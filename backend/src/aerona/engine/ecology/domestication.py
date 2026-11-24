@@ -40,6 +40,7 @@ from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import can_live_on
 from aerona.engine.ecology.evolution import docility_of, inherit_marks
 from aerona.engine.ecology.profiles import profile_of
+from aerona.engine.ecology.uses import give_use
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, GoodsLedger, holding
 from aerona.engine.industry.chosen import method_of
 from aerona.engine.primitives.distance import RegionAtlas
@@ -179,8 +180,7 @@ async def offspring(ctx: TickContext, parent: EntityRow, keeper: EntityRow, *, s
     for item in await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == child.id)):
         item.rate = max(item.rate, round_half_up(item.rate * (1 + table.yield_gain_pct / PERCENT)))
     for use in await ctx.session.scalars(select(SpeciesUseRow.use).where(SpeciesUseRow.species_entity_id == parent.id)):
-        if await ctx.session.get(SpeciesUseRow, (child.id, use)) is None:
-            ctx.session.add(SpeciesUseRow(species_entity_id=child.id, use=use))
+        await give_use(ctx.session, child.id, use)
     inherited = await traits_of(ctx.session, child.id)
     for trait in await traits_of(ctx.session, parent.id):
         if trait is not CreatureTrait.SACRED_ANIMAL and trait not in inherited:

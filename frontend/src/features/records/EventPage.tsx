@@ -29,8 +29,8 @@ import {
   TimelineItem,
   useShowMore,
 } from '@/components/domain'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Muted, Text } from '@/components/typography'
 import { Chip, Facts, RecordRow } from '@/features/cosmography/parts'
 import { wordOf } from '@/features/entity/affairs/labels'
@@ -86,7 +86,7 @@ function Participants({ people }: { people: readonly EventParticipant[] }) {
         icon={Users}
         size='inline'
         title='No one is named in it'
-        description='Name who took part with the roles they held from the incident forge in their drawer.'
+        description='Name who took part with the roles they held from the incident forge in their entry.'
       />
     )
   return (
@@ -639,7 +639,7 @@ function Account({ account }: { account: EventAccount }) {
 function EventView({ incidentId }: { incidentId: number }) {
   const account = useEventAccount(incidentId)
   const blocked = useBlocked()
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   if (account.isPending)
     return <LoadingBlock label='Reading the account of the happening' />
   if (account.isError)
@@ -679,7 +679,7 @@ function EventView({ incidentId }: { incidentId: number }) {
       <IncidentEditor
         account={data}
         blocked={blocked}
-        onStruck={() => drawers.back()}
+        onStruck={() => entryStack.back()}
       />
       <IncidentNameForge incidentId={data.id} name={data.name} />
       <PanelGrid columns={3}>
@@ -819,7 +819,7 @@ function EventView({ incidentId }: { incidentId: number }) {
   )
 }
 
-export function EventPage({ id }: DrawerPageProps) {
+export function EventPage({ id }: EntryPageProps) {
   const incidentId = Number(id)
   if (!Number.isInteger(incidentId) || incidentId <= 0)
     return (

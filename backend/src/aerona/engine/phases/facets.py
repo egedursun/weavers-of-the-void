@@ -17,6 +17,7 @@ from aerona.engine.phase import Phase
     "table.creator",
     "table.crime_cases",
     "table.death_work",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.facet_practices",

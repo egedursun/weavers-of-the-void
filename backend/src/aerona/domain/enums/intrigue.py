@@ -20,6 +20,7 @@ class IntrigueSecret(StrEnum):
     TRUE_HISTORY = "true_history"
     HIDDEN_POWER = "hidden_power"
     FORGERY = "forgery"
+    ILLNESS = "illness"
 
 
 class HookStrength(StrEnum):
@@ -33,6 +34,8 @@ class HookSource(StrEnum):
     FAVOUR = "favour"
     HOSTAGE = "hostage"
     TRUE_NAME = "true_name"
+    DEPENDENCE = "dependence"
+    AFFECTION = "affection"
 
 
 class HookDemand(StrEnum):
@@ -44,6 +47,8 @@ class HookDemand(StrEnum):
     APPOINTMENT = "appointment"
     SILENCE = "silence"
     PAYMENT = "payment"
+    RELEASE = "release"
+    INFORMATION = "information"
 
 
 class FavourOrigin(StrEnum):
@@ -56,6 +61,8 @@ class FavourOrigin(StrEnum):
     RELIEF = "relief"
     HOSPITALITY = "hospitality"
     RANSOM = "ransom"
+    HEALING = "healing"
+    TEACHING = "teaching"
 
 
 class IdentityReason(StrEnum):
@@ -67,6 +74,7 @@ class IdentityReason(StrEnum):
     FUGITIVE = "fugitive"
     HIDDEN_FAITH = "hidden_faith"
     PASSING_KIND = "passing_kind"
+    PROTECTION = "protection"
 
 
 class PlotKind(StrEnum):
@@ -90,6 +98,8 @@ class PlotKind(StrEnum):
     GEAS_TRAP = "geas_trap"
     HIDE_FLEET = "hide_fleet"
     FORGE_WORK = "forge_work"
+    FIX_CONTEST = "fix_contest"
+    INCITE_CROWD = "incite_crowd"
 
 
 class SchemePhase(StrEnum):
@@ -116,6 +126,8 @@ class BeliefSource(StrEnum):
     INTRUSION = "intrusion"
     SURVEILLANCE = "surveillance"
     MADE_MIND_REPORT = "made_mind_report"
+    DREAM = "dream"
+    OMEN = "omen"
 
 
 class TrueNameCause(StrEnum):

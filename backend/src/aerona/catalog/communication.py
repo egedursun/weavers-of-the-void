@@ -11,6 +11,8 @@ MEDIUM_LABELS: dict[Medium, str] = {
     Medium.NETWORK: "By network",
     Medium.MIND_LINK: "By a link between minds",
     Medium.BROADCAST: "By broadcast",
+    Medium.DRUM_AND_WHISTLE: "Drum and whistle",
+    Medium.COURIER_ANIMAL: "Courier animal",
 }
 CONTENT_LABELS: dict[DispatchContent, str] = {
     DispatchContent.PROPOSAL: "A proposal",
@@ -24,6 +26,8 @@ CONTENT_LABELS: dict[DispatchContent, str] = {
     DispatchContent.INTELLIGENCE: "Intelligence",
     DispatchContent.ORDER: "An order",
     DispatchContent.WARNING: "A warning",
+    DispatchContent.CONDOLENCE: "Condolence",
+    DispatchContent.CONGRATULATION: "Congratulation",
 }
 STATE_LABELS: dict[DispatchState, str] = {
     DispatchState.UNDER_WAY: "On its way",
@@ -33,6 +37,7 @@ STATE_LABELS: dict[DispatchState, str] = {
     DispatchState.DELAYED: "Held up on the road",
     DispatchState.FORGED: "Delivered as a forgery",
     DispatchState.MISREAD: "Delivered and misread",
+    DispatchState.REFUSED: "Refused",
 }
 ENVOY_LABELS: dict[EnvoyFate, str] = {
     EnvoyFate.RECEIVED: "Received with courtesy",
@@ -41,6 +46,7 @@ ENVOY_LABELS: dict[EnvoyFate, str] = {
     EnvoyFate.KILLED: "Slain",
     EnvoyFate.EXPELLED: "Sent home",
     EnvoyFate.DEFECTED: "Stayed to serve the host",
+    EnvoyFate.HONOURED: "Honoured with gifts",
 }
 SUBJECT_LABELS: dict[OpinionSubject, str] = {
     OpinionSubject.RULER: "Ruler",
@@ -50,6 +56,8 @@ SUBJECT_LABELS: dict[OpinionSubject, str] = {
     OpinionSubject.IDEOLOGY: "Creed",
     OpinionSubject.FACTION: "Faction",
     OpinionSubject.FOREIGN_POWER: "Foreign power",
+    OpinionSubject.ECONOMY: "Economy",
+    OpinionSubject.NEIGHBOUR_PEOPLE: "A neighbouring people",
 }
 SIGNAL_LABELS: dict[SignalKind, str] = {
     SignalKind.BEACON_CHAIN: "Beacon chains",
@@ -60,6 +68,7 @@ SIGNAL_LABELS: dict[SignalKind, str] = {
     SignalKind.RADIO_STATION: "Radio stations",
     SignalKind.MIND_LINK_STATION: "Mind-link stations",
     SignalKind.GROWN_NODE: "Grown nodes",
+    SignalKind.DRUM_RELAY: "Drum relays",
 }
 SIGNAL_STATE_LABELS: dict[SignalState, str] = {
     SignalState.ACTIVE: "Standing",
@@ -67,5 +76,6 @@ SIGNAL_STATE_LABELS: dict[SignalState, str] = {
     SignalState.BURNED: "Burned",
     SignalState.DISUSED: "Left unused",
     SignalState.JAMMED: "Jammed",
+    SignalState.RESTORED: "Restored",
 }
 MORTAL_MEDIA = frozenset({Medium.ENVOY, Medium.LETTER, Medium.HERALD, Medium.BIRD, Medium.SIGNAL_FIRE, Medium.NETWORK})

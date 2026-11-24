@@ -24,6 +24,7 @@ export function CreatorEpic({ creator }: { creator: CreatorRecord }) {
   })
   return (
     <Section
+      id='section-creator-epic'
       title='Epic'
       surface='card'
       level={3}

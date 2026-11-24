@@ -33,6 +33,8 @@ class FermentationRules:
     traded_quality_pct: int = rule(70, 0, 100, V, "Share of its quality a culture keeps when it passes to another town (%)")
     delight_pct: int = rule(50, 0, 200, V, "Delight a dish made with a culture gains at full quality (%)")
     hand_tending: int = rule(5, 0, 100, V, "Quality a mortal who tends a culture by hand adds to it")
+    wild_spoil_pct: int = rule(10, 0, 100, V, "Chance in an epoch that a wild culture of a place spoils and is lost (%)")
+    wild_found_pct: int = rule(20, 0, 100, V, "Chance a town founding a culture keeps the wild mixed culture of its place instead (%)")
 
 
 @dataclass(frozen=True)
@@ -47,6 +49,7 @@ class SymbiosisRules:
     mimic_shield_pct: int = rule(50, 0, 100, C, "Share of hunting a mimic escapes where the kind it copies lives, at full strength (%)")
     vector_load: int = rule(3, 0, 100, C, "Disease load a parasite of herds raises in its land each epoch, at full strength")
     mimic_alarm_pct: int = rule(80, 0, 100, C, "Share of the danger of the kind it copies a mimic is read with by those who meet it there (%)")
+    farming_pct: int = rule(40, 0, 200, C, "More room a kind that tends another kind, and the kind it tends, gain from each other at full strength (%)")
 
 
 @dataclass(frozen=True)
@@ -62,6 +65,10 @@ class DormancyRules:
     disturb_population: int = rule(3000, 0, 1000000, C, "Folk a land holds before its hunters and woodcutters disturb the sleepers there")
     woken_raid_pct: int = rule(200, 100, 500, C, "Chance of raiding a woken kind has, against its usual chance (%)")
     lair_hunt_pct: int = rule(50, 0, 200, C, "Easier a hunt for a kind is while it sleeps in its lair (%)")
+    diapause_survival_pct: int = rule(
+        60, 0, 100, C, "Share of its numbers a kind that pauses its young until the season returns keeps through a failed season (%)"
+    )
+    mesotherm_food_pct: int = rule(70, 0, 100, C, "Food a kind with a warm core and cooler limbs needs against a warm-blooded kind (%)")
 
 
 @dataclass(frozen=True)
@@ -92,6 +99,10 @@ class SenseRules:
     tracking_pct: int = rule(40, 0, 200, C, "More game a people's hunters take with senses that track, at full acuity (%)")
     navigation_pct: int = rule(30, 0, 100, V, "Share of the losses at sea a people's sense of direction spares, at full acuity (%)")
     spirits_pct: int = rule(50, 0, 100, W, "Share more often a people that sees spirits uncovers the spies of the gods, at full acuity (%)")
+    pressure_warning_pct: int = rule(
+        40, 0, 100, C, "Share of the chance of a seasonal hazard folk who sense coming storms and water movement avoid at a full sense (%)"
+    )
+    taste_poison_cut_pct: int = rule(50, 0, 100, C, "Share of the sickness of a poisoned catch folk who taste poison avoid at a full sense (%)")
 
 
 @dataclass(frozen=True)
@@ -107,6 +118,8 @@ class PlantDefenceRules:
         30, 0, 100, E, "Share of a land's harvest plants that poison their neighbours take, where they cover all of it, at full potency (%)"
     )
     carnivorous_danger: int = rule(20, 0, 100, E, "Danger a land gains from flesh-eating plants that cover all of it, at full potency")
+    mimicry_cut_pct: int = rule(30, 0, 100, E, "Share of the overgrazing of a land plants that look like guarded plants spare it at full cover (%)")
+    regrowth_cut_pct: int = rule(40, 0, 100, E, "Share of the overgrazing of a land plants that grow back fast heal at full cover (%)")
 
 
 @dataclass(frozen=True)

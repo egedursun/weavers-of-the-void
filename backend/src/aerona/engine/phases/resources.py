@@ -8,6 +8,7 @@ from aerona.engine.crafts.catch import regrowth_scale
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import ExtractionTally, extract, extraction_kind, keep_methods, reconcile, regrow
 from aerona.engine.economy.stocks import sync_aggregates
+from aerona.engine.environment.cells import keep_the_deep
 from aerona.engine.environment.columns import columns_by_region
 from aerona.engine.environment.dangers import weighted_dangers
 from aerona.engine.environment.deep import deepen
@@ -52,6 +53,8 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "settlement.population",
     "settlement.prosperity",
     "table.army_profiles",
+    "table.biology_variants",
+    "table.bodies",
     "table.bonds",
     "table.calendars",
     "table.chemical_works",
@@ -63,10 +66,15 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.commutes",
     "table.cosmos",
     "table.creator",
+    "table.cult_doctrines",
+    "table.culture_values",
+    "table.deep_passages",
     "table.deep_seals",
     "table.dimensional_events",
     "table.dimensions",
+    "table.endemic_diseases",
     "table.entities",
+    "table.entity_traits",
     "table.forced_weather",
     "table.foreign_gods",
     "table.galactic_structures",
@@ -76,8 +84,12 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incidents",
     "table.irregular_seasons",
+    "table.kinship_systems",
     "table.language_profiles",
+    "table.language_standing",
     "table.lexemes",
     "table.maimed_cohorts",
     "table.name_registry",
@@ -87,6 +99,8 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.place_profiles",
     "table.plague_responses",
     "table.plant_profiles",
+    "table.polity_deep_knowledge",
+    "table.polity_members",
     "table.polity_profiles",
     "table.public_clocks",
     "table.region_crops",
@@ -123,12 +137,14 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "resource.abundance",
     "settlement.population",
     "settlement.prosperity",
+    "table.applied_fixups",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_industry",
     "table.community_societies",
     "table.community_stocks",
+    "table.deep_passages",
     "table.entities",
     "table.entity_flags",
     "table.goods_flows",
@@ -139,13 +155,19 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.maimed_cohorts",
     "table.name_registry",
     "table.node_births",
+    "table.people_biology",
+    "table.people_culture",
     "table.place_environment",
     "table.place_profiles",
+    "table.polity_deep_knowledge",
     "table.production_runs",
     "table.region_environment",
     "table.region_geology",
+    "table.region_underground",
     "table.resource_profiles",
     "table.resource_workers",
+    "table.tradition_profiles",
+    "table.union_customs",
 )
 async def resource_economy(ctx: TickContext) -> None:
     book = await EconomyBook.load(ctx)
@@ -173,6 +195,22 @@ async def resource_economy(ctx: TickContext) -> None:
     ctx.count("strata_reached", deep.strata)
     ctx.count("gas_fires", deep.fires)
     ctx.count("reservoirs_tapped", deep.tapped)
+    ctx.count("faults_stressed", deep.stressed)
+    below = await keep_the_deep(ctx)
+    ctx.count("cells_shaped", below.shaped)
+    ctx.count("cells_named", below.named)
+    ctx.count("passages_formed", below.passages)
+    ctx.count("passages_dug", below.dug)
+    ctx.count("passages_collapsed", below.collapsed)
+    ctx.count("passages_flooded", below.flooded)
+    ctx.count("passages_drained", below.drained)
+    ctx.count("passages_cleared", below.cleared)
+    ctx.count("passages_sealed", below.sealed)
+    ctx.count("cells_known", below.known)
+    ctx.count("contacts_below", below.contacts)
+    ctx.count("unadapted_below", below.strained)
+    ctx.count("peoples_below", below.peoples)
+    ctx.count("armies_strung_out_below", below.narrowed)
 
 
 @reads(

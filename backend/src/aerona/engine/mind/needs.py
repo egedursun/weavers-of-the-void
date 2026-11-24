@@ -156,6 +156,7 @@ async def community_pressures(ctx: TickContext, community: EntityRow, culture: V
     wars = await ongoing_war_count(session, community.id)
     insecurity = wars * table.war_insecurity + threat * table.threat_pct / PERCENT + (table.plague_insecurity if community.id in plagued else 0)
     insecurity += basket.get(ShortfallEffect.INSECURITY, 0) * plenty.insecurity_pressure_pct / PERCENT
+    insecurity += basket.get(ShortfallEffect.JUSTICE, 0) * ctx.rules.shortfall.justice_pressure_pct / PERCENT
     location = await session.get(EntityRow, community.location_id) if community.location_id is not None else None
     fertility = stat(location, FERTILITY_KEY) if location is not None else None
     room = (fertility if fertility is not None else table.default_fertility) * table.crowd_per_fertility

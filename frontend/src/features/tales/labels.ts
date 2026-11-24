@@ -57,6 +57,10 @@ import {
   Undo2,
   Waves,
   Zap,
+  Building2,
+  HeartHandshake,
+  Sword,
+  Shell,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -123,6 +127,7 @@ export const SPELLS: Record<Schema['SeasonSpell'], Named> = {
 export const CYCLES: Record<Schema['AgeCycle'], Named> = {
   linear: { label: 'Runs on to its end', icon: MoveRight, tone: 'muted' },
   cyclic: { label: 'Turns in ages', icon: RefreshCcw, tone: 'gold' },
+  spiral: { label: 'Spiral', icon: Shell, tone: 'gold' },
 }
 
 export const TEMPLATES: Record<Schema['ArcTemplate'], Named> = {
@@ -161,6 +166,21 @@ export const TEMPLATES: Record<Schema['ArcTemplate'], Named> = {
   },
   sacrifice: { label: 'Sacrifice', icon: Flame, tone: 'gold' },
   discovery: { label: 'Discovery', icon: Search, tone: 'info' },
+  betrayal: {
+    label: 'Betrayal',
+    icon: Sword,
+    tone: 'danger',
+  },
+  friendship: {
+    label: 'Friendship',
+    icon: HeartHandshake,
+    tone: 'success',
+  },
+  legacy: {
+    label: 'Legacy',
+    icon: Building2,
+    tone: 'gold',
+  },
 }
 
 export const STAGES: Record<Schema['ArcStage'], Named> = {

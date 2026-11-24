@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.genesis import TURNING_CYCLES
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.ages import AgeEchoRow, AgeRow, ArcRow
@@ -113,7 +114,8 @@ async def seed_echoes(ctx: TickContext, ended: AgeRow, opened: AgeRow) -> int:
 async def turn_age(ctx: TickContext, variant: ApocalypseVariant | None) -> AgeRow:
     tally = AgeTally()
     ended = await ensure_age(ctx, tally)
-    carried = ctx.rules.ages.carry_pct
+    cosmos = await CosmosRepository(ctx.session).require_cosmos()
+    carried = PERCENT - ctx.rules.ages.spiral_change_pct if cosmos.age_cycle is AgeCycle.SPIRAL else ctx.rules.ages.carry_pct
     ended.ended_epoch = ctx.epoch
     ended.variant = variant
     ended.carried = carried
@@ -172,7 +174,7 @@ async def rebirth(ctx: TickContext, age: AgeRow, tally: AgeTally) -> None:
 
 async def keep_ages(ctx: TickContext, tally: AgeTally) -> None:
     cosmos = await CosmosRepository(ctx.session).require_cosmos()
-    if cosmos.age_cycle is not AgeCycle.CYCLIC:
+    if cosmos.age_cycle not in TURNING_CYCLES:
         return
     age = await ensure_age(ctx, tally)
     period = ctx.rules.ages.period_epochs

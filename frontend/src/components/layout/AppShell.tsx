@@ -8,11 +8,11 @@ import { AppSidebar } from './AppSidebar'
 import { Main } from './Main'
 import { SkipToMain } from './SkipToMain'
 import { TopBar } from './TopBar'
-import { DrawerStack, type DrawerPages } from './drawer/DrawerStack'
+import { EntryWindow, type EntryPages } from './entry/EntryWindow'
 import { useGlobalShortcuts } from './useGlobalShortcuts'
 
 type AppShellProps = {
-  drawerPages: DrawerPages
+  entryPages: EntryPages
   topBarContext?: ReactNode
   topBarActions?: ReactNode
   banner?: ReactNode
@@ -32,7 +32,7 @@ function GlobalShortcuts() {
 }
 
 export function AppShell({
-  drawerPages,
+  entryPages,
   topBarContext,
   topBarActions,
   banner,
@@ -59,7 +59,7 @@ export function AppShell({
             </Main>
           </SidebarInset>
           {aside}
-          <DrawerStack pages={drawerPages} />
+          <EntryWindow pages={entryPages} />
           {overlays}
         </SidebarProvider>
       </LayoutProvider>

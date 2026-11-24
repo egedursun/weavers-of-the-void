@@ -17,3 +17,5 @@ class KnowledgeKind(StrEnum):
     PATTERN = "pattern"
     SOURCE = "source"
     SECRET = "secret"
+    REMEDY = "remedy"
+    GENEALOGY = "genealogy"

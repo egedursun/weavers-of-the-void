@@ -18,6 +18,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import PreferenceRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.relations import ContestRow, GroupRankRow, RelationshipRow
+from aerona.db.tables.titles import TitleProfileRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
@@ -47,7 +48,7 @@ from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import move_stat, set_stats, stat
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation, relation, shift
 from aerona.engine.relations.interactions import alignment
@@ -223,6 +224,29 @@ async def paid(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow
         facts={"stake": bout.stake},
         place=bout.place_id or winner.location_id,
     )
+
+
+@STAKES.on(ContestStake.TITLE)
+async def win_title(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
+    title = await ctx.session.get(TitleProfileRow, bout.stake_node_id) if bout.stake_node_id is not None else None
+    if title is None:
+        title = await ctx.session.scalar(
+            select(TitleProfileRow).where(TitleProfileRow.holder_node_id == loser.id).order_by(TitleProfileRow.title_entity_id).limit(1)
+        )
+    if title is None or title.holder_node_id != loser.id or held(title.title_entity_id) or "holder_node_id" in title.locked:
+        return
+    title.holder_node_id = winner.id
+    await paid(ctx, bout, winner, loser, title.title_entity_id)
+
+
+@STAKES.on(ContestStake.RIGHTS)
+async def win_rights(ctx: TickContext, bout: Bout, winner: EntityRow, loser: EntityRow) -> None:
+    theirs = await living_entity(ctx.session, loser.location_id) if loser.location_id is not None else None
+    mine = await living_entity(ctx.session, winner.location_id) if winner.location_id is not None else None
+    if theirs is None or mine is None or theirs.id == mine.id or held(theirs.id, mine.id):
+        return
+    if move_stat(theirs, mine, "prosperity", ctx.rules.contests.rights_prosperity):
+        await paid(ctx, bout, winner, loser, theirs.id)
 
 
 @STAKES.on(ContestStake.HONOUR)

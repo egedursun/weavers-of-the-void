@@ -82,6 +82,11 @@ class ZealRules(Spanned):
     def persecution_memory_epochs(self) -> int:
         return self.epochs(self.persecution_memory_years)
 
+    charity_share_pct: int = rule(30, 0, 100, R, "Share of their wealth the zealous give away to those in need in an epoch of charity zeal (%)")
+    charity_food: int = rule(3, 0, 100, R, "Food each town of the givers gains in an epoch of charity zeal (supply index)")
+    pilgrim_prosperity: int = rule(6, 0, 100, R, "Prosperity a town loses when its zealous leave everything for a holy journey")
+    pilgrim_piety: int = rule(3, 0, 100, R, "Piety a holy place gains when zealous pilgrims fill it")
+
 
 @dataclass(frozen=True)
 class TithesRules:
@@ -103,6 +108,8 @@ class TithesRules:
     pilgrims_per_follower_pct: int = rule(1, 0, 100, R, "Followers who go on pilgrimage to a relic of full sanctity (%)")
     pilgrimage_duty_pct: int = rule(200, 100, 500, R, "Pilgrims a pilgrimage duty sends (%)")
     pilgrims_per_income: int = rule(100, 1, 10000, R, "Pilgrims for each unit of treasury their offerings bring")
+    school_literacy: int = rule(1, 0, 20, R, "Literacy a people gains each epoch from each school its church holds among them")
+    hospital_cures: int = rule(3, 0, 50, R, "Sick a house of healing its church holds tends back to health each epoch")
 
 
 @dataclass(frozen=True)

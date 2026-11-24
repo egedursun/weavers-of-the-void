@@ -41,6 +41,12 @@ class ShortfallRules:
     note_pct: int = rule(20, 0, 100, S, "Want at which a shortfall is first told in the chronicle (%)")
     thirst_pressure_pct: int = rule(150, 0, 300, S, "Hunger pressure from the share of the people without water (%)")
     shelter_pressure_pct: int = rule(80, 0, 300, S, "Crowding pressure from the share of the people without a roof (%)")
+    learning_want_pct: int = rule(60, 0, 100, S, "Want of learning in a town of full size with no school, academy or university standing (%)")
+    learning_town: int = rule(2000, 1, 1000000, S, "People above which a town without a school begins to want learning; the want is full at four times as many")
+    learning_literacy: int = rule(4, 0, 100, S, "Literacy its people lose in an epoch when a town has no school at all")
+    justice_want_pct: int = rule(60, 0, 100, S, "Want of justice in a town of full size with no court or courthouse standing (%)")
+    justice_town: int = rule(2000, 1, 1000000, S, "People above which a town without a court begins to want justice; the want is full at four times as many")
+    justice_pressure_pct: int = rule(25, 0, 300, S, "Insecurity pressure from the share of wrongs left unanswered for want of a court (%)")
 
 
 @dataclass(frozen=True)
@@ -55,6 +61,10 @@ class RebuildingRules:
     landslide_lesson_pct: int = rule(40, 0, 100, S, "Chance a town rebuilt after a landslide watches its slopes and learns to terrace them (%)")
     relocate_pct: int = rule(10, 0, 100, S, "Chance a ruined town is rebuilt on a nearby safer site (%)")
     abandon_pct: int = rule(5, 0, 100, S, "Chance a ruined town is left, its people scattering as the displaced (%)")
+    sinkhole_lesson_pct: int = rule(30, 0, 100, S, "Chance a town rebuilt after a sinkhole builds against quakes and falling ground (%)")
+    plague_lesson_pct: int = rule(40, 0, 100, S, "Chance a town rebuilt after a plague makes a plan of immunisation (%)")
+    restored_cost_pct: int = rule(150, 100, 400, S, "Cost of rebuilding a town as it was, by records and memory, against rebuilding it as before (%)")
+    restored_memory: int = rule(10, 0, 100, S, "Awe and cohesion a town keeps when it is restored as it was")
 
 
 @dataclass(frozen=True)
@@ -67,6 +77,7 @@ class WaterLiftRules:
     wind_pump_lift: int = rule(100, 0, 100, S, "Share of its capacity a wind pump lifts at full wind (%)")
     electric_pump_lift: int = rule(100, 0, 100, S, "Share of its capacity a pump driven by electric power lifts (%)")
     still_wind: int = rule(20, 0, 100, S, "Wind strength below which a wind pump stands still")
+    animal_wheel_lift: int = rule(35, 0, 100, S, "Share of a dry field's want a wheel turned by draught animals lifts (%)")
 
 
 @dataclass(frozen=True)
@@ -78,6 +89,7 @@ class LockRules:
     warded_seal_difficulty: int = rule(50, 0, 100, S, "Most a warded lock with a seal holds against a thief")
     worked_difficulty: int = rule(90, 0, 100, S, "Most a lock held by a rite or a power holds against one who can work against it")
     electronic_difficulty: int = rule(85, 0, 100, S, "Most an electronic lock holds against an intruder")
+    living_difficulty: int = rule(95, 0, 100, S, "Difficulty of opening a lock grown by living craft for any not of its maker's line")
 
 
 @dataclass(frozen=True)
@@ -108,3 +120,7 @@ class FugitiveRules:
     runaway_flee_pct: int = rule(3, 0, 100, S, "Chance in an epoch that a mortal in bondage runs away (%)")
     deserter_flee_pct: int = rule(5, 0, 100, S, "Chance in an epoch that a warrior of a realm at war deserts (%)")
     heretic_flee_pct: int = rule(5, 0, 100, S, "Chance in an epoch that one of another faith flees a realm that persecutes it (%)")
+    escaped_captive_hunt_pct: int = rule(40, 0, 100, S, "Chance each epoch a captor catches a captive who escaped (%)")
+    debtor_hunt_pct: int = rule(30, 0, 100, S, "Chance each epoch a creditor catches a debtor who fled (%)")
+    escaped_captive_flee_pct: int = rule(10, 0, 100, S, "Chance each epoch a held captive slips away and flees its captor (%)")
+    debtor_flee_pct: int = rule(5, 0, 100, S, "Chance each epoch a debtor who owes on a register flees the creditor (%)")

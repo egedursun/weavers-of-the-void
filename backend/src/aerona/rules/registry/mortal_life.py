@@ -26,6 +26,8 @@ class AgingRules:
     hazard_steepness: float = rule(4.0, 0.0, 50.0, G, "How steeply the chance of death climbs past the lifespan")
     hazard_start_pct: int = rule(85, 0, 200, G, "Share of the lifespan from which old age can kill (%)")
     hazard_medicine_pct: int = rule(70, 0, 100, G, "Death chance of the old where medicine is known (%)")
+    mature_end_pct: int = rule(60, 0, 100, G, "Share of adulthood after which a being is mature, before it becomes an elder (%)")
+    mature_health_loss: int = rule(1, 0, 100, G, "Health a mature being loses each epoch as its body begins to decline")
 
 
 @dataclass(frozen=True)

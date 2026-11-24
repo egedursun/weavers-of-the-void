@@ -31,6 +31,7 @@ TRADE_MODES: Mapping[TradeMode, TradeModeSpec] = total(
         TradeMode.SPACE: TradeModeSpec("Star Lane", None, "space_weather_pct", ()),
         TradeMode.RIFT: TradeModeSpec("Rift Way", None, "rift_weather_pct", ()),
         TradeMode.NETWORK: TradeModeSpec("Network Link", None, "network_weather_pct", ()),
+        TradeMode.UNDERGROUND: TradeModeSpec("Tunnel Way", None, "underground_weather_pct", ()),
     },
 )
 
@@ -44,6 +45,8 @@ TRADE_LOSS_CULPRITS: Mapping[TradeLoss, str | None] = total(
         TradeLoss.OFFICIALS: "official_id",
         TradeLoss.SPOILAGE: None,
         TradeLoss.PILFERAGE: None,
+        TradeLoss.PIRATES: None,
+        TradeLoss.BREAKAGE: None,
     },
 )
 
@@ -66,6 +69,8 @@ TRADE_LOSSES = total(
         TradeLoss.OFFICIALS: LossSpec("Tolls and extortion", "officials_pct", reckoned=False),
         TradeLoss.SPOILAGE: LossSpec("Spoilage", "spoilage_pct", reckoned=False),
         TradeLoss.PILFERAGE: LossSpec("Pilferage", "pilferage_pct", reckoned=False),
+        TradeLoss.PIRATES: LossSpec("Pirates", "pirates_pct"),
+        TradeLoss.BREAKAGE: LossSpec("Breakage", "breakage_pct", reckoned=False),
     },
 )
 

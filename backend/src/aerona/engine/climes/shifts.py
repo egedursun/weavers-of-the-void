@@ -94,7 +94,11 @@ async def sea_navigation(session: AsyncSession, rules: Rules, ends: tuple[int, i
 
 async def fire_wind(session: AsyncSession, rules: Rules, region_id: int) -> float:
     row = await session.get(RegionWindRow, region_id)
-    return 1 + row.strength / PERCENT * rules.winds.fire_wind_pct / PERCENT if row is not None else 1.0
+    if row is None:
+        return 1.0
+    dry = BELTS[row.band].fire_pct
+    lee = 1 + dry(rules) / PERCENT if dry is not None else 1.0
+    return (1 + row.strength / PERCENT * rules.winds.fire_wind_pct / PERCENT) * lee
 
 
 async def oscillation_sight(session: AsyncSession, rules: Rules, seer_id: int, world_id: int | None) -> int:

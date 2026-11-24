@@ -91,6 +91,7 @@ describe('summon a son', () => {
     await button.click()
     expect(server.callsTo('POST /api/sons/summon')[0].body).toEqual({
       world_id: null,
+      inspiration: '',
     })
     await expect
       .element(screen.getByText('A son is answering your call'))
@@ -112,6 +113,7 @@ describe('summon a son', () => {
     await screen.getByRole('button', { name: /Summon a son/ }).click()
     expect(server.callsTo('POST /api/sons/summon')[0].body).toEqual({
       world_id: 2,
+      inspiration: '',
     })
   })
 

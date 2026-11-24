@@ -19,6 +19,9 @@ class GeniusLocusKind(StrEnum):
     SEA = "sea"
     RUIN = "ruin"
     BATTLEFIELD = "battlefield"
+    MARSH = "marsh"
+    DESERT = "desert"
+    GLACIER = "glacier"
 
 
 class SpiritOffence(StrEnum):
@@ -28,6 +31,8 @@ class SpiritOffence(StrEnum):
     TABOO = "taboo"
     BLOODSHED = "bloodshed"
     OVERHARVEST = "overharvest"
+    TRESPASS = "trespass"
+    NOISE = "noise"
 
 
 class BureauRank(StrEnum):
@@ -48,6 +53,8 @@ class PetitionKind(StrEnum):
     RAIN = "rain"
     PROTECTION = "protection"
     VENGEANCE = "vengeance"
+    FINDING = "finding"
+    JUSTICE = "justice"
 
 
 class PetitionStatus(StrEnum):
@@ -66,6 +73,7 @@ class MysticState(StrEnum):
     PERSECUTED = "persecuted"
     FOUNDER = "founder"
     LAPSED = "lapsed"
+    HERMIT = "hermit"
 
 
 class VisionKind(StrEnum):
@@ -75,6 +83,7 @@ class VisionKind(StrEnum):
     TRANCE = "trance"
     DREAM = "dream"
     ORACLE_SPEECH = "oracle_speech"
+    SIGN = "sign"
 
 
 class MillenarianStage(StrEnum):
@@ -94,6 +103,8 @@ class TheodicyCause(StrEnum):
     DISASTER = "disaster"
     PERSECUTION = "persecution"
     LONG_SEASON = "long_season"
+    LEADER_LOST = "leader_lost"
+    SCHISM = "schism"
 
 
 class TheodicyResolution(StrEnum):
@@ -112,6 +123,8 @@ class SacramentKind(StrEnum):
     LAST_RITES = "last_rites"
     PURIFICATION = "purification"
     ORDINATION = "ordination"
+    PENANCE = "penance"
+    COMMUNION = "communion"
 
 
 class SacramentProtection(StrEnum):
@@ -119,6 +132,7 @@ class SacramentProtection(StrEnum):
     POSSESSION = "possession"
     UNREST = "unrest"
     CURSE = "curse"
+    FORTUNE = "fortune"
 
 
 class AfterlifeModel(StrEnum):
@@ -130,6 +144,7 @@ class AfterlifeModel(StrEnum):
     WANDERING = "wandering"
     UNION = "union"
     OBLIVION = "oblivion"
+    AMONG_LIVING = "among_living"
 
 
 class DivinationKind(StrEnum):
@@ -142,6 +157,8 @@ class DivinationKind(StrEnum):
     SCRYING = "scrying"
     SPIRIT_CONSULTATION = "spirit_consultation"
     EARTH_SIGNS = "earth_signs"
+    NUMEROLOGY = "numerology"
+    BODY_READING = "body_reading"
 
 
 class DivinationValidity(StrEnum):
@@ -160,6 +177,8 @@ class DivinationQuestion(StrEnum):
     VOYAGE = "voyage"
     FOUNDING = "founding"
     ILLNESS = "illness"
+    SUCCESSION = "succession"
+    LOST_THINGS = "lost_things"
 
 
 class OmenVerdict(StrEnum):
@@ -173,6 +192,7 @@ class ForesightSource(StrEnum):
     DIVINATION = "divination"
     GOD = "god"
     MADE_ORACLE = "made_oracle"
+    DREAM = "dream"
 
 
 class ForesightStatus(StrEnum):

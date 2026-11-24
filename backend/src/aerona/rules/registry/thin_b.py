@@ -48,6 +48,8 @@ class BeliefDepthRules:
     made_mind_confidence: int = rule(65, 0, 100, M, "Confidence of what a made mind reports to its keeper")
     shared_at: int = rule(3, 1, 1000, M, "Members holding a belief at which their community holds it too")
     public_opinion_pct: int = rule(5, 0, 100, M, "How much a shared belief moves the opinion of a community (%)")
+    dream_confidence: int = rule(35, 0, 100, M, "Confidence a mortal gives what it saw of others in a dream, at full intensity")
+    omen_confidence: int = rule(40, 0, 100, M, "Confidence one who heeds an omen gives what it reads of its land")
 
 
 @dataclass(frozen=True)

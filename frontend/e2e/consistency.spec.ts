@@ -84,7 +84,7 @@ for (const theme of THEMES) {
       mkdirSync(directory, { recursive: true })
       await page.screenshot({
         path: path.join(directory, `${screen.name}.png`),
-        fullPage: !screen.openPalette && !screen.toggleSidebar && !screen.path.includes('drawer='),
+        fullPage: !screen.openPalette && !screen.toggleSidebar && !screen.path.includes('entry='),
       })
       const violations = await page.evaluate(collectViolations, CHECK_OPTIONS)
       expect(violations, JSON.stringify(violations, null, 2)).toEqual([])

@@ -17,7 +17,7 @@ import {
   Section,
   StatBar,
 } from '@/components/domain'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { TRAIT_ICONS } from '@/features/entity/mind/labels'
 import { STRAINS } from '@/features/folkways/labels'
@@ -62,7 +62,7 @@ const WORKING = 'Working on it.'
 const STRONG_ATTRIBUTE = 70
 const WEAK_ATTRIBUTE = 30
 
-function nodeKind(kind: string): DrawerKind {
+function nodeKind(kind: string): EntryKind {
   if (kind === 'son') return 'son'
   if (kind === 'foreign_god') return 'foreign-god'
   return 'entity'

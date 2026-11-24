@@ -15,5 +15,7 @@ RIVER_SHIFT_CAUSE = total(
         RiverShiftCause.WORKS: Defined("Works", checked_by=(), used_by=("engine.water.courses.works_move", "tools.mortal.deep.divert_river")),
         RiverShiftCause.ERUPTION: Defined("Eruption", checked_by=(), used_by=("engine.environment.geomorph.erupted",)),
         RiverShiftCause.LANDSLIDE: Defined("Landslide", checked_by=("engine.water.courses.burst_slide_dams",), used_by=("engine.water.courses.slide_dam",)),
+        RiverShiftCause.ICE: Defined("Ice", checked_by=(), used_by=("engine.water.courses.ice_moves",)),
+        RiverShiftCause.CAPTURE: Defined("Capture", checked_by=(), used_by=("engine.water.courses.captures",)),
     },
 )

@@ -20,6 +20,8 @@ CLASSES: Mapping[LawArea, frozenset[SocialClass] | None] = total(
         LawArea.COMMERCE: frozenset({SocialClass.MERCHANT, SocialClass.ARTISAN, SocialClass.PROFESSIONAL}),
         LawArea.FAITH: frozenset({SocialClass.PRIEST, SocialClass.MONASTIC}),
         LawArea.LABOUR: frozenset({SocialClass.WORKER, SocialClass.FARMER, SocialClass.ARTISAN, SocialClass.SERF_OR_SLAVE}),
+        LawArea.FAMILY: None,
+        LawArea.ENVIRONMENT: frozenset({SocialClass.FARMER, SocialClass.WORKER, SocialClass.ARTISAN}),
     },
 )
 

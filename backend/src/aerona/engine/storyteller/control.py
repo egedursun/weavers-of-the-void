@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.genesis import TURNING_CYCLES
 from aerona.catalog.long_seasons import CAUSES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
@@ -195,8 +196,8 @@ async def set_cycle(ctx: TickContext, cycle: AgeCycle) -> AgeCycle:
 
 async def turn_now(ctx: TickContext) -> AgeRow:
     cosmos = await CosmosRepository(ctx.session).require_cosmos()
-    if cosmos.age_cycle is not AgeCycle.CYCLIC:
-        raise ValidationFailedError("Only a cyclic cosmos turns its ages; make the cosmos cyclic first.")
+    if cosmos.age_cycle not in TURNING_CYCLES:
+        raise ValidationFailedError("Only a cosmos that turns in ages turns them; make it cyclic or spiral first.")
     return await turn_age(ctx, cosmos.apocalypse_variant)
 
 

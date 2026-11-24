@@ -12,6 +12,7 @@ from aerona.engine.phase import Phase
     "table.celestial_readings",
     "table.creator",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.disease_profiles",
     "table.entities",

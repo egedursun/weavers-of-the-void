@@ -1,11 +1,13 @@
 from sqlalchemy import or_, select
 
+from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cycles import LongPlanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.eras import TechProgrammeRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.routes import RouteRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.cycles import PlanOutcome
@@ -14,7 +16,7 @@ from aerona.domain.enums.eras import ProgrammeStage
 from aerona.domain.enums.living import CultivationMethod
 from aerona.domain.enums.networks import NetworkCarrier
 from aerona.domain.enums.polity import HouseTrait
-from aerona.domain.enums.structure import StructureKind
+from aerona.domain.enums.structure import ConstructionState, StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.living.lines import LineDraft, make_line
 from aerona.engine.lore.research import techniques_of
@@ -113,3 +115,23 @@ async def fulfil_exploration(ctx: TickContext, plan: LongPlanRow, holder: Entity
     for route in found:
         route.known = True
     return (PlanOutcome.WAYS_CHARTED, {"count": len(found)}) if found else (PlanOutcome.NOTHING_FOUND, {})
+
+
+async def fulfil_restoration(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> Fulfilled:
+    realm = await realm_of_plan(ctx, plan)
+    if realm is None or realm.capital_entity_id is None:
+        return PlanOutcome.NO_REALM_TO_RESTORE, {}
+    ruins = [
+        row
+        for row in await ctx.session.scalars(
+            select(StructureProfileRow)
+            .where(StructureProfileRow.host_entity_id == realm.capital_entity_id, StructureProfileRow.construction_state == ConstructionState.RUINED)
+            .order_by(StructureProfileRow.structure_entity_id)
+        )
+        if not held(row.structure_entity_id) and "construction_state" not in row.locked
+    ]
+    for row in ruins:
+        row.construction_state = ConstructionState.RESTORED
+    if "legitimacy" not in realm.locked:
+        realm.legitimacy = clamp_int(realm.legitimacy + ctx.rules.long_plans.restoration_legitimacy, 0, PERCENT)
+    return PlanOutcome.REALM_RESTORED, {"realm": realm.polity_entity_id, "count": len(ruins)}

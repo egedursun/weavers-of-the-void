@@ -43,6 +43,7 @@ REBELS_SUBTYPE = "rebels"
 @reads(
     "table.bonds",
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
@@ -152,6 +153,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",
+    "table.deep_passages",
     "table.deterrence_postures",
     "table.dimensional_events",
     "table.dimensions",

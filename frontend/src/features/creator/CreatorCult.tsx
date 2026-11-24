@@ -24,6 +24,7 @@ export function CreatorCult({
   const { entityType } = useLabels()
   return (
     <Section
+      id='section-creator-cult'
       title='Cult'
       description={
         cult.length > 0

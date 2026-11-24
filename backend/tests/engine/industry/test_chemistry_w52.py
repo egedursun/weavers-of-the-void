@@ -8,7 +8,7 @@ NEW = (ChemicalProduct.INK, ChemicalProduct.GLAZE, ChemicalProduct.PRESERVATIVE,
 
 
 def test_twelve_chemical_products_each_with_a_recipe() -> None:
-    assert len(ChemicalProduct) == 12 and all(product in RECIPES for product in NEW)
+    assert len(ChemicalProduct) == 14 and all(product in RECIPES for product in NEW)
 
 
 async def test_ink_glaze_preservatives_and_acids_feed_their_crafts(realm: Realm) -> None:

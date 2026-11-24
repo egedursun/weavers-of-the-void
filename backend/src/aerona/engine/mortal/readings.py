@@ -54,7 +54,12 @@ def reading_of_score(rules: Rules, score: int, cause: DeathCause) -> DeathReadin
 
 
 def derive_reading(rules: Rules, values: Mapping[ValueAxis, int], cause: DeathCause) -> DeathReading:
-    return reading_of_score(rules, reading_score(rules, values, cause), cause)
+    reading = reading_of_score(rules, reading_score(rules, values, cause), cause)
+    spec = DEATH_CAUSES[cause]
+    harmless = not (spec.violent or spec.combat or spec.judged or spec.offered or spec.own_hand or spec.natural)
+    if reading is DeathReading.PLAIN and harmless and values.get(ValueAxis.MERCY, 0) >= rules.death_readings.pity_mercy:
+        return DeathReading.PITIED
+    return reading
 
 
 async def seed_people(ctx: TickContext, people_id: int) -> int:

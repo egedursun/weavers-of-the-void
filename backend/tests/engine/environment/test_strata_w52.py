@@ -41,7 +41,7 @@ def test_each_stratum_forms_only_where_its_rule_holds() -> None:
     assert U.RESERVOIR in strata([R.SOIL, R.CLAY, R.COAL, R.GRANITE], physics())
     assert U.RESERVOIR not in strata([R.SOIL, R.COAL, R.CLAY], physics())
     caves = strata([R.SOIL, R.LIMESTONE], physics(tectonics=90), rough=True)
-    assert {U.CAVERN_UPPER, U.CAVERN_MIDDLE, U.CAVERN_DEEP} <= caves
+    assert {U.CAVERN_UPPER, U.CAVERN_MIDDLE, U.CAVERN_LOWER} <= caves
     assert U.CAVERN_MIDDLE not in strata([R.SOIL, R.LIMESTONE], physics())
     assert U.MAGMA_SEA in strata([R.BASALT], physics(volcanism=80))
     assert U.UNDER_OCEAN in strata([R.WATER_ICE, R.GRANITE], physics(volcanism=RULES.underground.under_ocean_heat_min))

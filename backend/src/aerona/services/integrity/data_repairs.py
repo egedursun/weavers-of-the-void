@@ -62,6 +62,7 @@ from aerona.services.integrity.told_dangers import retell_dangers
 from aerona.services.integrity.tongue_links import mend_tongue_links
 from aerona.services.integrity.transformations import backfill_transformations
 from aerona.services.integrity.urban_links import mend_urban_links
+from aerona.services.integrity.value_axes import complete_value_axes
 from aerona.services.integrity.war_truces import close_unfought_truces
 from aerona.services.integrity.world_views import seed_missing_views
 from aerona.services.name_report import refit_pending_names
@@ -171,6 +172,7 @@ class DataRepairs:
             ("belief_names", lambda session, rules, epoch: repair_belief_names(session, rules)),
             ("pending_dialect_names", refit_pending_names),
             ("engine_drafts", lambda session, rules, epoch: requeue_engine_drafts(session)),
+            ("value_axes", lambda session, rules, epoch: complete_value_axes(session)),
             ("schema_repairs", lambda session, rules, epoch: schema_repairs(session)),
         ]
 

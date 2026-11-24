@@ -4,11 +4,13 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.kinds.resistances import RESISTANCES
+from aerona.catalog.life.crafts import NAME_TOKENS
 from aerona.catalog.life.powers import REGISTERING_LEVELS
 from aerona.catalog.life_traits import POWER_STATE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.crafts import SympatheticLinkRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.powers import MagicSystemLinkRow, MagicSystemRow, PowerRestrictionRow, PowerRow, PowerSourceKnowledgeRow, PowerSourceRow
@@ -19,7 +21,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.life_traits import PowerStateTrait
 from aerona.domain.enums.made import EffectTarget
-from aerona.domain.enums.mind import Attribute
+from aerona.domain.enums.mind import Attribute, ValueAxis
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
@@ -34,10 +36,13 @@ from aerona.domain.enums.powers import (
     SourceLawLevel,
 )
 from aerona.engine.arcana.resistance import carries_iron, sanctity_at
+from aerona.engine.body.customs import people_of
 from aerona.engine.concealment.truths import overt_breach
 from aerona.engine.context import TickContext
+from aerona.engine.dominion.sites import in_null_zone
 from aerona.engine.economy.purse import give_coin, points_of, receive_coin, shift_points, take_coin
 from aerona.engine.fortune.profiles import shift_fortune
+from aerona.engine.mind.book import values_for
 from aerona.engine.mind.split import attribute
 from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.polity.laws import law_param
@@ -156,10 +161,41 @@ async def tokenless(ctx: TickContext, asked: Asked) -> bool:
     return tokens is None
 
 
+@BLOCKS.on(RestrictionKind.ONLY_IN_COMPANY)
+async def alone(ctx: TickContext, asked: Asked) -> bool:
+    if asked.user.location_id is None:
+        return True
+    here = await present_among(ctx.session, [asked.user.location_id])
+    companion = await ctx.session.scalar(
+        select(EntityRow.id)
+        .where(here, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id != asked.user.id)
+        .limit(1)
+    )
+    return companion is None
+
+
+@BLOCKS.on(RestrictionKind.ONLY_BY_NAME)
+async def nameless(ctx: TickContext, asked: Asked) -> bool:
+    if asked.target is None:
+        return True
+    linked = await ctx.session.scalar(
+        select(SympatheticLinkRow.id)
+        .where(
+            SympatheticLinkRow.holder_node_id == asked.user.id,
+            SympatheticLinkRow.target_node_id == asked.target.id,
+            SympatheticLinkRow.token.in_(sorted(NAME_TOKENS)),
+        )
+        .limit(1)
+    )
+    return linked is None and not await active_bonds(ctx.session, [BondKind.KNOWS], sources=[asked.user.id], targets=[asked.target.id])
+
+
 BLOCKS.seal()
 
 
 async def restriction_factor(ctx: TickContext, power: PowerRow, user: EntityRow, target: EntityRow | None) -> float | None:
+    if await in_null_zone(ctx, user):
+        return None
     gain = 0
     for row in await ctx.session.scalars(select(PowerRestrictionRow).where(PowerRestrictionRow.power_id == power.id, PowerRestrictionRow.broken.is_(False))):
         if await BLOCKS[row.kind](ctx, Asked(row, power, user, target)):
@@ -217,6 +253,18 @@ async def nothing(_ctx: TickContext, _target: EntityRow, _user: EntityRow) -> in
     return 0
 
 
+async def disbelief(ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    people = await people_of(ctx.session, target)
+    values = await values_for(ctx.session, people.id) if people is not None else {}
+    return max(0, min(PERCENT, PERCENT // 2 - values.get(ValueAxis.SUPERSTITION, 0)))
+
+
+async def ancestral(ctx: TickContext, target: EntityRow, _user: EntityRow) -> int:
+    people = await people_of(ctx.session, target)
+    values = await values_for(ctx.session, people.id) if people is not None else {}
+    return max(0, min(PERCENT, (values.get(ValueAxis.FAMILY, 0) + values.get(ValueAxis.DEATH, 0)) // 2 + PERCENT // 4))
+
+
 RESISTANCE_READERS: Mapping[str, Callable[[TickContext, EntityRow, EntityRow], Awaitable[int]]] = {
     "devices": dampeners,
     "willpower": willpower,
@@ -227,6 +275,8 @@ RESISTANCE_READERS: Mapping[str, Callable[[TickContext, EntityRow, EntityRow], A
     "counter_power": counter_power,
     "distance": distance,
     "nothing": nothing,
+    "disbelief": disbelief,
+    "ancestral": ancestral,
 }
 
 

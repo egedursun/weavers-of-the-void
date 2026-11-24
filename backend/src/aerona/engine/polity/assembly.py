@@ -11,8 +11,10 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import ROUTE_DANGER_COLUMNS, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import TradePolicyRow
+from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.statecraft import SphereRow
+from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.disease import OutbreakStatus
@@ -25,12 +27,13 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind, LegitimacyBasis
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.statecraft import ResolutionKind, ResolutionState
+from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import LawBook, enact
 from aerona.engine.polity.regard import shift_regard
-from aerona.engine.primitives.numbers import clamp_int
-from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation, relation
@@ -133,6 +136,26 @@ async def quarrel(ctx: TickContext, members: list[EntityRow]) -> tuple[int, int]
     return (worst[1], worst[2]) if worst is not None else None
 
 
+async def at_war_between(ctx: TickContext, pair: tuple[int, int]) -> bool:
+    foes = await active_bonds(ctx.session, [BondKind.ENEMY], sources=[pair[0]])
+    return any(bond.target_node_id == pair[1] for bond in foes)
+
+
+async def unrecognised(ctx: TickContext, members: list[EntityRow]) -> int | None:
+    worlds = {member.world_id for member in members}
+    known = {member.id for member in members}
+    young = await ctx.session.scalars(
+        select(PolityProfileRow.core_entity_id)
+        .where(PolityProfileRow.core_entity_id.is_not(None), PolityProfileRow.founded_epoch >= ctx.epoch - 1)
+        .order_by(PolityProfileRow.polity_entity_id)
+    )
+    for core in list(young):
+        entity = await living_entity(ctx.session, core) if core is not None else None
+        if entity is not None and entity.world_id in worlds and entity.id not in known:
+            return entity.id
+    return None
+
+
 def stricken(members: list[EntityRow]) -> int | None:
     poor = [member for member in members if stat_or(member, "prosperity", PERCENT) < PERCENT // 4]
     return min(poor, key=lambda member: (stat_or(member, "prosperity", 0), member.id)).id if poor else None
@@ -143,8 +166,13 @@ async def gathered_motion(ctx: TickContext, members: list[EntityRow]) -> tuple[R
     if plague is not None:
         return ResolutionKind.QUARANTINE, plague
     pair = await quarrel(ctx, members)
+    if pair is not None and await at_war_between(ctx, pair):
+        return ResolutionKind.PEACEKEEPING, pair[0]
     if pair is not None:
         return ResolutionKind.ARBITRATION, pair[0]
+    newcomer = await unrecognised(ctx, members)
+    if newcomer is not None:
+        return ResolutionKind.RECOGNITION, newcomer
     needy = stricken(members)
     return (ResolutionKind.AID, needy) if needy is not None else None
 
@@ -322,6 +350,26 @@ async def arbitrate(ctx: TickContext, row: ResolutionRow, members: list[EntityRo
     await change_relation(ctx, second, first, amount, MemoryKind.FREED_US, note="a dispute settled by the council")
 
 
+async def keep_peace(ctx: TickContext, row: ResolutionRow, members: list[EntityRow], effect: int) -> None:
+    pair = await quarrel(ctx, members)
+    if pair is None or row.target_node_id not in pair:
+        return
+    for army in await ctx.session.scalars(
+        select(ArmyRow).where(ArmyRow.owner_entity_id.in_(list(pair)), ArmyRow.disbanded_epoch.is_(None)).order_by(ArmyRow.entity_id)
+    ):
+        entity = await living_entity(ctx.session, army.entity_id)
+        if entity is not None and not held(entity.id):
+            shift_stat(entity, "morale", -round_half_up(effect * await fear_of(ctx.session, entity)))
+    await change_relation(ctx, pair[0], pair[1], effect // 2, MemoryKind.FREED_US, note="kept apart by a council's peacekeepers")
+
+
+async def recognise(ctx: TickContext, row: ResolutionRow, effect: int) -> None:
+    newcomer = await living_entity(ctx.session, row.target_node_id) if row.target_node_id is not None else None
+    realm = await ctx.session.scalar(select(PolityProfileRow).where(PolityProfileRow.core_entity_id == row.target_node_id)) if newcomer is not None else None
+    if realm is not None and "legitimacy" not in realm.locked and not held(realm.polity_entity_id):
+        realm.legitimacy = clamp_int(realm.legitimacy + effect, 0, PERCENT)
+
+
 async def gathered_enforce(ctx: TickContext, row: ResolutionRow, members: list[EntityRow], tally: AssemblyTally, effect: int) -> bool:
     if row.kind is ResolutionKind.QUARANTINE:
         if ctx.rng(f"assembly.quarantine.{row.id}.{ctx.epoch}").chance(effect):
@@ -329,6 +377,12 @@ async def gathered_enforce(ctx: TickContext, row: ResolutionRow, members: list[E
         return True
     if row.kind is ResolutionKind.ARBITRATION:
         await arbitrate(ctx, row, members, effect)
+        return True
+    if row.kind is ResolutionKind.PEACEKEEPING:
+        await keep_peace(ctx, row, members, effect)
+        return True
+    if row.kind is ResolutionKind.RECOGNITION:
+        await recognise(ctx, row, effect)
         return True
     if row.kind is ResolutionKind.AID:
         needy = next((member for member in members if member.id == row.target_node_id), None)

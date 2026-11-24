@@ -15,7 +15,7 @@ import {
   StickyNote,
   Sun,
 } from 'lucide-react'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { type SearchHit } from './api'
 
 type Category = SearchHit['category']
@@ -52,22 +52,22 @@ export const HIT_LABEL: Record<Category, string> = {
 
 export function useHitRouter() {
   const navigate = useNavigate()
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   return useCallback(
     (hit: SearchHit) => {
       const id = String(hit.id)
       switch (hit.category) {
         case 'son':
-          return drawers.open({ kind: 'son', id })
+          return entryStack.open({ kind: 'son', id })
         case 'entity':
         case 'note':
-          return drawers.open({ kind: 'entity', id })
+          return entryStack.open({ kind: 'entity', id })
         case 'foreign_god':
-          return drawers.open({ kind: 'foreign-god', id })
+          return entryStack.open({ kind: 'foreign-god', id })
         case 'world':
-          return drawers.open({ kind: 'world', id })
+          return entryStack.open({ kind: 'world', id })
         case 'star':
-          return drawers.open({ kind: 'star', id })
+          return entryStack.open({ kind: 'star', id })
         case 'word':
           return navigate({ to: '/languages' })
         case 'epoch':
@@ -81,6 +81,6 @@ export function useHitRouter() {
           return navigate({ to: '/council' })
       }
     },
-    [drawers, navigate]
+    [entryStack, navigate]
   )
 }

@@ -242,6 +242,7 @@ async def convoy_views(session: AsyncSession, node_id: int) -> list[ConvoyView]:
             season=row.season,
             status=row.status,
             region=at(refs, row.region_entity_id),
+            stratum=row.stratum,
             capacity=row.capacity,
             departed_epoch=row.departed_epoch,
             arrived_epoch=row.arrived_epoch,

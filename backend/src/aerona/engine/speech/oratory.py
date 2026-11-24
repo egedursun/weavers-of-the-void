@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life_traits import SPEECH_VENUE_TRAITS, having
-from aerona.catalog.speech_shapes import HUMOUR_BITE_PCT
+from aerona.catalog.speech_shapes import HUMOUR_BITE_PCT, MOCKING_FORMS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.media import MediaOutletRow
@@ -33,7 +33,8 @@ from aerona.engine.sacred.places import ruler_of
 
 TEN = 10
 CROWD_VENUES = having(SPEECH_VENUE_TRAITS, SpeechVenueTrait.CROWD_VENUES)
-RAISING = frozenset({SpeechAim.RALLY, SpeechAim.DEFEND, SpeechAim.PERSUADE, SpeechAim.TEACH, SpeechAim.MOURN})
+RAISING = frozenset({SpeechAim.RALLY, SpeechAim.DEFEND, SpeechAim.PERSUADE, SpeechAim.TEACH, SpeechAim.MOURN, SpeechAim.PRAISE})
+STIRRING = frozenset({SpeechAim.RALLY, SpeechAim.ACCUSE, SpeechAim.WARN})
 GOD_KINDS = frozenset({EntityType.CULT})
 
 
@@ -152,9 +153,17 @@ async def hear(ctx: TickContext, speech: SpeechRow, tally: SpeechTally) -> None:
                 ctx, "speech.moved_vote", roles={IncidentRole.ACTOR: speaker.id, IncidentRole.PLACE: place.id}, facts={"aim": speech.aim, "effect": effect}
             )
             tally.votes += 1
+    elif speech.venue is SpeechVenue.MARKET and not held(place.id):
+        effect = power if speech.aim in RAISING else -power
+        with explaining():
+            term("speech.market_pct", effect * ctx.rules.speech.market_pct / PERCENT / TEN, source_node_id=speaker.id)
+            shift_stat(place, "prosperity", effect * ctx.rules.speech.market_pct / PERCENT / TEN, low=0, high=PERCENT)
+    elif speech.venue is SpeechVenue.FUNERAL and not held(place.id):
+        effect = power
+        await lose_honour(ctx, speaker.id, -round_half_up(power * ctx.rules.speech.funeral_honour_pct / PERCENT), "speech.funeral_honour_pct")
     elif speech.venue in CROWD_VENUES:
-        effect = power if speech.aim in {SpeechAim.RALLY, SpeechAim.ACCUSE} else -power
-        if await stir_town(ctx, place.id, effect if speech.aim is SpeechAim.ACCUSE else -effect, speaker.id):
+        effect = power if speech.aim in STIRRING else -power
+        if await stir_town(ctx, place.id, effect if speech.aim in {SpeechAim.ACCUSE, SpeechAim.WARN} else -effect, speaker.id):
             await record(
                 ctx, "speech.moved_crowd", roles={IncidentRole.ACTOR: speaker.id, IncidentRole.PLACE: place.id}, facts={"aim": speech.aim, "effect": effect}
             )
@@ -178,7 +187,11 @@ async def satire_of_rulers(ctx: TickContext, tally: SpeechTally) -> None:
     for seat_id in list(seats):
         place = await ctx.session.get(EntityRow, seat_id)
         style = await style_for(ctx.session, place) if place is not None else None
-        if style is None or style.form is not HumourForm.SATIRE or not style.mock_rulers:
+        if style is not None and style.form is HumourForm.RIDDLING and place is not None and not held(place.id):
+            with explaining():
+                term("speech.riddle_prosperity", ctx.rules.speech.riddle_prosperity, source_node_id=seat_id)
+                shift_stat(place, "prosperity", ctx.rules.speech.riddle_prosperity, low=0, high=PERCENT)
+        if style is None or style.form not in MOCKING_FORMS or not style.mock_rulers:
             continue
         if await shift_realm(ctx, seat_id, -loss, seat_id):
             tally.satire += 1

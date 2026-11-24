@@ -25,6 +25,9 @@ ORDER_LITERALNESS: Mapping[OrderKind, Callable[[Rules], int]] = total(
         K.FORBID: lambda rules: rules.instructions.forbid_literalness,
         K.CARRY: lambda rules: rules.instructions.carry_literalness,
         K.TEND: lambda rules: rules.instructions.tend_literalness,
+        K.TEACH: lambda rules: rules.instructions.teach_literalness,
+        K.HEAL: lambda rules: rules.instructions.heal_literalness,
+        K.HUNT: lambda rules: rules.instructions.hunt_literalness,
     },
 )
 
@@ -46,6 +49,8 @@ ORDER_CONDITIONS = total(
         OrderCondition.WHEN_TOKEN_SHOWN: ConditionSpec("When its token is shown"),
         OrderCondition.UNTIL_DONE: ConditionSpec("Until its task is done", ends_when_done=True),
         OrderCondition.AT_SET_TIMES: ConditionSpec("At set times", timed=True),
+        OrderCondition.WHILE_HOLDER_LIVES: ConditionSpec("While its holder lives"),
+        OrderCondition.WHEN_NAMED: ConditionSpec("When its name is spoken"),
     },
 )
 DONE_CONDITIONS = frozenset(kind for kind, spec in ORDER_CONDITIONS.items() if spec.ends_when_done)

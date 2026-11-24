@@ -67,6 +67,7 @@ const POLLUTION = [
   'radiation',
   'noise',
   'light',
+  'heat',
 ] as const
 
 type Props = { view: Works; blocked: string | null; hold: boolean }

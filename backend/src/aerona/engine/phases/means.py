@@ -14,6 +14,7 @@ from aerona.engine.phases.dominion import count
     "table.bonds",
     "table.book_contents",
     "table.community_stocks",
+    "table.deep_passages",
     "table.entities",
     "table.holder_levels",
     "table.holder_techniques",

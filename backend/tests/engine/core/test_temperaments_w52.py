@@ -34,7 +34,7 @@ async def beast_of(
 
 
 def test_nine_temperaments_and_the_new_three_avenge_gather_and_guard() -> None:
-    assert len(TEMPERAMENTS) == len(Temperament) == 9
+    assert len(TEMPERAMENTS) == len(Temperament) == 11
     assert Temperament.VENGEFUL in AVENGING and Temperament.VENGEFUL in REMEMBERING
     assert Temperament.ACQUISITIVE in GATHERING and Temperament.PROTECTIVE in GUARDING
     assert Temperament.PLACID not in AVENGING | GATHERING | GUARDING

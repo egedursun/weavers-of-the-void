@@ -8,7 +8,9 @@ import {
   KeyRound,
   Mail,
   MessageCircle,
+  Moon,
   Network,
+  Sparkles,
   Telescope,
   UserSearch,
   VenetianMask,
@@ -39,4 +41,6 @@ export const BELIEF_SOURCES: Record<
     icon: Antenna,
     tone: 'verdigris',
   },
+  dream: { label: 'Seen in a dream', icon: Moon, tone: 'success' },
+  omen: { label: 'Read in an omen', icon: Sparkles, tone: 'success' },
 }

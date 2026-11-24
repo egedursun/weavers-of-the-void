@@ -72,6 +72,10 @@ class ConsumptionRules:
     impiety_pressure_pct: int = rule(60, 0, 300, E, "Impiety pressure from missing incense and sacred goods (%)")
     insecurity_pressure_pct: int = rule(40, 0, 300, E, "Insecurity pressure from missing weapons and armour (%)")
     arcane_pressure_pct: int = rule(30, 0, 300, E, "Stagnation pressure from missing magical reagents (%)")
+    paper_per_1000: int = rule(4, 0, 100000, E, "Units of paper a thousand people use in an epoch")
+    glassware_per_1000: int = rule(3, 0, 100000, E, "Units of glassware a thousand people use in an epoch")
+    soap_per_1000: int = rule(5, 0, 100000, E, "Units of soap a thousand people use in an epoch")
+    ink_per_1000: int = rule(2, 0, 100000, E, "Units of ink a thousand people use in an epoch")
 
 
 @dataclass(frozen=True)

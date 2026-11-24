@@ -18,6 +18,7 @@ class WarEnding(StrEnum):
     SAME_FRONT = "same_front"
     NO_SIDE_LEFT = "no_side_left"
     MIRACLE = "miracle"
+    MEDIATED = "mediated"
 
 
 class WarSide(StrEnum):
@@ -36,6 +37,8 @@ class CasusBelliKind(StrEnum):
     DEBT_DEFAULT = "debt_default"
     RESOURCE_NEED = "resource_need"
     CONQUEST = "conquest"
+    BROKEN_WITNESSED_PACT = "broken_witnessed_pact"
+    HARBOURING_FUGITIVES = "harbouring_fugitives"
 
 
 class WarCause(StrEnum):
@@ -67,6 +70,8 @@ class WarCause(StrEnum):
     RAID = "raid"
     LIBERATION = "liberation"
     PUNITIVE = "punitive"
+    WATER = "water"
+    REFUGEES = "refugees"
 
 
 class SiegeStatus(StrEnum):
@@ -75,6 +80,7 @@ class SiegeStatus(StrEnum):
     REPULSED = "repulsed"
     LIFTED = "lifted"
     SURRENDERED = "surrendered"
+    BETRAYED = "betrayed"
 
 
 class BattleOutcome(StrEnum):
@@ -97,6 +103,7 @@ class CaptiveStatus(StrEnum):
     WARD = "ward"
     PAROLED = "paroled"
     MARRIED_IN = "married_in"
+    ADOPTED = "adopted"
 
 
 class TributeStatus(StrEnum):

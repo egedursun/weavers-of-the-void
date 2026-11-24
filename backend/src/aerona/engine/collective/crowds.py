@@ -21,7 +21,7 @@ from aerona.db.tables.polity import PolityMemberRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.collective import CascadeOutcome, CollectiveActKind, CollectiveTrigger, CrowdFeeling, MobEnd, MobStatus, MobTarget
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import GoodsFlow
@@ -482,6 +482,8 @@ async def spark(
     spec = ACTS[act]
     if spec.rejoices:
         act = await rejoice(ctx, town, row, rng)
+    if act is A.PETITION:
+        await hear_petition(ctx, town, row, rng)
     if spec.refuses_trade:
         await boycott(ctx, town, row)
     if spec.leaves:
@@ -545,6 +547,18 @@ async def rejoice(ctx: TickContext, town: EntityRow, row: CascadeRow, rng: Seede
         await record(ctx, "crowd.revel_turned", roles={IncidentRole.PLACE: town.id}, facts={"participants": row.participants}, place=town.id)
         return A.RIOT
     return A.JUBILATION
+
+
+async def hear_petition(ctx: TickContext, town: EntityRow, row: CascadeRow, rng: SeededRandom) -> bool:
+    table = ctx.rules.collective
+    answered = rng.chance(table.petition_heard_pct)
+    profile = await ctx.session.get(SettlementProfileRow, town.id)
+    if answered and profile is not None and not held(town.id) and "unrest" not in profile.locked:
+        profile.unrest = clamp_int(profile.unrest - table.petition_relief, 0, PERCENT)
+    await record(
+        ctx, "petition.answered", roles={IncidentRole.PLACE: town.id}, facts={"answered": int(answered), "participants": row.participants}, place=town.id
+    )
+    return answered
 
 
 async def boycotted(ctx: TickContext, town: EntityRow) -> EntityRow | None:
@@ -701,6 +715,25 @@ async def concede(ctx: TickContext, mob: MobRow, town: EntityRow, tally: CrowdTa
     return False
 
 
+async def crush_someone(ctx: TickContext, mob: MobRow, town: EntityRow) -> None:
+    folk = [
+        mortal
+        for mortal in await ctx.session.scalars(
+            select(EntityRow)
+            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [town.id]))
+            .order_by(EntityRow.id)
+        )
+        if not held(mortal.id)
+    ]
+    if folk:
+        victim = ctx.rng(f"crush.{mob.id}.{ctx.epoch}").pick(folk)
+        await apply_hits(
+            ctx,
+            victim,
+            Harm(damage=ctx.rules.collective_behaviour.crush_hp, cause=HarmCause.CROWD, death_cause="crushed in a crowd", damage_type=DamageType.BLUNT),
+        )
+
+
 async def rage_mobs(ctx: TickContext, tally: CrowdTally) -> None:
     table = ctx.rules.collective_behaviour
     for mob in list(await ctx.session.scalars(select(MobRow).where(MobRow.status != MobStatus.DISPERSED).order_by(MobRow.id))):
@@ -719,6 +752,7 @@ async def rage_mobs(ctx: TickContext, tally: CrowdTally) -> None:
             dead = round_half_up(mob.size * table.trample_per_mille / 1000 * 3)
             set_stats(town, population=max(0, population_of(town) - dead))
             tally.dead += dead
+            await crush_someone(ctx, mob, town)
             await end_mob(ctx, mob, town, MobEnd.FORCE, tally, dead=dead)
             continue
         realm = await realm_of_town(ctx, town.id)

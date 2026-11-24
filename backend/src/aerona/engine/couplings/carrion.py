@@ -10,12 +10,14 @@ from aerona.db.tables.couplings import CarrionPulseRow
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.evolution import EcosystemServiceRow
 from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.couplings import CarrionRest
 from aerona.domain.enums.ecology import Diet
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind, TerrainTrait
+from aerona.domain.enums.evolution import KeystoneRole
 from aerona.domain.enums.fossil import FossilSource
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import SpiritStats
@@ -24,7 +26,7 @@ from aerona.engine.environment.book import add_scar
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_percent
+from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.engine.primitives.queries import canon, top_region
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -97,15 +99,34 @@ async def settle_rest(ctx: TickContext, row: CarrionPulseRow, region: EntityRow,
         await record(ctx, "carrion.laid", roles={IncidentRole.PLACE: region.id}, facts={"rest": row.rest, "dead": row.carrion}, place=region.id)
 
 
+async def scavenged_by(ctx: TickContext, region_id: int) -> bool:
+    statement = select(EcosystemServiceRow.strength).where(
+        EcosystemServiceRow.region_entity_id == region_id, EcosystemServiceRow.role == KeystoneRole.SCAVENGER, EcosystemServiceRow.strength > 0
+    )
+    return await ctx.session.scalar(statement.limit(1)) is not None
+
+
+async def taken_rest(ctx: TickContext, region: EntityRow, ground: RegionEnvironmentRow | None) -> CarrionRest | None:
+    if ground is None:
+        return None
+    if ground.burned_epoch is not None and ground.burned_epoch >= ctx.epoch:
+        return CarrionRest.BURNED
+    if TerrainTrait.WATERY in TERRAIN[ground.dominant_terrain].traits:
+        return CarrionRest.SUNK
+    if await scavenged_by(ctx, region.id) and "disease_load" not in ground.locked:
+        ground.disease_load = clamp_int(round_half_up(ground.disease_load * (PERCENT - ctx.rules.carrion.scavenged_disease_cut_pct) / PERCENT), 0, PERCENT)
+        return CarrionRest.SCAVENGED
+    return None
+
+
 async def rest_of(ctx: TickContext, region: EntityRow, ground: RegionEnvironmentRow | None) -> CarrionRest:
     table = ctx.rules.carrion
     world = await ctx.session.get(WorldRow, region.world_id) if region.world_id is not None else None
     if world is not None and world.world_type in WORLD_RESTS:
         return WORLD_RESTS[world.world_type]
-    if ground is not None and ground.burned_epoch is not None and ground.burned_epoch >= ctx.epoch:
-        return CarrionRest.BURNED
-    if ground is not None and TerrainTrait.WATERY in TERRAIN[ground.dominant_terrain].traits:
-        return CarrionRest.SUNK
+    taken = await taken_rest(ctx, region, ground)
+    if taken is not None:
+        return taken
     if ground is not None and abs(ground.latitude) >= table.frozen_latitude:
         return CarrionRest.FROZEN
     if ground is not None and ground.moisture <= table.dry_moisture:
@@ -232,6 +253,7 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
     "table.carrion_pulses",
     "table.creator",
     "table.dimensions",
+    "table.ecosystem_services",
     "table.entities",
     "table.foreign_gods",
     "table.fossil_beds",

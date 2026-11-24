@@ -35,7 +35,7 @@ import {
   Section,
   FieldTile,
 } from '@/components/domain'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { CelestialDepthSection } from '@/features/celestial/CelestialDepthSection'
 import { StarDisc } from '@/features/cosmos/Glyphs'
@@ -176,7 +176,12 @@ function Glance({ galaxy, ladder }: { galaxy: GalaxyRecord; ladder: Ladder }) {
     (row) => row.galaxy_id === galaxy.id && row.ended_epoch === null
   )
   return (
-    <Section title='At a glance' icon={Sparkles} tone='gold'>
+    <Section
+      id='section-galaxy-glance'
+      title='At a glance'
+      icon={Sparkles}
+      tone='gold'
+    >
       <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4'>
         <MiniStat icon={Star} tone='gold' label='Stars' value={stars.length} />
         <MiniStat
@@ -661,6 +666,7 @@ function StarsSection({
   const worlds = ladder.placementsIn(galaxy.id)
   return (
     <Section
+      id='section-galaxy-stars'
       title='Stars and worlds'
       description={`${plural(stars.length, 'star')} burn here and ${plural(worlds.length, 'world')} ${agree(worlds.length, 'lies', 'lie')} in their light or drift between them.`}
       icon={Star}
@@ -932,7 +938,12 @@ export function GalaxyView({ galaxyId }: { galaxyId: number }) {
       <ShapeSection galaxy={galaxy} ladder={ladder} catalog={catalog} />
       <EventsPanel ladder={ladder} catalog={catalog} galaxyId={galaxy.id} />
       <SkyWorship nodeId={galaxy.id} />
-      <Section title='Beings that roam it' icon={Orbit} tone='warning'>
+      <Section
+        id='section-galaxy-beings'
+        title='Beings that roam it'
+        icon={Orbit}
+        tone='warning'
+      >
         {beings.length === 0 ? (
           <EmptyState
             icon={Orbit}
@@ -986,7 +997,7 @@ export function GalaxyView({ galaxyId }: { galaxyId: number }) {
   )
 }
 
-export function GalaxyPage({ id }: DrawerPageProps) {
+export function GalaxyPage({ id }: EntryPageProps) {
   const value = pageId(id)
   return value === null ? (
     <Missing icon={Orbit} title='No such galaxy' />

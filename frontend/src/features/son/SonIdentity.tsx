@@ -19,7 +19,7 @@ export function SonIdentity({ son }: { son: SonRecord }) {
   const personality = son.personality
   return (
     <>
-      <Section title='Existence' level={3}>
+      <Section id='section-son-existence' title='Existence' level={3}>
         {existence ? (
           <>
             <KeyValueList
@@ -46,7 +46,7 @@ export function SonIdentity({ son }: { son: SonRecord }) {
           <Muted>Their existence is not written yet.</Muted>
         )}
       </Section>
-      <Section title='Who they are' level={3}>
+      <Section id='section-son-identity' title='Who they are' level={3}>
         <KeyValueList
           items={[
             { label: 'Appearance', value: personality.appearance || '—' },

@@ -39,6 +39,7 @@ from aerona.engine.ecology.beasts import fall, hand_over, owned_items, profile_b
 from aerona.engine.ecology.domestication import offspring
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
 from aerona.engine.ecology.totems import drop_totem, found_totem
+from aerona.engine.ecology.uses import give_use
 from aerona.engine.polity.control import lock
 from aerona.engine.primitives.edits import bounds, coerce
 from aerona.engine.primitives.queries import close, connect, directed_bond, living_entity
@@ -181,8 +182,7 @@ async def set_use(ctx: TickContext, species_id: int, use: AnimalRole, *, held: b
             await ctx.session.flush()
         return None
     if row is None:
-        row = SpeciesUseRow(species_entity_id=species_id, use=use)
-        ctx.session.add(row)
+        row = await give_use(ctx.session, species_id, use)
         await ctx.session.flush()
     return row
 

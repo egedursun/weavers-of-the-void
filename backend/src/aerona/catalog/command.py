@@ -26,6 +26,7 @@ AREAS: MappingProxyType[CommandArea, AreaSpec] = total(
         A.MANOEUVRE: AreaSpec("Manoeuvre", S.STRATEGY, (S.TACTICS,), "fewer are cut down in a rout and ships and fliers strike harder"),
         A.SIEGE: AreaSpec("Siege", S.SIEGECRAFT, (S.ENGINEERING,), "engineers strike harder and walls fall sooner"),
         A.LOGISTICS: AreaSpec("Logistics", S.LOGISTICS, (S.STRATEGY,), "the army eats less of its stores"),
+        A.INTELLIGENCE: AreaSpec("Intelligence", S.INTRIGUE, (S.LANGUAGES,), "scouts and spies read the field before battle"),
     },
 )
 
@@ -58,6 +59,9 @@ TRAIT_AREAS: MappingProxyType[CommanderTrait, dict[CommandArea, int]] = total(
         CommanderTrait.DISCIPLINARIAN: {A.FIRE: 5, A.SHOCK: 5, A.LOGISTICS: 5},
         CommanderTrait.SIGNALS_COMMANDER: {A.MANOEUVRE: 10, A.FIRE: 10},
         CommanderTrait.NIGHT_FIGHTER: {A.SHOCK: 10, A.MANOEUVRE: 10},
+        CommanderTrait.JUNGLE_FIGHTER: {A.MANOEUVRE: 10, A.SHOCK: 5},
+        CommanderTrait.COLD_FIGHTER: {A.LOGISTICS: 10, A.SHOCK: 5},
+        CommanderTrait.RIVER_CROSSER: {A.MANOEUVRE: 15},
     },
 )
 

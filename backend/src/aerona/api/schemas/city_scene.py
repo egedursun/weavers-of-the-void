@@ -3,6 +3,7 @@ from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.city_rules import ConurbationGovernance
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import CoastKind, RiverClass, TemperatureBand, TerrainKind
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
 from aerona.domain.enums.society import SocialClass
@@ -74,6 +75,14 @@ class CityConurbation(ApiModel):
     governance: ConurbationGovernance
 
 
+class CityBelowView(ApiModel):
+    stratum: UndergroundStratum
+    region: NodeRef | None
+    cell_name: str | None
+    light: int
+    extent: int
+
+
 class CitySceneView(ApiModel):
     town: NodeRef
     morphology: Morphology
@@ -92,6 +101,7 @@ class CitySceneView(ApiModel):
     buildings: list[CityBuildingView]
     zones: list[ZoneShare]
     conurbation: CityConurbation | None
+    below: CityBelowView | None
 
 
 class LandTileView(ApiModel):

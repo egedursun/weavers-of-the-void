@@ -107,6 +107,8 @@ class DivineWoundKind(StrEnum):
     BOUND = "bound"
     SPLIT_ASPECT = "split_aspect"
     FORGOTTEN_NAME = "forgotten_name"
+    DESECRATED_SEAT = "desecrated_seat"
+    SPLIT_WORSHIP = "split_worship"
 
 
 class WoundCause(StrEnum):
@@ -118,6 +120,8 @@ class WoundCause(StrEnum):
     NEGLECT = "neglect"
     BETRAYAL = "betrayal"
     MORTAL_SLAYER = "mortal_slayer"
+    SCHISM = "schism"
+    OUTER_BEING = "outer_being"
 
 
 class CouncilMotion(StrEnum):
@@ -146,6 +150,9 @@ class CouncilMotion(StrEnum):
     REGULATE_MADE_MINDS = "regulate_made_minds"
     REGULATE_POWERS = "regulate_powers"
     REGULATE_LIVING_CRAFT = "regulate_living_craft"
+    REGULATE_CURSES = "regulate_curses"
+    OPEN_INQUIRY = "open_inquiry"
+    AMNESTY = "amnesty"
 
 
 class VotingRule(StrEnum):
@@ -177,6 +184,8 @@ class SonPunishment(StrEnum):
     STRIP_DIVINITY = "strip_divinity"
     PENANCE = "penance"
     ESSENCE_FINE = "essence_fine"
+    BOUND_TO_WORLD = "bound_to_world"
+    REBUKE = "rebuke"
 
 
 class PenanceDeed(StrEnum):
@@ -190,6 +199,7 @@ class LawScope(StrEnum):
     DIMENSION = "dimension"
     WORLD = "world"
     REGION = "region"
+    STRATUM = "stratum"
 
 
 class LawException(StrEnum):
@@ -199,6 +209,8 @@ class LawException(StrEnum):
     HEROES = "heroes"
     AVATARS = "avatars"
     NAMED_KIND = "named_kind"
+    OFFICE_HOLDERS = "office_holders"
+    BARGAINERS = "bargainers"
 
 
 class OuterHunger(StrEnum):
@@ -207,6 +219,8 @@ class OuterHunger(StrEnum):
     LIGHT = "light"
     NAMES = "names"
     MEMORIES = "memories"
+    DREAMS = "dreams"
+    TIME = "time"
 
 
 class BargainGain(StrEnum):
@@ -215,6 +229,8 @@ class BargainGain(StrEnum):
     MIGHT = "might"
     KNOWLEDGE = "knowledge"
     LONGEVITY = "longevity"
+    RESTORED_LIFE = "restored_life"
+    PROTECTION = "protection"
 
 
 class BargainPrice(StrEnum):
@@ -223,6 +239,8 @@ class BargainPrice(StrEnum):
     TRUE_NAME = "true_name"
     WORSHIPPERS = "worshippers"
     DESCENDANTS = "descendants"
+    MEMORIES = "memories"
+    YEARS = "years"
 
 
 class DivineVerb(StrEnum):

@@ -27,6 +27,7 @@ from aerona.engine.cosmos.encounters import JourneyCounts
 from aerona.engine.cosmos.ladder import NEW_CLUSTER_RADIUS, NEW_GALAXY_RADIUS
 from aerona.services.player import guards
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
+from aerona.services.player.shaping import Shaped, shape_after
 
 Edit = dict[str, int | float | str | bool | None]
 
@@ -170,7 +171,7 @@ class BeingTarget(Command):
     being_id: int
 
 
-class PhenomenonDraft(Command):
+class PhenomenonDraft(Shaped):
     kind: PhenomenonKind
     region_id: int
     intensity: int = 50
@@ -494,6 +495,7 @@ async def banish_being(scope: PlayerScope, command: BeingTarget) -> Effect:
 @player_action("phenomenon:create", ActionKind.CREATE_ENTITY)
 async def create_phenomenon(scope: PlayerScope, command: PhenomenonDraft) -> Effect:
     made = await control.new_phenomenon(await scope.context("phenomenon_create"), command.kind, command.region_id, command.intensity, PhenomenonCause.DIVINE)
+    await shape_after(scope, made.id, command)
     return Effect(f"{made.name} formed.", made.id, created_ids=(made.id,))
 
 

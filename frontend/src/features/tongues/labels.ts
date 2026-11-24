@@ -1,21 +1,23 @@
 import {
-  Plus,
-  Merge,
-  AudioWaveform,
+  type LucideIcon,
   ArrowLeftRight,
-  FlaskConical,
-  Binary,
   ArrowRightLeft,
   Asterisk,
+  AudioWaveform,
+  Binary,
   BookA,
   BookOpen,
   Brain,
+  CircleAlert,
+  Cpu,
   Crown,
   Droplet,
+  Drum,
   Ear,
   Eraser,
   EyeOff,
   Flame,
+  FlaskConical,
   Gavel,
   GitBranch,
   GitMerge,
@@ -24,17 +26,19 @@ import {
   Hash,
   Heart,
   Languages,
-  type LucideIcon,
   Megaphone,
+  Merge,
+  MessageCircle,
   Minus,
   Mountain,
   Palette,
   Pencil,
   Plane,
+  Plus,
   Recycle,
   Scale,
-  Shield,
   ScrollText,
+  Shield,
   Shrink,
   Sparkles,
   Sun,
@@ -46,6 +50,9 @@ import {
   Wind,
   Wrench,
   Zap,
+  HandHeart,
+  Tornado,
+  UsersRound,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -117,7 +124,7 @@ export const NUMBERS: Record<Schema['NumberSystem'], Named> = {
   none: { label: 'No number', icon: Minus, tone: 'muted' },
   singular_plural: { label: 'Singular and plural', icon: Users, tone: 'info' },
   dual: { label: 'With a dual', icon: Users, tone: 'verdigris' },
-  trial: { label: 'With a trial', icon: Users, tone: 'warning' },
+  trial: { label: 'With a trial', icon: UsersRound, tone: 'warning' },
   paucal: { label: 'With a paucal', icon: Users, tone: 'gold' },
 }
 
@@ -134,6 +141,11 @@ export const SHIFTS: Record<Schema['SenseShift'], Named> = {
     tone: 'gold',
   },
   associated: { label: 'Carried over by nearness', icon: Merge, tone: 'info' },
+  reversed: {
+    label: 'Turned to its opposite',
+    icon: ArrowLeftRight,
+    tone: 'info',
+  },
 }
 
 export const REGISTERS: Record<Schema['WordRegister'], Named> = {
@@ -144,6 +156,8 @@ export const REGISTERS: Record<Schema['WordRegister'], Named> = {
   taboo: { label: 'Not to be said', icon: EyeOff, tone: 'danger' },
   technical: { label: 'Words of a craft', icon: Wrench, tone: 'info' },
   honorific: { label: 'Speech to superiors', icon: Crown, tone: 'gold' },
+  legal: { label: 'Words of the law', icon: Gavel, tone: 'info' },
+  slang: { label: 'Slang', icon: MessageCircle, tone: 'muted' },
 }
 
 export const SCRIPT_CAUSES: Record<Schema['ScriptChangeCause'], Named> = {
@@ -153,6 +167,7 @@ export const SCRIPT_CAUSES: Record<Schema['ScriptChangeCause'], Named> = {
   borrowing: { label: 'Borrowed', icon: Handshake, tone: 'warning' },
   imposition: { label: 'Imposed by law', icon: Gavel, tone: 'danger' },
   revelation: { label: 'Revealed', icon: Sparkles, tone: 'gold' },
+  technology: { label: 'A new way of writing', icon: Cpu, tone: 'info' },
 }
 
 export const SYSTEMS: Record<Schema['WritingSystem'], Named> = {
@@ -178,9 +193,11 @@ export const MODALITIES: Record<Schema['LanguageModality'], Named> = {
     icon: FlaskConical,
     tone: 'verdigris',
   },
-  tactile: { label: 'Touch', icon: Hand, tone: 'gold' },
+  tactile: { label: 'Touch', icon: HandHeart, tone: 'gold' },
   vibration: { label: 'Vibration', icon: AudioWaveform, tone: 'warning' },
   electric: { label: 'Electric fields', icon: Zap, tone: 'info' },
+  drummed: { label: 'Drummed', icon: Drum, tone: 'gold' },
+  whistled: { label: 'Whistled', icon: Tornado, tone: 'info' },
 }
 
 export const STAGES: Record<Schema['LanguageStage'], Named> = {
@@ -190,6 +207,7 @@ export const STAGES: Record<Schema['LanguageStage'], Named> = {
   divine: { label: 'A divine tongue', icon: Sun, tone: 'gold' },
   constructed: { label: 'A made tongue', icon: Wrench, tone: 'info' },
   revived: { label: 'A revived tongue', icon: Recycle, tone: 'success' },
+  endangered: { label: 'Near its end', icon: CircleAlert, tone: 'danger' },
 }
 
 export const POLICIES: Record<Schema['LanguagePolicy'], Named> = {
@@ -199,6 +217,7 @@ export const POLICIES: Record<Schema['LanguagePolicy'], Named> = {
   revival: { label: 'Revived', icon: Wand2, tone: 'success' },
   protected: { label: 'Protected', icon: Shield, tone: 'verdigris' },
   standardised: { label: 'Set by an academy', icon: BookA, tone: 'info' },
+  bilingual: { label: 'Two tongues', icon: Languages, tone: 'info' },
 }
 
 export const BASES: Record<Schema['NumeralBase'], Named> = {
@@ -208,4 +227,6 @@ export const BASES: Record<Schema['NumeralBase'], Named> = {
   sexagesimal: { label: 'Counts in sixties', icon: Hash, tone: 'gold' },
   octal: { label: 'Counts in eights', icon: Hash, tone: 'warning' },
   body_tally: { label: 'Counts along the body', icon: Hand, tone: 'warning' },
+  binary: { label: 'Counts in twos', icon: Binary, tone: 'muted' },
+  quinary: { label: 'Counts in fives', icon: HandHeart, tone: 'muted' },
 }

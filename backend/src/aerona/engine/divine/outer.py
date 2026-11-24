@@ -8,17 +8,19 @@ from aerona.catalog.life.divine import HUNGER_LABELS
 from aerona.catalog.outer_bargains import BARGAIN_GAINS
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
-from aerona.core.grammar import spoken
+from aerona.core.grammar import several, spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.culture import HolderLevelRow, LegendProfileRow
-from aerona.db.tables.divine import BreachPointRow, OuterBeingProfileRow
+from aerona.db.tables.divine import AvatarRow, BreachPointRow, OuterBeingProfileRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.faith import CultTenetRow, SpiritProfileRow
 from aerona.db.tables.foreign_gods import OuterBargainRow
 from aerona.db.tables.lore import LexemeRow
+from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import Transmission
@@ -29,7 +31,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faith import AfterlifeState, TenetKind
 from aerona.domain.enums.limits import POWER_SLOTS
-from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.domain.enums.outer import OuterFate
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import PowerEffect
@@ -38,9 +40,11 @@ from aerona.domain.models.entity_stats import CultStats, revised
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
-from aerona.engine.divine.gods import faithful_communities
-from aerona.engine.divine.wounds import inflict
+from aerona.engine.divine.gods import faithful_communities, god_of
+from aerona.engine.divine.wounds import inflict, open_wounds
 from aerona.engine.lifecycle.states import ended_ids
+from aerona.engine.mythic.servitors import bargained_servant
+from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, open_record, retire_in
@@ -74,6 +78,17 @@ async def outer_profile(ctx: TickContext, being: EntityRow) -> OuterBeingProfile
     return row
 
 
+async def wound_patron(ctx: TickContext, being: EntityRow) -> None:
+    world = await ctx.session.get(WorldRow, being.world_id) if being.world_id is not None else None
+    patron = await god_of(ctx.session, world.patron_son_id or world.creator_son_id) if world is not None else None
+    if patron is None or held(patron.id) or await open_wounds(ctx.session, patron.id, DivineWoundKind.LOST_WORSHIPPERS):
+        return
+    if ctx.rng(f"outer.wound.{being.id}.{patron.id}.{ctx.epoch}").chance(ctx.rules.outer_beings.patron_wound_pct):
+        await inflict(
+            ctx, patron, DivineWoundKind.LOST_WORSHIPPERS, WoundCause.OUTER_BEING, severity=ctx.rules.outer_beings.price_severity, cause_node_id=being.id
+        )
+
+
 EATERS: Handlers[OuterHunger, Callable[[TickContext, EntityRow, int], Awaitable[int]]] = Handlers(OuterHunger)
 
 
@@ -92,6 +107,39 @@ async def eat_souls(ctx: TickContext, being: EntityRow, bite: int) -> int:
             await retire_in(ctx, soul, f"consumed by {being.name}", status=EntityStatus.DESTROYED)
             eaten += 1
     return eaten
+
+
+@EATERS.on(OuterHunger.DREAMS)
+async def eat_dreams(ctx: TickContext, being: EntityRow, bite: int) -> int:
+    sleepers = await ctx.session.scalars(
+        select(MortalProfileRow)
+        .join(EntityRow, EntityRow.id == MortalProfileRow.entity_id)
+        .where(EntityRow.world_id == being.world_id, EntityRow.status == EntityStatus.CANON)
+        .order_by(MortalProfileRow.entity_id)
+        .limit(bite * PERCENT)
+    )
+    emptied = 0
+    for profile in sleepers:
+        if not held(profile.entity_id) and "stress" not in profile.locked:
+            profile.stress = clamp_int(profile.stress + ctx.rules.outer_bargains.dreams_sleep_cut, 0, PERCENT)
+            emptied += 1
+    return emptied
+
+
+@EATERS.on(OuterHunger.TIME)
+async def eat_time(ctx: TickContext, being: EntityRow, bite: int) -> int:
+    touched = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.world_id == being.world_id, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+        .limit(bite * PERCENT)
+    )
+    aged = 0
+    for mortal in touched:
+        if not held(mortal.id):
+            put_stat(ctx.rules, mortal, "age", stat_or(mortal, "age", 0) + ctx.rules.outer_bargains.time_age_years)
+            aged += 1
+    return aged
 
 
 @EATERS.on(OuterHunger.KNOWLEDGE)
@@ -138,6 +186,9 @@ async def eat_memories(ctx: TickContext, being: EntityRow, bite: int) -> int:
             row.credence = clamp_int(row.credence - ctx.rules.outer_beings.memory_bite, 0, PERCENT)
             eaten += 1
     return eaten
+
+
+EATERS.seal()
 
 
 async def open_breaches(ctx: TickContext, being: EntityRow, row: OuterBeingProfileRow) -> int:
@@ -197,6 +248,8 @@ async def outer_feeding(ctx: TickContext) -> int:
                 kind=ChronicleKind.OUTER_BEING,
                 world_id=being.world_id,
             )
+        if eaten:
+            await wound_patron(ctx, being)
         await open_breaches(ctx, being, row)
         row.updated_epoch = ctx.epoch
     await breach_leaks(ctx)
@@ -339,6 +392,38 @@ async def give_line(ctx: TickContext, deal: Bargain) -> str:
     return f"bound their line, {marked} of it marked so far"
 
 
+async def give_memories(ctx: TickContext, deal: Bargain) -> str:
+    faded = 0
+    for child in await line_of(ctx, deal.son.id):
+        if held(child.id):
+            continue
+        for memory in await ctx.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == child.id).order_by(MemoryRow.id)):
+            memory.magnitude = memory.magnitude // 2
+            faded += 1
+    await record(
+        ctx,
+        "outer.price_paid",
+        roles={IncidentRole.ACTOR: deal.son.id, IncidentRole.TARGET: deal.being.id},
+        facts={"price": BargainPrice.MEMORIES, "souls": faded},
+    )
+    return f"gave up memories, {faded} of them faded"
+
+
+async def give_years(ctx: TickContext, deal: Bargain) -> str:
+    years = ctx.rules.outer_bargains.years_taken
+    aged = 0
+    avatars = select(AvatarRow.avatar_entity_id).where(AvatarRow.god_node_id == deal.son.id)
+    for body in [*await line_of(ctx, deal.son.id), *await ctx.session.scalars(select(EntityRow).where(EntityRow.id.in_(avatars)).order_by(EntityRow.id))]:
+        if held(body.id) or body.status is not EntityStatus.CANON:
+            continue
+        put_stat(ctx.rules, body, "age", stat_or(body, "age", 0) + years)
+        aged += 1
+    await record(
+        ctx, "outer.price_paid", roles={IncidentRole.ACTOR: deal.son.id, IncidentRole.TARGET: deal.being.id}, facts={"price": BargainPrice.YEARS, "souls": aged}
+    )
+    return f"gave up {several(years, 'year', 'years')} of life from {aged} of its line and bodies"
+
+
 Price = Callable[[TickContext, Bargain], Awaitable[str]]
 PRICES: Mapping[BargainPrice, Price] = total(
     BargainPrice,
@@ -348,6 +433,8 @@ PRICES: Mapping[BargainPrice, Price] = total(
         BargainPrice.TRUE_NAME: give_name,
         BargainPrice.WORSHIPPERS: give_worshippers,
         BargainPrice.DESCENDANTS: give_line,
+        BargainPrice.MEMORIES: give_memories,
+        BargainPrice.YEARS: give_years,
     },
 )
 
@@ -457,6 +544,52 @@ async def gain_span(ctx: TickContext, deal: Bargain, _essence: int) -> str:
     return f"gained {restored} existence and a longer span"
 
 
+async def gain_life(ctx: TickContext, deal: Bargain, _essence: int) -> str:
+    homes = [community.id for community in await faithful_communities(ctx.session, deal.son.id)]
+    dead = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.DEAD, EntityRow.affiliated_entity_id.in_(homes))
+        .order_by(EntityRow.end_epoch.desc(), EntityRow.id)
+        .limit(BARGAIN_GAINS[BargainGain.RESTORED_LIFE].size(ctx.rules))
+    )
+    returned = 0
+    for mortal in list(dead):
+        if held(mortal.id):
+            continue
+        put_stat(ctx.rules, mortal, "hp", max(stat_or(mortal, "hp", 0), PERCENT // 4))
+        mortal.status, mortal.end_epoch = EntityStatus.CANON, None
+        ctx.session.add(EntityFlagRow(entity_id=mortal.id, flag=EntityFlag.RETURNED_FROM_DEATH, epoch=ctx.epoch))
+        await record(ctx, "outer.dead_returned", roles={IncidentRole.ACTOR: deal.being.id, IncidentRole.SUBJECT: mortal.id, IncidentRole.PATRON: deal.son.id})
+        returned += 1
+    return f"brought back {returned} of its faithful from death, changed by the being's terms"
+
+
+async def gain_protection(ctx: TickContext, deal: Bargain, _essence: int) -> str:
+    table = ctx.rules.outer_bargains
+    covered = 0
+    for community in await faithful_communities(ctx.session, deal.son.id):
+        if held(community.id):
+            continue
+        await add_modifier(
+            ctx.session,
+            ModifierDraft(
+                target_node_id=community.id,
+                target_key="defense",
+                op=ModifierOp.ADD,
+                magnitude=table.protection_size // 4,
+                source_kind=ModifierSource.BLESSING,
+                reason_key="outer_protection",
+                start_epoch=ctx.epoch,
+                source_node_id=deal.being.id,
+                stacking_group=f"outer_protection.{deal.being.id}",
+                end_epoch=ctx.epoch + table.epochs(table.protection_years),
+            ),
+        )
+        covered += 1
+    guard = await bargained_servant(ctx, deal.son.id)
+    return f"put {covered} of its faithful places under the being's protection" + (" and was given a spirit to guard them" if guard is not None else "")
+
+
 Gain = Callable[[TickContext, Bargain, int], Awaitable[str]]
 GAINS: Mapping[BargainGain, Gain] = total(
     BargainGain,
@@ -466,6 +599,8 @@ GAINS: Mapping[BargainGain, Gain] = total(
         BargainGain.MIGHT: gain_might,
         BargainGain.KNOWLEDGE: gain_knowledge,
         BargainGain.LONGEVITY: gain_span,
+        BargainGain.RESTORED_LIFE: gain_life,
+        BargainGain.PROTECTION: gain_protection,
     },
 )
 

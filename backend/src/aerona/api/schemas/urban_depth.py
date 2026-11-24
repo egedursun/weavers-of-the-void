@@ -1,6 +1,7 @@
 from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import NodeRef
 from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.domain.enums.urban import (
     ConvoyStatus,
@@ -128,6 +129,7 @@ class ConvoyView(ApiModel):
     season: int
     status: ConvoyStatus
     region: NodeRef | None
+    stratum: UndergroundStratum | None
     capacity: int
     departed_epoch: int
     arrived_epoch: int | None

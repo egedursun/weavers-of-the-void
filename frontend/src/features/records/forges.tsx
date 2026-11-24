@@ -11,6 +11,7 @@ import {
   Trash2,
   Undo2,
   X,
+  LockKeyhole,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -60,7 +61,7 @@ const HOLD_PARTS: Record<string, Named> = {
   steps: { label: 'Its steps', icon: Footprints },
   witnesses: { label: 'Its witnesses', icon: Eye },
   moment: { label: 'When it happened', icon: Lock },
-  place: { label: 'Where it happened', icon: Lock },
+  place: { label: 'Where it happened', icon: LockKeyhole },
 }
 const VALUE_KINDS: Record<string, Named> = {
   number: { label: 'A number', icon: Plus },

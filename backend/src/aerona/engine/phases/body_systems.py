@@ -6,12 +6,17 @@ from aerona.engine.phase import Phase
 
 @reads(
     "settlement.prosperity",
+    "table.augments",
     "table.biology_variants",
     "table.body_systems",
     "table.community_stocks",
     "table.entities",
+    "table.garment_kinds",
+    "table.kind_holdings",
     "table.nodes",
+    "table.powers",
     "table.region_environment",
+    "table.rite_grammar",
     "table.sensitivities",
     "table.species_profiles",
     "table.worlds",

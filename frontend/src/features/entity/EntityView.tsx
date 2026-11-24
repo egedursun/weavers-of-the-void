@@ -1,9 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { BookOpen, SearchX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { OrnateFrame } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
-import { EmptyState, PagedList, Section } from '@/components/domain'
+import { EmptyState, Section } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { Text } from '@/components/typography'
 import { targetsOfRefs } from '@/features/chronicle/linkTargets'
@@ -115,7 +115,6 @@ import { SkillsSection } from './sections/SkillsSection'
 import { SocietyEconomy } from './sections/SocietyEconomy'
 import { TagEditor } from './sections/TagEditor'
 import { ThingSections } from './sections/ThingSections'
-import { MADE_HIDDEN_SECTIONS } from './sections/thingScope'
 import {
   CultureDriftSection,
   LoyaltySection,
@@ -133,7 +132,6 @@ import {
   TreasurySection,
 } from './society/SettlementPlan'
 import { PeopleStructuresSection, StructureSection } from './society/Structures'
-import { useMountedSections } from './useMountedSections'
 import {
   BeastSection,
   FoodWebSection,
@@ -157,12 +155,6 @@ const MIND_TYPES = new Set([
 ])
 
 const CULTURED = new Set(['people', 'culture'])
-const CULTURE_SECTIONS = [
-  'section-dress',
-  'section-emblems',
-  'section-music',
-  'section-substances',
-]
 
 const WORKING = new Set(['people', 'settlement', 'polity', 'culture'])
 const RANKED = new Set([
@@ -177,128 +169,6 @@ const ORGANISED = new Set(['people', 'polity', 'culture', 'cult', 'faction'])
 
 const SITE_TYPES = new Set(['place', 'structure', 'settlement', 'vessel'])
 const SITE_FLAGS = new Set(['ruin', 'previous_creation'])
-
-const SECTION_LINKS = [
-  { id: 'section-facts', label: 'Facts' },
-  { id: 'section-stats', label: 'Stats' },
-  { id: 'section-society', label: 'Society' },
-  { id: 'section-demography', label: 'Population' },
-  { id: 'section-labour', label: 'Work' },
-  { id: 'section-people-profile', label: 'Folk' },
-  { id: 'section-festival-year', label: 'Festivals' },
-  { id: 'section-needs', label: 'Needs' },
-  { id: 'section-class-wealth', label: 'Wealth' },
-  { id: 'section-culture-drift', label: 'Drift' },
-  { id: 'section-dress', label: 'Dress' },
-  { id: 'section-emblems', label: 'Emblems' },
-  { id: 'section-music', label: 'Music' },
-  { id: 'section-substances', label: 'Substances' },
-  { id: 'section-work-kinds', label: 'Professions' },
-  { id: 'section-rank-kinds', label: 'Ranks' },
-  { id: 'section-organisation-kinds', label: 'Forms' },
-  { id: 'section-loyalty', label: 'Loyalty' },
-  { id: 'section-mobility', label: 'Rise and fall' },
-  { id: 'section-settlement-plan', label: 'City' },
-  { id: 'section-treasury', label: 'Treasury' },
-  { id: 'section-structure', label: 'Work' },
-  { id: 'section-people-structures', label: 'Works' },
-  { id: 'section-disease', label: 'Sickness' },
-  { id: 'section-realm', label: 'Realm' },
-  { id: 'section-house', label: 'House' },
-  { id: 'section-treaty', label: 'Terms' },
-  { id: 'section-oaths', label: 'Oaths' },
-  { id: 'section-dedication', label: 'Dedication' },
-  { id: 'section-economy', label: 'Stores' },
-  { id: 'section-market', label: 'Market' },
-  { id: 'section-resource-profile', label: 'Reserve' },
-  { id: 'section-trade-route', label: 'Route' },
-  { id: 'section-depth', label: 'Depth' },
-  { id: 'section-opportunities', label: 'Opportunities' },
-  { id: 'section-hand', label: 'Hand of God' },
-  { id: 'section-commands', label: 'Commands' },
-  { id: 'section-community-relations', label: 'Community relations' },
-  { id: 'section-wars', label: 'Wars' },
-  { id: 'section-bonds', label: 'Bonds' },
-  { id: 'section-path', label: 'Connections' },
-  { id: 'section-images', label: 'Images' },
-  { id: 'section-chronicle', label: 'Chronicle' },
-  { id: 'section-environment', label: 'Environment' },
-  { id: 'section-land-shape', label: 'Land' },
-  { id: 'section-crops', label: 'Crops' },
-  { id: 'section-pets', label: 'Companions' },
-  { id: 'section-event', label: 'Event' },
-  { id: 'section-phenomenon', label: 'Phenomenon' },
-  { id: 'section-cosmic-being', label: 'Cosmic being' },
-  { id: 'section-celestial-readings', label: 'Readings' },
-  { id: 'section-events-here', label: 'Events here' },
-  { id: 'section-site', label: 'Rooms and digs' },
-  { id: 'section-gatherings', label: 'Gatherings' },
-  { id: 'section-histories', label: 'Histories' },
-  { id: 'section-dominion', label: 'Dominion' },
-  { id: 'section-arcana', label: 'Magic' },
-  { id: 'section-mythic', label: 'Myth' },
-  { id: 'section-tongues', label: 'Tongues' },
-  { id: 'section-made-type', label: 'Its make' },
-  { id: 'section-body', label: 'Body' },
-  { id: 'section-afflictions', label: 'Afflictions' },
-  { id: 'section-body-customs', label: 'Wounds and bodies' },
-  { id: 'section-maimed', label: 'The maimed' },
-  { id: 'section-life', label: 'Life' },
-  { id: 'section-kin', label: 'Kin' },
-  { id: 'section-gear', label: 'Gear' },
-  { id: 'section-mind', label: 'Mind' },
-  { id: 'section-skills', label: 'Skills' },
-  { id: 'section-memories', label: 'Memories' },
-  { id: 'section-mind-split', label: 'Attributes and facets' },
-  { id: 'section-mind-seat', label: 'Mind seat' },
-  { id: 'section-augments', label: 'Augments' },
-  { id: 'section-networks', label: 'Networks' },
-  { id: 'section-made-world', label: 'Made world' },
-  { id: 'section-feelings', label: 'Feelings' },
-  { id: 'section-tastes', label: 'Tastes' },
-  { id: 'section-ethics', label: 'Ethics' },
-  { id: 'section-aspirations', label: 'Dreams' },
-  { id: 'section-ties', label: 'Relationships' },
-  { id: 'section-renown', label: 'Reputation' },
-  { id: 'section-biography', label: 'Biography' },
-  { id: 'section-mechanics', label: 'Mechanics' },
-  { id: 'section-records', label: 'Every record' },
-  { id: 'section-edit', label: 'Edit' },
-]
-
-function SectionNav({ present }: { present: Set<string> }) {
-  const anchor = useRef<HTMLDivElement>(null)
-  const mounted = useMountedSections(anchor)
-  const links = SECTION_LINKS.filter(
-    (link) => present.has(link.id) && (mounted === null || mounted.has(link.id))
-  )
-  return (
-    <div ref={anchor} className='min-w-0'>
-      {links.length >= 4 && (
-        <PagedList
-          items={links}
-          initial={12}
-          noun={['entry', 'entries']}
-          as='nav'
-          className='flex min-w-0 flex-wrap gap-1'
-          listProps={{ 'aria-label': 'Sections' }}
-          itemKey={(link) => link.id}
-        >
-          {(link) => (
-            <Button
-              key={link.id}
-              variant='ghost'
-              size='sm'
-              onClick={() => scrollToSection(link.id)}
-            >
-              {link.label}
-            </Button>
-          )}
-        </PagedList>
-      )}
-    </div>
-  )
-}
 
 function EntityBody({ detail }: { detail: EntityDetail }) {
   const state = useWorldState()
@@ -342,101 +212,24 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
     setHighlight(epoch)
     scrollToSection('section-chronicle')
   }, [])
-  const present = new Set(SECTION_LINKS.map((link) => link.id))
-  if (!detail.insight.society) present.delete('section-society')
   const trading =
     entity.entity_type === 'people' || entity.entity_type === 'settlement'
-  if (!trading) {
-    present.delete('section-demography')
-    present.delete('section-labour')
-    present.delete('section-economy')
-    present.delete('section-market')
-    present.delete('section-needs')
-    present.delete('section-class-wealth')
-    present.delete('section-loyalty')
-  }
-  if (entity.entity_type !== 'people') present.delete('section-culture-drift')
   const cultured = CULTURED.has(entity.entity_type)
-  if (!cultured) for (const id of CULTURE_SECTIONS) present.delete(id)
-  if (!WORKING.has(entity.entity_type)) present.delete('section-work-kinds')
-  if (!RANKED.has(entity.entity_type)) present.delete('section-rank-kinds')
-  if (!ORGANISED.has(entity.entity_type))
-    present.delete('section-organisation-kinds')
-  if (!trading && entity.entity_type !== 'mortal')
-    present.delete('section-mobility')
-  if (entity.entity_type !== 'people') {
-    present.delete('section-people-profile')
-    present.delete('section-festival-year')
-  }
-  if (entity.entity_type !== 'settlement') {
-    present.delete('section-settlement-plan')
-    present.delete('section-treasury')
-  }
-  if (entity.entity_type !== 'structure') present.delete('section-structure')
-  if (entity.entity_type !== 'people')
-    present.delete('section-people-structures')
-  if (entity.entity_type !== 'disease') present.delete('section-disease')
-  if (entity.entity_type !== 'house') present.delete('section-house')
-  if (entity.entity_type !== 'treaty') present.delete('section-treaty')
-  if (entity.entity_type !== 'mortal') present.delete('section-oaths')
-  if (entity.entity_type !== 'structure') present.delete('section-dedication')
-  if (
-    !trading &&
-    entity.entity_type !== 'polity' &&
-    entity.entity_type !== 'mortal'
-  )
-    present.delete('section-realm')
-  if (entity.entity_type !== 'resource')
-    present.delete('section-resource-profile')
-  if (entity.entity_type !== 'trade_route')
-    present.delete('section-trade-route')
-  if (entity.entity_type !== 'region' && entity.entity_type !== 'place')
-    present.delete('section-environment')
-  if (entity.entity_type !== 'region') present.delete('section-land-shape')
-  if (entity.entity_type !== 'region') present.delete('section-crops')
-  if (entity.entity_type !== 'mortal') present.delete('section-pets')
-  if (entity.entity_type !== 'event') present.delete('section-event')
-  if (entity.entity_type !== 'phenomenon') present.delete('section-phenomenon')
-  if (entity.entity_type !== 'cosmic_being')
-    present.delete('section-cosmic-being')
-  if (entity.entity_type !== 'celestial')
-    present.delete('section-celestial-readings')
   const eventful =
     entity.entity_type === 'region' ||
     entity.entity_type === 'place' ||
     entity.entity_type === 'settlement'
-  if (!eventful) present.delete('section-events-here')
   const sited =
     SITE_TYPES.has(entity.entity_type) ||
     detail.flags.some((flag) => SITE_FLAGS.has(flag))
-  if (!sited) present.delete('section-site')
   const embodied = BODIED.has(entity.entity_type)
-  if (!embodied) present.delete('section-body')
   const made = MADE_ENTITY_TYPES.has(entity.entity_type)
-  if (!made) present.delete('section-made-type')
-  if (made) for (const id of MADE_HIDDEN_SECTIONS) present.delete(id)
   const afflictable =
     entity.entity_type === 'mortal' || entity.entity_type === 'beast'
-  if (!afflictable) present.delete('section-afflictions')
-  if (entity.entity_type !== 'people') present.delete('section-body-customs')
   const maimedHome =
     entity.entity_type === 'settlement' || entity.entity_type === 'people'
-  if (!maimedHome) present.delete('section-maimed')
   const minded = MIND_TYPES.has(entity.entity_type)
-  if (!minded) {
-    present.delete('section-mind')
-    present.delete('section-memories')
-  }
-  if (entity.entity_type !== 'mortal') present.delete('section-skills')
-  if (entity.entity_type !== 'mortal') present.delete('section-life')
-  if (entity.entity_type !== 'mortal') present.delete('section-kin')
-  if (entity.entity_type !== 'mortal') present.delete('section-gear')
   const acts = entity.status === 'canon' && agentTypeOf(entity.entity_type)
-  if (!acts) present.delete('section-opportunities')
-  if (!isCommunity(ctx.type)) {
-    present.delete('section-community-relations')
-    present.delete('section-wars')
-  }
   return (
     <EntityCtx.Provider value={ctx}>
       <article
@@ -448,7 +241,6 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
           onOpenImages={() => setLightbox(0)}
           readOnlyReason={readOnly}
         />
-        <SectionNav present={present} />
         <OrnateFrame
           frame='card'
           crest

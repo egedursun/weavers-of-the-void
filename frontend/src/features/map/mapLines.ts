@@ -5,6 +5,7 @@ import {
 } from '@/components/domain/useThemeColors'
 import { STANCE_WORDS } from '@/features/entity/affairs/labels'
 import { type MapView } from './api'
+import { PASSAGE_LOOK, type PassageState } from './deepLooks'
 import { type Transform, tracePolyline } from './mapModel'
 
 export const LINE_KINDS = [
@@ -21,9 +22,37 @@ export const LINE_KINDS = [
   'outbreak',
   'front',
   'supply',
+  'passage_open',
+  'passage_digging',
+  'passage_flooded',
+  'passage_collapsed',
+  'passage_sealed',
 ] as const
 export type LineKind = (typeof LINE_KINDS)[number]
 
+export const RELATION_LINE: Record<
+  MapView['relations'][number]['kind'],
+  LineKind
+> = {
+  trade: 'trade',
+  hostility: 'hostility',
+  rule: 'rule',
+  hunt: 'hunt',
+  conurbation: 'conurbation',
+  passage: 'passage_open',
+}
+
+export const PASSAGE_LINE: Record<PassageState, LineKind> = {
+  open: 'passage_open',
+  digging: 'passage_digging',
+  flooded: 'passage_flooded',
+  collapsed: 'passage_collapsed',
+  sealed: 'passage_sealed',
+}
+
+export const PASSAGE_KINDS: ReadonlySet<LineKind> = new Set(
+  Object.values(PASSAGE_LINE)
+)
 export const ROAD_KINDS: ReadonlySet<LineKind> = new Set(['road', 'trade_road'])
 export const OUTBREAK_KINDS: ReadonlySet<LineKind> = new Set(['outbreak'])
 export const MILITARY_KINDS: ReadonlySet<LineKind> = new Set([
@@ -74,6 +103,21 @@ const coast = (_: ThemeColors, view: MapView) => view.geometry.palette.coastline
 const light = (_: ThemeColors, view: MapView) =>
   view.geometry.palette.land_label
 
+function passageStyle(state: PassageState): LineStyle {
+  const look = PASSAGE_LOOK[state]
+  return {
+    casing: look.casing
+      ? { color: halo, width: look.width + 2.6, alpha: 0.55 }
+      : undefined,
+    main: {
+      color: (tokens: ThemeColors) => tokens[look.token],
+      width: look.width,
+      alpha: 0.95,
+      dash: look.dash.length > 0 ? [...look.dash] : undefined,
+    },
+  }
+}
+
 export const LINE_STYLE: Record<LineKind, LineStyle> = {
   road: {
     casing: { color: halo, width: 3.4, alpha: 0.45 },
@@ -104,6 +148,11 @@ export const LINE_STYLE: Record<LineKind, LineStyle> = {
     casing: { color: halo, width: 5, alpha: 0.35 },
     main: { color: gold, width: 2.4, alpha: 0.9 },
   },
+  passage_open: passageStyle('open'),
+  passage_digging: passageStyle('digging'),
+  passage_flooded: passageStyle('flooded'),
+  passage_collapsed: passageStyle('collapsed'),
+  passage_sealed: passageStyle('sealed'),
   route: {
     casing: { color: halo, width: 4, alpha: 0.4 },
     main: { color: gold, width: 1.8, alpha: 0.85 },
@@ -258,7 +307,7 @@ function shapesOf(view: MapView): Shape[] {
     })
   }
   for (const line of view.relations) {
-    const kind = line.kind as LineKind
+    const kind = relationLine(view, line)
     const info = {
       kind,
       source: line.source,
@@ -279,6 +328,22 @@ function shapesOf(view: MapView): Shape[] {
   return shapes
 }
 
+export function relationLine(
+  view: MapView,
+  line: MapView['relations'][number]
+): LineKind {
+  if (line.kind !== 'passage') return RELATION_LINE[line.kind]
+  const passage = view.level?.passages.find(
+    (item) =>
+      item.kind === 'level' &&
+      ((item.first_region_id === line.source &&
+        item.second_region_id === line.target) ||
+        (item.first_region_id === line.target &&
+          item.second_region_id === line.source))
+  )
+  return passage ? PASSAGE_LINE[passage.state] : RELATION_LINE[line.kind]
+}
+
 function visibleShapes(
   view: MapView,
   roads: boolean,
@@ -288,15 +353,17 @@ function visibleShapes(
   military = false
 ): Shape[] {
   return shapesOf(view).filter((shape) =>
-    MILITARY_KINDS.has(shape.info.kind)
-      ? military
-      : OUTBREAK_KINDS.has(shape.info.kind)
-        ? outbreaks
-        : ROUTE_KINDS.has(shape.info.kind)
-          ? trade
-          : ROAD_KINDS.has(shape.info.kind)
-            ? roads
-            : ties
+    PASSAGE_KINDS.has(shape.info.kind)
+      ? true
+      : MILITARY_KINDS.has(shape.info.kind)
+        ? military
+        : OUTBREAK_KINDS.has(shape.info.kind)
+          ? outbreaks
+          : ROUTE_KINDS.has(shape.info.kind)
+            ? trade
+            : ROAD_KINDS.has(shape.info.kind)
+              ? roads
+              : ties
   )
 }
 

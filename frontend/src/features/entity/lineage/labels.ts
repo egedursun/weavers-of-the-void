@@ -21,6 +21,7 @@ import {
   Users,
   Wallet,
   Warehouse,
+  User2,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
@@ -41,7 +42,7 @@ export const ROLES: Record<string, Named> = {
   heir: { label: 'Heir', icon: User, tone: 'verdigris' },
   dependent: { label: 'Dependent', icon: Baby, tone: 'muted' },
   carer: { label: 'Carer', icon: HandHeart, tone: 'success' },
-  servant: { label: 'Servant', icon: User, tone: 'muted' },
+  servant: { label: 'Servant', icon: User2, tone: 'muted' },
   ward: { label: 'Ward', icon: Baby, tone: 'info' },
   lodger: { label: 'Lodger', icon: User, tone: 'muted' },
 }

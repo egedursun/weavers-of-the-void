@@ -52,6 +52,8 @@ PLAN_LIMBS: MappingProxyType[BodyPlan, int] = total(
         P.CENTAUROID: 6,
         P.RADIAL: 5,
         P.COLONIAL: 0,
+        P.HEXAPOD: 6,
+        P.ROOTED: 2,
     },
 )
 PLAN_SKIN: MappingProxyType[BodyPlan, TissueMaterial] = total(
@@ -73,10 +75,18 @@ PLAN_SKIN: MappingProxyType[BodyPlan, TissueMaterial] = total(
         P.CENTAUROID: T.HIDE,
         P.RADIAL: T.RIGID,
         P.COLONIAL: T.SOFT_TISSUE,
+        P.HEXAPOD: T.PLATES,
+        P.ROOTED: T.WOODY,
     },
 )
 LIFE_SKIN: MappingProxyType[Biochemistry, TissueMaterial] = MappingProxyType(
-    {Biochemistry.SILICON: T.MINERAL, Biochemistry.CRYSTAL: T.CRYSTALLINE, Biochemistry.VOID: T.INSUBSTANTIAL, Biochemistry.CARBON_AMMONIA: T.FROZEN}
+    {
+        Biochemistry.SILICON: T.MINERAL,
+        Biochemistry.CRYSTAL: T.CRYSTALLINE,
+        Biochemistry.VOID: T.INSUBSTANTIAL,
+        Biochemistry.CARBON_AMMONIA: T.FROZEN,
+        Biochemistry.METAL: T.METALLIC,
+    }
 )
 TRAIT_SKIN: MappingProxyType[CreatureTrait, TissueMaterial] = MappingProxyType({CreatureTrait.STONESKIN: T.MINERAL, CreatureTrait.ARMOURED: T.PLATES})
 TRAIT_ATTACKS: MappingProxyType[CreatureTrait, AttackSpec] = MappingProxyType(
@@ -119,6 +129,8 @@ TISSUES: MappingProxyType[TissueMaterial, TissueSpec] = MappingProxyType(
             TissueSpec(T.GEL, "Gel", 15, 5, 8, 30, 5, 100, 25, 60),
             TissueSpec(T.ENERGY, "Energy", 15, 25, 5, 5, 0, 100, 95, 90),
             TissueSpec(T.INSUBSTANTIAL, "Insubstantial", 45, 15, 55, 55, 0, 100, 80, 0),
+            TissueSpec(T.LIQUID, "Liquid body", 30, 0, 2, 40, 80, 100, 0, 70),
+            TissueSpec(T.WOODY, "Woody", 25, 0, 20, 40, 40, 30, 0, 10),
         )
     }
 )

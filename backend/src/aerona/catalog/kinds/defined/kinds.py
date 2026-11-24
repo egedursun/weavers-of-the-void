@@ -43,7 +43,12 @@ KIND_CONCEPT = total(
         ),
         KindConcept.GARMENT: Defined(
             "Garment",
-            checked_by=("engine.kinds.crafts_life.EFFECTS", "engine.kinds.crafts_life.exposure_of", "engine.kinds.crafts_life.garment_fashion"),
+            checked_by=(
+                "engine.body.systems.ways_past",
+                "engine.kinds.crafts_life.EFFECTS",
+                "engine.kinds.crafts_life.exposure_of",
+                "engine.kinds.crafts_life.garment_fashion",
+            ),
             used_by=(
                 "db.kind_concepts.crafts.GARMENT",
                 "engine.kinds.crafts_life.exposure_of",
@@ -58,6 +63,7 @@ KIND_CONCEPT = total(
             used_by=(
                 "db.kind_concepts.crafts.COLOUR",
                 "engine.kinds.crafts_life.colour_laws",
+                "engine.kinds.crafts_life.held_meanings",
                 "engine.kinds.crafts_life.restraints",
                 "engine.kinds.crafts_life.restrict_colour",
             ),
@@ -156,5 +162,6 @@ MEAL_SLOT = total(
         MealSlot.REMEDY: Defined("Remedy", checked_by=(), used_by=("catalog.life.cuisine.COURSE_SLOTS",)),
         MealSlot.TRAVEL_FOOD: Defined("Travel food", checked_by=(), used_by=()),
         MealSlot.FAMINE_FOOD: Defined("Famine food", checked_by=(), used_by=()),
+        MealSlot.STREET: Defined("Street food", checked_by=(), used_by=()),
     },
 )

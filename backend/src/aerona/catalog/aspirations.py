@@ -224,6 +224,8 @@ INSPIRATION_LABELS: MappingProxyType[InspirationKind, str] = MappingProxyType(
         InspirationKind.ARTISTIC_VISION: "A vision of a work to make",
         InspirationKind.TECHNICAL_BREAKTHROUGH: "A way through a hard problem",
         InspirationKind.SPIRITUAL_INSIGHT: "An insight of the spirit",
+        InspirationKind.HEALING_INSIGHT: "An insight into healing",
+        InspirationKind.CIVIC_VISION: "A vision of how the town should be",
     }
 )
 

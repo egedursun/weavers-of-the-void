@@ -29,6 +29,7 @@ export function CreatorGalleries({
     <div className='flex min-w-0 flex-col gap-6'>
       {creatorId !== null && creatorImages !== null ? (
         <RecordGallery
+          sectionId='section-creator-images'
           title="The god's images"
           nodeId={creatorId}
           name={name}
@@ -41,6 +42,7 @@ export function CreatorGalleries({
       )}
       {worldId !== null && world && (
         <RecordGallery
+          sectionId='section-creator-world-images'
           title={`${world.name}: map background, landscape and cover`}
           nodeId={worldId}
           name={world.name}

@@ -410,6 +410,9 @@ TRADITION_EFFECTS = {
     "commemoration": (S.SOCIAL, "traditions.festival_cohesion", "cohesion"),
     "competition": (S.SOCIAL, "traditions.festival_satisfaction", "satisfaction"),
     "fair": (S.ECONOMY, "traditions.fair_trade_pct", "trade"),
+    "welcome": (S.SOCIAL, "traditions.bonding_effect", "cohesion"),
+    "reconciliation": (S.SOCIAL, "traditions.bonding_effect", "cohesion"),
+    "thanksgiving": (S.BODY, "traditions.healing_effect", "health"),
 }
 
 

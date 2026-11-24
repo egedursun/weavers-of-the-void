@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { EntityLink, Medallion, StatBar, FieldTile } from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
 import { useNames } from '@/features/entity/api/queries'
@@ -317,7 +317,7 @@ export function NodeLink({
   id,
   name,
 }: {
-  kind: DrawerKind
+  kind: EntryKind
   id: number | null | undefined
   name: string | null | undefined
 }) {

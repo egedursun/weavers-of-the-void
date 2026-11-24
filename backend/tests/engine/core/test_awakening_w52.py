@@ -35,7 +35,7 @@ async def kinds(session: AsyncSession) -> set[str]:
 
 
 def test_every_trigger_has_its_test() -> None:
-    assert set(TRIGGERS) == set(AwakeningTrigger) and len(AwakeningTrigger) == 6
+    assert set(TRIGGERS) == set(AwakeningTrigger) and len(AwakeningTrigger) == 8
 
 
 async def test_a_robbed_hoard_wakes_a_beast_stirred_by_theft_and_it_remembers_the_thief(session: AsyncSession, world: CoreWorld) -> None:

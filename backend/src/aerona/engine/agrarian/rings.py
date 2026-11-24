@@ -11,6 +11,7 @@ from aerona.db.tables.agrarian import CentralPlaceRow, LandRingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.gatherings import GatheringRow
+from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
@@ -26,6 +27,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining, term
 
 MARKET_TIERS = frozenset({SizeTier.TOWN, SizeTier.CITY, SizeTier.METROPOLIS, SizeTier.MEGALOPOLIS, SizeTier.WORLD_CITY})
 UNREACHED = 99_999
@@ -241,6 +243,40 @@ def ring_at(ctx: TickContext, cost: int | None) -> LandUseRing:
     return LandUseRing.WILDS
 
 
+def worked_ring(ctx: TickContext, land: RegionEnvironmentRow, ring: LandUseRing) -> LandUseRing:
+    if ring is not LandUseRing.WILDS and land.mined > 0:
+        return LandUseRing.INDUSTRY
+    if ring is LandUseRing.GRAIN and land.soil_fertility < ctx.rules.thunen.fallow_below:
+        return LandUseRing.FALLOW
+    return ring
+
+
+async def foul_air(ctx: TickContext, region_id: int, amount: int) -> None:
+    row = await ctx.session.get(RegionPollutionRow, region_id)
+    if row is None:
+        row = RegionPollutionRow(region_node_id=region_id, air=0, water=0, soil=0, polluters={}, epoch=ctx.epoch, locked=[])
+        ctx.session.add(row)
+    if "air" in row.locked or held(region_id):
+        return
+    with explaining():
+        term("thunen.industry_pollution", amount, source_node_id=region_id)
+        row.air = clamp_int(row.air + amount, 0, PERCENT)
+
+
+async def tend_rings(ctx: TickContext, atlas: RegionAtlas, ways: Ways, rows: dict[int, LandRingRow]) -> None:
+    for region_id, row in sorted(rows.items()):
+        land = ways.lands.get(region_id)
+        if land is None or held(region_id):
+            continue
+        if row.ring is LandUseRing.FALLOW and "soil_fertility" not in land.locked:
+            with explaining():
+                term("land_use.fallow_restore_pct", ctx.rules.land_use.fallow_restore_pct, source_node_id=region_id)
+                land.soil_fertility = clamp_int(land.soil_fertility + ctx.rules.land_use.fallow_restore_pct, 0, PERCENT)
+        if row.ring is LandUseRing.INDUSTRY:
+            for other in atlas.neighbour_regions(region_id):
+                await foul_air(ctx, other, ctx.rules.thunen.industry_pollution)
+
+
 def gap_at(ctx: TickContext, cost: int | None, any_market: bool) -> int:
     table = ctx.rules.central_places
     if not any_market:
@@ -253,6 +289,7 @@ def gap_at(ctx: TickContext, cost: int | None, any_market: bool) -> int:
 async def draw_rings(ctx: TickContext, atlas: RegionAtlas, ways: Ways, *, world: int, markets: dict[int, int], tally: SpatialTally) -> None:
     carried = carry(ctx, atlas, ways, set(markets), markets)
     rows = {row.region_entity_id: row for row in await ctx.session.scalars(select(LandRingRow).where(LandRingRow.region_entity_id.in_(list(ways.lands))))}
+    await tend_rings(ctx, atlas, ways, rows)
     for region_id, land in sorted(ways.lands.items()):
         if land.world_id != world or atlas.is_water(region_id) or held(region_id):
             continue
@@ -266,7 +303,7 @@ async def draw_rings(ctx: TickContext, atlas: RegionAtlas, ways: Ways, *, world:
         put(row, "market_entity_id", reached[2] if reached is not None else None)
         put(row, "distance", min(UNREACHED, cost) if cost is not None else 0)
         put(row, "by_water", bool(reached and reached[1]))
-        put(row, "ring", ring_at(ctx, cost))
+        put(row, "ring", worked_ring(ctx, land, ring_at(ctx, cost)))
         put(row, "gap", gap_at(ctx, cost, bool(markets)))
         row.updated_epoch = ctx.epoch
         tally.rings += 1

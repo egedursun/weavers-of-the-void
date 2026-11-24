@@ -37,3 +37,4 @@ class CureRules:
     antiviral_level: int = rule(7, 0, 10, G, "Medicine level a community needs before it can make an antiviral")
     surgery_level: int = rule(3, 0, 10, G, "Medicine level a community needs before its healers cut out a sickness")
     herb_level: int = rule(2, 0, 10, G, "Medicine level a community needs before its healers use herbs")
+    immunisation_level: int = rule(4, 0, 20, G, "Medicine level a people needs before it can immunise its folk against a sickness")

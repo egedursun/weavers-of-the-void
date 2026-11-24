@@ -131,6 +131,11 @@ class ImpactRules:
     airburst_pct: int = rule(20, 0, 100, C, "Chance a body that strikes bursts in the air above the ground instead (%)")
     airburst_winter_cut_pct: int = rule(70, 0, 100, C, "Share of the winter of an impact of its size an airburst spares (%)")
     airburst_reach: int = rule(2, 0, 10, C, "Steps of neighbouring lands an airburst's blast and fire reach")
+    debris_ring_chance: int = rule(5, 0, 100, T, "Chance a ring of debris sends a strike at a world of its star in an epoch (%)")
+    capture_size: int = rule(40, 0, 100, T, "Size of a falling body from which a world may take it into orbit instead of being struck")
+    capture_pct: int = rule(10, 0, 100, T, "Chance a large falling body is taken into orbit as a ring instead of striking (%)")
+    shatter_size: int = rule(50, 0, 100, T, "Size of a striking body from which it may break apart and throw up a second fall")
+    shatter_pct: int = rule(25, 0, 100, T, "Chance a large striking body breaks apart and sends a smaller fall after it (%)")
 
 
 @dataclass(frozen=True)
@@ -143,6 +148,7 @@ class TerraformingRules:
     native_harm_pct: int = rule(10, 0, 100, E, "Share of their numbers native kinds of another life lose to each epoch of terraforming (%)")
     biosphere_harm: int = rule(3, 0, 100, E, "Biosphere health a world of another life loses to each epoch of terraforming")
     pressure_hundredths: int = rule(10, 0, 1000, E, "Pressure, in hundredths, each point of thickening or thinning the air moves")
+    seed_life_pct: int = rule(50, 0, 500, T, "Health of its living whole a world gains for each step of seeding life on it (%)")
 
 
 @dataclass(frozen=True)
@@ -163,6 +169,8 @@ class CosmicFeatureRules:
     field_density: int = rule(50, 0, 100, T, "Density of a new asteroid field")
     comet_period: int = rule(12, 1, 10000, T, "Epochs between the returns of a new periodic comet")
     wanderer_period: int = rule(20, 1, 10000, T, "Epochs between the returns of a new wandering star")
+    nebula_piracy: int = rule(2, 0, 50, T, "Piracy each route of a star inside a nebula gains each epoch, fleets hiding in its cloud")
+    dark_body_danger: int = rule(1, 0, 50, T, "Danger each route of a star near an unseen mass gains each epoch as it bends the way")
 
 
 @dataclass(frozen=True)
@@ -170,9 +178,12 @@ class SurveyRules:
     detect_level: int = rule(1, 0, 10, T, "Astronomy level that detects the worlds of one's own galaxy")
     observe_level: int = rule(3, 0, 10, T, "Astronomy level that observes the worlds of one's own star")
     sail_steps: int = rule(1, 0, 5, T, "Survey steps sky navigation adds to every world one already detects")
-    journey_level: int = rule(1, 0, 5, T, "Survey level, from unknown at 0 to mapped at 5, a journey needs of the world it sails for")
-    colony_level: int = rule(3, 0, 5, T, "Survey level a colony needs of the world it settles")
-    conquest_level: int = rule(4, 0, 5, T, "Survey level a conquest needs of the world it claims")
+    journey_level: int = rule(1, 0, 6, T, "Survey level, from unknown at 0 to mapped at 6, a journey needs of the world it sails for")
+    colony_level: int = rule(4, 0, 6, T, "Survey level a colony needs of the world it settles")
+    conquest_level: int = rule(5, 0, 6, T, "Survey level a conquest needs of the world it claims")
+    chart_share_pct: int = rule(
+        30, 0, 100, T, "Chance a trading partner that has surveyed a world shares its charts in an epoch; charts got from others may be wrong (%)"
+    )
 
 
 @dataclass(frozen=True)

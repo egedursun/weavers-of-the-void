@@ -6,6 +6,7 @@ from aerona.engine.plants.bodies import PlantTally, keep_plants
 
 @reads(
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.forced_weather",

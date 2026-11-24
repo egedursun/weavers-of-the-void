@@ -2,14 +2,16 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Anchor,
+  CirclePlus,
   Clock,
   Cloud,
-  CirclePlus,
+  Coins,
   Compass,
   Gift,
   Mountain,
   Network,
   Orbit,
+  Pickaxe,
   Route,
   Swords,
   Thermometer,
@@ -17,8 +19,8 @@ import {
   TriangleAlert,
   UserMinus,
   Waves,
-  Coins,
   Zap,
+  Ship,
 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
 import { api } from '@/api/client'
@@ -57,11 +59,12 @@ const HOLD =
 export const ENVIRONMENTS: Record<Environment, Named> = {
   road: { label: 'Road', icon: Mountain, tone: 'gold' },
   river: { label: 'River', icon: Waves, tone: 'info' },
-  sea: { label: 'Sea', icon: Waves, tone: 'info' },
+  sea: { label: 'Sea', icon: Ship, tone: 'info' },
   sky: { label: 'Sky', icon: Cloud, tone: 'info' },
   space: { label: 'Space', icon: Orbit, tone: 'verdigris' },
   rift: { label: 'Rift', icon: Zap, tone: 'danger' },
   network: { label: 'Network', icon: Network, tone: 'muted' },
+  underground: { label: 'Tunnel way', icon: Pickaxe, tone: 'muted' },
 }
 
 export const EFFECTS: Record<Effect, Named> = {

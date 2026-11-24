@@ -10,7 +10,7 @@ from aerona.domain.enums.ecology import YieldProduct
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.mortal import LifeStage
 
-GRADES = (AgeGrade.CHILDREN, AgeGrade.YOUTHS, AgeGrade.YOUNG_ADULTS, AgeGrade.JUNIOR_ELDERS, AgeGrade.SENIOR_ELDERS)
+GRADES = (AgeGrade.CHILDREN, AgeGrade.YOUTHS, AgeGrade.YOUNG_ADULTS, AgeGrade.JUNIOR_ELDERS, AgeGrade.SENIOR_ELDERS, AgeGrade.ANCIENTS)
 
 
 RIGHTS: Mapping[Membership, tuple[MemberRight, ...]] = {
@@ -19,6 +19,7 @@ RIGHTS: Mapping[Membership, tuple[MemberRight, ...]] = {
     Membership.RESIDENT_FOREIGNER: (MemberRight.MARRIAGE, MemberRight.COURTS, MemberRight.PROPERTY, MemberRight.MOVEMENT),
     Membership.PROTECTED_MINORITY: (MemberRight.MARRIAGE, MemberRight.COURTS, MemberRight.PROPERTY, MemberRight.WORSHIP),
     Membership.BOUND: (),
+    Membership.STATELESS: (),
 }
 
 
@@ -33,6 +34,7 @@ PATH_WAIT: Mapping[Naturalisation, int] = total(
         Naturalisation.PURCHASE: 0,
         Naturalisation.GRANT: 0,
         Naturalisation.UNION: 25,
+        Naturalisation.ADOPTION: 0,
     },
 )
 
@@ -49,18 +51,21 @@ PACKAGES: Mapping[Intoxicant, PackageKind] = total(
         Intoxicant.ESSENCE: PackageKind.VIS_DEPENDENCE,
         Intoxicant.SYNTHETIC: PackageKind.DRUG_DEPENDENCE,
         Intoxicant.ANIMAL_DERIVED: PackageKind.DRUG_DEPENDENCE,
+        Intoxicant.STIMULANT: PackageKind.DRUG_DEPENDENCE,
+        Intoxicant.RESIN: PackageKind.DRUG_DEPENDENCE,
     },
 )
 
 
-SEEDED_STAGES = (LifeStage.CHILD, LifeStage.YOUTH, LifeStage.ADULT, LifeStage.ELDER)
+SEEDED_STAGES = (LifeStage.CHILD, LifeStage.YOUTH, LifeStage.ADULT, LifeStage.MATURE, LifeStage.ELDER)
 
 
 STAGE_SHIFTS: dict[LifeStage, dict[str, int]] = {
     LifeStage.CHILD: {"learning": 20, "leisure": 15, "care": -3, "service": -2},
     LifeStage.YOUTH: {"learning": 10, "leisure": 5},
     LifeStage.ADULT: {},
-    LifeStage.ELDER: {"rest": 15, "care": 5, "travel": -2},
+    LifeStage.MATURE: {"rest": 5, "care": 3, "socialising": 2},
+    LifeStage.ELDER: {"rest": 15, "care": 5, "travel": -2, "mourning": 3},
 }
 
 KEEP_INTOXICATION_INTOXICANT_USES = frozenset({IntoxicantUse.DAILY, IntoxicantUse.FEAST})
@@ -83,6 +88,8 @@ RIGHT_GRIEVANCE: Mapping[MemberRight, str] = total(
         MemberRight.MOVEMENT: "movement_grievance",
         MemberRight.VOTE: "vote_grievance",
         MemberRight.WORSHIP: "worship_grievance",
+        MemberRight.ASSEMBLY: "assembly_grievance",
+        MemberRight.EDUCATION: "education_grievance",
     },
 )
 
@@ -105,6 +112,8 @@ EVIDENCE: Mapping[EvidenceKind, EvidenceSpec] = total(
         EvidenceKind.MAGIC: EvidenceSpec("magic_weight", "magic_decay"),
         EvidenceKind.EXPERT: EvidenceSpec("expert_weight", "expert_decay"),
         EvidenceKind.HEARSAY: EvidenceSpec("hearsay_weight", "hearsay_decay", hearsay=True),
+        EvidenceKind.RECORD: EvidenceSpec("record_weight", "record_decay"),
+        EvidenceKind.BODY: EvidenceSpec("body_weight", "body_decay"),
     },
 )
 
@@ -120,6 +129,8 @@ COOP_GAINS: Mapping[CoopPurpose, str] = total(
         CoopPurpose.CREDIT: "credit_gain",
         CoopPurpose.GRANARY: "granary_gain",
         CoopPurpose.HERDING: "herding_gain",
+        CoopPurpose.SCHOOL: "school_gain",
+        CoopPurpose.HOUSING: "housing_gain",
     },
 )
 

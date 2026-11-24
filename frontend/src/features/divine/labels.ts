@@ -37,6 +37,13 @@ import {
   type LucideIcon,
   ShieldAlert,
   Landmark,
+  Clock,
+  Gem,
+  Layers2,
+  Unlink,
+  Layers3,
+  MapPin,
+  SunMoon,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import type { KpiTone } from '@/components/domain'
@@ -56,7 +63,7 @@ export const GOAL_KINDS: Record<Schema['GodGoalKind'], Named> = {
   },
   win_war: { label: 'Win a war', icon: Trophy, tone: 'warning' },
   acquire_relic: { label: 'Acquire a relic', icon: BookMarked, tone: 'info' },
-  raise_hero: { label: 'Raise a hero', icon: Crown, tone: 'success' },
+  raise_hero: { label: 'Raise a hero', icon: Gem, tone: 'success' },
   awaken_god: { label: 'Awaken a god', icon: Sun, tone: 'info' },
   defeat_foreign_god: {
     label: 'Defeat a foreign god',
@@ -125,6 +132,8 @@ export const WOUND_KINDS: Record<Schema['DivineWoundKind'], Named> = {
   bound: { label: 'Bound', icon: Link, tone: 'danger' },
   split_aspect: { label: 'Split aspect', icon: Split, tone: 'danger' },
   forgotten_name: { label: 'Forgotten name', icon: EyeOff, tone: 'danger' },
+  desecrated_seat: { label: 'Desecrated seat', icon: Eye, tone: 'danger' },
+  split_worship: { label: 'Split worship', icon: Unlink, tone: 'danger' },
 }
 
 export const WOUND_CAUSES: Record<Schema['WoundCause'], string> = {
@@ -136,6 +145,8 @@ export const WOUND_CAUSES: Record<Schema['WoundCause'], string> = {
   neglect: 'neglect',
   betrayal: 'betrayal by one in its service',
   mortal_slayer: "a mortal's deed",
+  outer_being: 'Outer being',
+  schism: 'Schism',
 }
 
 export const MOTIONS: Record<Schema['CouncilMotion'], Named> = {
@@ -216,6 +227,21 @@ export const MOTIONS: Record<Schema['CouncilMotion'], Named> = {
     icon: Layers,
     tone: 'info',
   },
+  regulate_curses: {
+    label: 'Rule on curses',
+    icon: Skull,
+    tone: 'info',
+  },
+  open_inquiry: {
+    label: 'Open an inquiry',
+    icon: Layers2,
+    tone: 'info',
+  },
+  amnesty: {
+    label: 'Amnesty',
+    icon: Layers3,
+    tone: 'info',
+  },
 }
 
 export const VOTING_RULES: Record<Schema['VotingRule'], Named> = {
@@ -255,6 +281,8 @@ export const PUNISHMENTS: Record<Schema['SonPunishment'], string> = {
   strip_divinity: 'Strip of divinity',
   penance: 'Bind to a penance',
   essence_fine: 'Fine its essence',
+  bound_to_world: 'Bound to one world',
+  rebuke: 'Rebuke',
 }
 
 export const PENANCE_DEEDS: Record<Schema['PenanceDeed'], string> = {
@@ -268,6 +296,7 @@ export const LAW_SCOPES: Record<Schema['LawScope'], Named> = {
   dimension: { label: 'One dimension', icon: Layers, tone: 'info' },
   world: { label: 'One world', icon: Globe, tone: 'info' },
   region: { label: 'One land', icon: Map, tone: 'verdigris' },
+  stratum: { label: 'Stratum', icon: MapPin, tone: 'verdigris' },
 }
 
 export const LAW_EXCEPTIONS: Record<Schema['LawException'], string> = {
@@ -277,6 +306,8 @@ export const LAW_EXCEPTIONS: Record<Schema['LawException'], string> = {
   heroes: 'Except heroes',
   avatars: 'Except avatars of the gods',
   named_kind: 'Except one named kind of being',
+  office_holders: 'Holders of a divine office',
+  bargainers: 'Bound by an outer bargain',
 }
 
 export const HUNGERS: Record<Schema['OuterHunger'], Named> = {
@@ -285,6 +316,8 @@ export const HUNGERS: Record<Schema['OuterHunger'], Named> = {
   light: { label: 'Light', icon: Star, tone: 'warning' },
   names: { label: 'Names', icon: ScrollText, tone: 'danger' },
   memories: { label: 'Memories', icon: Moon, tone: 'warning' },
+  time: { label: 'Time', icon: Clock, tone: 'warning' },
+  dreams: { label: 'Dreams', icon: SunMoon, tone: 'warning' },
 }
 
 export const GAINS: Record<Schema['BargainGain'], string> = {
@@ -293,6 +326,8 @@ export const GAINS: Record<Schema['BargainGain'], string> = {
   might: 'Might',
   knowledge: 'Knowledge out of reach',
   longevity: 'A longer span',
+  restored_life: 'The dead brought back',
+  protection: 'Protection',
 }
 
 export const PRICES: Record<Schema['BargainPrice'], string> = {
@@ -301,6 +336,8 @@ export const PRICES: Record<Schema['BargainPrice'], string> = {
   true_name: 'Its true name',
   worshippers: 'The souls of its faithful',
   descendants: 'Its line, bound for years',
+  memories: 'Memories',
+  years: 'Years',
 }
 
 export const STANDING_AXES = ['awe', 'love', 'fear', 'neglect'] as const

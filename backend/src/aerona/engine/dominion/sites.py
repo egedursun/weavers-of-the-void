@@ -35,6 +35,7 @@ from aerona.engine.mythic.servitors import turned_back
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.stats import has_stat, shift_stat
 from aerona.engine.recording.record import record
 
 SITE_KINDS = tuple(MagicSiteKind)
@@ -210,6 +211,35 @@ async def yield_sites(ctx: TickContext, tally: SiteTally) -> None:
                 site.output = amount
             tally.yielded += amount
     await ctx.session.flush()
+
+
+async def meet_and_fail(ctx: TickContext, tally: SiteTally) -> None:
+    table = ctx.rules.magic_sites
+    statement = select(MagicSiteRow).where(MagicSiteRow.found_epoch.is_not(None), MagicSiteRow.kind == MagicSiteKind.CONFLUENCE).order_by(MagicSiteRow.id)
+    for site in await ctx.session.scalars(statement):
+        place = await ctx.session.get(EntityRow, site.place_entity_id)
+        holder = await ctx.session.get(EntityRow, site.holder_node_id) if site.holder_node_id is not None else None
+        if place is None or held(place.id):
+            continue
+        if holder is not None and holder.status is EntityStatus.CANON and holder.entity_type in COMMUNITY_TYPES and not held(holder.id):
+            amount = round_half_up(site.strength * table.output_pct * table.confluence_pct / PERCENT / PERCENT)
+            await add_stock(ctx, holder, CommodityKind.MAGICAL_REAGENTS, amount)
+            tally.yielded += amount
+        if has_stat(place, "danger"):
+            shift_stat(place, "danger", table.confluence_danger)
+
+
+async def in_null_zone(ctx: TickContext, entity: EntityRow) -> bool:
+    places = [place for place in (entity.id, entity.location_id) if place is not None]
+    location = await ctx.session.get(EntityRow, entity.location_id) if entity.location_id is not None else None
+    if location is not None and location.location_id is not None:
+        places.append(location.location_id)
+    found = await ctx.session.scalar(
+        select(MagicSiteRow.id)
+        .where(MagicSiteRow.place_entity_id.in_(places), MagicSiteRow.kind == MagicSiteKind.NULL_ZONE, MagicSiteRow.found_epoch.is_not(None))
+        .limit(1)
+    )
+    return found is not None
 
 
 async def seed_thrones(ctx: TickContext, tally: SiteTally) -> None:

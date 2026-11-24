@@ -12,6 +12,8 @@ from aerona.db.tables.orders import EconomicOrderRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.works import StateEnterpriseRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -19,6 +21,8 @@ from aerona.domain.enums.orders import OwnershipRegime
 from aerona.domain.enums.works import EnterpriseForm, EnterpriseManagement
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
+from aerona.engine.economy.stocks import goods_of, holding
+from aerona.engine.lore.civics import holders_know
 from aerona.engine.numbers.book import towns_in
 from aerona.engine.primitives.mirrors import first_sight
 from aerona.engine.primitives.numbers import round_half_up
@@ -109,6 +113,8 @@ async def run_enterprise(ctx: TickContext, enterprise: StateEnterpriseRow, tally
     if realm is not None and "treasury" not in (realm.locked or []):
         realm.treasury += revenue
     tally.revenue += revenue
+    if enterprise.form is EnterpriseForm.GRANARY_BOARD:
+        await even_grain(ctx, enterprise)
     if enterprise.form is EnterpriseForm.MINT:
         coin = await ctx.session.scalar(
             select(CurrencyRow).where(CurrencyRow.issuer_entity_id == enterprise.polity_entity_id).order_by(CurrencyRow.id).limit(1)
@@ -119,6 +125,42 @@ async def run_enterprise(ctx: TickContext, enterprise: StateEnterpriseRow, tally
         await privatise(ctx, enterprise, realm, tally)
 
 
+async def even_grain(ctx: TickContext, enterprise: StateEnterpriseRow) -> int:
+    table = ctx.rules.state_enterprise
+    towns = [town for town in await towns_in(ctx.session, enterprise.polity_entity_id) if not held(town)]
+    stores = {town: await holding(ctx.session, town, CommodityKind.GRAIN) for town in towns}
+    if len(stores) < 2:
+        return 0
+    richest = max(sorted(stores), key=lambda town: stores[town])
+    poorest = min(sorted(stores), key=lambda town: stores[town])
+    gap = stores[richest] - stores[poorest]
+    amount = min(gap // 2, round_half_up(enterprise.output * table.granary_board_units))
+    if amount <= 0:
+        return 0
+    return await goods_of(ctx.session, ctx.epoch).move(richest, poorest, CommodityKind.GRAIN, amount, flow=GoodsFlow.AID)
+
+
+async def found_posts(ctx: TickContext, tally: EnterpriseTally) -> None:
+    realms = list(await ctx.session.scalars(select(PolityProfileRow.polity_entity_id).order_by(PolityProfileRow.polity_entity_id)))
+    posts = set(await ctx.session.scalars(select(StateEnterpriseRow.polity_entity_id).where(StateEnterpriseRow.form == EnterpriseForm.POST)))
+    for realm in realms:
+        if realm in posts or held(realm) or not await holders_know(ctx.session, [realm], Technique.POSTAL_SERVICE):
+            continue
+        ctx.session.add(
+            StateEnterpriseRow(
+                polity_entity_id=realm,
+                sector=None,
+                form=EnterpriseForm.POST,
+                management=EnterpriseManagement.OFFICIAL,
+                output=PERCENT // 10,
+                founded_epoch=ctx.epoch,
+                locked=[],
+            )
+        )
+        await record(ctx, "enterprise.founded", roles={IncidentRole.ACTOR: realm}, facts={"form": EnterpriseForm.POST})
+        tally.founded += 1
+
+
 async def found_for_orders(ctx: TickContext, tally: EnterpriseTally) -> None:
     query = select(EconomicOrderRow).where(EconomicOrderRow.ownership.in_(sorted(STATE_FORMS)), EconomicOrderRow.sector.is_not(None))
     for order in list(await ctx.session.scalars(query.order_by(EconomicOrderRow.id))):
@@ -127,7 +169,7 @@ async def found_for_orders(ctx: TickContext, tally: EnterpriseTally) -> None:
         running = select(StateEnterpriseRow.id).where(StateEnterpriseRow.polity_entity_id == order.polity_entity_id, StateEnterpriseRow.sector == order.sector)
         if await ctx.session.scalar(running.limit(1)) is not None:
             continue
-        form = STATE_FORMS[order.ownership]
+        form = EnterpriseForm.GRANARY_BOARD if order.sector is CommodityKind.GRAIN else STATE_FORMS[order.ownership]
         ctx.session.add(
             StateEnterpriseRow(
                 polity_entity_id=order.polity_entity_id,
@@ -146,6 +188,7 @@ async def found_for_orders(ctx: TickContext, tally: EnterpriseTally) -> None:
 async def keep_enterprises(ctx: TickContext) -> EnterpriseTally:
     tally = EnterpriseTally()
     await found_for_orders(ctx, tally)
+    await found_posts(ctx, tally)
     for enterprise in list(await ctx.session.scalars(select(StateEnterpriseRow).order_by(StateEnterpriseRow.id))):
         if not held(enterprise.polity_entity_id):
             await run_enterprise(ctx, enterprise, tally)

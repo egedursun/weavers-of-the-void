@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from aerona.core.total import total
 from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.disease import SpreadPath
+from aerona.domain.enums.structure import StructureKind
 from aerona.rules.registry import Rules
 
 P = SpreadPath
@@ -47,9 +48,24 @@ SPREAD_PATHS: Mapping[SpreadPath, PathSpec] = total(
             routes=frozenset({T.INHALATION, T.CONTACT, T.INGESTION, T.INTIMATE, T.OBJECTS, T.WATER}),
             chance=lambda rules: rules.spread.gathering_pct,
         ),
+        P.LIVESTOCK: PathSpec(
+            "With herds",
+            contact=True,
+            carrier="herds moved, sold and driven",
+            routes=frozenset({T.CONTACT, T.BITE, T.BLOOD, T.INGESTION}),
+            chance=lambda rules: rules.spread.livestock_pct,
+        ),
+        P.WATER_SUPPLY: PathSpec(
+            "Through a shared water supply",
+            contact=False,
+            carrier="shared wells, cisterns and aqueducts",
+            routes=frozenset({T.WATER, T.INGESTION}),
+            chance=lambda rules: rules.spread.water_supply_pct,
+        ),
         P.WATERWAY: PathSpec(
             "Downstream", contact=False, carrier="a river or canal", routes=frozenset({T.WATER}), chance=lambda rules: rules.spread.waterway_pct
         ),
     },
 )
+WATER_WORKS = frozenset({StructureKind.AQUEDUCT, StructureKind.CISTERN, StructureKind.RESERVOIR})
 CONTACT_PATHS = frozenset(path for path, spec in SPREAD_PATHS.items() if spec.contact)

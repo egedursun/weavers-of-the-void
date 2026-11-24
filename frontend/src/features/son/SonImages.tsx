@@ -13,6 +13,7 @@ export function SonImages({
   return (
     <RecordGallery
       key={son.image_prompt ?? ''}
+      sectionId='section-son-images'
       title='Images'
       nodeId={son.id}
       name={son.name}

@@ -31,7 +31,7 @@ async def servitors(ctx: TickContext) -> None:
     count(ctx, "servitor", tally)
 
 
-@reads("table.geasa")
+@reads("table.deep_passages", "table.geasa")
 @writes("table.divine_standing", "table.dominions", "table.geasa")
 async def geasa(ctx: TickContext) -> None:
     tally = GeasTally()

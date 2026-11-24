@@ -42,6 +42,8 @@ class FactionKind(StrEnum):
     WORKER_BODY = "worker_body"
     STREET_GANG = "street_gang"
     TRAFFICKING_RING = "trafficking_ring"
+    FENCE_NETWORK = "fence_network"
+    COUNTERFEITING_RING = "counterfeiting_ring"
 
 
 class FactionScale(StrEnum):
@@ -66,6 +68,8 @@ class FactionGoalKind(StrEnum):
     GAIN_PRIVILEGE = "gain_privilege"
     WIN_OFFICE = "win_office"
     RUIN_RIVAL = "ruin_rival"
+    PROTECT_MEMBERS = "protect_members"
+    FOUND_SETTLEMENT = "found_settlement"
 
 
 class FactionActionKind(StrEnum):
@@ -103,6 +107,8 @@ class EstatePrivilege(StrEnum):
     JUDICIAL_IMMUNITY = "judicial_immunity"
     RESERVED_OFFICES = "reserved_offices"
     LAND_HOLDING = "land_holding"
+    SERVICE_EXEMPTION = "service_exemption"
+    DRESS = "dress"
 
 
 class MovementCause(StrEnum):
@@ -118,6 +124,8 @@ class MovementCause(StrEnum):
     TEMPERANCE = "temperance"
     MIND_RIGHTS = "mind_rights"
     EQUAL_STANDING = "equal_standing"
+    LEARNING = "learning"
+    HEALTH = "health"
 
 
 KIND_OF_ENGINE = MappingProxyType(

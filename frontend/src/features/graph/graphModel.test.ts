@@ -6,7 +6,7 @@ import {
   ROUTE,
   buildGraph,
   defaultFocus,
-  drawerKindOf,
+  entryKindOf,
   filterGraph,
   findNode,
   linkGroupIndex,
@@ -160,8 +160,8 @@ describe('graph helpers', () => {
     )
     expect(familyOf('settlement').key).toBe('places')
     expect(familyOf('unknown').key).toBe('other')
-    expect(drawerKindOf('foreign_god')).toBe('foreign-god')
-    expect(drawerKindOf('world')).toBe('world')
+    expect(entryKindOf('foreign_god')).toBe('foreign-god')
+    expect(entryKindOf('world')).toBe('world')
     expect(findNode([{ id: 1, name: 'Ithren' }], ' ithren ')?.id).toBe(1)
     expect(validateGraphSearch({ from: '4', to: '9', focus: '0' })).toEqual({
       from: 4,

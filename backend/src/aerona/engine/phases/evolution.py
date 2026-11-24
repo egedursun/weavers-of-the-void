@@ -125,6 +125,7 @@ async def lineages(ctx: TickContext) -> None:
     "people.population",
     "settlement.population",
     "table.community_cohorts",
+    "table.deep_passages",
     "table.disease_cures",
     "table.disease_profiles",
     "table.disease_routes",
@@ -232,6 +233,9 @@ async def spillover(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.prosperity",
+    "settlement.population",
+    "settlement.prosperity",
     "table.bonds",
     "table.culture_values",
     "table.disease_routes",
@@ -240,6 +244,7 @@ async def spillover(ctx: TickContext) -> None:
     "table.nodes",
     "table.outbreaks",
     "table.plague_responses",
+    "table.polity_members",
     "table.quarantines",
     "table.structure_profiles",
     "table.theory_adherents",
@@ -247,9 +252,13 @@ async def spillover(ctx: TickContext) -> None:
     "table.tradition_profiles",
 )
 @writes(
+    "people.prosperity",
+    "settlement.population",
+    "settlement.prosperity",
     "table.chronicle",
     "table.chronicle_entities",
     "table.disease_profiles",
+    "table.entities",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
@@ -265,6 +274,7 @@ async def plague_responses(ctx: TickContext) -> None:
 @reads(
     "settlement.population",
     "table.community_cohorts",
+    "table.deep_passages",
     "table.disease_cures",
     "table.disease_profiles",
     "table.disease_routes",

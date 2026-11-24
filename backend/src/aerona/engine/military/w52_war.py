@@ -8,7 +8,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.honours import NamedUnitRow, UnitHonourRow
 from aerona.db.tables.military import ArmyOfficerRow, ArmyProfileRow, ArmyUnitRow, BattleCasualtyRow
-from aerona.db.tables.warfare import BattleRow
+from aerona.db.tables.polity import PolityMemberRow
+from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.warfare import ArmyRow, BattleRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import FugitiveKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
@@ -19,17 +21,20 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.engine.belonging.fugitives_w52 import flee
 from aerona.engine.context import TickContext
-from aerona.engine.honours.units import HonourTally, bestow, name_unit
+from aerona.engine.economy.purse import coin_of
+from aerona.engine.honours.units import HonourTally, bestow, disband_units, name_unit
 from aerona.engine.lore.taboos import dead_season
 from aerona.engine.military.aftermath import record_stacks
 from aerona.engine.military.battle import BattleResult
 from aerona.engine.military.engineering import RIVERS
-from aerona.engine.military.units import stacks_of, sync, take
+from aerona.engine.military.units import retire_stacks, stacks_of, sync, take
 from aerona.engine.mind.book import traits_of
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.levies import stand_down
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
-from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.primitives.records import retire_in
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.records import death_path
 
@@ -186,10 +191,48 @@ async def refine_stance(
         and chosen is Stance.MARCH
     ):
         chosen = Stance.ESCORT
+    elif enemy_profile is None and not attacking and stat_or(army, "morale", PERCENT) <= ctx.rules.campaigns.disband_morale:
+        chosen = Stance.DISBAND
     profile.stance = chosen
     if chosen is not before:
         await record(ctx, "army.stance", roles={IncidentRole.SUBJECT: army.id}, facts={"stance": chosen})
+    if chosen is Stance.DISBAND:
+        await disband_home(ctx, army)
+    elif chosen is Stance.FORAGE:
+        await interpret(ctx, army, profile)
     return chosen
+
+
+async def disband_home(ctx: TickContext, army: EntityRow) -> None:
+    row = await ctx.session.get(ArmyRow, army.id)
+    if row is None or row.disbanded_epoch is not None:
+        return
+    owner = await living_entity(ctx.session, row.owner_entity_id)
+    row.disbanded_epoch = ctx.epoch
+    unpaid = owner is not None and await coin_of(ctx.session, ctx.rules, owner) <= 0
+    stand_down(ctx.rules, army, owner)
+    await disband_units(ctx, army.id, HonourTally())
+    await retire_stacks(ctx.session, army.id)
+    await retire_in(ctx, army, "sent home and disbanded", close_bonds=True)
+    if unpaid and owner is not None:
+        for town in await present_towns(ctx, owner.id):
+            profile = await ctx.session.get(SettlementProfileRow, town.id)
+            if profile is not None and "crime" not in profile.locked:
+                profile.crime = clamp_int(profile.crime + ctx.rules.campaigns.unpaid_banditry, 0, PERCENT)
+
+
+async def present_towns(ctx: TickContext, owner_id: int) -> list[EntityRow]:
+    rows = await ctx.session.scalars(
+        select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == owner_id).order_by(PolityMemberRow.member_entity_id)
+    )
+    found = [await living_entity(ctx.session, town_id) for town_id in list(rows)]
+    return [town for town in found if town is not None and not held(town.id)]
+
+
+async def interpret(ctx: TickContext, army: EntityRow, profile: ArmyProfileRow) -> None:
+    if await officer(ctx, army.id, ArmyRole.INTERPRETER) is None or "supply_days" in profile.locked:
+        return
+    profile.supply_days += round_half_up(ctx.rules.logistics.season_days * role_effect(ctx, ArmyRole.INTERPRETER) / PERCENT)
 
 
 async def honour_army(ctx: TickContext, army_id: int, kind: UnitHonourKind, place: str, tally: HonourTally) -> int:
@@ -281,11 +324,15 @@ async def scatter_named(ctx: TickContext, battle_id: int, mortal: EntityRow, sid
         fate = CasualtyFate.MISSING
     elif rng.chance(table.loser_deserted_pct * rout_pct / PERCENT):
         fate = CasualtyFate.DESERTED
+    elif rng.chance(table.camp_sick_pct):
+        fate = CasualtyFate.SICK
     else:
         return None
     ctx.session.add(BattleCasualtyRow(battle_id=battle_id, mortal_entity_id=mortal.id, side_entity_id=side_id, fate=fate, harm=0, note=None))
     if fate is CasualtyFate.DESERTED:
         await desert_named(ctx, mortal, battle_id, side_id)
+    if fate is CasualtyFate.SICK:
+        shift_stat(mortal, "hp", -table.camp_sick_harm)
     return fate
 
 

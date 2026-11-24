@@ -133,7 +133,7 @@ SOLE_HEIR: Mapping[InheritanceCustom, Callable[[list[EntityRow], str | None], En
         InheritanceCustom.SENIORITY: lambda by_age, _: by_age[0],
         InheritanceCustom.DESIGNATED: lambda by_age, _: by_age[0],
     },
-    without={InheritanceCustom.EQUAL_SHARES},
+    without={InheritanceCustom.EQUAL_SHARES, InheritanceCustom.COMMUNAL},
 )
 
 
@@ -143,6 +143,8 @@ def heirs_by_custom(custom: InheritanceCustom, children: list[EntityRow], second
     by_age = sorted(children, key=lambda child: (-(stat(child, "age") or 0), child.id))
     if custom is InheritanceCustom.EQUAL_SHARES:
         return by_age
+    if custom is InheritanceCustom.COMMUNAL:
+        return []
     return [SOLE_HEIR[custom](by_age, second)]
 
 

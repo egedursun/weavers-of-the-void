@@ -28,6 +28,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import asabiyya_factor
 from aerona.engine.demography.kinship import assimilation_factor
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.language import intelligibility
 from aerona.engine.mind.drives import closeness
 from aerona.engine.mind.space import value_distance
@@ -294,9 +295,15 @@ async def tongues(ctx: TickContext, entity_id: int) -> set[int]:
 async def absorb_people(ctx: TickContext, people: EntityRow, into: EntityRow, *, union: bool, reason: str) -> None:
     cycles = ctx.rules.life_cycles
     low, high = headcount_bounds(ctx.rules, into)
-    set_stats(
-        into, population=clamp_int((stat(into, "population") or 0) + round_half_up((stat(people, "population") or 0) * cycles.people_kept_pct / 100), low, high)
-    )
+    before = stat(into, "population") or 0
+    joining = stat(people, "population") or 0
+    after = clamp_int(before + round_half_up(joining * cycles.people_kept_pct / 100), low, high)
+    moved = clamp_int(after - before, 0, joining)
+    with flowing(FlowCategory.MERGE):
+        set_stats(into, population=before + moved)
+        set_stats(people, population=joining - moved)
+    with flowing(FlowCategory.TRANSFORMATION):
+        set_stats(people, population=0)
     bonds = BondRepository(ctx.session)
     for bond in await bonds.outgoing(people.id, BondKind.KNOWS):
         knowledge = await living_entity(ctx.session, bond.target_node_id)
@@ -404,6 +411,7 @@ async def peoples(ctx: TickContext) -> int:
     "table.bonds",
     "table.community_relations",
     "table.culture_values",
+    "table.deep_passages",
     "table.entities",
     "table.entity_flags",
     "table.faction_profiles",

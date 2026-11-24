@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { shortcutItems } from '@/config/navigation'
-import { useDrawerStack } from './drawer/useDrawerStack'
+import { useEntryStack } from './entry/useEntryStack'
 
 const HELP_KEY = '?'
 
@@ -24,7 +24,7 @@ function overlayOpen(): boolean {
 
 export function useGlobalShortcuts() {
   const navigate = useNavigate()
-  const { open } = useDrawerStack()
+  const { open } = useEntryStack()
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {

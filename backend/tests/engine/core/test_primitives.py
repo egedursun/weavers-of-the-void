@@ -67,7 +67,7 @@ async def test_region_atlas_hops_and_reach(world: CoreWorld, session: AsyncSessi
     assert not atlas.near(world.people.id, world.species.id, None)
     assert atlas.near(world.people.id, world.species.id, seafaring_reach(Rules(), seafaring=True, sea_ban=False))
     assert seafaring_reach(Rules(), seafaring=True, sea_ban=True) is None
-    assert not atlas.same_region(world.language.id, world.language.id)
+    assert not atlas.same_cell(world.language.id, world.language.id)
 
 
 async def test_capacity_blends_place_and_region(world: CoreWorld, session: AsyncSession, rules: Rules) -> None:

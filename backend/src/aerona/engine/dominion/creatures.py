@@ -9,6 +9,7 @@ from aerona.catalog.life.dominion import LESSON_SIGN
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.random import SeededRandom
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.dominion import CreatureLessonRow, DivineCreatureRow, DominionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -20,6 +21,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import BeastStats
+from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.features import add_stock
@@ -28,7 +30,7 @@ from aerona.engine.dominion.core import patrons
 from aerona.engine.ecology.control import NewBeast, create_beast
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import has_stat, shift_stat
 from aerona.engine.recording.record import record
@@ -69,9 +71,10 @@ async def raise_creature(ctx: TickContext, god_id: int, *, name: str, descriptio
 
 
 def taught(rules_shift: int, weights: dict[str, int], deed: CreatureDeed, lesson: CreatureLesson, *, low: int, high: int) -> dict[str, int]:
-    step = rules_shift * LESSON_SIGN[lesson]
     current = dict(weights) or default_weights()
-    current[deed.value] = clamp_int(current.get(deed.value, START_WEIGHT) + step, low, high)
+    weight = current.get(deed.value, START_WEIGHT)
+    step = rules_shift * LESSON_SIGN[lesson] if LESSON_SIGN[lesson] else round_half_up((START_WEIGHT - weight) / 2)
+    current[deed.value] = clamp_int(weight + step, low, high)
     return current
 
 
@@ -230,6 +233,38 @@ async def wander(scene: Scene) -> Acted | None:
 @DEED_ACTS.on(CreatureDeed.REST)
 async def rest(scene: Scene) -> Acted | None:
     return None
+
+
+@DEED_ACTS.on(CreatureDeed.CARRY_MESSAGES)
+async def carry_word(scene: Scene) -> Acted | None:
+    if not scene.towns:
+        return None
+    for town in scene.towns:
+        await sway(scene.ctx, town.id, scene.god, love=scene.ctx.rules.divine_creatures.message_love)
+    return Acted(scene.towns[0].id)
+
+
+@DEED_ACTS.on(CreatureDeed.TEACH)
+async def teach_folk(scene: Scene) -> Acted | None:
+    for town in scene.towns:
+        people = await people_of(scene.ctx.session, town)
+        culture = await scene.ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+        if culture is not None and not held(culture.people_entity_id) and "literacy" not in culture.locked:
+            culture.literacy = clamp_int(culture.literacy + scene.ctx.rules.divine_creatures.teach_literacy, 0, PERCENT)
+            return Acted(town.id)
+    return None
+
+
+@DEED_ACTS.on(CreatureDeed.TRADE)
+async def trade_with(scene: Scene) -> Acted | None:
+    for town in scene.towns:
+        if has_stat(town, "prosperity") and not held(town.id):
+            shift_stat(town, "prosperity", scene.ctx.rules.divine_creatures.trade_prosperity)
+            return Acted(town.id)
+    return None
+
+
+DEED_ACTS.seal()
 
 
 async def perform(ctx: TickContext, atlas: RegionAtlas, beast: EntityRow, row: DivineCreatureRow, faithful: dict[int, int]) -> Acted | None:

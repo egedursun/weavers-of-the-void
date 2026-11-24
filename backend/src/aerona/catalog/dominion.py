@@ -16,6 +16,8 @@ HEAT = DivineScale.HEAT
 GROWTH = DivineScale.GROWTH
 LUCK = DivineScale.FORTUNE
 MAGIC = DivineScale.MAGIC
+HEALTH = DivineScale.HEALTH
+PEACE = DivineScale.PEACE
 
 DOMAIN_SCALES = total(
     Domain,
@@ -26,15 +28,15 @@ DOMAIN_SCALES = total(
         D.SKY: ((ORDER, 1),),
         D.STORM: ((ORDER, -1),),
         D.DEATH: ((GROWTH, -1),),
-        D.LIFE: ((GROWTH, 1),),
+        D.LIFE: ((GROWTH, 1), (HEALTH, 1)),
         D.DREAM: ((MAGIC, 1),),
         D.TIME: ((ORDER, 1),),
         D.LIGHT: ((ORDER, 1),),
         D.SHADOW: ((LUCK, -1),),
-        D.WAR: ((ORDER, -1),),
+        D.WAR: ((ORDER, -1), (PEACE, -1)),
         D.CRAFT: ((WORK, 1),),
         D.KNOWLEDGE: ((MAGIC, 1),),
-        D.LOVE: ((GROWTH, 1),),
+        D.LOVE: ((GROWTH, 1), (PEACE, 1)),
         D.TRICKERY: ((LUCK, -1),),
         D.HUNT: ((WORK, 1),),
         D.PLANTS: ((GROWTH, 1),),
@@ -46,7 +48,7 @@ DOMAIN_SCALES = total(
         D.MADNESS: ((ORDER, -1),),
         D.TRADE: ((LUCK, 1),),
         D.ROAD: ((WORK, 1),),
-        D.PLAGUE: ((GROWTH, -1),),
+        D.PLAGUE: ((GROWTH, -1), (HEALTH, -1)),
         D.HARVEST: ((WORK, 1),),
         D.MOON: ((MAGIC, 1),),
         D.SUN: ((HEAT, 1),),
@@ -70,7 +72,7 @@ DOMAIN_SCALES = total(
     },
 )
 
-FAVOURED_POLE = total(DivineScale, {ORDER: 1, WORK: 1, HEAT: 0, GROWTH: 1, LUCK: 1, MAGIC: 1})
+FAVOURED_POLE = total(DivineScale, {ORDER: 1, WORK: 1, HEAT: 0, GROWTH: 1, LUCK: 1, MAGIC: 1, HEALTH: 1, PEACE: 1})
 
 SCALE_POLES = total(
     DivineScale,
@@ -81,6 +83,8 @@ SCALE_POLES = total(
         GROWTH: ("growth", "decay"),
         LUCK: ("fortune", "misfortune"),
         MAGIC: ("magic", "drain"),
+        HEALTH: ("health", "sickness"),
+        PEACE: ("peace", "strife"),
     },
 )
 
@@ -154,7 +158,15 @@ ALIGNMENT_MANIFESTATIONS = total(
 )
 MANIFESTATION_ORDER = total(
     Manifestation,
-    {Manifestation.RADIANT: 0, Manifestation.SERENE: 0, Manifestation.STERN: -100, Manifestation.DREADFUL: 50, Manifestation.VEILED: 0},
+    {
+        Manifestation.RADIANT: 0,
+        Manifestation.SERENE: 0,
+        Manifestation.STERN: -100,
+        Manifestation.DREADFUL: 50,
+        Manifestation.VEILED: 0,
+        Manifestation.PLAYFUL: -50,
+        Manifestation.SORROWFUL: 0,
+    },
 )
 
 HELPFUL_DEEDS = frozenset({CreatureDeed.TEND_FIELDS, CreatureDeed.HEAL_SICK, CreatureDeed.GUARD_HOLY_SITES})
@@ -174,6 +186,8 @@ WORSHIP_MODES = total(
         WorshipMode.DEVOTION: WorshipModeSpec("Devotion"),
         WorshipMode.APPEASEMENT: WorshipModeSpec("Appeasement"),
         WorshipMode.BARGAIN: WorshipModeSpec("Bargain", bargains=True),
+        WorshipMode.UNION: WorshipModeSpec("Union"),
+        WorshipMode.KINSHIP: WorshipModeSpec("Kinship"),
     },
 )
 BARGAINING_MODES = frozenset(mode for mode, spec in WORSHIP_MODES.items() if spec.bargains)
@@ -194,5 +208,7 @@ PRAYER_TONES = total(
         PrayerTone.MERCY: PrayerToneSpec("Mercy", lambda rules: rules.worship.mercy_essence, asks=True),
         PrayerTone.REQUEST: PrayerToneSpec("Request", lambda rules: rules.worship.request_essence, asks=True),
         PrayerTone.PRAISE: PrayerToneSpec("Praise", lambda rules: rules.worship.praise_essence, praises=True),
+        PrayerTone.LAMENT: PrayerToneSpec("Lament", lambda rules: rules.worship.lament_essence),
+        PrayerTone.CONFESSION: PrayerToneSpec("Confession", lambda rules: rules.worship.confession_essence),
     },
 )

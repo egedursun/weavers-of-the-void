@@ -21,6 +21,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import AccountKind, AccountMedium
 from aerona.domain.enums.couplings import TeachingState
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.intrigue import HookSource, HookStrength
@@ -29,13 +30,14 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.accounts import RECORDED
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import shift_points
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.book import faith_tenets
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.intrigue.names import teach_name
 from aerona.engine.lore.art_forms import practise
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import connect, top_region
-from aerona.engine.primitives.stats import stat_or
+from aerona.engine.primitives.stats import has_stat, shift_stat, stat_or
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.lore import grant, holdings
 
@@ -252,6 +254,23 @@ SOURCE_GIVERS: Mapping[KnowledgeKind, Callable[[TickContext, list[int], EntityRo
     KnowledgeKind.ART_FORM: give_art,
     KnowledgeKind.SONG: give_song,
 }
+
+
+async def give_remedy(ctx: TickContext, lesson: Lesson) -> int | None:
+    home = lesson.learner.location_id if lesson.learner.entity_type is EntityType.MORTAL else lesson.learner.id
+    if home is None or held(home):
+        return None
+    await goods_of(ctx.session, ctx.epoch).add(home, CommodityKind.MEDICINE, ctx.rules.knowledge.remedy_worth * lesson.fidelity // PERCENT, GoodsFlow.HARVEST)
+    return lesson.teacher.id
+
+
+async def give_genealogy(ctx: TickContext, lesson: Lesson) -> int | None:
+    if held(lesson.learner.id) or not has_stat(lesson.learner, "renown"):
+        return None
+    shift_stat(lesson.learner, "renown", ctx.rules.knowledge.genealogy_worth * lesson.fidelity // PERCENT)
+    return lesson.teacher.id
+
+
 Giver = Callable[[TickContext, Lesson], Awaitable[int | None]]
 GIVERS: Mapping[KnowledgeKind, Giver] = total(
     KnowledgeKind,
@@ -271,6 +290,8 @@ GIVERS: Mapping[KnowledgeKind, Giver] = total(
         KnowledgeKind.PATTERN: give_lore,
         KnowledgeKind.SOURCE: give_lore,
         KnowledgeKind.SECRET: give_secret,
+        KnowledgeKind.REMEDY: give_remedy,
+        KnowledgeKind.GENEALOGY: give_genealogy,
     },
 )
 

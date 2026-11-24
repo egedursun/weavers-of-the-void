@@ -44,6 +44,7 @@ import {
   Users,
   Wand2,
   Zap,
+  BrainCog,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -96,7 +97,7 @@ export const OBJECTS: Record<Schema['DivineObject'], Named> = {
   weather: { label: 'Weather', icon: CloudRain, tone: 'info' },
   source: { label: 'Sources of power', icon: Gem, tone: 'verdigris' },
   power: { label: 'Powers in the land', icon: Wand2, tone: 'verdigris' },
-  mind: { label: 'Minds', icon: Brain, tone: 'info' },
+  mind: { label: 'Minds', icon: BrainCog, tone: 'info' },
   truth: { label: 'Hidden truths', icon: EyeOff, tone: 'muted' },
   law: { label: 'Laws', icon: Scroll, tone: 'gold' },
   memory: { label: 'Memories', icon: Database, tone: 'info' },

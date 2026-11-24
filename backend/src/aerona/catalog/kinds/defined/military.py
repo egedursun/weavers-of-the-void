@@ -64,6 +64,8 @@ SABOTAGE_KIND = total(
         SabotageKind.RITE_DISRUPTION: Defined("Rite disruption", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
         SabotageKind.SOURCE_POISONING: Defined("Source poisoning", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
         SabotageKind.MACHINE_SEIZURE: Defined("Machine seizure", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
+        SabotageKind.RECORD_TAMPERING: Defined("Record tampering", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
+        SabotageKind.ROUTE_BLOCKING: Defined("Route blocking", checked_by=("engine.military.sabotage.WIDER_SABOTAGE",), used_by=()),
     },
 )
 

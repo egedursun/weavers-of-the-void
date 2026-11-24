@@ -90,6 +90,7 @@ async def envy(ctx: TickContext, work: EntityRow, owner: EntityRow, neighbours: 
     "table.cosmos",
     "table.creator",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",

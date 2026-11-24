@@ -179,3 +179,5 @@ class CampaignsRules(Spanned):
 
     def war_seasons(self) -> int:
         return self.per_epoch(self.seasons_per_war_epoch)
+
+    unpaid_banditry: int = rule(5, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Crime each town of a realm gains when it sends home an army it cannot pay")

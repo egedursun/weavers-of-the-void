@@ -23,6 +23,7 @@ import {
   GAS_ATMOSPHERE,
   SURFACE_CODE,
   WORLD_BODY,
+  WORLD_SEA,
 } from '../model/looks'
 import { ForeignGodSeal } from './ForeignGodSeal'
 import { LEAK_VISIBLE_FROM, LeakEffect } from './LeakEffect'
@@ -63,26 +64,6 @@ const HOVER_EASE = 8
 const SEA_DEFAULT = 0.5
 const SEA_SPREAD = 0.18
 const center = new Vector3()
-const TERRAIN_SEA: Partial<Record<string, number>> = {
-  ocean: 0.82,
-  sand: 0.12,
-  ice: 0.4,
-  lava: 0.45,
-  dead: 0.3,
-  hycean: 0.85,
-  greenhouse: 0.05,
-  iron: 0.12,
-  chthonian: 0.1,
-  dwarf_planet: 0.15,
-  jungle: 0.35,
-  carbon: 0.25,
-  forge: 0.25,
-  fungal: 0.35,
-  shattered: 0.6,
-  ice_shell: 0.2,
-  methane: 0.3,
-}
-
 type World3DProps = {
   item: CosmosWorld
   body: WorldBody
@@ -118,14 +99,14 @@ export function World3D({
   const materials = useMemo(() => {
     const colors = paletteColors(paletteKey.split(','), '--cosmos-fog')
     const light = starLight(starType, starBrightness)
-    const toxic = atmosphere?.toxic ?? false
-    const atmosphereColor = toxic
-      ? tokenColor('--cosmos-toxic')
+    const tint = atmosphere?.tint ?? null
+    const atmosphereColor = tint
+      ? tokenColor(tint.air)
       : (look.gas ? colors[3] : colors[1])
           .clone()
           .lerp(new Color(1, 1, 1), 0.35)
-    const cloudColor = toxic
-      ? tokenColor('--cosmos-toxic-cloud')
+    const cloudColor = tint
+      ? tokenColor(tint.cloud)
       : colors[9].clone().lerp(tokenColor('--cosmos-bone'), 0.5)
     const city =
       look.cities && !misty
@@ -142,7 +123,7 @@ export function World3D({
         uStarColor: uniform(light),
         uLit: uniform(lit),
         uSea: uniform(
-          TERRAIN_SEA[world.world_type] ??
+          WORLD_SEA[world.world_type] ??
             SEA_DEFAULT + signedHash(`sea${world.id}`) * SEA_SPREAD
         ),
         uMount: uniform(0.5 + unitHash(`mt${world.id}`) * 0.6),

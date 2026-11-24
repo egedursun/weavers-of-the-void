@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from aerona.core.total import total
-from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
+from aerona.domain.enums.affliction import CureKind, ForgetScope, PackageKind, SleepUntil, Transmission, Visibility
 from aerona.domain.enums.body import BodyFunction, ConditionKind
 from aerona.domain.enums.culture import CurseKind
 from aerona.domain.enums.mind import NeedKind, ValueAxis
@@ -36,6 +36,9 @@ class StageSpec:
     lucky: bool = False
     binds: bool = False
     fades: bool = False
+    hastens: bool = False
+    forgets: bool = False
+    sleeps: bool = False
 
 
 @dataclass(frozen=True)
@@ -313,6 +316,38 @@ PACKAGES: MappingProxyType[PackageKind, PackageSpec] = total(
             Visibility.OBVIOUS,
             cure_level=3,
         ),
+        P.AGEING: PackageSpec(
+            P.AGEING,
+            "Ageing",
+            "Ageing sped, slowed or stopped for its holder, at a rate set when it is laid.",
+            frozenset({T.CURSE, T.RITE, T.GAZE}),
+            0,
+            (StageSpec("Ageing changed", None, hastens=True),),
+            frozenset({C.RITE, C.RELEASE, C.SITE, C.POWER}),
+            Visibility.MARKED,
+            cure_level=2,
+        ),
+        P.FORGETTING: PackageSpec(
+            P.FORGETTING,
+            "Forgetting",
+            "Memories, skills or a person's name taken from the holder, which can be learned again.",
+            frozenset({T.CURSE, T.RITE, T.INGESTION}),
+            0,
+            (StageSpec("Forgetting", 1, forgets=True),),
+            frozenset({C.RITE, C.RELEASE, C.MEDICINE, C.TIME}),
+            Visibility.HIDDEN,
+        ),
+        P.SLEEP: PackageSpec(
+            P.SLEEP,
+            "Sleep",
+            "A sleep the holder cannot leave until its cure comes.",
+            frozenset({T.CURSE, T.RITE, T.INGESTION}),
+            0,
+            (StageSpec("Asleep", None, ConditionKind.COMATOSE, 2, sleeps=True),),
+            frozenset({C.RELEASE, C.QUEST, C.SITE, C.DIVINE}),
+            Visibility.OBVIOUS,
+            cure_level=3,
+        ),
     },
 )
 
@@ -337,6 +372,22 @@ CURSE_PACKAGES: MappingProxyType[CurseKind, PackageKind | None] = total(
         CurseKind.COMPULSION: P.CHARM,
         CurseKind.AGING: P.GEAS_DOOM,
         CurseKind.EXPOSURE: P.FORTUNE,
+        CurseKind.ISOLATION: P.CHARM,
+        CurseKind.WEAKNESS: P.GEAS_DOOM,
     },
 )
 NEW_CURSE_KINDS = (CurseKind.TRANSFORMATION, CurseKind.COMPULSION)
+
+SLEEP_CURES: MappingProxyType[SleepUntil, CureKind] = total(SleepUntil, {SleepUntil.TIME: C.TIME, SleepUntil.DEED: C.QUEST, SleepUntil.ACT: C.RELEASE})
+FORGET_SCOPES: MappingProxyType[ForgetScope, str] = total(
+    ForgetScope,
+    {
+        ForgetScope.RECENT: "What came last",
+        ForgetScope.PERSON: "A person and all tied to them",
+        ForgetScope.SKILL: "What the hands knew",
+        ForgetScope.ALL: "A share of everything",
+    },
+)
+SLEEP_UNTILS: MappingProxyType[SleepUntil, str] = total(
+    SleepUntil, {SleepUntil.TIME: "Until its time runs out", SleepUntil.DEED: "Until a deed is done", SleepUntil.ACT: "Until one person acts"}
+)

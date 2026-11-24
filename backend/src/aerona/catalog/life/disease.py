@@ -25,4 +25,7 @@ LEANINGS: dict[PlagueResponse, tuple[ValueAxis, ...]] = {
     PlagueResponse.PRAYER: (ValueAxis.PIETY, ValueAxis.SUPERSTITION),
     PlagueResponse.SEEK_CURE: (ValueAxis.KNOWLEDGE, ValueAxis.MERCY),
     PlagueResponse.SANITATION: (ValueAxis.KNOWLEDGE, ValueAxis.PURITY),
+    PlagueResponse.FLEE: (ValueAxis.KINSHIP,),
+    PlagueResponse.INOCULATE: (ValueAxis.KNOWLEDGE,),
+    PlagueResponse.CLOSE_GATHERINGS: (ValueAxis.LAW, ValueAxis.KNOWLEDGE),
 }

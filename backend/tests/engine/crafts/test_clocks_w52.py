@@ -9,7 +9,7 @@ RULES = Rules()
 
 
 def test_eight_clocks_and_the_ones_that_keep_longitude() -> None:
-    assert len(ClockKind) == 8 and set(PRECISION) == set(ClockKind)
+    assert len(ClockKind) == 9 and set(PRECISION) == set(ClockKind)
     assert {ClockKind.CHRONOMETER, ClockKind.ELECTRONIC} == LONGITUDE_CLOCKS and LADDER[0][0] is ClockKind.ELECTRONIC
 
 

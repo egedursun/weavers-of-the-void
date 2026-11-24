@@ -3,7 +3,7 @@ from aerona.domain.enums.culture import CalendarSlot, RiteStage, TraditionFuncti
 
 
 def test_twenty_functions_each_with_a_slot_fit_and_a_cost() -> None:
-    assert len(FUNCTIONS) == len(TraditionFunction) == 20
+    assert len(FUNCTIONS) == len(TraditionFunction) == 23
     assert slot_fit(TraditionFunction.FAIR, None) is CalendarSlot.MARKET
     assert slot_fit(TraditionFunction.COMMEMORATION, None) is CalendarSlot.REMEMBRANCE
     assert slot_fit(TraditionFunction.RITE_OF_PASSAGE, RiteStage.NAMING) is CalendarSlot.NEW_YEAR

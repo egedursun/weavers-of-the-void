@@ -25,6 +25,9 @@ PEACE_COSTS: MappingProxyType[PeaceTermKind, int] = total(
         K.CAPTIVE_RELEASE: 0,
         K.CHAMPION: 5,
         K.WHITE_PEACE: 0,
+        K.BORDER_ACCORD: 8,
+        K.RETURN_OF_REFUGEES: 5,
+        K.APOLOGY: 3,
     },
 )
 
@@ -41,5 +44,7 @@ CASUS_BELLI_LABELS: MappingProxyType[CasusBelliKind, str] = total(
         CasusBelliKind.DEBT_DEFAULT: "A defaulted debt",
         CasusBelliKind.RESOURCE_NEED: "Need of land and food",
         CasusBelliKind.CONQUEST: "Conquest",
+        CasusBelliKind.BROKEN_WITNESSED_PACT: "A pact broken before its witnesses",
+        CasusBelliKind.HARBOURING_FUGITIVES: "Fugitives harboured",
     },
 )

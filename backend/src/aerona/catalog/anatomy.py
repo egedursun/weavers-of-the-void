@@ -177,7 +177,7 @@ AQUATIC_PARTS: tuple[Part, ...] = (
     Part(P.GILLS, "Gills", R.TORSO, (F.BREATH,), vital=True),
     Part(P.TORSO, "Body", R.TORSO, (F.VITAL,)),
     *_organs(breath=False),
-    *_pair(P.LEFT_FIN, P.RIGHT_FIN, "fin", R.ARMS, (F.LOCOMOTION, F.FINE_MANIPULATION)),
+    *_pair(P.LEFT_FIN, P.RIGHT_FIN, "fin", R.ARMS, (F.LOCOMOTION, F.FINE_MANIPULATION, F.SWIM)),
     Part(P.TAIL, "Tail fin", R.TAIL, (F.LOCOMOTION, F.TAIL), severable=True),
     SPINE_PART,
 )
@@ -263,6 +263,25 @@ COLONIAL_PARTS: tuple[Part, ...] = (
     Part(P.PSEUDOPODS, "Reaching members", R.ARMS, (F.GRASP, F.FINE_MANIPULATION), severable=True, shared=True),
 )
 
+HEXAPOD_PARTS: tuple[Part, ...] = (
+    Part(P.HEAD, "Head", R.HEAD, (F.COGNITION, F.PRESENCE), vital=True),
+    *_pair(P.LEFT_EYE, P.RIGHT_EYE, "eye", R.HEAD, (F.SIGHT,)),
+    *_pair(P.LEFT_ANTENNA, P.RIGHT_ANTENNA, "antenna", R.HEAD, (F.HEARING,)),
+    Part(P.TORSO, "Body", R.TORSO, (F.VITAL, F.PRESENCE)),
+    *_organs(),
+    Part(P.POUCH, "Brood pouch", R.TORSO, (F.REPRODUCTION,)),
+    *_pair(P.LEFT_FORELEG, P.RIGHT_FORELEG, "foreleg", R.ARMS, (F.GRASP, F.CLIMB)),
+    *_pair(P.LEFT_MIDLEG, P.RIGHT_MIDLEG, "middle leg", R.LEGS, (F.LOCOMOTION, F.CLIMB)),
+    *_pair(P.LEFT_HINDLEG, P.RIGHT_HINDLEG, "hind leg", R.LEGS, (F.LOCOMOTION,)),
+)
+
+ROOTED_PARTS: tuple[Part, ...] = (
+    Part(P.CORE, "Crown", R.HEAD, (F.COGNITION, F.SIGHT), vital=True),
+    Part(P.TORSO, "Stem", R.TORSO, (F.VITAL, F.BREATH, F.PRESENCE)),
+    Part(P.ROOTS, "Roots", R.LEGS, (F.VITAL, F.LOCOMOTION), vital=True, internal=True),
+    *_pair(P.LEFT_BRANCH, P.RIGHT_BRANCH, "branch", R.ARMS, (F.GRASP, F.REPRODUCTION)),
+)
+
 ANATOMIES: dict[BodyPlan, Anatomy] = {
     BodyPlan.HUMANOID: Anatomy(BodyPlan.HUMANOID, "Humanoid", HUMANOID_PARTS),
     BodyPlan.QUADRUPED: Anatomy(BodyPlan.QUADRUPED, "Four-legged", QUADRUPED_PARTS),
@@ -280,6 +299,8 @@ ANATOMIES: dict[BodyPlan, Anatomy] = {
     BodyPlan.CENTAUROID: Anatomy(BodyPlan.CENTAUROID, "Upright on four legs", CENTAUROID_PARTS),
     BodyPlan.RADIAL: Anatomy(BodyPlan.RADIAL, "Built round a centre", RADIAL_PARTS),
     BodyPlan.COLONIAL: Anatomy(BodyPlan.COLONIAL, "Many living members", COLONIAL_PARTS, colonial=True),
+    BodyPlan.HEXAPOD: Anatomy(BodyPlan.HEXAPOD, "Six-limbed", HEXAPOD_PARTS),
+    BodyPlan.ROOTED: Anatomy(BodyPlan.ROOTED, "Rooted", ROOTED_PARTS, bleeds=False),
 }
 
 SIGHT_PARTS = frozenset(part.key for anatomy in ANATOMIES.values() for part in anatomy.parts if F.SIGHT in part.functions)

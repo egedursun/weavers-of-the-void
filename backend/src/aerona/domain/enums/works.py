@@ -18,6 +18,10 @@ class WorksKind(StrEnum):
     TERRAFORMING_STAGE = "terraforming_stage"
     MEGASTRUCTURE_STAGE = "megastructure_stage"
     GROWN_WORKS = "grown_works"
+    LIGHTHOUSE = "lighthouse"
+    TERRACING = "terracing"
+    IRRIGATION = "irrigation"
+    TUNNEL = "tunnel"
 
 
 class LabourRegime(StrEnum):
@@ -41,6 +45,8 @@ class EnterpriseForm(StrEnum):
     LICENCE_HOLDER = "licence_holder"
     ARSENAL = "arsenal"
     MINT = "mint"
+    GRANARY_BOARD = "granary_board"
+    POST = "post"
 
 
 class EnterpriseManagement(StrEnum):

@@ -29,6 +29,7 @@ from aerona.engine.phases.dominion import count
     "table.coalition_members",
     "table.commemorations",
     "table.community_cohorts",
+    "table.deep_passages",
     "table.districts",
     "table.entities",
     "table.faction_memberships",
@@ -57,6 +58,7 @@ from aerona.engine.phases.dominion import count
     "table.peer_members",
     "table.polity_members",
     "table.polity_profiles",
+    "table.powers",
     "table.purity_ranks",
     "table.referendums",
     "table.skills",
@@ -90,6 +92,7 @@ async def belonging(ctx: TickContext) -> None:
 @reads(
     "cult.influence",
     "table.bonds",
+    "table.captives",
     "table.community_relations",
     "table.crime_cases",
     "table.cult_holdings",
@@ -108,6 +111,7 @@ async def belonging(ctx: TickContext) -> None:
     "table.personality_values",
     "table.polity_members",
     "table.prisoners",
+    "table.registries",
     "table.relationships",
     "table.reputations",
     "table.sanctuaries",
@@ -139,8 +143,31 @@ async def sanctuary(ctx: TickContext) -> None:
     count(ctx, "sanctuary", tally)
 
 
-@reads("table.artwork_profiles", "table.entities", "table.nodes", "table.offices", "table.satires")
-@writes("table.bias_weights", "table.mortal_profiles", "table.satires")
+@reads(
+    "table.artwork_profiles",
+    "table.entities",
+    "table.media_outlets",
+    "table.node_births",
+    "table.nodes",
+    "table.offices",
+    "table.polity_members",
+    "table.prisoners",
+    "table.sanctuaries",
+    "table.satires",
+    "table.settlement_profiles",
+    "table.social_norms",
+    "table.structure_profiles",
+)
+@writes(
+    "table.bias_weights",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.mortal_profiles",
+    "table.satires",
+)
 async def satire(ctx: TickContext) -> None:
     tally = SatireTally()
     await keep_satire(ctx, tally)

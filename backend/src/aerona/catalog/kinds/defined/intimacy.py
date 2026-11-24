@@ -14,6 +14,8 @@ BIRTH_COMPLICATION = total(
         BirthComplication.NONE: Defined(
             "None", checked_by=("engine.intimacy.course.complication_kind",), used_by=("db.tables.intimacy.ReproductiveCourseRow",)
         ),
+        BirthComplication.STILLBIRTH: Defined("Stillbirth", checked_by=(), used_by=()),
+        BirthComplication.BIRTH_INJURY: Defined("Birth injury", checked_by=(), used_by=()),
     },
 )
 
@@ -41,5 +43,6 @@ RELATION_CONTEXT = total(
         ),
         RelationContext.WITH_MADE_MINDS: Defined("With made minds", checked_by=(), used_by=("engine.intimacy.norms.contexts_of",)),
         RelationContext.WITH_OTHER_KINDS: Defined("With other kinds", checked_by=(), used_by=("engine.intimacy.norms.contexts_of",)),
+        RelationContext.WITH_SPIRITS_OR_GODS: Defined("With spirits or gods", checked_by=(), used_by=()),
     },
 )

@@ -52,6 +52,7 @@ import {
   Globe,
   Hammer,
   Hand,
+  Handshake,
   HardHat,
   Heart,
   HeartCrack,
@@ -59,6 +60,7 @@ import {
   HeartPulse,
   Hourglass,
   Key,
+  KeyRound,
   Landmark,
   Leaf,
   Lightbulb,
@@ -115,6 +117,7 @@ import {
   Unlink,
   UserCog,
   Users,
+  UserX,
   Utensils,
   UtensilsCrossed,
   VenetianMask,
@@ -126,6 +129,10 @@ import {
   Wind,
   Wrench,
   Zap,
+  HandHeart,
+  HourglassCog,
+  Bandage,
+  Repeat,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -320,6 +327,8 @@ export const RITE_STAGES: Record<Schemas['RiteStage'], LoreNamed> = {
   union: { label: 'Union', icon: HeartHandshake, tone: 'gold' },
   elderhood: { label: 'Elderhood', icon: Hourglass, tone: 'verdigris' },
   death: { label: 'Death', icon: Flower2, tone: 'muted' },
+  departure: { label: 'Departure', icon: DoorOpen, tone: 'info' },
+  initiation: { label: 'Initiation', icon: KeyRound, tone: 'gold' },
 }
 
 export const TRADITION_KINDS: Record<Schemas['TraditionFunction'], LoreNamed> =
@@ -356,12 +365,21 @@ export const TRADITION_KINDS: Record<Schemas['TraditionFunction'], LoreNamed> =
     commemoration: { label: 'Commemoration', icon: Landmark, tone: 'muted' },
     competition: { label: 'Competition', icon: Sparkles, tone: 'gold' },
     fair: { label: 'Fair', icon: Store, tone: 'gold' },
+    reconciliation: {
+      label: 'Reconciliation',
+      icon: PartyPopper,
+      tone: 'gold',
+    },
+    thanksgiving: { label: 'Thanksgiving', icon: PartyPopper, tone: 'gold' },
+    welcome: { label: 'Welcome', icon: PartyPopper, tone: 'gold' },
   }
 
 export const TRADITION_TERMS: Record<string, LoreNamed> = {
   food: { label: 'Food', icon: Wheat, tone: 'warning' },
   goods: { label: 'Goods', icon: Package, tone: 'warning' },
   cohesion: { label: 'Cohesion', icon: Users, tone: 'success' },
+  healing: { label: 'Healing', icon: HeartPulse, tone: 'success' },
+  bonding: { label: 'Bonding', icon: Handshake, tone: 'success' },
   satisfaction: { label: 'Satisfaction', icon: Smile, tone: 'success' },
   piety: { label: 'Piety', icon: Church, tone: 'gold' },
   food_saved: { label: 'Food saved', icon: Wheat, tone: 'success' },
@@ -454,7 +472,7 @@ export const RITE_COSTS: Record<string, LoreNamed> = {
 
 export const EFFECTS: Record<Schemas['RiteEffectKind'], LoreNamed> = {
   damage: { label: 'Destruction', icon: Zap, tone: 'danger' },
-  heal: { label: 'Healing', icon: HeartPulse, tone: 'success' },
+  heal: { label: 'Healing', icon: Bandage, tone: 'success' },
   weather_change: { label: 'Turns the weather', icon: CloudSun, tone: 'info' },
   curse: { label: 'Curse', icon: Skull, tone: 'danger' },
   bless: { label: 'Blessing', icon: Sparkles, tone: 'gold' },
@@ -490,7 +508,7 @@ export const EFFECTS: Record<Schemas['RiteEffectKind'], LoreNamed> = {
   nullify: { label: 'Nullifies powers', icon: Ban, tone: 'warning' },
   hasten: { label: 'Hastens', icon: FastForward, tone: 'success' },
   slow: { label: 'Slows', icon: Snail, tone: 'warning' },
-  age: { label: 'Ages', icon: Hourglass, tone: 'danger' },
+  age: { label: 'Ages', icon: HourglassCog, tone: 'danger' },
   renew: { label: 'Renews', icon: RefreshCcw, tone: 'success' },
   foresee: { label: 'Foresees', icon: Telescope, tone: 'gold' },
 }
@@ -608,7 +626,7 @@ export const CURSES: Record<Schemas['CurseKind'], LoreNamed> = {
   barrenness: { label: 'Barrenness', icon: Ban, tone: 'success' },
   transformation: {
     label: 'Transformation',
-    icon: ShieldCheck,
+    icon: Repeat,
     tone: 'success',
   },
   sleep: { label: 'Sleep', icon: Moon, tone: 'success' },
@@ -621,6 +639,8 @@ export const CURSES: Record<Schemas['CurseKind'], LoreNamed> = {
   compulsion: { label: 'Compulsion', icon: Link, tone: 'success' },
   aging: { label: 'Aging', icon: Hourglass, tone: 'success' },
   exposure: { label: 'Exposure', icon: Eye, tone: 'success' },
+  isolation: { label: 'Isolation', icon: UserX, tone: 'success' },
+  weakness: { label: 'Weakness', icon: HeartCrack, tone: 'success' },
 }
 
 export const DEEDS: Record<Schemas['ItemDeed'], LoreNamed> = {
@@ -661,6 +681,8 @@ export const MEDIUMS: Record<Schemas['ArtMode'], LoreNamed> = {
   landscape: { label: 'Landscape art', icon: Trees, tone: 'success' },
   body: { label: 'Body art', icon: Hand, tone: 'warning' },
   made_mind_art: { label: 'Made-mind art', icon: Bot, tone: 'muted' },
+  mind: { label: 'Mind', icon: Brain, tone: 'info' },
+  tactile: { label: 'Tactile art', icon: HandHeart, tone: 'info' },
 }
 
 export const SPEAKER_KINDS: Record<Schemas['SpeakerKind'], LoreNamed> = {

@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+from forms import capsule, teeth
 from render import C, Part, Plan, draw, page
 
 OUT = Path(__file__).parent
@@ -77,6 +78,8 @@ def quadruped(states: dict[str, str]) -> Plan:
         Part("heart", "Heart", HEART, (123, 119), inner=True),
         Part("gut", "Gut", GUT, (194, 118), inner=True),
         Part("groin", "Groin", GROIN, (213, 141), inner=True),
+        Part("teeth", "Teeth", teeth(42, 61.4, 18, 2.8, 8), (42, 61.4), inner=True, subtle=True),
+        Part("spine", "Spine", capsule([(112, 88), (150, 82), (200, 81), (250, 86), (274, 96)], 4.4), (200, 81), inner=True, subtle=True),
     ]
     marks = [f'<path d="{NOSE_MARK}" fill="#2c2d38" stroke="{C["stroke"]}" stroke-width="0.8"/>']
     if states.get("left_eye", "unhurt") not in {"lost", "prosthesis"}:

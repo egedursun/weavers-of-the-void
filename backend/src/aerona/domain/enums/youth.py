@@ -19,6 +19,8 @@ class YouthPurpose(StrEnum):
     MISCHIEF = "mischief"
     CRIME = "crime"
     POLITICS = "politics"
+    LEARNING = "learning"
+    LABOUR = "labour"
 
 
 class YouthMeasure(StrEnum):

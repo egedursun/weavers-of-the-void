@@ -47,6 +47,12 @@ class RouteDangersRules:
     sky_weather_pct: int = rule(150, 0, 300, G, "How hard foul weather bears on a sky lane (%)")
     sea_weather_pct: int = rule(100, 0, 300, G, "How hard storms at sea bear on a sea lane (%)")
     sea_danger_base: int = rule(10, 0, 100, G, "Danger of open water on any sea lane")
+    beast_migrating_pct: int = rule(80, 0, 300, G, "Weight of a beast passing along a route on its seasonal path among the dangers of the route (%)")
+    underground_weather_pct: int = rule(10, 0, 300, G, "Weight of weather on a tunnel way, which lies under the ground (%)")
+    pirates_pct: int = rule(100, 0, 300, G, "Pirate danger on a water route against its reckoning from the raiders and havens on the way (%)")
+    pirate_haven_danger: int = rule(15, 0, 100, G, "Pirate danger each lawless coast on a water route adds")
+    breakage_pct: int = rule(100, 0, 300, G, "Weight of breakage of fragile cargo on a route (%)")
+    breakage_base: int = rule(3, 0, 100, G, "Share of fragile cargo broken on a route before its containers and ground are weighed (%)")
 
 
 @dataclass(frozen=True)

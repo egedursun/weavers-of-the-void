@@ -39,6 +39,8 @@ NEED_SOURCES: Mapping[NeedKind, frozenset[SatisfactionSource]] = total(
         N.STIMULATION: frozenset({S.ACTIVITY, S.GOODS}),
         N.CONTINUITY: frozenset({S.FAITH, S.RELATION}),
         N.UPKEEP: frozenset({S.GOODS, S.RELATION}),
+        N.JUSTICE: frozenset({S.RELATION, S.ACHIEVEMENT}),
+        N.CARE: frozenset({S.RELATION, S.ACTIVITY}),
     },
 )
 ACTIVITY_NEEDS: Mapping[ActivityKind, tuple[NeedKind, ...]] = total(

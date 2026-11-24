@@ -9,7 +9,7 @@ import {
   cardFileName,
   deckOf,
   deckTotal,
-  drawerOf,
+  entryOf,
   filtersOf,
   materialOf,
   rankOf,
@@ -191,8 +191,8 @@ describe('card model', () => {
     expect(cardFileName(card({ name: 'Élodie Brûlé the Old' }), 'back')).toBe(
       'elodie-brule-the-old-back.png'
     )
-    expect(drawerOf(MORTAL)).toEqual({ kind: 'entity', id: '41' })
-    expect(drawerOf(card({ node_kind: 'creator' }))).toEqual({
+    expect(entryOf(MORTAL)).toEqual({ kind: 'entity', id: '41' })
+    expect(entryOf(card({ node_kind: 'creator' }))).toEqual({
       kind: 'creator',
     })
   })

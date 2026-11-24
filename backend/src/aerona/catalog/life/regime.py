@@ -6,6 +6,7 @@ TYPE_LABELS = {
     LegitimacyType.TRADITIONAL: ("the weight of custom", "custom forsaken"),
     LegitimacyType.CHARISMATIC: ("the ruler's charisma", "a ruler without charisma"),
     LegitimacyType.RATIONAL: ("the rule of law", "laws that bind no one"),
+    LegitimacyType.CONQUEST: ("the right of conquest", "a conquest long faded"),
 }
 
 

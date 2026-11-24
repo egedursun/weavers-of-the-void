@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
+from aerona.catalog.good_builtins import SEED_STOCK
 from aerona.catalog.goods_tables import COMMONS_MATERIAL, EATING_ORDER
 from aerona.catalog.goods_traits import commodities_with
 from aerona.catalog.methods import FUEL_FAMILY, FUEL_HEAT
@@ -12,6 +13,7 @@ from aerona.db.read_memo import memoized
 from aerona.db.tables.body import MaimedCohortRow
 from aerona.db.tables.economy import ProductionRunRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.records import IncidentFactRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow
@@ -24,6 +26,7 @@ from aerona.domain.enums.environment import CoastKind, TemperatureBand
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.industry import ProcessKind
+from aerona.domain.enums.kinds import GoodCategory
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.engine.body.variants import folk_biology
@@ -32,6 +35,7 @@ from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.ecology.flora import split_fields
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.extraction import tools_factor
+from aerona.engine.economy.good_kinds import good_book
 from aerona.engine.economy.stocks import DEFAULT_QUALITY, aggregate_need, epoch_need, goods_of, holdings, nourishment_need
 from aerona.engine.environment.profile import CropMix, crop_mix
 from aerona.engine.folk_knowledge.factor import folk_factor
@@ -39,9 +43,11 @@ from aerona.engine.industry.energy import warm_from_power, worked_by_hand
 from aerona.engine.industry.methods import feed, method_for, outdated
 from aerona.engine.industry.pollution import fish_factor, region_id_of
 from aerona.engine.mind.preferences import demand_factor, market_fit
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining_alone, term
 from aerona.engine.settlement.storage import capacity_of, storage_room, store_kind
 from aerona.rules.registry import Rules
 
@@ -82,6 +88,30 @@ def mix_of(ctx: TickContext, book: EconomyBook, community: EntityRow, sea: int |
     return crop_mix(ctx.rules, farmed=region.farmed, grazed=region.grazed, coastal=coastal, river=region.river_class, sea=sea)
 
 
+async def fertilise(ctx: TickContext, book: EconomyBook, community: EntityRow, farmers: float) -> float:
+    table = ctx.rules.goods
+    want = round_half_up(farmers * table.fertiliser_per_1000_farmers / THOUSAND)
+    if want <= 0 or held(community.id):
+        return 1.0
+    goods = await good_book(ctx.session)
+    ledger = goods_of(ctx.session, ctx.epoch)
+    spread = 0
+    for kind in sorted(goods.of_category(GoodCategory.FERTILISER)):
+        if spread >= want:
+            break
+        spread += sum(lot.quantity for lot in await ledger.take(community.id, kind, want - spread, GoodsFlow.INPUT, best_first=False))
+    share = min(1.0, spread / want)
+    if share <= 0:
+        return 1.0
+    region_id = region_id_of(book, community.id)
+    row = book.pollution.get(region_id) if region_id is not None else None
+    if row is not None and not held(region_id or 0) and "water" not in row.locked:
+        with explaining_alone():
+            term("goods.fertiliser_water_pollution", round_half_up(table.fertiliser_water_pollution * share), source_node_id=community.id)
+            row.water = min(PERCENT, row.water + round_half_up(table.fertiliser_water_pollution * share))
+    return 1 + table.fertiliser_yield_pct / PERCENT * share
+
+
 async def harvest_goods(
     ctx: TickContext, book: EconomyBook, community: EntityRow, rate: float, farmer_share: float, *, labour: float = 1.0
 ) -> dict[CommodityKind, int]:
@@ -110,7 +140,7 @@ async def harvest_goods(
     chain = ctx.rules.food_chain
     herds = round_half_up(land * mix.pasture * await folk_factor(ctx.session, ctx.rules, community, FolkDomain.ANIMALS)) - fodder
     milk = round_half_up(herds * chain.milk_pct / PERCENT)
-    fields = land * mix.grain
+    fields = land * mix.grain * await fertilise(ctx, book, community, farmers)
     split: dict[CommodityKind, int] = dict(field_goods(ctx, book, community, fields))
     split[CommodityKind.LIVESTOCK] = herds - milk
     split[CommodityKind.MILK] = milk
@@ -206,6 +236,45 @@ async def substitute_order(ctx: TickContext, community: EntityRow, order: tuple[
     return tuple(sorted(order, key=lambda kind: (cost(kind), order.index(kind))))
 
 
+async def seed_reserve(ctx: TickContext, community_id: int) -> dict[CommodityKind, int]:
+    goods = await good_book(ctx.session)
+    kinds = SEED_STOCK | goods.of_category(GoodCategory.SEED_AND_STOCK)
+    stock = await holdings(ctx.session, community_id)
+    return {kind: stock.get(kind, 0) * ctx.rules.goods.seed_reserve_pct // PERCENT for kind in sorted(kinds) if stock.get(kind, 0) > 0}
+
+
+async def eat_seed(
+    ctx: TickContext, community: EntityRow, reserve: dict[CommodityKind, int], left: int, *, eaten: dict[CommodityKind, int], tasted: list[tuple[int, int]]
+) -> int:
+    if left <= 0 or not reserve or held(community.id):
+        return left
+    ledger = goods_of(ctx.session, ctx.epoch)
+    kept = sum(reserve.values())
+    gone = 0
+    for kind, amount in sorted(reserve.items()):
+        value = COMMODITIES[kind].nourishment
+        if left <= 0 or value <= 0:
+            break
+        lots = await ledger.take(community.id, kind, min(amount, -(-left // value)), GoodsFlow.CONSUMPTION, best_first=False)
+        taken = sum(lot.quantity for lot in lots)
+        tasted.extend((lot.quality, lot.quantity) for lot in lots)
+        eaten[kind] = eaten.get(kind, 0) + taken
+        gone += taken
+        left = max(0, left - taken * value)
+    if gone <= 0:
+        return left
+    cut = round_half_up(ctx.rules.goods.seed_harvest_cut * gone / max(1, kept))
+    atlas = await RegionAtlas.load(ctx.session)
+    top = atlas.top_region(community.id)
+    region = await ctx.session.get(RegionEnvironmentRow, top) if top is not None else None
+    if region is not None and not held(region.entity_id) and "harvest_pct" not in region.locked:
+        with explaining_alone():
+            term("goods.seed_harvest_cut", -cut, source_node_id=community.id)
+            region.harvest_pct = max(0, region.harvest_pct - cut)
+    await record(ctx, "goods.seed_eaten", roles={IncidentRole.VICTIM: community.id}, facts={"eaten": gone, "cut": cut}, place=community.id)
+    return left
+
+
 async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKind, ...] = ()) -> Meal:
     population = headcount(community)
     view = await view_of(ctx.session, ctx.rules, community.world_id)
@@ -219,8 +288,11 @@ async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKi
     eaten: dict[CommodityKind, int] = {}
     tasted: list[tuple[int, int]] = []
     left = need
+    reserve = await seed_reserve(ctx, community.id)
+    held_back = await holdings(ctx.session, community.id)
     for kind in order:
-        lots = await ledger.take(community.id, kind, wanted.get(kind, 0), GoodsFlow.CONSUMPTION, best_first=False)
+        spare = max(0, held_back.get(kind, 0) - reserve.get(kind, 0))
+        lots = await ledger.take(community.id, kind, min(wanted.get(kind, 0), spare), GoodsFlow.CONSUMPTION, best_first=False)
         taken = sum(lot.quantity for lot in lots)
         tasted.extend((lot.quality, lot.quantity) for lot in lots)
         eaten[kind] = taken
@@ -238,6 +310,7 @@ async def eat(ctx: TickContext, community: EntityRow, staples: tuple[CommodityKi
         tasted.extend((lot.quality, lot.quantity) for lot in lots)
         eaten[kind] = eaten.get(kind, 0) + taken
         left = max(0, left - taken * value)
+    left = await eat_seed(ctx, community, reserve, left, eaten=eaten, tasted=tasted)
     fed = round_half_up((need - left) * PERCENT / need)
     short = {kind: amount - min(amount, eaten.get(kind, 0)) for kind, amount in wanted.items() if amount > eaten.get(kind, 0)}
     portions = sum(quantity for _, quantity in tasted)

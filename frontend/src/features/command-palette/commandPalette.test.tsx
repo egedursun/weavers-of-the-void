@@ -102,7 +102,7 @@ describe('command palette open and close', () => {
     const { screen, router } = await openPalette()
     await screen.getByRole('option', { name: /Stonehold/ }).click()
     await expect
-      .poll(() => (router.state.location.search as { drawer?: string }).drawer)
+      .poll(() => (router.state.location.search as { entry?: string }).entry)
       .toBe('entity:3')
     await expect.element(screen.getByRole('dialog')).not.toBeInTheDocument()
   })
@@ -211,7 +211,7 @@ describe('command palette global search', () => {
     const { screen, router } = await searchFor()
     await screen.getByRole('option', { name: /Ithren/ }).click()
     await expect
-      .poll(() => (router.state.location.search as { drawer?: string }).drawer)
+      .poll(() => (router.state.location.search as { entry?: string }).entry)
       .toBe('son:7')
   })
 
@@ -220,7 +220,7 @@ describe('command palette global search', () => {
     await world.screen.getByRole('option', { name: /Aerona/ }).click()
     await expect
       .poll(
-        () => (world.router.state.location.search as { drawer?: string }).drawer
+        () => (world.router.state.location.search as { entry?: string }).entry
       )
       .toBe('world:1')
   })
@@ -229,7 +229,7 @@ describe('command palette global search', () => {
     const { screen, router } = await searchFor()
     await screen.getByRole('option', { name: /Old Nyx/ }).click()
     await expect
-      .poll(() => (router.state.location.search as { drawer?: string }).drawer)
+      .poll(() => (router.state.location.search as { entry?: string }).entry)
       .toBe('foreign-god:4')
   })
 
@@ -237,7 +237,7 @@ describe('command palette global search', () => {
     const { screen, router } = await searchFor()
     await screen.getByRole('option', { name: /My note/ }).click()
     await expect
-      .poll(() => (router.state.location.search as { drawer?: string }).drawer)
+      .poll(() => (router.state.location.search as { entry?: string }).entry)
       .toBe('entity:11')
   })
 })
@@ -277,7 +277,7 @@ it('sends a star hit to its wiki drawer', async () => {
     .fill('zz')
   await screen.getByRole('option', { name: /Sol/ }).click()
   await expect
-    .poll(() => (router.state.location.search as { drawer?: string }).drawer)
+    .poll(() => (router.state.location.search as { entry?: string }).entry)
     .toBe('star:1')
 })
 
@@ -315,7 +315,7 @@ describe('command palette keyboard', () => {
     await userEvent.keyboard('{ArrowDown}')
     await userEvent.keyboard('{Enter}')
     await expect
-      .poll(() => (router.state.location.search as { drawer?: string }).drawer)
+      .poll(() => (router.state.location.search as { entry?: string }).entry)
       .toBe('son:8')
   })
 })
@@ -453,7 +453,7 @@ describe('command palette screens and interface', () => {
     const { screen, router } = await openPalette()
     await screen.getByRole('option', { name: /Help/ }).click()
     await expect
-      .poll(() => (router.state.location.search as { drawer?: string }).drawer)
+      .poll(() => (router.state.location.search as { entry?: string }).entry)
       .toBe('help')
   })
 

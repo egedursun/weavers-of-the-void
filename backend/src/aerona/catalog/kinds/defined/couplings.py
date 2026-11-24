@@ -15,5 +15,6 @@ FIELD_AGREEMENT_KIND = total(
         FieldAgreementKind.EXCHANGE: Defined("Exchange of captives and the dead", checked_by=(), used_by=("engine.couplings.field.exchanges",)),
         FieldAgreementKind.SAFE_CONDUCT: Defined("Safe conduct", checked_by=(), used_by=("engine.couplings.field.offer_terms",)),
         FieldAgreementKind.FRATERNISATION: Defined("Fraternisation", checked_by=(), used_by=("engine.couplings.field.fraternise",)),
+        FieldAgreementKind.BURIAL_TRUCE: Defined("Burial truce", checked_by=(), used_by=("engine.couplings.field.bury_dead",)),
     },
 )

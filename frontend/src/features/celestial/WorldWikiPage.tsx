@@ -40,7 +40,7 @@ import {
   Section,
 } from '@/components/domain'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
 import { CosmosAgrarianSection } from '@/features/agrarian/CosmosAgrarianSection'
 import { ChronicleEntry } from '@/features/chronicle/ChronicleEntry'
@@ -168,7 +168,7 @@ function WorldSpecs({ wiki }: { wiki: WorldWiki }) {
   const world = wiki.world
   const counts = wiki.counts
   return (
-    <Section title='At a glance'>
+    <Section id='section-world-glance' title='At a glance'>
       <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
         <MiniStat
           icon={UserRound}
@@ -250,7 +250,7 @@ function WorldPeoples({ wiki }: { wiki: WorldWiki }) {
   )
     return null
   return (
-    <Section title='Who lives and reigns here'>
+    <Section id='section-world-peoples' title='Who lives and reigns here'>
       {wiki.peoples.length > 0 && (
         <div className='flex min-w-0 flex-col gap-2'>
           <Label variant='overline'>{`Greatest peoples · ${wiki.counts.peoples}`}</Label>
@@ -314,7 +314,7 @@ function WorldSky({ wiki }: { wiki: WorldWiki }) {
     'another world'
   if (wiki.routes.length === 0 && wiki.sky_events.length === 0) return null
   return (
-    <Section title='Roads and skies'>
+    <Section id='section-world-roads' title='Roads and skies'>
       {wiki.routes.length > 0 && (
         <PagedList
           items={wiki.routes}
@@ -397,6 +397,7 @@ export function CelestialTimeline({
   const known = [...lines, ...older.lines].sort((a, b) => b.id - a.id)
   return (
     <Section
+      id='section-world-chronicle'
       title='Chronicle'
       description='The lines written about it, newest first.'
     >
@@ -454,7 +455,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
     <div className='flex min-w-0 flex-col gap-6'>
       <WorldHero wiki={data} />
       {data.world.cosmology && (
-        <Section title='How it began'>
+        <Section id='section-world-origin' title='How it began'>
           <Text
             as='blockquote'
             variant='prose'
@@ -498,6 +499,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
         emptyText='Nothing has been written about this world yet.'
       />
       <RecordGallery
+        sectionId='section-world-images'
         title='Images of the world'
         nodeId={data.world.id}
         name={data.world.name}
@@ -519,7 +521,7 @@ export function WorldWikiView({ worldId }: { worldId: number }) {
   )
 }
 
-export function WorldWikiPage({ id }: DrawerPageProps) {
+export function WorldWikiPage({ id }: EntryPageProps) {
   const worldId = Number(id)
   if (!Number.isInteger(worldId) || worldId <= 0)
     return (

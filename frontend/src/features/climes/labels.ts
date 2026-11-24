@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   CircleDot,
   CloudRain,
   Compass,
@@ -12,6 +11,11 @@ import {
   Sun,
   Tornado,
   Wind,
+  type LucideIcon,
+  FlameKindling,
+  Scale,
+  SunDim,
+  ThermometerSnowflake,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -28,7 +32,7 @@ export const TAB_ICONS = {
 } as const
 
 export const BANDS: Record<Schema['CirculationBand'], Named> = {
-  trade: { label: 'Trade wind', icon: Wind, tone: 'info' },
+  trade: { label: 'Trade wind', icon: Scale, tone: 'info' },
   westerly: { label: 'Westerly', icon: Wind, tone: 'verdigris' },
   polar: { label: 'Polar wind', icon: Snowflake, tone: 'muted' },
   single_cell: {
@@ -43,17 +47,31 @@ export const BANDS: Record<Schema['CirculationBand'], Named> = {
   },
   still: { label: 'Still air', icon: Minus, tone: 'muted' },
   doldrums: { label: 'Doldrums', icon: CloudRain, tone: 'info' },
-  subtropical_calm: { label: 'Subtropical calm', icon: Sun, tone: 'warning' },
+  subtropical_calm: {
+    label: 'Subtropical calm',
+    icon: SunDim,
+    tone: 'warning',
+  },
   banded: { label: 'Banded winds', icon: Tornado, tone: 'danger' },
   super_rotation: { label: 'Super rotation', icon: RefreshCw, tone: 'gold' },
+  monsoon: { label: 'Monsoon', icon: CloudRain, tone: 'success' },
+  mountain_wind: { label: 'Slope winds', icon: Mountain, tone: 'warning' },
 }
 
 export const PHASES: Record<Schema['OscillationPhase'], Named> = {
   neutral: { label: 'Neutral', icon: Minus, tone: 'muted' },
   warm: { label: 'Warm swing', icon: Flame, tone: 'warning' },
   cold: { label: 'Cold swing', icon: Snowflake, tone: 'info' },
-  strong_warm: { label: 'Strong warm swing', icon: Flame, tone: 'danger' },
-  strong_cold: { label: 'Strong cold swing', icon: Snowflake, tone: 'info' },
+  strong_warm: {
+    label: 'Strong warm swing',
+    icon: FlameKindling,
+    tone: 'danger',
+  },
+  strong_cold: {
+    label: 'Strong cold swing',
+    icon: ThermometerSnowflake,
+    tone: 'info',
+  },
 }
 
 export const DIRECTIONS = COMPASS.map(

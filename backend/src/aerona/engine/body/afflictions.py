@@ -3,10 +3,11 @@ from collections.abc import Awaitable, Callable
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.effect_packages import PACKAGES, PackageSpec, StageSpec
+from aerona.catalog.effect_packages import PACKAGES, SLEEP_CURES, PackageSpec, StageSpec
 from aerona.catalog.incident_kinds.body_lines import ONSET_STEPS
 from aerona.catalog.life.body import POWER_CURE_SPELL_FORMS
 from aerona.catalog.life_traits import MEMORY_KIND_TRAITS, having
+from aerona.catalog.structures import BASE_HOLY_HOUSES
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.random import SeededRandom
@@ -17,23 +18,24 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import HolderTechniqueRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.living import SymbiontRow
 from aerona.db.tables.made import AugmentRow
-from aerona.db.tables.mind import MemoryRow
+from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.powers import PowerRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import HeroQuestRow
 from aerona.db.write_guard import held as frozen
-from aerona.domain.enums.affliction import ChangeSign, CureKind, PackageKind, Transmission, Visibility
+from aerona.domain.enums.affliction import ChangeSign, CureKind, ForgetScope, PackageKind, SleepUntil, Transmission, Visibility
 from aerona.domain.enums.body import HarmCause, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.life_traits import MemoryKindTrait
-from aerona.domain.enums.mind import ActKind, MemoryKind, ValueHolder
+from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueHolder
 from aerona.domain.enums.minds import MindSeat
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.powers import PowerState
@@ -62,9 +64,11 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.book import clamp_value, needs_of, stored_values, write_needs, write_values
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.memories import remember
+from aerona.engine.mind.thoughts import think
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.folk import folk_of, present_among
 from aerona.engine.primitives.knowledge import known_levels
+from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import active_bonds, flags_by_entity, living_entity
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
@@ -85,7 +89,16 @@ def stage_of(row: AfflictionRow) -> StageSpec | None:
 
 
 def visible(row: AfflictionRow) -> bool:
-    return spec_of(row).visibility is not Visibility.HIDDEN and row.stage > 0
+    return spec_of(row).visibility not in (Visibility.HIDDEN, Visibility.MARKED) and row.stage > 0
+
+
+async def recognised(ctx: TickContext, row: AfflictionRow, watcher_id: int) -> bool:
+    if spec_of(row).visibility is not Visibility.MARKED or row.stage <= 0:
+        return visible(row)
+    if not ctx.rng(f"marked.{row.id}.{watcher_id}.{ctx.epoch}").chance(ctx.rules.packages.marked_read_pct):
+        return False
+    await record(ctx, "affliction.recognised", roles={IncidentRole.PATIENT: row.bearer_node_id, IncidentRole.ACTOR: watcher_id}, facts={"package": row.package})
+    return True
 
 
 async def active(session: AsyncSession, bearer_id: int) -> list[AfflictionRow]:
@@ -157,6 +170,8 @@ async def enter_stage(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, n
         for axis, delta in stage.values.items():
             values[axis] = clamp_value(values.get(axis, 0) + delta)
         await write_values(ctx.session, ValueHolder.PERSONAL, bearer.id, values)
+    if stage.hastens or stage.forgets or stage.sleeps:
+        await bend_life(ctx, bearer, row, stage)
     if stage.fears_source and row.source_node_id is not None:
         await remember(
             ctx.session,
@@ -167,6 +182,52 @@ async def enter_stage(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, n
             magnitude=ctx.rules.effect_packages.fear_magnitude,
             epoch=ctx.epoch,
         )
+
+
+async def bend_life(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, stage: StageSpec) -> None:
+    table = ctx.rules.packages
+    if stage.hastens and stat(bearer, "age") is not None:
+        rate = row.ageing_rate_pct if row.ageing_rate_pct is not None else table.ageing_rate_pct
+        years = round_half_up(table.epochs_years * (rate - PERCENT) / PERCENT)
+        set_stats(bearer, age=max(0, (stat(bearer, "age") or 0) + years))
+        await record(ctx, "affliction.aged", roles={IncidentRole.PATIENT: bearer.id}, facts={"years": years})
+    if stage.forgets:
+        lost = await forget(ctx, bearer, row.forget_scope or ForgetScope.ALL)
+        await think(ctx.session, ctx.rules, bearer.id, ThoughtKind.FORGOT, ctx.epoch)
+        await record(ctx, "affliction.forgot", roles={IncidentRole.PATIENT: bearer.id}, facts={"lost": lost, "scope": row.forget_scope or ForgetScope.ALL})
+    if stage.sleeps:
+        household = await ctx.session.scalar(select(HouseholdRow).where(HouseholdRow.head_node_id == bearer.id).limit(1))
+        if household is not None and "wealth" not in (household.locked or []):
+            household.wealth = max(0, household.wealth - table.sleep_care_cost)
+        await record(
+            ctx, "affliction.slept", roles={IncidentRole.PATIENT: bearer.id}, facts={"care": table.sleep_care_cost, "until": row.sleep_until or SleepUntil.DEED}
+        )
+
+
+async def forget(ctx: TickContext, bearer: EntityRow, scope: ForgetScope) -> int:
+    share = ctx.rules.packages.forget_share_pct
+    if scope is ForgetScope.SKILL:
+        skills = list(await ctx.session.scalars(select(SkillRow).where(SkillRow.holder_node_id == bearer.id).order_by(SkillRow.skill)))
+        for skill in skills:
+            skill.level = max(0, skill.level - skill.level * share // PERCENT)
+        return len(skills)
+    memories = list(await ctx.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == bearer.id).order_by(MemoryRow.epoch, MemoryRow.id)))
+    if scope is ForgetScope.RECENT:
+        lost = memories[len(memories) - len(memories) * share // PERCENT :]
+    elif scope is ForgetScope.PERSON and memories:
+        dearest = max(memories, key=lambda memory: (abs(memory.magnitude), memory.id)).subject_node_id
+        lost = [memory for memory in memories if memory.subject_node_id == dearest]
+    else:
+        lost = memories[: len(memories) * share // PERCENT]
+    for memory in lost:
+        await ctx.session.delete(memory)
+    return len(lost)
+
+
+def wakes_by(row: AfflictionRow, how: CureKind) -> bool:
+    if row.package is not PackageKind.SLEEP or row.sleep_until is None:
+        return True
+    return SLEEP_CURES[row.sleep_until] is how
 
 
 async def afflict(
@@ -245,6 +306,9 @@ async def cure(ctx: TickContext, bearer: EntityRow, row: AfflictionRow, how: Cur
     await revert(ctx, bearer, row)
     await restore_body(ctx, bearer, row)
     row.cured_epoch = ctx.epoch
+    if any(stage.sleeps for stage in spec_of(row).stages):
+        await think(ctx.session, ctx.rules, bearer.id, ThoughtKind.WOKE_FROM_SLEEP, ctx.epoch)
+        await record(ctx, "affliction.woke", roles={IncidentRole.PATIENT: bearer.id}, facts={"package": row.package})
     if row.package is PackageKind.CHARM:
         await broken_charm(ctx, bearer, row, found=how is not None and how is not CureKind.TIME)
     spec = spec_of(row)
@@ -306,6 +370,26 @@ async def power_cure(ctx: TickContext, bearer: EntityRow) -> bool:
     return found is not None
 
 
+@WIDER_CURES.on(CureKind.RELEASE)
+async def release_cure(ctx: TickContext, bearer: EntityRow) -> bool:
+    pardon = await ctx.session.scalar(
+        select(MemoryRow.id).where(MemoryRow.subject_node_id == bearer.id, MemoryRow.kind == MemoryKind.APOLOGISED_TO_ME).limit(1)
+    )
+    return pardon is not None
+
+
+@WIDER_CURES.on(CureKind.SITE)
+async def site_cure(ctx: TickContext, bearer: EntityRow) -> bool:
+    if bearer.location_id is None or not ctx.rng(f"cure.site.{bearer.id}.{ctx.epoch}").chance(ctx.rules.packages.site_cure_pct):
+        return False
+    holy = await ctx.session.scalar(
+        select(StructureProfileRow.structure_entity_id)
+        .where(StructureProfileRow.host_entity_id == bearer.location_id, StructureProfileRow.kind.in_(sorted(BASE_HOLY_HOUSES)))
+        .limit(1)
+    )
+    return holy is not None
+
+
 @WIDER_CURES.on(CureKind.SYMBIONT)
 async def symbiont_cure(ctx: TickContext, bearer: EntityRow) -> bool:
     return await ctx.session.scalar(select(SymbiontRow.id).where(SymbiontRow.host_node_id == bearer.id).limit(1)) is not None
@@ -331,6 +415,8 @@ async def try_cures(ctx: TickContext, bearer: EntityRow, row: AfflictionRow) -> 
         return CureKind.TIME
     if CureKind.QUEST in spec.cures and await quested(ctx, bearer, row.since_epoch):
         return CureKind.QUEST
+    if spec.visibility is Visibility.MARKED and not await recognised(ctx, row, bearer.location_id or bearer.id):
+        return await other_cures(ctx, bearer, spec, rng)
     healed = await medicine_of(ctx, bearer) >= spec.cure_level and await has_role_near(ctx, bearer, MortalRole.HEALER)
     if CureKind.MEDICINE in spec.cures and healed and rng.chance(table.medicine_pct):
         return CureKind.MEDICINE
@@ -581,6 +667,8 @@ async def progress(ctx: TickContext) -> dict[str, int]:
         if stage is not None:
             await stage_effects(ctx, bearer, row, stage)
         how = await try_cures(ctx, bearer, row) if row.stage > 0 else None
+        if how is not None and not wakes_by(row, how):
+            how = None
         if how is not None:
             await cure(ctx, bearer, row, how)
             counts["cured"] += 1

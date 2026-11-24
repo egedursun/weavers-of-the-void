@@ -206,7 +206,7 @@ def test_no_editor_offers_a_value_the_store_keeps_for_itself() -> None:
     assert {name: keys for name, keys in offered.items() if keys} == {}
 
 
-def test_no_drawer_editor_offers_a_value_the_store_keeps_for_itself() -> None:
+def test_no_screen_editor_offers_a_value_the_store_keeps_for_itself() -> None:
     root = Path(__file__).resolve().parents[3] / "frontend" / "src"
     offered = sorted(
         f"{path.relative_to(root)}: {key}"

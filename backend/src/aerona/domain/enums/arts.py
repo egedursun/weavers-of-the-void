@@ -9,6 +9,8 @@ class ArtMarketRole(StrEnum):
     CURATOR = "curator"
     CRITIC = "critic"
     FORGER = "forger"
+    RESTORER = "restorer"
+    AUCTIONEER = "auctioneer"
 
 
 class ForgeryKind(StrEnum):
@@ -19,6 +21,7 @@ class ForgeryKind(StrEnum):
     COIN = "coin"
     LINEAGE = "lineage"
     SEAL = "seal"
+    IDENTITY = "identity"
 
 
 class ForgeryStatus(StrEnum):
@@ -41,6 +44,8 @@ class ClubKind(StrEnum):
     ATHLETICS = "athletics"
     ANIMAL_CONTEST = "animal_contest"
     MIND_GAMES = "mind_games"
+    WATER_SPORT = "water_sport"
+    HUNT = "hunt"
 
 
 class FandomLine(StrEnum):

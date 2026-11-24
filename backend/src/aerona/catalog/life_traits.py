@@ -226,6 +226,14 @@ ACT_KIND_TRAITS: Mapping[ActKind, frozenset[ActKindTrait]] = total(
         ActKind.FEEDING_ON_HOSTS: frozenset({ActKindTrait.FAMINE_ACTS}),
         ActKind.KILLING_SACRED_ANIMAL: frozenset(),
         ActKind.FIXING_CONTESTS: frozenset(),
+        ActKind.ABANDONING_THE_SICK: frozenset({ActKindTrait.FAMINE_ACTS}),
+        ActKind.BREAKING_HOSPITALITY: frozenset(),
+        ActKind.CRUELTY_TO_ANIMALS: frozenset({ActKindTrait.FEARSOME}),
+        ActKind.APOLOGISING: frozenset(),
+        ActKind.SHELTERING_STRANGERS: frozenset(),
+        ActKind.LAYING_CURSES: frozenset({ActKindTrait.FEARSOME}),
+        ActKind.ENHANCING_CONTESTANTS: frozenset(),
+        ActKind.POISON_WELLS: frozenset(),
     },
 )
 
@@ -238,6 +246,7 @@ AGE_GRADE_TRAITS: Mapping[AgeGrade, frozenset[AgeGradeTrait]] = total(
         AgeGrade.YOUNG_ADULTS: frozenset(),
         AgeGrade.JUNIOR_ELDERS: frozenset(),
         AgeGrade.SENIOR_ELDERS: frozenset(),
+        AgeGrade.ANCIENTS: frozenset(),
     },
 )
 
@@ -266,6 +275,8 @@ ASSISTIVE_AID_TRAITS: Mapping[AssistiveAid, frozenset[AssistiveAidTrait]] = tota
         AssistiveAid.HEARING_HORN: frozenset(),
         AssistiveAid.CANE: frozenset(),
         AssistiveAid.MICROSCOPE: frozenset({AssistiveAidTrait.GROUND_LENS}),
+        AssistiveAid.HEARING_AID: frozenset(),
+        AssistiveAid.TACTILE_SCRIPT: frozenset(),
     },
 )
 
@@ -277,6 +288,7 @@ ATTACK_RANGE_TRAITS: Mapping[AttackRange, frozenset[AttackRangeTrait]] = total(
         AttackRange.NEAR: frozenset(),
         AttackRange.FAR: frozenset({AttackRangeTrait.WHOLE_TOWN}),
         AttackRange.SIGHT: frozenset({AttackRangeTrait.WHOLE_TOWN}),
+        AttackRange.AREA: frozenset({AttackRangeTrait.WHOLE_TOWN}),
     },
 )
 
@@ -299,6 +311,7 @@ BODY_SYSTEM_TRAITS: Mapping[BodySystem, frozenset[BodySystemTrait]] = total(
         BodySystem.REPRODUCTION: frozenset(),
         BodySystem.STRUCTURE: frozenset(),
         BodySystem.NONE: frozenset(),
+        BodySystem.EXCRETION: frozenset({BodySystemTrait.BLOODLESS}),
     },
 )
 
@@ -352,6 +365,8 @@ BUILDING_FORM_TRAITS: Mapping[BuildingForm, frozenset[BuildingFormTrait]] = tota
         BuildingForm.MODULAR: frozenset(),
         BuildingForm.GROWN: frozenset(),
         BuildingForm.CARVED: frozenset(),
+        BuildingForm.STILT: frozenset({BuildingFormTrait.FIXED_FORMS}),
+        BuildingForm.VAULT: frozenset({BuildingFormTrait.FIXED_FORMS}),
     },
 )
 
@@ -368,6 +383,7 @@ CAPTIVE_FATE_TRAITS: Mapping[CaptiveFate, frozenset[CaptiveFateTrait]] = total(
         CaptiveFate.RELEASED: frozenset(),
         CaptiveFate.EXECUTED: frozenset(),
         CaptiveFate.RECRUITED: frozenset({CaptiveFateTrait.BOUND}),
+        CaptiveFate.ADOPTED: frozenset(),
     },
 )
 
@@ -385,6 +401,7 @@ CAPTIVE_STATUS_TRAITS: Mapping[CaptiveStatus, frozenset[CaptiveStatusTrait]] = t
         CaptiveStatus.WARD: frozenset(),
         CaptiveStatus.PAROLED: frozenset({CaptiveStatusTrait.FREEING_STATUSES, CaptiveStatusTrait.RESCUE_STATUSES, CaptiveStatusTrait.AFTER_CAPTIVITY}),
         CaptiveStatus.MARRIED_IN: frozenset({CaptiveStatusTrait.AFTER_CAPTIVITY}),
+        CaptiveStatus.ADOPTED: frozenset({CaptiveStatusTrait.AFTER_CAPTIVITY}),
     },
 )
 
@@ -398,6 +415,8 @@ CHARM_POWER_TRAITS: Mapping[CharmPower, frozenset[CharmPowerTrait]] = total(
         CharmPower.HEALING: frozenset(),
         CharmPower.LOVE: frozenset(),
         CharmPower.TRAVEL: frozenset(),
+        CharmPower.CONCEALMENT: frozenset(),
+        CharmPower.COURAGE: frozenset({CharmPowerTrait.WARDS}),
     },
 )
 
@@ -432,6 +451,9 @@ CLAUSE_KIND_TRAITS: Mapping[ClauseKind, frozenset[ClauseKindTrait]] = total(
         ClauseKind.NO_PLAGUE_POWERS: frozenset({ClauseKindTrait.METHOD_CLAUSES}),
         ClauseKind.NO_DESIGNED_DISEASE: frozenset({ClauseKindTrait.METHOD_CLAUSES}),
         ClauseKind.MASS_WEAPON_LIMIT: frozenset({ClauseKindTrait.METHOD_CLAUSES}),
+        ClauseKind.RETURN_OF_REFUGEES: frozenset({ClauseKindTrait.PEACEFUL}),
+        ClauseKind.SHARED_WATER: frozenset({ClauseKindTrait.PEACEFUL}),
+        ClauseKind.CAPTIVE_EXCHANGE: frozenset({ClauseKindTrait.PEACEFUL}),
     },
 )
 
@@ -446,6 +468,7 @@ COMMAND_TOKEN_TRAITS: Mapping[CommandToken, frozenset[CommandTokenTrait]] = tota
         CommandToken.OFFICE: frozenset(),
         CommandToken.NETWORK_KEY: frozenset({CommandTokenTrait.OWNED_TOKENS}),
         CommandToken.TRUE_NAME: frozenset(),
+        CommandToken.GESTURE: frozenset(),
     },
 )
 
@@ -481,6 +504,9 @@ COMMANDER_TRAIT_TRAITS: Mapping[CommanderTrait, frozenset[CommanderTraitTrait]] 
         CommanderTrait.DISCIPLINARIAN: frozenset(),
         CommanderTrait.SIGNALS_COMMANDER: frozenset(),
         CommanderTrait.NIGHT_FIGHTER: frozenset(),
+        CommanderTrait.JUNGLE_FIGHTER: frozenset(),
+        CommanderTrait.COLD_FIGHTER: frozenset(),
+        CommanderTrait.RIVER_CROSSER: frozenset({CommanderTraitTrait.CAREFUL}),
     },
 )
 
@@ -495,6 +521,7 @@ CONSTRUCTION_STATE_TRAITS: Mapping[ConstructionState, frozenset[ConstructionStat
         ConstructionState.RUINED: frozenset(),
         ConstructionState.ABANDONED: frozenset(),
         ConstructionState.DISMANTLED: frozenset(),
+        ConstructionState.RESTORED: frozenset({ConstructionStateTrait.COUNTED_STATES}),
     },
 )
 
@@ -511,6 +538,8 @@ CONTEST_STAKE_TRAITS: Mapping[ContestStake, frozenset[ContestStakeTrait]] = tota
         ContestStake.LAND: frozenset({ContestStakeTrait.NOTED}),
         ContestStake.FREEDOM: frozenset({ContestStakeTrait.NOTED}),
         ContestStake.KNOWLEDGE: frozenset({ContestStakeTrait.NOTED}),
+        ContestStake.TITLE: frozenset({ContestStakeTrait.NOTED}),
+        ContestStake.RIGHTS: frozenset({ContestStakeTrait.NOTED}),
     },
 )
 
@@ -526,6 +555,8 @@ COOP_PURPOSE_TRAITS: Mapping[CoopPurpose, frozenset[CoopPurposeTrait]] = total(
         CoopPurpose.CREDIT: frozenset({CoopPurposeTrait.RELIEVING}),
         CoopPurpose.GRANARY: frozenset({CoopPurposeTrait.POOLING}),
         CoopPurpose.HERDING: frozenset({CoopPurposeTrait.WORKING}),
+        CoopPurpose.SCHOOL: frozenset({CoopPurposeTrait.POOLING}),
+        CoopPurpose.HOUSING: frozenset({CoopPurposeTrait.POOLING}),
     },
 )
 
@@ -558,6 +589,9 @@ COUNCIL_MOTION_TRAITS: Mapping[CouncilMotion, frozenset[CouncilMotionTrait]] = t
         CouncilMotion.REGULATE_MADE_MINDS: frozenset({CouncilMotionTrait.ORDER_LASTING}),
         CouncilMotion.REGULATE_POWERS: frozenset({CouncilMotionTrait.ORDER_LASTING}),
         CouncilMotion.REGULATE_LIVING_CRAFT: frozenset({CouncilMotionTrait.ORDER_LASTING}),
+        CouncilMotion.REGULATE_CURSES: frozenset({CouncilMotionTrait.ORDER_LASTING}),
+        CouncilMotion.OPEN_INQUIRY: frozenset(),
+        CouncilMotion.AMNESTY: frozenset(),
     },
 )
 
@@ -590,6 +624,7 @@ DEATH_ROLE_TRAITS: Mapping[DeathRole, frozenset[DeathRoleTrait]] = total(
         DeathRole.MOURNER: frozenset(),
         DeathRole.RECORD_KEEPER: frozenset(),
         DeathRole.CARRIER: frozenset({DeathRoleTrait.HANDLING, DeathRoleTrait.TENDING}),
+        DeathRole.GRAVE_MAKER: frozenset({DeathRoleTrait.HANDLING}),
     },
 )
 
@@ -603,6 +638,7 @@ DUEL_CONTEXT_TRAITS: Mapping[DuelContext, frozenset[DuelContextTrait]] = total(
         DuelContext.CHAMPION: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.AT_WAR}),
         DuelContext.GOD: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.AT_WAR}),
         DuelContext.RITUAL: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.CUSTOMARY}),
+        DuelContext.SPORT: frozenset({DuelContextTrait.DUEL_CONTEXTS, DuelContextTrait.CUSTOMARY}),
     },
 )
 
@@ -638,6 +674,10 @@ EMOTION_TRAITS: Mapping[Emotion, frozenset[EmotionTrait]] = total(
         Emotion.CURIOSITY: frozenset({EmotionTrait.STIRRED}),
         Emotion.COMPASSION: frozenset(),
         Emotion.CONTEMPT: frozenset({EmotionTrait.ANGRY}),
+        Emotion.TRUST: frozenset({EmotionTrait.HOPEFUL}),
+        Emotion.ANTICIPATION: frozenset({EmotionTrait.STIRRED, EmotionTrait.HOPEFUL}),
+        Emotion.ADMIRATION: frozenset({EmotionTrait.STIRRED}),
+        Emotion.EMBARRASSMENT: frozenset(),
     },
 )
 
@@ -660,7 +700,7 @@ EXTRACTION_KIND_TRAITS: Mapping[ExtractionKind, frozenset[ExtractionKindTrait]] 
     ExtractionKind,
     {
         ExtractionKind.MINING: frozenset({ExtractionKindTrait.ARTISAN_KINDS}),
-        ExtractionKind.QUARRYING: frozenset({ExtractionKindTrait.ARTISAN_KINDS}),
+        ExtractionKind.QUARRYING: frozenset({ExtractionKindTrait.ARTISAN_KINDS, ExtractionKindTrait.TAKES_FROM_RUINS}),
         ExtractionKind.LOGGING: frozenset(),
         ExtractionKind.FISHING: frozenset(),
         ExtractionKind.HERDING: frozenset(),
@@ -674,9 +714,10 @@ EXTRACTION_KIND_TRAITS: Mapping[ExtractionKind, frozenset[ExtractionKindTrait]] 
         ExtractionKind.ASTEROID: frozenset(),
         ExtractionKind.STELLAR: frozenset(),
         ExtractionKind.SOURCE_HARVEST: frozenset(),
-        ExtractionKind.SALVAGE: frozenset(),
+        ExtractionKind.SALVAGE: frozenset({ExtractionKindTrait.TAKES_FROM_RUINS}),
         ExtractionKind.LIVING_HARVEST: frozenset(),
         ExtractionKind.DISTILLATION: frozenset(),
+        ExtractionKind.EVAPORATING: frozenset({ExtractionKindTrait.ARTISAN_KINDS}),
     },
 )
 
@@ -755,6 +796,8 @@ FACTION_KIND_TRAITS: Mapping[FactionKind, frozenset[FactionKindTrait]] = total(
         FactionKind.WORKER_BODY: frozenset({FactionKindTrait.BODY_KINDS}),
         FactionKind.STREET_GANG: frozenset({FactionKindTrait.GANGS}),
         FactionKind.TRAFFICKING_RING: frozenset({FactionKindTrait.GANGS}),
+        FactionKind.FENCE_NETWORK: frozenset({FactionKindTrait.GANGS}),
+        FactionKind.COUNTERFEITING_RING: frozenset({FactionKindTrait.GANGS}),
     },
 )
 
@@ -774,6 +817,8 @@ FURNISHING_CATEGORY_TRAITS: Mapping[FurnishingCategory, frozenset[FurnishingCate
         FurnishingCategory.DECORATION: frozenset(),
         FurnishingCategory.SANITATION: frozenset(),
         FurnishingCategory.SHRINE: frozenset(),
+        FurnishingCategory.BATHING: frozenset(),
+        FurnishingCategory.PLAY: frozenset(),
     },
 )
 
@@ -817,6 +862,8 @@ GATHERING_KIND_TRAITS: Mapping[GatheringKind, frozenset[GatheringKindTrait]] = t
         GatheringKind.SPORT_MATCH: frozenset(),
         GatheringKind.COMMEMORATION: frozenset({GatheringKindTrait.ENGINE_KINDS}),
         GatheringKind.MUSTER: frozenset({GatheringKindTrait.ENGINE_KINDS}),
+        GatheringKind.REUNION: frozenset({GatheringKindTrait.POTLATCH_FEASTS, GatheringKindTrait.ENGINE_KINDS}),
+        GatheringKind.GIFT_EXCHANGE: frozenset({GatheringKindTrait.POTLATCH_FEASTS, GatheringKindTrait.ENGINE_KINDS}),
     },
 )
 
@@ -832,6 +879,7 @@ GIFT_STATE_TRAITS: Mapping[GiftState, frozenset[GiftStateTrait]] = total(
         GiftState.EXCEEDED: frozenset(),
         GiftState.PASSED_ON: frozenset(),
         GiftState.RELEASED: frozenset(),
+        GiftState.HOARDED: frozenset(),
     },
 )
 
@@ -847,6 +895,8 @@ GROUP_KIND_TRAITS: Mapping[GroupKind, frozenset[GroupKindTrait]] = total(
         GroupKind.CELL: frozenset({GroupKindTrait.LEADING}),
         GroupKind.BAND: frozenset({GroupKindTrait.LEADING}),
         GroupKind.TEAM: frozenset(),
+        GroupKind.CONGREGATION: frozenset({GroupKindTrait.LEADING}),
+        GroupKind.SCHOOL: frozenset({GroupKindTrait.LEADING}),
     },
 )
 
@@ -868,6 +918,9 @@ HAZARD_KIND_TRAITS: Mapping[HazardKind, frozenset[HazardKindTrait]] = total(
         HazardKind.BEAST_ATTACK: frozenset(),
         HazardKind.SOURCE_BACKLASH: frozenset(),
         HazardKind.MACHINE_ACCIDENT: frozenset(),
+        HazardKind.FALLS: frozenset({HazardKindTrait.WORKS_HAZARDS}),
+        HazardKind.BURNS: frozenset({HazardKindTrait.WORKS_HAZARDS}),
+        HazardKind.DUST_LUNG: frozenset({HazardKindTrait.WORKS_HAZARDS}),
     },
 )
 
@@ -904,6 +957,8 @@ HOUSE_DUTY_TRAITS: Mapping[HouseDuty, frozenset[HouseDutyTrait]] = total(
         HouseDuty.REPAIRS: frozenset(),
         HouseDuty.SICKCARE: frozenset({HouseDutyTrait.CARE_DUTIES}),
         HouseDuty.HOUSEHOLD_RITES: frozenset(),
+        HouseDuty.TEACHING: frozenset({HouseDutyTrait.CARE_DUTIES}),
+        HouseDuty.ACCOUNTS: frozenset({HouseDutyTrait.SERVED_DUTIES}),
     },
 )
 
@@ -923,6 +978,8 @@ IDENTITY_LAYER_TRAITS: Mapping[IdentityLayer, frozenset[IdentityLayerTrait]] = t
         IdentityLayer.LANGUAGE: frozenset(),
         IdentityLayer.KIND: frozenset(),
         IdentityLayer.CAUSE: frozenset({IdentityLayerTrait.GROUP_LAYERS}),
+        IdentityLayer.GIFT: frozenset(),
+        IdentityLayer.CALLING: frozenset({IdentityLayerTrait.GROUP_LAYERS}),
     },
 )
 
@@ -938,6 +995,7 @@ INHERITANCE_CUSTOM_TRAITS: Mapping[InheritanceCustom, frozenset[InheritanceCusto
         InheritanceCustom.BY_MERIT: frozenset({InheritanceCustomTrait.DISCRETION}),
         InheritanceCustom.SENIORITY: frozenset(),
         InheritanceCustom.DESIGNATED: frozenset({InheritanceCustomTrait.DISCRETION}),
+        InheritanceCustom.COMMUNAL: frozenset({InheritanceCustomTrait.DISCRETION}),
     },
 )
 
@@ -969,6 +1027,10 @@ INTERACTION_KIND_TRAITS: Mapping[InteractionKind, frozenset[InteractionKindTrait
         InteractionKind.APOLOGISE: frozenset({InteractionKindTrait.FRIENDLY_TALK}),
         InteractionKind.SHARE_MEAL: frozenset({InteractionKindTrait.FRIENDLY_TALK, InteractionKindTrait.TALK_FREE}),
         InteractionKind.ASK_COUNSEL: frozenset({InteractionKindTrait.FRIENDLY_TALK}),
+        InteractionKind.PRAISE: frozenset({InteractionKindTrait.FRIENDLY_TALK, InteractionKindTrait.TALK_FREE}),
+        InteractionKind.WARN: frozenset({InteractionKindTrait.TALK_FREE}),
+        InteractionKind.PLEAD: frozenset({InteractionKindTrait.TALK_FREE}),
+        InteractionKind.SHARE_NEWS: frozenset({InteractionKindTrait.FRIENDLY_TALK, InteractionKindTrait.TALK_FREE}),
     },
 )
 
@@ -985,6 +1047,8 @@ INTOXICANT_TRAITS: Mapping[Intoxicant, frozenset[IntoxicantTrait]] = total(
         Intoxicant.ESSENCE: frozenset(),
         Intoxicant.SYNTHETIC: frozenset({IntoxicantTrait.STIMULATES}),
         Intoxicant.ANIMAL_DERIVED: frozenset(),
+        Intoxicant.STIMULANT: frozenset({IntoxicantTrait.STIMULATES}),
+        Intoxicant.RESIN: frozenset(),
     },
 )
 
@@ -1009,6 +1073,8 @@ JOB_TRAITS: Mapping[Job, frozenset[JobTrait]] = total(
         Job.GATHERING: frozenset(),
         Job.INDUSTRY: frozenset({JobTrait.BOUND_JOBS, JobTrait.MADE_MIND_TRADES}),
         Job.ARTS: frozenset(),
+        Job.HEALING: frozenset({JobTrait.MADE_MIND_TRADES}),
+        Job.TEACHING: frozenset({JobTrait.MADE_MIND_TRADES}),
     },
 )
 
@@ -1024,6 +1090,8 @@ JOURNEY_INTENT_TRAITS: Mapping[JourneyIntent, frozenset[JourneyIntentTrait]] = t
         JourneyIntent.EXILE: frozenset({JourneyIntentTrait.CROWD_INTENTS, JourneyIntentTrait.PASSENGER_INTENTS}),
         JourneyIntent.FLIGHT: frozenset({JourneyIntentTrait.CROWD_INTENTS, JourneyIntentTrait.PASSENGER_INTENTS}),
         JourneyIntent.EMBASSY: frozenset({JourneyIntentTrait.PASSENGER_INTENTS, JourneyIntentTrait.SURVEYING}),
+        JourneyIntent.RESCUE: frozenset({JourneyIntentTrait.PASSENGER_INTENTS}),
+        JourneyIntent.RETURN: frozenset({JourneyIntentTrait.CROWD_INTENTS, JourneyIntentTrait.PASSENGER_INTENTS}),
     },
 )
 
@@ -1089,6 +1157,8 @@ LAND_ACT_TRAITS: Mapping[LandAct, frozenset[LandActTrait]] = total(
         LandAct.OPEN_SPRING: frozenset({LandActTrait.WELCOMED}),
         LandAct.CALL_LAVA: frozenset({LandActTrait.FEARED}),
         LandAct.SINK_COAST: frozenset({LandActTrait.FEARED}),
+        LandAct.RAISE_ISLAND: frozenset({LandActTrait.WELCOMED}),
+        LandAct.OPEN_UNDERGROUND: frozenset(),
     },
 )
 
@@ -1112,6 +1182,9 @@ LEISURE_KIND_TRAITS: Mapping[LeisureKind, frozenset[LeisureKindTrait]] = total(
         LeisureKind.DANCE: frozenset(),
         LeisureKind.STORYTELLING: frozenset(),
         LeisureKind.HUNTING: frozenset({LeisureKindTrait.TRAVEL_PURSUITS}),
+        LeisureKind.GARDENING: frozenset(),
+        LeisureKind.BATHING: frozenset(),
+        LeisureKind.ANIMAL_KEEPING: frozenset(),
     },
 )
 
@@ -1125,6 +1198,7 @@ LIFE_STAGE_TRAITS: Mapping[LifeStage, frozenset[LifeStageTrait]] = total(
         LifeStage.ADULT: frozenset({LifeStageTrait.GROWN}),
         LifeStage.ELDER: frozenset({LifeStageTrait.CARED_FOR, LifeStageTrait.GROWN, LifeStageTrait.OLD}),
         LifeStage.ANCIENT: frozenset({LifeStageTrait.CARED_FOR, LifeStageTrait.GROWN, LifeStageTrait.OLD}),
+        LifeStage.MATURE: frozenset({LifeStageTrait.GROWN}),
     },
 )
 
@@ -1185,6 +1259,8 @@ MEDIUM_TRAITS: Mapping[Medium, frozenset[MediumTrait]] = total(
         Medium.NETWORK: frozenset(),
         Medium.MIND_LINK: frozenset({MediumTrait.INSTANT}),
         Medium.BROADCAST: frozenset({MediumTrait.INSTANT, MediumTrait.OPEN_MEDIA}),
+        Medium.DRUM_AND_WHISTLE: frozenset({MediumTrait.OVERLAND}),
+        Medium.COURIER_ANIMAL: frozenset({MediumTrait.OVERLAND}),
     },
 )
 
@@ -1229,6 +1305,12 @@ MEMORY_KIND_TRAITS: Mapping[MemoryKind, frozenset[MemoryKindTrait]] = total(
         MemoryKind.AIDED_CHOSEN: frozenset(),
         MemoryKind.MEMORY_GAP: frozenset(),
         MemoryKind.COMPELLED_ME: frozenset(),
+        MemoryKind.HEALED_ME: frozenset({MemoryKindTrait.CARES}),
+        MemoryKind.SHELTERED_ME: frozenset({MemoryKindTrait.CARES}),
+        MemoryKind.ABANDONED_ME: frozenset({MemoryKindTrait.GRIEVANCES, MemoryKindTrait.HARMS}),
+        MemoryKind.SURVIVED_WITH: frozenset({MemoryKindTrait.CARES}),
+        MemoryKind.APOLOGISED_TO_ME: frozenset({MemoryKindTrait.CARES}),
+        MemoryKind.JUDGED_ME: frozenset({MemoryKindTrait.GRIEVANCES}),
     },
 )
 
@@ -1299,6 +1381,8 @@ MISHAP_KIND_TRAITS: Mapping[MishapKind, frozenset[MishapKindTrait]] = total(
         MishapKind.THEFT_SUFFERED: frozenset({MishapKindTrait.LOSSES}),
         MishapKind.TOOL_BROKEN: frozenset({MishapKindTrait.LOSSES}),
         MishapKind.NEAR_MISS: frozenset({MishapKindTrait.FRIGHTS}),
+        MishapKind.QUAKE: frozenset({MishapKindTrait.FRIGHTS}),
+        MishapKind.FLOOD: frozenset({MishapKindTrait.LOSSES}),
     },
 )
 
@@ -1319,6 +1403,7 @@ OATH_KIND_TRAITS: Mapping[OathKind, frozenset[OathKindTrait]] = total(
         OathKind.FIDELITY: frozenset(),
         OathKind.SECRECY: frozenset(),
         OathKind.TESTIMONY: frozenset(),
+        OathKind.OFFICE: frozenset({OathKindTrait.LOYAL_OATHS}),
     },
 )
 
@@ -1335,6 +1420,8 @@ OBSERVATION_METHOD_TRAITS: Mapping[ObservationMethod, frozenset[ObservationMetho
         ObservationMethod.NETWORK: frozenset(),
         ObservationMethod.POWER: frozenset({ObservationMethodTrait.TRUSTED_BY_FAITH}),
         ObservationMethod.DIVINATION: frozenset({ObservationMethodTrait.TRUSTED_BY_FAITH}),
+        ObservationMethod.ANIMAL_SIGNS: frozenset({ObservationMethodTrait.TRUSTED_BY_FAITH}),
+        ObservationMethod.DREAM: frozenset({ObservationMethodTrait.TRUSTED_BY_FAITH}),
     },
 )
 
@@ -1352,6 +1439,8 @@ OFFICE_DUTY_TRAITS: Mapping[OfficeDuty, frozenset[OfficeDutyTrait]] = total(
         OfficeDuty.MEMORY: frozenset({OfficeDutyTrait.DUTY_TOWNS, OfficeDutyTrait.PIETY_DUTIES}),
         OfficeDuty.MAKING: frozenset({OfficeDutyTrait.DUTY_TOWNS}),
         OfficeDuty.HEALING: frozenset({OfficeDutyTrait.DUTY_TOWNS}),
+        OfficeDuty.TRADE: frozenset({OfficeDutyTrait.DUTY_TOWNS}),
+        OfficeDuty.LEARNING: frozenset({OfficeDutyTrait.DUTY_TOWNS}),
     },
 )
 
@@ -1381,6 +1470,7 @@ OFFICE_KIND_TRAITS: Mapping[OfficeKind, frozenset[OfficeKindTrait]] = total(
         OfficeKind.CHIEF_SCIENTIST: frozenset(),
         OfficeKind.JESTER: frozenset(),
         OfficeKind.WARDEN: frozenset(),
+        OfficeKind.CENSOR: frozenset({OfficeKindTrait.COUNCIL}),
     },
 )
 
@@ -1403,6 +1493,9 @@ ORDER_KIND_TRAITS: Mapping[OrderKind, frozenset[OrderKindTrait]] = total(
         OrderKind.FORBID: frozenset(),
         OrderKind.CARRY: frozenset(),
         OrderKind.TEND: frozenset(),
+        OrderKind.TEACH: frozenset(),
+        OrderKind.HEAL: frozenset({OrderKindTrait.TARGETED_ORDERS}),
+        OrderKind.HUNT: frozenset({OrderKindTrait.TARGETED_ORDERS, OrderKindTrait.WEAPON_ORDERS}),
     },
 )
 
@@ -1414,7 +1507,7 @@ PACKAGE_KIND_TRAITS: Mapping[PackageKind, frozenset[PackageKindTrait]] = total(
         PackageKind.DRINK_DEPENDENCE: frozenset(),
         PackageKind.DRUG_DEPENDENCE: frozenset(),
         PackageKind.LYCANTHROPY: frozenset({PackageKindTrait.BEAST_CURSES}),
-        PackageKind.VAMPIRISM: frozenset(),
+        PackageKind.VAMPIRISM: frozenset({PackageKindTrait.HIDDEN_BY_BEARER}),
         PackageKind.DIVINE_BLESSING: frozenset(),
         PackageKind.VOID_TAINT: frozenset(),
         PackageKind.POSSESSION: frozenset(),
@@ -1427,6 +1520,9 @@ PACKAGE_KIND_TRAITS: Mapping[PackageKind, frozenset[PackageKindTrait]] = total(
         PackageKind.FORTUNE: frozenset(),
         PackageKind.TRANSFORMATION: frozenset(),
         PackageKind.CHARM: frozenset(),
+        PackageKind.AGEING: frozenset(),
+        PackageKind.FORGETTING: frozenset(),
+        PackageKind.SLEEP: frozenset(),
     },
 )
 
@@ -1448,6 +1544,8 @@ PASSION_KIND_TRAITS: Mapping[PassionKind, frozenset[PassionKindTrait]] = total(
         PassionKind.JEALOUSY: frozenset(),
         PassionKind.ADMIRATION: frozenset(),
         PassionKind.OBSESSION: frozenset(),
+        PassionKind.VENGEANCE: frozenset(),
+        PassionKind.COMPASSION: frozenset({PassionKindTrait.TENDER}),
     },
 )
 
@@ -1470,6 +1568,8 @@ POPULATION_INSTRUMENT_TRAITS: Mapping[PopulationInstrument, frozenset[Population
         PopulationInstrument.HEALTH_CAMPAIGN: frozenset(),
         PopulationInstrument.FAITH_TEACHING: frozenset(),
         PopulationInstrument.MADE_BIRTH: frozenset(),
+        PopulationInstrument.IMMUNISATION: frozenset(),
+        PopulationInstrument.SANITATION: frozenset(),
     },
 )
 
@@ -1523,6 +1623,8 @@ PREPAREDNESS_KIND_TRAITS: Mapping[PreparednessKind, frozenset[PreparednessKindTr
         PreparednessKind.EVACUATION_ROUTES: frozenset({PreparednessKindTrait.FIRE_SHIELDS}),
         PreparednessKind.WARD: frozenset({PreparednessKindTrait.FIRE_SHIELDS}),
         PreparednessKind.RESERVES_OF_ENERGY: frozenset(),
+        PreparednessKind.IMMUNISATION_PLAN: frozenset(),
+        PreparednessKind.QUAKE_BUILDING: frozenset(),
     },
 )
 
@@ -1562,6 +1664,8 @@ PUNISHMENT_KIND_TRAITS: Mapping[PunishmentKind, frozenset[PunishmentKindTrait]] 
         PunishmentKind.TRANSPORTATION: frozenset(),
         PunishmentKind.COMMUNITY_WORK: frozenset(),
         PunishmentKind.DAMPENING: frozenset(),
+        PunishmentKind.SHUNNING: frozenset({PunishmentKindTrait.MIND_PUNISHMENTS}),
+        PunishmentKind.CURSE_SENTENCE: frozenset({PunishmentKindTrait.MIND_PUNISHMENTS}),
     },
 )
 
@@ -1577,6 +1681,8 @@ REBUILD_CAUSE_TRAITS: Mapping[RebuildCause, frozenset[RebuildCauseTrait]] = tota
         RebuildCause.ERUPTION: frozenset(),
         RebuildCause.SEA_WAVE: frozenset(),
         RebuildCause.LANDSLIDE: frozenset(),
+        RebuildCause.SINKHOLE: frozenset(),
+        RebuildCause.PLAGUE: frozenset(),
     },
 )
 
@@ -1594,6 +1700,8 @@ RECORD_FORM_TRAITS: Mapping[RecordForm, frozenset[RecordFormTrait]] = total(
         RecordForm.LIVING: frozenset({RecordFormTrait.RECORDED_FORMS}),
         RecordForm.CRAFTED: frozenset(),
         RecordForm.MENTAL: frozenset(),
+        RecordForm.SCENT: frozenset(),
+        RecordForm.TACTILE: frozenset(),
     },
 )
 
@@ -1606,6 +1714,7 @@ REGIONAL_STANDING_TRAITS: Mapping[RegionalStanding, frozenset[RegionalStandingTr
         RegionalStanding.MINOR_POWER: frozenset(),
         RegionalStanding.CLIENT: frozenset(),
         RegionalStanding.NEUTRAL: frozenset(),
+        RegionalStanding.ISOLATED: frozenset(),
     },
 )
 
@@ -1634,6 +1743,9 @@ RELATION_TYPE_TRAITS: Mapping[RelationType, frozenset[RelationTypeTrait]] = tota
         RelationType.BETROTHED: frozenset(),
         RelationType.SWORN_KIN: frozenset({RelationTypeTrait.FRIENDLY}),
         RelationType.FOSTER: frozenset({RelationTypeTrait.FRIENDLY}),
+        RelationType.NEIGHBOUR: frozenset({RelationTypeTrait.FRIENDLY}),
+        RelationType.GUEST_FRIEND: frozenset({RelationTypeTrait.FRIENDLY}),
+        RelationType.ESTRANGED: frozenset(),
     },
 )
 
@@ -1652,6 +1764,8 @@ RIGHT_KIND_TRAITS: Mapping[RightKind, frozenset[RightKindTrait]] = total(
         RightKind.MARKET_PRIVILEGE: frozenset({RightKindTrait.COPIED}),
         RightKind.RECIPE: frozenset({RightKindTrait.COPIED, RightKindTrait.PORTION}),
         RightKind.TECHNIQUE: frozenset({RightKindTrait.COPIED, RightKindTrait.PORTION}),
+        RightKind.PERFORMANCE: frozenset({RightKindTrait.PORTION}),
+        RightKind.LIKENESS: frozenset({RightKindTrait.COPIED}),
     },
 )
 
@@ -1669,6 +1783,8 @@ RUMOUR_DISTORTION_TRAITS: Mapping[RumourDistortion, frozenset[RumourDistortionTr
         RumourDistortion.STEP_ADDED: frozenset({RumourDistortionTrait.STEP_KINDS}),
         RumourDistortion.STEP_DROPPED: frozenset({RumourDistortionTrait.STEP_KINDS}),
         RumourDistortion.ROLE_CHANGED: frozenset({RumourDistortionTrait.SWAPS}),
+        RumourDistortion.COUNT_INFLATED: frozenset(),
+        RumourDistortion.MOTIVE_ADDED: frozenset(),
     },
 )
 
@@ -1687,6 +1803,8 @@ SETTLE_MODE_TRAITS: Mapping[SettleMode, frozenset[SettleModeTrait]] = total(
         SettleMode.BURROW: frozenset(),
         SettleMode.SUBMERGED: frozenset({SettleModeTrait.UPKEPT}),
         SettleMode.CANOPY: frozenset(),
+        SettleMode.CLIFF: frozenset(),
+        SettleMode.DRIFT: frozenset({SettleModeTrait.UPKEPT}),
     },
 )
 
@@ -1700,6 +1818,7 @@ SIZE_CLASS_TRAITS: Mapping[SizeClass, frozenset[SizeClassTrait]] = total(
         SizeClass.LARGE: frozenset({SizeClassTrait.DRAUGHT, SizeClassTrait.KEPT_SIZES, SizeClassTrait.RIDEABLE}),
         SizeClass.HUGE: frozenset({SizeClassTrait.DRAUGHT, SizeClassTrait.GREAT, SizeClassTrait.RIDEABLE}),
         SizeClass.COLOSSAL: frozenset({SizeClassTrait.GREAT, SizeClassTrait.RIDEABLE}),
+        SizeClass.MICROSCOPIC: frozenset({SizeClassTrait.SLEEPERS}),
     },
 )
 
@@ -1770,6 +1889,12 @@ SKILL_KIND_TRAITS: Mapping[SkillKind, frozenset[SkillKindTrait]] = total(
         SkillKind.COMPUTING: frozenset(),
         SkillKind.SCIENCE: frozenset(),
         SkillKind.ADMINISTRATION: frozenset(),
+        SkillKind.FARMING: frozenset(),
+        SkillKind.HERDING: frozenset({SkillKindTrait.TRAVEL_SKILLS}),
+        SkillKind.COOKING: frozenset(),
+        SkillKind.MUSIC: frozenset(),
+        SkillKind.CLIMBING: frozenset({SkillKindTrait.TRAVEL_SKILLS, SkillKindTrait.HUNT_SKILLS}),
+        SkillKind.DIVING: frozenset({SkillKindTrait.TRAVEL_SKILLS}),
     },
 )
 
@@ -1812,6 +1937,7 @@ SPECIES_CLASS_TRAITS: Mapping[SpeciesClass, frozenset[SpeciesClassTrait]] = tota
         SpeciesClass.MADE: frozenset(),
         SpeciesClass.COLONIAL: frozenset({SpeciesClassTrait.PLANT_CLASSES}),
         SpeciesClass.HYBRID: frozenset(),
+        SpeciesClass.LICHEN: frozenset({SpeciesClassTrait.PLANT_CLASSES}),
     },
 )
 
@@ -1826,6 +1952,8 @@ SPEECH_VENUE_TRAITS: Mapping[SpeechVenue, frozenset[SpeechVenueTrait]] = total(
         SpeechVenue.SCHOOL: frozenset(),
         SpeechVenue.CAMP: frozenset({SpeechVenueTrait.CROWD_VENUES}),
         SpeechVenue.OUTLET: frozenset({SpeechVenueTrait.CROWD_VENUES}),
+        SpeechVenue.MARKET: frozenset({SpeechVenueTrait.CROWD_VENUES}),
+        SpeechVenue.FUNERAL: frozenset(),
     },
 )
 
@@ -1854,6 +1982,8 @@ SPELL_FORM_TRAITS: Mapping[SpellForm, frozenset[SpellFormTrait]] = total(
         SpellForm.FATE: frozenset(),
         SpellForm.MACHINE: frozenset(),
         SpellForm.INFORMATION: frozenset(),
+        SpellForm.DREAM: frozenset(),
+        SpellForm.LAW: frozenset(),
     },
 )
 
@@ -1871,6 +2001,9 @@ SPELL_TECHNIQUE_TRAITS: Mapping[SpellTechnique, frozenset[SpellTechniqueTrait]] 
         SpellTechnique.WARD: frozenset(),
         SpellTechnique.DRAIN: frozenset({SpellTechniqueTrait.HARMING}),
         SpellTechnique.MIMIC: frozenset(),
+        SpellTechnique.HEAL: frozenset(),
+        SpellTechnique.MOVE: frozenset(),
+        SpellTechnique.SPEAK: frozenset(),
     },
 )
 
@@ -1888,6 +2021,7 @@ STANCE_TRAITS: Mapping[Stance, frozenset[StanceTrait]] = total(
         Stance.WINTER_QUARTERS: frozenset({StanceTrait.LAYING, StanceTrait.PATROLS}),
         Stance.PURSUE: frozenset(),
         Stance.ESCORT: frozenset({StanceTrait.PATROLS}),
+        Stance.DISBAND: frozenset(),
     },
 )
 
@@ -1899,6 +2033,7 @@ STARVATION_STAGE_TRAITS: Mapping[StarvationStage, frozenset[StarvationStageTrait
         StarvationStage.RATIONING: frozenset(),
         StarvationStage.FAMINE: frozenset({StarvationStageTrait.HUNGRY}),
         StarvationStage.TABOO_BROKEN: frozenset({StarvationStageTrait.HUNGRY}),
+        StarvationStage.HUNGER_SICKNESS: frozenset({StarvationStageTrait.HUNGRY}),
     },
 )
 
@@ -1949,6 +2084,8 @@ STRUCTURE_SECTION_TRAITS: Mapping[StructureSection, frozenset[StructureSectionTr
         StructureSection.HABITAT_DECKS: frozenset({StructureSectionTrait.BREACHED_DECKS}),
         StructureSection.CONTROL_CORE: frozenset(),
         StructureSection.SHIELDING: frozenset(),
+        StructureSection.CISTERN: frozenset(),
+        StructureSection.CHIMNEY: frozenset({StructureSectionTrait.TALL}),
     },
 )
 
@@ -1979,6 +2116,8 @@ TACTIC_TRAITS: Mapping[Tactic, frozenset[TacticTrait]] = total(
         Tactic.ORBITAL_BOMBARDMENT: frozenset(),
         Tactic.DROP_ASSAULT: frozenset({TacticTrait.STRIKE_TACTICS}),
         Tactic.INFILTRATION: frozenset({TacticTrait.HIDDEN_TACTICS, TacticTrait.STRIKE_TACTICS}),
+        Tactic.RIVER_CROSSING: frozenset({TacticTrait.STRIKE_TACTICS}),
+        Tactic.FIRE_ATTACK: frozenset({TacticTrait.STRIKE_TACTICS}),
     },
 )
 
@@ -2002,6 +2141,8 @@ TAX_KIND_TRAITS: Mapping[TaxKind, frozenset[TaxKindTrait]] = total(
         TaxKind.SEIGNIORAGE: frozenset(),
         TaxKind.POLLUTION: frozenset({TaxKindTrait.SHARE_TAXES}),
         TaxKind.EXCISE: frozenset({TaxKindTrait.SHARE_TAXES}),
+        TaxKind.TOLL: frozenset({TaxKindTrait.SHARE_TAXES}),
+        TaxKind.HEARTH: frozenset({TaxKindTrait.HEAD_TAXES}),
     },
 )
 
@@ -2276,6 +2417,18 @@ THOUGHT_KIND_TRAITS: Mapping[ThoughtKind, frozenset[ThoughtKindTrait]] = total(
         ThoughtKind.GREW_CURIOUS: frozenset(),
         ThoughtKind.FELT_COMPASSION: frozenset(),
         ThoughtKind.FELT_CONTEMPT: frozenset(),
+        ThoughtKind.SEASON_FAILED: frozenset(),
+        ThoughtKind.STORM_SURVIVED: frozenset(),
+        ThoughtKind.QUAKE_SURVIVED: frozenset(),
+        ThoughtKind.HOME_LOST_TO_FLOOD: frozenset(),
+        ThoughtKind.BEAST_PASSED: frozenset(),
+        ThoughtKind.FLED_PLAGUE: frozenset(),
+        ThoughtKind.GATHERING_CLOSED: frozenset(),
+        ThoughtKind.SAW_ACCESSION: frozenset(),
+        ThoughtKind.YEAR_OF_PEACE: frozenset(),
+        ThoughtKind.CHARM_FOUND: frozenset(),
+        ThoughtKind.FORGOT: frozenset(),
+        ThoughtKind.WOKE_FROM_SLEEP: frozenset(),
     },
 )
 
@@ -2290,6 +2443,7 @@ TRADE_MODE_TRAITS: Mapping[TradeMode, frozenset[TradeModeTrait]] = total(
         TradeMode.SPACE: frozenset(),
         TradeMode.RIFT: frozenset(),
         TradeMode.NETWORK: frozenset(),
+        TradeMode.UNDERGROUND: frozenset({TradeModeTrait.LAND_MODES}),
     },
 )
 
@@ -2306,6 +2460,8 @@ TRADE_POLICY_KIND_TRAITS: Mapping[TradePolicyKind, frozenset[TradePolicyKindTrai
         TradePolicyKind.FREE_TRADE: frozenset(),
         TradePolicyKind.EXPORT_BAN: frozenset(),
         TradePolicyKind.SANCTION: frozenset({TradePolicyKindTrait.BARRING}),
+        TradePolicyKind.TOLL: frozenset(),
+        TradePolicyKind.STAPLE_RIGHT: frozenset(),
     },
 )
 
@@ -2320,6 +2476,7 @@ TRADE_ROUTE_STATUS_TRAITS: Mapping[TradeRouteStatus, frozenset[TradeRouteStatusT
         TradeRouteStatus.BLOCKADED: frozenset({TradeRouteStatusTrait.LIVE_STATUSES}),
         TradeRouteStatus.CLOSED: frozenset(),
         TradeRouteStatus.DECAYED: frozenset(),
+        TradeRouteStatus.TOLLED: frozenset({TradeRouteStatusTrait.LIVE_STATUSES, TradeRouteStatusTrait.CARRYING}),
     },
 )
 
@@ -2343,6 +2500,8 @@ TREATY_KIND_TRAITS: Mapping[TreatyKind, frozenset[TreatyKindTrait]] = total(
         TreatyKind.DIVINE_PACT: frozenset(),
         TreatyKind.NAVAL_LIMIT: frozenset({TreatyKindTrait.MUTUAL}),
         TreatyKind.ARMS_LIMIT: frozenset({TreatyKindTrait.MUTUAL}),
+        TreatyKind.MUTUAL_AID: frozenset({TreatyKindTrait.MUTUAL, TreatyKindTrait.KEPT_KINDS}),
+        TreatyKind.BORDER_ACCORD: frozenset({TreatyKindTrait.MUTUAL, TreatyKindTrait.KEPT_KINDS}),
     },
 )
 
@@ -2357,6 +2516,8 @@ UNIT_HONOUR_KIND_TRAITS: Mapping[UnitHonourKind, frozenset[UnitHonourKindTrait]]
         UnitHonourKind.MASSACRE: frozenset(),
         UnitHonourKind.RELIEF: frozenset({UnitHonourKindTrait.GLORIOUS}),
         UnitHonourKind.CROSSING: frozenset({UnitHonourKindTrait.GLORIOUS}),
+        UnitHonourKind.MERCY: frozenset(),
+        UnitHonourKind.FIRST_IN: frozenset({UnitHonourKindTrait.GLORIOUS}),
     },
 )
 
@@ -2389,6 +2550,7 @@ VEHICLE_FAMILY_TRAITS: Mapping[VehicleFamily, frozenset[VehicleFamilyTrait]] = t
         VehicleFamily.BURROWER: frozenset(),
         VehicleFamily.CONSTRUCT: frozenset(),
         VehicleFamily.LIVING: frozenset(),
+        VehicleFamily.SLEDGE: frozenset(),
     },
 )
 
@@ -2424,6 +2586,8 @@ WAR_CAUSE_TRAITS: Mapping[WarCause, frozenset[WarCauseTrait]] = total(
         WarCause.RAID: frozenset(),
         WarCause.LIBERATION: frozenset({}),
         WarCause.PUNITIVE: frozenset(),
+        WarCause.WATER: frozenset(),
+        WarCause.REFUGEES: frozenset(),
     },
 )
 
@@ -2441,6 +2605,7 @@ WAR_ENDING_TRAITS: Mapping[WarEnding, frozenset[WarEndingTrait]] = total(
         WarEnding.SAME_FRONT: frozenset(),
         WarEnding.NO_SIDE_LEFT: frozenset(),
         WarEnding.MIRACLE: frozenset({WarEndingTrait.SIGNED_ENDINGS}),
+        WarEnding.MEDIATED: frozenset({WarEndingTrait.SIGNED_ENDINGS}),
     },
 )
 
@@ -2456,6 +2621,7 @@ WAR_TERRAIN_TRAITS: Mapping[WarTerrain, frozenset[WarTerrainTrait]] = total(
         WarTerrain.UNDER_WATER: frozenset({WarTerrainTrait.LAND_UNFIT}),
         WarTerrain.SPACE: frozenset({WarTerrainTrait.LAND_UNFIT}),
         WarTerrain.UNDERGROUND: frozenset(),
+        WarTerrain.DIMENSION: frozenset({WarTerrainTrait.LAND_UNFIT}),
     },
 )
 
@@ -2485,6 +2651,7 @@ WITNESS_MODE_TRAITS: Mapping[WitnessMode, frozenset[WitnessModeTrait]] = total(
         WitnessMode.HEARD: frozenset(),
         WitnessMode.TOOK_PART: frozenset({WitnessModeTrait.FIRST_HAND}),
         WitnessMode.WAS_TOLD: frozenset(),
+        WitnessMode.SENSED: frozenset({WitnessModeTrait.FIRST_HAND}),
     },
 )
 
@@ -2508,6 +2675,10 @@ WORKS_KIND_TRAITS: Mapping[WorksKind, frozenset[WorksKindTrait]] = total(
         WorksKind.TERRAFORMING_STAGE: frozenset(),
         WorksKind.MEGASTRUCTURE_STAGE: frozenset(),
         WorksKind.GROWN_WORKS: frozenset(),
+        WorksKind.LIGHTHOUSE: frozenset(),
+        WorksKind.TERRACING: frozenset(),
+        WorksKind.IRRIGATION: frozenset(),
+        WorksKind.TUNNEL: frozenset({WorksKindTrait.ROUTE_WORKS}),
     },
 )
 
@@ -2524,6 +2695,8 @@ WORLD_END_TRAITS: Mapping[WorldEnd, frozenset[WorldEndTrait]] = total(
         WorldEnd.DROWNED: frozenset({WorldEndTrait.LIFELESS}),
         WorldEnd.BURNED: frozenset({WorldEndTrait.LIFELESS}),
         WorldEnd.DEVOURED: frozenset({WorldEndTrait.GONE_FROM_SKY, WorldEndTrait.LIFELESS}),
+        WorldEnd.EMPTIED: frozenset({WorldEndTrait.LIFELESS}),
+        WorldEnd.MERGED: frozenset({WorldEndTrait.GONE_FROM_SKY}),
     },
 )
 
@@ -2565,6 +2738,9 @@ WORLD_TYPE_TRAITS: Mapping[WorldType, frozenset[WorldTypeTrait]] = total(
         WorldType.HOLLOW: frozenset({WorldTypeTrait.BURIED_WORLDS, WorldTypeTrait.SKYLESS_WORLDS}),
         WorldType.ICE_SHELL: frozenset({WorldTypeTrait.BURIED_WORLDS, WorldTypeTrait.COLD_WORLDS, WorldTypeTrait.HARSH_WORLDS}),
         WorldType.METHANE: frozenset({WorldTypeTrait.HARSH_WORLDS}),
+        WorldType.ROGUE: frozenset({WorldTypeTrait.COLD_WORLDS, WorldTypeTrait.HARSH_WORLDS}),
+        WorldType.ARCHIPELAGO: frozenset(),
+        WorldType.MEGASTRUCTURE: frozenset(),
     },
 )
 
@@ -2580,6 +2756,8 @@ YOUTH_PURPOSE_TRAITS: Mapping[YouthPurpose, frozenset[YouthPurposeTrait]] = tota
         YouthPurpose.MISCHIEF: frozenset({YouthPurposeTrait.DELINQUENT, YouthPurposeTrait.UNRULY}),
         YouthPurpose.CRIME: frozenset({YouthPurposeTrait.DELINQUENT, YouthPurposeTrait.UNRULY}),
         YouthPurpose.POLITICS: frozenset({YouthPurposeTrait.UNRULY}),
+        YouthPurpose.LEARNING: frozenset(),
+        YouthPurpose.LABOUR: frozenset(),
     },
 )
 

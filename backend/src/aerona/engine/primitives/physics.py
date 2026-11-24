@@ -29,6 +29,8 @@ def capacity_pct(rules: Rules, atmosphere: Atmosphere) -> int:
         Atmosphere.NORMAL: physics.capacity_normal,
         Atmosphere.DENSE: physics.capacity_dense,
         Atmosphere.TOXIC: physics.capacity_toxic,
+        Atmosphere.STEAM: physics.capacity_steam,
+        Atmosphere.LAYERED: physics.capacity_layered,
     }[atmosphere]
 
 

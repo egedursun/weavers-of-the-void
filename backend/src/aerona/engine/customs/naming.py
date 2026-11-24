@@ -9,6 +9,7 @@ from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.customs import NameFormRow, NamingCustomRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import NotableYearRow
 from aerona.db.tables.intrigue import TrueNameRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import held
@@ -93,6 +94,27 @@ async def trade_part(ctx: TickContext, mortal: EntityRow) -> str | None:
     return None
 
 
+async def ancestral_part(ctx: TickContext, mortal: EntityRow) -> str | None:
+    for parent_id in sorted(await parents_of(ctx.session, mortal.id)):
+        for grandparent_id in sorted(await parents_of(ctx.session, parent_id)):
+            forebear = await ctx.session.get(EntityRow, grandparent_id)
+            if forebear is not None:
+                return forebear.name
+    return None
+
+
+async def event_part(ctx: TickContext, mortal: EntityRow) -> str | None:
+    if mortal.world_id is None:
+        return None
+    kind = await ctx.session.scalar(
+        select(NotableYearRow.kind)
+        .where(NotableYearRow.world_id == mortal.world_id, NotableYearRow.epoch == ctx.epoch)
+        .order_by(NotableYearRow.year.desc(), NotableYearRow.id.desc())
+        .limit(1)
+    )
+    return f"the year of {spoken(kind)}" if kind is not None else None
+
+
 async def no_part(ctx: TickContext, mortal: EntityRow) -> str | None:
     return None
 
@@ -106,6 +128,8 @@ PARTS: Mapping[NamingPattern, Callable[[TickContext, EntityRow], Awaitable[str |
         NamingPattern.TEKNONYM: no_part,
         NamingPattern.PLACE: place_part,
         NamingPattern.TRADE: trade_part,
+        NamingPattern.ANCESTRAL: ancestral_part,
+        NamingPattern.EVENT: event_part,
     },
 )
 

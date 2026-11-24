@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.api.dependencies import ServicesDep, reader, world_rules
 from aerona.api.schemas.city_scene import (
     CasteQuarter,
+    CityBelowView,
     CityBuildingView,
     CityConurbation,
     CityDistrictView,
@@ -37,6 +38,7 @@ from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.folkways import PurityRankRow
+from aerona.db.tables.geology import RegionStratumRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.structures import StructureDesignRow, StructureProfileRow
@@ -46,6 +48,7 @@ from aerona.domain.enums.settlement import DistrictKind, SizeTier, WaterSupply
 from aerona.domain.enums.structure import BuildingForm, StructureKind
 from aerona.domain.enums.urban import HousingLevel, LandCover, LandGround, Morphology, ZoneKind
 from aerona.engine.body.customs import people_id_of
+from aerona.engine.primitives.queries import top_region
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.urban.cityscape import DIGGINGS, HOUSE_SLOTS, homes_of, land_tiles, perimeter_of, pick_tile, provisional, resource_prefer, slots_of
 from aerona.engine.urban.coverage import home_of, people_of_districts
@@ -76,6 +79,24 @@ async def town_or_fail(session: AsyncSession, settlement_id: int) -> EntityRow:
     if town is None or town.entity_type is not EntityType.SETTLEMENT:
         raise NotFoundError("No such settlement.")
     return town
+
+
+async def city_below(session: AsyncSession, town: EntityRow) -> CityBelowView | None:
+    if town.stratum is None:
+        return None
+    region = await top_region(session, town)
+    cell = (
+        await session.scalar(select(RegionStratumRow).where(RegionStratumRow.region_entity_id == region.id, RegionStratumRow.stratum == town.stratum).limit(1))
+        if region is not None
+        else None
+    )
+    return CityBelowView(
+        stratum=town.stratum,
+        region=(await node_refs(session, [region.id]))[region.id] if region is not None else None,
+        cell_name=cell.name if cell is not None else None,
+        light=cell.light if cell is not None else 0,
+        extent=cell.extent if cell is not None else 0,
+    )
 
 
 @router.get("/city/{settlement_id}", response_model=CitySceneView)
@@ -137,7 +158,9 @@ async def city_scene(services: ServicesDep, settlement_id: NodeId) -> CitySceneV
             else []
         )
         quarters = {caste.id: caste for caste in castes}
+        below = await city_below(session, town)
         return CitySceneView(
+            below=below,
             conurbation=CityConurbation(
                 core=refs[city.core_entity_id], members=[refs[member] for member in city.members or [] if member in refs], governance=city.governance
             )

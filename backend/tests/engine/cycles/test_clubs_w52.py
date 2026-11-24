@@ -17,7 +17,7 @@ from tests.engine.core.test_cycles_w21 import context, town_of
 
 def test_six_club_kinds_with_beasts_and_minds() -> None:
     assert set(CLUBS) == set(ClubKind)
-    assert {ClubKind.ANIMAL_CONTEST} == ANIMAL_CLUBS and {ClubKind.MIND_GAMES} == MIND_CLUBS
+    assert {ClubKind.ANIMAL_CONTEST, ClubKind.HUNT} == ANIMAL_CLUBS and {ClubKind.MIND_GAMES} == MIND_CLUBS
     assert FIELD_GAMES[GameCategory.BOARD] is ClubKind.MIND_GAMES
 
 

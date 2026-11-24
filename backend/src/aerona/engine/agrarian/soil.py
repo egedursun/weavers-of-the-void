@@ -31,6 +31,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
 from aerona.engine.recording.record import record
+from aerona.rules.registry import Rules
 
 N = NutrientKind
 HALF = 50
@@ -138,6 +139,11 @@ async def field_work(ctx: TickContext, atlas: RegionAtlas) -> FieldWork:
     return FieldWork(rotating, terraced, dict(irrigated), drained, fodder, roots)
 
 
+def soil_life_of(rules: Rules, life: float) -> float:
+    span = rules.microbes.recycling_pct / PERCENT
+    return PERCENT / 2 * (1 + (life - 1) / span) if span > 0 else PERCENT / 2
+
+
 def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: NutrientKind, stock: int, work: FieldWork, *, life: float = 1.0) -> float:
     table = ctx.rules.nutrients
     region = land.entity_id
@@ -167,6 +173,20 @@ def nutrient_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: Nutr
             + (grazed * table.manure_pct + land.forest_cover / PERCENT * table.litter_pct) * life
             + (grazed * ctx.rules.soils.leached_amend_gain if land.soil is SoilKind.LEACHED else 0)
         )
+    return stored_change(ctx, land, nutrient, stock, work, life=life)
+
+
+def stored_change(ctx: TickContext, land: RegionEnvironmentRow, nutrient: NutrientKind, stock: int, work: FieldWork, *, life: float) -> float:
+    table = ctx.rules.nutrients
+    region = land.entity_id
+    if nutrient is N.SEED_BANK:
+        return (
+            land.forest_cover / PERCENT * table.seed_build
+            + (PERCENT - land.cleared) / PERCENT * table.seed_build / 2
+            - land.cleared / PERCENT * table.seed_draw
+        )
+    if nutrient is N.SOIL_LIFE:
+        return (soil_life_of(ctx.rules, life) - stock) * table.soil_life_follow_pct / PERCENT
     irrigation = work.irrigated.get(region, 0)
     if irrigation > 0 and region not in work.drained:
         return float(irrigation * table.irrigation_salt)
@@ -189,7 +209,7 @@ async def feed_soils(ctx: TickContext, atlas: RegionAtlas, tally: SoilTally) -> 
                 stocks[nutrient] = SoilNutrientRow(
                     region_entity_id=land.entity_id,
                     nutrient=nutrient,
-                    stock=0 if nutrient is N.SALINITY else land.soil_base,
+                    stock=0 if nutrient is N.SALINITY else land.forest_cover if nutrient is N.SEED_BANK else land.soil_base,
                     updated_epoch=ctx.epoch,
                     locked=[],
                 )

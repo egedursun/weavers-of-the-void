@@ -10,9 +10,11 @@ SPEECH_AIM = total(
         SpeechAim.MOCK: Defined("Mock", checked_by=("engine.speech.oratory.hear",), used_by=("tools.mortal.speech.satirise",)),
         SpeechAim.MOURN: Defined("Mourn", checked_by=(), used_by=("engine.speech.oratory.RAISING",)),
         SpeechAim.RALLY: Defined(
-            "Rally", checked_by=("engine.speech.oratory.hear",), used_by=("engine.speech.oratory.RAISING", "engine.speech.oratory.rulers_rally")
+            "Rally", checked_by=(), used_by=("engine.speech.oratory.RAISING", "engine.speech.oratory.STIRRING", "engine.speech.oratory.rulers_rally")
         ),
         SpeechAim.DEFEND: Defined("Defend", checked_by=(), used_by=("engine.speech.oratory.RAISING",)),
-        SpeechAim.ACCUSE: Defined("Accuse", checked_by=("engine.speech.oratory.hear",), used_by=()),
+        SpeechAim.ACCUSE: Defined("Accuse", checked_by=("engine.speech.oratory.hear",), used_by=("engine.speech.oratory.STIRRING",)),
+        SpeechAim.PRAISE: Defined("Praise", checked_by=(), used_by=("engine.speech.oratory.RAISING",)),
+        SpeechAim.WARN: Defined("Warn", checked_by=("engine.speech.oratory.hear",), used_by=("engine.speech.oratory.STIRRING",)),
     },
 )

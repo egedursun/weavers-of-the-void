@@ -6,6 +6,7 @@ import {
   Crosshair,
   Flame,
   FlaskConical,
+  Gauge,
   Ghost,
   Package,
   PawPrint,
@@ -18,6 +19,9 @@ import {
   Wheat,
   Wind,
   Zap,
+  WandSparkles,
+  CircleOff,
+  Bolt,
 } from 'lucide-react'
 import {
   type components,
@@ -89,19 +93,21 @@ const DAMAGE_ICON: Record<
   blunt: Axe,
   fire: Flame,
   cold: Snowflake,
-  void: Skull,
+  void: CircleOff,
   holy: Sparkles,
-  magic: Sparkles,
+  magic: WandSparkles,
   venom: Skull,
   ballistic: Crosshair,
   explosive: Bomb,
   energy: Zap,
-  electric: Zap,
+  electric: Bolt,
   radiation: Radiation,
   chemical: FlaskConical,
   sonic: AudioWaveform,
   psychic: Brain,
   asphyxia: Wind,
+  soul: Ghost,
+  pressure: Gauge,
 }
 
 function named(

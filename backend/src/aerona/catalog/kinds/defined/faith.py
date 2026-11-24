@@ -21,6 +21,7 @@ BINDING_KIND = total(
                 "engine.faith.control.bind_spirit",
                 "engine.faith.souls.release_host",
                 "engine.lore.rites.backlash",
+                "engine.sacred.rites.follow_namers",
             ),
         ),
         BindingKind.PLACE: Defined(
@@ -39,13 +40,16 @@ BINDING_KIND = total(
         BindingKind.REALM: Defined("Realm", checked_by=(), used_by=("engine.faith.spirit_bonds.keep_realm", "engine.faith.spirit_bonds.wider_binding")),
         BindingKind.NETWORK: Defined("Network", checked_by=(), used_by=("engine.faith.spirit_bonds.keep_network", "engine.faith.spirit_bonds.wider_binding")),
         BindingKind.LINE: Defined("Line", checked_by=(), used_by=("engine.faith.spirit_bonds.keep_line", "engine.faith.spirit_bonds.wider_binding")),
+        BindingKind.NAME: Defined("Name", checked_by=("engine.sacred.rites.follow_namers",), used_by=("engine.lore.rites.bind_wandering",)),
     },
 )
 
 HOLDING_KIND = total(
     HoldingKind,
     {
-        HoldingKind.TEMPLE: Defined("Temple", checked_by=(), used_by=("engine.faith.works.spend", "engine.faith.works.survey_holdings")),
+        HoldingKind.TEMPLE: Defined(
+            "Temple", checked_by=("engine.divine.wounds.worship_wounds",), used_by=("engine.faith.works.spend", "engine.faith.works.survey_holdings")
+        ),
         HoldingKind.LAND: Defined(
             "Land",
             checked_by=("api.routers.faith.doctrine", "api.routers.map.holy_marks", "engine.faith.works.land_holders"),
@@ -61,6 +65,8 @@ HOLDING_KIND = total(
         HoldingKind.NETWORK: Defined("Network", checked_by=("engine.faith.works.holding_income",), used_by=("engine.faith.works.wider_holdings",)),
         HoldingKind.SHARES: Defined("Shares", checked_by=("engine.faith.works.holding_income",), used_by=("engine.faith.works.wider_holdings",)),
         HoldingKind.LINES: Defined("Lines", checked_by=("engine.faith.works.holding_income",), used_by=("engine.faith.works.wider_holdings",)),
+        HoldingKind.SCHOOL: Defined("School", checked_by=(), used_by=("catalog.life.faith.CHURCH_WORKS", "engine.faith.works.tend_works")),
+        HoldingKind.HOSPITAL: Defined("Hospital", checked_by=(), used_by=("catalog.life.faith.CHURCH_WORKS", "engine.faith.works.tend_works")),
     },
 )
 
@@ -92,6 +98,9 @@ JUDGEMENT_DOCTRINE = total(
             checked_by=("agents.context.son_faith.church_line", "engine.sacred.rites.taught_model"),
             used_by=("catalog.tenets.DOMAIN_JUDGEMENT", "engine.faith.doctrine.judgement_of", "engine.faith.judgement.judgement_for"),
         ),
+        JudgementDoctrine.REMEMBRANCE: Defined(
+            "Remembrance", checked_by=("engine.faith.judgement.score_of", "engine.sacred.rites.taught_model"), used_by=("engine.faith.doctrine.judgement_of",)
+        ),
     },
 )
 
@@ -117,6 +126,7 @@ REBIRTH_PATH = total(
             checked_by=("engine.faith.souls.rebirth", "services.integrity.w52_agent_g.kindless_rebirths"),
             used_by=("engine.faith.doctrine.rebirth_path_of", "engine.faith.souls.reborn_as_kind"),
         ),
+        RebirthPath.PLACE: Defined("Place", checked_by=("engine.faith.souls.cradle",), used_by=("engine.faith.doctrine.rebirth_path_of",)),
     },
 )
 

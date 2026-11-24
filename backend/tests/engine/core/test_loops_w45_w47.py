@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from types import SimpleNamespace
 
 from sqlalchemy import select
@@ -110,11 +111,21 @@ async def test_a_realm_that_has_registered_most_of_its_gifted_moves_to_conscript
 
 def test_a_lettered_town_that_writes_wants_a_printing_house_and_an_epidemic_wants_a_quarantine_house() -> None:
     rules = Rules()
-    tests = dict((kind, test) for kind, test in NEEDS if kind in {StructureKind.PRINTING_HOUSE, StructureKind.QUARANTINE_HOUSE})
+    tests: dict[StructureKind, Callable[[Rules, object], bool]] = {}
+    for kind, test in NEEDS:
+        if kind in {StructureKind.PRINTING_HOUSE, StructureKind.QUARANTINE_HOUSE}:
+            tests.setdefault(kind, test)
     lettered = SimpleNamespace(
-        knows=lambda _branch: True, reaches=lambda _kind: True, at_least=lambda _tier: True, literacy=rules.construction.press_literacy, outbreak=True
+        knows=lambda _branch: True,
+        reaches=lambda _kind: True,
+        at_least=lambda _tier: True,
+        literacy=rules.construction.press_literacy,
+        outbreak=True,
+        workshops=set(),
     )
-    unlettered = SimpleNamespace(knows=lambda _branch: True, reaches=lambda _kind: True, at_least=lambda _tier: True, literacy=0, outbreak=False)
+    unlettered = SimpleNamespace(
+        knows=lambda _branch: True, reaches=lambda _kind: True, at_least=lambda _tier: True, literacy=0, outbreak=False, workshops=set()
+    )
     assert tests[StructureKind.PRINTING_HOUSE](rules, lettered)
     assert not tests[StructureKind.PRINTING_HOUSE](rules, unlettered)
     assert tests[StructureKind.QUARANTINE_HOUSE](rules, lettered)

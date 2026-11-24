@@ -26,6 +26,9 @@ class ValueAxis(StrEnum):
     COMPETITION = "competition"
     PERSEVERANCE = "perseverance_value"
     LEISURE = "leisure"
+    FREEDOM = "freedom"
+    EQUALITY = "equality"
+    HOSPITALITY = "hospitality"
 
 
 class Attribute(StrEnum):
@@ -92,6 +95,8 @@ class Facet(StrEnum):
     HUMOUR = "humour"
     SENSE_OF_DUTY = "sense_of_duty"
     GREED = "greed"
+    FORGIVENESS = "forgiveness"
+    ADAPTABILITY = "adaptability"
 
 
 class IdeaKind(StrEnum):
@@ -277,6 +282,9 @@ class TraitKind(StrEnum):
     RETENTIVE = "retentive"
     NUMERATE = "numerate"
     MUSICAL = "musical"
+    FREEDOM_LOVING = "freedom_loving"
+    EGALITARIAN = "egalitarian"
+    ADAPTABLE = "adaptable"
 
 
 class TraitSource(StrEnum):
@@ -364,6 +372,12 @@ class SkillKind(StrEnum):
     COMPUTING = "computing"
     SCIENCE = "science"
     ADMINISTRATION = "administration"
+    FARMING = "farming"
+    HERDING = "herding"
+    COOKING = "cooking"
+    MUSIC = "music"
+    CLIMBING = "climbing"
+    DIVING = "diving"
 
 
 class SkillSource(StrEnum):
@@ -412,6 +426,12 @@ class MemoryKind(StrEnum):
     AIDED_CHOSEN = "aided_chosen"
     MEMORY_GAP = "memory_gap"
     COMPELLED_ME = "compelled_me"
+    HEALED_ME = "healed_me"
+    SHELTERED_ME = "sheltered_me"
+    ABANDONED_ME = "abandoned_me"
+    SURVIVED_WITH = "survived_with"
+    APOLOGISED_TO_ME = "apologised_to_me"
+    JUDGED_ME = "judged_me"
 
 
 class OpinionComponent(StrEnum):
@@ -482,6 +502,14 @@ class ActKind(StrEnum):
     FEEDING_ON_HOSTS = "feeding_on_hosts"
     KILLING_SACRED_ANIMAL = "killing_sacred_animal"
     FIXING_CONTESTS = "fixing_contests"
+    ABANDONING_THE_SICK = "abandoning_the_sick"
+    BREAKING_HOSPITALITY = "breaking_hospitality"
+    CRUELTY_TO_ANIMALS = "cruelty_to_animals"
+    APOLOGISING = "apologising"
+    SHELTERING_STRANGERS = "sheltering_strangers"
+    LAYING_CURSES = "laying_curses"
+    ENHANCING_CONTESTANTS = "enhancing_contestants"
+    POISON_WELLS = "poison_wells"
 
 
 class NeedKind(StrEnum):
@@ -513,6 +541,8 @@ class NeedKind(StrEnum):
     STIMULATION = "stimulation"
     CONTINUITY = "continuity"
     UPKEEP = "upkeep"
+    JUSTICE = "justice"
+    CARE = "care"
 
 
 class NeedGroup(StrEnum):
@@ -520,6 +550,7 @@ class NeedGroup(StrEnum):
     SOCIAL = "social"
     SPIRIT = "spirit"
     ACTION = "action"
+    MIND = "mind"
 
 
 class Emotion(StrEnum):
@@ -551,6 +582,10 @@ class Emotion(StrEnum):
     CURIOSITY = "curiosity"
     COMPASSION = "compassion"
     CONTEMPT = "contempt"
+    TRUST = "trust"
+    ANTICIPATION = "anticipation"
+    ADMIRATION = "admiration"
+    EMBARRASSMENT = "embarrassment"
 
 
 class ThoughtKind(StrEnum):
@@ -707,6 +742,18 @@ class ThoughtKind(StrEnum):
     GREW_CURIOUS = "grew_curious"
     FELT_COMPASSION = "felt_compassion"
     FELT_CONTEMPT = "felt_contempt"
+    SEASON_FAILED = "season_failed"
+    STORM_SURVIVED = "storm_survived"
+    QUAKE_SURVIVED = "quake_survived"
+    HOME_LOST_TO_FLOOD = "home_lost_to_flood"
+    BEAST_PASSED = "beast_passed"
+    FLED_PLAGUE = "fled_plague"
+    GATHERING_CLOSED = "gathering_closed"
+    SAW_ACCESSION = "saw_accession"
+    YEAR_OF_PEACE = "year_of_peace"
+    CHARM_FOUND = "charm_found"
+    FORGOT = "forgot"
+    WOKE_FROM_SLEEP = "woke_from_sleep"
 
 
 class LifeGoal(StrEnum):
@@ -820,6 +867,8 @@ class InspirationKind(StrEnum):
     ARTISTIC_VISION = "artistic_vision"
     TECHNICAL_BREAKTHROUGH = "technical_breakthrough"
     SPIRITUAL_INSIGHT = "spiritual_insight"
+    HEALING_INSIGHT = "healing_insight"
+    CIVIC_VISION = "civic_vision"
 
 
 class InspirationState(StrEnum):
@@ -874,6 +923,7 @@ class HonourModel(StrEnum):
     HONOUR = "honour"
     FACE = "face"
     NONE = "none"
+    PURITY = "purity"
 
 
 class MoodState(StrEnum):
@@ -886,9 +936,16 @@ class MoodState(StrEnum):
     BROKEN = "broken"
 
 
+class MoodArousal(StrEnum):
+    CALM = "calm"
+    ALERT = "alert"
+    AGITATED = "agitated"
+
+
 class GriefStage(StrEnum):
     SHOCK = "shock"
     ANGER = "anger"
+    BARGAINING = "bargaining"
     MOURNING = "mourning"
     YEARNING = "yearning"
     ACCEPTANCE = "acceptance"
@@ -902,6 +959,8 @@ class DreamKind(StrEnum):
     PROPHETIC = "prophetic"
     VISITATION = "visitation"
     SHARED = "shared"
+    LUCID = "lucid"
+    MEMORY = "memory"
 
 
 class DreamReading(StrEnum):
@@ -928,6 +987,9 @@ class PressureKind(StrEnum):
     OPPRESSION = "oppression"
     DISEASE_BURDEN = "disease_burden"
     PURPOSELESSNESS = "purposelessness"
+    ISOLATION = "isolation"
+    DEBT = "debt"
+    PERSECUTION = "persecution"
 
 
 class TraitEffect(StrEnum):

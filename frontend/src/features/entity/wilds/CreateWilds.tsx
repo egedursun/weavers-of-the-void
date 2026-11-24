@@ -83,6 +83,7 @@ const SIZE_SCALE: Record<string, number> = {
   large: 1.4,
   huge: 1.8,
   colossal: 2.4,
+  microscopic: 0.2,
 }
 const SPECIES_BASE: Record<string, number> = {
   hp: 60,

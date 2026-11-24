@@ -28,6 +28,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.polity import ClauseKind, TreatyStatus
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.world_views import WorldView, world_views
 from aerona.engine.disease.borders import closed_borders
 from aerona.engine.ecology.flora import CropBook
 from aerona.engine.economy.materials import MaterialBook
@@ -69,6 +70,7 @@ class EconomyBook:
     magic_heat_pct: int = 0
     crops: CropBook | None = None
     herd_products: dict[int, set[str]] = field(default_factory=dict)
+    views: dict[int, WorldView] = field(default_factory=dict)
 
     @classmethod
     async def load(cls, ctx: TickContext) -> "EconomyBook":
@@ -132,6 +134,7 @@ class EconomyBook:
         for known in await session.scalars(select(HolderTechniqueRow)):
             book.techniques.setdefault(known.holder_entity_id, set()).add(known.technique)
         book.designs = {row.id: row for row in await session.scalars(select(WorkshopDesignRow).order_by(WorkshopDesignRow.id))}
+        book.views = await world_views(session, ctx.rules)
         await book.load_industry(ctx)
         book.blockaded = set(await session.scalars(select(ArmyProfileRow.blockade_entity_id).where(ArmyProfileRow.blockade_entity_id.is_not(None))))
         book.closed = await closed_borders(ctx.session, ctx.epoch)

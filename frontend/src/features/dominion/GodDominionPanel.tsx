@@ -636,7 +636,14 @@ export function GodDominionPanel({
           <ScaleRow
             key={scale}
             godId={godId}
-            row={scales[scale as DivineScale]}
+            row={
+              scales[scale as DivineScale] ?? {
+                scale: scale as DivineScale,
+                value: 0,
+                stored: false,
+                locked: [],
+              }
+            }
             blocked={blocked}
           />
         ))}

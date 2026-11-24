@@ -54,6 +54,30 @@ const BENEATH = {
       reached_epoch: 14,
       breached_epoch: 15,
       tapped_epoch: null,
+      name: 'Still Water',
+      terrain: 'underground',
+      extent: 70,
+      light: 0,
+      realm: null,
+      holder: { id: 31, kind: 'entity', name: 'Deep Realm' },
+      dwellers: [{ id: 32, kind: 'entity', name: 'Underhall' }],
+      dwellable: false,
+      locked: [],
+    },
+  ],
+  passages: [
+    {
+      id: 5,
+      kind: 'opening',
+      state: 'flooded',
+      origin: 'natural',
+      width: 40,
+      progress: 100,
+      near_stratum: null,
+      far_region: { id: 3, kind: 'entity', name: 'Grey Vale' },
+      far_stratum: 'aquifer',
+      place: { id: 33, kind: 'entity', name: 'Wet Cave' },
+      digger: null,
       locked: [],
     },
   ],
@@ -86,7 +110,7 @@ describe('beneath section', () => {
     await expect.element(screen.getByText('Reached in epoch 12')).toBeVisible()
     await expect.element(screen.getByText('Not reached')).toBeVisible()
     await expect
-      .element(screen.getByText('Held', { exact: true }))
+      .element(screen.getByText('Held', { exact: true }).first())
       .toBeVisible()
     await expect
       .element(screen.getByText('No vein runs through this layer.'))
@@ -95,6 +119,14 @@ describe('beneath section', () => {
       .element(screen.getByText('Aquifer', { exact: true }))
       .toBeVisible()
     await expect.element(screen.getByText('Breached in epoch 15')).toBeVisible()
+    await expect.element(screen.getByText('Still Water')).toBeVisible()
+    await expect.element(screen.getByText('Held by Deep Realm')).toBeVisible()
+    await expect
+      .element(screen.getByText('Opening to the surface'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Comes out at Wet Cave'))
+      .toBeVisible()
   })
 
   it('says when a land has no rock column and nothing below it', async () => {
@@ -104,6 +136,7 @@ describe('beneath section', () => {
       carvable: false,
       layers: [],
       strata: [],
+      passages: [],
     })
     const { screen } = await renderApp(<BeneathSection regionId={3} />)
     await expect.element(screen.getByText('No rock column')).toBeVisible()

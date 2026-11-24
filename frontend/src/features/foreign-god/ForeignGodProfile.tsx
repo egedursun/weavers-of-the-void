@@ -63,7 +63,7 @@ export function ForeignGodProfile({ detail }: { detail: ForeignGodDetail }) {
   const existence = god.existence_profile
   return (
     <>
-      <Section title='Stats' level={3}>
+      <Section id='section-foreign-stats' title='Stats' level={3}>
         <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3'>
           {STATS.map((stat) => (
             <StatBar
@@ -84,7 +84,7 @@ export function ForeignGodProfile({ detail }: { detail: ForeignGodDetail }) {
           run={({ key, value }) => editForeignGod(god.id, editBody(key, value))}
         />
       </Section>
-      <Section title='Powers' level={3}>
+      <Section id='section-foreign-powers' title='Powers' level={3}>
         {detail.powers.length === 0 ? (
           <Muted>
             No power written yet; deepening gives powers, or add one yourself
@@ -117,7 +117,11 @@ export function ForeignGodProfile({ detail }: { detail: ForeignGodDetail }) {
           </ul>
         )}
       </Section>
-      <Section title='Personality and existence' level={3}>
+      <Section
+        id='section-foreign-personality'
+        title='Personality and existence'
+        level={3}
+      >
         {personality || existence ? (
           <KeyValueList
             items={[

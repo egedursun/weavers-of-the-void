@@ -15,6 +15,8 @@ ROLE_WEIGHT: Mapping[ArtMarketRole, int] = total(
         ArtMarketRole.CURATOR: 3,
         ArtMarketRole.CRITIC: 2,
         ArtMarketRole.FORGER: 0,
+        ArtMarketRole.RESTORER: 2,
+        ArtMarketRole.AUCTIONEER: 2,
     },
 )
 

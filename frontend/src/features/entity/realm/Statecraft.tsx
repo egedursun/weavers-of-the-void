@@ -1,19 +1,21 @@
 import { useState } from 'react'
 import {
-  Church,
-  Megaphone,
   Ban,
   BookOpenCheck,
+  Church,
+  ClipboardList,
   Coins,
   Crown,
   Drama,
   Flame,
   Gavel,
   GitFork,
+  GraduationCap,
   HandCoins,
   Landmark,
   Lock,
   LockOpen,
+  Megaphone,
   Merge,
   PieChart,
   Plus,
@@ -24,7 +26,6 @@ import {
   Sparkles,
   Trash2,
   UserCog,
-  GraduationCap,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -150,6 +151,12 @@ const OFFICE_POWERS: Record<string, Named & { hint: string }> = {
     icon: Drama,
     tone: 'gold',
     hint: 'Mocks the ruler by licence and speaks what the council will not',
+  },
+  census: {
+    label: 'Census',
+    icon: ClipboardList,
+    tone: 'info',
+    hint: 'Counts the people and their property, raising taxes and levies',
   },
 }
 const LAW_HOLDS: Record<string, Named & { hint: string }> = {

@@ -21,6 +21,7 @@ from aerona.engine.phases.dominion import count
     "table.campaign_fronts",
     "table.commander_traits",
     "table.creator",
+    "table.deep_passages",
     "table.depots",
     "table.dimensions",
     "table.echelons",
@@ -75,6 +76,7 @@ async def order_of_battle(ctx: TickContext) -> None:
 @reads(
     "table.admiralties",
     "table.bonds",
+    "table.deep_passages",
     "table.entities",
     "table.nodes",
     "table.offices",

@@ -9,6 +9,7 @@ import {
   STAR_LOOK,
   SURFACE_CODE,
   WORLD_BODY,
+  WORLD_SEA,
 } from './looks'
 
 const defined = (token: string) => theme.includes(`${token}:`)
@@ -35,6 +36,16 @@ describe('cosmos looks', () => {
     expect(new Set(codes).size).toBe(codes.length)
     const kinds = Object.values(STAR_KIND_CODE)
     expect(new Set(kinds).size).toBe(kinds.length)
+  })
+
+  it('draws no two world types alike', () => {
+    const signatures = worldTypeValues.map((type) =>
+      JSON.stringify([WORLD_BODY[type], WORLD_SEA[type] ?? null])
+    )
+    const twins = worldTypeValues.filter(
+      (_, index) => signatures.indexOf(signatures[index]) !== index
+    )
+    expect(twins).toEqual([])
   })
 
   it('gives every travel method a colour in the theme', () => {

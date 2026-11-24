@@ -23,7 +23,7 @@ import {
   Portrait,
   Section,
 } from '@/components/domain'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { Label, Muted, PageTitle, Stat, Text } from '@/components/typography'
 import { StarLifeSection } from '@/features/cosmography/HeavenlyLife'
 import { SkyWorship } from '@/features/cosmography/wiki/SkyWorship'
@@ -96,6 +96,7 @@ function OrbitingWorlds({ wiki }: { wiki: StarWiki }) {
   const souls = wiki.worlds.reduce((sum, item) => sum + item.population, 0)
   return (
     <Section
+      id='section-star-worlds'
       title='Worlds in its light'
       description={
         wiki.worlds.length > 0
@@ -168,7 +169,7 @@ export function StarWikiView({ starId }: { starId: number }) {
   return (
     <div className='flex min-w-0 flex-col gap-6'>
       <StarHero wiki={data} />
-      <Section title='At a glance'>
+      <Section id='section-star-glance' title='At a glance'>
         <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-3'>
           <MiniStat
             icon={Sun}
@@ -203,7 +204,7 @@ export function StarWikiView({ starId }: { starId: number }) {
       <OrbitingWorlds wiki={data} />
       <SkyWorship nodeId={data.star.id} />
       {data.sky_events.length > 0 && (
-        <Section title='Signs in the sky'>
+        <Section id='section-star-signs' title='Signs in the sky'>
           <PagedList
             items={data.sky_events}
             initial={5}
@@ -240,6 +241,7 @@ export function StarWikiView({ starId }: { starId: number }) {
         emptyText='The chronicle has not named this star yet.'
       />
       <RecordGallery
+        sectionId='section-star-images'
         title='Images of the star'
         nodeId={data.star.id}
         name={data.star.name}
@@ -260,7 +262,7 @@ export function StarWikiView({ starId }: { starId: number }) {
   )
 }
 
-export function StarWikiPage({ id }: DrawerPageProps) {
+export function StarWikiPage({ id }: EntryPageProps) {
   const starId = Number(id)
   if (!Number.isInteger(starId) || starId <= 0)
     return (

@@ -17,7 +17,7 @@ from tests.engine.core.factories import CoreWorld, mortal
 
 
 def test_ten_marks_and_eleven_meanings() -> None:
-    assert len(MARKS) == len(MarkKind) == 10 and len(MEANINGS) == len(MarkMeaning) == 11
+    assert len(MARKS) == len(MarkKind) == 12 and len(MEANINGS) == len(MarkMeaning) == 13
     assert MARKS[MarkKind.IMPLANT].shows_augment and MarkKind.IMPLANT not in MARKABLE
     assert MARKS[MarkKind.HAIR].quick
     assert MEANINGS[MarkMeaning.FAITH].reading == "loyalty_god" and MEANINGS[MarkMeaning.PROFESSION].guild

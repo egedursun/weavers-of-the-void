@@ -27,6 +27,7 @@ export function CreatorNote({ note }: { note: string | null }) {
         : 'Not saved'
   return (
     <Section
+      id='section-creator-note'
       title='Your own word'
       description='Everything written here is canon: every son, mortal, Fate and the chronicler sees it each turn.'
       surface='card'

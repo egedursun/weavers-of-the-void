@@ -1,8 +1,12 @@
 import * as React from 'react'
-import cornerSmallUrl from '@/assets/ornate/corner-small.webp'
-import cornerUrl from '@/assets/ornate/corner.webp'
+import cornerUrl from '@/assets/ornate/corner-faded.webp'
+import cornerSmallUrl from '@/assets/ornate/corner-small-faded.webp'
 import crestUrl from '@/assets/ornate/crest.webp'
 import dividerUrl from '@/assets/ornate/divider.webp'
+import frameBlUrl from '@/assets/ornate/frame-bl.webp'
+import frameBrUrl from '@/assets/ornate/frame-br.webp'
+import frameTlUrl from '@/assets/ornate/frame-tl.webp'
+import frameTrUrl from '@/assets/ornate/frame-tr.webp'
 import wingUrl from '@/assets/ornate/wing.webp'
 import { cn } from '@/lib/utils'
 
@@ -175,3 +179,29 @@ export {
   useInsideFrame,
 }
 export type { GemTone }
+
+const SCENE_CORNER: Record<Corner, string> = {
+  tl: frameTlUrl,
+  tr: frameTrUrl,
+  bl: frameBlUrl,
+  br: frameBrUrl,
+}
+
+export function SceneCorners() {
+  return (
+    <>
+      {CORNERS.map((place) => (
+        <img
+          key={place}
+          src={SCENE_CORNER[place]}
+          alt=''
+          aria-hidden='true'
+          draggable={false}
+          decoding='async'
+          data-scene-corner={place}
+          className='scene-corner'
+        />
+      ))}
+    </>
+  )
+}

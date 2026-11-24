@@ -15,11 +15,13 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import ClergyFunction, FanaticismKind, HoldingKind, TenetKind
 from aerona.domain.enums.mind import SkillKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -37,7 +39,8 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, close, connect
 from aerona.engine.primitives.records import retire_in
-from aerona.engine.primitives.stats import set_stats, shift_stat, stat
+from aerona.engine.primitives.society import shift_stock
+from aerona.engine.primitives.stats import put_stat, set_stats, shift_stat, stat, stat_or
 from aerona.engine.records import death_path
 from aerona.engine.services.war import declare_war
 
@@ -321,6 +324,53 @@ async def millenarian_flight(ctx: TickContext, church: Church) -> FaithLine | No
     )
 
 
+async def charity(ctx: TickContext, church: Church) -> FaithLine | None:
+    table = ctx.rules.zeal
+    givers = [mortal for mortal in reach(ctx, await followers(ctx, church)) if stat_or(mortal, "wealth", 0) > 0]
+    if not givers:
+        return None
+    given = 0
+    for mortal in givers:
+        gift = stat_or(mortal, "wealth", 0) * table.charity_share_pct // PERCENT
+        put_stat(ctx.rules, mortal, "wealth", stat_or(mortal, "wealth", 0) - gift)
+        given += gift
+    for home_id in {mortal.location_id for mortal in givers if mortal.location_id is not None}:
+        if not held(home_id):
+            await shift_stock(ctx.session, ctx.rules, home_id, Commodity.FOOD, table.charity_food, epoch=ctx.epoch, flow=GoodsFlow.AID)
+    return FaithLine(
+        "faith.charity",
+        {IncidentRole.ACTOR: church.cult.id, IncidentRole.MEMBER: tuple(row.id for row in givers)},
+        {"givers": len(givers), "given": given},
+    )
+
+
+async def pilgrim_zeal(ctx: TickContext, church: Church) -> FaithLine | None:
+    goal = await holy_place(ctx, church)
+    leaving = [mortal for mortal in reach(ctx, await followers(ctx, church)) if goal is None or mortal.location_id != goal.id]
+    if not leaving:
+        return None
+    homes = {mortal.location_id for mortal in leaving if mortal.location_id is not None}
+    for mortal in leaving:
+        put_stat(ctx.rules, mortal, "wealth", 0)
+        if goal is not None:
+            mortal.location_id, mortal.world_id = goal.id, goal.world_id
+    for home_id in homes:
+        town = await ctx.session.get(EntityRow, home_id)
+        if town is not None and not held(town.id):
+            shift_stat(town, "prosperity", -ctx.rules.zeal.pilgrim_prosperity)
+    if goal is not None and not held(goal.id):
+        shift_stat(goal, "piety", ctx.rules.zeal.pilgrim_piety)
+    return FaithLine(
+        "faith.pilgrim_zeal",
+        {
+            IncidentRole.AUTHORITY: church.cult.id,
+            IncidentRole.MEMBER: tuple(row.id for row in leaving),
+            **({IncidentRole.DESTINATION: goal.id} if goal is not None else {}),
+        },
+        {"pilgrims": len(leaving)},
+    )
+
+
 FanaticPath = Callable[[TickContext, Church, FaithBook, RegionAtlas], Awaitable[FaithLine | None]]
 
 
@@ -333,6 +383,8 @@ FANATIC_PATHS: Mapping[FanaticismKind, FanaticPath] = total(
         FanaticismKind.PURGE: lambda ctx, church, _book, _atlas: purge(ctx, church),
         FanaticismKind.FORCED_CONVERSION: lambda ctx, church, _book, _atlas: forced_conversion(ctx, church),
         FanaticismKind.MARTYRDOM: lambda ctx, church, _book, _atlas: martyrdom(ctx, church),
+        FanaticismKind.CHARITY: lambda ctx, church, _book, _atlas: charity(ctx, church),
+        FanaticismKind.PILGRIM_ZEAL: lambda ctx, church, _book, _atlas: pilgrim_zeal(ctx, church),
         FanaticismKind.MORTIFICATION: lambda ctx, church, _book, _atlas: mortification(ctx, church),
         FanaticismKind.BOOK_BURNING: lambda ctx, church, _book, _atlas: book_burning(ctx, church),
         FanaticismKind.PERSECUTION: lambda ctx, church, _book, _atlas: persecution(ctx, church),

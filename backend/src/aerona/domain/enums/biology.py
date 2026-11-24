@@ -18,3 +18,6 @@ class BiologyVariant(StrEnum):
     COLONIAL = "colonial"
     ENERGY = "energy"
     SYMBIOTIC = "symbiotic"
+    AMPHIBIOUS = "amphibious"
+    METALLIC = "metallic"
+    LIQUID = "liquid"

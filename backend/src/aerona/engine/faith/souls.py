@@ -204,6 +204,11 @@ async def cradle(ctx: TickContext, profile: SpiritProfileRow, home: EntityRow) -
             return Cradle(ranked[-1], path)
         if score < table.torment_score:
             return Cradle(ranked[0], path)
+    if path is RebirthPath.PLACE and profile.origin_mortal_id is not None:
+        mortal = await ctx.session.get(EntityRow, profile.origin_mortal_id)
+        fell = await living_entity(ctx.session, mortal.location_id) if mortal is not None and mortal.location_id is not None else None
+        if fell is not None and fell.entity_type in COMMUNITY_TYPES:
+            return Cradle(fell, path)
     return Cradle(home, path)
 
 

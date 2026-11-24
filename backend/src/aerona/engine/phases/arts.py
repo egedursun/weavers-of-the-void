@@ -40,6 +40,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.galaxies",
     "table.galaxy_clusters",
     "table.gatherings",
+    "table.good_kinds",
     "table.holder_levels",
     "table.law_jurisdictions",
     "table.law_profiles",
@@ -155,7 +156,7 @@ async def constructs(ctx: TickContext) -> None:
     count(ctx, "construct_seals", seals)
 
 
-@reads("settlement.population", "table.beast_profiles", "table.entities", "table.monster_contracts", "table.node_births", "table.nodes")
+@reads("settlement.population", "table.beast_profiles", "table.deep_passages", "table.entities", "table.monster_contracts", "table.node_births", "table.nodes")
 @writes("table.chronicle", "table.chronicle_entities", "table.incident_facts", "table.incident_participants", "table.incidents", "table.monster_contracts")
 async def monster_contracts(ctx: TickContext) -> None:
     tally = ContractTally()

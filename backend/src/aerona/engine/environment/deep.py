@@ -1,10 +1,14 @@
+import heapq
 from collections import Counter
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.rocks import ROCKS
 from aerona.catalog.strata import STRATA
+from aerona.catalog.wind_belts import CURRENTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -12,11 +16,13 @@ from aerona.db.tables.geology import RegionGeologyRow, RegionStratumRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
-from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.environment import ScarKind
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.environment import CoastKind, ScarKind
 from aerona.domain.enums.geology import RockKind, UndergroundStratum
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
@@ -26,7 +32,9 @@ from aerona.engine.phases.geography import NATURES_BY_SUBTYPE, seed_place
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect
-from aerona.engine.recording.record import record
+from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining, term
+from aerona.rules.registry import Rules
 
 U = UndergroundStratum
 BREACHING = frozenset({U.MAGMA_SEA})
@@ -39,6 +47,7 @@ class DeepTally:
     strata: int = 0
     fires: int = 0
     tapped: int = 0
+    stressed: int = 0
 
 
 async def strata_by_region(session: AsyncSession) -> dict[int, list[RegionStratumRow]]:
@@ -104,7 +113,14 @@ async def reach_layer(ctx: TickContext, ground: RegionEnvironmentRow, row: Regio
 async def reach_stratum(ctx: TickContext, ground: RegionEnvironmentRow, row: RegionStratumRow, tally: DeepTally) -> None:
     row.reached_epoch = ctx.epoch
     tally.strata += 1
-    await record(ctx, "deep.stratum_reached", roles={IncidentRole.PLACE: ground.entity_id}, facts={"stratum": row.stratum}, place=ground.entity_id)
+    await record(
+        ctx,
+        "deep.stratum_reached",
+        roles={IncidentRole.PLACE: ground.entity_id},
+        facts={"stratum": row.stratum},
+        place=ground.entity_id,
+        steps=(StepDraft(StepAction.ENTER, locus_kind=StepLocus.STRATUM, locus_key=row.stratum.value, locus_node=ground.entity_id),),
+    )
     if row.stratum in BREACHING:
         await breach(ctx, ground, row)
     elif row.stratum is U.DEEP_UNDERWORLD:
@@ -131,7 +147,14 @@ async def breach(ctx: TickContext, ground: RegionEnvironmentRow, row: RegionStra
     row.breached_epoch = ctx.epoch
     if row.stratum is U.MAGMA_SEA and "scar.burned" not in ground.locked:
         add_scar(ground, ScarKind.BURNED, ctx.rules.underground.magma_breach_scar)
-    await record(ctx, "deep.stratum_breached", roles={IncidentRole.PLACE: ground.entity_id}, facts={"stratum": row.stratum}, place=ground.entity_id)
+    await record(
+        ctx,
+        "deep.stratum_breached",
+        roles={IncidentRole.PLACE: ground.entity_id},
+        facts={"stratum": row.stratum},
+        place=ground.entity_id,
+        steps=(StepDraft(StepAction.BREACH, locus_kind=StepLocus.STRATUM, locus_key=row.stratum.value, locus_node=ground.entity_id),),
+    )
 
 
 async def draw_reservoir(ctx: TickContext, ground: RegionEnvironmentRow, row: RegionStratumRow, tally: DeepTally) -> None:
@@ -169,10 +192,98 @@ def dissolve_salt(rules_pct: int, rows: list[RegionGeologyRow]) -> int:
     return dissolved
 
 
+def stress_fault(ctx: TickContext, row: RegionStratumRow, worked: bool) -> bool:
+    if not STRATA[row.stratum].faulted or "pressure" in row.locked or row.pressure >= PERCENT:
+        return False
+    table = ctx.rules.underground
+    with explaining():
+        term("underground.fault_stress_rate", table.fault_stress_rate, source_node_id=row.region_entity_id)
+        if worked:
+            term("underground.fault_mining_stress", table.fault_mining_stress, source_node_id=row.region_entity_id)
+        row.pressure = clamp_int(row.pressure + table.fault_stress_rate + (table.fault_mining_stress if worked else 0), 0, PERCENT)
+    return True
+
+
+async def ripe_faults(session: AsyncSession) -> set[int]:
+    statement = select(RegionStratumRow.region_entity_id).where(RegionStratumRow.stratum == U.FAULT_ZONE, RegionStratumRow.pressure >= PERCENT)
+    return set(await session.scalars(statement.order_by(RegionStratumRow.region_entity_id)))
+
+
+async def release_fault(session: AsyncSession, region_id: int) -> int | None:
+    statement = select(RegionStratumRow).where(RegionStratumRow.region_entity_id == region_id, RegionStratumRow.stratum == U.FAULT_ZONE)
+    row = await session.scalar(statement.limit(1))
+    if row is None or "pressure" in row.locked:
+        return None
+    stress = row.pressure
+    with explaining():
+        term("underground.fault_released", -stress, source_node_id=region_id)
+        row.pressure = 0
+    return stress
+
+
+def drift_shares(rules: Rules, start: int, neighbours: Callable[[int], list[int]], coasts: Mapping[int, OceanCurrent]) -> dict[int, float]:
+    budget = float(rules.rocks.pumice_drift_reach * PERCENT)
+    if budget <= 0:
+        return {start: 1.0} if start in coasts else {}
+    left = {start: budget}
+    edge = [(-budget, start)]
+    while edge:
+        spare, here = heapq.heappop(edge)
+        if -spare < left.get(here, 0.0):
+            continue
+        for other in neighbours(here):
+            if other not in coasts:
+                continue
+            remaining = -spare - max(1, PERCENT - CURRENTS[coasts[other]].sailing_pct(rules))
+            if remaining >= 0 and remaining > left.get(other, -1.0):
+                left[other] = remaining
+                heapq.heappush(edge, (-remaining, other))
+    return {region_id: share / budget for region_id, share in left.items() if region_id in coasts}
+
+
+async def raft_drift(ctx: TickContext, region: EntityRow) -> dict[int, float]:
+    rows = await ctx.session.execute(
+        select(RegionEnvironmentRow.entity_id, RegionEnvironmentRow.current).where(
+            RegionEnvironmentRow.world_id == region.world_id, RegionEnvironmentRow.coast_kind != CoastKind.NONE
+        )
+    )
+    coasts = {entity_id: current for entity_id, current in rows.all()}
+    atlas = await RegionAtlas.load(ctx.session)
+    return drift_shares(ctx.rules, region.id, atlas.neighbours, coasts)
+
+
+async def pumice_rafts(ctx: TickContext, region: EntityRow) -> int:
+    columns = await columns_by_region(ctx.session, [region.id])
+    if region.world_id is None or not any(ROCKS[row.rock].floats for row in columns.get(region.id, [])):
+        return 0
+    reached = await raft_drift(ctx, region)
+    towns = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.location_id.in_(sorted(reached)), EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    gathered = 0
+    for town in towns:
+        stone = round_half_up(ctx.rules.rocks.pumice_drift_stone * reached[town.location_id or region.id])
+        if held(town.id) or stone <= 0:
+            continue
+        await goods_of(ctx.session, ctx.epoch).add(town.id, CommodityKind.STONE, stone, GoodsFlow.EXTRACTION)
+        gathered += 1
+    if gathered:
+        await record(ctx, "rocks.pumice_rafts", roles={IncidentRole.PLACE: region.id}, facts={"shores": gathered}, place=region.id)
+    return gathered
+
+
 async def deepen(ctx: TickContext) -> DeepTally:
     tally = DeepTally()
     columns = await columns_by_region(ctx.session)
     strata = await strata_by_region(ctx.session)
+    for depth_region, unders in sorted(strata.items()):
+        if held(depth_region):
+            continue
+        above = await ctx.session.get(RegionEnvironmentRow, depth_region)
+        worked = (above is not None and above.mined > 0) or any(under.stratum is U.RESERVOIR and under.tapped_epoch is not None for under in unders)
+        tally.stressed += sum(1 for under in unders if stress_fault(ctx, under, worked))
     for region_id, rows in sorted(columns.items()):
         if held(region_id):
             continue

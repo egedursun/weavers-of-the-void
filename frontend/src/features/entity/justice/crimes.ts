@@ -8,7 +8,14 @@ import {
   Skull,
   Sparkles,
   Swords,
+  Syringe,
   Users,
+  KeyRound,
+  VenetianMask,
+  PawPrint,
+  Brush,
+  Fence,
+  Archive,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -17,19 +24,19 @@ type Schema = components['schemas']
 
 export const CRIMES: Record<Schema['CrimeKind'], Named> = {
   theft: { label: 'Theft', icon: HandCoins, tone: 'muted' },
-  burglary: { label: 'Burglary', icon: HandCoins, tone: 'muted' },
+  burglary: { label: 'Burglary', icon: KeyRound, tone: 'muted' },
   robbery: { label: 'Robbery', icon: HandCoins, tone: 'warning' },
-  fraud: { label: 'Fraud', icon: HandCoins, tone: 'muted' },
+  fraud: { label: 'Fraud', icon: VenetianMask, tone: 'muted' },
   embezzlement: { label: 'Embezzlement', icon: HandCoins, tone: 'warning' },
   counterfeiting: { label: 'Counterfeiting', icon: Coins, tone: 'warning' },
   smuggling: { label: 'Smuggling', icon: Coins, tone: 'muted' },
-  poaching: { label: 'Poaching', icon: HandCoins, tone: 'muted' },
+  poaching: { label: 'Poaching', icon: PawPrint, tone: 'muted' },
   arson: { label: 'Arson', icon: HandCoins, tone: 'warning' },
-  vandalism: { label: 'Vandalism', icon: HandCoins, tone: 'muted' },
-  trespass: { label: 'Trespass', icon: HandCoins, tone: 'muted' },
+  vandalism: { label: 'Vandalism', icon: Brush, tone: 'muted' },
+  trespass: { label: 'Trespass', icon: Fence, tone: 'muted' },
   receiving: {
     label: 'Receiving stolen goods',
-    icon: HandCoins,
+    icon: Archive,
     tone: 'muted',
   },
   murder: { label: 'Murder', icon: Skull, tone: 'danger' },
@@ -138,6 +145,11 @@ export const CRIMES: Record<Schema['CrimeKind'], Named> = {
   },
   taboo_breach: { label: 'Breaking a taboo', icon: Users, tone: 'muted' },
   purity_breach: { label: 'Breaching purity', icon: Users, tone: 'muted' },
+  neglect: {
+    label: 'Neglecting one in their care',
+    icon: Users,
+    tone: 'muted',
+  },
   blasphemy: { label: 'Blasphemy', icon: Sparkles, tone: 'warning' },
   heresy: { label: 'Heresy', icon: Sparkles, tone: 'warning' },
   sacrilege: { label: 'Sacrilege', icon: Sparkles, tone: 'warning' },
@@ -195,6 +207,11 @@ export const CRIMES: Record<Schema['CrimeKind'], Named> = {
   fixing_contests: {
     label: 'Fixing a contest',
     icon: Dices,
+    tone: 'warning',
+  },
+  enhancing_contestants: {
+    label: 'Enhancing contestants',
+    icon: Syringe,
     tone: 'warning',
   },
 }

@@ -10,8 +10,11 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.world import StarType, WorldType
+from aerona.domain.models.son_design import SonDesign
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.prehistory.control import configure
 from aerona.engine.prehistory.run import run_prehistory
@@ -23,12 +26,29 @@ from aerona.services.player import guards, pantheon
 from aerona.services.player.ports import ContentJob, ContentJobKind, WorldCreationRequest
 from aerona.services.player.runtime import CostedJob, FreeJob, PlayerRuntime, submit_costed, submit_free, unavailable
 from aerona.services.player.scope import ActionOutcome, Command, Effect, PlayerScope, player_action
+from aerona.services.player.world_edits import rename_world
 
 MIN_PEOPLES = 1
 
 
 class SummonSon(Command):
     world_id: int | None = None
+    name: str | None = None
+    title: str | None = None
+    rarity: Rarity | None = None
+    domain_1: Domain | None = None
+    domain_2: Domain | None = None
+    appearance: str | None = None
+    temperament: str | None = None
+    obsession: str | None = None
+    fear: str | None = None
+    speech_style: str | None = None
+    secret: str | None = None
+    loyalty: int | None = Field(default=None, ge=0, le=PERCENT_MAX)
+    ambition: int | None = Field(default=None, ge=0, le=PERCENT_MAX)
+    wrath: int | None = Field(default=None, ge=0, le=PERCENT_MAX)
+    mercy: int | None = Field(default=None, ge=0, le=PERCENT_MAX)
+    inspiration: str = ""
 
 
 class BirthChild(Command):
@@ -42,6 +62,7 @@ class MortalTarget(Command):
 
 
 class CreateWorld(Command):
+    name: str | None = None
     world_type: WorldType | None = None
     inspiration: str = ""
     star_id: int | None = None
@@ -77,6 +98,13 @@ async def _validated_world(runtime: PlayerRuntime, world_id: int | None) -> None
         await guards.target_world(session, world_id)
 
 
+def design_of(command: SummonSon, rules: Rules) -> SonDesign:
+    return SonDesign(
+        **command.model_dump(exclude={"world_id", "inspiration"}),
+        inspiration=command.inspiration.strip()[: rules.god_actions.inspiration_max_chars] or None,
+    )
+
+
 async def summon_son(runtime: PlayerRuntime, rules: Rules, command: SummonSon) -> ActionOutcome:
     summoner = runtime.ports.summoner
     if summoner is None:
@@ -85,7 +113,7 @@ async def summon_son(runtime: PlayerRuntime, rules: Rules, command: SummonSon) -
 
     async def work(context: JobContext) -> dict[str, Any] | None:
         context.report(0.0, "summon")
-        son_id = await summoner.summon(command.world_id)
+        son_id = await summoner.summon(command.world_id, design_of(command, rules))
         runtime.bus.publish(EventKind.NEW_SON, {"son_id": son_id})
         return {"son_id": son_id}
 
@@ -156,6 +184,9 @@ async def create_world(runtime: PlayerRuntime, rules: Rules, command: CreateWorl
         context.report(0.0, "world")
         world_id = await maker.create(request)
         runtime.bus.publish(EventKind.WORLD_BORN, {"world_id": world_id})
+        if command.name and command.name.strip():
+            async with runtime.database.write() as session:
+                await rename_world(runtime.scope(session, rules), world_id, command.name)
         epochs = rules.prehistory.epochs if command.prehistory_epochs is None else command.prehistory_epochs
         if epochs:
             context.report(0.5, "prehistory")

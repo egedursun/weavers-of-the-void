@@ -148,6 +148,27 @@ CAREERS: Mapping[CareerPath, CareerSpec] = total(
             opening=True,
             frontier=True,
         ),
+        P.HEALING: CareerSpec(
+            "Healing",
+            MortalRole.HEALER,
+            frozenset({T.COMPASSIONATE, T.PATIENT, T.CURIOUS}),
+            ValueAxis.MERCY,
+            NeedKind.CARE,
+            (SkillKind.MEDICINE, SkillKind.SURGERY),
+            lambda rules: rules.careers.healing_weight,
+            opening=True,
+        ),
+        P.WILDS: CareerSpec(
+            "The wilds",
+            MortalRole.HUNTER,
+            frozenset({T.HARDY, T.PATIENT, T.ADVENTUROUS}),
+            ValueAxis.NATURE,
+            NeedKind.AUTONOMY,
+            (SkillKind.TRACKING, SkillKind.FORAGING, SkillKind.CLIMBING),
+            lambda rules: rules.careers.wilds_weight,
+            opening=True,
+            frontier=True,
+        ),
     },
 )
 OPEN_PATHS = frozenset(path for path, spec in CAREERS.items() if spec.opening)

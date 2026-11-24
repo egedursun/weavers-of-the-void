@@ -71,6 +71,13 @@ REVIVAL_WAYS: Mapping[RevivalWay, WaySpec] = total(
             frozenset({G.REVIVE_LANGUAGE, G.RESTORE_GOD}),
             withdraws=True,
         ),
+        W.MIGRATE: WaySpec(
+            "Leave for a land of their own",
+            (V.FREEDOM, V.KINSHIP),
+            lambda rules: rules.revival.migrate_weight,
+            frozenset({G.RESTORE_LAND, G.RESTORE_RULE, G.RESTORE_LAW}),
+            withdraws=True,
+        ),
     },
 )
 REVIVAL_GOALS: Mapping[RevivalGoal, GoalSpec] = total(
@@ -81,6 +88,7 @@ REVIVAL_GOALS: Mapping[RevivalGoal, GoalSpec] = total(
         G.EXPEL_FOREIGNERS: GoalSpec("Expel the foreigners", "no foreign realm presses on it any more"),
         G.RESTORE_LAND: GoalSpec("Take back the land", "its land is its own again"),
         G.RESTORE_RULE: GoalSpec("Rule itself", "it is ruled by its own again"),
+        G.RESTORE_LAW: GoalSpec("Restore the old law", "it lives under its old law again"),
     },
 )
 SIGNS = frozenset({SkyEventKind.COMET, SkyEventKind.ECLIPSE, SkyEventKind.SUPERNOVA, SkyEventKind.BLACK_SUN, SkyEventKind.ALIGNMENT})

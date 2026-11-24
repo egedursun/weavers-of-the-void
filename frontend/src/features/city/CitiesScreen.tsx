@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { BookOpen, Building2, Mountain } from 'lucide-react'
+import { ArrowDownToLine, BookOpen, Building2, Mountain } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,13 +8,17 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { EmptyState, PageHeader } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { READ_ONLY_REASON } from '@/features/entity/actions/gate'
 import { useAllEntities, useWorldState } from '@/features/entity/api/queries'
 import { type EntitySummary } from '@/features/entity/api/types'
+import { STRATUM } from '@/features/entity/environment/geologyLabels'
+import { StratumSwatch } from '@/features/map/SwatchMarker'
+import { STRATUM_LOOK } from '@/features/map/deepLooks'
 import { CityPlane } from './CityPlane'
 import { LandPlane } from './LandPlane'
+import { useBelow } from './api'
 import { type CitiesSearch, type CityView } from './citiesSearch'
 import { CITY_ICON } from './labels'
 
@@ -60,9 +64,10 @@ export function CitiesView({
   onSearch: (patch: CitiesSearch) => void
 }) {
   const entities = useAllEntities(CANON, true)
+  const below = useBelow()
   const state = useWorldState()
   const world = useGlobalWorld()
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const view: CityView = search.view ?? 'city'
   const towns = useMemo(
     () => ranked(entities.data ?? [], 'settlement', world),
@@ -83,11 +88,29 @@ export function CitiesView({
   const blocked = state.data?.read_only ? READ_ONLY_REASON : null
   const list = view === 'city' ? towns : regions
   const current = view === 'city' ? town : region
-  const options = list.map((item) => ({
-    value: String(item.id),
-    label: item.name,
-    hint: item.subtype ?? undefined,
-  }))
+  const beneath = new Map((below.data ?? []).map((row) => [row.region_id, row]))
+  const options = list.map((item) => {
+    const deep = item.stratum
+    const under = beneath.get(item.id)
+    return {
+      value: String(item.id),
+      label: item.name,
+      hint: deep
+        ? STRATUM[deep].label
+        : under
+          ? `${plural(under.strata.length, 'depth', 'depths')} below${under.towns > 0 ? `, ${plural(under.towns, 'town', 'towns')}` : ''}`
+          : (item.subtype ?? undefined),
+      adornment: deep ? (
+        <StratumSwatch
+          fill={STRATUM_LOOK[deep].fill}
+          glow={STRATUM_LOOK[deep].glow}
+        />
+      ) : under ? (
+        <ArrowDownToLine aria-hidden='true' className='text-primary' />
+      ) : undefined,
+    }
+  })
+  const deepTowns = towns.filter((item) => item.stratum).length
   return (
     <div data-surface='CitiesScreen' className='flex min-w-0 flex-1 flex-col'>
       <div className='flex min-w-0 flex-col gap-4 border-b p-4 md:px-6'>
@@ -99,6 +122,12 @@ export function CitiesView({
             <>
               <Badge variant='outline'>{`${plural(towns.length, 'town', 'towns')}`}</Badge>
               <Badge variant='outline'>{`${plural(regions.length, 'land', 'lands')}`}</Badge>
+              {deepTowns > 0 && (
+                <Badge variant='outline'>
+                  <ArrowDownToLine />
+                  {`${plural(deepTowns, 'town', 'towns')} below the surface`}
+                </Badge>
+              )}
             </>
           }
         />
@@ -157,7 +186,7 @@ export function CitiesView({
             disabledReason={current ? undefined : 'Choose one first'}
             onClick={() =>
               current &&
-              drawers.open({ kind: 'entity', id: String(current.id) })
+              entryStack.open({ kind: 'entity', id: String(current.id) })
             }
           >
             <BookOpen />

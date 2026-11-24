@@ -115,6 +115,15 @@ def objects(book: DiseaseBook, spot: Spot) -> float:
     return touch(book, spot.path)
 
 
+def soil(book: DiseaseBook, spot: Spot) -> float:
+    ground = spot.ground
+    return 0.5 + (ground.farmed + ground.mined) / PERCENT / 2 if ground is not None else 0.5
+
+
+def sound(book: DiseaseBook, spot: Spot) -> float:
+    return 0.0 if spot.ground is None else min(1.0, spot.ground.magic_density / PERCENT + book.rules.transmission.sound_floor_pct / PERCENT)
+
+
 Reader = Callable[[DiseaseBook, DiseaseProfileRow, Spot], float]
 READERS: Mapping[Transmission, Reader] = total(
     Transmission,
@@ -134,6 +143,8 @@ READERS: Mapping[Transmission, Reader] = total(
         Transmission.EXPERIENCE: lambda book, profile, spot: constant(book),
         Transmission.INTIMATE: lambda book, profile, spot: constant(book),
         Transmission.OBJECTS: lambda book, profile, spot: objects(book, spot),
+        Transmission.SOIL: lambda book, profile, spot: soil(book, spot),
+        Transmission.SOUND: lambda book, profile, spot: sound(book, spot),
     },
 )
 DRINK_ROUTES = frozenset({Transmission.WATER, Transmission.INGESTION})

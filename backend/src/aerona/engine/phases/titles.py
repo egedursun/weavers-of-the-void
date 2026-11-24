@@ -11,6 +11,7 @@ from aerona.engine.polity.titles import TitleTally, tend_titles
     "table.claims",
     "table.creator",
     "table.de_jure_links",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.faction_memberships",

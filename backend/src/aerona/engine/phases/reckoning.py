@@ -9,6 +9,7 @@ from aerona.engine.reckoning.tend import tend_reckonings
 @reads(
     "table.collaborations",
     "table.collection_members",
+    "table.hidden_truths",
     "table.incident_collections",
     "table.incident_participants",
     "table.incidents",

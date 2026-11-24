@@ -3,13 +3,17 @@ import {
   Crown,
   Flame,
   Gem,
+  GraduationCap,
   HandCoins,
   HandHeart,
+  Handshake,
   HeartHandshake,
+  House,
   Megaphone,
   Scale,
   ScrollText,
   Shield,
+  ShieldCheck,
   Skull,
   Sparkles,
   Swords,
@@ -37,6 +41,8 @@ export const AXES: Record<ReputationAxis, Named> = {
   troublemaker: { label: 'Troublemaking', icon: Zap, tone: 'danger' },
   mercy: { label: 'Mercy', icon: HeartHandshake, tone: 'success' },
   justice: { label: 'Justice', icon: Scale, tone: 'gold' },
+  hospitality: { label: 'Hospitality', icon: House, tone: 'success' },
+  reliability: { label: 'Reliability', icon: ShieldCheck, tone: 'success' },
 }
 
 export const CURRENCIES: Record<string, Named> = {
@@ -44,6 +50,8 @@ export const CURRENCIES: Record<string, Named> = {
   piety: { label: 'Piety', icon: Sparkles, tone: 'verdigris' },
   dread: { label: 'Dread', icon: Flame, tone: 'danger' },
   tyranny: { label: 'Tyranny', icon: Scale, tone: 'warning' },
+  trust: { label: 'Trust', icon: Handshake, tone: 'success' },
+  learning: { label: 'Learning', icon: GraduationCap, tone: 'info' },
 }
 
 export const PRICE_ICON = HandCoins

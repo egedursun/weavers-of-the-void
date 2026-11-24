@@ -10,7 +10,7 @@ STATS = BearerStats(50, 50, 50, 50, 50)
 
 
 def test_ten_capacities_and_the_new_two_follow_breath_legs_and_senses() -> None:
-    assert len(Capacity) == len(CAPACITIES) == 10
+    assert len(Capacity) == len(CAPACITIES) == 12
     body = anatomy_of(BodyPlan.HUMANOID)
     whole = capacities(RULES, STATS, BodyState(body, (), {}, 0))
     blind = (Wound(BodyPart.LEFT_EYE.value, InjuryKind.GOUGED, 5, 100), Wound(BodyPart.RIGHT_EYE.value, InjuryKind.GOUGED, 5, 100))

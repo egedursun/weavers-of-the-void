@@ -1,8 +1,11 @@
 from collections import Counter
 from dataclasses import dataclass
 
+from sqlalchemy import select
+
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
+from aerona.db.tables.collective import MovementRow
 from aerona.db.tables.cycles import ChallengeRow, PolityStressRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import PolityProfileRow
@@ -26,6 +29,8 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import FactInput, record
 
 CLIMATE_PHASES = frozenset({"climate_transition", "planetary_climate"})
+SEASON_PHASES = frozenset({"long_seasons"})
+SUCCESSION_PHASES = frozenset({"polity_cycles"})
 FLOW_KINDS = {
     FlowCategory.DISASTER: ChallengeKind.DISASTER,
     FlowCategory.PLAGUE: ChallengeKind.PLAGUE,
@@ -48,6 +53,10 @@ def kind_of(phase: str, category: str) -> ChallengeKind | None:
     found = FLOW_KINDS.get(FlowCategory(category))
     if found is ChallengeKind.DISASTER and phase in CLIMATE_PHASES:
         return ChallengeKind.CLIMATE
+    if found is not None and phase in SEASON_PHASES:
+        return ChallengeKind.LONG_SEASON
+    if found is ChallengeKind.INVASION and phase in SUCCESSION_PHASES:
+        return ChallengeKind.SUCCESSION_CRISIS
     return found
 
 
@@ -62,8 +71,17 @@ def losses_by_town(flows: Counter[tuple[str, str, int, str]]) -> dict[int, Count
     return found
 
 
-def response_to(ctx: TickContext, index: int) -> ChallengeResponse:
+async def movements_in(ctx: TickContext, profile: PolityProfileRow) -> bool:
+    if profile.capital_entity_id is None:
+        return False
+    found = await ctx.session.scalar(select(MovementRow.id).where(MovementRow.settlement_entity_id == profile.capital_entity_id).limit(1))
+    return found is not None
+
+
+def response_to(ctx: TickContext, index: int, moving: bool = False) -> ChallengeResponse:
     table = ctx.rules.challenge_response
+    if index > table.band_high and moving:
+        return ChallengeResponse.TRANSFORMATION
     if index > table.band_high:
         return ChallengeResponse.COLLAPSE
     if index >= table.band_low:
@@ -95,6 +113,11 @@ async def answer(ctx: TickContext, polity: EntityRow, profile: PolityProfileRow,
             await record(ctx, "challenge.civic", roles={IncidentRole.SUBJECT: polity.id}, facts={"challenge": row.challenge}, place=capital)
         facts: dict[str, FactInput] = {"challenge": row.challenge, "asabiyya_gain": table.response_asabiyya}
         await record(ctx, "challenge.response", roles={IncidentRole.SUBJECT: polity.id}, facts=facts)
+    elif response is ChallengeResponse.TRANSFORMATION:
+        shift(standing, "value", table.response_asabiyya)
+        shift(profile, "legitimacy", -table.collapse_legitimacy // 2)
+        shift(profile, "stability", table.transformation_stability)
+        await record(ctx, "challenge.transformation", roles={IncidentRole.SUBJECT: polity.id}, facts={"challenge": row.challenge})
     elif response is ChallengeResponse.COLLAPSE:
         shift(standing, "value", -table.collapse_asabiyya)
         shift(profile, "stability", -table.collapse_stability)
@@ -151,7 +174,8 @@ async def meet_challenges(ctx: TickContext, tally: ChallengeTally) -> None:
                 shift(await asabiyya_row(ctx, polity.id), "value", -table.calm_decay)
             continue
         tally.met += 1
-        response = response_to(ctx, row.challenge)
+        moving = ctx.rng(f"challenge.transform.{polity.id}.{ctx.epoch}").chance(table.transformation_pct) and await movements_in(ctx, profile)
+        response = response_to(ctx, row.challenge, moving)
         await answer(ctx, polity, profile, row, response)
         if response is ChallengeResponse.RESPONSE:
             tally.responses += 1

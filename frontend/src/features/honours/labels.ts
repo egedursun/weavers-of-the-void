@@ -1,21 +1,24 @@
 import {
   Award,
+  BadgeCheck,
+  Briefcase,
   Castle,
   CircleSlash,
-  Flag,
-  Home,
-  type LucideIcon,
-  Medal,
   Coins,
+  Crown,
+  DoorOpen,
+  Flag,
+  HandHeart,
+  Home,
+  Medal,
+  Receipt,
   Shield,
+  ShieldCheck,
   Skull,
   Swords,
+  type LucideIcon,
   Users,
-  ShieldCheck,
   Waves,
-  Crown,
-  Receipt,
-  BadgeCheck,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -37,6 +40,8 @@ export const HONOURS: Record<Schema['UnitHonourKind'], Named> = {
   massacre: { label: 'Massacre suffered', icon: Skull, tone: 'danger' },
   relief: { label: 'A siege relieved', icon: ShieldCheck, tone: 'success' },
   crossing: { label: 'A crossing under arms', icon: Waves, tone: 'info' },
+  mercy: { label: 'Mercy shown', icon: HandHeart, tone: 'gold' },
+  first_in: { label: 'First through the breach', icon: DoorOpen, tone: 'gold' },
 }
 
 export const GRANTS: Record<Schema['VeteranGrant'], Named> = {
@@ -50,4 +55,5 @@ export const GRANTS: Record<Schema['VeteranGrant'], Named> = {
     icon: Receipt,
     tone: 'verdigris',
   },
+  office: { label: 'An office', icon: Briefcase, tone: 'success' },
 }

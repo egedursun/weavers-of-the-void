@@ -256,7 +256,7 @@ def set_ruler(ctx: TickContext, realm: Realm, ruler_id: int | None, reason: str,
 async def sync_members(ctx: TickContext, book: RealmBook, realm: Realm, wanted: set[int]) -> tuple[int, int]:
     joined = left = 0
     for member_id in sorted(set(realm.members) - wanted):
-        if held(member_id):
+        if held(member_id, realm.entity.id):
             continue
         await ctx.session.delete(realm.members.pop(member_id))
         book.member_of.pop(member_id, None)
@@ -266,6 +266,8 @@ async def sync_members(ctx: TickContext, book: RealmBook, realm: Realm, wanted: 
             continue
         other = book.realm_of(member_id)
         if other is not None and other.entity.id != realm.entity.id and member_id in other.members:
+            if held(other.entity.id, realm.entity.id):
+                continue
             await ctx.session.delete(other.members.pop(member_id))
         row = PolityMemberRow(polity_entity_id=realm.entity.id, member_entity_id=member_id, joined_epoch=ctx.epoch, autonomy=0)
         ctx.session.add(row)
@@ -278,7 +280,7 @@ async def sync_members(ctx: TickContext, book: RealmBook, realm: Realm, wanted: 
 async def dissolve(ctx: TickContext, book: RealmBook, live: set[int]) -> int:
     dissolved = 0
     for realm in list(book.realms.values()):
-        if realm.entity.id in live:
+        if realm.entity.id in live or held(realm.entity.id, *realm.members):
             continue
         await retire_in(ctx, realm.entity, "its lands passed to others", status=EntityStatus.DESTROYED)
         for member_id in list(realm.members):

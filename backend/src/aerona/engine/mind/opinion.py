@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES
+from aerona.catalog.relations import RELATIONS
 from aerona.constants.units import PERCENT
 from aerona.db.bond_index import bond_lookup
 from aerona.db.read_memo import memoized, pending_tables, table_names
@@ -25,6 +26,7 @@ from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import OpinionComponent, TraitEffect, TraitKind, ValueAxis
+from aerona.domain.enums.relations import RelationType
 from aerona.engine.belonging.effects import identities_of, shared_weight
 from aerona.engine.mind.book import ValueIndex, trait_effect, traits_of, values_for
 from aerona.engine.mind.memories import memories_about, strength_of
@@ -33,6 +35,7 @@ from aerona.engine.mind.space import NEUTRAL_DISTANCE, memory_weight, value_alig
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import BondIndex, active_bonds, spoken_language, spoken_languages
 from aerona.engine.renown.book import standing_with
+from aerona.rules.model import keyed
 from aerona.rules.registry import Rules
 
 OPINION_TABLES = table_names(
@@ -57,6 +60,8 @@ KIN_BONDS = KIN_BOND_KINDS
 PAIR_KINDS = frozenset({*KIN_BOND_KINDS, BondKind.ENEMY, BondKind.ALLY, BondKind.TRADES_WITH, BondKind.PAYS_TRIBUTE})
 NEGATIVE_COMPONENTS = frozenset({OpinionComponent.GRIEVANCE, OpinionComponent.FEAR})
 
+RELATION_VALUES = frozenset(kind.value for kind in RelationType)
+
 
 @dataclass(frozen=True)
 class PairFacts:
@@ -72,6 +77,7 @@ class PairFacts:
     common_enemies: int = 0
     friendship: int = 0
     rivalry: int = 0
+    relation_kinds: tuple[str, ...] = ()
     glory: int = 0
     infamy: int = 0
     dread: int = 0
@@ -148,6 +154,15 @@ def components_of(weighed: Iterable[WeighedMemory], trust_term: int) -> dict[Opi
     return {component: clamp_int(totals.get(component, 0), RELATION_MIN, RELATION_MAX) for component in OpinionComponent}
 
 
+def relation_floor(rules: Rules, kinds: Iterable[str]) -> int | None:
+    floors = [
+        floor
+        for kind in kinds
+        if kind in RELATION_VALUES and not RELATIONS[RelationType(kind)].hostile and (floor := keyed(rules.relations, kind, "floor")) > 0
+    ]
+    return max(floors) if floors else None
+
+
 def compose(
     rules: Rules,
     epoch: int,
@@ -173,6 +188,10 @@ def compose(
     if charm:
         terms.append(OpinionTerm("manner", charm))
     total = sum(item.contribution for item in weighed) + alignment + sum(term.value for term in terms)
+    floor = relation_floor(rules, facts.relation_kinds)
+    if floor is not None and total < floor:
+        terms.append(OpinionTerm("relation_floor", floor - total))
+        total = floor
     return Opinion(
         holder_id,
         subject_id,
@@ -257,6 +276,7 @@ async def facts_between(session: AsyncSession, first: int, second: int, mine: No
         common_enemies=len(common),
         friendship=bond.friendship if bond is not None else 0,
         rivalry=bond.rivalry if bond is not None else 0,
+        relation_kinds=tuple(sorted(bond.kinds or [])) if bond is not None else (),
         glory=glory,
         infamy=infamy,
         dread=theirs.dread,

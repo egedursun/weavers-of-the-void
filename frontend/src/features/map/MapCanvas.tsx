@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { type ThemeColors } from '@/components/domain/useThemeColors'
 import { type MapView } from './api'
+import { buildDeep } from './deepLayer'
 import { domainAnchors } from './mapEdges'
 import {
   type LayerMode,
@@ -107,10 +108,12 @@ export function MapCanvas(props: MapCanvasProps) {
     () => new Map(points.map((point) => [point.id, point])),
     [points]
   )
-  const fog = props.overlays.fog
+  const below = view.level !== null && view.level !== undefined
+  const fog = props.overlays.fog && !below
+  const tokens = props.tokens
   const terrain = useMemo(
-    () => buildTerrain(view.geometry, fog),
-    [view.geometry, fog]
+    () => (below ? buildDeep(view, tokens) : buildTerrain(view.geometry, fog)),
+    [below, view, tokens, fog]
   )
   const fogTexture = useMemo(
     () => (fog ? buildFog(view.geometry) : null),
@@ -254,9 +257,15 @@ export function MapCanvas(props: MapCanvasProps) {
       sizeRef.current = { width: rect.width, height: rect.height }
       canvas.width = Math.max(1, Math.round(rect.width * ratio))
       canvas.height = Math.max(1, Math.round(rect.height * ratio))
+      const previous = transformRef.current
+      const wasFitted =
+        !previous ||
+        (previous.k === fitRef.current.k &&
+          previous.x === fitRef.current.x &&
+          previous.y === fitRef.current.y)
       const fit = fitTransform(propsRef.current.view.geometry, sizeRef.current)
       fitRef.current = fit
-      if (!transformRef.current) transformRef.current = fit
+      if (wasFitted) transformRef.current = fit
       publish.current()
       render.current(performance.now())
     })
@@ -549,7 +558,7 @@ export function MapCanvas(props: MapCanvasProps) {
   return (
     <div
       ref={containerRef}
-      className='absolute inset-0 overflow-hidden'
+      className='absolute inset-0 isolate overflow-hidden'
       data-map-scene
     >
       <canvas

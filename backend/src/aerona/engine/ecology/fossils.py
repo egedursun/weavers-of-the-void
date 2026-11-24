@@ -9,6 +9,7 @@ from aerona.catalog.nature_kinds50 import PRESERVATIONS
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.constructs import ConstructRow
 from aerona.db.tables.culture import LegendProfileRow
 from aerona.db.tables.discovery import TheoryAdherentRow
 from aerona.db.tables.disease import OutbreakRow
@@ -16,14 +17,16 @@ from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.fossils import FossilBedRow
+from aerona.db.tables.geology import RegionStratumRow
 from aerona.db.tables.lifecycle_ends import LifecycleStateRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
-from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType
-from aerona.domain.enums.environment import ScarKind, TemperatureBand
+from aerona.domain.enums.entity import ENDED_STATUSES, EngineKind, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.environment import NotableYearKind, ScarKind, TemperatureBand
 from aerona.domain.enums.fossil import FossilReading, FossilSource, Preservation
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.lifecycle_end import LifecycleState
 from aerona.domain.enums.material import MaterialKind
@@ -32,6 +35,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.environment.notable import place_year
 from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -48,6 +52,8 @@ READINGS = (
     (ValueAxis.KNOWLEDGE, FossilReading.DEEP_TIME),
     (ValueAxis.WEALTH, FossilReading.MATERIAL),
     (ValueAxis.MERCY, FossilReading.MEDICINE),
+    (ValueAxis.TRADITION, FossilReading.SACRED),
+    (ValueAxis.NATURE, FossilReading.OMEN),
 )
 
 
@@ -103,6 +109,18 @@ async def remains(ctx: TickContext) -> list[Remains]:
     ):
         if corpse.id not in laid:
             found.append(Remains(corpse, FossilSource.GOD))
+    return found + await later_remains(ctx, laid, born)
+
+
+async def later_remains(ctx: TickContext, laid: set[int | None], born: dict[int, int]) -> list[Remains]:
+    found: list[Remains] = []
+    ended = select(EntityRow).join(ConstructRow, ConstructRow.entity_id == EntityRow.id).where(EntityRow.status.in_(sorted(ENDED_STATUSES)))
+    found += [Remains(made, FossilSource.MADE) for made in await ctx.session.scalars(ended.order_by(EntityRow.id)) if made.id not in laid]
+    living = select(EntityRow).where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON)
+    for people in await ctx.session.scalars(living.order_by(EntityRow.id)):
+        age = ctx.epoch - born.get(people.world_id or 0, ctx.epoch)
+        if people.id not in laid and people.world_id in born and age >= ctx.rules.fossils.ancestor_age_epochs:
+            found.append(Remains(people, FossilSource.ANCESTOR))
     return found
 
 
@@ -141,6 +159,8 @@ async def preservation_of(ctx: TickContext, region_id: int, frozen: bool) -> Pre
     land = await ctx.session.get(RegionEnvironmentRow, region_id)
     if frozen:
         return Preservation.ICE
+    if await has_caves(ctx, region_id):
+        return Preservation.CAVE
     if land is not None and (land.scars or {}).keys() & ASHEN:
         return Preservation.ASH
     if land is not None and land.wetland >= table.bog_wetland:
@@ -258,6 +278,32 @@ async def grind_remains(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) 
         shift_stat(finder, "hp", table.medicine_effect, 0)
 
 
+async def has_caves(ctx: TickContext, region_id: int) -> bool:
+    caves = select(RegionStratumRow.id).where(RegionStratumRow.region_entity_id == region_id, RegionStratumRow.stratum == UndergroundStratum.CAVERN_UPPER)
+    return await ctx.session.scalar(caves.limit(1)) is not None
+
+
+async def enshrine(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
+    ground = await ctx.session.get(RegionEnvironmentRow, bed.region_entity_id)
+    if ground is not None and "sacredness" not in ground.locked and not held(ground.entity_id):
+        ground.sacredness = clamp_int(ground.sacredness + ctx.rules.fossils.sacred_draw, 0, PERCENT)
+
+
+async def read_omen(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
+    await place_year(ctx, bed.region_entity_id, NotableYearKind.OMEN, await RegionAtlas.load(ctx.session))
+
+
+async def doubt_origin(ctx: TickContext, bed: FossilBedRow) -> None:
+    people = await ctx.session.get(EntityRow, bed.source_entity_id) if bed.source_entity_id is not None else None
+    if people is None or held(people.id):
+        return
+    for row in await ctx.session.scalars(
+        select(TheoryAdherentRow).where(TheoryAdherentRow.adherent_entity_id == people.id).order_by(TheoryAdherentRow.theory_entity_id)
+    ):
+        if "strength" not in row.locked:
+            row.strength = clamp_int(row.strength - ctx.rules.fossils.ancestor_doubt, 0, PERCENT)
+
+
 READ_EFFECTS: Mapping[FossilReading, Callable[[TickContext, FossilBedRow, EntityRow], Awaitable[None]]] = partial(
     FossilReading,
     {
@@ -266,6 +312,8 @@ READ_EFFECTS: Mapping[FossilReading, Callable[[TickContext, FossilBedRow, Entity
         FossilReading.DEEP_TIME: overturn,
         FossilReading.MATERIAL: work_remains,
         FossilReading.MEDICINE: grind_remains,
+        FossilReading.SACRED: enshrine,
+        FossilReading.OMEN: read_omen,
     },
     without=(FossilReading.UNREAD,),
 )
@@ -274,6 +322,8 @@ READ_EFFECTS: Mapping[FossilReading, Callable[[TickContext, FossilBedRow, Entity
 async def told(ctx: TickContext, bed: FossilBedRow, finder: EntityRow) -> None:
     if bed.reading in READ_EFFECTS:
         await READ_EFFECTS[bed.reading](ctx, bed, finder)
+    if bed.source is FossilSource.ANCESTOR:
+        await doubt_origin(ctx, bed)
     if bed.source is FossilSource.GOD:
         ground = await ctx.session.get(RegionEnvironmentRow, bed.region_entity_id)
         if ground is not None and "sacredness" not in ground.locked and not held(ground.entity_id):

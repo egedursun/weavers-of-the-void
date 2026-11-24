@@ -60,6 +60,7 @@ from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.db.tables.folk_knowledge import FolkClassRow
 from aerona.db.tables.folkways import LuckBeliefRow
 from aerona.db.tables.genetics import GenomeRow
+from aerona.db.tables.geology import DeepPassageRow, RegionStratumRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgGovernanceRow, OrgMergerRow, OrgSeatRow
 from aerona.db.tables.grave_goods import GraveGoodsRow
 from aerona.db.tables.honours import HonourHeldRow, HonourKindRow, NamedUnitRow, UnitHonourRow
@@ -150,6 +151,7 @@ from aerona.domain.enums.faith import RebirthPath, ReincarnationGate
 from aerona.domain.enums.fertility_means import FertilityMeans
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.folkways import LuckReach, LuckSign
+from aerona.domain.enums.geology import DeepPassageOrigin, DeepPassageState, UndergroundStratum
 from aerona.domain.enums.governance import GoverningBody
 from aerona.domain.enums.honours import UnitHonourKind
 from aerona.domain.enums.industry import ProcessKind
@@ -213,6 +215,7 @@ from aerona.domain.models.entity_stats import (
     PlaceStats,
     PolityStats,
     RiteStats,
+    SettlementStats,
     SpeciesStats,
     SpiritStats,
     StructureStats,
@@ -1246,6 +1249,55 @@ async def river_spirit_counted_a_mountain(session: AsyncSession, world: CoreWorl
     session.add(GeniusLocusRow(spirit_entity_id=keeper.id, place_entity_id=ford.id, kind=GeniusLocusKind.MOUNTAIN, locked=[]))
 
 
+async def settlement_in_no_cell(session: AsyncSession, world: CoreWorld) -> None:
+    town = await entity(
+        session,
+        "Hollow Hearth",
+        EntityType.SETTLEMENT,
+        SettlementStats(population=100, prosperity=50, defense=30, piety=50),
+        world_id=world.world.id,
+        location_id=world.regions[0].id,
+    )
+    town.stratum = UndergroundStratum.CAVERN_LOWER
+
+
+async def passage_dug_but_never_open(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(RegionStratumRow(region_entity_id=world.regions[0].id, stratum=UndergroundStratum.CAVERN_UPPER, volume=0, pressure=0, locked=[]))
+    session.add(
+        DeepPassageRow(
+            world_id=world.world.id,
+            first_region_entity_id=world.regions[0].id,
+            first_stratum=None,
+            second_region_entity_id=world.regions[0].id,
+            second_stratum=UndergroundStratum.CAVERN_UPPER,
+            state=DeepPassageState.OPEN,
+            origin=DeepPassageOrigin.DUG,
+            width=40,
+            progress=30,
+            opened=False,
+            locked=[],
+        )
+    )
+
+
+async def passage_into_no_cell(session: AsyncSession, world: CoreWorld) -> None:
+    session.add(
+        DeepPassageRow(
+            world_id=world.world.id,
+            first_region_entity_id=world.regions[0].id,
+            first_stratum=None,
+            second_region_entity_id=world.regions[0].id,
+            second_stratum=UndergroundStratum.MAGMA_SEA,
+            state=DeepPassageState.OPEN,
+            origin=DeepPassageOrigin.NATURAL,
+            width=40,
+            progress=100,
+            opened=True,
+            locked=[],
+        )
+    )
+
+
 async def vengeance_against_no_one(session: AsyncSession, world: CoreWorld) -> None:
     asker = await mortal(session, "Wronged One", world, world.regions[0].id)
     office = await entity(session, "Office Of Springs", EntityType.SPIRIT, SpiritStats(), world_id=world.world.id, location_id=world.regions[0].id)
@@ -1815,6 +1867,9 @@ BREAKERS: dict[str, Breaker] = {
     "expedition_ground_fits": expedition_into_a_dimension_with_no_rift,
     "married_in_names_union": joining_with_no_spouse,
     "spirit_fits_place": river_spirit_counted_a_mountain,
+    "deep_positions_valid": settlement_in_no_cell,
+    "passage_state_fits": passage_dug_but_never_open,
+    "passage_ends_exist": passage_into_no_cell,
     "vengeance_names_target": vengeance_against_no_one,
     "luck_sign_marked": luck_in_no_creature,
     "rebirth_kind_named": reborn_as_no_kind,

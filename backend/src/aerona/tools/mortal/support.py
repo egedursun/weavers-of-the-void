@@ -19,11 +19,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import COMMUNITY_TYPES, CivilizationTier, EngineKind, EntityOrigin, EntityType, LegendCategory
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.body.book import factor
 from aerona.engine.economy.provenance import ensure_materials
+from aerona.engine.environment.levels import level_fault
 from aerona.engine.gods.queries import community_of
 from aerona.engine.mind.book import best_skill, mind_of
 from aerona.engine.mind.skills import practise_any
@@ -138,8 +140,8 @@ async def near(call: MortalCall, other: EntityRow) -> bool:
     return atlas.near(call.me.id, other.id, seafaring_reach(call.rules, seafaring, sea_ban))
 
 
-async def same_region(call: MortalCall, other: EntityRow) -> bool:
-    return other.world_id == call.me.world_id and (await call.atlas()).same_region(call.me.id, other.id)
+async def same_cell(call: MortalCall, other: EntityRow) -> bool:
+    return other.world_id == call.me.world_id and (await call.atlas()).same_cell(call.me.id, other.id)
 
 
 async def require_target(call: MortalCall, entity_id: int | None) -> EntityRow:
@@ -163,6 +165,7 @@ class MortalCreation:
     subtype: str | None = None
     stats: dict[str, int] | None = None
     location_id: int | None = None
+    stratum: UndergroundStratum | None = None
     power: int | None = None
     image_prompt: str | None = None
     knowledge_branch: KnowledgeBranch | None = None
@@ -200,6 +203,7 @@ async def create_record(call: MortalCall, creation: MortalCreation) -> EntityRow
         split_title=False,
     )
     created = await EntityRepository(call.session).create(draft)
+    created.stratum = creation.stratum if valid_location is not None and valid_location.entity_type is EntityType.REGION else None
     await ensure_materials(call.session, created, rules=call.rules)
     call.remember_creation(created.id)
     call.target(created.id)
@@ -235,7 +239,7 @@ async def candidates_text(call: MortalCall, types: Collection[EntityType], *, lo
             break
         if other.id == call.me.id or (fits is not None and not fits(other)):
             continue
-        if not (await same_region(call, other) if local else await near(call, other)):
+        if not (await same_cell(call, other) if local else await near(call, other)):
             continue
         found.append(other)
     if not found:
@@ -261,3 +265,9 @@ async def rules_a_realm(session: AsyncSession, actor: EntityRow) -> bool:
         return False
     held = await session.scalar(select(OfficeRow.id).where(OfficeRow.holder_entity_id == actor.id, OfficeRow.kind.in_(RULES_A_REALM_OFFICE_KINDS)).limit(1))
     return held is not None
+
+
+async def refuse_level(call: MortalCall, location: EntityRow | None, stratum: UndergroundStratum | None, entity_type: EntityType) -> None:
+    why = await level_fault(call.session, location, stratum, entity_type)
+    if why is not None:
+        fail(MortalResult.LEVEL_REFUSED, why=why)

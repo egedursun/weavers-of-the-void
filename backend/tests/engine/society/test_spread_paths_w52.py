@@ -26,8 +26,16 @@ async def outbreak_of(realm: Realm, route: str) -> tuple[DiseaseBook, OutbreakRo
 
 
 def test_eleven_paths_each_with_a_carrier_and_the_contact_paths_read_from_the_catalogue() -> None:
-    assert len(SPREAD_PATHS) == len(SpreadPath) == 11
-    assert {SpreadPath.ROUTE, SpreadPath.ARMY, SpreadPath.JOURNEY, SpreadPath.SIEGE, SpreadPath.MIGRATION, SpreadPath.GATHERING} == CONTACT_PATHS
+    assert len(SPREAD_PATHS) == len(SpreadPath) == 13
+    assert {
+        SpreadPath.ROUTE,
+        SpreadPath.ARMY,
+        SpreadPath.JOURNEY,
+        SpreadPath.SIEGE,
+        SpreadPath.MIGRATION,
+        SpreadPath.GATHERING,
+        SpreadPath.LIVESTOCK,
+    } == CONTACT_PATHS
     assert all(spec.carrier for spec in SPREAD_PATHS.values())
     assert SPREAD_PATHS[SpreadPath.WATERWAY].routes == {Transmission.WATER}
 

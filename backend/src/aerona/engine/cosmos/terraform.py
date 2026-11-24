@@ -39,8 +39,28 @@ def shift(physics: WorldPhysicsRow, key: str, amount: int) -> bool:
     return True
 
 
-def reshape(rules: Rules, physics: WorldPhysicsRow, aim: TerraformAim, step: int, breath: str = AIR_GAS[AirNeed.OXYGEN]) -> bool:
+def seed_life(rules: Rules, world: WorldRow | None, step: int) -> bool:
+    if world is None or "biosphere_health" in world.locked:
+        return False
+    world.biosphere_health = min(PERCENT, world.biosphere_health + step * rules.terraforming.seed_life_pct // PERCENT)
+    return True
+
+
+def steady_seasons(world: WorldRow | None, step: int) -> bool:
+    if world is None or world.axial_tilt is None or "axial_tilt" in world.locked or world.axial_tilt == 0:
+        return False
+    world.axial_tilt = max(0, world.axial_tilt - step)
+    return True
+
+
+def reshape(
+    rules: Rules, physics: WorldPhysicsRow, aim: TerraformAim, step: int, breath: str = AIR_GAS[AirNeed.OXYGEN], *, world: WorldRow | None = None
+) -> bool:
     spec = TERRAFORM_AIMS[aim]
+    if spec.reshaping == "seed":
+        return seed_life(rules, world, step)
+    if spec.reshaping == "steady":
+        return steady_seasons(world, step)
     if spec.reshaping == "pressure":
         if "pressure" in physics.locked:
             return False
@@ -95,7 +115,7 @@ async def terraform_cycle(ctx: TickContext) -> int:
         physics = await ctx.session.get(WorldPhysicsRow, project.world_id)
         if world is None or physics is None or held(world.id) or (project.by_node_id is not None and held(project.by_node_id)):
             continue
-        if reshape(ctx.rules, physics, project.aim, project.step, await breath_of(ctx, project.by_node_id)):
+        if reshape(ctx.rules, physics, project.aim, project.step, await breath_of(ctx, project.by_node_id), world=world):
             moved += 1
             if TERRAFORM_AIMS[project.aim].touches_air:
                 await harm_natives(ctx, world, physics, project)

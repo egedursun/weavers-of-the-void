@@ -1,4 +1,4 @@
-import { type DrawerSearch } from '@/components/layout/drawer/drawerEntries'
+import { type EntrySearch } from '@/components/layout/entry/entryStack'
 
 export const ATLAS_SORTS = [
   'name',
@@ -20,7 +20,7 @@ export const ATLAS_STATUSES = [
 ] as const
 export type AtlasStatus = (typeof ATLAS_STATUSES)[number]
 
-export type AtlasSearch = DrawerSearch & {
+export type AtlasSearch = EntrySearch & {
   q?: string
   type?: string
   world?: number
@@ -65,7 +65,7 @@ export function validateAtlasSearch(
   search: Record<string, unknown>
 ): AtlasSearch {
   const result: AtlasSearch = {}
-  if (typeof search.drawer === 'string') result.drawer = search.drawer
+  if (typeof search.entry === 'string') result.entry = search.entry
   const q = text(search.q)
   if (q) result.q = q
   const type = text(search.type)

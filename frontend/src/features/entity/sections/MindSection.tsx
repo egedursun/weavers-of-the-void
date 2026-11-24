@@ -21,7 +21,7 @@ import {
   StatBar,
   ValueRadar,
 } from '@/components/domain'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Muted, Text } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -67,7 +67,7 @@ const VALUE_MAX = 100
 const STRONG = 50
 const WORKING = 'Working on it.'
 
-function nodeKind(kind: string): DrawerKind {
+function nodeKind(kind: string): EntryKind {
   if (kind === 'son') return 'son'
   if (kind === 'foreign_god') return 'foreign-god'
   return 'entity'

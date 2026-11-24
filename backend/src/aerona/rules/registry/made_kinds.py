@@ -108,6 +108,8 @@ class UnitTypeRules:
 @dataclass(frozen=True)
 class CuisineRules(Spanned):
     invent_pct: int = rule(50, 0, 100, S, "Chance each epoch a people comes to cook a new dish from its stores (%)")
+    acid_sour: int = rule(50, 0, 100, S, "Sourness of a dish from which its fruit, greens or milk serve as its acid")
+    aroma_pungent: int = rule(50, 0, 100, S, "Pungency of a dish from which its seasonings serve as its aroma")
     starting_dishes: int = rule(
         3,
         0,

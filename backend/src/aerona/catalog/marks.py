@@ -45,6 +45,8 @@ MARKS: Mapping[MarkKind, MarkSpec] = total(
         K.BRAND: MarkSpec("Brand", seeded=False),
         K.HAIR: MarkSpec("Hair", quick=True),
         K.IMPLANT: MarkSpec("Implant", seeded=False, shows_augment=True),
+        K.PAINT: MarkSpec("Paint", quick=True),
+        K.STAIN: MarkSpec("Stain"),
     },
 )
 MEANINGS: Mapping[MarkMeaning, MeaningSpec] = total(
@@ -61,6 +63,8 @@ MEANINGS: Mapping[MarkMeaning, MeaningSpec] = total(
         M.FAITH: MeaningSpec("Faith", "loyalty_god", event=BondKind.ADHERENT_OF),
         M.PROFESSION: MeaningSpec("Trade", "renown", guild=True),
         M.BEAUTY: MeaningSpec("Beauty", "renown", event=BondKind.BETROTHED_TO),
+        M.HEALING: MeaningSpec("Healing", None, calms=True),
+        M.BOUND_LABOUR: MeaningSpec("Bound labour", "honour", seeded=False, shames=True),
     },
 )
 MARKABLE = tuple(kind for kind, spec in MARKS.items() if spec.seeded)

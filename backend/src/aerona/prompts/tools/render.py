@@ -85,7 +85,7 @@ from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath
 from aerona.domain.enums.folkways import CharmPower, ImpuritySource, MishapKind
 from aerona.domain.enums.forecasting import ObservationMethod, WeatherAim, WeatherWorkMethod
 from aerona.domain.enums.fossil import FossilReading
-from aerona.domain.enums.geology import RockKind, UndergroundStratum
+from aerona.domain.enums.geology import DeepPassageKind, DeepPassageOrigin, DeepPassageState, RockKind, UndergroundStratum
 from aerona.domain.enums.honours import HonourPrivilege, VeteranGrant
 from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.law_depth import RecruitMotive, RegistryKind
@@ -389,6 +389,9 @@ def template_variables(rules: Rules, context: ToolTextContext, entity: EntityTyp
         "planetary_cycles": [kind.value for kind in PlanetaryCycle],
         "fossil_readings": [kind.value for kind in FossilReading if kind is not FossilReading.UNREAD],
         "underground_strata": [kind.value for kind in UndergroundStratum],
+        "deep_passage_kinds": [kind.value for kind in DeepPassageKind],
+        "deep_passage_states": [kind.value for kind in DeepPassageState],
+        "deep_passage_origins": [kind.value for kind in DeepPassageOrigin],
         "region_memory_kinds": [kind.value for kind in RegionMemoryKind],
         "danger_sources": [kind.value for kind in DangerSource],
         "danger_targets": [kind.value for kind in DangerHarm],

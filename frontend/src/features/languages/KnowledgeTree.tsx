@@ -25,7 +25,7 @@ import {
   PagedList,
   Section,
 } from '@/components/domain'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { type KnowledgeView } from '@/features/entity/api/types'
@@ -47,7 +47,7 @@ type BranchKey = KnowledgeBranch | typeof UNSORTED
 
 type NodeRef = KnowledgeView['knowers'][number]
 
-const REF_KIND: Partial<Record<NodeRef['kind'], DrawerKind>> = {
+const REF_KIND: Partial<Record<NodeRef['kind'], EntryKind>> = {
   entity: 'entity',
   son: 'son',
   foreign_god: 'foreign-god',

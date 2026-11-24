@@ -9,6 +9,8 @@ class FossilSource(StrEnum):
     EXTINCT_PEOPLE = "extinct_people"
     GOD = "god"
     BURIED_DEAD = "buried_dead"
+    MADE = "made"
+    ANCESTOR = "ancestor"
 
 
 class FossilReading(StrEnum):
@@ -18,6 +20,8 @@ class FossilReading(StrEnum):
     DEEP_TIME = "deep_time"
     MATERIAL = "material"
     MEDICINE = "medicine"
+    SACRED = "sacred"
+    OMEN = "omen"
 
 
 class Preservation(StrEnum):
@@ -28,3 +32,4 @@ class Preservation(StrEnum):
     TAR = "tar"
     ASH = "ash"
     DRY = "dry"
+    CAVE = "cave"

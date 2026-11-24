@@ -351,6 +351,7 @@ async def succession_line(ctx: TickContext, realm: Realm, laws: LawBook) -> list
         SuccessionRule.DIVINE_CHOICE: [*children, *housemates, *siblings],
         SuccessionRule.ULTIMOGENITURE: [*sorted(children, key=lambda item: (stat(item, "age") or 0, item.id)), *grandchildren, *siblings],
         SuccessionRule.DESIGNATION: [*children, *housemates, *siblings, *grandchildren, *await subjects(ctx, realm)],
+        SuccessionRule.ROTATION: [*[item for item in await subjects(ctx, realm) if item.id not in {mate.id for mate in housemates}], *children, *housemates],
     }
     seen: set[int] = set()
     pool: list[EntityRow] = []

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.catch import GEAR, GROUNDS
+from aerona.catalog.domestication import SOCIALITIES
 from aerona.catalog.evolution import APEX_SIZES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agrarian import GameReserveRow
@@ -45,6 +46,7 @@ class GroundTally:
 
 
 GAME_SIZES = APEX_SIZES
+NESTING = frozenset(form for form, spec in SOCIALITIES.items() if spec.nests)
 
 
 async def owner_of(ctx: TickContext, community_id: int) -> int:
@@ -90,6 +92,15 @@ async def seed_fisheries(ctx: TickContext, atlas: RegionAtlas, tally: GroundTall
     await ctx.session.flush()
 
 
+def land_ground(profile: SpeciesProfileRow | None, *, fowling: bool, large: bool) -> CatchGround:
+    nesting = profile is not None and profile.sociality in NESTING
+    if profile is not None and profile.body_plan is BodyPlan.INSECTOID:
+        return CatchGround.INSECT_GATHERING
+    if fowling:
+        return CatchGround.EGG_GATHERING if nesting else CatchGround.FOWLING
+    return CatchGround.GAME_HUNT if large else CatchGround.TRAPPING
+
+
 async def seed_land(ctx: TickContext, tally: GroundTally) -> None:
     table = ctx.rules.grounds
     known = {(row.source_entity_id, row.region_entity_id) for row in await ctx.session.scalars(select(CatchGroundRow))}
@@ -104,7 +115,7 @@ async def seed_land(ctx: TickContext, tally: GroundTally) -> None:
         rng = ctx.rng(seed_of("ground", *key))
         fowling = profile.body_plan is BodyPlan.AVIAN if profile is not None else rng.chance(table.fowling_chance)
         large = profile is not None and profile.size_class in GAME_SIZES
-        ground = CatchGround.FOWLING if fowling else CatchGround.GAME_HUNT if large else CatchGround.TRAPPING
+        ground = land_ground(profile, fowling=fowling, large=large)
         ctx.session.add(
             CatchGroundRow(
                 source_entity_id=row.species_entity_id,

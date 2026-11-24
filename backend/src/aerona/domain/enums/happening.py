@@ -21,6 +21,8 @@ class LandAct(StrEnum):
     OPEN_SPRING = "open_spring"
     CALL_LAVA = "call_lava"
     SINK_COAST = "sink_coast"
+    RAISE_ISLAND = "raise_island"
+    OPEN_UNDERGROUND = "open_underground"
 
 
 class RiverShiftCause(StrEnum):
@@ -32,3 +34,5 @@ class RiverShiftCause(StrEnum):
     WORKS = "works"
     ERUPTION = "eruption"
     LANDSLIDE = "landslide"
+    ICE = "ice"
+    CAPTURE = "capture"

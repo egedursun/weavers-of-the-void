@@ -10,15 +10,19 @@ from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
-from aerona.db.tables.intrigue import FavourRow
+from aerona.db.tables.intrigue import FavourRow, SecretRow
+from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
 from aerona.db.tables.polity import HouseProfileRow, OfficeRow
 from aerona.db.tables.regime import CoalitionMemberRow, PatronageTieRow, PowerBaseRow, RegimeRow, VenalOfficeRow
+from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
+from aerona.domain.enums.intrigue import HookSource
 from aerona.domain.enums.life_traits import OfficeKindTrait
+from aerona.domain.enums.military import AgentStatus
 from aerona.domain.enums.mind import ActKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind, OfficePower
@@ -30,6 +34,7 @@ from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
 from aerona.engine.demography.kinship import may_wed
 from aerona.engine.economy.purse import coin_of, points_of, receive_coin, take_coin, wealth_points
+from aerona.engine.intrigue.secrets import grant_hook
 from aerona.engine.lore.civics import realm_allows
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mind.hooks import judged
@@ -105,6 +110,8 @@ async def bind_clients(ctx: TickContext, book: RealmBook, tally: PatronageTally)
     for head, servant in servants.all():
         if head is not None and head != servant:
             await tie(ctx, head, servant, role=ClientRole.HOUSEHOLD, strength=table.office_strength, tally=tally)
+            await grant_hook(ctx, head, servant, HookSource.DEPENDENCE, strong=False)
+    await affection_hooks(ctx)
     for realm in book.realms.values():
         for office in realm.offices:
             if office.holder_entity_id is None or office.appointed_by_entity_id is None:
@@ -120,8 +127,30 @@ async def bind_clients(ctx: TickContext, book: RealmBook, tally: PatronageTally)
     for patron, author in patrons.all():
         if patron is not None and author is not None:
             await tie(ctx, patron, author, role=ClientRole.ARTIST, strength=table.office_strength, tally=tally)
+    spies = await ctx.session.execute(
+        select(SpyNetworkRow.owner_entity_id, SpyAgentRow.mortal_entity_id)
+        .join(SpyAgentRow, SpyAgentRow.network_id == SpyNetworkRow.id)
+        .where(SpyAgentRow.status == AgentStatus.ACTIVE, SpyAgentRow.mortal_entity_id.is_not(None))
+        .order_by(SpyAgentRow.id)
+    )
+    for owner, agent in spies.all():
+        if owner is not None and agent is not None and await living_entity(ctx.session, owner) is not None:
+            await tie(ctx, owner, agent, role=ClientRole.INFORMANT, strength=table.office_strength, tally=tally)
+    for realm in book.realms.values():
+        scholar = realm.office(OfficeKind.COURT_SCHOLAR)
+        if scholar is not None and scholar.holder_entity_id is not None and realm.ruler_id is not None:
+            await tie(ctx, realm.ruler_id, scholar.holder_entity_id, role=ClientRole.SCHOLAR, strength=table.office_strength, tally=tally)
     await ctx.session.flush()
     await name_brokers(ctx)
+
+
+async def affection_hooks(ctx: TickContext) -> None:
+    rows = await ctx.session.scalars(
+        select(RelationshipRow).where(RelationshipRow.romance >= ctx.rules.intrigue.affection_hook_at).order_by(RelationshipRow.id)
+    )
+    for row in list(rows):
+        if not held(row.subject_node_id):
+            await grant_hook(ctx, row.subject_node_id, row.holder_node_id, HookSource.AFFECTION, strong=row.romance >= ctx.rules.intrigue.strong_at)
 
 
 async def name_brokers(ctx: TickContext) -> None:
@@ -135,6 +164,14 @@ async def serve_patrons(ctx: TickContext) -> None:
     table = ctx.rules.patronage
     rows = list(await ctx.session.scalars(select(PatronageTieRow).where(PatronageTieRow.role.in_(list(SERVING_CLIENTS))).order_by(PatronageTieRow.id)))
     for row in rows:
+        if row.role is ClientRole.SCHOLAR:
+            patron = await living_entity(ctx.session, row.patron_node_id)
+            if patron is not None and not held(patron.id):
+                await add_renown(ctx.session, patron.id, table.scholar_renown * row.strength / PERCENT, ctx.epoch, rules=ctx.rules)
+            continue
+        if row.role is ClientRole.INFORMANT:
+            await inform_patron(ctx, row)
+            continue
         if row.role is ClientRole.ARTIST:
             patron = await living_entity(ctx.session, row.patron_node_id)
             if patron is not None and patron.entity_type is EntityType.MORTAL and not held(patron.id):
@@ -143,6 +180,15 @@ async def serve_patrons(ctx: TickContext) -> None:
         below = list(await ctx.session.scalars(select(PatronageTieRow.strength).where(PatronageTieRow.patron_node_id == row.client_entity_id)))
         if below and not held(row.client_entity_id):
             await add_renown(ctx.session, row.client_entity_id, sum(below) * table.broker_share_pct / PERCENT / TEN, ctx.epoch, rules=ctx.rules)
+
+
+async def inform_patron(ctx: TickContext, row: PatronageTieRow) -> None:
+    secrets = await ctx.session.scalars(select(SecretRow).order_by(SecretRow.id))
+    for secret in list(secrets):
+        known = secret.known_by or []
+        if row.client_entity_id in known and row.patron_node_id not in known and "known_by" not in (secret.locked or []):
+            secret.known_by = [*known, row.patron_node_id]
+            return
 
 
 async def loosen_ties(ctx: TickContext, tally: PatronageTally) -> None:

@@ -27,6 +27,7 @@ from aerona.domain.enums.cosmography import (
     PhenomenonEffect,
     PhenomenonKind,
     PhenomenonPersistence,
+    PhenomenonRhythm,
     PhenomenonScope,
     PhenomenonTarget,
     RiftCause,
@@ -525,6 +526,46 @@ PHENOMENON_MODEL: Mapping[PhenomenonKind, PhenomenonModel] = total(
     },
 )
 SCOPE_SPREAD: Mapping[PhenomenonScope, int] = total(PhenomenonScope, {PS.PLACE: 0, PS.REGION: 1, PS.WORLD: 3})
+PR = PhenomenonRhythm
+PHENOMENON_RHYTHMS: Mapping[PhenomenonKind, PhenomenonRhythm] = total(
+    PhenomenonKind,
+    {
+        PK.LASTING_STORM: PR.SEASONAL,
+        PK.TIME_DISTORTION: PR.CONSTANT,
+        PK.OUTSIDE_OPENING: PR.CONSTANT,
+        PK.POWER_SURGE: PR.ONCE,
+        PK.DIVINE_RESIDUE: PR.CONSTANT,
+        PK.MOVING_FOG: PR.WANDERING,
+        PK.MINERAL_GROWTH: PR.CONSTANT,
+        PK.BARREN_GROUND: PR.CONSTANT,
+        PK.DISTANT_VIEW: PR.CYCLIC,
+        PK.GRAVITY_ANOMALY: PR.CONSTANT,
+        PK.SOUNDING_GROUND: PR.CYCLIC,
+        PK.LASTING_LIGHTS: PR.CYCLIC,
+        PK.PATH_OF_THE_DEAD: PR.SEASONAL,
+        PK.BLIGHT: PR.WANDERING,
+    },
+)
+
+
+@dataclass(frozen=True)
+class RhythmSpec:
+    label: str
+    period: int = 0
+    wanders: bool = False
+    once: bool = False
+
+
+RHYTHMS: Mapping[PhenomenonRhythm, RhythmSpec] = total(
+    PhenomenonRhythm,
+    {
+        PR.CONSTANT: RhythmSpec("Constant"),
+        PR.SEASONAL: RhythmSpec("Returns with its season", period=1),
+        PR.CYCLIC: RhythmSpec("Follows a cycle of the sky", period=3),
+        PR.WANDERING: RhythmSpec("Wanders from region to region", wanders=True),
+        PR.ONCE: RhythmSpec("Comes once", once=True),
+    },
+)
 
 
 @dataclass(frozen=True)

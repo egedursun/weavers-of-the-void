@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { type LinkTarget } from '@/components/domain/nameLinks'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { useNames } from '@/features/entity/api/queries'
 import { type NameEntry, type NodeRef } from '@/features/entity/api/types'
 
-const DRAWER_OF_NODE: Partial<Record<string, DrawerKind>> = {
+const DRAWER_OF_NODE: Partial<Record<string, EntryKind>> = {
   entity: 'entity',
   son: 'son',
   foreign_god: 'foreign-god',
@@ -13,14 +13,14 @@ const DRAWER_OF_NODE: Partial<Record<string, DrawerKind>> = {
   star: 'star',
 }
 
-export function drawerKindOf(kind: string): DrawerKind | undefined {
+export function entryKindOf(kind: string): EntryKind | undefined {
   return DRAWER_OF_NODE[kind]
 }
 
 export function targetOf(
   entry: Pick<NameEntry, 'id' | 'name' | 'kind'>
 ): LinkTarget | null {
-  const kind = drawerKindOf(entry.kind)
+  const kind = entryKindOf(entry.kind)
   return kind ? { id: entry.id, name: entry.name, kind } : null
 }
 

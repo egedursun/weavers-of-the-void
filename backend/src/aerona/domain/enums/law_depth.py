@@ -18,6 +18,7 @@ class CourtLevel(StrEnum):
     GUILD = "guild"
     MILITARY = "military"
     CONSULAR = "consular"
+    APPELLATE = "appellate"
 
 
 class RegistryKind(StrEnum):
@@ -34,6 +35,8 @@ class RegistryKind(StrEnum):
     BIRTH = "birth"
     DEATH = "death"
     CITIZENSHIP = "citizenship"
+    WILL = "will"
+    LICENCE = "licence"
 
 
 class JurisdictionClaim(StrEnum):
@@ -49,6 +52,7 @@ class RecruitMotive(StrEnum):
     EGO = "ego"
     LOVE = "love"
     REVENGE = "revenge"
+    FAITH = "faith"
 
 
 class MoleHuntOutcome(StrEnum):

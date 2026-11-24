@@ -8,6 +8,7 @@ from aerona.engine.phase import Phase
 
 @reads(
     "table.battles",
+    "table.deep_passages",
     "table.deterrence_postures",
     "table.entities",
     "table.holder_custom_techniques",

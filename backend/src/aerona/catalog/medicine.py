@@ -41,6 +41,7 @@ MEDICINE: Mapping[MedicineTier, MedicineSpec] = total(
         M.REGENERATION: MedicineSpec(7, Technique.GENETIC_ENGINEERING, 60, 25, mind_care=True),
         M.GENOME_REPAIR: MedicineSpec(8, Technique.GENETIC_ENGINEERING, 70, 40, mind_care=True),
         M.CELLULAR_MACHINES: MedicineSpec(9, Technique.ARTIFICIAL_MINDS, 80, 60, mind_care=True),
+        M.ANATOMY: MedicineSpec(2, Technique.SURGERY, 8, 3),
     },
 )
 

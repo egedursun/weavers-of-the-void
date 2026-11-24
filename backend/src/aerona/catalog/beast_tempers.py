@@ -30,6 +30,8 @@ TEMPERS: Mapping[BeastTemper, TemperSpec] = total(
         T.WOUNDED: TemperSpec(active=False, held=False, hostile=True, lairbound=True, fear=lambda rules: 80),
         T.BROODING: TemperSpec(active=False, held=False, hostile=True, lairbound=True, fear=lambda rules: rules.beast_tempers.brooding_fear_pct),
         T.COWED: TemperSpec(active=False, held=False, hostile=False, lairbound=True, fear=lambda rules: 30),
+        T.MIGRATING: TemperSpec(active=True, held=False, hostile=False, lairbound=False, fear=lambda rules: rules.beasts.migrating_fear_pct),
+        T.FLEEING: TemperSpec(active=True, held=False, hostile=False, lairbound=False, fear=lambda rules: rules.beasts.fleeing_fear_pct),
     },
 )
 ACTIVE_TEMPERS = frozenset(temper for temper, spec in TEMPERS.items() if spec.active)
@@ -44,6 +46,8 @@ class TemperamentSpec:
     guards: bool
     drawn: bool = True
     remembers: bool = False
+    befriends: bool = False
+    honoured: bool = False
 
 
 TEMPERAMENTS: Mapping[Temperament, TemperamentSpec] = total(
@@ -58,6 +62,8 @@ TEMPERAMENTS: Mapping[Temperament, TemperamentSpec] = total(
         Temperament.VENGEFUL: TemperamentSpec(avenges=True, gathers=False, guards=False, remembers=True),
         Temperament.ACQUISITIVE: TemperamentSpec(avenges=False, gathers=True, guards=False),
         Temperament.PROTECTIVE: TemperamentSpec(avenges=False, gathers=False, guards=True),
+        Temperament.PLAYFUL: TemperamentSpec(avenges=False, gathers=False, guards=False, befriends=True),
+        Temperament.PROUD: TemperamentSpec(avenges=True, gathers=False, guards=False, honoured=True),
     },
 )
 AVENGING = frozenset(kind for kind, spec in TEMPERAMENTS.items() if spec.avenges)

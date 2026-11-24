@@ -32,6 +32,7 @@ BUILDER_CONDITION: Mapping[BuilderKind, int] = total(
         BuilderKind.GOD: 20,
         BuilderKind.COMPANY: 5,
         BuilderKind.MADE_MIND: 10,
+        BuilderKind.HOUSEHOLD: -5,
     },
 )
 

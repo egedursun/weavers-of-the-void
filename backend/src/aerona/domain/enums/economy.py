@@ -52,6 +52,10 @@ class CommodityKind(StrEnum):
     WAX = "wax"
     POTTERY = "pottery"
     BOOKS = "books"
+    PAPER = "paper"
+    GLASSWARE = "glassware"
+    SOAP = "soap"
+    INK = "ink"
 
 
 class MaterialFamily(StrEnum):
@@ -73,6 +77,7 @@ class MaterialOrigin(StrEnum):
     FOSSIL = "fossil"
     LIVING_LINE = "living_line"
     SALVAGE = "salvage"
+    OUTER_BEING = "outer_being"
 
 
 class FoeNature(StrEnum):
@@ -114,6 +119,9 @@ class WorkshopKind(StrEnum):
     DYEWORKS = "dyeworks"
     SCRIPTORIUM = "scriptorium"
     EVAPORATION_WORKS = "evaporation_works"
+    PAPER_MILL = "paper_mill"
+    PRINTING_HOUSE = "printing_house"
+    ROPEWALK = "ropewalk"
 
 
 class ExtractionKind(StrEnum):
@@ -135,6 +143,7 @@ class ExtractionKind(StrEnum):
     SALVAGE = "salvage"
     LIVING_HARVEST = "living_harvest"
     DISTILLATION = "distillation"
+    EVAPORATING = "evaporating"
 
 
 class HazardKind(StrEnum):
@@ -152,6 +161,9 @@ class HazardKind(StrEnum):
     BEAST_ATTACK = "beast_attack"
     SOURCE_BACKLASH = "source_backlash"
     MACHINE_ACCIDENT = "machine_accident"
+    FALLS = "falls"
+    BURNS = "burns"
+    DUST_LUNG = "dust_lung"
 
 
 class TradeMode(StrEnum):
@@ -162,6 +174,7 @@ class TradeMode(StrEnum):
     SPACE = "space"
     RIFT = "rift"
     NETWORK = "network"
+    UNDERGROUND = "underground"
 
 
 class TradeRouteStatus(StrEnum):
@@ -172,6 +185,7 @@ class TradeRouteStatus(StrEnum):
     DECAYED = "decayed"
     CONTESTED = "contested"
     SEASONAL = "seasonal"
+    TOLLED = "tolled"
 
 
 class TradeLoss(StrEnum):
@@ -182,6 +196,8 @@ class TradeLoss(StrEnum):
     OFFICIALS = "officials"
     SPOILAGE = "spoilage"
     PILFERAGE = "pilferage"
+    PIRATES = "pirates"
+    BREAKAGE = "breakage"
 
 
 class LoanStatus(StrEnum):
@@ -192,6 +208,7 @@ class LoanStatus(StrEnum):
     RESCHEDULED = "rescheduled"
     COLLATERAL_SEIZED = "collateral_seized"
     SOLD = "sold"
+    INHERITED = "inherited"
 
 
 class GoodsFlow(StrEnum):
@@ -231,6 +248,9 @@ class MoneyForm(StrEnum):
     ESSENCE_BACKED = "essence_backed"
     LABOUR_HOURS = "labour_hours"
     GIFT_TALLY = "gift_tally"
+    BILL_OF_EXCHANGE = "bill_of_exchange"
+    WAREHOUSE_RECEIPT = "warehouse_receipt"
+    LAND_SCRIP = "land_scrip"
 
 
 class MoneyBacking(StrEnum):
@@ -239,6 +259,8 @@ class MoneyBacking(StrEnum):
     DECREE = "decree"
     TRUST = "trust"
     SOURCE = "source"
+    LAND = "land"
+    LABOUR = "labour"
 
 
 class CurrencyIssuer(StrEnum):

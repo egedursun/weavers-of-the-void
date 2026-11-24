@@ -85,7 +85,8 @@ async def test_trade_winds_cast_a_rain_shadow_raise_cold_water_and_carry_foul_ai
     assert downwind is not None and downwind.air > 0 and tally.drifted >= 1 and tally.shadows >= 1
     shifts = await clime_shifts(session, rules, 3)
     assert shifts[lee][0] == -rules.winds.shadow
-    assert shifts[peak][0] == rules.winds.windward_rain
+    assert mountain.band is CirculationBand.MOUNTAIN_WIND
+    assert shifts[peak][0] == rules.winds.windward_rain + BELTS[CirculationBand.MOUNTAIN_WIND].rain_pct(rules) * rules.winds.band_rain_points // 100
     assert await fire_wind(session, rules, lee) == 1 + rules.winds.trade_strength / 100 * rules.winds.fire_wind_pct / 100
 
 

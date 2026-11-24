@@ -19,6 +19,9 @@ class SavingRules:
     land_war_loss_pct: int = rule(20, 0, 100, E, "Share of land savings lost each epoch its town is at war (%)")
     dearth_gain_pct: int = rule(50, 0, 400, E, "Extra worth stored goods fetch when they are sold in a hungry town (%)")
     rural_from: int = rule(40, 0, 100, E, "Share of farmers from which a town's households save in land (%)")
+    herder_from: int = rule(30, 0, 100, E, "Herds a town keeps for each hundred of its people from which its households save in livestock")
+    herd_growth_pct: int = rule(8, 0, 100, E, "Share by which herds kept as savings grow each epoch (%)")
+    herd_loss_pct: int = rule(5, 0, 100, E, "Share of herds kept as savings that die or are lost each epoch (%)")
 
 
 @dataclass(frozen=True)

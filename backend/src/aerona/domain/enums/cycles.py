@@ -28,12 +28,15 @@ class ChallengeKind(StrEnum):
     RUNAWAY = "runaway"
     REVELATION = "revelation"
     MIGRATION_WAVE = "migration_wave"
+    LONG_SEASON = "long_season"
+    SUCCESSION_CRISIS = "succession_crisis"
 
 
 class ChallengeResponse(StrEnum):
     STAGNATION = "stagnation"
     RESPONSE = "response"
     COLLAPSE = "collapse"
+    TRANSFORMATION = "transformation"
 
 
 class LongPlanKind(StrEnum):
@@ -49,6 +52,7 @@ class LongPlanKind(StrEnum):
     LINE = "line"
     REFORM = "reform"
     EXPLORATION = "exploration"
+    RESTORATION = "restoration"
 
 
 class LongPlanStatus(StrEnum):
@@ -71,6 +75,9 @@ class GiftOccasion(StrEnum):
     AMENDS = "amends"
     PATRONAGE = "patronage"
     HOSPITALITY = "hospitality"
+    FAREWELL = "farewell"
+    HOMECOMING = "homecoming"
+    INITIATION = "initiation"
 
 
 class GiftState(StrEnum):
@@ -82,6 +89,7 @@ class GiftState(StrEnum):
     EXCEEDED = "exceeded"
     PASSED_ON = "passed_on"
     RELEASED = "released"
+    HOARDED = "hoarded"
 
 
 class KinshipDescent(StrEnum):
@@ -196,3 +204,5 @@ class PlanOutcome(StrEnum):
     LINE_REFUSED = "line_refused"
     WAYS_CHARTED = "ways_charted"
     NOTHING_FOUND = "nothing_found"
+    REALM_RESTORED = "realm_restored"
+    NO_REALM_TO_RESTORE = "no_realm_to_restore"

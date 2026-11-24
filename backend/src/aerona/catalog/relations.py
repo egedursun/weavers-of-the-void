@@ -173,6 +173,10 @@ INTERACTIONS: Mapping[InteractionKind, InteractionSpec] = total(
         K.ASK_COUNSEL: act(
             "Asked counsel", {"trust": 30, "modesty": 20, "curiosity": 20}, warmth=10, friendship=3, familiarity=3, skill=SkillKind.NEGOTIATION, notable=True
         ),
+        K.PRAISE: act("Praised", {"altruism": 30, "politeness": 30}, warmth=6, friendship=4, familiarity=2, thought=T.RESPECTED, skill=SkillKind.ORATORY),
+        K.WARN: act("Warned", {"caution": 40, "sense_of_duty": 30}, friendship=2, familiarity=2),
+        K.PLEAD: act("Pleaded", {"vulnerability": 40, "politeness": 20}, warmth=3, familiarity=2, skill=SkillKind.NEGOTIATION),
+        K.SHARE_NEWS: act("Shared news", {"gregariousness": 40, "curiosity": 20}, friendship=2, familiarity=4),
     },
 )
 
@@ -213,6 +217,9 @@ RELATIONS: Mapping[RelationType, RelationSpec] = total(
         R.BETROTHED: RelationSpec("Betrothed", 10, duties=True, inherits=False, ends="at the union, or by breaking the promise"),
         R.SWORN_KIN: RelationSpec("Sworn kin", 20, duties=True, inherits=True, ends="only by oathbreaking"),
         R.FOSTER: RelationSpec("Foster kin", 15, duties=True, inherits=True, ends="never; the raising stays"),
+        R.NEIGHBOUR: RelationSpec("Neighbour", 5, duties=True, inherits=False, ends="when one of them moves away"),
+        R.GUEST_FRIEND: RelationSpec("Guest-friend", 10, duties=True, inherits=True, ends="only when hospitality is broken"),
+        R.ESTRANGED: RelationSpec("Estranged", 0, duties=False, inherits=False, ends="when they are reconciled", hostile=True),
     },
 )
 RELATION_LABELS = MappingProxyType({kind: spec.label for kind, spec in RELATIONS.items()})
@@ -250,6 +257,12 @@ CIRCLES: Mapping[CircleKind, CircleSpec] = total(
         ),
         CircleKind.SPORT_CLUB: CircleSpec("Sport club", frozenset({PreferenceKind.GAME}), frozenset(), fields=True),
         CircleKind.GAMING_CIRCLE: CircleSpec("Gaming circle", frozenset(), frozenset({ValueAxis.WEALTH}), wagers=True),
+        CircleKind.READING_CIRCLE: CircleSpec(
+            "Reading circle", frozenset({PreferenceKind.STORY_FORM, PreferenceKind.ART_FORM}), frozenset({ValueAxis.KNOWLEDGE})
+        ),
+        CircleKind.MUTUAL_AID: CircleSpec(
+            "Mutual aid society", frozenset({PreferenceKind.PROFESSION, PreferenceKind.CRAFT}), frozenset({ValueAxis.EQUALITY, ValueAxis.KINSHIP})
+        ),
     },
 )
 
@@ -269,6 +282,8 @@ PASSION_LABELS: MappingProxyType[PassionKind, str] = MappingProxyType(
         PassionKind.JEALOUSY: "Jealousy",
         PassionKind.ADMIRATION: "Admiration",
         PassionKind.OBSESSION: "Obsession",
+        PassionKind.VENGEANCE: "Vengeance",
+        PassionKind.COMPASSION: "Compassion",
     }
 )
 PASSION_SOURCE_LABELS: MappingProxyType[PassionSource, str] = MappingProxyType(
@@ -298,6 +313,7 @@ APPEALS: Mapping[AppealKind, AppealSpec] = total(
         AppealKind.FEAR: AppealSpec("An appeal to fear", fac(anxiety=40, vulnerability=30, emotional_stability=-20)),
         AppealKind.FEELING: AppealSpec("An appeal to feeling", fac(altruism=30, vulnerability=30, gratitude=20)),
         AppealKind.BOND: AppealSpec("An appeal to a bond", fac(trust=30, sense_of_duty=30, cooperation=20)),
+        AppealKind.TRADITION: AppealSpec("An appeal to tradition", fac(sense_of_duty=20, orderliness=20, curiosity=-20)),
     },
 )
 AIM_LABELS: Mapping[PersuasionAim, str] = total(
@@ -310,6 +326,8 @@ AIM_LABELS: Mapping[PersuasionAim, str] = total(
         PersuasionAim.TREATY: "A treaty",
         PersuasionAim.SURRENDER: "A surrender",
         PersuasionAim.CONFESSION: "A confession",
+        PersuasionAim.ALLIANCE: "An alliance",
+        PersuasionAim.RELEASE: "A captive's release",
     },
 )
 GROUP_LABELS: MappingProxyType[GroupKind, str] = total(
@@ -323,6 +341,8 @@ GROUP_LABELS: MappingProxyType[GroupKind, str] = total(
         GroupKind.CELL: "Cell",
         GroupKind.BAND: "Band",
         GroupKind.TEAM: "Team",
+        GroupKind.CONGREGATION: "Congregation",
+        GroupKind.SCHOOL: "School",
     },
 )
 
@@ -355,6 +375,8 @@ CONTESTS: Mapping[ContestKind, ContestSpec] = total(
         ContestKind.CRAFT_CONTEST: ContestSpec(
             "Craft contest", (SkillKind.SMITHING, SkillKind.WEAVING, SkillKind.JEWELLING), (Attribute.CREATIVITY, Attribute.KINAESTHETIC_SENSE), crafted=True
         ),
+        ContestKind.WRESTLING: ContestSpec("Wrestling", (SkillKind.UNARMED,), (Attribute.STRENGTH, Attribute.AGILITY)),
+        ContestKind.HUNT: ContestSpec("Hunt", (SkillKind.HUNTING, SkillKind.TRACKING), (Attribute.SPATIAL_SENSE, Attribute.ENDURANCE), races=True),
     },
 )
 STAKE_LABELS: Mapping[ContestStake, str] = total(
@@ -369,6 +391,8 @@ STAKE_LABELS: Mapping[ContestStake, str] = total(
         ContestStake.LAND: "A holding of land",
         ContestStake.FREEDOM: "The contestant's own freedom",
         ContestStake.KNOWLEDGE: "A kind of knowledge",
+        ContestStake.TITLE: "A title",
+        ContestStake.RIGHTS: "A right of water, grazing or passage",
     },
 )
 
@@ -406,6 +430,10 @@ TUNING: Mapping[InteractionKind, Tuning] = total(
         K.APOLOGISE: Tuning(lambda rules: rules.interactions.apologise_weight, lambda rules: rules.interactions.apologise_effect),
         K.SHARE_MEAL: Tuning(lambda rules: rules.interactions.share_meal_weight, lambda rules: rules.interactions.share_meal_effect),
         K.ASK_COUNSEL: Tuning(lambda rules: rules.interactions.ask_counsel_weight, lambda rules: rules.interactions.ask_counsel_effect),
+        K.PRAISE: Tuning(lambda rules: rules.interactions.praise_weight, lambda rules: rules.interactions.praise_effect),
+        K.WARN: Tuning(lambda rules: rules.interactions.warn_weight, lambda rules: rules.interactions.warn_effect),
+        K.PLEAD: Tuning(lambda rules: rules.interactions.plead_weight, lambda rules: rules.interactions.plead_effect),
+        K.SHARE_NEWS: Tuning(lambda rules: rules.interactions.share_news_weight, lambda rules: rules.interactions.share_news_effect),
     },
 )
 NOTABLE_INTERACTIONS = frozenset(kind for kind, spec in INTERACTIONS.items() if spec.notable)

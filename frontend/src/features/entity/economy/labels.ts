@@ -1,4 +1,5 @@
 import {
+  type LucideIcon,
   Amphora,
   Anchor,
   Anvil,
@@ -13,6 +14,7 @@ import {
   Box,
   Bug,
   Building2,
+  Cable,
   CalendarClock,
   CalendarRange,
   Candy,
@@ -55,6 +57,7 @@ import {
   LeafyGreen,
   Link,
   Lock,
+  Map,
   Milk,
   Mountain,
   Network,
@@ -64,7 +67,9 @@ import {
   Palette,
   PartyPopper,
   PawPrint,
+  PenTool,
   Pickaxe,
+  Printer,
   Recycle,
   Route,
   Scale,
@@ -87,15 +92,23 @@ import {
   Ticket,
   Trash2,
   Trees,
-  type LucideIcon,
+  Unlink,
   Utensils,
   Warehouse,
   Waves,
   Weight,
   Wheat,
   Wind,
+  Wine,
   Wrench,
   Zap,
+  Diamond,
+  FlameKindling,
+  Ghost,
+  SunDim,
+  Sword,
+  Receipt,
+  Bubbles,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -145,7 +158,12 @@ export const COMMODITY: Record<
     family: 'subsistence',
     store: 'goods',
   },
-  fuel: { label: 'Fuel', icon: Flame, family: 'subsistence', store: 'goods' },
+  fuel: {
+    label: 'Fuel',
+    icon: FlameKindling,
+    family: 'subsistence',
+    store: 'goods',
+  },
   bread: {
     label: 'Bread',
     icon: Croissant,
@@ -220,7 +238,12 @@ export const COMMODITY: Record<
     family: 'subsistence',
     store: 'food',
   },
-  coal: { label: 'Coal', icon: Flame, family: 'industrial', store: 'goods' },
+  coal: {
+    label: 'Coal',
+    icon: Sun,
+    family: 'industrial',
+    store: 'goods',
+  },
   peat: { label: 'Peat', icon: Leaf, family: 'subsistence', store: 'goods' },
   dung: { label: 'Dung', icon: Flame, family: 'subsistence', store: 'goods' },
   eggs: { label: 'Eggs', icon: Egg, family: 'subsistence', store: 'food' },
@@ -248,9 +271,19 @@ export const COMMODITY: Record<
   oil: { label: 'Oil', icon: Droplet, family: 'subsistence', store: 'food' },
   sugar: { label: 'Sugar', icon: Candy, family: 'luxury', store: 'food' },
   spice: { label: 'Spice', icon: Flower2, family: 'luxury', store: 'goods' },
-  halite: { label: 'Halite', icon: Gem, family: 'strategic', store: 'goods' },
+  halite: {
+    label: 'Halite',
+    icon: Diamond,
+    family: 'strategic',
+    store: 'goods',
+  },
   honey: { label: 'Honey', icon: Hexagon, family: 'luxury', store: 'food' },
-  wax: { label: 'Wax', icon: Flame, family: 'industrial', store: 'goods' },
+  wax: {
+    label: 'Wax',
+    icon: Thermometer,
+    family: 'industrial',
+    store: 'goods',
+  },
   pottery: {
     label: 'Pottery',
     icon: Amphora,
@@ -258,6 +291,25 @@ export const COMMODITY: Record<
     store: 'goods',
   },
   books: { label: 'Books', icon: BookOpen, family: 'luxury', store: 'goods' },
+  glassware: {
+    label: 'Glassware',
+    icon: Wine,
+    family: 'industrial',
+    store: 'goods',
+  },
+  ink: { label: 'Ink', icon: PenTool, family: 'industrial', store: 'goods' },
+  paper: {
+    label: 'Paper',
+    icon: ScrollText,
+    family: 'industrial',
+    store: 'goods',
+  },
+  soap: {
+    label: 'Soap',
+    icon: Bubbles,
+    family: 'subsistence',
+    store: 'goods',
+  },
 }
 
 export const GOODS_FAMILY: Record<GoodsFamily, Named & { note: string }> = {
@@ -341,6 +393,9 @@ export const WORKSHOP: Record<WorkshopKind, Named> = {
   dyeworks: { label: 'Dyeworks', icon: Palette, tone: 'verdigris' },
   scriptorium: { label: 'Scriptorium', icon: BookOpen, tone: 'gold' },
   evaporation_works: { label: 'Salt works', icon: Waves, tone: 'muted' },
+  paper_mill: { label: 'Paper mill', icon: Factory, tone: 'muted' },
+  printing_house: { label: 'Printing house', icon: Printer, tone: 'info' },
+  ropewalk: { label: 'Ropewalk', icon: Cable, tone: 'muted' },
 }
 
 export const MODE: Record<TradeMode, Named> = {
@@ -351,6 +406,7 @@ export const MODE: Record<TradeMode, Named> = {
   space: { label: 'Space lane', icon: Orbit, tone: 'verdigris' },
   rift: { label: 'Rift passage', icon: Zap, tone: 'danger' },
   network: { label: 'Network link', icon: Network, tone: 'muted' },
+  underground: { label: 'Tunnel way', icon: Pickaxe, tone: 'muted' },
 }
 
 export const ROUTE_STATUS: Record<
@@ -394,6 +450,12 @@ export const ROUTE_STATUS: Record<
     tone: 'gold',
     variant: 'info',
   },
+  tolled: {
+    label: 'Tolled',
+    icon: Coins,
+    tone: 'warning',
+    variant: 'info',
+  },
 }
 
 export const ROUTE_STATUSES: readonly TradeRouteStatus[] = [
@@ -414,6 +476,8 @@ export const TRADE_LOSS: Record<TradeLoss, Named> = {
   officials: { label: 'tolls and extortion', icon: Landmark, tone: 'gold' },
   spoilage: { label: 'spoilage', icon: Apple, tone: 'warning' },
   pilferage: { label: 'pilferage', icon: HandCoins, tone: 'danger' },
+  breakage: { label: 'Breakage', icon: Unlink, tone: 'warning' },
+  pirates: { label: 'Pirates', icon: Ghost, tone: 'danger' },
 }
 
 export const MONEY_FORM: Record<Schemas['MoneyForm'], Named> = {
@@ -432,6 +496,17 @@ export const MONEY_FORM: Record<Schemas['MoneyForm'], Named> = {
   },
   labour_hours: { label: 'Labour hours', icon: Hourglass, tone: 'muted' },
   gift_tally: { label: 'Gift tally', icon: Gift, tone: 'success' },
+  bill_of_exchange: {
+    label: 'Bill of exchange',
+    icon: Receipt,
+    tone: 'info',
+  },
+  warehouse_receipt: {
+    label: 'Warehouse receipt',
+    icon: Warehouse,
+    tone: 'gold',
+  },
+  land_scrip: { label: 'Land scrip', icon: Map, tone: 'verdigris' },
 }
 
 export const MONEY_BACKING: Record<Schemas['MoneyBacking'], Named> = {
@@ -440,6 +515,8 @@ export const MONEY_BACKING: Record<Schemas['MoneyBacking'], Named> = {
   decree: { label: "The issuer's decree", icon: Gavel, tone: 'info' },
   trust: { label: 'Trust alone', icon: Handshake, tone: 'muted' },
   source: { label: 'A source of power', icon: Sparkles, tone: 'verdigris' },
+  land: { label: 'Land', icon: Mountain, tone: 'verdigris' },
+  labour: { label: 'Work owed', icon: Hammer, tone: 'muted' },
 }
 
 export const CURRENCY_ISSUER: Record<Schemas['CurrencyIssuer'], Named> = {
@@ -496,6 +573,12 @@ export const LOAN_STATUS: Record<
     tone: 'warning',
     variant: 'outline',
   },
+  inherited: {
+    label: 'Inherited',
+    icon: ScrollText,
+    tone: 'info',
+    variant: 'warning',
+  },
 }
 
 export const MATERIAL_FAMILY: Record<MaterialFamily, Named> = {
@@ -530,6 +613,7 @@ export const MATERIAL_ORIGIN: Record<MaterialOrigin, Named> = {
     tone: 'success',
   },
   salvage: { label: 'Salvaged', icon: Recycle, tone: 'warning' },
+  outer_being: { label: 'From an outer being', icon: Orbit, tone: 'danger' },
 }
 
 export const MATERIAL_LABEL: Record<MaterialKind, string> = {
@@ -578,6 +662,9 @@ export const MATERIAL_LABEL: Record<MaterialKind, string> = {
   shell: 'Shell and nacre',
   polymer: 'Polymer',
   composite: 'Composite',
+  lacquer: 'Lacquer',
+  paper: 'Paper',
+  rubber: 'Rubber',
 }
 
 export const MATERIAL_KINDS = Object.keys(MATERIAL_LABEL) as MaterialKind[]
@@ -782,7 +869,7 @@ export const FLOW: Record<string, Named> = {
   loot: { label: 'Loot', icon: Swords, tone: 'danger' },
   loss: { label: 'Lost', icon: PackageMinus, tone: 'danger' },
   siege: { label: 'Spent in siege', icon: Castle, tone: 'danger' },
-  war: { label: 'Spent at war', icon: Swords, tone: 'danger' },
+  war: { label: 'Spent at war', icon: Sword, tone: 'danger' },
   construction: { label: 'Built with', icon: Construction, tone: 'info' },
   overflow: {
     label: 'Spoiled for lack of room',
@@ -1023,4 +1110,5 @@ export const EXTRACTIONS: Record<
     tone: 'success',
   },
   distillation: { label: 'Distillation', icon: FlaskConical, tone: 'info' },
+  evaporating: { label: 'Evaporating brine', icon: SunDim, tone: 'gold' },
 }

@@ -11,6 +11,8 @@ class TradePolicyKind(StrEnum):
     FREE_TRADE = "free_trade"
     EXPORT_BAN = "export_ban"
     SANCTION = "sanction"
+    TOLL = "toll"
+    STAPLE_RIGHT = "staple_right"
 
 
 class CreditState(StrEnum):
@@ -20,6 +22,7 @@ class CreditState(StrEnum):
     RESTRUCTURING = "restructuring"
     RESCUED = "rescued"
     REPUDIATED = "repudiated"
+    FROZEN = "frozen"
 
 
 class SpeculationStatus(StrEnum):
@@ -27,3 +30,4 @@ class SpeculationStatus(StrEnum):
     SOLD = "sold"
     BUST = "bust"
     SEIZED = "seized"
+    SPOILED = "spoiled"

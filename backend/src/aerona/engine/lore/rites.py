@@ -2,7 +2,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-from sqlalchemy import delete, select
+from sqlalchemy import ColumnElement, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.arcana import COMMANDING_TECHNIQUES, SCHOOL_GRAMMAR, TARGETS
@@ -68,7 +68,7 @@ from aerona.domain.enums.structure import ConstructionState
 from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import RiteStats, SpiritStats
 from aerona.engine.arcana.casting import corrupted_effect, shape_casting
-from aerona.engine.arcana.grammar import Shape, ensure_grammar, link_factor, power_suffices, reaches, window_of, worlds_joined, write_grammar
+from aerona.engine.arcana.grammar import Shape, ensure_grammar, link_factor, members_cost, power_suffices, reaches, window_of, worlds_joined, write_grammar
 from aerona.engine.arcana.grammar import cost_factor as grammar_cost
 from aerona.engine.arcana.labs import write_lab_text
 from aerona.engine.arcana.longevity import begin_longevity
@@ -96,7 +96,7 @@ from aerona.engine.environment.control import force_weather
 from aerona.engine.environment.local import weather_here
 from aerona.engine.eras.effects import tech_relief
 from aerona.engine.faith.book import faith_tenets, patron_node
-from aerona.engine.faith.souls import exorcise, seal_with, soul_near, unseal_with
+from aerona.engine.faith.souls import exorcise, house_of, seal_with, soul_near, unseal_with
 from aerona.engine.faith.spirit_bonds import wider_binding
 from aerona.engine.folkways.purity import unclean
 from aerona.engine.genetics.genome import aptitude, gift_factors
@@ -677,6 +677,14 @@ async def do_bind(ctx: TickContext, work: Working) -> str | None:
     return await bind_wandering(ctx, work, spirit)
 
 
+async def named_by(ctx: TickContext, spirit: SpiritProfileRow, caster: EntityRow) -> bool:
+    if spirit.origin_mortal_id is None:
+        return False
+    line = await house_of(ctx.session, spirit.origin_mortal_id)
+    own = await house_of(ctx.session, caster.id)
+    return line is not None and own is not None and line.house_entity_id == own.house_entity_id
+
+
 async def bind_wandering(ctx: TickContext, work: Working, spirit: SpiritProfileRow) -> str:
     keep = await ctx.session.scalar(
         select(StructureProfileRow.structure_entity_id)
@@ -685,6 +693,9 @@ async def bind_wandering(ctx: TickContext, work: Working, spirit: SpiritProfileR
         .limit(1)
     )
     wider = await wider_binding(ctx, work.caster.id) if work.row.power >= ctx.rules.spirits.wide_bind_power else None
+    if await named_by(ctx, spirit, work.caster):
+        spirit.binding, spirit.bound_entity_id, spirit.alignment = BindingKind.NAME, work.caster.id, SpiritAlignment.GUARDIAN
+        return "bound a spirit of its own line by name"
     if wider is not None:
         spirit.binding, spirit.bound_entity_id, spirit.alignment = wider[0], wider[1], SpiritAlignment.GUARDIAN
         return f"bound a wandering spirit to keep {an(spoken(wider[0]))}"
@@ -1222,13 +1233,33 @@ async def reach_factor(
     if not forced and not power_suffices(ctx.rules, grammar, row.power):
         return None
     factor = link_factor(ctx.rules, grammar, linked)
+    if RiteComponent.COMMUNAL in await components_of(ctx, row.rite_entity_id) and caster.location_id is not None:
+        workers = await ctx.session.scalar(
+            select(func.count())
+            .select_from(EntityRow)
+            .where(await present_among(ctx.session, [caster.location_id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        )
+        factor *= 1 + max(0, min(int(workers or 0), ctx.rules.arcana.line_reach) - 1) * ctx.rules.arcana.communal_power_per_worker / PERCENT
+    if target is not None and TARGETS[grammar.target].members:
+        factor /= 1 + members_cost(ctx.rules, grammar, len(await members_of_kind(ctx, target))) / PERCENT
     if grammar.technique in COMMANDING_TECHNIQUES and await true_named(ctx.session, caster.id, target_id):
         factor *= ctx.rules.links.true_name_command_pct / PERCENT
     return factor
 
 
+async def members_of_kind(ctx: TickContext, target: EntityRow) -> list[EntityRow | None]:
+    kin = select(BondRow.source_node_id).where(BondRow.target_node_id == target.id, BondRow.kind == BondKind.DESCENDS_FROM, BondRow.state == BondState.ACTIVE)
+    species = target.entity_type is EntityType.SPECIES
+    kind: ColumnElement[bool] = or_(EntityRow.affiliated_entity_id.in_(kin), EntityRow.id.in_(kin)) if species else EntityRow.affiliated_entity_id == target.id
+    reach = ctx.rules.arcana.line_reach * PERCENT
+    statement = select(EntityRow).where(kind, EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+    return [row for row in await ctx.session.scalars(statement.order_by(EntityRow.id).limit(reach)) if not held(row.id)]
+
+
 async def aims_of(ctx: TickContext, grammar: RiteGrammarRow, target: EntityRow | None) -> list[EntityRow | None]:
     spec = TARGETS[grammar.target]
+    if target is not None and spec.members:
+        return [target, *await members_of_kind(ctx, target)]
     if target is None or not spec.line or target.entity_type is not EntityType.MORTAL:
         return [target]
     line: list[EntityRow | None] = [target]

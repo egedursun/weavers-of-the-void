@@ -2,6 +2,7 @@ import math
 import sys
 from pathlib import Path
 
+from forms import capsule, teeth
 from render import C, Part, Plan, draw, ellipse, page
 
 OUT = Path(__file__).parent
@@ -156,6 +157,8 @@ def aquatic(states: dict[str, str]) -> Plan:
         Part("heart", "Heart", organ(122, 0.5, 7, 6), (122, organ_y(122, 0.5)), inner=True),
         Part("gut", "Gut", organ(184, 0.3, 36, 0.5), (184, organ_y(184, 0.3)), inner=True),
         Part("groin", "Vent", organ(222, 0.72, 5, 4), (222, organ_y(222, 0.72)), inner=True),
+        Part("teeth", "Teeth", teeth(40, 108.6, 18, 2.6, 8), (40, 108.6), inner=True, subtle=True),
+        Part("spine", "Spine", capsule([(x, profile(x)[0] + (profile(x)[1] - profile(x)[0]) * 0.36) for x in (110, 150, 190, 230, 270, 290)], 4.2), (190, profile(190)[0] + (profile(190)[1] - profile(190)[0]) * 0.36), inner=True, subtle=True),
     ]
     lateral = "M108,98 C150,95 200,96 250,98 C270,99 284,99 296,100"
     details = [lateral, MOUTH, *RAYS]

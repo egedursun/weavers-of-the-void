@@ -16,7 +16,7 @@ RULES = Rules()
 
 
 def test_seven_kinds_of_relief() -> None:
-    assert len(ReliefKind) == 7 and set(RELIEF_KINDS) == set(ReliefKind)
+    assert len(ReliefKind) == 9 and set(RELIEF_KINDS) == set(ReliefKind)
     assert RELIEF_KINDS[ReliefKind.FOSTER_CARE].takes_in is CohortCondition.ORPHANED and RELIEF_KINDS[ReliefKind.PENSION].pays_loyalty
 
 

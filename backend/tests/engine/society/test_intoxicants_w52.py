@@ -7,7 +7,7 @@ from tests.engine.society.factories import Realm, context, people
 
 
 def test_nine_intoxicants_seven_uses_each_with_its_dependence() -> None:
-    assert len(Intoxicant) == 9 and len(IntoxicantUse) == 7
+    assert len(Intoxicant) == 11 and len(IntoxicantUse) == 9
     assert set(PACKAGES) == set(Intoxicant)
 
 

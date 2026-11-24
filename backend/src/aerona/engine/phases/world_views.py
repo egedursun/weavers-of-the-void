@@ -54,6 +54,7 @@ async def world_views(ctx: TickContext) -> None:
     "table.applied_fixups",
     "table.bonds",
     "table.calendars",
+    "table.deep_passages",
     "table.entities",
     "table.forced_weather",
     "table.irregular_seasons",

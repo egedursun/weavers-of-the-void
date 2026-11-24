@@ -43,6 +43,11 @@ class GiftExchangeRules:
     amends_value: int = rule(40, 0, 100000, M, "Coin a gift of amends is worth")
     gifts_per_occasion: int = rule(3, 0, 100, M, "Gifts one birth, death or gathering may draw")
     guest_right_infamy: int = rule(40, 0, 100, M, "Infamy one who kills a guest it exchanged guest gifts with gains, the gravest breach of guest right")
+    farewell_debt: int = rule(60, 0, 100, M, "Share of a gift at a parting its receiver owes back (%)")
+    homecoming_debt: int = rule(60, 0, 100, M, "Share of a gift at a homecoming its receiver owes back (%)")
+    initiation_debt: int = rule(30, 0, 100, M, "Share of a gift at an initiation its receiver owes back (%)")
+    hoard_shame: int = rule(10, 0, 100, M, "Standing a holder loses each epoch it keeps a gift its circuit expects passed on")
+    hoard_chance_pct: int = rule(5, 0, 100, M, "Chance each epoch the holder of a circuit's gift keeps it instead of passing it on (%)")
 
 
 @dataclass(frozen=True)
@@ -77,6 +82,8 @@ class ClubRules:
     fixing_standing_loss: int = rule(20, 0, 100, C, "Rating and fandom a club loses when a fixing of its contest is found out")
     animal_breed_pct: int = rule(20, 0, 100, C, "Chance each epoch a club of animal contests breeds a new animal for the sport (%)")
     mind_patron_pct: int = rule(20, 0, 100, C, "Chance each epoch a club of games of the mind draws a patron's gift (%)")
+    water_sport_fan_draw: int = rule(30, 0, 100, C, "Share of a town near water drawn to follow a club of water sports (%)")
+    hunt_fan_draw: int = rule(20, 0, 100, C, "Share of a town drawn to follow a hunting club (%)")
 
 
 @dataclass(frozen=True)
@@ -93,6 +100,8 @@ class ArmyStaffRules:
     chaplain_effect: int = rule(10, 0, 100, W, "Morale a chaplain's rites lend an army each season, half of it as camp sickness eased by burying the dead")
     paymaster_effect: int = rule(20, 0, 100, W, "Mutiny pressure an honest paymaster takes from an army each season, or chest share a corrupt one loses (%)")
     scout_master_effect: int = rule(30, 0, 100, W, "Share of the losses to ambush and danger a master of scouts spares an army (%)")
+    engineer_master_effect: int = rule(25, 0, 100, W, "Share a master of engineers adds to the progress of an army's siege works (%)")
+    interpreter_effect: int = rule(20, 0, 100, W, "Share an interpreter adds to an army's foraging and parley among a people of another tongue (%)")
 
 
 @dataclass(frozen=True)
@@ -178,6 +187,11 @@ class SiegeRules:
     ramp_effect: int = rule(
         20, 0, 100, W, "Strength of a siege work that brings attackers to the wall top by labour over weeks: extra breach chance once it reaches the wall (%)"
     )
+    dam_labour: int = rule(60, 0, 100, W, "Labour a dam across a river takes each season from the besiegers (%)")
+    dam_effect: int = rule(25, 0, 100, W, "Share of the water of a besieged town a finished dam cuts, or of the approaches it floods (%)")
+    burn_works_pct: int = rule(40, 0, 100, W, "Share of the besiegers' works a garrison's fire sets back (%)")
+    burn_works_sallies: int = rule(3, 0, 50, W, "Sallies a garrison makes to burn the works before it can no longer spare the soldiers")
+    evacuate_share_pct: int = rule(60, 0, 100, W, "Share of a besieged coastal town's people carried away by sea when it is given up (%)")
 
 
 @dataclass(frozen=True)
@@ -187,6 +201,8 @@ class SackRules:
     ransom_pick_pct: int = rule(30, 0, 100, W, "Chance a victor who would sack a rich city takes a ransom instead (%)")
     deport_pick_pct: int = rule(20, 0, 100, W, "Chance a victor who would sack a city and holds bondage lawful takes its people instead (%)")
     ransom_from: int = rule(40, 0, 1000, W, "Treasury from which a fallen city can pay a ransom")
+    resettle_pick_pct: int = rule(15, 0, 100, W, "Chance a victor settles its own people in a fallen town (%)")
+    resettle_share_pct: int = rule(40, 0, 100, W, "Share of a fallen town's people driven out for the victor's settlers (%)")
 
 
 @dataclass(frozen=True)
@@ -217,6 +233,11 @@ class SettleModeRules:
     canopy_cover: int = rule(40, 0, 100, C, "Forest cover below which a settlement in the canopy loses its trees and comes down")
     canopy_fall_pct: int = rule(20, 0, 100, C, "Share of the folk of a canopy settlement lost when its forest falls (%)")
     unfit_unrest: int = rule(10, 0, 100, C, "Unrest a settlement gains each epoch while it lives in a way its people cannot (%)")
+    cliff_defence: int = rule(170, 0, 300, C, "How hard a settlement on cliffs is to take, against one on open ground (%)")
+    cliff_exposure: int = rule(120, 0, 300, C, "How much of the weather a settlement on cliffs takes, against one on open ground (%)")
+    drift_defence: int = rule(90, 0, 300, C, "How hard a settlement on drifting ice, rafts or floating masses is to take, against one on open ground (%)")
+    drift_exposure: int = rule(150, 0, 300, C, "How much of the weather a settlement on drift takes, against one on open ground (%)")
+    cliff_trade_pct: int = rule(70, 0, 200, C, "Trade a settlement on cliffs carries by lifts and paths, against one on open ground (%)")
 
 
 @dataclass(frozen=True)
@@ -235,3 +256,4 @@ class WarGroundRules:
         100, 0, 100, W, "Width of the front a battle in open space can hold, against one on open land (%); the ground itself never narrows it"
     )
     underground_frontage: int = rule(25, 0, 100, W, "Width of the front a battle in tunnels and caverns can hold, against one on open land (%)")
+    dimension_frontage: int = rule(30, 0, 100, W, "Width of the front when a war is fought across dimensions, through rifts and gates, against open land (%)")

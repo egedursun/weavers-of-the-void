@@ -29,11 +29,12 @@ from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.life_traits import ExtractionKindTrait, HazardKindTrait, WorldTypeTrait
 from aerona.domain.enums.mind import SkillKind
-from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.world import WorldType
 from aerona.domain.models.entity_stats import SpeciesStats
+from aerona.engine.body.book import capacity_lean
 from aerona.engine.body.cohorts import cohort, labour_factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -50,6 +51,7 @@ from aerona.engine.ecology.domestication import draught
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.stocks import goods_of, lots_of
 from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.cells import breach_opening
 from aerona.engine.environment.columns import rock_cut
 from aerona.engine.environment.years import world_years
 from aerona.engine.eras.effects import channel_value
@@ -66,6 +68,7 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount, set_stats, stat
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import term
 from aerona.engine.structures.readers import workshop_output
 from aerona.rules.registry import Rules
 
@@ -217,6 +220,8 @@ def material_value(profile: ResourceProfileRow) -> int:
 
 
 HILLY = terrains(TerrainTrait.ROUGH)
+RUINS = terrains(TerrainTrait.RUINED)
+FROM_RUINS = having(EXTRACTION_KIND_TRAITS, ExtractionKindTrait.TAKES_FROM_RUINS)
 
 
 def craft_factor(ctx: TickContext, book: EconomyBook, community_id: int, resource_id: int, kind: ExtractionKind) -> float:
@@ -235,6 +240,8 @@ def craft_factor(ctx: TickContext, book: EconomyBook, community_id: int, resourc
         lift += channel_value(ctx.rules, known, EraChannel.FARMING) / PERCENT
     if kind in ARTISAN_KINDS:
         lift += channel_value(ctx.rules, known, EraChannel.MINING) / PERCENT
+    if kind in FROM_RUINS and (ground := book.ground.region_of(resource_id)) is not None and ground.dominant_terrain in RUINS:
+        lift += ctx.rules.ruined_ground.stone_pct / PERCENT
     return 1 + lift
 
 
@@ -273,6 +280,17 @@ def world_share(rules: Rules, view: WorldView, kind: ExtractionKind) -> float:
     return 1.0
 
 
+async def named_labour(ctx: TickContext, book: EconomyBook, community_id: int) -> float:
+    workers = [
+        entity.id
+        for entity in book.entities.values()
+        if entity.entity_type is EntityType.MORTAL and entity.mortal_role in WORKING_ROLES and book.affiliated.get(entity.id) == community_id
+    ]
+    lean = await capacity_lean(ctx.session, workers, "labour", ctx.rules.capacities.labour_work_pct)
+    term("capacities.labour_work", max(0.0, 1 + lean), ModifierOp.MULTIPLY, source_node_id=community_id)
+    return max(0.0, 1 + lean)
+
+
 async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, profile: ResourceProfileRow, community: EntityRow, *, workers: int) -> int:
     table = ctx.rules.extraction
     gate = knowledge_gate(ctx.rules, book, profile, community.id)
@@ -289,6 +307,7 @@ async def output_of(ctx: TickContext, book: EconomyBook, resource: EntityRow, pr
     site = book.workshop(community.id, spec.workshop) if spec.workshop is not None else None
     works = (1 + (site.level if site is not None else 0) * table.workshop_pct_per_level / PERCENT) * await workshop_output(ctx.session, ctx.rules, site)
     raw = base * skill * knowledge * season * difficulty * works * await tools_factor(ctx, community.id, workers) * await labour_factor(ctx, community)
+    raw *= await named_labour(ctx, book, community.id)
     raw *= await clock_output(ctx.session, ctx.rules, community.id) * await cold_work(ctx, community)
     raw *= craft_factor(ctx, book, community.id, resource.id, kind) * gate * await method_factor(ctx, book, community.id, kind, workers)
     if kind is ExtractionKind.FISHING:
@@ -371,6 +390,7 @@ async def strike_hazard(
         profile.sealed_until_epoch = ctx.epoch + table.seal_epochs
         if await active_seal(ctx.session, resource.id) is None and ctx.rng(f"cavern.roll.{resource.id}").chance(table.cavern_chance):
             cavern = await _open_cavern(ctx, resource)
+            await breach_opening(ctx, resource, cavern)
             await seal_after_breach(ctx, resource, community)
     await record(
         ctx,

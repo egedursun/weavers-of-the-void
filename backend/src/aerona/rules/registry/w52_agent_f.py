@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 W = RuleGroup.WAR_AND_DIPLOMACY
 
@@ -24,7 +24,7 @@ class CrewsRules:
 
 
 @dataclass(frozen=True)
-class CaptivesRules:
+class CaptivesRules(Spanned):
     parole_pct: int = rule(20, 0, 100, W, "Chance each epoch a captor frees a captive of a war on parole, an oath not to fight again (%)")
     parole_kept_pct: int = rule(80, 0, 100, W, "Chance a paroled captive keeps the oath when its realm goes to war again (%)")
     married_in_pct: int = rule(5, 0, 100, W, "Chance each epoch a captive married into its captors' people stays and joins them for good (%)")
@@ -38,3 +38,6 @@ class CaptivesRules:
     execute_pct: int = rule(20, 0, 100, W, "Chance a captor whose people judge the killing of captives acceptable kills captives it cannot use (%)")
     recruit_pct: int = rule(25, 0, 100, W, "Chance a captor at war presses captives of warrior class into its army (%)")
     recruited_desertion_pct: int = rule(30, 0, 100, W, "Share of pressed captives who desert at the first hardship (%)")
+    adopt_pct: int = rule(10, 0, 100, W, "Chance captives are taken into their captors' households instead of held (%)")
+    adoption_pct: int = rule(20, 0, 100, W, "Chance a young captive long held is taken into its captors' people in an epoch (%)")
+    adoption_years: int = span(5, 0, 500, W, "Years a young captive is held before its captors may take it in as their own")

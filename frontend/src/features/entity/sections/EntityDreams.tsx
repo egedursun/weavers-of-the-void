@@ -9,7 +9,7 @@ import {
   Section,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
-import { drawerKindOf } from '@/features/chronicle/linkTargets'
+import { entryKindOf } from '@/features/chronicle/linkTargets'
 import { useEntityDreams } from '../api/queries'
 import { type NodeRef } from '../api/types'
 
@@ -24,7 +24,7 @@ type Dream = {
 
 function Who({ node }: { node: NodeRef | null }) {
   if (!node) return <Text as='span'>Someone forgotten</Text>
-  const kind = drawerKindOf(node.kind)
+  const kind = entryKindOf(node.kind)
   if (!kind) return <Text as='span'>{node.name}</Text>
   return (
     <EntityLink

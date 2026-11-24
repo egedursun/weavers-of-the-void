@@ -220,14 +220,14 @@ test('choosing a world flies the camera to it and the orbit controls rotate and 
   await expect.poll(() => transformOf(page, 'Keth Beacon')).not.toBe(rotated)
 })
 
-test('son avatars float above their world and open the son drawer', async ({ page }) => {
+test('son avatars float above their world and open the son entryWindow', async ({ page }) => {
   await open3d(page)
   await page.getByRole('radiogroup', { name: 'Choose a world' }).getByRole('radio', { name: 'Velar' }).click()
   const avatar = page.getByRole('button', { name: /^Ithren.* on Velar$/ })
   await expect(avatar).toHaveCount(1)
   await expect.poll(() => avatar.evaluate((node) => (node.parentElement as HTMLElement).style.visibility), { timeout: 15000 }).toBe('visible')
   await avatar.click()
-  await expect(page).toHaveURL(/drawer=son/)
+  await expect(page).toHaveURL(/entry=son/)
 })
 
 test('the scene pauses when the tab is hidden and resumes when it returns', async ({ page }) => {

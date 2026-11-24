@@ -105,6 +105,7 @@ function view(overrides: Record<string, unknown> = {}) {
     oath_choices: [],
     power_choices: [],
     line_choices: [],
+    mind_choices: [],
     novelty: null,
     sinecures: [],
     ...overrides,
@@ -268,6 +269,7 @@ describe('couplings', () => {
       oath_id: 44,
       power_id: null,
       line_id: null,
+      mind_id: null,
     })
   })
 

@@ -7,6 +7,7 @@ class SedimentCarrier(StrEnum):
     ICE = "ice"
     WAVE = "wave"
     SLOPE = "slope"
+    WORKS = "works"
 
 
 class SedimentKind(StrEnum):
@@ -18,6 +19,8 @@ class SedimentKind(StrEnum):
     CLAY = "clay"
     CARBONATE = "carbonate"
     EVAPORITE = "evaporite"
+    GLACIAL_FLOUR = "glacial_flour"
+    TAILINGS = "tailings"
 
 
 class CoastForm(StrEnum):
@@ -32,11 +35,15 @@ class CoastForm(StrEnum):
     ESTUARY = "estuary"
     MANGROVE = "mangrove"
     BARRIER_ISLAND = "barrier_island"
+    SPIT = "spit"
+    ATOLL = "atoll"
 
 
 class LocalClimateCause(StrEnum):
     VALLEY = "valley"
     SLOPE = "slope"
-    WATER = "water"
+    WATER_BODY = "water_body"
     FOREST = "forest"
-    BUILT = "built"
+    BUILT_LAND = "built_land"
+    WETLAND = "wetland"
+    ICE_FIELD = "ice_field"

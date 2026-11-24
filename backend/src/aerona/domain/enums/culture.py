@@ -53,6 +53,9 @@ class TraditionFunction(StrEnum):
     COMMEMORATION = "commemoration"
     COMPETITION = "competition"
     FAIR = "fair"
+    WELCOME = "welcome"
+    RECONCILIATION = "reconciliation"
+    THANKSGIVING = "thanksgiving"
 
 
 class RiteStage(StrEnum):
@@ -62,6 +65,8 @@ class RiteStage(StrEnum):
     UNION = "union"
     ELDERHOOD = "elderhood"
     DEATH = "death"
+    INITIATION = "initiation"
+    DEPARTURE = "departure"
 
 
 class Technique(StrEnum):
@@ -369,6 +374,8 @@ class CurseKind(StrEnum):
     COMPULSION = "compulsion"
     AGING = "aging"
     EXPOSURE = "exposure"
+    ISOLATION = "isolation"
+    WEAKNESS = "weakness"
 
 
 class ItemDeed(StrEnum):
@@ -405,6 +412,8 @@ class ArtMode(StrEnum):
     RITUAL_PERFORMANCE = "ritual_performance"
     TEXTILE_IMAGE = "textile_image"
     MADE_MIND_ART = "made_mind_art"
+    TACTILE = "tactile"
+    MIND = "mind"
 
 
 class LanguageRegister(StrEnum):
@@ -463,6 +472,8 @@ class TraditionEffectKind(StrEnum):
     VIGIL = "vigil"
     TRADE = "trade"
     FORAGE = "forage"
+    HEALING = "healing"
+    BONDING = "bonding"
 
 
 class RumourChannel(StrEnum):

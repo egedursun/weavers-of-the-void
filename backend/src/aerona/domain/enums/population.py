@@ -30,3 +30,5 @@ class PopulationInstrument(StrEnum):
     HEALTH_CAMPAIGN = "health_campaign"
     FAITH_TEACHING = "faith_teaching"
     MADE_BIRTH = "made_birth"
+    IMMUNISATION = "immunisation"
+    SANITATION = "sanitation"

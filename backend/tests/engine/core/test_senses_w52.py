@@ -12,7 +12,7 @@ RULES = Rules()
 
 
 def test_eleven_senses_and_the_new_two_serve_ambush_and_tracking() -> None:
-    assert len(SENSES) == len(SenseKind) == 11
+    assert len(SENSES) == len(SenseKind) == 13
     assert SenseKind.ELECTRIC in PURPOSES[AMBUSH] and SenseKind.ULTRAVIOLET in PURPOSES[TRACKING]
 
 

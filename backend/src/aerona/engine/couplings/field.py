@@ -201,6 +201,26 @@ async def exchanges(ctx: TickContext, war: WarRow, sides: list[int]) -> int:
     return freed
 
 
+async def bury_dead(ctx: TickContext, war: WarRow, sides: list[int]) -> bool:
+    table = ctx.rules.field_diplomacy
+    if len(sides) < 2 or war.battles < table.burial_battles:
+        return False
+    if await standing(ctx, war.id, sides[0], sides[1], (FieldAgreementKind.BURIAL_TRUCE,)) is not None:
+        return False
+    if not ctx.rng(f"burial.{war.id}.{war.battles}.{ctx.epoch}").chance(table.burial_chance):
+        return False
+    await agree(ctx, war.id, FieldAgreementKind.BURIAL_TRUCE, commander=sides[0], counterpart=sides[1], place=sides[0], term=ctx.epoch, honour=war.battles)
+    for side in await ctx.session.scalars(
+        select(WarSideRow).where(WarSideRow.war_id == war.id, WarSideRow.left_epoch.is_(None)).order_by(WarSideRow.entity_id)
+    ):
+        if "weariness" not in side.locked and not held(side.entity_id):
+            side.weariness = clamp_percent(side.weariness - table.burial_ease)
+    await record(
+        ctx, "parley.burial", roles={IncidentRole.SUBJECT: [sides[0], sides[1]]}, facts={"war": war.event_entity_id, "battles": war.battles}, place=sides[0]
+    )
+    return True
+
+
 async def fraternise(ctx: TickContext, war: WarRow, siege: SiegeRow) -> bool:
     table = ctx.rules.field_diplomacy
     if siege.rounds < table.fraternise_rounds or await standing(
@@ -254,6 +274,8 @@ async def field_diplomacy(ctx: TickContext) -> None:
         if held(*sides):
             continue
         ctx.count("field_exchanges", await exchanges(ctx, war, sides))
+        if await bury_dead(ctx, war, sides):
+            ctx.count("burial_truces")
         for siege in await ctx.session.scalars(select(SiegeRow).where(SiegeRow.war_id == war.id, SiegeRow.status == SiegeStatus.ONGOING)):
             if await fraternise(ctx, war, siege):
                 ctx.count("fraternisations")

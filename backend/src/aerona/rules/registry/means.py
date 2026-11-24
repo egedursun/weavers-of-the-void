@@ -35,6 +35,8 @@ class WritingMediaRules(Spanned):
     electronic_durability: int = rule(70, 0, 100, V, "How well writings on electronic records hold against damp and time (%)")
     outage_loss: int = rule(30, 0, 100, V, "Condition an electronic record loses each epoch its place has no working network")
     intrusion_alter_pct: int = rule(20, 0, 100, V, "Chance an intrusion into a network alters each electronic record kept there (%)")
+    cloth_durability: int = rule(45, 0, 100, V, "How well writings on cloth hold against damp and time (%)")
+    potsherd_durability: int = rule(85, 0, 100, V, "How well writings scratched on broken pottery hold against damp and time (%)")
 
 
 @dataclass(frozen=True)
@@ -87,6 +89,8 @@ class NavigationRules:
     beacons_loss_cut_pct: int = rule(15, 0, 100, W, "Navigation accuracy beacons on the shore of full quality adds (%)")
     positioning_loss_cut_pct: int = rule(30, 0, 100, W, "Navigation accuracy positioning by network of full quality adds (%)")
     beacon_works: int = rule(1, 0, 10, W, "Lighthouses or beacons a port needs on its shore to keep beacons")
+    pilots_loss_cut_pct: int = rule(40, 0, 100, V, "Share of losses near a harbour that local pilots taking vessels in prevent (%)")
+    buoys_loss_cut_pct: int = rule(20, 0, 100, V, "Share of losses on marked waters that buoys prevent (%)")
 
 
 @dataclass(frozen=True)
@@ -117,3 +121,5 @@ class ContainerRules:
     skin_capacity: int = rule(1, 0, 1000, E, "Goods one skin holds, against the capacity of a trade road")
     tank_capacity: int = rule(10, 0, 1000, E, "Goods one tank holds, against the capacity of a trade road")
     fit_spoil_pct: int = rule(50, 0, 100, E, "Share of the loss of goods on a road spared when they travel in containers suited to them (%)")
+    cage_capacity: int = rule(2, 0, 1000, E, "Goods one cage holds, against the capacity of a trade road")
+    net_bag_capacity: int = rule(3, 0, 1000, E, "Goods one net bag holds, against the capacity of a trade road")

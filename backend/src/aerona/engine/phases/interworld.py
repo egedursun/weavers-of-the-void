@@ -9,6 +9,7 @@ from aerona.engine.phase import Phase
 @reads(
     "settlement.population",
     "settlement.prosperity",
+    "table.deep_passages",
     "table.entities",
     "table.interworld_campaigns",
     "table.interworld_migrations",

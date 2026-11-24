@@ -76,6 +76,8 @@ class BodyRow(Base):
     fertility: Mapped[int] = mapped_column(default=PERCENT)
     endurance: Mapped[int] = mapped_column(default=PERCENT, server_default="100")
     perception: Mapped[int] = mapped_column(default=PERCENT, server_default="100")
+    stealth: Mapped[int] = mapped_column(default=PERCENT, server_default="100")
+    labour: Mapped[int] = mapped_column(default=PERCENT, server_default="100")
     armour_head: Mapped[int] = mapped_column(default=0)
     armour_torso: Mapped[int] = mapped_column(default=0)
     armour_limbs: Mapped[int] = mapped_column(default=0)

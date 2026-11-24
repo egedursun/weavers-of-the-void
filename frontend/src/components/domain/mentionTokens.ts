@@ -1,4 +1,4 @@
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { type LinkTarget, splitByNames, stripMarkers } from './nameLinks'
 
 export type MentionName = { id: number; name: string; kind: string }
@@ -6,7 +6,7 @@ export type MentionThread = { id: number; text: string }
 
 export type MentionPiece =
   | { type: 'text'; text: string }
-  | { type: 'link'; text: string; kind: DrawerKind; id: number }
+  | { type: 'link'; text: string; kind: EntryKind; id: number }
   | { type: 'thread'; text: string; title: string }
 
 export type MentionIndex = {
@@ -26,7 +26,7 @@ export const MENTION_FALLBACK = {
   route: 'a road',
 } as const
 
-const DRAWER_OF_KIND: Partial<Record<string, DrawerKind>> = {
+const DRAWER_OF_KIND: Partial<Record<string, EntryKind>> = {
   entity: 'entity',
   son: 'son',
   foreign_god: 'foreign-god',

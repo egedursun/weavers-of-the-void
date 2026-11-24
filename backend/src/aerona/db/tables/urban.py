@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.urban import (
     ConvoyStatus,
@@ -148,6 +149,7 @@ class ConvoyRow(Base):
     capacity: Mapped[int] = mapped_column(default=0)
     departed_epoch: Mapped[int] = mapped_column(default=0)
     arrived_epoch: Mapped[int | None]
+    stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "stratum"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

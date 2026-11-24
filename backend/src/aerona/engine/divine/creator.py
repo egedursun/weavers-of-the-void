@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 
 from aerona.catalog.backfill_words import ACT_WORDS
-from aerona.catalog.life.divine import TARGET_FOR_CREATOR_PASSIONS, TARGET_FOR_CREATOR_PASSIONS_2
+from aerona.catalog.life.divine import KEPT_OR_FREED_PASSIONS, MEMORY_WORKS, TARGET_FOR_CREATOR_PASSIONS, TARGET_FOR_CREATOR_PASSIONS_2
 from aerona.constants.units import PERCENT
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.celestial import WorldRow
@@ -10,6 +10,7 @@ from aerona.db.tables.creator_bonds import CreatorStandingRow
 from aerona.db.tables.divine import CreatorTabooRow, WorldAttentionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.creator import CreatorPassion
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.node import ActorKind
@@ -129,6 +130,15 @@ async def far_from_eye(ctx: TickContext, world_id: int | None) -> bool:
     return row is not None and row.attention < ctx.rules.creator.far_eye_below
 
 
+async def freed_or_kept(ctx: TickContext, passion: CreatorPassion) -> EntityRow | None:
+    if passion is P.FREEDOM:
+        freed = await ctx.session.scalar(select(CaptiveRow.captive_entity_id).where(CaptiveRow.released_epoch == ctx.epoch).order_by(CaptiveRow.id).limit(1))
+        return await place_of(ctx, freed) if freed is not None else None
+    born = select(EntityRow.id).where(EntityRow.birth_epoch == ctx.epoch, EntityRow.status == EntityStatus.CANON, EntityRow.engine_kind.in_(list(MEMORY_WORKS)))
+    archive = await ctx.session.scalar(born.order_by(EntityRow.id).limit(1))
+    return await place_of(ctx, archive) if archive is not None else None
+
+
 async def target_for(ctx: TickContext, passion: CreatorPassion) -> EntityRow | None:
     born = select(EntityRow).where(EntityRow.birth_epoch == ctx.epoch, EntityRow.status == EntityStatus.CANON)
     if passion is P.KNOWLEDGE:
@@ -161,7 +171,7 @@ async def passion_sign(ctx: TickContext, creator: CreatorRow) -> CreatorPassion 
     if passion is P.SILENCE:
         await silence(ctx, creator, True)
         return passion
-    target = await target_for(ctx, passion)
+    target = await (freed_or_kept(ctx, passion) if passion in KEPT_OR_FREED_PASSIONS else target_for(ctx, passion))
     if target is None:
         return None
     if passion is P.KNOWLEDGE:

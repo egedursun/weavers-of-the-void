@@ -1,6 +1,6 @@
 from collections import Counter
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,6 +42,7 @@ from aerona.domain.enums.son import PowerEffect, SonStatus, Stat
 from aerona.domain.enums.world import Discovery
 from aerona.domain.models.entity_stats import revised
 from aerona.domain.models.profiles import ExistenceProfile, Personality
+from aerona.domain.models.son_design import SonDesign
 from aerona.domain.models.stats import PassionBlock
 from aerona.engine.divine.lineage import inherited_domains, inherited_stats
 from aerona.engine.dominion.design import Design, budget_of, fate_check, scaled_stats, write_design
@@ -287,6 +288,43 @@ async def after_birth(session: AsyncSession, rules: Rules, son: SonRow, parentag
     )
 
 
+def designed(parentage: Parentage, design: SonDesign | None) -> Parentage:
+    if design is None:
+        return parentage
+    lines = design.given()
+    wish = (design.inspiration or "").strip()
+    text = "; ".join([*([wish] if wish else []), *lines])
+    return replace(parentage, inspiration=text or parentage.inspiration)
+
+
+def applied(output: SonProfileOutput, design: SonDesign | None) -> SonProfileOutput:
+    if design is None:
+        return output
+    texts = {
+        key: value.strip()
+        for key, value in {
+            "name": design.name,
+            "title": design.title,
+            "appearance": design.appearance,
+            "temperament": design.temperament,
+            "obsession": design.obsession,
+            "fear": design.fear,
+            "speech_style": design.speech_style,
+            "secret": design.secret,
+        }.items()
+        if value and value.strip()
+    }
+    domains = {key: value for key, value in {"domain_1": design.domain_1, "domain_2": design.domain_2}.items() if value is not None}
+    passions = output.passions.model_copy(
+        update={
+            key: value
+            for key, value in {"loyalty": design.loyalty, "ambition": design.ambition, "wrath": design.wrath, "mercy": design.mercy}.items()
+            if value is not None
+        }
+    )
+    return output.model_copy(update={**texts, **domains, "passions": passions})
+
+
 async def summon_context(scope: Scope, rarity: Rarity, world_id: int | None, parentage: Parentage) -> SummonSonContext:
     sons = list(await scope.session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD).order_by(SonRow.id)))
     parent = await scope.session.get(SonRow, parentage.parent_id) if parentage.parent_id is not None else None
@@ -308,16 +346,22 @@ async def summon_context(scope: Scope, rarity: Rarity, world_id: int | None, par
     )
 
 
-async def create_son(runtime: AgentRuntime, *, rarity: Rarity | None = None, world_id: int | None = None, parentage: Parentage = NO_PARENT) -> SonRow:
+async def create_son(
+    runtime: AgentRuntime, *, rarity: Rarity | None = None, world_id: int | None = None, parentage: Parentage = NO_PARENT, design: SonDesign | None = None
+) -> SonRow:
     runtime.require_llm("son summoning")
     async with runtime.database.read() as session:
         rules = await runtime.rules(session)
         scope = await load_scope(session, rules)
         rng = summon_rng(scope, str(parentage.parent_id or 0))
         parent = await session.get(SonRow, parentage.parent_id) if parentage.parent_id is not None else None
-        chosen = rarity or (child_rarity(rules, rng, parent.rarity) if parent is not None else roll_rarity(rules, rng))
+        chosen = (
+            rarity
+            or (design.rarity if design is not None else None)
+            or (child_rarity(rules, rng, parent.rarity) if parent is not None else roll_rarity(rules, rng))
+        )
         target = await son_world(session, rules, parentage.parent_id, world_id)
-        context = await summon_context(scope, chosen, target, parentage)
+        context = await summon_context(scope, chosen, target, designed(parentage, design))
     output = await ask(
         runtime.model,
         rules,
@@ -326,6 +370,7 @@ async def create_son(runtime: AgentRuntime, *, rarity: Rarity | None = None, wor
         user=(PromptId.SUMMON_SON_USER, context),
         output=SonProfileOutput,
     )
+    output = applied(output, design)
     async with runtime.database.write() as session:
         scope = await load_scope(session, rules)
         son = await insert_son(session, rules, summon_rng(scope, output.name), output, rarity=chosen, epoch=scope.epoch, parentage=parentage, world_id=target)
@@ -339,8 +384,8 @@ async def create_son(runtime: AgentRuntime, *, rarity: Rarity | None = None, wor
     return created
 
 
-async def summon_son(runtime: AgentRuntime, world_id: int | None = None, rarity: Rarity | None = None) -> SonRow:
-    return await create_son(runtime, rarity=rarity, world_id=world_id)
+async def summon_son(runtime: AgentRuntime, world_id: int | None = None, rarity: Rarity | None = None, design: SonDesign | None = None) -> SonRow:
+    return await create_son(runtime, rarity=rarity, world_id=world_id, design=design)
 
 
 async def birth_child(runtime: AgentRuntime, parent_id: int, inspiration: str | None = None, co_parent_id: int | None = None) -> SonRow:

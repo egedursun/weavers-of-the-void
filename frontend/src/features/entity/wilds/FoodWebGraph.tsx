@@ -2,7 +2,7 @@ import { useId, useState } from 'react'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { type KpiTone } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Muted } from '@/components/typography'
 import { type FoodWeb } from './api'
 import { type PlacedEdge, layoutWeb } from './foodWebLayout'
@@ -21,7 +21,7 @@ const FILL: Record<KpiTone, string> = {
 export function FoodWebGraph({ web }: { web: FoodWeb }) {
   const layout = layoutWeb(web)
   const marker = useId()
-  const drawer = useDrawerStack()
+  const entryStack = useEntryStack()
   const [focus, setFocus] = useState<number | null>(null)
   const byId = new Map(layout.nodes.map((node) => [node.id, node]))
   const linked = (edge: PlacedEdge) =>
@@ -101,11 +101,11 @@ export function FoodWebGraph({ web }: { web: FoodWeb }) {
               onFocus={() => setFocus(node.id)}
               onBlur={() => setFocus(null)}
               onClick={() =>
-                drawer.open({ kind: 'entity', id: String(node.id) })
+                entryStack.open({ kind: 'entity', id: String(node.id) })
               }
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ')
-                  drawer.open({ kind: 'entity', id: String(node.id) })
+                  entryStack.open({ kind: 'entity', id: String(node.id) })
               }}
             >
               <circle

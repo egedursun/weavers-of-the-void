@@ -12,6 +12,9 @@ class SpellTechnique(StrEnum):
     WARD = "ward"
     DRAIN = "drain"
     MIMIC = "mimic"
+    HEAL = "heal"
+    MOVE = "move"
+    SPEAK = "speak"
 
 
 class SpellForm(StrEnum):
@@ -36,6 +39,8 @@ class SpellForm(StrEnum):
     FATE = "fate"
     MACHINE = "machine"
     INFORMATION = "information"
+    DREAM = "dream"
+    LAW = "law"
 
 
 class SpellRange(StrEnum):
@@ -45,6 +50,7 @@ class SpellRange(StrEnum):
     WORLD = "world"
     LINKED = "linked"
     COSMOS = "cosmos"
+    DIMENSION = "dimension"
 
 
 class SpellDuration(StrEnum):
@@ -54,6 +60,7 @@ class SpellDuration(StrEnum):
     PERMANENT = "permanent"
     SUSTAINED = "sustained"
     UNTIL_CONDITION = "until_condition"
+    LIFETIME = "lifetime"
 
 
 class RiteCondition(StrEnum):
@@ -67,6 +74,7 @@ class RiteEnd(StrEnum):
     CASTER_GONE = "caster_gone"
     CASTER_STRUCK = "caster_struck"
     CONDITION_MET = "condition_met"
+    TARGET_GONE = "target_gone"
 
 
 class SpellTarget(StrEnum):
@@ -77,6 +85,8 @@ class SpellTarget(StrEnum):
     ITEM = "item"
     LINE = "line"
     WORLD = "world"
+    SPECIES = "species"
+    PEOPLE = "people"
 
 
 class RechargeRule(StrEnum):
@@ -86,6 +96,8 @@ class RechargeRule(StrEnum):
     NONE = "none"
     SKY_EVENT = "sky_event"
     BODILY_OFFERING = "bodily_offering"
+    REST = "rest"
+    WORSHIP = "worship"
 
 
 class LawSource(StrEnum):

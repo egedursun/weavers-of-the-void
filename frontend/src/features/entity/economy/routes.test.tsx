@@ -40,6 +40,7 @@ const VIEW = {
   renown: 10,
   culture: 4,
   path: [21, 22, 23],
+  path_strata: [null, 'cavern_upper', null],
   tolls: [
     {
       region_id: 22,
@@ -230,6 +231,9 @@ describe('trade route command', () => {
       mode: null,
       controller_id: null,
       toll_pct: null,
+      name: null,
+      title: null,
+      description: null,
     })
   })
 })

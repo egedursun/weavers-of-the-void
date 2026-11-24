@@ -91,6 +91,10 @@ EMOTIONS: MappingProxyType[Emotion, EmotionSpec] = total(
             lambda rules: rules.emotions.contempt_decay,
             lambda rules: rules.emotions.contempt_act_weight,
         ),
+        E.TRUST: EmotionSpec("Trust", 1, amp(trust=1), 30, lambda rules: rules.emotions.trust_decay),
+        E.ANTICIPATION: EmotionSpec("Anticipation", 1, amp(excitement_seeking=1), 60, lambda rules: rules.emotions.anticipation_decay),
+        E.ADMIRATION: EmotionSpec("Admiration", 1, amp(gratitude=1, envy=-1), 40, lambda rules: rules.emotions.admiration_decay),
+        E.EMBARRASSMENT: EmotionSpec("Embarrassment", -1, amp(self_consciousness=1), 70, lambda rules: rules.emotions.embarrassment_decay),
     },
 )
 FEARFUL_KEYS = frozenset(kind.value for kind, spec in EMOTIONS.items() if spec.fearful)
@@ -265,6 +269,18 @@ THOUGHTS: MappingProxyType[ThoughtKind, ThoughtSpec] = MappingProxyType(
         T.GREW_CURIOUS: th(E.CURIOSITY, 45, "Grew curious about something unknown", {"knowledge": 2}, {"curiosity": 2}),
         T.FELT_COMPASSION: th(E.COMPASSION, 45, "Felt for one who suffers", {"mercy": 2}, {"altruism": 2}),
         T.FELT_CONTEMPT: th(E.CONTEMPT, 45, "Held another in contempt", {"hierarchy": 2}, {"tolerance_of_difference": -2}),
+        T.SEASON_FAILED: th(E.FEAR, 50, "A season failed them", {"superstition": 4}, {"anxiety": 3}),
+        T.STORM_SURVIVED: th(E.RELIEF, 45, "Lived through a storm", {"perseverance_value": 3}, {"emotional_stability": 2}),
+        T.QUAKE_SURVIVED: th(E.RELIEF, 55, "Lived through a quake", {"superstition": 3}, {"anxiety": 2}),
+        T.HOME_LOST_TO_FLOOD: th(E.GRIEF, 65, "Lost a home to the water", {"nature": 4}, {"depression": 3}),
+        T.BEAST_PASSED: th(E.FEAR, 35, "A great beast passed by", {"nature": 3}, {"anxiety": 2}),
+        T.FLED_PLAGUE: th(E.FEAR, 60, "Fled a sickness", {"superstition": 3}, {"anxiety": 4}),
+        T.GATHERING_CLOSED: th(E.SADNESS, 30, "A gathering was closed to them", {"law": -3}, {"gregariousness": -2}),
+        T.SAW_ACCESSION: th(E.ANTICIPATION, 40, "Saw a new ruler take power", {"hierarchy": 3}, {"excitement_seeking": 2}),
+        T.YEAR_OF_PEACE: th(E.CONTENTMENT, 40, "Lived a year of peace", {"martial": -3, "leisure": 2}, {"emotional_stability": 2}),
+        T.CHARM_FOUND: th(E.JOY, 35, "Found a charm", {"superstition": 3}, {"cheerfulness": 2}),
+        T.FORGOT: th(E.FEAR, 45, "Forgot what it once knew", {"tradition": -2}, {"anxiety": 3}),
+        T.WOKE_FROM_SLEEP: th(E.RELIEF, 60, "Woke from a long sleep", {"perseverance_value": 2}, {"emotional_stability": -2}),
     }
 )
 
@@ -301,10 +317,8 @@ NEEDS: MappingProxyType[NeedKind, NeedSpec] = MappingProxyType(
         N.BELONGING: need(G.SOCIAL, "Belonging", T.BELONGED, T.ADRIFT, {"cooperation": 20}, beliefs={"kinship": 20, "loyalty": 15}),
         N.FAITH: need(G.SPIRIT, "Faith", T.PRAYED_IN_PEACE, T.FAITH_UNMET, {}, beliefs={"piety": 60, "superstition": 15}),
         N.PURPOSE: need(G.SPIRIT, "Purpose", T.FELT_PURPOSE, T.LACKED_PURPOSE, {"ambition": 20, "sense_of_duty": 20}, beliefs={"perseverance_value": 15}),
-        N.LEARNING: need(G.SPIRIT, "Learning", T.LEARNED_SOMETHING, T.LEARNED_NOTHING, {"curiosity": 50, "abstraction": 20}, beliefs={"knowledge": 40}),
-        N.CREATING: need(
-            G.SPIRIT, "Creation", T.MADE_SOMETHING, T.NOTHING_MADE, {"imagination": 30, "artistic_inclination": 30}, beliefs={"craftsmanship": 30}
-        ),
+        N.LEARNING: need(G.MIND, "Learning", T.LEARNED_SOMETHING, T.LEARNED_NOTHING, {"curiosity": 50, "abstraction": 20}, beliefs={"knowledge": 40}),
+        N.CREATING: need(G.MIND, "Creation", T.MADE_SOMETHING, T.NOTHING_MADE, {"imagination": 30, "artistic_inclination": 30}, beliefs={"craftsmanship": 30}),
         N.BEAUTY: need(G.SPIRIT, "Beauty", T.SAW_BEAUTY, T.SURROUNDED_BY_UGLINESS, {"artistic_inclination": 50}, beliefs={"artwork": 40}),
         N.NATURE: need(G.SPIRIT, "Nature", T.WALKED_IN_NATURE, T.CUT_OFF_FROM_NATURE, {"tolerance_of_difference": 10}, beliefs={"nature": 50}),
         N.ADVENTURE: need(G.ACTION, "Adventure", T.HAD_ADVENTURE, T.RESTLESS, {"excitement_seeking": 50, "caution": -20}, beliefs={"xenophilia": 20}),
@@ -315,10 +329,12 @@ NEEDS: MappingProxyType[NeedKind, NeedSpec] = MappingProxyType(
         N.PLEASURE: need(G.ACTION, "Leisure", T.ENJOYED_LEISURE, T.BORED, {"excitement_seeking": 20, "discipline": -30, "humour": 15}, beliefs={"leisure": 40}),
         N.ORDER: need(G.ACTION, "Order", T.LIVED_IN_ORDER, T.LIVED_IN_DISORDER, {"orderliness": 50}, beliefs={"law": 40, "tradition": 15}),
         N.AUTONOMY: need(G.SOCIAL, "Autonomy", T.FELT_FREE, T.FELT_CONSTRAINED, {"assertiveness": 30, "cooperation": -15}, beliefs={"hierarchy": -40}),
-        N.KNOWLEDGE: need(G.SPIRIT, "Knowledge", T.FOUND_ANSWERS, T.KEPT_IN_IGNORANCE, {"curiosity": 60}, beliefs={"knowledge": 30}),
-        N.STIMULATION: need(G.ACTION, "Stimulation", T.FELT_STIMULATED, T.FELT_DULLED, {"excitement_seeking": 40, "activity_level": 20}),
+        N.KNOWLEDGE: need(G.MIND, "Knowledge", T.FOUND_ANSWERS, T.KEPT_IN_IGNORANCE, {"curiosity": 60}, beliefs={"knowledge": 30}),
+        N.STIMULATION: need(G.MIND, "Stimulation", T.FELT_STIMULATED, T.FELT_DULLED, {"excitement_seeking": 40, "activity_level": 20}),
         N.CONTINUITY: need(G.SPIRIT, "Continuity", T.FELT_LASTING, T.FEARED_ENDING, {"anxiety": 30, "vulnerability": 20}),
         N.UPKEEP: need(G.BODY, "Upkeep", T.WELL_KEPT, T.NEGLECTED, {"orderliness": 15}),
+        N.JUSTICE: need(G.SPIRIT, "Justice", T.LIVED_IN_ORDER, T.WITNESSED_ATROCITY, {"sense_of_duty": 20}, beliefs={"law": 10}),
+        N.CARE: need(G.SOCIAL, "Care for others", T.WAS_COMFORTED, T.FELT_LONELY, {"altruism": 30}),
     }
 )
 
@@ -362,6 +378,8 @@ DREAM_LABELS: MappingProxyType[DreamKind, str] = MappingProxyType(
         DreamKind.PROPHETIC: "A prophetic dream",
         DreamKind.VISITATION: "A visitation",
         DreamKind.SHARED: "A shared dream",
+        DreamKind.LUCID: "A dream it steers",
+        DreamKind.MEMORY: "A dream of a memory",
     }
 )
 
@@ -404,6 +422,7 @@ NEED_READINGS: MappingProxyType[NeedGroup, DreamReading] = MappingProxyType(
         G.SOCIAL: DreamReading.CALL_TO_LOVE,
         G.SPIRIT: DreamReading.OMEN_OF_FAVOUR,
         G.ACTION: DreamReading.CALL_TO_JOURNEY,
+        G.MIND: DreamReading.OMEN_OF_FAVOUR,
     }
 )
 

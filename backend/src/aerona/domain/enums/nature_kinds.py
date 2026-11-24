@@ -12,6 +12,8 @@ class OfficeDuty(StrEnum):
     MEMORY = "memory"
     MAKING = "making"
     HEALING = "healing"
+    TRADE = "trade"
+    LEARNING = "learning"
 
 
 class RealmFunction(StrEnum):

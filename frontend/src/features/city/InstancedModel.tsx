@@ -44,6 +44,8 @@ function InstancedPiece<T extends Placement>({
   items,
   tint,
   dim,
+  bare,
+  glow,
   onPick,
   onHover,
 }: {
@@ -51,6 +53,8 @@ function InstancedPiece<T extends Placement>({
   items: T[]
   tint: string | null
   dim: number
+  bare: boolean
+  glow: boolean
   onPick?: (item: T) => void
   onHover?: (item: T | null) => void
 }) {
@@ -58,9 +62,9 @@ function InstancedPiece<T extends Placement>({
   const material = useMemo(
     () =>
       Array.isArray(piece.material)
-        ? piece.material.map((item) => shared(item, tint, dim))
-        : shared(piece.material, tint, dim),
-    [piece.material, tint, dim]
+        ? piece.material.map((item) => shared(item, tint, dim, bare, glow))
+        : shared(piece.material, tint, dim, bare, glow),
+    [piece.material, tint, dim, bare, glow]
   )
   useLayoutEffect(() => {
     const mesh = ref.current
@@ -119,6 +123,8 @@ export function InstancedModel<T extends Placement>({
   items,
   tint = null,
   dim = 1,
+  bare = false,
+  glow = false,
   onPick,
   onHover,
 }: {
@@ -126,6 +132,8 @@ export function InstancedModel<T extends Placement>({
   items: T[]
   tint?: string | null
   dim?: number
+  bare?: boolean
+  glow?: boolean
   onPick?: (item: T) => void
   onHover?: (item: T | null) => void
 }) {
@@ -141,6 +149,8 @@ export function InstancedModel<T extends Placement>({
           items={items}
           tint={tint}
           dim={dim}
+          bare={bare}
+          glow={glow}
           onPick={onPick}
           onHover={onHover}
         />

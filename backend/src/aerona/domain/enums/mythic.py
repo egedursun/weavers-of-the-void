@@ -15,6 +15,8 @@ class QuestTrial(StrEnum):
     FAITH = "faith"
     CUNNING = "cunning"
     ENDURANCE = "endurance"
+    MERCY = "mercy"
+    SACRIFICE = "sacrifice"
 
 
 class HeroquestState(StrEnum):
@@ -34,6 +36,8 @@ class HeroquestBoon(StrEnum):
     FAVOUR = "favour"
     TRUE_NAME = "true_name"
     TITLE = "title"
+    KNOWLEDGE = "knowledge"
+    HEALING = "healing"
 
 
 class MantlingState(StrEnum):
@@ -42,6 +46,7 @@ class MantlingState(StrEnum):
     REPLACED = "replaced"
     BLOCKED = "blocked"
     FAILED = "failed"
+    CONTESTED = "contested"
 
 
 class ServitorOrigin(StrEnum):
@@ -50,6 +55,8 @@ class ServitorOrigin(StrEnum):
     SUMMONED = "summoned"
     DEFECTED = "defected"
     BORN = "born"
+    BARGAINED = "bargained"
+    ASCENDED = "ascended"
 
 
 class ServitorRole(StrEnum):
@@ -64,11 +71,14 @@ class ServitorRole(StrEnum):
     WORSHIPPER = "worshipper"
     WARDEN = "warden"
     SCRIBE = "scribe"
+    HEALER = "healer"
+    TEACHER = "teacher"
 
 
 class GeasMode(StrEnum):
     TABOO = "taboo"
     DUTY = "duty"
+    CONDITION = "condition"
 
 
 class GeasState(StrEnum):
@@ -82,6 +92,7 @@ class GeasLayer(StrEnum):
     RITE = "rite"
     KIN = "kin"
     SELF = "self"
+    LAW = "law"
 
 
 class CosmicOffice(StrEnum):
@@ -98,3 +109,4 @@ class OfficeChoice(StrEnum):
     CREATOR = "creator"
     CONQUEST = "conquest"
     MANTLING = "mantling"
+    INHERITANCE = "inheritance"

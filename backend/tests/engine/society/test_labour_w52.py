@@ -29,9 +29,11 @@ def workers(**counts: int) -> Plan:
 
 
 def test_nine_reasons_and_eleven_shortfalls_have_their_words() -> None:
-    assert len(LabourReason) == 9 and set(REASONS) == set(LabourReason)
+    assert len(LabourReason) == 11 and set(REASONS) == set(LabourReason)
     assert not REASONS[LabourReason.LAW].chosen and REASONS[LabourReason.SKILL].chosen
-    assert len(ShortfallEffect) == 11 and {ShortfallEffect.THIRST, ShortfallEffect.SHELTER} == OUTER_SHORTFALLS
+    assert (
+        len(ShortfallEffect) == 13 and {ShortfallEffect.THIRST, ShortfallEffect.SHELTER, ShortfallEffect.JUSTICE, ShortfallEffect.LEARNING} == OUTER_SHORTFALLS
+    )
     assert SHORTFALLS[ShortfallEffect.THIRST].want == "water" and set(JOB_BRANCH) == set(Job)
 
 

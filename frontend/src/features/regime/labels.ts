@@ -1,6 +1,7 @@
 import {
   Award,
   BadgeCheck,
+  BookOpen,
   BookOpenCheck,
   Briefcase,
   Building2,
@@ -28,10 +29,10 @@ import {
   Tent,
   TreePine,
   Trophy,
+  type LucideIcon,
   UserCheck,
   Users,
   Vote,
-  type LucideIcon,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -63,6 +64,7 @@ export const LEGITIMACY_KINDS: Record<Schema['LegitimacyType'], Named> = {
   divine_mandate: { label: 'Divine mandate', icon: Sparkles, tone: 'gold' },
   popular: { label: 'Popular', icon: Users, tone: 'gold' },
   performance: { label: 'Performance', icon: Trophy, tone: 'gold' },
+  conquest: { label: 'Conquest', icon: Swords, tone: 'gold' },
 }
 
 export const ROUTINISATION: Record<Schema['Routinisation'], Named> = {
@@ -98,6 +100,8 @@ export const CLIENT_ROLES: Record<Schema['ClientRole'], Named> = {
   commander: { label: 'Commander', icon: Swords, tone: 'danger' },
   broker: { label: 'Broker', icon: Repeat, tone: 'warning' },
   artist: { label: 'Artist', icon: Palette, tone: 'gold' },
+  scholar: { label: 'Scholar', icon: BookOpen, tone: 'muted' },
+  informant: { label: 'Informant', icon: Eye, tone: 'muted' },
 }
 
 export const STANCES: Record<Schema['PowerStance'], Named> = {

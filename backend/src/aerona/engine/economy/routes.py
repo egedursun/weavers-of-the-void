@@ -37,6 +37,7 @@ from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, Tra
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
 from aerona.domain.enums.environment import CoastKind, RiverClass
 from aerona.domain.enums.eras import EraChannel
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.interpretation import InterpretedEvent
 from aerona.domain.enums.life_traits import TradeRouteStatusTrait
 from aerona.domain.enums.loops import BalanceLoop
@@ -44,7 +45,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import CarrierKind
 from aerona.domain.enums.polity import ClauseKind
-from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome
+from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome, StepState
 from aerona.domain.enums.settlement import TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.domain.enums.urban import PreservationMethod
@@ -83,6 +84,7 @@ from aerona.engine.nature.effects import sensed
 from aerona.engine.orders.exchange import billed_between, exchange_cost
 from aerona.engine.polity.accords import clause_pairs
 from aerona.engine.polity.law_effects import toll_rate
+from aerona.engine.primitives.deep_paths import route_cells
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
@@ -104,6 +106,12 @@ class Route:
     profile: TradeRouteProfileRow
     path: list[int]
     tolls: dict[int, TradeRouteTollRow] = field(default_factory=dict)
+    levels: list[UndergroundStratum | None] = field(default_factory=list)
+    cut: bool = False
+
+    @property
+    def cells(self) -> list[tuple[int, UndergroundStratum | None]]:
+        return list(zip(self.path, self.levels or [None] * len(self.path), strict=True))
 
     @property
     def ends(self) -> tuple[int, int]:
@@ -143,9 +151,9 @@ class Link:
 
 async def load_routes(ctx: TickContext, *, live_only: bool = True) -> list[Route]:
     profiles = {row.route_entity_id: row for row in await ctx.session.scalars(select(TradeRouteProfileRow))}
-    paths: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    paths: dict[int, list[tuple[int, int, UndergroundStratum | None]]] = defaultdict(list)
     for row in await ctx.session.scalars(select(TradeRouteRegionRow)):
-        paths[row.route_entity_id].append((row.position, row.region_entity_id))
+        paths[row.route_entity_id].append((row.position, row.region_entity_id, row.stratum))
     tolls: dict[int, dict[int, TradeRouteTollRow]] = defaultdict(dict)
     for toll in await ctx.session.scalars(select(TradeRouteTollRow)):
         tolls[toll.route_entity_id][toll.region_entity_id] = toll
@@ -156,7 +164,8 @@ async def load_routes(ctx: TickContext, *, live_only: bool = True) -> list[Route
         entity = await ctx.session.get(EntityRow, route_id)
         if entity is None or (live_only and entity.status is not EntityStatus.CANON):
             continue
-        routes.append(Route(entity, profile, [region for _, region in sorted(paths[route_id])], tolls[route_id]))
+        steps = sorted(paths[route_id], key=lambda step: step[0])
+        routes.append(Route(entity, profile, [region for _, region, _ in steps], tolls[route_id], [level for _, _, level in steps]))
     return routes
 
 
@@ -193,12 +202,19 @@ def region_works(works: dict[int, Works], region_id: int) -> Works:
     return works.get(region_id, Works())
 
 
+def island_world(book: EconomyBook, world_id: int) -> bool:
+    view = book.views.get(world_id)
+    return view is not None and view.sea_roads
+
+
 def choose_mode(book: EconomyBook, first: EntityRow, second: EntityRow, path: list[int]) -> TradeMode:
     ends = [book.ground.regions.get(region) for region in (path[0], path[-1])]
     sky = book.knowledge.knows(first.id, KnowledgeBranch.SKY_NAVIGATION) or book.knowledge.knows(second.id, KnowledgeBranch.SKY_NAVIGATION)
     seafaring = book.knowledge.knows(first.id, KnowledgeBranch.SEAFARING) or book.knowledge.knows(second.id, KnowledgeBranch.SEAFARING)
     if sky:
         return TradeMode.SKY
+    if len(path) > 1 and all(end is not None and island_world(book, end.world_id) for end in ends):
+        return TradeMode.SEA
     if seafaring and len(path) > 1 and all(end is not None and end.coast_kind is not CoastKind.NONE for end in ends):
         return TradeMode.SEA
     regions = [book.ground.regions.get(region) for region in path]
@@ -298,16 +314,20 @@ def season_factor(route: Route, seasons: int = 0) -> float:
     return route.profile.season_pct / PERCENT * share
 
 
-async def write_path(ctx: TickContext, route_id: int, path: list[int]) -> None:
+async def write_path(ctx: TickContext, route_id: int, path: list[int], levels: list[UndergroundStratum | None] | None = None) -> None:
     for row in await ctx.session.scalars(select(TradeRouteRegionRow).where(TradeRouteRegionRow.route_entity_id == route_id)):
         await ctx.session.delete(row)
     await ctx.session.flush()
     for position, region in enumerate(path):
-        ctx.session.add(TradeRouteRegionRow(route_entity_id=route_id, position=position, region_entity_id=region))
+        level = levels[position] if levels is not None and position < len(levels) else None
+        ctx.session.add(TradeRouteRegionRow(route_entity_id=route_id, position=position, region_entity_id=region, stratum=level))
 
 
 async def found_route(ctx: TickContext, book: EconomyBook, first: EntityRow, second: EntityRow, path: list[int], *, works: dict[int, Works]) -> Route:
-    mode = choose_mode(book, first, second, path)
+    cells = route_cells(book.ground.atlas, first, second)
+    if cells is not None:
+        path = [region for region, _ in cells]
+    mode = TradeMode.UNDERGROUND if cells is not None else choose_mode(book, first, second, path)
     entity = await create_record(
         ctx,
         RecordSpec(
@@ -335,9 +355,10 @@ async def found_route(ctx: TickContext, book: EconomyBook, first: EntityRow, sec
         locked=[],
     )
     ctx.session.add(profile)
-    await write_path(ctx, entity.id, path)
+    levels = [level for _, level in cells] if cells is not None else None
+    await write_path(ctx, entity.id, path, levels)
     await ctx.session.flush()
-    route = Route(entity, profile, path)
+    route = Route(entity, profile, path, levels=levels or [])
     set_stats(entity, capacity=await spoken_capacity(ctx, book, route, works))
     return route
 
@@ -463,7 +484,16 @@ async def _shipwreck(ctx: TickContext, route: Route, seller: EntityRow, tally: R
         "trade_route.shipwreck",
         roles={IncidentRole.SUBJECT: route.entity.id, IncidentRole.VICTIM: seller.id},
         facts={"drowned": crew},
-        steps=(StepDraft(StepAction.SINK, target=route.entity.id, amount=crew, unit=FactUnit.PEOPLE, outcome=StepOutcome.DESTROYED),),
+        steps=(
+            StepDraft(
+                StepAction.SINK,
+                target=route.entity.id,
+                amount=crew,
+                unit=FactUnit.PEOPLE,
+                outcome=StepOutcome.DESTROYED,
+                states=((seller.id, StepState.DROWNING),),
+            ),
+        ),
     )
 
 
@@ -961,7 +991,7 @@ def orphaned(book: EconomyBook, route: Route) -> bool:
 
 
 async def close_orphan(ctx: TickContext, route: Route, tally: RouteTally) -> None:
-    if route_locked(route, "status") or route.profile.status is TradeRouteStatus.CLOSED:
+    if route_locked(route, "status") or route.profile.status is TradeRouteStatus.CLOSED or held(route.entity.id):
         return
     route.profile.status = TradeRouteStatus.CLOSED
     route.profile.blockaded_by_entity_id = None
@@ -978,7 +1008,7 @@ async def upkeep(ctx: TickContext, book: EconomyBook, route: Route, *, works: di
     if blocker is not None and profile.status is not TradeRouteStatus.BLOCKADED:
         await _blockade(ctx, book, route, blocker, tally)
         return
-    if blocker is None and profile.status is TradeRouteStatus.BLOCKADED and not steady:
+    if blocker is None and profile.status is TradeRouteStatus.BLOCKADED and not steady and not route.cut:
         profile.status = TradeRouteStatus.OPEN
         profile.blockaded_by_entity_id = None
     moved = tally.volumes.get(route.entity.id, 0)

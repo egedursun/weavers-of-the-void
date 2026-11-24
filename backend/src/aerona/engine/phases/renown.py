@@ -89,8 +89,16 @@ async def renown_hearsay(ctx: TickContext) -> None:
     count(ctx, "deed", tally)
 
 
-@reads("table.deed_claims", "table.deeds", "table.incident_participants", "table.mind_facets", "table.skills")
-@writes("table.deed_claims")
+@reads("table.deed_claims", "table.deeds", "table.incident_participants", "table.mind_facets", "table.node_births", "table.reputations", "table.skills")
+@writes(
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.deed_claims",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incidents",
+    "table.memories",
+)
 async def renown_claims(ctx: TickContext) -> None:
     tally = DeedTally()
     await tend_claims(ctx, tally)
@@ -132,6 +140,7 @@ async def ruler_currencies(ctx: TickContext) -> None:
 @reads(
     "table.blueprints",
     "table.bonds",
+    "table.deep_passages",
     "table.entities",
     "table.faction_profiles",
     "table.holder_techniques",

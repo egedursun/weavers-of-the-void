@@ -1,7 +1,7 @@
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { EntityView } from './EntityView'
 import { parseEntityId } from './parseEntityId'
 
-export function EntityPage({ id }: DrawerPageProps) {
+export function EntityPage({ id }: EntryPageProps) {
   return <EntityView id={parseEntityId(id)} />
 }

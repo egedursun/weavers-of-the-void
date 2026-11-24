@@ -40,6 +40,7 @@ import {
   Moon,
   Mountain,
   Palette,
+  Radar,
   Repeat,
   Route,
   Scale,
@@ -58,6 +59,7 @@ import {
   Volume2,
   Wind,
   Zap,
+  History,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -71,7 +73,7 @@ export const HORROR_TARGETS: Record<Schema['HorrorTarget'], Named> = {
   sound: { label: 'Sound', icon: Volume2, tone: 'info' },
   weather: { label: 'Weather', icon: Cloud, tone: 'info' },
   time: { label: 'Time', icon: Clock, tone: 'verdigris' },
-  memory: { label: 'Memory', icon: Brain, tone: 'warning' },
+  memory: { label: 'Memory', icon: History, tone: 'warning' },
   language: { label: 'Language', icon: Languages, tone: 'warning' },
   sleep: { label: 'Sleep', icon: Moon, tone: 'info' },
   bodies: { label: 'Bodies', icon: HeartPulse, tone: 'danger' },
@@ -208,6 +210,12 @@ export const DELIVERIES: Record<Schema['AttackDelivery'], Named> = {
   spores: { label: 'Spores', icon: Sprout, tone: 'success' },
   bite: { label: 'Bite', icon: Skull, tone: 'danger' },
   sting: { label: 'Sting', icon: Target, tone: 'danger' },
+  projectile: {
+    label: 'Shot quills or spines',
+    icon: Crosshair,
+    tone: 'warning',
+  },
+  constriction: { label: 'Crushing coils', icon: Repeat, tone: 'danger' },
 }
 
 export const ATTACK_EFFECTS: Record<Schema['AttackEffect'], Named> = {
@@ -231,6 +239,7 @@ export const RANGES: Record<Schema['AttackRange'], Named> = {
   near: { label: 'Near', icon: CircleDot, tone: 'info' },
   far: { label: 'A whole town', icon: Globe, tone: 'warning' },
   sight: { label: 'By sight, a whole town', icon: Eye, tone: 'danger' },
+  area: { label: 'A whole area', icon: Radar, tone: 'danger' },
 }
 
 export const VALENCES: Record<Schema['StratumValence'], Named> = {

@@ -26,6 +26,8 @@ class RevivalWayRules:
     land_grievance: int = rule(6, 0, 100, C, "Grievance against its realm each town of a people seeking its lost land gains each epoch it revives")
     rule_pressure: int = rule(30, 0, 100, C, "Pressure for independence a revival seeking rule by the people itself adds at full strength")
     language_met_at: int = rule(70, 0, 100, C, "Standing of its tongue from which a revival of the language has met its goal")
+    migrate_weight: int = rule(30, 0, 100, C, "Weight of a revival that leaves for a land of its own")
+    law_grievance: int = rule(5, 0, 100, C, "Grievance a revival seeking its old law lays on each of its towns against the realm over it each epoch")
 
 
 @dataclass(frozen=True)
@@ -76,6 +78,19 @@ class CrowdRules:
     great_funeral_push: int = rule(25, 0, 100, S, "Grief the funeral of a great figure adds to a town's crowd at full force")
     election_push: int = rule(20, 0, 100, S, "Anger and fervour an election adds to a town's crowd at full force")
     great_funeral_importance: int = rule(70, 0, 100, S, "Importance from which the death of a figure brings its town a great funeral")
+    joy_cut: int = rule(55, 0, 100, S, "Joy a district must feel before it takes to the streets in it")
+    joy_decay: int = rule(40, 0, 100, S, "Share of a district's joy that fades each epoch (%)")
+    solidarity_cut: int = rule(50, 0, 100, S, "Solidarity a district must feel before it acts together in it")
+    solidarity_decay: int = rule(20, 0, 100, S, "Share of a district's solidarity that fades each epoch (%)")
+    vigil_threshold: int = rule(45, 0, 100, S, "Share of a district already keeping a vigil that an average dweller needs before joining (%)")
+    occupation_threshold: int = rule(
+        65, 0, 100, S, "Share of a district already holding a place that an average dweller needs before joining an occupation (%)"
+    )
+    petition_threshold: int = rule(40, 0, 100, S, "Share of a district already petitioning that an average dweller needs before joining (%)")
+    price_rise_push: int = rule(25, 0, 100, S, "How hard rising prices push a district toward a petition")
+    arrest_push: int = rule(30, 0, 100, S, "How hard an arrest pushes a district toward a vigil")
+    petition_heard_pct: int = rule(40, 0, 100, S, "Chance a ruler answers a crowd's petition by easing what it asks (%)")
+    petition_relief: int = rule(10, 0, 100, S, "Unrest a town sheds when its rulers answer a crowd's petition")
 
 
 @dataclass(frozen=True)
@@ -100,6 +115,10 @@ class IdentityLayerRules:
     commemoration_rise: int = rule(15, 0, 100, M, "Weight a community gains in the layer whose past it remembers at a commemoration")
     election_rise: int = rule(15, 0, 100, M, "Weight a community gains in the layers a vote of its realm divides by")
     contest_rise: int = rule(10, 0, 100, M, "Locality and circle weight a community gains when it meets another in a match")
+    gift_base_weight: int = rule(15, 0, 100, M, "Weight the layer of a gift a being bears rests at when nothing stirs it")
+    calling_base_weight: int = rule(20, 0, 100, M, "Weight the layer of a calling rests at when nothing stirs it")
+    disaster_rise: int = rule(15, 0, 100, M, "How far a shared disaster raises the layers of home ground and people")
+    arrivals_rise: int = rule(10, 0, 100, M, "How far newcomers arriving raise the layers of people, tongue and faith")
 
 
 @dataclass(frozen=True)
@@ -111,6 +130,8 @@ class CouncilOfWorldsRules:
     quarantine_effect: int = rule(60, 0, 100, W, "Share of the outbreaks a council's quarantine keeps from crossing to its other worlds (%)")
     arbitration_effect: int = rule(30, 0, 100, W, "Relation two members at odds regain when a council settles their dispute by vote")
     aid_effect: int = rule(15, 0, 100, W, "Prosperity each town of a stricken member world regains from a council's pooled relief")
+    peacekeeping_effect: int = rule(30, 0, 100, W, "Share by which a council's peacekeeping force lowers fighting between the parties it stands between (%)")
+    recognition_effect: int = rule(20, 0, 100, W, "Standing a new polity gains when a council recognises it")
 
 
 @dataclass(frozen=True)
@@ -139,6 +160,8 @@ class OpinionSubjectRules:
     ideology_weight: int = rule(100, 0, 100, M, "How strongly a town's view of a creed drifts toward its devotion (%)")
     faction_weight: int = rule(60, 0, 100, M, "How strongly a town's view of a faction among it sets the faction's recruits and the backlash against it (%)")
     foreign_power_weight: int = rule(50, 0, 100, M, "How strongly a town's view of a foreign power moves its trade, alliance support and will for war (%)")
+    economy_weight: int = rule(60, 0, 100, M, "Weight of prices and work in what a people thinks of its rulers (%)")
+    neighbour_people_weight: int = rule(40, 0, 100, M, "Weight of contact, trade and war in what a people thinks of a neighbouring people (%)")
 
 
 @dataclass(frozen=True)
@@ -161,6 +184,7 @@ class SecretKindRules:
     true_history_severity: int = rule(55, 0, 100, R, "Weight of the true history behind an official account when it comes to light")
     hidden_power_severity: int = rule(60, 0, 100, R, "Weight of a concealed innate power when it comes to light")
     forgery_severity: int = rule(60, 0, 100, R, "Weight of a forgery its holder made or used when it comes to light")
+    illness_severity: int = rule(55, 0, 100, R, "Weight of a ruler's hidden illness once it is known")
 
 
 @dataclass(frozen=True)
@@ -173,6 +197,8 @@ class HookDemandRules:
     appointment_cost: int = rule(60, 0, 100, R, "Chance pressing an appointment wears a strong hook down to a weak one (%)")
     silence_cost: int = rule(30, 0, 100, R, "Chance pressing a witness to silence wears a strong hook down to a weak one (%)")
     payment_cost: int = rule(50, 0, 100, R, "Chance extorting a payment wears a strong hook down to a weak one (%)")
+    release_cost: int = rule(45, 0, 100, R, "Cost to the bound of a hook that demands someone held be let go")
+    information_cost: int = rule(25, 0, 100, R, "Cost to the bound of a hook that demands what it knows")
 
 
 @dataclass(frozen=True)
@@ -188,6 +214,8 @@ class FavourOriginRules:
     ransom_weight: int = rule(100, 0, 100, R, "Share of its size a favour owed for a ransom paid keeps (%)")
     hospitality_favour: int = rule(25, 0, 100, R, "Size of the favour a sheltered fugitive owes its host")
     ransom_favour: int = rule(40, 0, 100, R, "Size of the favour a freed captive owes those who paid the ransom")
+    healing_weight: int = rule(60, 0, 100, R, "Weight of a favour earned by healing")
+    teaching_weight: int = rule(45, 0, 100, R, "Weight of a favour earned by teaching")
 
 
 @dataclass(frozen=True)
@@ -212,6 +240,7 @@ class GravityBandRules:
     under_ice_heat: int = rule(30, 0, 100, K, "Tectonics or volcanism from which an ice-sealed sea is warmed enough from beneath to hold life")
     cloud_low_kelvin: int = rule(220, 0, 1000, K, "Coldest surface warmth, in kelvin, at which a giant's cloud layers can hold life")
     cloud_high_kelvin: int = rule(350, 0, 2000, K, "Warmest surface warmth, in kelvin, at which a giant's cloud layers can hold life")
+    vent_heat: int = rule(45, 0, 100, K, "Tectonics or volcanism from which a sea floor has hot vents that life can live on")
 
 
 @dataclass(frozen=True)
@@ -230,3 +259,11 @@ class OuterBargainRules(Spanned):
         20, 0, 100, G, "Share of the followers of a god's faithful cults whose souls are handed over when that price falls due (%)"
     )
     descendants_years: int = span(150, 1, 5000, G, "Years a line given as a price stays bound before the debt is paid")
+    restored_life_size: int = rule(1, 0, 20, G, "Dead mortals of the bargainer's faithful an outer bargain that brings back the dead returns")
+    protection_size: int = rule(40, 0, 100, G, "Share of a named harm an outer bargain that gives protection turns aside from the places it covers (%)")
+    protection_years: int = span(100, 1, 5000, G, "Years the protection an outer bargain gives holds")
+    memories_weight: int = rule(15, 0, 100, G, "How often an outer being asks memories as its price")
+    years_weight: int = rule(15, 0, 100, G, "How often an outer being asks years of life as its price")
+    years_taken: int = span(40, 1, 1000, G, "Years of life a price paid in years takes from the bargainer's avatar or its line")
+    dreams_sleep_cut: int = rule(20, 0, 100, G, "Rest the sleepers of a world lose each epoch an outer being that hungers for dreams presses on it")
+    time_age_years: int = span(10, 0, 500, G, "Years each mortal of a world ages each epoch an outer being that hungers for time presses on it")

@@ -8,6 +8,7 @@ from aerona.catalog.life.divine import SERVITOR_ORIGINS
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.grammar import an, spoken
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, SpiritProfileRow
@@ -244,6 +245,30 @@ async def keep_accounts(ctx: TickContext, row: ServitorRow, tally: ServitorTally
             tally.served += 1
 
 
+@DUTIES.on(ServitorRole.HEALER)
+async def tend_sick(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
+    town = await ctx.session.get(SettlementProfileRow, row.post_entity_id) if row.post_entity_id is not None else None
+    if town is None or held(town.settlement_entity_id):
+        return
+    table = ctx.rules.servitors
+    if "sanitation" not in town.locked:
+        town.sanitation = clamp_int(town.sanitation + table.healer_health, 0, PERCENT)
+    if "siege_disease" not in town.locked:
+        town.siege_disease = clamp_int(town.siege_disease - table.healer_health, 0, PERCENT)
+    tally.served += 1
+
+
+@DUTIES.on(ServitorRole.TEACHER)
+async def teach_town(ctx: TickContext, row: ServitorRow, tally: ServitorTally) -> None:
+    place = await ctx.session.get(EntityRow, row.post_entity_id) if row.post_entity_id is not None else None
+    people = await people_of(ctx.session, place) if place is not None else None
+    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    if culture is None or held(culture.people_entity_id) or "literacy" in culture.locked:
+        return
+    culture.literacy = clamp_int(culture.literacy + ctx.rules.servitors.teacher_learning, 0, PERCENT)
+    tally.served += 1
+
+
 DUTIES.seal()
 
 
@@ -283,9 +308,37 @@ async def raise_offspring(ctx: TickContext, tally: ServitorTally) -> None:
         tally.raised += 1
 
 
+async def raise_heroes(ctx: TickContext, tally: ServitorTally) -> None:
+    table = ctx.rules.servitors
+    serving = set(await ctx.session.scalars(select(ServitorRow.spirit_entity_id)))
+    heroes = select(EntityRow.id).where(EntityRow.mortal_role == MortalRole.HERO)
+    rows = await ctx.session.scalars(select(SpiritProfileRow).where(SpiritProfileRow.origin_mortal_id.in_(heroes)).order_by(SpiritProfileRow.spirit_entity_id))
+    for spirit in list(rows):
+        if spirit.spirit_entity_id in serving or held(spirit.spirit_entity_id) or spirit.patron_son_id is None or held(spirit.patron_son_id):
+            continue
+        if not ctx.rng(f"servitor.ascend.{spirit.spirit_entity_id}.{ctx.epoch}").chance(table.raise_pct):
+            continue
+        await enrol(ctx, spirit.spirit_entity_id, spirit.patron_son_id, role=ServitorRole.MESSENGER, post_id=None, origin=ServitorOrigin.ASCENDED)
+        tally.raised += 1
+
+
+async def bargained_servant(ctx: TickContext, god_id: int) -> ServitorRow | None:
+    serving = select(ServitorRow.spirit_entity_id)
+    spirit = await ctx.session.scalar(
+        select(SpiritProfileRow.spirit_entity_id)
+        .where(SpiritProfileRow.state == AfterlifeState.WANDERING, SpiritProfileRow.spirit_entity_id.not_in(serving))
+        .order_by(SpiritProfileRow.spirit_entity_id)
+        .limit(1)
+    )
+    if spirit is None or held(spirit, god_id):
+        return None
+    return await enrol(ctx, spirit, god_id, role=ServitorRole.GUARD, post_id=None, origin=ServitorOrigin.BARGAINED)
+
+
 async def tend_servitors(ctx: TickContext, tally: ServitorTally) -> None:
     table = ctx.rules.servitors
     await raise_saints(ctx, tally)
+    await raise_heroes(ctx, tally)
     await raise_offspring(ctx, tally)
     for row in list(await ctx.session.scalars(select(ServitorRow).order_by(ServitorRow.spirit_entity_id))):
         spirit = await ctx.session.get(EntityRow, row.spirit_entity_id)

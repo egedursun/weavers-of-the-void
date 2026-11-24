@@ -22,6 +22,8 @@ SPACE_WEATHER_TEMPLATES: dict[str, str] = {
     "field_reversal": "The magnetic field of {subject} turned over; while it turns its shield is weaker, and {dose} came through to the ground.",
     "cosmic_ray_burst": "A burst of rays from far away reached {subject}, at strength {strength}; {dose} of it came through to the ground.",
     "wind_surge": "The wind of its star surged against {subject}, at strength {strength}; {dose} of it came through to the ground.",
+    "meteor_shower": "A shower of falling stars crossed the sky of {subject}, at strength {strength}; {dose} of it came through to the ground.",
+    "stellar_dimming": "The star of {subject} dimmed, at strength {strength}; {dose} of its light failed to reach the ground.",
 }
 
 LAND_STEPS: dict[str, A] = {

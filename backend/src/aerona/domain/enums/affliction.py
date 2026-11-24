@@ -19,6 +19,9 @@ class PackageKind(StrEnum):
     FORTUNE = "fortune"
     TRANSFORMATION = "transformation"
     CHARM = "charm"
+    AGEING = "ageing"
+    FORGETTING = "forgetting"
+    SLEEP = "sleep"
 
 
 class Transmission(StrEnum):
@@ -37,12 +40,28 @@ class Transmission(StrEnum):
     VOID = "void"
     INTIMATE = "intimate"
     OBJECTS = "objects"
+    SOIL = "soil"
+    SOUND = "sound"
 
 
 class Visibility(StrEnum):
     OBVIOUS = "obvious"
     NOTICEABLE = "noticeable"
     HIDDEN = "hidden"
+    MARKED = "marked"
+
+
+class ForgetScope(StrEnum):
+    RECENT = "recent"
+    PERSON = "person"
+    SKILL = "skill"
+    ALL = "all"
+
+
+class SleepUntil(StrEnum):
+    TIME = "time"
+    DEED = "deed"
+    ACT = "act"
 
 
 class CureKind(StrEnum):
@@ -56,6 +75,8 @@ class CureKind(StrEnum):
     SYMBIONT = "symbiont"
     TRANSFER = "transfer"
     AUGMENT = "augment"
+    RELEASE = "release"
+    SITE = "site"
 
 
 class ChangeSign(StrEnum):

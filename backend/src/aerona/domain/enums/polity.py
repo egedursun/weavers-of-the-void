@@ -51,6 +51,7 @@ class OfficeKind(StrEnum):
     CHIEF_SCIENTIST = "chief_scientist"
     JESTER = "jester"
     WARDEN = "warden"
+    CENSOR = "censor"
 
 
 class OfficePower(StrEnum):
@@ -67,6 +68,7 @@ class OfficePower(StrEnum):
     PREACH = "preach"
     RESEARCH = "research"
     JEST = "jest"
+    CENSUS = "census"
 
 
 class RegionalStanding(StrEnum):
@@ -75,6 +77,7 @@ class RegionalStanding(StrEnum):
     MINOR_POWER = "minor_power"
     CLIENT = "client"
     NEUTRAL = "neutral"
+    ISOLATED = "isolated"
 
 
 class RevoltKind(StrEnum):
@@ -105,6 +108,7 @@ class SuccessionRule(StrEnum):
     DIVINE_CHOICE = "divine_choice"
     ULTIMOGENITURE = "ultimogeniture"
     DESIGNATION = "designation"
+    ROTATION = "rotation"
 
 
 class SexRule(StrEnum):
@@ -128,6 +132,8 @@ class LawArea(StrEnum):
     COMMERCE = "commerce"
     FAITH = "faith"
     LABOUR = "labour"
+    FAMILY = "family"
+    ENVIRONMENT = "environment"
 
 
 class LawKind(StrEnum):
@@ -221,6 +227,7 @@ class ClaimBasis(StrEnum):
     DE_JURE = "de_jure"
     ELECTION = "election"
     ADOPTION = "adoption"
+    PROPHECY = "prophecy"
 
 
 class HouseTrait(StrEnum):
@@ -252,6 +259,7 @@ class OathKind(StrEnum):
     FIDELITY = "fidelity"
     SECRECY = "secrecy"
     TESTIMONY = "testimony"
+    OFFICE = "office"
 
 
 class OathStatus(StrEnum):
@@ -278,6 +286,8 @@ class TreatyKind(StrEnum):
     DIVINE_PACT = "divine_pact"
     NAVAL_LIMIT = "naval_limit"
     ARMS_LIMIT = "arms_limit"
+    MUTUAL_AID = "mutual_aid"
+    BORDER_ACCORD = "border_accord"
 
 
 class InterworldTreatyKind(StrEnum):
@@ -293,6 +303,7 @@ class TreatyStatus(StrEnum):
     PROPOSED = "proposed"
     REJECTED = "rejected"
     SUSPENDED = "suspended"
+    RENEGOTIATING = "renegotiating"
 
 
 class ClauseKind(StrEnum):
@@ -323,6 +334,9 @@ class ClauseKind(StrEnum):
     NO_PLAGUE_POWERS = "no_plague_powers"
     NO_DESIGNED_DISEASE = "no_designed_disease"
     MASS_WEAPON_LIMIT = "mass_weapon_limit"
+    RETURN_OF_REFUGEES = "return_of_refugees"
+    SHARED_WATER = "shared_water"
+    CAPTIVE_EXCHANGE = "captive_exchange"
 
 
 class PartyRole(StrEnum):
@@ -331,6 +345,7 @@ class PartyRole(StrEnum):
     VASSAL = "vassal"
     GUARANTOR = "guarantor"
     MEDIATOR = "mediator"
+    WITNESS = "witness"
 
 
 CLOSURES = frozenset({LawKind.CLOSED_SEASON, LawKind.PROTECTED_WATERS, LawKind.CATCH_QUOTA, LawKind.GEAR_BAN})

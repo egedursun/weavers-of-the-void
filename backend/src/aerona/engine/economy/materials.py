@@ -284,7 +284,7 @@ def holy_edge(rules: Rules, props: MaterialProps | None, natures: frozenset[FoeN
         return 1.0
     table = rules.materials
     lift = 0.0
-    for nature in natures:
+    for nature in sorted(natures):
         bane = FOE_BANES[nature]
         tainted = props.corruption * int(getattr(table, bane.corruption_rule)) if bane.corruption_rule is not None else 0
         lift += (props.sanctity * int(getattr(table, bane.sanctity_rule)) - tainted) / PERCENT / PERCENT

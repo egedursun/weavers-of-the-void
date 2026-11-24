@@ -2,7 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import delete, select
 
-from aerona.catalog.life.crafts import BURN_AND_FADE_LINK_TOKENS, TOKEN_STRENGTH, TOKENS_WITHIN_REACH_LINK_TOKENS
+from aerona.catalog.life.crafts import BURN_AND_FADE_LINK_TOKENS, GUARDED_TOKENS, TOKEN_STRENGTH, TOKENS_WITHIN_REACH_LINK_TOKENS
+from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.crafts import MaterialAffinityRow, SympatheticLinkRow
 from aerona.db.tables.culture import ArtworkProfileRow, ItemHistoryRow, RiteEffectRow
@@ -20,11 +21,25 @@ from aerona.domain.enums.customs import EvidenceKind
 from aerona.domain.enums.economy import MaterialFamily
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.folkways import AccusationOutcome
+from aerona.domain.enums.mind import ValueAxis
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.mind.book import values_for
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import active_bonds, has_flag
 
 MAGICAL = frozenset({MaterialFamily.PRECIOUS, MaterialFamily.EXOTIC})
+
+
+async def token_strength(ctx: TickContext, token: LinkToken, target_id: int) -> int:
+    strength = TOKEN_STRENGTH[token](ctx.rules)
+    if token not in GUARDED_TOKENS:
+        return strength
+    target = await ctx.session.get(EntityRow, target_id)
+    people = await people_of(ctx.session, target) if target is not None else None
+    values = await values_for(ctx.session, people.id) if people is not None else {}
+    guarded = values.get(ValueAxis.SUPERSTITION, 0) > 0 or values.get(ValueAxis.TRADITION, 0) > 0
+    return strength * (PERCENT - ctx.rules.links.guarded_tokens_cut) // PERCENT if guarded else strength
 
 
 async def tokens_within_reach(ctx: TickContext, caster_id: int, target_id: int) -> list[LinkToken]:
@@ -114,7 +129,7 @@ async def take_links(ctx: TickContext, tally: SympathyTally) -> None:
                 holder_node_id=caster.id,
                 target_node_id=grudge.subject_node_id,
                 token=token,
-                strength=TOKEN_STRENGTH[token](ctx.rules),
+                strength=await token_strength(ctx, token, grudge.subject_node_id),
                 obtained_epoch=ctx.epoch,
                 locked=[],
             )

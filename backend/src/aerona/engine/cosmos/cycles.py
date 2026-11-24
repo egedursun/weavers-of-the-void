@@ -19,6 +19,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.environment.long_seasons import made_spell
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
 
 BALANCE = PERCENT // 2
@@ -143,7 +144,7 @@ async def raise_seas(ctx: TickContext, world_id: int, physics: WorldPhysicsRow |
         row = cycles.get(cycle)
         if row is None or physics is None or "hydrosphere" in physics.locked or abs(row.stock - BALANCE) < STEP:
             continue
-        rise = table.sea_level if row.stock > BALANCE else -table.sea_level
+        rise = table.sea_level if (row.stock > BALANCE) is not CYCLES[cycle].inverse else -table.sea_level
         before = physics.hydrosphere
         physics.hydrosphere = clamp_int(physics.hydrosphere + rise, 0, PERCENT)
         if physics.hydrosphere == before:
@@ -182,6 +183,21 @@ async def note_band(ctx: TickContext, world_id: int, row: WorldCycleRow, before:
         facts={"cycle": row.cycle, "stock": row.stock, "inflow": row.inflow, "outflow": row.outflow},
         world_id=world_id,
     )
+
+
+async def cool_core(ctx: TickContext, world_id: int, physics: WorldPhysicsRow | None, cycles: WorldCycles) -> None:
+    if physics is None or "volcanism" in physics.locked or physics.volcanism <= 0:
+        return
+    for cycle, spec in CYCLES.items():
+        row = cycles.get(cycle)
+        if not spec.cools or row is None or row.stock >= ctx.rules.cycles.band_low:
+            continue
+        with explaining():
+            term("cycles.heat_volcano_step", -ctx.rules.cycles.heat_volcano_step, source_node_id=world_id)
+            physics.volcanism = clamp_int(physics.volcanism - ctx.rules.cycles.heat_volcano_step, 0, PERCENT)
+        await record(
+            ctx, "world.core_cooled", roles={IncidentRole.SUBJECT: world_id}, facts={"volcanism": physics.volcanism, "heat": row.stock}, world_id=world_id
+        )
 
 
 async def thin_air(ctx: TickContext, world_id: int, physics: WorldPhysicsRow | None, cycles: WorldCycles) -> None:
@@ -233,6 +249,7 @@ async def turn_cycles(ctx: TickContext, tally: CycleTally) -> None:
         tally.turned += 1
         await raise_seas(ctx, world_id, physics, cycles, tally)
         await thin_air(ctx, world_id, physics, cycles)
+        await cool_core(ctx, world_id, physics, cycles)
         carbon = cycles.get(PlanetaryCycle.CARBON)
         if carbon is not None and carbon.stock >= ctx.rules.long_seasons.made_threshold:
             await made_spell(ctx, world, winter=False, severity=carbon.stock - BALANCE, incident_id=None)

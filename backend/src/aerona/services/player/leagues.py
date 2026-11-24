@@ -9,11 +9,12 @@ from aerona.engine.leagues.book import LeagueTally, living_polity
 from aerona.engine.leagues.founding import found_league
 from aerona.engine.leagues.life import dissolve
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
+from aerona.services.player.shaping import Shaped, shape_after
 
 PARTNERS_MAX = 20
 
 
-class FoundLeague(Command):
+class FoundLeague(Shaped):
     founder_id: int
     partner_ids: list[int] = Field(min_length=1, max_length=PARTNERS_MAX)
     aims: list[LeagueAim] = Field(min_length=1)
@@ -36,6 +37,7 @@ async def league_found(scope: PlayerScope, command: FoundLeague) -> Effect:
     if len(realms) < ctx.rules.leagues.found_min_members:
         raise ValidationFailedError(f"A league needs at least {ctx.rules.leagues.found_min_members} realms.")
     league = await found_league(ctx, realms, list(dict.fromkeys(command.aims)), command.vote_basis, LeagueTally(), seat=command.seat_id)
+    await shape_after(scope, league.id, command)
     return Effect(f"{league.name.capitalize()} stands.", league.id, created_ids=(league.id,))
 
 

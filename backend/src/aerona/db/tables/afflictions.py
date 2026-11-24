@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.base import Base
 from aerona.db.columns import at_least, enum_type, nullable_between
-from aerona.domain.enums.affliction import ChangeSign, CharmKind, PackageKind, Transmission
+from aerona.domain.enums.affliction import ChangeSign, CharmKind, ForgetScope, PackageKind, SleepUntil, Transmission
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.material import MaterialKind
 
@@ -15,6 +15,7 @@ class AfflictionRow(Base):
         at_least("since_epoch", 0),
         nullable_between("fortune_strength", 0, 100),
         nullable_between("charm_strength", 0, 100),
+        nullable_between("ageing_rate_pct", 0, 1000),
         CheckConstraint("fortune_sign IS NULL OR fortune_sign IN (-1, 1)", name="fortune_sign_one"),
         Index("ix_afflictions_bearer", "bearer_node_id"),
         Index("ix_afflictions_package", "package"),
@@ -41,4 +42,7 @@ class AfflictionRow(Base):
     charm_target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     charm_kind: Mapped[CharmKind | None] = mapped_column(enum_type(CharmKind, "charm_kind"))
     charm_strength: Mapped[int | None]
+    ageing_rate_pct: Mapped[int | None]
+    forget_scope: Mapped[ForgetScope | None] = mapped_column(enum_type(ForgetScope, "forget_scope"))
+    sleep_until: Mapped[SleepUntil | None] = mapped_column(enum_type(SleepUntil, "sleep_until"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -103,5 +103,37 @@ async def slide_dam(ctx: TickContext, land: RegionEnvironmentRow) -> bool:
     return True
 
 
+async def ice_moves(ctx: TickContext, lands: dict[int, RegionEnvironmentRow]) -> int:
+    moved = 0
+    for region_id, land in sorted(lands.items()):
+        if land.river_class is RiverClass.NONE or land.temperature >= ctx.rules.environment.frozen_below or held(region_id):
+            continue
+        if ctx.rng(f"ice_shift.{region_id}.{ctx.epoch}").chance(ctx.rules.rivers.ice_shift_pct):
+            moved += int(await shift_river(ctx, region_id, None, RiverShiftCause.ICE) is not None)
+    return moved
+
+
+async def captures(ctx: TickContext, lands: dict[int, RegionEnvironmentRow]) -> int:
+    atlas = await RegionAtlas.load(ctx.session)
+    moved = 0
+    for region_id, land in sorted(lands.items()):
+        if land.river_class is RiverClass.NONE or held(region_id):
+            continue
+        lower = sorted(
+            (lands[other].elevation_mean, other)
+            for other in atlas.neighbours(region_id)
+            if other in lands and lands[other].river_class is not RiverClass.NONE and lands[other].elevation_mean < land.elevation_mean
+        )
+        if lower and ctx.rng(f"capture.{region_id}.{ctx.epoch}").chance(ctx.rules.rivers.capture_pct):
+            moved += int(await shift_river(ctx, region_id, lower[0][1], RiverShiftCause.CAPTURE) is not None)
+    return moved
+
+
 async def keep_courses(ctx: TickContext, lands: dict[int, RegionEnvironmentRow], inflow: dict[int, int]) -> int:
-    return await silt_out(ctx, lands, inflow) + await works_move(ctx, lands) + await burst_slide_dams(ctx, lands)
+    return (
+        await silt_out(ctx, lands, inflow)
+        + await works_move(ctx, lands)
+        + await burst_slide_dams(ctx, lands)
+        + await ice_moves(ctx, lands)
+        + await captures(ctx, lands)
+    )

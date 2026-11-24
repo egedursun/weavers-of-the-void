@@ -69,6 +69,8 @@ WRITABLE = total(
         M.TACTILE: True,
         M.VIBRATION: False,
         M.ELECTRIC: False,
+        M.WHISTLED: False,
+        M.DRUMMED: False,
     },
 )
 
@@ -85,6 +87,8 @@ MODALITY_NEEDS = total(
         M.TACTILE: frozenset({BodyFunction.GRASP}),
         M.VIBRATION: frozenset({BodyFunction.PRESENCE}),
         M.ELECTRIC: frozenset({BodyFunction.PRESENCE}),
+        M.WHISTLED: frozenset({BodyFunction.SPEECH}),
+        M.DRUMMED: frozenset({BodyFunction.GRASP}),
     },
 )
 
@@ -101,6 +105,8 @@ MODALITY_SENSE: Mapping[LanguageModality, SenseKind | None] = total(
         M.TACTILE: None,
         M.VIBRATION: SenseKind.VIBRATION,
         M.ELECTRIC: SenseKind.ELECTRIC,
+        M.WHISTLED: SenseKind.HEARING,
+        M.DRUMMED: SenseKind.HEARING,
     },
 )
 
@@ -117,6 +123,8 @@ MODALITY_RANGE: Mapping[LanguageModality, str | None] = total(
         M.TACTILE: None,
         M.VIBRATION: "vibration_range",
         M.ELECTRIC: "electric_range",
+        M.WHISTLED: "whistle_range",
+        M.DRUMMED: "drum_range",
     },
 )
 
@@ -224,6 +232,8 @@ BASES = total(
         NumeralBase.SEXAGESIMAL: BaseSpec("Sixties", 60, 10, True, False, "sexagesimal_reckoning_pct"),
         NumeralBase.OCTAL: BaseSpec("Eights", 8, 2, False, False, "octal_reckoning_pct"),
         NumeralBase.BODY_TALLY: BaseSpec("Counting along the body", 27, 0, False, True, "body_tally_reckoning_pct"),
+        NumeralBase.QUINARY: BaseSpec("Fives", 5, 2, False, False, "quinary_reckoning_pct"),
+        NumeralBase.BINARY: BaseSpec("Twos", 2, 1, False, True, "binary_reckoning_pct"),
     },
 )
 
@@ -244,6 +254,7 @@ STAGES = total(
         LanguageStage.DIVINE: StageSpec("A divine tongue", False, False),
         LanguageStage.CONSTRUCTED: StageSpec("A made tongue", False, True),
         LanguageStage.REVIVED: StageSpec("A revived tongue", True, True),
+        LanguageStage.ENDANGERED: StageSpec("A tongue near its end", True, False),
     },
 )
 
@@ -265,6 +276,7 @@ SHIFTS = total(
         SenseShift.RESTORED: ShiftSpec("Restored", "restored_rate"),
         SenseShift.EXTENDED: ShiftSpec("Carried over by likeness", "extended_rate"),
         SenseShift.ASSOCIATED: ShiftSpec("Carried over by nearness", "associated_rate"),
+        SenseShift.REVERSED: ShiftSpec("Turned to its opposite", "reversed_rate"),
     },
 )
 DRIFTS = tuple(shift for shift, spec in SHIFTS.items() if spec.rule is not None)
@@ -288,6 +300,8 @@ REGISTERS = total(
         WordRegister.TABOO: RegisterSpec("Not to be said", False, "taboo_insult", False),
         WordRegister.TECHNICAL: RegisterSpec("Words of a craft", False, None, True),
         WordRegister.HONORIFIC: RegisterSpec("Speech to superiors", False, "honorific_insult", False),
+        WordRegister.SLANG: RegisterSpec("Slang", True, None, True),
+        WordRegister.LEGAL: RegisterSpec("Words of the law", False, None, True),
     },
 )
 
@@ -308,6 +322,7 @@ SCRIPT_CAUSES = total(
         ScriptChangeCause.BORROWING: ScriptCauseSpec("Borrowed", False, False),
         ScriptChangeCause.IMPOSITION: ScriptCauseSpec("Imposed by law", True, False),
         ScriptChangeCause.REVELATION: ScriptCauseSpec("Revealed", False, True),
+        ScriptChangeCause.TECHNOLOGY: ScriptCauseSpec("Changed by a new way of writing", False, False),
     },
 )
 
@@ -331,6 +346,7 @@ POLICIES = total(
         LanguagePolicy.REVIVAL: PolicySpec("Revived", True, False, False, 1, SalienceDriver.RHETORIC),
         LanguagePolicy.PROTECTED: PolicySpec("Protected", False, True, False, -1),
         LanguagePolicy.STANDARDISED: PolicySpec("Set by an academy", False, False, True),
+        LanguagePolicy.BILINGUAL: PolicySpec("Two tongues kept side by side", True, True, False, -1),
     },
 )
 
@@ -356,6 +372,8 @@ SOCIOLECTS = total(
         SociolectKind.SAILORS: SociolectSpec("Speech of sailors", IdentityLayer.PROFESSION, -10, "sailors_drift", False),
         SociolectKind.YOUTH: SociolectSpec("Speech of the young", IdentityLayer.GENERATION, -20, "youth_drift", False),
         SociolectKind.SOLDIERS: SociolectSpec("Speech of soldiers", IdentityLayer.PROFESSION, 0, "soldiers_drift", True),
+        SociolectKind.CLERGY: SociolectSpec("Speech of the clergy", IdentityLayer.FAITH, 40, "clergy_drift", True),
+        SociolectKind.SCHOLARS: SociolectSpec("Speech of scholars", IdentityLayer.PROFESSION, 30, "scholars_drift", True, coins_technical=True),
     },
 )
 
@@ -375,5 +393,6 @@ SIGN_CAUSES = total(
         SignCause.HUNTING_SILENCE: SignCauseSpec("Born of silent hunting", False, False),
         SignCause.MUTILATION: SignCauseSpec("Born of maiming", False, False),
         SignCause.TRADE: SignCauseSpec("Born of trade between tongues", False, True),
+        SignCause.NOISE: SignCauseSpec("Born of the din of the works", False, False),
     },
 )

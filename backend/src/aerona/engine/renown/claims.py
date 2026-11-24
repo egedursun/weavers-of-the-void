@@ -89,4 +89,15 @@ async def tend_claims(ctx: TickContext, tally: DeedTally) -> None:
         found = await ctx.session.get(DeedRow, claim.deed_id)
         if found is not None:
             await test_claim(ctx, found, claim, tally)
+    await forget_claims(ctx)
     await ctx.session.flush()
+
+
+async def forget_claims(ctx: TickContext) -> None:
+    old = ctx.epoch - ctx.rules.claims.epochs(ctx.rules.claims.forgotten_years)
+    rows = await ctx.session.scalars(
+        select(DeedClaimRow).where(DeedClaimRow.status == ClaimStatus.STANDING, DeedClaimRow.epoch <= old).order_by(DeedClaimRow.id)
+    )
+    for claim in list(rows):
+        if "status" not in claim.locked and not held(claim.claimant_node_id):
+            claim.status, claim.settled_epoch, claim.credited = ClaimStatus.FORGOTTEN, ctx.epoch, 0

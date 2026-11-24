@@ -1,11 +1,15 @@
 import {
+  type LucideIcon,
   Baby,
   Ban,
+  Banknote,
   BookOpen,
   Castle,
   Church,
+  Compass,
   Crown,
   Dna,
+  DoorOpen,
   Drama,
   Feather,
   Fingerprint,
@@ -26,22 +30,27 @@ import {
   Megaphone,
   Minus,
   Music,
+  Newspaper,
   Palette,
   Scale,
   Shield,
   ShieldAlert,
+  Ship,
   Sparkles,
   Swords,
   Target,
   Tent,
   Trees,
+  TriangleAlert,
   Trophy,
-  type LucideIcon,
   Unlink,
+  Unlock,
   UserRound,
   Users,
   Vote,
   Wheat,
+  Building2,
+  Siren,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -70,6 +79,8 @@ export const LAYERS: Record<Schema['IdentityLayer'], Named> = {
   language: { label: 'Tongue', icon: Languages, tone: 'info' },
   kind: { label: 'Kind of being', icon: Dna, tone: 'verdigris' },
   cause: { label: 'Cause', icon: Flag, tone: 'warning' },
+  calling: { label: 'Calling', icon: Compass, tone: 'gold' },
+  gift: { label: 'Gift', icon: Sparkles, tone: 'gold' },
 }
 
 export const DRIVERS: Record<Schema['SalienceDriver'], Named> = {
@@ -82,7 +93,7 @@ export const DRIVERS: Record<Schema['SalienceDriver'], Named> = {
   segregation: { label: 'Kept apart', icon: Ban, tone: 'warning' },
   crossing: { label: 'Mixed marriages', icon: Heart, tone: 'success' },
   god: { label: 'A god', icon: Sparkles, tone: 'gold' },
-  persecution: { label: 'Persecution', icon: ShieldAlert, tone: 'danger' },
+  persecution: { label: 'Persecution', icon: Siren, tone: 'danger' },
   commemoration: {
     label: 'Remembering the past',
     icon: Landmark,
@@ -90,6 +101,8 @@ export const DRIVERS: Record<Schema['SalienceDriver'], Named> = {
   },
   election: { label: 'A vote', icon: Vote, tone: 'info' },
   contest: { label: 'A match', icon: Trophy, tone: 'warning' },
+  arrivals: { label: 'Newcomers', icon: DoorOpen, tone: 'info' },
+  disaster: { label: 'A shared disaster', icon: TriangleAlert, tone: 'danger' },
 }
 
 export const PLAYS: Record<Schema['PlayKind'], Named> = {
@@ -112,6 +125,8 @@ export const SANCTUARY_KINDS: Record<Schema['SanctuaryKind'], Named> = {
   wilds: { label: 'The wilds', icon: Trees, tone: 'success' },
   free_city: { label: 'Free city', icon: Landmark, tone: 'gold' },
   embassy: { label: 'Embassy', icon: Flag, tone: 'info' },
+  ship: { label: 'Ship sanctuary', icon: Ship, tone: 'gold' },
+  trade_hall: { label: 'Hall sanctuary', icon: Building2, tone: 'gold' },
 }
 
 export const FUGITIVES: Record<Schema['FugitiveKind'], Named> = {
@@ -121,6 +136,8 @@ export const FUGITIVES: Record<Schema['FugitiveKind'], Named> = {
   runaway: { label: 'Runaway from bondage', icon: Unlink, tone: 'warning' },
   deserter: { label: 'Deserter', icon: Footprints, tone: 'danger' },
   heretic: { label: 'Fled persecution', icon: Church, tone: 'verdigris' },
+  escaped_captive: { label: 'Escaped captive', icon: Unlock, tone: 'danger' },
+  debtor: { label: 'Fleeing debtor', icon: Banknote, tone: 'danger' },
 }
 
 export const STATES: Record<Schema['SanctuaryState'], Named> = {
@@ -136,4 +153,6 @@ export const SOURCES: Record<Schema['SatireSource'], Named> = {
   artwork: { label: 'A work of art', icon: BookOpen, tone: 'verdigris' },
   mortal: { label: 'A mortal', icon: UserRound, tone: 'info' },
   god: { label: 'A god', icon: Sparkles, tone: 'gold' },
+  crowd: { label: 'Songs and chants of a crowd', icon: Users, tone: 'warning' },
+  outlet: { label: 'An outlet', icon: Newspaper, tone: 'info' },
 }

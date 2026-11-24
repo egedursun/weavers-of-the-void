@@ -13,7 +13,7 @@ import {
   UserRound,
   Wand2,
 } from 'lucide-react'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 
 export const ACTION_LABEL: Record<string, string> = {
   painted: 'Painted',
@@ -49,7 +49,7 @@ export const FALLBACK_ACTION_ICON = Feather
 
 export const ACTION_ORDER = Object.keys(ACTION_LABEL)
 
-const DRAWER_OF_NODE: Record<string, DrawerKind> = {
+const DRAWER_OF_NODE: Record<string, EntryKind> = {
   entity: 'entity',
   son: 'son',
   foreign_god: 'foreign-god',
@@ -61,7 +61,7 @@ const DRAWER_OF_NODE: Record<string, DrawerKind> = {
   dimension: 'dimension',
 }
 
-export function drawerOfNode(kind: string): DrawerKind | null {
+export function entryOfNode(kind: string): EntryKind | null {
   return DRAWER_OF_NODE[kind] ?? null
 }
 

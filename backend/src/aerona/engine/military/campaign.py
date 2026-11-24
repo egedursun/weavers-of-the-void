@@ -32,6 +32,7 @@ from aerona.engine.agrarian.book import fell_plantings
 from aerona.engine.body.hits import Harm
 from aerona.engine.body.variants import fear_of, fear_of_id
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import take_coin
 from aerona.engine.environment.book import add_scar
 from aerona.engine.folkways.biases import lean
 from aerona.engine.lifecycle.wounds import apply_hits
@@ -41,7 +42,7 @@ from aerona.engine.military.support import reluctance, support_of
 from aerona.engine.military.units import stacks_of, sync, take
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.split import facet_weight, facets_for
-from aerona.engine.mortal.standing import shift_standing
+from aerona.engine.mortal.standing import add_renown, shift_standing
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -220,6 +221,17 @@ def mutiny_outcome(rules: Rules, roll: int, pressure: int, enemy: bool) -> Mutin
     return MutinyOutcome.GRUMBLING
 
 
+async def by_terms(ctx: TickContext, row: ArmyRow, owner: EntityRow | None, rows: list[ArmyUnitRow], outcome: MutinyOutcome) -> MutinyOutcome:
+    pressing = outcome is MutinyOutcome.REFUSAL or outcome is MutinyOutcome.DEPOSED
+    if not pressing or owner is None or not await take_coin(ctx.session, ctx.rules, owner, ctx.rules.campaign_depth.negotiate_cost):
+        return outcome
+    for stack in rows:
+        stack.morale = clamp_int(stack.morale + ctx.rules.campaign_depth.mutiny_gain // 2, 0, PERCENT)
+    if row.commander_entity_id is not None:
+        await add_renown(ctx.session, row.commander_entity_id, -ctx.rules.campaign_depth.negotiate_renown, ctx.epoch, rules=ctx.rules)
+    return MutinyOutcome.NEGOTIATED
+
+
 async def mutiny(ctx: TickContext, army: EntityRow, row: ArmyRow, profile: ArmyProfileRow, *, enemy_id: int | None) -> MutinyOutcome | None:
     if profile.mutiny < ctx.rules.campaign_depth.mutiny_threshold:
         return None
@@ -227,6 +239,7 @@ async def mutiny(ctx: TickContext, army: EntityRow, row: ArmyRow, profile: ArmyP
     owner = await living_entity(ctx.session, row.owner_entity_id)
     rows = await stacks_of(ctx.session, army.id)
     steps: tuple[StepDraft, ...] = ()
+    outcome = await by_terms(ctx, row, owner, rows, outcome)
     if outcome is MutinyOutcome.GRUMBLING:
         for stack in rows:
             stack.morale = clamp_int(stack.morale - round_half_up(ctx.rules.campaign_depth.mutiny_gain // 2 * await fear_of(ctx.session, army)), 0, PERCENT)

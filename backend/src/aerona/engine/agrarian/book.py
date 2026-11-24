@@ -45,6 +45,8 @@ def ring_shares(rules: Rules, ring: LandUseRing) -> tuple[int, int]:
         LandUseRing.GRAIN: (table.grain_farm_pct, table.grain_graze_pct),
         LandUseRing.RANCHING: (table.ranching_farm_pct, table.ranching_graze_pct),
         LandUseRing.WILDS: (PERCENT, PERCENT),
+        LandUseRing.INDUSTRY: (table.industry_farm_pct, table.industry_graze_pct),
+        LandUseRing.FALLOW: (table.fallow_farm_pct, table.fallow_graze_pct),
     }[ring]
 
 

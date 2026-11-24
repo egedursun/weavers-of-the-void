@@ -2,10 +2,12 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.military import STIRRING_FEUDS
 from aerona.catalog.life.phases import GRIEF, INSULTS
 from aerona.core.random import SeededRandom
 from aerona.core.total import partial, total
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.military import FeudRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.body import HarmCause
@@ -15,7 +17,7 @@ from aerona.domain.enums.military import DuelContext, FeudAction, FeudParty, Feu
 from aerona.domain.enums.mind import ActKind, MemoryKind, TraitKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
-from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.polity import LawKind, OathKind
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.storyteller import SpontaneousKind
 from aerona.domain.enums.war import WarCause
@@ -33,6 +35,7 @@ from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.phase import Phase
 from aerona.engine.phases.warfare import Theatre, duel
 from aerona.engine.polity.laws import law_param
+from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import living_entity
@@ -56,6 +59,8 @@ FEUD_KEYS: Mapping[FeudAction, str] = partial(
         FeudAction.DESTROY_PROPERTY: "vendetta.destroy_property",
         FeudAction.SEEK_MEDIATION: "vendetta.seek_mediation",
         FeudAction.CALL_ALLIES: "vendetta.call_allies",
+        FeudAction.SEEK_AMENDS: "vendetta.amends",
+        FeudAction.SWEAR_OFF: "vendetta.sworn_off",
     },
     without=(FeudAction.REST,),
 )
@@ -90,6 +95,8 @@ async def choose(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> Feud
     if await law_param(ctx.session, avenger.id, LawKind.BLOOD_FEUD, "wergild_allowed") and rng.chance(table.wergild_chance):
         return FeudAction.DEMAND_WERGILD
     weighed = (
+        (FeudAction.SWEAR_OFF, table.swear_off_chance if values.get(ValueAxis.HONOUR, 0) > 0 else 0),
+        (FeudAction.SEEK_AMENDS, table.amends_chance),
         (FeudAction.SEEK_MEDIATION, table.seek_mediation_chance),
         (FeudAction.ESCALATE, table.escalate_chance),
         (FeudAction.CALL_ALLIES, table.allies_chance),
@@ -200,6 +207,41 @@ async def rest(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> Deed |
     return None
 
 
+async def seek_amends(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> Deed | None:
+    gift = ctx.rules.vendetta.amends_wealth
+    if stat(enemy, "wealth") is None or (stat(enemy, "wealth") or 0) < gift or frozen(enemy.id):
+        return None
+    move_stat(enemy, avenger, "wealth", gift)
+    await end_blood_feud(ctx.session, avenger.id, enemy.id, epoch=ctx.epoch, status=FeudStatus.SETTLED)
+    await change_relation(ctx, avenger.id, enemy.id, gift, MemoryKind.GIFTED_ME, note="amends for the feud")
+    return Deed({IncidentRole.GIVER: enemy.id, IncidentRole.RECEIVER: avenger.id}, {"amends": gift, "status": FeudStatus.SETTLED})
+
+
+async def swear_off(ctx: TickContext, avenger: EntityRow, enemy: EntityRow) -> Deed | None:
+    if avenger.entity_type is not EntityType.MORTAL or enemy.entity_type is not EntityType.MORTAL:
+        return None
+    await swear(ctx, avenger, OathKind.NONVIOLENCE, recipient_id=enemy.id, note_text="sworn to end the feud")
+    await swear(ctx, enemy, OathKind.NONVIOLENCE, recipient_id=avenger.id, note_text="sworn to end the feud")
+    await end_blood_feud(ctx.session, avenger.id, enemy.id, epoch=ctx.epoch, status=FeudStatus.ENDED)
+    return Deed({IncidentRole.ALLY: [avenger.id, enemy.id]}, {"status": FeudStatus.ENDED})
+
+
+async def stir_dormant(ctx: TickContext) -> int:
+    table = ctx.rules.vendetta
+    woken = 0
+    for row in list(await ctx.session.scalars(select(FeudRow).where(FeudRow.status.in_(STIRRING_FEUDS)).order_by(FeudRow.id))):
+        if frozen(row.first_entity_id, row.second_entity_id) or "status" in row.locked:
+            continue
+        quiet = ctx.epoch - (row.last_epoch if row.last_epoch is not None else row.since_epoch)
+        if row.status is FeudStatus.ACTIVE and quiet >= table.epochs(table.dormant_years):
+            row.status = FeudStatus.DORMANT
+        elif row.status is FeudStatus.DORMANT and ctx.rng(f"feud.wake.{row.id}.{ctx.epoch}").chance(table.wake_pct):
+            row.status, row.last_epoch = FeudStatus.ACTIVE, ctx.epoch
+            await record(ctx, "feud.woke", roles={IncidentRole.ACTOR: row.first_entity_id, IncidentRole.OPPONENT: row.second_entity_id}, facts={"quiet": quiet})
+            woken += 1
+    return woken
+
+
 ACTIONS: Mapping[FeudAction, Callable[[TickContext, EntityRow, EntityRow], Awaitable[Deed | None]]] = total(
     FeudAction,
     {
@@ -213,6 +255,8 @@ ACTIONS: Mapping[FeudAction, Callable[[TickContext, EntityRow, EntityRow], Await
         FeudAction.DESTROY_PROPERTY: destroy_property,
         FeudAction.SEEK_MEDIATION: seek_mediation,
         FeudAction.CALL_ALLIES: call_allies,
+        FeudAction.SEEK_AMENDS: seek_amends,
+        FeudAction.SWEAR_OFF: swear_off,
     },
 )
 
@@ -224,6 +268,7 @@ async def act(ctx: TickContext, action: FeudAction | None, avenger: EntityRow, e
 async def feuds(ctx: TickContext) -> int:
     table = ctx.rules.vendetta
     acted = 0
+    await stir_dormant(ctx)
     live = ctx.rng("feud_order").shuffled(await active_feuds(ctx.session))
     limit = scaled_cap(table.cap, table.cap_feud_divisor, len(live))
     for row in live:

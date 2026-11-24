@@ -15,7 +15,7 @@ def part(key: BodyPart) -> Part:
 
 
 def test_twenty_seven_injury_kinds_each_told_and_cared_for() -> None:
-    assert len(InjuryKind) == 27
+    assert len(InjuryKind) == 30
     assert set(INJURY_PHRASES) == set(InjuryKind) and set(INJURIES) == set(InjuryKind)
     assert all(INJURIES[kind].noted for kind in (InjuryKind.ASPHYXIA, InjuryKind.DISLOCATION, InjuryKind.INTERNAL_BLEEDING))
 

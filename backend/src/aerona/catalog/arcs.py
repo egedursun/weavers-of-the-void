@@ -39,6 +39,9 @@ ARCS: Mapping[ArcTemplate, ArcSpec] = total(
         A.RECONCILIATION: ArcSpec("Reconciliation", lambda rules: rules.arcs.reconciliation_weight),
         A.SACRIFICE: ArcSpec("Sacrifice", lambda rules: rules.arcs.sacrifice_weight, ends_in_death=True),
         A.DISCOVERY: ArcSpec("Discovery", lambda rules: rules.arcs.discovery_weight),
+        A.BETRAYAL: ArcSpec("Betrayal", lambda rules: rules.arcs.betrayal_weight, confronting=True),
+        A.FRIENDSHIP: ArcSpec("Friendship", lambda rules: rules.arcs.friendship_weight),
+        A.LEGACY: ArcSpec("Legacy", lambda rules: rules.arcs.legacy_weight),
     },
 )
 CONFRONTING = frozenset(template for template, spec in ARCS.items() if spec.confronting)

@@ -5,7 +5,8 @@ from aerona.core.total import total
 from aerona.domain.enums.arcana import SpellTechnique
 from aerona.domain.enums.creator import CreatorPassion
 from aerona.domain.enums.divine import CouncilMotion, DivineWoundKind, OuterHunger, PenanceDeed, SonPunishment, WoundCause
-from aerona.domain.enums.mythic import MantlingState, ServitorOrigin
+from aerona.domain.enums.entity import EngineKind
+from aerona.domain.enums.mythic import HeroquestBoon, MantlingState, ServitorOrigin
 from aerona.rules.registry import Rules
 
 HUNGER_LABELS = {
@@ -14,6 +15,8 @@ HUNGER_LABELS = {
     OuterHunger.LIGHT: "Light",
     OuterHunger.NAMES: "Names",
     OuterHunger.MEMORIES: "Memories",
+    OuterHunger.DREAMS: "Dreams",
+    OuterHunger.TIME: "Time",
 }
 
 
@@ -25,6 +28,8 @@ HUNGER_TECHNIQUE: Mapping[OuterHunger, SpellTechnique] = total(
         OuterHunger.LIGHT: SpellTechnique.DESTROY,
         OuterHunger.NAMES: SpellTechnique.BIND,
         OuterHunger.MEMORIES: SpellTechnique.TRANSFORM,
+        OuterHunger.DREAMS: SpellTechnique.DRAIN,
+        OuterHunger.TIME: SpellTechnique.DRAIN,
     },
 )
 
@@ -55,6 +60,9 @@ MOTION_LABELS = {
     CouncilMotion.REGULATE_MADE_MINDS: "Regulate made minds",
     CouncilMotion.REGULATE_POWERS: "Regulate powers",
     CouncilMotion.REGULATE_LIVING_CRAFT: "Regulate living craft",
+    CouncilMotion.REGULATE_CURSES: "Rule on who may lay curses and how",
+    CouncilMotion.OPEN_INQUIRY: "Inquire into a god's acts",
+    CouncilMotion.AMNESTY: "Grant an amnesty",
 }
 
 
@@ -70,6 +78,8 @@ WOUND_LABELS: Mapping[DivineWoundKind, str] = total(
         DivineWoundKind.BOUND: "Binding",
         DivineWoundKind.SPLIT_ASPECT: "Split aspect",
         DivineWoundKind.FORGOTTEN_NAME: "Forgotten name",
+        DivineWoundKind.DESECRATED_SEAT: "Desecrated seat",
+        DivineWoundKind.SPLIT_WORSHIP: "Split worship",
     },
 )
 
@@ -83,10 +93,13 @@ STRUCK_KINDS = (
     DivineWoundKind.BOUND,
     DivineWoundKind.SPLIT_ASPECT,
     DivineWoundKind.FORGOTTEN_NAME,
+    DivineWoundKind.DESECRATED_SEAT,
+    DivineWoundKind.SPLIT_WORSHIP,
 )
 
 TARGET_FOR_CREATOR_PASSIONS = frozenset({CreatorPassion.WAR, CreatorPassion.CHAOS})
 TARGET_FOR_CREATOR_PASSIONS_2 = frozenset({CreatorPassion.CREATION, CreatorPassion.ORDER})
+MEMORY_WORKS = frozenset({EngineKind.LIBRARY, EngineKind.COSMIC_ARCHIVE})
 PREVENT_MANTLING_STATES = frozenset({MantlingState.ASCENDED, MantlingState.REPLACED})
 PREVENT_MANTLING_STATES_2 = frozenset({MantlingState.BLOCKED, MantlingState.FAILED})
 SPONSOR_MANTLING_STATES = frozenset({MantlingState.ASCENDED, MantlingState.REPLACED})
@@ -116,6 +129,8 @@ WOUND_CAUSES: Mapping[WoundCause, CauseSpec] = total(
         WoundCause.NEGLECT: CauseSpec("neglect", lambda rules: rules.divine_wounds.neglect_severity),
         WoundCause.BETRAYAL: CauseSpec("betrayal by one in its service", lambda rules: rules.divine_wounds.betrayal_severity),
         WoundCause.MORTAL_SLAYER: CauseSpec("a mortal's deed", lambda rules: rules.divine_wounds.mortal_slayer_severity, by_mortal=True),
+        WoundCause.SCHISM: CauseSpec("a split among its worshippers", lambda rules: rules.divine_wounds.schism_severity),
+        WoundCause.OUTER_BEING: CauseSpec("a being from outside the cosmos", lambda rules: rules.divine_wounds.outer_being_severity),
     },
 )
 NEGLECT_KINDS = frozenset({DivineWoundKind.LOST_WORSHIPPERS, DivineWoundKind.FORGOTTEN_NAME})
@@ -137,6 +152,8 @@ PUNISHMENTS: Mapping[SonPunishment, PunishmentSpec] = total(
         SonPunishment.STRIP_DIVINITY: PunishmentSpec("the loss of its divinity"),
         SonPunishment.PENANCE: PunishmentSpec("a penance", lasting=True),
         SonPunishment.ESSENCE_FINE: PunishmentSpec("a fine of essence", renown=lambda rules: rules.council.essence_fine_renown),
+        SonPunishment.BOUND_TO_WORLD: PunishmentSpec("being bound to one world", lasting=True),
+        SonPunishment.REBUKE: PunishmentSpec("a rebuke", renown=lambda rules: rules.council.rebuke_renown),
     },
 )
 
@@ -172,5 +189,9 @@ SERVITOR_ORIGINS: Mapping[ServitorOrigin, OriginSpec] = total(
         ServitorOrigin.SUMMONED: OriginSpec("summoned by a rite"),
         ServitorOrigin.DEFECTED: OriginSpec("come over from another god", names_former_god=True, loyalty=lambda rules: rules.servitors.defected_loyalty),
         ServitorOrigin.BORN: OriginSpec("born to its god"),
+        ServitorOrigin.BARGAINED: OriginSpec("given by an outer being", loyalty=lambda rules: rules.servitors.bargained_loyalty),
+        ServitorOrigin.ASCENDED: OriginSpec("risen from among mortals"),
     },
 )
+KEPT_OR_FREED_PASSIONS = frozenset({CreatorPassion.FREEDOM, CreatorPassion.MEMORY})
+RESTORING_BOONS = frozenset({HeroquestBoon.KNOWLEDGE, HeroquestBoon.HEALING})

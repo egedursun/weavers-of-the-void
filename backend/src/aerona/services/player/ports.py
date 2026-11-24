@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.ledger_capture import LedgerDraft
 from aerona.domain.enums.world import StarType, WorldType
+from aerona.domain.models.son_design import SonDesign
 
 
 class LedgerCapture(Protocol):
@@ -52,7 +53,7 @@ class ContentJob:
 
 
 class SonSummoner(Protocol):
-    async def summon(self, world_id: int | None) -> int: ...
+    async def summon(self, world_id: int | None, design: SonDesign | None = None) -> int: ...
 
     async def birth(self, parent_son_id: int, inspiration: str, co_parent_son_id: int | None) -> int: ...
 

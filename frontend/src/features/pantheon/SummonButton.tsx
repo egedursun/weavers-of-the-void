@@ -24,7 +24,9 @@ export function SummonButton({
   const summon = useGodAction({
     run: () =>
       unwrap(
-        api.POST('/api/sons/summon', { body: { world_id: worldIdOf(world) } })
+        api.POST('/api/sons/summon', {
+          body: { world_id: worldIdOf(world), inspiration: '' },
+        })
       ),
     success: 'A son is answering your call',
   })

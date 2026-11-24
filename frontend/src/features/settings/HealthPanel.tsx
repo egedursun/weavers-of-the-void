@@ -13,6 +13,7 @@ import {
   Tag,
   TriangleAlert,
 } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { formatBytes, formatDuration, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,12 @@ import { useHealth } from '@/features/images/api'
 import { useHealthReport } from './api'
 
 const MINUTE_SECONDS = 60
+const HEALTH_STATUS: Record<components['schemas']['HealthStatus'], string> = {
+  ok: 'All good',
+  warning: 'Recent errors',
+  bad: 'Database damaged',
+  degraded: 'Database checks failing',
+}
 const RECENT_ERRORS = 5
 
 export function HealthPanel() {
@@ -50,7 +57,7 @@ export function HealthPanel() {
         data && (
           <div className='flex flex-wrap gap-1.5'>
             <Badge variant={good ? 'success' : 'destructive'}>
-              {good ? 'All good' : data.status}
+              {HEALTH_STATUS[data.status]}
             </Badge>
             {data.read_only && <Badge variant='warning'>Read-only</Badge>}
           </div>

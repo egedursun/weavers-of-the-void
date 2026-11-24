@@ -65,6 +65,9 @@ RESPONSE_WORDS: Mapping[PlagueResponse, str] = {
     PlagueResponse.PRAYER: "gathered to pray",
     PlagueResponse.SEEK_CURE: "set its learned to seek a cure",
     PlagueResponse.SANITATION: "cleaned its water and carried away its refuse",
+    PlagueResponse.FLEE: "fled from the sickness",
+    PlagueResponse.INOCULATE: "inoculated its folk",
+    PlagueResponse.CLOSE_GATHERINGS: "closed its feasts, markets and rites",
 }
 
 INJURY_PHRASES: Mapping[InjuryKind, str] = total(
@@ -78,6 +81,9 @@ INJURY_PHRASES: Mapping[InjuryKind, str] = total(
         InjuryKind.CRUSH: "a crushing blow",
         InjuryKind.BURN: "burns",
         InjuryKind.FROSTBITE: "frostbite",
+        InjuryKind.SPRAIN: "a sprain",
+        InjuryKind.TORN_TENDON: "a torn tendon",
+        InjuryKind.PRESSURE_INJURY: "an injury of pressure",
         InjuryKind.BITE: "a savage bite",
         InjuryKind.VENOM: "venom",
         InjuryKind.SEVERED: "the loss of a part",

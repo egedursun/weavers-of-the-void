@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.arcana import CONDITIONAL_DURATIONS, SUSTAINED_DURATIONS
+from aerona.catalog.arcana import CONDITIONAL_DURATIONS, LIFETIME_DURATIONS, SUSTAINED_DURATIONS
 from aerona.core.total import total
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.body import InjuryRow
@@ -13,6 +13,7 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.renown import DeedRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.arcana import RiteCondition, RiteEnd
+from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.queries import living_entity
@@ -91,6 +92,8 @@ async def struck(watch: Watch, caster: EntityRow) -> bool:
 
 
 async def end_of(watch: Watch) -> RiteEnd | None:
+    if watch.grammar.duration in LIFETIME_DURATIONS:
+        return RiteEnd.TARGET_GONE if watch.target is None or watch.target.status is not EntityStatus.CANON else None
     if watch.grammar.duration in SUSTAINED_DURATIONS:
         caster = await living_entity(watch.ctx.session, watch.casting.caster_entity_id) if watch.casting.caster_entity_id is not None else None
         if caster is None:
@@ -102,7 +105,7 @@ async def end_of(watch: Watch) -> RiteEnd | None:
 
 
 async def end_rites(ctx: TickContext, tally: EndingTally) -> None:
-    lasting = sorted(SUSTAINED_DURATIONS | CONDITIONAL_DURATIONS)
+    lasting = sorted(SUSTAINED_DURATIONS | CONDITIONAL_DURATIONS | LIFETIME_DURATIONS)
     rows = await ctx.session.execute(
         select(CastingRow, RiteGrammarRow)
         .join(RiteGrammarRow, RiteGrammarRow.rite_entity_id == CastingRow.rite_entity_id)

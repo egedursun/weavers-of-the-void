@@ -9,6 +9,7 @@ from aerona.engine.phases.dominion import count
     "people.population",
     "settlement.population",
     "table.community_dishes",
+    "table.community_stocks",
     "table.dishes",
     "table.entities",
     "table.entity_traits",
@@ -19,6 +20,7 @@ from aerona.engine.phases.dominion import count
     "table.plant_profiles",
     "table.region_environment",
     "table.region_pollution",
+    "table.season_onsets",
     "table.sense_profiles",
     "table.soil_microbiota",
     "table.soil_nutrients",
@@ -28,7 +30,7 @@ from aerona.engine.phases.dominion import count
     "table.trade_route_profiles",
     "table.world_seasons",
 )
-@writes("table.ferment_cultures", "table.sense_profiles", "table.soil_microbiota", "table.species_profiles", "table.species_relations")
+@writes("table.ferment_cultures", "table.sense_profiles", "table.soil_microbiota", "table.species_profiles", "table.species_ranges", "table.species_relations")
 async def living_nature(ctx: TickContext) -> None:
     tally = NatureRun()
     await keep_nature(ctx, tally)

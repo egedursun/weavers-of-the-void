@@ -52,6 +52,7 @@ ECHELON_LABELS: dict[EchelonLevel, str] = {
     EchelonLevel.CORPS: "Corps",
     EchelonLevel.DIVISION: "Division",
     EchelonLevel.BRIGADE: "Brigade",
+    EchelonLevel.DETACHMENT: "Detachment",
 }
 
 SHOT_TARGETS: dict[ShotKind, tuple[VehicleSection, ...]] = {
@@ -66,6 +67,7 @@ SHOT_TARGETS: dict[ShotKind, tuple[VehicleSection, ...]] = {
     ShotKind.PIERCING: (V.ARMOUR_PLATING, V.ENGINE, V.BOILER, V.DRIVE, V.HULL),
     ShotKind.GUIDED: (V.BRIDGE, V.ENGINE, V.MAGAZINE, V.COCKPIT, V.DRIVE),
     ShotKind.ENERGY: (V.ARMOUR_PLATING, V.ENGINE, V.DRIVE, V.BRIDGE, V.HULL),
+    ShotKind.SMOKE: (V.BRIDGE, V.GUN_DECK, V.COCKPIT),
 }
 SHOT_WEIGHT: dict[ShotKind, int] = {
     ShotKind.ROUND: 100,
@@ -79,6 +81,7 @@ SHOT_WEIGHT: dict[ShotKind, int] = {
     ShotKind.PIERCING: 140,
     ShotKind.GUIDED: 200,
     ShotKind.ENERGY: 220,
+    ShotKind.SMOKE: 60,
 }
 
 RAKED_SECTIONS: tuple[VehicleSection, ...] = (V.BOW, V.STERN, V.RUDDER, V.STEERING, V.GUN_DECK)

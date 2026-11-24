@@ -138,3 +138,7 @@ class DiplomacyRules:
     coalition_threshold: int = rule(
         50, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Threat a realm's neighbours must feel before they band into a coalition against it"
     )
+    witness_breach_cost: int = rule(20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Standing a party loses for breaking a pact a witness sees")
+    frozen_upkeep: int = rule(3, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Prosperity each side of a frozen crisis loses each epoch until one side moves")
+    isolation_pct: int = rule(10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance each epoch a minor power with no trade abroad draws apart from all (%)")
+    isolation_cost: int = rule(2, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Prosperity an isolated realm's capital loses each epoch for want of trade")

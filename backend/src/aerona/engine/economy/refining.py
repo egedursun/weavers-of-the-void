@@ -423,6 +423,11 @@ async def hull_for(ctx: TickContext, book: EconomyBook, community: EntityRow) ->
     return None
 
 
+def yard_pull(book: EconomyBook, community: EntityRow) -> float:
+    view = book.views.get(community.world_id) if community.world_id is not None else None
+    return view.ship_pct / PERCENT if view is not None else 1.0
+
+
 async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow, tally: RefiningTally) -> None:
     table = ctx.rules.refining
     yard = book.workshop(community.id, WorkshopKind.SHIPYARD)
@@ -430,7 +435,7 @@ async def launch_ships(ctx: TickContext, book: EconomyBook, community: EntityRow
         yard is None
         or yard.held
         or yard.fleet >= fleet_room(ctx.rules, headcount(community))
-        or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance * await workshop_output(ctx.session, ctx.rules, yard))
+        or not ctx.rng(f"ship.{community.id}").chance(table.ship_chance * await workshop_output(ctx.session, ctx.rules, yard) * yard_pull(book, community))
     ):
         return
     needs = await hull_for(ctx, book, community)

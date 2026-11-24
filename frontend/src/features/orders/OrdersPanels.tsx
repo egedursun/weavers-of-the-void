@@ -475,7 +475,7 @@ export function ExchangePanel({
   const [quote, setQuote] = useState(second)
   const [rate, setRate] = useState('100')
   const [spread, setSpread] = useState('4')
-  const [drawer, setDrawer] = useState<number | null>(null)
+  const [drawer, setEntry] = useState<number | null>(null)
   const [payee, setPayee] = useState<number | null>(null)
   const [from, setFrom] = useState<number | null>(null)
   const [to, setTo] = useState<number | null>(null)
@@ -630,7 +630,7 @@ export function ExchangePanel({
         <NodePicker
           label='Drawn by'
           value={drawer}
-          onChange={setDrawer}
+          onChange={setEntry}
           blocked={blocked}
           types={HOLDER_TYPES}
         />

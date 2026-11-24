@@ -229,7 +229,7 @@ export function SonSiblings({
 }) {
   const rule = useRuleLookup()
   return (
-    <Section title='Siblings' level={3}>
+    <Section id='section-son-siblings' title='Siblings' level={3}>
       {siblings.length === 0 ? (
         <EmptyState
           icon={Users}

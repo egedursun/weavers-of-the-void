@@ -10,6 +10,8 @@ class CreatorPassion(StrEnum):
     MERCY = "mercy"
     CREATION = "creation"
     SILENCE = "silence"
+    FREEDOM = "freedom"
+    MEMORY = "memory"
 
 
 class CreatorMoodAxis(StrEnum):
@@ -17,6 +19,7 @@ class CreatorMoodAxis(StrEnum):
     ANGER = "anger"
     INTEREST = "interest"
     LONELINESS = "loneliness"
+    SORROW = "sorrow"
 
 
 class CreatorMoodLabel(StrEnum):
@@ -43,6 +46,8 @@ class CreatorSignKind(StrEnum):
     TEST = "test"
     REWARD = "reward"
     COVENANT_OFFER = "covenant_offer"
+    REBUKE = "rebuke"
+    INVITATION = "invitation"
 
 
 class CreatorStance(StrEnum):
@@ -103,3 +108,21 @@ class CreatorNature(StrEnum):
     SOURCE = "source"
     MANY_FACED = "many_faced"
     UNKNOWABLE = "unknowable"
+
+
+class MoodItem(StrEnum):
+    WARS = "wars"
+    GODLESS = "godless"
+    REBEL_SONS = "rebel_sons"
+    DOOMSDAY = "doomsday_clock"
+    CONTENTMENT_SOOTHES = "contentment_soothes"
+    CULT = "cult"
+    NEW_LIFE = "new_life"
+    ACTED = "the_god_acted"
+    SHADOW_OF_ANGER = "shadow_of_anger"
+    BATTLES = "battles"
+    BLOOD = "blood_shed"
+    LEAK = "leak"
+    TEMPERAMENT = "temperament"
+    STIR = "stir"
+    PASSIONS = "passions"

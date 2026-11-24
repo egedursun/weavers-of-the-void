@@ -11,5 +11,7 @@ MAGIC_SITE_KIND = total(
         MagicSiteKind.GATEWAY: Defined("Gateway", checked_by=("engine.dominion.sites.reveal", "engine.dominion.sites.seed_sites"), used_by=()),
         MagicSiteKind.TIDE_POINT: Defined("Tide point", checked_by=(), used_by=()),
         MagicSiteKind.DEPLETION_SCAR: Defined("Depletion scar", checked_by=(), used_by=()),
+        MagicSiteKind.CONFLUENCE: Defined("Confluence", checked_by=("engine.dominion.sites.meet_and_fail",), used_by=()),
+        MagicSiteKind.NULL_ZONE: Defined("Null zone", checked_by=("engine.dominion.sites.in_null_zone",), used_by=()),
     },
 )

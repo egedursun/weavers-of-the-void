@@ -89,6 +89,45 @@ void main(){
     float windows = step(0.92, fract(p.y*40.0)) * step(0.6, fract(atan(p.z, p.x)*20.0 + p.y*3.0));
     emis += uCityColor * windows * (1.0 - term) * 0.9;
     spec = 0.9; specPow = 120.0;
+  } else if (uType == 25) {
+    float warp = fbm(q*1.4, 3);
+    float frost = fbm(q*3.2 + warp, 5);
+    vec2 w = worley(q*3.1 + warp*0.4);
+    float fissure = 1.0 - smoothstep(0.015, 0.07, w.y - w.x);
+    base = mix(uPal[8]*0.22, uPal[9]*0.55, smoothstep(-0.4, 0.6, frost));
+    base = mix(base, vec3(0.006, 0.008, 0.014), fissure*0.85);
+    float heat = 0.6 + 0.4*sin(uTime*0.35 + w.x*9.0);
+    emis += uPal[0]*fissure*1.4*heat + uPal[1]*pow(max(snoise(q*24.0), 0.0), 10.0)*0.6;
+    emis += uPal[9]*pow(max(1.0 - nv, 0.0), 4.0)*0.08;
+    land = 1.0; hgt = smoothstep(-0.3, 0.7, frost)*0.5; bumpAmt = 0.6;
+    spec = 0.45*(1.0 - fissure); specPow = 60.0;
+  } else if (uType == 26) {
+    float warp = fbm(q*1.3, 3);
+    float isles = snoise(q*6.5 + warp*1.2)*0.6 + fbm(q*15.0 + 3.0, 4)*0.45;
+    float aw = max(fwidth(isles)*1.2, 0.002);
+    land = smoothstep(0.42 - aw, 0.42 + aw, isles);
+    float shelf = smoothstep(0.18, 0.42, isles)*(1.0 - land);
+    hgt = clamp((isles - 0.42)*2.2, 0.0, 1.0);
+    vec3 deep = mix(uPal[1], uPal[0], 0.35);
+    vec3 shallows = mix(uPal[0], uPal[2], 0.55);
+    vec3 shore = mix(uPal[2], uPal[3], smoothstep(0.0, 0.25, hgt));
+    vec3 green = mix(uPal[4], uPal[5], smoothstep(0.3, 0.7, fbm(q*9.0, 3) + 0.5));
+    vec3 isle = mix(shore, green, smoothstep(0.08, 0.3, hgt));
+    isle = mix(isle, uPal[7], smoothstep(0.6, 0.9, hgt));
+    base = mix(mix(deep, shallows, shelf), isle, land);
+    spec = (1.0 - land)*0.65; specPow = 90.0;
+    bumpAmt = land;
+  } else if (uType == 27) {
+    vec2 w = worley(q*4.2);
+    float seam = 1.0 - smoothstep(0.012, 0.05, w.y - w.x);
+    float cell = fract(sin(dot(floor(q*4.2*1.0 + w.x), vec3(17.1, 43.7, 9.3)))*24634.6);
+    float lat = step(0.92, fract(p.y*18.0)) * step(0.5, fract(atan(p.z, p.x)*9.0 + p.y*2.0));
+    base = mix(uPal[8], uPal[9], 0.2 + 0.45*cell) * (0.45 + 0.3*smoothstep(0.2, 0.8, w.x));
+    base = mix(base, vec3(0.03, 0.035, 0.05), seam*0.8);
+    float night = 1.0 - term;
+    emis += uCityColor*seam*(0.25 + 0.85*night) + uCopper*lat*night*0.6;
+    emis += uCityColor*step(0.985, cell)*night*0.9;
+    land = 1.0; spec = 0.55 - seam*0.4; specPow = 160.0;
   } else {
     float warp = fbm(q*1.15, 3);
     float e = fbm(q*1.7 + warp*0.65, 6);

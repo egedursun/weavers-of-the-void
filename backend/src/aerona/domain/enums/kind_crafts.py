@@ -19,6 +19,9 @@ class GarmentCategory(StrEnum):
     WORK_PROTECTION = "work_protection"
     ENVIRONMENT_SUIT = "environment_suit"
     BODY_MARKING = "body_marking"
+    SLEEPWEAR = "sleepwear"
+    WATER_WEAR = "water_wear"
+    CARRIER = "carrier"
 
 
 class WearingRule(StrEnum):
@@ -53,6 +56,9 @@ class ColourMeaning(StrEnum):
     JOY = "joy"
     FACTION = "faction"
     NONE = "none"
+    HEALTH = "health"
+    PURITY = "purity"
+    LIFE_STAGE = "life_stage"
 
 
 class ScentUse(StrEnum):
@@ -89,6 +95,8 @@ class FurnishingCategory(StrEnum):
     DECORATION = "decoration"
     SANITATION = "sanitation"
     SHRINE = "shrine"
+    BATHING = "bathing"
+    PLAY = "play"
 
 
 class ToolCategory(StrEnum):
@@ -116,6 +124,7 @@ class InstrumentCategory(StrEnum):
     ELECTRONIC = "electronic"
     MADE = "made"
     LIVING = "living"
+    WATER = "water"
 
 
 class EnsembleRole(StrEnum):
@@ -150,6 +159,8 @@ class GameCategory(StrEnum):
     SPECTACLE = "spectacle"
     GAMBLING = "gambling"
     NETWORK = "network"
+    PUZZLE = "puzzle"
+    ANIMAL_CONTEST = "animal_contest"
 
 
 class SubstanceCategory(StrEnum):

@@ -9,6 +9,7 @@ from aerona.domain.enums.military import (
     DefenderAction,
     FeudAction,
     FeudLevel,
+    FeudStatus,
     SiegeAction,
     Tactic,
     WarAimKind,
@@ -47,6 +48,8 @@ CAUSE_AIMS: dict[WarCause, tuple[WarAimKind, ...]] = {
     WarCause.RAID: (WarAimKind.LOOT,),
     WarCause.LIBERATION: (WarAimKind.LIBERATE, WarAimKind.REVENGE),
     WarCause.PUNITIVE: (WarAimKind.REVENGE, WarAimKind.TRIBUTE),
+    WarCause.WATER: (WarAimKind.SECURE_WATER, WarAimKind.SEIZE_RESOURCE),
+    WarCause.REFUGEES: (WarAimKind.RETURN_REFUGEES, WarAimKind.HUMILIATE),
 }
 
 
@@ -60,6 +63,9 @@ TRAIT_TACTICS: dict[CommanderTrait, tuple[Tactic, ...]] = {
     CommanderTrait.DEFENSIVE_GENIUS: (Tactic.HOLD_LINE, Tactic.RIVER_DEFENCE, Tactic.SHIELD_WALL),
     CommanderTrait.CAVALRY_MASTER: (Tactic.FLANK_CAVALRY, Tactic.FEIGNED_RETREAT),
     CommanderTrait.SIEGE_EXPERT: (Tactic.SIEGE_ASSAULT,),
+    CommanderTrait.RIVER_CROSSER: (Tactic.RIVER_CROSSING,),
+    CommanderTrait.JUNGLE_FIGHTER: (Tactic.AMBUSH, Tactic.FIRE_ATTACK),
+    CommanderTrait.COLD_FIGHTER: (Tactic.HOLD_LINE,),
     CommanderTrait.SKY_COMMANDER: (Tactic.AIR_SUPERIORITY,),
     CommanderTrait.SPACE_COMMANDER: (Tactic.ORBITAL_BOMBARDMENT, Tactic.DROP_ASSAULT),
     CommanderTrait.ARTILLERIST: (Tactic.ARTILLERY_BARRAGE, Tactic.MISSILE_ATTRITION),
@@ -90,6 +96,7 @@ PHASE_ACTIONS = {
     BattlePhase.RESERVES: StepAction.REINFORCE,
     BattlePhase.RITES: StepAction.PERFORM_RITE,
     BattlePhase.PURSUIT: StepAction.PURSUE,
+    BattlePhase.PARLEY: StepAction.YIELD,
     BattlePhase.SALVAGE: StepAction.PILLAGE,
     BattlePhase.AFTERMATH: StepAction.HOLD,
 }
@@ -108,6 +115,8 @@ LEVELS: Mapping[FeudAction, FeudLevel | None] = total(
         FeudAction.DESTROY_PROPERTY: FeudLevel.RAID,
         FeudAction.SEEK_MEDIATION: None,
         FeudAction.CALL_ALLIES: None,
+        FeudAction.SEEK_AMENDS: None,
+        FeudAction.SWEAR_OFF: None,
     },
 )
 
@@ -143,6 +152,8 @@ SIEGE_ACTIONS = {
     SiegeAction.ASSAULT: StepAction.STORM,
     SiegeAction.NEGOTIATE: StepAction.NEGOTIATE,
     SiegeAction.SUBORN: StepAction.BETRAY,
+    SiegeAction.POISON_SUPPLY: StepAction.HOLD,
+    SiegeAction.DIVERT_RIVER: StepAction.FLOOD,
 }
 
 
@@ -154,13 +165,15 @@ DEFENCE_ACTIONS = {
     DefenderAction.FLOOD_APPROACHES: StepAction.FLOOD_LAND,
     DefenderAction.SCORCHED_EARTH: StepAction.BURN_LAND,
     DefenderAction.EXPEL_MOUTHS: StepAction.LEAVE,
+    DefenderAction.BURN_WORKS: StepAction.IGNITE,
+    DefenderAction.EVACUATE_BY_SEA: StepAction.LEAVE,
 }
 
 
 WANTED_TRAITS_TACTICS = frozenset({Tactic.FRONTAL_ASSAULT, Tactic.WEDGE})
 SETTLE_COHORT_CAPTIVE_FATES = HOMEWARD_FATES
 SETTLE_COHORT_CAPTIVE_FATES_2 = KEPT_FATES
-PAY_CONTRACTS_CONTRACT_STATUSS = (ContractStatus.ACTIVE, ContractStatus.UNPAID)
+PAY_CONTRACTS_CONTRACT_STATUSS = (ContractStatus.ACTIVE, ContractStatus.UNPAID, ContractStatus.RENEWED)
 ENTRENCH_STANCES = frozenset(stance for stance, spec in STANCES.items() if spec.entrenches)
 FEED_STANCES = frozenset(stance for stance, spec in STANCES.items() if spec.feeds)
 FEED_STANCES_2 = frozenset(stance for stance, spec in STANCES.items() if spec.plunders)
@@ -168,3 +181,6 @@ EXTRA_TERMS_WAR_ENDINGS = frozenset({WarEnding.WHITE_PEACE, WarEnding.EXHAUSTION
 BATTER_SIEGE_ACTIONS = frozenset(action for action, spec in SIEGE_ACTION_SPECS.items() if spec.batters)
 BLACKMAIL_OFFICE_OFFICE_KINDS = frozenset({OfficeKind.CHANCELLOR, OfficeKind.AMBASSADOR})
 HIRE_MERCENARIES_CONTRACT_STATUSS = (ContractStatus.ACTIVE, ContractStatus.UNPAID)
+
+
+STIRRING_FEUDS = (FeudStatus.ACTIVE, FeudStatus.DORMANT)

@@ -8,6 +8,7 @@ from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.intrigue import BeliefSource
 from aerona.domain.enums.law_depth import RecruitMotive
@@ -19,7 +20,7 @@ from aerona.engine.intrigue.beliefs import believe
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mind.opinion import mortal_rulers
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
@@ -152,6 +153,11 @@ async def keep_motive(ctx: TickContext, network: SpyNetworkRow, agent: SpyAgentR
     return int(getattr(ctx.rules.spy_depth, spec.double_risk_rule)) / PERCENT
 
 
+async def at_war(ctx: TickContext, network: SpyNetworkRow) -> bool:
+    foes = await active_bonds(ctx.session, [BondKind.ENEMY], sources=[network.owner_entity_id])
+    return any(bond.target_node_id == network.target_entity_id for bond in foes)
+
+
 async def watch_agents(ctx: TickContext, network: SpyNetworkRow) -> int:
     table = ctx.rules.espionage
     changed = 0
@@ -160,7 +166,9 @@ async def watch_agents(ctx: TickContext, network: SpyNetworkRow) -> int:
             continue
         rng = ctx.rng(f"spy.watch.{agent.id}.{ctx.epoch}")
         before = agent.status
-        if agent.status is AgentStatus.ACTIVE and agent.exposure >= table.exposed_at:
+        if agent.status is AgentStatus.SLEEPER and await at_war(ctx, network):
+            agent.status = AgentStatus.ACTIVE
+        elif agent.status is AgentStatus.ACTIVE and agent.exposure >= table.exposed_at:
             agent.status = AgentStatus.MISSING if rng.chance(table.missing_pct) else AgentStatus.EXPOSED
         elif agent.status is AgentStatus.MISSING and rng.chance(table.found_pct):
             agent.status = AgentStatus.ACTIVE

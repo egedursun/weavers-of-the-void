@@ -3473,6 +3473,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
             "reserve_game",
             "poach_game",
             "improve_soil",
+            "tend_soil_stock",
         ),
         (
             "boserup.",
@@ -8227,6 +8228,24 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("geography_lines",),
         (),
         (),
+        (),
+    ),
+    ComplianceRow(
+        "S52.664 passages of the deep and what realms know of it",
+        ("deep_passages", "polity_deep_knowledge"),
+        ("resource_economy",),
+        (
+            "deep_passage:create",
+            "deep_passage:edit",
+            "deep_passage:hold",
+            "deep_passage:delete",
+            "deep_knowledge:set",
+            "deep_knowledge:delete",
+        ),
+        ("DeepMapPanel",),
+        ("geography_lines",),
+        (),
+        ("deep.",),
         (),
     ),
     ComplianceRow(

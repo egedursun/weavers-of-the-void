@@ -1,7 +1,10 @@
+import { type ReactNode } from 'react'
+
 export type ComboboxOption = {
   value: string
   label: string
   hint?: string
+  adornment?: ReactNode
   keywords?: string
 }
 

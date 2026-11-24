@@ -18,6 +18,8 @@ class BodyPlan(StrEnum):
     CENTAUROID = "centauroid"
     RADIAL = "radial"
     COLONIAL = "colonial"
+    HEXAPOD = "hexapod"
+    ROOTED = "rooted"
 
 
 class HeightClass(StrEnum):
@@ -50,6 +52,8 @@ class BodyFunction(StrEnum):
     HORN = "horn"
     TAIL = "tail"
     PRESENCE = "presence"
+    SWIM = "swim"
+    CLIMB = "climb"
 
 
 class BodyRegion(StrEnum):
@@ -80,6 +84,8 @@ class DamageType(StrEnum):
     SONIC = "sonic"
     PSYCHIC = "psychic"
     ASPHYXIA = "asphyxia"
+    SOUL = "soul"
+    PRESSURE = "pressure"
 
 
 class InjuryKind(StrEnum):
@@ -110,6 +116,9 @@ class InjuryKind(StrEnum):
     ASPHYXIA = "asphyxia"
     DISLOCATION = "dislocation"
     INTERNAL_BLEEDING = "internal_bleeding"
+    SPRAIN = "sprain"
+    TORN_TENDON = "torn_tendon"
+    PRESSURE_INJURY = "pressure_injury"
 
 
 class InjuryState(StrEnum):
@@ -121,6 +130,7 @@ class InjuryState(StrEnum):
     HEALED_SCAR = "healed_scar"
     PERMANENT = "permanent"
     LETHAL = "lethal"
+    CHRONIC = "chronic"
 
 
 class HarmCause(StrEnum):
@@ -153,6 +163,9 @@ class HarmCause(StrEnum):
     CHILDBIRTH = "childbirth"
     CRIME = "crime"
     SPORT = "sport"
+    ANIMAL = "animal"
+    CROWD = "crowd"
+    MEDICAL = "medical"
 
 
 class ConditionKind(StrEnum):
@@ -177,6 +190,9 @@ class ConditionKind(StrEnum):
     PARALYSIS = "paralysis"
     INFERTILITY = "infertility"
     CHRONIC_PAIN = "chronic_pain"
+    SEIZURES = "seizures"
+    LASTING_FEAR = "lasting_fear"
+    BREATHLESSNESS = "breathlessness"
 
 
 class MedicineTier(StrEnum):
@@ -194,6 +210,7 @@ class MedicineTier(StrEnum):
     GENOME_REPAIR = "genome_repair"
     CELLULAR_MACHINES = "cellular_machines"
     MIND_MEDICINE = "mind_medicine"
+    ANATOMY = "anatomy"
 
 
 class Capacity(StrEnum):
@@ -207,6 +224,8 @@ class Capacity(StrEnum):
     FERTILITY = "fertility"
     ENDURANCE = "endurance"
     PERCEPTION = "perception"
+    STEALTH = "stealth"
+    LABOUR = "labour"
 
 
 class BodyReading(StrEnum):
@@ -228,6 +247,8 @@ class MaimedKind(StrEnum):
     BROKEN_MINDED = "broken_minded"
     PARALYSED = "paralysed"
     LOST_FINGERS = "lost_fingers"
+    LOST_TAIL = "lost_tail"
+    LOST_WING = "lost_wing"
 
 
 class StrikeStyle(StrEnum):
@@ -297,6 +318,7 @@ class BodyPart(StrEnum):
     TENTACLES = "tentacles"
     CARAPACE = "carapace"
     BEAK = "beak"
+    POUCH = "pouch"
 
 
 class TissueKind(StrEnum):
@@ -347,3 +369,5 @@ class TreatmentStep(StrEnum):
     DRAIN = "drain"
     BLEED = "bleed"
     MEDICATE = "medicate"
+    TRANSFUSE = "transfuse"
+    REST = "rest"

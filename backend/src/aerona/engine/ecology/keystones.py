@@ -137,7 +137,6 @@ async def hold_reef_fish(ctx: TickContext, region_id: int, strength: int) -> Non
 
 
 async def keep_services(ctx: TickContext, tally: KeystoneTally) -> None:
-    table = ctx.rules.keystones
     tally.assigned = await assign_roles(ctx)
     await ctx.session.flush()
     best = await strongest(ctx)
@@ -175,10 +174,18 @@ async def keep_services(ctx: TickContext, tally: KeystoneTally) -> None:
         if role is KeystoneRole.REEF_BUILDER:
             await hold_reef_fish(ctx, region_id, strength)
         land = await ctx.session.get(RegionEnvironmentRow, region_id)
-        if land is None or "soil_fertility" in land.locked:
-            continue
-        if role is KeystoneRole.SOIL_MAKER and strength > 0:
-            land.soil_fertility = clamp_int(land.soil_fertility + round_half_up(table.soil_gain * strength / PERCENT), 0, PERCENT)
-        elif strength <= 0:
-            land.soil_fertility = clamp_int(land.soil_fertility - table.lost_decay, 0, PERCENT)
+        if land is not None and "soil_fertility" not in land.locked:
+            tend_land(ctx.rules, land, role, strength)
     await ctx.session.flush()
+
+
+def tend_land(rules: Rules, land: RegionEnvironmentRow, role: KeystoneRole, strength: int) -> None:
+    table = rules.keystones
+    if role is KeystoneRole.NUTRIENT_FIXER and strength > 0:
+        land.soil_fertility = clamp_int(land.soil_fertility + round_half_up(table.fixer_fertility_pct * strength / PERCENT / 10), 0, PERCENT)
+    elif role is KeystoneRole.GRAZER and strength > 0 and "forest_cover" not in land.locked:
+        land.forest_cover = clamp_int(land.forest_cover - round_half_up(table.grazer_hold_pct * strength / PERCENT / 20), 0, PERCENT)
+    elif role is KeystoneRole.SOIL_MAKER and strength > 0:
+        land.soil_fertility = clamp_int(land.soil_fertility + round_half_up(table.soil_gain * strength / PERCENT), 0, PERCENT)
+    elif strength <= 0:
+        land.soil_fertility = clamp_int(land.soil_fertility - table.lost_decay, 0, PERCENT)

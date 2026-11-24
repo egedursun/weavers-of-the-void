@@ -20,7 +20,7 @@ import {
   PagedList,
   Section,
 } from '@/components/domain'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { Label, Muted, Stat } from '@/components/typography'
 import { CelestialDepthSection } from '@/features/celestial/CelestialDepthSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
@@ -210,7 +210,12 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
         catalog={catalog}
         cover={wiki?.cover ?? null}
       />
-      <Section title='At a glance' icon={Workflow} tone='verdigris'>
+      <Section
+        id='section-cluster-glance'
+        title='At a glance'
+        icon={Workflow}
+        tone='verdigris'
+      >
         <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4'>
           <MiniStat
             icon={Orbit}
@@ -261,6 +266,7 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
         </div>
       </Section>
       <Section
+        id='section-cluster-galaxies'
         title='Galaxies of the cluster'
         description='Open one to see its map, its stars and its structures.'
         icon={Orbit}
@@ -295,7 +301,12 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
         </div>
       </Section>
       {children.length > 0 && (
-        <Section title='Clusters inside it' icon={Workflow} tone='verdigris'>
+        <Section
+          id='section-cluster-inner'
+          title='Clusters inside it'
+          icon={Workflow}
+          tone='verdigris'
+        >
           <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
             <Paged items={children} as='li'>
               {(row) => (
@@ -457,7 +468,7 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
   )
 }
 
-export function ClusterPage({ id }: DrawerPageProps) {
+export function ClusterPage({ id }: EntryPageProps) {
   const value = pageId(id)
   return value === null ? (
     <Missing icon={Workflow} title='No such cluster' />

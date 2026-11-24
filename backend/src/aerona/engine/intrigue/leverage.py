@@ -2,16 +2,20 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import select
 
+from aerona.core.grammar import several
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.intrigue import SecretRow
 from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.warfare import CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intrigue import HookDemand
 from aerona.domain.enums.justice import CaseStage, Deposition
 from aerona.domain.enums.unions import UnionPurpose
+from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.context import TickContext
 from aerona.engine.departures.book import note_resignation
 from aerona.engine.intrigue.favours import call_favour, hook_on, owed_to, use_hook
@@ -114,6 +118,30 @@ async def extort(ctx: TickContext, holder: EntityRow, target: EntityRow) -> str 
     return f"{target.name} paid {holder.name} {amount} of their wealth"
 
 
+async def release(ctx: TickContext, holder: EntityRow, target: EntityRow) -> str | None:
+    rows = await ctx.session.scalars(
+        select(CaptiveRow)
+        .where(CaptiveRow.captor_entity_id == target.id, CaptiveRow.status == CaptiveStatus.HELD, CaptiveRow.home_entity_id == holder.id)
+        .order_by(CaptiveRow.id)
+    )
+    freed = 0
+    for row in list(rows):
+        if not held(row.captive_entity_id) and "status" not in (row.locked or []):
+            row.status = CaptiveStatus.RELEASED
+            freed += 1
+    return f"{target.name} let {several(freed, 'captive', 'captives')} go to {holder.name}" if freed else None
+
+
+async def inform(ctx: TickContext, holder: EntityRow, target: EntityRow) -> str | None:
+    rows = await ctx.session.scalars(select(SecretRow).where(SecretRow.holder_node_id != holder.id).order_by(SecretRow.id))
+    told = 0
+    for row in list(rows):
+        if target.id in (row.known_by or []) and holder.id not in (row.known_by or []) and "known_by" not in (row.locked or []):
+            row.known_by = [*row.known_by, holder.id]
+            told += 1
+    return f"{target.name} told {holder.name} {several(told, 'secret', 'secrets')} it knew" if told else None
+
+
 Deed = Callable[[TickContext, EntityRow, EntityRow], Awaitable[str | None]]
 DEEDS: Mapping[HookDemand, Deed] = total(
     HookDemand,
@@ -126,6 +154,8 @@ DEEDS: Mapping[HookDemand, Deed] = total(
         HookDemand.APPOINTMENT: appoint_holder,
         HookDemand.SILENCE: keep_silent,
         HookDemand.PAYMENT: extort,
+        HookDemand.RELEASE: release,
+        HookDemand.INFORMATION: inform,
     },
 )
 

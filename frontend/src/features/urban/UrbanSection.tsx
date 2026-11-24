@@ -38,6 +38,7 @@ import { MindPicker } from '@/features/entity/mind/parts'
 import { DISTRICT_SPEC } from '@/features/entity/society/labels'
 import { NumberField } from '@/features/entity/wilds/parts'
 import { Ref } from '@/features/gatherings/parts'
+import { StratumBadge } from '@/features/map/StratumBadge'
 import {
   type ConvoyView,
   type CrimeStanceView,
@@ -863,6 +864,7 @@ function ConvoyCard({
           {PRESERVATION[row.preservation].label}
         </Chip>
         {row.region && <Chip>{`Last seen at ${row.region.name}`}</Chip>}
+        <StratumBadge stratum={row.stratum} prefix='Travelling the' />
         {cargo.map(([good, amount]) => (
           <Chip key={good}>{`${amount} ${good.replace('_', ' ')}`}</Chip>
         ))}

@@ -36,6 +36,9 @@ class WorldType(StrEnum):
     HOLLOW = "hollow"
     ICE_SHELL = "ice_shell"
     METHANE = "methane"
+    ROGUE = "rogue"
+    ARCHIPELAGO = "archipelago"
+    MEGASTRUCTURE = "megastructure"
 
 
 class SurfaceLiquid(StrEnum):
@@ -59,6 +62,8 @@ class Atmosphere(StrEnum):
     NORMAL = "normal"
     DENSE = "dense"
     TOXIC = "toxic"
+    STEAM = "steam"
+    LAYERED = "layered"
 
 
 class Discovery(StrEnum):

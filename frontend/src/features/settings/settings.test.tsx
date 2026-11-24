@@ -298,7 +298,7 @@ describe('guide settings', () => {
     const { screen, router } = await renderScreen(<GuideSettings />)
     await screen.getByRole('button', { name: 'Shortcuts and terms' }).click()
     await expect
-      .poll(() => (router.state.location.search as { drawer?: string }).drawer)
+      .poll(() => (router.state.location.search as { entry?: string }).entry)
       .toBe('help')
   })
 })
@@ -412,7 +412,9 @@ describe('health panel', () => {
         },
       },
     })
-    await expect.element(screen.getByText('degraded')).toBeInTheDocument()
+    await expect
+      .element(screen.getByText('Database checks failing'))
+      .toBeInTheDocument()
     const integrity = await miniStat('Integrity')
     await expect
       .element(integrity.getByText('page 3 corrupt'))

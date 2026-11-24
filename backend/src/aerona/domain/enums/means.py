@@ -16,6 +16,8 @@ class WritingMedium(StrEnum):
     SILK = "silk"
     WOOD_SLIPS = "wood_slips"
     ELECTRONIC = "electronic"
+    CLOTH = "cloth"
+    POTSHERD = "potsherd"
 
 
 class LockKind(StrEnum):
@@ -26,6 +28,7 @@ class LockKind(StrEnum):
     WARDED_SEAL = "warded_seal"
     WORKED = "worked"
     ELECTRONIC = "electronic"
+    LIVING = "living"
 
 
 class WaterLift(StrEnum):
@@ -36,6 +39,7 @@ class WaterLift(StrEnum):
     STEAM_PUMP = "steam_pump"
     WIND_PUMP = "wind_pump"
     ELECTRIC_PUMP = "electric_pump"
+    ANIMAL_WHEEL = "animal_wheel"
 
 
 class NavigationAid(StrEnum):
@@ -47,6 +51,8 @@ class NavigationAid(StrEnum):
     WAYFINDING = "wayfinding"
     BEACONS = "beacons"
     POSITIONING = "positioning"
+    PILOTS = "pilots"
+    BUOYS = "buoys"
 
 
 class ContainerKind(StrEnum):
@@ -60,3 +66,5 @@ class ContainerKind(StrEnum):
     BASKET = "basket"
     SKIN = "skin"
     TANK = "tank"
+    CAGE = "cage"
+    NET_BAG = "net_bag"

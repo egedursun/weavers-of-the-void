@@ -9,10 +9,12 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.happenings import EventFootprintRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society_depth import CommunityShortfallRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import SiegeRow
-from aerona.domain.enums.entity import EngineKind, EntityType
+from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society_depth import ShortfallEffect
+from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.kept import kept_rows
@@ -22,6 +24,9 @@ from aerona.engine.recording.record import record
 from aerona.engine.urban.coverage import WATER_OF
 
 HELD_SHORT = "short_pct"
+FULL_WANT_AT = 4
+SCHOOLING = frozenset({StructureKind.SCHOOL, StructureKind.ACADEMY, StructureKind.UNIVERSITY})
+COURTS = frozenset({StructureKind.COURT, StructureKind.COURTHOUSE})
 
 
 async def in_drought(ctx: TickContext, region_id: int) -> bool:
@@ -77,8 +82,32 @@ async def shelter_of(ctx: TickContext, community: EntityRow) -> int:
     return clamp_int(round_half_up(profile.homeless * PERCENT / population), 0, PERCENT)
 
 
+async def lacks(ctx: TickContext, town: EntityRow, kinds: frozenset[StructureKind]) -> bool:
+    standing = (
+        select(StructureProfileRow.structure_entity_id)
+        .join(EntityRow, EntityRow.id == StructureProfileRow.structure_entity_id)
+        .where(StructureProfileRow.host_entity_id == town.id, StructureProfileRow.kind.in_(sorted(kinds)), EntityRow.status == EntityStatus.CANON)
+        .limit(1)
+    )
+    return await ctx.session.scalar(standing) is None
+
+
+async def want_of(ctx: TickContext, community: EntityRow, kinds: frozenset[StructureKind], want_pct: int, full_town: int) -> int:
+    if community.entity_type is not EntityType.SETTLEMENT or not await lacks(ctx, community, kinds):
+        return 0
+    population = stat(community, "population") or 0
+    grown = (population - full_town) / max(1, full_town * (FULL_WANT_AT - 1))
+    return clamp_int(round_half_up(want_pct * min(1.0, max(0.0, grown))), 0, PERCENT)
+
+
 async def outer_wants(ctx: TickContext, community: EntityRow, region: RegionEnvironmentRow | None) -> dict[ShortfallEffect, int]:
-    return {ShortfallEffect.THIRST: await thirst_of(ctx, community, region), ShortfallEffect.SHELTER: await shelter_of(ctx, community)}
+    table = ctx.rules.shortfall
+    return {
+        ShortfallEffect.THIRST: await thirst_of(ctx, community, region),
+        ShortfallEffect.SHELTER: await shelter_of(ctx, community),
+        ShortfallEffect.LEARNING: await want_of(ctx, community, SCHOOLING, table.learning_want_pct, table.learning_town),
+        ShortfallEffect.JUSTICE: await want_of(ctx, community, COURTS, table.justice_want_pct, table.justice_town),
+    }
 
 
 async def shortfall_rows(ctx: TickContext, community_id: int) -> dict[ShortfallEffect, CommunityShortfallRow]:

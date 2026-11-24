@@ -12,7 +12,7 @@ from tests.engine.core.factories import CoreWorld, bond, mortal, settlement
 
 
 def test_six_patterns_and_eight_forms() -> None:
-    assert len(NAMING_PATTERNS) == len(NamingPattern) == 6 and len(NAME_FORMS) == len(NameForm) == 8
+    assert len(NAMING_PATTERNS) == len(NamingPattern) == 8 and len(NAME_FORMS) == len(NameForm) == 10
 
 
 async def test_the_dead_take_their_new_name_and_keep_the_living_one_on_record(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:

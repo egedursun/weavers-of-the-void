@@ -16,6 +16,8 @@ class SupplyTier(StrEnum):
     PRODUCER = "producer"
     WHOLESALE = "wholesale"
     RETAIL = "retail"
+    BROKER = "broker"
+    PEDDLER = "peddler"
 
 
 class PromotionMedium(StrEnum):

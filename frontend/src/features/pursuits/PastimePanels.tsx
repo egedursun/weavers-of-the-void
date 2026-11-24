@@ -14,7 +14,7 @@ import type { components } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { KpiTile, PagedList } from '@/components/domain'
+import { KpiTile, PagedList, ShapeFields, useShape } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { table } from '@/features/arcana/labels'
 import { Held, Listed } from '@/features/collective/parts'
@@ -447,11 +447,13 @@ export function ClubPanel({
     kind === 'settlement' ? nodeId : null
   )
   const [clubKind, setClubKind] = useState('')
+  const naming = useShape()
   const founding = usePursuitsAction(
     'club:create',
     (_: void) => ({
       town_id: town ?? 0,
       kind: clubKind === '' ? null : (clubKind as Club['kind']),
+      ...naming.body,
     }),
     'A club is founded'
   )
@@ -505,6 +507,13 @@ export function ClubPanel({
           </Button>
         }
       >
+        <div className='col-span-full min-w-0'>
+          <ShapeFields
+            shape={naming.shape}
+            onChange={naming.setShape}
+            blocked={busy}
+          />
+        </div>
         <NodePicker
           label='Town'
           value={town}

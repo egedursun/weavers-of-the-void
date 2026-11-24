@@ -33,7 +33,7 @@ async def plant(session: AsyncSession, world: CoreWorld, name: str, region: Enti
 
 
 def test_thirteen_forms_thirteen_parts_and_sixteen_products_each_with_its_worth() -> None:
-    assert len(PlantForm) == 13 and len(PlantPart) == 13 and len(PlantYield) == 16
+    assert len(PlantForm) == 15 and len(PlantPart) == 15 and len(PlantYield) == 19
     assert set(PLANT_PRODUCTS) == set(PlantYield)
     assert product_worth(RULES, PLANT_PRODUCTS[PlantYield.SPICE]) > product_worth(RULES, PLANT_PRODUCTS[PlantYield.GRAIN])
     assert product_worth(RULES, PLANT_PRODUCTS[PlantYield.FODDER]) < 1.0

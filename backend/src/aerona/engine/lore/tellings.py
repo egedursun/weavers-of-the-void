@@ -20,7 +20,7 @@ from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.db.tables.tellings import RumourDistortionRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.records import IncidentTier, RumourDistortion, StepOutcome
+from aerona.domain.enums.records import FactUnit, IncidentTier, RumourDistortion, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
@@ -34,6 +34,7 @@ DONE_TO = frozenset({IncidentRole.TARGET, IncidentRole.VICTIM, IncidentRole.OPPO
 UNSWAPPED = frozenset({*DOERS, *DONE_TO, IncidentRole.WITNESS, IncidentRole.TELLER, IncidentRole.PLACE})
 YEARS_OFF = (-3, -2, -1, 1, 2, 3)
 AMOUNT_FACTORS = (0.5, 0.75, 1.5, 2.0, 3.0)
+COUNTED_UNITS = frozenset({FactUnit.PEOPLE, FactUnit.COIN, FactUnit.COUNT, FactUnit.WEALTH_POINTS})
 OUTCOME_FAMILIES: tuple[frozenset[StepOutcome], ...] = (
     frozenset({StepOutcome.WOUNDED, StepOutcome.BROKEN, StepOutcome.SEVERED, StepOutcome.DOWNED, StepOutcome.KILLED}),
     frozenset(
@@ -223,8 +224,41 @@ def changed_steps(telling: Telling, rng: SeededRandom) -> RumourDistortionRow | 
     return RumourDistortionRow(distortion=RumourDistortion.STEP_DROPPED, step_id=step.id)
 
 
+def inflated_count(telling: Telling, held_before: Sequence[RumourDistortionRow], inflate_pct: int) -> RumourDistortionRow | None:
+    spec = INCIDENT_KINDS.get(telling.incident.kind)
+    counted = [
+        fact
+        for fact in telling.facts
+        if fact.number is not None and fact.number > 0 and spec is not None and (declared := spec.fact(fact.key)) is not None and declared.unit in COUNTED_UNITS
+    ]
+    if not counted:
+        return None
+    fact = counted[0]
+    told = max((row.told_number or 0.0 for row in held_before if row.fact_key == fact.key and row.told_number is not None), default=fact.number or 0.0)
+    return RumourDistortionRow(distortion=RumourDistortion.COUNT_INFLATED, fact_key=fact.key, told_number=round(told * (PERCENT + inflate_pct) / PERCENT, 2))
+
+
+async def added_motive(session: AsyncSession, telling: Telling, rng: SeededRandom) -> RumourDistortionRow | None:
+    if telling.incident.cause_incident_id is not None:
+        return None
+    doers = [row.node_id for row in telling.roles if row.role in DOERS]
+    if not doers:
+        return None
+    earlier = list(
+        await session.scalars(
+            select(IncidentParticipantRow.incident_id)
+            .where(IncidentParticipantRow.node_id.in_(doers), IncidentParticipantRow.incident_id < telling.incident.id)
+            .order_by(IncidentParticipantRow.incident_id.desc())
+            .limit(8)
+        )
+    )
+    if not earlier:
+        return None
+    return RumourDistortionRow(distortion=RumourDistortion.MOTIVE_ADDED, role=IncidentRole.ACTOR, told_incident_id=rng.pick(sorted(set(earlier))))
+
+
 async def draft_distortion(
-    session: AsyncSession, atlas: RegionAtlas, telling: Telling, held_before: Sequence[RumourDistortionRow], rng: SeededRandom
+    session: AsyncSession, atlas: RegionAtlas, telling: Telling, held_before: Sequence[RumourDistortionRow], rng: SeededRandom, *, inflate_pct: int = 0
 ) -> RumourDistortionRow | None:
     known = {target_of(row) for row in held_before}
     drafts = [
@@ -237,6 +271,8 @@ async def draft_distortion(
         changed_place(telling, atlas, rng),
         changed_moment(telling, rng),
         changed_steps(telling, rng),
+        inflated_count(telling, held_before, inflate_pct) if inflate_pct > 0 else None,
+        await added_motive(session, telling, rng),
     ]
     fresh = [draft for draft in drafts if draft is not None and target_of(draft) not in known]
     return rng.pick(fresh) if fresh else None
@@ -377,6 +413,8 @@ def apply_distortion(told: Told, row: RumourDistortionRow) -> Told:
         RumourDistortion.MOMENT_CHANGED: lambda told, row: replace(told, year=row.told_year),
         RumourDistortion.STEP_ADDED: change_step,
         RumourDistortion.STEP_DROPPED: change_step,
+        RumourDistortion.COUNT_INFLATED: change_fact,
+        RumourDistortion.MOTIVE_ADDED: lambda told, row: replace(told, cause_incident_id=row.told_incident_id),
     }
     return plain[row.distortion](told, row)
 

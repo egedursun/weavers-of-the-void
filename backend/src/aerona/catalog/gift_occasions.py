@@ -33,6 +33,9 @@ OCCASIONS: Mapping[GiftOccasion, OccasionSpec] = total(
         G.AMENDS: OccasionSpec("Amends for a wrong", lambda rules: rules.gifts.amends_debt, standing=80, in_kind=True, competitive=False),
         G.PATRONAGE: OccasionSpec("From a patron", lambda rules: rules.gifts.patronage_debt, standing=120, in_kind=False, competitive=False),
         G.HOSPITALITY: OccasionSpec("Between host and guest", lambda rules: rules.gifts.hospitality_debt, standing=100, in_kind=True, competitive=False),
+        G.FAREWELL: OccasionSpec("At a parting", lambda rules: rules.gifts.farewell_debt, standing=100, in_kind=True, competitive=False),
+        G.HOMECOMING: OccasionSpec("At a homecoming", lambda rules: rules.gifts.homecoming_debt, standing=100, in_kind=True, competitive=False),
+        G.INITIATION: OccasionSpec("At an initiation", lambda rules: rules.gifts.initiation_debt, standing=110, in_kind=True, competitive=False),
     },
 )
 COMPETITIVE = frozenset(occasion for occasion, spec in OCCASIONS.items() if spec.competitive)
@@ -58,6 +61,7 @@ GIFT_STATES: Mapping[GiftState, StateSpec] = total(
         S.EXCEEDED: StateSpec("Answered with more", held=False, settled=True, remembered=True),
         S.PASSED_ON: StateSpec("Passed on along a circuit", held=False, settled=True, remembered=True),
         S.RELEASED: StateSpec("Debt released", held=False, settled=True, remembered=True),
+        S.HOARDED: StateSpec("Hoarded instead of passed on", held=True, settled=False),
     },
 )
 HOLDING = frozenset(state for state, spec in GIFT_STATES.items() if spec.held)

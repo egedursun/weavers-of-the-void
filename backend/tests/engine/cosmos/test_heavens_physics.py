@@ -19,7 +19,7 @@ from aerona.domain.enums.cosmography import WorldAge
 from aerona.domain.enums.ecology import Biochemistry
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.physics import AirNeed, CosmicFeatureKind, ImpactBody, ImpactOutcome, LifeComplexity, SurveyLevel, TerraformAim
+from aerona.domain.enums.physics import SURVEY_ORDER, AirNeed, CosmicFeatureKind, ImpactBody, ImpactOutcome, LifeComplexity, SurveyLevel, TerraformAim
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.enums.travel import JourneyIntent, JourneyStatus
 from aerona.domain.enums.world import Atmosphere, Gravity, SkyEventKind, StarType, WorldType
@@ -33,7 +33,7 @@ from aerona.engine.cosmos.lifeforms import habitability, life_of, may_arise, wor
 from aerona.engine.cosmos.orbits import Light, Sky, eclipse_period, locks, next_epoch
 from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.stellar import giant_for, main_life, remnant_for
-from aerona.engine.cosmos.survey import knows_enough, level_of, survey_cycle
+from aerona.engine.cosmos.survey import index_of, knows_enough, level_of, survey_cycle
 from aerona.engine.cosmos.terraform import begin, terraform_cycle, wanted_aim
 from aerona.engine.demography.peoples import biology_for, ensure_profiles
 from aerona.engine.environment.control import set_world_calendar
@@ -111,8 +111,18 @@ async def test_a_people_knows_its_own_world_and_what_it_was_shown(session: Async
     assert await level_of(session, people.id, far.id) is SurveyLevel.UNKNOWN
     survey = await physics_control.set_survey(ctx, people.id, far.id, SurveyLevel.OBSERVED)
     assert "level" in survey.locked
-    assert await knows_enough(session, people, far.id, 2)
-    assert not await knows_enough(session, people, far.id, 4)
+    assert await knows_enough(session, people, far.id, index_of(SurveyLevel.OBSERVED))
+    assert not await knows_enough(session, people, far.id, index_of(SurveyLevel.SURVEYED))
+
+
+def test_journeys_colonies_and_conquests_ask_for_the_levels_their_rules_name(rules: Rules) -> None:
+    table = rules.survey
+    assert (table.journey_level, table.colony_level, table.conquest_level) == (
+        index_of(SurveyLevel.RUMOURED),
+        index_of(SurveyLevel.OBSERVED),
+        index_of(SurveyLevel.SURVEYED),
+    )
+    assert index_of(SurveyLevel.MAPPED) == len(SURVEY_ORDER) - 1 == 6
 
 
 def test_a_world_without_their_air_or_chemistry_suits_a_people_poorly(rules: Rules) -> None:

@@ -62,7 +62,8 @@ async def test_route_actions_found_edit_toll_and_strike_a_route(api: ApiWorld) -
     route = next(row for row in routes if {row["first_id"], row["second_id"]} == {ids[0], ids[1]})
     assert route["mode"] == "road" and route["controller_id"] == ids[2] and "mode" in route["locked"]
     assert route["tolls"] and route["tolls"][0]["rate_pct"] == 9 and route["tolls"][0]["controller_held"]
-    assert set(route["dangers"]) == {"bandits", "beasts", "weather", "sea", "officials", "spoilage", "pilferage"} and 0 <= route["season_pct"] <= 100
+    assert set(route["dangers"]) == {"bandits", "beasts", "weather", "sea", "officials", "spoilage", "pilferage", "breakage", "pirates"}
+    assert 0 <= route["season_pct"] <= 100
     edited = await api.http.post("/api/actions/trade_route:edit", json={"route_id": route["route_id"], "values": {"danger_weather": 41, "chokepoint": True}})
     assert edited.status_code == 200, edited.text
     removed = await api.http.post("/api/actions/trade_route:toll_remove", json={"route_id": route["route_id"], "region_id": route["tolls"][0]["region_id"]})

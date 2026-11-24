@@ -9,8 +9,10 @@ from aerona.db.tables.belief_depth import SourceTrustRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import BeliefRow
 from aerona.db.tables.made import IntrusionRow, SurveillanceProfileRow
+from aerona.db.tables.mind import DreamRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.polity import PolityMemberRow
+from aerona.db.tables.sacred import DivinationRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
@@ -54,6 +56,31 @@ async def intrusion_reports(ctx: TickContext, tally: SourceTally) -> None:
         target = await ctx.session.get(EntityRow, row.target_node_id) if row.target_node_id is not None else None
         if row.actor_node_id is not None and target is not None and not held(row.actor_node_id):
             await tell(ctx, row.actor_node_id, target, BeliefSource.INTRUSION, confidence=confidence, tally=tally)
+
+
+async def dream_reports(ctx: TickContext, tally: SourceTally) -> None:
+    confidence = ctx.rules.belief_depth.dream_confidence
+    for row in list(await ctx.session.scalars(select(DreamRow).where(DreamRow.epoch == ctx.epoch).order_by(DreamRow.id))):
+        if held(row.dreamer_node_id):
+            continue
+        for subject_id in row.content or []:
+            subject = await ctx.session.get(EntityRow, subject_id)
+            if subject is not None and subject.id != row.dreamer_node_id:
+                await tell(ctx, row.dreamer_node_id, subject, BeliefSource.DREAM, confidence=confidence * row.intensity // PERCENT, tally=tally)
+
+
+async def omen_reports(ctx: TickContext, tally: SourceTally) -> None:
+    confidence = ctx.rules.belief_depth.omen_confidence
+    rows = await ctx.session.scalars(
+        select(DivinationRow)
+        .where(DivinationRow.epoch == ctx.epoch, DivinationRow.heeded.is_(True), DivinationRow.client_entity_id.is_not(None))
+        .order_by(DivinationRow.id)
+    )
+    for row in list(rows):
+        client = await ctx.session.get(EntityRow, row.client_entity_id) if row.client_entity_id is not None else None
+        place = await ctx.session.get(EntityRow, client.location_id) if client is not None and client.location_id is not None else None
+        if client is not None and place is not None and not held(client.id):
+            await tell(ctx, client.id, place, BeliefSource.OMEN, confidence=confidence, tally=tally)
 
 
 async def made_mind_reports(ctx: TickContext, tally: SourceTally) -> None:
@@ -142,6 +169,8 @@ async def keep_belief_depth(ctx: TickContext, tally: SourceTally) -> None:
     await surveillance_reports(ctx, tally)
     await intrusion_reports(ctx, tally)
     await made_mind_reports(ctx, tally)
+    await dream_reports(ctx, tally)
+    await omen_reports(ctx, tally)
     await false_flags(ctx, tally)
     ctx.count("sources_judged", await judge_sources(ctx))
     ctx.count("beliefs_shared", await share_beliefs(ctx))

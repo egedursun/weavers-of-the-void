@@ -78,7 +78,7 @@ async def gather(ctx: TickContext, nodes: set[int]) -> Facts:
     await prime_rows(ctx.session, EntityRow, nodes)
     await prime_prefixes(ctx.session, CultureValueRow, nodes)
     await prime_prefixes(ctx.session, PersonalityValueRow, nodes)
-    for node in nodes:
+    for node in sorted(nodes):
         facts.values[node] = await values_for(ctx.session, node)
     return facts
 

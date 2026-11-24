@@ -20,6 +20,7 @@ FORM_CARE: Mapping[HouseholdForm, int] = total(
         HouseholdForm.INSTITUTIONAL: 80,
         HouseholdForm.MIXED: 40,
         HouseholdForm.CHOSEN: 40,
+        HouseholdForm.SKIPPED_GENERATION: 55,
     },
 )
 

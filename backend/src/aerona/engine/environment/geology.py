@@ -22,6 +22,7 @@ from aerona.domain.enums.geology import RockKind, UndergroundStratum
 from aerona.domain.enums.life_traits import WorldTypeTrait
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
+from aerona.engine.environment.cells import shape_cell
 from aerona.engine.environment.columns import POROUS
 from aerona.rules.registry import Rules
 
@@ -66,11 +67,15 @@ def hard_rock(ground: RegionEnvironmentRow, physics: WorldPhysicsRow | None, wor
     volcanism = physics.volcanism if physics is not None else 0
     tectonics = physics.tectonics if physics is not None else 0
     if ground.dominant_terrain is TerrainKind.VOLCANIC or volcanism >= PERCENT // 2 or world_type in MOLTEN_WORLDS:
-        found += [Layer(R.TUFF, 10), Layer(R.BASALT, 20), Layer(R.OBSIDIAN, 5)]
+        found += [Layer(R.PUMICE, 4), Layer(R.TUFF, 10), Layer(R.BASALT, 20), Layer(R.OBSIDIAN, 5)]
+        if ground.base_wetland > 0 or ground.coast_kind is not CoastKind.NONE:
+            found.append(Layer(R.TRAVERTINE, 6))
     if terrain_has(ground.dominant_terrain, TerrainTrait.ROUGH) or terrain_has(ground.dominant_terrain, TerrainTrait.HIGH):
         found.append(Layer(R.SLATE, 10))
         if tectonics >= PERCENT // 2:
             found += [Layer(R.MARBLE, 10), Layer(R.QUARTZITE, 10), Layer(R.GNEISS, 15)]
+            if ground.coast_kind is not CoastKind.NONE:
+                found.append(Layer(R.SERPENTINITE, 8))
     found.append(Layer(R.CRYSTAL_BEDROCK if world_type in CRYSTAL_WORLDS else R.GRANITE, 25))
     return found
 
@@ -91,7 +96,16 @@ def veins_for(rules: Rules, column: list[Layer], minerals: dict[str, int]) -> li
     return laid
 
 
-def strata_for(rules: Rules, column: list[Layer], physics: WorldPhysicsRow | None, world_type: WorldType, *, underworld: bool, rough: bool) -> list[Underlay]:
+def strata_for(
+    rules: Rules,
+    column: list[Layer],
+    physics: WorldPhysicsRow | None,
+    world_type: WorldType,
+    *,
+    underworld: bool,
+    rough: bool,
+    frozen: bool = False,
+) -> list[Underlay]:
     table = rules.underground
     rocks = [layer.rock for layer in column]
     found: list[Underlay] = []
@@ -109,13 +123,17 @@ def strata_for(rules: Rules, column: list[Layer], physics: WorldPhysicsRow | Non
         if rough:
             found.append(Underlay(U.CAVERN_MIDDLE))
             if physics is not None and physics.tectonics >= PERCENT * 3 // 5:
-                found.append(Underlay(U.CAVERN_DEEP))
+                found.append(Underlay(U.CAVERN_LOWER))
     if volcanism >= PERCENT // 2 or world_type in MOLTEN_WORLDS:
         found.append(Underlay(U.MAGMA_SEA))
     if world_type is WorldType.HOLLOW:
         found.append(Underlay(U.HOLLOW_INTERIOR))
     if underworld:
         found.append(Underlay(U.DEEP_UNDERWORLD))
+    if frozen or (R.WATER_ICE in rocks and volcanism < table.under_ocean_heat_min):
+        found.append(Underlay(U.PERMAFROST_LAYER))
+    if rough and physics is not None and physics.tectonics >= table.fault_tectonics_min:
+        found.append(Underlay(U.FAULT_ZONE))
     return found
 
 
@@ -147,10 +165,17 @@ async def lay_region(session: AsyncSession, rules: Rules, ground: RegionEnvironm
         select(EntityRow.id).where(EntityRow.world_id == ground.world_id, EntityRow.is_underworld.is_(True), EntityRow.status == EntityStatus.CANON).limit(1)
     )
     rough = terrain_has(ground.dominant_terrain, TerrainTrait.ROUGH)
-    for under in strata_for(rules, column, physics, world_type, underworld=underworld is not None, rough=rough):
+    frozen = ground.soil is SoilKind.PERMAFROST or terrain_has(ground.dominant_terrain, TerrainTrait.COLD)
+    present = set(await session.scalars(select(RegionStratumRow.stratum).where(RegionStratumRow.region_entity_id == ground.entity_id)))
+    for under in strata_for(rules, column, physics, world_type, underworld=underworld is not None, rough=rough, frozen=frozen):
+        if under.stratum in present:
+            continue
         if under.stratum is U.HOLLOW_INTERIOR and await shafts_of(session, ground.world_id) >= rules.underground.hollow_shaft_count:
             continue
-        session.add(RegionStratumRow(region_entity_id=ground.entity_id, stratum=under.stratum, volume=under.volume, pressure=under.pressure, locked=[]))
+        present.add(under.stratum)
+        cell = RegionStratumRow(region_entity_id=ground.entity_id, stratum=under.stratum, volume=under.volume, pressure=under.pressure, locked=[])
+        shape_cell(rules, cell, ground, rng.below(PERCENT), underworld)
+        session.add(cell)
     return len(column)
 
 

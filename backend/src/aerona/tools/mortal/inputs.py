@@ -32,6 +32,7 @@ from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.ecology import HerdTraining
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, LegendCategory
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.military import CovertSabotage
 from aerona.domain.enums.mind import ActKind
@@ -94,6 +95,7 @@ class BuildInput(ToolInput):
     subtype: Subtype | None = None
     description: Description
     location_id: int | None = None
+    stratum: UndergroundStratum | None = None
     dedicated_son_id: int | None = None
     material: MaterialKind | None = None
     channels_ley: bool = False
@@ -122,6 +124,7 @@ class DiscoverInput(ToolInput):
     subtype: Subtype | None = None
     description: Description
     location_id: int
+    stratum: UndergroundStratum | None = None
     domain: str | None = None
     image_prompt: ImagePrompt | None = None
     commodity: CommodityKind
@@ -138,6 +141,7 @@ class SettleInput(ToolInput):
     subtype: Subtype | None = None
     description: Description
     location_id: int
+    stratum: UndergroundStratum | None = None
     image_prompt: ImagePrompt | None = None
     mode: SettleMode | None = None
 
@@ -214,6 +218,7 @@ class ExploreInput(ToolInput):
     subtype: Subtype | None = None
     description: Description
     location_id: int | None = None
+    stratum: UndergroundStratum | None = None
     settle: bool = False
     image_prompt: ImagePrompt | None = None
 

@@ -86,8 +86,8 @@ describe('world filter', () => {
     expect(filteredRoute('/map')).toBe('/map')
     expect(filteredRoute('/pantheon')).toBeNull()
     expect(
-      worldSearch('/map', { world: 3, epoch: 2, focus: 9, drawer: 'son:1' }, 4)
-    ).toEqual({ world: 4, drawer: 'son:1' })
+      worldSearch('/map', { world: 3, epoch: 2, focus: 9, entry: 'son:1' }, 4)
+    ).toEqual({ world: 4, entry: 'son:1' })
     expect(
       worldSearch(
         '/atlas',

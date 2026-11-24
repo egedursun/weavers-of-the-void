@@ -89,6 +89,14 @@ ACT_LABELS: Mapping[ActKind, str] = total(
         A.FEEDING_ON_HOSTS: "Feeding on a living host",
         A.KILLING_SACRED_ANIMAL: "Killing a sacred animal",
         A.FIXING_CONTESTS: "Fixing a contest",
+        A.ABANDONING_THE_SICK: "Abandoning the sick",
+        A.BREAKING_HOSPITALITY: "Breaking hospitality",
+        A.CRUELTY_TO_ANIMALS: "Cruelty to animals",
+        A.APOLOGISING: "Apologising",
+        A.SHELTERING_STRANGERS: "Sheltering strangers",
+        A.LAYING_CURSES: "Laying curses",
+        A.ENHANCING_CONTESTANTS: "Enhancing contestants",
+        A.POISON_WELLS: "Poisoning wells and water",
     },
 )
 
@@ -156,6 +164,9 @@ HONOUR_MODELS: MappingProxyType[HonourModel, HonourSpec] = MappingProxyType(
             duel_end=DuelEnd.RING_OUT,
         ),
         HonourModel.NONE: HonourSpec("None: neither word nor standing is weighed beyond the act", 0, 0, 0, 100, 150, 0),
+        HonourModel.PURITY: HonourSpec(
+            "Purity: one member's wrong counts against the whole group", 100, 80, 120, 150, 100, 130, restores=True, grievance_kept_pct=70
+        ),
     }
 )
 
@@ -171,5 +182,6 @@ DUEL_END_LABELS: Mapping[DuelEnd, str] = total(
         DuelEnd.UNCONSCIOUS: "When one falls senseless",
         DuelEnd.FIRST_WOUND: "At the first wound",
         DuelEnd.RING_OUT: "When one is driven out of the bounds",
+        DuelEnd.STOPPED: "When an authority, a god or a crowd stops it",
     },
 )

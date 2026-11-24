@@ -5,12 +5,15 @@ from sqlalchemy import Select, select
 from aerona.catalog.sacred import SACRAMENT_COSTS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.tables.demography import PeopleCultureRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import CultDoctrineRow, CultOfficeRow
 from aerona.db.tables.folkways import PurityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sacred import DoctrineSacramentRow, SacramentRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.folkways import PurityState
 from aerona.domain.enums.mind import ThoughtKind, ValueAxis, ValueHolder
@@ -103,6 +106,31 @@ async def ordain(ctx: TickContext, mortal: EntityRow) -> None:
     await write_values(ctx.session, ValueHolder.PERSONAL, mortal.id, values)
 
 
+async def do_penance(ctx: TickContext, mortal: EntityRow) -> None:
+    profile = await ctx.session.get(MortalProfileRow, mortal.id)
+    if profile is None:
+        return
+    if "stress" not in profile.locked:
+        profile.stress = max(0, profile.stress - ctx.rules.sacraments.penance_guilt)
+    if "renown" not in profile.locked:
+        profile.renown = clamp_int(profile.renown + ctx.rules.sacraments.penance_standing, 0, PERCENT)
+
+
+async def share_meal(ctx: TickContext, mortal: EntityRow) -> None:
+    table = ctx.rules.sacraments
+    culture = await ctx.session.get(PeopleCultureRow, mortal.affiliated_entity_id) if mortal.affiliated_entity_id is not None else None
+    if culture is not None and not held(culture.people_entity_id) and "cohesion" not in culture.locked:
+        culture.cohesion = clamp_int(culture.cohesion + table.communion_cohesion, 0, PERCENT)
+    region = await region_of(ctx.session, mortal)
+    if region is None or held(region.id):
+        return
+    for outbreak in await ctx.session.scalars(
+        select(OutbreakRow).where(OutbreakRow.region_entity_id == region.id, OutbreakRow.status != OutbreakStatus.ENDED).order_by(OutbreakRow.id)
+    ):
+        if "infected" not in outbreak.locked:
+            outbreak.infected += table.communion_spread
+
+
 async def no_more(_ctx: TickContext, _mortal: EntityRow) -> None:
     return None
 
@@ -116,6 +144,8 @@ RITE_EFFECTS: Mapping[SacramentKind, Callable[[TickContext, EntityRow], Awaitabl
         SacramentKind.LAST_RITES: no_more,
         SacramentKind.PURIFICATION: cleanse,
         SacramentKind.ORDINATION: ordain,
+        SacramentKind.PENANCE: do_penance,
+        SacramentKind.COMMUNION: share_meal,
     },
 )
 

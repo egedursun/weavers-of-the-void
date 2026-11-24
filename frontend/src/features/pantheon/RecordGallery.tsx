@@ -17,6 +17,7 @@ import { useGodGate } from './gate'
 import { useGodAction } from './godAction'
 
 type RecordGalleryProps = {
+  sectionId: string
   title: string
   nodeId: number
   name: string
@@ -28,6 +29,7 @@ type RecordGalleryProps = {
 }
 
 export function RecordGallery({
+  sectionId,
   title,
   nodeId,
   name,
@@ -84,7 +86,7 @@ export function RecordGallery({
     success: 'Prompt saved',
   })
   return (
-    <Section title={title} level={3}>
+    <Section id={sectionId} title={title} level={3}>
       {images.length === 0 ? (
         <EmptyState
           icon={ImagePlus}

@@ -145,6 +145,18 @@ ART_MODES = total(
         M.MADE_MIND_ART: ArtModeSpec(
             "Made-mind art", ("source", "method", "curation"), (S.ELECTRONICS,), {V.KNOWLEDGE: 2, V.ARTWORK: 2}, ("generated",), RightKind.DESIGN
         ),
+        M.TACTILE: ArtModeSpec(
+            "Tactile art", ("texture", "form", "materials"), (S.CARPENTRY, S.POTTERY), {V.TRADITION: 2, V.KINSHIP: 2}, ("tactile",), RightKind.DESIGN
+        ),
+        M.MIND: ArtModeSpec(
+            "Mind art",
+            ("theme", "mood", "sharing"),
+            (S.SPIRIT_SPEAKING, S.SPELLCRAFT),
+            {V.KNOWLEDGE: 2, V.KINSHIP: 2},
+            ("mindwork",),
+            RightKind.DESIGN,
+            performed=True,
+        ),
     },
 )
 

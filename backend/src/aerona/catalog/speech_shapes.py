@@ -9,4 +9,8 @@ HUMOUR_BITE_PCT: dict[HumourForm, int] = {
     HumourForm.IRONY: 120,
     HumourForm.STORYTELLING: 90,
     HumourForm.RITUAL_CLOWNING: 40,
+    HumourForm.PARODY: 130,
+    HumourForm.RIDDLING: 50,
 }
+
+MOCKING_FORMS = frozenset({HumourForm.SATIRE, HumourForm.PARODY})

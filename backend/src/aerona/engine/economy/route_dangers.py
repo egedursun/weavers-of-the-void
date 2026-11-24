@@ -17,14 +17,16 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.warfare import ArmyRow
+from aerona.db.tables.works import PublicWorksRow
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import CommodityKind, TradeLoss, TradeMode
 from aerona.domain.enums.entity import EngineKind, EntityType
-from aerona.domain.enums.environment import TerrainTrait, WeatherEffect
+from aerona.domain.enums.environment import CoastKind, TerrainTrait, WeatherEffect
 from aerona.domain.enums.life_traits import StanceTrait, TradeModeTrait, WeatherEffectTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import CarrierKind
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus
+from aerona.domain.enums.works import WorksKind, WorksStatus
 from aerona.engine.context import TickContext
 from aerona.engine.creature_groups.groups import group_danger
 from aerona.engine.economy.book import EconomyBook
@@ -51,6 +53,8 @@ TEMPER_WEIGHT: MappingProxyType[BeastTemper, Callable[[Rules], int]] = total(
         BeastTemper.WOUNDED: lambda rules: rules.route_dangers.beast_enraged_pct,
         BeastTemper.BROODING: lambda rules: rules.route_dangers.beast_territorial_pct,
         BeastTemper.COWED: lambda rules: rules.route_dangers.beast_sleeping_pct,
+        BeastTemper.MIGRATING: lambda rules: rules.route_dangers.beast_migrating_pct,
+        BeastTemper.FLEEING: lambda rules: rules.route_dangers.beast_territorial_pct,
     },
 )
 FALLING_EFFECTS = having(WEATHER_EFFECT_TRAITS, WeatherEffectTrait.FALLING_EFFECTS)
@@ -68,6 +72,8 @@ class Dangers:
     officials: int = 0
     spoilage: int = 0
     pilferage: int = 0
+    pirates: int = 0
+    breakage: int = 0
     bandit_id: int | None = None
     beast_id: int | None = None
     official_id: int | None = None
@@ -96,6 +102,7 @@ class Lairs:
     beasts: dict[int, list[tuple[EntityRow, BeastProfileRow]]] = field(default_factory=dict)
     patrolled: frozenset[int] = frozenset()
     groups: dict[int, float] = field(default_factory=dict)
+    lit: frozenset[int] = frozenset()
 
     @classmethod
     async def load(cls, ctx: TickContext, book: EconomyBook) -> "Lairs":
@@ -110,7 +117,14 @@ class Lairs:
             for region in regions - {None}:
                 if region is not None:
                     found[region].append((beast, profile))
-        return cls(dict(found), await patrolled_regions(ctx), await group_danger(ctx.session, ctx.rules))
+        lit = frozenset(
+            region
+            for place in await ctx.session.scalars(
+                select(PublicWorksRow.place_node_id).where(PublicWorksRow.kind == WorksKind.LIGHTHOUSE, PublicWorksRow.status == WorksStatus.FINISHED)
+            )
+            if (region := book.ground.atlas.top_region(place)) is not None
+        )
+        return cls(dict(found), await patrolled_regions(ctx), await group_danger(ctx.session, ctx.rules), lit)
 
 
 async def patrolled_regions(ctx: TickContext) -> frozenset[int]:
@@ -213,6 +227,15 @@ def weather_danger(
     return clamp_int(round_half_up(sum(scores) / len(scores) * weight / PERCENT), 0, PERCENT)
 
 
+def pirate_danger(rules: Rules, book: EconomyBook, mode: TradeMode, path: list[int], patrolled: frozenset[int]) -> int:
+    if not TRADE_MODES[mode].waterborne:
+        return 0
+    havens = sum(
+        1 for region in path if (row := book.ground.regions.get(region)) is not None and row.coast_kind is not CoastKind.NONE and region not in patrolled
+    )
+    return clamp_int(havens * rules.route_dangers.pirate_haven_danger, 0, PERCENT)
+
+
 def dangers_of(
     ctx: TickContext,
     book: EconomyBook,
@@ -230,10 +253,26 @@ def dangers_of(
     table = ctx.rules.route_dangers
     spoilage = clamp_int(table.spoilage_pct * len(path) // max(1, SPOIL_SPAN), 0, PERCENT)
     pilferage = 0 if any(region in lairs.patrolled for region in path) else table.pilferage_pct
+    breakage = clamp_int(table.breakage_base * len(path) // max(1, SPOIL_SPAN), 0, PERCENT)
+    pirates = pirate_danger(ctx.rules, book, mode, path, lairs.patrolled)
     if TRADE_MODES[mode].seagoing:
         sea = clamp_int(ctx.rules.route_dangers.sea_danger_base + weather, 0, PERCENT)
-        return Dangers(bandits=bandits, beasts=beasts, sea=sea, spoilage=spoilage, pilferage=pilferage, bandit_id=band, beast_id=beast).reckon(ctx.rules)
-    return Dangers(bandits=bandits, beasts=beasts, weather=weather, spoilage=spoilage, pilferage=pilferage, bandit_id=band, beast_id=beast).reckon(ctx.rules)
+        if path and (path[0] in lairs.lit or path[-1] in lairs.lit):
+            sea = round_half_up(sea * (PERCENT - ctx.rules.public_works.lighthouse_loss_cut_pct) / PERCENT)
+        return Dangers(
+            bandits=bandits, beasts=beasts, sea=sea, spoilage=spoilage, pilferage=pilferage, pirates=pirates, breakage=breakage, bandit_id=band, beast_id=beast
+        ).reckon(ctx.rules)
+    return Dangers(
+        bandits=bandits,
+        beasts=beasts,
+        weather=weather,
+        spoilage=spoilage,
+        pilferage=pilferage,
+        pirates=pirates,
+        breakage=breakage,
+        bandit_id=band,
+        beast_id=beast,
+    ).reckon(ctx.rules)
 
 
 ICE_MODES = having(TRADE_MODE_TRAITS, TradeModeTrait.ICE_MODES)

@@ -14,6 +14,7 @@ export function ForeignGodChronicle({
   const older = useOlderLines('foreign_god', godId, lines.length, total)
   return (
     <ChronicleList
+      sectionId='section-foreign-chronicle'
       title='In the chronicle'
       description='Records about this god and their world, newest first.'
       lines={lines}

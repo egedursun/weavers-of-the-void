@@ -129,6 +129,7 @@ export function WikiRecords({
         emptyText={`The chronicle has not named ${name} yet.`}
       />
       <RecordGallery
+        sectionId='section-scale-images'
         title={`Images of ${name}`}
         nodeId={nodeId}
         name={name}
@@ -164,6 +165,7 @@ export function DangerZone<
   )
   return (
     <Section
+      id='section-scale-unmake'
       title={`Unmake the ${noun}`}
       description={consequence}
       icon={Skull}

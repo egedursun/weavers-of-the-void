@@ -213,6 +213,7 @@ async def pollution_views(session: AsyncSession, region_ids: list[int]) -> list[
                 radiation=row.radiation if row is not None else 0,
                 noise=row.noise if row is not None else 0,
                 light=row.light if row is not None else 0,
+                heat=row.heat if row is not None else 0,
                 blight=ground.scars.get(ScarKind.BLIGHTED.value, 0) if ground is not None else 0,
                 epoch=row.epoch if row is not None else None,
                 held=list(row.locked or []) if row is not None else [],

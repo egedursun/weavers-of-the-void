@@ -5,7 +5,7 @@ from typing import Literal
 from aerona.core.total import total
 from aerona.domain.enums.dominion import BeliefStance
 
-PullRule = Literal["embrace_pull_pct", "yield_pull_pct"]
+PullRule = Literal["embrace_pull_pct", "yield_pull_pct", "bargain_pull_pct"]
 FameRule = Literal["embrace_fame"]
 
 
@@ -22,5 +22,6 @@ BELIEF_STANCES: Mapping[BeliefStance, StanceToBelief] = total(
         BeliefStance.YIELD: StanceToBelief(pull_rule="yield_pull_pct"),
         BeliefStance.RESIST: StanceToBelief(resists=True),
         BeliefStance.EMBRACE: StanceToBelief(pull_rule="embrace_pull_pct", fame_rule="embrace_fame"),
+        BeliefStance.BARGAIN: StanceToBelief(pull_rule="bargain_pull_pct"),
     },
 )

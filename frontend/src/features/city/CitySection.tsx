@@ -3,6 +3,7 @@ import { Building2, Home, Maximize2, Tent, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState, KpiTile, LoadingBlock, Section } from '@/components/domain'
 import { Text } from '@/components/typography'
+import { CityBelow } from './CityBelow'
 import { BuildForge } from './CityControls'
 import { CityLegend } from './CityLegend'
 import { CityPlan2D } from './CityPlan2D'
@@ -20,6 +21,7 @@ function Summary({
   const empty = scene.districts.length === 0 && scene.buildings.length === 0
   return (
     <div className='@container/city flex min-w-0 flex-col gap-3'>
+      <CityBelow scene={scene} />
       <div className='grid min-w-0 grid-cols-2 gap-2 @xl/city:grid-cols-4'>
         <KpiTile
           label='People'
@@ -96,7 +98,7 @@ export function CitySection({
   return (
     <Section
       id='section-city'
-      title='The city'
+      title='City plan'
       description='The town as the engine reckons it: its zones and districts on their hexes, every building at its stage, its homes and homeless, its walls and water.'
       icon={CITY_ICON}
       tone='gold'

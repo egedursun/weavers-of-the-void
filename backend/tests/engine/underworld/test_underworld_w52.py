@@ -20,7 +20,7 @@ RULES = Rules()
 
 def test_six_crime_kinds_four_stances_six_fugitives_six_refuges() -> None:
     assert {FactionKind.STREET_GANG, FactionKind.TRAFFICKING_RING} <= CRIME_KINDS
-    assert len(CrimeStance) == 4 and len(FugitiveKind) == 6 and len(SanctuaryKind) == 6
+    assert len(CrimeStance) == 5 and len(FugitiveKind) == 8 and len(SanctuaryKind) == 8
     assert FUGITIVES[FugitiveKind.RUNAWAY].city_frees and SANCTUARIES[SanctuaryKind.WILDS].hides
 
 

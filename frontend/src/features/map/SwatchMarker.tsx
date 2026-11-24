@@ -165,6 +165,11 @@ const TOKEN_FILL: Partial<Record<ThemeColorName, string>> = {
   warning: 'bg-warning',
   'muted-foreground': 'bg-muted-foreground',
   'brand-gold': 'bg-brand-gold',
+  'brand-verdigris': 'bg-brand-verdigris',
+  'rarity-rare': 'bg-rarity-rare',
+  'rarity-epic': 'bg-rarity-epic',
+  'rarity-mythic': 'bg-rarity-mythic',
+  success: 'bg-success',
   primary: 'bg-primary',
 }
 
@@ -185,5 +190,68 @@ export function IconMarker({
     >
       <Icon className='size-icon-xs text-background' strokeWidth={2.6} />
     </span>
+  )
+}
+
+export function ShaftMarker({
+  token,
+  shape,
+  up,
+}: {
+  token: ThemeColorName
+  shape: 'shaft' | 'mouth'
+  up: boolean
+}) {
+  const ring = {
+    stroke: tokenVar(token),
+    strokeWidth: 1.6,
+    fill: tokenVar('brand-ink'),
+  }
+  const mark = {
+    stroke: tokenVar(token),
+    strokeWidth: 1.6,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    fill: 'none',
+  }
+  return (
+    <svg
+      aria-hidden='true'
+      className='size-icon-lg shrink-0'
+      viewBox='0 0 20 20'
+    >
+      {shape === 'mouth' ? (
+        <circle cx={10} cy={10} r={8} style={ring} />
+      ) : (
+        <rect x={2} y={2} width={16} height={16} rx={4} style={ring} />
+      )}
+      {shape === 'shaft' ? (
+        <>
+          <polyline points='6,8 10,4.5 14,8' style={mark} />
+          <polyline points='6,12 10,15.5 14,12' style={mark} />
+        </>
+      ) : (
+        <polyline
+          points={up ? '6,12 10,7 14,12' : '6,8 10,13 14,8'}
+          style={mark}
+        />
+      )}
+    </svg>
+  )
+}
+
+export function StratumSwatch({
+  fill,
+  glow,
+}: {
+  fill: ThemeColorName
+  glow: ThemeColorName
+}) {
+  return (
+    <span
+      aria-hidden='true'
+      className='size-icon-sm shrink-0 rounded-sm border-2'
+      style={{ background: tokenVar(fill), borderColor: tokenVar(glow) }}
+    />
   )
 }

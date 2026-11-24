@@ -2,7 +2,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.dominion.core import DominionTally, weigh_dominion
 from aerona.engine.dominion.creatures import CreatureTally, act_creatures
 from aerona.engine.dominion.image import ImageTally, shape_gods
-from aerona.engine.dominion.sites import SiteTally, search_sites, seed_sites, seed_thrones, tend_thrones, yield_sites
+from aerona.engine.dominion.sites import SiteTally, meet_and_fail, search_sites, seed_sites, seed_thrones, tend_thrones, yield_sites
 from aerona.engine.dominion.worship import WorshipTally, view_worship
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
@@ -90,6 +90,7 @@ async def magic_sites(ctx: TickContext) -> None:
     await seed_sites(ctx, tally)
     await search_sites(ctx, await RegionAtlas.load(ctx.session), tally)
     await yield_sites(ctx, tally)
+    await meet_and_fail(ctx, tally)
     count(ctx, "magic_site", tally)
 
 
@@ -187,7 +188,7 @@ async def god_images(ctx: TickContext) -> None:
     count(ctx, "image", tally)
 
 
-@reads("table.bonds", "table.divine_creatures")
+@reads("table.bonds", "table.deep_passages", "table.divine_creatures")
 async def divine_creatures(ctx: TickContext) -> None:
     tally = CreatureTally()
     await act_creatures(ctx, tally)

@@ -10,6 +10,7 @@ from aerona.engine.cosmos.climate import cold_snap
 from aerona.engine.cosmos.ladder import settle_star
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.environment.long_seasons import supernova_winter
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon
 from aerona.engine.recording.record import record
@@ -39,7 +40,8 @@ async def after_supernova(ctx: TickContext, star: StarRow) -> None:
     for world in cosmography.worlds.values():
         if held(world.id) or cosmography.place_world(world).star is not star:
             continue
-        cooled = await cold_snap(ctx, world.id, ctx.rules.world_life.supernova_cold)
+        winter = await supernova_winter(ctx, world, star.id)
+        cooled = 0 if winter is not None else await cold_snap(ctx, world.id, ctx.rules.world_life.supernova_cold)
         if cooled:
             await record(
                 ctx,

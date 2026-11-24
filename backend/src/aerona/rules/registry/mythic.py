@@ -34,6 +34,10 @@ class HeroquestRules:
     rewrite_distortion: int = rule(20, 0, 100, H, "Distortion a returning quester's departure writes into the myth")
     boon_standing: int = rule(10, 0, 100, H, "Awe the quester's community gains for the god of the myth when the quest succeeds")
     boon_dominion: int = rule(10, 0, 100, H, "Dominion the god of the myth gains in the quester's land when the land is renewed")
+    mercy_per_deed: int = rule(20, 0, 100, D, "Score a quester gains in a trial of mercy for each enemy it has spared")
+    sacrifice_share_pct: int = rule(30, 0, 100, D, "Share of its wealth a quester gives up in a trial of sacrifice; what it gives is its score (%)")
+    knowledge_boon: int = rule(10, 0, 50, H, "Intelligence a hero gains who brings knowledge back from a heroquest")
+    healing_boon: int = rule(30, 0, 100, H, "Health a hero regains, every sickness lifted, who brings healing back from a heroquest")
 
 
 @dataclass(frozen=True)
@@ -79,6 +83,9 @@ class ServitorRules:
     worshipper_awe: int = rule(2, 0, 100, D, "Awe a worshipping servitor adds in each faithful community of its god each epoch")
     warden_order: int = rule(3, 0, 100, D, "Crime and unrest a warden servitor takes from the town it keeps each epoch")
     scribe_love: int = rule(1, 0, 100, D, "Love a scribe servitor keeps alive among peoples who tell accounts of its god each epoch")
+    bargained_loyalty: int = rule(30, 0, 100, D, "Loyalty a servitor an outer being gave starts with, since it keeps that being's terms")
+    healer_health: int = rule(3, 0, 100, D, "Cleanliness a healer servitor gives the town it keeps each epoch, and sickness of a siege it lifts")
+    teacher_learning: int = rule(2, 0, 100, D, "Literacy a teacher servitor gives the people of the place it keeps each epoch")
 
 
 @dataclass(frozen=True)

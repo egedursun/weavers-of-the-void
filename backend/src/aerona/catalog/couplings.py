@@ -24,6 +24,8 @@ COMPONENT_FUNCTIONS = MappingProxyType(
         C.DANCED: (F.LOCOMOTION,),
         C.MATERIAL: (),
         C.MENTAL: (F.COGNITION,),
+        C.OFFERED: (),
+        C.COMMUNAL: (F.SPEECH,),
     }
 )
 
@@ -81,6 +83,7 @@ WORLD_RESTS = MappingProxyType(
         W.ICE: CarrionRest.FROZEN,
         W.ICE_SHELL: CarrionRest.FROZEN,
         W.METHANE: CarrionRest.FROZEN,
+        W.ROGUE: CarrionRest.FROZEN,
         W.DWARF_PLANET: CarrionRest.FROZEN,
         W.SAND: CarrionRest.MUMMIFIED,
         W.DEAD: CarrionRest.MUMMIFIED,
@@ -159,6 +162,15 @@ CARRION_RESTS: Mapping[CarrionRest, RestSpec] = total(
             scavenger=lambda rules: rules.carrion.burned_scavenger,
             restless=lambda rules: rules.carrion.burned_restless,
             fossil=lambda rules: rules.carrion.burned_fossil,
+        ),
+        CarrionRest.SCAVENGED: RestSpec(
+            gone=True,
+            keeps=False,
+            soil=0,
+            disease=lambda rules: rules.carrion.scavenged_disease,
+            scavenger=lambda rules: rules.carrion.scavenged_scavenger,
+            restless=lambda rules: rules.carrion.scavenged_restless,
+            fossil=lambda rules: rules.carrion.scavenged_fossil,
         ),
         CarrionRest.SUNK: RestSpec(
             keeps=False,

@@ -24,6 +24,8 @@ import {
   Users,
   Wand2,
   Zap,
+  Bolt,
+  Flame,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -43,7 +45,7 @@ export const ACTION_ICON: Partial<Record<ActionKind, LucideIcon>> = {
   bless_stat: Sparkles,
   bless_existence: InfinityIcon,
   ascend: Crown,
-  lightning: Zap,
+  lightning: Bolt,
   chat: MessageCircle,
   answer_prayer: MessageCircle,
   resurrect_son: Heart,
@@ -68,11 +70,11 @@ export const ACTION_ICON: Partial<Record<ActionKind, LucideIcon>> = {
   sever_route: Route,
   cleanse_leak: Wand2,
   miracle: Wand2,
-  disaster: Zap,
+  disaster: Flame,
   teach_knowledge: GraduationCap,
   advance_knowledge: GraduationCap,
   set_knowledge_level: GraduationCap,
-  curse: Skull,
+  curse: Ghost,
   dream: Moon,
   influence: Hand,
   declare_chosen: Crown,

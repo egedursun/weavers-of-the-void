@@ -13,7 +13,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import WarRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import COMMUNITY_TYPES, ENDED_STATUSES, SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
@@ -200,8 +200,8 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
         if society.shares[SocialClass.SCRIBE] < settings.relic_min_scribe_pct:
             continue
         ruin = ruin_near(community, ruins, atlas)
-        candidates = [item for item in lost_items if item.world_id == community.world_id and item.id in lost]
-        if ruin is None or not candidates or not rng.chance(settings.relic_decipher_chance):
+        candidates = [item for item in lost_items if item.world_id == community.world_id and item.id in lost and not held(item.id)]
+        if ruin is None or held(community.id) or not candidates or not rng.chance(settings.relic_decipher_chance):
             continue
         knowledge = rng.pick(candidates)
         await teach(ctx, community.id, knowledge, "rediscovered from the ruins", holdings)
@@ -227,6 +227,7 @@ async def _rediscovery(ctx: TickContext, holdings: KnowledgeHoldings, lost: set[
     "table.community_societies",
     "table.creator",
     "table.cult_holdings",
+    "table.deep_passages",
     "table.dimensions",
     "table.endowments",
     "table.entities",

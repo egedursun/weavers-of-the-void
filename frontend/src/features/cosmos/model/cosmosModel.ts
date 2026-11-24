@@ -33,6 +33,7 @@ export const ROUTE_STATE_LABEL: Record<RouteStateKey, string> = {
   scorched: 'Scorched by a flare',
   unstable: 'Throat shut',
   worn: 'Worn out',
+  guarded: 'Guarded',
 }
 
 export const RESTORABLE_ROUTE_STATES: ReadonlySet<RouteStateKey> = new Set([

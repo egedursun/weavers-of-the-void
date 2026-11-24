@@ -108,6 +108,12 @@ class GoodCategory(StrEnum):
     LUXURIES = "luxuries"
     LIVESTOCK = "livestock"
     MOUNTS = "mounts"
+    VEHICLES = "vehicles"
+    PREPARED_FOOD = "prepared_food"
+    SEED_AND_STOCK = "seed_and_stock"
+    FERTILISER = "fertiliser"
+    RESIN_AND_GUM = "resin_and_gum"
+    RELICS_AND_ANTIQUITIES = "relics_and_antiquities"
 
 
 class KindAct(StrEnum):
@@ -150,6 +156,8 @@ class IngredientRole(StrEnum):
     LEAVENING = "leavening"
     PRESERVATIVE = "preservative"
     COLOURING = "colouring"
+    ACID = "acid"
+    AROMA = "aroma"
 
 
 class MealSlot(StrEnum):
@@ -161,6 +169,7 @@ class MealSlot(StrEnum):
     REMEDY = "remedy"
     TRAVEL_FOOD = "travel_food"
     FAMINE_FOOD = "famine_food"
+    STREET = "street"
 
 
 class DrinkCategory(StrEnum):
@@ -176,6 +185,8 @@ class DrinkCategory(StrEnum):
     MEDICINAL = "medicinal"
     RITUAL = "ritual"
     SYNTHESISED = "synthesised"
+    SPARKLING = "sparkling"
+    SAP_DRINK = "sap_drink"
 
 
 class DrinkRole(StrEnum):

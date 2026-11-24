@@ -87,7 +87,7 @@ async def closest_language(ctx: TickContext, entity: EntityRow, atlas: RegionAtl
     for speaker_id, language_id in await ctx.session.execute(statement):
         language = await living_entity(ctx.session, language_id)
         if language is not None and language.entity_type is EntityType.LANGUAGE:
-            speakers.append(SpokenNearby(language_id=language_id, same_region=atlas.same_region(entity.id, speaker_id)))
+            speakers.append(SpokenNearby(language_id=language_id, same_cell=atlas.same_cell(entity.id, speaker_id)))
     chosen = nearest_language(location_language.id if location_language is not None else None, ancestors, speakers, ctx.rules)
     found = await living_entity(ctx.session, chosen)
     return found if found is not None and found.entity_type is EntityType.LANGUAGE else None

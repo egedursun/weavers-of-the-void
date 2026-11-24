@@ -112,6 +112,8 @@ BUILT_IN_JOBS: MappingProxyType[Job, BuiltInProfession] = partial(
         Job.GATHERING: BuiltInProfession(PC.FOOD_PRODUCTION, 20, 20, 40, 30, 20),
         Job.INDUSTRY: BuiltInProfession(PC.CRAFTING, 30, 40, 40, 45, 35),
         Job.ARTS: BuiltInProfession(PC.ART_AND_ENTERTAINMENT, 45, 30, 55, 5, 55),
+        Job.HEALING: BuiltInProfession(PC.LEARNING, 55, 40, 65, 15, 55),
+        Job.TEACHING: BuiltInProfession(PC.LEARNING, 50, 30, 60, 5, 55),
     },
     without={Job.IDLE},
 )
@@ -178,6 +180,8 @@ BUILT_IN_ORGANISATIONS: MappingProxyType[FactionKind, BuiltInOrganisation] = tot
         FactionKind.WORKER_BODY: BuiltInOrganisation(OP.MUTUAL_AID, OW.MEMBERS, OM.BY_TRADE, FS.ORGANISATION, OL.LICENSED, OG.ASSEMBLY, 30, 65, 10),
         FactionKind.STREET_GANG: BuiltInOrganisation(OP.CRIME, OW.NONE, OM.BY_POWER, FS.BAND, OL.OUTLAWED, OG.LEADER, 5, 55, 30),
         FactionKind.TRAFFICKING_RING: BuiltInOrganisation(OP.CRIME, OW.FOUNDER, OM.BY_INVITATION, FS.NETWORK, OL.SECRET, OG.LEADER, 10, 60, 80),
+        FactionKind.FENCE_NETWORK: BuiltInOrganisation(OP.CRIME, OW.MEMBERS, OM.BY_INVITATION, FS.NETWORK, OL.SECRET, OG.LEADER, 10, 55, 70),
+        FactionKind.COUNTERFEITING_RING: BuiltInOrganisation(OP.CRIME, OW.FOUNDER, OM.BY_INVITATION, FS.BAND, OL.SECRET, OG.LEADER, 15, 50, 75),
     },
 )
 
@@ -314,6 +318,8 @@ ORGANISATION_BASE_LABELS: dict[str, str] = {
     "worker_body": "Worker body",
     "street_gang": "Street gang",
     "trafficking_ring": "Trafficking ring",
+    "fence_network": "Network of fences",
+    "counterfeiting_ring": "Counterfeiting ring",
 }
 
 PROFESSION_SPEC = ConceptSpec(

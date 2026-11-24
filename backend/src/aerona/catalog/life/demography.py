@@ -18,6 +18,7 @@ INHERITANCE_RULES: dict[InheritanceCustom, SuccessionRule] = {
     InheritanceCustom.THROUGH_SECOND_LINE: SuccessionRule.THROUGH_SECOND_LINE,
     InheritanceCustom.SENIORITY: SuccessionRule.SENIORITY,
     InheritanceCustom.DESIGNATED: SuccessionRule.TANISTRY,
+    InheritanceCustom.COMMUNAL: SuccessionRule.ELECTIVE,
 }
 
 
@@ -39,6 +40,7 @@ AGE_BANDS: Mapping[AgeBand, BandSpec] = total(
         AgeBand.YOUTH: BandSpec("Youths", 0.8, 1 / 3, fights=True, bears=True),
         AgeBand.ADULT: BandSpec("Adults", 1.0, None, fights=True, bears=True),
         AgeBand.ELDER: BandSpec("Elders", 0.5, None),
+        AgeBand.ANCIENT: BandSpec("The very old", 0.2, None),
     },
 )
 AGE_ORDER = tuple(AgeBand)
@@ -57,6 +59,8 @@ CONDITION_EMERGES: Mapping[CohortCondition, bool] = total(
         CohortCondition.MAIMED: False,
         CohortCondition.ORPHANED: True,
         CohortCondition.DISPLACED: True,
+        CohortCondition.INDEBTED: True,
+        CohortCondition.GIFTED: False,
     },
 )
 EMERGING_CONDITIONS = frozenset(condition for condition, emerges in CONDITION_EMERGES.items() if emerges)
@@ -72,6 +76,8 @@ CONDITION_WORK: Mapping[CohortCondition, float] = partial(
         CohortCondition.CAPTIVE: 0.8,
         CohortCondition.ORPHANED: 0.6,
         CohortCondition.DISPLACED: 0.7,
+        CohortCondition.INDEBTED: 1.1,
+        CohortCondition.GIFTED: 1.2,
     },
     without=(CohortCondition.SICK, CohortCondition.MAIMED),
 )
@@ -100,7 +106,7 @@ CLASS_JOBS = partial(
 
 DEATH_RATES = AGE_ORDER
 
-APPLY_SHORTFALLS_SHORTFALL_EFFECTS = (ShortfallEffect.HUNGER, ShortfallEffect.STATUS, ShortfallEffect.ARCANE)
+APPLY_SHORTFALLS_SHORTFALL_EFFECTS = (ShortfallEffect.HUNGER, ShortfallEffect.STATUS, ShortfallEffect.ARCANE, ShortfallEffect.JUSTICE)
 MOVE_PEOPLE_COHORT_CONDITIONS = frozenset({CohortCondition.ENSLAVED, CohortCondition.CAPTIVE})
 CORVEE_JOBS = (Job.FARMING, Job.HERDING)
 ALLOCATE_COHORT_CONDITIONS = frozenset({CohortCondition.ENSLAVED, CohortCondition.CAPTIVE})

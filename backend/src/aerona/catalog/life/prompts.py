@@ -15,5 +15,6 @@ VESSEL_DIRECTIONS = total(
         VehicleKind.LIVING: "a living being that carries travellers, in motion, at a scale that shows its size",
         VehicleKind.RIFT: "an opening between places with what shows through it and travellers before it for scale",
         VehicleKind.ON_FOOT: "travellers on foot on their way, with the land they cross",
+        VehicleKind.DRIFT: "a craft or body carried between worlds by a current or a drifting mass, with its passengers on it",
     },
 )

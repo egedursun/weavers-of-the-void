@@ -29,7 +29,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { type KpiTone, Portrait } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { RulingSkyList } from '@/features/cosmos/RulingSkyList'
 import { useCosmos } from '@/features/cosmos/api'
@@ -166,7 +166,7 @@ function ClimateChips() {
 
 export function WorldHeader() {
   const state = useWorldState()
-  const { open } = useDrawerStack()
+  const { open } = useEntryStack()
   const mobile = useIsMobile()
   const [expanded, setExpanded] = useState<boolean | null>(null)
   const shown = expanded ?? !mobile

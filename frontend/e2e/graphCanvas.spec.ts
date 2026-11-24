@@ -56,7 +56,7 @@ test('the 2D network draws on its canvas and finding a node opens its info card'
   await expect(card.getByRole('button', { name: 'Open its page' })).toBeVisible()
   await expect(card.getByRole('link', { name: 'Show on map' })).toHaveAttribute('href', /\/map\?world=\d+&focus=12/)
   await card.getByRole('button', { name: 'Open its page' }).click()
-  await expect(page).toHaveURL(/drawer=entity/)
+  await expect(page).toHaveURL(/entry=entity/)
 })
 
 test('the info card finds the path to a second record and focuses the surroundings', async ({ page }) => {

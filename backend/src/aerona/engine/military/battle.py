@@ -2,6 +2,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from aerona.catalog.battle_depth import BASE_DISCIPLINE, FORMATIONS, FormationSpec, WeaponProfile, formation_for
+from aerona.catalog.deepened import RIDERS, RINGED
 from aerona.catalog.life.military import GENERIC, TRAIT_TACTICS
 from aerona.catalog.life_traits import TACTIC_TRAITS, having
 from aerona.catalog.materials import MATERIALS
@@ -529,7 +530,7 @@ def strength(rules: Rules, side: Side, ground: Field) -> float:
 
 def scouting(side: Side) -> float:
     eyes = sum(stack.row.count * stack.spec.speed / PERCENT for stack in side.stacks if stack.alive and stack.row.kind in SCOUTS)
-    return eyes + side.skill * 10 + side.intel + side.watch
+    return eyes + side.skill * 10 + side.intel + side.watch + side.areas.get(CommandArea.INTELLIGENCE, 0) * 10
 
 
 BARRAGE_KINDS = frozenset({UnitKind.ARTILLERY_CREW, UnitKind.SIEGE_CREW, UnitKind.DRONE_OPERATORS})
@@ -577,10 +578,21 @@ def choose_tactic(rules: Rules, rng: SeededRandom, side: Side, enemy_doctrine: s
             weight *= 0.1
         if option is Tactic.NIGHT_RAID and not ground.night:
             weight *= 0.1
+        if option is Tactic.RIVER_CROSSING and not ground.river:
+            weight *= 0.1
+        if option is Tactic.FIRE_ATTACK:
+            weight *= fire_weight(ground)
         if any(option in TRAIT_TACTICS.get(trait, ()) for trait in side.traits):
             weight *= 2.0
         weights.append(weight)
     return rng.weighted(options, weights)
+
+
+def fire_weight(ground: Field) -> float:
+    if has_trait(ground.weather, WeatherTrait.WET):
+        return 0.1
+    windy = 1.5 if has_trait(ground.weather, WeatherTrait.WINDY) else 1.0
+    return windy * 2.0 if terrain_has(ground.terrain, TerrainTrait.ARID) or terrain_has(ground.terrain, TerrainTrait.WOODED) else 0.6
 
 
 def tactic_factor(rules: Rules, mine: Tactic, theirs: Tactic, ground: Field) -> float:
@@ -1112,8 +1124,20 @@ def commit_reserves(rules: Rules, streams: Streams, side: Side, index: int) -> i
     return committed
 
 
+def parley(rules: Rules, streams: Streams, attacker: Side, defender: Side, ground: Field) -> Side | None:
+    strong, weak = (attacker, defender) if strength(rules, attacker, ground) >= strength(rules, defender, ground) else (defender, attacker)
+    if not (weak.skill and strong.skill) or strength(rules, weak, ground) >= strength(rules, strong, ground) * rules.tactics.parley_ratio_pct / PERCENT:
+        return None
+    return weak if streams(f"parley.{weak.entity.id}").chance(rules.tactics.parley_pct) else None
+
+
 def opening(rules: Rules, streams: Streams, attacker: Side, defender: Side, ground: Field) -> tuple[Side | None, list[PhaseLog]]:
     table = rules.tactics
+    yielder = parley(rules, streams, attacker, defender, ground)
+    if yielder is not None:
+        return yielder, [
+            traced(PhaseLog(BattlePhase.PARLEY, 0, 0, f"{yielder.entity.name} yielded at parley", {"yielded": yielder.entity.name}), attacker, defender)
+        ]
     eyes_a, eyes_d = scouting(attacker), scouting(defender)
     lead = attacker if eyes_a > eyes_d else defender
     other = defender if lead is attacker else attacker
@@ -1329,8 +1353,24 @@ def aftermath(rules: Rules, winner: Side, loser: Side, gap: float) -> tuple[dict
     return wounded, maimed, by_kind
 
 
+def circle_up(rules: Rules, side: Side, foe: Side) -> int:
+    alive = [stack for stack in foe.stacks if stack.alive]
+    riders = sum(stack.row.count for stack in alive if stack.spec.family in RIDERS)
+    total = sum(stack.row.count for stack in alive) or 1
+    if riders * PERCENT < total * rules.deepened.circle_mounted_share_pct or not any(stack.spec.family is F.VEHICLE for stack in side.stacks if stack.alive):
+        return 0
+    ringed = 0
+    for stack in side.stacks:
+        if stack.alive and stack.spec.family in RINGED and "formation" not in (stack.row.locked or []):
+            stack.row.formation = Formation.CIRCLE
+            ringed += 1
+    return ringed
+
+
 def resolve(rules: Rules, streams: Streams, attacker: Side, defender: Side, ground: Field) -> BattleResult:
     cast_luck(rules, streams, attacker, defender)
+    circle_up(rules, attacker, defender)
+    circle_up(rules, defender, attacker)
     planned_by = next((side.entity.id for side in (attacker, defender) if side.planned), None)
     refuser, phases = opening(rules, streams, attacker, defender, ground)
     trapped_by = next((side.entity.id for side in (attacker, defender) if side.trap), None)

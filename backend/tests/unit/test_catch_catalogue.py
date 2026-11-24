@@ -20,7 +20,7 @@ def test_every_ground_lies_in_a_medium_and_allows_its_gear() -> None:
 
 def test_market_ranks_keep_their_order_and_reach() -> None:
     rules = Rules()
-    order = [CentralityRank.DAILY, CentralityRank.WEEKLY, CentralityRank.SEASONAL, CentralityRank.RARE, CentralityRank.METROPOLITAN]
+    order = [CentralityRank.DAILY, CentralityRank.WEEKLY, CentralityRank.REGIONAL, CentralityRank.SEASONAL, CentralityRank.RARE, CentralityRank.METROPOLITAN]
     assert by_order() == order
     assert higher_markets(CentralityRank.DAILY) == set(order[1:])
     assert higher_markets(CentralityRank.RARE) == {CentralityRank.METROPOLITAN}

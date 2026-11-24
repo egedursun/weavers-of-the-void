@@ -42,6 +42,7 @@ class SavingRow(Base):
     saved: Mapped[int] = mapped_column(default=0)
     land: Mapped[int] = mapped_column(default=0, server_default="0")
     goods: Mapped[int] = mapped_column(default=0, server_default="0")
+    livestock: Mapped[int] = mapped_column(default=0, server_default="0")
     updated_epoch: Mapped[int] = mapped_column(default=0)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 

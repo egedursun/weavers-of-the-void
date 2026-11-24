@@ -8,12 +8,13 @@ from aerona.domain.enums.prehistory import PrehistoryKind
 from aerona.domain.enums.world_view import BindingNeed, SettleMode, WarTerrain, WorldLight
 
 SHARE_MAX = 500
-WORLD_VIEW_FLAGS = ("seasons", "nights", "fire", "soil")
+WORLD_VIEW_FLAGS = ("seasons", "nights", "fire", "soil", "sea_roads")
 WORLD_VIEW_SHARES = (
     "timber_pct",
     "food_need_pct",
     "capacity_pct",
     "ore_yield_pct",
+    "ship_pct",
     "storm_pct",
     "quake_pct",
     "flood_pct",
@@ -43,10 +44,12 @@ class WorldViewRow(Base):
     nights: Mapped[bool] = mapped_column(default=True)
     fire: Mapped[bool] = mapped_column(default=True)
     soil: Mapped[bool] = mapped_column(default=True)
+    sea_roads: Mapped[bool] = mapped_column(default=False)
     timber_pct: Mapped[int] = mapped_column(default=100)
     food_need_pct: Mapped[int] = mapped_column(default=100)
     capacity_pct: Mapped[int] = mapped_column(default=100)
     ore_yield_pct: Mapped[int] = mapped_column(default=100)
+    ship_pct: Mapped[int] = mapped_column(default=100)
     storm_pct: Mapped[int] = mapped_column(default=100)
     quake_pct: Mapped[int] = mapped_column(default=100)
     flood_pct: Mapped[int] = mapped_column(default=100)

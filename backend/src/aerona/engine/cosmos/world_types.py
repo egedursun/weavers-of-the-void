@@ -29,6 +29,8 @@ class WorldTypeMechanics:
     forced_atmosphere: Atmosphere | None = None
     drifts: bool = False
     ore_yield_pct: RuleValue | None = None
+    ship_pct: RuleValue | None = None
+    sea_roads: bool = False
     disaster_pct: Mapping[Disaster, RuleValue] = field(default_factory=dict)
 
 
@@ -248,6 +250,31 @@ WORLD_TYPE_MECHANICS: dict[WorldType, WorldTypeMechanics] = {
             forced_atmosphere=Atmosphere.DENSE,
             disaster_pct={
                 Disaster.FLOOD: lambda rules: rules.world_physics.methane_flood_pct,
+            },
+        ),
+        WorldTypeMechanics(
+            W.ROGUE,
+            capacity_pct=lambda rules: rules.world_physics.rogue_capacity,
+            disaster_pct={
+                Disaster.EARTHQUAKE: lambda rules: rules.world_physics.rogue_earthquake_pct,
+            },
+        ),
+        WorldTypeMechanics(
+            W.ARCHIPELAGO,
+            capacity_pct=lambda rules: rules.world_physics.archipelago_capacity,
+            ship_pct=lambda rules: rules.world_physics.archipelago_ship_pct,
+            sea_roads=True,
+            disaster_pct={
+                Disaster.STORM: lambda rules: rules.world_physics.archipelago_storm_pct,
+                Disaster.FLOOD: lambda rules: rules.world_physics.archipelago_flood_pct,
+            },
+        ),
+        WorldTypeMechanics(
+            W.MEGASTRUCTURE,
+            capacity_pct=lambda rules: rules.world_physics.megastructure_capacity,
+            fertility_decay=lambda rules: rules.world_physics.megastructure_wear,
+            disaster_pct={
+                Disaster.EARTHQUAKE: lambda rules: rules.world_physics.megastructure_earthquake_pct,
             },
         ),
     )

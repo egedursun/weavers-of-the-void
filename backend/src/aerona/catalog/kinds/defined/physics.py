@@ -36,6 +36,9 @@ COSMIC_FEATURE_KIND = total(
             checked_by=("engine.cosmos.features.periodic_period",),
             used_by=("catalog.life.domain.PERIODIC_BODIES", "engine.cosmos.features.WANDERING_SUBTYPES"),
         ),
+        CosmicFeatureKind.NEBULA: Defined("Nebula", checked_by=(), used_by=("engine.cosmos.features.veil_and_bend",)),
+        CosmicFeatureKind.DEBRIS_RING: Defined("Ring of debris", checked_by=(), used_by=("engine.cosmos.impacts.capture", "engine.cosmos.impacts.forecast")),
+        CosmicFeatureKind.DARK_BODY: Defined("Unseen mass", checked_by=(), used_by=("engine.cosmos.features.veil_and_bend",)),
     },
 )
 

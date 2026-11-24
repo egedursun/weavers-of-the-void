@@ -25,6 +25,7 @@ SLEEP_BANDS: Mapping[Dormancy, frozenset[TemperatureBand]] = total(
         Dormancy.AESTIVATION: HEAT,
         Dormancy.TORPOR: frozenset(),
         Dormancy.CRYPTOBIOSIS: frozenset({TemperatureBand.FROZEN, TemperatureBand.SEARING}),
+        Dormancy.DIAPAUSE: COLD | HEAT,
     },
 )
 CHAIN_DEPTH = 8
@@ -75,6 +76,8 @@ def chilled(thermoregulation: Thermoregulation, band: TemperatureBand | None) ->
 def activity(rules: Rules, thermoregulation: Thermoregulation, band: TemperatureBand | None) -> float:
     if thermoregulation in UNTOUCHED or band is None:
         return 1.0
+    if thermoregulation is Thermoregulation.MESOTHERM:
+        return 1.0 if band not in COLD else rules.dormancy.mesotherm_food_pct / PERCENT
     if thermoregulation is Thermoregulation.HETEROTHERM:
         return 1.0 if band not in COLD else 1 - (1 - activity(rules, Thermoregulation.ECTOTHERM, band)) * rules.thermoregulation.heterotherm_switch / PERCENT
     table = rules.thermoregulation

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.cartography.biomes import Biome
-from aerona.catalog.wind_belts import BELTS
+from aerona.catalog.wind_belts import BELTS, CURRENTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.climes import RegionWindRow
@@ -15,10 +15,13 @@ from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.climes import CirculationBand
 from aerona.domain.enums.cosmography import OceanCurrent
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind
 from aerona.domain.enums.industry import Pollutant
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.long_seasons import current_spell
 from aerona.engine.industry.pollution import shift
 from aerona.engine.primitives.distance import RegionAtlas
@@ -37,6 +40,10 @@ class WindTally:
     monsoons: int = 0
     upwellings: int = 0
     drifted: int = 0
+    salvaged: int = 0
+
+
+LATITUDE_BANDS = frozenset({CirculationBand.TRADE, CirculationBand.WESTERLY, CirculationBand.POLAR, CirculationBand.SUBTROPICAL_CALM})
 
 
 def heading(octant: int) -> tuple[float, float]:
@@ -71,6 +78,15 @@ def band_of(rules: Rules, physics: WorldPhysicsRow | None, latitude: int, lean: 
     return latitude_band(rules, max(0, abs(latitude) - lean))
 
 
+def local_band(rules: Rules, band: CirculationBand, env: RegionEnvironmentRow) -> CirculationBand:
+    if band in LATITUDE_BANDS and highland(rules, env):
+        return CirculationBand.MOUNTAIN_WIND
+    monsoon_reach = rules.monsoons.lowest_latitude <= abs(env.latitude) <= rules.monsoons.highest_latitude
+    if band in LATITUDE_BANDS and env.coast_kind is not CoastKind.NONE and monsoon_reach:
+        return CirculationBand.MONSOON
+    return band
+
+
 def strength_of(rules: Rules, band: CirculationBand) -> int:
     return BELTS[band].strength(rules)
 
@@ -101,9 +117,11 @@ def toward(rules: Rules, positions: dict[int, tuple[float, float]], region: int,
 def current_for(rules: Rules, row: RegionWindRow, tides: int, atlas: RegionAtlas, region_id: int, *, upwind: bool) -> OceanCurrent:
     if row.upwelling:
         return OceanCurrent.UPWELLING
-    narrow = sum(1 for other in atlas.neighbours(region_id) if atlas.is_water(other)) <= NARROW_SEA
-    if narrow and tides >= rules.currents.tidal_strength_min:
+    seas = sum(1 for other in atlas.neighbours(region_id) if atlas.is_water(other))
+    if seas <= NARROW_SEA and tides >= rules.currents.tidal_strength_min:
         return OceanCurrent.TIDAL
+    if seas >= rules.currents.open_sea_neighbours:
+        return OceanCurrent.COUNTER if upwind else OceanCurrent.GYRE
     return OceanCurrent.WARM if not upwind else OceanCurrent.NONE
 
 
@@ -120,9 +138,10 @@ async def keep_winds(ctx: TickContext, tally: WindTally) -> None:
         env = envs[region.id]
         if held(region.id):
             continue
-        band = band_of(table, physics.get(env.world_id), env.latitude)
+        prevailing = band_of(table, physics.get(env.world_id), env.latitude)
+        band = local_band(table, prevailing, env)
         summer = band_of(table, physics.get(env.world_id), env.latitude, table.winds.seasonal_shift)
-        octant = BELTS[band].blows_from
+        octant = BELTS[prevailing].blows_from
         neighbours = atlas.neighbour_regions(region.id)
         upwind = toward(table, positions, region.id, neighbours, octant)
         downwind = toward(table, positions, region.id, neighbours, (octant + OCTANTS // 2) % OCTANTS)
@@ -163,7 +182,23 @@ async def keep_winds(ctx: TickContext, tally: WindTally) -> None:
                 await current_spell(ctx, world, region, env.current is OceanCurrent.WARM)
         if downwind and row.strength > 0:
             await drift_air(ctx, region.id, downwind[0], row.strength, tally)
+        salvage = CURRENTS[env.current].salvage if env.current is not None else None
+        if salvage is not None:
+            tally.salvaged += await gather_drift(ctx, atlas, region.id, salvage(table))
     await ctx.session.flush()
+
+
+async def gather_drift(ctx: TickContext, atlas: RegionAtlas, region_id: int, timber: int) -> int:
+    gathered = 0
+    for town in await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.location_id == region_id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    ):
+        if timber > 0 and not held(town.id):
+            await goods_of(ctx.session, ctx.epoch).add(town.id, CommodityKind.TIMBER, timber, GoodsFlow.EXTRACTION)
+            gathered += 1
+    return gathered
 
 
 async def drift_air(ctx: TickContext, source: int, sink: int, strength: int, tally: WindTally) -> None:

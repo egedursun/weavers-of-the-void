@@ -29,6 +29,8 @@ NAMING_PATTERNS: Mapping[NamingPattern, PatternSpec] = total(
         P.TEKNONYM: PatternSpec("Parents named for their child", ""),
         P.PLACE: PatternSpec("Named for the birthplace", " of "),
         P.TRADE: PatternSpec("Named for the trade", ", "),
+        P.ANCESTRAL: PatternSpec("Named for a forebear", ", again "),
+        P.EVENT: PatternSpec("Named for the time of birth", ", born in "),
     },
 )
 NAME_FORMS: Mapping[NameForm, FormSpec] = total(
@@ -42,5 +44,7 @@ NAME_FORMS: Mapping[NameForm, FormSpec] = total(
         F.VOW: FormSpec("Name of a vow"),
         F.ASCENSION: FormSpec("Name of rule"),
         F.POSTHUMOUS: FormSpec("Name after death"),
+        F.EPITHET: FormSpec("Epithet"),
+        F.ADOPTION: FormSpec("Adoption name"),
     },
 )

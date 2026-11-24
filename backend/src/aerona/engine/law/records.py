@@ -12,6 +12,7 @@ from aerona.db.tables.customs import MembershipRow
 from aerona.db.tables.discovery import BlueprintRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import CompanyProfileRow
+from aerona.db.tables.kin import WillRow
 from aerona.db.tables.law_depth import RegistryRow
 from aerona.db.tables.living import LivingLineRow
 from aerona.db.tables.minds import MindProfileRow
@@ -67,6 +68,22 @@ async def deaths(ctx: TickContext) -> list[Entry]:
 async def citizens(ctx: TickContext) -> list[Entry]:
     rows = await ctx.session.scalars(select(MembershipRow).where(MembershipRow.since_epoch == ctx.epoch).order_by(MembershipRow.mortal_entity_id))
     return [Entry(await where(ctx, row.mortal_entity_id), row.mortal_entity_id, row.polity_entity_id) for row in rows]
+
+
+@SOURCES.on(RegistryKind.WILL)
+async def wills(ctx: TickContext) -> list[Entry]:
+    rows = await ctx.session.scalars(select(WillRow).where(WillRow.made_epoch == ctx.epoch).order_by(WillRow.id))
+    return [Entry(await where(ctx, row.testator_node_id), row.testator_node_id, row.testator_node_id, row.id) for row in rows]
+
+
+@SOURCES.on(RegistryKind.LICENCE)
+async def licences(ctx: TickContext) -> list[Entry]:
+    rows = await ctx.session.scalars(
+        select(IncorporealRightRow)
+        .where(IncorporealRightRow.licensed_to_node_id.is_not(None), IncorporealRightRow.since_epoch == ctx.epoch)
+        .order_by(IncorporealRightRow.id)
+    )
+    return [Entry(await where(ctx, row.licensed_to_node_id), row.licensed_to_node_id, row.holder_node_id, row.id) for row in rows]
 
 
 @SOURCES.on(RegistryKind.COMPANY)

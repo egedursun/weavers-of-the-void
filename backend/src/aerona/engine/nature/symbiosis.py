@@ -4,8 +4,9 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.domestication import HOUSED_STAGES
+from aerona.catalog.domestication import HOUSED_STAGES, SOCIALITIES
 from aerona.catalog.life.domain import GROWN
+from aerona.catalog.life.nature import DRAINING_BONDS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
@@ -56,6 +57,8 @@ class SymbiosisBook:
             share = present.get(other, 0) / PERCENT * row.strength / PERCENT
             if row.kind is K.MUTUALISM:
                 factor += share * table.mutual_pct / PERCENT
+            elif row.kind is K.FARMING:
+                factor += share * table.farming_pct / PERCENT
             elif row.kind is K.COMMENSALISM and row.first_species_id == species_id:
                 factor += share * table.commensal_pct / PERCENT
         return factor
@@ -64,7 +67,7 @@ class SymbiosisBook:
         return sum(
             present.get(row.first_species_id, 0) / PERCENT * row.strength / PERCENT * rules.symbiosis.parasite_loss
             for row in self.of_species.get(species_id, [])
-            if row.kind is K.PARASITISM and row.second_species_id == species_id
+            if row.kind in DRAINING_BONDS and row.second_species_id == species_id
         )
 
     def shield(self, rules: Rules, species_id: int, present: dict[int, int]) -> float:
@@ -79,10 +82,17 @@ class SymbiosisBook:
         return 1 - cover * rules.symbiosis.mimic_shield_pct / PERCENT
 
 
+FARMERS = frozenset(form for form, spec in SOCIALITIES.items() if spec.nests)
+
+
 def kind_between(first: SpeciesProfileRow, second: SpeciesProfileRow, first_traits: set[CreatureTrait]) -> tuple[SymbiosisKind, bool]:
+    gap = SIZE_ORDER.index(second.size_class) - SIZE_ORDER.index(first.size_class)
+    if first.species_class not in GROWN and second.species_class in GROWN and first.sociality in FARMERS:
+        return K.FARMING, False
     if (first.species_class in GROWN) != (second.species_class in GROWN):
         return K.MUTUALISM, first.species_class in GROWN
-    gap = SIZE_ORDER.index(second.size_class) - SIZE_ORDER.index(first.size_class)
+    if first.species_class in GROWN and second.species_class in GROWN and abs(gap) >= 2:
+        return K.AMENSALISM, gap < 0
     if CreatureTrait.MIMIC in first_traits and second.aggression > first.aggression:
         return K.MIMICRY, False
     if abs(gap) >= 2:

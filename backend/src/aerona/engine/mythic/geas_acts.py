@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.mythic import BINDING_MODES
 from aerona.db.read_memo import memoized
 from aerona.db.tables.mythic import GeasRow
 from aerona.db.write_guard import held
@@ -22,12 +23,21 @@ async def kept_geas_acts(session: AsyncSession) -> frozenset[tuple[int, ActKind]
 async def geas_acted(ctx: TickContext, actor_id: int, act: ActKind) -> int:
     if held(actor_id):
         return 0
+    for armed in list(
+        await ctx.session.scalars(
+            select(GeasRow).where(
+                GeasRow.bearer_entity_id == actor_id, GeasRow.mode == GeasMode.CONDITION, GeasRow.trigger == act, GeasRow.armed_epoch.is_(None)
+            )
+        )
+    ):
+        if "armed_epoch" not in armed.locked:
+            armed.armed_epoch, armed.last_kept_epoch = ctx.epoch, ctx.epoch
     if (actor_id, act) not in await kept_geas_acts(ctx.session):
         return 0
     rows = list(await ctx.session.scalars(select(GeasRow).where(GeasRow.bearer_entity_id == actor_id, GeasRow.act == act, GeasRow.state == GeasState.KEPT)))
     for row in rows:
         if row.mode is GeasMode.TABOO and "state" not in row.locked:
             break_geas(row, ctx.epoch)
-        elif row.mode is GeasMode.DUTY and "last_kept_epoch" not in row.locked:
+        elif row.mode in BINDING_MODES and "last_kept_epoch" not in row.locked:
             row.last_kept_epoch = ctx.epoch
     return len(rows)

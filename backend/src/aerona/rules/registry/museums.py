@@ -19,3 +19,5 @@ class MuseumRules(Spanned):
     research_cap: int = rule(50, 0, 100000, S, "Most pieces that count toward the research of one field")
     loot_pct: int = rule(100, 0, 100, S, "Share of the pieces of its collections a sacked town loses to the sacker (%)")
     son_cost: int = rule(40, 0, 1000, S, "Essence a son spends to found a collection in a town")
+    map_prestige: int = rule(6, 0, 100, S, "Prestige each map in a collection gives its keeper")
+    instrument_prestige: int = rule(5, 0, 100, S, "Prestige each instrument in a collection gives its keeper")

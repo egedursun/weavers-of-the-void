@@ -4,6 +4,7 @@ from aerona.api.schemas.common import ApiModel, RequestModel
 from aerona.api.schemas.records import BondView, ChronicleLineRecord, EntityRecord, EntitySummary, ImageRecord, NodeRef
 from aerona.constants.api import ENTITY_PAGE_DEFAULT, ENTITY_PAGE_MAX
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, SocialClass
 from aerona.services.importance import ArchiveMode
 
@@ -128,6 +129,20 @@ class EntityInsight(ApiModel):
     descendants: list[NodeRef] = Field(default_factory=list)
 
 
+class LevelChoice(ApiModel):
+    stratum: UndergroundStratum
+    name: str | None
+    dwellable: bool
+    reason: str | None
+
+
+class EntityLevel(ApiModel):
+    region: NodeRef
+    stratum: UndergroundStratum | None
+    held: bool
+    choices: list[LevelChoice]
+
+
 class EntityDetail(ApiModel):
     entity: EntityRecord
     cover: str | None
@@ -151,6 +166,7 @@ class EntityDetail(ApiModel):
     importance: Importance | None
     images: list[ImageRecord]
     insight: EntityInsight
+    level: EntityLevel | None = None
 
 
 class ArchiveRequest(RequestModel):

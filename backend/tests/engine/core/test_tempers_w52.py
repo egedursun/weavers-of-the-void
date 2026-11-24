@@ -36,7 +36,7 @@ async def kinds(session: AsyncSession) -> set[str]:
 
 
 def test_ten_tempers_and_the_three_new_ones_keep_to_the_lair() -> None:
-    assert len(TEMPERS) == len(BeastTemper) == 10
+    assert len(TEMPERS) == len(BeastTemper) == 12
     new = {BeastTemper.WOUNDED, BeastTemper.BROODING, BeastTemper.COWED}
     assert new.isdisjoint(ACTIVE_TEMPERS) and all(TEMPERS[temper].lairbound for temper in new)
     assert {BeastTemper.WOUNDED, BeastTemper.BROODING} <= HOSTILE_TEMPERS and BeastTemper.COWED not in HOSTILE_TEMPERS

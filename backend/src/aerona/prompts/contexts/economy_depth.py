@@ -73,6 +73,8 @@ class RouteLine(ContextItem):
     officials: int = 0
     spoilage: int = 0
     pilferage: int = 0
+    pirates: int = 0
+    breakage: int = 0
     season_pct: int
     closed_season: str = ""
     carrier: str = ""

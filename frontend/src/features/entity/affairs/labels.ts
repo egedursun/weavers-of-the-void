@@ -20,6 +20,7 @@ import {
   HeartPulse,
   Home,
   Landmark,
+  Languages,
   Medal,
   Moon,
   Package,
@@ -29,13 +30,16 @@ import {
   ScrollText,
   Search,
   Shield,
+  ShieldAlert,
   ShieldCheck,
   Shovel,
   Swords,
+  Utensils,
   Vote,
   Wallet,
   Wheat,
   Wine,
+  Ticket,
 } from 'lucide-react'
 import {
   bondRoleValues,
@@ -87,11 +91,17 @@ export const TASKS: Record<string, Named> = {
     tone: 'success',
   },
   oversee_works: { label: 'Oversee the works', icon: Hammer, tone: 'info' },
-  promote_trade: { label: 'Promote trade', icon: Coins, tone: 'gold' },
+  promote_trade: { label: 'Promote trade', icon: Scale, tone: 'gold' },
   advance_learning: {
     label: 'Advance learning',
     icon: BookOpen,
     tone: 'verdigris',
+  },
+  public_health: { label: 'Public health', icon: HeartPulse, tone: 'success' },
+  secure_borders: {
+    label: 'Keep the borders',
+    icon: ShieldCheck,
+    tone: 'info',
   },
 }
 
@@ -112,6 +122,8 @@ export const TAX_KINDS: Record<components['schemas']['TaxKind'], Named> = {
   seigniorage: { label: 'Seigniorage on coin', icon: Coins, tone: 'gold' },
   pollution: { label: 'Pollution tax', icon: Factory, tone: 'warning' },
   excise: { label: 'Excise on goods', icon: Wine, tone: 'verdigris' },
+  hearth: { label: 'Hearth tax', icon: Home, tone: 'gold' },
+  toll: { label: 'Toll', icon: Ticket, tone: 'gold' },
 }
 
 export const MANDATE_KINDS: Record<string, Named> = {
@@ -125,6 +137,8 @@ export const MANDATE_KINDS: Record<string, Named> = {
   enclosure: { label: 'Enclosure of the commons', icon: Fence, tone: 'danger' },
   ration: { label: 'Rationing by rule', icon: Scale, tone: 'warning' },
   corvee: { label: 'Called-out labour', icon: Pickaxe, tone: 'danger' },
+  quarantine: { label: 'Quarantine', icon: ShieldAlert, tone: 'warning' },
+  conscription: { label: 'Conscription', icon: Swords, tone: 'danger' },
 }
 
 export const MANDATE_STATES: Record<string, Named> = {
@@ -170,6 +184,8 @@ export const POSITIONS: Record<string, Named> = {
   },
   jester: { label: 'Jester', icon: Drama, tone: 'warning' },
   seer: { label: 'Seer', icon: Eye, tone: 'verdigris' },
+  taster: { label: 'Food taster', icon: Utensils, tone: 'warning' },
+  interpreter: { label: 'Interpreter', icon: Languages, tone: 'info' },
 }
 
 export function labelTable(

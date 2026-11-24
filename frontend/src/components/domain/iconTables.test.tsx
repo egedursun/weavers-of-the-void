@@ -87,6 +87,16 @@ describe('domain icon vocabulary', () => {
     }
   })
 
+  it('never draws two values of one vocabulary with the same icon', () => {
+    for (const [vocabulary, table] of Object.entries(ICON_VOCABULARIES)) {
+      const icons = Object.values(table)
+      const twins = Object.keys(table).filter(
+        (_, index) => icons.indexOf(icons[index]) !== index
+      )
+      expect(twins, vocabulary).toEqual([])
+    }
+  })
+
   it('falls back for an unknown value and renders an svg', async () => {
     expect(domainIcon('stat', 'luck')).toBe(DOMAIN_ICON_FALLBACK)
     const screen = await render(

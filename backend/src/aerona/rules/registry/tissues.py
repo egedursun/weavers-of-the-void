@@ -48,6 +48,8 @@ class TissueRules(Spanned):
     cauterise_level: int = rule(1, 0, 20, G, "Medicine level needed to cauterise")
     traction_level: int = rule(3, 0, 20, G, "Medicine level needed for traction")
 
+    transfuse_level: int = rule(4, 0, 20, G, "Medicine level needed to give blood back after bleeding")
+
     @property
     def amputate_at(self) -> int:
         return self.epochs(self.amputate_at_years)

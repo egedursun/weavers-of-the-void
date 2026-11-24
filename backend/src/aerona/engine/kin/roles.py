@@ -70,6 +70,25 @@ async def co_spouses(session: AsyncSession, mortal_id: int) -> list[int]:
     return await of_each(session, await spouses_of(session, mortal_id), spouses_of)
 
 
+async def step_parents(session: AsyncSession, mortal_id: int) -> list[int]:
+    parents = set(await parents_of(session, mortal_id))
+    return sorted(set(await of_each(session, sorted(parents), spouses_of)) - parents - {mortal_id})
+
+
+async def step_children(session: AsyncSession, mortal_id: int) -> list[int]:
+    own = set(await children_of(session, mortal_id))
+    return sorted(set(await of_each(session, await spouses_of(session, mortal_id), children_of)) - own - {mortal_id})
+
+
+async def half_siblings(session: AsyncSession, mortal_id: int) -> list[int]:
+    parents = set(await parents_of(session, mortal_id))
+    found: list[int] = []
+    for other in await of_each(session, sorted(parents), children_of):
+        if other != mortal_id and len(parents & set(await parents_of(session, other))) == 1:
+            found.append(other)
+    return sorted(found)
+
+
 async def foster_kin(session: AsyncSession, mortal_id: int) -> list[int]:
     return sorted(set(await fosterers_of(session, mortal_id)) | set(await fosterlings_of(session, mortal_id)))
 
@@ -99,6 +118,9 @@ RESOLVERS: Mapping[KinRole, Lookup] = total(
         KinRole.GODPARENT: godparents_of,
         KinRole.SWORN_KIN: sworn_kin_of,
         KinRole.FOSTER_KIN: foster_kin,
+        KinRole.STEP_PARENT: step_parents,
+        KinRole.STEP_CHILD: step_children,
+        KinRole.HALF_SIBLING: half_siblings,
     },
 )
 

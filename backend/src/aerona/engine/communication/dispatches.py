@@ -3,6 +3,7 @@ from typing import Any
 
 from sqlalchemy import select
 
+from aerona.catalog.deepened import REFUSABLE
 from aerona.catalog.ethics import HONOUR_MODELS
 from aerona.catalog.intrigue import BELIEF_ATTRIBUTES
 from aerona.catalog.life.communication import COURTESIES_OFFICE_KINDS, EFFECTS_DISPATCH_CONTENTS, WELCOME_SKILL_KINDS
@@ -25,6 +26,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intrigue import BeliefSource, FavourOrigin
 from aerona.domain.enums.mind import ActKind, MemoryKind, PreferenceKind, SkillKind, ValueAxis
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import WarCause
 from aerona.engine.communication.post import CLAUSES, COMMODITY, FACTS, FORGER, LOCKED_STATE, OVERLAND, SPIED, TREATY, send
 from aerona.engine.context import TickContext
@@ -38,8 +40,9 @@ from aerona.engine.mind.preferences import fit, prefs_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import bond_exists, living_entity, spoken_language
-from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining, term
 from aerona.engine.relations.book import ensure_relation, relation, shift
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.community_relations import relation as community_relation
@@ -201,6 +204,9 @@ async def receive_envoy(ctx: TickContext, row: MessageRow, tally: DispatchTally)
     hostile = back is not None and back.friendship <= table.envoy_hostility
     if not hostile or not ctx.rng(seed_of("dispatch.envoy", row.id)).chance(table.envoy_harm_pct):
         row.envoy_fate = EnvoyFate.RECEIVED
+        if back is not None and back.friendship >= ctx.rules.deepened.honour_at:
+            await honour_envoy(ctx, row, envoy)
+            return
         if ctx.rng(seed_of("dispatch.defect", row.id)).chance(ctx.rules.envoys.defect_pct):
             await defect(ctx, row, envoy)
             tally.defected += 1
@@ -228,6 +234,38 @@ async def receive_envoy(ctx: TickContext, row: MessageRow, tally: DispatchTally)
         row.envoy_fate = EnvoyFate.KILLED
         await judged(ctx, recipient.id, envoy.id, ActKind.GUEST_KILLING)
         await declare_war(ctx, row.sender_node_id, recipient.id, f"{recipient.name} slew the envoy {envoy.name}", cause=WarCause.PUNITIVE, world_cap=False)
+
+
+async def honour_envoy(ctx: TickContext, row: MessageRow, envoy: EntityRow) -> None:
+    row.envoy_fate = EnvoyFate.HONOURED
+    home = await living_entity(ctx.session, row.sender_node_id)
+    if home is not None and not held(home.id):
+        with explaining():
+            term("deepened.honour_gift", ctx.rules.deepened.honour_gift)
+            shift_stat(home, "prosperity", ctx.rules.deepened.honour_gift)
+    await warm(ctx, row.sender_node_id, row.recipient_node_id, ctx.rules.deepened.courtesy_friendship, MemoryKind.GIFTED_ME)
+    await record(
+        ctx,
+        "deepened.envoy_honoured",
+        roles={IncidentRole.SUBJECT: envoy.id, IncidentRole.RECEIVER: row.recipient_node_id, IncidentRole.ORIGIN: row.sender_node_id},
+    )
+
+
+async def refused(ctx: TickContext, row: MessageRow) -> bool:
+    if row.content not in REFUSABLE or row.envoy_node_id is not None or LOCKED_STATE in (row.locked or []):
+        return False
+    back = await relation(ctx.session, row.recipient_node_id, row.sender_node_id)
+    if back is None or back.friendship > ctx.rules.deepened.refuse_at:
+        return False
+    row.state = DispatchState.REFUSED
+    await warm(ctx, row.sender_node_id, row.recipient_node_id, -ctx.rules.deepened.refuse_harm, MemoryKind.HUMILIATED_ME)
+    await record(
+        ctx,
+        "deepened.message_refused",
+        roles={IncidentRole.ORIGIN: row.sender_node_id, IncidentRole.RECEIVER: row.recipient_node_id},
+        facts={"content": row.content},
+    )
+    return True
 
 
 async def sting(ctx: TickContext, row: MessageRow, recipient: int) -> float:
@@ -267,9 +305,19 @@ async def effects(ctx: TickContext, row: MessageRow, tally: DispatchTally) -> No
         acted = ctx.rng(seed_of("dispatch.misread_acted", row.id)).chance(ctx.rules.dispatches.misread_pct)
         if row.misread and acted and isinstance(row.payload.get(TREATY), int):
             await misread_clause(ctx, row.payload[TREATY], recipient)
-    elif content is not None and DISPATCH_CONTENTS[content].commands:
+    elif content is not None:
+        await answer_content(ctx, row, tally, kindness)
+
+
+async def answer_content(ctx: TickContext, row: MessageRow, tally: DispatchTally, kindness: float) -> None:
+    spec = DISPATCH_CONTENTS[row.content] if row.content is not None else None
+    if spec is None:
+        return
+    if spec.courtesy:
+        await warm(ctx, row.recipient_node_id, row.sender_node_id, ctx.rules.deepened.courtesy_friendship * kindness, MemoryKind.GIFTED_ME)
+    elif spec.commands:
         tally.obeyed += int(await obey(ctx, row))
-    elif content is not None and DISPATCH_CONTENTS[content].warns:
+    elif spec.warns:
         tally.warned += int(await heed(ctx, row))
 
 
@@ -288,7 +336,7 @@ async def deliver(ctx: TickContext, row: MessageRow, tally: DispatchTally) -> No
     await mark_arrival(ctx, row)
     if row.envoy_node_id is not None:
         await receive_envoy(ctx, row, tally)
-    if row.envoy_fate is EnvoyFate.KILLED:
+    if row.envoy_fate is EnvoyFate.KILLED or await refused(ctx, row):
         return
     await effects(ctx, row, tally)
 
@@ -341,9 +389,25 @@ async def courtesies(ctx: TickContext, atlas: RegionAtlas, tally: DispatchTally)
                     ctx, realm, other, DispatchContent.GIFT_NOTICE, Medium.ENVOY if envoy else Medium.LETTER, payload=payload, envoy_id=envoy, atlas=atlas
                 ):
                     tally.sent += 1
+            elif warmth >= table.warm_at and await mourning_or_glad(ctx, other) is not None:
+                if await send(ctx, realm, other, await mourning_or_glad(ctx, other) or DispatchContent.CONDOLENCE, Medium.LETTER, atlas=atlas):
+                    tally.sent += 1
             elif warmth <= table.cold_at and rng.chance(table.ruler_insult_pct):
                 if await send(ctx, realm, other, DispatchContent.INSULT, Medium.LETTER, atlas=atlas):
                     tally.sent += 1
+
+
+async def mourning_or_glad(ctx: TickContext, realm_id: int) -> DispatchContent | None:
+    profile = await ctx.session.get(PolityProfileRow, realm_id)
+    if profile is None:
+        return None
+    seat = await ctx.session.scalar(select(OfficeRow).where(OfficeRow.polity_entity_id == realm_id, OfficeRow.kind == OfficeKind.RULER).limit(1))
+    if seat is not None and seat.since_epoch == ctx.epoch:
+        return DispatchContent.CONGRATULATION
+    capital = await living_entity(ctx.session, profile.capital_entity_id) if profile.capital_entity_id is not None else None
+    if capital is not None and stat_or(capital, "prosperity", PERCENT) < ctx.rules.deepened.refuse_harm:
+        return DispatchContent.CONDOLENCE
+    return None
 
 
 async def held_up(ctx: TickContext, row: MessageRow) -> bool:

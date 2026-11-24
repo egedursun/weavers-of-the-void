@@ -84,7 +84,16 @@ const CREATURE = {
 }
 
 const SCALES = (
-  ['order', 'productivity', 'heat', 'growth', 'fortune', 'magic'] as const
+  [
+    'order',
+    'productivity',
+    'heat',
+    'growth',
+    'fortune',
+    'magic',
+    'health',
+    'peace',
+  ] as const
 ).map((scale) => ({
   scale,
   value: scale === 'order' ? -2 : 0,

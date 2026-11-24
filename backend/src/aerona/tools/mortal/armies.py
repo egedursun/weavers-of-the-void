@@ -23,7 +23,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import ArmyInput, CommanderInput
-from aerona.tools.mortal.support import MortalCreation, craft_of, create_record, headcount_key, i_know, money_key, name_free, require_target, same_region
+from aerona.tools.mortal.support import MortalCreation, craft_of, create_record, headcount_key, i_know, money_key, name_free, require_target, same_cell
 
 PERCENT = 100
 HALF = 50
@@ -124,7 +124,7 @@ async def appoint_commander(call: MortalCall, args: CommanderInput) -> str:
     if await held_captive(call.session, mortal.id) is not None:
         fail(MortalResult.IS_CAPTIVE, name=mortal.name)
     bonds = BondRepository(call.session)
-    if not (await same_region(call, mortal) or await bonds.active_between(call.me.id, mortal.id, KIN_BONDS)):
+    if not (await same_cell(call, mortal) or await bonds.active_between(call.me.id, mortal.id, KIN_BONDS)):
         fail(MortalResult.NOT_BOUND_TO_YOU, name=mortal.name)
     for bond in await bonds.incoming(army.id, BondKind.COMMANDS):
         await bonds.deactivate(bond, call.epoch, mortal.name)

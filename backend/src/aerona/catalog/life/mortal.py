@@ -15,6 +15,8 @@ BREAK_TRAITS: dict[StressBreak, frozenset[TraitKind]] = {
     StressBreak.VICE: frozenset({TraitKind.GLUTTONOUS, TraitKind.LUSTFUL, TraitKind.GREEDY}),
     StressBreak.REVELATION: frozenset({TraitKind.CURIOUS, TraitKind.SCHOLARLY}),
     StressBreak.WITHDRAWAL: frozenset({TraitKind.RECLUSIVE, TraitKind.FRAGILE, TraitKind.DETACHED, TraitKind.ALOOF}),
+    StressBreak.DISSOCIATION: frozenset({TraitKind.DETACHED, TraitKind.FRAGILE, TraitKind.IMPRESSIONABLE}),
+    StressBreak.COLLAPSE: frozenset({TraitKind.FRAGILE, TraitKind.DILIGENT}),
 }
 
 

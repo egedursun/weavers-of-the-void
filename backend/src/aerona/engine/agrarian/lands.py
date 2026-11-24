@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.goods_traits import commodities_with
-from aerona.catalog.life.agrarian import COMMONS_BOON, KIND_TOLL
+from aerona.catalog.life.agrarian import COMMONS_BOON, KIND_TOLL, PALM_GOODS
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
@@ -22,9 +22,9 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import CommonsKind, CommonsRule, PerennialKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.ecology import SOWN, GrowthCycle
-from aerona.domain.enums.economy import CommodityKind
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import CoastKind, RiverClass
+from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand
 from aerona.domain.enums.goods_traits import CommodityTrait
 from aerona.domain.enums.living import LineTrait
 from aerona.domain.enums.mind import ActKind, MemoryKind
@@ -40,6 +40,7 @@ from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.standing import regard
 from aerona.engine.economy.purse import give_coin
+from aerona.engine.economy.stocks import goods_of
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.living.traits import eased, traits_of
 from aerona.engine.lore.civics import holders_know
@@ -67,6 +68,7 @@ FREEHOLD = "freehold"
 COMMUNAL = "communal"
 COTTAGERS = frozenset({SocialClass.FARMER, SocialClass.SERF_OR_SLAVE})
 STRICT = 50
+WARM_BANDS = frozenset({TemperatureBand.WARM, TemperatureBand.HOT, TemperatureBand.SEARING})
 
 
 @dataclass
@@ -121,13 +123,22 @@ def mature_epochs(ctx: TickContext, kind: PerennialKind) -> int:
             PerennialKind.TIMBER: table.timber_epochs,
             PerennialKind.PLANTATION: table.plantation_epochs,
             PerennialKind.FOREST_GARDEN: table.forest_garden_epochs,
+            PerennialKind.COPPICE: table.epochs(table.coppice_years),
+            PerennialKind.HEDGEROW: table.epochs(table.hedgerow_years),
+            PerennialKind.PALM_STAND: table.epochs(table.palm_stand_years),
         },
     )[kind]
 
 
 def kind_of(yields: set[CommodityKind], land: RegionEnvironmentRow | None, forest: int) -> PerennialKind:
+    if land is not None and land.temperature_band in WARM_BANDS and yields & PALM_GOODS:
+        return PerennialKind.PALM_STAND
     if yields & CASH_CROPS:
         return PerennialKind.PLANTATION
+    if land is not None and CommodityKind.TIMBER in yields and land.forest_cover < forest:
+        return PerennialKind.COPPICE
+    if land is not None and not yields - {CommodityKind.TIMBER} and land.farmed >= STRICT:
+        return PerennialKind.HEDGEROW
     if land is not None and land.forest_cover >= forest and CommodityKind.FRUIT in yields:
         return PerennialKind.FOREST_GARDEN
     return next((kind for commodity, kind in YIELD_KINDS if commodity in yields), PerennialKind.GROVE)
@@ -201,6 +212,10 @@ async def grow(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
             coin_pct, column, toll = KIND_TOLL[row.kind]
             earned = row.area * table.coin_per_area * row.condition / PERCENT * max(0, bred) / PERCENT * coin_pct / PERCENT
             await give_coin(ctx.session, ctx.rules, owner, round_half_up(earned))
+            if row.kind is PerennialKind.COPPICE:
+                await goods_of(ctx.session, ctx.epoch).add(
+                    owner.id, CommodityKind.FUEL, round_half_up(row.area * table.coppice_fuel * row.condition / PERCENT), GoodsFlow.EXTRACTION
+                )
             land = lands.lands.get(row.region_entity_id)
             if toll and land is not None and column not in land.locked:
                 setattr(land, column, clamp_int(getattr(land, column) + toll, 0, PERCENT))
@@ -243,6 +258,12 @@ async def commons_kinds(ctx: TickContext, land: RegionEnvironmentRow, towns: lis
         kinds.append(CommonsKind.QUARRY)
     if land.magic_density >= table.source_density:
         kinds.append(CommonsKind.SOURCE_GROUND)
+    if land.soil is SoilKind.PEAT or land.wetland >= table.turbary_peat:
+        kinds.append(CommonsKind.TURBARY)
+    if land.forest_cover >= table.woods_forest // 2 and land.farmed < table.wild_built:
+        kinds.append(CommonsKind.FORAGING_GROUND)
+    if land.coast_kind is not CoastKind.NONE and land.base_wetland < table.turbary_peat:
+        kinds.append(CommonsKind.SHORE)
     holders = [town.id for town in towns]
     if await holders_know(ctx.session, holders, Technique.RADIO):
         kinds.append(CommonsKind.SPECTRUM)
@@ -267,6 +288,7 @@ def wear_share(ctx: TickContext, rule: CommonsRule) -> int:
         CommonsRule.ENCLOSED: table.enclosed_pct,
         CommonsRule.STATE: table.state_pct,
         CommonsRule.LICENSED: table.licensed_pct,
+        CommonsRule.ROTATIONAL: table.rotational_pct,
     }.get(rule, PERCENT)
 
 
@@ -353,6 +375,20 @@ def realm_dispossessed(rows: list[CommonsRow], book: RealmBook, realm_id: int) -
     return sum(row.dispossessed for row in rows if row.steward_entity_id is not None and book.member_of.get(row.steward_entity_id) == realm_id)
 
 
+def share_common(ctx: TickContext, lands: Holdings, row: CommonsRow) -> None:
+    table = ctx.rules.commons
+    towns = lands.towns.get(row.region_entity_id, [])
+    for town in towns:
+        if not held(town.id):
+            share = 1 - table.licence_concentration_pct / PERCENT if row.rule is CommonsRule.LICENSED and town.id != row.steward_entity_id else 1.0
+            shift_stat(town, "prosperity", (row.condition - HALF) / HALF * table.prosperity_weight * share)
+            bestow(row, town, lands.profiles.get(town.id))
+            if row.rule is CommonsRule.STATE:
+                aggrieve(table.state_grievance, lands.profiles.get(town.id))
+            elif row.rule is CommonsRule.ROTATIONAL:
+                aggrieve(-table.rotational_calm, lands.profiles.get(town.id))
+
+
 async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> None:
     table = ctx.rules.commons
     rows = list(await ctx.session.scalars(select(CommonsRow).order_by(CommonsRow.id)))
@@ -368,18 +404,20 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
         if row.rule in QUOTA_RULES:
             put(row, "use", await held_to_quota(ctx, row))
         if row.use > table.sustainable:
+            before = row.condition
             shift(row, "condition", -(row.use - table.sustainable) * table.degrade_pct / PERCENT * wear_share(ctx, row.rule) / PERCENT)
+            if row.condition < table.council_at <= before:
+                await record(
+                    ctx,
+                    "commons.overused",
+                    roles={IncidentRole.SUBJECT: row.region_entity_id},
+                    facts={"common": row.kind, "use": row.use, "condition": row.condition},
+                    place=row.region_entity_id,
+                )
         else:
             shift(row, "condition", table.regrow)
         if row.rule is not CommonsRule.ENCLOSED:
-            towns = lands.towns.get(row.region_entity_id, [])
-            for town in towns:
-                if not held(town.id):
-                    share = 1 - table.licence_concentration_pct / PERCENT if row.rule is CommonsRule.LICENSED and town.id != row.steward_entity_id else 1.0
-                    shift_stat(town, "prosperity", (row.condition - HALF) / HALF * table.prosperity_weight * share)
-                    bestow(row, town, lands.profiles.get(town.id))
-                    if row.rule is CommonsRule.STATE:
-                        aggrieve(table.state_grievance, lands.profiles.get(town.id))
+            share_common(ctx, lands, row)
             await pay_realm(ctx, row, book)
         steward = lands.profiles.get(row.steward_entity_id) if row.steward_entity_id is not None else None
         if (
@@ -389,7 +427,7 @@ async def keep_commons(ctx: TickContext, lands: Holdings, tally: LandsTally) -> 
             and steward.public_order >= table.council_order
             and ctx.rng(f"commons.council.{row.id}.{ctx.epoch}").chance(table.council_chance)
         ):
-            put(row, "rule", CommonsRule.COUNCIL)
+            put(row, "rule", CommonsRule.ROTATIONAL if row.condition < table.rotational_at else CommonsRule.COUNCIL)
             tally.councils += 1
             await record(
                 ctx,

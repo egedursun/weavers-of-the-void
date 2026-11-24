@@ -9,7 +9,7 @@ RULES = Rules()
 
 
 def test_eleven_maims_and_the_new_two_aim_at_their_parts() -> None:
-    assert len(MaimedKind) == len(MAIMS) == 11
+    assert len(MaimedKind) == len(MAIMS) == 13
     assert MAIMS[MaimedKind.PARALYSED].part is BodyPart.SPINE and MAIMS[MaimedKind.LOST_FINGERS].part is BodyPart.FINGERS
     assert MAIMS[MaimedKind.LOST_FINGERS].loss(RULES.maimed) == RULES.maimed.lost_fingers_craft_cut
 

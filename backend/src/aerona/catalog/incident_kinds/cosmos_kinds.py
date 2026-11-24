@@ -560,6 +560,15 @@ IMPACTS: tuple[IncidentKindSpec, ...] = (
         kind=K.SKY,
     ),
     happening(
+        "impact.captured",
+        S,
+        "{subject} took the falling {body} into orbit, where it became a ring.",
+        roles=(one(R.SUBJECT),),
+        facts=(chosen("body", ImpactBody), amount("size", U.STRENGTH)),
+        clock=C.INSTANT,
+        kind=K.SKY,
+    ),
+    happening(
         "impact.called",
         S,
         "A body of the heavens ({body}) of size {size} was called down upon {subject}.",

@@ -12,7 +12,7 @@ import { Toaster } from 'sonner'
 import { render } from 'vitest-browser-react'
 import { type paths } from '@/api/generated/schema'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { validateDrawerSearch } from '@/components/layout/drawer/drawerEntries'
+import { validateEntrySearch } from '@/components/layout/entry/entryStack'
 
 const TEST_TOASTS = {
   classNames: {
@@ -129,7 +129,7 @@ export function freshQueryClient(): QueryClient {
 export async function renderApp(node: ReactNode, path = '/') {
   const queryClient = freshQueryClient()
   const rootRoute = createRootRoute({
-    validateSearch: validateDrawerSearch,
+    validateSearch: validateEntrySearch,
     component: () => (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>

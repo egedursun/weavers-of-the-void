@@ -83,6 +83,7 @@ INDEXED_LISTS: dict[str, list[str]] = {"biome_mix": [biome.name.lower().replace(
 ID_LISTS = frozenset(
     {
         "witness_node_ids",
+        "path_region_ids",
         "items",
         "territory",
         "promoters",

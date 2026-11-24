@@ -207,6 +207,12 @@ WORLD_CLIMATE_MULTIPLIERS: dict[tuple[WorldType, ClimateEra], Callable[[Rules], 
     (WorldType.METHANE, ClimateEra.RAIN): lambda rules: rules.climate_world_type.methane_rain,
     (WorldType.METHANE, ClimateEra.ICE_AGE): lambda rules: rules.climate_world_type.methane_ice_age,
     (WorldType.METHANE, ClimateEra.SCORCHING): lambda rules: rules.climate_world_type.methane_scorching,
+    (WorldType.ROGUE, ClimateEra.ICE_AGE): lambda rules: rules.climate_world_type.rogue_ice_age,
+    (WorldType.ROGUE, ClimateEra.SCORCHING): lambda rules: rules.climate_world_type.rogue_scorching,
+    (WorldType.ARCHIPELAGO, ClimateEra.RAIN): lambda rules: rules.climate_world_type.archipelago_rain,
+    (WorldType.ARCHIPELAGO, ClimateEra.DROUGHT): lambda rules: rules.climate_world_type.archipelago_drought,
+    (WorldType.MEGASTRUCTURE, ClimateEra.ICE_AGE): lambda rules: rules.climate_world_type.megastructure_ice_age,
+    (WorldType.MEGASTRUCTURE, ClimateEra.DROUGHT): lambda rules: rules.climate_world_type.megastructure_drought,
 }
 
 

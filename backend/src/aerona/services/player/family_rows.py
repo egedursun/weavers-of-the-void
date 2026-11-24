@@ -130,6 +130,9 @@ FAMILY_TABLES: dict[str, str] = {
     "creature_group": "creature_groups",
     "divine_conception": "divine_conceptions",
     "god_reading": "god_readings",
+    "deep_cell": "region_underground",
+    "deep_passage": "deep_passages",
+    "deep_knowledge": "polity_deep_knowledge",
 }
 
 

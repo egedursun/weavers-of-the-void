@@ -13,6 +13,7 @@ import {
   Heart,
   HeartCrack,
   HeartHandshake,
+  History,
   Hourglass,
   Laugh,
   Lightbulb,
@@ -24,12 +25,16 @@ import {
   Smile,
   SmilePlus,
   Sparkles,
+  Star,
   Sun,
   Sunrise,
   ThumbsDown,
+  Timer,
   Users,
   Wind,
   Zap,
+  Bolt,
+  Binoculars,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
@@ -63,10 +68,14 @@ export const EMOTION_ICONS: Record<components['schemas']['Emotion'], Named> = {
   boredom: { label: 'Boredom', icon: Meh, tone: 'muted' },
   despair: { label: 'Despair', icon: Skull, tone: 'muted' },
   longing: { label: 'Longing', icon: Moon, tone: 'verdigris' },
-  surprise: { label: 'Surprise', icon: Zap, tone: 'gold' },
+  surprise: { label: 'Surprise', icon: Bolt, tone: 'gold' },
   curiosity: { label: 'Curiosity', icon: Search, tone: 'info' },
   compassion: { label: 'Compassion', icon: HeartHandshake, tone: 'success' },
   contempt: { label: 'Contempt', icon: ThumbsDown, tone: 'danger' },
+  admiration: { label: 'Admiration', icon: Star, tone: 'gold' },
+  anticipation: { label: 'Anticipation', icon: Timer, tone: 'info' },
+  embarrassment: { label: 'Embarrassment', icon: Frown, tone: 'warning' },
+  trust: { label: 'Trust', icon: Handshake, tone: 'success' },
 }
 
 export const MOOD_ICONS: Record<string, Named> = {
@@ -91,6 +100,7 @@ export const GRIEF_STAGES: Record<components['schemas']['GriefStage'], Named> =
       icon: HeartCrack,
       tone: 'muted',
     },
+    bargaining: { label: 'Bargaining', icon: Handshake, tone: 'warning' },
   }
 
 export const DREAM_KINDS: Record<string, Named> = {
@@ -100,6 +110,8 @@ export const DREAM_KINDS: Record<string, Named> = {
   prophetic: { label: 'Prophetic dream', icon: Eye, tone: 'gold' },
   visitation: { label: 'Visitation', icon: Sparkles, tone: 'gold' },
   shared: { label: 'Shared dream', icon: Users, tone: 'success' },
+  lucid: { label: 'A dream it steers', icon: Binoculars, tone: 'info' },
+  memory: { label: 'A dream of a memory', icon: History, tone: 'info' },
 }
 
 export const READING_ICON = Lightbulb

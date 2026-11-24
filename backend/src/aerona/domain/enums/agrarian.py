@@ -7,6 +7,8 @@ class LandUseRing(StrEnum):
     GRAIN = "grain"
     RANCHING = "ranching"
     WILDS = "wilds"
+    INDUSTRY = "industry"
+    FALLOW = "fallow"
 
 
 class CentralityRank(StrEnum):
@@ -15,6 +17,7 @@ class CentralityRank(StrEnum):
     SEASONAL = "seasonal"
     RARE = "rare"
     METROPOLITAN = "metropolitan"
+    REGIONAL = "regional"
 
 
 class NutrientKind(StrEnum):
@@ -22,6 +25,8 @@ class NutrientKind(StrEnum):
     MINERAL = "mineral"
     ORGANIC = "organic"
     SALINITY = "salinity"
+    SEED_BANK = "seed_bank"
+    SOIL_LIFE = "soil_life"
 
 
 class PerennialKind(StrEnum):
@@ -31,6 +36,9 @@ class PerennialKind(StrEnum):
     TIMBER = "timber"
     PLANTATION = "plantation"
     FOREST_GARDEN = "forest_garden"
+    COPPICE = "coppice"
+    HEDGEROW = "hedgerow"
+    PALM_STAND = "palm_stand"
 
 
 class CommonsKind(StrEnum):
@@ -43,6 +51,9 @@ class CommonsKind(StrEnum):
     SPECTRUM = "spectrum"
     ORBITS = "orbits"
     SOURCE_GROUND = "source_ground"
+    TURBARY = "turbary"
+    FORAGING_GROUND = "foraging_ground"
+    SHORE = "shore"
 
 
 class CommonsRule(StrEnum):
@@ -52,6 +63,7 @@ class CommonsRule(StrEnum):
     ENCLOSED = "enclosed"
     STATE = "state"
     LICENSED = "licensed"
+    ROTATIONAL = "rotational"
 
 
 class PreparednessKind(StrEnum):
@@ -67,6 +79,8 @@ class PreparednessKind(StrEnum):
     EVACUATION_ROUTES = "evacuation_routes"
     WARD = "ward"
     RESERVES_OF_ENERGY = "reserves_of_energy"
+    IMMUNISATION_PLAN = "immunisation_plan"
+    QUAKE_BUILDING = "quake_building"
 
 
 class AidKind(StrEnum):
@@ -80,6 +94,7 @@ class AidKind(StrEnum):
     MEDICINE = "medicine"
     SOLDIERS = "soldiers"
     KNOWLEDGE = "knowledge"
+    TRANSPORT = "transport"
 
 
 class RebuildPlan(StrEnum):
@@ -87,6 +102,7 @@ class RebuildPlan(StrEnum):
     OPPORTUNISTIC = "opportunistic"
     RELOCATED = "relocated"
     ABANDONED = "abandoned"
+    RESTORED = "restored"
 
 
 class RebuildCause(StrEnum):
@@ -98,6 +114,8 @@ class RebuildCause(StrEnum):
     ERUPTION = "eruption"
     SEA_WAVE = "sea_wave"
     LANDSLIDE = "landslide"
+    SINKHOLE = "sinkhole"
+    PLAGUE = "plague"
 
 
 class KeystoneUse(StrEnum):

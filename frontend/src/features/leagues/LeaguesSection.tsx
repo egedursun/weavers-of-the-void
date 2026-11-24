@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Medallion, Paged } from '@/components/domain'
+import { Medallion, Paged, ShapeFields, useShape } from '@/components/domain'
 import { Label, Text } from '@/components/typography'
 import { ForgeCard } from '@/features/cosmography/parts'
 import { useNames } from '@/features/cosmos/api'
@@ -83,6 +83,7 @@ function LeagueControls({ nodeId }: { nodeId: number }) {
   const [second, setSecond] = useState<number | null>(null)
   const [aims, setAims] = useState<Aim[]>(['defence'])
   const [basis, setBasis] = useState<Basis>('one_member_one_vote')
+  const naming = useShape()
   const founding = useMadeAction(
     'league:found',
     (_: void) => ({
@@ -90,6 +91,7 @@ function LeagueControls({ nodeId }: { nodeId: number }) {
       partner_ids: [first ?? -1, second ?? -1],
       aims,
       vote_basis: basis,
+      ...naming.body,
     }),
     'A league of realms is founded'
   )
@@ -138,6 +140,13 @@ function LeagueControls({ nodeId }: { nodeId: number }) {
         </div>
       }
     >
+      <div className='col-span-full min-w-0'>
+        <ShapeFields
+          shape={naming.shape}
+          onChange={naming.setShape}
+          blocked={notRealm}
+        />
+      </div>
       <ThingPicker
         label='Second realm'
         value={first}

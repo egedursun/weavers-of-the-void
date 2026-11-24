@@ -66,6 +66,7 @@ from aerona.services.books.armssvg import arms_plan
 from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_tables
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.deeds import DeedsChapter, deeds_chapter
+from aerona.services.books.deepsvg import DeepStratum, world_below
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.kinds import add_kind_sections
@@ -215,6 +216,7 @@ class WorldArticle:
     facts: list[Labelled] = field(default_factory=list)
     typed: list[TypedSection] = field(default_factory=list)
     wheel: Markup | None = None
+    below: list[DeepStratum] = field(default_factory=list)
 
 
 EFFECT_LABELS: dict[str, str] = {
@@ -848,6 +850,7 @@ class BookBuilder:
             cover=await cover_of(self.session, world.id),
             guide=await traveller_guide(self.session, self.rules, world.id, complete=True),
             picture=await map_picture(self.session, self.rules, world.id, epoch),
+            below=await world_below(self.session, self.rules, world.id, epoch, world_anchor(world.id)),
             facts=facts,
             typed=self.typed.of(world.id),
             wheel=self.wheels.get(world.id),

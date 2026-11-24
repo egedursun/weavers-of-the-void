@@ -191,7 +191,21 @@ QUARTER_WORKS: MappingProxyType[DistrictKind, frozenset[StructureKind]] = Mappin
     }
 )
 H = HousingLevel
-HOUSING_ORDER = (H.HUT, H.SHIP_BERTH, H.TENEMENT, H.COTTAGE, H.HOUSE, H.HABITAT_MODULE, H.APARTMENT, H.TOWNHOUSE, H.TOWER_BLOCK, H.ARCOLOGY_UNIT, H.MANOR)
+HOUSING_ORDER = (
+    H.SHACK,
+    H.HUT,
+    H.SHIP_BERTH,
+    H.TENEMENT,
+    H.COTTAGE,
+    H.HOUSE,
+    H.HABITAT_MODULE,
+    H.APARTMENT,
+    H.TOWNHOUSE,
+    H.TOWER_BLOCK,
+    H.ARCOLOGY_UNIT,
+    H.MANOR,
+    H.PALACE,
+)
 HOUSING_GATES = MappingProxyType(
     {
         H.TENEMENT: (KnowledgeBranch.ARCHITECTURE, 3),
@@ -216,9 +230,11 @@ HOUSING_LABELS = total(
         H.ARCOLOGY_UNIT: "Arcology unit",
         H.HABITAT_MODULE: "Habitat module",
         H.SHIP_BERTH: "Ship berth",
+        H.SHACK: "Shack",
+        H.PALACE: "Palace",
     },
 )
-FINE_HOMES = frozenset({H.TOWNHOUSE, H.ARCOLOGY_UNIT, H.MANOR})
+FINE_HOMES = frozenset({H.TOWNHOUSE, H.ARCOLOGY_UNIT, H.MANOR, H.PALACE})
 TALL_HOMES = frozenset({H.TOWER_BLOCK, H.ARCOLOGY_UNIT})
 M = Morphology
 REACH_RULE = total(
@@ -259,10 +275,15 @@ DENSITY_RULE = total(
         D.UNIVERSITY: "university_housing_pct",
         D.CAMP: "camp_housing_pct",
         D.LAZARETTO: "lazaretto_housing_pct",
+        D.PILGRIM_QUARTER: "pilgrim_quarter_housing_pct",
+        D.CARAVAN_QUARTER: "caravan_quarter_housing_pct",
+        D.FLOATING: "floating_housing_pct",
     },
 )
 HOUSING_RULE = {
+    H.SHACK: "shack_pct",
     H.HUT: "hut_pct",
+    H.PALACE: "palace_pct",
     H.COTTAGE: "cottage_pct",
     H.TOWNHOUSE: "townhouse_pct",
     H.MANOR: "manor_pct",
@@ -315,6 +336,7 @@ CARGO: Mapping[CargoClass, CargoSpec] = total(
         CargoClass.LIVING: CargoSpec(False, "livestock_loss", False),
         CargoClass.SAVED_MINDS: CargoSpec(False, None, False),
         CargoClass.RELICS: CargoSpec(False, None, False),
+        CargoClass.OVERSIZE: CargoSpec(True, "oversize_loss", False),
     },
 )
 
@@ -326,9 +348,11 @@ RACKETS_OF: MappingProxyType[FactionKind, tuple[RacketKind, ...]] = MappingProxy
         FactionKind.SMUGGLING_RING: (RacketKind.SMUGGLING, RacketKind.COUNTERFEITING, RacketKind.INTOXICANTS, RacketKind.ARMS),
         FactionKind.PIRATE_CONFEDERACY: (RacketKind.SMUGGLING, RacketKind.KIDNAPPING, RacketKind.TRAFFICKING),
         FactionKind.ASSASSINS: (RacketKind.EXTORTION, RacketKind.DATA_THEFT),
-        FactionKind.BANDITS: (RacketKind.PROTECTION, RacketKind.TRAFFICKING),
+        FactionKind.BANDITS: (RacketKind.PROTECTION, RacketKind.TRAFFICKING, RacketKind.POACHING),
         FactionKind.STREET_GANG: (RacketKind.PROTECTION, RacketKind.INTOXICANTS),
         FactionKind.TRAFFICKING_RING: (RacketKind.TRAFFICKING, RacketKind.KIDNAPPING),
+        FactionKind.FENCE_NETWORK: (RacketKind.FENCING, RacketKind.FORGERY),
+        FactionKind.COUNTERFEITING_RING: (RacketKind.COUNTERFEITING, RacketKind.FORGERY),
     }
 )
 RACKET_TOLL: Mapping[RacketKind, tuple[int, str, int]] = total(
@@ -347,6 +371,15 @@ RACKET_TOLL: Mapping[RacketKind, tuple[int, str, int]] = total(
         RacketKind.DATA_THEFT: (130, "admin_capacity", -2),
         RacketKind.LOAN_SHARKING: (100, "unrest", 1),
         RacketKind.ARMS: (150, "crime", 2),
+        RacketKind.FORGERY: (120, "crime", 2),
+        RacketKind.POACHING: (80, "unrest", 1),
     },
 )
 MERCHANT_HOUSES = frozenset({FactionKind.CHARTERED_COMPANY, FactionKind.MERCHANT_GUILD, FactionKind.WANDERING_MARKET})
+
+
+DERIVED_SERVICES: tuple[tuple[UrbanService, UrbanService, str], ...] = (
+    (V.LIGHTING, V.POWER, "lighting_from_power_pct"),
+    (V.LIGHTING, V.WATCH, "lighting_from_watch_pct"),
+    (V.PEST_CONTROL, V.SANITATION, "pest_control_from_sanitation_pct"),
+)

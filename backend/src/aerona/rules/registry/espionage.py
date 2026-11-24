@@ -128,3 +128,9 @@ class EspionageRules(Spanned):
     @property
     def agent_service_epochs(self) -> int:
         return self.epochs(self.agent_service_years)
+
+    recruit_agent_difficulty: int = rule(45, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Difficulty of an operation to win a new agent inside the target")
+    surveil_difficulty: int = rule(15, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Difficulty of an operation that only watches the target")
+    route_block_danger: int = rule(25, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Danger of banditry a blocking saboteur adds to each route of the target")
+    sleeper_pct: int = rule(30, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Chance an agent won in peace waits embedded as a sleeper until war (%)")
+    surveil_gain: int = rule(8, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Intelligence a watch on the target gathers each operation, at little risk")

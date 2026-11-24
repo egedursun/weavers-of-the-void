@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life_traits import FACTION_KIND_TRAITS, having
+from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.customs import AgeSetMemberRow, AgeSetRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -9,7 +10,9 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import MovementProfileRow, MovementSupportRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.minds import MindProfileRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import HouseMemberRow
+from aerona.db.tables.powers import PowerRow
 from aerona.db.tables.regime import CoalitionMemberRow
 from aerona.domain.enums.belonging import IdentityLayer
 from aerona.domain.enums.bond import BondKind
@@ -90,6 +93,8 @@ async def community_values(session: AsyncSession, atlas: RegionAtlas, community:
         IdentityLayer.LANGUAGE: await tongue_value(session, community),
         IdentityLayer.KIND: (None, await kind_label(session, folk.id if folk is not None else None)),
         IdentityLayer.CAUSE: (await backed_cause(session, community.id), None),
+        IdentityLayer.GIFT: (None, None),
+        IdentityLayer.CALLING: (None, None),
     }
 
 
@@ -123,7 +128,19 @@ async def mortal_values(session: AsyncSession, atlas: RegionAtlas, mortal: Entit
         IdentityLayer.LANGUAGE: await tongue_value(session, mortal),
         IdentityLayer.KIND: await mortal_kind(session, mortal, folk),
         IdentityLayer.CAUSE: (await joined_cause(session, mortal.id), None),
+        IdentityLayer.GIFT: (None, await gift_of(session, mortal.id)),
+        IdentityLayer.CALLING: (None, await calling_of(session, mortal.id)),
     }
+
+
+async def gift_of(session: AsyncSession, mortal_id: int) -> str | None:
+    form = await session.scalar(select(PowerRow.form).where(PowerRow.holder_node_id == mortal_id).order_by(PowerRow.id).limit(1))
+    return str(spoken(form)) if form is not None else None
+
+
+async def calling_of(session: AsyncSession, mortal_id: int) -> str | None:
+    profile = await session.get(MortalProfileRow, mortal_id)
+    return str(spoken(profile.career)) if profile is not None and profile.career is not None else None
 
 
 async def values_of(session: AsyncSession, atlas: RegionAtlas, holder: EntityRow) -> dict[IdentityLayer, Value]:

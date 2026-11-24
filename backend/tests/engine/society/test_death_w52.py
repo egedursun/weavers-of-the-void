@@ -8,7 +8,7 @@ from tests.engine.society.factories import Realm, mortal
 
 
 def test_twenty_nine_causes_and_drowning_comes_from_lack_of_air() -> None:
-    assert len(DEATH_CAUSES) == len(DeathCause) == 29
+    assert len(DEATH_CAUSES) == len(DeathCause) == 33
     assert death_cause_of(HarmCause.DISASTER, DamageType.ASPHYXIA) is DeathCause.DROWNING
     assert death_cause_of(HarmCause.BATTLE) is DeathCause.BATTLE
     assert DEATH_CAUSES[DeathCause.BATTLE].violent and not DEATH_CAUSES[DeathCause.DROWNING].violent

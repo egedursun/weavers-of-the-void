@@ -45,6 +45,7 @@ CARRIERS: Mapping[CarrierKind, CarrierSpec] = total(
         K.LIVING: CarrierSpec("Living carriers", 35, 4, 3, T.GENETIC_ENGINEERING, LAND | WATER, "feed", 30),
         K.RITE: CarrierSpec("Bound conveyance", 15, 8, 7, T.SUMMONING, EVERY, None, 10),
         K.NETWORK: CarrierSpec("Networks", 0, 10, 1, T.COMPUTATION, frozenset({M.NETWORK}), None, 15),
+        K.SLEDGE: CarrierSpec("Sledges", 6, 2, 2, None, frozenset({M.ROAD}), "feed", 45),
     },
 )
 CARRIER_OF: Mapping[TransportKind, CarrierKind] = total(TransportKind, {kind: CarrierKind(kind.value) for kind in TransportKind})

@@ -17,7 +17,7 @@ import {
   StatBar,
   Paged,
 } from '@/components/domain'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { Muted, Text } from '@/components/typography'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { DialectDetails } from './DialectDetails'
@@ -36,7 +36,7 @@ function timeText(factor: number): string {
     : `Fast (×${formatDecimal(factor)})`
 }
 
-export function TravellersGuide({ id }: DrawerPageProps) {
+export function TravellersGuide({ id }: EntryPageProps) {
   const worldId = Number(id)
   const valid = Number.isInteger(worldId) && worldId > 0
   const guide = useWorldGuide(valid ? worldId : null)
@@ -129,7 +129,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
         showMax={false}
       />
       {world.cosmology && (
-        <Section title='Cosmology' level={3}>
+        <Section id='section-guide-cosmology' title='Cosmology' level={3}>
           <Text variant='prose' italic>
             {world.cosmology}
           </Text>
@@ -137,6 +137,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
       )}
       {world.phonology && (
         <Section
+          id='section-guide-dialect'
           title='Local dialect'
           description='How names are born here; a name that breaks it is judged by Fate.'
           level={3}
@@ -144,7 +145,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
           <DialectDetails phonology={world.phonology} />
         </Section>
       )}
-      <Section title='Dangers' level={3}>
+      <Section id='section-guide-dangers' title='Dangers' level={3}>
         {data.dangers.length === 0 ? (
           <Muted>Nothing here is known to hunt travellers.</Muted>
         ) : (
@@ -174,7 +175,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
           </PagedList>
         )}
       </Section>
-      <Section title='Peoples' level={3}>
+      <Section id='section-guide-peoples' title='Peoples' level={3}>
         {data.peoples.length === 0 ? (
           <Muted>No people lives here yet.</Muted>
         ) : (
@@ -209,7 +210,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
           </PagedList>
         )}
       </Section>
-      <Section title='Resources' level={3}>
+      <Section id='section-guide-resources' title='Resources' level={3}>
         {data.resources.length === 0 ? (
           <Muted>No resource is recorded.</Muted>
         ) : (
@@ -249,7 +250,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
           </PagedList>
         )}
       </Section>
-      <Section title='Roads' level={3}>
+      <Section id='section-guide-roads' title='Roads' level={3}>
         {data.routes.length === 0 ? (
           <Muted>No known road leads here.</Muted>
         ) : (
@@ -282,7 +283,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
           </PagedList>
         )}
       </Section>
-      <Section title='Native gods' level={3}>
+      <Section id='section-guide-gods' title='Native gods' level={3}>
         {data.foreign_gods.length === 0 ? (
           <Muted>No old god is known here.</Muted>
         ) : (
@@ -312,7 +313,7 @@ export function TravellersGuide({ id }: DrawerPageProps) {
           </PagedList>
         )}
       </Section>
-      <Section title='Sky' level={3}>
+      <Section id='section-guide-sky' title='Sky' level={3}>
         {data.sky.length === 0 ? (
           <Muted>The sky of this world holds nothing named.</Muted>
         ) : (

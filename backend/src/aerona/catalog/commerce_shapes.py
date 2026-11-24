@@ -24,6 +24,8 @@ TIER_INCOME_PCT: dict[SupplyTier, int] = {
     SupplyTier.PRODUCER: 60,
     SupplyTier.WHOLESALE: 80,
     SupplyTier.RETAIL: 100,
+    SupplyTier.BROKER: 70,
+    SupplyTier.PEDDLER: 50,
 }
 
 LEASE_UPKEEP_PCT: dict[LeaseThing, int] = {

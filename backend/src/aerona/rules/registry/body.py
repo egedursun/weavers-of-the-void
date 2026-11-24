@@ -149,6 +149,12 @@ class InjuryRules:
     player_cut: int = rule(40, 0, 100, G, "Maiming by the player: share of cuts")
     player_blunt: int = rule(30, 0, 100, G, "Maiming by the player: share of blunt blows")
     player_pierce: int = rule(30, 0, 100, G, "Maiming by the player: share of thrusts")
+    animal_blunt: int = rule(60, 0, 100, G, "Harm by herds, mounts and kept beasts: share of blows and trampling")
+    animal_pierce: int = rule(40, 0, 100, G, "Harm by herds, mounts and kept beasts: share of bites, horns and tusks")
+    crowd_blunt: int = rule(70, 0, 100, G, "Harm in crushes and riots: share of blows and trampling")
+    crowd_asphyxia: int = rule(30, 0, 100, G, "Harm in crushes and riots: share of crushing breath out of the body")
+    medical_cut: int = rule(70, 0, 100, G, "Harm by treatment that goes wrong: share of cuts")
+    medical_chemical: int = rule(30, 0, 100, G, "Harm by treatment that goes wrong: share of harm by remedies")
 
 
 @dataclass(frozen=True)
@@ -246,6 +252,14 @@ class CapacityRules:
     malnutrition_melee: int = rule(20, -100, 100, G, "A body wasted by a poor diet: melee lost (%)")
     malnutrition_craft: int = rule(15, -100, 100, G, "A body wasted by a poor diet: craft lost (%)")
     malnutrition_fertility: int = rule(30, -100, 100, G, "A body wasted by a poor diet: fertility lost (%)")
+    seizure_capacity_cut: int = rule(25, 0, 100, G, "Seizures: share of command and craft lost to fits that strike at random (%)")
+    lasting_fear_melee: int = rule(30, 0, 100, G, "Lasting fear: share of melee and command lost until mind medicine treats it (%)")
+    breathless_endurance: int = rule(30, 0, 100, G, "Breathlessness: share of endurance and labour lost (%)")
+    stealth_stride: int = rule(40, 0, 100, G, "How much going unseen leans on moving quietly on sound limbs (%)")
+    labour_grasp: int = rule(50, 0, 100, G, "How much work by strength leans on a sound grip (%)")
+    stealth_cover_pct: int = rule(60, 0, 200, G, "How much an agent's going unseen, above or below a sound body, changes how fast the agent is exposed (%)")
+    stealth_theft_pct: int = rule(50, 0, 200, G, "How much a thief's going unseen, above or below a sound body, changes the odds of being stopped (%)")
+    labour_work_pct: int = rule(50, 0, 200, G, "How much the labour of named workers, above or below a sound body, changes the output of their community (%)")
 
 
 @dataclass(frozen=True)
@@ -466,6 +480,8 @@ class MaimedRules:
     festival_veterans: int = rule(60, 1, 100000, G, "Maimed veterans a martial people needs to begin a scar festival")
     anti_war_pct: int = rule(250, 0, 1000, G, "How much a maimed share sours a people on new wars (%)")
     healer_demand_pct: int = rule(300, 0, 1000, G, "How much a maimed share raises the birth of healers (%)")
+    lost_tail: int = rule(5, 0, 100, G, "Weight of losing a tail among the maims a wound to it leaves")
+    lost_wing: int = rule(5, 0, 100, G, "Weight of losing a wing among the maims a wound to it leaves")
 
 
 @dataclass(frozen=True)

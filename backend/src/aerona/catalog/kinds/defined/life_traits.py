@@ -342,6 +342,9 @@ EXTRACTION_KIND_TRAIT = total(
             checked_by=(),
             used_by=("catalog.life_traits.EXTRACTION_KIND_TRAITS", "engine.economy.extraction.ARTISAN_KINDS", "engine.phases.resources.SEAM_KINDS"),
         ),
+        ExtractionKindTrait.TAKES_FROM_RUINS: Defined(
+            "Takes from ruins", checked_by=(), used_by=("catalog.life_traits.EXTRACTION_KIND_TRAITS", "engine.economy.extraction.FROM_RUINS")
+        ),
     },
 )
 
@@ -654,7 +657,16 @@ MISHAP_KIND_TRAIT = total(
     MishapKindTrait,
     {
         MishapKindTrait.FRIGHTS: Defined("Frights", checked_by=(), used_by=("catalog.life_traits.MISHAP_KIND_TRAITS", "engine.fortune.everyday.FRIGHTS")),
-        MishapKindTrait.LOSSES: Defined("Losses", checked_by=(), used_by=("catalog.life_traits.MISHAP_KIND_TRAITS", "engine.fortune.everyday.LOSSES")),
+        MishapKindTrait.LOSSES: Defined(
+            "Losses",
+            checked_by=(),
+            used_by=(
+                "catalog.life_traits.MISHAP_KIND_TRAITS",
+                "engine.fortune.everyday.LOSSES",
+                "engine.sacred.bureau.LOSSES",
+                "engine.sacred.foresight.LOSSES",
+            ),
+        ),
     },
 )
 
@@ -731,6 +743,9 @@ PACKAGE_KIND_TRAIT = total(
     {
         PackageKindTrait.BEAST_CURSES: Defined(
             "Beast curses", checked_by=(), used_by=("catalog.life_traits.PACKAGE_KIND_TRAITS", "engine.transform.beings.BEAST_CURSES")
+        ),
+        PackageKindTrait.HIDDEN_BY_BEARER: Defined(
+            "Hidden by bearer", checked_by=(), used_by=("catalog.life_traits.PACKAGE_KIND_TRAITS", "engine.intrigue.sources.CURSED_PACKAGES")
         ),
     },
 )

@@ -415,8 +415,8 @@ const CREATOR_DETAIL: Schemas['CreatorDetail'] = {
     loneliness: 38,
     label: 'content',
     breakdown: [
-      { epoch: 11, axis: 'contentment', item: 'faith', delta: 2.5 },
-      { epoch: 11, axis: 'anger', item: 'godless communities', delta: 1.2 },
+      { epoch: 11, axis: 'contentment', item: 'cult', delta: 2.5 },
+      { epoch: 11, axis: 'anger', item: 'godless', delta: 1.2 },
     ],
   },
   faith: 12.6,

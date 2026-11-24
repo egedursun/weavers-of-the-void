@@ -77,6 +77,7 @@ class SealDraft(Command):
     oath_id: int | None = None
     power_id: int | None = None
     line_id: int | None = None
+    mind_id: int | None = None
 
 
 class NoveltyDraft(Edited):
@@ -226,7 +227,7 @@ async def field_agreement_void(scope: PlayerScope, command: FieldAgreementTarget
 
 @player_action("deep_seal:seal", ActionKind.EDIT_RECORD)
 async def deep_seal_seal(scope: PlayerScope, command: SealDraft) -> Effect:
-    links = SealLinks(oath_id=command.oath_id, power_id=command.power_id, line_id=command.line_id)
+    links = SealLinks(oath_id=command.oath_id, power_id=command.power_id, line_id=command.line_id, mind_id=command.mind_id)
     await control.seal(await scope.context("deep_seal_seal"), command.place_id, command.kind, command.strength, links)
     return Effect("The deep is sealed.", target_node_id=command.place_id)
 

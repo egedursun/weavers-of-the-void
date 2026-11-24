@@ -12,6 +12,7 @@ import {
   Link,
   Map as MapIcon,
   MapPin,
+  MessageSquareWarning,
   Orbit,
   Scale,
   ScrollText,
@@ -22,8 +23,11 @@ import {
   Swords,
   TriangleAlert,
   Unlink,
-  UserX,
+  Unlock,
   Users,
+  UserX,
+  CircleSlash,
+  Snowflake,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -43,9 +47,16 @@ export const DEMANDS: Record<string, Named> = {
   hand_over: { label: 'Hand over a person', icon: UserX, tone: 'danger' },
   disarm: { label: 'Cut its forces', icon: ShieldOff, tone: 'warning' },
   open_trade: { label: 'Open its roads to trade', icon: Ship, tone: 'info' },
+  apology: {
+    label: 'A public apology',
+    icon: MessageSquareWarning,
+    tone: 'warning',
+  },
+  release_captives: { label: 'Release captives', icon: Unlock, tone: 'info' },
 }
 
 export const CRISIS_STATES: Record<string, Named> = {
+  frozen: { label: 'Frozen', icon: Snowflake, tone: 'info' },
   escalating: { label: 'Escalating', icon: TriangleAlert, tone: 'warning' },
   backed_down: { label: 'The demander backed down', icon: Ban, tone: 'muted' },
   conceded: { label: 'Conceded', icon: CheckCircle2, tone: 'success' },
@@ -80,6 +91,7 @@ export const SUBJECT_KINDS: Record<string, Named> = {
 }
 
 export const STANDINGS: Record<string, Named> = {
+  isolated: { label: 'Isolated', icon: CircleSlash, tone: 'muted' },
   hegemon: { label: 'Hegemon', icon: Crown, tone: 'gold' },
   great_power: { label: 'Great power', icon: Landmark, tone: 'gold' },
   minor_power: { label: 'Minor power', icon: Scale, tone: 'muted' },

@@ -41,5 +41,7 @@ TAXES: Mapping[TaxKind, TaxSpec] = total(
         K.SEIGNIORAGE: TaxSpec(frozenset(SocialClass), 0, 10, 5, 50, 70, T.COINAGE),
         K.POLLUTION: TaxSpec(frozenset({C.WORKER, C.MERCHANT, C.ARTISAN}), 0, 45, 35, 60, 70, T.INDUSTRIAL_CHEMISTRY),
         K.EXCISE: TaxSpec(frozenset({C.CITIZEN, C.WORKER, C.FARMER, C.ARTISAN}), 0, 30, 30, 100, 90, T.DOUBLE_ENTRY),
+        K.TOLL: TaxSpec(frozenset({C.MERCHANT}), 5, 25, 25, 60, 100, T.COINAGE),
+        K.HEARTH: TaxSpec(frozenset({C.FARMER, C.ARTISAN, C.WORKER, C.CITIZEN}), 0, 30, 15, 100, 100, None),
     },
 )

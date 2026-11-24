@@ -9,6 +9,7 @@ from aerona.engine.water.ice import WaterTally, keep_water
     "settlement.prosperity",
     "table.coasts",
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",

@@ -1,8 +1,11 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from aerona.catalog.movement import CAVE_WAYS, ROCK_WAYS, SEA_WAYS, SOAKED_WAYS, SPIRIT_WAYS, UNDERWORLD_WAYS
 from aerona.core.total import total
+from aerona.domain.enums.biology import BiologyVariant
 from aerona.domain.enums.cosmography import DimensionKind
+from aerona.domain.enums.environment import MovementMode, TerrainKind
 from aerona.domain.enums.faith import StratumActivity, StratumAdmission, StratumContact, StratumKind, StratumPermanence, StratumValence
 from aerona.domain.enums.geology import UndergroundStratum
 
@@ -83,19 +86,40 @@ class StratumSpec:
     bored: bool = False
     vents: bool = False
     caves: bool = False
+    frozen: bool = False
+    faulted: bool = False
+    dwellable: bool = False
+    adapted: frozenset[BiologyVariant] = frozenset()
+    modes: frozenset[MovementMode] = SPIRIT_WAYS
+    terrain: TerrainKind = TerrainKind.UNDERGROUND
 
 
+V = BiologyVariant
+U = UndergroundStratum
+CAVE_FOLK = frozenset({V.SUBTERRANEAN, V.FUNGAL, V.CRYSTALLINE, V.CONSTRUCT, V.INCORPOREAL, V.UNDEAD, V.ENERGY})
 STRATA: Mapping[UndergroundStratum, StratumSpec] = total(
     UndergroundStratum,
     {
-        UndergroundStratum.AQUIFER: StratumSpec("Aquifer", 0, True, bored=True),
-        UndergroundStratum.RESERVOIR: StratumSpec("Reservoir", 1, False, bored=True),
-        UndergroundStratum.UNDER_OCEAN: StratumSpec("Ocean under the ice", 1, True, bored=True, vents=True),
-        UndergroundStratum.CAVERN_UPPER: StratumSpec("Upper caverns", 2, False, caves=True),
-        UndergroundStratum.CAVERN_MIDDLE: StratumSpec("Middle caverns", 3, False, caves=True),
-        UndergroundStratum.CAVERN_DEEP: StratumSpec("Deep caverns", 4, False, caves=True),
-        UndergroundStratum.MAGMA_SEA: StratumSpec("Magma sea", 5, False, vents=True),
-        UndergroundStratum.HOLLOW_INTERIOR: StratumSpec("Hollow interior", 6, False),
-        UndergroundStratum.DEEP_UNDERWORLD: StratumSpec("Deep underworld", 7, False),
+        U.PERMAFROST_LAYER: StratumSpec("Frozen ground", 0, False, frozen=True, modes=ROCK_WAYS),
+        U.AQUIFER: StratumSpec("Aquifer", 0, True, bored=True, modes=SOAKED_WAYS),
+        U.UNDER_OCEAN: StratumSpec(
+            "Ocean under the ice",
+            1,
+            True,
+            bored=True,
+            vents=True,
+            dwellable=True,
+            adapted=frozenset({V.AQUATIC}),
+            modes=SEA_WAYS,
+            terrain=TerrainKind.SEA,
+        ),
+        U.RESERVOIR: StratumSpec("Reservoir", 1, False, bored=True),
+        U.CAVERN_UPPER: StratumSpec("Upper caverns", 2, False, caves=True, dwellable=True, adapted=CAVE_FOLK, modes=CAVE_WAYS),
+        U.CAVERN_MIDDLE: StratumSpec("Middle caverns", 3, False, caves=True, dwellable=True, adapted=CAVE_FOLK, modes=CAVE_WAYS),
+        U.FAULT_ZONE: StratumSpec("Fault zone", 3, False, faulted=True),
+        U.CAVERN_LOWER: StratumSpec("Lower caverns", 4, False, caves=True, dwellable=True, adapted=CAVE_FOLK, modes=CAVE_WAYS),
+        U.HOLLOW_INTERIOR: StratumSpec("Hollow interior", 6, False, dwellable=True, adapted=frozenset(BiologyVariant), modes=frozenset(MovementMode)),
+        U.MAGMA_SEA: StratumSpec("Magma sea", 5, False, vents=True, terrain=TerrainKind.VOLCANIC),
+        U.DEEP_UNDERWORLD: StratumSpec("Deep underworld", 7, False, dwellable=True, adapted=frozenset({V.INCORPOREAL, V.UNDEAD}), modes=UNDERWORLD_WAYS),
     },
 )

@@ -41,6 +41,13 @@ class MoneyRules:
     intrusion_chance: int = rule(5, 0, 100, G, "Chance each epoch network or energy money is broken into (%)")
     intrusion_supply_pct: int = rule(10, 0, 100, G, "Share of the supply of network or energy money lost to a break-in (%)")
     reform_chance: int = rule(30, 0, 100, G, "Chance each epoch an issuer that knows the technique of a newer form of money moves its currency to it (%)")
+    bill_partners: int = rule(3, 1, 100, G, "Trading partners from which a market that keeps double entry draws bills of exchange on its partners")
+    receipt_prosperity: int = rule(40, 0, 100, G, "Prosperity from which a place with a warehouse or granary passes its store receipts as money")
+    scrip_population: int = rule(5000, 0, 100000000, G, "People from which a place at war pays settlers and soldiers in land scrip")
+    bill_drawer_prosperity: int = rule(20, 0, 100, G, "Prosperity below which the drawer of a bill of exchange can no longer pay it")
+    labour_backing_per_person: int = rule(20, 1, 100000, G, "Money one person's owed work can stand behind")
+    failed_trust_loss: int = rule(40, 0, 100, G, "Trust a currency loses when the backing behind it fails")
+    failed_supply_loss_pct: int = rule(30, 0, 100, G, "Share of a currency's supply lost when the backing behind it fails (%)")
     issue_units: int = rule(
         200, 0, 100000, G, "Money an issuer of a currency not made of metal adds to its supply each epoch, per thousand of its people (at least one thousand)"
     )

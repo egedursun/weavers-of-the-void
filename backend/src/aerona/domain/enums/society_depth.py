@@ -13,6 +13,8 @@ class ShortfallEffect(StrEnum):
     ARCANE = "arcane"
     THIRST = "thirst"
     SHELTER = "shelter"
+    LEARNING = "learning"
+    JUSTICE = "justice"
 
 
 class LabourReason(StrEnum):
@@ -25,6 +27,8 @@ class LabourReason(StrEnum):
     HELD = "held"
     LAW = "law"
     SKILL = "skill"
+    DEBT = "debt"
+    KIN_DUTY = "kin_duty"
 
 
 class DriftCause(StrEnum):
@@ -69,3 +73,5 @@ class MobilityEvent(StrEnum):
     ENRICHED = "enriched"
     ORDAINED = "ordained"
     OUTCAST = "outcast"
+    EXILED = "exiled"
+    ADOPTED = "adopted"

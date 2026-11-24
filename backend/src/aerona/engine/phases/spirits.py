@@ -45,7 +45,7 @@ async def lay_to_rest(ctx: TickContext, spirit: EntityRow, reason: str) -> None:
     await retire(ctx.session, spirit, ctx.epoch, f"Epoch {ctx.epoch}: {reason}.", close_bonds=True)
 
 
-@reads("spirit.unrest", "table.bonds", "table.entities", "table.entity_flags", "table.nodes", "table.routes", "table.worlds")
+@reads("spirit.unrest", "table.bonds", "table.deep_passages", "table.entities", "table.entity_flags", "table.nodes", "table.routes", "table.worlds")
 @writes("spirit.unrest", "table.bonds", "table.chronicle", "table.entities", "table.entity_flags", "table.incident_facts", "table.incidents")
 async def spirits_rest(ctx: TickContext) -> None:
     rules = ctx.rules
@@ -119,6 +119,7 @@ async def spirits_rest(ctx: TickContext) -> None:
     "spirit.unrest",
     "table.bonds",
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",
@@ -163,7 +164,7 @@ async def hauntings(ctx: TickContext) -> None:
             continue
         avenged = await killers_home(ctx, spirit)
         haunted = next((settlement for settlement in settlements if settlement.id == avenged), None) or next(
-            (settlement for settlement in settlements if atlas.same_region(spirit.id, settlement.id)), None
+            (settlement for settlement in settlements if atlas.same_cell(spirit.id, settlement.id)), None
         )
         if haunted is None or not rng.chance(rules.world_engine.spirit_haunt_chance * await haunt_factor(ctx.session, rules, atlas.top_region(haunted.id))):
             continue

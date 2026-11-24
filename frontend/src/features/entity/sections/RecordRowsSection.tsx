@@ -86,7 +86,7 @@ import { type KpiTone } from '@/components/domain/KpiTile'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { ShowMore } from '@/components/domain/ShowMore'
 import { useShowMore } from '@/components/domain/useShowMore'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -334,7 +334,7 @@ function NodeCell({ value, names }: { value: unknown; names: Names }) {
   const known = typeof value === 'number' ? names[String(value)] : undefined
   if (typeof value !== 'number' || !known) return <Cell value={value} />
   return LINKS.has(known.link) ? (
-    <EntityLink kind={known.link as DrawerKind} id={String(value)} showIcon>
+    <EntityLink kind={known.link as EntryKind} id={String(value)} showIcon>
       {known.name}
     </EntityLink>
   ) : (

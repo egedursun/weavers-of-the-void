@@ -1,7 +1,24 @@
 import sys
 from pathlib import Path
 
-from human import ABS, FACE, GROIN, GUT, HEAD, HEART, JAW, MOUTH, NAVEL, NECK, NOSE, RIGHT, TONGUE, TORSO, mirror
+from forms import capsule, teeth, toes
+from human import (
+    ABS,
+    FACE,
+    GROIN,
+    GUT,
+    HEAD,
+    HEART,
+    JAW,
+    MOUTH,
+    NAVEL,
+    NECK,
+    NOSE,
+    RIGHT,
+    TONGUE,
+    TORSO,
+    mirror,
+)
 from render import C, Part, Plan, draw, page
 
 OUT = Path(__file__).parent
@@ -22,6 +39,7 @@ def humanoid(states: dict[str, str]) -> Plan:
     parts: list[Part] = [
         *sided("leg", "leg", RIGHT["leg"], (80, 300)),
         *sided("foot", "foot", RIGHT["foot"], (80, 408)),
+        Part("toes", "Toes", toes([RIGHT["foot"], mirror(RIGHT["foot"])]), (80, 414.5), subtle=True),
         Part("torso", "Torso", TORSO, (76, 176)),
         *sided("arm", "arm", RIGHT["arm"], (47, 150)),
         *sided("hand", "hand", RIGHT["hand"], (40, 245)),
@@ -34,10 +52,12 @@ def humanoid(states: dict[str, str]) -> Plan:
         *sided("eye", "eye", RIGHT["eye"], (90.8, 39.5)),
         Part("nose", "Nose", NOSE, (100, 46)),
         Part("tongue", "Tongue", TONGUE, (100, 56), inner=True, subtle=True),
+        Part("teeth", "Teeth", teeth(100, 54.6, 9.6, 2.4), (100, 54.6), inner=True, subtle=True),
         Part("lungs", "Lungs", RIGHT["lung"] + " " + mirror(RIGHT["lung"]), (84, 118), inner=True),
         Part("heart", "Heart", HEART, (106, 119), inner=True),
         Part("gut", "Gut", GUT, (100, 170), inner=True),
         Part("groin", "Groin", GROIN, (100, 223), inner=True),
+        Part("spine", "Spine", capsule([(100, 86), (100, 140), (100, 196), (100, 228)], 4.4), (100, 150), inner=True, subtle=True),
     ]
     details = [
         RIGHT["brow"],

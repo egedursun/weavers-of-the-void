@@ -107,6 +107,7 @@ const SIEGE_STATUS: Record<
   repulsed: { label: 'Repulsed', badge: 'info' },
   lifted: { label: 'Lifted', badge: 'outline' },
   surrendered: { label: 'Surrendered', badge: 'success' },
+  betrayed: { label: 'Betrayed from within', badge: 'destructive' },
 }
 
 export function Ref({ node }: { node: NodeRef | null }) {

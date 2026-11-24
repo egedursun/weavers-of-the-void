@@ -12,7 +12,7 @@ from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.military import SpyNetworkRow
+from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -22,13 +22,14 @@ from aerona.domain.enums.disease import SpreadPath
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
-from aerona.domain.enums.military import SabotageKind, SpyCover, SpyOperation
+from aerona.domain.enums.military import AgentStatus, SabotageKind, SpyCover, SpyOperation
 from aerona.domain.enums.mind import MemoryKind, SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, DeathCause
 from aerona.domain.enums.polity import LawKind, OfficeKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import WarCause
+from aerona.engine.body.book import capacity_lean
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.blueprints import steal_design
@@ -36,6 +37,7 @@ from aerona.engine.lore.research import steal_technique
 from aerona.engine.military.feuds import house_feud
 from aerona.engine.military.forensics import choose_method, examine
 from aerona.engine.military.sabotage import WIDER_SABOTAGE, wider_choices
+from aerona.engine.military.spies_w52 import at_war as warring
 from aerona.engine.military.spies_w52 import disinform, exfiltrate, feed_false, infiltrate, inside, succeeds, watch_agents
 from aerona.engine.military.spy_depth import topology_pct
 from aerona.engine.military.spycraft import (
@@ -70,6 +72,7 @@ from aerona.engine.primitives.queries import canon, living_entity
 from aerona.engine.primitives.society import shift_stock
 from aerona.engine.primitives.stats import move_stat, shift_stat, stat
 from aerona.engine.recording.record import FactInput, record
+from aerona.engine.recording.terms import explaining, term
 from aerona.engine.records import death_path
 from aerona.engine.services.community_relations import change_relation, relation
 from aerona.engine.services.war import declare_war, has_truce, uprising_target
@@ -306,9 +309,35 @@ async def counterfeit(ctx: TickContext, spymaster: EntityRow, target: EntityRow,
     return await told(ctx, "espionage.counterfeit", spymaster, target, facts={"currency": coin.name, "trust_lost": ctx.rules.espionage.counterfeit_trust})
 
 
+@OPERATIONS.on(SpyOperation.RECRUIT_AGENT)
+async def recruit_inside(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
+    agent = await recruit(ctx, network)
+    if agent is None:
+        return None
+    if not await warring(ctx, network) and ctx.rng(f"spy.sleeper.{agent.id}").chance(ctx.rules.espionage.sleeper_pct):
+        agent.status = AgentStatus.SLEEPER
+    return await told(ctx, "espionage.intel", spymaster, target, facts={"intel": network.intel, "aims": 0})
+
+
+@OPERATIONS.on(SpyOperation.SURVEIL)
+async def surveil(ctx: TickContext, spymaster: EntityRow, target: EntityRow, network: SpyNetworkRow) -> str | None:
+    gain = inside(ctx, network, cover_access(network, ctx.rules.espionage.surveil_gain))
+    network.intel = clamp_int(network.intel + round_half_up(gain), 0, PERCENT)
+    return await told(ctx, "espionage.intel", spymaster, target, facts={"intel": network.intel, "aims": 0})
+
+
 OPERATIONS.on(SpyOperation.INFILTRATE)(infiltrate)
 OPERATIONS.on(SpyOperation.EXFILTRATE)(exfiltrate)
 OPERATIONS.on(SpyOperation.DISINFORM)(disinform)
+
+
+async def covered_gain(ctx: TickContext, agent: SpyAgentRow, gain: int) -> int:
+    if agent.mortal_entity_id is None:
+        return gain
+    hidden = await capacity_lean(ctx.session, [agent.mortal_entity_id], "stealth", ctx.rules.capacities.stealth_cover_pct)
+    shown = max(0, round_half_up(gain * (1 - hidden)))
+    term("capacities.stealth_cover", shown - gain, source_node_id=agent.mortal_entity_id)
+    return shown
 
 
 async def perform_operation(ctx: TickContext, spymaster: EntityRow, target: EntityRow, operation: SpyOperation) -> str:
@@ -324,7 +353,9 @@ async def perform_operation(ctx: TickContext, spymaster: EntityRow, target: Enti
     if "exposure" not in network.locked:
         network.exposure = clamp_int(network.exposure + gain, 0, PERCENT)
     for agent in await agents_of(ctx, network):
-        agent.exposure = clamp_int(agent.exposure + gain, 0, PERCENT)
+        with explaining():
+            shown = await covered_gain(ctx, agent, gain)
+            agent.exposure = clamp_int(agent.exposure + shown, 0, PERCENT)
     network.last_operation, network.last_epoch = operation.value, ctx.epoch
     return text or ""
 
@@ -405,7 +436,8 @@ async def run_networks(ctx: TickContext) -> None:
     for network in list(await ctx.session.scalars(select(SpyNetworkRow).order_by(SpyNetworkRow.id))):
         spymaster, target = await living_entity(ctx.session, network.owner_entity_id), await living_entity(ctx.session, network.target_entity_id)
         if spymaster is None or target is None:
-            await ctx.session.delete(network)
+            if not held(network.owner_entity_id, network.target_entity_id):
+                await ctx.session.delete(network)
             continue
         if network.since_epoch == ctx.epoch or held(spymaster.id, target.id):
             continue

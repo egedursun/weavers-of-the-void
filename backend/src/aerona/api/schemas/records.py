@@ -12,6 +12,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import PrayerTone
 from aerona.domain.enums.entity import ArchiveOverride, EntityOrigin, EntityStatus, EntityType, LegendCategory, MortalRole
 from aerona.domain.enums.foreign_god import ForeignGodPowerEffect, ForeignGodStatus
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.limits import POWER_SLOTS
 from aerona.domain.enums.meta import ImageMime, ImageOrigin
 from aerona.domain.enums.node import ActorKind, NodeKind
@@ -178,6 +179,7 @@ class EntitySummary(ApiModel):
     importance: int | None
     favorite: bool
     pending_name: bool
+    stratum: UndergroundStratum | None = None
 
 
 class EntityRecord(EntitySummary):

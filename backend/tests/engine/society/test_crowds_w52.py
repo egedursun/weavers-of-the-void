@@ -19,9 +19,9 @@ def calm(**levels: int) -> dict[CrowdFeeling, int]:
 
 
 def test_twelve_acts_five_feelings_and_sixteen_triggers_are_typed() -> None:
-    assert len(ACTS) == len(CollectiveActKind) == 12
-    assert len(CROWD_FEELINGS) == len(CrowdFeeling) == 5
-    assert len(TRIGGERS) == len(CollectiveTrigger) == 16
+    assert len(ACTS) == len(CollectiveActKind) == 15
+    assert len(CROWD_FEELINGS) == len(CrowdFeeling) == 7
+    assert len(TRIGGERS) == len(CollectiveTrigger) == 18
     assert TRIGGERS[CollectiveTrigger.VICTORY].act is CollectiveActKind.JUBILATION
     assert TRIGGERS[CollectiveTrigger.GREAT_FUNERAL].mood is CrowdFeeling.GRIEF
     assert trigger_for(CollectiveActKind.BOYCOTT) in TRIGGERS
@@ -44,7 +44,7 @@ async def test_one_store_holds_five_feelings_that_rise_fade_and_hold(realm: Real
     await stir_feelings(ctx, town.id, {CrowdFeeling.GRIEF: 60, CrowdFeeling.HOPE: 30})
     await realm.session.flush()
     levels = await feelings_of(realm.session, town.id)
-    assert levels[CrowdFeeling.GRIEF] == 60 and levels[CrowdFeeling.HOPE] == 30 and len(levels) == 5
+    assert levels[CrowdFeeling.GRIEF] == 60 and levels[CrowdFeeling.HOPE] == 30 and len(levels) == 7
     await set_feeling(realm.session, town.id, CrowdFeeling.HOPE, 50, hold=True)
     await fade_feelings(ctx, town.id)
     await stir_feelings(ctx, town.id, {CrowdFeeling.HOPE: 20})

@@ -82,6 +82,8 @@ class ResistanceKind(StrEnum):
     DISTANCE = "distance"
     COUNTER_SOURCE = "counter_source"
     NONE = "none"
+    DISBELIEF = "disbelief"
+    ANCESTRAL = "ancestral"
 
 
 class PowerVisibility(StrEnum):
@@ -100,6 +102,8 @@ class PowerHazard(StrEnum):
     BURNOUT = "burnout"
     DEPENDENCY = "dependency"
     ATTENTION = "attention"
+    AGEING = "ageing"
+    POSSESSION = "possession"
 
 
 class SourceRelation(StrEnum):
@@ -189,6 +193,8 @@ class RestrictionKind(StrEnum):
     MUST_BE_UNSEEN = "must_be_unseen"
     MUST_TOUCH = "must_touch"
     ONLY_WITH_TOKEN = "only_with_token"
+    ONLY_IN_COMPANY = "only_in_company"
+    ONLY_BY_NAME = "only_by_name"
 
 
 class PowerDeviceEffect(StrEnum):

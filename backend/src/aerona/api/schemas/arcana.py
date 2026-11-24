@@ -163,6 +163,8 @@ class GeasView(ApiModel):
     laid_epoch: int
     last_kept_epoch: int
     broken_epoch: int | None
+    trigger: ActKind | None
+    armed_epoch: int | None
     locked: list[str]
 
 

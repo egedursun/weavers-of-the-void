@@ -10,8 +10,8 @@ from tests.engine.society.factories import Realm, context, link, mortal, tuned
 
 
 def test_six_stages_in_order_with_anger_after_shock_and_yearning_before_acceptance() -> None:
-    assert len(GRIEF_STAGES) == 6
-    assert OPEN_GRIEF_STAGES == (GriefStage.SHOCK, GriefStage.ANGER, GriefStage.MOURNING, GriefStage.YEARNING)
+    assert len(GRIEF_STAGES) == 7
+    assert OPEN_GRIEF_STAGES == (GriefStage.SHOCK, GriefStage.ANGER, GriefStage.BARGAINING, GriefStage.MOURNING, GriefStage.YEARNING)
     assert GRIEF_STAGES[GriefStage.ANGER].angry and GRIEF_STAGES[GriefStage.YEARNING].yearning
 
 

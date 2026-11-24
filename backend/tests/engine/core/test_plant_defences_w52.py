@@ -12,7 +12,7 @@ from tests.engine.core.living_kinds import kind, range_of, told
 
 
 def test_seven_defences_with_stinging_and_guardians() -> None:
-    assert len(PlantDefence) == 7
+    assert len(PlantDefence) == 9
     assert {PlantDefence.STINGING, PlantDefence.GUARDIANS} <= set(PlantDefence)
 
 

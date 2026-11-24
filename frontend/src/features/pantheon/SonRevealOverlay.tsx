@@ -24,7 +24,7 @@ import {
   RARITY_TEXT_CLASS,
 } from '@/components/domain/rarityClasses'
 import { Logo } from '@/components/layout/Logo'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import {
   Label,
   Muted,
@@ -323,7 +323,7 @@ function rarityRank(view: SonPublic): number {
 
 export function SonRevealOverlay() {
   const queryClient = useQueryClient()
-  const { open } = useDrawerStack()
+  const { open } = useEntryStack()
   const sons = useSons()
   const items = useRevealQueue((state) => state.items)
   const push = useRevealQueue((state) => state.push)

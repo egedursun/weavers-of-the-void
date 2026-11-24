@@ -44,6 +44,7 @@ async def geomorphology(ctx: TickContext) -> None:
     "table.cosmos",
     "table.creator",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.event_casualties",

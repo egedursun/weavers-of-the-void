@@ -234,6 +234,8 @@ async def geas_views(session: AsyncSession, rows: list[GeasRow]) -> list[GeasVie
             laid_epoch=row.laid_epoch,
             last_kept_epoch=row.last_kept_epoch,
             broken_epoch=row.broken_epoch,
+            trigger=row.trigger,
+            armed_epoch=row.armed_epoch,
             locked=list(row.locked),
         )
         for row in rows

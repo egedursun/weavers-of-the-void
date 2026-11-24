@@ -597,15 +597,15 @@ def partners(tincture: Tincture) -> list[Tincture]:
 
 
 def against(under: set[Tincture]) -> list[Tincture]:
-    common = [tincture for tincture in SOLID_TINCTURES if all(tincture in partners(below) for below in under)]
+    common = [tincture for tincture in SOLID_TINCTURES if all(tincture in partners(below) for below in sorted(under))]
     return common
 
 
 def contrasting(under: set[Tincture]) -> Tincture:
     common = against(under)
     if common:
-        return max(common, key=lambda tincture: (min(abs(LIGHTNESS[tincture] - LIGHTNESS[below]) for below in under), tincture.value))
-    darkest = min(LIGHTNESS[below] for below in under)
+        return max(common, key=lambda tincture: (min(abs(LIGHTNESS[tincture] - LIGHTNESS[below]) for below in sorted(under)), tincture.value))
+    darkest = min(LIGHTNESS[below] for below in sorted(under))
     return Tincture.SILVER if darkest < 0.5 else Tincture.BLACK
 
 

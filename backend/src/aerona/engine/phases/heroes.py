@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +15,7 @@ from aerona.db.tables.warfare import HeroQuestRow
 from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import Capacity, HarmCause
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import HERO_ROLES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.entity import HERO_ROLES, SOCIETY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.quests import QuestAim
@@ -414,6 +415,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",
+    "table.deep_passages",
     "table.designated_heirs",
     "table.dimensions",
     "table.divine_wounds",
@@ -488,6 +490,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.transform_prospects",
     "table.war_sides",
     "table.wars",
+    "table.wills",
     "table.world_domain_hooks",
     "table.world_maps",
     "table.world_seasons",
@@ -569,6 +572,59 @@ def hero_stats(ctx: TickContext, community: EntityRow) -> MortalStats:
     )
 
 
+@dataclass(frozen=True)
+class MortalShape:
+    name: str | None
+    title: str | None
+    description: str | None
+    role: MortalRole
+    stats: dict[str, Any]
+    power: int
+
+
+async def born_among(ctx: TickContext, community: EntityRow, mortal: EntityRow) -> None:
+    bonds = BondRepository(ctx.session)
+    await bonds.connect(BondDraft(mortal.id, community.id, BondKind.DESCENDS_FROM, ctx.epoch, "born of the people"))
+    faith = await FaithIndex.load(ctx.session)
+    patron = faith.patron(community.id)
+    if patron is not None and faith.is_living_god(patron):
+        await bonds.connect(BondDraft(mortal.id, patron, BondKind.WORSHIPS, ctx.epoch, "the faith of their people"))
+    language = await spoken_language(ctx.session, community.id)
+    if language is not None:
+        await bonds.connect(BondDraft(mortal.id, language.id, BondKind.SPEAKS, ctx.epoch, "mother tongue"))
+
+
+async def shape_mortal(ctx: TickContext, community_id: int, shape: MortalShape) -> EntityRow:
+    community = await ctx.session.get(EntityRow, community_id)
+    if community is None or community.entity_type not in SOCIETY_TYPES:
+        raise NotFoundError("A mortal is born among a people or a settlement.")
+    if community.status is not EntityStatus.CANON:
+        raise ValidationFailedError(f"{community.name} is no longer part of the world.")
+    rolled = hero_stats(ctx, community).model_dump(exclude_none=True)
+    stats = MortalStats.model_validate({**rolled, **{key: value for key, value in shape.stats.items() if value is not None}})
+    given = (shape.name or "").strip()
+    named = given or await Namer(ctx.session, ctx.rules).person([community], seed_of(community.id, ctx.epoch, "shaped"), community.world_id)
+    mortal = await create_record(
+        ctx,
+        RecordSpec(
+            name=named or f"{community.name} Child",
+            entity_type=EntityType.MORTAL,
+            stats=stats,
+            body=(shape.description or "").strip() or f"Born among {community.name}.",
+            power=clamp_int(shape.power, 1, 10),
+            world_id=community.world_id,
+            location_id=community.id if community.entity_type is EntityType.SETTLEMENT else community.location_id,
+            mortal_role=shape.role,
+            title=(shape.title or "").strip() or None,
+            flags=(EntityFlag.NAME_FROM_LANGUAGE,) if named and not given else (),
+            origin=EntityOrigin.CREATOR,
+        ),
+    )
+    await born_among(ctx, community, mortal)
+    await record(ctx, "mortals.shaped", roles={IncidentRole.CHILD: mortal.id, IncidentRole.ORIGIN: community.id}, place=mortal.location_id)
+    return mortal
+
+
 async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     name = await Namer(ctx.session, ctx.rules).person([community], seed_of(community.id, ctx.epoch, HERO_SUBTYPE), community.world_id)
     hero = await create_record(
@@ -587,15 +643,7 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
             flags=(EntityFlag.NAME_FROM_LANGUAGE,) if name else (),
         ),
     )
-    bonds = BondRepository(ctx.session)
-    await bonds.connect(BondDraft(hero.id, community.id, BondKind.DESCENDS_FROM, ctx.epoch, "born of the people"))
-    faith = await FaithIndex.load(ctx.session)
-    patron = faith.patron(community.id)
-    if patron is not None and faith.is_living_god(patron):
-        await bonds.connect(BondDraft(hero.id, patron, BondKind.WORSHIPS, ctx.epoch, "the faith of their people"))
-    language = await spoken_language(ctx.session, community.id)
-    if language is not None:
-        await bonds.connect(BondDraft(hero.id, language.id, BondKind.SPEAKS, ctx.epoch, "mother tongue"))
+    await born_among(ctx, community, hero)
     await record(
         ctx, "heroes.birth", roles={IncidentRole.CHILD: hero.id, IncidentRole.ORIGIN: community.id}, facts={"power": hero.power_level}, place=hero.location_id
     )

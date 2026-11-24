@@ -270,6 +270,20 @@ async def government_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: 
     return text, Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id, {"government": government.value})
 
 
+async def water_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
+    victor, loser = sides
+    if aim.achieved < ctx.rules.peace.tribute_score:
+        return None
+    return f"{loser.name} agreed to share its waters with {victor.name}", Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id, {"water": True})
+
+
+async def refugee_term(ctx: TickContext, war: WarRow, aim: WarAimRow, sides: Sides, book: RealmBook) -> Term:
+    victor, loser = sides
+    if aim.achieved < ctx.rules.peace.tribute_score:
+        return None
+    return f"{loser.name} let those who fled return to {victor.name}", Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id, {"refugees": True})
+
+
 TERMS = {
     A.CONQUER_REGION: cession_term,
     A.SEIZE_RESOURCE: cession_term,
@@ -286,6 +300,8 @@ TERMS = {
     A.CONVERT: faith_term,
     A.CHANGE_GOVERNMENT: government_term,
     A.SEIZE_ROUTE: route_term,
+    A.SECURE_WATER: water_term,
+    A.RETURN_REFUGEES: refugee_term,
 }
 
 

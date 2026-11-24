@@ -135,6 +135,8 @@ class SpyDepthRules:
     cell_exposure: int = rule(20, 0, 100, W, "Exposure a caught agent brings on the rest of their cell")
     flat_exposure: int = rule(15, 0, 100, W, "Exposure a caught agent brings on every agent of a network without cells")
     safe_house_relief: int = rule(10, 0, 100, W, "Exposure a cell's safe house spares its agents when one is caught")
+    faith_loyalty: int = rule(65, 0, 100, W, "Loyalty of an agent who serves for their faith, while target and handler differ in faith")
+    faith_double_risk: int = rule(10, 0, 100, W, "Chance an agent serving for faith is turned when the target shares their faith (%)")
 
 
 @dataclass(frozen=True)

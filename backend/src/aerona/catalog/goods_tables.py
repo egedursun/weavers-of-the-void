@@ -37,6 +37,7 @@ ORIGIN_SOURCE: Mapping[MaterialOrigin, MaterialSource] = total(
         MaterialOrigin.FOSSIL: MaterialSource.WORLD,
         MaterialOrigin.LIVING_LINE: MaterialSource.CREATURE,
         MaterialOrigin.SALVAGE: MaterialSource.MAKERS,
+        MaterialOrigin.OUTER_BEING: MaterialSource.RIFT,
     },
 )
 
@@ -67,6 +68,8 @@ RECIPES = {
     ChemicalProduct.GLAZE: Recipe((Technique.ALCHEMY,), CommodityKind.STONE, None),
     ChemicalProduct.PRESERVATIVE: Recipe((Technique.HERBALISM,), CommodityKind.HALITE, None),
     ChemicalProduct.ACID: Recipe((Technique.ALCHEMY,), CommodityKind.ORE, None),
+    ChemicalProduct.SOLVENT: Recipe((Technique.INDUSTRIAL_CHEMISTRY,), CommodityKind.OIL, None),
+    ChemicalProduct.ADHESIVE: Recipe((Technique.HERBALISM,), CommodityKind.LIVESTOCK, None),
 }
 
 TROPHY_CLASSES = {
@@ -90,6 +93,7 @@ ORIGIN_WORDS = total(
         MaterialOrigin.FOSSIL: "a bed of what lived long ago",
         MaterialOrigin.LIVING_LINE: "a living line its makers grow",
         MaterialOrigin.SALVAGE: "a relic or wreck its finders took apart",
+        MaterialOrigin.OUTER_BEING: "a substance brought from a being outside the cosmos",
     },
 )
 
@@ -142,6 +146,7 @@ HULLS: Mapping[VehicleKind, tuple[MaterialKind, ...]] = total(
         VehicleKind.LIVING: (MaterialKind.LIVING_WOOD, MaterialKind.CHITIN, MaterialKind.HIDE),
         VehicleKind.RIFT: (MaterialKind.CRYSTAL, MaterialKind.OBSIDIAN, MaterialKind.STONE),
         VehicleKind.ON_FOOT: (MaterialKind.LEATHER, MaterialKind.CLOTH, MaterialKind.HIDE),
+        VehicleKind.DRIFT: (MaterialKind.WOOD, MaterialKind.STONE, MaterialKind.HIDE),
     },
 )
 

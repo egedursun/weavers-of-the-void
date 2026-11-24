@@ -77,8 +77,9 @@ from aerona.tools.mortal.support import (
     name_free,
     near,
     practised,
+    refuse_level,
     require_craft,
-    same_region,
+    same_cell,
 )
 
 PERCENT = 100
@@ -143,7 +144,7 @@ async def _usable_resource(call: MortalCall, resource_id: int) -> EntityRow:
     resource = await require_canon(call.session, resource_id)
     require_type(resource, {EntityType.RESOURCE}, MortalResult.NOT_A_RESOURCE_NAMED, name=resource.name)
     owned = await BondRepository(call.session).exists_between(call.me.id, resource.id, BondKind.OWNS)
-    if not owned and not await same_region(call, resource):
+    if not owned and not await same_cell(call, resource):
         fail(MortalResult.NOT_YOUR_RESOURCE, name=resource.name)
     abundance = stat_or(resource, "abundance", 0)
     if abundance < tools.craft_min_abundance:
@@ -240,8 +241,9 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
     location = await call.session.get(EntityRow, args.location_id) if args.location_id is not None else await home_of(call)
     if location is None or location.status is not EntityStatus.CANON or location.entity_type not in BUILD_SITES:
         fail(MortalResult.INVALID_LOCATION)
-    if location.id != call.me.id and not await same_region(call, location):
+    if location.id != call.me.id and not await same_cell(call, location):
         fail(MortalResult.NOT_YOUR_LAND)
+    await refuse_level(call, location, args.stratum, EntityType.STRUCTURE)
     await require_craft(call)
     craft = await craft_of(call)
     await practised(call, BUILD_STRUCTURE_SKILL_KINDS, call.rules.skills.craft_xp)
@@ -257,7 +259,14 @@ async def build_structure(call: MortalCall, args: BuildInput) -> str:
     work = await create_record(
         call,
         MortalCreation(
-            args.name, EntityType.STRUCTURE, args.description, subtype=args.subtype, stats=stats, location_id=location.id, image_prompt=args.image_prompt
+            args.name,
+            EntityType.STRUCTURE,
+            args.description,
+            subtype=args.subtype,
+            stats=stats,
+            location_id=location.id,
+            stratum=args.stratum,
+            image_prompt=args.image_prompt,
         ),
     )
     if material is not None:
@@ -370,8 +379,9 @@ async def discover_resource(call: MortalCall, args: DiscoverInput) -> str:
     if not await has_right(call.session, call.me.id, MemberRight.MOVEMENT):
         fail(MortalResult.RIGHT_BARRED, why="those of your standing may not move and settle freely")
     location = await require_canon(call.session, args.location_id)
-    if location.entity_type not in LAND or not await same_region(call, location):
+    if location.entity_type not in LAND or not await same_cell(call, location):
         await fail_with_candidates(call, MortalResult.DISCOVER_OWN_REGION, LAND, local=True)
+    await refuse_level(call, location, args.stratum, EntityType.RESOURCE)
     stats = {
         "abundance": clamp(tools.discover_abundance_base + call.die(tools.discover_abundance_die)),
         "value": clamp(tools.discover_value_base + call.die(tools.discover_value_die)),
@@ -380,7 +390,14 @@ async def discover_resource(call: MortalCall, args: DiscoverInput) -> str:
     resource = await create_record(
         call,
         MortalCreation(
-            args.name, EntityType.RESOURCE, args.description, subtype=args.subtype, stats=stats, location_id=location.id, image_prompt=args.image_prompt
+            args.name,
+            EntityType.RESOURCE,
+            args.description,
+            subtype=args.subtype,
+            stats=stats,
+            location_id=location.id,
+            stratum=args.stratum,
+            image_prompt=args.image_prompt,
         ),
     )
     resource.domain = match_domain(args.domain or "") or Domain.EARTH
@@ -434,7 +451,7 @@ async def claim_resource(call: MortalCall, args: ClaimInput) -> str:
     resource = await require_canon(call.session, args.resource_id)
     if resource.entity_type is not EntityType.RESOURCE:
         await fail_with_candidates(call, MortalResult.NOT_A_RESOURCE, [EntityType.RESOURCE], local=True)
-    if not await same_region(call, resource):
+    if not await same_cell(call, resource):
         await fail_with_candidates(call, MortalResult.RESOURCE_NOT_ON_LAND, [EntityType.RESOURCE], local=True)
     bonds = BondRepository(call.session)
     if await bonds.exists_between(call.me.id, resource.id, BondKind.OWNS):
@@ -487,6 +504,7 @@ async def found_settlement(call: MortalCall, args: SettleInput) -> str:
     location = await require_canon(call.session, args.location_id)
     if location.entity_type not in LAND or not await near(call, location):
         fail(MortalResult.SETTLE_NEAR)
+    await refuse_level(call, location, args.stratum, EntityType.SETTLEMENT)
     key = headcount_key(call.me)
     if key is None:
         fail(MortalResult.NO_MIGRANTS)
@@ -524,6 +542,7 @@ async def found_settlement(call: MortalCall, args: SettleInput) -> str:
             subtype=args.subtype,
             stats=stats,
             location_id=location.id,
+            stratum=args.stratum,
             power=power,
             image_prompt=args.image_prompt,
         ),

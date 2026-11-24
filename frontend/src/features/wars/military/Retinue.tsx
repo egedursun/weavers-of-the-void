@@ -16,6 +16,7 @@ import {
   Undo2,
   UserRound,
   Users,
+  Home,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -71,6 +72,11 @@ const CAPTIVE_STATUS: Record<string, Named> = {
   married_in: {
     label: 'Married into the captors',
     icon: HeartHandshake,
+    tone: 'success',
+  },
+  adopted: {
+    label: 'Adopted',
+    icon: Home,
     tone: 'success',
   },
 }

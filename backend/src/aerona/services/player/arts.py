@@ -6,6 +6,7 @@ from aerona.domain.enums.mind import ValueAxis
 from aerona.engine.arts import control
 from aerona.services.player.cosmography import Edited
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
+from aerona.services.player.shaping import Shaped, shape_after
 
 MANY = 1_000_000
 SPAN = 100
@@ -105,7 +106,7 @@ class ManifestoLine(Command):
     value: int | None = Field(default=None, ge=-SPAN, le=SPAN)
 
 
-class ClubDraft(Command):
+class ClubDraft(Shaped):
     town_id: int
     kind: ClubKind | None = None
 
@@ -268,6 +269,7 @@ async def art_movement_manifesto(scope: PlayerScope, command: ManifestoLine) -> 
 @player_action("club:create", ActionKind.EDIT_RECORD)
 async def club_create(scope: PlayerScope, command: ClubDraft) -> Effect:
     row = await control.start_club(await scope.context("club_create"), command.town_id, command.kind)
+    await shape_after(scope, row.faction_entity_id, command)
     return Effect("A club is founded.", command.town_id, created_ids=(row.faction_entity_id,))
 
 

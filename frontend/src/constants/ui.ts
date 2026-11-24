@@ -1,6 +1,6 @@
-export const MAX_DRAWER_DEPTH = 8
-export const DRAWER_ENTRY_SEPARATOR = ','
-export const DRAWER_ID_SEPARATOR = ':'
+export const MAX_ENTRY_DEPTH = 8
+export const ENTRY_SEPARATOR = ','
+export const ENTRY_ID_SEPARATOR = ':'
 export const QUERY_STALE_TIME_MS = 10_000
 export const REALTIME_RETRY_BASE_MS = 1_000
 export const REALTIME_RETRY_MAX_MS = 30_000

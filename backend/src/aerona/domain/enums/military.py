@@ -103,6 +103,7 @@ class Stance(StrEnum):
     WINTER_QUARTERS = "winter_quarters"
     PURSUE = "pursue"
     ESCORT = "escort"
+    DISBAND = "disband"
 
 
 class Tactic(StrEnum):
@@ -129,6 +130,8 @@ class Tactic(StrEnum):
     ORBITAL_BOMBARDMENT = "orbital_bombardment"
     DROP_ASSAULT = "drop_assault"
     INFILTRATION = "infiltration"
+    RIVER_CROSSING = "river_crossing"
+    FIRE_ATTACK = "fire_attack"
 
 
 class BattlePhase(StrEnum):
@@ -143,6 +146,7 @@ class BattlePhase(StrEnum):
     PURSUIT = "pursuit"
     SALVAGE = "salvage"
     AFTERMATH = "aftermath"
+    PARLEY = "parley"
 
 
 class OutcomeClass(StrEnum):
@@ -182,6 +186,9 @@ class CommanderTrait(StrEnum):
     DISCIPLINARIAN = "disciplinarian"
     SIGNALS_COMMANDER = "signals_commander"
     NIGHT_FIGHTER = "night_fighter"
+    JUNGLE_FIGHTER = "jungle_fighter"
+    COLD_FIGHTER = "cold_fighter"
+    RIVER_CROSSER = "river_crosser"
 
 
 class CommandArea(StrEnum):
@@ -190,6 +197,7 @@ class CommandArea(StrEnum):
     MANOEUVRE = "manoeuvre"
     SIEGE = "siege"
     LOGISTICS = "logistics"
+    INTELLIGENCE = "intelligence"
 
 
 class SiegeAction(StrEnum):
@@ -199,6 +207,8 @@ class SiegeAction(StrEnum):
     ASSAULT = "assault"
     NEGOTIATE = "negotiate"
     SUBORN = "suborn"
+    POISON_SUPPLY = "poison_supply"
+    DIVERT_RIVER = "divert_river"
 
 
 class DefenderAction(StrEnum):
@@ -209,12 +219,15 @@ class DefenderAction(StrEnum):
     FLOOD_APPROACHES = "flood_approaches"
     SCORCHED_EARTH = "scorched_earth"
     EXPEL_MOUTHS = "expel_mouths"
+    BURN_WORKS = "burn_works"
+    EVACUATE_BY_SEA = "evacuate_by_sea"
 
 
 class StarvationStage(StrEnum):
     NONE = "none"
     RATIONING = "rationing"
     FAMINE = "famine"
+    HUNGER_SICKNESS = "hunger_sickness"
     TABOO_BROKEN = "taboo_broken"
 
 
@@ -234,6 +247,8 @@ class WarAimKind(StrEnum):
     LOOT = "loot"
     CHANGE_GOVERNMENT = "change_government"
     SEIZE_ROUTE = "seize_route"
+    SECURE_WATER = "secure_water"
+    RETURN_REFUGEES = "return_refugees"
 
 
 class CaptiveFate(StrEnum):
@@ -246,6 +261,7 @@ class CaptiveFate(StrEnum):
     RELEASED = "released"
     EXECUTED = "executed"
     RECRUITED = "recruited"
+    ADOPTED = "adopted"
 
 
 class DuelContext(StrEnum):
@@ -255,6 +271,7 @@ class DuelContext(StrEnum):
     CHAMPION = "champion"
     GOD = "god"
     RITUAL = "ritual"
+    SPORT = "sport"
 
 
 class DuelEnd(StrEnum):
@@ -266,6 +283,7 @@ class DuelEnd(StrEnum):
     UNCONSCIOUS = "unconscious"
     FIRST_WOUND = "first_wound"
     RING_OUT = "ring_out"
+    STOPPED = "stopped"
 
 
 class SpyOperation(StrEnum):
@@ -279,6 +297,8 @@ class SpyOperation(StrEnum):
     INFILTRATE = "infiltrate"
     EXFILTRATE = "exfiltrate"
     DISINFORM = "disinform"
+    RECRUIT_AGENT = "recruit_agent"
+    SURVEIL = "surveil"
 
 
 class SabotageKind(StrEnum):
@@ -294,6 +314,8 @@ class SabotageKind(StrEnum):
     RITE_DISRUPTION = "rite_disruption"
     SOURCE_POISONING = "source_poisoning"
     MACHINE_SEIZURE = "machine_seizure"
+    RECORD_TAMPERING = "record_tampering"
+    ROUTE_BLOCKING = "route_blocking"
 
 
 class CovertSabotage(StrEnum):
@@ -320,6 +342,8 @@ class FeudAction(StrEnum):
     DESTROY_PROPERTY = "destroy_property"
     SEEK_MEDIATION = "seek_mediation"
     CALL_ALLIES = "call_allies"
+    SEEK_AMENDS = "seek_amends"
+    SWEAR_OFF = "swear_off"
 
 
 class ArmyRole(StrEnum):
@@ -331,6 +355,8 @@ class ArmyRole(StrEnum):
     CHAPLAIN = "chaplain"
     PAYMASTER = "paymaster"
     SCOUT_MASTER = "scout_master"
+    ENGINEER_MASTER = "engineer_master"
+    INTERPRETER = "interpreter"
 
 
 class ContractStatus(StrEnum):
@@ -338,6 +364,7 @@ class ContractStatus(StrEnum):
     UNPAID = "unpaid"
     TURNED = "turned"
     ENDED = "ended"
+    RENEWED = "renewed"
 
 
 class SackChoice(StrEnum):
@@ -346,6 +373,7 @@ class SackChoice(StrEnum):
     RAZE = "raze"
     RANSOM_CITY = "ransom_city"
     DEPORT = "deport"
+    RESETTLE = "resettle"
 
 
 class SiegeWork(StrEnum):
@@ -362,6 +390,7 @@ class SiegeWork(StrEnum):
     NETWORK_ATTACK = "network_attack"
     RITE_BREACH = "rite_breach"
     RAMP = "ramp"
+    DAM = "dam"
 
 
 class PeaceTermKind(StrEnum):
@@ -381,6 +410,9 @@ class PeaceTermKind(StrEnum):
     CAPTIVE_RELEASE = "captive_release"
     CHAMPION = "champion"
     WHITE_PEACE = "white_peace"
+    BORDER_ACCORD = "border_accord"
+    RETURN_OF_REFUGEES = "return_of_refugees"
+    APOLOGY = "apology"
 
 
 class CasualtyFate(StrEnum):
@@ -390,6 +422,7 @@ class CasualtyFate(StrEnum):
     CAPTURED = "captured"
     MISSING = "missing"
     DESERTED = "deserted"
+    SICK = "sick"
 
 
 class SpyOwnerKind(StrEnum):
@@ -409,6 +442,7 @@ class AgentStatus(StrEnum):
     RETIRED = "retired"
     MISSING = "missing"
     EXPOSED = "exposed"
+    SLEEPER = "sleeper"
 
 
 class FeudParty(StrEnum):
@@ -432,6 +466,7 @@ class FeudStatus(StrEnum):
     SETTLED = "settled"
     OUTLAWED = "outlawed"
     EXTINGUISHED = "extinguished"
+    DORMANT = "dormant"
 
 
 class MutinyOutcome(StrEnum):
@@ -440,6 +475,7 @@ class MutinyOutcome(StrEnum):
     DEPOSED = "deposed"
     BANDITRY = "banditry"
     TURNCOAT = "turncoat"
+    NEGOTIATED = "negotiated"
 
 
 class VesselStatus(StrEnum):
@@ -472,6 +508,7 @@ class Formation(StrEnum):
     CONVOY = "convoy"
     SCREEN = "screen"
     LAYERED = "layered"
+    CIRCLE = "circle"
 
 
 class TargetClass(StrEnum):

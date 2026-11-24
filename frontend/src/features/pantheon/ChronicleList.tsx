@@ -28,6 +28,7 @@ function LineText({ line }: { line: ChronicleLine }) {
 }
 
 type ChronicleListProps = {
+  sectionId: string
   title: string
   description?: string
   lines: ChronicleLine[]
@@ -38,6 +39,7 @@ type ChronicleListProps = {
 }
 
 export function ChronicleList({
+  sectionId,
   title,
   description,
   lines,
@@ -50,7 +52,7 @@ export function ChronicleList({
   const ordered = newestFirst ? [...known].sort((a, b) => b.id - a.id) : known
   const page = useShowMore(ordered, LINES_SHOWN, LINES_STEP)
   return (
-    <Section title={title} description={description} level={3}>
+    <Section id={sectionId} title={title} description={description} level={3}>
       {ordered.length === 0 ? (
         <EmptyState
           icon={ScrollText}

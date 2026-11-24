@@ -64,6 +64,8 @@ class SentenceRules(Spanned):
     work_stress: int = rule(8, 0, 100, G, "Stress a sentence of work, penance or arrest lays on a culprit")
     work_gain: int = rule(2, 0, 100, G, "Sanitation a sentence of community work gives the town")
     arrest_renown: int = rule(3, 0, 100, G, "Renown lost under house arrest")
+    shunning_renown: int = rule(6, 0, 100, G, "Renown lost by one its people shun")
+    shunning_stress: int = rule(8, 0, 100, G, "Stress borne by one its people shun")
     probation_infamy: int = rule(3, 0, 100, G, "Infamy probation marks a culprit with")
     deterrence_pct: int = rule(5, 0, 100, G, "Crime a sentence takes from its town per point of deterrence above recidivism (%)")
     cost_coin: int = rule(1, 0, 100, G, "Treasury each point of a sentence's cost takes from the polity")
@@ -76,6 +78,8 @@ class SentenceRules(Spanned):
     @property
     def reeducation_term(self) -> int:
         return self.epochs(self.reeducation_term_years)
+
+    court_geas_pct: int = rule(30, 0, 100, G, "Chance a court that sentences to penance also lays a geas where oaths bind by the world's law (%)")
 
 
 @dataclass(frozen=True)

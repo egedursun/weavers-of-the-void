@@ -36,6 +36,8 @@ DAMAGE_SECTIONS: MappingProxyType[D, tuple[S, ...]] = total(
         D.RADIATION: (S.CREW_QUARTERS, S.LIFE_SUPPORT, S.COCKPIT),
         D.SONIC: (S.CREW_QUARTERS, S.HULL, S.SENSORS),
         D.ASPHYXIA: (S.CREW_QUARTERS, S.LIFE_SUPPORT, S.COCKPIT),
+        D.SOUL: (S.CREW_QUARTERS, S.BRIDGE, S.CORE),
+        D.PRESSURE: (S.HULL, S.CREW_QUARTERS, S.LIFE_SUPPORT, S.KEEL),
     },
 )
 FAMILY_SECTIONS: MappingProxyType[E, tuple[S, ...]] = MappingProxyType(
@@ -47,7 +49,7 @@ FAMILY_SECTIONS: MappingProxyType[E, tuple[S, ...]] = MappingProxyType(
         E.BOARDING_GEAR: (S.DECK, S.CREW_QUARTERS),
     }
 )
-SHIELDED = frozenset({D.ENERGY, D.MAGIC, D.HOLY, D.VOID, D.PSYCHIC, D.ELECTRIC, D.RADIATION, D.SONIC})
+SHIELDED = frozenset({D.ENERGY, D.MAGIC, D.HOLY, D.VOID, D.PSYCHIC, D.ELECTRIC, D.RADIATION, D.SONIC, D.SOUL})
 WATERBORNE = frozenset({V.WATER, V.UNDERWATER, V.AMPHIBIOUS})
 LIFTED = frozenset({V.AIR, V.GAS_GIANT})
 WEATHERED = frozenset({V.WATER, V.UNDERWATER, V.AMPHIBIOUS, V.AIR, V.GAS_GIANT})
@@ -130,6 +132,8 @@ SECTION_CHAINS: MappingProxyType[S, tuple[ChainSpec, ...]] = total(
         S.TOWER: NO_CHAIN,
         S.PLATFORM: NO_CHAIN,
         S.CORE: EXPLODES,
+        S.GALLEY: BURNS,
+        S.SICK_BAY: NO_CHAIN,
     },
 )
 

@@ -44,5 +44,7 @@ WAR_CAUSES: Mapping[WarCause, WarCauseSpec] = total(
         C.RAID: WarCauseSpec(),
         C.LIBERATION: WarCauseSpec(),
         C.PUNITIVE: WarCauseSpec(),
+        C.WATER: WarCauseSpec(over_trade=True),
+        C.REFUGEES: WarCauseSpec(),
     },
 )

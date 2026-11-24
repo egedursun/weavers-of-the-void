@@ -9,7 +9,7 @@ RULES = Rules()
 
 
 def test_twelve_cure_classes_each_with_its_place_and_the_two_new_ones_working_on_their_agents() -> None:
-    assert len(CURES) == len(CureClass) == 12
+    assert len(CURES) == len(CureClass) == 14
     assert CureClass.ANTIVIRAL in AGENTS[DiseaseAgent.VIRUS].cures
     assert CureClass.SURGERY in AGENTS[DiseaseAgent.PARASITE].cures
     assert CureClass.ANTIMICROBIAL not in AGENTS[DiseaseAgent.VIRUS].cures

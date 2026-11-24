@@ -201,7 +201,7 @@ async def first_faith_god(session: AsyncSession, rules: Rules, entity: EntityRow
         patron = await living_patron(session, other)
         if patron is None:
             continue
-        counts[patron.id] += life.first_faith_region_weight if atlas.same_region(entity.id, other.id) else 1
+        counts[patron.id] += life.first_faith_region_weight if atlas.same_cell(entity.id, other.id) else 1
     weights: dict[int, float] = {son_id: count ** (life.first_faith_crowd_exponent / PERCENT) for son_id, count in counts.items()}
     active = await session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE, SonRow.current_world_id == entity.world_id))
     for son in active:

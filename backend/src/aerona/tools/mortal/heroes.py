@@ -34,7 +34,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import AdoptInput, AdventureInput, DefyInput
-from aerona.tools.mortal.support import first_stat, near, require_target, same_region
+from aerona.tools.mortal.support import first_stat, near, require_target, same_cell
 
 PERCENT = 100
 OWNER_DEFENCE = ("defense", "strength")
@@ -207,7 +207,7 @@ async def adopt(call: MortalCall, args: AdoptInput) -> str:
         fail(MortalResult.ADOPT_TARGET)
     if await held_captive(call.session, child.id) is not None:
         fail(MortalResult.ADOPT_CAPTIVE, name=child.name)
-    if not (await same_region(call, child) or await near(call, child)):
+    if not (await same_cell(call, child) or await near(call, child)):
         fail(MortalResult.ADOPT_FAR, name=child.name)
     bonds = BondRepository(call.session)
     if await bonds.exists_between(call.me.id, child.id, BondKind.PARENT_OF) or await bonds.exists_between(call.me.id, child.id, BondKind.FOSTERED_BY):

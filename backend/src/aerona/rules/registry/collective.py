@@ -44,6 +44,7 @@ class CollectiveBehaviourRules:
     sample: int = rule(200, 10, 5000, S, "Dwellers a cascade samples to find who joins")
     famine_food: int = rule(30, 0, 1000, S, "Food stores below which a town feels famine (supply index, 100 = one epoch of its needs)")
     price_spike: int = rule(160, 100, 1000, S, "Food price, against the usual hundred, past which a town feels a price spike")
+    crush_hp: int = rule(30, 1, 100, S, "Harm one of the folk takes when soldiers break a crowd and it crushes those in it")
 
 
 @dataclass(frozen=True)
@@ -81,6 +82,8 @@ class HistoriographyRules(Spanned):
     @property
     def commemorate_every(self) -> int:
         return self.epochs(self.commemorate_every_years)
+
+    warn_standing_effect: int = rule(-3, -100, 100, C, "Fame an account that warns against its subject gives it")
 
 
 @dataclass(frozen=True)

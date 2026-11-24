@@ -10,9 +10,9 @@ from tests.engine.society.factories import Realm, context, mortal
 
 
 def test_nine_contests_nine_stakes_and_ten_circles() -> None:
-    assert len(CONTESTS) == len(ContestKind) == 9 == len(STAKE_LABELS) == len(ContestStake)
+    assert len(CONTESTS) == len(ContestKind) == 11 == len(STAKE_LABELS) == len(ContestStake)
     assert set(CONTEST_RENOWN) == set(ContestKind)
-    assert len(CIRCLES) == len(CircleKind) == 10
+    assert len(CIRCLES) == len(CircleKind) == 12
     assert CIRCLES[CircleKind.SPORT_CLUB].fields and CIRCLES[CircleKind.GAMING_CIRCLE].wagers
     assert CONTESTS[ContestKind.RACE].races and CONTESTS[ContestKind.CRAFT_CONTEST].crafted
 

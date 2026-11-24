@@ -5,7 +5,7 @@ from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type, nullable_between
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.mind import FocusKind, KindFamily, MoodState, Profession
+from aerona.domain.enums.mind import FocusKind, KindFamily, MoodArousal, MoodState, Profession
 from aerona.domain.enums.mortal import CareerPath, DeathCause, DeathReading, LifeStage, MarriageEnd, StressBreak
 from aerona.domain.enums.unions import UnionForm, UnionPurpose
 
@@ -57,6 +57,8 @@ class MortalProfileRow(Base):
     last_break_epoch: Mapped[int | None]
     mood: Mapped[MoodState] = mapped_column(enum_type(MoodState, "mood"), default=MoodState.FINE, server_default=MoodState.FINE.value)
     mood_score: Mapped[int] = mapped_column(default=0, server_default="0")
+    arousal: Mapped[MoodArousal] = mapped_column(enum_type(MoodArousal, "arousal"), default=MoodArousal.ALERT, server_default=MoodArousal.ALERT.value)
+    arousal_score: Mapped[int] = mapped_column(default=50, server_default="50")
     focus: Mapped[FocusKind | None] = mapped_column(enum_type(FocusKind, "focus"))
     conviction: Mapped[int] = mapped_column(default=50, server_default="50")
     drawn_to: Mapped[list[str] | None] = mapped_column(JSON)

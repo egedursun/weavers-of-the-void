@@ -44,6 +44,7 @@ ENDING_LABELS: dict[WarEnding, str] = {
     WarEnding.SAME_FRONT: "front of the same war",
     WarEnding.NO_SIDE_LEFT: "no side left",
     WarEnding.MIRACLE: "peace miracle",
+    WarEnding.MEDIATED: "mediated peace",
 }
 
 
@@ -56,6 +57,7 @@ ZONE_INK: dict[ZoneKind, str] = {
     ZoneKind.CIVIC: "#4f9fa6",
     ZoneKind.GREEN: "#4f9a5a",
     ZoneKind.TRANSPORT: "#7a8a96",
+    ZoneKind.PORT: "#4f7e9c",
     ZoneKind.MILITARY: "#a0524a",
     ZoneKind.RESEARCH: "#6a7fc0",
 }
@@ -69,6 +71,7 @@ STATE_OPACITY: dict[ConstructionState, float] = {
     ConstructionState.RUINED: 0.3,
     ConstructionState.ABANDONED: 0.25,
     ConstructionState.DISMANTLED: 0.1,
+    ConstructionState.RESTORED: 1.0,
 }
 
 
@@ -99,6 +102,8 @@ DREAM_THOUGHTS = {
     DreamKind.PROPHETIC: ThoughtKind.RECEIVED_VISITATION,
     DreamKind.VISITATION: ThoughtKind.RECEIVED_VISITATION,
     DreamKind.SHARED: ThoughtKind.HAD_GOOD_DREAM,
+    DreamKind.LUCID: ThoughtKind.HAD_GOOD_DREAM,
+    DreamKind.MEMORY: ThoughtKind.DREAMED_OF_LONGING,
 }
 
 DISBAND_FACTION_FACTION_KINDS = (FactionKind.WANDERING_MARKET, FactionKind.ROUTE_RAIDERS)

@@ -1,21 +1,23 @@
 import {
-  Eye,
-  Cable,
-  Brain,
-  Sprout,
-  Network,
   Bird,
+  Brain,
+  Cable,
+  Drum,
+  Eye,
   Flame,
   KeySquare,
   Mail,
   Megaphone,
   MessagesSquare,
   Moon,
+  Network,
   RadioTower,
   ScrollText,
   Sparkles,
+  Sprout,
   ThumbsUp,
   UserRoundCheck,
+  Rabbit,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
@@ -27,6 +29,8 @@ export const SIGNAL_ICON = RadioTower
 export const LETTER_ICON = Mail
 
 export const MEDIUMS: Record<string, Named> = {
+  courier_animal: { label: 'Courier animal', icon: Rabbit, tone: 'info' },
+  drum_and_whistle: { label: 'Drum and whistle', icon: Drum, tone: 'warning' },
   envoy: { label: 'Envoy', icon: UserRoundCheck, tone: 'gold' },
   letter: { label: 'Letter', icon: Mail, tone: 'info' },
   herald: { label: 'Herald', icon: Megaphone, tone: 'warning' },
@@ -64,6 +68,7 @@ export const SIGNAL_ICONS: Record<components['schemas']['SignalKind'], Named> =
       tone: 'verdigris',
     },
     grown_node: { label: 'Grown nodes', icon: Sprout, tone: 'success' },
+    drum_relay: { label: 'Drum relays', icon: Drum, tone: 'danger' },
   }
 
 export function approvalTone(approval: number): Named['tone'] {

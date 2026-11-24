@@ -141,6 +141,9 @@ class EnvironmentRules:
     ley_storm_spread_pct: int = rule(40, 0, 100, RuleGroup.ENVIRONMENT, "Chance that a magic storm runs down a ley line into the next region (%)")
     ley_wizard_pct: int = rule(150, 0, 1000, RuleGroup.ENVIRONMENT, "How often a wizard on a ley line acts (%)")
     sever_ley_epochs: int = rule(5, 1, 1000, RuleGroup.ENVIRONMENT, "Epochs a severed ley line stays cut")
+    temperature_rogue: int = rule(5, 0, 100, RuleGroup.ENVIRONMENT, "Sea-level equatorial temperature of a rogue world with no star")
+    temperature_archipelago: int = rule(55, 0, 100, RuleGroup.ENVIRONMENT, "Sea-level equatorial temperature of an archipelago world")
+    temperature_megastructure: int = rule(50, 0, 100, RuleGroup.ENVIRONMENT, "Sea-level equatorial temperature of a made world")
 
 
 @dataclass(frozen=True)
@@ -746,6 +749,7 @@ class SeasonsRules:
 @dataclass(frozen=True)
 class LandUseRules:
     rewild_rate: int = rule(6, 0, 100, RuleGroup.ENVIRONMENT, "Land use that fades each epoch in an empty region")
+    fallow_restore_pct: int = rule(10, 0, 100, RuleGroup.ENVIRONMENT, "Soil fertility a land left fallow regains each epoch")
     drift_divisor: int = rule(3, 1, 100, RuleGroup.ENVIRONMENT, "Epochs over which land use closes on its target (divisor)")
     farm_target_pct: int = rule(90, 0, 300, RuleGroup.ENVIRONMENT, "Farmland per point of occupancy among farming peoples (%)")
     graze_target_pct: int = rule(70, 0, 300, RuleGroup.ENVIRONMENT, "Pasture per point of occupancy among herding peoples (%)")

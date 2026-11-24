@@ -15,7 +15,7 @@ RULES = Rules()
 
 
 def test_five_dormancies_and_the_new_two_eat_less_or_endure_and_sleep_by_their_bands() -> None:
-    assert len(Dormancy) == 5
+    assert len(Dormancy) == 6
     assert appetite(RULES, SpeciesProfileRow(dormancy=Dormancy.TORPOR)) == 1 - RULES.dormancy.torpor_food_cut_pct / 100
     assert appetite(RULES, SpeciesProfileRow(dormancy=Dormancy.NONE)) == 1.0
     assert enduring(RULES, SpeciesProfileRow(dormancy=Dormancy.CRYPTOBIOSIS)) < enduring(RULES, SpeciesProfileRow(dormancy=Dormancy.NONE))

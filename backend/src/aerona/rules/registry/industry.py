@@ -110,6 +110,8 @@ class PollutionRules:
     rite_clean: int = rule(10, 0, 100, G, "Pollution a purification rite clears from the land")
     void_rite: int = rule(8, 0, 100, G, "Air and soil pollution a rite of the void leaves on the land")
     law_cut_pct: int = rule(60, 0, 100, G, "Share of the pollution of works an environment law at full strictness prevents (%)")
+    recover_heat: int = rule(30, 0, 100, G, "Heat that leaves a land's waters each epoch once the works stop")
+    heat_harm: int = rule(30, 0, 100, G, "Share of the catch a land's waters at full heat lose (%)")
 
 
 @dataclass(frozen=True)
@@ -188,6 +190,7 @@ class DrinkRules:
     hospitality_regard: int = rule(2, 0, 20, G, "Regard a people gains each epoch with each neighbour that shares its drink of hospitality")
     derive_strength: int = rule(70, 1, 100, G, "Strength at which a people that has taken a drink from others makes a drink of its own from it")
     derive_pct: int = rule(25, 0, 100, G, "Chance each epoch such a people makes its own drink (%)")
+    new_kind_pct: int = rule(20, 0, 100, G, "Chance each epoch a people that can make a new kind of drink from sap or a fermented drink first makes it (%)")
     dependence_unrest_pct: int = rule(
         3, 0, 100, G, "Unrest a habit-forming drink adds where its drinkers have no drink in store, per point of dependence (hundredths)"
     )

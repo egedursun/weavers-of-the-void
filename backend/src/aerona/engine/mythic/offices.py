@@ -147,6 +147,8 @@ async def tend_offices(ctx: TickContext, tally: OfficeTally) -> None:
                 row.neglect = clamp_int(row.neglect - table.neglect_gain, 0, PERCENT)
             tally.income += await give_essence(ctx, row.holder_node_id, await income_of(ctx, row))
             continue
+        if await pass_to_heir(ctx, row):
+            continue
         tally.neglected += 1
         if "neglect" not in row.locked:
             row.neglect = clamp_int(row.neglect + table.neglect_gain, 0, PERCENT)
@@ -155,6 +157,18 @@ async def tend_offices(ctx: TickContext, tally: OfficeTally) -> None:
         if row.neglect:
             await neglected(ctx, row)
     await ctx.session.flush()
+
+
+async def pass_to_heir(ctx: TickContext, row: CosmicOfficeRow) -> bool:
+    if row.holder_node_id is None or "holder_node_id" in row.locked or held(row.holder_node_id):
+        return False
+    heir = await ctx.session.scalar(
+        select(SonRow).where(SonRow.parent_son_id == row.holder_node_id, SonRow.status == SonStatus.ACTIVE).order_by(SonRow.id).limit(1)
+    )
+    if heir is None or held(heir.id):
+        return False
+    await appoint(ctx, row.office, heir.id, OfficeChoice.INHERITANCE)
+    return True
 
 
 async def appoint(ctx: TickContext, office: CosmicOffice, holder_id: int | None, chosen_by: OfficeChoice) -> CosmicOfficeRow:

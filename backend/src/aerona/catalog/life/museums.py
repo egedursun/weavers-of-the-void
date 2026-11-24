@@ -47,6 +47,8 @@ PIECE_PRESTIGE: Mapping[PieceKind, str] = total(
         PieceKind.MANUSCRIPT: "manuscript_prestige",
         PieceKind.TROPHY: "trophy_prestige",
         PieceKind.REGALIA: "prestige_per_piece",
+        PieceKind.MAP: "map_prestige",
+        PieceKind.INSTRUMENT: "instrument_prestige",
     },
 )
 

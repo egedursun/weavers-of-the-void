@@ -657,6 +657,8 @@ YIELDS: Mapping[UrbanService, tuple[Yield, ...]] = total(
         U.DEPOT: (Yield("hauling_capacity", "depot_hauling", 1),),
         U.ADMINISTRATION: (Yield("public_order", "admin_order", 1),),
         U.ENTERTAINMENT: (Yield("unrest", "entertainment_calm", -1),),
+        U.LIGHTING: (Yield("crime", "lighting_order", -1), Yield("prosperity", "lighting_trade", 1)),
+        U.PEST_CONTROL: (Yield("sanitation", "pest_control_health", 1), Yield("siege_supplies", "pest_control_stores", 1)),
     },
 )
 BOUNDED = frozenset({"public_order", "crime", "unrest", "sanitation", "prestige"})

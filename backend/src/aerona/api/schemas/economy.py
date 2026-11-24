@@ -20,6 +20,7 @@ from aerona.domain.enums.economy import (
     WorkshopKind,
 )
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.nature_kinds import MaterialSource
 from aerona.domain.enums.operations import CarrierKind
@@ -242,6 +243,8 @@ class RouteDangerView(ApiModel):
     officials: int
     spoilage: int
     pilferage: int
+    pirates: int
+    breakage: int
 
 
 class RouteLossView(ApiModel):
@@ -282,6 +285,7 @@ class TradeRouteView(ApiModel):
     renown: int
     culture: int
     path: list[int]
+    path_strata: list[UndergroundStratum | None]
     tolls: list[TollView]
     controller_id: int | None
     blockaded_by_id: int | None

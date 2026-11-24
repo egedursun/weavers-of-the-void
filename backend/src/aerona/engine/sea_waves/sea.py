@@ -27,6 +27,8 @@ SHAPE_PCT = total(
         C.ESTUARY: 140,
         C.MANGROVE: 40,
         C.BARRIER_ISLAND: 60,
+        C.SPIT: 110,
+        C.ATOLL: 50,
     },
 )
 WATCHING = (FolkDomain.WATERS, FolkDomain.LAND)

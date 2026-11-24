@@ -9,6 +9,8 @@ class RiteComponent(StrEnum):
     DANCED = "danced"
     MATERIAL = "material"
     MENTAL = "mental"
+    OFFERED = "offered"
+    COMMUNAL = "communal"
 
 
 class RestraintKind(StrEnum):
@@ -26,6 +28,8 @@ class SociolectKind(StrEnum):
     SAILORS = "sailors"
     YOUTH = "youth"
     SOLDIERS = "soldiers"
+    CLERGY = "clergy"
+    SCHOLARS = "scholars"
 
 
 class SignCause(StrEnum):
@@ -34,6 +38,7 @@ class SignCause(StrEnum):
     HUNTING_SILENCE = "hunting_silence"
     MUTILATION = "mutilation"
     TRADE = "trade"
+    NOISE = "noise"
 
 
 class TeachingState(StrEnum):
@@ -49,6 +54,7 @@ class FieldAgreementKind(StrEnum):
     EXCHANGE = "exchange"
     SAFE_CONDUCT = "safe_conduct"
     FRATERNISATION = "fraternisation"
+    BURIAL_TRUCE = "burial_truce"
 
 
 class FieldAgreementState(StrEnum):
@@ -65,12 +71,14 @@ class SealKind(StrEnum):
     POWER = "power"
     LIVING = "living"
     PACT = "pact"
+    MADE = "made"
 
 
 class SealLink(StrEnum):
     OATH = "oath"
     POWER = "power"
     LINE = "line"
+    MIND = "mind"
 
 
 class CarrionRest(StrEnum):
@@ -82,3 +90,4 @@ class CarrionRest(StrEnum):
     BURIED = "buried"
     BURNED = "burned"
     SUNK = "sunk"
+    SCAVENGED = "scavenged"

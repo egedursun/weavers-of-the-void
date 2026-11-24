@@ -3,7 +3,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.life.sacred import PERSONAL_QUESTIONS, TRUE_OMEN_DIVINATION_QUESTIONS
+from aerona.catalog.life.sacred import FORESEEING_DREAMS, PERSONAL_QUESTIONS, TRUE_OMEN_DIVINATION_QUESTIONS
+from aerona.catalog.life_traits import MISHAP_KIND_TRAITS, having
 from aerona.catalog.sacred import DIVINATION_ACCURACY, DIVINATION_LAWS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total as every
@@ -13,11 +14,12 @@ from aerona.db.tables.dominion import MiracleRecordRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
-from aerona.db.tables.mind import SkillRow
+from aerona.db.tables.folkways import MishapRow
+from aerona.db.tables.mind import DreamRow, SkillRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.operations import ExpeditionRow
-from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.sacred import DivinationRow, DivinationSystemRow, ForecastModelRow, ForesightRow
 from aerona.db.tables.society import ArchiveHoldingRow
 from aerona.db.tables.sons import SonRow
@@ -29,12 +31,13 @@ from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import AfterlifeState, BindingKind
+from aerona.domain.enums.life_traits import MishapKindTrait
 from aerona.domain.enums.mind import SkillKind, ValueAxis, ValueHolder
 from aerona.domain.enums.minds import MindPurpose
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.sacred import DivinationKind, DivinationQuestion, DivinationValidity, ForesightSource, ForesightStatus, OmenVerdict
-from aerona.domain.enums.society import Commodity
+from aerona.domain.enums.society import Commodity, NaturalLaw
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.entity_stats import ProphecyStats
 from aerona.engine.body.customs import people_id_of
@@ -236,6 +239,8 @@ async def question_for(ctx: TickContext, realm_id: int, ruler: EntityRow) -> Div
         (DivinationQuestion.FOUNDING, await newest_town(ctx, realm_id) is not None),
         (DivinationQuestion.VOYAGE, await setting_out(ctx, realm_id)),
         (DivinationQuestion.WAR, await foe_of(ctx, realm_id) is not None),
+        (DivinationQuestion.SUCCESSION, stat_or(ruler, "age", 0) * PERCENT >= max(1, stat_or(ruler, "lifespan", 0)) * ctx.rules.divination.succession_age_pct),
+        (DivinationQuestion.LOST_THINGS, await things_lost(ctx, realm_id)),
     )
     return next((question for question, met in asked if met), DivinationQuestion.HARVEST)
 
@@ -253,6 +258,17 @@ async def setting_out(ctx: TickContext, realm_id: int) -> bool:
         select(ExpeditionRow.id).where(ExpeditionRow.started_epoch == ctx.epoch, ExpeditionRow.leader_entity_id.in_(leaders)).limit(1)
     )
     return found is not None
+
+
+async def things_lost(ctx: TickContext, realm_id: int) -> bool:
+    towns = await members_of(ctx.session, realm_id)
+    found = await ctx.session.scalar(
+        select(MishapRow.id).where(MishapRow.settlement_entity_id.in_(towns), MishapRow.epoch == ctx.epoch, MishapRow.kind.in_(sorted(LOSSES))).limit(1)
+    )
+    return found is not None
+
+
+LOSSES = having(MISHAP_KIND_TRAITS, MishapKindTrait.LOSSES)
 
 
 @dataclass(frozen=True)
@@ -322,6 +338,21 @@ async def fought(_heeding: Heeding) -> None:
     return None
 
 
+async def name_heir(heeding: Heeding) -> None:
+    realm = await heeding.ctx.session.get(PolityProfileRow, heeding.realm_id)
+    if realm is not None and heeding.sign and not held(realm.polity_entity_id) and "legitimacy" not in realm.locked:
+        realm.legitimacy = clamp_int(realm.legitimacy + heeding.sign * heeding.ctx.rules.divination.succession_legitimacy, 0, PERCENT)
+
+
+async def find_lost(heeding: Heeding) -> None:
+    ctx = heeding.ctx
+    if heeding.sign <= 0:
+        return
+    for town_id in await members_of(ctx.session, heeding.realm_id):
+        if not held(town_id):
+            await shift_stock(ctx.session, ctx.rules, town_id, Commodity.GOODS, ctx.rules.divination.lost_things_goods, epoch=ctx.epoch, flow=GoodsFlow.AID)
+
+
 HEEDINGS: Mapping[DivinationQuestion, Callable[[Heeding], Awaitable[None]]] = every(
     DivinationQuestion,
     {
@@ -333,6 +364,8 @@ HEEDINGS: Mapping[DivinationQuestion, Callable[[Heeding], Awaitable[None]]] = ev
         DivinationQuestion.VOYAGE: sail,
         DivinationQuestion.FOUNDING: found_town,
         DivinationQuestion.ILLNESS: tend_sick,
+        DivinationQuestion.SUCCESSION: name_heir,
+        DivinationQuestion.LOST_THINGS: find_lost,
     },
 )
 
@@ -567,10 +600,31 @@ async def seers(ctx: TickContext) -> list[tuple[int, ForesightSource, int | None
         .order_by(MindProfileRow.node_id)
     )
     found.extend((node, ForesightSource.MADE_ORACLE, world, capacity) for node, world, capacity in oracles.all())
+    dreamers = await ctx.session.execute(
+        select(EntityRow, DreamRow.intensity)
+        .join(DreamRow, DreamRow.dreamer_node_id == EntityRow.id)
+        .where(
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            DreamRow.epoch == ctx.epoch,
+            DreamRow.kind.in_(sorted(FORESEEING_DREAMS)),
+            DreamRow.intensity >= ctx.rules.prescience.dream_intensity,
+        )
+        .order_by(EntityRow.id, DreamRow.id)
+    )
+    seen: set[int] = set()
+    for mortal, intensity in dreamers.all():
+        if mortal.id not in seen and await dreams_real(ctx, mortal):
+            seen.add(mortal.id)
+            found.append((mortal.id, ForesightSource.DREAM, mortal.world_id, intensity))
     for son in await ctx.session.scalars(select(SonRow).where(SonRow.status == SonStatus.ACTIVE).order_by(SonRow.id)):
         if son.current_world_id is not None and await seer_power(ctx, son):
             found.append((son.id, ForesightSource.GOD, son.current_world_id, MIDDLE + ctx.rules.prescience.god_sight))
     return found
+
+
+async def dreams_real(ctx: TickContext, mortal: EntityRow) -> bool:
+    return await binds(ctx, NaturalLaw.DREAMS_ARE_REAL, mortal) or mortal.mortal_role is MortalRole.SEER
 
 
 async def check_foresights(ctx: TickContext, tally: ForesightTally) -> None:

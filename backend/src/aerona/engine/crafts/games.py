@@ -57,6 +57,8 @@ SHAPES: Mapping[GameCategory, GameShape] = total(
         C.SPECTACLE: GameShape(None, 30, 40, 2, 50, 90),
         C.GAMBLING: GameShape(None, 95, 0, 1, 95, 20),
         C.NETWORK: GameShape(SkillKind.STRATEGY, 20, 0, 4, 20, 40),
+        C.PUZZLE: GameShape(SkillKind.CRYPTOGRAPHY, 5, 0, 1, 5, 10),
+        C.ANIMAL_CONTEST: GameShape(SkillKind.BEAST_HANDLING, 40, 50, 1, 60, 80),
     },
 )
 

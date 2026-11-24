@@ -13,6 +13,8 @@ class HousingLevel(StrEnum):
     ARCOLOGY_UNIT = "arcology_unit"
     HABITAT_MODULE = "habitat_module"
     SHIP_BERTH = "ship_berth"
+    SHACK = "shack"
+    PALACE = "palace"
 
 
 class UrbanService(StrEnum):
@@ -37,6 +39,8 @@ class UrbanService(StrEnum):
     DEPOT = "depot"
     ADMINISTRATION = "administration"
     ENTERTAINMENT = "entertainment"
+    LIGHTING = "lighting"
+    PEST_CONTROL = "pest_control"
 
 
 class Morphology(StrEnum):
@@ -62,6 +66,8 @@ class RacketKind(StrEnum):
     DATA_THEFT = "data_theft"
     LOAN_SHARKING = "loan_sharking"
     ARMS = "arms"
+    FORGERY = "forgery"
+    POACHING = "poaching"
 
 
 class OrderLaw(StrEnum):
@@ -87,6 +93,7 @@ class ConvoyStatus(StrEnum):
     LOST = "lost"
     STRANDED = "stranded"
     QUARANTINED = "quarantined"
+    TURNED_BACK = "turned_back"
 
 
 class TransportKind(StrEnum):
@@ -119,6 +126,7 @@ class CargoClass(StrEnum):
     LIVING = "living"
     SAVED_MINDS = "saved_minds"
     RELICS = "relics"
+    OVERSIZE = "oversize"
 
 
 class PreservationMethod(StrEnum):
@@ -141,6 +149,7 @@ class MarketPlay(StrEnum):
     CORNER = "corner"
     DUMP = "dump"
     RUMOUR = "rumour"
+    SHORT = "short"
 
 
 class CrimeStance(StrEnum):
@@ -148,6 +157,7 @@ class CrimeStance(StrEnum):
     CO_OPT = "co_opt"
     TOLERATE = "tolerate"
     LICENSE = "license"
+    INTEGRATE = "integrate"
 
 
 class ZoneKind(StrEnum):
@@ -161,6 +171,7 @@ class ZoneKind(StrEnum):
     TRANSPORT = "transport"
     MILITARY = "military"
     RESEARCH = "research"
+    PORT = "port"
 
 
 class CivicService(StrEnum):

@@ -552,7 +552,7 @@ async def cluster_drift(ctx: TickContext, cosmography: Cosmography) -> int:
 async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set[int]) -> int:
     devoted = await flags_by_entity(ctx.session, EntityFlag.WORSHIPS_GALAXY)
     counts: Counter[int] = Counter()
-    for galaxy_id in grown:
+    for galaxy_id in sorted(grown):
         home = cosmography.galaxies[galaxy_id].cluster_id
         if home is not None:
             counts[home] += 1

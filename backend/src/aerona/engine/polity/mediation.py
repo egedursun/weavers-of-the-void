@@ -3,10 +3,12 @@ from sqlalchemy import func, select
 from aerona.catalog.life_traits import TREATY_KIND_TRAITS, having
 from aerona.catalog.pacts import DECLARED_STANDINGS, PARTY_ROLES, PAUSED_STATES, PRINCIPAL_ROLES, STANDINGS
 from aerona.constants.units import PERCENT, TENTHS
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import TreatyPartyRow, TreatyProfileRow
 from aerona.db.tables.statecraft import CrisisRow, PolityRegardRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.life_traits import TreatyKindTrait
 from aerona.domain.enums.modifier import IncidentRole
@@ -18,6 +20,7 @@ from aerona.engine.intrigue.favours import owe
 from aerona.engine.polity.accords import end_treaty, parties_of
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.regard import alarm, realm_ids, shift_regard
+from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import record
 
@@ -201,14 +204,44 @@ async def keep_neutrality(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         if not STANDINGS[realm.profile.standing].allies:
             members = book.members(realm)
             capital = next((member for member in members if member.id == realm.profile.capital_entity_id), members[0] if members else None)
-            if capital is not None and wars and not held(capital.id):
+            if capital is not None and wars and not held(capital.id) and STANDINGS[realm.profile.standing].trades:
                 shift_stat(capital, "prosperity", table.neutral_trade_pct * wars / TENTHS, high=PERCENT)
                 counts["traded"] += 1
+            await stay_apart(ctx, realm, capital)
+            continue
+        if await stand_apart(ctx, realm):
+            counts["isolated"] = counts.get("isolated", 0) + 1
             continue
         alone = realm.profile.standing is RegionalStanding.MINOR_POWER and wars >= 2
         if alone and ctx.rng(f"neutral.{realm.entity.id}.{ctx.epoch}").chance(table.neutral_declare_pct) and await declare_neutral(ctx, realm):
             counts["declared"] += 1
     return counts
+
+
+async def trades_abroad(ctx: TickContext, realm: Realm) -> bool:
+    core = realm.profile.core_entity_id
+    if core is None:
+        return False
+    outward = await active_bonds(ctx.session, [BondKind.TRADES_WITH], sources=[core])
+    return bool(outward or await active_bonds(ctx.session, [BondKind.TRADES_WITH], targets=[core]))
+
+
+async def stand_apart(ctx: TickContext, realm: Realm) -> bool:
+    if realm.profile.standing is not RegionalStanding.MINOR_POWER or STANDING in realm.profile.locked or await trades_abroad(ctx, realm):
+        return False
+    if not ctx.rng(f"isolated.{realm.entity.id}.{ctx.epoch}").chance(ctx.rules.diplomacy.isolation_pct):
+        return False
+    realm.profile.standing = RegionalStanding.ISOLATED
+    return True
+
+
+async def stay_apart(ctx: TickContext, realm: Realm, capital: EntityRow | None) -> None:
+    if realm.profile.standing is not RegionalStanding.ISOLATED or STANDING in realm.profile.locked:
+        return
+    if await trades_abroad(ctx, realm):
+        realm.profile.standing = RegionalStanding.MINOR_POWER
+    elif capital is not None and not held(capital.id):
+        shift_stat(capital, "prosperity", -ctx.rules.diplomacy.isolation_cost)
 
 
 async def breach_neutrality(ctx: TickContext, aggressor_id: int, target_id: int) -> bool:

@@ -118,6 +118,16 @@ const ALPHA: Record<LayerMode, number> = {
   waves: 0.5,
   groups: 0.45,
   protected: 0.45,
+  deep: 0.45,
+}
+
+const DEEP_BANDS: Record<string, string> = {
+  one: 'One level beneath',
+  some: 'Two or three levels beneath',
+  many: 'Four or more levels beneath',
+  wide: 'A wide cell',
+  middling: 'A middling cell',
+  narrow: 'A narrow cell',
 }
 
 const KIND_LAYERS: Partial<Record<LayerMode, KindConcept>> = {
@@ -165,8 +175,11 @@ const BAND_LABEL: Record<string, string> = {
   grain: 'Grain',
   ranching: 'Herds',
   wilds: 'Beyond the markets',
+  industry: 'Works and mines',
+  fallow: 'Fallow',
   daily: 'Daily needs',
   weekly: 'Weekly market',
+  regional: 'Regional market',
   rare: 'Rare goods',
   poor: 'Poor soil',
   fair: 'Fair soil',
@@ -490,6 +503,24 @@ function regionKey(
           }
         : null
     }
+    case 'deep': {
+      if (view.level) {
+        const cell = view.level.cells.find(
+          (item) => item.region_id === regionId
+        )
+        if (!cell) return null
+        const band =
+          cell.extent >= 67 ? 'wide' : cell.extent >= 34 ? 'middling' : 'narrow'
+        return { key: `deep:${band}`, alpha: alpha * (0.6 + cell.light / 250) }
+      }
+      const below = view.deep?.below?.find(
+        (item) => item.region_id === regionId
+      )
+      if (!below) return null
+      const band =
+        below.strata >= 4 ? 'many' : below.strata >= 2 ? 'some' : 'one'
+      return { key: `deep:${band}`, alpha }
+    }
     case 'groups': {
       const group =
         view.groups?.[String(regionId)] ?? view.groups?.[String(topId)]
@@ -577,6 +608,7 @@ function labelFor(
   if (kind === 'rainfall' || kind === 'sacred')
     return LAND_LABEL[raw] ?? words(raw)
   if (kind === 'scars') return words(raw)
+  if (kind === 'deep') return DEEP_BANDS[raw] ?? words(raw)
   if (
     kind === 'population' ||
     kind === 'followers' ||

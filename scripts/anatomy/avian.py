@@ -2,6 +2,7 @@ import re
 import sys
 from pathlib import Path
 
+from forms import capsule
 from render import C, Part, Plan, draw, ellipse, page
 
 OUT = Path(__file__).parent
@@ -81,6 +82,7 @@ def avian(states: dict[str, str]) -> Plan:
         Part("heart", "Heart", HEART, (180, 126), inner=True),
         Part("gut", "Gut", GUT, (180, 156), inner=True),
         Part("groin", "Groin", GROIN, (180, 178), inner=True),
+        Part("spine", "Spine", capsule([(180, 98), (180, 140), (180, 186)], 4.4), (180, 146), inner=True, subtle=True),
     ]
     details = [*WING_LINES, *(mirror(line) for line in WING_LINES), *TAIL_LINES, *BREAST, *(mirror(line) for line in BREAST[-1:]), BROW, mirror(BROW), CERE]
     marks = []

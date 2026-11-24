@@ -36,6 +36,10 @@ class EstateRules:
     monopoly_rent: int = rule(3, 0, 100, F, "Wealth a monopoly brings its estate each epoch")
     militia_pct: int = rule(50, 0, 200, F, "How much of an armed class's share swells a town's militia (%)")
     propose_pct: int = rule(15, 0, 100, F, "Chance each epoch an influential estate brings a law its class wants before the realm (%)")
+    service_exemption_loyalty: int = rule(15, 0, 100, F, "Loyalty an estate gains when it is freed from levies and the call to arms")
+    service_exemption_cost: int = rule(20, 0, 100, F, "Soldiers a realm loses from its levies for each estate freed from service (%)")
+    dress_loyalty: int = rule(5, 0, 100, F, "Loyalty an estate gains when its rank is marked by what it alone may wear")
+    dress_cost: int = rule(2, 0, 100, F, "Unrest among those barred from an estate's dress each epoch")
 
 
 @dataclass(frozen=True)
@@ -61,6 +65,8 @@ class MovementRules:
     mind_rights_weight: int = rule(100, 0, 100, F, "How strongly the pressures for the mind rights cause gather a movement and its support (%)")
     equal_standing_weight: int = rule(100, 0, 100, F, "How strongly the pressures for the equal standing cause gather a movement and its support (%)")
     temperance_cut: int = rule(10, 0, 100, F, "Acceptance of each intoxicant a risen temperance movement takes from its people's customs")
+    learning_weight: int = rule(30, 0, 100, F, "Weight of a cause of learning for all among the causes a people takes up")
+    health_weight: int = rule(30, 0, 100, F, "Weight of a cause of public health among the causes a people takes up")
 
 
 @dataclass(frozen=True)

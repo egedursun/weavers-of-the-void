@@ -12,6 +12,7 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.law_depth import RecruitMotive, RegistryKind
 from aerona.domain.enums.military import AgentStatus
 from aerona.domain.enums.mind import TraitKind
@@ -25,7 +26,7 @@ from aerona.engine.military.spies_w52 import keep_motive, motive_by_heart
 from aerona.engine.mind.book import traits_of, values_for
 from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.recording.record import record
 from aerona.engine.records import death_path
 
@@ -75,6 +76,12 @@ async def grieved_by_lord(ctx: TickContext, mortal_id: int) -> bool:
     return grudge is not None
 
 
+async def shares_faith(ctx: TickContext, first: int, second: int) -> bool:
+    mine = {bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[first])}
+    theirs = {bond.target_node_id for bond in await active_bonds(ctx.session, [BondKind.WORSHIPS], sources=[second])}
+    return bool(mine & theirs)
+
+
 async def motive_for(ctx: TickContext, network: SpyNetworkRow, mortal: EntityRow) -> RecruitMotive:
     recruiter = network.spymaster_entity_id or network.owner_entity_id
     if await hook_on(ctx, recruiter, mortal.id) is not None:
@@ -82,6 +89,12 @@ async def motive_for(ctx: TickContext, network: SpyNetworkRow, mortal: EntityRow
     heart = await motive_by_heart(ctx, network, mortal)
     if heart is not None:
         return heart
+    return await motive_by_mind(ctx, network, mortal)
+
+
+async def motive_by_mind(ctx: TickContext, network: SpyNetworkRow, mortal: EntityRow) -> RecruitMotive:
+    if await shares_faith(ctx, network.owner_entity_id, mortal.id) and not await shares_faith(ctx, network.target_entity_id, mortal.id):
+        return RecruitMotive.FAITH
     if await values_close(ctx, network.owner_entity_id, mortal.id):
         return RecruitMotive.IDEOLOGY
     traits = await traits_of(ctx.session, mortal.id)

@@ -10,6 +10,7 @@ import {
 import { useNavigate } from '@tanstack/react-router'
 import { Orbit, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SceneCorners } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/domain'
 import { Text } from '@/components/typography'
@@ -201,6 +202,7 @@ export function CosmosView() {
             className='flex min-w-0 flex-col border-b lg:sticky lg:top-topbar lg:h-svh lg:flex-1 lg:border-r lg:border-b-0 lg:pb-topbar'
           >
             <div className='scene-frame relative h-96 min-w-0 sm:h-160 lg:h-auto lg:flex-1'>
+              <SceneCorners />
               {settings.view === '3d' ? (
                 <Suspense
                   fallback={<Skeleton className='h-full w-full rounded-none' />}

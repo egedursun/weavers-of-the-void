@@ -1,22 +1,23 @@
 import {
-  Waves,
   Activity,
   Ban,
+  Biohazard,
+  Bird,
   BookOpen,
   Cloud,
   Coins,
   Crown,
   DoorOpen,
-  EyeOff,
   Droplets,
+  EyeOff,
   Flame,
   Footprints,
   Gem,
   Hammer,
+  HandCoins,
   HandHeart,
   Heart,
   HeartPulse,
-  type LucideIcon,
   Minus,
   Moon,
   Pause,
@@ -31,10 +32,22 @@ import {
   Swords,
   ThumbsDown,
   ThumbsUp,
+  Waves,
   Wheat,
   Wind,
   Zap,
-  HandCoins,
+  type LucideIcon,
+  Eye,
+  FlameKindling,
+  Gavel,
+  GraduationCap,
+  Handshake,
+  Scale3d,
+  Sparkle,
+  Star,
+  VenetianMask,
+  Mail,
+  Siren,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -80,6 +93,18 @@ export const SCALES: Record<Schema['DivineScale'], Pole> = {
     tone: 'verdigris',
     opposite: { label: 'Drain', icon: Droplets, tone: 'muted' },
   },
+  peace: {
+    label: 'Peace',
+    icon: Bird,
+    tone: 'success',
+    opposite: { label: 'Strife', icon: Swords, tone: 'danger' },
+  },
+  health: {
+    label: 'Health',
+    icon: HeartPulse,
+    tone: 'success',
+    opposite: { label: 'Sickness', icon: Biohazard, tone: 'danger' },
+  },
 }
 
 export const ALIGNMENTS: Record<Schema['PerceivedAlignment'], Named> = {
@@ -92,6 +117,8 @@ export const WORSHIP_MODES: Record<Schema['WorshipMode'], Named> = {
   devotion: { label: 'Devotion', icon: Heart, tone: 'success' },
   appeasement: { label: 'Appeasement', icon: ShieldAlert, tone: 'warning' },
   bargain: { label: 'Bargain', icon: Scale, tone: 'info' },
+  union: { label: 'Union', icon: Gavel, tone: 'info' },
+  kinship: { label: 'Kinship', icon: Scale3d, tone: 'info' },
 }
 
 export const PRAYER_TONES: Record<Schema['PrayerTone'], Named> = {
@@ -99,6 +126,8 @@ export const PRAYER_TONES: Record<Schema['PrayerTone'], Named> = {
   mercy: { label: 'A plea for mercy', icon: Shield, tone: 'warning' },
   request: { label: 'A request for a boon', icon: HandCoins, tone: 'info' },
   praise: { label: 'Praise', icon: Sparkles, tone: 'gold' },
+  lament: { label: 'Lament', icon: Sparkle, tone: 'gold' },
+  confession: { label: 'Confession', icon: Star, tone: 'gold' },
 }
 
 export const MANIFESTATIONS: Record<Schema['Manifestation'], Named> = {
@@ -107,12 +136,15 @@ export const MANIFESTATIONS: Record<Schema['Manifestation'], Named> = {
   stern: { label: 'Stern', icon: Scale, tone: 'warning' },
   dreadful: { label: 'Dreadful', icon: Skull, tone: 'danger' },
   veiled: { label: 'Veiled', icon: EyeOff, tone: 'muted' },
+  playful: { label: 'Playful', icon: Eye, tone: 'muted' },
+  sorrowful: { label: 'Sorrowful', icon: VenetianMask, tone: 'muted' },
 }
 
 export const STANCES: Record<Schema['BeliefStance'], Named> = {
   yield: { label: 'Yields to belief', icon: Activity, tone: 'info' },
   resist: { label: 'Resists belief', icon: Ban, tone: 'warning' },
   embrace: { label: 'Embraces belief', icon: Heart, tone: 'success' },
+  bargain: { label: 'Bargain', icon: Handshake, tone: 'success' },
 }
 
 export const SITE_KINDS: Record<Schema['MagicSiteKind'], Named> = {
@@ -122,6 +154,8 @@ export const SITE_KINDS: Record<Schema['MagicSiteKind'], Named> = {
   gateway: { label: 'Gateway', icon: DoorOpen, tone: 'warning' },
   tide_point: { label: 'Tide point', icon: Waves, tone: 'verdigris' },
   depletion_scar: { label: 'Depletion scar', icon: Flame, tone: 'verdigris' },
+  confluence: { label: 'Confluence', icon: FlameKindling, tone: 'verdigris' },
+  null_zone: { label: 'Null zone', icon: Sun, tone: 'verdigris' },
 }
 
 export const DEEDS: Record<Schema['CreatureDeed'], Named> = {
@@ -133,11 +167,19 @@ export const DEEDS: Record<Schema['CreatureDeed'], Named> = {
   wreck_works: { label: 'Wreck works', icon: Hammer, tone: 'danger' },
   wander: { label: 'Wander', icon: Footprints, tone: 'info' },
   rest: { label: 'Rest', icon: Pause, tone: 'muted' },
+  trade: { label: 'Trade', icon: Scale, tone: 'muted' },
+  carry_messages: {
+    label: 'Carry messages',
+    icon: Mail,
+    tone: 'muted',
+  },
+  teach: { label: 'Teach', icon: GraduationCap, tone: 'muted' },
 }
 
 export const LESSONS: Record<Schema['CreatureLesson'], Named> = {
   reward: { label: 'Reward', icon: ThumbsUp, tone: 'success' },
   punish: { label: 'Punish', icon: ThumbsDown, tone: 'danger' },
+  warn: { label: 'Warn', icon: Siren, tone: 'danger' },
 }
 
 export const THRONE_ICON = Crown

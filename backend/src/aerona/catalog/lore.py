@@ -103,6 +103,9 @@ TRADITIONS = MappingProxyType(
             TraditionSpec(K.COMMEMORATION, {"food": 1}, {"cohesion": 3}, {V.TRADITION: 2}),
             TraditionSpec(K.COMPETITION, {"food": 1}, {"satisfaction": 2, "martial": 1}, {V.COMPETITION: 2}),
             TraditionSpec(K.FAIR, {"goods": 1}, {"trade": 2, "satisfaction": 1}, {V.WEALTH: 1}),
+            TraditionSpec(K.WELCOME, {"food": 1}, {"hospitality": 1, "bonding": 1}, {V.HOSPITALITY: 2, V.XENOPHILIA: 1}),
+            TraditionSpec(K.RECONCILIATION, {"goods": 1}, {"bonding": 2, "cohesion": 1}, {V.MERCY: 1, V.KINSHIP: 1}),
+            TraditionSpec(K.THANKSGIVING, {"food": 2}, {"satisfaction": 2, "piety": 1, "healing": 1}, {V.PIETY: 1}),
         )
     }
 )
@@ -174,6 +177,9 @@ FUNCTIONS: Mapping[TraditionFunction, FunctionSpec] = total(
         K.COMMEMORATION: FunctionSpec(CalendarSlot.REMEMBRANCE, lambda rules: rules.traditions.commemoration_cost),
         K.COMPETITION: FunctionSpec(CalendarSlot.MIDSUMMER, lambda rules: rules.traditions.competition_cost),
         K.FAIR: FunctionSpec(CalendarSlot.MARKET, lambda rules: rules.traditions.fair_cost),
+        K.WELCOME: FunctionSpec(None, lambda rules: rules.traditions.welcome_cost, absorbable=True),
+        K.RECONCILIATION: FunctionSpec(None, lambda rules: rules.traditions.reconciliation_cost),
+        K.THANKSGIVING: FunctionSpec(CalendarSlot.HARVEST, lambda rules: rules.traditions.thanksgiving_cost, festive=True, absorbable=True),
     },
 )
 FESTIVE = frozenset(kind for kind, spec in FUNCTIONS.items() if spec.festive)
@@ -200,6 +206,8 @@ STAGE_SLOTS: Mapping[RiteStage, CalendarSlot | None] = total(
         RiteStage.UNION: None,
         RiteStage.ELDERHOOD: None,
         RiteStage.DEATH: CalendarSlot.REMEMBRANCE,
+        RiteStage.INITIATION: None,
+        RiteStage.DEPARTURE: None,
     },
 )
 
@@ -217,6 +225,8 @@ STAGES = total(
         RiteStage.UNION: TraditionSpec(K.RITE_OF_PASSAGE, {"food": 1}, {"fertility": 5}, {V.KINSHIP: 1}),
         RiteStage.ELDERHOOD: TraditionSpec(K.RITE_OF_PASSAGE, {"food": 1}, {"cohesion": 1}, {V.TRADITION: 1, V.KINSHIP: 1}),
         RiteStage.DEATH: TraditionSpec(K.RITE_OF_PASSAGE, {"goods": 1}, {"rite": 1}, {V.DEATH: 1}),
+        RiteStage.INITIATION: TraditionSpec(K.RITE_OF_PASSAGE, {"food": 1}, {"cohesion": 2}, {V.LOYALTY: 1}),
+        RiteStage.DEPARTURE: TraditionSpec(K.RITE_OF_PASSAGE, {"goods": 1}, {"cohesion": 1}, {V.KINSHIP: 1, V.XENOPHILIA: 1}),
     },
 )
 

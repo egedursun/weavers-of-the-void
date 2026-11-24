@@ -31,7 +31,7 @@ def displaced(town_id: int, count: int) -> CohortRow:
 
 
 def test_twenty_four_district_kinds_with_their_own_effects() -> None:
-    assert len(DistrictKind) == 24 and set(DENSITY_RULE) == set(DistrictKind) and set(ZONE_OF_DISTRICT) == set(DistrictKind)
+    assert len(DistrictKind) == 27 and set(DENSITY_RULE) == set(DistrictKind) and set(ZONE_OF_DISTRICT) == set(DistrictKind)
     assert base_parameters(RULES, DistrictKind.CAMP)["sanitation"] < 0 < base_parameters(RULES, DistrictKind.LAZARETTO)["sanitation"]
 
 

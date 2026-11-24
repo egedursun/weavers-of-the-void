@@ -3,11 +3,14 @@ import {
   Bird,
   Bone,
   Brain,
+  CalendarClock,
   Church,
   CloudFog,
   Cog,
   Crosshair,
+  Crown,
   Droplet,
+  Droplets,
   Eclipse,
   Feather,
   Flame,
@@ -16,6 +19,8 @@ import {
   Ghost,
   Hand,
   HandCoins,
+  HeartCrack,
+  KeyRound,
   Layers,
   MoonStar,
   Mountain,
@@ -30,9 +35,14 @@ import {
   Sun,
   Swords,
   TreeDeciduous,
+  TreePine,
   Volume2,
   Wand,
+  Waves,
   Zap,
+  FlameKindling,
+  Shell,
+  Laugh,
 } from 'lucide-react'
 import { type Named } from './labels'
 
@@ -40,7 +50,7 @@ export const TISSUE: Record<string, Named> = {
   soft_tissue: { label: 'Soft tissue', icon: Hand, tone: 'muted' },
   hide: { label: 'Hide', icon: Layers, tone: 'warning' },
   plates: { label: 'Plates', icon: Shield, tone: 'verdigris' },
-  shell: { label: 'Shell', icon: Shield, tone: 'warning' },
+  shell: { label: 'Shell', icon: Shell, tone: 'warning' },
   plumage: { label: 'Plumage', icon: Feather, tone: 'info' },
   rigid: { label: 'Rigid frame', icon: Bone, tone: 'muted' },
   fibrous: { label: 'Fibrous', icon: TreeDeciduous, tone: 'success' },
@@ -52,6 +62,8 @@ export const TISSUE: Record<string, Named> = {
   gel: { label: 'Gel', icon: Droplet, tone: 'success' },
   energy: { label: 'Energy', icon: Zap, tone: 'danger' },
   insubstantial: { label: 'Insubstantial', icon: Ghost, tone: 'muted' },
+  liquid: { label: 'Liquid body', icon: Droplets, tone: 'info' },
+  woody: { label: 'Woody', icon: TreePine, tone: 'gold' },
 }
 
 export const BITE: Record<string, Named> = {
@@ -116,6 +128,18 @@ export const TEMPERAMENT_KIND: Record<string, Named & { hint: string }> = {
     tone: 'verdigris',
     hint: 'Guards a place or a people against all comers',
   },
+  playful: {
+    label: 'Playful',
+    icon: Laugh,
+    tone: 'success',
+    hint: 'Tests and follows travellers and may be befriended',
+  },
+  proud: {
+    label: 'Proud',
+    icon: Crown,
+    tone: 'gold',
+    hint: 'Answers insults and challenges and is never cowed',
+  },
 }
 
 export const AVERSION: Record<string, Named> = {
@@ -126,6 +150,8 @@ export const AVERSION: Record<string, Named> = {
   holy_ground: { label: 'Holy ground', icon: Church, tone: 'gold' },
   light: { label: 'Light', icon: Sun, tone: 'gold' },
   cold: { label: 'Cold', icon: Snowflake, tone: 'info' },
+  scent: { label: 'Strong scent', icon: FlameKindling, tone: 'warning' },
+  true_name: { label: 'Its true name', icon: KeyRound, tone: 'gold' },
 }
 
 export const AWAKENING: Record<string, Named & { hint: string }> = {
@@ -165,6 +191,18 @@ export const AWAKENING: Record<string, Named & { hint: string }> = {
     tone: 'verdigris',
     hint: 'Wakes when a summoning rite calls it, and may be bound',
   },
+  kin_harmed: {
+    label: 'When its kin are harmed',
+    icon: HeartCrack,
+    tone: 'danger',
+    hint: 'Wakes when its young or kind are hunted',
+  },
+  season: {
+    label: 'With a season',
+    icon: CalendarClock,
+    tone: 'info',
+    hint: 'Stirs in a set season, so its waking can be prepared for',
+  },
 }
 
 export const HABITAT: Record<string, Named> = {
@@ -175,4 +213,6 @@ export const HABITAT: Record<string, Named> = {
   void: { label: 'The void', icon: Orbit, tone: 'muted' },
   magma: { label: 'The magma sea', icon: Flame, tone: 'danger' },
   ethereal: { label: 'The realms beyond', icon: Ghost, tone: 'verdigris' },
+  ice: { label: 'Ice', icon: Snowflake, tone: 'info' },
+  shore: { label: 'Shore', icon: Waves, tone: 'verdigris' },
 }

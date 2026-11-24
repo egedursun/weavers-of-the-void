@@ -1,10 +1,19 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.catalog.death_causes import DEATH_CAUSES
-from aerona.catalog.life.folkways import ANSWER_MISHAP_RESPONSES, CHARM_EFFECTS, EXPLAINERS, LEANINGS, RESPONSES, SIGN_WORDS, WEIGHTS_FOR_MISHAP_ATTRIBUTIONS
+from aerona.catalog.life.folkways import (
+    ANSWER_MISHAP_RESPONSES,
+    BLAMING,
+    CHARM_EFFECTS,
+    EXPLAINERS,
+    LEANINGS,
+    RESPONSES,
+    SIGN_WORDS,
+    WEIGHTS_FOR_MISHAP_ATTRIBUTIONS,
+)
 from aerona.catalog.life_traits import CHARM_POWER_TRAITS, LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
@@ -23,14 +32,16 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import NotableYearKind
 from aerona.domain.enums.folkways import CharmPower, LuckReach, LuckSign, MishapAttribution, MishapKind, MishapResponse, PurityState
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.life_traits import CharmPowerTrait, LifeStageTrait
 from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis
 from aerona.domain.enums.minds import MindOrigin
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.records import StepAction, StepState
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.customs import people_of
@@ -45,13 +56,16 @@ from aerona.engine.mind.book import values_for
 from aerona.engine.mind.hooks import committed
 from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.folk import present_in
+from aerona.engine.primitives.folk import present_in, towns_of_people
 from aerona.engine.primitives.knowledge import branch_level
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.stats import put_stat, stat_or
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 
 WITNESSES = 3
+SHAKING = {EngineKind.EARTHQUAKE: MishapKind.QUAKE, EngineKind.FLOOD: MishapKind.FLOOD}
 YOUNG = having(LIFE_STAGE_TRAITS, LifeStageTrait.GROWING)
 WARDS = having(CHARM_POWER_TRAITS, CharmPowerTrait.WARDS)
 HEALTH = frozenset({LuckReach.HEALTH})
@@ -91,6 +105,8 @@ REACHES: Mapping[MishapKind, frozenset[LuckReach]] = total(
         MishapKind.THEFT_SUFFERED: JOURNEY,
         MishapKind.TOOL_BROKEN: HARVEST,
         MishapKind.NEAR_MISS: frozenset(LuckReach),
+        MishapKind.QUAKE: frozenset({LuckReach.BUILDING}),
+        MishapKind.FLOOD: HARVEST,
     },
 )
 
@@ -150,6 +166,16 @@ async def land_losses(ctx: TickContext, town: EntityRow, region: int | None) -> 
             select(OutbreakRow).where(OutbreakRow.region_entity_id == region, OutbreakRow.started_epoch == ctx.epoch).order_by(OutbreakRow.id)
         ):
             found.append(Befell(MishapKind.ILLNESS, "an outbreak of disease", None, outbreak.disease_entity_id))
+        for event_id, kind in (
+            await ctx.session.execute(
+                select(EntityRow.id, EntityRow.engine_kind)
+                .where(EntityRow.location_id == region, EntityRow.birth_epoch == ctx.epoch, EntityRow.engine_kind.in_(sorted(SHAKING)))
+                .order_by(EntityRow.id)
+            )
+        ).all():
+            found.append(
+                Befell(SHAKING[kind or EngineKind.FLOOD], "a quake in the region" if kind is EngineKind.EARTHQUAKE else "a flood in the region", None, event_id)
+            )
     herds = await ctx.session.scalar(
         select(GoodsFlowRow.quantity).where(
             GoodsFlowRow.epoch == ctx.epoch,
@@ -256,7 +282,50 @@ async def attribute(ctx: TickContext, town: EntityRow, row: MishapRow, people: E
     rng = ctx.rng(seed_of("mishap.blame", row.id))
     row.attribution = rng.weighted(choices, [weights[item] for item in choices]) if choices else MishapAttribution.CHANCE
     if "response" not in row.locked:
-        row.response = RESPONSES[row.attribution]
+        row.response = await response_to(ctx, town, row)
+
+
+async def response_to(ctx: TickContext, town: EntityRow, row: MishapRow) -> MishapResponse:
+    table = ctx.rules.mishaps
+    if row.attribution is None:
+        return MishapResponse.NOTHING
+    if row.victim_node_id is not None:
+        repeated = await ctx.session.scalar(
+            select(func.count())
+            .select_from(MishapRow)
+            .where(
+                MishapRow.settlement_entity_id == town.id,
+                MishapRow.victim_node_id == row.victim_node_id,
+                MishapRow.epoch >= ctx.epoch - table.epochs(table.move_memory_years),
+            )
+        )
+        if int(repeated or 0) >= table.move_after:
+            return MishapResponse.MOVE_AWAY
+    if row.cause_node_id is not None and row.attribution in BLAMING:
+        return MishapResponse.COMPENSATION
+    return RESPONSES[row.attribution]
+
+
+async def move_away(ctx: TickContext, town: EntityRow, victim: EntityRow) -> None:
+    people = await people_of(ctx.session, town)
+    neighbours = [town_id for town_id in await towns_of_people(ctx.session, people.id if people is not None else None) if town_id != town.id]
+    if victim.entity_type is not EntityType.MORTAL or not neighbours:
+        return
+    victim.location_id = ctx.rng(seed_of("mishap.move", victim.id, ctx.epoch)).pick(neighbours)
+
+
+async def seek_compensation(ctx: TickContext, town: EntityRow, row: MishapRow) -> None:
+    table = ctx.rules.mishaps
+    blamed = await ctx.session.get(EntityRow, row.cause_node_id) if row.cause_node_id is not None else None
+    if blamed is None or held(blamed.id) or row.victim_node_id is None:
+        return
+    victim = await ctx.session.get(EntityRow, row.victim_node_id)
+    owed = min(stat_or(blamed, "wealth", 0), table.compensation_wealth)
+    if victim is not None and owed > 0 and ctx.rng(seed_of("mishap.pay", row.id)).chance(table.compensation_paid_pct):
+        put_stat(ctx.rules, blamed, "wealth", stat_or(blamed, "wealth", 0) - owed)
+        put_stat(ctx.rules, victim, "wealth", stat_or(victim, "wealth", 0) + owed)
+        return
+    await change_relation(ctx, town.id, blamed.id, -table.scheme_opinion, MemoryKind.ILL_WILL, note="refused amends for a misfortune")
 
 
 async def answer(ctx: TickContext, town: EntityRow, row: MishapRow, tally: MishapTally) -> None:
@@ -267,6 +336,12 @@ async def answer(ctx: TickContext, town: EntityRow, row: MishapRow, tally: Misha
         return
     if row.response in ANSWER_MISHAP_RESPONSES and profile is not None and not is_held(profile, "stress"):
         profile.stress = clamp_int(profile.stress - table.rite_calm, 0, PERCENT)
+    if row.attribution is MishapAttribution.SELF and profile is not None and not is_held(profile, "stress"):
+        profile.stress = clamp_int(profile.stress + table.self_guilt, 0, PERCENT)
+    if row.response is MishapResponse.MOVE_AWAY and victim is not None:
+        await move_away(ctx, town, victim)
+    if row.response is MishapResponse.COMPENSATION:
+        await seek_compensation(ctx, town, row)
     if row.response is MishapResponse.OFFERING and profile is not None and not is_held(profile, "loyalty_god"):
         profile.loyalty_god = clamp_int(profile.loyalty_god + table.offering_loyalty, 0, PERCENT)
     if row.response is MishapResponse.PURIFICATION and victim is not None and victim.entity_type is EntityType.MORTAL:
@@ -349,6 +424,12 @@ async def bind_affection(ctx: TickContext, bearer: int, love: tuple[bool, int] |
         return
     if ctx.rng(f"charm.love.{bearer}.{target.id}.{ctx.epoch}").chance(force):
         await afflict(ctx, target, PackageKind.CHARM, Transmission.RITE, source_node_id=bearer)
+        await record(
+            ctx,
+            "charm.bound",
+            roles={IncidentRole.ACTOR: bearer, IncidentRole.TARGET: target.id},
+            steps=(StepDraft(StepAction.BIND, actor=bearer, target=target.id, states=((target.id, StepState.CHARMED),)),),
+        )
 
 
 async def seed_luck(ctx: TickContext, people: EntityRow, tally: MishapTally) -> None:

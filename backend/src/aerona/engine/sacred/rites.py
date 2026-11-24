@@ -2,21 +2,24 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.sacred import LATER_SACRAMENTS, SHARED_MEAL_AFTER
 from aerona.catalog.sacred import SACRAMENT_GUARDS, STATE_MODELS, STRATUM_MODELS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.discovery import TheoryProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, CultOfficeRow, CultTenetRow, ReincarnationRow, SoulJudgementRow, SpiritProfileRow
 from aerona.db.tables.folkways import PurityRow
 from aerona.db.tables.mind import DreamRow
+from aerona.db.tables.renown import DeedRow
 from aerona.db.tables.sacred import DoctrineAfterlifeRow, DoctrineSacramentRow, FaithClimateRow, SacramentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.eras import EraChannel
-from aerona.domain.enums.faith import AfterlifeState, JudgementDoctrine, TenetKind
+from aerona.domain.enums.faith import AfterlifeState, BindingKind, JudgementDoctrine, TenetKind
 from aerona.domain.enums.folkways import PurityState
 from aerona.domain.enums.mind import DreamKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -44,6 +47,8 @@ MODEL_BY_TENET = (
     (TenetKind.SOULS_REST, AfterlifeModel.COMMON_REALM),
 )
 
+LATER_SACRAMENTS_FIXUP = "sacraments.w52_deepening"
+
 
 @dataclass
 class RiteTally:
@@ -69,11 +74,11 @@ async def churches(ctx: TickContext) -> list[int]:
     )
 
 
-async def teach_sacraments(ctx: TickContext, cult_id: int, tally: RiteTally) -> None:
+async def teach_sacraments(ctx: TickContext, cult_id: int, tally: RiteTally, *, later: frozenset[SacramentKind] = frozenset()) -> None:
     taught = set(await ctx.session.scalars(select(DoctrineSacramentRow.kind).where(DoctrineSacramentRow.cult_entity_id == cult_id)))
-    if taught:
+    if taught and not later:
         return
-    for kind in SacramentKind:
+    for kind in [kind for kind in SacramentKind if kind not in taught and (not taught or kind in later)]:
         ctx.session.add(
             DoctrineSacramentRow(
                 cult_entity_id=cult_id, kind=kind, protection=SACRAMENT_GUARDS[kind], strength=ctx.rules.sacraments.strength, since_epoch=ctx.epoch, locked=[]
@@ -110,13 +115,23 @@ async def due_rites(ctx: TickContext) -> list[tuple[EntityRow, SacramentKind]]:
         (row, SacramentKind.ORDINATION)
         for row in await ctx.session.scalars(mortals.where(EntityRow.id.in_(clergy), EntityRow.id.not_in(ordained)).order_by(EntityRow.id))
     )
+    shamed = select(DeedRow.doer_node_id).where(DeedRow.epoch == ctx.epoch, DeedRow.act.is_not(None), DeedRow.magnitude < 0)
+    penitent = select(SacramentRow.mortal_entity_id).where(SacramentRow.kind == SacramentKind.PENANCE, SacramentRow.epoch == ctx.epoch)
+    found.extend(
+        (row, SacramentKind.PENANCE)
+        for row in await ctx.session.scalars(mortals.where(EntityRow.id.in_(shamed), EntityRow.id.not_in(penitent)).order_by(EntityRow.id))
+    )
+    found.extend((row, SacramentKind.COMMUNION) for row, kind in list(found) if kind in SHARED_MEAL_AFTER)
     return found
 
 
 async def keep_sacraments(ctx: TickContext, tally: RiteTally) -> None:
+    later = frozenset() if await ctx.session.get(AppliedFixupRow, LATER_SACRAMENTS_FIXUP) is not None else LATER_SACRAMENTS
     for cult_id in await churches(ctx):
         if not held(cult_id):
-            await teach_sacraments(ctx, cult_id, tally)
+            await teach_sacraments(ctx, cult_id, tally, later=later)
+    if later:
+        ctx.session.add(AppliedFixupRow(key=LATER_SACRAMENTS_FIXUP, result={"sacraments": sorted(kind.value for kind in later)}))
     await ctx.session.flush()
     plagued = await plagued_regions(ctx.session)
     for mortal, kind in await due_rites(ctx):
@@ -135,11 +150,13 @@ async def keep_sacraments(ctx: TickContext, tally: RiteTally) -> None:
 
 async def taught_model(ctx: TickContext, cult_id: int) -> AfterlifeModel:
     tenets = set(await ctx.session.scalars(select(CultTenetRow.tenet).where(CultTenetRow.cult_entity_id == cult_id)))
+    remembered = await ctx.session.get(CultDoctrineRow, cult_id)
+    if remembered is not None and remembered.judgement is JudgementDoctrine.REMEMBRANCE:
+        return AfterlifeModel.AMONG_LIVING
     for tenet, model in MODEL_BY_TENET:
         if tenet in tenets:
             return model
-    doctrine = await ctx.session.get(CultDoctrineRow, cult_id)
-    return AfterlifeModel.OBLIVION if doctrine is not None and doctrine.judgement is JudgementDoctrine.NONE else AfterlifeModel.JUDGED_REALMS
+    return AfterlifeModel.OBLIVION if remembered is not None and remembered.judgement is JudgementDoctrine.NONE else AfterlifeModel.JUDGED_REALMS
 
 
 async def teach_afterlives(ctx: TickContext, tally: RiteTally) -> None:
@@ -204,6 +221,10 @@ async def shock_souls(ctx: TickContext, tally: RiteTally) -> None:
         doctrine = await taught_to(ctx, mortal_id)
         if doctrine is None or doctrine.aligned or doctrine.model is actual or held(doctrine.cult_entity_id):
             continue
+        if doctrine.model is AfterlifeModel.AMONG_LIVING and actual is AfterlifeModel.WANDERING:
+            if "doubt" not in doctrine.locked:
+                doctrine.doubt = clamp_int(doctrine.doubt - table.testimony_doubt, 0, PERCENT)
+            continue
         spirit = await living_entity(ctx.session, spirit_id)
         if spirit is not None and not held(spirit.id):
             set_stats(spirit, unrest=clamp_int(stat_or(spirit, "unrest", 0) + table.shock_unrest, 0, PERCENT))
@@ -242,8 +263,27 @@ async def weigh_doubt(ctx: TickContext) -> None:
         doctrine.updated_epoch = ctx.epoch
 
 
+async def follow_namers(ctx: TickContext) -> int:
+    followed = 0
+    rows = await ctx.session.scalars(select(SpiritProfileRow).where(SpiritProfileRow.binding == BindingKind.NAME).order_by(SpiritProfileRow.spirit_entity_id))
+    for row in list(rows):
+        spirit = await living_entity(ctx.session, row.spirit_entity_id)
+        namer = await living_entity(ctx.session, row.bound_entity_id) if row.bound_entity_id is not None else None
+        if spirit is None or held(spirit.id):
+            continue
+        if namer is None:
+            if "binding" not in row.locked:
+                row.binding, row.bound_entity_id = BindingKind.NONE, None
+            continue
+        if spirit.location_id != namer.location_id:
+            spirit.location_id = namer.location_id
+            followed += 1
+    return followed
+
+
 async def keep_afterlife_belief(ctx: TickContext, tally: RiteTally) -> None:
     await teach_afterlives(ctx, tally)
+    ctx.count("spirits_followed", await follow_namers(ctx))
     await shock_souls(ctx, tally)
     await hear_the_dead(ctx, tally)
     await weigh_doubt(ctx)

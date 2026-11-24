@@ -32,3 +32,6 @@ class WorldViewRules:
     terrain_attrition_pct: int = rule(
         5, 0, 100, C, "Share of a land army lost each epoch it marches on a world whose wars are fought at sea, in the sky or by boarding (%)"
     )
+    living_light_pct: int = rule(50, 0, 200, C, "Share of a harvest under a star a land lit by species and peoples that glow gathers (%)")
+    made_light_pct: int = rule(70, 0, 200, C, "Share of a harvest under a star a land lit by works gathers (%)")
+    name_literacy_from: int = rule(30, 0, 100, C, "Literacy of a people from which its written names keep its towns where a world holds only what is named")

@@ -70,6 +70,8 @@ const FLAVOUR_KEYS = [
   'numbing',
   'smoky',
   'fermented',
+  'astringent',
+  'rich',
 ] as const
 
 function useGoodNames(worldId: number | null) {

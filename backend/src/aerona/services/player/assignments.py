@@ -24,8 +24,9 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import AGENT_TYPES, COMMUNITY_TYPES, EngineKind, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.limits import MAX_STARS, MIN_STARS, PERCENT_MAX, PERCENT_MIN
-from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.modifier import IncidentRole, ModifierOp, ModifierSource
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.society import CreatureTrait, NaturalLaw, ResourceMechanic
 from aerona.domain.enums.son import Passion, SonStatus, Stat
@@ -34,9 +35,11 @@ from aerona.domain.models.entity_stats import LegendStats
 from aerona.domain.models.stats import PASSION_CEILING, PASSION_FLOOR, STAT_CEILING, STAT_FLOOR
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.resources import set_mechanics
+from aerona.engine.environment.levels import level_fault, unfit_below
 from aerona.engine.gods.progress import star_requirement
 from aerona.engine.phases.world_balance import balance_sons
 from aerona.engine.primitives.faith import worship_creator
+from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.renames import rewrite_name
 from aerona.engine.primitives.stats import set_stats, stat
@@ -94,9 +97,13 @@ class SonImagePrompt(Command):
     image_prompt: str = ""
 
 
+UNFIT_HOLD = "placed by the Creator where no one can dwell"
+
+
 class MoveEntity(Command):
     entity_id: int
     location_id: int
+    stratum: UndergroundStratum | None = None
 
 
 class AssignPatron(Command):
@@ -353,8 +360,14 @@ async def move_entity(scope: PlayerScope, command: MoveEntity) -> Effect:
         raise ValidationFailedError(
             f"{an(spoken(target.entity_type), capital=True)} cannot be placed inside {an(spoken(location.entity_type))}; possible: {allowed}."
         )
+    fault = await level_fault(scope.session, location, command.stratum, target.entity_type, dwelling=False)
+    if fault is not None:
+        raise ValidationFailedError(f"{fault[0].upper()}{fault[1:]}.")
     epoch = await scope.epoch()
     await EntityRepository(scope.session).move(target, location.id, epoch)
+    target.stratum = command.stratum
+    if unfit_below(command.stratum, target.entity_type):
+        await add_modifier(scope.session, ModifierDraft(target.id, "stratum", ModifierOp.ADD, 0, ModifierSource.PIN, UNFIT_HOLD, start_epoch=epoch))
     target.map_x = None
     target.map_y = None
     for child in await _descendants(scope, target.id):
@@ -368,12 +381,15 @@ async def move_entity(scope: PlayerScope, command: MoveEntity) -> Effect:
     message = (
         await record(
             ctx,
-            "player.entity.moved",
+            "player.entity.moved" if command.stratum is None else "player.entity.moved_below",
             roles={IncidentRole.TARGET: target.id, IncidentRole.PLACE: location.id, IncidentRole.AUTHORITY: creator.id},
+            facts={} if command.stratum is None else {"stratum": command.stratum},
             place=location.id,
             kind=ChronicleKind.CREATOR_HAND,
         )
     ).text
+    if unfit_below(command.stratum, target.entity_type):
+        message = f"{message} No one can dwell there, so its level is held against the world."
     return Effect(message, target.id)
 
 

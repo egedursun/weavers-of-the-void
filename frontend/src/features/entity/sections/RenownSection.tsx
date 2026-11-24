@@ -63,7 +63,14 @@ const ANYONE = [
 const PLACES = ['settlement', 'people', 'polity', 'region']
 const MORTALS = ['mortal']
 const ABOUT = ['place', 'region', 'prophecy']
-const STANDINGS = ['prestige', 'piety', 'dread', 'tyranny'] as const
+const STANDINGS = [
+  'prestige',
+  'piety',
+  'dread',
+  'tyranny',
+  'trust',
+  'learning',
+] as const
 const HARMFUL = new Set([
   'cruelty',
   'trickery',

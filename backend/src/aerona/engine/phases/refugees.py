@@ -77,7 +77,7 @@ async def shelter_score(ctx: TickContext, bonds: BondIndex, atlas: RegionAtlas, 
     origin_god = await patron_node(ctx.session, origin)
     if origin_god is not None and origin_god == await patron_node(ctx.session, host):
         score += life.refugee_weight_god
-    if not atlas.same_region(origin.id, host.id):
+    if not atlas.same_cell(origin.id, host.id):
         score += life.refugee_weight_other_region
     score += await closeness(ctx.session, origin.id, host.id) * ctx.rules.culture_drift.refugee_kinship_weight
     return score

@@ -27,6 +27,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.water import CoastRow
 from aerona.db.write_guard import held as frozen
 from aerona.db.write_guard import unheld
+from aerona.domain.enums.agrarian import NutrientKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.dominion import DivineScale
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityType
@@ -557,6 +558,7 @@ async def run_backfills(ctx: TickContext) -> None:
     "table.cosmic_features",
     "table.cosmos",
     "table.custom_kinds",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.districts",
@@ -677,8 +679,9 @@ async def environment_survey(ctx: TickContext) -> None:
     await run_backfills(ctx)
 
 
-def decay_scars(rules: Rules, env: RegionEnvironmentRow) -> list[ScarKind]:
-    decay = {kind: spec.decay(rules) for kind, spec in SCARS.items()}
+def decay_scars(rules: Rules, env: RegionEnvironmentRow, seeds: int = 0) -> list[ScarKind]:
+    regrowth = 1 + seeds / PERCENT * rules.nutrients.seed_regrowth_pct / PERCENT
+    decay = {kind: round_half_up(spec.decay(rules) * regrowth) for kind, spec in SCARS.items()}
     kept = {
         key: depth if f"scar.{key}" in env.locked else depth - decay[ScarKind(key)]
         for key, depth in env.scars.items()
@@ -817,7 +820,7 @@ async def environment_derive(ctx: TickContext) -> None:
         context = contexts.get(region.id)
         if env is None or context is None:
             continue
-        for healed in [] if frozen(region.id) else decay_scars(rules, env):
+        for healed in [] if frozen(region.id) else decay_scars(rules, env, stocks.get(region.id, {}).get(NutrientKind.SEED_BANK, 0)):
             await record(ctx, "scar.healed", roles={IncidentRole.PLACE: env.entity_id}, facts={"scar": healed}, place=env.entity_id)
         if "magic_density" not in env.locked:
             env.magic_density = clamp_int(stat_or(region, "magic", env.magic_density), 0, PERCENT)
@@ -996,6 +999,7 @@ def land_sizes(atlas: RegionAtlas, region_ids: list[int]) -> dict[int, float]:
     "table.bonds",
     "table.calendars",
     "table.cosmos",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
@@ -1602,6 +1606,7 @@ async def crown_nexus(ctx: TickContext, web: LeyWeb, grounds: dict[int, RegionEn
     "region.magic",
     "structure.function",
     "table.applied_fixups",
+    "table.deep_passages",
     "table.entities",
     "table.ley_lines",
     "table.node_births",

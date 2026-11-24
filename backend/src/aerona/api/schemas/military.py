@@ -5,6 +5,7 @@ from aerona.api.schemas.records import NodeRef
 from aerona.api.schemas.wars import WarSummary
 from aerona.domain.enums.demography import MartialStyle
 from aerona.domain.enums.environment import TerrainKind, WeatherKind
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.military import (
     ArmourType,
     BattlePhase,
@@ -82,6 +83,8 @@ class MovementView(ApiModel):
     season: int
     from_region: NodeRef | None
     to_region: NodeRef | None
+    from_stratum: UndergroundStratum | None
+    to_stratum: UndergroundStratum | None
     stance: Stance
     supply_days: int
     attrition: int
@@ -104,6 +107,8 @@ class ArmyWorksView(ApiModel):
 
 class ArmyCard(ApiModel):
     army: NodeRef | None
+    stratum: UndergroundStratum | None
+    battle_stratum: UndergroundStratum | None
     owner: NodeRef | None
     commander: NodeRef | None
     war_id: int | None
@@ -209,6 +214,7 @@ class AimView(ApiModel):
 
 class OccupationView(ApiModel):
     region: NodeRef | None
+    stratum: UndergroundStratum | None
     occupier: NodeRef | None
     war_id: int | None
     since_epoch: int
@@ -219,6 +225,8 @@ class OccupationView(ApiModel):
 class FrontView(ApiModel):
     first_region: NodeRef | None
     second_region: NodeRef | None
+    first_stratum: UndergroundStratum | None
+    second_stratum: UndergroundStratum | None
     since_epoch: int
     last_epoch: int
 

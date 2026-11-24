@@ -1,10 +1,12 @@
 import {
+  type LucideIcon,
   Anchor,
   Ban,
   Bird,
   BookOpen,
   Box,
   Brush,
+  Bug,
   Building2,
   Clock,
   Clover,
@@ -15,9 +17,11 @@ import {
   Cpu,
   Crosshair,
   Crown,
+  Drama,
   Droplet,
   Droplets,
   Ear,
+  Egg,
   Eye,
   Fish,
   Flame,
@@ -26,11 +30,14 @@ import {
   Gem,
   Grid3x3,
   Hammer,
+  HandCoins,
+  Hand,
   Handshake,
   Hash,
   Heart,
   HeartPulse,
   Hourglass,
+  KeySquare,
   Layers,
   Leaf,
   Link,
@@ -38,6 +45,7 @@ import {
   Music,
   Orbit,
   Package,
+  Paperclip,
   PawPrint,
   PenTool,
   Pill,
@@ -45,14 +53,18 @@ import {
   Sailboat,
   Scale,
   ScanEye,
+  ScanFace,
   Scroll,
   Search,
+  Share2,
   Shell,
   Ship,
   Sigma,
+  Shirt,
   Sparkle,
   Sparkles,
   Sprout,
+  Stethoscope,
   Sun,
   Swords,
   Tag,
@@ -61,13 +73,15 @@ import {
   TestTube,
   TriangleAlert,
   Trophy,
-  type LucideIcon,
   Waves,
   Wheat,
   Wrench,
   Zap,
-  KeySquare,
-  Shirt,
+  Clock1,
+  Tally1,
+  Earbuds,
+  Mic,
+  Fingerprint,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -96,6 +110,12 @@ export const GROUNDS: Record<Schema['CatchGround'], Named> = {
   shore_gathering: { label: 'Shore gathering', icon: Shell, tone: 'success' },
   diving: { label: 'Diving the beds', icon: Gem, tone: 'gold' },
   fish_ponds: { label: 'Fish ponds', icon: Droplets, tone: 'info' },
+  egg_gathering: { label: 'Gathering eggs', icon: Egg, tone: 'gold' },
+  insect_gathering: {
+    label: 'Gathering from nests and swarms',
+    icon: Bug,
+    tone: 'warning',
+  },
 }
 
 export const GEAR: Record<Schema['Gear'], Named> = {
@@ -113,6 +133,8 @@ export const GEAR: Record<Schema['Gear'], Named> = {
     icon: PawPrint,
     tone: 'verdigris',
   },
+  dredges: { label: 'Dredges', icon: Sailboat, tone: 'danger' },
+  decoys: { label: 'Decoys', icon: Bird, tone: 'info' },
 }
 
 export const CATCH_RIGHTS: Record<Schema['CatchRight'], Named> = {
@@ -133,6 +155,8 @@ export const PRODUCTS: Record<Schema['ChemicalProduct'], Named> = {
   glaze: { label: 'Glaze', icon: Sparkle, tone: 'gold' },
   preservative: { label: 'Preservative', icon: Package, tone: 'success' },
   acid: { label: 'Acid', icon: TestTube, tone: 'warning' },
+  adhesive: { label: 'Adhesive', icon: Paperclip, tone: 'muted' },
+  solvent: { label: 'Solvent', icon: FlaskConical, tone: 'warning' },
 }
 
 export const COVERS: Record<Schema['InsuranceCover'], Named> = {
@@ -142,6 +166,8 @@ export const COVERS: Record<Schema['InsuranceCover'], Named> = {
   crop: { label: 'Crop', icon: Wheat, tone: 'gold' },
   vessel: { label: 'Vessel', icon: Sailboat, tone: 'info' },
   livestock: { label: 'Livestock', icon: Rabbit, tone: 'verdigris' },
+  health: { label: 'Health', icon: Stethoscope, tone: 'success' },
+  ransom: { label: 'Ransom', icon: HandCoins, tone: 'warning' },
 }
 
 export const RIGHT_KINDS: Record<Schema['RightKind'], Named> = {
@@ -156,6 +182,8 @@ export const RIGHT_KINDS: Record<Schema['RightKind'], Named> = {
   market_privilege: { label: 'Market privilege', icon: Scale, tone: 'success' },
   recipe: { label: 'Recipe', icon: CookingPot, tone: 'warning' },
   technique: { label: 'Technique', icon: Cog, tone: 'info' },
+  likeness: { label: 'Likeness', icon: ScanFace, tone: 'info' },
+  performance: { label: 'Performance', icon: Drama, tone: 'gold' },
 }
 
 export const ACQUIRED: Record<Schema['RightAcquired'], Named> = {
@@ -167,6 +195,7 @@ export const ACQUIRED: Record<Schema['RightAcquired'], Named> = {
   granted: { label: 'Granted', icon: Scroll, tone: 'gold' },
   won: { label: 'Won in a contest', icon: Trophy, tone: 'success' },
   wed: { label: 'Passed with a union', icon: Heart, tone: 'verdigris' },
+  shared: { label: 'Held in common', icon: Share2, tone: 'success' },
 }
 
 export const AIDS: Record<Schema['AssistiveAid'], Named> = {
@@ -176,6 +205,8 @@ export const AIDS: Record<Schema['AssistiveAid'], Named> = {
   hearing_horn: { label: 'Hearing horn', icon: Ear, tone: 'warning' },
   cane: { label: 'Cane', icon: Footprints, tone: 'muted' },
   microscope: { label: 'Microscope', icon: Microscope, tone: 'info' },
+  hearing_aid: { label: 'Hearing aid', icon: Earbuds, tone: 'info' },
+  tactile_script: { label: 'Script read by touch', icon: Hand, tone: 'info' },
 }
 
 export const CLOCKS: Record<Schema['ClockKind'], Named> = {
@@ -187,12 +218,13 @@ export const CLOCKS: Record<Schema['ClockKind'], Named> = {
   astronomical: { label: 'Astronomical clock', icon: Orbit, tone: 'gold' },
   chronometer: { label: 'Chronometer', icon: Compass, tone: 'info' },
   electronic: { label: 'Electronic clock', icon: Cpu, tone: 'verdigris' },
+  fire_clock: { label: 'Fire clock', icon: Clock1, tone: 'gold' },
 }
 
 export const NOTATIONS: Record<Schema['Notation'], Named> = {
   additive: { label: 'Added up', icon: Hash, tone: 'muted' },
   positional: { label: 'By place', icon: Grid3x3, tone: 'gold' },
-  tally: { label: 'Tallies', icon: Hash, tone: 'muted' },
+  tally: { label: 'Tallies', icon: Tally1, tone: 'muted' },
   symbolic: { label: 'Signs for unknowns', icon: Sigma, tone: 'verdigris' },
 }
 
@@ -218,4 +250,7 @@ export const TOKENS: Record<Schema['LinkToken'], Named> = {
   fragment: { label: 'Fragment', icon: Box, tone: 'warning' },
   true_name: { label: 'True name', icon: KeySquare, tone: 'gold' },
   possession: { label: 'A kept possession', icon: Shirt, tone: 'muted' },
+  voice: { label: 'Voice', icon: Mic, tone: 'muted' },
+  footprint: { label: 'Footprint', icon: Fingerprint, tone: 'muted' },
+  birth_record: { label: 'Record of birth', icon: Scroll, tone: 'muted' },
 }

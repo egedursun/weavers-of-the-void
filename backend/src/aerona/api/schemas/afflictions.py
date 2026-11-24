@@ -1,5 +1,5 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.affliction import ChangeSign, CharmKind, CureKind, PackageKind, Transmission, Visibility
+from aerona.domain.enums.affliction import ChangeSign, CharmKind, CureKind, ForgetScope, PackageKind, SleepUntil, Transmission, Visibility
 from aerona.domain.enums.body import BodyFunction, BodyPlan, ConditionKind
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import NeedKind, ValueAxis
@@ -72,6 +72,9 @@ class BearerAfflictionView(ApiModel):
     charm_target_name: str | None
     charm_kind: CharmKind | None
     charm_strength: int | None
+    ageing_rate_pct: int | None
+    forget_scope: ForgetScope | None
+    sleep_until: SleepUntil | None
 
 
 class AfflictionsView(ApiModel):

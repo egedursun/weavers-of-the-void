@@ -20,6 +20,7 @@ class AgentSpec:
     soil: int
     objects: int
     cold: int
+    spreads: bool = True
 
 
 AGENTS: MappingProxyType[DiseaseAgent, AgentSpec] = total(
@@ -31,11 +32,13 @@ AGENTS: MappingProxyType[DiseaseAgent, AgentSpec] = total(
         A.PARASITE: AgentSpec("Parasite", frozenset({K.ANTIPARASITIC, K.SURGERY, K.HERBAL, K.POWER}), 70, 50, 10, 20),
         A.PRION: AgentSpec("Prion", frozenset({K.DESIGNED, K.POWER}), 30, 80, 80, 90),
         A.TOXIN: AgentSpec("Toxin", frozenset({K.ANTITOXIN, K.HERBAL, K.REST_AND_CARE}), 50, 30, 40, 70),
-        A.DEFICIENCY: AgentSpec("Deficiency", frozenset({K.NUTRITIONAL}), 0, 0, 0, 0),
+        A.DEFICIENCY: AgentSpec("Deficiency", frozenset({K.NUTRITIONAL, K.DIET}), 0, 0, 0, 0, spreads=False),
         A.SPIRIT: AgentSpec("Spirit", frozenset({K.EXORCISM, K.RITE, K.POWER}), 0, 0, 20, 100),
         A.CURSE: AgentSpec("Curse", frozenset({K.RITE, K.EXORCISM, K.POWER}), 0, 0, 60, 100),
         A.MADE: AgentSpec("Made agent", frozenset({K.DESIGNED, K.POWER}), 40, 30, 40, 50),
         A.UNKNOWN: AgentSpec("Unknown", frozenset({K.REST_AND_CARE}), 30, 30, 30, 50),
+        A.HEREDITARY: AgentSpec("Hereditary", frozenset({K.DESIGNED, K.REST_AND_CARE}), 0, 0, 0, 0, spreads=False),
+        A.AUTOIMMUNE: AgentSpec("Body against itself", frozenset({K.REST_AND_CARE, K.DIET, K.DESIGNED}), 0, 0, 0, 0, spreads=False),
     },
 )
 
@@ -78,6 +81,10 @@ CURES: Mapping[CureClass, CureSpec] = total(
         K.EXORCISM: CureSpec("Exorcism", None, overused=False, resistance=ordinary_resistance),
         K.POWER: CureSpec("Power", None, overused=False, resistance=ordinary_resistance),
         K.DESIGNED: CureSpec("Designed", None, overused=False, resistance=ordinary_resistance),
+        K.IMMUNISATION: CureSpec(
+            "Immunisation", lambda rules: rules.cures.immunisation_level, overused=False, resistance=ordinary_resistance, worked="disease.cure_worked"
+        ),
+        K.DIET: CureSpec("Diet", lambda rules: 0, overused=False, resistance=ordinary_resistance),
     },
 )
 CURE_LABELS = MappingProxyType({cure: spec.label for cure, spec in CURES.items()})

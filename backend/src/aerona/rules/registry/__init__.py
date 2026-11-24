@@ -780,6 +780,9 @@ from aerona.rules.registry.w52_agent_f import CaptivesRules, CrewsRules
 from aerona.rules.registry.w52_agent_g import CharmRules, HuntRules, LuckRules, MysticVisionRules, PetitionRules, RebirthRules
 from aerona.rules.registry.w52_agent_h import GreatPersonsRules
 from aerona.rules.registry.w52_agent_i import GiftedRules
+from aerona.rules.registry.w52_agent_l import HonourRules, LifeCourseRules, PsycheRules
+from aerona.rules.registry.w52_agent_m import DeepenedRules
+from aerona.rules.registry.w52_agent_p import RuinedGroundRules
 from aerona.rules.registry.war_conduct import WarConductRules
 from aerona.rules.registry.war_depth import (
     BattleMagicRules,
@@ -1245,6 +1248,9 @@ class Rules:
     luck: LuckRules = field(default_factory=LuckRules)
     charms: CharmRules = field(default_factory=CharmRules)
     hunts: HuntRules = field(default_factory=HuntRules)
+    mind: PsycheRules = field(default_factory=PsycheRules)
+    life_course: LifeCourseRules = field(default_factory=LifeCourseRules)
+    honour: HonourRules = field(default_factory=HonourRules)
     currencies: CurrencyRules = field(default_factory=CurrencyRules)
     lore_trade: LoreTradeRules = field(default_factory=LoreTradeRules)
     claims: ClaimRules = field(default_factory=ClaimRules)
@@ -1503,6 +1509,8 @@ class Rules:
     captives: CaptivesRules = field(default_factory=CaptivesRules)
     gifted: GiftedRules = field(default_factory=GiftedRules)
     great_persons: GreatPersonsRules = field(default_factory=GreatPersonsRules)
+    deepened: DeepenedRules = field(default_factory=DeepenedRules)
+    ruined_ground: RuinedGroundRules = field(default_factory=RuinedGroundRules)
     art_market: ArtMarketRoleRules = field(default_factory=ArtMarketRoleRules)
     rights: CulturalRightsRules = field(default_factory=CulturalRightsRules)
     clubs: ClubRules = field(default_factory=ClubRules)

@@ -46,7 +46,12 @@ function ForgePower({ view }: { view: SonPublic }) {
 export function SonPowers({ view }: { view: SonPublic }) {
   const { entityType } = useLabels()
   return (
-    <Section title='Powers' level={3} actions={<ForgePower view={view} />}>
+    <Section
+      id='section-son-powers'
+      title='Powers'
+      level={3}
+      actions={<ForgePower view={view} />}
+    >
       {view.powers.length === 0 ? (
         <div className='flex min-w-0 items-center gap-2 rounded-md p-3 sealed-well'>
           <Lock

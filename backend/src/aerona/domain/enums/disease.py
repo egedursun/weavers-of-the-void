@@ -39,6 +39,8 @@ class SpreadPath(StrEnum):
     MIGRATION = "migration"
     GATHERING = "gathering"
     WATERWAY = "waterway"
+    LIVESTOCK = "livestock"
+    WATER_SUPPLY = "water_supply"
 
 
 class CureSource(StrEnum):

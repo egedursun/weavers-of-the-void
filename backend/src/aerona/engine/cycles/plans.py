@@ -29,6 +29,7 @@ from aerona.engine.cycles.plan_works import (
     fulfil_programme,
     fulfil_realm,
     fulfil_reform,
+    fulfil_restoration,
 )
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.economy.purse import take_coin
@@ -298,6 +299,7 @@ FULFIL: Mapping[LongPlanKind, Fulfil] = total(
         LongPlanKind.LINE: fulfil_line,
         LongPlanKind.REFORM: fulfil_reform,
         LongPlanKind.EXPLORATION: fulfil_exploration,
+        LongPlanKind.RESTORATION: fulfil_restoration,
     },
 )
 

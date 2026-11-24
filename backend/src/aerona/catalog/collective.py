@@ -62,6 +62,10 @@ CROWD_FEELINGS: Mapping[CrowdFeeling, FeelingSpec] = total(
         ),
         C.GRIEF: FeelingSpec("Grief", EmotionTrait.GRIEVING, lambda rules: rules.collective.grief_cut, lambda rules: rules.collective.grief_decay),
         C.HOPE: FeelingSpec("Hope", EmotionTrait.HOPEFUL, lambda rules: rules.collective.hope_cut, lambda rules: rules.collective.hope_decay),
+        C.JOY: FeelingSpec("Joy", EmotionTrait.STIRRED, lambda rules: rules.collective.joy_cut, lambda rules: rules.collective.joy_decay),
+        C.SOLIDARITY: FeelingSpec(
+            "Solidarity", EmotionTrait.HOPEFUL, lambda rules: rules.collective.solidarity_cut, lambda rules: rules.collective.solidarity_decay
+        ),
     },
 )
 TRIGGERS: Mapping[CollectiveTrigger, TriggerSpec] = total(
@@ -83,6 +87,8 @@ TRIGGERS: Mapping[CollectiveTrigger, TriggerSpec] = total(
         T.VICTORY: TriggerSpec(A.JUBILATION, (C.FERVOUR, C.HOPE), MobTarget.PALACE, "a victory", lambda rules: rules.collective.victory_push),
         T.GREAT_FUNERAL: TriggerSpec(A.PROCESSION, (C.GRIEF,), MobTarget.TEMPLE, "a great funeral", lambda rules: rules.collective.great_funeral_push),
         T.ELECTION: TriggerSpec(A.DEMONSTRATION, (C.ANGER, C.FERVOUR), MobTarget.PALACE, "an election", lambda rules: rules.collective.election_push),
+        T.PRICE_RISE: TriggerSpec(A.PETITION, (C.ANGER, C.SOLIDARITY), MobTarget.PALACE, "rising prices", lambda rules: rules.collective.price_rise_push),
+        T.ARREST: TriggerSpec(A.VIGIL, (C.ANGER, C.SOLIDARITY), MobTarget.PALACE, "an arrest", lambda rules: rules.collective.arrest_push),
     },
 )
 ACTS: Mapping[CollectiveActKind, ActSpec] = total(
@@ -130,6 +136,33 @@ ACTS: Mapping[CollectiveActKind, ActSpec] = total(
             turns_on=(C.GRIEF, C.FEAR),
             leaves=True,
         ),
+        A.VIGIL: ActSpec(
+            "kept a vigil",
+            C.SOLIDARITY,
+            CollectionKind.PROCESSION,
+            lambda rules: rules.collective.vigil_threshold,
+            harmless=True,
+            instead_of=frozenset({A.RIOT, A.LYNCHING}),
+            turns_on=(C.GRIEF, C.SOLIDARITY),
+        ),
+        A.OCCUPATION: ActSpec(
+            "held a place and would not leave it",
+            C.SOLIDARITY,
+            CollectionKind.MOVEMENT,
+            lambda rules: rules.collective.occupation_threshold,
+            instead_of=frozenset({A.STRIKE, A.REVOLT}),
+            turns_on=(C.ANGER, C.SOLIDARITY),
+            refuses_trade=True,
+        ),
+        A.PETITION: ActSpec(
+            "brought a petition to those who rule",
+            C.HOPE,
+            CollectionKind.PROCESSION,
+            lambda rules: rules.collective.petition_threshold,
+            harmless=True,
+            instead_of=frozenset({A.DEMONSTRATION, A.RIOT}),
+            turns_on=(C.HOPE, C.SOLIDARITY),
+        ),
     },
 )
 ACT_TEXT: Mapping[CollectiveActKind, str] = MappingProxyType({act: spec.text for act, spec in ACTS.items()})
@@ -159,6 +192,8 @@ FORMATIVE_SHIFTS = total(
         F.LIBERATION: ((V.LAW, 1), (V.HIERARCHY, -1)),
         F.SCHISM: ((V.PIETY, 1), (V.LOYALTY, -1)),
         F.LONG_SEASON: ((V.PERSEVERANCE, 1), (V.PIETY, 1)),
+        F.PEACE: ((V.LEISURE, 1), (V.MARTIAL, -1)),
+        F.PERSECUTION: ((V.KINSHIP, 1), (V.TRADITION, 1)),
     },
 )
 COLLECTION_FORMATIVE = MappingProxyType(

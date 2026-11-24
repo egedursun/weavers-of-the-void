@@ -14,6 +14,7 @@ import {
   Castle,
   Church,
   CircleCheck,
+  ClipboardList,
   Coins,
   Copy,
   Cpu,
@@ -21,9 +22,11 @@ import {
   DoorOpen,
   Drama,
   Droplet,
+  Droplets,
   Eye,
   EyeOff,
   Feather,
+  Fence,
   Fish,
   Flag,
   FlaskConical,
@@ -55,6 +58,8 @@ import {
   PartyPopper,
   PenLine,
   Radiation,
+  RefreshCw,
+  Repeat,
   Scale,
   ScrollText,
   Server,
@@ -68,13 +73,20 @@ import {
   Stethoscope,
   Sun,
   Swords,
+  Trees,
   TrendingUp,
   Trophy,
+  Undo2,
   UserPlus,
   Users,
   VolumeX,
   Vote,
   WandSparkles,
+  Banknote,
+  Building,
+  HourglassCog,
+  Route,
+  Users2,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -143,10 +155,11 @@ export const STANDINGS: Record<
   minor_power: { label: 'Minor power', icon: Shield, tone: 'muted' },
   client: { label: 'Client state', icon: Lock, tone: 'warning' },
   neutral: { label: 'Neutral', icon: Scale, tone: 'info' },
+  isolated: { label: 'Isolated', icon: Ban, tone: 'gold' },
 }
 
 export const OFFICES: Record<string, Named> = {
-  ruler: { label: 'Ruler', icon: Crown, tone: 'gold' },
+  ruler: { label: 'Ruler', icon: Castle, tone: 'gold' },
   heir_designate: { label: 'Heir designate', icon: Baby, tone: 'success' },
   regent: { label: 'Regent', icon: Hourglass, tone: 'verdigris' },
   chancellor: { label: 'Chancellor', icon: ScrollText, tone: 'info' },
@@ -176,6 +189,7 @@ export const OFFICES: Record<string, Named> = {
   },
   jester: { label: 'Court jester', icon: Drama, tone: 'gold' },
   warden: { label: 'Warden of the grounds', icon: Fish, tone: 'verdigris' },
+  censor: { label: 'Censor', icon: ClipboardList, tone: 'info' },
 }
 
 export const LAW_AREAS: Record<string, Named> = {
@@ -196,9 +210,11 @@ export const LAW_AREAS: Record<string, Named> = {
     icon: ScrollText,
     tone: 'gold',
   },
-  commerce: { label: 'Trade and contracts', icon: Coins, tone: 'gold' },
+  commerce: { label: 'Trade and contracts', icon: Banknote, tone: 'gold' },
   faith: { label: 'Faith and rites', icon: Sparkles, tone: 'verdigris' },
   labour: { label: 'Work and wages', icon: Hammer, tone: 'info' },
+  family: { label: 'Family', icon: Users2, tone: 'success' },
+  environment: { label: 'Environment', icon: Trees, tone: 'verdigris' },
 }
 
 export const LAW_KINDS: Record<string, string> = {
@@ -415,6 +431,7 @@ export const LEGITIMACY_BASES: Record<string, Named> = {
 }
 
 export const CLAIM_BASES: Record<string, Named> = {
+  prophecy: { label: 'By prophecy', icon: Eye, tone: 'verdigris' },
   inheritance: { label: 'By blood', icon: Crown, tone: 'gold' },
   marriage: { label: 'By marriage', icon: Heart, tone: 'danger' },
   conquest: { label: 'By conquest', icon: Swords, tone: 'danger' },
@@ -507,6 +524,18 @@ export const TREATY_KINDS: Record<string, Named & { plural: string }> = {
     icon: Radiation,
     tone: 'info',
   },
+  mutual_aid: {
+    label: 'Mutual aid',
+    plural: 'Pacts of mutual aid',
+    icon: HandHeart,
+    tone: 'success',
+  },
+  border_accord: {
+    label: 'Border accord',
+    plural: 'Border accords',
+    icon: Fence,
+    tone: 'info',
+  },
 }
 
 export const TREATY_STATUSES: Record<
@@ -519,7 +548,12 @@ export const TREATY_STATUSES: Record<
   broken: { label: 'Broken', icon: HeartCrack, tone: 'danger' },
   proposed: { label: 'Proposed', icon: PenLine, tone: 'gold' },
   rejected: { label: 'Rejected', icon: Ban, tone: 'muted' },
-  suspended: { label: 'Suspended', icon: Hourglass, tone: 'warning' },
+  suspended: { label: 'Suspended', icon: HourglassCog, tone: 'warning' },
+  renegotiating: {
+    label: 'Under renegotiation',
+    icon: RefreshCw,
+    tone: 'success',
+  },
 }
 
 export const PARTY_ROLES: Record<string, Named> = {
@@ -528,6 +562,7 @@ export const PARTY_ROLES: Record<string, Named> = {
   vassal: { label: 'Vassal', icon: Shield, tone: 'muted' },
   guarantor: { label: 'Guarantor', icon: ShieldCheck, tone: 'info' },
   mediator: { label: 'Mediator', icon: Scale, tone: 'verdigris' },
+  witness: { label: 'Witness', icon: Eye, tone: 'info' },
 }
 
 export const CLAUSES: Record<string, Named> = {
@@ -550,7 +585,7 @@ export const CLAUSES: Record<string, Named> = {
   non_aggression: { label: 'Non-aggression', icon: Ban, tone: 'muted' },
   route_control: {
     label: 'Road and tolls ceded',
-    icon: Signpost,
+    icon: Route,
     tone: 'gold',
   },
   resource_demand: {
@@ -618,6 +653,17 @@ export const CLAUSES: Record<string, Named> = {
     icon: Radiation,
     tone: 'info',
   },
+  return_of_refugees: {
+    label: 'Return of refugees',
+    icon: Undo2,
+    tone: 'warning',
+  },
+  shared_water: { label: 'Shared water', icon: Droplets, tone: 'info' },
+  captive_exchange: {
+    label: 'Exchange of captives',
+    icon: Repeat,
+    tone: 'success',
+  },
 }
 
 export const OATHS: Record<string, Named> = {
@@ -638,6 +684,7 @@ export const OATHS: Record<string, Named> = {
   fidelity: { label: 'Fidelity', icon: Heart, tone: 'verdigris' },
   secrecy: { label: 'Secrecy', icon: Lock, tone: 'muted' },
   testimony: { label: 'Testimony', icon: Gavel, tone: 'gold' },
+  office: { label: 'Oath of office', icon: Landmark, tone: 'gold' },
 }
 
 export const OATH_STATUSES: Record<string, Named> = {
@@ -659,12 +706,12 @@ export const OATH_PENALTIES: Record<
 }
 
 export const TREASURY_ENTRIES: Record<string, Named> = {
-  tax: { label: 'Taxes', icon: Coins, tone: 'gold' },
+  tax: { label: 'Taxes', icon: Landmark, tone: 'gold' },
   tolls: { label: 'Tolls', icon: Signpost, tone: 'gold' },
   investment: { label: 'Investment', icon: TrendingUp, tone: 'success' },
   garrison: { label: 'Garrison and court upkeep', icon: Shield },
   walls: { label: 'Walls', icon: BrickWall },
-  building: { label: 'Building works', icon: Hammer },
+  building: { label: 'Building works', icon: Building },
   festival: { label: 'Festival', icon: PartyPopper, tone: 'verdigris' },
   alms: { label: 'Alms', icon: HandHeart, tone: 'success' },
   fire: { label: 'Fire', icon: Building2, tone: 'danger' },
@@ -673,7 +720,11 @@ export const TREASURY_ENTRIES: Record<string, Named> = {
   loan: { label: 'Loan', icon: Coins, tone: 'info' },
   upkeep: { label: 'Upkeep', icon: Hammer, tone: 'muted' },
   office_sale: { label: 'Office sold', icon: Coins, tone: 'gold' },
-  relief: { label: 'Relief for the needy', icon: HandHeart, tone: 'success' },
+  relief: {
+    label: 'Relief for the needy',
+    icon: HeartHandshake,
+    tone: 'success',
+  },
   rebuilding: { label: 'Rebuilding', icon: Hammer, tone: 'info' },
   monopoly: { label: 'Monopoly trade', icon: Gem, tone: 'gold' },
 }

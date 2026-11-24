@@ -45,6 +45,8 @@ SETTLE_MODES: Mapping[SettleMode, SettleSpec] = total(
         SettleMode.CANOPY: SettleSpec(
             "In the canopy", grounded=True, needs=MovementMode.CLIMBING, terrains=frozenset({T.WOODED}), natural=frozenset({P.ARBOREAL}), forest=True
         ),
+        SettleMode.CLIFF: SettleSpec("On cliffs", grounded=True, terrains=frozenset({T.HIGH, T.ROUGH, T.COASTAL})),
+        SettleMode.DRIFT: SettleSpec("On drift", grounded=False, terrains=frozenset({T.WATERY})),
     },
 )
 PREFERRED = (SettleMode.SUBMERGED, SettleMode.BURROW, SettleMode.CANOPY)

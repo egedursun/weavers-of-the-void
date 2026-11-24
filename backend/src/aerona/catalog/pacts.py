@@ -5,7 +5,7 @@ from aerona.core.total import total
 from aerona.domain.enums.communication import DispatchContent, DispatchState, EnvoyFate, OpinionSubject, SignalState
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, IdentityReason, IntrigueSecret
 from aerona.domain.enums.minds import MadeMindsLaw
-from aerona.domain.enums.polity import PartyRole, RegionalStanding, TreatyStatus
+from aerona.domain.enums.polity import ClauseKind, PartyRole, RegionalStanding, TreatyKind, TreatyStatus
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LorePrice, ServiceTask
 from aerona.domain.enums.statecraft import CrisisState, ResolutionKind
 from aerona.rules.registry import Rules
@@ -19,6 +19,7 @@ class RoleSpec:
     principal: bool
     defends: bool = False
     settles: bool = False
+    witnesses: bool = False
 
 
 PARTY_ROLES: Mapping[PartyRole, RoleSpec] = total(
@@ -29,6 +30,7 @@ PARTY_ROLES: Mapping[PartyRole, RoleSpec] = total(
         PartyRole.VASSAL: RoleSpec("Vassal", True),
         PartyRole.GUARANTOR: RoleSpec("Guarantor", False, defends=True),
         PartyRole.MEDIATOR: RoleSpec("Mediator", False, settles=True),
+        PartyRole.WITNESS: RoleSpec("Witness", False, witnesses=True),
     },
 )
 PRINCIPAL_ROLES = frozenset(role for role, spec in PARTY_ROLES.items() if spec.principal)
@@ -51,10 +53,12 @@ TREATY_STATES: Mapping[TreatyStatus, TreatyStateSpec] = total(
         TreatyStatus.PROPOSED: TreatyStateSpec("Proposed", False),
         TreatyStatus.REJECTED: TreatyStateSpec("Rejected", False),
         TreatyStatus.SUSPENDED: TreatyStateSpec("Suspended", False, paused=True),
+        TreatyStatus.RENEGOTIATING: TreatyStateSpec("Under renegotiation", True),
     },
 )
 PAUSED_STATES = frozenset(state for state, spec in TREATY_STATES.items() if spec.paused)
 BREAKABLE_STATES = frozenset(state for state, spec in TREATY_STATES.items() if spec.binds or spec.paused)
+BINDING_STATES = frozenset(state for state, spec in TREATY_STATES.items() if spec.binds)
 
 
 @dataclass(frozen=True)
@@ -72,6 +76,7 @@ CRISIS_STATES: Mapping[CrisisState, CrisisStateSpec] = total(
         CrisisState.CONCEDED: CrisisStateSpec("Conceded", False),
         CrisisState.WAR: CrisisStateSpec("War", False),
         CrisisState.MEDIATED: CrisisStateSpec("Settled by a mediator", False, third_party=True),
+        CrisisState.FROZEN: CrisisStateSpec("Frozen", True),
     },
 )
 THIRD_PARTY_STATES = frozenset(state for state, spec in CRISIS_STATES.items() if spec.third_party)
@@ -83,6 +88,7 @@ class StandingSpec:
     war_pct: Amount
     allies: bool = True
     declared: bool = False
+    trades: bool = True
 
 
 STANDINGS: Mapping[RegionalStanding, StandingSpec] = total(
@@ -93,6 +99,7 @@ STANDINGS: Mapping[RegionalStanding, StandingSpec] = total(
         RegionalStanding.MINOR_POWER: StandingSpec("Minor power", lambda rules: rules.treaties.minor_war_pct),
         RegionalStanding.CLIENT: StandingSpec("Client", lambda rules: rules.treaties.client_war_pct),
         RegionalStanding.NEUTRAL: StandingSpec("Neutral", lambda rules: rules.treaties.minor_war_pct, allies=False, declared=True),
+        RegionalStanding.ISOLATED: StandingSpec("Isolated", lambda rules: rules.treaties.isolated_war_pct, allies=False, trades=False),
     },
 )
 DECLARED_STANDINGS = frozenset(standing for standing, spec in STANDINGS.items() if spec.declared)
@@ -114,6 +121,8 @@ RESOLUTIONS: Mapping[ResolutionKind, ResolutionSpec] = total(
         ResolutionKind.QUARANTINE: ResolutionSpec(lambda rules: rules.council_of_worlds.quarantine_effect, True),
         ResolutionKind.ARBITRATION: ResolutionSpec(lambda rules: rules.council_of_worlds.arbitration_effect, True),
         ResolutionKind.AID: ResolutionSpec(lambda rules: rules.council_of_worlds.aid_effect, True),
+        ResolutionKind.PEACEKEEPING: ResolutionSpec(lambda rules: rules.council_of_worlds.peacekeeping_effect, True),
+        ResolutionKind.RECOGNITION: ResolutionSpec(lambda rules: rules.council_of_worlds.recognition_effect, True),
     },
 )
 
@@ -122,6 +131,7 @@ RESOLUTIONS: Mapping[ResolutionKind, ResolutionSpec] = total(
 class ContentSpec:
     commands: bool = False
     warns: bool = False
+    courtesy: bool = False
 
 
 DISPATCH_CONTENTS: Mapping[DispatchContent, ContentSpec] = total(
@@ -138,6 +148,8 @@ DISPATCH_CONTENTS: Mapping[DispatchContent, ContentSpec] = total(
         DispatchContent.INTELLIGENCE: ContentSpec(),
         DispatchContent.ORDER: ContentSpec(commands=True),
         DispatchContent.WARNING: ContentSpec(warns=True),
+        DispatchContent.CONDOLENCE: ContentSpec(courtesy=True),
+        DispatchContent.CONGRATULATION: ContentSpec(courtesy=True),
     },
 )
 
@@ -158,6 +170,7 @@ DISPATCH_STATES: Mapping[DispatchState, DispatchStateSpec] = total(
         DispatchState.DELAYED: DispatchStateSpec(True, False),
         DispatchState.FORGED: DispatchStateSpec(False, True),
         DispatchState.MISREAD: DispatchStateSpec(False, True),
+        DispatchState.REFUSED: DispatchStateSpec(False, True),
     },
 )
 TRAVELLING_STATES = frozenset(state for state, spec in DISPATCH_STATES.items() if spec.travelling)
@@ -179,6 +192,7 @@ ENVOY_FATES: Mapping[EnvoyFate, EnvoyFateSpec] = total(
         EnvoyFate.KILLED: EnvoyFateSpec(True, False),
         EnvoyFate.EXPELLED: EnvoyFateSpec(True, True),
         EnvoyFate.DEFECTED: EnvoyFateSpec(False, False),
+        EnvoyFate.HONOURED: EnvoyFateSpec(False, True),
     },
 )
 
@@ -197,6 +211,7 @@ SIGNAL_STATES: Mapping[SignalState, SignalStateSpec] = total(
         SignalState.BURNED: SignalStateSpec(False, False),
         SignalState.DISUSED: SignalStateSpec(False, True),
         SignalState.JAMMED: SignalStateSpec(False, True),
+        SignalState.RESTORED: SignalStateSpec(True, False),
     },
 )
 
@@ -213,6 +228,8 @@ OPINION_WEIGHTS: Mapping[OpinionSubject, Amount] = total(
         OpinionSubject.IDEOLOGY: lambda rules: rules.opinion_subjects.ideology_weight,
         OpinionSubject.FACTION: lambda rules: rules.opinion_subjects.faction_weight,
         OpinionSubject.FOREIGN_POWER: lambda rules: rules.opinion_subjects.foreign_power_weight,
+        OpinionSubject.ECONOMY: lambda rules: rules.opinion_subjects.economy_weight,
+        OpinionSubject.NEIGHBOUR_PEOPLE: lambda rules: rules.opinion_subjects.neighbour_people_weight,
     },
 )
 
@@ -221,6 +238,7 @@ OPINION_WEIGHTS: Mapping[OpinionSubject, Amount] = total(
 class PriceSpec:
     deferred: bool = False
     swaps: bool = False
+    sworn: bool = False
 
 
 LORE_PRICES: Mapping[LorePrice, PriceSpec] = total(
@@ -231,6 +249,7 @@ LORE_PRICES: Mapping[LorePrice, PriceSpec] = total(
         LorePrice.RENOWN: PriceSpec(),
         LorePrice.EXCHANGE: PriceSpec(swaps=True),
         LorePrice.SERVICE: PriceSpec(deferred=True),
+        LorePrice.OATH: PriceSpec(sworn=True),
     },
 )
 SERVICE_TASKS: Mapping[ServiceTask, str] = total(
@@ -257,6 +276,7 @@ CLAIM_KINDS: Mapping[ClaimKind, ClaimSpec] = total(
         ClaimKind.SHARED: ClaimSpec(False, False),
         ClaimKind.FALSE: ClaimSpec(True, True),
         ClaimKind.INFLATED: ClaimSpec(True, True),
+        ClaimKind.BORROWED: ClaimSpec(True, True),
     },
 )
 CONTESTABLE_CLAIMS = frozenset(kind for kind, spec in CLAIM_KINDS.items() if spec.contestable)
@@ -275,6 +295,7 @@ CLAIM_STATES: Mapping[ClaimStatus, ClaimStateSpec] = total(
         ClaimStatus.VERIFIED: ClaimStateSpec(100, True),
         ClaimStatus.EXPOSED: ClaimStateSpec(0, True),
         ClaimStatus.DISPUTED: ClaimStateSpec(50, False),
+        ClaimStatus.FORGOTTEN: ClaimStateSpec(0, True),
     },
 )
 UNSETTLED_CLAIMS = frozenset(state for state, spec in CLAIM_STATES.items() if not spec.settled)
@@ -301,6 +322,7 @@ SECRET_WEIGHTS: Mapping[IntrigueSecret, Amount] = total(
         IntrigueSecret.TRUE_HISTORY: lambda rules: rules.secret_kinds.true_history_severity,
         IntrigueSecret.HIDDEN_POWER: lambda rules: rules.secret_kinds.hidden_power_severity,
         IntrigueSecret.FORGERY: lambda rules: rules.secret_kinds.forgery_severity,
+        IntrigueSecret.ILLNESS: lambda rules: rules.secret_kinds.illness_severity,
     },
 )
 HOOK_COSTS: Mapping[HookDemand, Amount] = total(
@@ -314,6 +336,8 @@ HOOK_COSTS: Mapping[HookDemand, Amount] = total(
         HookDemand.APPOINTMENT: lambda rules: rules.hooks.appointment_cost,
         HookDemand.SILENCE: lambda rules: rules.hooks.silence_cost,
         HookDemand.PAYMENT: lambda rules: rules.hooks.payment_cost,
+        HookDemand.RELEASE: lambda rules: rules.hooks.release_cost,
+        HookDemand.INFORMATION: lambda rules: rules.hooks.information_cost,
     },
 )
 FAVOUR_WEIGHTS: Mapping[FavourOrigin, Amount] = total(
@@ -328,6 +352,8 @@ FAVOUR_WEIGHTS: Mapping[FavourOrigin, Amount] = total(
         FavourOrigin.RELIEF: lambda rules: rules.favours.relief_weight,
         FavourOrigin.HOSPITALITY: lambda rules: rules.favours.hospitality_weight,
         FavourOrigin.RANSOM: lambda rules: rules.favours.ransom_weight,
+        FavourOrigin.HEALING: lambda rules: rules.favours.healing_weight,
+        FavourOrigin.TEACHING: lambda rules: rules.favours.teaching_weight,
     },
 )
 
@@ -349,6 +375,10 @@ IDENTITY_REASONS: Mapping[IdentityReason, IdentitySpec] = total(
         IdentityReason.FUGITIVE: IdentitySpec(IntrigueSecret.FALSE_IDENTITY),
         IdentityReason.HIDDEN_FAITH: IdentitySpec(IntrigueSecret.HERESY, persecuted=True),
         IdentityReason.PASSING_KIND: IdentitySpec(IntrigueSecret.FALSE_IDENTITY, persecuted=True),
+        IdentityReason.PROTECTION: IdentitySpec(IntrigueSecret.FALSE_IDENTITY),
     },
 )
 WILLLESS_LAWS = frozenset({MadeMindsLaw.NO_WILL, MadeMindsLaw.INSTRUCTED_ONLY})
+NEIGHBOUR_ACCORDS = frozenset({TreatyKind.BORDER_ACCORD, TreatyKind.MUTUAL_AID})
+TERM_CLAUSES = frozenset({ClauseKind.TOLLS_WAIVED, ClauseKind.CAPTIVE_EXCHANGE, ClauseKind.RETURN_OF_REFUGEES, ClauseKind.SHARED_WATER})
+CARRYING_SIGNALS = frozenset(state for state, spec in SIGNAL_STATES.items() if spec.carries)

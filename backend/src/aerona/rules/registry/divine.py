@@ -90,6 +90,11 @@ class DivineWoundRules:
     betrayal_severity: int = rule(35, 1, 100, G, "Severity of the wound a god takes when one in its service turns on it")
     betrayal_pct: int = rule(50, 0, 100, G, "Chance a servitor or ally that turns on its god wounds it (%)")
     mortal_slayer_severity: int = rule(45, 1, 100, G, "Severity of the wound a mortal deals a god by a deed of god-bane, a true name or a rite")
+    schism_severity: int = rule(40, 1, 100, G, "Severity of the wound a god takes when its worshippers split")
+    outer_being_severity: int = rule(60, 1, 100, G, "Severity of the wound a being from outside the cosmos deals a god")
+    split_cults: int = rule(3, 2, 50, G, "Churches worshipping one god at which its worship is split and may wound it")
+    worship_wound_pct: int = rule(20, 0, 100, G, "Chance a god whose seat is laid waste or whose worship is split takes a wound in an epoch (%)")
+    worship_wound_severity: int = rule(25, 1, 100, G, "Severity of a wound to a god from a seat laid waste or split worship")
 
 
 @dataclass(frozen=True)
@@ -199,6 +204,7 @@ class OuterBeingRules:
     seal_decay: int = rule(2, 0, 100, G, "Strength a seal loses each epoch")
     starve_epochs: int = rule(12, 1, 1000, G, "Epochs unfed, unworshipped and without a cult after which an outer being starves")
     destroy_essence: int = rule(100, 0, 10000, G, "Essence the Creator spends to destroy an outer being")
+    patron_wound_pct: int = rule(10, 0, 100, G, "Chance the patron god of a world takes a wound in an epoch an outer being feeds on that world (%)")
 
 
 @dataclass(frozen=True)

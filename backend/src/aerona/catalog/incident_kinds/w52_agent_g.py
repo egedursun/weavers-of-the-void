@@ -2,7 +2,7 @@ from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleS
 from aerona.domain.enums.faith import RebirthPath
 from aerona.domain.enums.folkways import AccusationOutcome, LuckReach, LuckSign
 from aerona.domain.enums.modifier import IncidentRole as R
-from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule
+from aerona.domain.enums.records import FactUnit, FactValue, PlaceRule, StepAction
 from aerona.domain.enums.records import ProcessClock as C
 from aerona.domain.enums.records import ProcessGroup as G
 from aerona.domain.enums.sacred import (
@@ -24,6 +24,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "{subject} knew the divine as {vision}; answered by a god: {answered}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ORIGIN, required=False)),
         facts=(FactSpec("vision", FactValue.ENUM, enum=VisionKind), FactSpec("answered", FactValue.NUMBER, FactUnit.COUNT)),
+        steps=frozenset({StepAction.ENTER}),
         place=PlaceRule.NONE,
         clock=C.SEASON,
     ),

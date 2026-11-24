@@ -14,7 +14,7 @@ V = BiologyVariant
 
 
 def test_sixteen_variants_and_skyless_read_from_the_catalogue() -> None:
-    assert len(BIOLOGY_VARIANTS) == len(BiologyVariant) == 16
+    assert len(BIOLOGY_VARIANTS) == len(BiologyVariant) == 19
     assert {V.AQUATIC, V.SUBTERRANEAN, V.FUNGAL} == SKYLESS_VARIANTS
     assert derived_effects([V.ENERGY])["fire_harm_pct"] == 0
     assert BIOLOGY_VARIANTS[V.COLONIAL].buds and BIOLOGY_VARIANTS[V.SYMBIOTIC].needs_partner and BIOLOGY_VARIANTS[V.FUNGAL].burns

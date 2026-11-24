@@ -9,6 +9,7 @@ from aerona.db.session import Database
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.job import JobStatus
+from aerona.domain.models.son_design import SonDesign
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.jobs.manager import JobManager
@@ -25,7 +26,7 @@ class FakeSummoner:
         self.fail = fail
         self.calls: list[int | None] = []
 
-    async def summon(self, world_id: int | None) -> int:
+    async def summon(self, world_id: int | None, design: SonDesign | None = None) -> int:
         self.calls.append(world_id)
         if self.fail:
             raise RuntimeError("the summoning failed")
@@ -115,7 +116,7 @@ async def test_busy_lock_and_missing_port(runtime: PlayerRuntime, database: Data
     gate = asyncio.Event()
 
     class SlowSummoner:
-        async def summon(self, world_id: int | None) -> int:
+        async def summon(self, world_id: int | None, design: SonDesign | None = None) -> int:
             await gate.wait()
             return 1
 
@@ -189,7 +190,7 @@ class FakeBirths:
     def __init__(self) -> None:
         self.births: list[tuple[int, str, int | None]] = []
 
-    async def summon(self, world_id: int | None) -> int:
+    async def summon(self, world_id: int | None, design: SonDesign | None = None) -> int:
         return 0
 
     async def birth(self, parent_son_id: int, inspiration: str, co_parent_son_id: int | None) -> int:

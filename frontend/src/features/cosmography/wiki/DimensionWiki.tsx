@@ -23,7 +23,7 @@ import {
   PagedList,
   Section,
 } from '@/components/domain'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { Label, Muted, Stat } from '@/components/typography'
 import { CelestialDepthSection } from '@/features/celestial/CelestialDepthSection'
 import { ThingSections } from '@/features/entity/sections/ThingSections'
@@ -44,7 +44,7 @@ import { type Ladder, nameTable } from '../ladder'
 import { Chip, Facts, Meter, NodeLink, RecordEditor } from '../parts'
 import { ClusterThumb, DimensionThumb } from '../visual/ScaleThumbs'
 import { stateOf } from '../visual/dimensionState'
-import { drawerKindOf } from '../visual/drawerKind'
+import { entryKindOf } from '../visual/entryKind'
 import { GalaxyCard } from './ClusterWiki'
 import { DimensionLaws } from './DimensionLaws'
 import { HostedStrata } from './HostedStrata'
@@ -192,7 +192,12 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         catalog={catalog}
         cover={wiki?.cover ?? null}
       />
-      <Section title='At a glance' icon={Layers} tone='info'>
+      <Section
+        id='section-dimension-glance'
+        title='At a glance'
+        icon={Layers}
+        tone='info'
+      >
         <div className='grid min-w-0 grid-cols-2 gap-2 sm:grid-cols-4'>
           <MiniStat
             icon={Workflow}
@@ -245,6 +250,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         </div>
       </Section>
       <Section
+        id='section-dimension-holds'
         title='What it holds'
         description='Its clusters and the galaxies that drift outside any cluster.'
         icon={Workflow}
@@ -332,7 +338,12 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
           </div>
         </div>
       </Section>
-      <Section title='Worlds in this dimension' icon={Globe2} tone='info'>
+      <Section
+        id='section-dimension-worlds'
+        title='Worlds in this dimension'
+        icon={Globe2}
+        tone='info'
+      >
         {worlds.length === 0 ? (
           <EmptyState
             icon={Globe2}
@@ -363,7 +374,12 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
         )}
       </Section>
       {inner.length > 0 && (
-        <Section title='Dimensions within it' icon={Layers} tone='info'>
+        <Section
+          id='section-dimension-inner'
+          title='Dimensions within it'
+          icon={Layers}
+          tone='info'
+        >
           <ul className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
             <Paged items={inner} as='li'>
               {(row) => (
@@ -432,7 +448,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
                 'Ruler',
                 <NodeLink
                   key='ruler'
-                  kind={drawerKindOf(
+                  kind={entryKindOf(
                     ladder.data.rulers?.[String(dimension.ruler_node_id)]?.kind
                   )}
                   id={dimension.ruler_node_id}
@@ -550,7 +566,12 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
       />
       <HostedStrata name={dimension.name} strata={wiki?.strata ?? []} />
       <SkyWorship nodeId={dimension.id} />
-      <Section title='Beings of this dimension' icon={Eye} tone='warning'>
+      <Section
+        id='section-dimension-beings'
+        title='Beings of this dimension'
+        icon={Eye}
+        tone='warning'
+      >
         {beings.length === 0 ? (
           <EmptyState
             icon={Eye}
@@ -604,7 +625,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
   )
 }
 
-export function DimensionPage({ id }: DrawerPageProps) {
+export function DimensionPage({ id }: EntryPageProps) {
   const value = pageId(id)
   return value === null ? (
     <Missing icon={Layers} title='No such dimension' />

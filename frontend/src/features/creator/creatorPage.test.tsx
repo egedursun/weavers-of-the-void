@@ -131,10 +131,10 @@ describe('creator page', () => {
       )
       .toBeVisible()
     await expect
-      .element(screen.getByText(/Last epoch: faith \+2\.5/))
+      .element(screen.getByText(/Last epoch: Worship \+2\.5/))
       .toBeVisible()
     await expect
-      .element(screen.getByText(/Last epoch: godless communities \+1\.2/))
+      .element(screen.getByText(/Last epoch: Godless lands \+1\.2/))
       .toBeVisible()
     await expect.element(screen.getByText('Acts at 70').first()).toBeVisible()
     await screen.getByRole('button', { name: 'Set the mood yourself' }).click()

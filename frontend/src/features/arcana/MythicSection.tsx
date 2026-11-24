@@ -782,6 +782,12 @@ function GeasCard({
             />,
           ],
           ['Last kept', `Epoch ${geas.last_kept_epoch}`],
+          [
+            'Bound when',
+            geas.trigger
+              ? `${wordOf(actKindValues, geas.trigger)}${geas.armed_epoch !== null ? `, bound since epoch ${geas.armed_epoch}` : ', not yet'}`
+              : 'Always',
+          ],
         ]}
       />
       <RecordEditor
@@ -802,9 +808,21 @@ function GeasCard({
           },
           {
             key: 'mode',
-            label: 'Taboo or duty',
+            label: 'Taboo, duty or condition',
             kind: 'pick',
             table: table(GEAS_MODES),
+          },
+          {
+            key: 'trigger',
+            label: 'Binds when someone does',
+            kind: 'pick',
+            table: listed(actKindValues),
+          },
+          {
+            key: 'armed_epoch',
+            label: 'Bound since epoch',
+            kind: 'number',
+            min: 0,
           },
           {
             key: 'act',

@@ -237,6 +237,7 @@ def test_customs_produce_every_inheritance_and_marriage() -> None:
         customs_of({ValueAxis.KINSHIP: 30, ValueAxis.TRADITION: 30})[0],
         customs_of({ValueAxis.LAW: 30})[0],
         customs_of({ValueAxis.HIERARCHY: -30})[0],
+        customs_of({ValueAxis.EQUALITY: 30})[0],
         customs_of({})[0],
     }
     assert inheritances == set(InheritanceCustom)
@@ -266,6 +267,8 @@ def test_funeral_rites_follow_land_knowledge_and_values() -> None:
         funeral_of(ground(dominant_terrain=TerrainKind.MOUNTAINS), {}, {}),
         funeral_of(ground(coast_kind=next(item for item in CoastKind if item is not CoastKind.NONE)), {KnowledgeBranch.SEAFARING: 1}, {}),
         funeral_of(None, {}, {ValueAxis.PIETY: 30}),
+        funeral_of(None, {}, {ValueAxis.NATURE: 30}),
+        funeral_of(None, {}, {ValueAxis.DEATH: -60}),
         funeral_of(None, {}, {}),
     }
     assert found == CULTURAL_FUNERALS

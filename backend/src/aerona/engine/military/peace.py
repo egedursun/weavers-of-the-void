@@ -8,6 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import CaptiveCohortRow, PeaceTermRow, WarAimRow
 from aerona.db.tables.polity import HouseProfileRow, PolityMemberRow
 from aerona.db.tables.warfare import CaptiveRow, WarRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.military import CaptiveFate, PeaceTermKind, WarAimKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.polity import ClauseKind, PartyRole
@@ -18,6 +19,7 @@ from aerona.engine.mind.book import values_for
 from aerona.engine.museums.hoards import return_trophies
 from aerona.engine.polity.accords import Clause, sign
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.stats import move_stat
 from aerona.engine.services.war import release_captive
 
 A = WarAimKind
@@ -38,6 +40,8 @@ AIM_TERMS: dict[WarAimKind, PeaceTermKind] = {
     A.CONVERT: K.OPEN_TEMPLES,
     A.CHANGE_GOVERNMENT: K.GOVERNMENT,
     A.SEIZE_ROUTE: K.TRADE_CONCESSION,
+    A.SECURE_WATER: K.BORDER_ACCORD,
+    A.RETURN_REFUGEES: K.RETURN_OF_REFUGEES,
 }
 TRADE_CAUSES = frozenset(cause for cause, spec in WAR_CAUSES.items() if spec.over_trade)
 
@@ -77,6 +81,8 @@ async def extra_terms(ctx: TickContext, war: WarRow, victor: EntityRow, loser: E
         first = next(house for house in houses)
         second = next(house for house in houses if house.polity_entity_id != first.polity_entity_id)
         terms.append(PeaceTerm(K.MARRIAGE, {"first_house": first.house_entity_id, "second_house": second.house_entity_id}))
+    if values.get(ValueAxis.HONOUR, 0) > 0 and ending is not WarEnding.WHITE_PEACE:
+        terms.append(PeaceTerm(K.APOLOGY))
     aims = list(await ctx.session.scalars(select(WarAimRow).where(WarAimRow.war_id == war.id, WarAimRow.side_entity_id == victor.id)))
     border = next((aim for aim in aims if aim.kind is A.CONQUER_REGION and aim.achieved < ctx.rules.peace.cession_score and aim.target_entity_id), None)
     if border is not None and border.target_entity_id is not None:
@@ -99,6 +105,10 @@ async def clause_for(ctx: TickContext, war: WarRow, term: PeaceTerm, victor: Ent
             found = "a border land was left without soldiers", Clause(ClauseKind.DEMILITARISED, loser.id, victor.id, dict(term.params))
         case K.CHAMPION:
             found = "future quarrels will be settled by champions", Clause(ClauseKind.CHAMPION, loser.id, victor.id, dict(term.params))
+        case K.APOLOGY:
+            if not held(loser.id, victor.id):
+                move_stat(loser, victor, "prestige", ctx.rules.peace.apology_prestige)
+            found = f"{loser.name} owned its wrong before {victor.name}", Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id, {"apology": True})
         case K.WHITE_PEACE:
             found = "neither side gained anything", Clause(ClauseKind.NON_AGGRESSION, loser.id, victor.id)
     return found

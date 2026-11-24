@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState, MiniStat, Section } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { ForeignGodCard } from '@/features/foreign-god/ForeignGodCard'
 import { PlaceForeignGodForm } from '@/features/foreign-god/PlaceForeignGodForm'
 import { type ForeignGodRecord } from './api'
@@ -29,7 +29,7 @@ type GodListProps = {
 }
 
 export function ForeignGodList({ gods, index, onSelectWorld }: GodListProps) {
-  const { open } = useDrawerStack()
+  const { open } = useEntryStack()
   const sorted = [...gods].sort(
     (first, second) =>
       STATUS_ORDER[first.status] - STATUS_ORDER[second.status] ||

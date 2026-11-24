@@ -225,3 +225,4 @@ class RelicStance(StrEnum):
     FORBIDDEN = "forbidden"
     HERITAGE = "heritage"
     STUDIED = "studied"
+    TRADED = "traded"

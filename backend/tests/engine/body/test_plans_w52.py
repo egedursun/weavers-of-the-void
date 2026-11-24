@@ -17,7 +17,7 @@ BACKBONED = (BodyPlan.HUMANOID, BodyPlan.QUADRUPED, BodyPlan.AVIAN, BodyPlan.SER
 
 
 def test_sixteen_plans_each_with_an_anatomy_and_every_table_that_reads_a_plan() -> None:
-    assert len(BodyPlan) == 16 and len(BodyPart) == 54
+    assert len(BodyPlan) == 18 and len(BodyPart) == 55
     for plan in BodyPlan:
         assert plan in ANATOMIES and plan in KIN and plan in BODY_MODES and plan in PLAN_TEXT and plan in PLANS and plan in BODY_WORDS
 

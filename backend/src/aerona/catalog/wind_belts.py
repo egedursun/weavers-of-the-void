@@ -19,6 +19,7 @@ class BeltSpec:
     rain_pct: Callable[[Rules], int]
     sailing_pct: Callable[[Rules], int]
     calm: bool = False
+    fire_pct: Callable[[Rules], int] | None = None
 
 
 BELTS: Mapping[CirculationBand, BeltSpec] = total(
@@ -93,6 +94,21 @@ BELTS: Mapping[CirculationBand, BeltSpec] = total(
             lambda rules: rules.winds.super_rotation_rain_pct,
             lambda rules: rules.winds.super_rotation_sailing_pct,
         ),
+        CirculationBand.MONSOON: BeltSpec(
+            "Monsoon",
+            EAST,
+            lambda rules: rules.winds.monsoon_strength,
+            lambda rules: rules.winds.monsoon_rain_pct,
+            lambda rules: rules.winds.monsoon_sailing_pct,
+        ),
+        CirculationBand.MOUNTAIN_WIND: BeltSpec(
+            "Slope winds",
+            WEST,
+            lambda rules: rules.winds.mountain_wind_strength,
+            lambda rules: rules.winds.mountain_wind_rain_pct,
+            lambda rules: rules.winds.mountain_wind_sailing_pct,
+            fire_pct=lambda rules: rules.winds.mountain_wind_fire_pct,
+        ),
     },
 )
 
@@ -103,6 +119,7 @@ class CurrentSpec:
     temperature: Callable[[Rules], int]
     sailing_pct: Callable[[Rules], int]
     danger: Callable[[Rules], int]
+    salvage: Callable[[Rules], int] | None = None
 
 
 CURRENTS: Mapping[OceanCurrent, CurrentSpec] = total(
@@ -134,6 +151,19 @@ CURRENTS: Mapping[OceanCurrent, CurrentSpec] = total(
             lambda rules: rules.currents.tidal_temperature,
             lambda rules: rules.currents.tidal_sailing_pct,
             lambda rules: rules.currents.tidal_danger,
+        ),
+        OceanCurrent.GYRE: CurrentSpec(
+            "Gyre",
+            lambda rules: rules.currents.gyre_temperature,
+            lambda rules: rules.currents.gyre_sailing_pct,
+            lambda rules: rules.currents.gyre_danger,
+            salvage=lambda rules: rules.currents.gyre_salvage,
+        ),
+        OceanCurrent.COUNTER: CurrentSpec(
+            "Counter current",
+            lambda rules: rules.currents.counter_temperature,
+            lambda rules: rules.currents.counter_sailing_pct,
+            lambda rules: rules.currents.counter_danger,
         ),
     },
 )

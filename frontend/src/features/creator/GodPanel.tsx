@@ -173,6 +173,7 @@ export function GodPanel({ doom }: { doom: number }) {
   )
   return (
     <Section
+      id='section-creator-hand'
       title="The Creator's hand"
       description='Your essence, the doom clock and your signs. Everything here also happens on its own as epochs pass.'
       surface='card'

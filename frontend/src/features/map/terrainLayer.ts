@@ -33,7 +33,7 @@ export type MapTexture = {
   scale: number
 }
 
-function texture(map: WorldMap): {
+export function texture(map: WorldMap): {
   canvas: HTMLCanvasElement
   context: CanvasRenderingContext2D
   scale: number
@@ -52,7 +52,7 @@ function texture(map: WorldMap): {
   return { canvas, context, scale }
 }
 
-function fillCell(
+export function fillCell(
   context: CanvasRenderingContext2D,
   map: WorldMap,
   index: number,
@@ -83,7 +83,7 @@ function cellColor(map: WorldMap, index: number, fog: boolean): string {
   )
 }
 
-function coastPath(map: WorldMap): Path2D {
+export function coastPath(map: WorldMap): Path2D {
   const path = new Path2D()
   const coordinates = map.borders.coordinates
   map.borders.kinds.forEach((kind, index) => {
@@ -150,7 +150,7 @@ export function buildTerrain(map: WorldMap, fog = true): MapTexture | null {
   return { canvas, scale }
 }
 
-function seeded(seed: string): () => number {
+export function seeded(seed: string): () => number {
   let state = 2166136261
   for (const char of seed)
     state = Math.imul(state ^ char.charCodeAt(0), 16777619)

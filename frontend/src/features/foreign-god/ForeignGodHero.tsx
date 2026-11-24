@@ -4,7 +4,7 @@ import { formatDecimal } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DomainGlyph, HeroFrame, StatBar } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, PageTitle } from '@/components/typography'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { useRuleLookup } from '@/features/pantheon/gate'
@@ -19,7 +19,7 @@ export function ForeignGodHero({ detail }: { detail: ForeignGodDetail }) {
   const god = detail.god
   const { domain } = useLabels()
   const rule = useRuleLookup()
-  const { open } = useDrawerStack()
+  const { open } = useEntryStack()
   const wake = rule('pantheon.sleep_wake_threshold')
   return (
     <HeroFrame>

@@ -1,4 +1,5 @@
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleSpec, per_value
+from aerona.catalog.life.military import DEFENCE_ACTIONS, SIEGE_ACTIONS
 from aerona.domain.enums.chronicle import ChronicleKind as K
 from aerona.domain.enums.chronicle import FeedCategory as F
 from aerona.domain.enums.collective import Tincture
@@ -56,7 +57,7 @@ BATTLE_STEPS = frozenset(
     }
 )
 STRUCK_VEHICLES = frozenset({A.FIRE, A.IGNITE, A.EXPLODE, A.FLOOD, A.VENT, A.CRASH, A.ROUT, A.COLLAPSE, A.BREAK})
-SIEGE_STEPS = frozenset({A.BOMBARD, A.UNDERMINE, A.HOLD, A.STORM, A.NEGOTIATE, A.SORTIE, A.REPAIR, A.RAISE, A.BREACH, A.REINFORCE, A.SURRENDER})
+SIEGE_STEPS = frozenset({A.RAISE, A.BREACH, A.REINFORCE, A.SURRENDER, *SIEGE_ACTIONS.values(), *DEFENCE_ACTIONS.values()})
 
 
 def number(key: str, unit: U, *, required: bool = True) -> FactSpec:
@@ -157,6 +158,7 @@ WAR_ENDINGS = {
     WarEnding.SAME_FRONT: "{war} ended as {actor} and {opponent} came to stand on the same side.",
     WarEnding.NO_SIDE_LEFT: "{war} ended: neither {actor} nor {opponent} was left to fight it.",
     WarEnding.MIRACLE: "{war} ended by a miracle between {actor} and {opponent}.",
+    WarEnding.MEDIATED: "{war} ended between {actor} and {opponent} through a mediator.",
 }
 MUTINIES = {
     MutinyOutcome.GRUMBLING: "The soldiers of {subject} grew restless, hungry and unpaid.",
@@ -164,6 +166,7 @@ MUTINIES = {
     MutinyOutcome.DEPOSED: "The soldiers of {subject} rose against their commander and cast them out.",
     MutinyOutcome.BANDITRY: "{subject} turned to plunder the lands it was raised to guard.",
     MutinyOutcome.TURNCOAT: "{subject} went over to the enemy.",
+    MutinyOutcome.NEGOTIATED: "The soldiers of {subject} won pay and terms from their commander and took up their posts again.",
 }
 SACKS = {
     SackChoice.MERCY: "{actor} spared {target}.",
@@ -172,6 +175,7 @@ SACKS = {
         "led away captive and {relics:treasure was|treasures were} carried off."
     ),
     SackChoice.RAZE: "{actor} razed {target}: {dead:person|people} died, {captives:person was|people were} enslaved and its districts burned.",
+    SackChoice.RESETTLE: "{actor} took {target} and settled its own people there; {dead:person|people} died and {captives:person was|people were} led away.",
 }
 MOLES = {
     MoleHuntOutcome.CAUGHT: "{actor}, spymaster of {authority}, hunted for moles and caught one.",

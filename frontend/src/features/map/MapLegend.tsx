@@ -20,6 +20,10 @@ import { Switch } from '@/components/ui/switch'
 import { EntityLink, Paged, FieldTile } from '@/components/domain'
 import { type ThemeColorName } from '@/components/domain/useThemeColors'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import {
+  PASSAGE_STATE,
+  STRATUM,
+} from '@/features/entity/environment/geologyLabels'
 import { ALL_FAMILIES, familyOf } from '@/features/graph/families'
 import {
   BorderMarker,
@@ -29,11 +33,28 @@ import {
   HatchSwatch,
   IconMarker,
   LineMarker,
+  ShaftMarker,
+  StratumSwatch,
 } from './SwatchMarker'
 import { type MapView } from './api'
+import { shaftsOf } from './deepLayer'
+import {
+  PASSAGE_LOOK,
+  ROCK_SEAM_TOKEN,
+  ROCK_TOKEN,
+  SEABED_TOKEN,
+  STRATUM_LOOK,
+} from './deepLooks'
 import { EVENT_ICON, SETTLEMENT_ICON, typeIcon } from './iconPaths'
 import { EVENT_TOKEN } from './mapLayout'
-import { LINE_STYLE, type LineKind, ROAD_KINDS, ROUTE_KINDS } from './mapLines'
+import {
+  LINE_STYLE,
+  type LineKind,
+  PASSAGE_KINDS,
+  ROAD_KINDS,
+  ROUTE_KINDS,
+  relationLine,
+} from './mapLines'
 import {
   type LayerMode,
   type Overlay,
@@ -77,6 +98,11 @@ const LINE_TOKEN: Record<LineKind, ThemeColorName> = {
   outbreak: 'destructive',
   front: 'destructive',
   supply: 'brand-gold',
+  passage_open: PASSAGE_LOOK.open.token,
+  passage_digging: PASSAGE_LOOK.digging.token,
+  passage_flooded: PASSAGE_LOOK.flooded.token,
+  passage_collapsed: PASSAGE_LOOK.collapsed.token,
+  passage_sealed: PASSAGE_LOOK.sealed.token,
 }
 
 const LINE_NOTE: Partial<Record<LineKind, string>> = {
@@ -86,6 +112,11 @@ const LINE_NOTE: Partial<Record<LineKind, string>> = {
   rule: 'arrow points at the ruled',
   hunt: 'arrow points at the prey',
   conurbation: 'settlements grown into one city',
+  passage_open: 'a way through the deep between two cells',
+  passage_digging: 'still being dug',
+  passage_flooded: 'water fills it',
+  passage_collapsed: 'fallen in; it must be cleared',
+  passage_sealed: 'closed by a seal',
 }
 
 type MapLegendProps = {
@@ -276,6 +307,97 @@ function DomainKey({
   )
 }
 
+const STATES_SHOWN = Object.keys(PASSAGE_LOOK).length
+
+function DeepKey({ view }: { view: MapView }) {
+  const level = view.level
+  if (!level) return null
+  const look = STRATUM_LOOK[level.stratum]
+  const stratum = STRATUM[level.stratum]
+  const shafts = shaftsOf(view)
+  const states = new Set(shafts.map((shaft) => shaft.state))
+  const glyphs = new Set(shafts.map((shaft) => shaft.glyph))
+  return (
+    <Block title='The deep' defaultOpen>
+      <ul className='flex min-w-0 flex-col gap-1.5'>
+        <Row icon={<StratumSwatch fill={look.fill} glow={look.glow} />}>
+          <Text as='span' truncate className='flex-1'>
+            {stratum.label}
+          </Text>
+          <Muted variant='caption'>{`${plural(level.cells.length, 'cell', 'cells')}`}</Muted>
+        </Row>
+        <Row icon={<IconMarker icon={stratum.icon} token={look.glow} />}>
+          <Muted variant='caption'>{stratum.hint}</Muted>
+        </Row>
+        <Row icon={<ColorSwatch token={ROCK_TOKEN} />}>
+          <Text as='span'>Solid rock</Text>
+          <Muted variant='caption'>no hollow at this depth</Muted>
+        </Row>
+        <Row icon={<ColorSwatch token={SEABED_TOKEN} />}>
+          <Text as='span'>Rock beneath the sea</Text>
+        </Row>
+        <Row icon={<LineMarker token={look.glow} width={2} />}>
+          <Text as='span'>Edge of a hollow</Text>
+          <Muted variant='caption'>brighter where its light is greater</Muted>
+        </Row>
+        <Row icon={<LineMarker token={ROCK_SEAM_TOKEN} width={1} dash='3 2' />}>
+          <Text as='span'>The coast above</Text>
+        </Row>
+        {glyphs.has('shaft') && (
+          <Row icon={<ShaftMarker token={look.glow} shape='shaft' up />}>
+            <Text as='span'>Shaft to another depth</Text>
+          </Row>
+        )}
+        {glyphs.has('mouth') && (
+          <Row icon={<ShaftMarker token={look.glow} shape='mouth' up />}>
+            <Text as='span'>Way up to the surface</Text>
+          </Row>
+        )}
+        <Paged items={[...states].sort()} initial={STATES_SHOWN} as='li'>
+          {(state) => (
+            <Row
+              key={state}
+              icon={<ColorSwatch token={PASSAGE_LOOK[state].token} />}
+            >
+              <Text as='span'>{PASSAGE_STATE[state].label}</Text>
+              <Muted variant='caption'>shaft or way up in this state</Muted>
+            </Row>
+          )}
+        </Paged>
+      </ul>
+    </Block>
+  )
+}
+
+function WaysDown({ view }: { view: MapView }) {
+  const openings = view.deep?.openings ?? []
+  if (view.level || openings.length === 0) return null
+  const states = [...new Set(openings.map((opening) => opening.state))].sort()
+  return (
+    <Block title='Ways down' defaultOpen={false}>
+      <ul className='flex min-w-0 flex-col gap-1.5'>
+        <Paged items={states} initial={STATES_SHOWN} as='li'>
+          {(state) => (
+            <Row
+              key={state}
+              icon={
+                <ShaftMarker
+                  token={PASSAGE_LOOK[state].token}
+                  shape='mouth'
+                  up={false}
+                />
+              }
+            >
+              <Text as='span'>{`${PASSAGE_STATE[state].label} way down`}</Text>
+              <Muted variant='caption'>{`${openings.filter((opening) => opening.state === state).length}`}</Muted>
+            </Row>
+          )}
+        </Paged>
+      </ul>
+    </Block>
+  )
+}
+
 export function MapLegend({
   view,
   mode,
@@ -322,17 +444,19 @@ export function MapLegend({
     ...view.roads.map((road): LineKind =>
       road.kind === 'trade' ? 'trade_road' : 'road'
     ),
-    ...view.relations.map((line) => line.kind as LineKind),
+    ...view.relations.map((line) => relationLine(view, line)),
     ...(view.trade ?? []).map((route): LineKind =>
       route.status === 'blockaded' ? 'route_blocked' : 'route'
     ),
   ])
   const lines = [...lineKinds].filter((kind) =>
-    ROUTE_KINDS.has(kind)
-      ? overlays.trade
-      : ROAD_KINDS.has(kind)
-        ? overlays.roads
-        : overlays.ties
+    PASSAGE_KINDS.has(kind)
+      ? true
+      : ROUTE_KINDS.has(kind)
+        ? overlays.trade
+        : ROAD_KINDS.has(kind)
+          ? overlays.roads
+          : overlays.ties
   )
   const ongoing = view.wars.some((war) => war.ongoing)
   const threshold: Record<string, string> = {
@@ -362,26 +486,31 @@ export function MapLegend({
           <DomainKey mode={mode} palette={palette} />
         </Block>
       )}
-      <Block title='The land' defaultOpen={false}>
-        <ul className='flex min-w-0 flex-col gap-1.5'>
-          <Paged items={view.geometry.palette.biome_names} as='li'>
-            {(name, index) => (
-              <Row
-                key={name}
-                icon={
-                  <ColorSwatch
-                    color={view.geometry.palette.biome_colours[index]}
-                  />
-                }
-              >
-                <Text as='span' truncate className='flex-1'>
-                  {name.replaceAll('_', ' ')}
-                </Text>
-              </Row>
-            )}
-          </Paged>
-        </ul>
-      </Block>
+      {view.level ? (
+        <DeepKey view={view} />
+      ) : (
+        <Block title='The land' defaultOpen={false}>
+          <ul className='flex min-w-0 flex-col gap-1.5'>
+            <Paged items={view.geometry.palette.biome_names} as='li'>
+              {(name, index) => (
+                <Row
+                  key={name}
+                  icon={
+                    <ColorSwatch
+                      color={view.geometry.palette.biome_colours[index]}
+                    />
+                  }
+                >
+                  <Text as='span' truncate className='flex-1'>
+                    {name.replaceAll('_', ' ')}
+                  </Text>
+                </Row>
+              )}
+            </Paged>
+          </ul>
+        </Block>
+      )}
+      <WaysDown view={view} />
       <Block title='Markers' defaultOpen={!layerTitle}>
         {!anyMarker && <Muted>No markers on this map yet.</Muted>}
         {fallenCount > 0 && (

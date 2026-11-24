@@ -35,7 +35,7 @@ class AsabiyyaTally:
 async def comfort(ctx: TickContext, town_ids: set[int]) -> float:
     total = 0.0
     weight = 0.0
-    for town_id in town_ids:
+    for town_id in sorted(town_ids):
         society = await ctx.session.get(CommunitySocietyRow, town_id)
         if society is None:
             continue
@@ -78,7 +78,11 @@ class Frontiers:
         self.threshold = max(float(table.frontier_floor), mean * table.frontier_ratio_pct / PERCENT)
 
     def count(self, regions: set[int], own: set[int]) -> int:
-        return sum(1 for region in regions if any(self.distance(mine, other) >= self.threshold for other in self.strangers(region, own) for mine in own))
+        return sum(
+            1
+            for region in sorted(regions)
+            if any(self.distance(mine, other) >= self.threshold for other in self.strangers(region, own) for mine in sorted(own))
+        )
 
 
 def generation_turned(ctx: TickContext) -> bool:

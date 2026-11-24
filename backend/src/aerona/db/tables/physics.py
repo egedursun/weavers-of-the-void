@@ -111,6 +111,7 @@ class WorldPhysicsRow(Base):
     methane: Mapped[int] = mapped_column(default=0)
     ammonia: Mapped[int] = mapped_column(default=0, server_default="0")
     hydrogen: Mapped[int] = mapped_column(default=0, server_default="0")
+    sulphur_dioxide: Mapped[int] = mapped_column(default=0, server_default="0")
     water_vapour: Mapped[int] = mapped_column(default=0)
     exotic_gas: Mapped[int] = mapped_column(default=0)
     pressure: Mapped[float] = mapped_column(Float, default=1.0)

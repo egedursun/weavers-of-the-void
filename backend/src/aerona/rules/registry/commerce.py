@@ -10,6 +10,10 @@ S = RuleGroup.ECONOMY
 class CommerceRules(Spanned):
     retail_margin_pct: int = rule(20, 0, 200, S, "Margin a retail tier or shop adds to what passes through it")
     wholesale_margin_pct: int = rule(10, 0, 200, S, "Margin a wholesale tier adds to what passes through it")
+    broker_margin_pct: int = rule(5, 0, 100, S, "Margin a broker adds as it buys in one market and sells in another")
+    peddler_margin_pct: int = rule(25, 0, 200, S, "Margin a peddler adds to the goods it carries to a settlement with no market")
+    broker_routes: int = rule(3, 1, 100, S, "Trade routes meeting at a market from which brokers trade between its partners")
+    peddler_hops: int = rule(3, 1, 50, S, "Regions a peddler walks from a market to a settlement with none")
     promotion_demand_pct: int = rule(10, 0, 100, S, "Reputation a promotion at full reach adds to its brand each epoch, in tenths")
     false_claim_trust_loss: int = rule(20, 0, 100, S, "Reputation and honour lost when a false claim of a promotion is found out")
     lease_default_chance_pct: int = rule(5, 0, 100, S, "Chance each epoch that a lessee fails to pay the rent")

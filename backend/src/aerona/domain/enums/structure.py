@@ -204,6 +204,8 @@ class StructureSection(StrEnum):
     HABITAT_DECKS = "habitat_decks"
     CONTROL_CORE = "control_core"
     SHIELDING = "shielding"
+    CISTERN = "cistern"
+    CHIMNEY = "chimney"
 
 
 class SectionRole(StrEnum):
@@ -251,6 +253,8 @@ class BuildingForm(StrEnum):
     MODULAR = "modular"
     GROWN = "grown"
     CARVED = "carved"
+    STILT = "stilt"
+    VAULT = "vault"
 
 
 class ConstructionState(StrEnum):
@@ -261,6 +265,7 @@ class ConstructionState(StrEnum):
     RUINED = "ruined"
     ABANDONED = "abandoned"
     DISMANTLED = "dismantled"
+    RESTORED = "restored"
 
 
 class BuilderKind(StrEnum):
@@ -272,6 +277,7 @@ class BuilderKind(StrEnum):
     GOD = "god"
     COMPANY = "company"
     MADE_MIND = "made_mind"
+    HOUSEHOLD = "household"
 
 
 class ConstructionStatus(StrEnum):

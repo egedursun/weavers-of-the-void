@@ -19,6 +19,7 @@ const MOTIVE_FILL: Record<AgentMotiveView['motive'], string> = {
   ego: 'fill-info stroke-info',
   love: 'fill-primary stroke-primary',
   revenge: 'fill-destructive stroke-destructive',
+  faith: 'fill-info stroke-info',
 }
 
 type Point = { x: number; y: number }

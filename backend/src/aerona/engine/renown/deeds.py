@@ -237,7 +237,8 @@ async def claim_falsely(ctx: TickContext, deed: DeedRow, tally: DeedTally) -> in
             continue
         if await ctx.session.scalar(select(DeedClaimRow.id).where(DeedClaimRow.deed_id == deed.id, DeedClaimRow.claimant_node_id == rival.id)) is not None:
             return None
-        ctx.session.add(new_claim(deed.id, rival.id, ClaimKind.FALSE, ctx.epoch))
+        borrowed = deed.doer_node_id != rival.id and ctx.rng(seed_of("claim.borrowed", deed.id, rival.id)).chance(table.borrowed_pct)
+        ctx.session.add(new_claim(deed.id, rival.id, ClaimKind.BORROWED if borrowed else ClaimKind.FALSE, ctx.epoch))
         tally.false_claims += 1
         return rival.id
     return None

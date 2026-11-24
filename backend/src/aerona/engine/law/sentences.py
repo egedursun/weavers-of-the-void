@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable
 from sqlalchemy import select
 
 from aerona.catalog.crimes import PUNISHMENTS, TRIALS
+from aerona.catalog.mythic import GEAS_ACTS
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.db.tables.bonds import BondRow
@@ -12,18 +13,23 @@ from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.powers import PowerRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.justice import TrialKind
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.mortal import PunishmentKind
+from aerona.domain.enums.mythic import GeasLayer, GeasMode
 from aerona.domain.enums.powers import PowerState
-from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.society import NaturalLaw, SocialClass
+from aerona.engine.body.afflictions import afflict
 from aerona.engine.context import TickContext
+from aerona.engine.divine.laws import binds
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.law.prisons import imprison
 from aerona.engine.mind.book import values_for
 from aerona.engine.mortal.standing import add_infamy, add_stress, add_wealth, shift_standing
+from aerona.engine.mythic.geasa import lay_geas
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent
 from aerona.engine.primitives.queries import add_flag
 
@@ -91,6 +97,10 @@ async def cast_out(ctx: TickContext, culprit: EntityRow, _case: int | None) -> N
 async def atone(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
     await add_stress(ctx.session, culprit.id, ctx.rules.sentences.work_stress, ctx.epoch)
     await shift_standing(ctx.session, culprit, "piety", ctx.rules.sentences.penance_piety, ctx.epoch, default=0)
+    if culprit.entity_type is EntityType.MORTAL and await binds(ctx, NaturalLaw.OATHS_BIND, culprit):
+        rng = ctx.rng(f"court.geas.{culprit.id}.{ctx.epoch}")
+        if rng.chance(ctx.rules.sentences.court_geas_pct):
+            await lay_geas(ctx, culprit, layer_node_id=None, layer=GeasLayer.LAW, mode=GeasMode.TABOO, act=rng.pick(list(GEAS_ACTS[GeasMode.TABOO])))
 
 
 async def elsewhere(ctx: TickContext, culprit: EntityRow, *, far: bool) -> EntityRow | None:
@@ -156,6 +166,17 @@ async def dampen(ctx: TickContext, culprit: EntityRow, _case: int | None) -> Non
     for power in list(await ctx.session.scalars(select(PowerRow).where(PowerRow.holder_node_id == culprit.id, PowerRow.state == PowerState.ACTIVE))):
         if "state" not in power.locked:
             power.state = PowerState.SUPPRESSED
+
+
+@SENTENCES.on(PunishmentKind.SHUNNING)
+async def shun(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
+    await add_stress(ctx.session, culprit.id, ctx.rules.sentences.shunning_stress, ctx.epoch)
+    await shift_standing(ctx.session, culprit, "renown", -ctx.rules.sentences.shunning_renown, ctx.epoch, default=0)
+
+
+@SENTENCES.on(PunishmentKind.CURSE_SENTENCE)
+async def lay_sentence_curse(ctx: TickContext, culprit: EntityRow, _case: int | None) -> None:
+    await afflict(ctx, culprit, PackageKind.FORTUNE, Transmission.CURSE, source_node_id=culprit.location_id)
 
 
 async def answer(ctx: TickContext, polity_id: int | None, town_id: int | None, *, cost: int, leans: tuple[int, int, int], fairness: int) -> None:

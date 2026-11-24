@@ -119,6 +119,9 @@ PHYSICS: MappingProxyType[MaterialKind, tuple[int, ...]] = MappingProxyType(
         M.SHELL: (80, 100, 100, 50, 30, 20, 30, 20, 0, 20, 50, 30),
         M.POLYMER: (35, 35, 70, 25, 50, 70, 45, 65, 50, 10, 25, 30),
         M.COMPOSITE: (75, 80, 100, 30, 85, 90, 80, 85, 30, 20, 30, 60),
+        M.RUBBER: (35, 35, 100, 12, 30, 90, 20, 70, 95, 2, 12, 0),
+        M.PAPER: (100, 23, 100, 7, 3, 10, 2, 8, 15, 5, 7, 0),
+        M.LACQUER: (90, 30, 100, 12, 20, 35, 10, 25, 25, 3, 12, 5),
     }
 )
 
@@ -136,6 +139,9 @@ MATERIALS: MappingProxyType[MaterialKind, MaterialSpec] = MappingProxyType(
             spec((M.HIDE, "Hide", F.ORGANIC), (8, 45, 15, 0), (10, 5, 0), (10, 8, 40)),
             spec((M.LEATHER, "Leather", F.ORGANIC), (15, 55, 15, 0), (10, 5, 0), (15, 15, 25)),
             spec((M.CLOTH, "Cloth", F.ORGANIC), (3, 30, 5, 0), (15, 10, 0), (10, 10, 45)),
+            spec((M.PAPER, "Paper", F.ORGANIC), (2, 10, 3, 0), (10, 15, 0), (15, 15, 55)),
+            worked(spec((M.RUBBER, "Rubber", F.ORGANIC), (5, 60, 10, 0), (5, 5, 0), (35, 30, 25)), B.METALLURGY, 3),
+            worked(spec((M.LACQUER, "Lacquer", F.ORGANIC), (20, 25, 5, 5), (20, 25, 0), (45, 50, 10)), B.AGRICULTURE, 2),
             spec((M.STONE, "Stone", F.STONE), (55, 25, 80, 15), (15, 20, 0), (5, 5, 2)),
             spec((M.FLINT, "Flint", F.STONE), (60, 10, 40, 55), (10, 5, 0), (15, 8, 3)),
             spec((M.OBSIDIAN, "Obsidian", F.STONE), (58, 5, 35, 80), (40, 5, 20), (35, 25, 3)),

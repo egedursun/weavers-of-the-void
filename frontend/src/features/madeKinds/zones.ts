@@ -57,6 +57,8 @@ const VEHICLE_ZONES: Record<VehicleSection, Zone> = {
   magazine: 'body',
   mount_body: 'body',
   troop_bay: 'body',
+  galley: 'body',
+  sick_bay: 'body',
 }
 
 const STRUCTURE_ZONES: Record<StructureSection, Zone> = {
@@ -103,6 +105,8 @@ const STRUCTURE_ZONES: Record<StructureSection, Zone> = {
   upper_floors: 'top',
   wards: 'body',
   workshop_floor: 'body',
+  cistern: 'under',
+  chimney: 'top',
 }
 
 export function vehicleZone(section: string): Zone {

@@ -83,6 +83,7 @@ async def thin_elites(ctx: TickContext, polity: EntityRow) -> int:
     "table.community_societies",
     "table.cosmos",
     "table.creator",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
@@ -168,6 +169,7 @@ async def asabiyya(ctx: TickContext) -> None:
     "table.bonds",
     "table.cosmos",
     "table.creator",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
@@ -181,6 +183,7 @@ async def asabiyya(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.living_lines",
+    "table.movements",
     "table.network_nodes",
     "table.node_births",
     "table.nodes",
@@ -476,8 +479,29 @@ async def nomadism(ctx: TickContext) -> None:
     count(ctx, "nomads", tally)
 
 
-@reads("table.bonds", "table.culture_values", "table.entities", "table.founding_myths", "table.nodes", "table.people_culture")
-@writes("table.account_stances", "table.culture_values", "table.legacy_traits", "table.people_culture")
+@reads(
+    "table.account_stances",
+    "table.bonds",
+    "table.culture_values",
+    "table.entities",
+    "table.founding_myths",
+    "table.legacy_traits",
+    "table.node_births",
+    "table.nodes",
+    "table.people_culture",
+)
+@writes(
+    "table.account_stances",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.culture_values",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incidents",
+    "table.legacy_traits",
+    "table.people_culture",
+)
 async def legacy_traits(ctx: TickContext) -> None:
     tally = LegacyTally()
     await keep_legacies(ctx, tally)

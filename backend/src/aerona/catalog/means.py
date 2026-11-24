@@ -96,6 +96,8 @@ MEDIA = total(
         WritingMedium.SILK: MediumSpec("Silk", "silk_durability", True, False, 1, CommodityKind.CLOTH),
         WritingMedium.WOOD_SLIPS: MediumSpec("Slips of wood or cane", "wood_slips_durability", True, False, 1, CommodityKind.TIMBER, bulk=4),
         WritingMedium.ELECTRONIC: MediumSpec("Electronic record", "electronic_durability", False, False, 5, None, needs=Technique.COMPUTATION, networked=True),
+        WritingMedium.CLOTH: MediumSpec("Cloth", "cloth_durability", True, False, 1, CommodityKind.CLOTH),
+        WritingMedium.POTSHERD: MediumSpec("Potsherd", "potsherd_durability", False, False, 0, CommodityKind.POTTERY, bulk=2),
     },
 )
 CASUAL_MEDIA = (WritingMedium.CLAY_TABLET, WritingMedium.WAX_TABLET, WritingMedium.BARK, WritingMedium.PALM_LEAF, WritingMedium.PAPYRUS)
@@ -114,6 +116,7 @@ LOCKS: Mapping[LockKind, LockSpec] = total(
         LockKind.ELECTRONIC: LockSpec(
             "Electronic lock", 6, False, (Technique.ELECTRICITY,), (SkillKind.ELECTRONICS, SkillKind.COMPUTING), True, "electronic_difficulty"
         ),
+        LockKind.LIVING: LockSpec("Living lock", 8, False, (Technique.GENETIC_ENGINEERING,), (), False, "living_difficulty"),
     },
 )
 
@@ -127,6 +130,7 @@ LIFTS: Mapping[WaterLift, LiftSpec] = total(
         WaterLift.STEAM_PUMP: LiftSpec("Steam pump", 8, Technique.STEAM_POWER, "steam_pump_lift"),
         WaterLift.WIND_PUMP: LiftSpec("Wind pump", 5, Technique.MACHINE_TOOLS, "wind_pump_lift", wind=True),
         WaterLift.ELECTRIC_PUMP: LiftSpec("Electric pump", 12, Technique.ELECTRICITY, "electric_pump_lift", electric=True),
+        WaterLift.ANIMAL_WHEEL: LiftSpec("Animal wheel", 3, Technique.PLOUGH, "animal_wheel_lift"),
     },
 )
 MINE_PUMPS = frozenset({WaterLift.SCREW, WaterLift.CHAIN_PUMP, WaterLift.STEAM_PUMP, WaterLift.ELECTRIC_PUMP})
@@ -141,6 +145,8 @@ AIDS = MappingProxyType(
         NavigationAid.WAYFINDING: AidSpec("Wayfinding lore", None, False, "wayfinding_loss_cut_pct", skilled=True),
         NavigationAid.BEACONS: AidSpec("Beacons on the shore", None, False, "beacons_loss_cut_pct", shore_works=True),
         NavigationAid.POSITIONING: AidSpec("Positioning by network", Technique.COMPUTATION, False, "positioning_loss_cut_pct", networked=True),
+        NavigationAid.PILOTS: AidSpec("Pilots who take vessels in", None, False, "pilots_loss_cut_pct", skilled=True, shore_works=True),
+        NavigationAid.BUOYS: AidSpec("Buoys", Technique.SAILING, False, "buoys_loss_cut_pct", shore_works=True),
     }
 )
 
@@ -189,6 +195,8 @@ CONTAINERS = MappingProxyType(
         ContainerKind.TANK: ContainerSpec(
             "Tank", 1, True, SkillKind.ENGINEERING, CommodityKind.ORE, frozenset({CargoClass.LIQUID, CargoClass.GAS, CargoClass.HAZARDOUS})
         ),
+        ContainerKind.CAGE: ContainerSpec("Cage", 3, False, SkillKind.CARPENTRY, CommodityKind.TIMBER, frozenset({CargoClass.LIVESTOCK, CargoClass.LIVING})),
+        ContainerKind.NET_BAG: ContainerSpec("Net bag", 7, False, SkillKind.WEAVING, CommodityKind.FIBRE, frozenset({CargoClass.BULK, CargoClass.PERISHABLE})),
     }
 )
 

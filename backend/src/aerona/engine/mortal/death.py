@@ -6,7 +6,9 @@ from aerona.catalog.death_causes import death_cause_of
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import DamageType, HarmCause
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -25,7 +27,7 @@ from aerona.engine.recording.record import record
 
 GLORY: Mapping[DeathReading, int] = total(
     DeathReading,
-    {DeathReading.GLORIOUS: 2, DeathReading.HONOURABLE: 1, DeathReading.PLAIN: 0, DeathReading.SHAMEFUL: -1, DeathReading.CURSED: -2},
+    {DeathReading.GLORIOUS: 2, DeathReading.HONOURABLE: 1, DeathReading.PLAIN: 0, DeathReading.SHAMEFUL: -1, DeathReading.CURSED: -2, DeathReading.PITIED: 0},
 )
 
 
@@ -39,6 +41,13 @@ async def death_place(ctx: TickContext, mortal: EntityRow) -> int | None:
         return location.id
     atlas = await RegionAtlas.load(ctx.session)
     return atlas.top_region(mortal.id)
+
+
+async def pity_household(ctx: TickContext, mortal: EntityRow) -> None:
+    household = await ctx.session.scalar(select(HouseholdRow).where(HouseholdRow.head_node_id == mortal.id).limit(1))
+    if household is None or "wealth" in (household.locked or []) or held(mortal.id):
+        return
+    household.wealth += ctx.rules.life_course.pitied_care
 
 
 async def house_prestige(ctx: TickContext, mortal: EntityRow, manner: DeathCause) -> int:
@@ -80,4 +89,6 @@ async def record_end(ctx: TickContext, mortal: EntityRow, manner: DeathCause) ->
     for kin_id in await close_kin_of(ctx.session, mortal.id):
         if await living_entity(ctx.session, kin_id) is not None:
             await add_stress(ctx.session, kin_id, ctx.rules.stress.loss_stress, ctx.epoch)
+    if reading is DeathReading.PITIED:
+        await pity_household(ctx, mortal)
     await house_prestige(ctx, mortal, manner)

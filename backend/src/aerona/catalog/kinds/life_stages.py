@@ -5,7 +5,7 @@ from typing import Literal
 from aerona.core.total import total
 from aerona.domain.enums.mortal import LifeStage
 
-AgeLoss = Literal["elder_health_loss", "ancient_health_loss"]
+AgeLoss = Literal["mature_health_loss", "elder_health_loss", "ancient_health_loss"]
 
 
 @dataclass(frozen=True)
@@ -26,5 +26,6 @@ LIFE_STAGES: Mapping[LifeStage, LifeStageSpec] = total(
         S.ADULT: LifeStageSpec(recovers=True, counts_as_adult=True, reached="adulthood"),
         S.ELDER: LifeStageSpec(recovers=False, counts_as_adult=True, age_loss="elder_health_loss", reached="old age"),
         S.ANCIENT: LifeStageSpec(recovers=False, counts_as_adult=False, age_loss="ancient_health_loss"),
+        S.MATURE: LifeStageSpec(recovers=True, counts_as_adult=True, age_loss="mature_health_loss", reached="middle age"),
     },
 )

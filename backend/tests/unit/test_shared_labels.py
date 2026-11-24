@@ -56,7 +56,7 @@ def test_a_named_field_label_passes(tmp_path: Path) -> None:
     assert check.generics_in(view) == []
 
 
-def test_the_sections_every_drawer_renders_name_their_fields() -> None:
+def test_the_sections_every_entry_window_renders_name_their_fields() -> None:
     check = script()
     shared = check.shared_files()
     assert any(path.name == "DominionSection.tsx" for path in shared)

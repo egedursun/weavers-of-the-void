@@ -9,6 +9,8 @@ class UnitHonourKind(StrEnum):
     MASSACRE = "massacre"
     RELIEF = "relief"
     CROSSING = "crossing"
+    MERCY = "mercy"
+    FIRST_IN = "first_in"
 
 
 class VeteranGrant(StrEnum):
@@ -18,6 +20,7 @@ class VeteranGrant(StrEnum):
     MEMBERSHIP = "membership"
     TITLE = "title"
     TAX_EXEMPTION = "tax_exemption"
+    OFFICE = "office"
 
 
 class HonourPrivilege(StrEnum):

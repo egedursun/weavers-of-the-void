@@ -22,6 +22,8 @@ class UnitHonourRules:
         3, 1, 100, W, "Honours of victory, stand or siege after which a unit earns a nickname in the tongue of the land it was raised from"
     )
     standard_renown: int = rule(4, 0, 100, W, "Renown the standard its army or realm bears gains for each honour a unit earns")
+    mercy_esprit: int = rule(8, 0, 100, W, "Esprit a unit gains for sparing a city or a foe its people read as worth sparing")
+    first_in_esprit: int = rule(12, 0, 100, W, "Esprit a unit gains for being first through a breach")
 
 
 @dataclass(frozen=True)
@@ -50,3 +52,6 @@ class VeteranRules(Spanned):
     @property
     def pension_years(self) -> int:
         return self.epochs(self.paid_years)
+
+    office_loyalty: int = rule(12, 0, 100, W, "Relation each town of a realm gains with it when it raises a veteran into an office")
+    office_cost: int = rule(40, 0, 10000, W, "Coin a realm spends to place one veteran in an office")

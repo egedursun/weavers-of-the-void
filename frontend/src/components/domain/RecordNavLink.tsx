@@ -11,11 +11,11 @@ import {
 } from 'lucide-react'
 import { Button, type ButtonProps } from '@/components/ui/button'
 import {
-  type DrawerSearch,
-  parseDrawerStack,
-  pushDrawerEntry,
-} from '@/components/layout/drawer/drawerEntries'
-import { drawerSearchWith } from '@/components/layout/drawer/useDrawerStack'
+  type EntrySearch,
+  parseEntryStack,
+  pushEntry,
+} from '@/components/layout/entry/entryStack'
+import { entrySearchWith } from '@/components/layout/entry/useEntryStack'
 
 export type NavTarget =
   | { view: 'map'; world?: number | null; focus?: number }
@@ -92,10 +92,10 @@ function TargetLink({
       <Link
         {...rest}
         to='.'
-        search={(previous: DrawerSearch) =>
-          drawerSearchWith(
+        search={(previous: EntrySearch) =>
+          entrySearchWith(
             previous,
-            pushDrawerEntry(parseDrawerStack(previous.drawer), {
+            pushEntry(parseEntryStack(previous.entry), {
               kind: 'world',
               id: String(target.world),
             })

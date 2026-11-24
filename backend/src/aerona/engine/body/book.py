@@ -2,7 +2,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass, replace
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import Anatomy, anatomy_of
@@ -455,6 +455,15 @@ async def perception_of(session: AsyncSession, rules: Rules, mortal: EntityRow) 
     if body is None:
         return float(base)
     return base * body.perception / PERCENT * rules.body_capacities.perception_watch_pct / PERCENT
+
+
+async def capacity_lean(session: AsyncSession, node_ids: list[int], field: str, weight: int) -> float:
+    if not node_ids:
+        return 0.0
+    mean = await session.scalar(select(func.avg(getattr(BodyRow, field))).where(BodyRow.node_id.in_(sorted(node_ids))))
+    if mean is None:
+        return 0.0
+    return (float(mean) - PERCENT) / PERCENT * weight / PERCENT
 
 
 def bedridden(rules: Rules, bearer: object) -> bool:

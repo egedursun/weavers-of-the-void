@@ -198,6 +198,8 @@ async def derive(database: Database, world_id: int, rules: Rules | None, publish
             summary.events += await digest.mirror_of(ctx, row, world)
         elif row.kind is PrehistoryKind.VOYAGE:
             summary.events += await digest.borrowed_from(ctx, row, row.source_world_id or world.parent_world_id)
+        elif row.kind is PrehistoryKind.RUINED:
+            summary.events += await digest.ruins_of(ctx, row, world)
         elif row.kind is PrehistoryKind.PHENOMENON:
             summary.events += await digest.borrowed_from(ctx, row, row.source_world_id)
         await digest.prune_digest(ctx, world_id, ctx.rules.prehistory.digest_size)

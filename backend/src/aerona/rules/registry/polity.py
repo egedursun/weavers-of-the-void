@@ -344,6 +344,15 @@ class TreatiesRules(Spanned):
     def marriage_treaty_epochs(self) -> int:
         return self.epochs(self.marriage_treaty_years)
 
+    isolated_war_pct: int = rule(5, 0, 100, P, "Chance a polity that stands apart from all is drawn into a war of its region (%)")
+    accord_relation: int = rule(30, -100, 100, P, "Regard two realms of one world need before they fix their borders by accord")
+    aid_relation: int = rule(50, -100, 100, P, "Regard two realms need before they pledge each other aid in disaster")
+    accord_pct: int = rule(10, 0, 100, P, "Chance each epoch two realms that regard each other well enough sign an accord they lack (%)")
+    border_accord_regard: int = rule(3, 0, 100, P, "Regard two realms gain each epoch their borders stay fixed by accord")
+    aid_struck_prosperity: int = rule(25, 0, 100, P, "Prosperity below which a realm counts as struck and its pledged partner sends aid")
+    aid_prosperity: int = rule(5, 0, 100, P, "Prosperity a partner sends a struck realm each epoch under a pact of mutual aid")
+    shared_water_regard: int = rule(2, 0, 100, P, "Regard parties sharing a river by treaty gain each epoch")
+
 
 @dataclass(frozen=True)
 class RealmTierRules:

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from aerona.core.total import total
 from aerona.domain.enums.crafts import CatchGround, CatchMedium, Gear
+from aerona.domain.enums.economy import CommodityKind
 from aerona.rules.registry import Rules
 
 
@@ -10,6 +11,7 @@ from aerona.rules.registry import Rules
 class GroundSpec:
     medium: CatchMedium
     gear: tuple[Gear, ...]
+    goods: tuple[CommodityKind, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -19,6 +21,7 @@ class GearSpec:
     harms_bed: bool = False
     sickens: bool = False
     needs_animals: bool = False
+    bed_harm: Callable[[Rules], int] | None = None
 
 
 GROUNDS: Mapping[CatchGround, GroundSpec] = total(
@@ -27,11 +30,13 @@ GROUNDS: Mapping[CatchGround, GroundSpec] = total(
         CatchGround.FISHERY: GroundSpec(CatchMedium.WATER, (Gear.LINES, Gear.NETS, Gear.WEIRS, Gear.TRAWLS, Gear.POISON)),
         CatchGround.MARINE_HUNT: GroundSpec(CatchMedium.WATER, (Gear.HARPOONS,)),
         CatchGround.TRAPPING: GroundSpec(CatchMedium.LAND, (Gear.TRAPS, Gear.SNARES, Gear.POISON)),
-        CatchGround.FOWLING: GroundSpec(CatchMedium.LAND, (Gear.SNARES, Gear.MISSILES, Gear.HUNTING_ANIMALS)),
-        CatchGround.GAME_HUNT: GroundSpec(CatchMedium.LAND, (Gear.MISSILES, Gear.TRAPS, Gear.HUNTING_ANIMALS)),
-        CatchGround.SHORE_GATHERING: GroundSpec(CatchMedium.SHORE, (Gear.NETS, Gear.TRAPS)),
-        CatchGround.DIVING: GroundSpec(CatchMedium.UNDER_WATER, (Gear.NETS, Gear.HARPOONS)),
+        CatchGround.FOWLING: GroundSpec(CatchMedium.LAND, (Gear.SNARES, Gear.MISSILES, Gear.HUNTING_ANIMALS, Gear.DECOYS)),
+        CatchGround.GAME_HUNT: GroundSpec(CatchMedium.LAND, (Gear.MISSILES, Gear.TRAPS, Gear.HUNTING_ANIMALS, Gear.DECOYS)),
+        CatchGround.SHORE_GATHERING: GroundSpec(CatchMedium.SHORE, (Gear.NETS, Gear.TRAPS, Gear.DREDGES)),
+        CatchGround.DIVING: GroundSpec(CatchMedium.UNDER_WATER, (Gear.NETS, Gear.HARPOONS, Gear.DREDGES)),
         CatchGround.FISH_PONDS: GroundSpec(CatchMedium.POND, (Gear.NETS, Gear.WEIRS)),
+        CatchGround.EGG_GATHERING: GroundSpec(CatchMedium.LAND, (Gear.NETS, Gear.SNARES), (CommodityKind.EGGS,)),
+        CatchGround.INSECT_GATHERING: GroundSpec(CatchMedium.LAND, (Gear.TRAPS, Gear.NETS), (CommodityKind.HONEY, CommodityKind.WAX, CommodityKind.DYE)),
     },
 )
 
@@ -46,6 +51,13 @@ GEAR: Mapping[Gear, GearSpec] = total(
         Gear.HARPOONS: GearSpec(lambda rules: rules.grounds.harpoons_pct, lambda rules: rules.grounds.harpoons_depletion),
         Gear.MISSILES: GearSpec(lambda rules: rules.grounds.missiles_pct, lambda rules: rules.grounds.missiles_depletion),
         Gear.TRAWLS: GearSpec(lambda rules: rules.grounds.trawls_pct, lambda rules: rules.grounds.trawls_depletion, harms_bed=True),
+        Gear.DREDGES: GearSpec(
+            lambda rules: rules.grounds.dredges_pct,
+            lambda rules: rules.grounds.dredges_depletion,
+            harms_bed=True,
+            bed_harm=lambda rules: rules.grounds.dredge_bed_harm_pct,
+        ),
+        Gear.DECOYS: GearSpec(lambda rules: rules.grounds.decoys_pct, lambda rules: rules.grounds.decoys_depletion),
         Gear.POISON: GearSpec(lambda rules: rules.grounds.poison_pct, lambda rules: rules.grounds.poison_depletion, sickens=True),
         Gear.HUNTING_ANIMALS: GearSpec(
             lambda rules: rules.grounds.hunting_animals_pct, lambda rules: rules.grounds.hunting_animals_depletion, needs_animals=True

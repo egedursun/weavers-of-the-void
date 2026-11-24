@@ -48,6 +48,7 @@ class ForgeryRules:
     seal_detect_pct: int = rule(90, 0, 100, C, "How readily a forged seal is found out, against the base chance (%)")
     coin_trust_cut: int = rule(5, 0, 100, C, "Trust a currency loses each time false coin of it is made")
     seal_order_take: int = rule(20, 0, 100000, C, "Coin a forged seal draws from its realm by a false order")
+    identity_detect_pct: int = rule(25, 0, 100, M, "Chance each epoch false papers and a false person are seen through (%)")
 
 
 @dataclass(frozen=True)

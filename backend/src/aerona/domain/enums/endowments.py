@@ -11,6 +11,8 @@ class EndowmentPurpose(StrEnum):
     KIN = "kin"
     MEMORY = "memory"
     RESEARCH = "research"
+    HOSPITALITY = "hospitality"
+    RANSOM = "ransom"
 
 
 class EndowmentCapital(StrEnum):

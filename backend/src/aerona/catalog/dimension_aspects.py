@@ -52,6 +52,8 @@ FORM_PULLS: Mapping[SpellForm, Pull] = total(
         SpellForm.FATE: Pull("stability", 1),
         SpellForm.MACHINE: Pull("stability", 1),
         SpellForm.INFORMATION: Pull("magic", 1),
+        SpellForm.DREAM: Pull("veil", -1),
+        SpellForm.LAW: Pull("stability", 1),
     },
 )
 KIND_FORMS: Mapping[DimensionKind, tuple[SpellForm, ...]] = total(

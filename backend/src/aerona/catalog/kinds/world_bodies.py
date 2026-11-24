@@ -61,5 +61,8 @@ WORLD_BODIES: Mapping[WorldType, WorldBody] = total(
         W.HOLLOW: WorldBody(1.0, 30, 60, 5, 0, 0, 1.0, 30, 50, 20, 10, 0),
         W.ICE_SHELL: WorldBody(1.0, 30, 60, 60, 0, 0, 1.0, 70, 50, 20, 80, 0),
         W.METHANE: WorldBody(1.0, 30, 60, 5, 0, 0, 1.0, 30, 50, 20, 10, 30),
+        W.ROGUE: WorldBody(1.0, 30, 55, 15, 0, 0, 1.0, 20, 40, 30, 90, 0),
+        W.ARCHIPELAGO: WorldBody(1.0, 30, 60, 5, 0, 0, 1.0, 30, 60, 40, 5, 0),
+        W.MEGASTRUCTURE: WorldBody(0.5, 60, 30, 5, 0, 5, 1.0, 40, 0, 0, 5, 0),
     },
 )

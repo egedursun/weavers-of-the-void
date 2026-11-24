@@ -236,6 +236,27 @@ TYPED: tuple[InvariantSpec, ...] = (
         "healed to a scar",
     ),
     InvariantSpec(
+        "deep_positions_valid",
+        "entities",
+        "a thing placed below stands in a cell that exists beneath its region",
+        Remedy.REPAIR,
+        "brought up to the surface",
+    ),
+    InvariantSpec(
+        "passage_state_fits",
+        "deep_passages",
+        "a passage is being dug exactly while it has never opened, and sealed exactly while a seal names it",
+        Remedy.REPAIR,
+        "its state set from its digging and its seals",
+    ),
+    InvariantSpec(
+        "passage_ends_exist",
+        "deep_passages",
+        "both ends of a passage are cells that exist, and only an opening comes out at a place",
+        Remedy.REPAIR,
+        "the passage taken away",
+    ),
+    InvariantSpec(
         "spirit_fits_place",
         "genius_loci",
         "a place spirit is of the kind its place calls for",

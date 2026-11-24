@@ -61,3 +61,5 @@ class CommunicationRules(Spanned):
     war_support_pct: int = rule(30, 0, 100, D, "Share of approval of a war that eases or deepens war weariness (%)")
     enforcement_pct: int = rule(20, 0, 100, D, "Share of approval of a law added to its enforcement (%)")
     censor_wish_at: int = rule(-30, -100, 0, D, "Approval of the ruler below which a hierarchical realm wishes for censorship")
+    drum_and_whistle_hops: int = rule(5, 1, 1000, D, "Regions drummed or whistled speech carries in a season")
+    courier_animal_hops: int = rule(4, 1, 1000, D, "Regions a courier animal carries a message in a season")

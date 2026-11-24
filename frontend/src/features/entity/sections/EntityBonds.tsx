@@ -33,7 +33,7 @@ import {
 import { PageControls } from '@/components/domain/PageControls'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
-import { drawerKindOf } from '@/features/chronicle/linkTargets'
+import { entryKindOf } from '@/features/chronicle/linkTargets'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { type EntityContext } from '../actions/context'
 import { humanize } from '../actions/schema'
@@ -56,7 +56,7 @@ function bondKindNote(info: BondKindInfo | undefined): string | undefined {
 function BondOther({ bond }: { bond: BondView }) {
   const other = bond.other
   if (!other) return <Text as='span'>Something forgotten</Text>
-  const kind = drawerKindOf(other.kind)
+  const kind = entryKindOf(other.kind)
   if (!kind) return <Text as='span'>{other.name}</Text>
   return (
     <EntityLink

@@ -29,6 +29,7 @@ COURT_TEXT = total(
         CourtLevel.GUILD: "a trade court",
         CourtLevel.MILITARY: "a court of the armed forces",
         CourtLevel.CONSULAR: "a court of a foreign realm",
+        CourtLevel.APPELLATE: "a court of appeal",
     },
 )
 COURT_BIAS = total(
@@ -41,6 +42,7 @@ COURT_BIAS = total(
         CourtLevel.GUILD: "guild_bias",
         CourtLevel.MILITARY: "military_bias",
         CourtLevel.CONSULAR: "consular_bias",
+        CourtLevel.APPELLATE: "appellate_bias",
     },
 )
 COURT_OFFICES: MappingProxyType[CourtLevel, OfficeKind] = MappingProxyType({CourtLevel.PROVINCIAL: OfficeKind.GOVERNOR, CourtLevel.HIGH: OfficeKind.HIGH_JUDGE})
@@ -69,6 +71,8 @@ REGISTRY_TEXT = total(
         RegistryKind.BIRTH: "birth",
         RegistryKind.DEATH: "death",
         RegistryKind.CITIZENSHIP: "citizenship",
+        RegistryKind.WILL: "will",
+        RegistryKind.LICENCE: "licence",
     },
 )
 PAID_IN_WORK = frozenset({RegistryKind.INDENTURE})

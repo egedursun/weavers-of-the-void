@@ -7,6 +7,7 @@ from aerona.catalog.life_traits import LAND_ACT_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.geology import RegionStratumRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import SOCIETY_TYPES
@@ -112,8 +113,18 @@ async def stir_ground(ctx: TickContext, region: EntityRow, ground: RegionEnviron
         if physics is not None and "volcanism" not in physics.locked:
             physics.volcanism = clamp_int(physics.volcanism + table.lava_volcanism, 0, PERCENT)
         return LandOutcome.DONE
+    if act is A.OPEN_UNDERGROUND:
+        opened = 0
+        for stratum in await ctx.session.scalars(select(RegionStratumRow).where(RegionStratumRow.region_entity_id == region.id).order_by(RegionStratumRow.id)):
+            if stratum.reached_epoch is None and "reached_epoch" not in stratum.locked:
+                stratum.reached_epoch = ctx.epoch
+                opened += 1
+        return LandOutcome.DONE if opened else LandOutcome.UNCHANGED
     if ground.coast_kind is CoastKind.NONE:
         return LandOutcome.NO_COAST
+    if act is A.RAISE_ISLAND:
+        raised = hold_value(ground, "elevation_mean", clamp_int(ground.elevation_mean + table.step, 0, PERCENT))
+        return LandOutcome.DONE if raised else LandOutcome.UNCHANGED
     hold_value(ground, "elevation_mean", clamp_int(ground.elevation_mean - table.step, 0, PERCENT))
     await apply_disaster(ctx, region, Disaster.FLOOD, 1.0)
     return LandOutcome.DONE

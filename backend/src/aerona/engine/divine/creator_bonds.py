@@ -153,6 +153,16 @@ async def covenant_offer(ctx: TickContext, creator: CreatorRow, target: EntityRo
     return await read_sign(ctx, creator, target, {"awe": 4, "love": 4}, MemoryKind.DIVINE_WILL)
 
 
+async def rebuke(ctx: TickContext, creator: CreatorRow, target: EntityRow | None) -> EntityRow | None:
+    return await read_sign(ctx, creator, target, {"awe": 4, "dread": 2}, MemoryKind.DIVINE_WILL)
+
+
+async def invitation(ctx: TickContext, creator: CreatorRow, target: EntityRow | None) -> EntityRow | None:
+    if target is not None and not held(target.id):
+        await shift_standing(ctx.session, target, "piety", ctx.rules.creator_bonds.sign_piety, ctx.epoch, default=0)
+    return await read_sign(ctx, creator, target, {"love": 6, "awe": 4, "ignorance": -6}, MemoryKind.GOODWILL)
+
+
 def aimed(sign: Sign) -> Sign:
     async def send(ctx: TickContext, creator: CreatorRow, target: EntityRow | None) -> EntityRow | None:
         return await sign(ctx, creator, target or await least_aware(ctx))
@@ -171,6 +181,8 @@ WIDER_SIGNS: Mapping[CreatorSignKind, Sign] = {
     CreatorSignKind.TEST: aimed(test),
     CreatorSignKind.REWARD: aimed(reward),
     CreatorSignKind.COVENANT_OFFER: aimed(covenant_offer),
+    CreatorSignKind.REBUKE: aimed(rebuke),
+    CreatorSignKind.INVITATION: aimed(invitation),
 }
 
 

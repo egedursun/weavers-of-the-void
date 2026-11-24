@@ -1,7 +1,7 @@
 from aerona.domain.enums.prehistory import PrehistoryKind
 from aerona.domain.enums.world import WorldType
 
-SIMULATED_KINDS = frozenset({PrehistoryKind.FULL, PrehistoryKind.LIVING, PrehistoryKind.CORPSE})
+SIMULATED_KINDS = frozenset({PrehistoryKind.FULL, PrehistoryKind.LIVING, PrehistoryKind.CORPSE, PrehistoryKind.RUINED})
 SPECIAL_KINDS: dict[WorldType, PrehistoryKind] = {
     WorldType.LIVING: PrehistoryKind.LIVING,
     WorldType.DEAD: PrehistoryKind.SOULS,
@@ -11,6 +11,7 @@ SPECIAL_KINDS: dict[WorldType, PrehistoryKind] = {
     WorldType.GENERATION_SHIP: PrehistoryKind.VOYAGE,
     WorldType.VOID_POCKET: PrehistoryKind.PHENOMENON,
     WorldType.CORPSE_WORLD: PrehistoryKind.CORPSE,
+    WorldType.MEGASTRUCTURE: PrehistoryKind.RUINED,
 }
 WORLD_PREHISTORY: dict[WorldType, PrehistoryKind] = {world_type: SPECIAL_KINDS.get(world_type, PrehistoryKind.FULL) for world_type in WorldType}
 PREHISTORY_PHASES = frozenset(

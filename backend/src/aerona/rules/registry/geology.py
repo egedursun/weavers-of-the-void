@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 G = RuleGroup.ENVIRONMENT
 
@@ -48,6 +48,26 @@ class RocksRules:
     obsidian_porosity: int = rule(0, 0, 100, G, "Obsidian: how much water it holds")
     obsidian_solubility: int = rule(2, 0, 100, G, "Obsidian: how readily water dissolves it into caves")
     obsidian_workability: int = rule(30, 0, 100, G, "Obsidian: how readily it is carved and quarried")
+    pumice_hardness: int = rule(8, 0, 100, G, "Pumice: how hard it is to dig, against the tools of the diggers")
+    pumice_porosity: int = rule(70, 0, 100, G, "Pumice: how much water it holds")
+    pumice_solubility: int = rule(2, 0, 100, G, "Pumice: how readily water dissolves it into caves")
+    pumice_workability: int = rule(70, 0, 100, G, "Pumice: how readily it is carved and quarried")
+    serpentinite_hardness: int = rule(30, 0, 100, G, "Serpentinite: how hard it is to dig, against the tools of the diggers")
+    serpentinite_porosity: int = rule(5, 0, 100, G, "Serpentinite: how much water it holds")
+    serpentinite_solubility: int = rule(3, 0, 100, G, "Serpentinite: how readily water dissolves it into caves")
+    serpentinite_workability: int = rule(80, 0, 100, G, "Serpentinite: how readily it is carved and quarried")
+    travertine_hardness: int = rule(35, 0, 100, G, "Travertine: how hard it is to dig, against the tools of the diggers")
+    travertine_porosity: int = rule(20, 0, 100, G, "Travertine: how much water it holds")
+    travertine_solubility: int = rule(25, 0, 100, G, "Travertine: how readily water dissolves it into caves")
+    travertine_workability: int = rule(75, 0, 100, G, "Travertine: how readily it is carved and quarried")
+    pumice_drift_stone: int = rule(4, 0, 100, G, "Stone a shore settlement beside an eruption gathers from rafts of pumice, less the farther they drift")
+    pumice_drift_reach: int = rule(
+        3,
+        0,
+        20,
+        G,
+        "How many coasts of slack water rafts of pumice drift along from an erupting land; a current that speeds ships carries them farther, one that slows them stops them sooner",
+    )
     slate_hardness: int = rule(45, 0, 100, G, "Slate: how hard it is to dig, against the tools of the diggers")
     slate_porosity: int = rule(5, 0, 100, G, "Slate: how much water it holds")
     slate_solubility: int = rule(2, 0, 100, G, "Slate: how readily water dissolves it into caves")
@@ -124,7 +144,7 @@ class RocksRules:
 
 
 @dataclass(frozen=True)
-class UndergroundRules:
+class UndergroundRules(Spanned):
     under_ocean_heat_min: int = rule(30, 0, 100, G, "Volcanism a world with an ice crust needs to keep an ocean beneath it")
     bore_flood_pct: int = rule(15, 0, 100, G, "Chance a bore into water floods the works that made it (%)")
     reservoir_pressure: int = rule(50, 0, 100, G, "Pressure of a reservoir when it is laid")
@@ -138,6 +158,40 @@ class UndergroundRules:
     dig_step: int = rule(5, 0, 100, G, "Mining a mortal's digging adds to its region")
     open_essence: int = rule(30, 0, 10000, G, "Essence a son spends to open or close a depth beneath a region")
     cavern_place_pct: int = rule(50, 0, 100, G, "Chance reaching a cavern opens a cave place in its region (%)")
+    fault_stress_rate: int = rule(3, 0, 20, G, "Stress a fault zone gathers each epoch until it releases as a quake")
+    fault_mining_stress: int = rule(4, 0, 50, G, "More stress a fault zone gathers in an epoch when mining or a drawn reservoir works the ground above it")
+    fault_tectonics_min: int = rule(50, 0, 100, G, "Plate motion of a world at which its rough ground lies over fault zones")
+    extent_min: int = rule(20, 1, 100, G, "Least share of a region's area a cell beneath it spans when it forms (%)")
+    natural_level_pct: int = rule(
+        40, 0, 100, G, "Chance two cells of one stratum beneath neighbouring regions are joined by a passage when the world forms (%)"
+    )
+    natural_vertical_pct: int = rule(30, 0, 100, G, "Chance two dwellable strata beneath one region are joined by a passage when the world forms (%)")
+    natural_opening_pct: int = rule(60, 0, 100, G, "Chance a cave, cavern system or sinkhole opens onto the shallowest dwellable cell beneath it (%)")
+    narrow_width: int = rule(30, 1, 100, G, "Width below which a passage admits only those who walk, climb, burrow, swim or pass as spirits")
+    narrow_army_pct: int = rule(25, 1, 100, G, "Share of an army that crosses a narrow passage each turn (%)")
+    dig_rate: int = rule(10, 1, 100, G, "Progress a digging passage makes each epoch in rock of middling hardness")
+    collapse_pct: int = rule(2, 0, 100, G, "Chance each epoch an open passage collapses (%)")
+    flood_pct: int = rule(3, 0, 100, G, "Chance each epoch a passage beside an aquifer or in a flooded region floods (%)")
+    drain_years: int = span(150, 50, 2500, G, "Years a flooded passage takes to drain back open")
+    clear_rate: int = rule(20, 1, 100, G, "Progress clearing a collapsed passage makes each epoch")
+    vertical_hop_cost: int = rule(1, 1, 5, G, "Cost of crossing a vertical passage or an opening, counted as regions crossed")
+    people_pct: int = rule(30, 0, 100, G, "Chance a dwellable stratum of a world holds a people of its own at genesis (%)")
+    unadapted_penalty_pct: int = rule(20, 0, 100, G, "Health, fertility and food a people loses in a cell its bodies are not made for (%)")
+    permafrost_layer_light: int = rule(0, 0, 100, G, "Light a cell of the permafrost layer has when it forms")
+    aquifer_light: int = rule(0, 0, 100, G, "Light a cell of the aquifer has when it forms")
+    under_ocean_light: int = rule(0, 0, 100, G, "Light a cell of the under ocean has when it forms")
+    reservoir_light: int = rule(0, 0, 100, G, "Light a cell of the reservoir has when it forms")
+    cavern_upper_light: int = rule(0, 0, 100, G, "Light a cell of the cavern upper has when it forms")
+    cavern_middle_light: int = rule(0, 0, 100, G, "Light a cell of the cavern middle has when it forms")
+    fault_zone_light: int = rule(0, 0, 100, G, "Light a cell of the fault zone has when it forms")
+    cavern_lower_light: int = rule(0, 0, 100, G, "Light a cell of the cavern lower has when it forms")
+    hollow_interior_light: int = rule(0, 0, 100, G, "Light a cell of the hollow interior has when it forms")
+    magma_sea_light: int = rule(60, 0, 100, G, "Light a cell of the magma sea has when it forms")
+    deep_underworld_light: int = rule(0, 0, 100, G, "Light a cell of the deep underworld has when it forms")
+    people_founders: int = rule(800, 100, 100000, G, "People a folk of the deep numbers when it is first found in its cell")
+    crowded_communities: int = rule(4, 1, 100, G, "Communities in one region from which a people settles a cell it knows beneath it")
+    flee_prosperity: int = rule(15, 0, 100, G, "Prosperity below which a settlement in a cell its folk are not made for climbs to the surface")
+    knowledge_per_crossing: int = rule(20, 1, 100, G, "Knowledge of a cell a polity gains each time its people cross into it")
 
 
 @dataclass(frozen=True)
@@ -150,6 +204,8 @@ class RiversRules:
     slide_dam_burst_pct: int = rule(30, 0, 100, G, "Chance a lake dammed by a slide bursts in the epoch after (%)")
     burst_flood: int = rule(30, 0, 100, G, "Flood depth a burst slide dam leaves downstream")
     works_grievance: int = rule(20, 0, 100, G, "Grievance a realm downstream holds against the realm whose works moved its river")
+    ice_shift_pct: int = rule(3, 0, 100, G, "Chance river ice that jams and floods in a frozen land moves the river in an epoch (%)")
+    capture_pct: int = rule(1, 0, 100, G, "Chance a river cuts back into a neighbouring river lower than itself and takes its course in an epoch (%)")
 
 
 @dataclass(frozen=True)
@@ -170,6 +226,13 @@ class SedimentRules:
     carbonate_fill: int = rule(50, 0, 100, G, "Carbonate: how fast it fills harbours and canals")
     evaporite_fertility: int = rule(10, 0, 300, G, "Evaporite: fertility it gives the land it is laid on (%)")
     evaporite_fill: int = rule(40, 0, 100, G, "Evaporite: how fast it fills harbours and canals")
+    glacial_flour_fertility: int = rule(120, 0, 300, G, "Rock flour ground by ice: fertility it gives the land it is laid on (%)")
+    glacial_flour_fill: int = rule(70, 0, 100, G, "Rock flour ground by ice: how fast it fills harbours and canals")
+    tailings_fertility: int = rule(5, 0, 300, G, "Mine waste: fertility it gives the land it is laid on (%)")
+    tailings_fill: int = rule(90, 0, 100, G, "Mine waste: how fast it fills harbours and canals")
+    tailings_poison: int = rule(15, 0, 100, G, "Poisoned ground mine waste leaves where it is laid and the ore beneath its source is toxic")
+    tailings_mined: int = rule(40, 0, 100, G, "Mining of a land from which the waste of its works runs off as mine waste")
+    tailings_water_pollution: int = rule(3, 0, 50, G, "Water pollution each ten points of mine waste a flow carries lays in the land it reaches")
     salt_irrigation_pct: int = rule(5, 0, 100, G, "Chance irrigated dry land without drainage turns saline in an epoch (%)")
     soil_lay_load: int = rule(60, 0, 100, G, "Sediment of one kind a land must receive in an epoch before it lays its soil there")
     soil_lay_pct: int = rule(10, 0, 100, G, "Chance a land receiving enough of one sediment takes on its soil in an epoch (%)")
@@ -201,3 +264,8 @@ class CoastsRules:
     barrier_island_wear_rate: int = rule(120, 0, 300, G, "Barrier island: how fast the sea wears it (%)")
     estuary_fish_pct: int = rule(20, 0, 100, G, "Share of food an estuary adds to the catch of its coast (%)")
     barrier_shift_pct: int = rule(10, 0, 100, G, "Chance a storm shifts a barrier island in an epoch, wearing its coast (%)")
+    spit_build_rate: int = rule(140, 0, 300, G, "Sand spit: how fast it builds land from the sediment it receives (%)")
+    spit_wear_rate: int = rule(90, 0, 300, G, "Sand spit: how fast the sea wears it (%)")
+    atoll_build_rate: int = rule(40, 0, 300, G, "Ring island: how fast it builds land from the sediment it receives (%)")
+    atoll_wear_rate: int = rule(80, 0, 300, G, "Ring island: how fast the sea wears it (%)")
+    atoll_sea_rise_wear: int = rule(30, 0, 100, G, "Coast a ring island loses in an epoch for every step the world's sea has risen")

@@ -53,10 +53,20 @@ async def occupy(ctx: TickContext, war: WarRow, march: March, defender: EntityRo
     table = ctx.rules.occupation
     row = await ctx.session.get(OccupationRow, region)
     if row is None:
-        row = OccupationRow(region_entity_id=region, occupier_entity_id=march.owner.id, war_id=war.id, since_epoch=ctx.epoch, control=0, resistance=0)
+        row = OccupationRow(
+            region_entity_id=region,
+            stratum=march.profile.stratum,
+            occupier_entity_id=march.owner.id,
+            war_id=war.id,
+            since_epoch=ctx.epoch,
+            control=0,
+            resistance=0,
+        )
         ctx.session.add(row)
     elif row.occupier_entity_id != march.owner.id:
         row.occupier_entity_id, row.war_id, row.since_epoch, row.control = march.owner.id, war.id, ctx.epoch, 0
+        if "stratum" not in (row.locked or []):
+            row.stratum = march.profile.stratum
     row.control = clamp_int(row.control + table.control_gain, 0, PERCENT)
     row.resistance = await resistance(ctx, march.owner, defender.id)
     await advance(ctx, war.id, march.owner.id, ctx.rules.war_aims.occupation_score, target=region, kinds=REGION_AIMS)

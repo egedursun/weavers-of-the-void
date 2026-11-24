@@ -33,6 +33,7 @@ from aerona.domain.models.entity_stats import ItemStats
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.debt_law import bind_debtor, debt_law_of, jail_debtor
+from aerona.engine.economy.money_forms_w52 import backing_of, fitting_form, test_backing
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.finance.credit import interest_for, on_default, refuses
 from aerona.engine.finance.w52_credit import seize_collateral
@@ -58,6 +59,7 @@ class MoneyTally:
     adopted: int = 0
     debased: int = 0
     reformed: int = 0
+    failed: int = 0
     lent: int = 0
     repaid: int = 0
     defaulted: int = 0
@@ -138,7 +140,7 @@ async def found_currency(ctx: TickContext, issuer: EntityRow, metal: MaterialKin
         minted_epoch=ctx.epoch,
         issuer_kind=issuer_kind_of(issuer.entity_type, issuer.engine_kind),
         form=form,
-        backing=MoneyBacking.METAL if metal is not None else MoneyBacking.DECREE,
+        backing=backing_of(form, metal is not None),
         convertible=metal is not None,
     )
     ctx.session.add(currency)
@@ -182,7 +184,9 @@ async def mint(ctx: TickContext, book: EconomyBook, issuer: EntityRow, tally: Mo
     metal = lot.material if lot is not None else None
     currency = await issued_by(ctx, issuer.id)
     if currency is None:
-        form = unminted_form(book, issuer.id) or (MoneyForm.COIN if metal is not None and not book.lacks(issuer.id, Technique.COINAGE) else None)
+        form = unminted_form(book, issuer.id) or (
+            MoneyForm.COIN if metal is not None and not book.lacks(issuer.id, Technique.COINAGE) else await fitting_form(ctx, book, issuer)
+        )
         if form is None or not await may_coin(ctx.session, ctx.rules, issuer.id):
             return
         if riches(issuer) < ctx.rules.trade.coinage_min_wealth or not ctx.rng(f"mint.{issuer.id}.{ctx.epoch}").chance(ctx.rules.trade.coinage_chance):
@@ -293,6 +297,8 @@ async def tend_currencies(ctx: TickContext, book: EconomyBook, tally: MoneyTally
         if await reform(ctx, book, currency, issuer):
             tally.reformed += 1
         await strain(ctx, currency, issuer)
+        if await test_backing(ctx, book, currency, issuer):
+            tally.failed += 1
         standing = currency.purity if MONEY_FORMS[currency.form].uses_metal else riches(issuer)
         anchor = await lagged(ctx, BalanceLoop.DEBASEMENT, issuer.id, standing, subject=currency.id)
         currency.trust = clamp_int(currency.trust + (anchor - currency.trust) * table.trust_drift_pct / PERCENT, 0, PERCENT)

@@ -76,7 +76,7 @@ def test_designed_world_types_are_all_present() -> None:
         "methane",
     }
     assert designed <= {world_type.value for world_type in WorldType}
-    assert len(WorldType) == 34
+    assert len(WorldType) == 37
 
 
 def test_every_engine_kind_belongs_to_exactly_one_type() -> None:

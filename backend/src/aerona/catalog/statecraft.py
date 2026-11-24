@@ -23,6 +23,8 @@ DEMANDS: Mapping[CrisisDemand, DemandSpec] = total(
         CrisisDemand.HAND_OVER: DemandSpec("hand over one who shelters with it", "hand_over_weight", person=True, peaceful=True),
         CrisisDemand.DISARM: DemandSpec("cut its forces", "disarm_weight", peaceful=True),
         CrisisDemand.OPEN_TRADE: DemandSpec("open its roads and ports to trade", "open_trade_weight", peaceful=True),
+        CrisisDemand.APOLOGY: DemandSpec("make a public apology", "apology_weight", peaceful=True),
+        CrisisDemand.RELEASE_CAPTIVES: DemandSpec("release the captives it holds", "release_captives_weight", peaceful=True),
     },
 )
 
@@ -51,6 +53,8 @@ COUNCIL_TASKS: Mapping[CouncilTask, TaskSpec] = total(
         CouncilTask.OVERSEE_WORKS: TaskSpec("oversee the realm's works", "oversee_works_effect", gain=True),
         CouncilTask.PROMOTE_TRADE: TaskSpec("promote trade on the realm's roads", "promote_trade_effect", gain=True),
         CouncilTask.ADVANCE_LEARNING: TaskSpec("advance the realm's learning", "advance_learning_effect", gain=True),
+        CouncilTask.PUBLIC_HEALTH: TaskSpec("keep the realm's people in health", "public_health_effect", gain=True),
+        CouncilTask.SECURE_BORDERS: TaskSpec("keep the realm's borders", "secure_borders_effect", gain=True),
     },
 )
 
@@ -67,6 +71,8 @@ MANDATE_TEXT: Mapping[MandateKind, str] = total(
         MandateKind.ENCLOSURE: "enclose the commons",
         MandateKind.RATION: "share food and fuel by rule",
         MandateKind.CORVEE: "call out labour for the works",
+        MandateKind.QUARANTINE: "close districts and ports against sickness",
+        MandateKind.CONSCRIPTION: "levy soldiers for the armies",
     },
 )
 
@@ -81,6 +87,8 @@ POSITION_TEXT: Mapping[CourtPosition, str] = total(
         CourtPosition.MASTER_OF_REVELS: "keeps the court's feasts",
         CourtPosition.JESTER: "may mock the ruler",
         CourtPosition.SEER: "reads signs for the court",
+        CourtPosition.TASTER: "tastes the ruler's food and drink first",
+        CourtPosition.INTERPRETER: "speaks for the court with envoys of other tongues",
     },
 )
 
@@ -94,5 +102,7 @@ RESOLUTION_TEXT: Mapping[ResolutionKind, str] = total(
         ResolutionKind.QUARANTINE: "close the routes to a world struck by plague",
         ResolutionKind.ARBITRATION: "settle a dispute between two of its members",
         ResolutionKind.AID: "pool relief for a world struck by disaster",
+        ResolutionKind.PEACEKEEPING: "send a force to keep the peace between two members",
+        ResolutionKind.RECOGNITION: "admit a new polity to its councils and treaties",
     },
 )

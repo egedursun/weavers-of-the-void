@@ -191,6 +191,7 @@ async def migrate(ctx: TickContext, atlas: RegionAtlas, source: EntityRow, targe
     "table.community_societies",
     "table.cosmos",
     "table.culture_values",
+    "table.deep_passages",
     "table.endemic_diseases",
     "table.entities",
     "table.forced_weather",

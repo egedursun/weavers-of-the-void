@@ -39,6 +39,7 @@ class SealBreachInput(ToolInput):
     oath_id: int | None = None
     power_id: int | None = None
     line_id: int | None = None
+    mind_id: int | None = None
     reason: Reason
 
 
@@ -78,7 +79,7 @@ async def seal_breach(call: SonCall, args: SealBreachInput) -> str:
     await ensure_in_reach(call, place)
     if await active_seal(call.session, place.id) is not None:
         fail(SonResult.BREACH_REFUSED, why="it is already sealed")
-    links = SealLinks(oath_id=args.oath_id, power_id=args.power_id, line_id=args.line_id)
+    links = SealLinks(oath_id=args.oath_id, power_id=args.power_id, line_id=args.line_id, mind_id=args.mind_id)
     if missing_link(args.kind, links):
         fail(SonResult.BREACH_REFUSED, why=f"a seal of that kind names its {missing_link(args.kind, links)}")
     row = await seal_deep(call.tick, place.id, args.kind, call.son.id, links=links)

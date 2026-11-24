@@ -6,6 +6,7 @@ from aerona.db.base import Base
 from aerona.db.columns import at_least, between, enum_type
 from aerona.db.profile_guard import register_profile_table
 from aerona.domain.enums.demography import CohortCondition, MartialStyle
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.law_depth import RecruitMotive
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.military import (
@@ -164,6 +165,8 @@ class ArmyProfileRow(Base):
     baggage: Mapped[int] = mapped_column(default=0)
     blockade_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     updated_epoch: Mapped[int] = mapped_column(default=0)
+    stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "stratum"))
+    battle_stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "battle_stratum"))
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
     tactic: Mapped[Tactic | None] = mapped_column(enum_type(Tactic, "tactic"))
     drill: Mapped[int] = mapped_column(default=0)
@@ -336,6 +339,8 @@ class ArmyMovementRow(Base):
     season: Mapped[int]
     from_region_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     to_region_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    from_stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "from_stratum"))
+    to_stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "to_stratum"))
     stance: Mapped[Stance] = mapped_column(enum_type(Stance, "stance"))
     supply_days: Mapped[int]
     attrition: Mapped[int] = mapped_column(default=0)
@@ -371,7 +376,9 @@ class CampaignFrontRow(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     war_id: Mapped[int] = mapped_column(ForeignKey("wars.id", ondelete="CASCADE"))
     first_region_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    first_stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "first_stratum"))
     second_region_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    second_stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "second_stratum"))
     since_epoch: Mapped[int]
     last_epoch: Mapped[int]
 
@@ -395,6 +402,7 @@ class OccupationRow(Base):
     __table_args__ = (between("control", PERCENT_MIN, PERCENT_MAX), between("resistance", PERCENT_MIN, PERCENT_MAX))
 
     region_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
+    stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "stratum"))
     occupier_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), index=True)
     war_id: Mapped[int | None] = mapped_column(ForeignKey("wars.id", ondelete="SET NULL"))
     since_epoch: Mapped[int]

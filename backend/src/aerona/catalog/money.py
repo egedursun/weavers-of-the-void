@@ -1,9 +1,9 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from aerona.core.total import total
+from aerona.core.total import partial, total
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.economy import CurrencyIssuer, MoneyForm
+from aerona.domain.enums.economy import CurrencyIssuer, MoneyBacking, MoneyForm, WorkshopKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 
 F = MoneyForm
@@ -33,6 +33,13 @@ MONEY_FORMS: Mapping[MoneyForm, MoneyFormSpec] = total(
         F.ESSENCE_BACKED: MoneyFormSpec("Essence-backed money", "Worth that rests on a source of power", False, None, 30, False),
         F.LABOUR_HOURS: MoneyFormSpec("Labour hours", "Worth counted in hours of work given", False, None, 50, False),
         F.GIFT_TALLY: MoneyFormSpec("Gift tally", "A count of gifts given and owed", False, None, 10, False),
+        F.BILL_OF_EXCHANGE: MoneyFormSpec(
+            "Bill of exchange", "An order to pay drawn in one market and paid in another", False, Technique.DOUBLE_ENTRY, 40, False
+        ),
+        F.WAREHOUSE_RECEIPT: MoneyFormSpec(
+            "Warehouse receipt", "A note for goods held in a store, passed as money while the store stands", False, None, 50, False
+        ),
+        F.LAND_SCRIP: MoneyFormSpec("Land scrip", "A claim on land given to settlers and soldiers and passed as money", False, None, 60, False),
     },
 )
 REFORMS: tuple[MoneyForm, ...] = (F.PAPER, F.LEDGER, F.NETWORK)
@@ -50,3 +57,18 @@ def issuer_kind_of(entity_type: EntityType, engine_kind: EngineKind | None) -> C
     if entity_type is EntityType.FACTION:
         return CurrencyIssuer.BANK if engine_kind is EngineKind.MERCHANT_GUILD else CurrencyIssuer.COMPANY
     return CurrencyIssuer.COMMUNITY
+
+
+FORM_BACKINGS: Mapping[MoneyForm, MoneyBacking] = partial(
+    MoneyForm,
+    {
+        F.LAND_SCRIP: MoneyBacking.LAND,
+        F.LABOUR_HOURS: MoneyBacking.LABOUR,
+        F.WAREHOUSE_RECEIPT: MoneyBacking.COMMODITY,
+        F.BILL_OF_EXCHANGE: MoneyBacking.TRUST,
+        F.REPUTATION: MoneyBacking.TRUST,
+        F.ESSENCE_BACKED: MoneyBacking.SOURCE,
+    },
+    without=(F.COIN, F.COMMODITY, F.TOKEN, F.PAPER, F.LEDGER, F.NETWORK, F.ENERGY, F.GIFT_TALLY),
+)
+STORE_WORKSHOPS: tuple[WorkshopKind, ...] = (WorkshopKind.WAREHOUSE, WorkshopKind.GRANARY)

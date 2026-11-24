@@ -106,8 +106,13 @@ STORYTELLER_LABELS: MappingProxyType[StorytellerProfile, str] = MappingProxyType
     }
 )
 AGE_CYCLE_LABELS: MappingProxyType[AgeCycle, str] = MappingProxyType(
-    {AgeCycle.LINEAR: "Linear: the cosmos runs on to its end", AgeCycle.CYCLIC: "Cyclic: each end turns a new age"}
+    {
+        AgeCycle.LINEAR: "Linear: the cosmos runs on to its end",
+        AgeCycle.CYCLIC: "Cyclic: each end turns a new age",
+        AgeCycle.SPIRAL: "Spiral: each turn keeps a set share and changes the rest",
+    }
 )
+TURNING_CYCLES = frozenset({AgeCycle.CYCLIC, AgeCycle.SPIRAL})
 LORE_LANGUAGE_LABELS: MappingProxyType[LoreLanguage, str] = MappingProxyType({LoreLanguage.ENGLISH: "English", LoreLanguage.TURKISH: "Turkish"})
 LAYER_KINDS: tuple[DimensionKind, ...] = tuple(kind for kind in DimensionKind if kind is not DimensionKind.PRIME)
 

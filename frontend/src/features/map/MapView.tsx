@@ -8,14 +8,17 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { SceneCorners } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, Medallion, PageHeader } from '@/components/domain'
 import { useThemeColors } from '@/components/domain/useThemeColors'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { Text } from '@/components/typography'
 import { EpochStarChip } from '@/features/cosmos/EpochStarChip'
 import { useRangeMap } from '@/features/entity/wilds/api'
+import { DeepMapPanel } from './DeepMapPanel'
+import { DepthLadder } from './DepthLadder'
 import {
   MapCanvas,
   type MapViewport,
@@ -29,7 +32,7 @@ import { MapScaleOverlay } from './MapScaleOverlay'
 import { type StackPopup, MapStackOverlay } from './MapStackOverlay'
 import { MapStatusLine } from './MapStatusLine'
 import { MapTimeSlider } from './MapTimeSlider'
-import { MapToolbar, type WorldOption } from './MapToolbar'
+import { type DepthOption, MapToolbar, type WorldOption } from './MapToolbar'
 import { PastEpochBanner } from './PastEpochBanner'
 import { SpeciesRangePanel } from './SpeciesRangePanel'
 import {
@@ -43,14 +46,17 @@ import {
   useRegenerateMap,
   useRemoveMapNote,
   useRules,
+  useDeepMap,
   useSons,
   useWorldMap,
+  type MapStratum,
 } from './api'
 import {
   type LayerMode,
   type Overlay,
   LAYER_MODES,
   OVERLAYS,
+  depthReason,
   positionedPoints,
   tierOf,
 } from './mapModel'
@@ -62,6 +68,7 @@ import { rangeShade } from './speciesRange'
 import { useLayerPalette } from './useLayerPalette'
 import {
   isBoolean,
+  isDepthRecord,
   isNumber,
   isStringList,
   oneOf,
@@ -77,6 +84,7 @@ const STORAGE = {
   legend: 'aerona.map.legend',
   hidden: 'aerona.map.hidden-types',
   fallen: 'aerona.map.fallen',
+  depth: 'aerona.map.depth',
 }
 const DEFAULT_OVERLAYS: Record<Overlay, boolean> = {
   roads: true,
@@ -204,6 +212,25 @@ export function MapView() {
     worlds[0]?.id ??
     null
   const map = useWorldMap(worldId, search.epoch ?? null)
+  const [depths, setDepths] = usePersistentState<Record<string, string>>(
+    STORAGE.depth,
+    {},
+    isDepthRecord
+  )
+  const offered = map.data?.deep?.strata ?? []
+  const stored = worldId !== null ? depths[String(worldId)] : undefined
+  const depth =
+    offered.find((option) => option.stratum === stored)?.stratum ?? null
+  const deepMap = useDeepMap(worldId, depth, search.epoch ?? null)
+  const onDepth = (next: MapStratum | null) => {
+    if (worldId === null) return
+    setDepths((current) => {
+      const copy = { ...current }
+      if (next === null) delete copy[String(worldId)]
+      else copy[String(worldId)] = next
+      return copy
+    })
+  }
 
   const setSearch = useCallback(
     (patch: Partial<MapSearch>) =>
@@ -222,6 +249,28 @@ export function MapView() {
   let body
   if (cosmos.isPending || (worldId !== null && map.isPending))
     body = <MapLoading />
+  else if (depth !== null && deepMap.error)
+    body = (
+      <Alert variant='destructive'>
+        <AlertTitle>This depth could not be drawn</AlertTitle>
+        <AlertDescription className='flex flex-wrap items-center gap-3'>
+          <span className='min-w-0 flex-1'>{deepMap.error.message}</span>
+          <Button
+            size='sm'
+            variant='outline'
+            onClick={() => void deepMap.refetch()}
+          >
+            <RefreshCw />
+            Draw this depth again
+          </Button>
+          <Button size='sm' variant='outline' onClick={() => onDepth(null)}>
+            <MapIcon />
+            Back to the surface
+          </Button>
+        </AlertDescription>
+      </Alert>
+    )
+  else if (depth !== null && deepMap.isPending) body = <MapLoading />
   else if (cosmos.error || map.error)
     body = (
       <Alert variant='destructive'>
@@ -238,7 +287,7 @@ export function MapView() {
             }
           >
             <RefreshCw />
-            Try again
+            Draw the map again
           </Button>
         </AlertDescription>
       </Alert>
@@ -254,7 +303,10 @@ export function MapView() {
   else
     body = (
       <MapScreen
-        view={map.data}
+        view={depth !== null && deepMap.data ? deepMap.data : map.data}
+        depth={depth}
+        depths={offered}
+        onDepth={onDepth}
         loadingEpoch={map.isPlaceholderData ? (search.epoch ?? 'today') : null}
         worlds={worlds}
         mobile={mobile}
@@ -284,6 +336,9 @@ export function MapView() {
 
 type MapScreenProps = {
   view: MapViewData
+  depth: MapStratum | null
+  depths: readonly DepthOption[]
+  onDepth: (depth: MapStratum | null) => void
   loadingEpoch: number | 'today' | null
   worlds: WorldOption[]
   mobile: boolean
@@ -297,6 +352,9 @@ type MapScreenProps = {
 
 function MapScreen({
   view,
+  depth,
+  depths,
+  onDepth,
   loadingEpoch,
   worlds,
   mobile,
@@ -310,15 +368,18 @@ function MapScreen({
   const tokens = useThemeColors()
   const reducedMotion = useReducedMotion()
   const settings = useMapSettings()
-  const drawer = useDrawerStack()
+  const entryStack = useEntryStack()
   const sons = useSons()
   const languages = useLanguages()
   const catalogue = useCatalogue()
-  const [mode, setMode] = usePersistentState<LayerMode>(
+  const [chosenMode, setMode] = usePersistentState<LayerMode>(
     STORAGE.mode,
     'terrain',
     oneOf(LAYER_MODES)
   )
+  const mode: LayerMode = depthReason(chosenMode, depth)
+    ? 'terrain'
+    : chosenMode
   const [storedOverlays, setOverlays] = usePersistentState<
     Partial<Record<Overlay, boolean>>
   >(STORAGE.overlays, DEFAULT_OVERLAYS, isOverlays)
@@ -420,7 +481,7 @@ function MapScreen({
   const world = worlds.find((item) => item.id === view.world.id)
 
   const openRecord = (id: number) =>
-    drawer.open({ kind: 'entity', id: String(id) })
+    entryStack.open({ kind: 'entity', id: String(id) })
 
   const onActivate = (hit: HitTarget, screen: ScreenPoint) => {
     setStack(null)
@@ -511,6 +572,9 @@ function MapScreen({
       <MapToolbar
         mode={mode}
         onMode={setMode}
+        depth={depth}
+        depths={depths}
+        onDepth={onDepth}
         overlays={overlays}
         onOverlay={(overlay, on) =>
           setOverlays((current) => ({ ...current, [overlay]: on }))
@@ -548,11 +612,12 @@ function MapScreen({
           onToday={() => onEpoch(null)}
         />
       )}
-      <div className='flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:flex-row'>
+      <div className='flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:flex-row lg:items-start'>
         <div
           data-map-frame
-          className='scene-frame relative min-h-120 min-w-0 flex-1 overflow-hidden rounded-md md:min-h-160'
+          className='scene-frame relative h-120 min-w-0 flex-1 overflow-hidden rounded-md md:h-160'
         >
+          <SceneCorners />
           <MapCanvas
             view={view}
             tokens={tokens}
@@ -604,6 +669,7 @@ function MapScreen({
             scale={viewport?.transform.k ?? 0}
             starName={starName}
           />
+          <DepthLadder depth={depth} depths={depths} onDepth={onDepth} />
           {hover && viewport && !popup && !stack && (
             <MapHoverOverlay
               hover={hover.text}
@@ -645,7 +711,7 @@ function MapScreen({
         </div>
         {legendOpen && (
           <Card className='min-w-0 lg:w-80 lg:shrink-0'>
-            <CardContent className='flex min-w-0 flex-col gap-3'>
+            <CardContent className='flex min-w-0 flex-col gap-3 lg:max-h-140 lg:overflow-y-auto'>
               <MapLegend
                 view={view}
                 mode={mode}
@@ -670,6 +736,7 @@ function MapScreen({
           </Card>
         )}
       </div>
+      <DeepMapPanel view={view} />
       <MapTimeSlider
         current={view.time.current}
         shown={view.time.shown}

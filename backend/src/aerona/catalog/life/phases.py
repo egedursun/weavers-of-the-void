@@ -56,6 +56,7 @@ DUEL_FATES: Mapping[DuelEnd, CasualtyFate] = total(
         DuelEnd.UNCONSCIOUS: CasualtyFate.WOUNDED,
         DuelEnd.FIRST_WOUND: CasualtyFate.WOUNDED,
         DuelEnd.RING_OUT: CasualtyFate.WOUNDED,
+        DuelEnd.STOPPED: CasualtyFate.WOUNDED,
     },
 )
 
@@ -71,6 +72,7 @@ DUEL_ENDINGS: Mapping[DuelEnd, str] = total(
         DuelEnd.UNCONSCIOUS: "{loser} lost consciousness",
         DuelEnd.FIRST_WOUND: "{loser} took the first wound and the duel ended there",
         DuelEnd.RING_OUT: "{loser} was driven beyond the marked bounds",
+        DuelEnd.STOPPED: "the duel was stopped before {winner} or {loser} gave way, and the quarrel stayed open",
     },
 )
 

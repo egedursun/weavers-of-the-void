@@ -12,6 +12,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import StructureStats
 from aerona.engine.context import TickContext
 from aerona.engine.demography.care import shelter_displaced
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.phases.ruins import abandon
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import add_flag
@@ -110,10 +111,12 @@ async def abandon_town(ctx: TickContext, row: ReconstructionRow, town: EntityRow
     people = stat_or(town, "population", 0)
     host = await nearest_host(ctx, town)
     sent = 0
-    if host is not None and people > 0:
-        set_stats(host, population=stat_or(host, "population", 0) + people)
-        sent = await shelter_displaced(ctx, host, people)
     await abandon(ctx, town)
+    if host is not None and people > 0:
+        with flowing(FlowCategory.MIGRATION):
+            set_stats(host, population=stat_or(host, "population", 0) + people)
+            set_stats(town, population=0)
+        sent = await shelter_displaced(ctx, host, people)
     row.finished_epoch = ctx.epoch
     await record(
         ctx,

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { agree, plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
-import { OrnateFrame } from '@/components/ui/ornate'
+import { OrnateFrame, SceneCorners } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, KpiTile, PagedList } from '@/components/domain'
@@ -116,6 +116,7 @@ function LandBody({
         className='relative flex min-w-0 scroll-mt-16 flex-col'
       >
         <div className='scene-frame relative h-scene min-w-0 overflow-hidden bg-card lg:h-scene-lg'>
+          <SceneCorners />
           {hasWebGL2() ? (
             <Suspense
               fallback={<Skeleton className='h-full w-full rounded-none' />}

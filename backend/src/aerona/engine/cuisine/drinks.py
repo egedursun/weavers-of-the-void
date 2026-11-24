@@ -7,18 +7,24 @@ from aerona.catalog.kinds.drink_roles import BONDING_ROLES, DRINK_ROLES
 from aerona.catalog.life.cuisine import CATEGORY_WORDS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.food_kinds import DrinkKindRow
 from aerona.db.tables.kinds import KindHoldingRow
+from aerona.db.tables.plants import PlantPartRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.kinds import DrinkCategory, DrinkRole, GoodLegality, KindConcept, KindSpread, KindStance
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.plants import PlantPart
 from aerona.domain.enums.records import StepAction
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import holding
+from aerona.engine.eras.effects import era_techniques
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import homes_of
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -59,6 +65,8 @@ STARTS = total(
         D.MEDICINAL: DrinkStart(D.MEDICINAL, 40, 0, 10, 5, 2),
         D.RITUAL: DrinkStart(D.RITUAL, 30, 20, 10, 5, 2),
         D.SYNTHESISED: DrinkStart(D.SYNTHESISED, 80, 0, 10, 20, 8),
+        D.SPARKLING: DrinkStart(D.SPARKLING, 50, 25, 10, 10, 4),
+        D.SAP_DRINK: DrinkStart(D.SAP_DRINK, 30, 15, 5, 25, 1),
     },
 )
 FIRST_DRINKS: tuple[tuple[CommodityKind, DrinkCategory], ...] = (
@@ -162,6 +170,42 @@ async def first_drink(ctx: TickContext, people: EntityRow, tally: DrinkTally) ->
             return
 
 
+async def sap_bearers(ctx: TickContext, people: EntityRow) -> bool:
+    atlas = await RegionAtlas.load(ctx.session)
+    regions = {region for home in await homes_of(ctx.session, people) if (region := atlas.top_region(home)) is not None}
+    if not regions:
+        return False
+    found = await ctx.session.scalar(
+        select(PlantPartRow.id)
+        .join(SpeciesRangeRow, SpeciesRangeRow.species_entity_id == PlantPartRow.species_entity_id)
+        .where(PlantPartRow.part == PlantPart.SAP, SpeciesRangeRow.region_entity_id.in_(sorted(regions)), SpeciesRangeRow.abundance > 0)
+        .limit(1)
+    )
+    return found is not None
+
+
+async def new_kind_of_drink(ctx: TickContext, people: EntityRow, tally: DrinkTally) -> None:
+    table = ctx.rules.drink
+    made = {category for category in await ctx.session.scalars(select(DrinkKindRow.category).where(DrinkKindRow.origin_node_id == people.id))}
+    wanted: list[DrinkCategory] = []
+    if D.SAP_DRINK not in made and await sap_bearers(ctx, people):
+        wanted.append(D.SAP_DRINK)
+    if D.SPARKLING not in made and D.FERMENTED in made and Technique.ALCHEMY in await era_techniques(ctx.session, people.id):
+        wanted.append(D.SPARKLING)
+    for category in wanted:
+        if not ctx.rng(f"drink.new.{people.id}.{category.value}.{ctx.epoch}").chance(table.new_kind_pct):
+            continue
+        drink = await found_drink(ctx, people, category)
+        tally.founded += 1
+        await record(
+            ctx,
+            "drink.founded",
+            roles={IncidentRole.MAKER: people.id},
+            facts={"drink": drink.name, "category": category, "good": CommodityKind.BREW_BASE if category is D.SPARKLING else CommodityKind.FRUIT},
+            steps=(StepDraft(StepAction.PREPARE, actor=people.id),),
+        )
+
+
 async def derive_drinks(ctx: TickContext, people: EntityRow, tally: DrinkTally) -> None:
     table = ctx.rules.drink
     for holding_row, drink in await holdings_of(ctx.session, people.id):
@@ -253,6 +297,7 @@ async def keep_drinks(ctx: TickContext) -> DrinkTally:
         if held(people.id):
             continue
         await first_drink(ctx, people, tally)
+        await new_kind_of_drink(ctx, people, tally)
         await derive_drinks(ctx, people, tally)
         await drink_in(ctx, people, tally)
     await share_hospitality(ctx, tally)

@@ -12,16 +12,19 @@ from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.fossils import FossilBedRow
+from aerona.db.tables.industry import RegionPollutionRow
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.water import MONTHS, CoastRow, LocalClimateRow, RegionCryosphereRow, SedimentFlowRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import TradeMode
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TerrainKind, TerrainTrait
+from aerona.domain.enums.environment import CoastKind, RiverClass, ScarKind, SoilKind, TerrainKind, TerrainTrait
 from aerona.domain.enums.life_traits import TradeModeTrait
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.water import CoastForm, LocalClimateCause, SedimentCarrier, SedimentKind
 from aerona.engine.context import TickContext
+from aerona.engine.environment.book import add_scar
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -49,6 +52,8 @@ HIGH = 70
 WOODED = 50
 DESERT = frozenset({TerrainKind.DESERT})
 DRY_LANDS = terrains(TerrainTrait.ARID)
+WET_LANDS = terrains(TerrainTrait.WET, without=(TerrainTrait.WATERY, TerrainTrait.COLD))
+ICY_LANDS = terrains(TerrainTrait.COLD, every=(TerrainTrait.SLIPPERY,))
 WARM_SEA = 70
 STILL_WATER = 60
 FILL_BASE = 50
@@ -176,7 +181,9 @@ async def thaw(ctx: TickContext, region_id: int, atlas: RegionAtlas, fall: int, 
         await record(ctx, "land.thaw_release", roles={IncidentRole.PLACE: region_id}, facts={"richness": bed.richness}, place=region_id)
 
 
-def carried_by(table: WaterAndIceRules, land: RegionEnvironmentRow, frozen_below: int) -> tuple[SedimentCarrier | None, int]:
+def carried_by(table: WaterAndIceRules, land: RegionEnvironmentRow, frozen_below: int, tailings_mined: int) -> tuple[SedimentCarrier | None, int]:
+    if land.mined >= tailings_mined:
+        return SedimentCarrier.WORKS, table.river_load
     if land.river_class is not RiverClass.NONE:
         return SedimentCarrier.RIVER, table.great_river_load if land.river_class is RiverClass.GREAT_RIVER else table.river_load
     ways = (
@@ -192,11 +199,30 @@ def carried_by(table: WaterAndIceRules, land: RegionEnvironmentRow, frozen_below
 def sediment_kind(land: RegionEnvironmentRow, sink: RegionEnvironmentRow | None, carrier: SedimentCarrier) -> SedimentKind:
     if carrier is SedimentCarrier.RIVER and land.dominant_terrain in DRY_LANDS:
         return SedimentKind.EVAPORITE
+    if carrier is SedimentCarrier.ICE and sink is not None and sink.river_class is not RiverClass.NONE:
+        return SedimentKind.GLACIAL_FLOUR
     if carrier is SedimentCarrier.WAVE and sink is not None and (sink.coast_kind is CoastKind.REEF or sink.temperature >= WARM_SEA):
         return SedimentKind.CARBONATE
     if carrier in (SedimentCarrier.RIVER, SedimentCarrier.WAVE) and sink is not None and sink.wetland >= STILL_WATER:
         return SedimentKind.CLAY
     return CARRIERS[carrier].kind
+
+
+async def poison_by_tailings(ctx: TickContext, flows: list[SedimentFlowRow]) -> None:
+    per = ctx.rules.sediment.tailings_water_pollution
+    for flow in flows:
+        if flow.kind is not SedimentKind.TAILINGS or held(flow.sink_region_id):
+            continue
+        row = await ctx.session.get(RegionPollutionRow, flow.sink_region_id)
+        if row is None:
+            row = RegionPollutionRow(region_node_id=flow.sink_region_id, locked=[])
+            ctx.session.add(row)
+        if "water" in (row.locked or []):
+            continue
+        amount = flow.load * per // 10
+        with explaining_alone():
+            term("sediment.tailings_water_pollution", amount, source_node_id=flow.source_region_id)
+            row.water = clamp_int((row.water or 0) + amount, 0, PERCENT)
 
 
 async def lay_soils(ctx: TickContext, lands: dict[int, RegionEnvironmentRow], flows: list[SedimentFlowRow]) -> int:
@@ -213,6 +239,8 @@ async def lay_soils(ctx: TickContext, lands: dict[int, RegionEnvironmentRow], fl
         if ctx.rng(f"sediment_soil.{region_id}.{kind.value}.{ctx.epoch}").chance(table.soil_lay_pct):
             land.soil = soil
             laid += 1
+            if SEDIMENTS[kind].poisons and "scar.poisoned" not in land.locked:
+                add_scar(land, ScarKind.POISONED, table.tailings_poison)
             await record(
                 ctx, "land.sediment_laid", roles={IncidentRole.PLACE: region_id}, facts={"sediment": kind, "load": clamp_int(load, 0, PERCENT)}, place=region_id
             )
@@ -238,7 +266,7 @@ async def seed_flows(ctx: TickContext, land: RegionEnvironmentRow, atlas: Region
         return
     below = sorted((lands[other].elevation_mean, other) for other in atlas.neighbours(land.entity_id) if other in lands)
     shores = [other for other in atlas.neighbours(land.entity_id) if other in lands and lands[other].coast_kind in COAST_OF_KIND]
-    carrier, load = carried_by(table, land, ctx.rules.environment.frozen_below)
+    carrier, load = carried_by(table, land, ctx.rules.environment.frozen_below, ctx.rules.sediment.tailings_mined)
     sink = shores[0] if carrier is SedimentCarrier.WAVE and shores else below[0][1] if below and below[0][0] <= land.elevation_mean else None
     if carrier is None or sink is None:
         return
@@ -249,6 +277,8 @@ async def seed_flows(ctx: TickContext, land: RegionEnvironmentRow, atlas: Region
 def coast_form(land: RegionEnvironmentRow) -> CoastForm:
     if land.dominant_terrain is TerrainKind.MANGROVE:
         return CoastForm.MANGROVE
+    if land.dominant_terrain is TerrainKind.ISLAND and land.coast_kind is CoastKind.REEF:
+        return CoastForm.ATOLL
     if land.river_class in (RiverClass.RIVER, RiverClass.GREAT_RIVER):
         return CoastForm.ESTUARY
     return COAST_OF_KIND[land.coast_kind]
@@ -268,6 +298,8 @@ async def shape_coast(ctx: TickContext, land: RegionEnvironmentRow, sediment: tu
     row = await coast_of(ctx, land)
     if row is None:
         return
+    physics = await ctx.session.get(WorldPhysicsRow, land.world_id) if COAST_FORMS[row.form].drowns else None
+    sea_rise = max(0, physics.sea_level) // 10 if physics is not None else 0
     with explaining_alone():
         term("water_and_ice.sediment", inflow, source_node_id=land.entity_id)
         if "rate" not in row.locked:
@@ -277,6 +309,8 @@ async def shape_coast(ctx: TickContext, land: RegionEnvironmentRow, sediment: tu
             row.rate = clamp_int(build - wear, -PERCENT, PERCENT)
         if "progress" not in row.locked:
             row.progress = clamp_int(row.progress + row.rate, -PERCENT, PERCENT)
+        if COAST_FORMS[row.form].drowns and "progress" not in row.locked:
+            row.progress = clamp_int(row.progress - sea_rise * ctx.rules.coasts.atoll_sea_rise_wear, -PERCENT, PERCENT)
         shifted = row.form is CoastForm.BARRIER_ISLAND and ctx.rng(f"barrier.{land.entity_id}.{ctx.epoch}").chance(ctx.rules.coasts.barrier_shift_pct)
         if shifted and "progress" not in row.locked:
             row.progress = clamp_int(row.progress - PERCENT // 4, -PERCENT, PERCENT)
@@ -292,7 +326,7 @@ async def shape_coast(ctx: TickContext, land: RegionEnvironmentRow, sediment: tu
         tally.grew += 1
         row.progress = 0
         if "form" not in row.locked:
-            row.form = CoastForm.DELTA
+            row.form = COAST_FORMS[row.form].grows_into or (CoastForm.SPIT if row.form is CoastForm.BEACH and richness < PERCENT // 2 else CoastForm.DELTA)
         if "soil_fertility" not in land.locked:
             land.soil_fertility = clamp_int(land.soil_fertility + table.delta_fertility * richness // PERCENT, 0, PERCENT)
         await record(ctx, "land.delta_grew", roles={IncidentRole.PLACE: land.entity_id}, facts={"fertility": land.soil_fertility}, place=land.entity_id)
@@ -307,16 +341,20 @@ async def cause_of(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> Loc
     region = atlas.top_region(town.id)
     land = await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
     if land is None:
-        return LocalClimateCause.BUILT
-    if land.elevation_mean >= HIGH:
-        return LocalClimateCause.SLOPE
-    if land.roughness >= ROUGH:
-        return LocalClimateCause.VALLEY
-    if land.coast_kind in COAST_OF_KIND or land.river_class is not RiverClass.NONE:
-        return LocalClimateCause.WATER
-    if land.forest_cover >= WOODED:
-        return LocalClimateCause.FOREST
-    return LocalClimateCause.BUILT
+        return LocalClimateCause.BUILT_LAND
+    ice = await ctx.session.get(RegionCryosphereRow, land.entity_id)
+    checks = (
+        (
+            land.dominant_terrain in ICY_LANDS or (ice is not None and ice.glacier_extent >= ctx.rules.water_and_ice.ice_field_glacier),
+            LocalClimateCause.ICE_FIELD,
+        ),
+        (land.dominant_terrain in WET_LANDS, LocalClimateCause.WETLAND),
+        (land.elevation_mean >= HIGH, LocalClimateCause.SLOPE),
+        (land.roughness >= ROUGH, LocalClimateCause.VALLEY),
+        (land.coast_kind in COAST_OF_KIND or land.river_class is not RiverClass.NONE, LocalClimateCause.WATER_BODY),
+        (land.forest_cover >= WOODED, LocalClimateCause.FOREST),
+    )
+    return next((cause for fits, cause in checks if fits), LocalClimateCause.BUILT_LAND)
 
 
 async def warm_towns(ctx: TickContext, atlas: RegionAtlas) -> None:
@@ -336,7 +374,9 @@ async def warm_towns(ctx: TickContext, atlas: RegionAtlas) -> None:
             row.heat_shift = clamp_int(people // THOUSAND * table.local_heat_per_density + LOCAL_CAUSES[row.cause].heat, -50, 50)
         if "humidity_shift" not in row.locked:
             row.humidity_shift = clamp_int(LOCAL_CAUSES[row.cause].humidity, -50, 50)
-        if row.heat_shift >= table.heat_threshold:
+        if "wind_shift" not in row.locked:
+            row.wind_shift = clamp_int(LOCAL_CAUSES[row.cause].wind, -50, 50)
+        if row.heat_shift >= table.heat_threshold or (LOCAL_CAUSES[row.cause].sickens and row.humidity_shift >= table.damp_threshold):
             region = atlas.top_region(town.id)
             if region is None or held(region):
                 continue
@@ -385,5 +425,6 @@ async def keep_water(ctx: TickContext, tally: WaterTally) -> None:
             await shape_coast(ctx, land, (clamp_int(came, 0, PERCENT), worth.get(land.entity_id, 0) // max(1, came)), atlas, tally)
     tally.courses += await keep_courses(ctx, lands, inflow)
     tally.soils += await lay_soils(ctx, lands, flows)
+    await poison_by_tailings(ctx, flows)
     await warm_towns(ctx, atlas)
     await ctx.session.flush()

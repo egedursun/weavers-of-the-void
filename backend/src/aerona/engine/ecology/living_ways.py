@@ -5,17 +5,22 @@ from sqlalchemy import select
 
 from aerona.catalog.diets import DIETS
 from aerona.catalog.domestication import STAGES
+from aerona.catalog.plants import FORMS, PARTS
 from aerona.catalog.strata import STRATA
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesRangeRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.geology import RegionStratumRow
+from aerona.db.tables.industry import RegionPollutionRow
 from aerona.db.tables.plants import PlantAnatomyRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.ecology import AnimalRole, Biochemistry, Diet, DomesticationStage, Sociality
+from aerona.domain.enums.ecology import AnimalRole, Biochemistry, Diet, DomesticationStage, SizeClass, Sociality, SpeciesClass
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.environment import ScarKind, TerrainKind
+from aerona.domain.enums.evolution import KeystoneRole
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.plants import PlantForm
 from aerona.engine.context import TickContext
@@ -24,6 +29,7 @@ from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.book import add_scar
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import record
 
 DEAD_GROUND = (ScarKind.BATTLEFIELD, ScarKind.PLAGUE_GROUND, ScarKind.BURNED)
@@ -40,6 +46,8 @@ class WaysTally:
     swarmed: int = 0
     commensal: int = 0
     feral: int = 0
+    weathered: int = 0
+    escaped: int = 0
 
 
 @dataclass(frozen=True)
@@ -130,8 +138,10 @@ async def warmth_bands(ctx: TickContext, living: Living, tally: WaysTally) -> No
         for row in rows:
             profile = living.profiles.get(row.species_entity_id)
             chemistry = profile.biochemistry if profile is not None else None
-            outside = (chemistry is Biochemistry.CARBON_METHANE and ground.temperature > table.carbon_methane_heat_max) or (
-                chemistry is Biochemistry.PLASMA and ground.temperature < table.plasma_heat_min
+            outside = (
+                (chemistry is Biochemistry.CARBON_METHANE and ground.temperature > table.carbon_methane_heat_max)
+                or (chemistry is Biochemistry.PLASMA and ground.temperature < table.plasma_heat_min)
+                or (chemistry is Biochemistry.METAL and not table.metal_temp_min <= ground.temperature <= table.metal_temp_max)
             )
             if outside and chemistry is not None and thin(row, table.out_of_band_loss):
                 tally.thinned += 1
@@ -213,6 +223,22 @@ async def settle_beside(ctx: TickContext, living: Living, tally: WaysTally) -> N
                     add_scar(ground, ScarKind.OVERGRAZED, round_half_up(table.feral_graze_harm * row.abundance / PERCENT))
 
 
+FEEDING_FORMS = frozenset(form for form, spec in FORMS.items() if any(PARTS[part].feeds_pollinators for part in spec.parts))
+
+
+async def feed_pollinators(living: Living, rows: list[SpeciesRangeRow], gain: int) -> None:
+    for row in rows:
+        profile = living.profiles.get(row.species_entity_id)
+        if (
+            gain > 0
+            and profile is not None
+            and profile.keystone is KeystoneRole.POLLINATOR
+            and "abundance" not in (row.locked or [])
+            and not held(row.species_entity_id)
+        ):
+            row.abundance = clamp_int(row.abundance + gain, 0, PERCENT)
+
+
 async def plant_ways(ctx: TickContext, living: Living, tally: WaysTally) -> None:
     table = ctx.rules.plants_depth
     for region_id, rows in sorted(living.ranges.items()):
@@ -221,6 +247,10 @@ async def plant_ways(ctx: TickContext, living: Living, tally: WaysTally) -> None
             continue
         for row in rows:
             form = living.forms.get(row.species_entity_id)
+            if form in FEEDING_FORMS:
+                await feed_pollinators(living, rows, ctx.rules.plants_depth.pollen_feed * row.abundance // PERCENT)
+            if form is PlantForm.GEOPHYTE and ground.burned_epoch is not None and ground.burned_epoch >= ctx.epoch - 1 and "abundance" not in row.locked:
+                row.abundance = clamp_int(row.abundance + table.geophyte_regrow, 0, PERCENT)
             if form is PlantForm.EPIPHYTE and ground.forest_cover < table.epiphyte_host_need:
                 tally.thinned += int(thin(row, table.epiphyte_host_need // 10))
             if form is PlantForm.PARASITIC and "harvest_pct" not in ground.locked:
@@ -301,6 +331,76 @@ async def keep_living_ways(ctx: TickContext, resin_species: set[int]) -> WaysTal
     await plant_ways(ctx, living, tally)
     await tap_resin(ctx, living, resin_species)
     await animal_roles(ctx)
+    await deeper_ways(ctx, living, tally)
     await feed_herds(ctx)
     await ctx.session.flush()
     return tally
+
+
+async def deeper_ways(ctx: TickContext, living: Living, tally: WaysTally) -> None:
+    await lichen_and_insects(ctx, living, tally)
+    await captives(ctx, living, tally)
+    await shown_and_herded(ctx)
+
+
+async def lichen_and_insects(ctx: TickContext, living: Living, tally: WaysTally) -> None:
+    forms = ctx.rules.species_forms
+    classes = {species: kind for species, kind in await ctx.session.execute(select(SpeciesProfileRow.species_entity_id, SpeciesProfileRow.species_class))}
+    foul = {region: air for region, air in await ctx.session.execute(select(RegionPollutionRow.region_node_id, RegionPollutionRow.air))}
+    for region_id, rows in sorted(living.ranges.items()):
+        ground = living.grounds.get(region_id)
+        if ground is None or held(region_id):
+            continue
+        for row in rows:
+            if classes.get(row.species_entity_id) is not SpeciesClass.LICHEN:
+                continue
+            if foul.get(region_id, 0) >= forms.lichen_air_kill and thin(row, row.abundance // 2):
+                tally.thinned += 1
+            elif "soil_fertility" not in ground.locked:
+                gain = round_half_up(forms.lichen_weathering_pct * row.abundance / PERCENT)
+                ground.soil_fertility = clamp_int(ground.soil_fertility + gain, 0, PERCENT)
+                tally.weathered += int(gain > 0)
+        unseen = sum(
+            row.abundance for row in rows if (profile := living.profiles.get(row.species_entity_id)) is not None and profile.size_class is SizeClass.MICROSCOPIC
+        )
+        if unseen and "disease_load" not in ground.locked:
+            ground.disease_load = clamp_int(ground.disease_load + round_half_up(unseen * forms.microscopic_scale / (PERCENT * PERCENT * 10)), 0, PERCENT)
+        eaters = sum(row.abundance for row in rows if diet_of(living, row.species_entity_id) is Diet.INSECTIVORE)
+        swarms = [row for row in rows if (profile := living.profiles.get(row.species_entity_id)) is not None and profile.sociality is Sociality.SWARM]
+        for row in swarms if eaters > 0 else []:
+            tally.thinned += int(thin(row, round_half_up(ctx.rules.diets.insectivore_draw * min(PERCENT, eaters) / PERCENT)))
+        for row in rows:
+            profile = living.profiles.get(row.species_entity_id)
+            if profile is not None and profile.sociality is Sociality.PAIR and 0 < row.abundance < forms.pair_low and "breeding_seasons" not in profile.locked:
+                profile.breeding_seasons = max(1, round_half_up(profile.breeding_seasons * (PERCENT - forms.pair_widow_pct) / PERCENT))
+
+
+async def captives(ctx: TickContext, living: Living, tally: WaysTally) -> None:
+    table = ctx.rules.domestication_depth
+    for species_id, profile in sorted(living.profiles.items()):
+        if profile.stage is not DomesticationStage.CAPTIVE or held(species_id) or "stage" in profile.locked:
+            continue
+        if ctx.rng(f"captive.escape.{species_id}.{ctx.epoch}").chance(table.captive_escape_pct):
+            profile.stage = DomesticationStage.FERAL
+            profile.feral_epoch = ctx.epoch
+            tally.escaped += 1
+            await record(ctx, "species.escaped", roles={IncidentRole.SUBJECT: species_id}, facts={"stage": DomesticationStage.CAPTIVE})
+    kept = select(HerdRow.community_entity_id).where(HerdRow.stage == DomesticationStage.CAPTIVE)
+    for community_id in sorted(set(await ctx.session.scalars(kept))):
+        town = await ctx.session.get(EntityRow, community_id)
+        if town is not None and not held(town.id):
+            shift_stat(town, "prosperity", -table.captive_upkeep)
+
+
+async def shown_and_herded(ctx: TickContext) -> None:
+    table = ctx.rules.species_roles
+    for community_id, head in sorted((await heads_kept_for(ctx.session, AnimalRole.DISPLAY)).items()):
+        profile = await ctx.session.get(SettlementProfileRow, community_id)
+        if head > 0 and profile is not None and "prestige" not in profile.locked and not held(community_id):
+            profile.prestige = clamp_int(profile.prestige + table.display_status, 0, PERCENT)
+    for community_id, head in sorted((await heads_kept_for(ctx.session, AnimalRole.HERDING)).items()):
+        if head <= 0 or held(community_id):
+            continue
+        for herd in await ctx.session.scalars(select(HerdRow).where(HerdRow.community_entity_id == community_id).order_by(HerdRow.species_entity_id)):
+            if "head" not in herd.locked:
+                herd.head = herd.head + round_half_up(herd.head * table.herding_output_pct / PERCENT / 10)

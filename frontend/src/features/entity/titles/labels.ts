@@ -6,6 +6,7 @@ import {
   Gem,
   Hammer,
   Landmark,
+  Network,
   Scroll,
   Shield,
   Swords,
@@ -35,6 +36,7 @@ export const RANKS: Record<string, Named> = {
   },
   military: { label: 'Military command', icon: Swords, tone: 'danger' },
   guild: { label: 'Head of an association', icon: Hammer, tone: 'warning' },
+  league: { label: 'League', icon: Network, tone: 'gold' },
 }
 
 export const TENURE_ICON = Anchor

@@ -11,6 +11,7 @@ class PrehistoryKind(StrEnum):
     VOYAGE = "voyage"
     PHENOMENON = "phenomenon"
     CORPSE = "corpse"
+    RUINED = "ruined"
 
 
 class PrehistoryState(StrEnum):

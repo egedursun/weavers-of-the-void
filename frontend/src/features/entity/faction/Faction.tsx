@@ -23,6 +23,7 @@ import {
   Medal,
   Megaphone,
   PackageOpen,
+  PackageSearch,
   Palette,
   Plus,
   Save,
@@ -36,6 +37,7 @@ import {
   Sword,
   Swords,
   Target,
+  Tent,
   Trash2,
   TriangleAlert,
   Trophy,
@@ -43,6 +45,12 @@ import {
   UserPlus,
   Users,
   Vote,
+  Crosshair,
+  Gem,
+  Sailboat,
+  UsersRound,
+  Banknote,
+  Speech,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -106,7 +114,7 @@ const FACTION_KINDS: Record<string, Named> = {
   peasant_league: { label: "Farmers' league", icon: Users, tone: 'success' },
   rebels: { label: 'Rebels', icon: Flag, tone: 'danger' },
   bandits: { label: 'Bandits', icon: Skull, tone: 'danger' },
-  pirates: { label: 'Pirates', icon: Ship, tone: 'danger' },
+  pirates: { label: 'Pirates', icon: Sailboat, tone: 'danger' },
   assassins: { label: 'Assassins', icon: Sword, tone: 'danger' },
   scholars_academy: { label: 'Academy', icon: ScrollText, tone: 'info' },
   secret_society: { label: 'Secret society', icon: BookLock, tone: 'muted' },
@@ -151,16 +159,26 @@ const FACTION_KINDS: Record<string, Named> = {
   financiers: { label: 'Financiers', icon: Coins, tone: 'gold' },
   veterans: { label: "Veterans' association", icon: Medal, tone: 'warning' },
   worker_body: { label: 'Worker body', icon: HardHat, tone: 'warning' },
-  street_gang: { label: 'Street gang', icon: Swords, tone: 'danger' },
+  street_gang: { label: 'Street gang', icon: Crosshair, tone: 'danger' },
   trafficking_ring: { label: 'Trafficking ring', icon: Link2, tone: 'danger' },
   club: { label: 'Club', icon: Trophy, tone: 'gold' },
   league: { label: 'League', icon: Medal, tone: 'info' },
+  fence_network: {
+    label: 'Network of fences',
+    icon: PackageSearch,
+    tone: 'danger',
+  },
+  counterfeiting_ring: {
+    label: 'Counterfeiting ring',
+    icon: Banknote,
+    tone: 'danger',
+  },
 }
 const FACTION_SCALES: Record<string, Named> = {
   band: { label: 'Band', icon: Users, tone: 'muted' },
   company: { label: 'Company', icon: Users, tone: 'info' },
   organisation: { label: 'Organisation', icon: Users, tone: 'gold' },
-  network: { label: 'Network', icon: Users, tone: 'success' },
+  network: { label: 'Network', icon: UsersRound, tone: 'success' },
 }
 const FACTION_GOALS: Record<string, Named> = {
   lower_taxes: { label: 'Lower taxes', icon: Coins, tone: 'gold' },
@@ -182,9 +200,19 @@ const FACTION_GOALS: Record<string, Named> = {
   },
   independence: { label: 'Independence', icon: Flag, tone: 'warning' },
   loot: { label: 'Loot', icon: Skull, tone: 'danger' },
-  gain_privilege: { label: 'Gain a privilege', icon: Crown, tone: 'gold' },
+  gain_privilege: { label: 'Gain a privilege', icon: Gem, tone: 'gold' },
   win_office: { label: 'Win an office', icon: Landmark, tone: 'info' },
-  ruin_rival: { label: 'Ruin a rival', icon: Swords, tone: 'danger' },
+  ruin_rival: { label: 'Ruin a rival', icon: Sword, tone: 'danger' },
+  protect_members: {
+    label: 'Protect its members',
+    icon: ShieldCheck,
+    tone: 'info',
+  },
+  found_settlement: {
+    label: 'Found a settlement',
+    icon: Tent,
+    tone: 'success',
+  },
 }
 const FACTION_ACTIONS: Record<string, Named> = {
   lobby: { label: 'Lobbied', icon: Megaphone, tone: 'info' },
@@ -202,7 +230,7 @@ const FACTION_ACTIONS: Record<string, Named> = {
   suppressed: { label: 'Hunted', icon: ShieldCheck, tone: 'danger' },
   hired: { label: 'Hired', icon: Handshake, tone: 'success' },
   defected: { label: 'Defected', icon: Target, tone: 'danger' },
-  propaganda: { label: 'Propaganda', icon: Megaphone, tone: 'info' },
+  propaganda: { label: 'Propaganda', icon: Speech, tone: 'info' },
   boycott: { label: 'Boycott', icon: Ban, tone: 'warning' },
 }
 const RANKS: Record<string, Named> = {

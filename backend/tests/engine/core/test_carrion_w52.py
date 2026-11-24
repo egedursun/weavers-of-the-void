@@ -17,7 +17,7 @@ RULES = Rules()
 
 
 def test_eight_rests_each_with_every_pressure_and_keeping_read_from_the_catalogue() -> None:
-    assert set(CARRION_RESTS) == set(CarrionRest) and len(CarrionRest) == 8
+    assert set(CARRION_RESTS) == set(CarrionRest) and len(CarrionRest) == 9
     assert {rest for rest, spec in CARRION_RESTS.items() if spec.keeps} == KEEPING_RESTS
     assert CARRION_RESTS[CarrionRest.BURNED].gone and CARRION_RESTS[CarrionRest.BURNED].scavenger(RULES) == 0
     assert CARRION_RESTS[CarrionRest.SUNK].scavenger(RULES) > 0 and not CARRION_RESTS[CarrionRest.BURIED].gone

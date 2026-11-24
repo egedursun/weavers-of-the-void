@@ -37,6 +37,9 @@ const BASE = {
   charm_target_name: null,
   charm_kind: null,
   charm_strength: null,
+  ageing_rate_pct: null,
+  forget_scope: null,
+  sleep_until: null,
 }
 
 const VIEW = {

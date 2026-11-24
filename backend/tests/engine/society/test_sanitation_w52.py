@@ -20,7 +20,7 @@ RULES = Rules()
 
 def test_cleaning_cuts_the_water_food_and_goods_routes_only() -> None:
     cut = {route for route, spec in ROUTES.items() if PlagueResponse.SANITATION in spec.blocked_by}
-    assert cut == {Transmission.WATER, Transmission.INGESTION, Transmission.OBJECTS}
+    assert cut == {Transmission.WATER, Transmission.INGESTION, Transmission.OBJECTS, Transmission.SOIL}
 
 
 async def test_cleaning_needs_a_medical_theory_behind_it_and_leaves_lasting_works(realm: Realm) -> None:

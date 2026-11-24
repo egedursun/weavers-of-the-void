@@ -13,7 +13,7 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.prehistory import PrehistoryEventRow, PrehistoryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import ChronicleKind
-from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.prehistory import PrehistoryKind, PrehistorySource, PrehistoryState
 from aerona.domain.enums.world import Discovery, WorldType
@@ -21,6 +21,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import planet_of
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.stats import has_stat, shift_stat
 from aerona.engine.recording.record import record as record_incident
 from aerona.language.similarity import NamePool
 
@@ -145,6 +146,20 @@ async def deeds_of(ctx: TickContext, row: PrehistoryRow, god_id: int | None) -> 
         .limit(ctx.rules.prehistory.digest_size)
     )
     return await borrow(ctx, row, list(await ctx.session.scalars(statement)), PrehistorySource.DERIVED, subject=god_id)
+
+
+async def ruins_of(ctx: TickContext, row: PrehistoryRow, world: WorldRow) -> int:
+    fall = ctx.rules.prehistory.ruin_prosperity
+    towns = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.world_id == world.id, EntityRow.entity_type.in_(COMMUNITY_TYPES), EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    for town in towns:
+        if not held(town.id) and has_stat(town, "prosperity"):
+            shift_stat(town, "prosperity", -fall)
+    found = await strongest(ctx, (IncidentRow.world_id == world.id,), ctx.rules.prehistory.digest_size)
+    return await borrow(ctx, row, found, PrehistorySource.DERIVED)
 
 
 async def souls_of(ctx: TickContext, row: PrehistoryRow, world: WorldRow) -> int:

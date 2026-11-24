@@ -17,10 +17,10 @@ NEW_ACTS = (ActKind.LYING, ActKind.DRUNKENNESS, ActKind.TOMB_ROBBING, ActKind.US
 
 
 def test_every_act_is_labelled_read_by_values_and_renowned() -> None:
-    assert len(ActKind) == 59
+    assert len(ActKind) == 67
     for act in NEW_ACTS:
         assert ACT_LABELS[act] and ACT_READINGS[act] and act in ACT_RENOWN
-    assert {ReputationAxis.MERCY, ReputationAxis.JUSTICE} <= GLORIOUS and len(AXES) == 11
+    assert {ReputationAxis.MERCY, ReputationAxis.JUSTICE} <= GLORIOUS and len(AXES) == 13
     assert {diet for diet, spec in DIETS.items() if spec.feeds_on_hosts} == {Diet.PARASITE, Diet.SANGUIVORE}
 
 

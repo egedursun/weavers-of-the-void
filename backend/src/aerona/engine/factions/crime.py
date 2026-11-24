@@ -7,7 +7,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.intrigue import SecretRow
-from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.urban import CrimeStanceRow, PayrollRow, RacketRow, TurfRow
 from aerona.db.write_guard import held
@@ -191,8 +191,23 @@ async def bear_stances(ctx: TickContext) -> None:
             await inform(ctx, stance, profile.home_entity_id)
         elif stance.stance is CrimeStance.TOLERATE:
             await tolerate(ctx, stance, profile)
+        elif stance.stance is CrimeStance.INTEGRATE:
+            await integrate(ctx, stance, profile, weight)
         else:
             await license_trade(ctx, stance, profile)
+
+
+async def integrate(ctx: TickContext, stance: CrimeStanceRow, profile: FactionProfileRow, weight: float) -> None:
+    table = ctx.rules.crime_orgs
+    town = await ctx.session.get(SettlementProfileRow, profile.home_entity_id) if profile.home_entity_id is not None else None
+    if town is not None and not held(town.settlement_entity_id):
+        if "crime" not in town.locked:
+            town.crime = clamp_int(round_half_up(town.crime - table.integrate_crime * weight), 0, PERCENT)
+        if "militia" not in town.locked:
+            town.militia += round_half_up(table.integrate_watch * weight)
+    realm = await ctx.session.get(PolityProfileRow, stance.polity_entity_id)
+    if realm is not None and "corruption" not in realm.locked:
+        realm.corruption = clamp_int(round_half_up(realm.corruption + table.integrate_corruption * weight), 0, PERCENT)
 
 
 async def run_underworld(ctx: TickContext, tally: CrimeTally) -> None:

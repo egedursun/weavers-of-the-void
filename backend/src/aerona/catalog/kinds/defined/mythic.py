@@ -13,6 +13,8 @@ HEROQUEST_BOON = total(
         HeroquestBoon.FAVOUR: Defined("The god's favour", checked_by=(), used_by=("engine.mythic.heroquests.bestow", "engine.mythic.heroquests.succeed")),
         HeroquestBoon.TRUE_NAME: Defined("A true name", checked_by=("engine.mythic.heroquests.bestow",), used_by=()),
         HeroquestBoon.TITLE: Defined("A title", checked_by=("engine.mythic.heroquests.bestow",), used_by=()),
+        HeroquestBoon.KNOWLEDGE: Defined("Knowledge", checked_by=("engine.mythic.heroquests.restore",), used_by=("catalog.life.divine.RESTORING_BOONS",)),
+        HeroquestBoon.HEALING: Defined("Healing", checked_by=(), used_by=("catalog.life.divine.RESTORING_BOONS",)),
     },
 )
 
@@ -32,5 +34,6 @@ OFFICE_CHOICE = total(
         ),
         OfficeChoice.CONQUEST: Defined("Taken by conquest", checked_by=(), used_by=("engine.mythic.offices.conquer_offices",)),
         OfficeChoice.MANTLING: Defined("Taken by mantling", checked_by=(), used_by=("engine.mythic.mantling.replace",)),
+        OfficeChoice.INHERITANCE: Defined("Inheritance", checked_by=(), used_by=("engine.mythic.offices.pass_to_heir",)),
     },
 )

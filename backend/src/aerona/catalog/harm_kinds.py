@@ -163,6 +163,8 @@ DAMAGE: Mapping[DamageType, DamageSpec] = total(
         D.SONIC: DamageSpec(always(K.CONCUSSION), striking=True),
         D.PSYCHIC: DamageSpec(always(K.MIND_SCAR)),
         D.ASPHYXIA: DamageSpec(asphyxia_wound, bodily=True, breathing=True),
+        D.SOUL: DamageSpec(always(K.MIND_SCAR)),
+        D.PRESSURE: DamageSpec(always(K.PRESSURE_INJURY), bodily=True, breathing=True, deep=True),
     },
 )
 
@@ -237,6 +239,11 @@ INJURIES: Mapping[InjuryKind, InjurySpec] = total(
         ),
         K.RADIATION_SICKNESS: InjurySpec(clean_healing=True, lasting=lambda rules: rules.permanent_radiation, healing=lambda rules: rules.heal_radiation_pct),
         K.MIND_SCAR: InjurySpec(of_the_mind=True, lasting=lambda rules: rules.permanent_mind_scar, healing=lambda rules: rules.heal_mind_scar_pct),
+        K.SPRAIN: InjurySpec(clean_healing=True, care=(S.REST, S.SPLINT), healing=lambda rules: rules.heal_cut_pct),
+        K.TORN_TENDON: InjurySpec(care=(S.REST, S.SPLINT), lasting=lambda rules: rules.permanent_crush, healing=lambda rules: rules.heal_puncture_pct),
+        K.PRESSURE_INJURY: InjurySpec(
+            noted=True, care=(S.REST,), lasting=lambda rules: rules.permanent_concussion, healing=lambda rules: rules.heal_concussion_pct
+        ),
     },
 )
 
@@ -256,6 +263,8 @@ STEPS: Mapping[TreatmentStep, StepSpec] = total(
         S.DRAIN: StepSpec(StepAction.TREAT, supply=CommodityKind.CLOTH, level=lambda rules: rules.cauterise_level, noted=True, festering=True),
         S.BLEED: StepSpec(StepAction.TREAT, noted=True),
         S.MEDICATE: StepSpec(StepAction.TREAT, supply=CommodityKind.MEDICINE, noted=True, festering=True),
+        S.TRANSFUSE: StepSpec(StepAction.TREAT, level=lambda rules: rules.transfuse_level, stanches=True, noted=True),
+        S.REST: StepSpec(StepAction.TREAT),
     },
 )
 

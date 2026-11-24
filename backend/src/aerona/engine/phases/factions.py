@@ -108,6 +108,8 @@ BLUEPRINT_LIST = (
     FactionBlueprint(K.LEAGUE, "league", "League", "clubs"),
     FactionBlueprint(K.STREET_GANG, "street gang", "Gang", "members"),
     FactionBlueprint(K.TRAFFICKING_RING, "trafficking ring", "Ring", "traffickers"),
+    FactionBlueprint(K.FENCE_NETWORK, "network of fences", "Fences", "fences"),
+    FactionBlueprint(K.COUNTERFEITING_RING, "counterfeiting ring", "Coiners", "coiners"),
 )
 BLUEPRINTS: Mapping[FactionKind, FactionBlueprint] = total(FactionKind, {item.kind: item for item in BLUEPRINT_LIST})
 
@@ -347,6 +349,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.districts",
@@ -438,6 +441,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.office_history",
     "table.offices",
     "table.polity_profiles",
+    "table.public_opinion",
     "table.reputations",
     "table.ruler_currencies",
     "table.secrets",

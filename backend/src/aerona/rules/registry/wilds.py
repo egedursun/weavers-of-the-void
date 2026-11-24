@@ -165,6 +165,10 @@ class BeastsRules(Spanned):
     recovery_danger: int = rule(10, 0, 100, G, "Danger a land sheds when the beast that haunted it is slain")
     hoard_item_chance: int = rule(30, 0, 100, G, "A raid carries off a treasured item of the town to the hoard (%)")
 
+    migrating_fear_pct: int = rule(70, 0, 300, G, "Dread a beast passing through on its seasonal path spreads against a beast at rest (%)")
+    fleeing_fear_pct: int = rule(120, 0, 300, G, "Dread a beast driven from its land spreads in the land it presses into (%)")
+    playful_befriend_pct: int = rule(5, 0, 100, G, "Chance in an epoch that a playful beast near a town follows and befriends its folk (%)")
+
     @property
     def tribute_epochs(self) -> int:
         return self.epochs(self.tribute_years)

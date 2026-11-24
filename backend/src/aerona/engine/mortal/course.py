@@ -18,7 +18,7 @@ from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
-from aerona.db.write_guard import unheld
+from aerona.db.write_guard import held, unheld
 from aerona.domain.enums.body import ConditionKind, HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
@@ -56,9 +56,9 @@ from aerona.engine.mortal.standing import add_renown
 from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
-from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.unions.axes import spousing_of
 from aerona.engine.unions.customs import divorce_rule
@@ -105,7 +105,7 @@ FULL = PERCENT
 
 LIFE_KEYS = partial(
     LifeStage,
-    {LifeStage.ADULT: "life.adult", LifeStage.ELDER: "life.elder"},
+    {LifeStage.ADULT: "life.adult", LifeStage.MATURE: "life.mature", LifeStage.ELDER: "life.elder"},
     without=tuple(stage for stage in LifeStage if LIFE_STAGES[stage].reached is None),
 )
 
@@ -234,10 +234,21 @@ async def update_health(ctx: TickContext, mortal: EntityRow, profile: MortalProf
     loss = sum(chronic) * table.elder_health_loss + sum(wounds)
     age_loss = LIFE_STAGES[stage].age_loss
     loss += getattr(table, age_loss) if age_loss is not None else 0
+    if stage is LifeStage.MATURE:
+        decline(ctx, mortal)
     mending = await stored_attribute(ctx.session, mortal, Attribute.RECUPERATION)
     gain = table.health_recovery * (1 + (mending - FULL // 2) / PERCENT) if LIFE_STAGES[stage].recovers else 0
     gain += await land_health(ctx, mortal)
     profile.health = clamp_int(profile.health + gain - loss, 0, FULL)
+
+
+def decline(ctx: TickContext, mortal: EntityRow) -> None:
+    if held(mortal.id):
+        return
+    share = ctx.rules.life_course.over_epoch(ctx.rules.life_course.mature_decline_pct)
+    for key in ("strength", "endurance"):
+        if stat(mortal, key) is not None:
+            shift_stat(mortal, key, -round_half_up(stat_or(mortal, key, 0) * share / PERCENT))
 
 
 async def land_health(ctx: TickContext, mortal: EntityRow) -> int:

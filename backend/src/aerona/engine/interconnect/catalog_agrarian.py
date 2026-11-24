@@ -86,7 +86,7 @@ AGRARIAN_MECHANICS = (
         surface=Surface(drawer=DRAWER, layer="map-layer-nutrients"),
         backfill="agrarian_cycles: every land's stocks start from its natural soil on the first epoch after the upgrade",
         templates=("nutrients.salted", "nutrients.recovered"),
-        tools=("improve_soil",),
+        tools=("improve_soil", "tend_soil_stock"),
         tables=(SoilNutrientRow.__tablename__,),
         exposure=Exposure.CONTEXT,
         targets=("region",),

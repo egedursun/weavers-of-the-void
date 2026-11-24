@@ -11,9 +11,10 @@ from aerona.db.tables.cosmos import CreatorMoodInputRow, CreatorRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.world_ends import WorldEndRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.creator import CreatorMoodAxis, CreatorMoodLabel, CreatorPassion
+from aerona.domain.enums.creator import CreatorMoodAxis, CreatorMoodLabel, CreatorPassion, MoodItem
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
@@ -28,24 +29,6 @@ BATTLE_KINDS = frozenset({EngineKind.BATTLE, EngineKind.SIEGE})
 NEW_LIFE_TYPES = frozenset({EntityType.PEOPLE, EntityType.MORTAL, EntityType.SETTLEMENT, EntityType.SPECIES})
 BREAKDOWN_PRECISION = 2
 HALF = 0.5
-
-
-class MoodItem:
-    WARS = "wars"
-    GODLESS = "godless"
-    REBEL_SONS = "rebel_sons"
-    DOOMSDAY = "doomsday_clock"
-    CONTENTMENT_SOOTHES = "contentment_soothes"
-    CULT = "cult"
-    NEW_LIFE = "new_life"
-    ACTED = "the_god_acted"
-    SHADOW_OF_ANGER = "shadow_of_anger"
-    BATTLES = "battles"
-    BLOOD = "blood_shed"
-    LEAK = "leak"
-    TEMPERAMENT = "temperament"
-    STIR = "stir"
-    PASSIONS = "passions"
 
 
 @dataclass(frozen=True)
@@ -71,6 +54,8 @@ class MoodInputs:
     unanswered_weight: float
     battles: int = 0
     killings: int = 0
+    ended_worlds: int = 0
+    lost_peoples: int = 0
     mean_leak: float = 0.0
     temperament_roll: float = HALF
     anger_roll: float = HALF
@@ -83,7 +68,7 @@ class MoodInputs:
 @dataclass(frozen=True)
 class MoodBreakdownItem:
     axis: CreatorMoodAxis
-    item: str
+    item: MoodItem
     delta: float
 
 
@@ -166,6 +151,13 @@ def compute_mood_update(rules: Rules, state: MoodState, inputs: MoodInputs) -> M
         (MoodItem.TEMPERAMENT, -temperament * creator.temperament_content_pct / PERCENT),
         (MoodItem.STIR, swing(inputs.content_roll, creator.mood_jitter)),
     ]
+    sorrow_items = [
+        (MoodItem.BLOOD, saturating(inputs.killings, creator.sorrow_death_half, creator.sorrow_death_max)),
+        (MoodItem.DOOMSDAY, saturating(inputs.ended_worlds, 1, creator.sorrow_world_max)),
+        (MoodItem.GODLESS, saturating(inputs.lost_peoples, creator.sorrow_people_half, creator.sorrow_people_max)),
+    ]
+    sorrow = sum(delta for _, delta in sorrow_items)
+    anger_items.append((MoodItem.CONTENTMENT_SOOTHES, -sorrow * creator.sorrow_wrath_pct / PERCENT))
     anger = clamp_percent(state.anger * creator.wrath_keep_pct / PERCENT + sum(delta for _, delta in anger_items))
     contentment = clamp_percent(state.contentment * creator.content_keep_pct / PERCENT + sum(delta for _, delta in content_items))
     interest = clamp_percent(
@@ -179,7 +171,7 @@ def compute_mood_update(rules: Rules, state: MoodState, inputs: MoodInputs) -> M
     loneliness = clamp_percent(state.loneliness * creator.loneliness_keep_pct / PERCENT + loneliness_terms)
     breakdown = tuple(
         MoodBreakdownItem(axis, item, round(delta, BREAKDOWN_PRECISION))
-        for axis, items in ((CreatorMoodAxis.ANGER, anger_items), (CreatorMoodAxis.CONTENTMENT, content_items))
+        for axis, items in ((CreatorMoodAxis.ANGER, anger_items), (CreatorMoodAxis.CONTENTMENT, content_items), (CreatorMoodAxis.SORROW, sorrow_items))
         for item, delta in items
         if round(delta, BREAKDOWN_PRECISION) != 0
     )
@@ -233,7 +225,18 @@ async def gather_mood_inputs(session: AsyncSession, rules: Rules, old_epoch: int
     discoveries += round(await mean_spread(session) * rules.creator.spread_interest_pct / PERCENT)
     works = int(await session.scalar(born.where(EntityRow.entity_type.in_([EntityType.ARTWORK, EntityType.STRUCTURE]))) or 0)
     creator_row = await session.scalar(select(CreatorRow).limit(1))
+    ended_worlds = int(await session.scalar(select(func.count()).select_from(WorldEndRow).where(WorldEndRow.epoch == old_epoch)) or 0)
+    lost_peoples = int(
+        await session.scalar(
+            select(func.count(EntityRow.id)).where(
+                EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status != EntityStatus.CANON, EntityRow.end_epoch == old_epoch
+            )
+        )
+        or 0
+    )
     return MoodInputs(
+        ended_worlds=ended_worlds,
+        lost_peoples=lost_peoples,
         passions=tuple(creator_row.passions) if creator_row is not None else (),
         discoveries=discoveries,
         works=works,

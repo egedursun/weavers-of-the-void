@@ -22,7 +22,7 @@ export function ForeignGodRelations({ detail }: { detail: ForeignGodDetail }) {
   )
   return (
     <>
-      <Section title='Worshippers' level={3}>
+      <Section id='section-foreign-worshippers' title='Worshippers' level={3}>
         {detail.worshippers.length === 0 ? (
           <EmptyState
             icon={Users}
@@ -56,7 +56,7 @@ export function ForeignGodRelations({ detail }: { detail: ForeignGodDetail }) {
         )}
       </Section>
       {detail.sons_here.length > 0 && (
-        <Section title='Sons encountered' level={3}>
+        <Section id='section-foreign-sons' title='Sons encountered' level={3}>
           <PagedList
             items={detail.sons_here}
             initial={8}
@@ -90,7 +90,7 @@ export function ForeignGodRelations({ detail }: { detail: ForeignGodDetail }) {
           </PagedList>
         </Section>
       )}
-      <Section title='Bonds' level={3}>
+      <Section id='section-foreign-bonds' title='Bonds' level={3}>
         <BondList bonds={bonds} total={detail.bond_total} editable />
         <CreateBondForm sourceId={detail.god.id} />
       </Section>

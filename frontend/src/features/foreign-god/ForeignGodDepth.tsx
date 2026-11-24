@@ -28,6 +28,7 @@ export function ForeignGodDepth({ god }: { god: ForeignGodRecord }) {
   })
   return (
     <Section
+      id='section-foreign-depth'
       title='Depth'
       surface='card'
       level={3}

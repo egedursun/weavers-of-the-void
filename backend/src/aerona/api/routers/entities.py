@@ -15,6 +15,7 @@ from aerona.api.schemas.entities import ArchiveRequest, EntityDetail, EntityQuer
 from aerona.api.schemas.records import BondView, ChronicleLineRecord, EntityRecord, EntitySummary, NodeRef
 from aerona.api.views.common import bond_count, bond_views, images_of, mentioning, node_ref, node_refs
 from aerona.api.views.insight import entity_insight
+from aerona.api.views.levels import level_of
 from aerona.constants.api import RELATION_PAGE_DEFAULT, RELATION_PAGE_MAX
 from aerona.constants.player import ANCESTOR_SEARCH_DEPTH
 from aerona.core.errors import NotFoundError
@@ -203,6 +204,7 @@ async def read_entity(services: ServicesDep, entity_id: int = Path(ge=1)) -> Ent
             maker=await node_ref(session, entity.maker_entity_id),
             patron=await node_ref(session, patron),
             breadcrumb=await breadcrumb(session, entity),
+            level=await level_of(session, entity),
             contents=[EntitySummary.model_validate(row) for row in contents],
             content_total=content_total,
             flags=sorted(await session.scalars(select(EntityFlagRow.flag).where(EntityFlagRow.entity_id == entity.id))),

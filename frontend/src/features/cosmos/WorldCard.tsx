@@ -39,7 +39,7 @@ import {
   Section,
   StatBar,
 } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
 import { useCatalogue } from '@/features/entity/api/queries'
 import { usePersistentState } from '@/features/map/usePersistentState'
@@ -151,7 +151,7 @@ export function WorldCard({
   onDescend,
 }: WorldCardProps) {
   const navigate = useNavigate()
-  const drawer = useDrawerStack()
+  const entryStack = useEntryStack()
   const deadRealm = useCatalogue().data?.world_types.find(
     (type) => type.key === item.world.world_type
   )?.realm_of_dead
@@ -259,7 +259,7 @@ export function WorldCard({
             <Button
               variant='outline'
               onClick={() =>
-                void drawer.open({ kind: 'world', id: String(world.id) })
+                void entryStack.open({ kind: 'world', id: String(world.id) })
               }
             >
               <BookOpen />
@@ -277,7 +277,10 @@ export function WorldCard({
             <Button
               variant='outline'
               onClick={() =>
-                void drawer.open({ kind: 'world-guide', id: String(world.id) })
+                void entryStack.open({
+                  kind: 'world-guide',
+                  id: String(world.id),
+                })
               }
             >
               <Compass />

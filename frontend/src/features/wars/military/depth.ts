@@ -1,24 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
 import {
-  Cpu,
-  Clover,
   Anchor,
   Axe,
   BadgeCheck,
   Banknote,
+  Binoculars,
   Bone,
   Brain,
-  CloudFog,
-  Coins,
   ClipboardList,
+  CloudFog,
+  Clover,
+  Coins,
+  Cpu,
   Crown,
   Drama,
   Droplet,
   Eye,
-  Globe,
-  Hammer,
-  Lock,
-  MessageSquareWarning,
   Factory,
   Flag,
   Flame,
@@ -26,13 +23,22 @@ import {
   Gem,
   Ghost,
   Gift,
+  Globe,
+  Hammer,
   HandHeart,
   Handshake,
   HeartPulse,
+  Home,
   KeySquare,
+  Languages,
   Leaf,
-  type LucideIcon,
+  Lock,
   Map,
+  MessageSquareWarning,
+  Moon,
+  Mountain,
+  Plane,
+  RefreshCw,
   Rocket,
   Sailboat,
   Scale,
@@ -41,12 +47,24 @@ import {
   Sparkles,
   Swords,
   Target,
+  Tent,
+  type LucideIcon,
   Unlock,
   Users,
-  Binoculars,
-  Mountain,
+  Waves,
   Wifi,
-  Plane,
+  Thermometer,
+  Activity,
+  Award,
+  Church,
+  HeartHandshake,
+  Sword,
+  UsersRound,
+  House,
+  Sun,
+  LineStyle,
+  Footprints,
+  Shovel,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -140,7 +158,7 @@ export const RECORD_ICON: Record<string, LucideIcon> = {
   army_profile: Map,
   officer: BadgeCheck,
   contract: Banknote,
-  war: Swords,
+  war: Sword,
   siege: KeySquare,
   war_aim: Target,
   occupation: Crown,
@@ -173,6 +191,7 @@ export const FEUD_STATUS: Record<Feud['status'], Named> = {
   settled: { label: 'Settled', icon: Scale, tone: 'success' },
   outlawed: { label: 'Ended by law', icon: Gavel, tone: 'info' },
   extinguished: { label: 'A side is gone', icon: Skull, tone: 'muted' },
+  dormant: { label: 'Dormant', icon: Ghost, tone: 'muted' },
 }
 
 export const FEUD_PARTY: Record<Feud['party'], Named> = {
@@ -189,7 +208,7 @@ export const FEUD_LEVEL: Record<Feud['level'], Named> = {
 }
 
 export const FEUD_ACTIONS: Record<string, Named> = {
-  mediated: { label: 'Mediated', icon: HandHeart, tone: 'success' },
+  mediated: { label: 'Mediated', icon: HeartHandshake, tone: 'success' },
   raid: { label: 'A raid', icon: Swords, tone: 'danger' },
   assassinate: { label: 'An assassination', icon: Skull, tone: 'danger' },
   demand_wergild: { label: 'Wergild demanded', icon: Coins, tone: 'gold' },
@@ -235,11 +254,23 @@ export const TERM: Record<string, Named> = {
     tone: 'warning',
   },
   white_peace: { label: 'White peace', icon: Handshake, tone: 'muted' },
+  border_accord: {
+    label: 'Border accord',
+    icon: HeartHandshake,
+    tone: 'muted',
+  },
+  return_of_refugees: {
+    label: 'Return of refugees',
+    icon: House,
+    tone: 'muted',
+  },
+  apology: { label: 'Apology', icon: Users, tone: 'muted' },
 }
 
 export const FATE_OF: Record<string, Named> = {
+  sick: { label: 'Fell sick in camp', icon: Thermometer, tone: 'warning' },
   killed: { label: 'Killed', icon: Skull, tone: 'danger' },
-  wounded: { label: 'Wounded', icon: HeartPulse, tone: 'warning' },
+  wounded: { label: 'Wounded', icon: Activity, tone: 'warning' },
   maimed: { label: 'Maimed', icon: HeartPulse, tone: 'danger' },
   captured: { label: 'Captured', icon: Unlock, tone: 'info' },
   missing: { label: 'Missing', icon: Map, tone: 'muted' },
@@ -248,7 +279,7 @@ export const FATE_OF: Record<string, Named> = {
 
 export const MORALE_PART: Record<string, Named> = {
   leadership: { label: 'Leadership', icon: Crown, tone: 'gold' },
-  faith: { label: 'Faith', icon: Sparkles, tone: 'verdigris' },
+  faith: { label: 'Faith', icon: Church, tone: 'verdigris' },
   babel: { label: 'Many tongues', icon: Brain, tone: 'warning' },
   beast_dread: { label: 'Dread of beasts', icon: Skull, tone: 'danger' },
   luck: { label: 'Luck they believe in', icon: Clover, tone: 'gold' },
@@ -258,7 +289,11 @@ export const MORALE_PART: Record<string, Named> = {
   willpower: { label: 'Willpower', icon: Brain, tone: 'success' },
   flaring_items: { label: 'Flaring relics', icon: Flame, tone: 'warning' },
   passion: { label: "A commander's passion", icon: HandHeart, tone: 'gold' },
-  divine: { label: 'Gifts of their gods', icon: Sparkles, tone: 'verdigris' },
+  divine: {
+    label: 'Gifts of their gods',
+    icon: Sun,
+    tone: 'verdigris',
+  },
   god_shield: {
     label: 'A god steadied them',
     icon: Sparkles,
@@ -283,11 +318,11 @@ export const MAGIC_PART: Record<string, Named> = {
 export const CAUSE: Record<string, Named> = {
   claim: { label: 'A claim', icon: Crown, tone: 'gold' },
   holy_war: { label: 'Holy war', icon: Sparkles, tone: 'verdigris' },
-  succession: { label: 'Succession', icon: Crown, tone: 'warning' },
+  succession: { label: 'Succession', icon: Award, tone: 'warning' },
   raid: { label: 'Raid', icon: Axe, tone: 'danger' },
   liberation: { label: 'Liberation', icon: Unlock, tone: 'success' },
   punitive: { label: 'Punishment', icon: Gavel, tone: 'danger' },
-  declared: { label: 'Declared', icon: Swords, tone: 'danger' },
+  declared: { label: 'Declared', icon: Sword, tone: 'danger' },
   independence: { label: 'Independence', icon: Unlock, tone: 'info' },
   resource: { label: 'Resources', icon: Coins, tone: 'gold' },
   trade_route: { label: 'Trade route', icon: Coins, tone: 'info' },
@@ -317,6 +352,8 @@ export const CAUSE: Record<string, Named> = {
   envy: { label: 'Envy', icon: Gem, tone: 'warning' },
   schism: { label: 'Schism', icon: Scale, tone: 'verdigris' },
   beast: { label: 'A beast', icon: Bone, tone: 'danger' },
+  water: { label: 'Water', icon: Waves, tone: 'danger' },
+  refugees: { label: 'Refugees', icon: Footprints, tone: 'danger' },
 }
 
 export function nameOf(table: Record<string, Named>, key: string): Named {
@@ -342,8 +379,10 @@ export const ROLE: Record<string, Named> = {
   },
   surgeon: { label: 'Surgeon', icon: HeartPulse, tone: 'verdigris' },
   chaplain: { label: 'Chaplain', icon: Sparkles, tone: 'verdigris' },
-  paymaster: { label: 'Paymaster', icon: Coins, tone: 'gold' },
+  paymaster: { label: 'Paymaster', icon: Banknote, tone: 'gold' },
   scout_master: { label: 'Master of scouts', icon: Binoculars, tone: 'info' },
+  engineer_master: { label: 'Master of engineers', icon: Hammer, tone: 'info' },
+  interpreter: { label: 'Interpreter', icon: Languages, tone: 'info' },
 }
 
 export const CONTRACT_STATUS: Record<string, Named> = {
@@ -351,6 +390,7 @@ export const CONTRACT_STATUS: Record<string, Named> = {
   unpaid: { label: 'Unpaid', icon: Banknote, tone: 'warning' },
   turned: { label: 'Turned on its employer', icon: Skull, tone: 'danger' },
   ended: { label: 'Contract ended', icon: Unlock, tone: 'muted' },
+  renewed: { label: 'Renewed', icon: RefreshCw, tone: 'success' },
 }
 
 export const AGENT_STATUS: Record<string, Named> = {
@@ -361,6 +401,7 @@ export const AGENT_STATUS: Record<string, Named> = {
   retired: { label: 'Retired', icon: Leaf, tone: 'muted' },
   missing: { label: 'Out of contact', icon: Map, tone: 'muted' },
   exposed: { label: 'Known to the enemy', icon: Eye, tone: 'warning' },
+  sleeper: { label: 'Sleeper', icon: Moon, tone: 'muted' },
 }
 
 export const OWNER_KIND: Record<
@@ -368,11 +409,12 @@ export const OWNER_KIND: Record<
   Named
 > = {
   polity: { label: 'Spies of a realm', icon: Crown, tone: 'gold' },
-  faction: { label: 'Spies of a faction', icon: Users, tone: 'info' },
+  faction: { label: 'Spies of a faction', icon: UsersRound, tone: 'info' },
   cult: { label: 'Spies of a cult', icon: Sparkles, tone: 'verdigris' },
   community: { label: 'Spies of a people', icon: Users, tone: 'muted' },
   company: { label: 'Spies of a company', icon: Coins, tone: 'gold' },
   made_mind: { label: 'Spies of a made mind', icon: Cpu, tone: 'verdigris' },
+  household: { label: 'A household', icon: Home, tone: 'gold' },
 }
 
 export const SACK_CHOICE: Record<string, Named> = {
@@ -381,6 +423,11 @@ export const SACK_CHOICE: Record<string, Named> = {
   raze: { label: 'Raze', icon: Skull, tone: 'danger' },
   ransom_city: { label: 'Ransom the city', icon: Coins, tone: 'gold' },
   deport: { label: 'Deport its people', icon: Ship, tone: 'danger' },
+  resettle: {
+    label: "Settle the victors' people",
+    icon: Tent,
+    tone: 'warning',
+  },
 }
 
 export const SIEGE_WORK: Record<string, Named> = {
@@ -391,8 +438,8 @@ export const SIEGE_WORK: Record<string, Named> = {
   countermines: { label: 'Countermines', icon: Bone, tone: 'info' },
   ladders: { label: 'Ladders', icon: Rocket, tone: 'muted' },
   bombardment: { label: 'Massed bombardment', icon: Hammer, tone: 'danger' },
-  sapping: { label: 'Sapping trenches', icon: Bone, tone: 'info' },
-  blockade_lines: { label: 'Blockade lines', icon: Map, tone: 'warning' },
+  sapping: { label: 'Sapping trenches', icon: Shovel, tone: 'info' },
+  blockade_lines: { label: 'Blockade lines', icon: LineStyle, tone: 'warning' },
   air_assault: { label: 'Assault from the air', icon: Plane, tone: 'info' },
   network_attack: {
     label: 'Attack on the networks',
@@ -401,6 +448,7 @@ export const SIEGE_WORK: Record<string, Named> = {
   },
   rite_breach: { label: 'Breaching rite', icon: Sparkles, tone: 'verdigris' },
   ramp: { label: 'Siege ramp', icon: Mountain, tone: 'muted' },
+  dam: { label: 'Dam', icon: Waves, tone: 'info' },
 }
 
 export const WALL_MATERIAL: Record<string, Named> = {

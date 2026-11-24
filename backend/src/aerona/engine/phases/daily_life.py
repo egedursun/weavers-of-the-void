@@ -28,6 +28,7 @@ from aerona.engine.phase import Phase
     "table.creator",
     "table.cult_doctrines",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.domestic_service",
     "table.entities",

@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Anchor,
   Bird,
   Bone,
@@ -25,6 +24,7 @@ import {
   HeartPulse,
   Landmark,
   Layers,
+  Microscope,
   Mountain,
   Network,
   Package,
@@ -42,16 +42,21 @@ import {
   Snail,
   Snowflake,
   Sparkles,
+  Sprout,
   Sun,
   Sunrise,
   Syringe,
   TreeDeciduous,
+  TreePine,
   Turtle,
   Utensils,
   Vegan,
   Waves,
   Wheat,
   Zap,
+  type LucideIcon,
+  Building2,
+  Worm,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -162,6 +167,18 @@ export const BODY_SPEC: Record<BodyPlan, Spec> = {
     tone: 'success',
     hint: 'Builders who lose members and grow them back',
   },
+  hexapod: {
+    label: 'Six-limbed folk',
+    icon: Worm,
+    tone: 'warning',
+    hint: 'Steady under great loads and quick to climb',
+  },
+  rooted: {
+    label: 'Rooted folk',
+    icon: TreePine,
+    tone: 'success',
+    hint: 'Stay where they grow and draw their food through roots',
+  },
 }
 
 export const SIZE_CLASS_SPEC: Record<SizeClass, Spec> = {
@@ -171,6 +188,12 @@ export const SIZE_CLASS_SPEC: Record<SizeClass, Spec> = {
   large: { label: 'Large', icon: Ruler, tone: 'warning' },
   huge: { label: 'Huge', icon: Mountain, tone: 'warning' },
   colossal: { label: 'Colossal', icon: Mountain, tone: 'danger' },
+  microscopic: {
+    label: 'Too small to see',
+    icon: Microscope,
+    tone: 'muted',
+    hint: 'Live as a multitude no eye can count',
+  },
 }
 
 export const DIET_SPEC: Record<Diet, Spec> = {
@@ -263,6 +286,12 @@ export const DIET_SPEC: Record<Diet, Spec> = {
     icon: Zap,
     tone: 'gold',
     hint: 'Draw on raw power where the world holds it',
+  },
+  insectivore: {
+    label: 'Eaters of insects',
+    icon: Worm,
+    tone: 'success',
+    hint: 'Live on the insects of their land',
   },
 }
 
@@ -470,6 +499,18 @@ export const FUNERAL_SPEC: Record<FuneralCustom, Spec> = {
     icon: Layers,
     tone: 'verdigris',
     hint: 'Laid to rest, then gathered in a second rite that draws the people closer',
+  },
+  memorial_only: {
+    label: 'Memorial',
+    icon: Building2,
+    tone: 'muted',
+    hint: 'The lost and unrecovered honoured with a memorial',
+  },
+  return_to_soil: {
+    label: 'Return to the soil',
+    icon: Sprout,
+    tone: 'success',
+    hint: 'Given back to the living ground',
   },
 }
 

@@ -4,13 +4,14 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.life.works import APPLY_WORKS_WORKS_KINDS, APPLY_WORKS_WORKS_KINDS_2
+from aerona.catalog.life.works import APPLY_WORKS_WORKS_KINDS, APPLY_WORKS_WORKS_KINDS_2, LAND_WORKS
 from aerona.catalog.life_traits import WORKS_KIND_TRAITS, having
 from aerona.catalog.works_shapes import WORKS_PROSPERITY_PCT
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
 from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.db.tables.works import PublicWorksRow, PublicWorkStageRow
@@ -22,6 +23,7 @@ from aerona.domain.enums.settlement import WATER_ORDER
 from aerona.domain.enums.works import LabourRegime, WorksKind, WorksStatus
 from aerona.engine.context import TickContext
 from aerona.engine.numbers.book import towns_in
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import record
@@ -40,6 +42,7 @@ WORKS_LEVELS: Mapping[WorksKind, tuple[str, int, int | None]] = partial(
         WorksKind.CANAL: ("harbour_capacity", 10, None),
         WorksKind.HARBOUR_WORKS: ("harbour_capacity", 20, None),
         WorksKind.GRANARY_SYSTEM: ("granary_capacity", 50, None),
+        WorksKind.IRRIGATION: ("irrigation", 1, LEVEL_MAX),
     },
     without=(
         WorksKind.AQUEDUCT,
@@ -49,6 +52,9 @@ WORKS_LEVELS: Mapping[WorksKind, tuple[str, int, int | None]] = partial(
         WorksKind.TERRAFORMING_STAGE,
         WorksKind.MEGASTRUCTURE_STAGE,
         WorksKind.GROWN_WORKS,
+        WorksKind.LIGHTHOUSE,
+        WorksKind.TERRACING,
+        WorksKind.TUNNEL,
     ),
 )
 ROUTE_WORKS = having(WORKS_KIND_TRAITS, WorksKindTrait.ROUTE_WORKS)
@@ -114,7 +120,43 @@ async def shift_infrastructure(session: AsyncSession, town_id: int, kind: WorksK
             setattr(row, column, min(value, cap) if cap is not None else value)
 
 
+async def drained(session: AsyncSession, place_id: int) -> bool:
+    found = await session.scalar(
+        select(PublicWorksRow.id)
+        .where(PublicWorksRow.place_node_id == place_id, PublicWorksRow.kind == WorksKind.DRAINAGE, PublicWorksRow.status == WorksStatus.FINISHED)
+        .limit(1)
+    )
+    return found is not None
+
+
+async def shape_land(ctx: TickContext, works: PublicWorksRow, sign: int) -> None:
+    if works.kind not in LAND_WORKS:
+        return
+    table = ctx.rules.public_works
+    atlas = await RegionAtlas.load(ctx.session)
+    region_id = atlas.top_region(works.place_node_id)
+    land = await ctx.session.get(RegionEnvironmentRow, region_id) if region_id is not None else None
+    if land is None or held(land.entity_id):
+        return
+    with explaining():
+        if works.kind is WorksKind.TERRACING:
+            if "erosion" not in land.locked:
+                term("public_works.terracing_erosion", -sign * table.terracing_erosion, source_node_id=works.polity_entity_id)
+                land.erosion = clamp_int(land.erosion - sign * table.terracing_erosion, 0, PERCENT)
+            if "harvest_pct" not in land.locked:
+                term("public_works.terracing_harvest", sign * table.terracing_harvest, source_node_id=works.polity_entity_id)
+                land.harvest_pct = clamp_int(land.harvest_pct + sign * table.terracing_harvest, 0, PERCENT * 2)
+            return
+        if "harvest_pct" not in land.locked:
+            term("public_works.irrigation_harvest", sign * table.irrigation_harvest, source_node_id=works.polity_entity_id)
+            land.harvest_pct = clamp_int(land.harvest_pct + sign * table.irrigation_harvest, 0, PERCENT * 2)
+        if sign > 0 and not await drained(ctx.session, works.place_node_id) and "soil_fertility" not in land.locked:
+            term("public_works.irrigation_salt", -table.irrigation_salt, source_node_id=works.polity_entity_id)
+            land.soil_fertility = clamp_int(land.soil_fertility - table.irrigation_salt, 0, PERCENT)
+
+
 async def apply_works(ctx: TickContext, works: PublicWorksRow, sign: int) -> None:
+    await shape_land(ctx, works, sign)
     route = await ctx.session.get(TradeRouteProfileRow, works.place_node_id)
     if route is not None and works.kind in ROUTE_WORKS and not held(works.place_node_id) and "length" not in (route.locked or []):
         change = max(1, round_half_up(route.length * ROUTE_SHORTENING_PCT / PERCENT))

@@ -176,6 +176,10 @@ class EvidenceRules:
     hearsay_decay: int = rule(10, 0, 50, J, "Reliability what was heard said loses each epoch besides the usual")
     written_hearsay_pct: int = rule(25, 0, 100, J, "How much of hearsay's weight a realm with a written code still lets count (%)")
     expert_skill_pct: int = rule(100, 0, 300, J, "How strongly an expert's skill sets the reliability of their testimony (%)")
+    record_weight: int = rule(60, 0, 100, J, "Weight a court gives written records, where its people read")
+    record_decay: int = rule(5, 0, 100, J, "Weight records lose each epoch as they age")
+    body_weight: int = rule(55, 0, 100, J, "Weight a court gives wounds, marks and remains read by a healer")
+    body_decay: int = rule(20, 0, 100, J, "Weight what a body shows loses each epoch")
 
 
 @dataclass(frozen=True)

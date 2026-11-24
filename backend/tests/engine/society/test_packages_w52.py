@@ -18,7 +18,7 @@ RULES = Rules()
 
 
 def test_seventeen_packages_and_every_curse_kind_installs_one() -> None:
-    assert len(PACKAGES) == len(PackageKind) == 17
+    assert len(PACKAGES) == len(PackageKind) == 20
     assert set(CURSE_PACKAGES) == set(CurseKind)
     assert CURSE_PACKAGES[CurseKind.TRANSFORMATION] is PackageKind.TRANSFORMATION
     assert CURSE_PACKAGES[CurseKind.COMPULSION] is PackageKind.CHARM

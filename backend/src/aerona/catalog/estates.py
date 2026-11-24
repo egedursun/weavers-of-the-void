@@ -94,6 +94,8 @@ PRIVILEGE_LABELS: dict[EstatePrivilege, str] = {
     EstatePrivilege.JUDICIAL_IMMUNITY: "Immunity from the courts",
     EstatePrivilege.RESERVED_OFFICES: "Offices kept for the estate",
     EstatePrivilege.LAND_HOLDING: "The sole right to hold land",
+    EstatePrivilege.SERVICE_EXEMPTION: "Freedom from the call to arms",
+    EstatePrivilege.DRESS: "Dress of rank",
 }
 
 
@@ -114,6 +116,8 @@ PRIVILEGES: Mapping[EstatePrivilege, PrivilegeSpec] = total(
         EstatePrivilege.JUDICIAL_IMMUNITY: PrivilegeSpec("judicial_immunity_loyalty", "judicial_immunity_cost"),
         EstatePrivilege.RESERVED_OFFICES: PrivilegeSpec("reserved_offices_loyalty", "reserved_offices_cost"),
         EstatePrivilege.LAND_HOLDING: PrivilegeSpec("land_holding_loyalty", "land_holding_cost", rent=True),
+        EstatePrivilege.SERVICE_EXEMPTION: PrivilegeSpec("service_exemption_loyalty", "service_exemption_cost"),
+        EstatePrivilege.DRESS: PrivilegeSpec("dress_loyalty", "dress_cost"),
     },
 )
 

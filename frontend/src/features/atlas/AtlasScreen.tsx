@@ -7,13 +7,13 @@ import { OrnateFrame } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, PageHeader } from '@/components/domain'
 import {
-  type DrawerEntry,
+  type EntryRef,
   sameEntry,
-  parseDrawerStack,
-  pushDrawerEntry,
-  serializeDrawerStack,
-} from '@/components/layout/drawer/drawerEntries'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+  parseEntryStack,
+  pushEntry,
+  serializeEntryStack,
+} from '@/components/layout/entry/entryStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { Text } from '@/components/typography'
 import { useWorldsStructureTypes } from '@/features/city/api'
@@ -40,7 +40,7 @@ import {
   VISIBLE_STATUS,
   allKeys,
   buildAtlasTree,
-  drawerFor,
+  entryFor,
   findNode,
   isFiltering,
   matchesEntity,
@@ -58,7 +58,7 @@ export function AtlasScreen() {
   useImageGenEvents()
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const catalogue = useCatalogue()
   const state = useWorldState()
   const cosmos = useCosmos()
@@ -176,34 +176,34 @@ export function AtlasScreen() {
   const selected = search.select ?? null
   const selectedNode = selected ? findNode(tree, selected) : null
   const selectedGroup = selectedNode?.kind === 'group' ? selectedNode : null
-  const selectedEntry = selectedNode ? drawerFor(selectedNode) : null
+  const selectedEntry = selectedNode ? entryFor(selectedNode) : null
   const openedFor = useRef<string | null>(null)
   useEffect(() => {
     if (!selected || !selectedEntry || openedFor.current === selected) return
     openedFor.current = selected
-    if (!drawers.entries.some((entry) => sameEntry(entry, selectedEntry)))
-      drawers.open(selectedEntry)
-  }, [selected, selectedEntry, drawers])
-  const show = (key: string, entry: DrawerEntry | null) =>
+    if (!entryStack.entries.some((entry) => sameEntry(entry, selectedEntry)))
+      entryStack.open(selectedEntry)
+  }, [selected, selectedEntry, entryStack])
+  const show = (key: string, entry: EntryRef | null) =>
     void navigate({
       search: (previous) => ({
         ...previous,
         select: key,
-        drawer: entry
-          ? serializeDrawerStack(
-              pushDrawerEntry(parseDrawerStack(previous.drawer), entry)
+        entry: entry
+          ? serializeEntryStack(
+              pushEntry(parseEntryStack(previous.entry), entry)
             )
-          : previous.drawer,
+          : previous.entry,
       }),
       replace: true,
     })
   const pick = (key: string) => {
     const node = findNode(tree, key)
-    show(key, node ? drawerFor(node) : null)
+    show(key, node ? entryFor(node) : null)
   }
   const activate = (node: AtlasNode) => {
-    const entry = drawerFor(node)
-    if (entry) drawers.open(entry)
+    const entry = entryFor(node)
+    if (entry) entryStack.open(entry)
     else if (node.children.length)
       branches.toggle(node.key, !open.has(node.key))
   }
@@ -284,7 +284,7 @@ export function AtlasScreen() {
                     open={open}
                     onToggle={branches.toggle}
                     selected={selected}
-                    onSelect={(node) => show(node.key, drawerFor(node))}
+                    onSelect={(node) => show(node.key, entryFor(node))}
                     onActivate={activate}
                     query={filters.q}
                     imageWorkerOn={

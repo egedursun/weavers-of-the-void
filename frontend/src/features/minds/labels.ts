@@ -137,6 +137,9 @@ import {
   Scale,
   Store,
   Languages,
+  HandHeart,
+  HandMetal,
+  Pointer,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -353,7 +356,7 @@ export const OUTAGE_CAUSES: Record<Schema['OutageCause'], Named> = {
   rite: { label: 'A rite', icon: Wand, tone: 'verdigris' },
   power: { label: 'A power', icon: Zap, tone: 'verdigris' },
   shortage: { label: 'Shortage', icon: BatteryLow, tone: 'warning' },
-  divine: { label: 'A god’s hand', icon: Sun, tone: 'gold' },
+  divine: { label: 'A god’s hand', icon: Sparkles, tone: 'gold' },
   ice_storm: { label: 'Ice storm', icon: CloudSnow, tone: 'warning' },
   quake: { label: 'Quake', icon: Activity, tone: 'danger' },
   shutdown: { label: 'Shutdown by its owner', icon: PowerOff, tone: 'warning' },
@@ -589,6 +592,7 @@ export const RELIC_STANCES: Record<Schema['RelicStance'], Named> = {
   forbidden: { label: 'Forbidden', icon: Ban, tone: 'danger' },
   heritage: { label: 'Heritage', icon: Landmark, tone: 'verdigris' },
   studied: { label: 'Studied', icon: Microscope, tone: 'info' },
+  traded: { label: 'Traded', icon: Coins, tone: 'gold' },
 }
 
 export const ENERGY_KINDS: Record<Schema['EnergyKind'], Named> = {
@@ -625,8 +629,8 @@ export const BODY_PARTS: Record<Schema['BodyPart'], Named> = {
   fingers: { label: 'Fingers', icon: Hand, tone: 'info' },
   gills: { label: 'Gills', icon: Hand, tone: 'info' },
   groin: { label: 'Groin', icon: Hand, tone: 'info' },
-  gut: { label: 'Gut', icon: Hand, tone: 'info' },
-  head: { label: 'Head', icon: Hand, tone: 'info' },
+  gut: { label: 'Gut', icon: HandHeart, tone: 'info' },
+  head: { label: 'Head', icon: HandMetal, tone: 'info' },
   heart: { label: 'Heart', icon: Hand, tone: 'info' },
   horn: { label: 'Horn', icon: Hand, tone: 'info' },
   jaw: { label: 'Jaw', icon: Hand, tone: 'info' },
@@ -672,6 +676,7 @@ export const BODY_PARTS: Record<Schema['BodyPart'], Named> = {
   tentacles: { label: 'Tentacles', icon: Waves, tone: 'info' },
   carapace: { label: 'Carapace', icon: Shield, tone: 'muted' },
   beak: { label: 'Beak', icon: Bird, tone: 'gold' },
+  pouch: { label: 'Pouch', icon: Pointer, tone: 'info' },
 }
 
 export const LINEAGE_KINDS: Partial<Record<Schema['BondKind'], Named>> = {

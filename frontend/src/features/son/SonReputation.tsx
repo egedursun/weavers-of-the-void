@@ -52,7 +52,12 @@ export function SonReputation({
       : null
   const pushes = [son.manual_love, son.manual_fear, son.manual_forgotten]
   return (
-    <Section title='How they see the Creator' surface='card' level={3}>
+    <Section
+      id='section-son-reputation'
+      title='How they see the Creator'
+      surface='card'
+      level={3}
+    >
       <div className='flex min-w-0 flex-wrap gap-1.5'>
         <Badge variant={REPUTATION_BADGE[reputation.label]}>
           {REPUTATION_LABEL[reputation.label]}

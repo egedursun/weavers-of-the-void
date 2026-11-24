@@ -63,6 +63,13 @@ class CoverageRules:
     warded_order: int = rule(
         2, 0, 100, S, "Public order each guardian spirit bound to a building of a town gives it each epoch, or unrest each vengeful one adds"
     )
+    lighting_order: int = rule(10, 0, 100, S, "Crime that full street lighting takes from a town's nights")
+    lighting_trade: int = rule(3, 0, 100, S, "Prosperity full street lighting adds to a town by its night trade")
+    pest_control_health: int = rule(8, 0, 100, S, "Sanitation full pest control adds to a town")
+    pest_control_stores: int = rule(5, 0, 100, S, "Stores full pest control keeps from vermin in a town")
+    lighting_from_power_pct: int = rule(100, 0, 100, S, "Share of a district's power reach that lights its streets (%)")
+    lighting_from_watch_pct: int = rule(40, 0, 100, S, "Share of a district's watch that keeps lamps lit before there is power (%)")
+    pest_control_from_sanitation_pct: int = rule(60, 0, 100, S, "Share of a district's sanitation that keeps vermin down (%)")
 
 
 @dataclass(frozen=True)
@@ -83,6 +90,8 @@ class HousingEvolutionRules:
     ship_berth_pct: int = rule(200, 0, 400, S, "People a district of ship berths houses, against a district of houses (%)")
     fine_homes: int = rule(100, 0, 400, S, "Share of homes at townhouse or manor a town needs, against the share of its folk who are nobles or merchants (%)")
     cramped_unrest: int = rule(3, 0, 100, S, "Unrest each epoch when the town's rich lack fine homes")
+    shack_pct: int = rule(160, 0, 400, S, "People a district of shacks crowds in, against a district of houses (%)")
+    palace_pct: int = rule(20, 0, 400, S, "People a district of palaces houses, against a district of houses (%)")
 
 
 @dataclass(frozen=True)
@@ -148,6 +157,9 @@ class CrimeOrgRules:
     privateer_pct: int = rule(20, 0, 100, P, "Extra raid chance a co-opted pirate confederacy brings on the convoys of its realm's enemies (%)")
     informant_pct: int = rule(20, 0, 100, P, "Chance each epoch a co-opted organisation gives its realm a secret of its town (%)")
     stance_pct: int = rule(25, 0, 100, P, "Chance each epoch a realm troubled by an organisation takes a stance against it (%)")
+    integrate_crime: int = rule(15, 0, 100, P, "Crime a realm takes from a town when it pardons and enrols a crime family's members")
+    integrate_watch: int = rule(10, 0, 1000, P, "Watch a town gains from the pardoned members of a crime family each epoch")
+    integrate_corruption: int = rule(5, 0, 100, P, "Corruption a realm gains each epoch from the criminals it took into its service")
 
 
 @dataclass(frozen=True)
@@ -217,6 +229,7 @@ class CargoRules:
     livestock_loss: int = rule(5, 0, 100, M, "Share of livestock lost walking a route (%)")
     spill_loss: int = rule(3, 0, 100, M, "Share of liquids and gases lost to leaks on a route (%)")
     hazard_loss: int = rule(4, 0, 100, M, "Share of dangerous goods lost to accidents on a route (%)")
+    oversize_loss: int = rule(10, 0, 100, M, "Share of oversize cargo lost where a route narrows or a carrier cannot bear it (%)")
 
 
 @dataclass(frozen=True)

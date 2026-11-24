@@ -135,6 +135,7 @@ export function SonTurns({
   return (
     <>
       <Section
+        id='section-son-turns'
         title='Turns'
         description='What they did each epoch, from the action ledger.'
         level={3}
@@ -155,6 +156,7 @@ export function SonTurns({
         )}
       </Section>
       <ChronicleList
+        sectionId='section-son-trace'
         title='Trace in the chronicle'
         lines={chronicle}
         older={older}

@@ -3,9 +3,11 @@ from sqlalchemy import select
 from aerona.catalog.fugitives import FUGITIVES
 from aerona.db.tables.belonging import FugitiveRow, SanctuaryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.law_depth import RegistryRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import FugitiveKind, SanctuaryKind, SanctuaryState
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.law_depth import RegistryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.society import SocialClass
@@ -17,7 +19,7 @@ from aerona.engine.law.prisons import imprison
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
-from aerona.engine.services.war import ongoing_war_count
+from aerona.engine.services.war import held_captive, ongoing_war_count
 
 
 async def open_fugitives(ctx: TickContext) -> list[FugitiveRow]:
@@ -47,11 +49,22 @@ async def why_flee(ctx: TickContext, mortal: EntityRow, realm: int) -> FugitiveK
         and roll.chance(table.deserter_flee_pct)
     ):
         return FugitiveKind.DESERTER
+    if await held_captive(ctx.session, mortal.id) is not None and roll.chance(table.escaped_captive_flee_pct):
+        return FugitiveKind.ESCAPED_CAPTIVE
+    if await deep_in_debt(ctx, mortal.id) and roll.chance(table.debtor_flee_pct):
+        return FugitiveKind.DEBTOR
     if await law_param(ctx.session, realm, LawKind.RELIGIOUS_TOLERANCE, "level") == "persecution":
         mine, theirs = await patron_node(ctx.session, mortal.id), await patron_node(ctx.session, realm)
         if mine is not None and theirs is not None and mine != theirs and roll.chance(table.heretic_flee_pct):
             return FugitiveKind.HERETIC
     return None
+
+
+async def deep_in_debt(ctx: TickContext, mortal_id: int) -> bool:
+    owed = await ctx.session.scalar(
+        select(RegistryRow.id).where(RegistryRow.kind == RegistryKind.DEBT, RegistryRow.counterparty_entity_id == mortal_id, RegistryRow.amount > 0).limit(1)
+    )
+    return owed is not None
 
 
 async def take_flight(ctx: TickContext) -> int:

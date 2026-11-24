@@ -21,6 +21,8 @@ CURSE_RULES = {
             CurseKind.PLACE_CURSE,
             CurseKind.COMPULSION,
             CurseKind.EXPOSURE,
+            CurseKind.ISOLATION,
+            CurseKind.WEAKNESS,
         ),
         "item_curses.wider_pct",
     ),

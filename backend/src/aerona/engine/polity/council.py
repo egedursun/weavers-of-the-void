@@ -12,6 +12,7 @@ from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.intrigue import SchemeRow, SecretRow
 from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.statecraft import PolityRegardRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
@@ -141,6 +142,24 @@ async def disrupt_schemes(ctx: TickContext, book: RealmBook, work: Work) -> None
     for scheme in await ctx.session.scalars(select(SchemeRow).where(SchemeRow.target_node_id.in_(list(guarded)), SchemeRow.phase.in_(list(OPEN)))):
         if not held(scheme.owner_node_id) and "progress" not in (scheme.locked or []):
             scheme.progress = clamp_int(scheme.progress - loss, 0, PERCENT)
+
+
+@EFFECTS.on(CouncilTask.PUBLIC_HEALTH)
+async def public_health(ctx: TickContext, book: RealmBook, work: Work) -> None:
+    gain = round_half_up(ctx.rules.council.public_health_effect * work.strength / 10)
+    for member in work.realm.members:
+        town = await ctx.session.get(SettlementProfileRow, member)
+        if town is not None and not held(member) and "sanitation" not in town.locked:
+            town.sanitation = clamp_int(town.sanitation + gain, 0, PERCENT)
+
+
+@EFFECTS.on(CouncilTask.SECURE_BORDERS)
+async def secure_borders(ctx: TickContext, book: RealmBook, work: Work) -> None:
+    cut = round_half_up(ctx.rules.council.secure_borders_effect * work.strength / 10)
+    for member in work.realm.members:
+        town = await ctx.session.get(SettlementProfileRow, member)
+        if town is not None and not held(member) and "crime" not in town.locked:
+            town.crime = clamp_int(town.crime - cut, 0, PERCENT)
 
 
 @EFFECTS.on(CouncilTask.CONVERT_PROVINCE)

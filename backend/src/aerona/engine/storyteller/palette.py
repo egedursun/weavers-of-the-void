@@ -109,7 +109,7 @@ BASE_PALETTE: tuple[PaletteEntry, ...] = (
     ),
     entry("schism", P.FAITH, D.DISRUPTION, ("faith.schism", "faith.heresy"), entity=E.CULT),
     entry("revival", P.FAITH, D.RECOVERY, ("faith.revival", "faith.conversion"), entity=E.CULT),
-    entry("market_crash", P.ECONOMY, D.DISRUPTION, ("finance.crash", "economy.famine"), entity=E.SETTLEMENT),
+    entry("market_crash", P.ECONOMY, D.DISRUPTION, ("finance.crash", "economy.famine", "money.failed", "goods.seed_eaten"), entity=E.SETTLEMENT),
     entry("die_off", P.ECOLOGY, D.DISRUPTION, ("ecology.extinct", "ecology.collapse"), entity=E.SPECIES),
     entry("renewal", P.ECOLOGY, D.RECOVERY, ("ecology.recovered", "ecology.spread"), entity=E.SPECIES),
     entry("cure_found", P.DISEASE, D.RECOVERY, ("disease.cured", "disease.ended"), entity=E.DISEASE),

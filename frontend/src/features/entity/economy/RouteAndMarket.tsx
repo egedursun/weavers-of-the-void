@@ -48,6 +48,7 @@ import {
 import { LineChart } from '@/components/domain/LineChart'
 import { Muted, Stat, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
+import { StratumBadge } from '@/features/map/StratumBadge'
 import { TRANSPORTS } from '@/features/operations/labels'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -635,6 +636,37 @@ export function RouteBanner({ route }: { route: RouteView }) {
           {status.label}
         </Badge>
       </div>
+      {route.path.length > 0 && (
+        <ol
+          aria-label='The lands it runs through, in order'
+          className='flex min-w-0 flex-wrap items-center gap-1'
+        >
+          <Paged
+            items={route.path.map((id, index) => ({
+              id,
+              stratum: route.path_strata[index],
+              index,
+            }))}
+            as='li'
+          >
+            {(step) => (
+              <li
+                key={`${step.id}.${step.index}`}
+                className='flex min-w-0 items-center gap-1'
+              >
+                <Badge variant='outline' size='sm'>
+                  <MapIcon />
+                  {named(
+                    step.id,
+                    route.region_names[String(step.id)] ?? 'A land'
+                  )}
+                </Badge>
+                <StratumBadge stratum={step.stratum} />
+              </li>
+            )}
+          </Paged>
+        </ol>
+      )}
       <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
         <IconStat
           icon={MapIcon}

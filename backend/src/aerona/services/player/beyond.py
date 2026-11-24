@@ -14,7 +14,7 @@ from aerona.engine.phases.afterlife import (
     set_immortal,
 )
 from aerona.engine.phases.doom import set_doom_clock, trigger_apocalypse
-from aerona.engine.phases.horror import order_horror_event, order_outer_being, set_son_sanity, spawn_outer_cult, suppress_outer_cult
+from aerona.engine.phases.horror import order_horror_event, set_son_sanity, spawn_outer_cult, suppress_outer_cult
 from aerona.engine.phases.sky import order_time_echo
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 
@@ -157,12 +157,6 @@ async def horror_event(scope: PlayerScope, command: HorrorEvent) -> Effect:
     spec = HorrorSpec(command.target, command.effect, command.scope, command.sense, command.source)
     row, text = await order_horror_event(scope.session, scope.rules, command.world_id, spec)
     return Effect(text, command.world_id, values={"horror_id": row.id})
-
-
-@player_action("horror:outer_being", ActionKind.SUMMON_OUTER_BEING)
-async def outer_being(scope: PlayerScope, command: WorldTarget) -> Effect:
-    being = await order_outer_being(scope.session, scope.rules, command.world_id)
-    return Effect(f"{being.name} entered the world.", being.id, created_ids=(being.id,))
 
 
 @player_action("horror:cult", ActionKind.OUTER_CULT)

@@ -6,9 +6,11 @@ from aerona.catalog.evolution import PLANT_EATERS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
+from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature import PlantDefence, SymbiosisKind
 from aerona.engine.context import TickContext
@@ -70,6 +72,14 @@ async def keep_plant_defences(ctx: TickContext, tally: PlantTally) -> None:
         stung = round_half_up(cover.get(PlantDefence.STINGING, 0.0) * table.stinging_harm)
         if region is not None and stung > 0 and (stat(region, "danger") or 0) < stung:
             shift_stat(region, "danger", stung - (stat(region, "danger") or 0))
+        spared = cover.get(PlantDefence.MIMICRY, 0.0) * table.mimicry_cut_pct + cover.get(PlantDefence.REGROWTH, 0.0) * table.regrowth_cut_pct
+        land = await ctx.session.get(RegionEnvironmentRow, region_id) if spared > 0 else None
+        if land is not None and "scar.overgrazed" not in land.locked and land.scars.get(ScarKind.OVERGRAZED.value, 0) > 0:
+            worn = land.scars[ScarKind.OVERGRAZED.value]
+            left = round_half_up(worn * (PERCENT - min(float(PERCENT), spared)) / PERCENT)
+            land.scars = {key: value for key, value in land.scars.items() if key != ScarKind.OVERGRAZED.value} | (
+                {ScarKind.OVERGRAZED.value: left} if left > 0 else {}
+            )
         if cover.get(PlantDefence.GUARDIANS, 0.0) > 0:
             await guard_plants(ctx, region_id, cover[PlantDefence.GUARDIANS], book)
         gathered = round_half_up(cover.get(PlantDefence.TOXINS, 0.0) * table.toxin_medicine)

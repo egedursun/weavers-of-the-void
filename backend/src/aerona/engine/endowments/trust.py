@@ -9,6 +9,7 @@ from aerona.db.tables.crafts import NumberSystemRow
 from aerona.db.tables.endowments import EndowmentRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folk_knowledge import FolkKnowledgeRow
+from aerona.db.tables.military import CaptiveCohortRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -19,7 +20,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import realm_of
-from aerona.engine.economy.purse import give_coin
+from aerona.engine.economy.purse import give_coin, receive_coin
 from aerona.engine.mortal.kin import children_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
@@ -56,6 +57,23 @@ def parties(row: EndowmentRow, actor: int | None = None) -> dict[IncidentRole, i
 
 def editable(row: EndowmentRow | SettlementProfileRow | MortalProfileRow | FolkKnowledgeRow | NumberSystemRow, field: str) -> bool:
     return field not in (row.locked or [])
+
+
+async def ransom_kin(ctx: TickContext, town: EntityRow | None, amount: int) -> bool:
+    if town is None:
+        return False
+    row = await ctx.session.scalar(
+        select(CaptiveCohortRow).where(CaptiveCohortRow.origin_entity_id == town.id, CaptiveCohortRow.count > 0).order_by(CaptiveCohortRow.id).limit(1)
+    )
+    captor = await ctx.session.get(EntityRow, row.captor_entity_id) if row is not None else None
+    if row is None or captor is None or held(captor.id, town.id) or "count" in (row.locked or []):
+        return False
+    freed = min(row.count, max(1, amount // max(1, ctx.rules.endowments.ransom_per_captive)))
+    await receive_coin(ctx.session, ctx.rules, captor, amount)
+    row.count -= freed
+    shift_stat(town, "population", freed, low=0)
+    await record(ctx, "endowment.ransomed", roles={IncidentRole.TARGET: captor.id, IncidentRole.RECEIVER: town.id}, facts={"freed": freed}, place=town.id)
+    return True
 
 
 async def town_of(session: AsyncSession, node_id: int) -> EntityRow | None:
@@ -145,6 +163,9 @@ async def serve(ctx: TickContext, row: EndowmentRow, amount: int) -> None:
                 await give_coin(ctx.session, ctx.rules, heir, amount // len(living))
         case EndowmentPurpose.MEMORY:
             await raise_renown(ctx, row.founder_node_id, points, "endowments.effect_per_income")
+        case EndowmentPurpose.RANSOM:
+            if await ransom_kin(ctx, town, amount):
+                await raise_renown(ctx, row.founder_node_id, points, "endowments.effect_per_income")
     beneficiary = await ctx.session.get(EntityRow, row.beneficiary_node_id)
     if beneficiary is not None and row.purpose is not EndowmentPurpose.KIN and not held(beneficiary.id):
         await give_coin(ctx.session, ctx.rules, beneficiary, amount)

@@ -77,6 +77,7 @@ class SetPollution(Command):
     radiation: int | None = Field(default=None, ge=0, le=SPAN)
     noise: int | None = Field(default=None, ge=0, le=SPAN)
     light: int | None = Field(default=None, ge=0, le=SPAN)
+    heat: int | None = Field(default=None, ge=0, le=SPAN)
     hold: bool = True
 
 

@@ -20,13 +20,24 @@ from aerona.domain.enums.economy import (
     TradeRouteStatus,
     WorkshopKind,
 )
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.industry import MethodKind
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.operations import CarrierKind
 from aerona.domain.enums.society import KnowledgeBranch
 
-ROUTE_DANGER_COLUMNS = ("danger_bandits", "danger_beasts", "danger_weather", "danger_sea", "danger_officials", "danger_spoilage", "danger_pilferage")
+ROUTE_DANGER_COLUMNS = (
+    "danger_bandits",
+    "danger_beasts",
+    "danger_weather",
+    "danger_sea",
+    "danger_officials",
+    "danger_spoilage",
+    "danger_pilferage",
+    "danger_pirates",
+    "danger_breakage",
+)
 PHYSICS_COLUMNS = (
     "melting_point",
     "ignition_point",
@@ -301,6 +312,8 @@ class TradeRouteProfileRow(Base):
     danger_officials: Mapped[int] = mapped_column(default=0, server_default="0")
     danger_spoilage: Mapped[int] = mapped_column(default=0, server_default="0")
     danger_pilferage: Mapped[int] = mapped_column(default=0, server_default="0")
+    danger_pirates: Mapped[int] = mapped_column(default=0, server_default="0")
+    danger_breakage: Mapped[int] = mapped_column(default=0, server_default="0")
     closed_season: Mapped[int | None]
     season_pct: Mapped[int] = mapped_column(default=100)
     chokepoint: Mapped[bool] = mapped_column(default=False)
@@ -314,6 +327,7 @@ class TradeRouteRegionRow(Base):
     route_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
     position: Mapped[int] = mapped_column(primary_key=True)
     region_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), index=True)
+    stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "stratum"))
 
 
 class TradeRouteTollRow(Base):

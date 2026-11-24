@@ -4,14 +4,14 @@ from aerona.catalog.statecraft import DEMAND_TEXT, YIELDED_DEMANDS
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import TreatyProfileRow, VassalageRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow
-from aerona.db.tables.warfare import ArmyRow
+from aerona.db.tables.warfare import ArmyRow, CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.intrigue import FavourOrigin
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import TreatyStatus
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
-from aerona.domain.enums.war import WarCause
+from aerona.domain.enums.war import CaptiveStatus, WarCause
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.intrigue.favours import owe
@@ -23,7 +23,7 @@ from aerona.engine.polity.mediation import mediate_crisis
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
-from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import declare_war
@@ -73,12 +73,64 @@ async def concede_more(ctx: TickContext, crisis: CrisisRow, demander: Realm, tar
         return await hand_over(ctx, crisis, demander, target)
     if crisis.demand is CrisisDemand.DISARM:
         return await disarm(ctx, target) > 0
+    if crisis.demand is CrisisDemand.APOLOGY:
+        shame(target, ctx.rules.crisis.apology_shame)
+        return True
+    if crisis.demand is CrisisDemand.RELEASE_CAPTIVES:
+        return await free_captives(ctx, demander, target) > 0
     first, second = demander.profile.core_entity_id, target.profile.core_entity_id
     return (
         first is not None
         and second is not None
         and await connect(ctx.session, second, first, BondKind.TRADES_WITH, ctx.epoch, description="opened at a demand") is not None
     )
+
+
+async def free_captives(ctx: TickContext, demander: Realm, target: Realm) -> int:
+    captor, home = target.profile.core_entity_id, demander.profile.core_entity_id
+    if captor is None or home is None:
+        return 0
+    rows = await ctx.session.scalars(
+        select(CaptiveRow)
+        .where(CaptiveRow.captor_entity_id == captor, CaptiveRow.home_entity_id == home, CaptiveRow.status == CaptiveStatus.HELD)
+        .order_by(CaptiveRow.id)
+    )
+    freed = 0
+    for row in list(rows):
+        if not held(row.captive_entity_id) and "status" not in (row.locked or []):
+            row.status = CaptiveStatus.RELEASED
+            freed += 1
+    return freed
+
+
+async def tell_crisis(ctx: TickContext, crisis: CrisisRow, demander: Realm, target: Realm, state: CrisisState) -> None:
+    await record(
+        ctx,
+        f"statecraft.crisis_{state.value}_{crisis.demand.value}",
+        roles={IncidentRole.ACCUSER: demander.entity.id, IncidentRole.TARGET: target.entity.id},
+        facts={"escalation": crisis.escalation, "legitimacy_lost": 0},
+        place=target.profile.capital_entity_id,
+    )
+
+
+async def freeze(ctx: TickContext, book: RealmBook, tally: CrisisTally) -> None:
+    stalled: list[CrisisRow] = list(await ctx.session.scalars(select(CrisisRow).where(CrisisRow.state == CrisisState.ESCALATING).order_by(CrisisRow.id)))
+    for crisis in stalled:
+        if "state" in crisis.locked or ctx.epoch - crisis.opened_epoch < ctx.rules.crisis.epochs(ctx.rules.crisis.frozen_after_years):
+            continue
+        demander, target = book.realms.get(crisis.demander_entity_id), book.realms.get(crisis.target_entity_id)
+        if demander is None or target is None or held(crisis.demander_entity_id, crisis.target_entity_id):
+            continue
+        crisis.state = CrisisState.FROZEN
+        await tell_crisis(ctx, crisis, demander, target, CrisisState.FROZEN)
+    frozen = await ctx.session.scalars(select(CrisisRow).where(CrisisRow.state == CrisisState.FROZEN).order_by(CrisisRow.id))
+    for crisis in list(frozen):
+        for side in (crisis.demander_entity_id, crisis.target_entity_id):
+            realm = book.realms.get(side)
+            capital = await living_entity(ctx.session, realm.profile.capital_entity_id) if realm is not None and realm.profile.capital_entity_id else None
+            if capital is not None and not held(capital.id):
+                shift_stat(capital, "prosperity", -ctx.rules.diplomacy.frozen_upkeep)
+        tally.frozen += 1
 
 
 async def hand_over(ctx: TickContext, crisis: CrisisRow, demander: Realm, target: Realm) -> bool:
@@ -178,3 +230,4 @@ async def tend_crises(ctx: TickContext, tally: CrisisTally) -> None:
     book = await RealmBook.load(ctx.session)
     for verdict in verdicts:
         await settle(ctx, book, verdict, tally)
+    await freeze(ctx, book, tally)

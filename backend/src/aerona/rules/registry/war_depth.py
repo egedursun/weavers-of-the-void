@@ -106,6 +106,8 @@ class CampaignDepthRules:
     raid_wealth_gap: int = rule(25, 0, 1000, W, "Wealth lead of a neighbour that tempts raiders")
     aggressive_strategy: int = rule(60, 0, 100, W, "Aggression at which a marshal marches to besiege")
     cautious_strategy: int = rule(35, 0, 100, W, "Aggression below which a marshal entrenches or retreats")
+    negotiate_cost: int = rule(40, 0, 10000, W, "Coin an owner pays to end a mutiny by terms")
+    negotiate_renown: int = rule(5, 0, 100, W, "Renown a commander loses when a mutiny ends by terms")
 
 
 @dataclass(frozen=True)
@@ -121,6 +123,9 @@ class WarFinanceRules:
     mercenary_seasons: int = rule(4, 1, 100, W, "Seasons a mercenary contract runs")
     war_tax_weariness: int = rule(4, 0, 100, W, "Weariness a season of war taxes adds")
     lost_trade_weariness: int = rule(3, 0, 100, W, "Weariness each cut trade route adds in an epoch")
+    renew_loyalty: int = rule(60, 0, 100, W, "Loyalty a paid company needs to renew its contract when it runs out")
+    renew_seasons: int = rule(4, 1, 40, W, "Seasons a renewed mercenary contract runs")
+    renew_loyalty_gain: int = rule(10, 0, 100, W, "Loyalty a company gains when its contract is renewed")
 
 
 @dataclass(frozen=True)

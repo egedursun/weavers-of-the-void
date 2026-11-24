@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import event, text
+from sqlalchemy import event, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
 
@@ -10,11 +10,15 @@ from aerona.constants.engine import ADJACENT_HOPS, LOCATION_CHAIN_MAX_HOPS, UNKN
 from aerona.db.read_memo import memo_of, register_index, table_names, touched_rows
 from aerona.db.tables.celestial import WorldMapRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.geology import DeepPassageRow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.environment import MovementMode
+from aerona.domain.enums.geology import UndergroundStratum
+from aerona.engine.primitives.deep import Cell, DeepEdge, LayeredGraph, Level, passage_kind
 from aerona.engine.primitives.map_store import stored_regions
 from aerona.rules.registry import Rules
 
-ATLAS_TABLES = table_names((EntityRow, WorldMapRow))
+ATLAS_TABLES = table_names((EntityRow, WorldMapRow, DeepPassageRow))
 MAP_TABLES = table_names((WorldMapRow,))
 
 
@@ -25,6 +29,7 @@ class Placement:
     world_id: int
     location_id: int | None
     living: bool = True
+    stratum: UndergroundStratum | None = None
 
 
 @dataclass(frozen=True)
@@ -51,9 +56,10 @@ async def terrain_of(session: AsyncSession) -> Terrain:
     return terrain
 
 
-PLACEMENT_SQL = text("SELECT id, entity_type, world_id, location_id, status FROM entities")
+PLACEMENT_SQL = text("SELECT id, entity_type, world_id, location_id, status, stratum FROM entities")
 LIVE_PLACEMENTS = "aerona.live_placements"
 ENTITY_TYPES = {kind.value: kind for kind in EntityType}
+STRATA_BY_VALUE: dict[str | None, UndergroundStratum] = {stratum.value: stratum for stratum in UndergroundStratum}
 
 
 def follow_placements(sync: Session, *_: object) -> None:
@@ -63,7 +69,7 @@ def follow_placements(sync: Session, *_: object) -> None:
     new, dirty, deleted = touched_rows(sync, EntityRow)
     for row in (*new, *dirty):
         if row.id is not None:
-            live[row.id] = Placement(row.id, row.entity_type, row.world_id, row.location_id, row.status == EntityStatus.CANON)
+            live[row.id] = Placement(row.id, row.entity_type, row.world_id, row.location_id, row.status == EntityStatus.CANON, row.stratum)
     for row in deleted:
         live.pop(row.id, None)
 
@@ -88,21 +94,30 @@ async def placements_of(session: AsyncSession) -> dict[int, Placement]:
     live: dict[int, Placement] | None = session.sync_session.info.get(LIVE_PLACEMENTS)
     if live is None:
         live = {
-            entity_id: Placement(entity_id, ENTITY_TYPES[kind], world_id, location_id, status == EntityStatus.CANON.value)
-            for entity_id, kind, world_id, location_id, status in (await session.execute(PLACEMENT_SQL)).all()
+            entity_id: Placement(entity_id, ENTITY_TYPES[kind], world_id, location_id, status == EntityStatus.CANON.value, STRATA_BY_VALUE.get(stratum))
+            for entity_id, kind, world_id, location_id, status, stratum in (await session.execute(PLACEMENT_SQL)).all()
         }
         session.sync_session.info[LIVE_PLACEMENTS] = live
     return dict(live)
 
 
 class RegionAtlas:
-    def __init__(self, placements: dict[int, Placement], records: dict[int, list[RegionRecord]], terrain: Terrain | None = None) -> None:
+    def __init__(
+        self,
+        placements: dict[int, Placement],
+        records: dict[int, list[RegionRecord]],
+        terrain: Terrain | None = None,
+        passages: tuple[DeepEdge, ...] = (),
+        rules: Rules | None = None,
+    ) -> None:
         shared = terrain or Terrain.of(records)
         self._placements = placements
         self._graphs = shared.graphs
         self._records = shared.records
         self._top: dict[int, int | None] = {}
         self._communities: dict[int, list[int]] | None = None
+        table = (rules or Rules()).underground
+        self._layers = LayeredGraph(self.neighbours, passages, narrow_width=table.narrow_width, vertical_cost=table.vertical_hop_cost)
 
     @classmethod
     async def load(cls, session: AsyncSession) -> "RegionAtlas":
@@ -110,7 +125,7 @@ class RegionAtlas:
         if memo is not None and "atlas" in memo:
             found: RegionAtlas = memo["atlas"]
             return found
-        atlas = cls(await placements_of(session), {}, await terrain_of(session))
+        atlas = cls(await placements_of(session), {}, await terrain_of(session), await deep_edges(session))
         after = memo_of(session, "atlas", ATLAS_TABLES)
         if after is not None:
             after["atlas"] = atlas
@@ -169,9 +184,42 @@ class RegionAtlas:
         graph = self._graphs.get(world) if world is not None else None
         return graph.neighbours(region_id) if graph is not None and region_id in graph else []
 
-    def same_region(self, first: int, second: int) -> bool:
-        region = self.top_region(first)
-        return region is not None and region == self.top_region(second)
+    def level_of(self, entity_id: int | None) -> Level:
+        current = self._placements.get(entity_id) if entity_id is not None else None
+        hops = 0
+        while current is not None and hops <= LOCATION_CHAIN_MAX_HOPS:
+            above = self._placements.get(current.location_id) if current.location_id is not None else None
+            if above is not None and above.entity_type is EntityType.REGION:
+                return current.stratum
+            current = above
+            hops += 1
+        return None
+
+    def cell_of(self, entity_id: int | None) -> Cell | None:
+        region = self.top_region(entity_id)
+        if region is None:
+            return None
+        return (region, None) if entity_id == region else (region, self.level_of(entity_id))
+
+    def same_cell(self, first: int, second: int) -> bool:
+        cell = self.cell_of(first)
+        return cell is not None and cell == self.cell_of(second)
+
+    def cell_hops(self, first: Cell | None, second: Cell | None, modes: frozenset[MovementMode] | None = None) -> int | None:
+        if first is None or second is None:
+            return None
+        if first[1] is None and second[1] is None and (modes is None or self._layers.empty):
+            return self.region_hops(first[0], second[0])
+        if self.world_of(first[0]) != self.world_of(second[0]):
+            return None
+        return self._layers.hops(first, second, modes)
+
+    def cell_path(
+        self, first: Cell | None, second: Cell | None, modes: frozenset[MovementMode] | None = None, avoid: frozenset[Cell] = frozenset()
+    ) -> list[Cell] | None:
+        if first is None or second is None or self.world_of(first[0]) != self.world_of(second[0]):
+            return None
+        return self._layers.path(first, second, modes, avoid)
 
     def region_hops(self, first_region: int | None, second_region: int | None) -> int | None:
         if first_region is None or second_region is None:
@@ -194,7 +242,7 @@ class RegionAtlas:
         return graph.path(first_region, second_region, avoid) if graph is not None else None
 
     def hops(self, first: int, second: int) -> int | None:
-        return self.region_hops(self.top_region(first), self.top_region(second))
+        return self.cell_hops(self.cell_of(first), self.cell_of(second))
 
     def distance(self, first: int, second: int) -> int:
         hops = self.hops(first, second)
@@ -224,6 +272,23 @@ class RegionAtlas:
 
     def record(self, region_id: int) -> RegionRecord | None:
         return self._records.get(region_id)
+
+
+async def deep_edges(session: AsyncSession) -> tuple[DeepEdge, ...]:
+    rows = await session.execute(
+        select(
+            DeepPassageRow.first_region_entity_id,
+            DeepPassageRow.first_stratum,
+            DeepPassageRow.second_region_entity_id,
+            DeepPassageRow.second_stratum,
+            DeepPassageRow.state,
+            DeepPassageRow.width,
+        ).order_by(DeepPassageRow.id)
+    )
+    return tuple(
+        DeepEdge((first, upper), (second, lower), state, width, passage_kind((first, upper), (second, lower)))
+        for first, upper, second, lower, state, width in rows.all()
+    )
 
 
 def seafaring_reach(rules: Rules, seafaring: bool, sea_ban: bool) -> int | None:

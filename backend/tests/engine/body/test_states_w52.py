@@ -9,7 +9,7 @@ RULES = Rules()
 
 
 def test_eight_states_with_gangrene_between_festering_and_death() -> None:
-    assert len(InjuryState) == len(STATES) == 8
+    assert len(InjuryState) == len(STATES) == 9
     assert {InjuryState.INFECTED, InjuryState.GANGRENOUS} == FESTERING
     assert {InjuryState.FRESH, InjuryState.REOPENED} == FRESH_STATES
     assert {InjuryState.GANGRENOUS, InjuryState.REOPENED} <= OPEN_INJURY_STATES

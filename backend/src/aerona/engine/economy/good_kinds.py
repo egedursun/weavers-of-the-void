@@ -11,7 +11,7 @@ from aerona.core.total import total
 from aerona.db.read_memo import memoized
 from aerona.db.tables.kinds import GoodKindRow
 from aerona.domain.enums.economy import CommodityKind
-from aerona.domain.enums.kinds import GoodLegality, GoodTaxClass
+from aerona.domain.enums.kinds import GoodCategory, GoodLegality, GoodTaxClass
 from aerona.domain.enums.urban import CargoClass
 from aerona.rules.registry import Rules
 
@@ -97,12 +97,16 @@ class GoodBook:
         row = self.rows.get(kind)
         return row.cargo_class if row is not None else cargo_class(kind)
 
-    def spoil_scale(self, kind: CommodityKind) -> float:
+    def spoil_scale(self, kind: CommodityKind, rules: Rules | None = None) -> float:
         row = self.rows.get(kind)
         usual = BUILT_IN_GOODS[kind].perishability
+        fast = rules.goods.prepared_spoil_pct / PERCENT if rules is not None and row is not None and row.category is GoodCategory.PREPARED_FOOD else 1.0
         if row is None or usual == 0:
-            return 1.0
-        return usual / row.perishability if row.perishability > 0 else 0.0
+            return fast
+        return fast * usual / row.perishability if row.perishability > 0 else 0.0
+
+    def of_category(self, category: GoodCategory) -> set[CommodityKind]:
+        return {kind for kind, row in self.rows.items() if row.category is category}
 
     def bulk_scale(self, kind: CommodityKind) -> float:
         row = self.rows.get(kind)
@@ -123,7 +127,10 @@ class GoodBook:
         scale = int(getattr(table, key)) / PERCENT if key is not None else 1.0
         scale *= max(0.0, 1 - row.taboo * table.taboo_pct / PERCENT / PERCENT)
         wealth = ((prosperity if prosperity is not None else PERCENT // 2) - PERCENT // 2) / PERCENT
-        scale *= max(0.0, 1 + wealth * row.prestige * table.prestige_demand_pct / PERCENT / PERCENT)
+        renown = table.relic_renown_pct if row.category is GoodCategory.RELICS_AND_ANTIQUITIES else table.prestige_demand_pct
+        scale *= max(0.0, 1 + wealth * row.prestige * renown / PERCENT / PERCENT)
+        if row.category is GoodCategory.PREPARED_FOOD:
+            scale *= table.prepared_draw_pct / PERCENT
         faith = (piety if piety is not None else 0) / PERCENT
         scale *= 1 + faith * row.sacred * table.sacred_demand_pct / PERCENT / PERCENT
         return scale

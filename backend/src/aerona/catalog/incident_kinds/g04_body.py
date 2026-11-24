@@ -786,6 +786,10 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     stress_break("rage_at", "{subject} broke under the strain and fell upon {target} in a rage.", (role(R.TARGET),), (number("harm", U.HP),)),
     stress_break("despair", "{subject} sank into despair.", facts=(chosen("condition", ConditionKind),)),
     stress_break(
+        "dissociation", "{subject} broke under the strain and drifted from itself, its memories blurred.", facts=(chosen("condition", ConditionKind),)
+    ),
+    stress_break("collapse", "{subject} broke under the strain and its body gave way.", facts=(number("harm", U.PERCENT),)),
+    stress_break(
         "zeal",
         "{subject} broke under the strain and gave themself wholly to their faith.",
         (role(R.HOST, required=False),),

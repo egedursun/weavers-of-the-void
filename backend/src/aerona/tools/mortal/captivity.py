@@ -29,7 +29,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import EscapeInput, RansomInput, RescueInput
-from aerona.tools.mortal.support import STRENGTH_CHAIN, enemies, first_stat, near, same_region
+from aerona.tools.mortal.support import STRENGTH_CHAIN, enemies, first_stat, near, same_cell
 
 PERCENT = 100
 KIN_BONDS = (
@@ -97,7 +97,7 @@ async def escape(call: MortalCall, args: EscapeInput) -> str:
 async def is_my_captive(call: MortalCall, captive: EntityRow) -> bool:
     if await BondRepository(call.session).active_between(call.me.id, captive.id, KIN_BONDS):
         return True
-    if await same_region(call, captive):
+    if await same_cell(call, captive):
         return True
     mine, theirs = await patron_son(call.session, call.me), await patron_son(call.session, captive)
     return mine is not None and theirs is not None and mine.id == theirs.id

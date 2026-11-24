@@ -10,6 +10,8 @@ class ExceptionSpec:
     label: str
     spares: str
     names_kind: bool = False
+    names_office: bool = False
+    bargain_bound: bool = False
 
 
 LAW_EXCEPTIONS: Mapping[LawException, ExceptionSpec] = total(
@@ -21,5 +23,7 @@ LAW_EXCEPTIONS: Mapping[LawException, ExceptionSpec] = total(
         LawException.HEROES: ExceptionSpec("Heroes", "heroes"),
         LawException.AVATARS: ExceptionSpec("Avatars", "avatars of the gods"),
         LawException.NAMED_KIND: ExceptionSpec("A named kind", "one kind of being", names_kind=True),
+        LawException.OFFICE_HOLDERS: ExceptionSpec("Holders of a divine office", "the holders of a named divine office", names_office=True),
+        LawException.BARGAINERS: ExceptionSpec("Those bound by an outer bargain", "those bound by an outer bargain", bargain_bound=True),
     },
 )

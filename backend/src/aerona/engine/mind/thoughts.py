@@ -13,13 +13,13 @@ from aerona.db.tables.mind import ThoughtRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.write_guard import write_blocked
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.mind import Emotion, Facet, MemoryKind, MoodState, NeedKind, ThoughtKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import Emotion, Facet, MemoryKind, MoodArousal, MoodState, NeedKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.engine.mind.book import clamp_value, is_locked, locked_for, mind_of, stored_values, write_values
 from aerona.engine.mind.memories import remember
 from aerona.engine.mind.split import FACET_LOCK, clamp_facet, facet_weight, facets_of, write_facets
 from aerona.engine.mind.values import VALUE_LOCK
 from aerona.engine.mortal.profile import ensure_profile, is_held
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.rules.registry import Rules
 
 THOUGHT_LOCK = "thoughts"
@@ -192,10 +192,29 @@ async def settle_mood(session: AsyncSession, rules: Rules, mortal: EntityRow, ep
     profile, _ = await ensure_profile(session, mortal.id, epoch)
     if is_held(profile, MOOD_FIELD):
         return None
-    score = mood_score(rules, await thoughts_of(session, mortal.id), epoch)
+    rows = await thoughts_of(session, mortal.id)
+    score = mood_score(rules, rows, epoch)
     profile.mood_score = score
     profile.mood = mood_state(rules, score)
+    profile.arousal_score = settled_arousal(rules, profile.arousal_score, arousal_score(rows, epoch))
+    profile.arousal = arousal_state(rules, profile.arousal_score)
     return profile.mood
+
+
+def arousal_score(rows: list[ThoughtRow], epoch: int) -> int:
+    weights = [(EMOTIONS[row.emotion].arousal, strength_of(row, epoch)) for row in rows]
+    total = sum(strength for _, strength in weights)
+    return round_half_up(sum(arousal * strength for arousal, strength in weights) / total) if total else PERCENT // 2
+
+
+def settled_arousal(rules: Rules, before: int, felt: int) -> int:
+    return clamp_int(before + (felt - before) * (PERCENT - rules.mind.arousal_decay) // PERCENT, 0, PERCENT)
+
+
+def arousal_state(rules: Rules, score: int) -> MoodArousal:
+    if score < rules.mind.calm_below:
+        return MoodArousal.CALM
+    return MoodArousal.AGITATED if score > rules.mind.agitated_above else MoodArousal.ALERT
 
 
 async def mood_of(session: AsyncSession, node_id: int | None) -> int:

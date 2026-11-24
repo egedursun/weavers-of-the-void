@@ -2,6 +2,7 @@ from enum import StrEnum
 
 
 class SizeClass(StrEnum):
+    MICROSCOPIC = "microscopic"
     TINY = "tiny"
     SMALL = "small"
     MEDIUM = "medium"
@@ -29,6 +30,7 @@ class Diet(StrEnum):
     DECOMPOSER = "decomposer"
     CHEMOSYNTHETIC = "chemosynthetic"
     ENERGY = "energy"
+    INSECTIVORE = "insectivore"
 
 
 class Sociality(StrEnum):
@@ -38,6 +40,8 @@ class Sociality(StrEnum):
     HIVE = "hive"
     COLONY = "colony"
     SWARM = "swarm"
+    PAIR = "pair"
+    FAMILY_GROUP = "family_group"
 
 
 class DomesticationStage(StrEnum):
@@ -48,6 +52,7 @@ class DomesticationStage(StrEnum):
     DOMESTICATED = "domesticated"
     BREED = "breed"
     FERAL = "feral"
+    CAPTIVE = "captive"
 
 
 STAGE_ORDER = tuple(DomesticationStage)
@@ -71,6 +76,8 @@ class AnimalRole(StrEnum):
     REAGENT_SOURCE = "reagent_source"
     SPORT = "sport"
     MEDICINE = "medicine"
+    DISPLAY = "display"
+    HERDING = "herding"
 
 
 class RangeTrend(StrEnum):
@@ -90,6 +97,8 @@ class BeastTemper(StrEnum):
     WOUNDED = "wounded"
     BROODING = "brooding"
     COWED = "cowed"
+    MIGRATING = "migrating"
+    FLEEING = "fleeing"
 
 
 class YieldProduct(StrEnum):
@@ -112,6 +121,8 @@ class YieldProduct(StrEnum):
     SCENT = "scent"
     HONEY = "honey"
     WAX = "wax"
+    SHELL = "shell"
+    SCALES = "scales"
 
 
 class FoodLink(StrEnum):
@@ -132,6 +143,7 @@ class SpeciesClass(StrEnum):
     MADE = "made"
     COLONIAL = "colonial"
     HYBRID = "hybrid"
+    LICHEN = "lichen"
 
 
 class Biochemistry(StrEnum):
@@ -143,6 +155,7 @@ class Biochemistry(StrEnum):
     SPIRIT = "spirit"
     CARBON_METHANE = "carbon_methane"
     PLASMA = "plasma"
+    METAL = "metal"
 
 
 class GrowthCycle(StrEnum):
@@ -178,6 +191,9 @@ class PlantYield(StrEnum):
     RESIN = "resin"
     STIMULANT = "stimulant"
     FODDER = "fodder"
+    MEDICINE = "medicine"
+    BUILDING = "building"
+    FUEL = "fuel"
 
 
 class HerdTraining(StrEnum):
@@ -202,6 +218,8 @@ class TissueMaterial(StrEnum):
     GEL = "gel"
     ENERGY = "energy"
     INSUBSTANTIAL = "insubstantial"
+    LIQUID = "liquid"
+    WOODY = "woody"
 
 
 class AttackDelivery(StrEnum):
@@ -215,6 +233,8 @@ class AttackDelivery(StrEnum):
     SPORES = "spores"
     BITE = "bite"
     STING = "sting"
+    PROJECTILE = "projectile"
+    CONSTRICTION = "constriction"
 
 
 class AttackEffect(StrEnum):
@@ -238,6 +258,7 @@ class AttackRange(StrEnum):
     NEAR = "near"
     FAR = "far"
     SIGHT = "sight"
+    AREA = "area"
 
 
 class Temperament(StrEnum):
@@ -250,6 +271,8 @@ class Temperament(StrEnum):
     VENGEFUL = "vengeful"
     ACQUISITIVE = "acquisitive"
     PROTECTIVE = "protective"
+    PLAYFUL = "playful"
+    PROUD = "proud"
 
 
 class Aversion(StrEnum):
@@ -260,6 +283,8 @@ class Aversion(StrEnum):
     HOLY_GROUND = "holy_ground"
     LIGHT = "light"
     COLD = "cold"
+    SCENT = "scent"
+    TRUE_NAME = "true_name"
 
 
 class AwakeningTrigger(StrEnum):
@@ -269,6 +294,8 @@ class AwakeningTrigger(StrEnum):
     THEFT = "theft"
     SKY_SIGN = "sky_sign"
     SUMMONS = "summons"
+    KIN_HARMED = "kin_harmed"
+    SEASON = "season"
 
 
 class Habitat(StrEnum):
@@ -279,3 +306,5 @@ class Habitat(StrEnum):
     VOID = "void"
     MAGMA = "magma"
     ETHEREAL = "ethereal"
+    ICE = "ice"
+    SHORE = "shore"

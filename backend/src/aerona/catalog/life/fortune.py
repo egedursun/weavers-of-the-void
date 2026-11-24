@@ -38,6 +38,8 @@ HARMED: Mapping[MishapKind, DamageType | None] = total(
         MishapKind.THEFT_SUFFERED: None,
         MishapKind.TOOL_BROKEN: None,
         MishapKind.NEAR_MISS: None,
+        MishapKind.QUAKE: DamageType.BLUNT,
+        MishapKind.FLOOD: DamageType.COLD,
     },
 )
 

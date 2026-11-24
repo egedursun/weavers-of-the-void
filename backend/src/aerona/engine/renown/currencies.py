@@ -186,6 +186,10 @@ async def tend_currencies(ctx: TickContext, tally: CurrencyTally) -> None:
         bump(row, Currency.DREAD, -round_half_up(table.dread_fade * (1 + mercy)))
         await rule_justly(ctx, ruler_id, members, await renown_share(ctx.session, ruler_id, members, ReputationAxis.JUSTICE))
         bump(row, Currency.TYRANNY, -round_half_up(table.tyranny_fade * (1 + await amends(ctx, polity_id, members) * table.amends_pct / PERCENT)))
+        reliable = await renown_share(ctx.session, ruler_id, members, ReputationAxis.RELIABILITY)
+        bump(row, Currency.TRUST, round_half_up(reliable * table.trust_pct) - table.trust_fade)
+        wise = await renown_share(ctx.session, ruler_id, members, ReputationAxis.WISDOM)
+        bump(row, Currency.LEARNING, round_half_up(wise * table.learning_pct) - table.learning_fade)
         row.updated_epoch = ctx.epoch
         await court_clergy(ctx, row, members, tally)
         await silence(ctx, row, members, tally)

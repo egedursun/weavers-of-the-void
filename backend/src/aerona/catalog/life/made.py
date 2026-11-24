@@ -106,6 +106,7 @@ STANCE_USE = partial(
         RelicStance.FORBIDDEN: RelicUse.FEARED,
         RelicStance.HERITAGE: RelicUse.DISPLAYED,
         RelicStance.STUDIED: RelicUse.REPURPOSED,
+        RelicStance.TRADED: RelicUse.DISPLAYED,
     },
     without={RelicStance.TOOL},
 )

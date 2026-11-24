@@ -146,3 +146,13 @@ class CreatorRules:
     far_eye_below: int = rule(20, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Attention below which a world is far from the Creator's eye")
     far_eye_rebel_pct: int = rule(15, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Further loyalty slack and rebellion chance of a son in a world far from the eye")
     passion_sign_chance: int = rule(20, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Chance each epoch the Creator sends a sign of one of its passions (%)")
+    sorrow_death_half: int = rule(
+        20, 1, 10000, RuleGroup.CREATOR_AND_ESSENCE, "Killings in an epoch at which the Creator's sorrow at death reaches half its most"
+    )
+    sorrow_death_max: int = rule(15, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Most sorrow killings in one epoch bring the Creator")
+    sorrow_world_max: int = rule(30, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Most sorrow the end of worlds in one epoch brings the Creator")
+    sorrow_people_half: int = rule(
+        2, 1, 1000, RuleGroup.CREATOR_AND_ESSENCE, "Peoples gone in an epoch at which the Creator's sorrow at forgotten peoples reaches half its most"
+    )
+    sorrow_people_max: int = rule(20, 0, 100, RuleGroup.CREATOR_AND_ESSENCE, "Most sorrow peoples gone in one epoch bring the Creator")
+    sorrow_wrath_pct: int = rule(50, 0, 200, RuleGroup.CREATOR_AND_ESSENCE, "Share of its sorrow by which the Creator's wrath falls in an epoch (%)")

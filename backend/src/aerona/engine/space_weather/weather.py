@@ -10,14 +10,19 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.networks import NetworkProfileRow
 from aerona.db.tables.space_weather import SpaceWeatherEventRow, StarActivityRow, WorldFieldRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.ages import LongSeasonReach, SeasonCause
 from aerona.domain.enums.body import HarmCause
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.networks import OutageCause
 from aerona.domain.enums.space_weather import SpaceWeatherKind
-from aerona.domain.enums.world import SkyEventKind
+from aerona.domain.enums.world import Atmosphere, SkyEventKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.stocks import goods_of
+from aerona.engine.environment.long_seasons import single_winter
+from aerona.engine.environment.spells import SpellSources
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.made.control import cut_network
 from aerona.engine.primitives.naming import seed_of
@@ -225,6 +230,41 @@ def settle_compass(rules: Rules, world: WorldRow, field: WorldFieldRow) -> None:
     field.compass_error = clamp_int(max(field.surface_dose, weakness // 2), 0, PERCENT)
 
 
+async def meteor_shower(ctx: TickContext, world: WorldRow, field: WorldFieldRow, strength: int, tally: SpaceWeatherTally) -> None:
+    await strike(ctx, world, field, Strike(None, SpaceWeatherKind.METEOR_SHOWER, strength), tally)
+    await read_omen(ctx, world, strength, tally)
+    if world.atmosphere is not Atmosphere.NONE:
+        return
+    towns = await ctx.session.scalars(
+        select(EntityRow)
+        .where(EntityRow.world_id == world.id, EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON)
+        .order_by(EntityRow.id)
+    )
+    for town in list(towns):
+        if held(town.id):
+            continue
+        await goods_of(ctx.session, ctx.epoch).add(
+            town.id, CommodityKind.ORE, strength * ctx.rules.space_weather.star_metal_per_strength // PERCENT, GoodsFlow.EXTRACTION
+        )
+        shift_stat(town, "prosperity", -round_half_up(strength * ctx.rules.space_weather.airless_strike_loss / PERCENT), low=0, high=PERCENT)
+
+
+async def dim_star(ctx: TickContext, world: WorldRow, field: WorldFieldRow, star: StarRow, *, strength: int, tally: SpaceWeatherTally) -> None:
+    table = ctx.rules.space_weather
+    await strike(ctx, world, field, Strike(star.id, SpaceWeatherKind.STELLAR_DIMMING, strength), tally)
+    if strength < table.dimming_winter_strength:
+        return
+    await single_winter(
+        ctx,
+        world,
+        SeasonCause.STELLAR,
+        length=max(1, table.epochs(strength * table.dimming_years // PERCENT)),
+        severity=strength,
+        reach=LongSeasonReach.WORLD,
+        sources=SpellSources(star_id=star.id),
+    )
+
+
 async def weather_world(ctx: TickContext, world: WorldRow, tally: SpaceWeatherTally) -> None:
     table = ctx.rules.space_weather
     field = await field_of(ctx, world)
@@ -248,6 +288,10 @@ async def weather_world(ctx: TickContext, world: WorldRow, tally: SpaceWeatherTa
             await strike(ctx, world, field, Strike(star.id, kind, strength), tally)
     if rng.chance(table.burst_base_pct):
         await strike(ctx, world, field, Strike(None, SpaceWeatherKind.COSMIC_RAY_BURST, PEAK + rng.below(PEAK)), tally)
+    if rng.chance(table.meteor_shower_pct):
+        await meteor_shower(ctx, world, field, rng.integer(table.meteor_strength_min, PERCENT), tally)
+    if star is not None and rng.chance(table.dimming_pct):
+        await dim_star(ctx, world, field, star, strength=rng.integer(table.dimming_strength_min, PERCENT), tally=tally)
     settle_compass(ctx.rules, world, field)
 
 

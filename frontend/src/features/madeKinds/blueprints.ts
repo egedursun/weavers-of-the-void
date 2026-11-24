@@ -4312,6 +4312,7 @@ const FAMILY_SHAPES: Record<VehicleFamily, Silhouette> = {
   rotorcraft: 'rotorcraft',
   spacecraft: 'warship_space',
   burrower: 'burrower',
+  sledge: 'cart',
 }
 
 const FORM_SHAPES: Record<BuildingForm, Silhouette> = {
@@ -4342,6 +4343,8 @@ const FORM_SHAPES: Record<BuildingForm, Silhouette> = {
   modular: 'modular',
   grown: 'grown',
   carved: 'carved',
+  stilt: 'hall',
+  vault: 'hall',
 }
 
 export function vehicleShape(

@@ -7,6 +7,7 @@ from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
 from aerona.db.tables.belonging import SanctuaryLawRow, SanctuaryRow
 from aerona.db.tables.collective import SocialNormRow
+from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow
@@ -45,7 +46,7 @@ from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
 HOLY = (StructureKind.TEMPLE, StructureKind.SHRINE, StructureKind.MONASTERY)
-HIDING = terrains(TerrainTrait.WOODED) | terrains(TerrainTrait.HIGH) | terrains(TerrainTrait.WET)
+HIDING = terrains(TerrainTrait.WOODED) | terrains(TerrainTrait.HIGH) | terrains(TerrainTrait.WET) | terrains(TerrainTrait.RUINED)
 WELCOMING = frozenset({EthicalStance.REQUIRED, EthicalStance.ADMIRABLE})
 
 
@@ -71,6 +72,24 @@ class Fugitive:
 async def restricted(ctx: TickContext, polity: int | None) -> bool:
     law = await ctx.session.get(SanctuaryLawRow, polity) if polity is not None else None
     return law is not None and law.restricted
+
+
+async def structure_in(ctx: TickContext, town: int, kind: StructureKind) -> EntityRow | None:
+    found = await ctx.session.scalar(
+        select(EntityRow)
+        .join(StructureProfileRow, StructureProfileRow.structure_entity_id == EntityRow.id)
+        .where(EntityRow.location_id == town, EntityRow.status == EntityStatus.CANON, StructureProfileRow.kind == kind)
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    return found
+
+
+async def ship_in(ctx: TickContext, town: int) -> EntityRow | None:
+    vessel = await ctx.session.scalar(
+        select(VesselProfileRow.entity_id).where(VesselProfileRow.home_port_entity_id == town).order_by(VesselProfileRow.entity_id).limit(1)
+    )
+    return await living_entity(ctx.session, vessel) if vessel is not None else None
 
 
 async def temple_in(ctx: TickContext, town: int) -> EntityRow | None:
@@ -131,6 +150,12 @@ async def host_for(ctx: TickContext, fugitive: Fugitive, wanted: SanctuaryKind |
         found.append((town, SanctuaryKind.FREE_CITY))
     if await welcoming(ctx, town) and not held(town.id):
         found.append((town, SanctuaryKind.HOSPITALITY))
+    hall = await structure_in(ctx, town.id, StructureKind.GUILDHALL)
+    if hall is not None and not held(hall.id):
+        found.append((hall, SanctuaryKind.TRADE_HALL))
+    ship = await ship_in(ctx, town.id)
+    if ship is not None and not held(ship.id):
+        found.append((ship, SanctuaryKind.SHIP))
     wilds = await wilds_near(ctx, town)
     if wilds is not None:
         found.append((wilds, SanctuaryKind.WILDS))

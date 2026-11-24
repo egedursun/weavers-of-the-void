@@ -615,7 +615,7 @@ TERRAIN: Mapping[TerrainKind, TerrainSpec] = total(
             },
         ),
         T.RUIN_FIELD: TerrainSpec(
-            traits=frozenset({TT.AMBUSH_COVER}),
+            traits=frozenset({TT.AMBUSH_COVER, TT.RUINED}),
             place_kind=K.RUIN,
             natures=(),
             unit_factors=lambda rules: {F.MOUNTED: rules.battle_terrain.ruin_field_mounted_pct},

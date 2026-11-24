@@ -25,6 +25,9 @@ SEALS: Mapping[SealKind, SealSpec] = total(
             "A grown barrier", lambda rules: rules.deep_seals.living_decay, lambda rules: rules.deep_seals.living_strength, SealLink.LINE
         ),
         SealKind.PACT: SealSpec("A sworn pact", lambda rules: rules.deep_seals.pact_decay, lambda rules: rules.deep_seals.pact_strength, SealLink.OATH),
+        SealKind.MADE: SealSpec("A made mind or works", lambda rules: rules.deep_seals.made_decay, lambda rules: rules.deep_seals.made_strength, SealLink.MIND),
     },
 )
-LINK_LABELS: Mapping[SealLink, str] = total(SealLink, {SealLink.OATH: "oath", SealLink.POWER: "power", SealLink.LINE: "living line"})
+LINK_LABELS: Mapping[SealLink, str] = total(
+    SealLink, {SealLink.OATH: "oath", SealLink.POWER: "power", SealLink.LINE: "living line", SealLink.MIND: "made mind"}
+)

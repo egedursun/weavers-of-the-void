@@ -25,6 +25,8 @@ CREATOR_PASSIONS: dict[CreatorPassion, PassionSpec] = {
         PassionSpec(P.MERCY, "Mercy", "miracles, healing, forgiven crimes"),
         PassionSpec(P.CREATION, "Creation", "new worlds, stars, new peoples"),
         PassionSpec(P.SILENCE, "Silence", "an untouched world, children left to themselves"),
+        PassionSpec(P.FREEDOM, "Freedom", "peoples choosing their own ways and ending what binds them"),
+        PassionSpec(P.MEMORY, "Memory", "names kept, the dead remembered, histories written"),
     )
 }
 
@@ -72,6 +74,10 @@ ACTION_PASSIONS: dict[ActionKind, frozenset[CreatorPassion]] = {
     A.FOREIGN_GOD_WAR: frozenset({P.WAR}),
     A.EDIT_RECORD: frozenset({P.BEAUTY}),
     A.MANIFESTATION: frozenset({P.BEAUTY}),
+    A.REMEMBER_WORLD: frozenset({P.MEMORY}),
+    A.COMMEMORATE: frozenset({P.MEMORY}),
+    A.ARCHIVE_RECORD: frozenset({P.MEMORY}),
+    A.RELEASE_OATH: frozenset({P.FREEDOM}),
 }
 
 ACTION_POLARITY: dict[ActionKind, ActionPolarity] = {

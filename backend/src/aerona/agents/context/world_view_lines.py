@@ -11,6 +11,7 @@ from aerona.engine.cosmos.world_views import WorldView, view_of
 SHARES = (
     ("timber_pct", "timber"),
     ("ore_yield_pct", "ore"),
+    ("ship_pct", "hulls its shipyards launch"),
     ("food_need_pct", "the food its people need"),
     ("capacity_pct", "room for life"),
     ("storm_pct", "storms"),
@@ -41,6 +42,8 @@ def view_lines(view: WorldView) -> list[str]:
         )
         if not flag
     )
+    if view.sea_roads:
+        found.append("every road between its lands goes by sea")
     found.extend(f"{label} at {getattr(view, key)}% of an ordinary world" for key, label in SHARES if getattr(view, key) != PERCENT)
     if view.sea_pct != WorldView().sea_pct:
         found.append(f"the sea gives {view.sea_pct}% of the food of its coasts")

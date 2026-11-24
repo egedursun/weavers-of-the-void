@@ -14,6 +14,7 @@ from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, WorldRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.ecology import BeastProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import SchemeRow, TrueNameRow
@@ -32,6 +33,7 @@ from aerona.domain.enums.minds import WillCause
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.structure import ConstructionState
+from aerona.engine.body.customs import people_of
 from aerona.engine.constructs.making import Design, make_construct, skilled_makers
 from aerona.engine.constructs.wards import realm_of_army
 from aerona.engine.context import TickContext
@@ -182,6 +184,22 @@ async def at_its_time(ctx: TickContext, charge: Charge) -> bool:
     return ctx.rng(f"order.time.{charge.order.id}.{ctx.epoch}").chance(share)
 
 
+async def holder_lives(ctx: TickContext, charge: Charge) -> bool:
+    return charge.holder is not None and await living_entity(ctx.session, charge.holder.id) is not None
+
+
+async def name_spoken(ctx: TickContext, charge: Charge) -> bool:
+    name = await ctx.session.get(TrueNameRow, charge.construct.id)
+    if name is None:
+        return False
+    home = await town_of(ctx.session, charge.construct)
+    for knower_id in sorted(name.known_by):
+        knower = await living_entity(ctx.session, knower_id) if knower_id != charge.construct.id else None
+        if knower is not None and home is not None and await town_of(ctx.session, knower) == home:
+            return True
+    return False
+
+
 HOLDS: Mapping[OrderCondition, Callable[[TickContext, Charge], Awaitable[bool]]] = total(
     OrderCondition,
     {
@@ -192,6 +210,8 @@ HOLDS: Mapping[OrderCondition, Callable[[TickContext, Charge], Awaitable[bool]]]
         OrderCondition.WHEN_TOKEN_SHOWN: token_shown,
         OrderCondition.UNTIL_DONE: always,
         OrderCondition.AT_SET_TIMES: at_its_time,
+        OrderCondition.WHILE_HOLDER_LIVES: holder_lives,
+        OrderCondition.WHEN_NAMED: name_spoken,
     },
 )
 
@@ -406,10 +426,41 @@ async def do_tend(ctx: TickContext, charge: Charge) -> bool:
     return await shift_stock(ctx.session, ctx.rules, town.id, Commodity.FOOD, ctx.rules.instructions.tend_food, epoch=ctx.epoch, flow=GoodsFlow.HARVEST)
 
 
+@EFFECTS.on(OrderKind.TEACH)
+async def do_teach(ctx: TickContext, charge: Charge) -> bool:
+    town = await town_target(ctx, charge)
+    people = await people_of(ctx.session, town) if town is not None else None
+    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    if culture is None or held(culture.people_entity_id) or "literacy" in culture.locked:
+        return False
+    culture.literacy = clamp_int(culture.literacy + ctx.rules.instructions.teach_literacy, 0, PERCENT)
+    return True
+
+
+@EFFECTS.on(OrderKind.HEAL)
+async def do_heal(ctx: TickContext, charge: Charge) -> bool:
+    patient = charge.target or charge.holder
+    if patient is None or held(patient.id) or patient.entity_type is not EntityType.MORTAL:
+        return False
+    set_stats(patient, hp=clamp_int(stat_or(patient, "hp", 0) + ctx.rules.instructions.heal_hp, 0, PERCENT))
+    return True
+
+
+@EFFECTS.on(OrderKind.HUNT)
+async def do_hunt(ctx: TickContext, charge: Charge) -> bool:
+    town = await town_target(ctx, charge) or await town_of(ctx.session, charge.construct)
+    if town is None or held(town.id):
+        return False
+    return await shift_stock(ctx.session, ctx.rules, town.id, Commodity.FOOD, ctx.rules.instructions.hunt_food, epoch=ctx.epoch, flow=GoodsFlow.HARVEST)
+
+
 @EFFECTS.on(OrderKind.OBEY_HOLDER)
 @EFFECTS.on(OrderKind.HOLD_STILL)
 async def do_nothing(ctx: TickContext, charge: Charge) -> bool:
     return charge.holder is not None and ctx.epoch >= 0
+
+
+EFFECTS.seal()
 
 
 async def target_for(ctx: TickContext, rules: InstructionSetRow, order: InstructionOrderRow, holder: EntityRow | None) -> EntityRow | None:

@@ -56,7 +56,7 @@ from aerona.engine.dominion.book import DominionBook
 from aerona.engine.economy.routes import trade_links
 from aerona.engine.environment.book import EnvironmentBook, add_scar, region_environment
 from aerona.engine.environment.columns import columns_by_region
-from aerona.engine.environment.deep import dissolve_salt
+from aerona.engine.environment.deep import dissolve_salt, pumice_rafts, release_fault, ripe_faults
 from aerona.engine.environment.geomorph import erupted, eruption_chance, quaked, river_after_flood, river_after_quake, shapes_by_region
 from aerona.engine.environment.long_seasons import eruption_spell
 from aerona.engine.environment.notable import remember_event_year
@@ -660,8 +660,9 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         home = atlas.top_region(community.id)
         if home is not None:
             regional_population[home] = regional_population.get(home, 0) + stat_or(community, "population", 0)
+    ripe = await ripe_faults(ctx.session)
     for region in ctx.rng("region_disaster.order").shuffled(unheld(await canon(ctx.session, [EntityType.REGION]))):
-        if world.world_full(ctx.rules, region.world_id):
+        if world.world_full(ctx.rules, region.world_id) and region.id not in ripe:
             continue
         if atlas.is_water(region.id) or region.is_water:
             continue
@@ -671,6 +672,8 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
         tidal = (planet.tidal_strength or 0) if planet is not None else 0
         shape = shapes.get(region.id)
         candidates = region_candidates(ctx, region, atlas, regional_population.get(region.id, 0), world.laws, ground=ground, tidal=tidal, shape=shape)
+        if region.id in ripe:
+            candidates = [(Disaster.EARTHQUAKE, 1.0), *candidates]
         for disaster, base in candidates:
             chance = await paced(ctx, region.world_id, SpontaneousKind.PLAGUE, base) if disaster is Disaster.PLAGUE else base
             climate = world.climate_mult(region.world_id) if disaster is Disaster.PLAGUE else 1.0
@@ -688,7 +691,19 @@ async def _region_disasters(ctx: TickContext, world: DisasterWorld) -> None:
                 event, impact = await strike(ctx, region, disaster, severity)
                 world.tally(region.world_id)
                 await record_strike(ctx, key, region, (disaster, severity, event, impact))
+                await after_shaking(ctx, region, disaster, severity)
             break
+
+
+async def after_shaking(ctx: TickContext, region: EntityRow, disaster: Disaster, severity: int) -> None:
+    if disaster is Disaster.ERUPTION:
+        await pumice_rafts(ctx, region)
+        return
+    if disaster not in (Disaster.EARTHQUAKE, Disaster.VOLCANIC_QUAKE):
+        return
+    stress = await release_fault(ctx.session, region.id)
+    if stress is not None:
+        await record(ctx, "quake.struck", roles={IncidentRole.PLACE: region.id}, facts={"stress": stress, "severity": severity}, place=region.id)
 
 
 async def _city_plagues(ctx: TickContext, world: DisasterWorld) -> None:
@@ -758,7 +773,7 @@ async def _plague_spread(ctx: TickContext) -> int:
         partners = sorted((bonded | set(traffic)) - struck - {source})
         for partner_id in partners:
             partner = await session.get(EntityRow, partner_id)
-            if partner is None or partner.status is not EntityStatus.CANON or partner.entity_type not in COMMUNITY_TYPES:
+            if partner is None or partner.status is not EntityStatus.CANON or partner.entity_type not in COMMUNITY_TYPES or held(partner.id):
                 continue
             on_route = partner.id in traffic
             chance = route_chance(ctx.rules, traffic[partner.id]) if on_route else float(settings.plague_spread_chance)
@@ -875,6 +890,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.cult_tenets",
     "table.culture_values",
     "table.death_readings",
+    "table.deep_passages",
     "table.designated_heirs",
     "table.dimensional_events",
     "table.dimensions",
@@ -962,6 +978,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.region_environment",
     "table.region_geology",
     "table.region_geomorphology",
+    "table.region_underground",
     "table.river_shifts",
     "table.role_norms",
     "table.routes",
@@ -992,6 +1009,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.war_sides",
     "table.wars",
     "table.wave_warnings",
+    "table.wills",
     "table.world_domain_hooks",
     "table.world_maps",
     "table.world_physics",

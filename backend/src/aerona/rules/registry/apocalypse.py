@@ -13,7 +13,7 @@ class ApocalypseRules:
     hostility_divisor: int = rule(1, 1, 100, RuleGroup.APOCALYPSE, "Every this many ongoing community wars advance the clock by 1 (fractions accumulate)")
     godless_cap: int = rule(6, 0, 1000, RuleGroup.APOCALYPSE, "Maximum advance of the clock by godless communities in one epoch, for each living world")
     cursed_cap: int = rule(4, 0, 1000, RuleGroup.APOCALYPSE, "Maximum advance of the clock by cursed entities in one epoch, for each living world")
-    restless_cap: int = rule(6, 0, 1000, RuleGroup.APOCALYPSE, "Maximum advance of the clock by restless spirits in one epoch, for each living world")
+    restless_cap: int = rule(5, 0, 1000, RuleGroup.APOCALYPSE, "Maximum advance of the clock by restless spirits in one epoch, for each living world")
     wars_cap: int = rule(4, 0, 1000, RuleGroup.APOCALYPSE, "Maximum advance of the clock by ongoing wars in one epoch, for each living world")
     rebel_son: int = rule(4, 0, 50, RuleGroup.APOCALYPSE, "Each rebel son advances the clock")
     miracle: int = rule(3, 0, 50, RuleGroup.APOCALYPSE, "Each miracle pushes the clock back")

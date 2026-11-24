@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Path
-from sqlalchemy import select
+from sqlalchemy import or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.schemas.records import NodeRef
 from aerona.api.schemas.regions import (
     BeneathView,
+    DeepPassageView,
     DepthStratumView,
     HazardExposure,
     MapKnowledgeView,
@@ -18,20 +21,26 @@ from aerona.api.schemas.regions import (
 from aerona.catalog.dangers import DANGERS, HAZARDS
 from aerona.catalog.land_memory import LAND_MEMORIES
 from aerona.catalog.rocks import ROCKS
+from aerona.catalog.strata import STRATA
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.geology import RegionStratumRow
+from aerona.db.tables.geology import DeepPassageRow, RegionStratumRow
 from aerona.db.tables.region import PolityMapKnowledgeRow, RegionDangerRow, RegionHazardRow, RegionMemoryRow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.geology import UndergroundStratum
+from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.region import DangerHarm
+from aerona.engine.body.customs import people_of
+from aerona.engine.cycles.book import realm_of
 from aerona.engine.environment.columns import carvable, columns_by_region, quarry_grade, stratum_depth
 from aerona.engine.environment.dangers import reaches, row_weight, total, weighted
 from aerona.engine.environment.hazards import exposed
 from aerona.engine.environment.knowledge import reveals
 from aerona.engine.environment.memory import darkness, darkness_of, fades, holiness, holiness_of
 from aerona.engine.environment.perils import haunt_factor
+from aerona.engine.primitives.deep import passage_kind
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import round_half_up
 
@@ -171,6 +180,22 @@ async def region_beneath(services: ServicesDep, region_id: int = Path(ge=1)) -> 
             raise NotFoundError("No such region.")
         rows = (await columns_by_region(session, [region_id])).get(region_id, [])
         strata = list(await session.scalars(select(RegionStratumRow).where(RegionStratumRow.region_entity_id == region_id).order_by(RegionStratumRow.id)))
+        below = list(
+            await session.scalars(
+                select(EntityRow)
+                .where(EntityRow.location_id == region_id, EntityRow.stratum.is_not(None), EntityRow.status == EntityStatus.CANON)
+                .order_by(EntityRow.id)
+            )
+        )
+        passages = list(
+            await session.scalars(
+                select(DeepPassageRow)
+                .where(or_(DeepPassageRow.first_region_entity_id == region_id, DeepPassageRow.second_region_entity_id == region_id))
+                .order_by(DeepPassageRow.id)
+            )
+        )
+        named = {row.id: row.name for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_(deep_refs(strata, passages, below))))}
+        holders = {stratum: await holder_below(session, below, stratum) for stratum in {row.stratum for row in strata}}
     tops = [sum(row.thickness for row in rows[:index]) for index in range(len(rows))]
     return BeneathView(
         region_id=region_id,
@@ -205,8 +230,64 @@ async def region_beneath(services: ServicesDep, region_id: int = Path(ge=1)) -> 
                 reached_epoch=row.reached_epoch,
                 breached_epoch=row.breached_epoch,
                 tapped_epoch=row.tapped_epoch,
+                name=row.name,
+                terrain=row.terrain,
+                extent=row.extent,
+                light=row.light,
+                realm=ref(named, row.realm_entity_id),
+                holder=ref(named, holders.get(row.stratum)),
+                dwellers=[NodeRef(id=entity.id, kind=NodeKind.ENTITY, name=entity.name) for entity in below if entity.stratum is row.stratum],
+                dwellable=STRATA[row.stratum].dwellable,
                 locked=row.locked,
             )
             for row in sorted(strata, key=lambda item: (stratum_depth(rules, rows, item.stratum), item.id))
         ],
+        passages=[passage_view(passage, region_id, named) for passage in passages],
+    )
+
+
+def ref(named: dict[int, str], node_id: int | None) -> NodeRef | None:
+    return NodeRef(id=node_id, kind=NodeKind.ENTITY, name=named.get(node_id, "")) if node_id is not None and node_id in named else None
+
+
+def deep_refs(strata: list[RegionStratumRow], passages: list[DeepPassageRow], below: list[EntityRow]) -> list[int]:
+    found = {row.realm_entity_id for row in strata} | {entity.id for entity in below}
+    for passage in passages:
+        found |= {passage.first_region_entity_id, passage.second_region_entity_id, passage.place_entity_id, passage.dug_by_entity_id}
+    return sorted(node for node in found if node is not None)
+
+
+async def holder_below(session: AsyncSession, below: list[EntityRow], stratum: UndergroundStratum) -> int | None:
+    for entity in below:
+        if entity.stratum is stratum and entity.entity_type is EntityType.SETTLEMENT:
+            folk = await people_of(session, entity)
+            return await realm_of(session, entity.id) or (folk.id if folk is not None else None)
+    return None
+
+
+def passage_view(row: DeepPassageRow, region_id: int, named: dict[int, str]) -> DeepPassageView:
+    near_first = row.first_region_entity_id == region_id and (
+        row.second_region_entity_id != region_id or row.first_stratum is None or row.second_stratum is not None
+    )
+    near, far = (
+        ((row.first_region_entity_id, row.first_stratum), (row.second_region_entity_id, row.second_stratum))
+        if near_first
+        else (
+            (row.second_region_entity_id, row.second_stratum),
+            (row.first_region_entity_id, row.first_stratum),
+        )
+    )
+    return DeepPassageView(
+        id=row.id,
+        kind=passage_kind(near, far),
+        state=row.state,
+        origin=row.origin,
+        width=row.width,
+        progress=row.progress,
+        near_stratum=near[1],
+        far_region=ref(named, far[0]),
+        far_stratum=far[1],
+        place=ref(named, row.place_entity_id),
+        digger=ref(named, row.dug_by_entity_id),
+        locked=row.locked,
     )

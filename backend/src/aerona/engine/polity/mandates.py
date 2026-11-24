@@ -8,6 +8,7 @@ from aerona.core.grammar import spoken
 from aerona.db.read_memo import memoized
 from aerona.db.tables.affairs import MandateRow, NobleDemandRow
 from aerona.db.tables.agrarian import CommonsRow, PreparednessRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import TradePolicyRow
@@ -18,6 +19,7 @@ from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import CommonsRule
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.finance import TradePolicyKind
@@ -34,9 +36,10 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import KnowledgeMap
+from aerona.engine.primitives.levies import levy
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import stat_or
+from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
 from aerona.engine.settlement.book import town_of
@@ -169,8 +172,12 @@ async def plan(ctx: TickContext, book: RealmBook, realm: Realm, tally: MandateTa
         elif hunger >= table.famine_hunger and capital is not None and member.id != capital:
             amount = round_half_up(table.relief_food * stat_or(member, "population", 0) / PER_MILLE)
             issued = await issue(ctx, realm, MandateKind.FAMINE_RELIEF, settlement_id=member.id, commodity=GRAIN, amount=amount)
+        elif town is not None and await sick_near(ctx, member.id):
+            issued = await issue(ctx, realm, MandateKind.QUARANTINE, settlement_id=member.id)
         elif town is not None and town.unrest >= table.curfew_unrest:
             issued = await issue(ctx, realm, MandateKind.CURFEW, settlement_id=member.id)
+        elif fighting and town is not None and town.militia < stat_or(member, "population", 0) * ctx.rules.mandates.conscript_share_pct // PERCENT // 10:
+            issued = await issue(ctx, realm, MandateKind.CONSCRIPTION, settlement_id=member.id)
         elif fighting and town is not None:
             amount = round_half_up(table.produce_amount * stat_or(member, "population", 0) / PER_MILLE)
             issued = await issue(ctx, realm, MandateKind.PRODUCE, settlement_id=member.id, commodity=CommodityKind.WEAPONS, amount=amount)
@@ -213,6 +220,36 @@ async def keep_ration(ctx: TickContext, realm: Realm, row: MandateRow) -> None:
     town.unrest = clamp_int(town.unrest + round_half_up(ctx.rules.urban.ration_unrest * unfair), 0, PERCENT)
 
 
+async def sick_near(ctx: TickContext, town_id: int) -> bool:
+    town = await ctx.session.get(EntityRow, town_id)
+    if town is None or town.location_id is None:
+        return False
+    found = await ctx.session.scalar(
+        select(OutbreakRow.id).where(OutbreakRow.region_entity_id == town.location_id, OutbreakRow.status != OutbreakStatus.ENDED).limit(1)
+    )
+    return found is not None
+
+
+async def keep_quarantine(ctx: TickContext, row: MandateRow) -> None:
+    town = await ctx.session.get(SettlementProfileRow, row.settlement_entity_id or -1)
+    if town is None or held(town.settlement_entity_id):
+        return
+    if "sanitation" not in town.locked:
+        town.sanitation = clamp_int(town.sanitation + ctx.rules.mandates.quarantine_health, 0, PERCENT)
+    place = await ctx.session.get(EntityRow, town.settlement_entity_id)
+    if place is not None:
+        shift_stat(place, "prosperity", -ctx.rules.mandates.quarantine_trade_cost)
+
+
+async def keep_conscription(ctx: TickContext, row: MandateRow) -> None:
+    town = await ctx.session.get(SettlementProfileRow, row.settlement_entity_id or -1)
+    place = await ctx.session.get(EntityRow, row.settlement_entity_id or -1)
+    if town is None or place is None or held(place.id) or "militia" in town.locked:
+        return
+    raised = levy(ctx.rules, place, round_half_up(stat_or(place, "population", 0) * ctx.rules.mandates.conscript_share_pct / PERCENT / 10))
+    town.militia += raised
+
+
 async def keep_corvee(ctx: TickContext, row: MandateRow) -> None:
     if row.settlement_entity_id is None:
         return
@@ -240,6 +277,8 @@ async def met(ctx: TickContext, row: MandateRow) -> bool:
 async def met_on_land(ctx: TickContext, row: MandateRow) -> bool:
     if row.kind is MandateKind.CORVEE and row.settlement_entity_id is not None:
         return not await active_at(ctx, row.settlement_entity_id)
+    if row.kind is MandateKind.QUARANTINE and row.settlement_entity_id is not None:
+        return not await sick_near(ctx, row.settlement_entity_id)
     if row.kind is MandateKind.ENCLOSURE and row.settlement_entity_id is not None:
         closed = select(CommonsRow.id).where(CommonsRow.steward_entity_id == row.settlement_entity_id, CommonsRow.rule == CommonsRule.ENCLOSED)
         return await ctx.session.scalar(closed.limit(1)) is not None
@@ -268,6 +307,10 @@ async def judge(ctx: TickContext, realm: Realm, row: MandateRow, tally: MandateT
         await keep_ration(ctx, realm, row)
     if row.kind is MandateKind.CORVEE:
         await keep_corvee(ctx, row)
+    if row.kind is MandateKind.QUARANTINE:
+        await keep_quarantine(ctx, row)
+    if row.kind is MandateKind.CONSCRIPTION:
+        await keep_conscription(ctx, row)
     if ctx.epoch < row.until_epoch or STATE in row.locked:
         return
     done = await met(ctx, row)

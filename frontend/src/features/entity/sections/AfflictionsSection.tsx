@@ -34,7 +34,7 @@ import {
   StatBar,
   FieldTile,
 } from '@/components/domain'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { NEED_WORDS } from '@/features/entity/affairs/labels'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -45,8 +45,10 @@ import {
   CHANGE_SIGNS,
   CHARMS,
   CURES,
+  FORGET_SCOPES,
   FORTUNE_SIGNS,
   PACKAGE_LOOKS,
+  SLEEP_UNTILS,
   STAT_LABELS,
   TRANSMISSIONS,
   VISIBILITY,
@@ -72,7 +74,7 @@ function usePackages() {
   })
 }
 
-function linkKind(value: string | null): DrawerKind | null {
+function linkKind(value: string | null): EntryKind | null {
   return value === 'entity' ||
     value === 'son' ||
     value === 'foreign-god' ||
@@ -333,6 +335,9 @@ function AfflictionCard({
             charm_target_id: row.charm_target_id,
             charm_kind: row.charm_kind,
             charm_strength: row.charm_strength,
+            ageing_rate_pct: row.ageing_rate_pct,
+            forget_scope: row.forget_scope,
+            sleep_until: row.sleep_until,
           }}
           labels={{
             transmission: 'Passed through',
@@ -351,6 +356,9 @@ function AfflictionCard({
             charm_target_id: 'Charmed toward',
             charm_kind: 'Charm of',
             charm_strength: 'Charm strength',
+            ageing_rate_pct: 'Ageing rate (%)',
+            forget_scope: 'What it takes',
+            sleep_until: 'Sleeps until',
           }}
           choices={{
             transmission: options(TRANSMISSIONS, Object.keys(TRANSMISSIONS)),
@@ -362,6 +370,16 @@ function AfflictionCard({
               ([value, item]) => ({ value, label: item.label })
             ),
             charm_kind: Object.entries(CHARMS).map(([value, item]) => ({
+              value,
+              label: item.label,
+            })),
+            forget_scope: Object.entries(FORGET_SCOPES).map(
+              ([value, item]) => ({
+                value,
+                label: item.label,
+              })
+            ),
+            sleep_until: Object.entries(SLEEP_UNTILS).map(([value, item]) => ({
               value,
               label: item.label,
             })),
@@ -433,6 +451,27 @@ function PackageShape({ row }: { row: Affliction }) {
           </Badge>
           {row.changed_from && (
             <Muted variant='caption'>{`Changed now, from ${PLANS[row.changed_from].label.toLowerCase()}`}</Muted>
+          )}
+        </div>
+      )}
+      {(row.ageing_rate_pct !== null ||
+        row.forget_scope !== null ||
+        row.sleep_until !== null) && (
+        <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
+          {row.ageing_rate_pct !== null && (
+            <Badge size='sm' variant='info'>
+              {`Ages at ${row.ageing_rate_pct}% of the usual pace`}
+            </Badge>
+          )}
+          {row.forget_scope !== null && (
+            <Badge size='sm' variant='warning'>
+              {`Takes ${FORGET_SCOPES[row.forget_scope].label.toLowerCase()}`}
+            </Badge>
+          )}
+          {row.sleep_until !== null && (
+            <Badge size='sm' variant='secondary'>
+              {`Sleeps ${SLEEP_UNTILS[row.sleep_until].label.toLowerCase()}`}
+            </Badge>
           )}
         </div>
       )}

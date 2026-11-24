@@ -80,7 +80,7 @@
 {% endif %}
 {%- endmacro %}
 
-{% macro picture(map, links, caption) -%}
+{% macro picture(map, links, caption, ways='Road') -%}
 {% if map %}
 <figure class="map">
 <div class="sheet" style="background:{{ map.halo }}">
@@ -101,7 +101,7 @@
 <span class="name">{{ caption }}</span>
 {% for tier in map.legend %}<span class="legend"><svg viewBox="-6 -6 12 12">{% if tier == "capital" %}<rect x="-3.6" y="-3.6" width="7.2" height="7.2" transform="rotate(45)" fill="#e3b64f"/>{% elif tier == "village" %}<circle r="1.8" fill="currentColor"/>{% else %}<circle r="3.6" fill="none" stroke="currentColor" stroke-width="1.2"/><circle r="1.5" fill="currentColor"/>{% endif %}</svg>{{ tier | replace("_", " ") | capitalize }}</span>{% endfor %}
 <span class="legend"><svg viewBox="0 -6 16 12"><path d="M0 0H16" stroke="currentColor" stroke-dasharray="3 2" stroke-width="1.2"/></svg>Border</span>
-<span class="legend"><svg viewBox="0 -6 16 12"><path d="M0 0H16" stroke="currentColor" stroke-dasharray="1.6 1.4" stroke-width="1"/></svg>Road</span>
+<span class="legend"><svg viewBox="0 -6 16 12"><path d="M0 0H16" stroke="currentColor" stroke-dasharray="1.6 1.4" stroke-width="1"/></svg>{{ ways }}</span>
 </figcaption>
 </figure>
 {% endif %}

@@ -62,6 +62,7 @@ const STATUSES: Record<string, string> = {
   sold: 'Sold',
   bust: 'Bust',
   seized: 'Seized',
+  spoiled: 'Spoiled in store',
 }
 
 type Props = { view: Finance; blocked: string | null; hold: boolean }

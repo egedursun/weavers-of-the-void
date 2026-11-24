@@ -109,6 +109,8 @@ class FactionsRules:
     ruin_rival_weight: int = rule(70, 0, 100, RuleGroup.CIVILIZATION, "How highly a faction puts the ruin of a rival faction among its goals (%)")
     propaganda_shift: int = rule(5, 0, 50, RuleGroup.CIVILIZATION, "Approval a faction's tracts and criers move on the subject it presses")
     ruin_cohesion: int = rule(10, 0, 100, RuleGroup.CIVILIZATION, "Cohesion a faction loses each time a rival works to ruin it")
+    protect_members_weight: int = rule(40, 0, 100, RuleGroup.CIVILIZATION, "Weight of protecting its members among a faction's goals")
+    found_settlement_weight: int = rule(20, 0, 100, RuleGroup.CIVILIZATION, "Weight of founding a settlement among a faction's goals")
 
 
 @dataclass(frozen=True)
@@ -193,6 +195,10 @@ class IntrigueRules(Spanned):
     @property
     def recruit_epochs(self) -> int:
         return self.epochs(self.recruit_years)
+
+    affection_hook_at: int = rule(70, 0, 100, RuleGroup.REPUTATION, "Romance a mortal must feel before the one it loves holds a hook on it")
+    fixed_contest_renown: int = rule(5, 0, 100, RuleGroup.REPUTATION, "Renown a contestant loses when a rival fixes a contest against it")
+    incited_unrest: int = rule(10, 0, 100, RuleGroup.REPUTATION, "Unrest a schemer's stirred crowd raises in a town")
 
 
 @dataclass(frozen=True)

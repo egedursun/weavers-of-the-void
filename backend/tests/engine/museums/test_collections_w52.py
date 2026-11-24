@@ -17,7 +17,7 @@ RULES = Rules()
 
 
 def test_five_collections_eight_pieces_nine_gardens() -> None:
-    assert len(HoardKind) == 5 and len(PieceKind) == 8 and len(GardenKind) == 9
+    assert len(HoardKind) == 6 and len(PieceKind) == 10 and len(GardenKind) == 11
     assert PIECE_OF_CLASS[ItemClass.CROWN] is PieceKind.REGALIA and PIECE_OF_CLASS[ItemClass.BOOK] is PieceKind.MANUSCRIPT
     assert set(PIECE_PRESTIGE) == set(PieceKind) and GARDEN_WILD[GardenKind.MENAGERIE] and not GARDEN_WILD[GardenKind.BOTANIC]
 

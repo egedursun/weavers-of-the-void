@@ -134,6 +134,18 @@ async def bind_penance(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, 
     return [f"{son.name} must {PENANCE_DEEDS[deed].label} by epoch {ruling.until_epoch}"]
 
 
+async def bind_to_world(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    if son.current_world_id is None:
+        return []
+    table = ctx.rules.council
+    son.bound_world_id, son.bound_until_epoch = son.current_world_id, ctx.epoch + table.epochs(table.bound_world_years)
+    return [f"{son.name} was bound to its world until epoch {son.bound_until_epoch}"]
+
+
+async def rebuke_son(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
+    return [f"{son.name} was rebuked before the council"]
+
+
 async def fine_son(ctx: TickContext, son: SonRow, ruling: CouncilRulingRow, members: list[SonRow]) -> list[str]:
     return [await fine_essence(ctx, son, members)]
 
@@ -148,6 +160,8 @@ PENALTIES: Mapping[SonPunishment, Penalty] = total(
         SonPunishment.STRIP_DIVINITY: strip_divinity,
         SonPunishment.PENANCE: bind_penance,
         SonPunishment.ESSENCE_FINE: fine_son,
+        SonPunishment.BOUND_TO_WORLD: bind_to_world,
+        SonPunishment.REBUKE: rebuke_son,
     },
 )
 

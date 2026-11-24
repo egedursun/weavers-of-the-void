@@ -153,6 +153,7 @@ FORMATIONS = total(
         Formation.CONVOY: FormationSpec("Convoy", 70, 70, 120, 140, 50, 140),
         Formation.SCREEN: FormationSpec("Screen", 80, 85, 70, 110, 70, 105),
         Formation.LAYERED: FormationSpec("Layered", 95, 120, 70, 85, 80, 90),
+        Formation.CIRCLE: FormationSpec("Circle", 85, 125, 110, 40, 50, 95),
     },
 )
 

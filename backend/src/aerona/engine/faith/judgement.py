@@ -149,6 +149,8 @@ def score_of(table: AfterlifeRules, deeds: dict[str, int], doctrine: JudgementDo
         return table.rite_score if FUNERALS[rite].counts_as_rite else table.no_rite_score
     if doctrine is JudgementDoctrine.FAVOUR:
         return table.favoured_score if favoured else table.forsaken_score
+    if doctrine is JudgementDoctrine.REMEMBRANCE:
+        return clamp_int(deeds.get("renown", 0), 0, PERCENT)
     return table.neutral_score
 
 

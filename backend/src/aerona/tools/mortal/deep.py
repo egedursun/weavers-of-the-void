@@ -11,8 +11,9 @@ from aerona.db.tables.crafts import CatchGroundRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.geology import RegionStratumRow
+from aerona.db.tables.geology import DeepPassageRow, RegionStratumRow
 from aerona.db.tables.living import LivingLineRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.polity import OathRow
 from aerona.db.tables.powers import PowerRow
 from aerona.db.tables.structures import StructureProfileRow
@@ -23,15 +24,18 @@ from aerona.domain.enums.couplings import SealKind
 from aerona.domain.enums.crafts import CatchGround, CatchMedium, Gear
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.environment import RiverClass
-from aerona.domain.enums.geology import UndergroundStratum
+from aerona.domain.enums.geology import DeepPassageState, UndergroundStratum
 from aerona.domain.enums.happening import RiverShiftCause
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.couplings.deep import SealLinks, active_seal, missing_link, seal_deep
 from aerona.engine.crafts.shores import open_ground
+from aerona.engine.environment.cells import dig_toward, ends_of, tell
 from aerona.engine.environment.columns import columns_by_region
 from aerona.engine.environment.deep import DeepTally, draw_reservoir, reach_stratum
 from aerona.engine.environment.geomorph import shift_river
+from aerona.engine.primitives.deep import Cell, passage_kind, shape_fault
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.water.courses import blame_works
@@ -41,6 +45,7 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
+from aerona.tools.mortal.support import home_of, i_know
 
 
 class RegionInput(ToolInput):
@@ -113,17 +118,20 @@ class SealDepthInput(ToolInput):
     oath_id: int | None = None
     power_id: int | None = None
     line_id: int | None = None
+    mind_id: int | None = None
 
 
 async def owns_links(call: MortalCall, links: SealLinks) -> bool:
     oath = await call.session.get(OathRow, links.oath_id) if links.oath_id is not None else None
     power = await call.session.get(PowerRow, links.power_id) if links.power_id is not None else None
     line = await call.session.get(LivingLineRow, links.line_id) if links.line_id is not None else None
+    mind = await call.session.get(MindProfileRow, links.mind_id) if links.mind_id is not None else None
     home = call.me.location_id
     return (
         (links.oath_id is None or (oath is not None and oath.swearer_entity_id == call.me.id))
         and (links.power_id is None or (power is not None and power.holder_node_id == call.me.id))
         and (links.line_id is None or (line is not None and line.owner_node_id in {call.me.id, home}))
+        and (links.mind_id is None or (mind is not None and mind.made_by_node_id in {call.me.id, home}))
     )
 
 
@@ -136,7 +144,7 @@ async def seal_depth(call: MortalCall, args: SealDepthInput) -> str:
         fail(MortalResult.DEEP_REFUSED, why="you seal only a place in the land you stand on")
     if held(place.id) or await active_seal(call.session, place.id) is not None:
         fail(MortalResult.DEEP_REFUSED, why="that deep is already sealed or held")
-    links = SealLinks(oath_id=args.oath_id, power_id=args.power_id, line_id=args.line_id)
+    links = SealLinks(oath_id=args.oath_id, power_id=args.power_id, line_id=args.line_id, mind_id=args.mind_id)
     missing = missing_link(args.kind, links)
     if missing is not None:
         fail(MortalResult.DEEP_REFUSED, why=f"a seal of that kind names its {missing}")
@@ -241,12 +249,105 @@ async def change_gear(call: MortalCall, args: ChangeGearInput) -> str:
     return result(MortalResult.GEAR_CHANGED, gear=spoken(args.gear))
 
 
+class DigPassageInput(ToolInput):
+    from_region_id: int
+    from_stratum: UndergroundStratum | None = None
+    to_region_id: int
+    to_stratum: UndergroundStratum | None = None
+
+
+class PassageInput(ToolInput):
+    passage_id: int
+
+
+async def cell_exists(call: MortalCall, region_id: int, stratum: UndergroundStratum | None) -> None:
+    region = await call.session.get(EntityRow, region_id)
+    if region is None or region.status is not EntityStatus.CANON:
+        fail(MortalResult.DEEP_REFUSED, why="no such region")
+    if stratum is not None:
+        await stratum_here(call, region_id, stratum)
+
+
+async def dig_passage(call: MortalCall, args: DigPassageInput) -> str:
+    first, second = (args.from_region_id, args.from_stratum), (args.to_region_id, args.to_stratum)
+    atlas = await RegionAtlas.load(call.session)
+    fault = shape_fault(first, second, second[0] in atlas.neighbours(first[0]))
+    if fault is not None:
+        fail(MortalResult.DEEP_REFUSED, why=fault)
+    await cell_exists(call, first[0], first[1])
+    await cell_exists(call, second[0], second[1])
+    if held(first[0], second[0]):
+        fail(MortalResult.DEEP_REFUSED, why="that land is held")
+    home = await home_of(call)
+    if not await i_know(call, KnowledgeBranch.METALLURGY, home):
+        fail(MortalResult.DEEP_REFUSED, why="your people do not know how to dig through rock")
+    digger = home or call.me
+    row = await dig_toward(call.tick, digger, first, second, by_node_id=call.me.id)
+    if row.state is DeepPassageState.DIGGING and "progress" not in row.locked:
+        row.progress = clamp_int(row.progress + call.rules.underground.dig_rate, 0, PERCENT)
+    call.target(first[0])
+    return result(
+        MortalResult.PASSAGE_DIGGING,
+        kind=spoken(passage_kind(first, second)),
+        first=await end_name(call, first),
+        second=await end_name(call, second),
+        progress=row.progress,
+    )
+
+
+async def end_name(call: MortalCall, cell: Cell) -> str:
+    region = await call.session.get(EntityRow, cell[0])
+    name = region.name if region is not None else str(cell[0])
+    return name if cell[1] is None else f"the {STRATA[cell[1]].label.lower()} beneath {name}"
+
+
+async def passage_of(call: MortalCall, passage_id: int) -> DeepPassageRow:
+    row = await call.session.get(DeepPassageRow, passage_id)
+    if row is None:
+        fail(MortalResult.DEEP_REFUSED, why="no such passage")
+    first, second = ends_of(row)
+    if held(first[0], second[0]) or "state" in row.locked:
+        fail(MortalResult.DEEP_REFUSED, why="that passage is held")
+    return row
+
+
+async def clear_passage(call: MortalCall, args: PassageInput) -> str:
+    row = await passage_of(call, args.passage_id)
+    if row.state is not DeepPassageState.COLLAPSED:
+        fail(MortalResult.DEEP_REFUSED, why="that passage has not fallen in")
+    home = await home_of(call)
+    row.dug_by_entity_id = (home or call.me).id
+    first, second = ends_of(row)
+    call.target(first[0])
+    return result(
+        MortalResult.PASSAGE_CLEARING, kind=spoken(passage_kind(first, second)), first=await end_name(call, first), second=await end_name(call, second)
+    )
+
+
+async def collapse_passage(call: MortalCall, args: PassageInput) -> str:
+    row = await passage_of(call, args.passage_id)
+    if row.state in {DeepPassageState.COLLAPSED, DeepPassageState.SEALED}:
+        fail(MortalResult.DEEP_REFUSED, why="that passage is already closed")
+    if not await i_know(call, KnowledgeBranch.METALLURGY, await home_of(call)) and not await i_know(call, KnowledgeBranch.WARFARE):
+        fail(MortalResult.DEEP_REFUSED, why="you have no sappers and no knowledge of digging")
+    row.state, row.progress = DeepPassageState.COLLAPSED, 0
+    first, second = ends_of(row)
+    await tell(call.tick, "deep.passage_collapsed", row, call.me.id)
+    call.target(first[0])
+    return result(
+        MortalResult.PASSAGE_BROUGHT_DOWN, kind=spoken(passage_kind(first, second)), first=await end_name(call, first), second=await end_name(call, second)
+    )
+
+
 def specs() -> list[ToolSpec[MortalCall, Any]]:
     meta = ToolMeta(ActionKind.INFLUENCE, mortal_standard_action)
     mortal = AgentKind.MORTAL
     return [
         ToolSpec(MortalToolId.DIG_DEEPER, mortal, RegionInput, meta, dig_deeper),
         ToolSpec(MortalToolId.BORE, mortal, BoreInput, meta, bore),
+        ToolSpec(MortalToolId.DIG_PASSAGE, mortal, DigPassageInput, meta, dig_passage),
+        ToolSpec(MortalToolId.CLEAR_PASSAGE, mortal, PassageInput, meta, clear_passage),
+        ToolSpec(MortalToolId.COLLAPSE_PASSAGE, mortal, PassageInput, meta, collapse_passage),
         ToolSpec(MortalToolId.DRILL_RESERVOIR, mortal, RegionInput, meta, drill_reservoir),
         ToolSpec(MortalToolId.SEAL_DEPTH, mortal, SealDepthInput, meta, seal_depth),
         ToolSpec(MortalToolId.DIVERT_RIVER, mortal, DivertInput, meta, divert_river),

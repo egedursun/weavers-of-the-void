@@ -14,6 +14,8 @@ LAND_DOMAINS: dict[LandAct, frozenset[Domain]] = {
     LandAct.OPEN_SPRING: frozenset({Domain.SEA, Domain.LIFE, Domain.EARTH, Domain.PLANTS}),
     LandAct.CALL_LAVA: frozenset({Domain.FIRE, Domain.EARTH, Domain.ASH, Domain.STONE}),
     LandAct.SINK_COAST: frozenset({Domain.SEA, Domain.STORM, Domain.EARTH}),
+    LandAct.RAISE_ISLAND: frozenset({Domain.SEA, Domain.EARTH, Domain.FIRE, Domain.STONE}),
+    LandAct.OPEN_UNDERGROUND: frozenset({Domain.EARTH, Domain.STONE, Domain.SHADOW}),
 }
 TAINTING = frozenset({Domain.DEATH, Domain.PLAGUE, Domain.MADNESS, Domain.SHADOW, Domain.BLOOD, Domain.HUNGER})
 

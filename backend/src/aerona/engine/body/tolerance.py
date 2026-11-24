@@ -24,11 +24,15 @@ class Ground:
     gravity: int
     warmth: int
     toxins: int
+    radiation: int = 0
+    light: int = PERCENT // 2
+    humidity: int = PERCENT // 2
 
 
-def ground_of(world: WorldRow, land: RegionEnvironmentRow | None) -> Ground:
+def ground_of(world: WorldRow, land: RegionEnvironmentRow | None, *, radiation: int = 0, light: int = PERCENT // 2) -> Ground:
     toxins = TOXIC if world.atmosphere is Atmosphere.TOXIC else CLEAN
-    return Ground(AIR[world.atmosphere], GRAVITY[world.gravity], land.temperature if land is not None else PERCENT // 2, toxins)
+    humidity = land.moisture if land is not None else PERCENT // 2
+    return Ground(AIR[world.atmosphere], GRAVITY[world.gravity], land.temperature if land is not None else PERCENT // 2, toxins, radiation, light, humidity)
 
 
 def excess(row: BodySystemRow, ground: Ground) -> int:
@@ -39,6 +43,9 @@ def excess(row: BodySystemRow, ground: Ground) -> int:
         row.cold_min - ground.warmth,
         ground.warmth - row.heat_max,
         ground.toxins - row.toxin_tolerance,
+        ground.radiation - row.radiation_max,
+        row.light_min - ground.light,
+        abs(ground.humidity - PERCENT // 2) - row.humidity_range // 2,
     ]
     if row.system is BodySystem.BREATH:
         over.append(row.air_need - ground.air)

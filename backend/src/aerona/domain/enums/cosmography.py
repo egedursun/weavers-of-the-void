@@ -323,6 +323,8 @@ class OceanCurrent(StrEnum):
     COLD = "cold"
     UPWELLING = "upwelling"
     TIDAL = "tidal"
+    GYRE = "gyre"
+    COUNTER = "counter"
 
 
 class ApocalypseVariant(StrEnum):
@@ -385,6 +387,14 @@ class PhenomenonPersistence(StrEnum):
     PASSING = "passing"
     LASTING = "lasting"
     PERMANENT = "permanent"
+
+
+class PhenomenonRhythm(StrEnum):
+    CONSTANT = "constant"
+    SEASONAL = "seasonal"
+    CYCLIC = "cyclic"
+    WANDERING = "wandering"
+    ONCE = "once"
 
 
 class BeingSense(StrEnum):

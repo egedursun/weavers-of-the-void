@@ -225,6 +225,15 @@ def route_status(route: RouteRow, calendar: SkyCalendar, forgotten: Collection[i
     if route.temp_open_until_epoch is not None:
         reason = f"The alignment lifted the seal temporarily; it re-seals at the start of Epoch {route.temp_open_until_epoch}."
         return RouteStatus(True, RouteState.TEMPORARY, reason, closes_epoch=closes_epoch, aligned=aligned, hidden=hidden)
+    if route.guarded:
+        return RouteStatus(
+            True,
+            RouteState.GUARDED,
+            "The route is open and guarded; raids are fewer and a toll is taken.",
+            closes_epoch=closes_epoch,
+            aligned=aligned,
+            hidden=hidden,
+        )
     return RouteStatus(True, RouteState.OPEN, "The route is open.", closes_epoch=closes_epoch, aligned=aligned, hidden=hidden)
 
 

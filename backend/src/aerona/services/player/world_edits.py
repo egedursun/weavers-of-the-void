@@ -63,6 +63,10 @@ async def _rename(scope: PlayerScope, world: WorldRow, requested: str) -> str | 
     return old
 
 
+async def rename_world(scope: PlayerScope, world_id: int, requested: str) -> None:
+    await _rename(scope, await guards.world(scope.session, world_id), requested)
+
+
 def _percent_field(value: int, low: int, label: str) -> float:
     if not low <= value <= PERCENT_MAX:
         raise ValidationFailedError(f"{label} must be between {low} and {PERCENT_MAX}.")

@@ -35,9 +35,9 @@ import {
   ShowMore,
   useShowMore,
 } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Muted, Text } from '@/components/typography'
-import { drawerKindOf } from '@/features/chronicle/linkTargets'
+import { entryKindOf } from '@/features/chronicle/linkTargets'
 import { READ_ONLY_REASON } from '@/features/entity/actions/gate'
 import { useWorldState } from '@/features/entity/api/queries'
 import { BulkImageGenPanel } from '@/features/images/BulkImageGenPanel'
@@ -79,7 +79,7 @@ export function GalleryScreen() {
   const images = useImages(null)
   const status = useImageGenStatus()
   const state = useWorldState()
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const [category, setCategory] = useState<string>(EVERY)
   const [world, setWorld] = useState<string>(EVERY)
   const [query, setQuery] = useState('')
@@ -154,7 +154,7 @@ export function GalleryScreen() {
           <Button
             variant='outline'
             size='sm'
-            onClick={() => drawers.open({ kind: 'creator' })}
+            onClick={() => entryStack.open({ kind: 'creator' })}
           >
             <Upload />
             Upload for the god or a world
@@ -405,7 +405,7 @@ export function GalleryScreen() {
         readOnlyReason={readOnly}
         extra={() => {
           if (!current) return null
-          const drawer = drawerKindOf(current.target_kind ?? 'entity')
+          const drawer = entryKindOf(current.target_kind ?? 'entity')
           const category = categoryOf(current)
           const Icon = CATEGORY_ICON[category] ?? FALLBACK_ICON
           return (

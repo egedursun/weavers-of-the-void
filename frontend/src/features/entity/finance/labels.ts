@@ -46,6 +46,8 @@ export const POLICIES: Record<components['schemas']['TradePolicyKind'], Named> =
       icon: ShieldBan,
       tone: 'danger',
     },
+    staple_right: { label: 'Staple right', icon: HandCoins, tone: 'warning' },
+    toll: { label: 'Toll', icon: HandCoins, tone: 'warning' },
   }
 
 export const CREDIT_TONE: Record<string, Named['tone']> = {
@@ -55,6 +57,7 @@ export const CREDIT_TONE: Record<string, Named['tone']> = {
   restructuring: 'info',
   rescued: 'verdigris',
   repudiated: 'danger',
+  frozen: 'success',
 }
 
 export const HOARD_TONE: Record<string, Named['tone']> = {
@@ -62,4 +65,5 @@ export const HOARD_TONE: Record<string, Named['tone']> = {
   sold: 'success',
   bust: 'danger',
   seized: 'info',
+  spoiled: 'warning',
 }

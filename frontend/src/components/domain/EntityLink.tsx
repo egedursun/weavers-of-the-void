@@ -3,16 +3,16 @@ import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { type Rarity } from '@/constants/rarity'
 import {
-  type DrawerEntry,
-  type DrawerSearch,
-  parseDrawerStack,
-  pushDrawerEntry,
-} from '@/components/layout/drawer/drawerEntries'
-import { drawerSearchWith } from '@/components/layout/drawer/useDrawerStack'
-import { DRAWER_KIND_ICON } from './drawerKindIcon'
+  type EntryRef,
+  type EntrySearch,
+  parseEntryStack,
+  pushEntry,
+} from '@/components/layout/entry/entryStack'
+import { entrySearchWith } from '@/components/layout/entry/useEntryStack'
+import { ENTRY_KIND_ICON } from './entryKindIcon'
 import { RARITY_TEXT_CLASS } from './rarityClasses'
 
-type EntityLinkProps = DrawerEntry & {
+type EntityLinkProps = EntryRef & {
   children: ReactNode
   rarity?: Rarity
   showIcon?: boolean
@@ -27,14 +27,14 @@ export function EntityLink({
   showIcon = false,
   className,
 }: EntityLinkProps) {
-  const Icon = DRAWER_KIND_ICON[kind]
+  const Icon = ENTRY_KIND_ICON[kind]
   return (
     <Link
       to='.'
-      search={(previous: DrawerSearch) =>
-        drawerSearchWith(
+      search={(previous: EntrySearch) =>
+        entrySearchWith(
           previous,
-          pushDrawerEntry(parseDrawerStack(previous.drawer), { kind, id })
+          pushEntry(parseEntryStack(previous.entry), { kind, id })
         )
       }
       data-entity-kind={kind}

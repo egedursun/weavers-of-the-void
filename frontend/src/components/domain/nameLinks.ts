@@ -1,9 +1,9 @@
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 
 export type LinkTarget = {
   id: number
   name: string
-  kind: DrawerKind
+  kind: EntryKind
 }
 
 type Piece = { text: string; target?: LinkTarget }

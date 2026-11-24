@@ -136,6 +136,7 @@ async def crafts_of_life(ctx: TickContext) -> None:
     ctx.count("dress_revivals", tally.revived)
     ctx.count("arms_linked_to_heraldry", tally.arms_linked)
     ctx.count("dress_worn_by_fashion", tally.worn)
+    ctx.count("colour_meanings_written", tally.meanings)
 
 
 @reads(

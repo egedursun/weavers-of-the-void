@@ -18,6 +18,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.military import ArmyRole, Stance
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.operations import EchelonLevel, EchelonOrder
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
@@ -25,6 +26,7 @@ from aerona.engine.military.command import command_areas
 from aerona.engine.military.units import stacks_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.recording.record import record
 from aerona.engine.relations.persuasion import office_holder
 from aerona.engine.services.war import ongoing_wars
 from aerona.rules.registry import Rules
@@ -116,7 +118,18 @@ def needed(rules: Rules, stacks: int) -> dict[EchelonLevel, int]:
     brigades = max(1, ceil(stacks / table.stacks_per_brigade))
     divisions = max(1, ceil(brigades / table.brigades_per_division))
     corps = ceil(divisions / table.divisions_per_corps) if divisions > table.divisions_per_corps else 0
-    return {L.CORPS: corps, L.DIVISION: divisions, L.BRIGADE: brigades}
+    detachments = 1 if stacks >= table.detachment_stacks else 0
+    return {L.CORPS: corps, L.DIVISION: divisions, L.BRIGADE: brigades, L.DETACHMENT: detachments}
+
+
+async def cut_off(ctx: TickContext, army: EntityRow, rows: list[EchelonRow]) -> None:
+    table = ctx.rules.order_of_battle
+    for row in [row for row in rows if row.level is L.DETACHMENT and row.id is not None and "level" not in row.locked]:
+        if not ctx.rng(f"detachment.cut.{row.id}.{ctx.epoch}").chance(table.detachment_cut_pct):
+            continue
+        await record(ctx, "army.detachment_cut", roles={IncidentRole.SUBJECT: army.id})
+        await ctx.session.delete(row)
+        rows.remove(row)
 
 
 async def form(ctx: TickContext, army: EntityRow, army_row: ArmyRow, region_id: int | None, tally: CommandTally) -> EchelonRow:
@@ -143,7 +156,7 @@ async def form(ctx: TickContext, army: EntityRow, army_row: ArmyRow, region_id: 
     stacks = [row for row in await stacks_of(ctx.session, army.id) if row.count > 0]
     wanted = needed(ctx.rules, len(stacks))
     deputies = await sub_commanders(ctx, army.id)
-    for level in (L.CORPS, L.DIVISION, L.BRIGADE):
+    for level in (L.CORPS, L.DIVISION, L.BRIGADE, L.DETACHMENT):
         present = [row for row in rows if row.level is level]
         for index in range(len(present), wanted[level]):
             row = EchelonRow(
@@ -158,6 +171,7 @@ async def form(ctx: TickContext, army: EntityRow, army_row: ArmyRow, region_id: 
             rows.append(row)
             tally.formed += 1
     await ctx.session.flush()
+    await cut_off(ctx, army, rows)
     link(rows, top)
     for index, row in enumerate(item for item in rows if item.level is not L.ARMY):
         commander = deputies[index] if index < len(deputies) else None
@@ -269,6 +283,8 @@ def wanted_order(profile: ArmyProfileRow, attacking: bool, short: bool) -> Echel
         return EchelonOrder.HOLD
     if attacking and profile.stance is not Stance.RETREAT:
         return EchelonOrder.ATTACK
+    if profile.stance is Stance.RETREAT:
+        return EchelonOrder.SCREEN
     return EchelonOrder.MANOEUVRE
 
 

@@ -1,13 +1,11 @@
 import {
-  ListChecks,
-  Sun,
-  EyeOff,
-  Package,
-  ShieldOff,
+  Anchor,
   Anvil,
   ArrowRightLeft,
+  Atom,
   Ban,
   Banknote,
+  BicepsFlexed,
   Binoculars,
   Bird,
   Bomb,
@@ -22,14 +20,18 @@ import {
   ChessRook,
   ChevronsUp,
   Church,
+  CircleDot,
   Cloud,
   Coins,
   Columns3,
   Crosshair,
   Crown,
   Disc3,
+  DoorOpen,
+  Drone,
   Eclipse,
   Eye,
+  EyeOff,
   Feather,
   Fence,
   Flag,
@@ -41,25 +43,39 @@ import {
   Hammer,
   HandCoins,
   HandFist,
+  HandHeart,
   Handshake,
   HeartCrack,
+  HeartHandshake,
   Hexagon,
+  Home,
   Hourglass,
   KeyRound,
   Landmark,
   LandPlot,
   Layers,
   Link,
+  ListChecks,
   Lock,
   LockOpen,
   Medal,
   Megaphone,
   Meh,
   Merge,
+  MessageSquareWarning,
   Moon,
   Mountain,
+  Orbit,
+  Package,
+  PackageOpen,
   PawPrint,
   Pickaxe,
+  Plane,
+  PlaneTakeoff,
+  Radar,
+  Radio,
+  RadioTower,
+  Rocket,
   RotateCcw,
   Route,
   Rows3,
@@ -69,8 +85,11 @@ import {
   Shell,
   Shield,
   ShieldCheck,
+  ShieldEllipsis,
   ShieldHalf,
+  ShieldOff,
   ShieldPlus,
+  Ship,
   Shovel,
   Signpost,
   Skull,
@@ -78,42 +97,35 @@ import {
   Smile,
   Snowflake,
   Sparkles,
+  Stethoscope,
+  Sun,
   Sword,
   Swords,
+  Target,
+  Thermometer,
   ThumbsDown,
+  Trees,
   Triangle,
   Trophy,
-  Users,
+  Truck,
+  type LucideIcon,
   Undo2,
+  UserMinus,
+  UserPlus,
+  Users,
   VenetianMask,
   WandSparkles,
   Waves,
   Wheat,
   Wind,
-  Zap,
-  type LucideIcon,
-  Anchor,
-  Target,
-  Truck,
-  Rocket,
   Wrench,
-  Plane,
-  Trees,
-  Drone,
-  Orbit,
-  Radio,
-  HandHeart,
-  Stethoscope,
-  RadioTower,
-  BicepsFlexed,
-  PlaneTakeoff,
-  Atom,
-  ShieldEllipsis,
-  Radar,
-  DoorOpen,
-  UserMinus,
-  MessageSquareWarning,
-  PackageOpen,
+  Zap,
+  Cross,
+  Gift,
+  Layers2,
+  SignpostBig,
+  ThermometerSnowflake,
+  FlameKindling,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -146,6 +158,7 @@ export const STANCE: Record<string, Named> = {
   },
   pursue: { label: 'Pursuing', icon: Route, tone: 'danger' },
   escort: { label: 'Escorting convoys', icon: ShieldPlus, tone: 'verdigris' },
+  disband: { label: 'Disbanding', icon: Home, tone: 'muted' },
 }
 
 export const DOCTRINE: Record<Schemas['MartialStyle'], Named> = {
@@ -199,6 +212,16 @@ export const AIM: Record<string, Named> = {
     icon: Signpost,
     tone: 'gold',
   },
+  secure_water: {
+    label: 'Secure water',
+    icon: Waves,
+    tone: 'gold',
+  },
+  return_refugees: {
+    label: 'Return refugees',
+    icon: SignpostBig,
+    tone: 'gold',
+  },
 }
 
 export const FATE: Record<string, Named> = {
@@ -209,8 +232,9 @@ export const FATE: Record<string, Named> = {
   labour: { label: 'Forced labour', icon: Pickaxe, tone: 'warning' },
   exchanged: { label: 'Exchanged', icon: ArrowRightLeft, tone: 'info' },
   released: { label: 'Released', icon: LockOpen, tone: 'success' },
-  executed: { label: 'Executed', icon: Skull, tone: 'danger' },
+  executed: { label: 'Executed', icon: Ghost, tone: 'danger' },
   recruited: { label: 'Pressed into the army', icon: Swords, tone: 'warning' },
+  adopted: { label: 'Adopted', icon: HeartHandshake, tone: 'success' },
 }
 
 export const TRAIT: Record<Schemas['CommanderTrait'], Named> = {
@@ -272,6 +296,21 @@ export const TRAIT: Record<Schemas['CommanderTrait'], Named> = {
     tone: 'verdigris',
   },
   night_fighter: { label: 'Night fighter', icon: Moon, tone: 'muted' },
+  jungle_fighter: {
+    label: 'Jungle fighter',
+    icon: Trees,
+    tone: 'danger',
+  },
+  cold_fighter: {
+    label: 'Cold fighter',
+    icon: ThermometerSnowflake,
+    tone: 'danger',
+  },
+  river_crosser: {
+    label: 'River crosser',
+    icon: Cross,
+    tone: 'danger',
+  },
 }
 
 export const FAMILY: Record<Schemas['UnitFamily'], Named> = {
@@ -337,7 +376,7 @@ export const UNIT_ICON: Record<Schemas['UnitKind'], LucideIcon> = {
   powered_troopers: BicepsFlexed,
   drop_troops: PlaneTakeoff,
   pilots: Plane,
-  gifted: Sparkles,
+  gifted: Gift,
   dampeners: ShieldOff,
   detectors: Radar,
 }
@@ -367,7 +406,7 @@ export const ARMOUR: Record<Schemas['ArmourType'], Named & { rank: number }> = {
     tone: 'info',
     rank: 7,
   },
-  composite: { label: 'Composite', icon: Layers, tone: 'gold', rank: 8 },
+  composite: { label: 'Composite', icon: Layers2, tone: 'gold', rank: 8 },
   powered: {
     label: 'Powered armour',
     icon: BicepsFlexed,
@@ -426,6 +465,8 @@ export const OPERATION: Record<string, Named> = {
     icon: MessageSquareWarning,
     tone: 'danger',
   },
+  recruit_agent: { label: 'Recruited an agent', icon: UserPlus, tone: 'info' },
+  surveil: { label: 'Watched', icon: Eye, tone: 'muted' },
 }
 
 export const SIEGE_STATUS: Record<string, Named> = {
@@ -434,6 +475,7 @@ export const SIEGE_STATUS: Record<string, Named> = {
   repulsed: { label: 'Siege repulsed', icon: ShieldCheck, tone: 'success' },
   lifted: { label: 'Siege lifted', icon: Flag, tone: 'muted' },
   surrendered: { label: 'Surrendered on terms', icon: Handshake, tone: 'gold' },
+  betrayed: { label: 'Betrayed from within', icon: DoorOpen, tone: 'danger' },
 }
 
 export const STARVATION: Record<string, Named> = {
@@ -441,6 +483,11 @@ export const STARVATION: Record<string, Named> = {
   rationing: { label: 'Rationing', icon: Scale, tone: 'warning' },
   famine: { label: 'Famine', icon: HeartCrack, tone: 'danger' },
   taboo_broken: { label: 'Taboo broken', icon: Skull, tone: 'danger' },
+  hunger_sickness: {
+    label: 'Hunger sickness',
+    icon: Thermometer,
+    tone: 'danger',
+  },
 }
 
 export const SIEGE_ACTION: Record<string, Named> = {
@@ -450,6 +497,8 @@ export const SIEGE_ACTION: Record<string, Named> = {
   assault: { label: 'Assault', icon: Swords, tone: 'danger' },
   negotiate: { label: 'Parley', icon: Handshake, tone: 'info' },
   suborn: { label: 'Suborning the garrison', icon: Coins, tone: 'warning' },
+  poison_supply: { label: 'Poisoned the supply', icon: Skull, tone: 'danger' },
+  divert_river: { label: 'Turned the river', icon: Waves, tone: 'warning' },
 }
 
 export const DEFENCE: Record<string, Named> = {
@@ -472,6 +521,12 @@ export const DEFENCE: Record<string, Named> = {
     icon: UserMinus,
     tone: 'warning',
   },
+  burn_works: {
+    label: 'Burned the siege works',
+    icon: FlameKindling,
+    tone: 'danger',
+  },
+  evacuate_by_sea: { label: 'Left by sea', icon: Ship, tone: 'info' },
 }
 
 export const WORKS: Record<string, Named> = {
@@ -522,9 +577,12 @@ export const TACTIC: Record<Schemas['Tactic'], Named> = {
   orbital_bombardment: { label: 'Orbital bombardment', icon: Orbit },
   drop_assault: { label: 'Drop assault', icon: PlaneTakeoff },
   infiltration: { label: 'Infiltration', icon: VenetianMask },
+  river_crossing: { label: 'River crossing', icon: Cross },
+  fire_attack: { label: 'Fire attack', icon: Flame },
 }
 
 export const PHASE: Record<string, Named> = {
+  parley: { label: 'Parley', icon: Handshake, tone: 'info' },
   scouting: { label: 'Scouting', icon: Binoculars, tone: 'info' },
   plan: { label: 'Battle plans', icon: ScrollText, tone: 'gold' },
   command: { label: 'Orders', icon: Megaphone, tone: 'gold' },
@@ -709,6 +767,7 @@ export const FORMATION: Record<Schemas['Formation'], Named> = {
   convoy: { label: 'Convoy', icon: Truck, tone: 'muted' },
   screen: { label: 'Screen', icon: Eye, tone: 'info' },
   layered: { label: 'Layered defence', icon: Layers, tone: 'info' },
+  circle: { label: 'Circle', icon: CircleDot, tone: 'gold' },
 }
 
 export const MORALE_STATE: Record<Schemas['MoraleState'], Named> = {
@@ -740,6 +799,16 @@ export const CASUS_BELLI: Record<Schemas['CasusBelliKind'], Named> = {
     tone: 'warning',
   },
   conquest: { label: 'Conquest', icon: Flag, tone: 'muted' },
+  broken_witnessed_pact: {
+    label: 'Broken witnessed pact',
+    icon: Handshake,
+    tone: 'muted',
+  },
+  harbouring_fugitives: {
+    label: 'Harbouring fugitives',
+    icon: DoorOpen,
+    tone: 'muted',
+  },
 }
 
 export const WAR_GOODS: Record<string, Named> = {
@@ -754,4 +823,5 @@ export const COMMAND_AREA: Record<Schemas['CommandArea'], Named> = {
   manoeuvre: { label: 'Manoeuvre', icon: Route, tone: 'gold' },
   siege: { label: 'Siege', icon: Castle, tone: 'warning' },
   logistics: { label: 'Logistics', icon: Wheat, tone: 'success' },
+  intelligence: { label: 'Intelligence', icon: Eye, tone: 'info' },
 }

@@ -3,9 +3,11 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.domestication import UNBOUND_BIOCHEMISTRY
+from aerona.catalog.life.limit_ways import LIMIT_WAYS
 from aerona.catalog.life_traits import BODY_SYSTEM_TRAITS, having
 from aerona.catalog.nature_kinds50 import BODY_SYSTEMS, SENSITIVITIES
 from aerona.constants.units import PERCENT
+from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.body_systems import BodySystemRow, SensitivityRow
 from aerona.db.tables.celestial import WorldRow
@@ -13,22 +15,33 @@ from aerona.db.tables.ecology import SpeciesProfileRow
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.kind_crafts import GarmentKindRow
+from aerona.db.tables.kinds import KindHoldingRow
+from aerona.db.tables.made import AugmentRow
+from aerona.db.tables.powers import PowerRow
+from aerona.db.tables.space_weather import WorldFieldRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
-from aerona.domain.enums.body_systems import BodySystem
+from aerona.domain.enums.body_systems import BodySystem, LimitWay
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.kind_crafts import GarmentCategory
+from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.life_traits import BodySystemTrait
+from aerona.domain.enums.made import AugmentSlot
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import StepAction, StepState
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.body.tolerance import Ground, excess, ground_of
 from aerona.engine.context import TickContext
+from aerona.engine.cosmos.world_views import light_pct, view_of
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.folk import folk_among
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import shift_stat
-from aerona.engine.recording.record import record
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.recording.terms import explaining_alone, term
 from aerona.rules.registry import Rules
 
@@ -54,6 +67,8 @@ def adapt(rules: Rules, row: BodySystemRow, ground: Ground) -> bool:
         ("gravity_max", ground.gravity, True),
         ("heat_max", ground.warmth, True),
         ("toxin_tolerance", ground.toxins, True),
+        ("radiation_max", ground.radiation, True),
+        ("light_min", ground.light, False),
         ("cold_min", ground.warmth, False),
         ("air_need", ground.air, False),
     ):
@@ -89,6 +104,9 @@ async def seed(ctx: TickContext, holder: EntityRow, biology: BiologyRow, tally: 
             heat_max=clamp_int(ground.warmth + margin * 2, 0, PERCENT),
             sleep_need=PERCENT * 3 // TENTHS if biology.sleeps else 0,
             toxin_tolerance=clamp_int(ground.toxins + margin, 0, PERCENT),
+            radiation_max=clamp_int(ground.radiation + margin, 0, PERCENT),
+            light_min=clamp_int(ground.light - margin * 2, 0, PERCENT),
+            humidity_range=clamp_int(abs(ground.humidity - PERCENT // 2) * 2 + margin * 2, 0, PERCENT),
             locked=[],
         )
         ctx.session.add(row)
@@ -97,10 +115,54 @@ async def seed(ctx: TickContext, holder: EntityRow, biology: BiologyRow, tally: 
     return rows
 
 
+async def ways_past(ctx: TickContext, people_id: int) -> list[LimitWay]:
+    among = await folk_among(ctx.session, [people_id])
+    folk = select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, among)
+    found: list[LimitWay] = []
+    suits = await ctx.session.scalar(
+        select(KindHoldingRow.id)
+        .join(GarmentKindRow, GarmentKindRow.id == KindHoldingRow.kind_id)
+        .where(
+            KindHoldingRow.concept == KindConcept.GARMENT,
+            KindHoldingRow.holder_node_id == people_id,
+            GarmentKindRow.category == GarmentCategory.ENVIRONMENT_SUIT,
+        )
+        .limit(1)
+    )
+    if suits is not None:
+        found.append(LimitWay.EQUIPMENT)
+    augments = set(await ctx.session.scalars(select(AugmentRow.slot).where(AugmentRow.bearer_node_id.in_(folk))))
+    if augments - {AugmentSlot.BLOOD, AugmentSlot.WHOLE_BODY}:
+        found.append(LimitWay.AUGMENT)
+    if augments & {AugmentSlot.BLOOD, AugmentSlot.WHOLE_BODY}:
+        found.append(LimitWay.GROWN_ORGAN)
+    if await ctx.session.scalar(select(PowerRow.id).where(PowerRow.holder_node_id.in_(folk)).limit(1)) is not None:
+        found.append(LimitWay.POWER)
+    rites = select(RiteGrammarRow.rite_entity_id).join(EntityRow, EntityRow.id == RiteGrammarRow.rite_entity_id).where(among)
+    if await ctx.session.scalar(rites.limit(1)) is not None:
+        found.append(LimitWay.RITE)
+    return found
+
+
+async def eased(ctx: TickContext, people: EntityRow, town: EntityRow, worst: int) -> int:
+    if worst <= 0:
+        return worst
+    ways = await ways_past(ctx, people.id)
+    if not ways:
+        return worst
+    ease = min(PERCENT, sum(LIMIT_WAYS[way].ease(ctx.rules) for way in ways))
+    cost = sum(LIMIT_WAYS[way].cost(ctx.rules) for way in ways)
+    if not held(town.id):
+        with explaining_alone():
+            term("body_systems.limit_way_cost", -cost, source_node_id=people.id)
+            shift_stat(town, "prosperity", -cost, low=0, high=PERCENT)
+    return worst * (PERCENT - ease) // PERCENT
+
+
 async def strain(ctx: TickContext, folk: tuple[EntityRow, list[BodySystemRow]], town: EntityRow, ground: Ground, tally: BodySystemTally) -> None:
     people, rows = folk
     table = ctx.rules.body_systems
-    worst = max((excess(row, ground) for row in rows if BODY_SYSTEMS[row.system].worn), default=0)
+    worst = await eased(ctx, people, town, max((excess(row, ground) for row in rows if BODY_SYSTEMS[row.system].worn), default=0))
     structure = next((row for row in rows if row.system is BodySystem.STRUCTURE and row.present), None)
     light = structure is not None and ground.gravity < structure.gravity_max - table.margin * 2
     if (worst > 0 or light) and not held(town.id):
@@ -151,7 +213,13 @@ async def react(ctx: TickContext, tally: BodySystemTally) -> None:
             continue
         tally.reactions += 1
         await apply_hits(ctx, being, Harm(max(1, row.severity // TENTHS), HarmCause.POISON, "struck down by what its body cannot bear"), lethal=False)
-        await record(ctx, "body.sensitivity_reaction", roles={IncidentRole.SUBJECT: being.id}, facts={"sensitivity": row.kind, "severity": row.severity})
+        await record(
+            ctx,
+            "body.sensitivity_reaction",
+            roles={IncidentRole.SUBJECT: being.id},
+            facts={"sensitivity": row.kind, "severity": row.severity},
+            steps=(StepDraft(StepAction.FALL_ILL, actor=being.id, states=((being.id, StepState.POISONED),)),),
+        )
 
 
 async def keep_body_systems(ctx: TickContext, tally: BodySystemTally) -> None:
@@ -173,6 +241,8 @@ async def keep_body_systems(ctx: TickContext, tally: BodySystemTally) -> None:
             continue
         region = atlas.top_region(town.id)
         land = await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
-        await strain(ctx, (people, rows), town, ground_of(world, land), tally)
+        field = await ctx.session.get(WorldFieldRow, world.id)
+        light = light_pct(ctx.rules, (await view_of(ctx.session, ctx.rules, world.id)).light)
+        await strain(ctx, (people, rows), town, ground_of(world, land, radiation=field.surface_dose if field is not None else 0, light=light), tally)
     await react(ctx, tally)
     await ctx.session.flush()

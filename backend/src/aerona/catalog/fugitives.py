@@ -32,6 +32,8 @@ FUGITIVES: Mapping[FugitiveKind, FugitiveSpec] = total(
         F.RUNAWAY: FugitiveSpec("Runaway from bondage", False, True, "runaway_hunt_pct"),
         F.DESERTER: FugitiveSpec("Deserter", False, False, "deserter_hunt_pct"),
         F.HERETIC: FugitiveSpec("Fled persecution", True, False, "heretic_hunt_pct"),
+        F.ESCAPED_CAPTIVE: FugitiveSpec("Escaped captive", True, True, "escaped_captive_hunt_pct"),
+        F.DEBTOR: FugitiveSpec("Fleeing debtor", False, True, "debtor_hunt_pct"),
     },
 )
 
@@ -44,5 +46,7 @@ SANCTUARIES: Mapping[SanctuaryKind, SanctuarySpec] = total(
         K.WILDS: SanctuarySpec("The wilds", True, "a hunt in the wilds"),
         K.FREE_CITY: SanctuarySpec("Free city", False, "a breach of the city's charter"),
         K.EMBASSY: SanctuarySpec("Embassy", False, "a crisis between powers"),
+        K.SHIP: SanctuarySpec("Ship", True, "a breach of the ship's charter"),
+        K.TRADE_HALL: SanctuarySpec("Trade hall", False, "a breach of the charter of its trade"),
     },
 )

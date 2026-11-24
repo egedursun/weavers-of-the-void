@@ -145,7 +145,7 @@ def judgement_of(church: Church, tenets: list[TenetKind]) -> JudgementDoctrine:
     if TenetKind.JUDGEMENT_BY_FAITH in tenets:
         return JudgementDoctrine.FAITH
     if church.god is None:
-        return JudgementDoctrine.NONE
+        return JudgementDoctrine.REMEMBRANCE if TenetKind.ANCESTOR_VENERATION in tenets else JudgementDoctrine.NONE
     return DOMAIN_JUDGEMENT.get(church.god.domain_primary, JudgementDoctrine.DEEDS)
 
 
@@ -157,6 +157,8 @@ def rebirth_path_of(rules: Rules, values: dict[ValueAxis, int], judgement: Judge
         return RebirthPath.KIND
     if judgement in REBIRTH_PATH_OF_JUDGEMENT_DOCTRINES and values.get(ValueAxis.HIERARCHY, 0) >= threshold:
         return RebirthPath.MERIT
+    if values.get(ValueAxis.TRADITION, 0) >= threshold:
+        return RebirthPath.PLACE
     return RebirthPath.PEOPLE
 
 

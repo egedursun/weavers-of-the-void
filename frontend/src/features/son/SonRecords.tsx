@@ -28,7 +28,7 @@ export function SonRecords({ detail }: { detail: SonDetail }) {
   const spoken = useShowMore(words, WORDS_SHOWN)
   return (
     <>
-      <Section title='Worshippers' level={3}>
+      <Section id='section-son-worshippers' title='Worshippers' level={3}>
         {detail.worshippers.length === 0 ? (
           <EmptyState
             icon={HandHeart}
@@ -57,7 +57,7 @@ export function SonRecords({ detail }: { detail: SonDetail }) {
           </div>
         )}
       </Section>
-      <Section title='Creations' level={3}>
+      <Section id='section-son-creations' title='Creations' level={3}>
         {detail.creations.length === 0 ? (
           <EmptyState
             icon={Hammer}
@@ -104,7 +104,7 @@ export function SonRecords({ detail }: { detail: SonDetail }) {
           </div>
         )}
       </Section>
-      <Section title='Words' level={3}>
+      <Section id='section-son-words' title='Words' level={3}>
         {words.length === 0 ? (
           <EmptyState
             icon={MessageSquare}

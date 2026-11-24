@@ -37,6 +37,7 @@ import {
   Equal,
   Orbit,
   Dna,
+  Users2,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -116,7 +117,7 @@ export const LAW_CONDITIONS: Record<Schema['LawCondition'], Named> = {
 export const EXCEPTION_KINDS: Record<Schema['LawExceptionKind'], Named> = {
   person: { label: 'A person', icon: User, tone: 'info' },
   line: { label: 'A house or line', icon: Users, tone: 'gold' },
-  people: { label: 'A people', icon: Users, tone: 'verdigris' },
+  people: { label: 'A people', icon: Users2, tone: 'verdigris' },
   kind: { label: 'A kind of thing', icon: Shapes, tone: 'muted' },
   place: { label: 'A place', icon: MapPin, tone: 'success' },
 }

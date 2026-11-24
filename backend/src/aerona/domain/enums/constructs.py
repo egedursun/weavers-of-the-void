@@ -10,6 +10,7 @@ class InstructionBinding(StrEnum):
     OWNERSHIP = "ownership"
     LEASE = "lease"
     SYMBIOSIS = "symbiosis"
+    DEBT = "debt"
 
 
 class CommandToken(StrEnum):
@@ -20,6 +21,7 @@ class CommandToken(StrEnum):
     OFFICE = "office"
     NETWORK_KEY = "network_key"
     TRUE_NAME = "true_name"
+    GESTURE = "gesture"
 
 
 class OrderKind(StrEnum):
@@ -38,6 +40,9 @@ class OrderKind(StrEnum):
     FORBID = "forbid"
     CARRY = "carry"
     TEND = "tend"
+    TEACH = "teach"
+    HEAL = "heal"
+    HUNT = "hunt"
 
 
 class OrderCondition(StrEnum):
@@ -48,6 +53,8 @@ class OrderCondition(StrEnum):
     WHEN_TOKEN_SHOWN = "when_token_shown"
     UNTIL_DONE = "until_done"
     AT_SET_TIMES = "at_set_times"
+    WHILE_HOLDER_LIVES = "while_holder_lives"
+    WHEN_NAMED = "when_named"
 
 
 class OrderTime(StrEnum):

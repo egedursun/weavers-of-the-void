@@ -217,6 +217,21 @@ WORLD_TYPES: dict[WorldType, WorldTypeSpec] = {
             "A cold world under an orange haze, with lakes and rain of liquid methane.",
             liquid=SurfaceLiquid.METHANE,
         ),
+        WorldTypeSpec(
+            W.ROGUE,
+            "Rogue world",
+            "A world with no star, its light coming from within or not at all.",
+        ),
+        WorldTypeSpec(
+            W.ARCHIPELAGO,
+            "Archipelago world",
+            "A world of sea broken by many islands, where every road is a sea road.",
+        ),
+        WorldTypeSpec(
+            W.MEGASTRUCTURE,
+            "Made world",
+            "A world that was built: a ring, a shell or a hollowed body, with builders, sections and decay.",
+        ),
     )
 }
 
@@ -228,6 +243,8 @@ ATMOSPHERE_LABELS: dict[Atmosphere, str] = {
     Atmosphere.NORMAL: "Normal",
     Atmosphere.DENSE: "Dense",
     Atmosphere.TOXIC: "Toxic",
+    Atmosphere.STEAM: "Steam",
+    Atmosphere.LAYERED: "Breathable in one band",
 }
 
 DISCOVERY_LABELS: dict[Discovery, str] = {

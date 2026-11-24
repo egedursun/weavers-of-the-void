@@ -3,20 +3,26 @@ import {
   Bone,
   BookOpen,
   Bug,
+  Carrot,
   CircleOff,
   Cloud,
+  Cog,
+  Compass,
   Cross,
   Crown,
   Droplets,
   Eye,
   Flame,
   Flower2,
+  Footprints,
   Gem,
   Ghost,
   Hammer,
   Hourglass,
   Landmark,
   Leaf,
+  Library,
+  Map,
   Moon,
   Mountain,
   Orbit,
@@ -36,13 +42,16 @@ import {
   Star,
   Sun,
   Swords,
+  Thermometer,
   Trees,
   Trophy,
-  type LucideIcon,
   Undo2,
-  Zap,
   Waves,
-  Thermometer,
+  Zap,
+  type LucideIcon,
+  Flower,
+  MountainSnow,
+  Search,
 } from 'lucide-react'
 import { type components, worldTypeValues } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -67,7 +76,7 @@ export const LIFE_STATES: Record<Schema['LifecycleState'], Named> = {
   active: { label: 'Alive', icon: Sun, tone: 'success' },
   dormant: { label: 'Dormant', icon: Moon, tone: 'muted' },
   extinct: { label: 'Extinct', icon: CircleOff, tone: 'danger' },
-  lost: { label: 'Lost', icon: CircleOff, tone: 'danger' },
+  lost: { label: 'Lost', icon: Search, tone: 'danger' },
   corrupted: { label: 'Corrupted', icon: Zap, tone: 'warning' },
   eradicated: { label: 'Eradicated', icon: ShieldOff, tone: 'success' },
   banished: { label: 'Banished', icon: Undo2, tone: 'info' },
@@ -107,6 +116,8 @@ export const WORLD_ENDS: Record<Schema['WorldEnd'], Named> = {
   drowned: { label: 'Drowned under its seas', icon: Waves, tone: 'info' },
   burned: { label: 'Burned barren', icon: Flame, tone: 'danger' },
   devoured: { label: 'Devoured from outside', icon: Skull, tone: 'danger' },
+  merged: { label: 'Merged', icon: Bone, tone: 'danger' },
+  emptied: { label: 'Emptied', icon: Cross, tone: 'danger' },
 }
 
 export const WORLD_END_CAUSES: Record<Schema['WorldEndCause'], Named> = {
@@ -124,6 +135,13 @@ export const WORLD_END_CAUSES: Record<Schema['WorldEndCause'], Named> = {
   },
   war: { label: 'A war unmade it', icon: Swords, tone: 'danger' },
   outer_hunger: { label: 'An outer hunger', icon: Skull, tone: 'danger' },
+  plague: { label: 'Plague', icon: Bone, tone: 'danger' },
+  runaway_making: { label: 'Runaway making', icon: Cross, tone: 'danger' },
+  structure_failure: {
+    label: 'Structure failure',
+    icon: Cross,
+    tone: 'danger',
+  },
 }
 
 export const FOSSIL_SOURCES: Record<Schema['FossilSource'], Named> = {
@@ -142,6 +160,12 @@ export const FOSSIL_SOURCES: Record<Schema['FossilSource'], Named> = {
   },
   god: { label: 'A god that died', icon: Crown, tone: 'gold' },
   buried_dead: { label: 'The buried dead', icon: Shovel, tone: 'muted' },
+  made: { label: 'Old made bodies and works', icon: Cog, tone: 'info' },
+  ancestor: {
+    label: 'Older forms of a living kind',
+    icon: Footprints,
+    tone: 'gold',
+  },
 }
 
 export const FOSSIL_READINGS: Record<Schema['FossilReading'], Named> = {
@@ -151,6 +175,8 @@ export const FOSSIL_READINGS: Record<Schema['FossilReading'], Named> = {
   deep_time: { label: 'Evidence of deep time', icon: Hourglass, tone: 'info' },
   material: { label: 'A substance to work', icon: Hammer, tone: 'warning' },
   medicine: { label: 'A remedy', icon: Pill, tone: 'success' },
+  sacred: { label: 'Held sacred', icon: Landmark, tone: 'verdigris' },
+  omen: { label: 'An omen', icon: Eye, tone: 'warning' },
 }
 
 export const FOSSIL_PRESERVATIONS: Record<Schema['Preservation'], Named> = {
@@ -161,6 +187,7 @@ export const FOSSIL_PRESERVATIONS: Record<Schema['Preservation'], Named> = {
   tar: { label: 'Tar', icon: Flame, tone: 'danger' },
   ash: { label: 'Ash', icon: Cloud, tone: 'muted' },
   dry: { label: 'Dry ground', icon: Sun, tone: 'warning' },
+  cave: { label: 'Cave', icon: MountainSnow, tone: 'muted' },
 }
 
 export const HOARD_KINDS: Record<Schema['HoardKind'], Named> = {
@@ -169,6 +196,7 @@ export const HOARD_KINDS: Record<Schema['HoardKind'], Named> = {
   royal_collection: { label: 'Royal collection', icon: Crown, tone: 'gold' },
   museum: { label: 'Museum', icon: Landmark, tone: 'success' },
   trophy_hall: { label: 'Trophy hall', icon: Trophy, tone: 'danger' },
+  library: { label: 'Library', icon: Library, tone: 'info' },
 }
 
 export const PIECE_KINDS: Record<Schema['PieceKind'], Named> = {
@@ -180,6 +208,8 @@ export const PIECE_KINDS: Record<Schema['PieceKind'], Named> = {
   manuscript: { label: 'Manuscript', icon: ScrollText, tone: 'info' },
   trophy: { label: 'Trophy of war', icon: Swords, tone: 'danger' },
   regalia: { label: 'Regalia', icon: Crown, tone: 'gold' },
+  map: { label: 'Map', icon: Map, tone: 'gold' },
+  instrument: { label: 'Instrument', icon: Compass, tone: 'gold' },
 }
 
 export const GARDEN_KINDS: Record<Schema['GardenKind'], Named> = {
@@ -190,8 +220,10 @@ export const GARDEN_KINDS: Record<Schema['GardenKind'], Named> = {
   hunting_park: { label: 'Hunting park', icon: PawPrint, tone: 'warning' },
   sacred_grove: { label: 'Sacred grove', icon: Trees, tone: 'verdigris' },
   cemetery: { label: 'Cemetery', icon: Skull, tone: 'muted' },
-  botanic: { label: 'Botanic garden', icon: Sprout, tone: 'success' },
+  botanic: { label: 'Botanic garden', icon: Leaf, tone: 'success' },
   menagerie: { label: 'Menagerie', icon: PawPrint, tone: 'gold' },
+  kitchen_garden: { label: 'Kitchen garden', icon: Carrot, tone: 'gold' },
+  roof_garden: { label: 'Roof garden', icon: Flower, tone: 'gold' },
 }
 
 export const WORLD_KINDS: Record<string, Named> = Object.fromEntries(

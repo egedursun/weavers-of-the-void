@@ -28,6 +28,8 @@ async def mortal_body_system_lines(scope: Scope, me: EntityRow) -> list[str]:
         if breath is not None:
             found.append(f"your body bears weight up to {breath.gravity_max} and poison up to {breath.toxin_tolerance}")
             found.append(f"it bears warmth from {breath.cold_min} to {breath.heat_max}")
+            found.append(f"it bears rays up to {breath.radiation_max} and needs light of at least {breath.light_min}")
+            found.append(f"it bears air as dry or damp as {breath.humidity_range}")
     for sensitive in await session.scalars(select(SensitivityRow).where(SensitivityRow.holder_entity_id == me.id).order_by(SensitivityRow.id)):
         what = spoken(sensitive.trigger_commodity) if sensitive.trigger_commodity is not None else spoken(sensitive.kind)
         found.append(f"you fall ill from {what}, at a severity of {sensitive.severity}")

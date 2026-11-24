@@ -41,6 +41,7 @@ import {
   Swords,
   Users,
   Wind,
+  Sun,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -125,7 +126,7 @@ export const IDEA_SOURCES: Record<string, Named> = {
   theory: { label: 'From what their people know', icon: Atom, tone: 'info' },
   book: { label: 'From a book', icon: BookOpen, tone: 'muted' },
   teacher: { label: 'From a teacher', icon: Glasses, tone: 'verdigris' },
-  divine: { label: 'Planted by a god', icon: Sparkles, tone: 'gold' },
+  divine: { label: 'Planted by a god', icon: Sun, tone: 'gold' },
   player: { label: 'Planted by the Creator', icon: Sparkles, tone: 'gold' },
   network: { label: 'Carried by a network', icon: Network, tone: 'info' },
   made_mind: { label: 'From a made mind', icon: Cpu, tone: 'verdigris' },

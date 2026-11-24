@@ -74,6 +74,8 @@ class SonRow(StatColumns, PassionColumns, NodeRow):
     status: Mapped[SonStatus] = mapped_column(enum_type(SonStatus, "status"), default=SonStatus.ACTIVE)
     sleep_epochs_left: Mapped[int] = mapped_column(default=0)
     chained: Mapped[bool] = mapped_column(default=False)
+    bound_world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
+    bound_until_epoch: Mapped[int | None]
     rebel: Mapped[bool] = mapped_column(default=False)
     outer_bargain_forbidden: Mapped[bool] = mapped_column(default=False)
     standing_order: Mapped[str | None] = mapped_column(Text)

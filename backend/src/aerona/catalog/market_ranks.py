@@ -32,8 +32,16 @@ RANKS: Mapping[CentralityRank, RankSpec] = total(
             lambda rules: rules.central_places.rare_threshold,
             market=True,
         ),
-        CentralityRank.SEASONAL: RankSpec(
+        CentralityRank.REGIONAL: RankSpec(
             2,
+            lambda rules: rules.central_places.regional_threshold,
+            lambda rules: rules.central_places.regional_range,
+            lambda rules: rules.central_places.regional_centrality,
+            lambda rules: rules.central_places.seasonal_threshold,
+            market=True,
+        ),
+        CentralityRank.SEASONAL: RankSpec(
+            3,
             lambda rules: rules.central_places.seasonal_threshold,
             lambda rules: rules.central_places.seasonal_range * rules.central_places.fair_reach_pct // 100,
             lambda rules: rules.central_places.seasonal_centrality,
@@ -42,7 +50,7 @@ RANKS: Mapping[CentralityRank, RankSpec] = total(
             fair=True,
         ),
         CentralityRank.RARE: RankSpec(
-            3,
+            4,
             lambda rules: rules.central_places.rare_threshold,
             lambda rules: rules.central_places.rare_range,
             lambda rules: rules.central_places.rare_centrality,
@@ -50,7 +58,7 @@ RANKS: Mapping[CentralityRank, RankSpec] = total(
             market=True,
         ),
         CentralityRank.METROPOLITAN: RankSpec(
-            4,
+            5,
             lambda rules: rules.central_places.metropolitan_threshold,
             lambda rules: rules.central_places.metropolitan_range,
             lambda rules: rules.central_places.metropolitan_centrality,

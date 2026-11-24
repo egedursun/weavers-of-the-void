@@ -35,7 +35,7 @@ from aerona.tools.framework.call import MortalCall
 from aerona.tools.framework.inputs import ToolInput
 from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_action
 from aerona.tools.framework.validation import fail
-from aerona.tools.mortal.support import same_region
+from aerona.tools.mortal.support import same_cell
 
 REFUSED = MortalResult.WAR_ORDER_REFUSED
 
@@ -150,7 +150,7 @@ async def assign_army_role(call: MortalCall, args: ArmyRoleInput) -> str:
     mortal = await living_entity(call.session, args.mortal_id)
     if mortal is None or mortal.entity_type is not EntityType.MORTAL or held(mortal.id):
         fail(REFUSED, why="that is no free mortal")
-    if mortal.id != call.me.id and not await same_region(call, mortal):
+    if mortal.id != call.me.id and not await same_cell(call, mortal):
         fail(REFUSED, why=f"{mortal.name} is too far from you")
     await appoint(call.tick, army.id, mortal.id, args.role)
     if args.role is ArmyRole.COMMANDER:

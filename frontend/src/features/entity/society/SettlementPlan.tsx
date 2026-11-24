@@ -1080,7 +1080,7 @@ export function SettlementPlanSection({
   return (
     <Section
       id='section-settlement-plan'
-      title='The city'
+      title='Order, walls and districts'
       description='Its size, districts, walls, water and sewers; order, crime and unrest; how it stands a siege.'
       icon={Landmark}
     >

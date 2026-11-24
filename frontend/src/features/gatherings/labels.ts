@@ -29,6 +29,7 @@ import {
   Gem,
   Ghost,
   Hammer,
+  Gift,
   Handshake,
   Heart,
   HeartCrack,
@@ -83,6 +84,16 @@ import {
   Wheat,
   Wind,
   Zap,
+  Award,
+  Building2,
+  Compass,
+  Diamond,
+  FlameKindling,
+  Sword,
+  UsersRound,
+  Bandage,
+  Coins,
+  Scroll,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -101,7 +112,7 @@ export const GATHERING_KINDS: Record<Schema['GatheringKind'], Named> = {
   council: { label: 'Council', icon: Users, tone: 'info' },
   summit: { label: 'Summit', icon: Handshake, tone: 'success' },
   festival: { label: 'Festival', icon: PartyPopper, tone: 'gold' },
-  fair: { label: 'Fair', icon: Store, tone: 'verdigris' },
+  fair: { label: 'Fair', icon: Coins, tone: 'verdigris' },
   games: { label: 'Games', icon: Flag, tone: 'warning' },
   performance: { label: 'Performance', icon: Drama, tone: 'info' },
   trial: { label: 'Trial', icon: Gavel, tone: 'warning' },
@@ -112,7 +123,7 @@ export const GATHERING_KINDS: Record<Schema['GatheringKind'], Named> = {
   examination: { label: 'Examination', icon: BookOpenCheck, tone: 'info' },
   election: { label: 'Election', icon: Vote, tone: 'info' },
   rally: { label: 'Rally', icon: Megaphone, tone: 'warning' },
-  strike: { label: 'Strike', icon: Ban, tone: 'danger' },
+  strike: { label: 'Strike', icon: Bandage, tone: 'danger' },
   convention: { label: 'Convention', icon: Briefcase, tone: 'verdigris' },
   launch: { label: 'Launch', icon: Rocket, tone: 'gold' },
   broadcast: { label: 'Broadcast', icon: RadioTower, tone: 'info' },
@@ -133,8 +144,10 @@ export const GATHERING_KINDS: Record<Schema['GatheringKind'], Named> = {
   mourning: { label: 'Mourning', icon: HeartCrack, tone: 'muted' },
   initiation: { label: 'Initiation', icon: KeyRound, tone: 'info' },
   sport_match: { label: 'Match', icon: Trophy, tone: 'warning' },
-  commemoration: { label: 'Commemoration', icon: Landmark, tone: 'muted' },
-  muster: { label: 'Muster', icon: Flag, tone: 'warning' },
+  commemoration: { label: 'Commemoration', icon: Building2, tone: 'muted' },
+  muster: { label: 'Muster', icon: Swords, tone: 'warning' },
+  gift_exchange: { label: 'Gift exchange', icon: Gift, tone: 'gold' },
+  reunion: { label: 'Reunion', icon: UsersRound, tone: 'success' },
 }
 
 export const GATHERING_STATUSES: Record<Schema['GatheringStatus'], Named> = {
@@ -183,20 +196,20 @@ export const GUEST_ROLES: Record<Schema['GuestRole'], Named> = {
 }
 
 export const COLLECTION_KINDS: Record<Schema['CollectionKind'], Named> = {
-  war: { label: 'War', icon: Swords, tone: 'danger' },
+  war: { label: 'War', icon: Sword, tone: 'danger' },
   battle: { label: 'Battle', icon: Swords, tone: 'danger' },
   siege: { label: 'Siege', icon: Castle, tone: 'danger' },
   duel: { label: 'Duel', icon: Swords, tone: 'warning' },
   abduction: { label: 'Abduction', icon: KeyRound, tone: 'danger' },
   beast_attack: { label: 'Beast attack', icon: Footprints, tone: 'danger' },
-  raid: { label: 'Raid', icon: Flame, tone: 'danger' },
+  raid: { label: 'Raid', icon: FlameKindling, tone: 'danger' },
   persecution: { label: 'Persecution', icon: ShieldAlert, tone: 'danger' },
   purge: { label: 'Purge', icon: Ban, tone: 'danger' },
   insurrection: { label: 'Insurrection', icon: Flag, tone: 'warning' },
   coup: { label: 'Coup', icon: Crown, tone: 'warning' },
   succession_crisis: {
     label: 'Succession crisis',
-    icon: Crown,
+    icon: Award,
     tone: 'warning',
   },
   occupation: { label: 'Occupation', icon: Shield, tone: 'warning' },
@@ -211,7 +224,7 @@ export const COLLECTION_KINDS: Record<Schema['CollectionKind'], Named> = {
   coronation: { label: 'Accession', icon: Crown, tone: 'gold' },
   feast: { label: 'Feast', icon: Utensils, tone: 'gold' },
   tournament: { label: 'Tournament', icon: Trophy, tone: 'warning' },
-  hunt: { label: 'Hunt', icon: Footprints, tone: 'verdigris' },
+  hunt: { label: 'Hunt', icon: Compass, tone: 'verdigris' },
   council: { label: 'Council', icon: Users, tone: 'info' },
   summit: { label: 'Summit', icon: Handshake, tone: 'success' },
   plague: { label: 'Plague', icon: Bug, tone: 'danger' },
@@ -237,7 +250,7 @@ export const COLLECTION_KINDS: Record<Schema['CollectionKind'], Named> = {
 
 export const COLLECTION_ROLES: Record<Schema['CollectionRole'], Named> = {
   leader: { label: 'Leader', icon: Crown, tone: 'gold' },
-  member: { label: 'Member', icon: Users, tone: 'info' },
+  member: { label: 'Member', icon: UsersRound, tone: 'info' },
   victim: { label: 'Victim', icon: HeartCrack, tone: 'danger' },
   witness: { label: 'Witness', icon: Eye, tone: 'muted' },
   host: { label: 'Host', icon: Home, tone: 'gold' },
@@ -353,7 +366,7 @@ export const CHALLENGES: Record<Schema['SiteChallenge'], Named> = {
 }
 
 export const CONTENT_KINDS: Record<Schema['RoomContentKind'], Named> = {
-  item: { label: 'Item', icon: Gem, tone: 'gold' },
+  item: { label: 'Item', icon: Diamond, tone: 'gold' },
   spirit: { label: 'Spirit', icon: Ghost, tone: 'info' },
   beast: { label: 'Beast', icon: Footprints, tone: 'danger' },
   trap: { label: 'Trap', icon: Zap, tone: 'warning' },
@@ -398,7 +411,7 @@ export const DIG_FINDS: Record<Schema['ExcavationFind'], Named> = {
   route_map: { label: 'Map of a route', icon: Map, tone: 'success' },
   waking: { label: 'Sleepers woken', icon: Sunrise, tone: 'info' },
   remains: { label: 'Remains', icon: Bone, tone: 'muted' },
-  records: { label: 'Records', icon: ScrollText, tone: 'verdigris' },
+  records: { label: 'Records', icon: Scroll, tone: 'verdigris' },
 }
 
 export const BATTLEFIELD_FEATURES: Record<Schema['BattlefieldFeature'], Named> =

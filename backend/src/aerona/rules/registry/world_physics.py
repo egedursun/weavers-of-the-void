@@ -107,6 +107,15 @@ class WorldPhysicsRules:
     ice_shell_storm_pct: int = rule(30, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Ice-shell world: chance of a natural storm (% of the usual)")
     methane_capacity: int = rule(35, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Life capacity of a methane world (%)")
     methane_flood_pct: int = rule(150, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Methane world: chance of a natural flood (% of the usual)")
+    rogue_capacity: int = rule(30, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Life capacity of a rogue world (%)")
+    rogue_earthquake_pct: int = rule(140, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Rogue world: chance of a natural earthquake (% of the usual)")
+    archipelago_capacity: int = rule(90, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Life capacity of an archipelago world (%)")
+    archipelago_storm_pct: int = rule(150, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Archipelago world: chance of a natural storm (% of the usual)")
+    archipelago_ship_pct: int = rule(160, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Archipelago world: chance a shipyard launches a hull (% of the usual)")
+    archipelago_flood_pct: int = rule(130, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Archipelago world: chance of a natural flood (% of the usual)")
+    megastructure_capacity: int = rule(80, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Life capacity of a made world (%)")
+    megastructure_wear: int = rule(2, 0, 100, RuleGroup.COSMOS_AND_TRAVEL, "Made world: fertility its made ground loses each epoch as the structure wears")
+    megastructure_earthquake_pct: int = rule(60, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Made world: chance of a natural earthquake (% of the usual)")
     forge_earthquake_pct: int = rule(150, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Forge-world: chance of a natural earthquake (% of the usual)")
     corpse_world_plague_pct: int = rule(150, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Corpse-world: chance of a natural plague (% of the usual)")
     lava_earthquake_pct: int = rule(200, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Lava world: chance of a natural earthquake (% of the usual)")
@@ -115,3 +124,5 @@ class WorldPhysicsRules:
     artificial_earthquake_pct: int = rule(
         0, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Chance of an earthquake on an artificial world (palace, ship; % of the usual)"
     )
+    capacity_steam: int = rule(35, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Life capacity of a world with an atmosphere of steam (%)")
+    capacity_layered: int = rule(45, 0, 1000, RuleGroup.COSMOS_AND_TRAVEL, "Life capacity of a world whose air is breathable only in one band (%)")

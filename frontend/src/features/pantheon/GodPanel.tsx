@@ -38,7 +38,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { KpiTile, MiniStat, Portrait, FieldTile } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
 import { RedrawLikenessButton } from '@/features/creator/CreatorHero'
 import { MoodGauges } from '@/features/creator/MoodPanel'
@@ -115,7 +115,7 @@ function PromptBox({ prompt }: { prompt: string | null }) {
 }
 
 export function GodPanel({ state }: { state: WorldState }) {
-  const { open } = useDrawerStack()
+  const { open } = useEntryStack()
   const creator = state.creator
   const detail = useCreator()
   const reputation = useCreatorReputation()

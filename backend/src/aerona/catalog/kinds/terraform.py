@@ -5,7 +5,7 @@ from typing import Literal
 from aerona.core.total import total
 from aerona.domain.enums.physics import TerraformAim
 
-Reshaping = Literal["pressure", "breathable", "shift"]
+Reshaping = Literal["pressure", "breathable", "shift", "seed", "steady"]
 
 
 @dataclass(frozen=True)
@@ -31,5 +31,7 @@ TERRAFORM_AIMS: Mapping[TerraformAim, TerraformSpec] = total(
         T.DRY: TerraformSpec("dry it", False, "shift", "hydrosphere", -1),
         T.BRIGHTEN: TerraformSpec("raise its brightness", False, "shift", "albedo", 1),
         T.DARKEN: TerraformSpec("lower its brightness", False, "shift", "albedo", -1),
+        T.SEED_LIFE: TerraformSpec("seed life on it", False, "seed"),
+        T.STEADY_SEASONS: TerraformSpec("steady its seasons", False, "steady"),
     },
 )

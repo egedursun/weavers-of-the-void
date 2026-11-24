@@ -388,6 +388,7 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.bonds",
     "table.creator",
     "table.cult_tenets",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",

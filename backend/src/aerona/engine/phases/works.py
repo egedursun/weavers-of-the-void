@@ -213,6 +213,7 @@ WORKS_READS = (
     "table.currencies",
     "table.deed_claims",
     "table.deeds",
+    "table.deep_passages",
     "table.designs",
     "table.dimensional_events",
     "table.dimensions",

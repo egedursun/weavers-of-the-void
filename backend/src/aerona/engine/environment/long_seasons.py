@@ -359,6 +359,27 @@ async def stellar_spells(ctx: TickContext, cosmography: Cosmography, changes: di
     return begun
 
 
+async def supernova_winter(ctx: TickContext, world: WorldRow, star_id: int) -> IrregularSeasonRow | None:
+    table = ctx.rules.long_seasons
+    ongoing = await ctx.session.scalar(
+        select(IrregularSeasonRow.id)
+        .where(IrregularSeasonRow.world_id == world.id, IrregularSeasonRow.source_star_id == star_id, IrregularSeasonRow.spell == SeasonSpell.WINTER)
+        .limit(1)
+    )
+    if ongoing is not None or table.supernova_severity <= 0:
+        return None
+    rng = ctx.rng(f"supernova_spell.{world.id}.{star_id}")
+    return await single_winter(
+        ctx,
+        world,
+        SeasonCause.STELLAR,
+        length=rng.integer(table.shortest_spell, table.longest_spell),
+        severity=table.supernova_severity,
+        reach=LongSeasonReach.WORLD,
+        sources=SpellSources(star_id=star_id),
+    )
+
+
 async def impact_spell(ctx: TickContext, world: WorldRow, impact_id: int, size: int, epochs: int) -> IrregularSeasonRow | None:
     table = ctx.rules.long_seasons
     if size < table.impact_size_min or epochs <= 0:

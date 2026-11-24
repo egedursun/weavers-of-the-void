@@ -25,6 +25,7 @@ from aerona.domain.enums.cosmography import (
     OmenReading,
     PhenomenonCause,
     PhenomenonKind,
+    PhenomenonRhythm,
     RiftCause,
     RiftState,
 )
@@ -247,6 +248,9 @@ class PhenomenonProfileRow(Base):
     cause: Mapped[PhenomenonCause] = mapped_column(enum_type(PhenomenonCause, "cause"))
     cause_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     formed_epoch: Mapped[int]
+    rhythm: Mapped[PhenomenonRhythm] = mapped_column(enum_type(PhenomenonRhythm, "rhythm"), default=PhenomenonRhythm.CONSTANT, server_default="constant")
+    rhythm_period: Mapped[int] = mapped_column(default=0, server_default="0")
+    path_region_ids: Mapped[list[int]] = mapped_column(JSON, default=list, server_default="[]")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

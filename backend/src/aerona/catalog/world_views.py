@@ -62,5 +62,10 @@ WORLD_VIEWS: MappingProxyType[WorldType, WorldViewSpec] = MappingProxyType(
         W.HOLLOW: WorldViewSpec(light=WorldLight.INNER_SUN, seasons=False, nights=False),
         W.ICE_SHELL: WorldViewSpec(soil=False, timber_pct=0, fire=False, need=BindingNeed.HEAT, settle=SettleMode.VENT, war=WarTerrain.UNDER_WATER, sea_pct=60),
         W.METHANE: WorldViewSpec(timber_pct=0, fire=False, need=BindingNeed.HEAT),
+        W.ROGUE: WorldViewSpec(light=WorldLight.BIOLUMINESCENCE, seasons=False, nights=False, timber_pct=10, need=BindingNeed.HEAT, settle=SettleMode.VENT),
+        W.ARCHIPELAGO: WorldViewSpec(timber_pct=60, need=BindingNeed.PLACE, settle=SettleMode.CLIFF, war=WarTerrain.NAVAL, sea_pct=80),
+        W.MEGASTRUCTURE: WorldViewSpec(light=WorldLight.MADE_LIGHT, seasons=False, soil=False, timber_pct=0, need=BindingNeed.NAME, settle=SettleMode.DECK),
     }
 )
+
+BOUND_NEEDS = frozenset({BindingNeed.PLACE, BindingNeed.NAME})

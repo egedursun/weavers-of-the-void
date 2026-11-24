@@ -104,6 +104,8 @@ KIN: dict[BodyPlan, KinSpec] = {
     BodyPlan.CENTAUROID: KinSpec(160, 150, 100, 60, MountFit.CANNOT, {J.HERDING: 120, J.TRADE: 115, J.CRAFTING: 90}, mounted=True),
     BodyPlan.RADIAL: KinSpec(55, 75, 90, 140, MountFit.CANNOT, {J.FISHING: 130, J.SCHOLARSHIP: 70}, frontless=True),
     BodyPlan.COLONIAL: KinSpec(80, 110, 120, 110, MountFit.CANNOT, {J.BUILDING: 120, J.FARMING: 110, J.SCHOLARSHIP: 75}),
+    BodyPlan.HEXAPOD: KinSpec(110, 100, 130, 100, MountFit.CANNOT, {J.BUILDING: 120, J.MINING: 120, J.HERDING: 80}),
+    BodyPlan.ROOTED: KinSpec(40, 60, 80, 40, MountFit.CANNOT, {J.FARMING: 160, J.SCHOLARSHIP: 110, J.TRADE: 40}),
 }
 
 SIZES: dict[SizeClass, SizeSpec] = {
@@ -113,6 +115,7 @@ SIZES: dict[SizeClass, SizeSpec] = {
     SizeClass.LARGE: SizeSpec(160, 160, 140, 120, 90, True),
     SizeClass.HUGE: SizeSpec(250, 250, 190, 145, 70, False),
     SizeClass.COLOSSAL: SizeSpec(400, 400, 260, 170, 50, False),
+    SizeClass.MICROSCOPIC: SizeSpec(5, 5, 5, 5, 150, False),
 }
 
 HEAVY_JOBS = frozenset({J.FARMING, J.MINING, J.BUILDING, J.SOLDIERING})
@@ -143,6 +146,7 @@ DIETS: Mapping[Diet, DietSpec] = total(
         Diet.PARASITE: DietSpec({FoodSource.PASTURE: 50}, frozenset({CommodityKind.LIVESTOCK})),
         Diet.DECOMPOSER: DietSpec({FoodSource.FIELDS: 60}, frozenset({CommodityKind.DUNG, CommodityKind.FODDER})),
         Diet.CHEMOSYNTHETIC: DietSpec({FoodSource.STONE: 90}, frozenset({CommodityKind.ORE})),
+        Diet.INSECTIVORE: DietSpec({FoodSource.FIELDS: 70, FoodSource.PASTURE: 40}, frozenset({CommodityKind.MEAT})),
         Diet.ENERGY: DietSpec({FoodSource.SUN: 80, FoodSource.ESSENCE: 60}, frozenset({CommodityKind.FUEL, CommodityKind.MAGICAL_REAGENTS})),
     },
 )
@@ -233,6 +237,8 @@ FUNERALS = total(
         F.SECONDARY_BURIAL: FuneralSpec(
             "Second burial", "lay their dead to rest, then gather the bones in a second rite", 105, 120, -5, 140, carrion=CarrionRest.ROTTING, second_rite=True
         ),
+        F.RETURN_TO_SOIL: FuneralSpec("Return to the soil", "give their dead back to the living ground", 90, 85, -5, 90),
+        F.MEMORIAL_ONLY: FuneralSpec("Memorial", "honour the lost and unrecovered with a memorial alone", 0, 110, 10, 110, body_left=False),
     },
 )
 
@@ -281,6 +287,8 @@ MODE_STYLE: MappingProxyType[ArtMode, Style] = total(
         ArtMode.RITUAL_PERFORMANCE: Style(ornament=30, geometry=0, colour=10, scale=20, symmetry=20),
         ArtMode.TEXTILE_IMAGE: Style(ornament=40, geometry=20, colour=40, scale=-10, symmetry=20),
         ArtMode.MADE_MIND_ART: Style(ornament=0, geometry=30, colour=10, scale=0, symmetry=0),
+        ArtMode.TACTILE: Style(ornament=10, geometry=10, colour=-30, scale=-10, symmetry=10),
+        ArtMode.MIND: Style(ornament=-10, geometry=-20, colour=20, scale=10, symmetry=-10),
     },
 )
 STYLE_VALUES: MappingProxyType[str, ValueAxis] = MappingProxyType(

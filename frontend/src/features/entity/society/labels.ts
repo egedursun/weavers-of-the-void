@@ -1,9 +1,11 @@
 import {
+  type LucideIcon,
   Accessibility,
   Anchor,
   Axe,
   Baby,
   Ban,
+  Beef,
   Bird,
   BookOpen,
   Brain,
@@ -51,6 +53,7 @@ import {
   HeartCrack,
   HeartPulse,
   Hexagon,
+  Hourglass,
   House,
   Landmark,
   Layers,
@@ -66,11 +69,14 @@ import {
   PawPrint,
   Pickaxe,
   Plane,
+  Receipt,
   Route,
   Sailboat,
+  School,
   ScrollText,
   Shield,
   ShieldHalf,
+  Shovel,
   Skull,
   Smile,
   Snowflake,
@@ -92,16 +98,21 @@ import {
   TrendingUp,
   Trophy,
   Truck,
-  type LucideIcon,
   User,
   UserRound,
   Users,
+  Volume2,
   Vote,
   WandSparkles,
   Waves,
   Wheat,
   Wind,
   Zap,
+  Caravan,
+  Construction,
+  HeartHandshake,
+  TentTree,
+  UsersRound,
 } from 'lucide-react'
 import { type components, sexKindValues } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -172,6 +183,8 @@ export const JOB_SPEC: Record<Job, Spec> = {
   gathering: { label: 'Gathering from the wild', icon: Leaf },
   industry: { label: 'Works and factories', icon: Factory },
   arts: { label: 'The arts', icon: Palette },
+  healing: { label: 'Healing', icon: HeartPulse },
+  teaching: { label: 'Teaching', icon: School },
 }
 export const JOB_ORDER = Object.keys(JOB_SPEC) as Job[]
 
@@ -181,6 +194,7 @@ export const AGE_SPEC: Record<AgeBand, Spec> = {
   youth: { label: 'Youths', icon: Footprints, tone: 'warning' },
   adult: { label: 'Adults', icon: UserRound, tone: 'gold' },
   elder: { label: 'Elders', icon: Users, tone: 'verdigris' },
+  ancient: { label: 'The very old', icon: Hourglass, tone: 'muted' },
 }
 export const SEX_ORDER: Sex[] = [...sexKindValues]
 export const AGE_ORDER: AgeBand[] = [
@@ -268,6 +282,8 @@ export const CONDITION_SPEC: Record<CohortCondition, Spec> = {
     tone: 'warning',
     hint: 'Driven from their homes; they press on the place that takes them in',
   },
+  gifted: { label: 'Gifted', icon: Sparkles, tone: 'gold' },
+  indebted: { label: 'Indebted', icon: Receipt, tone: 'warning' },
 }
 
 export const PRESSURE_HINT: Record<string, string> = {
@@ -315,8 +331,15 @@ export const DISTRICT_SPEC: Record<DistrictKind, Spec> = {
   },
   suburb: { label: 'Suburb', icon: House, tone: 'success' },
   arcology: { label: 'Arcology', icon: Building2, tone: 'verdigris' },
-  camp: { label: 'Camp of the displaced', icon: Tent, tone: 'warning' },
+  camp: { label: 'Camp of the displaced', icon: TentTree, tone: 'warning' },
   lazaretto: { label: 'Lazaretto', icon: Cross, tone: 'info' },
+  floating: { label: 'Floating district', icon: Sailboat, tone: 'success' },
+  pilgrim_quarter: {
+    label: 'Pilgrim quarter',
+    icon: Footprints,
+    tone: 'success',
+  },
+  caravan_quarter: { label: 'Caravan quarter', icon: Caravan, tone: 'success' },
 }
 export const DISTRICT_MAX_LEVEL = 5
 
@@ -349,7 +372,7 @@ export const TREASURY_SPEC: Record<TreasuryEntry, Spec> = {
   investment: { label: 'Investment', icon: TrendingUp, tone: 'info' },
   garrison: { label: 'Garrison and militia', icon: Shield, tone: 'danger' },
   walls: { label: 'Walls', icon: BrickWall, tone: 'warning' },
-  building: { label: 'Building', icon: Hammer, tone: 'gold' },
+  building: { label: 'Building', icon: Construction, tone: 'gold' },
   festival: { label: 'Festival', icon: PartyPopper, tone: 'verdigris' },
   alms: { label: 'Alms', icon: HandHeart, tone: 'verdigris' },
   fire: { label: 'Fire', icon: Flame, tone: 'danger' },
@@ -358,7 +381,7 @@ export const TREASURY_SPEC: Record<TreasuryEntry, Spec> = {
   loan: { label: 'Bank loan', icon: Landmark, tone: 'warning' },
   upkeep: { label: 'Upkeep of works', icon: Building, tone: 'warning' },
   office_sale: { label: 'Office sold', icon: Landmark, tone: 'gold' },
-  relief: { label: 'Aid sent', icon: HandHeart, tone: 'success' },
+  relief: { label: 'Aid sent', icon: HeartHandshake, tone: 'success' },
   rebuilding: { label: 'Rebuilding', icon: Hammer, tone: 'warning' },
   monopoly: { label: 'Keystone trade', icon: Gem, tone: 'gold' },
 }
@@ -407,6 +430,7 @@ export const INHERITANCE_SPEC: Record<InheritanceCustom, Spec> = {
   by_merit: { label: 'The worthiest', icon: Trophy, tone: 'gold' },
   seniority: { label: 'Eldest of the line', icon: Users, tone: 'warning' },
   designated: { label: 'As the will names', icon: ScrollText, tone: 'gold' },
+  communal: { label: 'Held in common', icon: UsersRound, tone: 'info' },
 }
 
 export const VECTOR_SPEC: Record<Transmission, Spec> = {
@@ -500,6 +524,18 @@ export const VECTOR_SPEC: Record<Transmission, Spec> = {
     tone: 'warning',
     hint: 'Rides on goods, bedding and the clothes of the dead along trade',
   },
+  soil: {
+    label: 'Lying in the ground',
+    icon: Shovel,
+    tone: 'warning',
+    hint: 'Reaches those who dig, farm or walk barefoot, and stays when the sick are gone',
+  },
+  sound: {
+    label: 'Carried by a sound',
+    icon: Volume2,
+    tone: 'verdigris',
+    hint: 'Passes by hearing where the world allows it, blocked by silence and wards',
+  },
 }
 
 const AFFLICTION_ONLY_ROUTES = ['rite', 'gaze', 'experience'] as const
@@ -581,6 +617,12 @@ export const PATH_SPEC: Record<SpreadPath, Spec> = {
     tone: 'warning',
   },
   waterway: { label: 'Came downstream', icon: Waves, tone: 'info' },
+  livestock: { label: 'Came with herds', icon: Beef, tone: 'warning' },
+  water_supply: {
+    label: 'Came through shared water',
+    icon: Droplets,
+    tone: 'danger',
+  },
 }
 
 export const STATUS_SPEC: Record<OutbreakStatus, Spec> = {

@@ -34,6 +34,8 @@ FANATICISMS: Mapping[FanaticismKind, Fanaticism] = total(
         F.BOOK_BURNING: Fanaticism(ActKind.BURNING_BOOKS, frozenset({T.ANTI_MAGIC}), frozenset({T.MONASTIC_LEARNING})),
         F.PERSECUTION: Fanaticism(ActKind.CONVERSION_BY_FORCE, frozenset({T.EXCLUSIVITY}), frozenset({T.PACIFISM, T.SYNCRETIC_OPENNESS})),
         F.MILLENARIAN_FLIGHT: Fanaticism(ActKind.ABANDONING_ELDERS, frozenset({T.PILGRIMAGE_DUTY})),
+        F.CHARITY: Fanaticism(None, frozenset({T.ASCETICISM})),
+        F.PILGRIM_ZEAL: Fanaticism(None, frozenset({T.PILGRIMAGE_DUTY})),
     },
 )
 

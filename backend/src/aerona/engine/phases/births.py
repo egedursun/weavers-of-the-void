@@ -48,6 +48,7 @@ from aerona.engine.cycles.breeding import assign_caste, bearer_among, born_sex
 from aerona.engine.cycles.lineage import breeds, system_of, union_of
 from aerona.engine.demography.kinship import may_wed
 from aerona.engine.demography.urban import founding_factor
+from aerona.engine.environment.cells import level_for
 from aerona.engine.eras.effects import MODERN_FROM, era_at, era_order
 from aerona.engine.fertility_means.factor import user_factor
 from aerona.engine.folkways.fed import fed_fertility
@@ -558,9 +559,18 @@ async def found_settlement(
             flags=(EntityFlag.NAME_FROM_LANGUAGE,) if name else (),
         ),
     )
+    settlement.stratum = await level_for(ctx, atlas, people, region.id)
     atlas.remember(settlement)
     await connect(ctx.session, settlement.id, people.id, BondKind.DESCENDS_FROM, ctx.epoch)
     await homeland_rule(ctx, people, settlement)
+    if settlement.stratum is not None:
+        await record(
+            ctx,
+            "deep.settled",
+            roles={IncidentRole.ACTOR: people.id, IncidentRole.PRODUCT: settlement.id, IncidentRole.PLACE: region.id},
+            facts={"stratum": settlement.stratum},
+            place=region.id,
+        )
     language = await spoken_language(ctx.session, people.id)
     if language is not None:
         await connect(ctx.session, settlement.id, language.id, BondKind.SPEAKS, ctx.epoch)
@@ -778,6 +788,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, born: WorldQuota) -> No
     "table.community_societies",
     "table.creator",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
@@ -797,7 +808,9 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, born: WorldQuota) -> No
     "table.nodes",
     "table.people_biology",
     "table.people_culture",
+    "table.polity_deep_knowledge",
     "table.polity_members",
+    "table.region_underground",
     "table.sons",
     "table.stars",
     "table.storytellers",
@@ -1176,6 +1189,7 @@ async def wed_within_the_community(ctx: TickContext) -> int:
     "table.child_standing",
     "table.conditions",
     "table.culture_values",
+    "table.deep_passages",
     "table.dwellings",
     "table.endemic_diseases",
     "table.entities",
@@ -1324,13 +1338,16 @@ async def crown_ruler(ctx: TickContext, community_id: int) -> EntityRow:
     return await crown(ctx, community)
 
 
-async def order_village(ctx: TickContext, people_id: int) -> EntityRow:
+async def order_village(ctx: TickContext, people_id: int, settlers: int | None = None) -> EntityRow:
     people = await require_living(ctx, people_id, frozenset({EntityType.PEOPLE}), "The people")
     atlas = await RegionAtlas.load(ctx.session)
     region = await living_entity(ctx.session, atlas.top_region(people.id))
     if region is None:
         raise ValidationFailedError(f"{people.name} lives in no region.")
-    migrants = village_migrants(ctx.rules, stat(people, "population") or 0)
+    population = stat(people, "population") or 0
+    migrants = (
+        village_migrants(ctx.rules, population) if settlers is None else min(settlers, max(0, population - ctx.rules.deep_world.village_people_remainder))
+    )
     if migrants < ctx.rules.deep_world.village_min_population:
         raise ValidationFailedError(f"{people.name} is too small to send out settlers.")
     existing = len(await kin_settlements(ctx, atlas, people))

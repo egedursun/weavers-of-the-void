@@ -39,6 +39,7 @@ class VehicleFamily(StrEnum):
     BURROWER = "burrower"
     CONSTRUCT = "construct"
     LIVING = "living"
+    SLEDGE = "sledge"
 
 
 class VehicleFrame(StrEnum):
@@ -191,6 +192,7 @@ class Propulsion(StrEnum):
     SELF = "self"
     CURRENT = "current"
     TOWED = "towed"
+    PEDAL = "pedal"
 
 
 class VehicleSize(StrEnum):
@@ -257,6 +259,8 @@ class VehicleSection(StrEnum):
     TOWER = "tower"
     PLATFORM = "platform"
     CORE = "core"
+    GALLEY = "galley"
+    SICK_BAY = "sick_bay"
 
 
 class MountKind(StrEnum):

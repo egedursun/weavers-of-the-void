@@ -56,6 +56,7 @@ from aerona.db.tables.folk_knowledge import FolkClassRow, FolkKnowledgeRow
 from aerona.db.tables.forecasting import ObservationMethodRow, WeatherWorkRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.geology import DeepPassageRow, RegionStratumRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgCliqueRow, OrgMergerRow, OrgResearchRow, OrgSeatRow
 from aerona.db.tables.grave_goods import GraveGoodsRow
 from aerona.db.tables.honours import HonourHeldRow, HonourKindRow, NamedUnitRow
@@ -1222,6 +1223,13 @@ DECREE = ("ruling:decree", {"motion": "cosmic_truce"})
 BREACH = ("breach:open", {"being_id": Computed(outer_being), "region_id": Pick(EntityType.REGION), "strength": 30})
 
 LEVERS: dict[str, Lever] = {
+    "mortal:shape": given(
+        community_id=Pick(TOWN), name="Ardel Vasse", title="Keeper of the Ford", role="sage", sex="bearer", strength=81, wisdom=74, age=30, lifespan=90
+    ),
+    "region:shape": given(world_id=Pick("world"), near_id=Pick(EntityType.REGION), name="Corran Deep", fertility=70, danger=20),
+    "record:shape": given(entity_type="cult", name="The Quiet Way", god_id=Pick("son"), world_id=Pick("world"), followers=40, zeal=60),
+    "people:village": given(people_id=Pick(EntityType.PEOPLE), name="Lowmeadow", settlers=150),
+    "horror:outer_being": given(world_id=Pick("world"), name="The Hollow Choir", description="It hums under the sea floor."),
     **{name: after("affliction:give") for name in ("affliction:cure", "affliction:delete", "affliction:edit", "affliction:hold")},
     "aspiration:dream_remove": after("aspiration:dream"),
     "aspiration:inspiration_edit": after("aspiration:inspire"),
@@ -5341,6 +5349,29 @@ def newest_row(table: type[Any], key: str) -> Computed:
     return Computed(lambda session: session.scalar(select(column).order_by(column.desc()).limit(1)))
 
 
+DEEP_CELL = (
+    "deep_cell:create",
+    {"table": "region_underground", "values": {"region_entity_id": Pick(EntityType.REGION), "stratum": "fault_zone", "extent": 40}},
+)
+DEEP_PASSAGE_VALUES = {
+    "world_id": Pick("world"),
+    "first_region_entity_id": Pick(EntityType.REGION),
+    "first_stratum": None,
+    "second_region_entity_id": Pick(EntityType.REGION),
+    "second_stratum": "cavern_upper",
+    "state": "open",
+    "origin": "divine",
+    "width": 40,
+    "progress": 100,
+    "opened": True,
+}
+DEEP_PASSAGE = ("deep_passage:create", {"table": "deep_passages", "values": DEEP_PASSAGE_VALUES})
+DEEP_KNOWLEDGE = (
+    "deep_knowledge:set",
+    {"table": "polity_deep_knowledge", "values": {"polity_entity_id": Pick(REALM), "cell_id": newest_row(RegionStratumRow, "id"), "level": 30}},
+)
+
+
 def row_levers(prefix: str, table: str, values: Mapping[str, Any], key: Mapping[str, Any], edits: Mapping[str, Any]) -> dict[str, Lever]:
     made = (f"{prefix}:create", {"table": table, "values": dict(values)})
     return {
@@ -6477,7 +6508,7 @@ LEVERS.update(
         **seeded_levers(
             "local_climate",
             "local_climates",
-            {"place_entity_id": Pick(TOWN), "cause": "built", "heat_shift": 5},
+            {"place_entity_id": Pick(TOWN), "cause": "built_land", "heat_shift": 5},
             {"place_entity_id": Pick(TOWN)},
             {"cause": "valley", "humidity_shift": 10},
         ),
@@ -6496,6 +6527,32 @@ LEVERS.update(
             ("disease_agent:create", {"table": "disease_agents", "values": {"disease_entity_id": Newest(EntityType.DISEASE), "agent": "bacterium"}}),
             table="disease_agents",
             key={"disease_entity_id": Newest(EntityType.DISEASE)},
+        ),
+        "deep_cell:create": given(
+            table="region_underground",
+            values={"region_entity_id": Pick(EntityType.REGION), "stratum": "fault_zone", "extent": 40, "light": 0, "name": "Deep Seam"},
+        ),
+        "deep_cell:edit": after(
+            DEEP_CELL, table="region_underground", key={"id": newest_row(RegionStratumRow, "id")}, values={"name": "Lower Hall", "extent": 70, "light": 20}
+        ),
+        "deep_cell:hold": after(DEEP_CELL, table="region_underground", key={"id": newest_row(RegionStratumRow, "id")}, values={"extent": 50}),
+        "deep_cell:delete": after(DEEP_CELL, table="region_underground", key={"id": newest_row(RegionStratumRow, "id")}),
+        "deep_passage:create": given(table="deep_passages", values=DEEP_PASSAGE_VALUES),
+        "deep_passage:edit": after(
+            DEEP_PASSAGE, table="deep_passages", key={"id": newest_row(DeepPassageRow, "id")}, values={"state": "flooded", "width": 20, "progress": 100}
+        ),
+        "deep_passage:hold": after(DEEP_PASSAGE, table="deep_passages", key={"id": newest_row(DeepPassageRow, "id")}, values={"state": "open"}),
+        "deep_passage:delete": after(DEEP_PASSAGE, table="deep_passages", key={"id": newest_row(DeepPassageRow, "id")}),
+        "deep_knowledge:set": after(
+            DEEP_CELL,
+            table="polity_deep_knowledge",
+            values={"polity_entity_id": Pick(REALM), "cell_id": newest_row(RegionStratumRow, "id"), "level": 60, "held": True},
+        ),
+        "deep_knowledge:delete": after(
+            DEEP_CELL,
+            DEEP_KNOWLEDGE,
+            table="polity_deep_knowledge",
+            key={"polity_entity_id": Pick(REALM), "cell_id": newest_row(RegionStratumRow, "id")},
         ),
         **row_levers(
             "body_system",

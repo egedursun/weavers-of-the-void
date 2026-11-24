@@ -18,6 +18,9 @@ ITEM_SWAY_PCT: dict[MediaItemKind, int] = {
     MediaItemKind.PROMOTION: 60,
     MediaItemKind.DEVOTION: 80,
     MediaItemKind.OFFICIAL: 120,
+    MediaItemKind.SATIRE: 140,
+    MediaItemKind.SPORT: 20,
+    MediaItemKind.NOTICES: 10,
 }
 
 FORM_DECAY_PCT: dict[RecordForm, int] = {
@@ -31,4 +34,9 @@ FORM_DECAY_PCT: dict[RecordForm, int] = {
     RecordForm.LIVING: 200,
     RecordForm.CRAFTED: 40,
     RecordForm.MENTAL: 250,
+    RecordForm.SCENT: 160,
+    RecordForm.TACTILE: 70,
 }
+
+NOTICE_PREFIXES = ("birth.", "births.", "death.", "mortal.died", "union.", "marriage.")
+SPORT_PREFIXES = ("games.", "duel.", "contest.", "club.")

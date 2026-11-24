@@ -25,6 +25,8 @@ from aerona.domain.enums.war import WarCause
 
 DUEL_ACTIONS = frozenset(
     {
+        A.INSULT,
+        A.PLEAD,
         A.CLOSE,
         A.FLEE,
         A.STRIKE,
@@ -72,13 +74,15 @@ FEUD_DEEDS: Mapping[str, tuple[str, tuple[R, ...]]] = {
     "ambush": ("Kin of {actor} ambushed {victim} of {target} on the road.", (R.VICTIM,)),
     "assassinate": ("An avenger of {actor} murdered {victim} of {target}.", (R.VICTIM,)),
     "call_allies": ("{actor} called {ally} into the feud with {target}.", (R.ALLY,)),
-    "demand_wergild": ("{giver} paid {receiver} wergild and the blood feud was laid to rest.", (R.GIVER, R.RECEIVER)),
+    "demand_wergild": ("{giver} paid {receiver} wergild and the blood feud ended.", (R.GIVER, R.RECEIVER)),
     "destroy_property": ("Kin of {actor} destroyed goods and works of {target}.", ()),
     "escalate": ("The blood feud between {actor} and {target} turned into open war.", (R.ALLY,)),
     "mediated": ("The blood feud between {actor} and {target} was ended by mediation.", (R.MEDIATOR,)),
     "raid": ("Kin of {actor} raided {target} to avenge their dead.", (R.VICTIM,)),
     "raid_halls": ("Kin of {actor} raided {target}, and {leader} led them through {halls:hall|halls} of it.", (R.VICTIM, R.LEADER)),
     "seek_mediation": ("{actor} asked for mediation and its feud with {target} was settled by {mediator}.", (R.MEDIATOR,)),
+    "amends": ("{giver} made amends to {receiver} and the feud ended.", (R.GIVER, R.RECEIVER)),
+    "sworn_off": ("{actor} and {target} swore an oath to end their feud.", (R.ALLY,)),
 }
 FEUD_STEPS: Mapping[str, frozenset[A]] = {
     "abduct": frozenset({A.AVENGE, A.CARRY_OFF}),
@@ -90,6 +94,8 @@ FEUD_STEPS: Mapping[str, frozenset[A]] = {
     "raid": frozenset({A.AVENGE}),
     "raid_halls": frozenset({A.AVENGE}),
     "seek_mediation": frozenset({A.RECONCILE}),
+    "amends": frozenset({A.APOLOGISE, A.RECONCILE}),
+    "sworn_off": frozenset({A.RECONCILE}),
 }
 OPTIONAL_FEUD_ROLES = frozenset({("mediated", R.MEDIATOR), ("raid", R.VICTIM), ("raid_halls", R.VICTIM)})
 MANY_ROLES = frozenset({R.VICTIM, R.ALLY})
@@ -103,6 +109,8 @@ FEUD_FACTS: Mapping[str, tuple[str, ...]] = {
     "raid": ("harm", "prosperity_loss"),
     "raid_halls": ("harm", "prosperity_loss", "halls"),
     "seek_mediation": ("status",),
+    "amends": ("amends", "status"),
+    "sworn_off": ("status",),
 }
 
 
@@ -127,6 +135,7 @@ FEUD_FACT_SPECS: Mapping[str, FactSpec] = {
     "cause": chosen("cause", DeathCause),
     "war_cause": chosen("cause", WarCause),
     "wergild": number("wergild", U.WEALTH_POINTS),
+    "amends": number("amends", U.WEALTH_POINTS),
     "status": chosen("status", FeudStatus),
     "prosperity_loss": number("prosperity_loss", U.PERCENT),
     "halls": number("halls", U.COUNT),
@@ -386,6 +395,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         roles=(role(R.TEACHER), role(R.LEARNER), role(R.INSTRUMENT)),
         facts=(number("age", U.YEARS),),
         chronicle_kind=K.LINEAGE,
+    ),
+    kind("creation.shaped", "{product} came into being by the Creator's will.", roles=(role(R.PRODUCT),), chronicle_kind=K.CREATOR_HAND),
+    kind(
+        "mortals.shaped",
+        "{child} was born among {origin} by the Creator's will.",
+        roles=(role(R.CHILD), role(R.ORIGIN)),
+        feed=F.LIFE,
+        chronicle_kind=K.BIRTH,
     ),
     kind(
         "heroes.birth",

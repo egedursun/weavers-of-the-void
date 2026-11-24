@@ -51,7 +51,7 @@ import {
   type TimelineTone,
   FieldTile,
 } from '@/components/domain'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
 import { useGodGate } from '@/features/pantheon/gate'
@@ -129,7 +129,7 @@ function bodyKey(nodeId: number) {
   return [...loreKeys.entity(nodeId), 'body'] as const
 }
 
-function linkKind(value: string | null): DrawerKind | null {
+function linkKind(value: string | null): EntryKind | null {
   return value === 'entity' ||
     value === 'son' ||
     value === 'foreign-god' ||

@@ -26,6 +26,8 @@ class WaterAndIceRules:
     glacier_step: int = rule(10, 1, 100, G, "Change of a glacier's extent in one epoch that counts as an advance or a retreat")
     heat_outbreak: int = rule(1, 0, 20, G, "Severity an outbreak in a hot crowded town gains each epoch")
     heat_threshold: int = rule(10, 0, 50, G, "Warmth a town adds to its own climate at which its heat feeds disease")
+    damp_threshold: int = rule(10, 0, 50, G, "Dampness a wetland town gains at which its air feeds disease")
+    ice_field_glacier: int = rule(40, 0, 100, G, "Share of a region under glaciers at which its towns live in the cold of an ice field (%)")
     river_load: int = rule(20, 0, 100, G, "Load of sediment a river carries to the land below it")
     great_river_load: int = rule(40, 0, 100, G, "Load of sediment a great river carries to the land below it")
     wind_load: int = rule(10, 0, 100, G, "Load of sand the wind carries from a desert to its neighbours")

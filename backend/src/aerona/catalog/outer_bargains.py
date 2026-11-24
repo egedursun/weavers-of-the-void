@@ -27,6 +27,8 @@ BARGAIN_GAINS: Mapping[BargainGain, GainSpec] = total(
         BargainGain.MIGHT: GainSpec("Might", lambda rules: rules.outer_bargains.might_size),
         BargainGain.KNOWLEDGE: GainSpec("Knowledge out of reach", lambda rules: rules.outer_bargains.knowledge_size),
         BargainGain.LONGEVITY: GainSpec("A longer span", lambda rules: rules.outer_bargains.longevity_size),
+        BargainGain.RESTORED_LIFE: GainSpec("The dead brought back", lambda rules: rules.outer_bargains.restored_life_size),
+        BargainGain.PROTECTION: GainSpec("Protection from a harm", lambda rules: rules.outer_bargains.protection_size),
     },
 )
 
@@ -38,5 +40,7 @@ BARGAIN_PRICES: Mapping[BargainPrice, PriceSpec] = total(
         BargainPrice.TRUE_NAME: PriceSpec("A true name", lambda rules: rules.outer_bargains.true_name_weight),
         BargainPrice.WORSHIPPERS: PriceSpec("The souls of the faithful", lambda rules: rules.outer_bargains.worshippers_weight),
         BargainPrice.DESCENDANTS: PriceSpec("The bargainer's line", lambda rules: rules.outer_bargains.descendants_weight, lasting=True),
+        BargainPrice.MEMORIES: PriceSpec("Memories", lambda rules: rules.outer_bargains.memories_weight),
+        BargainPrice.YEARS: PriceSpec("Years of life", lambda rules: rules.outer_bargains.years_weight),
     },
 )

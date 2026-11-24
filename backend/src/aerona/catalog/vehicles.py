@@ -180,6 +180,8 @@ LAYOUTS: MappingProxyType[VehicleFamily, tuple[SectionSpec, ...]] = total(
             part(S.MAGAZINE, C.WEAPON, R.CRITICAL, (3, 3), H.EXPLOSION, S.GUN_DECK, S.HOLD),
             part(S.HOLD, C.HOLD, R.MINOR, (10, 8), H.FIRE, S.HULL, S.MAGAZINE),
             part(S.CREW_QUARTERS, C.QUARTERS, R.MINOR, (3, 3), H.NONE, S.DECK),
+            part(S.GALLEY, C.QUARTERS, R.MINOR, (2, 2), H.FIRE, S.CREW_QUARTERS),
+            part(S.SICK_BAY, C.QUARTERS, R.MINOR, (2, 2), H.NONE, S.CREW_QUARTERS),
             part(S.NAVIGATION, C.NAVIGATION, R.MINOR, (2, 2), H.NONE, S.STERN),
         ),
         Y.STEAM_SHIP: (
@@ -196,6 +198,8 @@ LAYOUTS: MappingProxyType[VehicleFamily, tuple[SectionSpec, ...]] = total(
             part(S.ARMOUR_PLATING, C.ARMOUR, R.MINOR, (10, 15), H.NONE, S.HULL),
             part(S.HOLD, C.HOLD, R.MINOR, (6, 5), H.FIRE, S.FUEL_STORE),
             part(S.CREW_QUARTERS, C.QUARTERS, R.MINOR, (3, 2), H.NONE, S.DECK),
+            part(S.GALLEY, C.QUARTERS, R.MINOR, (2, 2), H.FIRE, S.CREW_QUARTERS),
+            part(S.SICK_BAY, C.QUARTERS, R.MINOR, (2, 2), H.NONE, S.CREW_QUARTERS),
         ),
         Y.SUBMARINE: (
             part(S.HULL, C.HULL, R.CRITICAL, (30, 30), H.BREACH, S.BALLAST, S.LIFE_SUPPORT, S.ENGINE),
@@ -283,6 +287,12 @@ LAYOUTS: MappingProxyType[VehicleFamily, tuple[SectionSpec, ...]] = total(
             part(S.HOLD, C.HOLD, R.MINOR, (12, 14), H.NONE, S.HULL),
             part(S.WARD, C.WARD, R.MINOR, (10, 10), H.NONE, S.CORE),
         ),
+        Y.SLEDGE: (
+            part(S.CHASSIS, C.FRAME, R.CRITICAL, (35, 25), H.NONE, S.DRAFT_TEAM, S.CARGO_BAY),
+            part(S.HARNESS, C.STEERING, R.MINOR, (10, 10), H.NONE, S.DRAFT_TEAM),
+            part(S.DRAFT_TEAM, C.PROPULSION, R.MAJOR, (25, 35), H.PANIC, S.HARNESS),
+            part(S.CARGO_BAY, C.HOLD, R.MINOR, (30, 30), H.NONE, S.CHASSIS),
+        ),
     },
 )
 
@@ -314,6 +324,7 @@ MOUNTS: MappingProxyType[VehicleFamily, tuple[MountKind, ...]] = total(
         Y.BURROWER: (M.RAM,),
         Y.CONSTRUCT: (M.HARDPOINT, M.WARD_NODE),
         Y.LIVING: (M.BOW, M.WARD_NODE),
+        Y.SLEDGE: (M.CREW_STATION,),
     },
 )
 
@@ -417,6 +428,7 @@ FUELS: MappingProxyType[Propulsion, CommodityKind | None] = total(
         P.SELF: CommodityKind.FODDER,
         P.CURRENT: None,
         P.TOWED: None,
+        P.PEDAL: None,
     },
 )
 
@@ -459,7 +471,7 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
             frame((F.RIDING_MOUNT, "Riding mount", D.LAND, Y.MOUNT, P.RIDDEN, Z.SMALL), (60, 40, 5, 1, 0, 40, 5, 20)),
             frame((F.PACK_MOUNT, "Pack mount", D.LAND, Y.MOUNT, P.RIDDEN, Z.SMALL), (35, 40, 20, 1, 0, 45, 0, 20)),
             frame((F.TRAVOIS, "Travois", D.LAND, Y.CART, P.DRAFT_ANIMALS, Z.SMALL), (25, 25, 25, 1, 0, 30, 0, 10)),
-            frame((F.SLEDGE, "Sledge", D.LAND, Y.CART, P.DRAFT_ANIMALS, Z.SMALL), (35, 35, 40, 1, 0, 50, 0, 15)),
+            frame((F.SLEDGE, "Sledge", D.LAND, Y.SLEDGE, P.DRAFT_ANIMALS, Z.SMALL), (35, 35, 40, 1, 0, 50, 0, 15)),
             frame((F.HANDCART, "Handcart", D.LAND, Y.CART, P.CREW, Z.SMALL), (15, 15, 20, 1, 0, 25, 0, 10)),
             frame((F.CART, "Cart", D.LAND, Y.CART, P.DRAFT_ANIMALS, Z.SMALL), (25, 30, 60, 1, 0, 30, 0, 20), (K.AGRICULTURE, 1)),
             frame((F.WAGON, "Wagon", D.LAND, Y.WAGON, P.DRAFT_ANIMALS, Z.MEDIUM), (25, 35, 120, 2, 4, 35, 5, 30), (K.TRADE, 1)),
@@ -837,7 +849,7 @@ FRAMES: MappingProxyType[VehicleFrame, FrameSpec] = total(
                 (80, 80, 20, 4, 6, 70, 80, 110),
                 (K.METALLURGY, 10),
             ),
-            frame((F.BICYCLE, "Bicycle", D.LAND, Y.CART, P.CREW, Z.SMALL), (35, 40, 10, 1, 0, 40, 0, 10), (K.METALLURGY, 6)),
+            frame((F.BICYCLE, "Bicycle", D.LAND, Y.CART, P.PEDAL, Z.SMALL), (35, 40, 10, 1, 0, 40, 0, 10), (K.METALLURGY, 6)),
             frame((F.RICKSHAW, "Rickshaw", D.LAND, Y.CART, P.CREW, Z.SMALL), (20, 20, 20, 1, 2, 30, 0, 12), (K.TRADE, 2)),
             frame((F.PALANQUIN, "Palanquin", D.LAND, Y.CART, P.CREW, Z.SMALL), (10, 15, 5, 4, 1, 25, 0, 10), (K.ARCHITECTURE, 1)),
             frame((F.TRAM, "Tram", D.LAND, Y.RAIL, P.ELECTRIC, Z.LARGE), (40, 20, 40, 2, 60, 55, 5, 45), (K.METALLURGY, 8)),
@@ -970,5 +982,6 @@ FAMILY_TECHNIQUES: MappingProxyType[VehicleFamily, Technique | None] = total(
         VehicleFamily.BURROWER: Technique.STEEL,
         VehicleFamily.CONSTRUCT: Technique.ALCHEMY,
         VehicleFamily.LIVING: Technique.SELECTIVE_BREEDING,
+        VehicleFamily.SLEDGE: None,
     },
 )

@@ -26,7 +26,7 @@ def held_bond(holder: int, subject: int, friendship: int, kinds: list[str] | Non
 
 def test_every_interaction_and_appeal_has_its_spec_and_tuning() -> None:
     assert set(INTERACTIONS) == set(TUNING) == set(InteractionKind)
-    assert len(InteractionKind) == 24 and len(APPEALS) == len(AppealKind) == 7 and len(PersuasionAim) == 7
+    assert len(InteractionKind) == 28 and len(APPEALS) == len(AppealKind) == 8 and len(PersuasionAim) == 9
     assert {InteractionKind.APOLOGISE, InteractionKind.SHARE_MEAL, InteractionKind.ASK_COUNSEL} <= NOTABLE_INTERACTIONS
     assert all(0 <= tuning.weight(RULES) <= 100 and 0 <= tuning.effect(RULES) <= 100 for tuning in TUNING.values())
 

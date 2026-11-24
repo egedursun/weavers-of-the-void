@@ -4,13 +4,16 @@ from typing import Any
 
 from sqlalchemy import delete, select
 
+from aerona.catalog.kinds.crafts_labels import CLEANSING_FURNISHINGS, WORKING_WEAR
 from aerona.catalog.life_traits import FURNISHING_CATEGORY_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.collective import ArmsRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.crafts import GameRow
+from aerona.db.tables.customs import AgeSetRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.folkways import PurityRankRow
 from aerona.db.tables.kind_crafts import (
     ColourMeaningRow,
     ColourTermRow,
@@ -26,7 +29,8 @@ from aerona.db.tables.kind_crafts import (
 from aerona.db.tables.kinds import KindHoldingRow, KindRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.kind_crafts import ColourMeaning, EmblemSystem, FurnishingCategory, ToolCategory
+from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.kind_crafts import ColourMeaning, EmblemSystem, FurnishingCategory, GarmentCategory, ToolCategory
 from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
 from aerona.domain.enums.life_traits import FurnishingCategoryTrait
 from aerona.domain.enums.modifier import IncidentRole
@@ -34,6 +38,7 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.kinds.acts import HOLDINGS
+from aerona.engine.lore.civics import holders_know
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -74,6 +79,7 @@ class CraftTally:
     revived: int = 0
     arms_linked: int = 0
     worn: int = 0
+    meanings: int = 0
 
 
 @dataclass(frozen=True)
@@ -84,14 +90,22 @@ class Exposure:
     violence: int = 0
 
 
-FURNISHING_SANITATION = frozenset({FurnishingCategory.SANITATION})
+FURNISHING_SANITATION = CLEANSING_FURNISHINGS
+FURNISHING_PLAY = frozenset({FurnishingCategory.PLAY})
+GARMENT_WORK = WORKING_WEAR
+GARMENT_REST = frozenset({GarmentCategory.SLEEPWEAR})
 FURNISHING_FIRE = having(FURNISHING_CATEGORY_TRAITS, FurnishingCategoryTrait.FURNISHING_FIRE)
 TOOL_SANITATION = frozenset({ToolCategory.MEDICAL})
 TOOL_FIRE = frozenset({ToolCategory.FIRE_MAKING})
 
 
 def garment_shift(rules: Rules, kind: Any, weight: float) -> TownShift:
-    return TownShift(prestige=kind.prestige * kind.status_signal / PERCENT * weight * rules.dress.prestige_pct / PERCENT)
+    table = rules.dress
+    return TownShift(
+        prestige=kind.prestige * kind.status_signal / PERCENT * weight * table.prestige_pct / PERCENT,
+        prosperity=weight * table.work_wear_prosperity if kind.category in GARMENT_WORK else 0.0,
+        unrest=-weight * table.rest_wear_calm if kind.category in GARMENT_REST else 0.0,
+    )
 
 
 def colour_shift(rules: Rules, kind: Any, weight: float) -> TownShift:
@@ -120,6 +134,7 @@ def furnishing_shift(rules: Rules, kind: Any, weight: float) -> TownShift:
         prestige=kind.prestige * weight * table.prestige_pct / PERCENT,
         sanitation=comfort * table.sanitation_pct / PERCENT if kind.category in FURNISHING_SANITATION else 0.0,
         fire_risk=comfort * table.fire_pct / PERCENT if kind.category in FURNISHING_FIRE else 0.0,
+        prosperity=comfort * table.play_skill_pct / PERCENT if kind.category in FURNISHING_PLAY else 0.0,
     )
 
 
@@ -357,6 +372,36 @@ async def colour_laws(ctx: TickContext, holders: dict[int, HolderKinds], tally: 
                     await restrict_colour(ctx, realm, item.kind, tally)
 
 
+async def meanings_of(ctx: TickContext, people_id: int) -> list[ColourMeaning]:
+    found: list[ColourMeaning] = []
+    if await holders_know(ctx.session, [people_id], Technique.HOSPITALS) or await holders_know(ctx.session, [people_id], Technique.HERBALISM):
+        found.append(ColourMeaning.HEALTH)
+    if await ctx.session.scalar(select(PurityRankRow.id).where(PurityRankRow.people_entity_id == people_id).limit(1)) is not None:
+        found.append(ColourMeaning.PURITY)
+    if await ctx.session.scalar(select(AgeSetRow.id).where(AgeSetRow.people_entity_id == people_id).limit(1)) is not None:
+        found.append(ColourMeaning.LIFE_STAGE)
+    return found
+
+
+async def held_meanings(ctx: TickContext, holders: dict[int, HolderKinds]) -> int:
+    written = 0
+    for holder_id, kinds in sorted(holders.items()):
+        colours = sorted(kinds.by_concept.get(KindConcept.COLOUR_TERM, []), key=lambda item: (-item.holding.strength, item.kind.id))
+        if held(holder_id) or not colours:
+            continue
+        for index, meaning in enumerate(await meanings_of(ctx, holder_id)):
+            colour = colours[index % len(colours)].kind
+            present = await ctx.session.scalar(
+                select(ColourMeaningRow.id).where(ColourMeaningRow.culture_node_id == holder_id, ColourMeaningRow.meaning == meaning).limit(1)
+            )
+            if present is not None:
+                continue
+            ctx.session.add(ColourMeaningRow(colour_term_id=colour.id, culture_node_id=holder_id, meaning=meaning, since_epoch=ctx.epoch, locked=[]))
+            written += 1
+    await ctx.session.flush()
+    return written
+
+
 async def garment_fashion(ctx: TickContext, tally: CraftTally) -> None:
     table = ctx.rules.fashion
     garments = list(await ctx.session.scalars(select(GarmentKindRow).where(GarmentKindRow.retired.is_(False)).order_by(GarmentKindRow.id)))
@@ -460,6 +505,7 @@ async def keep_crafts_of_life(ctx: TickContext) -> CraftTally:
     await garment_fashion(ctx, tally)
     holders = await holdings_by_holder(ctx, tuple(EFFECTS))
     await colour_laws(ctx, holders, tally)
+    tally.meanings += await held_meanings(ctx, holders)
     for holder_id, kinds in holders.items():
         if held(holder_id):
             continue

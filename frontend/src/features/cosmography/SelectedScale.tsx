@@ -15,7 +15,7 @@ import {
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { MiniStat } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { type CosmographyCatalog, catalogLabel } from './api'
 import { type ScaleKind } from './heavensSearch'
@@ -78,10 +78,10 @@ function Frame({
 }
 
 export function SelectedScale({ ladder, catalog, kind, id, onClear }: Props) {
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const navigate = useNavigate()
   const open = (
-    <Button size='sm' onClick={() => drawers.open({ kind, id: String(id) })}>
+    <Button size='sm' onClick={() => entryStack.open({ kind, id: String(id) })}>
       <Eye />
       Open its page
     </Button>

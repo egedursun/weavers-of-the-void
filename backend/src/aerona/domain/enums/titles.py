@@ -12,6 +12,7 @@ class TitleTier(StrEnum):
     FAITH_SUPREME = "faith_supreme"
     MILITARY = "military"
     GUILD = "guild"
+    LEAGUE = "league"
 
 
 class TitleTenure(StrEnum):

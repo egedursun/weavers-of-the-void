@@ -6,7 +6,7 @@ import { EntityLink, Paged, PagedList } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { NodeOptions, NodePicker, type PickableNode } from './NodePicker'
 import { type PathResult, usePath } from './api'
-import { drawerKindOf, linkLabel } from './graphModel'
+import { entryKindOf, linkLabel } from './graphModel'
 
 export type PathNode = PickableNode & { kind: string }
 
@@ -30,7 +30,7 @@ function NodeName({
   name: string
   kinds: ReadonlyMap<number, string>
 }) {
-  const kind = drawerKindOf(kinds.get(id))
+  const kind = entryKindOf(kinds.get(id))
   if (!kind)
     return (
       <Text as='span' weight='medium'>

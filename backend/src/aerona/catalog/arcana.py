@@ -36,8 +36,23 @@ SCHOOL_GRAMMAR = total(
 
 COMMANDING_TECHNIQUES = frozenset({T.CONTROL, T.BIND})
 
-TECHNIQUE_COST = total(
-    SpellTechnique, {T.CREATE: 3, T.PERCEIVE: 1, T.TRANSFORM: 3, T.DESTROY: 2, T.CONTROL: 3, T.BIND: 4, T.SUMMON: 4, T.WARD: 2, T.DRAIN: 3, T.MIMIC: 4}
+TECHNIQUE_COST: MappingProxyType[SpellTechnique, Callable[[Rules], int]] = total(
+    SpellTechnique,
+    {
+        T.CREATE: lambda rules: rules.arcana.create_cost,
+        T.PERCEIVE: lambda rules: rules.arcana.perceive_cost,
+        T.TRANSFORM: lambda rules: rules.arcana.transform_cost,
+        T.DESTROY: lambda rules: rules.arcana.destroy_cost,
+        T.CONTROL: lambda rules: rules.arcana.control_cost,
+        T.BIND: lambda rules: rules.arcana.bind_cost,
+        T.SUMMON: lambda rules: rules.arcana.summon_cost,
+        T.WARD: lambda rules: rules.arcana.ward_cost,
+        T.DRAIN: lambda rules: rules.arcana.drain_cost,
+        T.MIMIC: lambda rules: rules.arcana.mimic_cost,
+        T.HEAL: lambda rules: rules.arcana.heal_cost,
+        T.MOVE: lambda rules: rules.arcana.move_cost,
+        T.SPEAK: lambda rules: rules.arcana.speak_cost,
+    },
 )
 
 FORM_COST = total(
@@ -64,6 +79,8 @@ FORM_COST = total(
         F.FATE: 5,
         F.MACHINE: 3,
         F.INFORMATION: 3,
+        F.DREAM: 3,
+        F.LAW: 5,
     },
 )
 
@@ -74,6 +91,7 @@ class RangeSpec:
     step: int
     through_link: bool = False
     beyond_world: bool = False
+    across_dimension: bool = False
 
 
 RANGES = total(
@@ -85,6 +103,7 @@ RANGES = total(
         SpellRange.WORLD: RangeSpec("World", 4),
         SpellRange.LINKED: RangeSpec("Through a link", 2, through_link=True),
         SpellRange.COSMOS: RangeSpec("Beyond the world", 6, beyond_world=True),
+        SpellRange.DIMENSION: RangeSpec("Across dimensions", 8, beyond_world=True, across_dimension=True),
     },
 )
 RANGE_STEP = MappingProxyType({kind: spec.step for kind, spec in RANGES.items()})
@@ -97,6 +116,7 @@ class DurationSpec:
     epochs: int
     sustained: bool = False
     conditional: bool = False
+    lifetime: bool = False
 
 
 DURATIONS = total(
@@ -108,12 +128,14 @@ DURATIONS = total(
         SpellDuration.PERMANENT: DurationSpec("Permanent", 4, 1000),
         SpellDuration.SUSTAINED: DurationSpec("While sustained", 2, 1000, sustained=True),
         SpellDuration.UNTIL_CONDITION: DurationSpec("Until a condition is met", 3, 1000, conditional=True),
+        SpellDuration.LIFETIME: DurationSpec("A lifetime", 3, 1000, lifetime=True),
     },
 )
 DURATION_STEP = MappingProxyType({kind: spec.step for kind, spec in DURATIONS.items()})
 DURATION_EPOCHS = MappingProxyType({kind: spec.epochs for kind, spec in DURATIONS.items()})
 SUSTAINED_DURATIONS = frozenset(kind for kind, spec in DURATIONS.items() if spec.sustained)
 CONDITIONAL_DURATIONS = frozenset(kind for kind, spec in DURATIONS.items() if spec.conditional)
+LIFETIME_DURATIONS = frozenset(kind for kind, spec in DURATIONS.items() if spec.lifetime)
 
 
 @dataclass(frozen=True)
@@ -142,6 +164,7 @@ class TargetSpec:
     item: bool = False
     line: bool = False
     world: bool = False
+    members: bool = False
 
 
 TARGETS = total(
@@ -154,6 +177,8 @@ TARGETS = total(
         SpellTarget.ITEM: TargetSpec("An item", 1, item=True),
         SpellTarget.LINE: TargetSpec("A line of descent", 3, line=True),
         SpellTarget.WORLD: TargetSpec("A whole world", 6, world=True),
+        SpellTarget.SPECIES: TargetSpec("A whole species", 5, members=True),
+        SpellTarget.PEOPLE: TargetSpec("A whole people", 4, members=True),
     },
 )
 TARGET_STEP = MappingProxyType({kind: spec.step for kind, spec in TARGETS.items()})
@@ -176,6 +201,8 @@ RECHARGES = total(
         RechargeRule.NONE: RechargeSpec("Never", lambda rules: rules.arcana.none_fill),
         RechargeRule.SKY_EVENT: RechargeSpec("At a sign in the sky", lambda rules: rules.arcana.sky_event_fill),
         RechargeRule.BODILY_OFFERING: RechargeSpec("By an offering of the body", lambda rules: rules.arcana.bodily_offering_fill),
+        RechargeRule.REST: RechargeSpec("By rest", lambda rules: rules.arcana.rest_fill),
+        RechargeRule.WORSHIP: RechargeSpec("By the prayers of followers", lambda rules: rules.arcana.worship_fill),
     },
 )
 

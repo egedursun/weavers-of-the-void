@@ -31,6 +31,8 @@ import {
   PagedList,
   RangeField,
   FieldTile,
+  ShapeFields,
+  useShape,
 } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -90,13 +92,15 @@ const HOUSE_TRAITS: Record<string, Named> = {
 
 export function FoundHouse({ blocked }: { blocked: string | null }) {
   const [founder, setFounder] = useState<number | null>(null)
+  const naming = useShape()
   const found = useGodAction({
     run: () =>
       unwrap(
         api.POST('/api/actions/house:found', {
-          body: { mortal_id: founder ?? 0 },
+          body: { mortal_id: founder ?? 0, ...naming.body },
         })
       ),
+    onDone: naming.reset,
   })
   const busy = blocked ?? (found.isPending ? WORKING : null)
   return (
@@ -106,6 +110,11 @@ export function FoundHouse({ blocked }: { blocked: string | null }) {
         types={MORTALS}
         value={founder}
         onChange={setFounder}
+        blocked={busy}
+      />
+      <ShapeFields
+        shape={naming.shape}
+        onChange={naming.setShape}
         blocked={busy}
       />
       <Button
@@ -451,6 +460,7 @@ export function SealTreaty({
   const [guarantor, setGuarantor] = useState<number | null>(null)
   const [epochs, setEpochs] = useState('5')
   const [clauses, setClauses] = useState<Draft[]>([])
+  const naming = useShape()
   const seal = useGodAction({
     run: () =>
       unwrap(
@@ -481,9 +491,11 @@ export function SealTreaty({
               params: termsOf(clause.kind, clause.amount, clause.frame),
             })),
             epochs: Number(epochs) || null,
+            ...naming.body,
           },
         })
       ),
+    onDone: naming.reset,
   })
   const busy = blocked ?? (seal.isPending ? WORKING : null)
   return (
@@ -494,6 +506,11 @@ export function SealTreaty({
         value={kind}
         blocked={busy}
         onPick={setKind}
+      />
+      <ShapeFields
+        shape={naming.shape}
+        onChange={naming.setShape}
+        blocked={busy}
       />
       <div className='grid min-w-0 grid-cols-1 gap-2 @md/realm:grid-cols-3'>
         <RecordField

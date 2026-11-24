@@ -8,3 +8,5 @@ class SpaceWeatherKind(StrEnum):
     FIELD_REVERSAL = "field_reversal"
     COSMIC_RAY_BURST = "cosmic_ray_burst"
     WIND_SURGE = "wind_surge"
+    METEOR_SHOWER = "meteor_shower"
+    STELLAR_DIMMING = "stellar_dimming"

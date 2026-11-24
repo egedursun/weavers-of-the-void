@@ -28,6 +28,7 @@ from aerona.api.schemas.maps import (
     MapTrade,
     MapView,
     MapWar,
+    RegionBelow,
     RegionDeJure,
     RegionDivineRule,
     RegionGround,
@@ -43,6 +44,7 @@ from aerona.api.schemas.maps import (
     RelationLineKind,
 )
 from aerona.api.schemas.records import EntitySummary, MapNoteRecord, WorldRecord
+from aerona.api.views.deep_map import at_level, deep_level, deep_summary, passage_lines
 from aerona.cartography.generator import generate_map
 from aerona.cartography.model import MARKER_TYPES, WorldMap
 from aerona.catalog.life.economy import OPEN
@@ -62,6 +64,7 @@ from aerona.db.tables.economy import TradeFlowRow, TradeRouteProfileRow, TradeRo
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import SpeciesTraitRow
 from aerona.db.tables.faith import CultHoldingRow
+from aerona.db.tables.geology import RegionStratumRow
 from aerona.db.tables.military import ArmyProfileRow, CampaignFrontRow, OccupationRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkProfileRow
 from aerona.db.tables.node import NodeRow
@@ -79,6 +82,7 @@ from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.evolution import EvolvedTrait
 from aerona.domain.enums.faith import HoldingKind
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.enums.works import WorksStatus
 from aerona.domain.models.records import GroundSnapshot
@@ -155,6 +159,43 @@ async def geometry(services: Services, world_id: int) -> WorldMap:
 
 @router.get("/worlds/{world_id}/map", response_model=MapView)
 async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int | None = Query(default=None, ge=1)) -> MapView:
+    return await build_map(services, world_id, epoch, None)
+
+
+@router.get("/worlds/{world_id}/map/deep/{stratum}", response_model=MapView)
+async def read_deep_map(
+    services: ServicesDep, stratum: UndergroundStratum, world_id: int = Path(ge=1), epoch: int | None = Query(default=None, ge=1)
+) -> MapView:
+    return await build_map(services, world_id, epoch, stratum)
+
+
+@router.get("/below", response_model=list[RegionBelow])
+async def read_below(services: ServicesDep) -> list[RegionBelow]:
+    async with reader(services) as session:
+        regions = select(EntityRow.id).where(EntityRow.entity_type == EntityType.REGION)
+        cells = await session.execute(
+            select(RegionStratumRow.region_entity_id, RegionStratumRow.stratum)
+            .where(RegionStratumRow.region_entity_id.in_(regions))
+            .order_by(RegionStratumRow.region_entity_id, RegionStratumRow.id)
+        )
+        strata: dict[int, list[UndergroundStratum]] = {}
+        for region_id, stratum in cells:
+            if stratum not in strata.setdefault(region_id, []):
+                strata[region_id].append(stratum)
+        towns = await session.execute(
+            select(EntityRow.location_id, func.count())
+            .where(
+                EntityRow.entity_type == EntityType.SETTLEMENT,
+                EntityRow.status == EntityStatus.CANON,
+                EntityRow.stratum.is_not(None),
+            )
+            .group_by(EntityRow.location_id)
+        )
+        below_towns = {location: int(count) for location, count in towns if location is not None}
+        return [RegionBelow(region_id=region_id, strata=found, towns=below_towns.get(region_id, 0)) for region_id, found in sorted(strata.items())]
+
+
+async def build_map(services: Services, world_id: int, epoch: int | None, level: UndergroundStratum | None) -> MapView:
     async with reader(services) as session:
         if await session.get(WorldRow, world_id) is None:
             raise NotFoundError(NO_WORLD)
@@ -184,11 +225,16 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
         else:
             if shown != current:
                 entities = [entity for entity in entities if entity.birth_epoch <= shown and (entity.end_epoch is None or entity.end_epoch > shown)]
-            political = await political_map(session, rules, world_id)
+            political = await political_map(session, rules, world_id, level)
+        atlas = await RegionAtlas.load(session)
+        deep = await deep_summary(session, world_id, entities, atlas)
+        below = await deep_level(session, world_id, level, entities, atlas) if level is not None else None
+        entities = at_level(entities, atlas, level)
         positions = {row.id: (row.map_x, row.map_y) for row in entities if row.map_x is not None and row.map_y is not None}
         roads = await road_network(session, world_id)
         routed = await asyncio.to_thread(routed_roads, shape, roads, positions)
         lines = [*await relation_lines(session, shape, positions, roads), *await conurbation_lines(session, positions)]
+        passages = passage_lines(below, shape) if below is not None else []
         covers = await covers_of(session, [row.id for row in entities])
         return MapView(
             world=WorldRecord.model_validate(world),
@@ -199,7 +245,8 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             relations=[
                 MapRelation(source=line.source, target=line.target, kind=RelationLineKind(line.kind), description=line.description, path=line.path)
                 for line in lines
-            ],
+            ]
+            + passages,
             wars=[MapWar.model_validate(site) for site in await war_sites(session, world_id, shown, current)],
             region_creators=region_creators(entities),
             settlements=await settlement_tiers(session, rules, world_id, shown),
@@ -237,6 +284,8 @@ async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int
             lairs=await lair_marks(session, world_id, positions, rules.beasts.raid_reach),
             notes=[MapNoteRecord.model_validate(row) for row in await map_notes(session, world_id)],
             time=MapTime(current=current, shown=shown, snapshots=await snapshot_epochs(session, world_id)),
+            deep=deep,
+            level=below,
         )
 
 

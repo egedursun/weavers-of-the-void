@@ -149,6 +149,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.ciphers",
     "table.creator",
     "table.cult_doctrines",
+    "table.deep_passages",
     "table.deterrence_postures",
     "table.dimensions",
     "table.entities",
@@ -413,7 +414,7 @@ async def journey_missions(ctx: TickContext, book: FaithBook, atlas: RegionAtlas
         if not preachers:
             continue
         for community in communities:
-            if community.world_id == journey.destination_world_id and (community.id == landing or atlas.same_region(community.id, landing)):
+            if community.world_id == journey.destination_world_id and (community.id == landing or atlas.same_cell(community.id, landing)):
                 found[community.id].extend(church.cult.id for church in preachers)
     return found
 
@@ -574,6 +575,7 @@ def nearness(ctx: TickContext, dominion: DominionBook, atlas: RegionAtlas, commu
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.divine_standing",
     "table.dominions",

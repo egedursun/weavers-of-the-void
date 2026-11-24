@@ -12,6 +12,8 @@ class Medium(StrEnum):
     NETWORK = "network"
     MIND_LINK = "mind_link"
     BROADCAST = "broadcast"
+    DRUM_AND_WHISTLE = "drum_and_whistle"
+    COURIER_ANIMAL = "courier_animal"
 
 
 class DispatchContent(StrEnum):
@@ -26,6 +28,8 @@ class DispatchContent(StrEnum):
     INTELLIGENCE = "intelligence"
     ORDER = "order"
     WARNING = "warning"
+    CONDOLENCE = "condolence"
+    CONGRATULATION = "congratulation"
 
 
 class DispatchState(StrEnum):
@@ -36,6 +40,7 @@ class DispatchState(StrEnum):
     DELAYED = "delayed"
     FORGED = "forged"
     MISREAD = "misread"
+    REFUSED = "refused"
 
 
 class EnvoyFate(StrEnum):
@@ -45,6 +50,7 @@ class EnvoyFate(StrEnum):
     KILLED = "killed"
     EXPELLED = "expelled"
     DEFECTED = "defected"
+    HONOURED = "honoured"
 
 
 class OpinionSubject(StrEnum):
@@ -55,6 +61,8 @@ class OpinionSubject(StrEnum):
     IDEOLOGY = "ideology"
     FACTION = "faction"
     FOREIGN_POWER = "foreign_power"
+    ECONOMY = "economy"
+    NEIGHBOUR_PEOPLE = "neighbour_people"
 
 
 class SignalKind(StrEnum):
@@ -66,6 +74,7 @@ class SignalKind(StrEnum):
     RADIO_STATION = "radio_station"
     MIND_LINK_STATION = "mind_link_station"
     GROWN_NODE = "grown_node"
+    DRUM_RELAY = "drum_relay"
 
 
 class SignalState(StrEnum):
@@ -74,3 +83,4 @@ class SignalState(StrEnum):
     BURNED = "burned"
     DISUSED = "disused"
     JAMMED = "jammed"
+    RESTORED = "restored"

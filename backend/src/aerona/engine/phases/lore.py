@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.lore import CREED_DEFIES, DEFIED_BY
+from aerona.catalog.tongues import STAGES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken as spoken_word
 from aerona.db.tables.bonds import BondRow
@@ -24,6 +25,7 @@ from aerona.domain.enums.culture import ProphecyState, RiteStage, SpeakerKind, T
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.tongues import LanguageStage
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore import (
@@ -58,7 +60,7 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import canon, spoken_language
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.recording.record import record
 
 K = TraditionFunction
@@ -92,7 +94,21 @@ async def stand(ctx: TickContext, language: EntityRow, liturgical: set[int]) -> 
     if "lingua_franca" not in row.locked:
         row.lingua_franca = row.prestige >= table.lingua_franca
     row.updated_epoch = ctx.epoch
+    await endanger(ctx, language)
     return row
+
+
+async def endanger(ctx: TickContext, language: EntityRow) -> None:
+    profile = await ctx.session.get(LanguageProfileRow, language.id)
+    if profile is None or frozen(language.id) or not STAGES[profile.stage].inherits_sounds or STAGES[profile.stage].taught:
+        return
+    communities = [await ctx.session.get(EntityRow, node) for node in await speakers(ctx.session, language.id)]
+    voices = sum(stat_or(community, "population", 0) for community in communities if community is not None)
+    if voices < ctx.rules.tongues.endangered_speakers and profile.stage is not LanguageStage.ENDANGERED:
+        profile.stage = LanguageStage.ENDANGERED
+        await record(ctx, "language.endangered", roles={IncidentRole.SUBJECT: language.id}, facts={"speakers": voices})
+    elif voices >= ctx.rules.tongues.endangered_speakers and profile.stage is LanguageStage.ENDANGERED:
+        profile.stage = LanguageStage.NATURAL
 
 
 async def trade_tongue(ctx: TickContext, franca: int) -> int:
@@ -211,12 +227,15 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
 @reads(
     "language.complexity",
     "language.sacredness",
+    "people.population",
+    "settlement.population",
     "table.artwork_profiles",
     "table.bonds",
     "table.community_relations",
     "table.community_societies",
     "table.community_society",
     "table.deeds",
+    "table.deep_passages",
     "table.entities",
     "table.entity_flags",
     "table.epithets",
@@ -454,6 +473,7 @@ async def commemorations(ctx: TickContext, atlas: RegionAtlas) -> None:
     "table.creator",
     "table.culture_values",
     "table.custom_kinds",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",
@@ -556,6 +576,9 @@ async def tradition_cycles(ctx: TickContext) -> None:
 
 @reads(
     "cult.followers",
+    "disease.dead",
+    "disease.infected",
+    "event.severity",
     "faction.wealth",
     "item.protection",
     "mortal.age",
@@ -601,21 +624,35 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.cult_tenets",
     "table.culture_values",
     "table.custom_kinds",
+    "table.deep_passages",
     "table.dimensions",
+    "table.disease_cures",
+    "table.disease_profiles",
+    "table.disease_routes",
+    "table.districts",
     "table.divine_wounds",
+    "table.dominions",
+    "table.drink_kinds",
+    "table.endemic_diseases",
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
     "table.era_deeds",
+    "table.event_casualties",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",
     "table.genomes",
+    "table.god_designs",
+    "table.god_scales",
     "table.great_people",
     "table.great_person_points",
+    "table.herds",
     "table.holder_custom_techniques",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.immunities",
+    "table.impurity_sources",
     "table.incident_participants",
     "table.incidents",
     "table.incubating_ideas",
@@ -623,9 +660,11 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.inspirations",
     "table.institutions",
     "table.item_profiles",
+    "table.kind_holdings",
     "table.knowledge_holders",
     "table.law_jurisdictions",
     "table.law_profiles",
+    "table.ley_lines",
     "table.loans",
     "table.mind_attributes",
     "table.mortal_equipment",
@@ -639,20 +678,27 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.offices",
     "table.outbreaks",
     "table.people_culture",
+    "table.plague_responses",
     "table.polity_eras",
     "table.polity_members",
     "table.polity_profiles",
     "table.production_runs",
     "table.prostheses",
+    "table.quarantines",
+    "table.region_dominion",
     "table.region_environment",
     "table.research_boosts",
     "table.research_focus",
     "table.research_progress",
     "table.ruler_currencies",
+    "table.settlement_profiles",
     "table.sieges",
     "table.skills",
     "table.sky_events",
     "table.sons",
+    "table.species_hosts",
+    "table.species_profiles",
+    "table.species_ranges",
     "table.spy_networks",
     "table.stars",
     "table.structure_profiles",
@@ -667,12 +713,15 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.wars",
     "table.world_domain_hooks",
     "table.world_eras",
+    "table.world_seasons",
     "table.worlds",
     "table.written_works",
 )
 @writes(
     "art_form.practitioners",
     "art_form.prestige",
+    "disease.dead",
+    "disease.infected",
     "knowledge.spread",
     "mortal.hp",
     "people.population",
@@ -694,8 +743,15 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.chronicle_entities",
     "table.community_societies",
     "table.culture_values",
+    "table.disease_profiles",
+    "table.disease_routes",
+    "table.divine_standing",
     "table.entities",
+    "table.entity_flags",
     "table.era_deeds",
+    "table.event_casualties",
+    "table.event_footprints",
+    "table.event_profiles",
     "table.great_person_points",
     "table.holder_levels",
     "table.holder_techniques",
@@ -707,8 +763,11 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "table.mortal_profiles",
     "table.name_registry",
     "table.node_births",
+    "table.notable_years",
+    "table.outbreaks",
     "table.polity_eras",
     "table.polity_profiles",
+    "table.region_environment",
     "table.research_boosts",
     "table.research_focus",
     "table.research_incidents",

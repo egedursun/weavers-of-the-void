@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.disease import LEANINGS
+from aerona.catalog.medicine import MEDICINE
 from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
@@ -14,6 +15,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import CureResearchRow, PlagueResponseRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.body import MedicineTier
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.discovery import TheoryDomain
@@ -28,11 +30,12 @@ from aerona.engine.disease.research import institutions
 from aerona.engine.disease.routes import learn_routes
 from aerona.engine.disease.stigma import values_for
 from aerona.engine.economy.purse import take_coin
+from aerona.engine.eras.effects import era_techniques
 from aerona.engine.faith.judgement import funeral_custom
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
-from aerona.engine.primitives.stats import shift_bounded
+from aerona.engine.primitives.stats import has_stat, shift_bounded, shift_stat, stat
 from aerona.engine.recording.record import record
 
 R = PlagueResponse
@@ -50,6 +53,9 @@ RESPONSE_KEYS = total(
         PlagueResponse.PRAYER: "disease.plague_response.prayer",
         PlagueResponse.SEEK_CURE: "disease.plague_response.seek_cure",
         PlagueResponse.SANITATION: "disease.plague_response.sanitation",
+        PlagueResponse.FLEE: "disease.plague_response.flee",
+        PlagueResponse.INOCULATE: "disease.plague_response.inoculate",
+        PlagueResponse.CLOSE_GATHERINGS: "disease.plague_response.close_gatherings",
     },
 )
 
@@ -91,7 +97,16 @@ async def options_for(ctx: TickContext, community: EntityRow) -> list[PlagueResp
         options.append(R.SEEK_CURE)
     if await cleaning_backed(ctx, community):
         options.append(R.SANITATION)
+    options.append(R.FLEE)
+    options.append(R.CLOSE_GATHERINGS)
+    if await knows_tier(ctx, community.id, MedicineTier.IMMUNISATION):
+        options.append(R.INOCULATE)
     return options
+
+
+async def knows_tier(ctx: TickContext, community_id: int, tier: MedicineTier) -> bool:
+    technique = MEDICINE[tier].technique
+    return technique is not None and technique in await era_techniques(ctx.session, community_id)
 
 
 async def cleaning_backed(ctx: TickContext, community: EntityRow) -> bool:
@@ -162,9 +177,30 @@ async def struck(ctx: TickContext) -> list[tuple[EntityRow, int]]:
     return found
 
 
+async def bear_wider(ctx: TickContext, row: PlagueResponseRow, community: EntityRow, weight: float) -> bool:
+    table = ctx.rules.plague_responses
+    if row.response is R.FLEE:
+        fled = round_half_up((stat(community, "population") or 0) * table.flee_share_pct / PERCENT * weight)
+        if fled > 0 and has_stat(community, "population"):
+            shift_stat(community, "population", -fled)
+        return True
+    elif row.response is R.INOCULATE:
+        profile = await ctx.session.get(DiseaseProfileRow, row.disease_entity_id)
+        if profile is not None and "virulence" not in profile.locked:
+            profile.virulence = clamp_int(profile.virulence - round(table.inoculate_cut * weight), 1, PERCENT)
+        return True
+    elif row.response is R.CLOSE_GATHERINGS:
+        shift_bounded(ctx.rules, community, STABILITY, -table.gathering_morale * weight)
+        shift_stat(community, "prosperity", -round(table.gathering_trade * weight))
+        return True
+    return False
+
+
 async def bear(ctx: TickContext, row: PlagueResponseRow, community: EntityRow, tally: ResponseTally) -> None:
     table = ctx.rules.plague_responses
     weight = row.strength / PERCENT
+    if await bear_wider(ctx, row, community, weight):
+        return
     if row.response is R.CLOSE_BORDERS:
         shift_bounded(ctx.rules, community, STABILITY, -table.border_unrest * weight)
     elif row.response is R.QUARANTINE and ctx.rng(f"plague_riot.{community.id}.{row.disease_entity_id}").chance(

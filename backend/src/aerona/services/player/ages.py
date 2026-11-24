@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from aerona.catalog.genesis import AGE_CYCLE_LABELS
 from aerona.core.grammar import several, spoken
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.ages import AgeCycle, ArcRole, ArcStage, ArcTemplate, LongSeasonReach, SeasonCause, SeasonSpell, SeasonSpellShape, SetupKind
@@ -226,7 +227,7 @@ async def eco_transformation_set(scope: PlayerScope, command: TransformationDraf
 @player_action("age:cycle", ActionKind.EDIT_RECORD)
 async def age_cycle(scope: PlayerScope, command: CycleChoice) -> Effect:
     await control.set_cycle(await scope.context("age_cycle"), command.cycle)
-    return Effect("The cosmos turns in ages." if command.cycle is AgeCycle.CYCLIC else "The cosmos runs on to its end.")
+    return Effect(AGE_CYCLE_LABELS[command.cycle] + ".")
 
 
 @player_action("age:turn", ActionKind.EDIT_RECORD)

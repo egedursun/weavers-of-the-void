@@ -39,6 +39,8 @@ MOVEMENT_CAUSES: Mapping[MovementCause, CauseSpec] = total(
         M.EQUAL_STANDING: CauseSpec(
             "Equal standing of classes and kinds", G.ENACT_LAW, LawKind.FOREIGNER_RIGHTS, lambda rules: rules.movements.equal_standing_weight
         ),
+        M.LEARNING: CauseSpec("Learning for all", G.ABOLISH_LAW, LawKind.CENSORSHIP, lambda rules: rules.movements.learning_weight),
+        M.HEALTH: CauseSpec("Public health", G.ENACT_LAW, LawKind.SANITATION, lambda rules: rules.movements.health_weight),
     },
 )
 CAUSE_LABELS: Mapping[MovementCause, str] = MappingProxyType({cause: spec.label for cause, spec in MOVEMENT_CAUSES.items()})

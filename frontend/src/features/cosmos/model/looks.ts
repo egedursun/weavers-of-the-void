@@ -340,6 +340,9 @@ export type SurfaceCode =
   | 'shattered'
   | 'hollow'
   | 'lineae'
+  | 'starless'
+  | 'isles'
+  | 'lattice'
 
 export const SURFACE_CODE: Record<SurfaceCode, number> = {
   rocky: 0,
@@ -367,6 +370,9 @@ export const SURFACE_CODE: Record<SurfaceCode, number> = {
   shattered: 22,
   hollow: 23,
   lineae: 24,
+  starless: 25,
+  isles: 26,
+  lattice: 27,
 }
 
 export type WorldBodyLook = {
@@ -414,7 +420,7 @@ export const WORLD_BODY: Record<WorldType, WorldBodyLook> = {
     gas: true,
     cities: false,
     cloudy: false,
-    ring: true,
+    ring: false,
   }),
   hot_giant: body('hotgas', { gas: true, cities: false, cloudy: false }),
   iron: body('metal', { cloudy: false }),
@@ -430,28 +436,69 @@ export const WORLD_BODY: Record<WorldType, WorldBodyLook> = {
   hollow: body('hollow'),
   ice_shell: body('lineae', { cloudy: false }),
   methane: body('shroud', { cloudy: false }),
+  rogue: body('starless', { cloudy: false }),
+  archipelago: body('isles'),
+  megastructure: body('lattice', { cloudy: false }),
+}
+
+export const WORLD_SEA: Partial<Record<WorldType, number>> = {
+  ocean: 0.82,
+  sand: 0.12,
+  ice: 0.4,
+  lava: 0.45,
+  dead: 0.3,
+  hycean: 0.85,
+  greenhouse: 0.05,
+  iron: 0.12,
+  chthonian: 0.1,
+  dwarf_planet: 0.15,
+  jungle: 0.35,
+  carbon: 0.25,
+  forge: 0.25,
+  fungal: 0.35,
+  shattered: 0.6,
+  ice_shell: 0.2,
+  methane: 0.3,
+  super_earth: 0.6,
 }
 
 export type AtmosphereLook = {
   intensity: number
   shell: number
   clouds: number
-  toxic: boolean
+  tint: { air: string; cloud: string } | null
 }
 
 export const ATMOSPHERE_LOOK: Record<Atmosphere, AtmosphereLook | null> = {
   none: null,
-  thin: { intensity: 0.55, shell: 1.07, clouds: 0.2, toxic: false },
-  normal: { intensity: 1, shell: 1.11, clouds: 0.4, toxic: false },
-  dense: { intensity: 1.5, shell: 1.16, clouds: 0.68, toxic: false },
-  toxic: { intensity: 1.25, shell: 1.13, clouds: 0.5, toxic: true },
+  thin: { intensity: 0.55, shell: 1.07, clouds: 0.2, tint: null },
+  normal: { intensity: 1, shell: 1.11, clouds: 0.4, tint: null },
+  dense: { intensity: 1.5, shell: 1.16, clouds: 0.68, tint: null },
+  toxic: {
+    intensity: 1.25,
+    shell: 1.13,
+    clouds: 0.5,
+    tint: { air: '--cosmos-toxic', cloud: '--cosmos-toxic-cloud' },
+  },
+  steam: {
+    intensity: 1.7,
+    shell: 1.2,
+    clouds: 0.9,
+    tint: { air: '--cosmos-steam', cloud: '--cosmos-steam-cloud' },
+  },
+  layered: {
+    intensity: 1.35,
+    shell: 1.15,
+    clouds: 0.6,
+    tint: { air: '--cosmos-layered', cloud: '--cosmos-layered-cloud' },
+  },
 }
 
 export const GAS_ATMOSPHERE: AtmosphereLook = {
   intensity: 0.8,
   shell: 1.08,
   clouds: 0,
-  toxic: false,
+  tint: null,
 }
 
 export const NEBULA_TOKENS = [

@@ -31,6 +31,7 @@ from aerona.domain.enums.mythic import MantlingState
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.divine.council_order import bound_elsewhere
 from aerona.engine.divine.gods import God, alive, domains_of, faithful_communities, god_of, living_gods
 from aerona.engine.divine.hooks import foes_of
 from aerona.engine.dominion.sites import thrones_held
@@ -385,7 +386,7 @@ async def choose(ctx: TickContext, god: God) -> GodGoalRow | None:
 
 async def attend(ctx: TickContext, son: SonRow, goal: GodGoalRow) -> bool:
     table = ctx.rules.son_goals
-    if goal.world_id is None or son.current_world_id == goal.world_id or son.status is not SonStatus.ACTIVE:
+    if goal.world_id is None or son.current_world_id == goal.world_id or son.status is not SonStatus.ACTIVE or bound_elsewhere(son, goal.world_id, ctx.epoch):
         return False
     if son.manually_assigned_epoch is not None and ctx.epoch - son.manually_assigned_epoch < table.manual_attention_epochs:
         return False

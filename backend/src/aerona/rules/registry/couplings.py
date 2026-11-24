@@ -85,6 +85,11 @@ class CarrionRules:
     frozen_latitude: int = rule(70, 0, 90, E, "Latitude at or beyond which the unburied dead of a region freeze instead of rotting")
     floating_hazard: int = rule(5, 0, 100, E, "Danger the dead floating in a void or among broken rock add to a region each epoch")
     burial_cost: int = rule(2, 0, 100, E, "Prosperity a town spends each epoch burying the dead of its region")
+    scavenged_disease: int = rule(1, 0, 100, E, "Disease load the dead eaten and scattered by scavengers add to their region each epoch")
+    scavenged_scavenger: int = rule(30, 0, 100, E, "Abundance the scavengers of a region gain from the dead they eat and scatter")
+    scavenged_restless: int = rule(2, 0, 100, E, "Chance in an epoch that the scattered dead of a region rise restless (%)")
+    scavenged_fossil: int = rule(1, 0, 100, E, "Chance in an epoch that the scattered dead of a region lay a bed of remains (%)")
+    scavenged_disease_cut_pct: int = rule(60, 0, 100, E, "Share of the disease load scavengers take away from a region where they scatter the dead (%)")
 
 
 @dataclass(frozen=True)
@@ -125,6 +130,10 @@ class FieldDiplomacyRules(Spanned):
     def truce_epochs(self) -> int:
         return self.epochs(self.truce_years)
 
+    burial_battles: int = rule(2, 0, 50, W, "Battles a war must see before its sides may pause to bury their dead")
+    burial_chance: int = rule(25, 0, 100, W, "Chance the sides of a bloody war pause to bury their dead in an epoch (%)")
+    burial_ease: int = rule(3, 0, 50, W, "Weariness each side sheds when it may bury its dead in peace")
+
 
 @dataclass(frozen=True)
 class DeepSealRules:
@@ -146,6 +155,9 @@ class DeepSealRules:
     power_strength: int = rule(60, 1, 100, M, "Strength a seal held by an innate power starts with")
     living_strength: int = rule(50, 1, 100, M, "Strength a grown barrier starts with")
     pact_strength: int = rule(80, 1, 100, M, "Strength a seal held by a pact with those below starts with")
+    made_decay: int = rule(1, 0, 50, M, "Strength a seal kept by a made mind loses each epoch while the mind keeps it")
+    made_strength: int = rule(75, 1, 100, M, "Strength a seal kept by a made mind starts with")
+    made_drift_max: int = rule(60, 0, 100, M, "Drift from its making at which a made mind no longer keeps the seal it holds")
     living_feed: int = rule(5, 0, 50, M, "Strength a grown barrier gains each epoch while its line is fed")
     pact_grievance: int = rule(30, 0, 100, M, "Grievance those below hold against the breaker of a pact seal")
 

@@ -11,9 +11,10 @@ RULES = Rules()
 
 
 def test_twelve_layers_each_with_its_own_base_weight() -> None:
-    assert len(IDENTITY_LAYERS) == len(IdentityLayer) == 12
+    assert len(IDENTITY_LAYERS) == len(IdentityLayer) == 14
     assert set(NEW_LAYERS) == {IdentityLayer.LANGUAGE, IdentityLayer.KIND, IdentityLayer.CAUSE}
-    assert all(spec.base(RULES) == 30 for spec in IDENTITY_LAYERS.values())
+    assert all(spec.base(RULES) == 30 for layer, spec in IDENTITY_LAYERS.items() if layer not in {IdentityLayer.GIFT, IdentityLayer.CALLING})
+    assert (IDENTITY_LAYERS[IdentityLayer.GIFT].base(RULES), IDENTITY_LAYERS[IdentityLayer.CALLING].base(RULES)) == (15, 20)
 
 
 async def test_a_claimed_strength_outlives_the_epoch_and_weighs_in_trust(realm: Realm) -> None:

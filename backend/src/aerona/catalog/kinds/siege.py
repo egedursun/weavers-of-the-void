@@ -18,5 +18,6 @@ STARVATION: Mapping[StarvationStage, StarvationSpec] = total(
         StarvationStage.RATIONING: StarvationSpec(starving=False, surrender_pct=0),
         StarvationStage.FAMINE: StarvationSpec(starving=True, surrender_pct=100),
         StarvationStage.TABOO_BROKEN: StarvationSpec(starving=True, surrender_pct=200),
+        StarvationStage.HUNGER_SICKNESS: StarvationSpec(starving=True, surrender_pct=150),
     },
 )

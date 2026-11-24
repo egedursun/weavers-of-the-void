@@ -17,7 +17,7 @@ RULES = Rules()
 
 def test_seven_stages_with_the_two_new_ones_between_wild_and_kept() -> None:
     order = list(DomesticationStage)
-    assert len(STAGES) == len(order) == 7
+    assert len(STAGES) == len(order) == 8
     assert order.index(DomesticationStage.COMMENSAL) == order.index(DomesticationStage.WILD) + 1
     assert not STAGES[DomesticationStage.COMMENSAL].kept and not STAGES[DomesticationStage.FERAL].kept
     assert {stage for stage, spec in STAGES.items() if spec.kept} == KEPT_BEFORE

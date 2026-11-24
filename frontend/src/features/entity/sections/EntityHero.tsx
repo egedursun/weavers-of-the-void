@@ -21,6 +21,7 @@ import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverl
 import { useLoreMutation } from '../api/mutations'
 import { useCatalogue, useWorldState } from '../api/queries'
 import { type EntityDetail } from '../api/types'
+import { EntityLevel } from './EntityLevel'
 import { TagChips } from './TagChips'
 
 type EntityHeroProps = {
@@ -77,6 +78,7 @@ export function EntityHero({
     <HeroFrame>
       <header
         data-entity-hero={entity.id}
+        data-entry-kind={typeLabel}
         className='flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start'
       >
         <PortraitGenerateOverlay
@@ -111,6 +113,14 @@ export function EntityHero({
               ))
             )}
           </nav>
+          {detail.level && entity.location_id !== null ? (
+            <EntityLevel
+              entityId={entity.id}
+              locationId={entity.location_id}
+              level={detail.level}
+              readOnlyReason={readOnlyReason}
+            />
+          ) : null}
           <PageTitle truncate={2}>
             {dead ? `† ${entity.name}` : entity.name}
           </PageTitle>

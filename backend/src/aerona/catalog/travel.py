@@ -239,6 +239,8 @@ JOURNEY_INTENT_LABELS: dict[JourneyIntent, str] = {
     JourneyIntent.EXILE: "Exile",
     JourneyIntent.FLIGHT: "Flight",
     JourneyIntent.EMBASSY: "Embassy",
+    JourneyIntent.RESCUE: "Rescue",
+    JourneyIntent.RETURN: "Return home",
 }
 
 

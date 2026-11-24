@@ -22,6 +22,7 @@ from aerona.engine.polity.subjects import SubjectTally, tend_subjects
     "table.crisis_backers",
     "table.culture_ethics",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.diplomacy_profiles",

@@ -105,8 +105,11 @@ async def tend_route(ctx: TickContext, route: RouteRow, moved: int, lawful: int 
     busy = route.traffic >= table.busy_traffic
     if "wear" not in route.locked:
         route.wear = clamp_percent(route.wear + route.traffic // table.traffic_wear - (0 if busy else table.wear_repair))
+    if "guarded" not in route.locked:
+        route.guarded = route.toll_controller_entity_id is not None and (route.guarded or route.piracy >= table.guard_piracy)
     if "piracy" not in route.locked:
-        route.piracy = clamp_percent(route.piracy + (table.piracy_growth if busy else -table.piracy_decay) - lawful * table.space_law_piracy)
+        guard = table.guard_piracy_cut if route.guarded else 0
+        route.piracy = clamp_percent(route.piracy + (table.piracy_growth if busy else -table.piracy_decay) - lawful * table.space_law_piracy - guard)
     if "danger" not in route.locked and route.wear:
         route.danger = clamp_percent(max(route.danger, route.wear * table.wear_danger_pct // PERCENT))
     if route.wear >= PERCENT and "active" not in route.locked:
@@ -129,7 +132,7 @@ async def cosmic_trade(ctx: TickContext) -> int:
             moved, delivered = await carry(ctx, route, cosmography.scope_by_id(route.world_a_id, route.world_b_id), first, second)
         await tend_route(ctx, route, moved + (route.traffic if moved == 0 and "traffic" in route.locked else 0), await lawful_ends(ctx, [first, second]))
         if route.toll_controller_entity_id is not None and route.toll_pct and delivered:
-            tolls[route.toll_controller_entity_id] += delivered * route.toll_pct // PERCENT
+            tolls[route.toll_controller_entity_id] += delivered * (route.toll_pct + (ctx.rules.cosmography.guard_toll_pct if route.guarded else 0)) // PERCENT
         carried += moved
     for controller_id, amount in sorted(tolls.items()):
         controller = await ctx.session.get(EntityRow, controller_id)

@@ -104,7 +104,7 @@ class PurityRules(Spanned):
 
 
 @dataclass(frozen=True)
-class MishapRules:
+class MishapRules(Spanned):
     bad_luck_chance: int = rule(15, 0, 100, R, "Chance each epoch that a town suffers a small misfortune no one did (%)")
     explained_medicine: int = rule(3, 0, 20, R, "Medicine a community needs to explain an illness or a child's death by its cause")
     explained_farming: int = rule(3, 0, 20, R, "Agriculture a community needs to explain a failed harvest or a loss of herds by its cause")
@@ -124,6 +124,11 @@ class MishapRules:
     beliefs_per_people: int = rule(3, 0, 7, R, "Beliefs about luck a superstitious people holds when first read")
     charm_strength: int = rule(60, 0, 100, R, "Strength of a charm made after a misfortune")
     lucky_morale: int = rule(5, 0, 100, R, "Morale an army gains in battle for each luck belief of its people that reaches battle")
+    self_guilt: int = rule(10, 0, 100, R, "Stress of guilt one who blames a misfortune on its own conduct carries")
+    move_after: int = rule(3, 1, 20, R, "Misfortunes at one place after which one who suffers them moves away")
+    move_memory_years: int = span(100, 0, 1000, R, "Years over which misfortunes at one place are counted toward moving away")
+    compensation_wealth: int = rule(5, 0, 100, R, "Wealth one blamed for a misfortune is asked to pay the one who suffered it")
+    compensation_paid_pct: int = rule(50, 0, 100, R, "Chance one blamed for a misfortune pays amends rather than refusing and starting a quarrel (%)")
 
 
 @dataclass(frozen=True)

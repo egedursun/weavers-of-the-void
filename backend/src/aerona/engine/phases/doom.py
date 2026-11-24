@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.genesis import TURNING_CYCLES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.worlds import WorldRepository
@@ -13,7 +14,6 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.ages import AgeCycle
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import (
     OPEN_RIFT_STATES,
@@ -365,7 +365,7 @@ async def doom_clock(ctx: TickContext) -> None:
             reset = round_half_up(threshold * doom.after_calling_pct / PERCENT)
         else:
             await end_by(ctx, variant)
-            if cosmos.age_cycle is AgeCycle.CYCLIC:
+            if cosmos.age_cycle in TURNING_CYCLES:
                 await turn_age(ctx, variant)
             reset = round_half_up(threshold * doom.after_ruin_pct / PERCENT)
         record_doom(ctx, DoomItem.RESET, reset - clock)

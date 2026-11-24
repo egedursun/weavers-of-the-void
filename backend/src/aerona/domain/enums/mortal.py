@@ -6,6 +6,7 @@ class LifeStage(StrEnum):
     CHILD = "child"
     YOUTH = "youth"
     ADULT = "adult"
+    MATURE = "mature"
     ELDER = "elder"
     ANCIENT = "ancient"
 
@@ -40,6 +41,10 @@ class DeathCause(StrEnum):
     BOMBARDMENT = "bombardment"
     DROWNING = "drowning"
     SPORT = "sport"
+    ANIMAL = "animal"
+    CROWD = "crowd"
+    MEDICAL = "medical"
+    SOUL_LOSS = "soul_loss"
 
 
 class MarriageEnd(StrEnum):
@@ -64,6 +69,8 @@ class CareerPath(StrEnum):
     SERVICE = "service"
     ARTS = "arts"
     SETTLE = "settle"
+    HEALING = "healing"
+    WILDS = "wilds"
 
 
 class StressBreak(StrEnum):
@@ -74,6 +81,8 @@ class StressBreak(StrEnum):
     VICE = "vice"
     REVELATION = "revelation"
     WITHDRAWAL = "withdrawal"
+    DISSOCIATION = "dissociation"
+    COLLAPSE = "collapse"
 
 
 class CrimeKind(StrEnum):
@@ -150,6 +159,8 @@ class CrimeKind(StrEnum):
     IMPERSONATION = "impersonation"
     MIND_COMPULSION = "mind_compulsion"
     FIXING_CONTESTS = "fixing_contests"
+    ENHANCING_CONTESTANTS = "enhancing_contestants"
+    NEGLECT = "neglect"
 
 
 class PunishmentKind(StrEnum):
@@ -185,6 +196,8 @@ class PunishmentKind(StrEnum):
     TRANSPORTATION = "transportation"
     COMMUNITY_WORK = "community_work"
     DAMPENING = "dampening"
+    SHUNNING = "shunning"
+    CURSE_SENTENCE = "curse_sentence"
 
 
 class EquipmentSlot(StrEnum):
@@ -221,3 +234,4 @@ class DeathReading(StrEnum):
     PLAIN = "plain"
     SHAMEFUL = "shameful"
     CURSED = "cursed"
+    PITIED = "pitied"

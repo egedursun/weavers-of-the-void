@@ -9,6 +9,7 @@ class DeathRole(StrEnum):
     MOURNER = "mourner"
     RECORD_KEEPER = "record_keeper"
     CARRIER = "carrier"
+    GRAVE_MAKER = "grave_maker"
 
 
 class DeathStanding(StrEnum):

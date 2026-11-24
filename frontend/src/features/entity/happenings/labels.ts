@@ -34,6 +34,12 @@ import {
   Waves,
   Wheat,
   Wind,
+  Droplet,
+  FlameKindling,
+  GlassWater,
+  HeartCrack,
+  Leaf,
+  Sword,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Spec } from '../society/labels'
@@ -48,7 +54,7 @@ export const EVENT_ICON: LucideIcon = Hourglass
 export const LAND_ICON: LucideIcon = Mountain
 
 export const KIND_SPEC: Record<string, Spec> = {
-  war: { label: 'War', icon: Swords, tone: 'danger' },
+  war: { label: 'War', icon: Sword, tone: 'danger' },
   battle: { label: 'Battle', icon: Swords, tone: 'danger' },
   siege: { label: 'Siege', icon: Shield, tone: 'warning' },
   magic_storm: { label: 'Magic storm', icon: Sparkles, tone: 'verdigris' },
@@ -92,7 +98,7 @@ export const KIND_SPEC: Record<string, Spec> = {
   },
   fire: {
     label: 'Great fire',
-    icon: Flame,
+    icon: FlameKindling,
     tone: 'warning',
     hint: 'Burns districts and leaves burned ground',
   },
@@ -180,11 +186,11 @@ export const SOIL_SPEC: Record<SoilKind, Spec> = {
   permafrost: { label: 'Permafrost', icon: Snowflake, tone: 'info' },
   regolith: { label: 'Regolith', icon: Mountain, tone: 'muted' },
   artificial: { label: 'Made ground', icon: Building2, tone: 'gold' },
-  humic: { label: 'Humic soil', icon: Sprout, tone: 'success' },
-  leached: { label: 'Leached soil', icon: Droplets, tone: 'muted' },
+  humic: { label: 'Humic soil', icon: Leaf, tone: 'success' },
+  leached: { label: 'Leached soil', icon: Droplet, tone: 'muted' },
   silt: { label: 'Silt', icon: Waves, tone: 'info' },
-  gley: { label: 'Gley', icon: Droplets, tone: 'verdigris' },
-  cracking_clay: { label: 'Cracking clay', icon: CircleDot, tone: 'warning' },
+  gley: { label: 'Gley', icon: GlassWater, tone: 'verdigris' },
+  cracking_clay: { label: 'Cracking clay', icon: HeartCrack, tone: 'warning' },
 }
 
 export const RIVER_SPEC: Record<RiverClass, Spec> = {
@@ -197,12 +203,18 @@ export const RIVER_SPEC: Record<RiverClass, Spec> = {
 export const CAUSE_SPEC: Record<RiverShiftCause, Spec> = {
   flood: { label: 'A great flood', icon: CloudRain, tone: 'info' },
   quake: { label: 'An earthquake', icon: Activity, tone: 'warning' },
-  divine: { label: 'A god', icon: Sparkles, tone: 'gold' },
+  divine: { label: 'A god', icon: Sun, tone: 'gold' },
   player: { label: 'Your hand', icon: Sparkles, tone: 'gold' },
   silting: { label: 'Its bed silted up', icon: Waves, tone: 'muted' },
   works: { label: 'The works of a people', icon: Hammer, tone: 'warning' },
   eruption: { label: 'An eruption', icon: Flame, tone: 'danger' },
   landslide: { label: 'A landslide', icon: Mountain, tone: 'warning' },
+  ice: { label: 'River ice', icon: Snowflake, tone: 'info' },
+  capture: {
+    label: 'Another river cut into it',
+    icon: Droplets,
+    tone: 'muted',
+  },
 }
 
 export const FIELD_LABEL: Record<string, string> = {

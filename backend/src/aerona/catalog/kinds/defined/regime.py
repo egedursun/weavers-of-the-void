@@ -43,6 +43,7 @@ LEGITIMACY_TYPE = total(
         LegitimacyType.DIVINE_MANDATE: Defined("Divine mandate", checked_by=(), used_by=()),
         LegitimacyType.POPULAR: Defined("Popular", checked_by=(), used_by=()),
         LegitimacyType.PERFORMANCE: Defined("Performance", checked_by=(), used_by=()),
+        LegitimacyType.CONQUEST: Defined("Conquest", checked_by=("catalog.life.regime.TYPE_LABELS",), used_by=()),
     },
 )
 

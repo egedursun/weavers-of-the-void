@@ -30,6 +30,11 @@ import {
   Dice5,
   MapPin,
   Briefcase,
+  Diamond,
+  SunDim,
+  Zap,
+  LineStyle,
+  Flower,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -37,7 +42,7 @@ export const TASTES_ICON = Heart
 export const ETHICS_ICON = Scale
 
 export const PREFERENCE_KINDS: Record<string, Named> = {
-  material: { label: 'Material', icon: Gem, tone: 'gold' },
+  material: { label: 'Material', icon: Diamond, tone: 'gold' },
   food: { label: 'Food', icon: Utensils, tone: 'success' },
   drink: { label: 'Drink', icon: Wine, tone: 'info' },
   creature: { label: 'Creature', icon: PawPrint, tone: 'verdigris' },
@@ -55,12 +60,12 @@ export const PREFERENCE_KINDS: Record<string, Named> = {
   looks: { label: 'Looks', icon: Gem, tone: 'gold' },
   technology: { label: 'Technology', icon: Cpu, tone: 'info' },
   made_thing: { label: 'Made thing', icon: Hammer, tone: 'warning' },
-  power: { label: 'Power', icon: Sparkles, tone: 'gold' },
-  source: { label: 'Source of power', icon: Sun, tone: 'gold' },
-  living_line: { label: 'Living craft', icon: Leaf, tone: 'success' },
+  power: { label: 'Power', icon: Zap, tone: 'gold' },
+  source: { label: 'Source of power', icon: SunDim, tone: 'gold' },
+  living_line: { label: 'Living craft', icon: LineStyle, tone: 'success' },
   network: { label: 'Network', icon: Network, tone: 'info' },
   sound: { label: 'Sound', icon: Music, tone: 'verdigris' },
-  scent: { label: 'Scent', icon: Flower2, tone: 'success' },
+  scent: { label: 'Scent', icon: Flower, tone: 'success' },
   texture: { label: 'Texture', icon: Hand, tone: 'muted' },
   story_form: { label: 'Shape of a story', icon: BookOpen, tone: 'verdigris' },
   game: { label: 'Game', icon: Dice5, tone: 'warning' },

@@ -500,6 +500,8 @@ def road_risk(
     sails = wind_guard(rules, rig.fabric) if rig is not None else 1.0
     risk = route.danger / PERCENT + world_danger / PERCENT * travel.world_danger_risk_pct / PERCENT + wind / PERCENT * travel.wind_risk_pct / PERCENT * sails
     risk += region_danger / PERCENT * rules.regional_danger.traveller_risk_pct / PERCENT
+    if route.guarded:
+        risk *= rules.cosmography.guarded_risk_pct / PERCENT
     if KnowledgeBranch.SKY_NAVIGATION in branches:
         risk *= travel.sky_navigation_risk_pct / PERCENT
     if KnowledgeBranch.VOID_LIVING in branches:
@@ -1114,6 +1116,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "settlement.defense",
     "settlement.piety",
     "settlement.population",
+    "settlement.prosperity",
     "species.danger",
     "table.augments",
     "table.beast_profiles",
@@ -1129,6 +1132,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.divine_wounds",
@@ -1165,6 +1169,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "table.node_materials",
     "table.nodes",
     "table.offices",
+    "table.outbreaks",
     "table.people_biology",
     "table.personality_values",
     "table.place_environment",
@@ -1209,6 +1214,7 @@ async def _arrival_note(ctx: TickContext, arrival: Arrival, result: EntityRow | 
     "people.prosperity",
     "settlement.piety",
     "settlement.population",
+    "settlement.prosperity",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",

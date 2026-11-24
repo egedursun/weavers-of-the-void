@@ -36,6 +36,8 @@ class RulerCurrencyRow(Base):
         between("piety", PERCENT_MIN, PERCENT_MAX),
         between("dread", PERCENT_MIN, PERCENT_MAX),
         between("tyranny", PERCENT_MIN, PERCENT_MAX),
+        between("trust", PERCENT_MIN, PERCENT_MAX),
+        between("learning", PERCENT_MIN, PERCENT_MAX),
         at_least("updated_epoch", 0),
     )
 
@@ -44,6 +46,8 @@ class RulerCurrencyRow(Base):
     piety: Mapped[int] = mapped_column(default=0)
     dread: Mapped[int] = mapped_column(default=0)
     tyranny: Mapped[int] = mapped_column(default=0)
+    trust: Mapped[int] = mapped_column(default=0, server_default="0")
+    learning: Mapped[int] = mapped_column(default=0, server_default="0")
     silenced_until: Mapped[int | None]
     updated_epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

@@ -35,6 +35,8 @@ class CookingMethod(StrEnum):
     AGED = "aged"
     EXTRUDED = "extruded"
     PRESSURE_COOKED = "pressure_cooked"
+    EARTH_OVEN = "earth_oven"
+    PARCHED = "parched"
 
 
 class DishCourse(StrEnum):

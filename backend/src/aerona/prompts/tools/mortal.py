@@ -84,14 +84,14 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "household_id": "Your household",
             "terms": "The terms of service: wage, board or bound",
             "wage": "The wage your household pays each epoch when the terms are a wage",
-            "duties": "Duties of the house the servant keeps: food, water, fuel, cleaning, textiles, childcare, eldercare, animals, repairs, sickcare or household_rites",
+            "duties": "Duties of the house the servant keeps: food, water, fuel, cleaning, textiles, childcare, eldercare, animals, repairs, sickcare, household_rites, teaching or accounts",
         },
     ),
     T.TAKE_LEISURE: ToolText(
         "You give part of your time to a pursuit you enjoy, at a place if you name one: it lifts your mood and eases your stress, "
         "and a pursuit of travel spends your coin at the place you visit. 1 action.",
         {
-            "kind": "The pursuit: conversation, games, sport, music, crafts, collecting, reading, excursion, tourism, drinking, worship_extra, rest, media, dance, storytelling or hunting",
+            "kind": "The pursuit: conversation, games, sport, music, crafts, collecting, reading, excursion, tourism, drinking, worship_extra, rest, media, dance, storytelling, hunting, gardening, bathing or animal_keeping",
             "venue_id": "Where you pursue it, if anywhere in particular",
         },
     ),
@@ -102,7 +102,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "household_id": "Your household",
             "assignments": "Who keeps which duty",
             "assignments.member_id": "A member or servant of your household",
-            "assignments.duty": "The duty: food, water, fuel, cleaning, textiles, childcare, eldercare, animals, repairs, sickcare or household_rites",
+            "assignments.duty": "The duty: food, water, fuel, cleaning, textiles, childcare, eldercare, animals, repairs, sickcare, household_rites, teaching or accounts",
         },
     ),
     T.CALL_ON_KIN: ToolText(
@@ -111,7 +111,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "Kin whom no strong duty binds may refuse, and a refusal counts as a breached duty. 1 action.",
         {
             "role": "Which kin: parent, child, sibling, grandparent, grandchild, parent_sibling_first_line, parent_sibling_second_line, "
-            "sibling_child, cousin_parallel, cousin_cross, parent_in_law, child_in_law, sibling_in_law, co_spouse, chosen_kin, godparent, sworn_kin or foster_kin",
+            "sibling_child, cousin_parallel, cousin_cross, parent_in_law, child_in_law, sibling_in_law, co_spouse, chosen_kin, godparent, sworn_kin, foster_kin, step_parent, step_child or half_sibling",
             "need": "What you need: food, coin, care, shelter or protection",
         },
     ),
@@ -131,7 +131,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "child_id": "The child you raise",
             "techniques": "The ways you raise it, each with a weight",
             "techniques.technique": "The way: example, instruction, praise, shame, punishment, ritual_ordeal, storytelling, play, "
-            "apprenticeship, schooling, peer_group or age_set",
+            "apprenticeship, schooling, peer_group, age_set, mentoring or travel",
             "techniques.weight": "How much of the upbringing goes this way, from 0 to 100",
         },
     ),
@@ -139,7 +139,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You set the way a school teaches: its theory sets how fast its pupils learn, and its depth whether it teaches few things deeply or many broadly. 1 action.",
         {
             "school_id": "The school",
-            "theory": "The theory: rote, dialectic, apprenticeship, discovery, ritual_transmission, examination, network_learning or mind_transfer",
+            "theory": "The theory: rote, dialectic, apprenticeship, discovery, ritual_transmission, examination, network_learning, mind_transfer or peer_teaching",
             "depth": "From 0 for breadth to 100 for depth",
         },
     ),
@@ -163,7 +163,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "its purpose moves the town's order, crime or unrest and what its members come to value. 1 action.",
         {
             "group_id": "The youth group of your town",
-            "purpose": "The purpose: sport, service, courtship, defence, faith, mischief, crime or politics",
+            "purpose": "The purpose: sport, service, courtship, defence, faith, mischief, crime, politics, learning or labour",
         },
     ),
     T.REFORM_YOUTH: ToolText(
@@ -181,7 +181,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "aim": "The aim: grow, hold, shrink, rebalance_age, rebalance_class, settle_land, empty_land, keep_kind, mix_kinds or none",
             "instruments": "The instruments, each with a strength",
             "instruments.instrument": "The instrument: birth_reward, birth_tax, union_law, child_limit, child_support, inheritance_rule, settlement_grant, "
-            "migration_permit, migration_ban, expulsion, resettlement, recruitment_abroad, health_campaign, faith_teaching or made_birth",
+            "migration_permit, migration_ban, expulsion, resettlement, recruitment_abroad, health_campaign, faith_teaching, made_birth, immunisation or sanitation",
             "instruments.strength": "Its strength, from 0 to 100",
             "target_node_id": "A people or place within your realm the policy aims at, or none for the whole realm",
             "reason": "Why you set it",
@@ -224,7 +224,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "and finished works change roads, bridges, water, walls, stores, harbours or prosperity. 1 action.",
         {
             "kind": "The works: road, bridge, canal, rail_line, aqueduct, dam, drainage, harbour_works, walls, granary_system, sewer, power_line, "
-            "network_line, terraforming_stage, megastructure_stage or grown_works",
+            "network_line, terraforming_stage, megastructure_stage, grown_works, lighthouse, terracing, irrigation or tunnel",
             "route_or_region_id": "The route, region or town they lie on",
             "labour": "The labour: paid, corvee, bound, made_minds or constructs",
             "budget": "What the treasury sets aside for them",
@@ -239,7 +239,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "and a corrupt manager may skim it. 1 action.",
         {
             "sector": "The good it deals in, or none",
-            "form": "The form: monopoly, royal_works, state_company, licence_holder, arsenal or mint",
+            "form": "The form: monopoly, royal_works, state_company, licence_holder, arsenal, mint, granary_board or post",
             "manager_id": "Who manages it: an official, a company or a made mind, or none",
         },
     ),
@@ -295,19 +295,42 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.SEAL_DEPTH: ToolText(
         "Seal the deep beneath a place in the land you stand on ({{ seal_kinds | join(', ') }}, though no mortal makes a god's seal). "
-        "A pact names an oath you swore to those below, a power names a power you hold and a grown barrier names a living line your people keep. 1 action.",
+        "A pact names an oath you swore to those below, a power names a power you hold, a grown barrier names a living line your people keep "
+        "and a made seal names a made mind your people made, which keeps it only while it stays awake, bound and true. 1 action.",
         {
             "place_id": "The place whose deep you seal",
             "kind": "What holds the seal",
             "oath_id": "For a pact: your oath",
             "power_id": "For a power: your power",
             "line_id": "For a grown barrier: your people's living line",
+            "mind_id": "For a made seal: a made mind your people made",
         },
     ),
     T.BORE: ToolText(
         "Bore down to a body of water or a trap beneath the land you stand on ({{ underground_strata | join(', ') }}); only the aquifer, the "
         "ocean under the ice and a reservoir can be bored. A bore into water may flood. 1 action.",
         {"region_id": "The land you stand on", "stratum": "What you bore to"},
+    ),
+    T.DIG_PASSAGE: ToolText(
+        "Your people dig a passage through the deep, or carry on digging one ({{ deep_passage_kinds | join(', ') }}): between the same stratum "
+        "beneath two neighbouring regions, between two strata beneath one region, or from a region's surface down to a cell beneath it. A stratum "
+        "names a level beneath the region; leave it empty for the surface. Your people must know metallurgy. The passage stands {{ "
+        "deep_passage_states | join(', ') }} as it is dug, opens, floods, falls or is sealed. 1 action.",
+        {
+            "from_region_id": "The region at one end",
+            "from_stratum": "The level beneath it at that end, or empty for its surface",
+            "to_region_id": "The region at the other end",
+            "to_stratum": "The level beneath it at the other end, or empty for its surface",
+        },
+    ),
+    T.CLEAR_PASSAGE: ToolText(
+        "Your people clear a passage of the deep that has fallen in, so that it opens again as the work goes on. 1 action.",
+        {"passage_id": "The passage to clear"},
+    ),
+    T.COLLAPSE_PASSAGE: ToolText(
+        "As an act of war or siege, you bring down a passage of the deep, cutting what passes through it. You need sappers or the knowledge of "
+        "metallurgy. 1 action.",
+        {"passage_id": "The passage to bring down"},
     ),
     T.DRILL_RESERVOIR: ToolText(
         "Drill the reservoir beneath the land you stand on for fuel; it yields {{ rules.underground.reservoir_draw }} at a time and may blow out "
@@ -652,7 +675,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "compulsory. 1 action.",
         {
             "form": "Its form: craft_union, industrial_union, general_union, companion_society, mutual_aid, worker_cooperative or made_mind_collective",
-            "trades": "The trades it speaks for: farming, herding, fishing, mining, crafting, trade, soldiering, clergy, scholarship, building, service, idle, transport, administration, gathering, industry or arts",
+            "trades": "The trades it speaks for: farming, herding, fishing, mining, crafting, trade, soldiering, clergy, scholarship, building, service, idle, transport, administration, gathering, industry, arts, healing or teaching",
             "settlement_id": "Your town",
         },
     ),
@@ -747,7 +770,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "slanted items move the opinion of its audience on their subject. 1 action.",
         {
             "outlet_id": "Your outlet",
-            "kind": "The item: news, opinion, record_of_event, entertainment, instruction, promotion, devotion or official",
+            "kind": "The item: news, opinion, record_of_event, entertainment, instruction, promotion, devotion, official, satire, sport or notices",
             "subject_incident_id": "The happening it tells of, or none",
             "subject_node_id": "Whom or what it speaks of, or none",
             "slant": "How it leans, from -100 against to 100 for",
@@ -794,15 +817,15 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "You speak in your town. At the assembly a speech moves the realm's standing, in the square or camp it stirs or calms the crowd, "
         "at the temple it moves the faithful; its force follows your charisma and the reach of the venue. 1 action.",
         {
-            "venue": "Where: assembly, court, temple, square, school, camp or outlet",
-            "aim": "To what end: persuade, teach, mock, mourn, rally, defend or accuse",
+            "venue": "Where: assembly, court, temple, square, school, camp, outlet, market or funeral",
+            "aim": "To what end: persuade, teach, mock, mourn, rally, defend, accuse, praise or warn",
             "audience_node_id": "Whom you speak to or of, or none",
         },
     ),
     T.SATIRISE: ToolText(
         "You mock someone in public. Where your people allow mocking such a one, it costs them honour and gains you some; "
         "where they do not, it gives offence, and mocking a ruler where speech is censored is punished. 1 action.",
-        {"target_id": "Whom you mock", "venue": "Where: assembly, court, temple, square, school, camp or outlet"},
+        {"target_id": "Whom you mock", "venue": "Where: assembly, court, temple, square, school, camp, outlet, market or funeral"},
     ),
     T.TEACH_LORE: ToolText(
         "You teach what your people know of a domain to someone. A learner of another people brings its accuracy closer to yours where yours is higher; "
@@ -825,7 +848,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "It raises your renown while it serves and goes on after you. 1 action.",
         {
             "beneficiary_id": "What or whom it serves: a town, a building, a school, a temple, a people or a being",
-            "purpose": "Its purpose: relief, learning, worship, health, works, art, kin, memory or research",
+            "purpose": "Its purpose: relief, learning, worship, health, works, art, kin, memory, research, hospitality or ransom",
             "capital": "How much of your wealth you give to it",
         },
     ),
@@ -1045,13 +1068,13 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.PRESS_LEVERAGE: ToolText(
         "You lean on someone you hold a hook on, or who owes you a favour, with one demand: marriage, step down, support, vote, law, "
-        "appointment, silence or payment. Appointment puts you in a vacant office of the realm they rule; silence keeps them from "
+        "appointment, silence, payment, release or information. Release frees those they hold of yours; information tells you what they know. Appointment puts you in a vacant office of the realm they rule; silence keeps them from "
         "testifying before a court that tries you. "
         "A weak hook is spent and a strong one may wear weak; a favour called in may be refused. 1 action.",
         {"target_id": "Whom you press", "demand": "What you demand"},
     ),
     T.SEND_DISPATCH: ToolText(
-        "You send a message to someone: proposal, demand, threat, insult, gift notice, declaration, report, plea, intelligence, order or warning, "
+        "You send a message to someone: proposal, demand, threat, insult, gift notice, declaration, report, plea, intelligence, order, warning, condolence or congratulation, "
         "by one of these: {{ mortal_media | join(', ') }}. It takes time by distance, medium and season; spies may read or seize it, "
         "outlaws may waylay it, and in another tongue it may be misread. 1 action.",
         {
@@ -1086,7 +1109,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "A crisis opens: other realms back a side, the weaker side backs down or concedes, and if neither yields it becomes war. 1 action.",
         {
             "target_id": "The realm you make the demand of",
-            "demand": "What you demand: cede_region, release_vassal, convert, pay, hand_over, disarm or open_trade",
+            "demand": "What you demand: cede_region, release_vassal, convert, pay, hand_over, disarm, open_trade, apology or release_captives",
             "subject_id": "The land to cede, the vassal to release or the person to hand over, if the demand names one",
         },
     ),
@@ -1097,7 +1120,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.ISSUE_MANDATE: ToolText(
         "As ruler or regent you issue a mandate: {{ mandate_kinds }}. Unmet mandates cost you legitimacy, and harsh ones weigh on your people. 1 action.",
         {
-            "kind": "produce, export_ban, build, famine_relief, curfew, slum_clearance, prepare, enclosure, ration or corvee",
+            "kind": "produce, export_ban, build, famine_relief, curfew, slum_clearance, prepare, enclosure, ration, corvee, quarantine or conscription",
             "settlement_id": "The settlement it is laid on, if any",
             "commodity": "The good to produce, ban or send",
             "district": "The quarter to build",
@@ -1135,8 +1158,8 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.TRADE_LORE: ToolText(
         "You trade a piece of lore you hold (a technique, a hidden site, knowledge of a land or a prophecy) to a neighbour who lacks it. "
-        "Rarer lore is worth more, and each telling makes it less rare. You may name the price: wealth, favour, renown, exchange or service. "
-        "Exchange takes a piece of lore the buyer holds and you lack; service is a deed the buyer must do before the lore passes. "
+        "Rarer lore is worth more, and each telling makes it less rare. You may name the price: wealth, favour, renown, exchange, service or oath. "
+        "Exchange takes a piece of lore the buyer holds and you lack; service is a deed the buyer must do before the lore passes; an oath binds the buyer, and breaking it is oathbreaking. "
         "Otherwise the buyer pays as it can. 1 action.",
         {
             "buyer_id": "Who receives the lore",
@@ -1147,7 +1170,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         },
     ),
     T.PERSUADE: ToolText(
-        "You try to bring another being round by an appeal of one kind: belief, self_interest, authority, evidence, fear, feeling or bond. "
+        "You try to bring another being round by an appeal of one kind: belief, self_interest, authority, evidence, fear, feeling, bond or tradition. "
         "You may aim at a belief, a decision, a faith, a vote, a treaty, a surrender or a confession: a surrender is sought from the ruler of a town "
         "your side besieges and works only once its defenders falter; a confession is sought from one you hold accused. An appeal to a bond fails "
         "where none ties you. Your oratory, how well the appeal fits them, their stubbornness and their passions decide it. 1 action.",
@@ -1227,6 +1250,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "subtype": "Its own name for this kind of structure",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own settlement, place or region; if empty, where you are",
+            "stratum": "Only when the place is a region: the level beneath it where it stands ({{ underground_strata | join(', ') }}), or empty for the surface",
             "dedicated_son_id": "The god it is dedicated to, if any",
             "material": "What it is built of, from your people's stores; a holy material raises a temple's sanctity and a soft one decays sooner",
             "channels_ley": "True if it is raised to draw on the ley lines; it gains strength only where a line runs",
@@ -1261,6 +1285,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "subtype": "What kind of resource it is",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own region or a place in your region",
+            "stratum": "Only when the place is a region: the level beneath it where it stands ({{ underground_strata | join(', ') }}), or empty for the surface",
             "domain": "One of: {{ domains | join(', ') }}",
             "image_prompt": IMAGE_PROMPT_FIELD,
             "commodity": "What your people draw from it: {{ commodities | join(', ') }}; ore goes to metalworking",
@@ -1282,6 +1307,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "subtype": "What kind of settlement it is",
             "description": DESCRIPTION_FIELD,
             "location_id": "Your own region or a neighbouring region",
+            "stratum": "Only when the place is a region: the level beneath it where it stands ({{ underground_strata | join(', ') }}), or empty for the surface",
             "image_prompt": IMAGE_PROMPT_FIELD,
             "mode": "How it is settled; leave empty to settle as your people and the ground allow",
         },
@@ -1372,6 +1398,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
             "subtype": "What kind of land or place it is",
             "description": "What you found, how you found it, what the first to set foot there saw",
             "location_id": "Only for a place: the region it lies in (your own or a neighbouring one); if empty, your own region",
+            "stratum": "Only when the place is a region: the level beneath it where it stands ({{ underground_strata | join(', ') }}), or empty for the surface",
             "settle": "If you are a community, your pioneers settle there and found a new settlement",
             "image_prompt": IMAGE_PROMPT_FIELD,
         },
@@ -1398,7 +1425,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         "holds, and some journeys never arrive. 1 action.",
         {
             "route_id": "The route's id",
-            "intent": "colony, trade, exploration, conquest, pilgrimage, exile, flight or embassy",
+            "intent": "colony, trade, exploration, conquest, pilgrimage, exile, flight, embassy, rescue or return",
             "percent": "What percent of your community sets out (for colony or conquest; at most {{ "
             + M
             + ".expedition_max_pct }}); default {{ "
@@ -1681,8 +1708,9 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"commons_id": "The common you enclose"},
     ),
     T.RULE_COMMONS: ToolText(
-        "You set a council over a common of your land; a common ruled by its users wears down far more slowly when many depend on it. 1 action.",
-        {"commons_id": "The common the council rules"},
+        "You set a council over a common of your land, or have its households take it in turns by year; a common ruled by its users wears down far "
+        "more slowly when many depend on it, and one taken in turns also eases the quarrels over it. 1 action.",
+        {"commons_id": "The common the council rules", "by_turns": "True to have its households take it in turns by year"},
     ),
     T.OPEN_GROUND: ToolText(
         "Open a ground for your people to catch from in the land you stand on ({{ catch_grounds | join(', ') }}), worked with gear it allows "
@@ -1968,7 +1996,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     T.TEND_CULTURE: ToolText(
         "You tend a ferment culture of your town, or start one if it has none of that kind; a kept culture makes the town's baked, cured, fermented,"
         " pickled and brewed food better. 1 action.",
-        {"kind": "The culture: yeast, starter, mould, lactic or vinegar"},
+        {"kind": "The culture: yeast, starter, mould, lactic, vinegar, alkaline or wild"},
     ),
     T.MAKE_MIND: ToolText(
         "You make a mind in a thing near you, by the method you name, with the will and purpose you give it; your skill sets how well it turns out. 1 action.",
@@ -2597,7 +2625,7 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
         {"loan_id": "The loan", "buyer_id": "Who buys it"},
     ),
     T.INSURE: ToolText(
-        "You buy cover from an insurer of your town against one kind of loss: cargo, house, life, crop, vessel or livestock; you pay a premium each epoch and it pays when the loss comes, if it can. 1 action.",
+        "You buy cover from an insurer of your town against one kind of loss: cargo, house, life, crop, vessel, livestock, health or ransom; you pay a premium each epoch and it pays when the loss comes, if it can. 1 action.",
         {"insurer_id": "The insurer", "cover": "What the cover is against"},
     ),
     T.SEIZE_HOARDS: ToolText(
@@ -2638,9 +2666,9 @@ MORTAL_TOOL_TEXTS: dict[MortalToolId, ToolText] = {
     ),
     T.PROPOSE_RESOLUTION: ToolText(
         "As ruler or regent of a member you put a resolution to your council of worlds for its members to vote on: "
-        "route security, embargo, void ban, sanction, quarantine, arbitration or aid. "
-        "An embargo, sanction, quarantine, arbitration or aid names what it is about: a realm, a god, a world struck by plague, a member at odds or a "
-        "stricken member. 1 action.",
+        "route security, embargo, void ban, sanction, quarantine, arbitration, aid, peacekeeping or recognition. "
+        "An embargo, sanction, quarantine, arbitration, aid, peacekeeping or recognition names what it is about: a realm, a god, a world struck by plague, a member at odds, a "
+        "stricken member, a member at war or a new polity to admit. 1 action.",
         {"kind": "The resolution", "target_id": "What it is about"},
     ),
     T.EXPEL_ENVOY: ToolText(

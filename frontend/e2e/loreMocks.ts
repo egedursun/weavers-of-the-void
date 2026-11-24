@@ -22,7 +22,7 @@ const LORE_SCREENS = /^\/(atlas|chronicle|languages|gallery)(\/|$)/
 export function onLoreScreen(referer: string | undefined): boolean {
   if (!referer) return false
   const url = new URL(referer)
-  return LORE_SCREENS.test(url.pathname) || /drawer=[^&]*entity/.test(url.search)
+  return LORE_SCREENS.test(url.pathname) || /entry=[^&]*entity/.test(url.search)
 }
 
 type Summary = {

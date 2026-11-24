@@ -28,6 +28,7 @@ import {
   Trash2,
   Users,
   Wheat,
+  BrickWallFire,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -64,6 +65,7 @@ import { Label, Muted, Stat, Text } from '@/components/typography'
 import { TERRAIN, WEATHER } from '@/features/entity/environment/labels'
 import { CLASS_SPEC } from '@/features/entity/society/labels'
 import { IncitementCard } from '@/features/foundations/IncitementCard'
+import { StratumBadge } from '@/features/map/StratumBadge'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { WARS } from '@/features/worldview/labels'
@@ -149,7 +151,7 @@ const SIEGE_MAX: Partial<Record<SiegeNumber, number>> = {
 const SIEGE_ICON: Record<SiegeNumber, typeof Wheat> = {
   supplies: Wheat,
   water: Droplets,
-  breaches: BrickWall,
+  breaches: BrickWallFire,
   walls_level: BrickWall,
   disease_inside: Biohazard,
   disease_outside: Biohazard,
@@ -972,6 +974,7 @@ export function OccupationCard({
             {`Held by ${occupation.occupier?.name ?? 'an enemy'}`}
           </Muted>
         </div>
+        <StratumBadge stratum={occupation.stratum} />
         <Plain icon={CalendarDays}>{`Since ${occupation.since_epoch}`}</Plain>
       </div>
       {perspective && (
@@ -1462,10 +1465,17 @@ function Fronts({ room }: { room: Room }) {
           const first = front.first_region?.name ?? '?'
           const second = front.second_region?.name ?? '?'
           return (
-            <li key={`${front.first_region?.id}.${front.second_region?.id}`}>
+            <li
+              key={`${front.first_region?.id}.${front.second_region?.id}`}
+              className='flex min-w-0 flex-wrap items-center gap-1'
+            >
               <Plain icon={MapIcon}>
                 {`${first === second ? first : `${first} – ${second}`} · epoch ${front.since_epoch === front.last_epoch ? front.since_epoch : `${front.since_epoch}–${front.last_epoch}`}`}
               </Plain>
+              <StratumBadge stratum={front.first_stratum} />
+              {front.second_stratum !== front.first_stratum && (
+                <StratumBadge stratum={front.second_stratum} />
+              )}
             </li>
           )
         }}

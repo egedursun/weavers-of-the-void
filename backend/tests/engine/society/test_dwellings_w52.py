@@ -7,7 +7,7 @@ RULES = Rules()
 
 
 def test_fifteen_dwellings_and_what_shelters() -> None:
-    assert len(DWELLINGS) == len(DwellingKind) == 15
+    assert len(DWELLINGS) == len(DwellingKind) == 18
     stilts = DWELLINGS[DwellingKind.STILT_HOUSE]
     assert stilts.floods is not None and stilts.floods(RULES) == RULES.dwellings.stilt_flood_cut_pct
     burrow = DWELLINGS[DwellingKind.BURROW]
@@ -20,5 +20,8 @@ def test_fifteen_dwellings_and_what_shelters() -> None:
         DwellingKind.BURROW,
         DwellingKind.NEST,
         DwellingKind.SUBMERGED,
+        DwellingKind.ROCK_CUT,
+        DwellingKind.COURTYARD,
+        DwellingKind.GROWN,
     }
     assert Disaster.FLOOD in Disaster

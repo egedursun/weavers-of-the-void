@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest'
 import { render } from 'vitest-browser-react'
 import { page } from 'vitest/browser'
 import { RARITIES } from '@/constants/rarity'
-import { validateDrawerSearch } from '@/components/layout/drawer/drawerEntries'
+import { validateEntrySearch } from '@/components/layout/entry/entryStack'
 import {
   EmptyState,
   EntityLink,
@@ -28,7 +28,7 @@ import {
 
 async function renderInRouter(node: ReactNode, path = '/') {
   const rootRoute = createRootRoute({
-    validateSearch: validateDrawerSearch,
+    validateSearch: validateEntrySearch,
     component: () => node,
   })
   const router = createRouter({
@@ -65,12 +65,12 @@ describe('domain components', () => {
       <EntityLink kind='son' id='7'>
         Ithren
       </EntityLink>,
-      '/?drawer=entity:3'
+      '/?entry=entity:3'
     )
     await screen.getByRole('link', { name: 'Ithren' }).click()
     await expect
       .poll(() => router.state.location.search)
-      .toEqual({ drawer: 'entity:3,son:7' })
+      .toEqual({ entry: 'entity:3,son:7' })
   })
 
   it('falls back to initials when a plain portrait has no image', async () => {

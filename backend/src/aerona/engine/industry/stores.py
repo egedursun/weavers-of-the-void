@@ -134,7 +134,7 @@ async def spoil(ctx: TickContext, book: EconomyBook, community: EntityRow, row: 
     for lot in await perishables(ctx, community.id):
         if lot.held:
             continue
-        rate = 1 - (1 - min(PERCENT, getattr(table, PERISHABLE[lot.commodity]) * goods.spoil_scale(lot.commodity)) / PERCENT * shelter) ** years
+        rate = 1 - (1 - min(PERCENT, getattr(table, PERISHABLE[lot.commodity]) * goods.spoil_scale(lot.commodity, ctx.rules)) / PERCENT * shelter) ** years
         if lot.commodity in STORED_GRAINS:
             rate = min(1.0, rate * ((1 + table.vermin_pct / PERCENT) if vermin else 1.0) * ((1 - table.hunters_pct / PERCENT) if hunters else 1.0))
         lost = min(lot.quantity - lot.preserved, round_half_up((lot.quantity - lot.preserved) * rate))

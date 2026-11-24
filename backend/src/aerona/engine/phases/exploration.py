@@ -29,7 +29,7 @@ from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.civilization import TierCapability
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.epoch import DeferredStepKind, DeferredStepStatus
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.life_traits import KnowledgeBranchTrait
@@ -310,6 +310,33 @@ async def find_land(ctx: TickContext, search: LandSearch) -> LandResult | None:
     )
     ctx.count("lands_found")
     return LandResult(land, kind, pioneer, written.text)
+
+
+async def shape_region(ctx: TickContext, world_id: int, near_id: int | None, water: bool, stats: dict[str, int | None]) -> EntityRow:
+    world = await ctx.session.get(WorldRow, world_id)
+    if world is None:
+        raise NotFoundError("No such world.")
+    near = await ctx.session.get(EntityRow, near_id) if near_id is not None else None
+    if near is not None and (near.entity_type is not EntityType.REGION or near.world_id != world.id):
+        raise ValidationFailedError("A new region lies beside a region of the same world.")
+    rolled = land_stats(ctx, EntityType.REGION, ctx.rng(seed_of("shaped_region", world.id, near_id or 0))).model_dump(exclude_none=True)
+    land = await open_record(
+        ctx.session,
+        ctx.epoch,
+        RecordSpec(
+            name=f"{world.name} New Land",
+            entity_type=EntityType.REGION,
+            body=f"A region of {world.name}.",
+            stats=RegionStats.model_validate({**rolled, **{key: value for key, value in stats.items() if value is not None}}),
+            power=ctx.rules.exploration.land_power,
+            world_id=world.id,
+            is_water=water,
+            origin=EntityOrigin.CREATOR,
+        ),
+    )
+    await position_region(ctx, land, near)
+    await record(ctx, "creation.shaped", roles={IncidentRole.PRODUCT: land.id}, place=land.id, world_id=world.id)
+    return land
 
 
 async def _discovery_bonds(ctx: TickContext, search: LandSearch, land: EntityRow) -> None:
@@ -717,6 +744,7 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.community_societies",
     "table.cosmos",
     "table.creator",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",

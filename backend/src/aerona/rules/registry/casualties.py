@@ -54,3 +54,6 @@ class CasualtiesRules(Spanned):
     @property
     def veteran_epochs(self) -> int:
         return self.epochs(self.veteran_years)
+
+    camp_sick_pct: int = rule(8, 0, 100, H, "Chance a named soldier of a beaten side is taken by camp sickness after the battle (%)")
+    camp_sick_harm: int = rule(20, 0, 100, H, "Health camp sickness takes from a soldier it strikes")

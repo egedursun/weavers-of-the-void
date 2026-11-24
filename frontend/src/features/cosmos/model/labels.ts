@@ -177,6 +177,8 @@ export const ATMOSPHERE_LABEL: Record<Atmosphere, string> = {
   normal: 'Normal',
   dense: 'Dense',
   toxic: 'Toxic',
+  steam: 'Steam',
+  layered: 'Breathable in one band',
 }
 
 export const CLIMATE_LABEL: Record<ClimateEra, string> = {
@@ -202,6 +204,8 @@ export const JOURNEY_INTENT_LABEL: Record<JourneyIntent, string> = {
   exile: 'Exile',
   flight: 'Flight',
   embassy: 'Embassy',
+  return: 'Return home',
+  rescue: 'Rescue',
 }
 
 export const JOURNEY_STATUS_LABEL: Record<JourneyStatus, string> = {

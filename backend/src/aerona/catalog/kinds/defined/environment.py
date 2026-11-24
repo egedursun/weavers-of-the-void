@@ -16,12 +16,12 @@ LAND_USE = total(
 MOVEMENT_MEDIUM = total(
     MovementMedium,
     {
-        MovementMedium.GROUND: Defined("Ground", checked_by=(), used_by=("catalog.movement.MOVEMENT",)),
+        MovementMedium.GROUND: Defined("Ground", checked_by=("catalog.movement.CAVE_WAYS",), used_by=("catalog.movement.MOVEMENT",)),
         MovementMedium.WATER_SURFACE: Defined(
             "Water surface", checked_by=("catalog.movement.by_water", "engine.environment.profile.passability_of"), used_by=("catalog.movement.MOVEMENT",)
         ),
         MovementMedium.UNDER_WATER: Defined("Under water", checked_by=("engine.environment.profile.passability_of",), used_by=("catalog.movement.MOVEMENT",)),
-        MovementMedium.AIR: Defined("Air", checked_by=(), used_by=("catalog.movement.MOVEMENT",)),
+        MovementMedium.AIR: Defined("Air", checked_by=("catalog.movement.CAVE_WAYS",), used_by=("catalog.movement.MOVEMENT",)),
         MovementMedium.THROUGH_MATTER: Defined(
             "Through matter", checked_by=("engine.environment.profile.passability_of",), used_by=("catalog.movement.MOVEMENT",)
         ),
@@ -86,6 +86,8 @@ TERRAIN_TRAIT = total(
                 "engine.demography.peoples.COVERED",
                 "engine.industry.fuels.COAL_TERRAINS_BLOCKED",
                 "engine.military.battle.SHELTER",
+                "engine.military.battle.fire_weight",
+                "engine.military.clash.JUNGLES",
                 "engine.military.clash.WOODS",
             ),
         ),
@@ -105,6 +107,7 @@ TERRAIN_TRAIT = total(
             checked_by=(),
             used_by=(
                 "catalog.dangers.HAZARDS",
+                "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
                 "engine.demography.biology.HEIGHTS",
                 "engine.economy.extraction.HILLY",
@@ -118,6 +121,7 @@ TERRAIN_TRAIT = total(
             "High",
             checked_by=(),
             used_by=(
+                "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
                 "engine.belonging.sanctuary.HIDING",
                 "engine.demography.peoples.COVERED",
@@ -150,6 +154,7 @@ TERRAIN_TRAIT = total(
                 "engine.environment.geology.sediments",
                 "engine.military.battle.SHELTER",
                 "engine.military.clash.WETLANDS",
+                "engine.water.ice.WET_LANDS",
             ),
         ),
         TerrainTrait.ARID: Defined(
@@ -163,6 +168,7 @@ TERRAIN_TRAIT = total(
                 "engine.economy.extraction.DRYLANDS",
                 "engine.economy.route_dangers.CARAVAN_TERRAIN",
                 "engine.environment.geology.sediments",
+                "engine.military.battle.fire_weight",
                 "engine.military.clash.DRYLANDS",
                 "engine.water.ice.DRY_LANDS",
             ),
@@ -176,15 +182,21 @@ TERRAIN_TRAIT = total(
                 "engine.demography.peoples.SKY_LANDS",
                 "engine.economy.route_dangers.PASS_TERRAIN",
                 "engine.environment.dangers.SNOW_TERRAIN",
+                "engine.environment.geology.lay_region",
                 "engine.environment.geomorph.DRY_LANDS",
                 "engine.industry.fuels.COAL_TERRAINS_BLOCKED",
                 "engine.military.battle.HIGHLANDS",
                 "engine.military.battle.SHELTER",
+                "engine.military.clash.COLDLANDS",
                 "engine.structures.types.CARVED_GROUND",
                 "engine.vehicles.caravans.SNOW_GROUNDS",
+                "engine.water.ice.ICY_LANDS",
+                "engine.water.ice.WET_LANDS",
             ),
         ),
-        TerrainTrait.HOT: Defined("Hot", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.industry.fuels.COAL_TERRAINS_BLOCKED")),
+        TerrainTrait.HOT: Defined(
+            "Hot", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.industry.fuels.COAL_TERRAINS_BLOCKED", "engine.military.clash.JUNGLES")
+        ),
         TerrainTrait.COASTAL: Defined(
             "Coastal",
             checked_by=(),
@@ -201,7 +213,7 @@ TERRAIN_TRAIT = total(
         ),
         TerrainTrait.WATERY: Defined(
             "Watery",
-            checked_by=("engine.couplings.carrion.rest_of", "engine.ecology.beast_ways.habitat_ways", "engine.nature.senses.in_water"),
+            checked_by=("engine.couplings.carrion.taken_rest", "engine.ecology.beast_ways.habitat_ways", "engine.nature.senses.in_water"),
             used_by=(
                 "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
@@ -211,6 +223,7 @@ TERRAIN_TRAIT = total(
                 "engine.environment.weather.warm_sea_draw",
                 "engine.operations.expeditions.ground_of",
                 "engine.operations.expeditions.wreck_ground",
+                "engine.water.ice.WET_LANDS",
                 "services.integrity.w52_agent_h.ground_fits",
             ),
         ),
@@ -226,6 +239,9 @@ TERRAIN_TRAIT = total(
             ),
         ),
         TerrainTrait.BUILT: Defined("Built", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.military.aftermath.street_toll")),
+        TerrainTrait.RUINED: Defined(
+            "Ruined", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.belonging.sanctuary.HIDING", "engine.economy.extraction.RUINS")
+        ),
         TerrainTrait.AMBUSH_COVER: Defined(
             "Ambush cover",
             checked_by=(),
@@ -248,7 +264,9 @@ TERRAIN_TRAIT = total(
                 "engine.structures.types.CARVED_GROUND",
             ),
         ),
-        TerrainTrait.SLIPPERY: Defined("Slippery", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.military.duels.SLIPPERY")),
+        TerrainTrait.SLIPPERY: Defined(
+            "Slippery", checked_by=(), used_by=("catalog.terrain.TERRAIN", "engine.military.duels.SLIPPERY", "engine.water.ice.ICY_LANDS")
+        ),
         TerrainTrait.NON_MINERAL_GROUND: Defined(
             "Non mineral ground",
             checked_by=(),
@@ -292,6 +310,7 @@ WEATHER_KIND = total(
                 "catalog.cosmography.PHENOMENON_WEATHER",
                 "catalog.life.powers.FORM_WEATHER",
                 "catalog.weather.WEATHER",
+                "engine.forecasting.works.AIM_WEATHER",
                 "engine.lore.rites.SCHOOL_WEATHER",
             ),
         ),
@@ -365,7 +384,9 @@ WEATHER_TRAIT = total(
         WeatherTrait.SNOW_COVER: Defined(
             "Snow cover", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.battle.modifier", "engine.military.clash.wanted_traits")
         ),
-        WeatherTrait.WET: Defined("Wet", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.duels.set_footing")),
+        WeatherTrait.WET: Defined(
+            "Wet", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.battle.fire_weight", "engine.military.duels.set_footing")
+        ),
         WeatherTrait.LIQUID: Defined("Liquid", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.military.battle.weather_factor")),
         WeatherTrait.HOT: Defined(
             "Hot", checked_by=(), used_by=("catalog.weather.WEATHER", "engine.demography.biology.trait_edge", "engine.environment.weather.SUMMER_TRAITS")
@@ -378,6 +399,7 @@ WEATHER_TRAIT = total(
             checked_by=(),
             used_by=(
                 "catalog.weather.WEATHER",
+                "engine.military.battle.fire_weight",
                 "engine.military.battle.weather_factor",
                 "engine.military.naval.fleet_power",
                 "engine.military.vessels.arms_weight",

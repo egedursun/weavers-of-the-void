@@ -23,6 +23,9 @@ class RelationType(StrEnum):
     BETROTHED = "betrothed"
     SWORN_KIN = "sworn_kin"
     FOSTER = "foster"
+    NEIGHBOUR = "neighbour"
+    GUEST_FRIEND = "guest_friend"
+    ESTRANGED = "estranged"
 
 
 class InteractionKind(StrEnum):
@@ -50,6 +53,10 @@ class InteractionKind(StrEnum):
     APOLOGISE = "apologise"
     SHARE_MEAL = "share_meal"
     ASK_COUNSEL = "ask_counsel"
+    PRAISE = "praise"
+    WARN = "warn"
+    PLEAD = "plead"
+    SHARE_NEWS = "share_news"
 
 
 class CircleKind(StrEnum):
@@ -63,6 +70,8 @@ class CircleKind(StrEnum):
     CRAFT_CIRCLE = "craft_circle"
     SPORT_CLUB = "sport_club"
     GAMING_CIRCLE = "gaming_circle"
+    READING_CIRCLE = "reading_circle"
+    MUTUAL_AID = "mutual_aid"
 
 
 class PassionKind(StrEnum):
@@ -80,6 +89,8 @@ class PassionKind(StrEnum):
     JEALOUSY = "jealousy"
     ADMIRATION = "admiration"
     OBSESSION = "obsession"
+    VENGEANCE = "vengeance"
+    COMPASSION = "compassion"
 
 
 class PassionSource(StrEnum):
@@ -98,6 +109,7 @@ class AppealKind(StrEnum):
     FEAR = "fear"
     FEELING = "feeling"
     BOND = "bond"
+    TRADITION = "tradition"
 
 
 class PersuasionAim(StrEnum):
@@ -108,6 +120,8 @@ class PersuasionAim(StrEnum):
     TREATY = "treaty"
     SURRENDER = "surrender"
     CONFESSION = "confession"
+    ALLIANCE = "alliance"
+    RELEASE = "release"
 
 
 class GroupKind(StrEnum):
@@ -119,6 +133,8 @@ class GroupKind(StrEnum):
     CELL = "cell"
     BAND = "band"
     TEAM = "team"
+    CONGREGATION = "congregation"
+    SCHOOL = "school"
 
 
 class ContestKind(StrEnum):
@@ -131,6 +147,8 @@ class ContestKind(StrEnum):
     STORYTELLING = "storytelling"
     RACE = "race"
     CRAFT_CONTEST = "craft_contest"
+    WRESTLING = "wrestling"
+    HUNT = "hunt"
 
 
 class ContestStake(StrEnum):
@@ -143,6 +161,8 @@ class ContestStake(StrEnum):
     LAND = "land"
     FREEDOM = "freedom"
     KNOWLEDGE = "knowledge"
+    TITLE = "title"
+    RIGHTS = "rights"
 
 
 class ContestEnd(StrEnum):

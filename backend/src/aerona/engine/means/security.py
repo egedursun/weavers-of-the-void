@@ -18,6 +18,7 @@ from aerona.domain.enums.mind import SkillKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.structure import StructureKind
+from aerona.engine.body.book import capacity_lean
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import era_techniques
@@ -182,6 +183,7 @@ async def attempt_theft(ctx: TickContext, thief: EntityRow, owner: EntityRow, it
         if not opener and not dark:
             picked = float(PERCENT)
     odds = row.lock_quality * table.lock_pct / PERCENT * picked + row.guards * table.guard_pct
+    odds *= max(0.0, 1 - await capacity_lean(ctx.session, [thief.id], "stealth", ctx.rules.capacities.stealth_theft_pct))
     thwarted = rng.chance(min(PERCENT, odds))
     if not thwarted and row.lock is not None:
         await record(

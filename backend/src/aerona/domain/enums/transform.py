@@ -93,6 +93,8 @@ class TransformTrigger(StrEnum):
     DARK_AGE = "dark_age"
     PUNISHMENT = "punishment"
     BACKFILL = "backfill"
+    DEVOTION = "devotion"
+    DEED = "deed"
 
 
 class ProspectStance(StrEnum):

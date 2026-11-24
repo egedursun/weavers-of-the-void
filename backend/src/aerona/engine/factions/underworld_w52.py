@@ -51,6 +51,8 @@ async def stance_for(ctx: TickContext, realm_id: int, profile: FactionProfileRow
         return CrimeStance.LICENSE, PERCENT // 2
     if wealth > trade:
         return CrimeStance.TOLERATE, PERCENT // 2
+    if values.get(ValueAxis.MERCY, 0) > law:
+        return CrimeStance.INTEGRATE, PERCENT // 2
     return CrimeStance.CO_OPT, PERCENT // 2
 
 

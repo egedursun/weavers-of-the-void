@@ -18,6 +18,14 @@ import {
   CreateBeastDialog,
   CreateSpeciesDialog,
 } from '@/features/entity/wilds/CreateWilds'
+import {
+  FoundSettlementDialog,
+  RaiseRegionDialog,
+  ShapeMortalDialog,
+  ShapeRecordDialog,
+  ShapeSonDialog,
+  SummonOuterBeingDialog,
+} from './ShapeDialogs'
 
 export function CreateHub() {
   return (
@@ -32,11 +40,35 @@ export function CreateHub() {
         <DialogHeader>
           <DialogTitle>Create with your own hand</DialogTitle>
           <DialogDescription>
-            Forge any kind of lore, a new kind of creature or a great beast;
-            every value can be set before it enters the world.
+            Shape beings, lands, powers, creatures and lore; every value can be
+            set before it enters the world.
           </DialogDescription>
         </DialogHeader>
         <div className='flex min-w-0 flex-col gap-4'>
+          <div className='flex min-w-0 flex-col gap-2'>
+            <Label variant='overline'>Beings</Label>
+            <div className='flex min-w-0 flex-wrap gap-2'>
+              <ShapeMortalDialog />
+              <ShapeSonDialog />
+              <ShapeRecordDialog kind='spirit' />
+              <SummonOuterBeingDialog />
+            </div>
+          </div>
+          <div className='flex min-w-0 flex-col gap-2'>
+            <Label variant='overline'>Lands</Label>
+            <div className='flex min-w-0 flex-wrap gap-2'>
+              <RaiseRegionDialog />
+              <FoundSettlementDialog />
+            </div>
+          </div>
+          <div className='flex min-w-0 flex-col gap-2'>
+            <Label variant='overline'>Heavens and powers</Label>
+            <div className='flex min-w-0 flex-wrap gap-2'>
+              <ShapeRecordDialog kind='celestial' />
+              <ShapeRecordDialog kind='natural_law' />
+              <ShapeRecordDialog kind='cult' />
+            </div>
+          </div>
           <div className='flex min-w-0 flex-col gap-2'>
             <Label variant='overline'>Wilds</Label>
             <div className='flex min-w-0 flex-wrap gap-2'>

@@ -42,6 +42,7 @@ from aerona.db.tables.discovery import ArtFormProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.living import LivingLineRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import OathRow, OfficeRow
 from aerona.db.tables.powers import PowerRow
@@ -67,17 +68,20 @@ class SealChoices:
     oaths: list[SealLinkChoice]
     powers: list[SealLinkChoice]
     lines: list[SealLinkChoice]
+    minds: list[SealLinkChoice]
 
 
 async def seal_links(session: AsyncSession) -> SealChoices:
     oaths = list(await session.scalars(select(OathRow).where(OathRow.status == OathStatus.SWORN).order_by(OathRow.id.desc())))
     powers = list(await session.scalars(select(PowerRow).where(PowerRow.state == PowerState.ACTIVE).order_by(PowerRow.strength.desc(), PowerRow.id)))
     lines = list(await session.scalars(select(LivingLineRow).where(LivingLineRow.escaped.is_(False)).order_by(LivingLineRow.id)))
-    names = await node_names(session, [row.swearer_entity_id for row in oaths] + [row.holder_node_id for row in powers])
+    minds = list(await session.scalars(select(MindProfileRow.node_id).where(MindProfileRow.dormant.is_(False)).order_by(MindProfileRow.node_id)))
+    names = await node_names(session, [row.swearer_entity_id for row in oaths] + [row.holder_node_id for row in powers] + minds)
     return SealChoices(
         oaths=[SealLinkChoice(id=row.id, label=f"{names.get(row.swearer_entity_id, 'Someone')}'s oath of {spoken(row.kind)}") for row in oaths],
         powers=[SealLinkChoice(id=row.id, label=f"{names.get(row.holder_node_id, 'Someone')}'s power of {spoken(row.form)}") for row in powers],
         lines=[SealLinkChoice(id=row.id, label=row.name) for row in lines],
+        minds=[SealLinkChoice(id=mind, label=names.get(mind, "A made mind")) for mind in minds],
     )
 
 
@@ -286,6 +290,7 @@ async def node_couplings(services: ServicesDep, node_id: NodeId) -> CouplingNode
                     pact_oath_id=row.pact_oath_id,
                     power_id=row.power_id,
                     living_line_id=row.living_line_id,
+                    made_mind_id=row.made_mind_id,
                     locked=row.locked,
                 )
                 for row in seals
@@ -293,6 +298,7 @@ async def node_couplings(services: ServicesDep, node_id: NodeId) -> CouplingNode
             oath_choices=links.oaths,
             power_choices=links.powers,
             line_choices=links.lines,
+            mind_choices=links.minds,
             novelty=NoveltyView(
                 novelty=novelty.novelty,
                 adoption=novelty.adoption,

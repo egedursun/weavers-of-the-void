@@ -69,6 +69,7 @@ async def appeals(ctx: TickContext) -> None:
     "table.nodes",
     "table.polity_members",
     "table.registries",
+    "table.wills",
 )
 @writes("table.registries")
 async def registries(ctx: TickContext) -> None:

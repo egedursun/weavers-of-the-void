@@ -12,7 +12,7 @@ from tests.engine.society.factories import Realm, context, mortal, people, settl
 
 
 def test_twelve_customs_and_the_two_new_ones_act_on_the_body() -> None:
-    assert len(FUNERALS) == len(FuneralCustom) == 13
+    assert len(FUNERALS) == len(FuneralCustom) == 15
     assert FUNERALS[FuneralCustom.MUMMIFICATION].preserves and FUNERALS[FuneralCustom.MUMMIFICATION].carrion is CarrionRest.MUMMIFIED
     assert FUNERALS[FuneralCustom.SECONDARY_BURIAL].second_rite
     assert set(RITE_TREATMENTS) == set(FuneralCustom)

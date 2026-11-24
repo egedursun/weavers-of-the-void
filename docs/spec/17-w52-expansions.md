@@ -1042,7 +1042,7 @@ The exact current membership of each set is kept for the existing kinds; the tab
 **Behaviour.** `engine/lore/calendar_slots.py` `slot_open(ctx, world_id, slot, holder_id) -> SlotState(open: bool, reason: str | None)` is the only test of whether a slot comes. `rites.season_of` and `traditions.slot_fits` are removed and both callers use it. The meanings are fixed once:
 
 - `holy_day` opens on a sky event over the holder's world this epoch, or where the holder's people keep a calendar with holy days.
-- `campaign` opens where a season of the world is fit for war (`traditions.season_campaign`). Being at war, which `season_of` read as `campaign`, becomes a rite requirement of its own: `rite_profiles.needs_war` (bool), with its own unmet reason.
+- `campaign` opens where a season of the world is fit for war (`traditions.season_campaign`). Being at war, which `season_of` read as `campaign`, becomes a rite requirement of its own: `war` in `rite_profiles.requirements` (bool), with its own unmet reason.
 - `midwinter` opens where the coldest season's temperature shift is at most `-traditions.midwinter_cold` and its growth is at most `traditions.dead_growth`.
 
 **Guard.** `scripts/check_calendar_slots.py` fails when code outside the two modules above compares with or keys on a `CalendarSlot` member. `tests/engine/lore/test_calendar_slots.py` covers every slot and shows that a holy day on another world no longer opens a rite's slot (fails on the old code).
@@ -1316,7 +1316,7 @@ The pairs `eruption_length_min ≤ eruption_length_max` and `eruption_strength_m
 
 - `CalendarSlot` gains `new_year`, `midsummer`, `remembrance`, `market`, `wild_harvest` (ten values).
 - `TraditionEffectKind` gains `trade` (a fair raises the settlement's trade income and goods flow for the epoch) and `forage` (food from hunting, fishing and gathering, scaled by the region's wild species and pressing on them).
-- `rite_profiles.needs_war` (F61).
+- The rite requirement `war` in `rite_profiles.requirements` (F61).
 
 **Behaviour.** `SLOTS` gives each slot its opening and effects:
 
@@ -1349,9 +1349,9 @@ Each tradition's `in_season` is set from `slot_open`. A tradition whose slot nev
 
 **Incidents.** `tradition.kept` carries the slot as a fact; new `tradition.slot_closed` (a tradition's slot does not come, with the reason) and `tradition.fair_held`, `tradition.forage_taken`.
 
-**Agent tools.** Mortal tradition founding (`calendar_slot`) and son tradition creation list ten slots; rite design takes `needs_war`.
+**Agent tools.** Mortal tradition founding (`calendar_slot`) and son tradition creation list ten slots; rite design takes the requirement `war`.
 
-**God levers.** Tradition and rite editors offer ten slots and `needs_war` (`test_editable_fields.py`); `tradition:effect` offers `trade` and `forage`.
+**God levers.** Tradition and rite editors offer ten slots and the requirement `war` (`test_editable_fields.py`); `tradition:effect` offers `trade` and `forage`.
 
 **Screens.** `TraditionPanel` and the forge: ten slot medallions with icons and tones; a slot that does not come on this world is shown disabled with its reason from `slot_open`, served by the API as `slot_open` and `slot_reason`. People drawers gain a "Year of festivals" strip: the traditions of a people placed on the world's season wheel by slot.
 
@@ -1361,7 +1361,7 @@ Each tradition's `in_season` is set from `slot_open`. A tradition whose slot nev
 
 **Integrity.** A `remembrance` tradition names a named year or a death of its people; a `market` tradition's settlement has a market or fair; F59 for `season_position`.
 
-**Legacy.** Migration rebuilds the `calendar_slot` check (ten values) and adds `rite_profiles.needs_war`. Fixup `traditions.w52_slots`: rites whose slot was `campaign` get `needs_war` and lose the slot, so they keep their old meaning; 52.4's remembrance fixup.
+**Legacy.** Migration rebuilds the `calendar_slot` check (ten values) and the requirement `war` lives in the existing `rite_profiles.requirements`. Fixup `rites.w52_war_need` (`services/integrity/rite_needs.py`): rites whose slot opens in the season fit for war gain the requirement `war`, so they keep their old meaning; 52.4's remembrance fixup.
 
 **Reach.** Every people, settlement and tradition in every era and every kind of world. Slots belong to traditions and rites, so nodes other than peoples, settlements, traditions and rites reach them only through the traditions they keep.
 
@@ -1400,7 +1400,7 @@ Proving tests: `tests/engine/environment/test_eight_seasons.py`, `test_season_po
 |---|---|---|---|---|---|---|---|---|
 | F59 positions | every registered column | season edits | `seasons:*` | season panels | — | — | positions in range | — |
 | F60 weather typing | — | weather, war, schemes, biology, vessels | `weather:*` | weather labels | weather lines | weather tables | traits complete | — |
-| F61 slots | `rite_profiles.needs_war` | traditions, rites | tradition and rite editors | slot pickers | tradition lines | tradition entries | slot opening | campaign rites |
+| F61 slots | `war` in `rite_profiles.requirements` | traditions, rites | tradition and rite editors | slot pickers | tradition lines | tradition entries | slot opening | campaign rites |
 | 52.1 seasons | `worlds`, `world_seasons.share_pct` | environment, harvest, moments | `seasons:*` | season wheel | `add_season`, `reorder_seasons`, `reshape_season`, `forecast_seasons`, `forecast`; `SeasonLine` | world entries | shares, positions | shares, names |
 | 52.2 frost, ice storm | weather enum columns | weather, harvest, networks, war | `weather:*` | weather pickers | `shape_weather`, `work_weather`; weather lines | weather tables | enum checks | — |
 | 52.3 long seasons | `irregular_seasons`, `winter_forecasts` | ages, impacts, disasters, starlife | `irregular_season:*`, `winter_forecast:*` | "Long seasons" panel | `unsettle_seasons`, `lengthen_winter`, `end_long_season`, `forecast_seasons`; `long_seasons` | world, impact, region, star entries | source and shape | impact winters |
@@ -1445,7 +1445,7 @@ Each table of batch 1 fills the layers of spec 16 6.6: changes recorded with ter
 | K.56 | How do frost, ice storm, snow and hail differ? | Frost forms on clear freezing nights without falling water; ice storm is rain that freezes on contact in a narrow band around freezing; snow and hail fall frozen. |
 | K.57 | One long season per world? | No. Several spells combine: the strongest plus a share of the others; winter and summer offset. |
 | K.58 | Does batch 1 add kinds of named year? | No. 47.4 brought them to eight; batch 1 feeds them from the new sources, and the deepening pass adds `peace` and `founding` (52.429). |
-| K.59 | What does the `campaign` slot mean? | The season fit for war. Being at war is the rite requirement `needs_war`. |
+| K.59 | What does the `campaign` slot mean? | The season fit for war. Being at war is the rite requirement `war`. |
 
 ### 52.11 Execution order (batch 1)
 
@@ -1466,7 +1466,7 @@ The batch is gated once.
 
 ### F62. Terrain traits are typed in the catalogue
 
-**State.** `catalog/terrain.py` holds `TERRAIN`, a `total()` catalogue per `TerrainKind`: label, `traits: frozenset[TerrainTrait]`, `passage: dict[MovementMode, rule key]` (F63), the biomes and world types it is derived from, and the soils it allows. `TerrainTrait` values name what the hand-written sets of D9 mean: `wooded`, `open`, `rough`, `high`, `wet`, `arid`, `cold`, `hot`, `coastal`, `watery`, `underground`, `built`, `ruined`, `sacred_ground`, `fertile`, `ambush_cover`, `airless`, `gaseous`, `non_mineral_ground` (the terrains whose ground is not rock, soil, water or ice). Each existing set is replaced by one trait test, with its exact current membership kept for the existing kinds and the new kinds placed by their nature (52.12).
+**State.** `catalog/terrain.py` holds `TERRAIN`, a `total()` catalogue per `TerrainKind`: label, `traits: frozenset[TerrainTrait]`, `passage: dict[MovementMode, rule key]` (F63), the biomes and world types it is derived from, and the soils it allows. `TerrainTrait` values name what the hand-written sets of D9 mean: `wooded`, `open`, `rough`, `high`, `wet`, `arid`, `cold`, `hot`, `coastal`, `watery`, `underground`, `built`, `ruined`, `confined`, `slippery`, `fertile`, `ambush_cover`, `airless`, `gaseous`, `non_mineral_ground` (the terrains whose ground is not rock, soil, water or ice). Each existing set is replaced by one trait test, with its exact current membership kept for the existing kinds and the new kinds placed by their nature (52.12).
 
 The W48 authored layer and property catalogue of `TerrainKind` (48.B) read the same spec, so authored terrain kinds inherit traits and passage from their category.
 
@@ -4254,7 +4254,7 @@ The batch is gated once, alone or with the batches before it.
 
 ### F70. Package, mind and life-course families come from typed catalogues
 
-**State.** `PackageKind`, `Emotion`, `GriefStage`, `StressBreak`, `CareerPath`, `ArcTemplate`, `DeathCause`, `FuneralCustom`, from batches 17–19 `ActKind`, `ReputationAxis`, `Locus`, `KinshipDescent`, `InheritanceCustom`, `KinRole`, `DwellingKind`, `AgeBand`, `CohortCondition`, `Job`, `MobilityEvent` and `FormativeKind`, from batches 20–22 `IdentityLayer`, `SalienceDriver`, `RevivalWay`, `RevivalGoal`, `MovementCause`, `CollectiveActKind`, `CrowdFeeling`, `CollectiveTrigger`, `TraditionKind`, `GatheringKind`, `MarkKind`, `MarkMeaning`, `NamingPattern`, `NameForm` and `AgeGrade`, from batches 23–25 `GiftOccasion`, `GiftState`, `ArtMarketRole`, `ForgeryKind`, `RightKind`, `RightAcquired` and `ClubKind`, from batches 29–31 `CreditState`, `LoanStatus`, `SavingForm`, `InsuranceCover`, `SpeculationStatus`, `MarketPlay`, `TradeMode`, `TradeRouteStatus`, `TradeLoss`, `ConvoyStatus`, `ContainerKind`, `NavigationAid`, `LabourReason` and `ShortfallEffect`, from batches 32–34 `DistrictKind`, `RebuildCause`, `RebuildPlan`, `ReliefKind`, `ConstructionState`, `HoardKind`, `PieceKind`, `GardenKind`, `WaterLift`, `RelicStance`, `AssistiveAid`, `ClockKind` and `LockKind`, from batches 35–38 the criminal kinds of `FactionKind`, `CrimeStance`, `FugitiveKind`, `SanctuaryKind`, `CouncilTask`, `MandateKind`, `CrisisDemand`, `CourtPosition`, `ClientRole`, `MemberRight`, `Naturalisation`, `TitleRank`, `ClaimBasis` and `SuccessionRule`, from batches 39–43 `LawArea`, `CourtLevel`, `EvidenceKind`, `RegistryKind`, `OathKind`, `FactionGoalKind`, `FactionActionKind`, `EstatePrivilege`, `CoopPurpose`, `PartyRole`, `TreatyStatus`, `CrisisState`, `RegionalStanding`, `ResolutionKind`, `DispatchContent`, `DispatchState`, `EnvoyFate`, `SignalState` and `OpinionSubject`, from batches 44–48 `LorePrice`, `ClaimKind`, `ClaimStatus`, `IntrigueSecret`, `HookDemand`, `FavourOrigin`, `IdentityReason`, `SpyOperation`, `RecruitMotive`, `AgentStatus`, `Stance`, `ArmyRole`, `UnitHonourKind` and `VeteranGrant`, from batches 49–53 `CasualtyFate`, `CaptiveFate`, `SiegeAction`, `SiegeWork`, `DefenderAction`, `SackChoice`, `SiegeStatus`, `CrewStation`, `DuelContext` and `DuelEnd`, from batches 54–58 `CaptiveStatus`, `VisionKind`, `TheodicyCause`, `SacramentKind`, `SacramentProtection`, `RebirthPath`, `GeniusLocusKind`, `SpiritOffence` and `PetitionKind`, from batches 59–63 `LuckSign`, `LuckReach`, `CharmPower`, `AccusationOutcome`, `DivinationKind`, `DivinationQuestion`, `SpellRange`, `SpellDuration`, `SpellTarget`, `RechargeRule`, `LinkToken`, `QuestTrial` and `GeasLayer`, from batches 64–68 `OrderKind`, `OrderCondition`, `CommandToken`, `WorshipMode`, `PrayerTone`, `Manifestation` and `WoundCause`, from batches 69–73 `SonPunishment`, `ServitorOrigin`, the law exemption enum, `BargainGain`, the bargain price enum, `LifeEnvironment`, `AirNeed` and `Gravity`, from batches 74–78 `ImpactBody`, `ImpactOutcome`, `WorldEnd`, `WorldEndCause`, `SettleMode`, `WarTerrain` and `JourneyIntent`, from batches 79–83 `GreatField` and `Notation`, from batches 84–88 `ExpeditionRole`, `ExpeditionGround`, `ResolveKind`, `ExcavationRisk`, `SiteChallenge` and `BattlefieldFeature`, from the second pass `DimensionElement`, `BeingAgenda`, `BeingScale`, `RiftCause`, `MindPurpose`, `RealmEntry`, `AugmentKind`, `SurveillanceFocus`, `SourceLawLevel`, `GiftedAttitude` and `LivingCraftStance`, from the deepening pass on batches 1–10 `SeasonWater`, `SeasonOnset`, `WeatherEffect`, `LongSeasonReach`, `OscillationPhase`, `ClimateEra`, `PlanetaryCycle`, `LandUseRing`, `PerennialKind`, `CommonsKind`, `SpeciesClass`, `SizeClass`, `SymbiosisKind`, `FermentKind`, `TissueMaterial`, `AttackDelivery`, `AttackRange`, `DiseaseAgent`, `BodyFunction`, `MedicineTier` and `BodySystem`, from the deepening pass on batches 11–20 `PackageVisibility`, `CureKind`, `ValueAxis`, `Facet`, `PersonalityTrait`, `MoodArousal`, `NeedKind`, `NeedGroup`, `PressureKind`, `MemoryKind`, `ThoughtKind`, `InspirationKind`, `DreamKind`, `LifeStage`, `SkillKind`, `MasteryKind`, `SocializationTechnique`, `PedagogyTheory`, `YouthPurpose`, `GroupKind`, `PassionKind`, `RelationContext`, `IntimacyStance`, `BirthComplication`, `PostnatalCustom`, `CookingMethod`, `DishCourse`, `HonourModel`, `Currency`, `PunishmentKind`, `HouseholdForm` and `PopulationInstrument`, from the deepening pass on batches 21–30 `MealSlot`, `CrewStation`, `DeathRole`, `ArtMode`, `ClubKind`, `AccountMedium`, `MaterialOrigin`, `ExtractionKind`, `HazardKind`, `TradePolicyKind`, `CarrierKind` and `CargoClass`, from the deepening pass on batches 31–40 `ZoneKind`, `HousingLevel`, `UrbanService`, `AidKind`, `PreparednessKind`, `BuildingForm`, `BuilderKind`, `StructureSection`, `CurseKind`, `RacketKind`, `OfficeKind`, `OfficePower`, `TaxKind`, `LegitimacyType`, `Membership`, `TitleTier` and `LongPlanKind`, from the deepening pass on batches 41–50 `TreatyKind`, `ClauseKind`, `ChallengeKind`, `ChallengeResponse`, `Medium`, `SignalKind`, `BeliefSource`, `HookSource`, `PlotKind`, `SabotageKind`, `Formation`, `CommandArea`, `CommanderTrait`, `ContractStatus`, `MutinyOutcome`, `BattlePhase`, `Tactic` and `StarvationStage`, from the deepening pass on batches 51–60 `Echelon`, `EchelonOrder`, `WarAim`, `CasusBelli`, `WarCause`, `PeaceTermKind`, `WarEnding`, `FieldAgreementKind`, `VehicleFamily`, `Propulsion`, `VehicleSection`, `ShotKind`, `FeudAction`, `FeudStatus`, `HoldingKind`, `ZealKind`, `MysticState`, `AfterlifeModel`, `JudgementDoctrine`, `BindingKind`, `MishapKind`, `MishapAttribution`, `MishapResponse` and `ForesightSource`, from the deepening pass on batches 61–70 `SpellTechnique`, `SpellForm`, `RiteComponent`, `RestrictionKind`, `ResistanceKind`, `PowerHazard`, `GeasMode`, `HeroquestBoon`, `CreatureLesson`, `InstructionBinding`, `DivineWoundKind`, `DivineScale`, `MagicSiteKind`, `CreatureDeed`, `BeliefStance`, `ServitorRole`, `CouncilMotion`, `OfficeDuty`, `TransformTrigger` and `MantlingState`, from the deepening pass on batches 71–80 `LawScope`, `CreatorPassion`, `CreatorMoodAxis`, `CreatorSignKind`, `OuterHunger`, `WorldType`, `CosmicFeatureKind`, `Atmosphere`, `LandAct`, `TerraformAim`, `WorldLight`, `BindingNeed`, `PhenomenonRhythm`, `VehicleKind`, `RouteState`, `SurveyLevel`, `PrehistoryKind` and `AgeCycle`, from the deepening pass on batches 81–90 `KnowledgeBranch`, `Technique`, `TechFamily`, `AgeKind`, `EraDeed`, `ResearchIncident`, `BlueprintKind`, `BlueprintSource`, `TheoryDomain`, `AnomalyKind`, `TechnologyEra`, `EraChannel`, `ProgrammeStage`, `StorytellerProfile`, `ArcRole`, `SetupKind`, `QuirkKind`, `ExpeditionEvent`, `SiteRoomKind`, `RoomContentKind`, `ExcavationFind`, `MindUpkeep`, `WillCause`, `MakingOutcome`, `RealmPurpose`, `MadeMindStance`, `AugmentMake`, `EffectTarget`, `HostPlacement`, `NetworkCarrier`, `NetworkRole`, `OutageCause`, `IntrusionTarget`, `IntrusionAim`, `IntrusionOutcome`, `DataContent`, `CompanyCharter`, `CompanyHoldingKind`, `ReplicatorOutput`, `AllocationMode`, `RelicState` and `RelicUse`, from the deepening pass on batches 91–93 `PowerOrigin`, `SourceLocus`, `PowerState`, `PowerTrigger`, `PowerCost`, `PowerDeviceEffect`, `SourceAccess`, `SourceRenewal`, `GiftedStance`, `BloodlineRule`, `HiddenTruthKind`, `ConcealScope`, `KeeperRole`, `KeeperResponse`, `SeekerAim`, `BreachCause`, `TruthAttitude`, `CultivationMethod`, `LineTrait`, `Metabolism`, `Fertility` and `LineOutcome`, from batches 94–99 `GoodCategory`, `MoneyForm`, `IngredientRole`, `DrinkCategory`, `GarmentCategory`, `FurnishingCategory`, `InstrumentCategory`, `GameCategory`, `InstrumentKind`, `StepLocus`, `StepState`, `WitnessMode`, `RumourDistortion`, `RecordForm`, `MediaItemKind`, `SatireSource`, `HumourForm`, `SpeechVenue`, `WorksKind`, `EndowmentPurpose`, `SpaceWeatherKind`, `WeatherWorkMethod`, `ObservationMethod` and `LocalClimateCause`, and from batches 14–16 `RelationType`, `InteractionKind`, `CircleKind`, `AppealKind`, `PersuasionAim`, `ContestKind`, `ContestStake`, `HouseDuty`, `Intoxicant`, `IntoxicantUse`, `TimeShare`, `LeisureKind` and `BiologyVariant`, each get a `total()` catalogue (extending `catalog/effect_packages.py` and the mind and mortal catalogues): for packages the family they belong to (body change, mind change, dependence, blessing, taint, compulsion, fortune) and the beings they turn into; for emotions their valence, arousal, the acts they push and the needs and memories that raise them; for grief stages and breaking points their order, effects and exits; for paths, arcs and causes of death what they lead to and the incidents that start them; for funeral customs what they do to the body, the soul and the living.
+**State.** `PackageKind`, `Emotion`, `GriefStage`, `StressBreak`, `CareerPath`, `ArcTemplate`, `DeathCause`, `FuneralCustom`, from batches 17–19 `ActKind`, `ReputationAxis`, `Locus`, `KinshipDescent`, `InheritanceCustom`, `KinRole`, `DwellingKind`, `AgeBand`, `CohortCondition`, `Job`, `MobilityEvent` and `FormativeKind`, from batches 20–22 `IdentityLayer`, `SalienceDriver`, `RevivalWay`, `RevivalGoal`, `MovementCause`, `CollectiveActKind`, `CrowdFeeling`, `CollectiveTrigger`, `TraditionKind`, `GatheringKind`, `MarkKind`, `MarkMeaning`, `NamingPattern`, `NameForm` and `AgeGrade`, from batches 23–25 `GiftOccasion`, `GiftState`, `ArtMarketRole`, `ForgeryKind`, `RightKind`, `RightAcquired` and `ClubKind`, from batches 29–31 `CreditState`, `LoanStatus`, `SavingForm`, `InsuranceCover`, `SpeculationStatus`, `MarketPlay`, `TradeMode`, `TradeRouteStatus`, `TradeLoss`, `ConvoyStatus`, `ContainerKind`, `NavigationAid`, `LabourReason` and `ShortfallEffect`, from batches 32–34 `DistrictKind`, `RebuildCause`, `RebuildPlan`, `ReliefKind`, `ConstructionState`, `HoardKind`, `PieceKind`, `GardenKind`, `WaterLift`, `RelicStance`, `AssistiveAid`, `ClockKind` and `LockKind`, from batches 35–38 the criminal kinds of `FactionKind`, `CrimeStance`, `FugitiveKind`, `SanctuaryKind`, `CouncilTask`, `MandateKind`, `CrisisDemand`, `CourtPosition`, `ClientRole`, `MemberRight`, `Naturalisation`, `TitleRank`, `ClaimBasis` and `SuccessionRule`, from batches 39–43 `LawArea`, `CourtLevel`, `EvidenceKind`, `RegistryKind`, `OathKind`, `FactionGoalKind`, `FactionActionKind`, `EstatePrivilege`, `CoopPurpose`, `PartyRole`, `TreatyStatus`, `CrisisState`, `RegionalStanding`, `ResolutionKind`, `DispatchContent`, `DispatchState`, `EnvoyFate`, `SignalState` and `OpinionSubject`, from batches 44–48 `LorePrice`, `ClaimKind`, `ClaimStatus`, `IntrigueSecret`, `HookDemand`, `FavourOrigin`, `IdentityReason`, `SpyOperation`, `RecruitMotive`, `AgentStatus`, `Stance`, `ArmyRole`, `UnitHonourKind` and `VeteranGrant`, from batches 49–53 `CasualtyFate`, `CaptiveFate`, `SiegeAction`, `SiegeWork`, `DefenderAction`, `SackChoice`, `SiegeStatus`, `CrewStation`, `DuelContext` and `DuelEnd`, from batches 54–58 `CaptiveStatus`, `VisionKind`, `TheodicyCause`, `SacramentKind`, `SacramentProtection`, `RebirthPath`, `GeniusLocusKind`, `SpiritOffence` and `PetitionKind`, from batches 59–63 `LuckSign`, `LuckReach`, `CharmPower`, `AccusationOutcome`, `DivinationKind`, `DivinationQuestion`, `SpellRange`, `SpellDuration`, `SpellTarget`, `RechargeRule`, `LinkToken`, `QuestTrial` and `GeasLayer`, from batches 64–68 `OrderKind`, `OrderCondition`, `CommandToken`, `WorshipMode`, `PrayerTone`, `Manifestation` and `WoundCause`, from batches 69–73 `SonPunishment`, `ServitorOrigin`, the law exemption enum, `BargainGain`, the bargain price enum, `LifeEnvironment`, `AirNeed` and `Gravity`, from batches 74–78 `ImpactBody`, `ImpactOutcome`, `WorldEnd`, `WorldEndCause`, `SettleMode`, `WarTerrain` and `JourneyIntent`, from batches 79–83 `GreatField` and `Notation`, from batches 84–88 `ExpeditionRole`, `ExpeditionGround`, `ResolveKind`, `ExcavationRisk`, `SiteChallenge` and `BattlefieldFeature`, from the second pass `DimensionElement`, `BeingAgenda`, `BeingScale`, `RiftCause`, `MindPurpose`, `RealmEntry`, `AugmentKind`, `SurveillanceFocus`, `SourceLawLevel`, `GiftedAttitude` and `LivingCraftStance`, from the deepening pass on batches 1–10 `SeasonWater`, `SeasonOnset`, `WeatherEffect`, `LongSeasonReach`, `OscillationPhase`, `ClimateEra`, `PlanetaryCycle`, `LandUseRing`, `PerennialKind`, `CommonsKind`, `SpeciesClass`, `SizeClass`, `SymbiosisKind`, `FermentKind`, `TissueMaterial`, `AttackDelivery`, `AttackRange`, `DiseaseAgent`, `BodyFunction`, `MedicineTier` and `BodySystem`, from the deepening pass on batches 11–20 `Visibility`, `CureKind`, `ValueAxis`, `Facet`, `TraitKind`, `MoodArousal`, `NeedKind`, `NeedGroup`, `PressureKind`, `MemoryKind`, `ThoughtKind`, `InspirationKind`, `DreamKind`, `LifeStage`, `SkillKind`, `MasteryKind`, `SocializationTechnique`, `PedagogyTheory`, `YouthPurpose`, `GroupKind`, `PassionKind`, `RelationContext`, `NormStance`, `BirthComplication`, `PostnatalCustom`, `CookingMethod`, `DishCourse`, `HonourModel`, `Currency`, `PunishmentKind`, `HouseholdForm` and `PopulationInstrument`, from the deepening pass on batches 21–30 `MealSlot`, `CrewStation`, `DeathRole`, `ArtMode`, `ClubKind`, `AccountMedium`, `MaterialOrigin`, `ExtractionKind`, `HazardKind`, `TradePolicyKind`, `CarrierKind` and `CargoClass`, from the deepening pass on batches 31–40 `ZoneKind`, `HousingLevel`, `UrbanService`, `AidKind`, `PreparednessKind`, `BuildingForm`, `BuilderKind`, `StructureSection`, `CurseKind`, `RacketKind`, `OfficeKind`, `OfficePower`, `TaxKind`, `LegitimacyType`, `Membership`, `TitleTier` and `LongPlanKind`, from the deepening pass on batches 41–50 `TreatyKind`, `ClauseKind`, `ChallengeKind`, `ChallengeResponse`, `Medium`, `SignalKind`, `BeliefSource`, `HookSource`, `PlotKind`, `SabotageKind`, `Formation`, `CommandArea`, `CommanderTrait`, `ContractStatus`, `MutinyOutcome`, `BattlePhase`, `Tactic` and `StarvationStage`, from the deepening pass on batches 51–60 `EchelonLevel`, `EchelonOrder`, `WarAimKind`, `CasusBelliKind`, `WarCause`, `PeaceTermKind`, `WarEnding`, `FieldAgreementKind`, `VehicleFamily`, `Propulsion`, `VehicleSection`, `ShotKind`, `FeudAction`, `FeudStatus`, `HoldingKind`, `FanaticismKind`, `MysticState`, `AfterlifeModel`, `JudgementDoctrine`, `BindingKind`, `MishapKind`, `MishapAttribution`, `MishapResponse` and `ForesightSource`, from the deepening pass on batches 61–70 `SpellTechnique`, `SpellForm`, `RiteComponent`, `RestrictionKind`, `ResistanceKind`, `PowerHazard`, `GeasMode`, `HeroquestBoon`, `CreatureLesson`, `InstructionBinding`, `DivineWoundKind`, `DivineScale`, `MagicSiteKind`, `CreatureDeed`, `BeliefStance`, `ServitorRole`, `CouncilMotion`, `OfficeDuty`, `TransformTrigger` and `MantlingState`, from the deepening pass on batches 71–80 `LawScope`, `CreatorPassion`, `CreatorMoodAxis`, `CreatorSignKind`, `OuterHunger`, `WorldType`, `CosmicFeatureKind`, `Atmosphere`, `LandAct`, `TerraformAim`, `WorldLight`, `BindingNeed`, `PhenomenonRhythm`, `VehicleKind`, `RouteState`, `SurveyLevel`, `PrehistoryKind` and `AgeCycle`, from the deepening pass on batches 81–90 `KnowledgeBranch`, `Technique`, `TechFamily`, `AgeKind`, `EraDeed`, `ResearchIncident`, `BlueprintKind`, `BlueprintSource`, `TheoryDomain`, `AnomalyKind`, `TechnologyEra`, `EraChannel`, `ProgrammeStage`, `StorytellerProfile`, `ArcRole`, `SetupKind`, `QuirkKind`, `ExpeditionEvent`, `SiteRoomKind`, `RoomContentKind`, `ExcavationFind`, `MindUpkeep`, `WillCause`, `MakingOutcome`, `RealmPurpose`, `MadeMindStance`, `AugmentMake`, `EffectTarget`, `HostPlacement`, `NetworkCarrier`, `NetworkRole`, `OutageCause`, `IntrusionTarget`, `IntrusionAim`, `IntrusionOutcome`, `DataContent`, `CompanyCharter`, `CompanyHoldingKind`, `ReplicatorOutput`, `AllocationMode`, `RelicState` and `RelicUse`, from the deepening pass on batches 91–93 `PowerOrigin`, `SourceLocus`, `PowerState`, `PowerTrigger`, `PowerCost`, `PowerDeviceEffect`, `SourceAccess`, `SourceRenewal`, `GiftedStance`, `BloodlineRule`, `HiddenTruthKind`, `ConcealScope`, `KeeperRole`, `KeeperResponse`, `SeekerAim`, `BreachCause`, `TruthAttitude`, `CultivationMethod`, `LineTrait`, `Metabolism`, `Fertility` and `LineOutcome`, from batches 94–99 `GoodCategory`, `MoneyForm`, `IngredientRole`, `DrinkCategory`, `GarmentCategory`, `FurnishingCategory`, `InstrumentCategory`, `GameCategory`, `InstrumentKind`, `StepLocus`, `StepState`, `WitnessMode`, `RumourDistortion`, `RecordForm`, `MediaItemKind`, `SatireSource`, `HumourForm`, `SpeechVenue`, `WorksKind`, `EndowmentPurpose`, `SpaceWeatherKind`, `WeatherWorkMethod`, `ObservationMethod` and `LocalClimateCause`, and from batches 14–16 `RelationType`, `InteractionKind`, `CircleKind`, `AppealKind`, `PersuasionAim`, `ContestKind`, `ContestStake`, `HouseDuty`, `Intoxicant`, `IntoxicantUse`, `TimeShare`, `LeisureKind` and `BiologyVariant`, each get a `total()` catalogue (extending `catalog/effect_packages.py` and the mind and mortal catalogues): for packages the family they belong to (body change, mind change, dependence, blessing, taint, compulsion, fortune) and the beings they turn into; for emotions their valence, arousal, the acts they push and the needs and memories that raise them; for grief stages and breaking points their order, effects and exits; for paths, arcs and causes of death what they lead to and the incidents that start them; for funeral customs what they do to the body, the soul and the living.
 
 **Behaviour.** The hand-written sets of D21 become catalogue fields, and so do `intrigue/schemes.py` `RIVALS` (relation types) and `cosmos/omens.py` `SKYLESS` (biology variants).
 
@@ -5844,9 +5844,9 @@ Batches 20–22 use F70: every enum below has a `total()` catalogue, and the gua
 
 **Current.** Six causes. Movements for labour, for reform of a faith, against intoxicants, for the rights of made minds, for nature and for equal standing of classes or kinds are absent.
 
-**State.** `MovementCause` gains `labour`, `faith_reform`, `temperance`, `mind_rights`, `nature` and `equal_standing`.
+**State.** `MovementCause` gains `labour`, `faith_reform`, `temperance`, `mind_rights` and `equal_standing`; movements for nature are spec 16 `conservation` (51.9), whose readers this section names.
 
-**Behaviour.** `labour` founds and backs worker bodies (51.4) and disputes; `faith_reform` splits or reforms a faith (schism); `temperance` presses laws against intoxicants; `mind_rights` presses the status laws of made minds (44.6); `nature` presses protected areas and species (51.9); `equal_standing` presses against castes, estates and laws that rank kinds.
+**Behaviour.** `labour` founds and backs worker bodies (51.4) and disputes; `faith_reform` splits or reforms a faith (schism); `temperance` presses laws against intoxicants; `mind_rights` presses the status laws of made minds (44.6); `conservation` presses protected areas and species (51.9); `equal_standing` presses against castes, estates and laws that rank kinds.
 
 **Rules.** Namespace `movements`: per cause `{cause}_weight` (0–100).
 
@@ -14681,7 +14681,7 @@ Batches 1–10 were written once as a check of counts. This pass reads every val
 
 **Current.** No six-limbed body and no rooted body; no roots, antennae, fins or pouch; no swimming or climbing function.
 
-**State.** `BodyPlan` gains `hexapod` and `rooted`. `BodyPart` gains `roots`, `antennae`, `fins` and `pouch`. `BodyFunction` gains `swim` and `climb`.
+**State.** `BodyPlan` gains `hexapod` and `rooted`. `BodyPart` gains `roots`, `left_antenna`, `right_antenna`, `left_fin`, `right_fin` and `pouch`; paired parts are struck and lost one side at a time, as arms and legs are. `BodyFunction` gains `swim` and `climb`.
 
 **Behaviour.** `hexapod` bodies stand on six limbs (stability, load, climbing); `rooted` bodies stay in place and draw water and food through roots, or move slowly. `roots` are vital for rooted bodies, `antennae` serve smell and touch, `fins` serve swimming, `pouch` carries young. `swim` and `climb` functions give the movement modes `swimming` and `climbing` (52.433) and lose them when the parts are harmed.
 
@@ -14841,7 +14841,7 @@ Batches 1–10 were written once as a check of counts. This pass reads every val
 
 **Current.** No excretion system and no sensitivity to pressure.
 
-**State.** `BodySystem` gains `excretion`. Sensitivities gain `pressure`.
+**State.** `BodySystem` gains `excretion`. Sensitivities gain `to_pressure`.
 
 **Behaviour.** `excretion` carries waste out of the body; its failure gives illness and is struck by poisons; `pressure` sensitivity sets harm from depth, height and decompression for each biology.
 
@@ -15240,7 +15240,7 @@ Every value of batches 11–20 is read again for depth, including those first ca
 
 **Current.** No memory of being healed, sheltered, abandoned, of a shared ordeal, of an apology or of a judgement; thoughts do not read the happenings of this spec.
 
-**State.** `MemoryKind` gains `healed_me`, `sheltered_me`, `abandoned_me`, `survived_with`, `apologised_to_me` and `judged_me`. `ThoughtKind` gains `season_failed`, `storm_survived`, `quake_survived`, `home_lost_to_flood`, `beast_passed`, `fled_plague`, `gathering_closed`, `saw_crowning`, `year_of_peace`, `charm_found`, `forgot`, `woke_from_sleep`.
+**State.** `MemoryKind` gains `healed_me`, `sheltered_me`, `abandoned_me`, `survived_with`, `apologised_to_me` and `judged_me`. `ThoughtKind` gains `season_failed`, `storm_survived`, `quake_survived`, `home_lost_to_flood`, `beast_passed`, `fled_plague`, `gathering_closed`, `saw_accession`, `year_of_peace`, `charm_found`, `forgot`, `woke_from_sleep`.
 
 **Behaviour.** Each memory sets opinion and acts toward its subject; each thought sets mood and its decay.
 
@@ -15624,7 +15624,7 @@ Every value of batches 11–20 is read again for depth, including those first ca
 
 **Current.** No norm for bonds with spirits and gods; no stance between accepted and honoured that a culture expects; no stillbirth or birth injury; no rest kept by the other parent.
 
-**State.** `RelationContext` gains `with_spirits_or_gods`. `IntimacyStance` gains `expected`. `BirthComplication` gains `stillbirth` and `birth_injury`. `PostnatalCustom` gains `partner_rest` (the other parent keeps rest and rites).
+**State.** `RelationContext` gains `with_spirits_or_gods`. `NormStance` gains `expected`. `BirthComplication` gains `stillbirth` and `birth_injury`. `PostnatalCustom` gains `partner_rest` (the other parent keeps rest and rites).
 
 **Behaviour.** `with_spirits_or_gods` sets each culture's norm for bonds between mortals and spirits or gods, which the gods (sons and foreign gods) and the god lever can act on; `expected` sets a custom a culture expects without law. `stillbirth` and `birth_injury` follow health, medicine and attendants and feed grief and maims; `partner_rest` lets the other parent keep rest and rites after a birth.
 
@@ -16145,12 +16145,12 @@ Integration as 52.114. Guards: F70 widened; proving test `tests/engine/deepening
 | Section | Enums | God levers | Screens | Codex and book |
 |---|---|---|---|---|
 | 52.491 | PackageKind | affliction editor | affliction card | affliction entries |
-| 52.492 | PackageVisibility | affliction editor | affliction card | affliction entries |
+| 52.492 | Visibility | affliction editor | affliction card | affliction entries |
 | 52.493 | CureKind | affliction editor | affliction card | affliction entries |
 | 52.494 | Emotion | mind editor | mind card | mind entries |
 | 52.495 | GriefStage, StressBreak | mind editor | mind card | mind entries |
 | 52.496 | ValueAxis, Facet | mind editor | mind card | mind entries |
-| 52.497 | PersonalityTrait, MoodArousal | mind editor | mind card | mind entries |
+| 52.497 | TraitKind, MoodArousal | mind editor | mind card | mind entries |
 | 52.498 | NeedKind, NeedGroup | mind editor | mind card | mind entries |
 | 52.499 | PressureKind | mind editor | mind card | mind entries |
 | 52.500 | MemoryKind, ThoughtKind | mind editor | mind card | mind entries |
@@ -16165,7 +16165,7 @@ Integration as 52.114. Guards: F70 widened; proving test `tests/engine/deepening
 | 52.509 | CircleKind, GroupKind | group editor | group card | group entries |
 | 52.510 | PassionKind, AppealKind, PersuasionAim | persuasion editor | persuasion card | persuasion entries |
 | 52.511 | ContestKind, ContestStake | contest editor | contest card | contest entries |
-| 52.512 | RelationContext, IntimacyStance, BirthComplication, PostnatalCustom | birth editor | birth card | birth entries |
+| 52.512 | RelationContext, NormStance, BirthComplication, PostnatalCustom | birth editor | birth card | birth entries |
 | 52.513 | HouseDuty, TimeShare | daily life editor | daily life card | daily life entries |
 | 52.514 | CookingMethod, DishCourse | cuisine editor | cuisine card | cuisine entries |
 | 52.515 | Intoxicant, IntoxicantUse | intoxicant editor | intoxicant card | intoxicant entries |
@@ -16929,7 +16929,7 @@ Order: D30–D35 corrections and their guards first; coverage rows; sections in 
 
 **Current.** No network of fences or ring of counterfeiters; no state that pardons and recruits criminals; no escaped captive or fleeing debtor; no sanctuary on ships or in guild halls; no racket in forged identities or in poaching.
 
-**State.** Built-in organisation kinds of purpose `crime` gain `fence_network` and `counterfeiting_ring`. `CrimeStance` gains `integrate` (pardon and recruit into the watch, army or offices). `FugitiveKind` gains `escaped_captive` and `debtor`. `SanctuaryKind` gains `ship` and `guild_hall`. `RacketKind` gains `forgery` and `poaching`.
+**State.** Built-in organisation kinds of purpose `crime` gain `fence_network` and `counterfeiting_ring`. `CrimeStance` gains `integrate` (pardon and recruit into the watch, army or offices). `FugitiveKind` gains `escaped_captive` and `debtor`. `SanctuaryKind` gains `ship` and `trade_hall`. `RacketKind` gains `forgery` and `poaching`.
 
 **Behaviour.** Integration lowers crime and raises corruption and the skill of the watch; debtors flee creditors and debt labour; ships and guild halls shelter by their charters; forgery rackets sell identities (52.536 `identity`); poaching rackets press game and commons.
 
@@ -17604,7 +17604,7 @@ Every value of batches 51–60 is read again for depth, including those first ca
 
 **Current.** No detached force below the brigade; no order to screen; no war fought for water or for refugees; no ground for war in a broken witnessed pact or in harbouring fugitives.
 
-**State.** `Echelon` gains `detachment` (a small independent force for raids, garrisons and escorts). `EchelonOrder` gains `screen`. `WarAim` gains `secure_water` and `return_refugees`. `CasusBelli` gains `broken_witnessed_pact` (52.564 `witness`) and `harbouring_fugitives` (52.240). `WarCause` gains `water` and `refugees`.
+**State.** `EchelonLevel` gains `detachment` (a small independent force for raids, garrisons and escorts). `EchelonOrder` gains `screen`. `WarAimKind` gains `secure_water` and `return_refugees`. `CasusBelliKind` gains `broken_witnessed_pact` (52.564 `witness`) and `harbouring_fugitives` (52.240). `WarCause` gains `water` and `refugees`.
 
 **Behaviour.** Detachments act apart from their army and can be cut off; screens hide an army's moves and catch scouts; water wars follow shared rivers (52.565 `shared_water`), dams and diversions; refugee wars follow flight across borders.
 
@@ -17764,7 +17764,7 @@ Every value of batches 51–60 is read again for depth, including those first ca
 
 **Current.** No school or hospital held by a faith; every kind of zeal is harsh: no zeal of giving or of journeying.
 
-**State.** `HoldingKind` gains `school` and `hospital`. `ZealKind` gains `charity` (giving away goods to those in need) and `pilgrim_zeal` (leaving everything for a holy journey).
+**State.** `HoldingKind` gains `school` and `hospital`. `FanaticismKind` gains `charity` (giving away goods to those in need) and `pilgrim_zeal` (leaving everything for a holy journey).
 
 **Behaviour.** Faith schools and hospitals raise learning and health and the faith's draw; charity zeal moves wealth to the poor and lowers hunger and the zealous's wealth; pilgrim zeal empties households and fills roads and holy places.
 
@@ -17999,7 +17999,7 @@ Integration as 52.114. Guards: F70 widened; proving test `tests/engine/deepening
 | 52.580 | VehicleFamily, Propulsion, VehicleSection, ShotKind | vehicle editor | vehicle card | vehicle entries |
 | 52.581 | DuelContext, DuelEnd | duel editor | duel card | duel entries |
 | 52.582 | CaptiveStatus, FeudAction, FeudStatus | feud editor | feud card | feud entries |
-| 52.583 | HoldingKind, ZealKind | faith editor | faith card | faith entries |
+| 52.583 | HoldingKind, FanaticismKind | faith editor | faith card | faith entries |
 | 52.584 | VisionKind, TheodicyCause, SacramentKind, SacramentProtection, MysticState | faith editor | faith card | faith entries |
 | 52.585 | RebirthPath, AfterlifeModel, JudgementDoctrine, BindingKind | afterlife editor | afterlife card | afterlife entries |
 | 52.586 | GeniusLocusKind, SpiritOffence, PetitionKind | spirit editor | spirit card | spirit entries |
@@ -20515,7 +20515,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `SeasonSpellShape` | `cycling`, `single` | 2 | 52.3 |
 | `SeasonWarmth` | `coldest`, `cold`, `cooling`, `even`, `warming`, `warm`, `warmest` | 7 | 52.1 |
 | `SeasonWater` | `arid`, `dry`, `even`, `wet`, `deluge` | 5 | 52.1, widened by 52.426 |
-| `TerrainTrait` | `wooded`, `open`, `rough`, `high`, `wet`, `arid`, `cold`, `hot`, `coastal`, `watery`, `underground`, `built`, `ruined`, `sacred_ground`, `fertile`, `ambush_cover`, `airless`, `gaseous`, `non_mineral_ground` | 19 | F62 |
+| `TerrainTrait` | `wooded`, `open`, `rough`, `high`, `wet`, `arid`, `cold`, `hot`, `coastal`, `watery`, `underground`, `built`, `ruined`, `confined`, `slippery`, `fertile`, `ambush_cover`, `airless`, `gaseous`, `non_mineral_ground` | 20 | F62 |
 | `WeatherDraw` | `cold`, `hot`, `dry`, `dry_hot`, `wet`, `wet_liquid`, `clear`, `even`, `aurora`, `magic`, `ash`, `void`, `eclipse`, `freezing_clear`, `freezing_wet` | 15 | F60, 52.2 |
 | `WeatherTrait` | `cold`, `snow_cover`, `icy`, `wet`, `liquid`, `hot`, `dry`, `windy`, `storm`, `covering`, `slowing`, `heavy`, `extreme` | 13 | F60 |
 
@@ -20572,7 +20572,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `BlueprintSource` | `found` (52.619) | 1 |
 | body system tolerances | `radiation` (52.654), `light` (52.654), `humidity` (52.654) | 3 |
 | `BodyFunction` | `swim` (52.484), `climb` (52.484) | 2 |
-| `BodyPart` | `spine` (52.79), `tentacles` (52.79), `carapace` (52.79), `beak` (52.79), `roots` (52.484), `antennae` (52.484), `fins` (52.484), `pouch` (52.484) | 8 |
+| `BodyPart` | `spine` (52.79), `tentacles` (52.79), `carapace` (52.79), `beak` (52.79), `roots` (52.484), `left_antenna` (52.484), `right_antenna` (52.484), `left_fin` (52.484), `right_fin` (52.484), `pouch` (52.484) | 10 |
 | `BodyPlan` | `tentacled` (52.79), `centauroid` (52.79), `radial` (52.79), `colonial` (52.79), `hexapod` (52.484), `rooted` (52.484) | 6 |
 | `BodySystem` | `excretion` (52.489) | 1 |
 | `BreachCause` | `children` (52.638), `dreams` (52.638), `excavation` (52.638) | 3 |
@@ -20587,7 +20587,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `CarrierKind` | `sledge` (52.545) | 1 |
 | `CarrionRest` | `buried` (52.63), `burned` (52.63), `sunk` (52.63), `scavenged` (52.471) | 4 |
 | `CasualtyFate` | `missing` (52.309), `deserted` (52.309), `sick` (52.574) | 3 |
-| `CasusBelli` | `broken_witnessed_pact` (52.578), `harbouring_fugitives` (52.578) | 2 |
+| `CasusBelliKind` | `broken_witnessed_pact` (52.578), `harbouring_fugitives` (52.578) | 2 |
 | `CatchGround` | `game_hunt` (52.44), `shore_gathering` (52.44), `diving` (52.44), `fish_ponds` (52.44), `egg_gathering` (52.456), `insect_gathering` (52.456) | 6 |
 | `CentralityRank` | `seasonal` (52.42), `metropolitan` (52.42), `regional` (52.452) | 3 |
 | `ChallengeKind` | `long_season` (52.566), `succession_crisis` (52.566) | 2 |
@@ -20675,7 +20675,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `DuelContext` | `ritual` (52.323), `sport` (52.581) | 2 |
 | `DuelEnd` | `first_wound` (52.324), `ring_out` (52.324), `stopped` (52.581) | 3 |
 | `DwellingKind` | `farmstead` (52.133), `stilt_house` (52.133), `burrow` (52.133), `nest` (52.133), `submerged` (52.133), `grown` (52.523), `rock_cut` (52.523), `courtyard` (52.523) | 8 |
-| `Echelon` | `detachment` (52.578) | 1 |
+| `EchelonLevel` | `detachment` (52.578) | 1 |
 | `EchelonOrder` | `screen` (52.578) | 1 |
 | `EffectTarget` | `lifespan` (52.628) | 1 |
 | `Emotion` | `surprise` (52.95), `curiosity` (52.95), `compassion` (52.95), `contempt` (52.95), `trust` (52.494), `anticipation` (52.494), `admiration` (52.494), `embarrassment` (52.494) | 8 |
@@ -20758,7 +20758,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `InstrumentKind` | `weather_work` (52.647), `word` (52.647), `kept_animal` (52.647) | 3 |
 | `InsuranceCover` | `crop` (52.203), `vessel` (52.203), `livestock` (52.203), `health` (52.544), `ransom` (52.544) | 5 |
 | `InteractionKind` | `apologise` (52.107), `share_meal` (52.107), `ask_counsel` (52.107), `praise` (52.508), `warn` (52.508), `plead` (52.508), `share_news` (52.508) | 7 |
-| `IntimacyStance` | `expected` (52.512) | 1 |
+| `NormStance` | `expected` (52.512) | 1 |
 | `Intoxicant` | `synthetic` (52.116), `animal_derived` (52.116), `stimulant` (52.515), `resin` (52.515) | 4 |
 | `IntoxicantUse` | `medicine` (52.117), `hospitality` (52.117), `work` (52.515), `courage` (52.515) | 4 |
 | `IntrigueSecret` | `hidden_power` (52.289), `forgery` (52.289), `illness` (52.570), `debt` (52.570) | 4 |
@@ -20826,7 +20826,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `MobilityEvent` | `enriched` (52.139), `ordained` (52.139), `outcast` (52.139), `exiled` (52.525), `adopted` (52.525) | 5 |
 | money backing | `land` (52.643), `labour` (52.643) | 2 |
 | `MoneyForm` | `bill_of_exchange` (52.643), `warehouse_receipt` (52.643), `land_scrip` (52.643) | 3 |
-| `MovementCause` | `labour` (52.146), `faith_reform` (52.146), `temperance` (52.146), `mind_rights` (52.146), `nature` (52.146), `equal_standing` (52.146), `learning` (52.527), `health` (52.527) | 8 |
+| `MovementCause` | `labour` (52.146), `faith_reform` (52.146), `temperance` (52.146), `mind_rights` (52.146), `equal_standing` (52.146), `learning` (52.527), `health` (52.527) | 7 |
 | `MovementMode` | `submerged` (52.14), `incorporeal` (52.14), `swimming` (52.433), `climbing` (52.433) | 4 |
 | `MutinyOutcome` | `negotiated` (52.573) | 1 |
 | `MysticState` | `hermit` (52.584) | 1 |
@@ -20854,13 +20854,13 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `OutageCause` | `quake` (52.629), `shutdown` (52.629) | 2 |
 | `OuterHunger` | `dreams` (52.607), `time` (52.607) | 2 |
 | `PackageKind` | `fortune` (52.90), `transformation` (52.90), `charm` (52.90), `ageing` (52.491), `forgetting` (52.491), `sleep` (52.491) | 6 |
-| `PackageVisibility` | `marked` (52.492) | 1 |
+| `Visibility` | `marked` (52.492) | 1 |
 | `PartyRole` | `mediator` (52.271), `witness` (52.564) | 2 |
 | `PassionKind` | `vengeance` (52.510), `compassion` (52.510) | 2 |
 | `PeaceTermKind` | `border_accord` (52.579), `return_of_refugees` (52.579), `apology` (52.579) | 3 |
 | `PedagogyTheory` | `peer_teaching` (52.507) | 1 |
 | `PerennialKind` | `coppice` (52.454), `hedgerow` (52.454), `palm_stand` (52.454) | 3 |
-| `PersonalityTrait` | `freedom_loving` (52.497), `egalitarian` (52.497), `hospitable` (52.497), `forgiving` (52.497), `adaptable` (52.497), `just` (52.497) | 6 |
+| `TraitKind` | `freedom_loving` (52.497), `egalitarian` (52.497), `hospitable` (52.497), `forgiving` (52.497), `adaptable` (52.497), `just` (52.497) | 6 |
 | `PersuasionAim` | `surrender` (52.110), `confession` (52.110), `alliance` (52.510), `release` (52.510) | 4 |
 | `PetitionKind` | `rain` (52.338), `protection` (52.338), `vengeance` (52.338), `finding` (52.586), `justice` (52.586) | 5 |
 | `PieceKind` | `manuscript` (52.227), `trophy` (52.227), `regalia` (52.227), `map` (52.552), `instrument` (52.552) | 5 |
@@ -20901,7 +20901,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `RecordForm` | `scent` (52.649), `tactile` (52.649) | 2 |
 | `RecruitMotive` | `love` (52.297), `revenge` (52.297), `faith` (52.571) | 3 |
 | `RegionalStanding` | `neutral` (52.274), `isolated` (52.564) | 2 |
-| `RegionMemoryKind` | `founding` (52.16), `treaty` (52.16), `expulsion` (52.16), `discovery` (52.16), `uprising` (52.435), `union` (52.435), `crowning` (52.435) | 7 |
+| `RegionMemoryKind` | `founding` (52.16), `treaty` (52.16), `expulsion` (52.16), `discovery` (52.16), `uprising` (52.435), `union` (52.435), `accession` (52.435) | 7 |
 | `RegistryKind` | `will` (52.560), `licence` (52.560) | 2 |
 | `RelationContext` | `with_spirits_or_gods` (52.512) | 1 |
 | `RelationType` | `betrothed` (52.106), `sworn_kin` (52.106), `foster` (52.106), `neighbour` (52.508), `guest_friend` (52.508), `estranged` (52.508) | 6 |
@@ -20932,7 +20932,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `SacramentKind` | `purification` (52.331), `ordination` (52.331), `penance` (52.584), `communion` (52.584) | 4 |
 | `SacramentProtection` | `curse` (52.332), `fortune` (52.584) | 2 |
 | `SalienceDriver` | `persecution` (52.143), `commemoration` (52.143), `election` (52.143), `contest` (52.143), `disaster` (52.526), `arrivals` (52.526) | 6 |
-| `SanctuaryKind` | `wilds` (52.241), `free_city` (52.241), `embassy` (52.241), `ship` (52.555), `guild_hall` (52.555) | 5 |
+| `SanctuaryKind` | `wilds` (52.241), `free_city` (52.241), `embassy` (52.241), `ship` (52.555), `trade_hall` (52.555) | 5 |
 | `SatireSource` | `crowd` (52.649), `outlet` (52.649) | 2 |
 | `SavingForm` | `land` (52.202), `goods` (52.202), `livestock` (52.544) | 3 |
 | `ScarKind` | `flooded` (52.15), `poisoned` (52.15), `mined_out` (52.15), `eroded` (52.15), `deforested` (52.434), `drained` (52.434), `overgrazed` (52.434) | 7 |
@@ -20946,7 +20946,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `SeekerAim` | `protect` (52.638) | 1 |
 | `SenseKind` | `electric` (52.59), `ultraviolet` (52.59), `taste` (52.467), `pressure` (52.467) | 4 |
 | `SenseShift` | `extended` (52.176), `associated` (52.176), `reversed` (52.539) | 3 |
-| `Sensitivity` | `pressure` (52.489) | 1 |
+| `Sensitivity` | `to_pressure` (52.489) | 1 |
 | `ServitorOrigin` | `defected` (52.372), `born` (52.372), `bargained` (52.600), `ascended` (52.600) | 4 |
 | `ServitorRole` | `healer` (52.600), `teacher` (52.600) | 2 |
 | `SettleMode` | `burrow` (52.390), `submerged` (52.390), `canopy` (52.390), `cliff` (52.612), `drift` (52.612) | 5 |
@@ -21012,7 +21012,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `TheodicyCause` | `persecution` (52.330), `long_season` (52.330), `leader_lost` (52.584), `schism` (52.584) | 4 |
 | `TheoryDomain` | `language` (52.621), `law` (52.621) | 2 |
 | `Thermoregulation` | `heterotherm` (52.61), `athermic` (52.61), `mesotherm` (52.468) | 3 |
-| `ThoughtKind` | `season_failed` (52.500), `storm_survived` (52.500), `quake_survived` (52.500), `home_lost_to_flood` (52.500), `beast_passed` (52.500), `fled_plague` (52.500), `gathering_closed` (52.500), `saw_crowning` (52.500), `year_of_peace` (52.500), `charm_found` (52.500), `forgot` (52.500), `woke_from_sleep` (52.500) | 12 |
+| `ThoughtKind` | `season_failed` (52.500), `storm_survived` (52.500), `quake_survived` (52.500), `home_lost_to_flood` (52.500), `beast_passed` (52.500), `fled_plague` (52.500), `gathering_closed` (52.500), `saw_accession` (52.500), `year_of_peace` (52.500), `charm_found` (52.500), `forgot` (52.500), `woke_from_sleep` (52.500) | 12 |
 | `TimeShare` | `civic` (52.118), `training` (52.118), `socialising` (52.513), `mourning` (52.513) | 4 |
 | `TissueMaterial` | `liquid` (52.473), `woody` (52.473) | 2 |
 | `TitleTier` | `league` (52.559) | 1 |
@@ -21038,7 +21038,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `VehicleSection` | `galley` (52.580), `sick_bay` (52.580) | 2 |
 | `VeteranGrant` | `membership` (52.305), `title` (52.305), `tax_exemption` (52.305), `office` (52.572) | 4 |
 | `VisionKind` | `dream` (52.329), `oracle_speech` (52.329), `sign` (52.584) | 3 |
-| `WarAim` | `secure_water` (52.578), `return_refugees` (52.578) | 2 |
+| `WarAimKind` | `secure_water` (52.578), `return_refugees` (52.578) | 2 |
 | `WarCause` | `water` (52.578), `refugees` (52.578) | 2 |
 | `WarEnding` | `mediated` (52.579) | 1 |
 | `WarTerrain` | `under_water` (52.391), `space` (52.391), `underground` (52.391), `dimension` (52.612) | 4 |
@@ -21062,7 +21062,7 @@ This is the list integration works from. Withdrawn sections (52.254, 52.417) add
 | `WoundCause` | `neglect` (52.369), `betrayal` (52.369), `mortal_slayer` (52.369), `schism` (52.600), `outer_being` (52.600) | 5 |
 | `WritingMedium` | `calcified_tissue` (52.179), `silk` (52.179), `wood_slips` (52.179), `electronic` (52.179), `cloth` (52.539), `potsherd` (52.539) | 6 |
 | `YouthPurpose` | `learning` (52.507), `labour` (52.507) | 2 |
-| `ZealKind` | `charity` (52.583), `pilgrim_zeal` (52.583) | 2 |
+| `FanaticismKind` | `charity` (52.583), `pilgrim_zeal` (52.583) | 2 |
 | `ZoneKind` | `port` (52.550) | 1 |
 
 Totals: 20 new enums, and 1684 values added to 538 existing enums and typed lists.
@@ -21100,5 +21100,10 @@ The whole spec was read once more before integration, end to end, against the co
 | Prose that imposed a price ("bargains carry their price") and the part title "strange flesh". | Plain wording; the part is "many bodies". |
 | The header listed batches in the order they were written, with counts later passes changed. | The header is the table of parts; final values are in Appendix 17.A. |
 | Every `52.` reference, `F` foundation, `D` defect and section number. | All resolve; no number is used twice. |
+| Integration against the code (2026-11-23): `TerrainTrait` held `confined` and `slippery` for the narrow and slippery grounds its readers name, and no terrain is holy ground in itself. | F62 and 17.A list `ruined` (the ruin field) with `confined` and `slippery`; holy places are places of their own kinds, not terrain, so `sacred_ground` is dropped. |
+| `MovementCause.nature` (52.146) was held by spec 16 `conservation` (51.9). | Dropped; the behaviour reads `conservation`. |
+| `BodyPart.antennae` and `fins` (52.484) were built as paired parts, like arms and legs. | 17.A names `left_antenna`, `right_antenna`, `left_fin` and `right_fin`. |
+| `RegionMemoryKind.crowning` (52.435) and `Sensitivity.pressure` (52.489) are written as the era-neutral `accession` and as `to_pressure`, after the other sensitivities. | 17.A carries the final names. |
+| Appendix 17.A was checked against the code by hand only. | `tests/unit/test_appendix_17a.py` parses 17.A and fails on a value missing from its enum or typed list, never read by the engine, not served to the screens or left without its label there, or left out of a tool text that lists its enum. |
 
 Every gendered word, forced strangeness, imposed reaction, quota and imagery family of `check_prompt_bias.py` was searched over the whole text and every value; none remains.

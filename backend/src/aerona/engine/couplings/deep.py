@@ -12,6 +12,7 @@ from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.living import LivingLineRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.polity import OathRow
 from aerona.db.tables.powers import PowerRow
 from aerona.db.write_guard import held
@@ -20,6 +21,7 @@ from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import PowerStateTrait
 from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.minds import MindPurpose
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OathStatus
 from aerona.domain.enums.powers import PowerState
@@ -46,11 +48,12 @@ class SealLinks:
     oath_id: int | None = None
     power_id: int | None = None
     line_id: int | None = None
+    mind_id: int | None = None
 
 
 def missing_link(kind: SealKind, links: SealLinks) -> str | None:
     link = SEALS[kind].link
-    given = {SealLink.OATH: links.oath_id, SealLink.POWER: links.power_id, SealLink.LINE: links.line_id}
+    given = {SealLink.OATH: links.oath_id, SealLink.POWER: links.power_id, SealLink.LINE: links.line_id, SealLink.MIND: links.mind_id}
     return LINK_LABELS[link] if link is not None and given[link] is None else None
 
 
@@ -67,6 +70,7 @@ async def seal_deep(
         pact_oath_id=linked.oath_id,
         power_id=linked.power_id,
         living_line_id=linked.line_id,
+        made_mind_id=linked.mind_id,
         epoch=ctx.epoch,
         locked=[],
     )
@@ -141,6 +145,11 @@ async def test_seal(ctx: TickContext, row: DeepSealRow) -> None:
     if row.kind is SealKind.PACT and await pact_broken(ctx, row):
         await break_pact(ctx, row, place)
         return
+    if row.kind is SealKind.MADE and await keeper_failed(ctx, row):
+        row.strength = 0
+        row.broken_epoch = ctx.epoch
+        await record(ctx, "seal.failed", roles={IncidentRole.SUBJECT: place.id, IncidentRole.ACTOR: row.made_mind_id}, place=place.id)
+        return
     if row.kind is SealKind.POWER and not await power_holds(ctx, row):
         loss = row.strength
     if row.kind is SealKind.LIVING:
@@ -160,6 +169,14 @@ async def test_seal(ctx: TickContext, row: DeepSealRow) -> None:
     if row.strength == 0:
         row.broken_epoch = ctx.epoch
         await record(ctx, "seal.broken", roles={IncidentRole.SUBJECT: place.id})
+
+
+async def keeper_failed(ctx: TickContext, row: DeepSealRow) -> bool:
+    keeper = await ctx.session.get(EntityRow, row.made_mind_id) if row.made_mind_id is not None else None
+    mind = await ctx.session.get(MindProfileRow, row.made_mind_id) if row.made_mind_id is not None else None
+    if keeper is None or keeper.status is not EntityStatus.CANON or mind is None:
+        return True
+    return mind.dormant or mind.purpose is MindPurpose.FREE or mind.drift_pct >= ctx.rules.deep_seals.made_drift_max
 
 
 async def pact_broken(ctx: TickContext, row: DeepSealRow) -> bool:

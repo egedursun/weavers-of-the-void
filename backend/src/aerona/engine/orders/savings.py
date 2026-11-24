@@ -12,6 +12,7 @@ from aerona.db.tables.orders import HoardRow, SavingRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.modifier import IncidentRole
@@ -20,12 +21,14 @@ from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import give_coin
+from aerona.engine.economy.stocks import holding
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.finance.speculation import hunger_at
 from aerona.engine.mind.split import MIDPOINT, attributes_of
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.society import class_shares
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.war import ongoing_wars
 
@@ -85,11 +88,19 @@ async def form_for(ctx: TickContext, household: HouseholdRow) -> SavingForm:
         return SavingForm.GOODS
     if town is not None and await farmer_share(ctx, town) >= ctx.rules.saving.rural_from:
         return SavingForm.LAND
+    if town is not None and await herder_share(ctx, town) >= ctx.rules.saving.herder_from:
+        return SavingForm.LIVESTOCK
     return SavingForm.INVESTMENT
 
 
 async def farmer_share(ctx: TickContext, town_id: int) -> float:
     return (await class_shares(ctx.session, ctx.rules, town_id))[SocialClass.FARMER]
+
+
+async def herder_share(ctx: TickContext, town_id: int) -> float:
+    town = await ctx.session.get(EntityRow, town_id)
+    herds = await holding(ctx.session, town_id, CommodityKind.LIVESTOCK) if town is not None else 0
+    return min(float(PERCENT), herds * PERCENT / max(1, stat_or(town, "population", 0) // 100)) if town is not None else 0.0
 
 
 async def saving_of(ctx: TickContext, household: HouseholdRow) -> SavingRow:
@@ -202,6 +213,9 @@ async def tend_held(ctx: TickContext, household: HouseholdRow, row: SavingRow) -
         household.wealth += row.land * table.land_rent_pct // PERCENT
         if town is not None and await ongoing_wars(ctx.session, town):
             row.land -= row.land * table.land_war_loss_pct // PERCENT
+    if row.livestock > 0 and "livestock" not in row.locked:
+        row.livestock += row.livestock * (table.herd_growth_pct - table.herd_loss_pct) // PERCENT
+        row.livestock = max(0, row.livestock)
     if row.goods > 0 and "goods" not in row.locked:
         row.goods -= row.goods * table.goods_spoil_pct // PERCENT
         if town is not None and await hunger_at(ctx, town) >= ctx.rules.speculation.famine_hunger:

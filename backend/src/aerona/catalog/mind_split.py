@@ -129,6 +129,12 @@ SKILL_ATTRIBUTES: MappingProxyType[SkillKind, tuple[Attribute, ...]] = total(
         S.MECHANICS: (A.ANALYTICAL_ABILITY, A.SPATIAL_SENSE),
         S.PILOTING: (A.SPATIAL_SENSE, A.ENDURANCE),
         S.SCIENCE: (A.ANALYTICAL_ABILITY, A.SPATIAL_SENSE, A.PATIENCE),
+        S.FARMING: (A.ENDURANCE, A.PATIENCE, A.STRENGTH),
+        S.HERDING: (A.ENDURANCE, A.EMPATHY, A.SPATIAL_SENSE),
+        S.COOKING: (A.CREATIVITY, A.FOCUS, A.KINAESTHETIC_SENSE),
+        S.MUSIC: (A.MUSICALITY, A.KINAESTHETIC_SENSE, A.MEMORY),
+        S.CLIMBING: (A.STRENGTH, A.AGILITY, A.SPATIAL_SENSE),
+        S.DIVING: (A.ENDURANCE, A.TOUGHNESS, A.WILLPOWER),
     },
 )
 
@@ -183,6 +189,8 @@ FACETS: MappingProxyType[Facet, FacetSpec] = MappingProxyType(
         F.HUMOUR: FacetSpec("Humour", G.MIND, lean(leisure=15, piety=-10)),
         F.SENSE_OF_DUTY: FacetSpec("Sense of duty", G.MIND, lean(loyalty=15, law=15, honour=10), T.JUST, T.ARBITRARY),
         F.GREED: FacetSpec("Greed", G.MIND, lean(wealth=25, mercy=-10), T.GREEDY, T.GENEROUS),
+        F.FORGIVENESS: FacetSpec("Forgiveness", G.SOCIAL, lean(mercy=20, honour=-10), T.FORGIVING, T.VENGEFUL),
+        F.ADAPTABILITY: FacetSpec("Adaptability", G.MIND, lean(tradition=-15, xenophilia=10), T.ADAPTABLE, T.STUBBORN),
     }
 )
 
@@ -351,6 +359,9 @@ CONDITION_ATTRIBUTES: MappingProxyType[ConditionKind, tuple[Attribute, ...]] = M
         C.PARALYSIS: (A.AGILITY, A.KINAESTHETIC_SENSE, A.ENDURANCE),
         C.INFERTILITY: (),
         C.CHRONIC_PAIN: (A.FOCUS, A.PATIENCE, A.ENDURANCE),
+        C.SEIZURES: (A.FOCUS, A.AGILITY),
+        C.LASTING_FEAR: (A.WILLPOWER, A.PATIENCE),
+        C.BREATHLESSNESS: (A.ENDURANCE, A.RECUPERATION),
     }
 )
 
@@ -363,6 +374,8 @@ BREAK_FACETS: MappingProxyType[StressBreak, tuple[Facet, ...]] = MappingProxyTyp
         SB.ZEAL: (F.SENSE_OF_DUTY,),
         SB.VICE: (F.EXCITEMENT_SEEKING, F.GREED),
         SB.REVELATION: (F.CURIOSITY, F.ABSTRACTION),
+        SB.DISSOCIATION: (F.VULNERABILITY, F.SELF_CONSCIOUSNESS),
+        SB.COLLAPSE: (F.ACTIVITY_LEVEL, F.PERSEVERANCE),
     }
 )
 

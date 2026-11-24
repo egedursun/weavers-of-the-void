@@ -484,6 +484,8 @@ USE_RULES = {
     AnimalRole.ENTERTAINMENT: "domestication.entertainment_calm",
     AnimalRole.SPORT: "species_roles.sport_draw",
     AnimalRole.MEDICINE: "species_roles.medicine_yield",
+    AnimalRole.DISPLAY: "species_roles.display_status",
+    AnimalRole.HERDING: "species_roles.herding_output_pct",
 }
 
 
@@ -546,6 +548,8 @@ TEMPER_TEXT = {
     BeastTemper.WOUNDED: "keeps to its lair to heal, and strikes harder if cornered",
     BeastTemper.BROODING: "guards its young in its lair against all who come near",
     BeastTemper.COWED: "keeps away from where it was driven off",
+    BeastTemper.MIGRATING: "passes through lands, towns and routes on its seasonal path",
+    BeastTemper.FLEEING: "has left its land after defeat, fire or the loss of its lair",
 }
 
 

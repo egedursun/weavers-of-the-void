@@ -27,6 +27,15 @@ export const mapKeys = {
   all: [...queryKeys.world.all, 'map'] as const,
   view: (worldId: number, epoch: number | null) =>
     [...queryKeys.world.all, 'map', worldId, epoch ?? 'today'] as const,
+  deep: (worldId: number, stratum: string, epoch: number | null) =>
+    [
+      ...queryKeys.world.all,
+      'map',
+      worldId,
+      'deep',
+      stratum,
+      epoch ?? 'today',
+    ] as const,
   cosmos: [...queryKeys.world.all, 'cosmos'] as const,
   sons: [...queryKeys.world.all, 'sons'] as const,
   languages: [...queryKeys.world.all, 'languages'] as const,
@@ -53,6 +62,32 @@ export function useWorldMap(worldId: number | null, epoch: number | null) {
         })
       )) as MapView,
     enabled: worldId !== null,
+    placeholderData: keepPreviousData,
+  })
+}
+
+export type MapStratum = components['schemas']['UndergroundStratum']
+
+export function useDeepMap(
+  worldId: number | null,
+  stratum: MapStratum | null,
+  epoch: number | null
+) {
+  return useQuery({
+    queryKey: mapKeys.deep(worldId ?? 0, stratum ?? 'surface', epoch),
+    queryFn: async (): Promise<MapView> =>
+      (await unwrap(
+        api.GET('/api/worlds/{world_id}/map/deep/{stratum}', {
+          params: {
+            path: {
+              world_id: worldId ?? 0,
+              stratum: stratum ?? 'cavern_upper',
+            },
+            query: epoch === null ? {} : { epoch },
+          },
+        })
+      )) as MapView,
+    enabled: worldId !== null && stratum !== null,
     placeholderData: keepPreviousData,
   })
 }

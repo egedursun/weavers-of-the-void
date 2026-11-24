@@ -12,7 +12,7 @@ from aerona.api.schemas.records import (
     WorldRecord,
 )
 from aerona.domain.enums.agent import MessageIntent
-from aerona.domain.enums.creator import CreatorMoodAxis, CreatorMoodLabel, CreatorPassion
+from aerona.domain.enums.creator import CreatorMoodAxis, CreatorMoodLabel, CreatorPassion, MoodItem
 from aerona.domain.enums.dominion import PrayerTone
 from aerona.domain.enums.son import ReputationLabel, SonDeathCause
 
@@ -20,7 +20,7 @@ from aerona.domain.enums.son import ReputationLabel, SonDeathCause
 class MoodInput(ApiModel):
     epoch: int
     axis: CreatorMoodAxis
-    item: str
+    item: MoodItem
     delta: float
 
 

@@ -18,6 +18,7 @@ class MysticVisionRules:
     dream_awe_pct: int = rule(50, 0, 200, R, "More awe a vision in sleep stirs where the mystic's people keep readings of dreams (%)")
     oracle_followers_pct: int = rule(100, 0, 400, R, "More followers a public oracle draws than another vision (%)")
     oracle_court_legitimacy: int = rule(3, 0, 50, R, "Legitimacy a ruler of the town gains when a public oracle there proves answered by a god")
+    sign_weight: int = rule(15, 0, 100, R, "Weight of a sign read in the world among the kinds of direct experience a mystic has")
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,16 @@ class PetitionRules:
     rain_shift: int = rule(8, 0, 100, R, "Rainfall a granted petition for rain brings the land of the town")
     protection_defence: int = rule(10, 0, 100, R, "Defence a granted petition for protection gives the town")
     protection_unrest_at: int = rule(40, 0, 100, R, "Unrest of a town from which its folk petition for protection")
+    finding_grant_pct: int = rule(40, 0, 100, R, "How readily a spirit office grants a petition to find what is lost or missing (50 = as the step gives)")
+    justice_grant_pct: int = rule(
+        35, 0, 100, R, "How readily a spirit office grants a petition for a wrong answered where courts fail (50 = as the step gives)"
+    )
+    finding_goods: int = rule(3, 0, 100, R, "Goods a town finds again when a spirit office grants its petition to find what was lost (supply index)")
+    justice_order_below: int = rule(
+        35, 0, 100, R, "Public order of a town below which its folk petition the spirits for justice rather than vengeance, its courts failing them"
+    )
+    justice_renown: int = rule(5, 0, 100, R, "Renown one who wronged a petitioner loses when a spirit office grants the petition for justice")
+    justice_calm: int = rule(10, 0, 100, R, "Stress a petitioner sheds when a spirit office grants its petition for justice")
 
 
 @dataclass(frozen=True)
@@ -60,6 +71,9 @@ class LuckRules:
     trade_pct: int = rule(10, 0, 100, R, "Prosperity a town gains or loses for a reading of luck in trade, by the boldness of its deals (%)")
     union_stress: int = rule(8, 0, 100, R, "Stress a reading of luck in unions lifts or lays on the newly wed of the town")
     building_pct: int = rule(25, 0, 100, R, "Share of a town's new works that wait for a better day after an ill reading of luck in building (%)")
+    weather_weight: int = rule(45, 0, 100, R, "Weight of the weather of a day read as luck among the signs a people believes")
+    learning_pct: int = rule(1, 0, 20, R, "Literacy a people gains or loses in a town where a sign read as luck for learning falls good or bad")
+    contest_prestige: int = rule(2, 0, 20, R, "Prestige a town gains or loses where a sign read as luck for contests falls good or bad")
 
 
 @dataclass(frozen=True)
@@ -72,6 +86,8 @@ class CharmRules:
     travel_effect: int = rule(50, 0, 100, R, "Force of a charm of travel (50 = as the charm's strength gives)")
     travel_loss_cut_pct: int = rule(30, 0, 100, R, "Share of a journey's losses a real charm of travel at full strength turns aside (%)")
     comfort: int = rule(4, 0, 100, R, "Stress a charm without force lifts from its bearer each epoch by the comfort of belief")
+    concealment_effect: int = rule(50, 0, 100, R, "Force of a charm of concealment (50 = as the charm's strength gives)")
+    courage_effect: int = rule(50, 0, 100, R, "Force of a charm of courage (50 = as the charm's strength gives)")
 
 
 @dataclass(frozen=True)
@@ -80,3 +96,4 @@ class HuntRules:
     true_confession_pct: int = rule(40, 0, 100, L, "Chance an accused who truly did the harm confesses before judgement (%)")
     flight_pct: int = rule(15, 0, 100, L, "Chance an accused flees before judgement where it is free to go (%)")
     flight_fervour: int = rule(10, 0, 100, L, "Fervour an accused's flight adds to its town's hunt, read as guilt")
+    reconcile_pct: int = rule(10, 0, 100, R, "Chance an accusation ends before judgement by amends and rites that leave no grudge (%)")

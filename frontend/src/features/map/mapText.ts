@@ -4,6 +4,11 @@ import {
   HOLDING_WORDS,
   NODE_KIND_WORDS,
 } from '@/features/entity/affairs/labels'
+import {
+  PASSAGE_STATE,
+  STRATUM,
+} from '@/features/entity/environment/geologyLabels'
+import { TERRAIN } from '@/features/entity/environment/labels'
 import { typeLabel } from '@/features/graph/families'
 import { type MapView } from './api'
 import { type LineKind } from './mapLines'
@@ -48,6 +53,11 @@ export const LINE_LABEL: Record<LineKind, string> = {
   outbreak: 'Spreading sickness',
   front: 'Front',
   supply: 'Army and supply line',
+  passage_open: 'Open passage',
+  passage_digging: 'Passage being dug',
+  passage_flooded: 'Flooded passage',
+  passage_collapsed: 'Collapsed passage',
+  passage_sealed: 'Sealed passage',
 }
 
 const DIRECTED: ReadonlySet<LineKind> = new Set(['rule', 'hunt', 'outbreak'])
@@ -138,6 +148,7 @@ export function hoverText(
     const region = view.geometry.regions.find((item) => item.id === hit.id)
     const point = pointById.get(hit.id)
     if (!region || !point) return null
+    if (view.level) return cellHover(view.level, point.name, hit.id, pointById)
     const names = (ids: readonly number[]) =>
       ids
         .map((id) => pointById.get(id)?.name)
@@ -276,4 +287,55 @@ export function hoverText(
   }
   const note = view.notes.find((item) => item.id === hit.id)
   return note ? { title: 'Your note', lines: [note.text] } : null
+}
+
+type DeepLevel = NonNullable<MapView['level']>
+
+export function cellHover(
+  level: DeepLevel,
+  regionName: string,
+  regionId: number,
+  pointById: ReadonlyMap<number, PositionedPoint>
+): HoverText {
+  const stratum = STRATUM[level.stratum].label
+  const cell = level.cells.find((item) => item.region_id === regionId)
+  if (!cell)
+    return {
+      title: regionName,
+      lines: [`No ${stratum.toLowerCase()} beneath ${regionName}`],
+    }
+  const holder =
+    cell.holder_id !== null ? pointById.get(cell.holder_id)?.name : undefined
+  const passages = level.passages.filter(
+    (item) =>
+      (item.first_region_id === regionId &&
+        item.first_stratum === level.stratum) ||
+      (item.second_region_id === regionId &&
+        item.second_stratum === level.stratum)
+  )
+  const states = new Map<string, number>()
+  for (const passage of passages)
+    states.set(passage.state, (states.get(passage.state) ?? 0) + 1)
+  const peoples = cell.peoples
+    .map((id) => pointById.get(id)?.name)
+    .filter((name): name is string => Boolean(name))
+  return {
+    title: cell.name
+      ? `${cell.name}, beneath ${regionName}`
+      : `${stratum} beneath ${regionName}`,
+    lines: [
+      `${stratum} · ${TERRAIN[cell.terrain].label}`,
+      `Extent ${cell.extent}, light ${cell.light}`,
+      cell.dwellable ? 'Can be dwelt in' : 'No one can dwell here',
+      holder ? `Held by ${holder}` : 'Ruled by no realm',
+      peoples.length > 0
+        ? `Peoples: ${peoples.join(', ')}`
+        : 'No people lives here',
+      plural(cell.settlements, 'settlement'),
+      passages.length > 0
+        ? `Passages: ${[...states.entries()].map(([state, count]) => `${count} ${PASSAGE_STATE[state as keyof typeof PASSAGE_STATE].label.toLowerCase()}`).join(', ')}`
+        : 'No passage leads here',
+      ...(cell.held ? ['Held by the god'] : []),
+    ],
+  }
 }

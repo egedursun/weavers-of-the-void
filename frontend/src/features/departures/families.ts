@@ -10,7 +10,7 @@ export const DEPARTURES: RecordFamily = {
   icon: DoorOpen,
   tone: 'warning',
   empty:
-    'No one has left an office here by choice. Rulers, officials and heads of organisations of any kind leave by abdication, retirement, resignation, withdrawal or exile, and their leavings show in their own drawer, the realm or organisation they left and the one they handed it to. The offices of sons over domains follow divine rules and are not left this way.',
+    'No one has left an office here by choice. Rulers, officials and heads of organisations of any kind leave by abdication, retirement, resignation, withdrawal or exile, and their leavings show in their own entry, the realm or organisation they left and the one they handed it to. The offices of sons over domains follow divine rules and are not left this way.',
   tables: {
     departures: {
       create: 'departure:create',

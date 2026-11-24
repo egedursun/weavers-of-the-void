@@ -39,7 +39,7 @@ HEROQUEST_FIELDS = (
 )
 MANTLING_FIELDS = ("god_node_id", "deeds", "worship", "progress", "state", "blocked", "notified")
 SERVITOR_FIELDS = ("god_node_id", "origin", "role", "post_entity_id", "loyalty", "fallen_to_node_id", "former_god_node_id")
-GEAS_FIELDS = ("layer_node_id", "layer", "mode", "act", "state", "favour", "laid_epoch", "last_kept_epoch", "broken_epoch")
+GEAS_FIELDS = ("layer_node_id", "layer", "mode", "act", "trigger", "state", "favour", "laid_epoch", "last_kept_epoch", "armed_epoch", "broken_epoch")
 OFFICE_FIELDS = ("holder_node_id", "chosen_by", "neglect", "duty", "office_kind_id")
 
 
@@ -141,6 +141,8 @@ class GeasRow(Base):
     laid_epoch: Mapped[int] = mapped_column(default=0)
     last_kept_epoch: Mapped[int] = mapped_column(default=0)
     broken_epoch: Mapped[int | None]
+    trigger: Mapped[ActKind | None] = mapped_column(enum_type(ActKind, "trigger"))
+    armed_epoch: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -30,6 +30,8 @@ SPEED_RULES = {
     Medium.HERALD: "herald_hops",
     Medium.BIRD: "bird_hops",
     Medium.SIGNAL_FIRE: "signal_fire_hops",
+    Medium.DRUM_AND_WHISTLE: "drum_and_whistle_hops",
+    Medium.COURIER_ANIMAL: "courier_animal_hops",
 }
 
 
@@ -45,6 +47,8 @@ TEXTS = {
     DispatchContent.INTELLIGENCE: "intelligence",
     DispatchContent.ORDER: "an order",
     DispatchContent.WARNING: "a warning",
+    DispatchContent.CONDOLENCE: "condolences",
+    DispatchContent.CONGRATULATION: "congratulations",
 }
 
 
@@ -59,6 +63,7 @@ CUT_WHEN_TAKEN = total(
         SignalKind.RADIO_STATION: False,
         SignalKind.MIND_LINK_STATION: False,
         SignalKind.GROWN_NODE: True,
+        SignalKind.DRUM_RELAY: True,
     },
 )
 

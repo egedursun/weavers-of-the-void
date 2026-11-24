@@ -10,7 +10,7 @@ from tests.engine.core.living_kinds import kind, land, range_of, told
 
 
 def test_fifteen_diets_and_the_four_new_ones_read_their_own_food() -> None:
-    assert len(DIETS) == len(Diet) == 15
+    assert len(DIETS) == len(Diet) == 16
     assert DIETS[Diet.DECOMPOSER].eats_refuse and not DIETS[Diet.DECOMPOSER].yields_meat
     assert not DIETS[Diet.ENERGY].edible and not DIETS[Diet.CHEMOSYNTHETIC].hunts
 

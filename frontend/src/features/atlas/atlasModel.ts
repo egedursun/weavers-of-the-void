@@ -6,9 +6,9 @@ import {
 } from '@/api/generated/schema'
 import { plural } from '@/lib/units'
 import {
-  type DrawerEntry,
-  type DrawerKind,
-} from '@/components/layout/drawer/drawerEntries'
+  type EntryRef,
+  type EntryKind,
+} from '@/components/layout/entry/entryStack'
 import { type StructureTypes } from '@/features/city/api'
 import {
   DWELLING_ICON,
@@ -53,7 +53,7 @@ export type AtlasNode = {
   children: AtlasNode[]
 }
 
-const DRAWER_OF: Partial<Record<AtlasNodeKind, DrawerKind>> = {
+const DRAWER_OF: Partial<Record<AtlasNodeKind, EntryKind>> = {
   entity: 'entity',
   son: 'son',
   'foreign-god': 'foreign-god',
@@ -64,7 +64,7 @@ const DRAWER_OF: Partial<Record<AtlasNodeKind, DrawerKind>> = {
   dimension: 'dimension',
 }
 
-export function drawerFor(node: AtlasNode): DrawerEntry | null {
+export function entryFor(node: AtlasNode): EntryRef | null {
   if (node.kind === 'creator') return { kind: 'creator' }
   const kind = DRAWER_OF[node.kind]
   return kind && node.id !== undefined ? { kind, id: String(node.id) } : null

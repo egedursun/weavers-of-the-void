@@ -2,6 +2,7 @@ from collections.abc import Mapping
 
 from aerona.core.total import total
 from aerona.domain.enums.agrarian import CommonsKind, LandUseRing, PerennialKind, PreparednessKind
+from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.intervention import Disaster
 
 SHIELDS: dict[Disaster, frozenset[PreparednessKind]] = {
@@ -27,6 +28,9 @@ KIND_TOLL: Mapping[PerennialKind, tuple[int, str, int]] = total(
         PerennialKind.TIMBER: (100, "forest_cover", 1),
         PerennialKind.PLANTATION: (150, "soil_fertility", -1),
         PerennialKind.FOREST_GARDEN: (70, "forest_cover", 1),
+        PerennialKind.COPPICE: (60, "forest_cover", 0),
+        PerennialKind.HEDGEROW: (40, "erosion", -1),
+        PerennialKind.PALM_STAND: (120, "soil_fertility", 0),
     },
 )
 
@@ -43,8 +47,20 @@ COMMONS_BOON: Mapping[CommonsKind, tuple[str, int]] = total(
         CommonsKind.SPECTRUM: ("prestige", 1),
         CommonsKind.ORBITS: ("prestige", 2),
         CommonsKind.SOURCE_GROUND: ("public_order", 1),
+        CommonsKind.TURBARY: ("prosperity", 1),
+        CommonsKind.FORAGING_GROUND: ("prosperity", 1),
+        CommonsKind.SHORE: ("prosperity", 1),
     },
 )
 
 
-RING_ORDER = (LandUseRing.GARDENS, LandUseRing.FORESTRY, LandUseRing.GRAIN, LandUseRing.RANCHING, LandUseRing.WILDS)
+PALM_GOODS = frozenset({CommodityKind.FRUIT, CommodityKind.OIL})
+RING_ORDER = (
+    LandUseRing.INDUSTRY,
+    LandUseRing.GARDENS,
+    LandUseRing.FORESTRY,
+    LandUseRing.GRAIN,
+    LandUseRing.FALLOW,
+    LandUseRing.RANCHING,
+    LandUseRing.WILDS,
+)

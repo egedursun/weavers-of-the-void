@@ -7,6 +7,7 @@ class AgeBand(StrEnum):
     YOUTH = "youth"
     ADULT = "adult"
     ELDER = "elder"
+    ANCIENT = "ancient"
 
 
 class SexKind(StrEnum):
@@ -26,6 +27,8 @@ class CohortCondition(StrEnum):
     MAIMED = "maimed"
     ORPHANED = "orphaned"
     DISPLACED = "displaced"
+    INDEBTED = "indebted"
+    GIFTED = "gifted"
 
 
 class Job(StrEnum):
@@ -46,6 +49,8 @@ class Job(StrEnum):
     GATHERING = "gathering"
     INDUSTRY = "industry"
     ARTS = "arts"
+    HEALING = "healing"
+    TEACHING = "teaching"
 
 
 class MotifSource(StrEnum):
@@ -88,6 +93,7 @@ class InheritanceCustom(StrEnum):
     BY_MERIT = "by_merit"
     SENIORITY = "seniority"
     DESIGNATED = "designated"
+    COMMUNAL = "communal"
 
 
 class NaturalTrait(StrEnum):
@@ -117,3 +123,5 @@ class FuneralCustom(StrEnum):
     NONE = "none"
     MUMMIFICATION = "mummification"
     SECONDARY_BURIAL = "secondary_burial"
+    RETURN_TO_SOIL = "return_to_soil"
+    MEMORIAL_ONLY = "memorial_only"

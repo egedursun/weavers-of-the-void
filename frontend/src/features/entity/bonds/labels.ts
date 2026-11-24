@@ -1,32 +1,41 @@
 import {
   Beer,
   BookOpen,
+  Crosshair,
   Crown,
   Drama,
+  Dumbbell,
   Feather,
+  Fence,
   Flame,
   Gem,
   GraduationCap,
+  HandHelping,
   Handshake,
   Heart,
   HeartCrack,
   HeartHandshake,
   Home,
+  House,
   Landmark,
   Medal,
   MessageCircle,
   Music,
   Puzzle,
   Scale,
-  Ship,
   Shield,
+  Ship,
   Skull,
   Sparkles,
   Swords,
   Target,
   Trees,
   User,
+  UserX,
   Users,
+  Diamond,
+  BookOpenText,
+  Flag,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 import { type CircleKind, type ContestKind, type RelationType } from './api'
@@ -65,9 +74,12 @@ export const RELATION_TYPES: Record<RelationType, Named> = {
   },
   patron: { label: 'Patron', icon: Landmark, tone: 'gold' },
   client: { label: 'Client', icon: Scale, tone: 'muted' },
-  betrothed: { label: 'Betrothed', icon: Gem, tone: 'warning' },
-  sworn_kin: { label: 'Sworn kin', icon: Shield, tone: 'gold' },
+  betrothed: { label: 'Betrothed', icon: Diamond, tone: 'warning' },
+  sworn_kin: { label: 'Sworn kin', icon: Users, tone: 'gold' },
   foster: { label: 'Foster kin', icon: Home, tone: 'verdigris' },
+  estranged: { label: 'Estranged', icon: UserX, tone: 'danger' },
+  guest_friend: { label: 'Guest-friend', icon: House, tone: 'success' },
+  neighbour: { label: 'Neighbour', icon: Fence, tone: 'success' },
 }
 
 export const PASSION_KINDS: Record<string, Named> = {
@@ -88,6 +100,8 @@ export const CIRCLE_KINDS: Record<CircleKind, Named> = {
   craft_circle: { label: 'Craft circle', icon: Gem, tone: 'warning' },
   sport_club: { label: 'Sport club', icon: Medal, tone: 'success' },
   gaming_circle: { label: 'Gaming circle', icon: Puzzle, tone: 'warning' },
+  mutual_aid: { label: 'Mutual aid', icon: HandHelping, tone: 'success' },
+  reading_circle: { label: 'Reading circle', icon: BookOpenText, tone: 'info' },
 }
 
 export const GROUP_KINDS: Record<string, Named> = {
@@ -110,8 +124,10 @@ export const CONTEST_KINDS: Record<ContestKind, Named> = {
   trial_of_wisdom: { label: 'Trial of wisdom', icon: BookOpen, tone: 'gold' },
   song_contest: { label: 'Song contest', icon: Music, tone: 'verdigris' },
   storytelling: { label: 'Storytelling', icon: Drama, tone: 'verdigris' },
-  race: { label: 'Race', icon: Target, tone: 'success' },
+  race: { label: 'Race', icon: Flag, tone: 'success' },
   craft_contest: { label: 'Craft contest', icon: Gem, tone: 'gold' },
+  hunt: { label: 'The hunt', icon: Crosshair, tone: 'warning' },
+  wrestling: { label: 'Wrestling', icon: Dumbbell, tone: 'warning' },
 }
 
 export const OUTCOMES: Record<string, string> = {

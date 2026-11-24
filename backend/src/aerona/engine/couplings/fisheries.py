@@ -39,6 +39,7 @@ async def stock_left(ctx: TickContext, ground: CatchGroundRow) -> int | None:
     "table.entities",
     "table.law_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
     "table.polity_members",
     "table.resource_profiles",

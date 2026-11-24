@@ -133,5 +133,7 @@ GOAL_WEIGHTS: Mapping[FactionGoalKind, str] = total(
         FactionGoalKind.GAIN_PRIVILEGE: "gain_privilege_weight",
         FactionGoalKind.WIN_OFFICE: "win_office_weight",
         FactionGoalKind.RUIN_RIVAL: "ruin_rival_weight",
+        FactionGoalKind.PROTECT_MEMBERS: "protect_members_weight",
+        FactionGoalKind.FOUND_SETTLEMENT: "found_settlement_weight",
     },
 )

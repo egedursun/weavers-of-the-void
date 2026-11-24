@@ -1,21 +1,22 @@
 from dataclasses import dataclass, fields
 from typing import Any, cast
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.goods_traits import commodities_with
 from aerona.catalog.life_traits import SETTLE_MODE_TRAITS, WAR_TERRAIN_TRAITS, having
 from aerona.catalog.prehistory import WORLD_PREHISTORY
-from aerona.catalog.world_views import WORLD_VIEWS, WorldViewSpec
+from aerona.catalog.world_views import BOUND_NEEDS, WORLD_VIEWS, WorldViewSpec
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.total import partial
 from aerona.db.read_memo import memo_of
 from aerona.db.tables.celestial import WorldRow
-from aerona.db.tables.demography import PeopleBiologyRow
+from aerona.db.tables.demography import PeopleBiologyRow, PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.means import WaterLiftRow
+from aerona.db.tables.sacred import GeniusLocusRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.world_views import SHARE_MAX, WORLD_VIEW_FIELDS, WorldViewRow
 from aerona.db.write_guard import held
@@ -54,7 +55,7 @@ DRAWN_FROM = partial(
         BindingNeed.AIR: (AIR_STOCKS, GoodsFlow.CONSUMPTION),
         BindingNeed.OFFERINGS: (OFFERING_STOCKS, GoodsFlow.OFFERING),
     },
-    without=(BindingNeed.NONE, BindingNeed.WATER, BindingNeed.BELIEF),
+    without=(BindingNeed.NONE, BindingNeed.WATER, BindingNeed.BELIEF, BindingNeed.PLACE, BindingNeed.NAME),
 )
 UPKEPT = having(SETTLE_MODE_TRAITS, SettleModeTrait.UPKEPT)
 COLD_BORN = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
@@ -72,10 +73,12 @@ class WorldView:
     nights: bool = True
     fire: bool = True
     soil: bool = True
+    sea_roads: bool = False
     timber_pct: int = PERCENT
     food_need_pct: int = PERCENT
     capacity_pct: int = PERCENT
     ore_yield_pct: int = PERCENT
+    ship_pct: int = PERCENT
     storm_pct: int = PERCENT
     quake_pct: int = PERCENT
     flood_pct: int = PERCENT
@@ -124,11 +127,13 @@ def default_values(rules: Rules, world_type: WorldType) -> dict[str, object]:
         "nights": spec.nights,
         "fire": spec.fire,
         "soil": spec.soil,
+        "sea_roads": mechanics.sea_roads,
         "timber_pct": share(spec.timber_pct),
         "food_need_pct": share(spec.food_need_pct),
         "sea_pct": clamp_int(spec.sea_pct if spec.sea_pct is not None else rules.environment.coast_fishing_share, 0, PERCENT),
         "capacity_pct": share(mechanics.capacity_pct(rules) if mechanics.capacity_pct is not None else PERCENT),
         "ore_yield_pct": share(mechanics.ore_yield_pct(rules) if mechanics.ore_yield_pct is not None else PERCENT),
+        "ship_pct": share(mechanics.ship_pct(rules) if mechanics.ship_pct is not None else PERCENT),
         "route_danger": clamp_int(mechanics.route_danger(rules), 0, PERCENT),
         "leak": clamp_int(mechanics.leak(rules), 0, PERCENT),
         "leak_repair": clamp_int(mechanics.leak_repair(rules), 0, PERCENT),
@@ -178,6 +183,8 @@ def light_pct(rules: Rules, light: WorldLight) -> int:
         WorldLight.INNER_SUN: table.inner_sun_light_pct,
         WorldLight.DIVINE: table.divine_light_pct,
         WorldLight.SHIP_CYCLE: table.ship_light_pct,
+        WorldLight.BIOLUMINESCENCE: table.living_light_pct,
+        WorldLight.MADE_LIGHT: table.made_light_pct,
         WorldLight.FADING_GOD: table.fading_light_pct,
         WorldLight.NONE: table.dark_light_pct,
     }[light]
@@ -257,6 +264,20 @@ async def born_free(ctx: TickContext, town: EntityRow, need: BindingNeed) -> boo
     return need is BindingNeed.HEAT and biology.acclimatised in COLD_BORN
 
 
+async def bound_met(ctx: TickContext, town: EntityRow, need: BindingNeed) -> bool:
+    if need is BindingNeed.PLACE:
+        guardian = await ctx.session.scalar(
+            select(GeniusLocusRow.spirit_entity_id)
+            .where(or_(GeniusLocusRow.community_entity_id == town.id, GeniusLocusRow.place_entity_id == town.id))
+            .order_by(GeniusLocusRow.spirit_entity_id)
+            .limit(1)
+        )
+        return guardian is not None
+    folk = await people_id_of(ctx.session, town)
+    culture = await ctx.session.get(PeopleCultureRow, folk) if folk is not None else None
+    return culture is not None and culture.literacy >= ctx.rules.world_views.name_literacy_from
+
+
 async def need_met(ctx: TickContext, town: EntityRow, view: WorldView, atlas: RegionAtlas) -> bool:
     if await born_free(ctx, town, view.need):
         return True
@@ -270,6 +291,8 @@ async def need_met(ctx: TickContext, town: EntityRow, view: WorldView, atlas: Re
         return await drawn(ctx, town.id, stocks, wanted, flow) >= wanted
     if view.need is BindingNeed.BELIEF:
         return (stat(town, "piety") or 0) >= table.belief_from
+    if view.need in BOUND_NEEDS:
+        return await bound_met(ctx, town, view.need)
     return True
 
 

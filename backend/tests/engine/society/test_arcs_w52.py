@@ -10,7 +10,7 @@ RULES = Rules()
 
 
 def test_nineteen_arcs_with_their_kinds_read_from_the_catalogue() -> None:
-    assert len(ARCS) == len(ArcTemplate) == 19
+    assert len(ARCS) == len(ArcTemplate) == 22
     assert ArcTemplate.OVERCOMING in CONFRONTING and ArcTemplate.SACRIFICE in ENDS_IN_DEATH
     assert len(stages_of(ArcTemplate.QUEST)) > len(stages_of(ArcTemplate.DISCOVERY))
     assert {ArcTemplate.RECONCILIATION, ArcTemplate.DISCOVERY, ArcTemplate.OVERCOMING} <= set(GOALS)

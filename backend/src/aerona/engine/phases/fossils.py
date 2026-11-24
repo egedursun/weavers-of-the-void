@@ -6,6 +6,7 @@ from aerona.engine.phases.dominion import count
 
 
 @reads(
+    "table.constructs",
     "table.creator",
     "table.dimensions",
     "table.entities",
@@ -21,8 +22,10 @@ from aerona.engine.phases.dominion import count
     "table.lifecycle_states",
     "table.node_births",
     "table.nodes",
+    "table.notable_years",
     "table.outbreaks",
     "table.region_environment",
+    "table.region_underground",
     "table.sons",
     "table.species_ranges",
     "table.stars",
@@ -41,6 +44,7 @@ from aerona.engine.phases.dominion import count
     "table.incident_participants",
     "table.incidents",
     "table.legend_profiles",
+    "table.notable_years",
     "table.outbreaks",
     "table.theory_adherents",
 )

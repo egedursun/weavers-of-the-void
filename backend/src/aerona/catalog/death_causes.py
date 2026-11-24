@@ -55,6 +55,10 @@ DEATH_CAUSES: Mapping[DeathCause, DeathCauseSpec] = total(
         D.BOMBARDMENT: DeathCauseSpec("Bombardment", violent=True),
         D.DROWNING: DeathCauseSpec("Drowning", damage=DamageType.ASPHYXIA),
         D.SPORT: DeathCauseSpec("Sport"),
+        D.ANIMAL: DeathCauseSpec("An animal", loose=True),
+        D.CROWD: DeathCauseSpec("A crush of people", violent=True, loose=True),
+        D.MEDICAL: DeathCauseSpec("Treatment gone wrong"),
+        D.SOUL_LOSS: DeathCauseSpec("Loss of the soul", uncanny=True),
     },
 )
 BY_DAMAGE: Mapping[DamageType, DeathCause] = {spec.damage: cause for cause, spec in DEATH_CAUSES.items() if spec.damage is not None}

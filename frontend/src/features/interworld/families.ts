@@ -10,7 +10,7 @@ export const INTERWORLD: RecordFamily = {
   icon: Orbit,
   tone: 'info',
   empty:
-    'Nothing crosses between worlds here. Realms send campaigns along the ways between worlds, a world drawer shows who holds the space around it, and a settlement shows its people when they move to another world; worlds joined by no way keep this idle.',
+    'Nothing crosses between worlds here. Realms send campaigns along the ways between worlds, the entry of a world shows who holds the space around it, and a settlement shows its people when they move to another world; worlds joined by no way keep this idle.',
   tables: {
     interworld_campaigns: {
       create: 'interworld_campaign:create',

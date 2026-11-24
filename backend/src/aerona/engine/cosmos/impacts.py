@@ -174,10 +174,12 @@ async def forecast(ctx: TickContext, cosmography: Cosmography) -> int:
     fields = await live_features(ctx, CosmicFeatureKind.ASTEROID_FIELD)
     comets = [row for row in await live_features(ctx, CosmicFeatureKind.PERIODIC_COMET) if returned_now(row, ctx.epoch)]
     rogues = await live_features(ctx, CosmicFeatureKind.ROGUE_WORLD)
+    rings = await live_features(ctx, CosmicFeatureKind.DEBRIS_RING)
     for source, body, chance in (
         *((row, ImpactBody.ASTEROID, row.density / 10 * table.field_chance_per_density / 10) for row in fields),
         *((row, ImpactBody.COMET, float(table.comet_chance)) for row in comets),
         *((row, ImpactBody.ROGUE_WORLD, float(table.rogue_chance)) for row in rogues),
+        *((row, ImpactBody.EJECTA, float(table.debris_ring_chance)) for row in rings),
     ):
         for world in worlds_of(cosmography, source.star_id):
             if world.parent_world_id is not None or held(world.id) or await pending_on(ctx, world.id) is not None:
@@ -433,8 +435,48 @@ async def resolve(ctx: TickContext) -> int:
         if impact.called_by_node_id is None and ctx.rng(f"impact_miss.{impact.id}").chance(ctx.rules.impacts.miss_pct):
             await pass_by(ctx, impact)
             continue
-        struck += int(await strike(ctx, impact))
+        if impact.called_by_node_id is None and await capture(ctx, impact):
+            continue
+        hit = await strike(ctx, impact)
+        struck += int(hit)
+        if hit:
+            await shatter(ctx, impact)
     return struck
+
+
+async def capture(ctx: TickContext, impact: ImpactEventRow) -> bool:
+    table = ctx.rules.impacts
+    world = await ctx.session.get(WorldRow, impact.world_id)
+    if world is None or world.star_id is None or impact.size < table.capture_size or IMPACT_BODIES[impact.body].made:
+        return False
+    if not ctx.rng(f"impact_capture.{impact.id}").chance(table.capture_pct):
+        return False
+    impact.outcome = ImpactOutcome.CAPTURED
+    ring = CosmicFeatureRow(
+        kind=CosmicFeatureKind.DEBRIS_RING,
+        name=f"Ring of {world.name}",
+        star_id=world.star_id,
+        world_id=world.id,
+        density=impact.size,
+        created_epoch=ctx.epoch,
+        locked=[],
+    )
+    ctx.session.add(ring)
+    await ctx.session.flush()
+    impact.feature_id = impact.feature_id or ring.id
+    await record(ctx, "impact.captured", roles={IncidentRole.SUBJECT: world.id}, facts={"body": impact.body, "size": impact.size}, world_id=world.id)
+    return True
+
+
+async def shatter(ctx: TickContext, impact: ImpactEventRow) -> None:
+    table = ctx.rules.impacts
+    world = await ctx.session.get(WorldRow, impact.world_id)
+    if world is None or impact.size < table.shatter_size or impact.body is ImpactBody.EJECTA:
+        return
+    if not ctx.rng(f"impact_shatter.{impact.id}").chance(table.shatter_pct):
+        return
+    impact.outcome = ImpactOutcome.FRAGMENTED
+    await schedule(ctx, world, ImpactBody.EJECTA, size=max(1, impact.size // 2))
 
 
 async def pass_by(ctx: TickContext, impact: ImpactEventRow) -> None:

@@ -68,6 +68,20 @@ import {
   Zap,
   EyeOff,
   Palette,
+  Bolt,
+  Book,
+  BrainCog,
+  Lamp,
+  MapPinHouse,
+  Moon,
+  Sparkle,
+  Sword,
+  TrendingUpDown,
+  VenetianMask,
+  WavesLadder,
+  Binoculars,
+  MapPinned,
+  ShieldHalf,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -84,7 +98,7 @@ export const TAB_ICONS = {
 } as const
 
 export const NUTRIENTS: Record<Schema['Nutrient'], Named> = {
-  energy: { label: 'Energy', icon: Zap, tone: 'gold' },
+  energy: { label: 'Energy', icon: Bolt, tone: 'gold' },
   protein: { label: 'Protein', icon: Beef, tone: 'danger' },
   fat: { label: 'Fats', icon: Milk, tone: 'warning' },
   fresh: { label: 'Fresh food', icon: Apple, tone: 'success' },
@@ -149,7 +163,7 @@ export const DECISIONS: Record<Schema['BiasedDecision'], Named> = {
   conversion: { label: 'Turning to a god', icon: Sparkles, tone: 'gold' },
   migration: { label: 'Leaving home', icon: TrendingUp, tone: 'info' },
   god_goal: { label: 'Taking up a goal', icon: Target, tone: 'gold' },
-  war: { label: 'Going to war', icon: Swords, tone: 'danger' },
+  war: { label: 'Going to war', icon: Sword, tone: 'danger' },
   retreat: { label: 'Falling back', icon: Undo2, tone: 'warning' },
   trade: { label: 'Opening trade', icon: Coins, tone: 'success' },
   alliance: { label: 'Making an alliance', icon: Handshake, tone: 'info' },
@@ -174,7 +188,7 @@ export const IMPURITY_SOURCES: Record<Schema['ImpuritySource'], Named> = {
   bodily_fluids: { label: 'Bodily fluids', icon: Droplet, tone: 'danger' },
   food: { label: 'Foods', icon: UtensilsCrossed, tone: 'warning' },
   species: { label: 'Species', icon: PawPrint, tone: 'verdigris' },
-  profession: { label: 'Professions', icon: Hammer, tone: 'info' },
+  profession: { label: 'Professions', icon: Wrench, tone: 'info' },
   outsiders: { label: 'Outsiders', icon: Users, tone: 'muted' },
   place: { label: 'Places', icon: Mountain, tone: 'muted' },
   object: { label: 'Objects', icon: Gem, tone: 'warning' },
@@ -229,6 +243,8 @@ export const MISHAP_KINDS: Record<Schema['MishapKind'], Named> = {
   theft_suffered: { label: 'Robbed', icon: Hand, tone: 'warning' },
   tool_broken: { label: 'A tool broke', icon: Wrench, tone: 'info' },
   near_miss: { label: 'A near miss', icon: Eye, tone: 'muted' },
+  flood: { label: 'Flood', icon: WavesLadder, tone: 'muted' },
+  quake: { label: 'Quake', icon: Binoculars, tone: 'muted' },
 }
 
 export const ATTRIBUTIONS: Record<Schema['MishapAttribution'], Named> = {
@@ -237,15 +253,16 @@ export const ATTRIBUTIONS: Record<Schema['MishapAttribution'], Named> = {
   witchcraft: { label: 'Witchcraft', icon: Ghost, tone: 'danger' },
   curse: { label: 'A curse', icon: Skull, tone: 'danger' },
   god: { label: 'A god', icon: Sparkles, tone: 'gold' },
-  spirit: { label: 'A spirit', icon: Ghost, tone: 'verdigris' },
+  spirit: { label: 'A spirit', icon: Moon, tone: 'verdigris' },
   ancestor: { label: 'An ancestor', icon: Users, tone: 'muted' },
   omen: { label: 'An omen', icon: Eye, tone: 'warning' },
   fate: { label: 'Fate', icon: Hourglass, tone: 'muted' },
   enemy_scheme: { label: 'An enemy scheme', icon: Swords, tone: 'danger' },
   impurity: { label: 'Impurity', icon: Droplets, tone: 'warning' },
   broken_oath: { label: 'A broken oath', icon: Scale, tone: 'warning' },
-  made_mind: { label: 'A made mind', icon: Brain, tone: 'verdigris' },
+  made_mind: { label: 'A made mind', icon: BrainCog, tone: 'verdigris' },
   hidden_people: { label: 'Those who hide', icon: EyeOff, tone: 'muted' },
+  self: { label: 'Own conduct', icon: VenetianMask, tone: 'muted' },
 }
 
 export const RESPONSES: Record<Schema['MishapResponse'], Named> = {
@@ -256,6 +273,8 @@ export const RESPONSES: Record<Schema['MishapResponse'], Named> = {
   accusation: { label: 'An accusation', icon: Gavel, tone: 'danger' },
   purification: { label: 'Purification', icon: Droplets, tone: 'info' },
   safety_custom: { label: 'A safety custom', icon: Shield, tone: 'success' },
+  compensation: { label: 'Compensation', icon: ShieldHalf, tone: 'success' },
+  move_away: { label: 'Move away', icon: ShieldAlert, tone: 'success' },
 }
 
 export const LUCK_SIGNS: Record<Schema['LuckSign'], Named> = {
@@ -268,6 +287,7 @@ export const LUCK_SIGNS: Record<Schema['LuckSign'], Named> = {
   person: { label: 'A kind of person', icon: User, tone: 'info' },
   animal: { label: 'A kind of creature', icon: PawPrint, tone: 'verdigris' },
   colour: { label: 'A colour', icon: Sparkles, tone: 'gold' },
+  weather: { label: 'Weather', icon: Sparkle, tone: 'gold' },
 }
 
 export const LUCK_REACHES: Record<Schema['LuckReach'], Named> = {
@@ -279,11 +299,13 @@ export const LUCK_REACHES: Record<Schema['LuckReach'], Named> = {
   trade: { label: 'Trade', icon: Coins, tone: 'gold' },
   union: { label: 'Unions', icon: Handshake, tone: 'success' },
   building: { label: 'Building', icon: Hammer, tone: 'info' },
+  learning: { label: 'Learning', icon: Book, tone: 'info' },
+  contest: { label: 'Contest', icon: Trophy, tone: 'info' },
 }
 
 export const COLOURS: Record<Schema['ColourFocus'], Named> = {
   dark: { label: 'Dark', icon: Palette, tone: 'muted' },
-  light: { label: 'Light', icon: Palette, tone: 'gold' },
+  light: { label: 'Light', icon: Lamp, tone: 'gold' },
   red: { label: 'Red', icon: Palette, tone: 'danger' },
   yellow: { label: 'Yellow', icon: Palette, tone: 'gold' },
   green: { label: 'Green', icon: Palette, tone: 'success' },
@@ -302,6 +324,8 @@ export const CHARM_POWERS: Record<Schema['CharmPower'], Named> = {
   healing: { label: 'Healing', icon: HeartPulse, tone: 'success' },
   love: { label: 'Love', icon: HandHeart, tone: 'danger' },
   travel: { label: 'Safe travel', icon: MapPin, tone: 'info' },
+  concealment: { label: 'Concealment', icon: MapPinHouse, tone: 'info' },
+  courage: { label: 'Courage', icon: MapPinned, tone: 'info' },
 }
 
 export const OUTCOMES: Record<Schema['AccusationOutcome'], Named> = {
@@ -312,6 +336,7 @@ export const OUTCOMES: Record<Schema['AccusationOutcome'], Named> = {
   killed: { label: 'Killed', icon: Skull, tone: 'danger' },
   confessed: { label: 'Confessed', icon: Scroll, tone: 'warning' },
   fled: { label: 'Fled', icon: TrendingUp, tone: 'danger' },
+  reconciled: { label: 'Reconciled', icon: TrendingUpDown, tone: 'danger' },
 }
 
 export const STRAINS: Record<Schema['IdeaStrain'], Named> = {

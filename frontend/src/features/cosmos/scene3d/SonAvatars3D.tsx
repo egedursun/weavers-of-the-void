@@ -3,7 +3,7 @@ import { rarityValues } from '@/api/generated/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Portrait } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { mediaUrl } from '@/features/pantheon/media'
 import { type SonPublic } from '../api'
@@ -20,7 +20,7 @@ type SonAvatars3DProps = {
 }
 
 export function SonAvatars3D({ index, sons, labels }: SonAvatars3DProps) {
-  const drawer = useDrawerStack()
+  const entryStack = useEntryStack()
   const byId = new Map(sons.map((son) => [son.son.id, son]))
   const register = useCallback(
     (key: string) => (element: HTMLElement | null) => {
@@ -58,7 +58,7 @@ export function SonAvatars3D({ index, sons, labels }: SonAvatars3DProps) {
                     aria-label={`${ref.name}${rarity ? `, ${wordOf(rarityValues, rarity)} son` : ''} on ${item.world.name}`}
                     title={`${ref.name}${rarity ? ` · ${wordOf(rarityValues, rarity)} son` : ''} · on ${item.world.name}`}
                     onClick={() =>
-                      void drawer.open({ kind: 'son', id: String(ref.id) })
+                      void entryStack.open({ kind: 'son', id: String(ref.id) })
                     }
                   >
                     <Portrait

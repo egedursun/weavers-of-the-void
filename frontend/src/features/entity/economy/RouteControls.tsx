@@ -33,6 +33,8 @@ import {
   EmptyState,
   EntityLink,
   FormRow,
+  ShapeFields,
+  useShape,
   IconStat,
   KpiTile,
   Medallion,
@@ -805,6 +807,7 @@ export function FoundRouteDialog({
   const [mode, setMode] = useState<string>(LAND_DECIDES)
   const [keeper, setKeeper] = useState<string | null>(null)
   const [toll, setToll] = useState('10')
+  const naming = useShape()
   const found = useGodAction({
     run: () =>
       unwrap(
@@ -815,10 +818,14 @@ export function FoundRouteDialog({
             mode: mode === LAND_DECIDES ? null : (mode as TradeMode),
             controller_id: keeper === null ? null : Number(keeper),
             toll_pct: keeper === null || toll === '' ? null : numberOr(toll, 0),
+            ...naming.body,
           },
         })
       ),
-    onDone: () => setOpen(false),
+    onDone: () => {
+      setOpen(false)
+      naming.reset()
+    },
   })
   const missing =
     first === null || second === null
@@ -846,6 +853,7 @@ export function FoundRouteDialog({
           </DialogDescription>
         </DialogHeader>
         <div className='flex min-w-0 flex-col gap-3'>
+          <ShapeFields shape={naming.shape} onChange={naming.setShape} />
           <FormRow label='First market'>
             {(id) => (
               <RecordCombobox

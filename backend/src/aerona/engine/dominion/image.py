@@ -158,6 +158,10 @@ def manifestation_of(ctx: TickContext, alignment: PerceivedAlignment, *, wrath: 
         return Manifestation.VEILED
     if alignment is PerceivedAlignment.AMBIVALENT and wrath - mercy >= ctx.rules.god_images.stern_gap:
         return Manifestation.STERN
+    if alignment is PerceivedAlignment.AMBIVALENT and mercy - wrath >= ctx.rules.god_images.stern_gap:
+        return Manifestation.SORROWFUL
+    if alignment is PerceivedAlignment.AMBIVALENT and max(wrath, mercy) < ctx.rules.god_images.playful_below:
+        return Manifestation.PLAYFUL
     return ALIGNMENT_MANIFESTATIONS[alignment]
 
 

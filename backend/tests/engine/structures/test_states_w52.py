@@ -13,7 +13,7 @@ RULES = Rules()
 
 
 def test_seven_construction_states_and_three_gone() -> None:
-    assert len(ConstructionState) == 7
+    assert len(ConstructionState) == 8
     assert {ConstructionState.RUINED, ConstructionState.ABANDONED, ConstructionState.DISMANTLED} == GONE_STATES
 
 

@@ -2,7 +2,7 @@ import { Crown } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/domain'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { GodDivinitySection } from '@/features/divine/GodDivinitySection'
 import { BodySection } from '@/features/entity/sections/BodySection'
 import { MemoriesSection } from '@/features/entity/sections/MemoriesSection'
@@ -50,7 +50,7 @@ function PageSkeleton() {
   )
 }
 
-export function SonPage({ id }: DrawerPageProps) {
+export function SonPage({ id }: EntryPageProps) {
   const sonId = Number(id)
   const detail = useSonDetail(sonId)
   const sons = useSons()

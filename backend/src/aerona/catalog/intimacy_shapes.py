@@ -7,6 +7,7 @@ POSTNATAL_RECOVERY_PCT: dict[PostnatalCustom, int] = {
     PostnatalCustom.SPECIALIST_CARE: 150,
     PostnatalCustom.RITE: 90,
     PostnatalCustom.NONE: 0,
+    PostnatalCustom.PARTNER_REST: 115,
 }
 
 OCCASION_ODDS_PCT: dict[RestraintOccasion, int] = {

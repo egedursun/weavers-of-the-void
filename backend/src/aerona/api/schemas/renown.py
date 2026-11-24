@@ -23,6 +23,8 @@ class StandingView(ApiModel):
     piety: int
     dread: int
     tyranny: int
+    trust: int
+    learning: int
     silenced_until: int | None
     updated_epoch: int
     realm: NodeRef | None

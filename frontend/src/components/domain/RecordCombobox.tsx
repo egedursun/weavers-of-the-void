@@ -143,6 +143,7 @@ export function RecordCombobox({
                       option.value === value ? 'opacity-100' : 'opacity-0'
                     )}
                   />
+                  {option.adornment}
                   <span className='min-w-0 flex-1 truncate'>
                     {option.label}
                   </span>

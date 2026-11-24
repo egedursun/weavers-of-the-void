@@ -349,6 +349,11 @@ class StepState(StrEnum):
     ENCIRCLED = "encircled"
     ROUTED = "routed"
     RALLIED = "rallied"
+    DROWNING = "drowning"
+    CHARMED = "charmed"
+    ASLEEP = "asleep"
+    POISONED = "poisoned"
+    FRIGHTENED = "frightened"
 
 
 class InstrumentKind(StrEnum):
@@ -366,6 +371,9 @@ class InstrumentKind(StrEnum):
     NETWORK = "network"
     BODY = "body"
     NONE = "none"
+    WEATHER_WORK = "weather_work"
+    WORD = "word"
+    KEPT_ANIMAL = "kept_animal"
 
 
 class StepLocus(StrEnum):
@@ -383,6 +391,9 @@ class StepLocus(StrEnum):
     REALM = "realm"
     NETWORK_NODE = "network_node"
     NONE = "none"
+    STRATUM = "stratum"
+    DREAM = "dream"
+    DIMENSION = "dimension"
 
 
 class WitnessMode(StrEnum):
@@ -390,6 +401,7 @@ class WitnessMode(StrEnum):
     HEARD = "heard"
     TOOK_PART = "took_part"
     WAS_TOLD = "was_told"
+    SENSED = "sensed"
 
 
 class RumourDistortion(StrEnum):
@@ -403,6 +415,8 @@ class RumourDistortion(StrEnum):
     STEP_ADDED = "step_added"
     STEP_DROPPED = "step_dropped"
     ROLE_CHANGED = "role_changed"
+    COUNT_INFLATED = "count_inflated"
+    MOTIVE_ADDED = "motive_added"
 
 
 class ProcessGroup(StrEnum):

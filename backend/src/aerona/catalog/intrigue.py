@@ -37,6 +37,7 @@ SECRETS: dict[IntrigueSecret, SecretSpec] = {
         SecretSpec(IntrigueSecret.TRUE_HISTORY, "The true history behind an official account", 55),
         SecretSpec(IntrigueSecret.HIDDEN_POWER, "A concealed innate power", 60),
         SecretSpec(IntrigueSecret.FORGERY, "A forgery made or used", 60, ActKind.THEFT),
+        SecretSpec(IntrigueSecret.ILLNESS, "A hidden illness", 50),
     )
 }
 
@@ -84,6 +85,8 @@ SCHEMES: dict[PlotKind, SchemeSpec] = {
         SchemeSpec(PlotKind.GEAS_TRAP, "Geas trap", 60, 50, 1, IntrigueSecret.CRIME),
         SchemeSpec(PlotKind.HIDE_FLEET, "Hidden fleet", 55, 60, 1, IntrigueSecret.CRIME),
         SchemeSpec(PlotKind.FORGE_WORK, "Forged work", 45, 60, 0, IntrigueSecret.CRIME),
+        SchemeSpec(PlotKind.FIX_CONTEST, "Fixed contest", 40, 55, 1, IntrigueSecret.CRIME, ActKind.FIXING_CONTESTS),
+        SchemeSpec(PlotKind.INCITE_CROWD, "Stirred crowd", 50, 40, 2, IntrigueSecret.CRIME),
     )
 }
 
@@ -104,6 +107,8 @@ HOOK_SOURCE_LABELS: dict[HookSource, str] = {
     HookSource.FAVOUR: "A favour",
     HookSource.HOSTAGE: "A hostage",
     HookSource.TRUE_NAME: "A true name",
+    HookSource.DEPENDENCE: "Dependence",
+    HookSource.AFFECTION: "Affection",
 }
 HOOK_DEMAND_LABELS: dict[HookDemand, str] = {
     HookDemand.MARRIAGE: "Agree to a marriage",
@@ -114,6 +119,8 @@ HOOK_DEMAND_LABELS: dict[HookDemand, str] = {
     HookDemand.APPOINTMENT: "Appoint the holder to an office",
     HookDemand.SILENCE: "Keep silent before a court",
     HookDemand.PAYMENT: "Pay the holder",
+    HookDemand.RELEASE: "Let someone go",
+    HookDemand.INFORMATION: "Tell what it knows",
 }
 FAVOUR_LABELS: dict[FavourOrigin, str] = {
     FavourOrigin.GIFT: "A gift",
@@ -125,6 +132,8 @@ FAVOUR_LABELS: dict[FavourOrigin, str] = {
     FavourOrigin.RELIEF: "Aid in a stricken hour",
     FavourOrigin.HOSPITALITY: "Shelter given",
     FavourOrigin.RANSOM: "A ransom paid",
+    FavourOrigin.HEALING: "A healing",
+    FavourOrigin.TEACHING: "Teaching",
 }
 IDENTITY_LABELS: dict[IdentityReason, str] = {
     IdentityReason.SPY: "A spy's cover",
@@ -135,6 +144,7 @@ IDENTITY_LABELS: dict[IdentityReason, str] = {
     IdentityReason.FUGITIVE: "A fugitive's other name",
     IdentityReason.HIDDEN_FAITH: "A believer's hidden faith",
     IdentityReason.PASSING_KIND: "A being passing as another kind",
+    IdentityReason.PROTECTION: "A name worn to protect kin",
 }
 
 BELIEF_ATTRIBUTES: tuple[str, ...] = ("wealth", "defense", "population", "prosperity")
@@ -162,6 +172,8 @@ BELIEF_SOURCE_LABELS: Mapping[BeliefSource, str] = total(
         BeliefSource.INTRUSION: "Taken by intrusion",
         BeliefSource.SURVEILLANCE: "Reported by watchers",
         BeliefSource.MADE_MIND_REPORT: "Reported by a made mind",
+        BeliefSource.DREAM: "Seen in a dream",
+        BeliefSource.OMEN: "Read in an omen",
     },
 )
 PRICE_PREFIX = "price."
@@ -200,6 +212,8 @@ SCHEME_DONE: Mapping[PlotKind, str] = total(
         PlotKind.GEAS_TRAP: "caught {target} in a geas trap",
         PlotKind.HIDE_FLEET: "hid a fleet from {target}",
         PlotKind.FORGE_WORK: "forged a work to deceive {target}",
+        PlotKind.FIX_CONTEST: "fixed a contest against {target}",
+        PlotKind.INCITE_CROWD: "stirred a crowd against {target}",
     },
 )
 SCHEME_PLOTTED: Mapping[PlotKind, str] = total(
@@ -225,6 +239,8 @@ SCHEME_PLOTTED: Mapping[PlotKind, str] = total(
         PlotKind.GEAS_TRAP: "to catch them in a geas trap",
         PlotKind.HIDE_FLEET: "to hide a fleet from them",
         PlotKind.FORGE_WORK: "to forge a work to deceive them",
+        PlotKind.FIX_CONTEST: "to fix a contest against them",
+        PlotKind.INCITE_CROWD: "to stir a crowd against them",
     },
 )
 SECRET_TOLD: Mapping[IntrigueSecret, str] = total(
@@ -248,5 +264,6 @@ SECRET_TOLD: Mapping[IntrigueSecret, str] = total(
         IntrigueSecret.TRUE_HISTORY: "the true history behind an official account",
         IntrigueSecret.HIDDEN_POWER: "a power they were born with and kept hidden",
         IntrigueSecret.FORGERY: "a forgery they made or used",
+        IntrigueSecret.ILLNESS: "an illness they kept hidden",
     },
 )

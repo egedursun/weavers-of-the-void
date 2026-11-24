@@ -1,8 +1,11 @@
 from sqlalchemy import func, select
 
+from aerona.catalog.life.faith import CHURCH_WORKS, TENDED_ROUTES
 from aerona.constants.units import PER_MILLE, PERCENT
+from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ItemProfileRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
@@ -13,6 +16,8 @@ from aerona.db.tables.polity import HouseMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.sons import SonRow
+from aerona.db.tables.structures import StructureProfileRow
+from aerona.db.write_guard import held as frozen
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CurseKind, ItemClass
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
@@ -25,6 +30,8 @@ from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.models.entity_stats import ItemStats
+from aerona.engine.body.afflictions import cure
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.death_work.handling import reachable, remains_of
 from aerona.engine.disease.book import DiseaseBook
@@ -158,7 +165,47 @@ async def survey_holdings(ctx: TickContext, church: Church) -> int:
     target = church.tenets.get(TenetKind.PILGRIMAGE_DUTY)
     if target is not None and target.target is not None and target.target.isdigit():
         added += await hold(ctx, church, int(target.target), HoldingKind.HOLY_PLACE)
+    for kind, holding, tenet in CHURCH_WORKS:
+        if homes and church.holds(tenet):
+            works = await ctx.session.scalars(
+                select(StructureProfileRow.structure_entity_id)
+                .join(EntityRow, EntityRow.id == StructureProfileRow.structure_entity_id)
+                .where(StructureProfileRow.kind == kind, EntityRow.status == EntityStatus.CANON, EntityRow.location_id.in_(homes))
+                .order_by(StructureProfileRow.structure_entity_id)
+            )
+            for work in works:
+                added += await hold(ctx, church, work, holding)
     return added + await wider_holdings(ctx, church, homes)
+
+
+async def tend_works(ctx: TickContext, church: Church) -> int:
+    table = ctx.rules.tithes
+    tended = 0
+    for row in await holdings_of(ctx, church, HoldingKind.SCHOOL):
+        work = await ctx.session.get(EntityRow, row.holding_entity_id)
+        town = await ctx.session.get(EntityRow, work.location_id) if work is not None and work.location_id is not None else None
+        people = await people_of(ctx.session, town) if town is not None else None
+        culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+        if culture is not None and not frozen(culture.people_entity_id) and "literacy" not in culture.locked:
+            culture.literacy = clamp_int(culture.literacy + table.school_literacy, 0, PERCENT)
+            tended += 1
+    for row in await holdings_of(ctx, church, HoldingKind.HOSPITAL):
+        work = await ctx.session.get(EntityRow, row.holding_entity_id)
+        if work is None or work.location_id is None:
+            continue
+        sick = await ctx.session.scalars(
+            select(AfflictionRow)
+            .join(EntityRow, EntityRow.id == AfflictionRow.bearer_node_id)
+            .where(AfflictionRow.cured_epoch.is_(None), EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [work.location_id]))
+            .order_by(AfflictionRow.id)
+            .limit(table.hospital_cures)
+        )
+        for affliction in list(sick):
+            bearer = await ctx.session.get(EntityRow, affliction.bearer_node_id)
+            if bearer is not None and not frozen(bearer.id) and affliction.transmission in TENDED_ROUTES:
+                await cure(ctx, bearer, affliction, None)
+                tended += 1
+    return tended
 
 
 async def wider_holdings(ctx: TickContext, church: Church, homes: list[int]) -> int:

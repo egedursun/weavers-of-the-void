@@ -19,8 +19,8 @@ import { GodPanel } from './GodPanel'
 import { MoodPanel } from './MoodPanel'
 import { ReputationPanel } from './ReputationPanel'
 import { RevelationDialog } from './RevelationDialog'
-import { type MoodAxis, useCreator, useCreatorReputation } from './api'
-import { MOOD_AXES } from './mood'
+import { useCreator, useCreatorReputation } from './api'
+import { type GaugeAxis, MOOD_AXES } from './mood'
 
 function savePrompt(prompt: string) {
   return unwrap(api.PATCH('/api/creator', { body: { image_prompt: prompt } }))
@@ -61,7 +61,7 @@ export function CreatorPage() {
   const creator = data.creator
   const values = Object.fromEntries(
     MOOD_AXES.map((axis) => [axis, data.mood[axis]])
-  ) as Record<MoodAxis, number>
+  ) as Record<GaugeAxis, number>
   return (
     <div className='flex min-w-0 flex-col gap-6'>
       <CreatorHero detail={data} />

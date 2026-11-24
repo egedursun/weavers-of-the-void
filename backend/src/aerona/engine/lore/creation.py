@@ -1,4 +1,5 @@
 from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from pydantic import TypeAdapter
@@ -10,6 +11,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, spoken
 from aerona.db.base import Base
+from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.culture import (
     ArtworkProfileRow,
@@ -23,6 +25,8 @@ from aerona.db.tables.culture import (
 from aerona.db.tables.discovery import ArtFormProfileRow, TheoryProfileRow
 from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.node import NodeRow
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import (
     ArtMode,
     BacklashKind,
@@ -39,8 +43,10 @@ from aerona.domain.enums.culture import (
 )
 from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.economy import MaterialSlot
-from aerona.domain.enums.entity import EngineKind, EntityType
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.entity import EngineKind, EntityOrigin, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
 from aerona.domain.enums.world import SkyEventKind
 from aerona.domain.models.entity_stats import EntityStats
 from aerona.engine.context import TickContext
@@ -50,6 +56,7 @@ from aerona.engine.lore.prophecy import Foretelling, typed_condition
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.record import record
 
 STATS: TypeAdapter[EntityStats] = TypeAdapter(EntityStats)
 CREATABLE = frozenset(
@@ -68,6 +75,55 @@ CREATABLE = frozenset(
     }
 )
 Values = dict[str, Any]
+WORSHIPPED = frozenset({NodeKind.CREATOR, NodeKind.SON, NodeKind.FOREIGN_GOD})
+SHAPED_RECORDS = frozenset({EntityType.CELESTIAL, EntityType.SPIRIT, EntityType.NATURAL_LAW, EntityType.CULT})
+
+
+@dataclass(frozen=True)
+class RecordShape:
+    entity_type: EntityType
+    name: str
+    description: str
+    title: str | None
+    world_id: int | None
+    location_id: int | None
+    power: int
+    stats: dict[str, int | None]
+    natural_law: NaturalLaw | None
+    god_id: int | None = None
+
+
+async def shape_record(ctx: TickContext, shape: RecordShape) -> EntityRow:
+    if shape.entity_type not in SHAPED_RECORDS:
+        raise ValidationFailedError(f"{an(spoken(shape.entity_type), capital=True)} is made elsewhere.")
+    if not shape.name.strip():
+        raise ValidationFailedError("Name it first.")
+    world, location = await place_of(ctx, shape.location_id, shape.world_id)
+    stats = {"kind": shape.entity_type.value, **{key: value for key, value in shape.stats.items() if value is not None}}
+    entity = await create_record(
+        ctx,
+        RecordSpec(
+            name=shape.name.strip(),
+            entity_type=shape.entity_type,
+            stats=STATS.validate_python(stats),
+            body=shape.description.strip() or shape.name.strip(),
+            power=clamp_int(shape.power, 1, 10),
+            world_id=world,
+            location_id=location,
+            title=(shape.title or "").strip() or None,
+            natural_law=shape.natural_law if shape.entity_type is EntityType.NATURAL_LAW else None,
+            origin=EntityOrigin.CREATOR,
+        ),
+    )
+    if shape.entity_type is EntityType.CULT and shape.god_id is not None:
+        god = await ctx.session.get(NodeRow, shape.god_id)
+        if god is None or god.kind not in WORSHIPPED:
+            raise ValidationFailedError("A faith worships a god: the Creator, a son or a foreign god.")
+        await BondRepository(ctx.session).connect(BondDraft(entity.id, god.id, BondKind.WORSHIPS, ctx.epoch, "the god it was raised to worship"))
+    await record(ctx, "creation.shaped", roles={IncidentRole.PRODUCT: entity.id}, place=location, world_id=world)
+    return entity
+
+
 Seeder = Callable[[TickContext, EntityRow, Values], Awaitable[Base | None]]
 
 

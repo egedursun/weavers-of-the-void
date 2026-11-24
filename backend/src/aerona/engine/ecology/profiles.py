@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -17,7 +18,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
-from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow, SpeciesUseRow
+from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow
@@ -34,6 +35,7 @@ from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.fauna import traits_of
 from aerona.engine.ecology.biochemistry import tolerated
+from aerona.engine.ecology.uses import give_use
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
@@ -80,6 +82,8 @@ FAT = Product("fat", CommodityKind.FUEL, None, 1)
 SCENT = Product("scent", CommodityKind.INCENSE, None, 1)
 HONEY = Product("honey", CommodityKind.HONEY, None, 1)
 WAX = Product("wax", CommodityKind.WAX, None, 1)
+SHELL = Product("shell", CommodityKind.TOOLS, MaterialKind.CALCIFIED_TISSUE, 1)
+SCALES = Product("scales", CommodityKind.ARMOUR, MaterialKind.CHITIN, 1)
 PRODUCTS = {
     YieldProduct.MEAT: MEAT,
     YieldProduct.HIDE: HIDE,
@@ -100,6 +104,8 @@ PRODUCTS = {
     YieldProduct.SCENT: SCENT,
     YieldProduct.HONEY: HONEY,
     YieldProduct.WAX: WAX,
+    YieldProduct.SHELL: SHELL,
+    YieldProduct.SCALES: SCALES,
 }
 PEST_HUNTERS = MEAT_EATERS
 
@@ -186,15 +192,20 @@ def diet_of(species: EntityRow, traits: set[CreatureTrait], plan: BodyPlan, pare
     return Diet.CARNIVORE if (stat(species, "danger") or 0) >= PERCENT // 2 else Diet.HERBIVORE
 
 
+SOCIAL_TESTS: tuple[tuple[Callable[[Diet, set[CreatureTrait]], bool], Sociality], ...] = (
+    (lambda _diet, traits: T.HIVE_MIND in traits, Sociality.HIVE),
+    (lambda _diet, traits: T.PACK_HUNTER in traits, Sociality.PACK),
+    (lambda _diet, traits: T.SWARM_BREEDER in traits, Sociality.SWARM),
+    (lambda diet, traits: diet is Diet.PISCIVORE and T.FLYING in traits, Sociality.COLONY),
+    (lambda diet, traits: T.LONG_LIVED in traits and diet in GRAZERS, Sociality.FAMILY_GROUP),
+    (lambda _diet, traits: T.FLYING in traits, Sociality.PAIR),
+)
+
+
 def sociality_of(diet: Diet, traits: set[CreatureTrait], parent: SpeciesProfileRow | None) -> Sociality:
-    if T.HIVE_MIND in traits:
-        return Sociality.HIVE
-    if T.PACK_HUNTER in traits:
-        return Sociality.PACK
-    if T.SWARM_BREEDER in traits:
-        return Sociality.SWARM
-    if diet is Diet.PISCIVORE and T.FLYING in traits:
-        return Sociality.COLONY
+    found = next((form for test, form in SOCIAL_TESTS if test(diet, traits)), None)
+    if found is not None:
+        return found
     if parent is not None:
         return parent.sociality
     return Sociality.HERD if diet in GRAZERS else Sociality.SOLITARY
@@ -223,6 +234,8 @@ def bodily_chemistry(plan: BodyPlan, diet: Diet) -> Biochemistry | None:
 
 
 def native_chemistry(native: tuple[Biochemistry, ...]) -> Biochemistry:
+    if Biochemistry.METAL in native:
+        return Biochemistry.METAL
     if Biochemistry.CARBON_METHANE in native and Biochemistry.CARBON_WATER not in native:
         return Biochemistry.CARBON_METHANE
     return Biochemistry.CARBON_WATER if not native or Biochemistry.CARBON_WATER in native else native[0]
@@ -447,8 +460,8 @@ async def profile_of(ctx: TickContext, species: EntityRow, spec: SpeciesSpec | N
                 locked=[],
             )
         )
-    for use in kept:
-        ctx.session.add(SpeciesUseRow(species_entity_id=species.id, use=use))
+    for use in sorted(kept):
+        await give_use(ctx.session, species.id, use)
     await ctx.session.flush()
     return row
 

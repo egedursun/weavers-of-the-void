@@ -23,9 +23,11 @@ from aerona.domain.enums.divine import (
 )
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import PerceivedAlignment, WorshipMode
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.law_grammar import LawCondition, LawOperator, LawTarget
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.mind import ActKind
+from aerona.domain.enums.mythic import CosmicOffice
 from aerona.domain.enums.outer import OuterFate
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.son import ExistenceMode
@@ -190,6 +192,7 @@ class NaturalLawProfileRow(Base):
         between("stability", PERCENT_MIN, PERCENT_MAX),
         CheckConstraint("scope = 'cosmos' OR world_id IS NOT NULL", name="scoped_has_world"),
         CheckConstraint("scope <> 'region' OR region_entity_id IS NOT NULL", name="region_has_region"),
+        CheckConstraint("scope <> 'stratum' OR stratum IS NOT NULL OR afterlife_stratum_id IS NOT NULL", name="stratum_has_stratum"),
     )
 
     law_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"), primary_key=True)
@@ -202,6 +205,9 @@ class NaturalLawProfileRow(Base):
     author_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     exception: Mapped[LawException] = mapped_column(enum_type(LawException, "exception"), default=LawException.NONE)
     exempt_kind_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
+    exempt_office: Mapped[CosmicOffice | None] = mapped_column(enum_type(CosmicOffice, "exempt_office"))
+    stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "stratum"))
+    afterlife_stratum_id: Mapped[int | None] = mapped_column(ForeignKey("afterlife_strata.id", ondelete="SET NULL"))
     contested: Mapped[bool] = mapped_column(default=False)
     target: Mapped[LawTarget | None] = mapped_column(enum_type(LawTarget, "target"))
     operator: Mapped[LawOperator | None] = mapped_column(enum_type(LawOperator, "operator"))

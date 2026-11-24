@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.life.cosmos import CAUSE_END, END_REMNANT, END_WORLD_WORLD_ENDS
 from aerona.catalog.life_traits import WORLD_END_TRAITS, having
+from aerona.catalog.planetary_cycles import CYCLES
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
@@ -15,10 +16,12 @@ from aerona.db.repositories.worlds import WorldRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow, StarRow, WorldRow
 from aerona.db.tables.cosmography import RiftRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.divine import BreachPointRow, OuterBeingProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.evolution import WorldCycleRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.made import ReplicatorLineRow, ReplicatorPresenceRow
 from aerona.db.tables.mass_weapons import MassWeaponRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.world_ends import WorldEndRow
@@ -26,8 +29,10 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.evolution import CycleEffect
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.life_traits import WorldEndTrait
+from aerona.domain.enums.made import ReplicatorStage
 from aerona.domain.enums.mass_weapons import MassReach
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.outer import OuterFate
@@ -39,7 +44,9 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.orbits import planet_of
 from aerona.engine.cosmos.world_views import reset_view, view_of
 from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.records import retire_in
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft, record
 
 E = WorldEnd
@@ -57,6 +64,8 @@ LIVES = frozenset(
     }
 )
 HOME_BONDS = (BondKind.LIVES_IN, BondKind.DESCENDS_FROM)
+
+FERTILITY_KEY = "fertility"
 
 
 @dataclass
@@ -248,9 +257,20 @@ async def forsaken(ctx: TickContext, world: WorldRow) -> bool:
     return living is None and once is not None and world.id != cosmos.primary_world_id
 
 
+def runaway_end(ctx: TickContext, world: WorldRow, row: WorldCycleRow) -> WorldEnd | None:
+    spec = CYCLES[row.cycle]
+    if CycleEffect.GREENHOUSE in spec.moves:
+        return E.BURNED
+    if CycleEffect.SEA_LEVEL not in spec.moves:
+        return None
+    if spec.inverse:
+        return E.FROZEN_DEAD
+    return E.DROWNED if world.terrain_sea * PERCENT >= ctx.rules.world_ends.drowned_sea_pct else None
+
+
 async def runaway_cycle(ctx: TickContext, world: WorldRow) -> WorldCycleRow | None:
     cycles = select(WorldCycleRow).where(WorldCycleRow.world_id == world.id, WorldCycleRow.stock >= ctx.rules.world_ends.runaway_stock)
-    return await ctx.session.scalar(cycles.order_by(WorldCycleRow.cycle).limit(1))
+    return next((row for row in await ctx.session.scalars(cycles.order_by(WorldCycleRow.cycle)) if runaway_end(ctx, world, row) is not None), None)
 
 
 @CAUSE_SIGN.on(WorldEndCause.RUNAWAY_CLIMATE)
@@ -295,6 +315,51 @@ async def never_by_itself(_ctx: TickContext, _world: WorldRow) -> bool:
     return False
 
 
+@CAUSE_SIGN.on(WorldEndCause.PLAGUE)
+async def emptied_by_plague(ctx: TickContext, world: WorldRow) -> bool:
+    society = select(EntityRow.id).where(EntityRow.world_id == world.id, EntityRow.entity_type.in_(SOCIETIES))
+    living = await ctx.session.scalar(society.where(EntityRow.status == EntityStatus.CANON).limit(1))
+    if living is not None or await ctx.session.scalar(society.where(EntityRow.status != EntityStatus.CANON).limit(1)) is None:
+        return False
+    regions = select(EntityRow.id).where(EntityRow.world_id == world.id, EntityRow.entity_type == EntityType.REGION)
+    struck = await ctx.session.scalar(
+        select(OutbreakRow.id)
+        .where(
+            OutbreakRow.region_entity_id.in_(regions), OutbreakRow.started_epoch >= ctx.epoch - ctx.rules.world_ends.epochs(ctx.rules.world_ends.plague_years)
+        )
+        .limit(1)
+    )
+    return struck is not None
+
+
+async def runaway_lines(ctx: TickContext, world: WorldRow) -> list[ReplicatorLineRow]:
+    places = select(EntityRow.id).where(EntityRow.world_id == world.id)
+    lines = select(ReplicatorPresenceRow.line_id).where(ReplicatorPresenceRow.place_node_id.in_(places))
+    return list(
+        await ctx.session.scalars(
+            select(ReplicatorLineRow).where(ReplicatorLineRow.id.in_(lines), ReplicatorLineRow.stage == ReplicatorStage.RUNAWAY).order_by(ReplicatorLineRow.id)
+        )
+    )
+
+
+@CAUSE_SIGN.on(WorldEndCause.RUNAWAY_MAKING)
+async def unmade_by_making(ctx: TickContext, world: WorldRow) -> bool:
+    places = select(EntityRow.id).where(EntityRow.world_id == world.id)
+    mass = await ctx.session.scalar(select(func.sum(ReplicatorPresenceRow.mass)).where(ReplicatorPresenceRow.place_node_id.in_(places)))
+    return bool(await runaway_lines(ctx, world)) and int(mass or 0) >= ctx.rules.world_ends.runaway_making_mass
+
+
+@CAUSE_SIGN.on(WorldEndCause.STRUCTURE_FAILURE)
+async def structure_failed(ctx: TickContext, world: WorldRow) -> bool:
+    if world.world_type is not WorldType.MEGASTRUCTURE:
+        return False
+    regions = await canon(ctx.session, [EntityType.REGION], world.id)
+    if not regions:
+        return False
+    worn = sum(stat_or(region, FERTILITY_KEY, 0) for region in regions) / len(regions)
+    return worn <= ctx.rules.world_ends.failure_fertility
+
+
 CAUSE_SIGN.seal()
 
 
@@ -304,12 +369,18 @@ async def source_of(ctx: TickContext, world: WorldRow, cause: WorldEndCause) -> 
         return weapons[-1].holder_entity_id if weapons else None
     if cause is WorldEndCause.OUTER_HUNGER:
         return await starving_being(ctx, world)
+    if cause is WorldEndCause.RUNAWAY_MAKING:
+        lines = await runaway_lines(ctx, world)
+        return lines[0].maker_node_id if lines else None
     return None
 
 
-def ending_of(ctx: TickContext, world: WorldRow, cause: WorldEndCause) -> WorldEnd:
-    if cause is WorldEndCause.RUNAWAY_CLIMATE and world.terrain_sea * PERCENT >= ctx.rules.world_ends.drowned_sea_pct:
-        return E.DROWNED
+def ending_of(ctx: TickContext, world: WorldRow, cause: WorldEndCause, runaway: WorldCycleRow | None = None) -> WorldEnd:
+    found = runaway_end(ctx, world, runaway) if runaway is not None else None
+    if found is not None:
+        return found
+    if cause is WorldEndCause.IMPACT and world.parent_world_id is not None:
+        return E.MERGED
     return CAUSE_END[cause]
 
 
@@ -321,7 +392,8 @@ async def keep_world_ends(ctx: TickContext, tally: EndingTally) -> None:
         for cause, sign in CAUSE_SIGN.items():
             if CAUSE_END[cause] is E.TRANSFIGURED or not await sign(ctx, world):
                 continue
-            await end_world(ctx, world, ending_of(ctx, world, cause), cause, source_node_id=await source_of(ctx, world, cause))
+            runaway = await runaway_cycle(ctx, world) if cause is WorldEndCause.RUNAWAY_CLIMATE else None
+            await end_world(ctx, world, ending_of(ctx, world, cause, runaway), cause, source_node_id=await source_of(ctx, world, cause))
             tally.frozen += int(cause is WorldEndCause.STAR_DEATH)
             tally.ended += 1
             break

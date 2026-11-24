@@ -884,6 +884,24 @@ class EnginePhasesRules:
     world_views: int = rule(
         1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: what each world binds its towns to, and the upkeep of floating and sealed towns"
     )
+    world_thoughts: int = rule(1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: beings at a place take thoughts from what the world did there")
+    time_shares: int = rule(
+        1, 0, 1, RuleGroup.ENGINE_PHASES, "Run the engine step: time spent in company binds a people and time set aside for mourning eases grief"
+    )
+    deepened_towns: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: new quarters, works, gardens, collections, relics, aids, clocks, curses and cooperatives act on their towns",
+    )
+    deepened_realms: int = rule(
+        1,
+        0,
+        1,
+        RuleGroup.ENGINE_PHASES,
+        "Run the engine step: rights, wards, the stateless, conquest, leagues, prophecy, appeals, evidence, oaths, goals, privileges, signals and hidden kin",
+    )
     settle_modes: int = rule(
         1,
         0,

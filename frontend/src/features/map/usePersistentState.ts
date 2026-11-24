@@ -58,3 +58,9 @@ export const oneOf =
     typeof value === 'string' && options.includes(value)
 export const isStringList = (value: unknown) =>
   Array.isArray(value) && value.every((item) => typeof item === 'string')
+
+export const isDepthRecord = (value: unknown) =>
+  typeof value === 'object' &&
+  value !== null &&
+  !Array.isArray(value) &&
+  Object.values(value).every((item) => typeof item === 'string')

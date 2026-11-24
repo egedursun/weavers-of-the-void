@@ -5,12 +5,13 @@ from aerona.domain.enums.economy import TradeMode
 from aerona.engine.economy import route_control
 from aerona.engine.gods import pacts
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
+from aerona.services.player.shaping import Shaped, shape_after
 
 RouteValue = int | str | bool | list[int] | None
 TermValue = int | str | None
 
 
-class FoundRoute(Command):
+class FoundRoute(Shaped):
     first_id: int
     second_id: int
     mode: TradeMode | None = None
@@ -67,6 +68,7 @@ async def found_route(scope: PlayerScope, command: FoundRoute) -> Effect:
         controller_id=command.controller_id,
         toll_pct=command.toll_pct,
     )
+    await shape_after(scope, route.entity.id, command)
     return Effect(f"{route.entity.name} is opened to merchants as you laid it out.", route.entity.id, created_ids=(route.entity.id,))
 
 

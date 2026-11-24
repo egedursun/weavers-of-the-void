@@ -101,6 +101,20 @@ import {
   Dna,
   Bot,
   Cpu,
+  Banknote,
+  Bean,
+  Leaf,
+  LibraryBig,
+  Lighthouse,
+  UserRound,
+  UsersRound,
+  MountainSnow,
+  Container,
+  Filter,
+  CloudDrizzle,
+  ShowerHead,
+  Database,
+  Ban,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Spec } from './labels'
@@ -157,7 +171,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   library: {
     label: 'Library',
-    icon: Library,
+    icon: LibraryBig,
     tone: 'info',
     hint: 'Keeps and deepens knowledge; shields from dark ages',
   },
@@ -259,7 +273,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   granary: {
     label: 'Granary',
-    icon: Wheat,
+    icon: Leaf,
     tone: 'success',
     hint: 'Stores grain; feeds a siege',
   },
@@ -350,7 +364,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   irrigation: {
     label: 'Irrigation works',
-    icon: Sprout,
+    icon: Bean,
     tone: 'success',
     hint: 'Watered fields, bigger harvests',
   },
@@ -410,7 +424,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   bathhouse: {
     label: 'Bathhouse',
-    icon: Droplets,
+    icon: ShowerHead,
     tone: 'info',
     hint: 'Keeps the districts it reaches clean and well',
   },
@@ -428,7 +442,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   fountain: {
     label: 'Fountain',
-    icon: Droplet,
+    icon: CloudDrizzle,
     tone: 'info',
     hint: 'Gives water to the districts it reaches and makes them pleasant',
   },
@@ -554,7 +568,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   lighthouse: {
     label: 'Lighthouse',
-    icon: TowerControl,
+    icon: Lighthouse,
     tone: 'info',
     hint: 'Guides vessels home; works as a harbour for the sea lanes it lights',
   },
@@ -680,13 +694,13 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   cistern: {
     label: 'Cistern',
-    icon: Droplet,
+    icon: Database,
     tone: 'info',
     hint: 'Stores water; works as a fountain',
   },
   reservoir: {
     label: 'Reservoir',
-    icon: Droplets,
+    icon: Container,
     tone: 'info',
     hint: 'Holds water for the town; works as an aqueduct',
   },
@@ -698,7 +712,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   tunnel: {
     label: 'Tunnel',
-    icon: Mountain,
+    icon: MountainSnow,
     tone: 'info',
     hint: 'Carries a road through rock; works as a road',
   },
@@ -788,7 +802,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   exchange: {
     label: 'Exchange',
-    icon: Coins,
+    icon: Banknote,
     tone: 'gold',
     hint: 'Trades in shares and debts; works as a bank',
   },
@@ -950,7 +964,7 @@ export const KIND_SPEC: Record<StructureKind, Spec> = {
   },
   water_purification: {
     label: 'Water purification',
-    icon: Droplets,
+    icon: Filter,
     tone: 'info',
     hint: 'Brings clean water like an aqueduct',
   },
@@ -986,8 +1000,9 @@ export const STATE_SPEC: Record<ConstructionState, Spec> = {
   complete: { label: 'Standing', icon: Building, tone: 'success' },
   damaged: { label: 'Damaged', icon: Wrench, tone: 'warning' },
   ruined: { label: 'Ruined', icon: Skull, tone: 'danger' },
-  abandoned: { label: 'Left unfinished', icon: Construction, tone: 'warning' },
+  abandoned: { label: 'Left unfinished', icon: Ban, tone: 'warning' },
   dismantled: { label: 'Taken apart', icon: Hammer, tone: 'muted' },
+  restored: { label: 'Restored', icon: Pickaxe, tone: 'muted' },
 }
 
 export const BUILDER_SPEC: Record<BuilderKind, Spec> = {
@@ -999,6 +1014,7 @@ export const BUILDER_SPEC: Record<BuilderKind, Spec> = {
   god: { label: 'A god', icon: Sparkles, tone: 'verdigris' },
   company: { label: 'Company', icon: Coins, tone: 'gold' },
   made_mind: { label: 'Made mind', icon: Cpu, tone: 'gold' },
+  household: { label: 'A household', icon: Home, tone: 'gold' },
 }
 
 export const UNIT_LABEL: Record<CapacityUnit, string> = {
@@ -1026,10 +1042,10 @@ export const SCALE_SPEC: Record<BuildScale, Spec> = {
 }
 
 export const STAFF_SCALE_SPEC: Record<StaffScale, Spec> = {
-  none: { label: 'No staff', icon: Users, tone: 'muted' },
+  none: { label: 'No staff', icon: UsersRound, tone: 'muted' },
   few: { label: 'A few hands', icon: Users, tone: 'muted' },
   some: { label: 'A crew', icon: Users, tone: 'gold' },
-  many: { label: 'A great staff', icon: Users, tone: 'warning' },
+  many: { label: 'A great staff', icon: UserRound, tone: 'warning' },
 }
 
 export const STRUCTURE_FIELD: Record<string, string> = {

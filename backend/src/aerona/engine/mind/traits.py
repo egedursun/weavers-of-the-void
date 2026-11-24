@@ -26,7 +26,7 @@ def affinity(trait: TraitKind, values: Mapping[ValueAxis, int], scale_pct: int) 
 
 def open_choices(choices: Iterable[TraitKind], held: set[TraitKind]) -> list[TraitKind]:
     blocked = held | {TRAITS[trait].opposite for trait in held if TRAITS[trait].opposite is not None}
-    filled = Counter(TRAIT_FAMILY[trait] for trait in held)
+    filled = Counter(TRAIT_FAMILY[trait] for trait in sorted(held))
     return [trait for trait in choices if trait not in blocked and filled[TRAIT_FAMILY[trait]] < FAMILY_LIMIT[TRAIT_FAMILY[trait]]]
 
 

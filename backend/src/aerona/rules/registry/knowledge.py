@@ -93,3 +93,9 @@ class KnowledgeRules:
     son_advance_cost: int = rule(6, 0, 1000, RuleGroup.GOD_AND_SON_COSTS, "Son: essence cost of the advance knowledge tool")
     son_level_per_power: int = rule(2, 1, 10, RuleGroup.GOD_AND_SON_COSTS, "Son: advance knowledge reaches at most power cap times this many levels")
     hint_empty_branches: int = rule(6, 0, 50, RuleGroup.CIVILIZATION, "Unknown branches named in opportunities and errors")
+    remedy_worth: int = rule(4, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Medicine a home gains each time one of it learns a remedy in full")
+    genealogy_worth: int = rule(
+        3, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Renown one gains each time it learns a line of descent in full, to back its claims"
+    )
+    remedy_value: int = rule(40, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of a remedy as a holding of knowledge")
+    genealogy_value: int = rule(30, 0, 100, RuleGroup.RELIGION_AND_LANGUAGE, "Worth of a line of descent as a holding of knowledge")

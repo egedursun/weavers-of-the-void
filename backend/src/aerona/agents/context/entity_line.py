@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.catalog.strata import STRATA
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityStatus
 from aerona.prompts import PromptId, render
@@ -35,9 +36,16 @@ async def location_names(session: AsyncSession, entities: Sequence[EntityRow]) -
     return {entity_id: name for entity_id, name in rows}
 
 
+def placed(entity: EntityRow, names: dict[int, str]) -> str | None:
+    place = names.get(entity.location_id) if entity.location_id is not None else None
+    if place is None or entity.stratum is None:
+        return place
+    return f"the {STRATA[entity.stratum].label.lower()} beneath {place}"
+
+
 async def line_items(session: AsyncSession, entities: Sequence[EntityRow], with_location: bool = True) -> list[EntityLineItem]:
     names = await location_names(session, entities) if with_location else {}
-    return [line_item(entity, names.get(entity.location_id) if entity.location_id is not None else None) for entity in entities]
+    return [line_item(entity, placed(entity, names)) for entity in entities]
 
 
 async def entity_line_text(session: AsyncSession, entity: EntityRow, with_location: bool = True) -> str:

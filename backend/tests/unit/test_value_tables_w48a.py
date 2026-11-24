@@ -30,7 +30,7 @@ def test_world_bodies_keep_the_shape_of_each_kind_of_world() -> None:
 
 def test_war_cause_classes_come_from_the_table() -> None:
     assert {WarCause.HOLY_WAR, WarCause.SCHISM, WarCause.DIVINE_GRUDGE} == FAITH_CAUSES
-    assert {WarCause.TRADE_ROUTE, WarCause.RESOURCE, WarCause.DEBT} == TRADE_CAUSES
+    assert {WarCause.TRADE_ROUTE, WarCause.RESOURCE, WarCause.DEBT, WarCause.WATER} == TRADE_CAUSES
     assert {cause for cause, spec in WAR_CAUSES.items() if spec.within_realm} == {
         WarCause.CLAIM,
         WarCause.INDEPENDENCE,
@@ -42,4 +42,4 @@ def test_war_cause_classes_come_from_the_table() -> None:
 
 def test_only_the_old_stop_recovering_and_only_grown_folk_come_of_age() -> None:
     assert {stage for stage, spec in LIFE_STAGES.items() if not spec.recovers} == {LifeStage.ELDER, LifeStage.ANCIENT}
-    assert {stage for stage, spec in LIFE_STAGES.items() if spec.counts_as_adult} == {LifeStage.ADULT, LifeStage.ELDER}
+    assert {stage for stage, spec in LIFE_STAGES.items() if spec.counts_as_adult} == {LifeStage.ADULT, LifeStage.MATURE, LifeStage.ELDER}

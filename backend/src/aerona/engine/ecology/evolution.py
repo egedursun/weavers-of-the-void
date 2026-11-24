@@ -191,6 +191,9 @@ def pressures(
     steps[E.DOCILITY] += table.docility_keep_gain if tamed else -table.docility_wild_loss
     preyed = any((hunter, region) in selection.present for hunter in selection.hunted_by.get(row.species_entity_id, set()))
     steps[E.LONGEVITY] += -table.predator_pressure * table.longevity_predation_pct / PERCENT * 2 if preyed else table.predator_pressure / 2
+    steps[E.STRENGTH] += table.strength_pressure if tamed else -table.strength_pressure / 2
+    steps[E.PARENTAL_CARE] += table.parental_care_pressure if preyed else -table.parental_care_pressure / 2
+    steps[E.SOCIAL_LEARNING] += table.social_learning_pressure if row.hunted > 0 else 0
     spared = 1 - table.protection_relax_pct / PERCENT if profile.sacred_to_node_id is not None else 1.0
     return {trait: step * spared for trait, step in steps.items()}
 
@@ -278,6 +281,7 @@ async def live_traits(ctx: TickContext, means: dict[tuple[int, EvolvedTrait], in
             with explaining():
                 term("trait_evolution.longevity_mean", longevity, source_node_id=species_id)
                 profile.lifespan_years = max(1, profile.lifespan_years + step)
+    await raise_young(ctx, means, profiles)
     resistant = {species_id for (species_id, trait), mean in means.items() if trait is EvolvedTrait.DISEASE_RESISTANCE and mean > NEUTRAL}
     if not resistant:
         return
@@ -288,6 +292,29 @@ async def live_traits(ctx: TickContext, means: dict[tuple[int, EvolvedTrait], in
         disease = await ctx.session.get(DiseaseProfileRow, agent.disease_entity_id)
         if disease is not None and not held(disease.disease_entity_id) and "virulence" not in (disease.locked or []):
             disease.virulence = clamp_int(disease.virulence + table.virulence_answer, 1, PERCENT)
+
+
+async def raise_young(ctx: TickContext, means: dict[tuple[int, EvolvedTrait], int], profiles: dict[int, SpeciesProfileRow]) -> None:
+    high = NEUTRAL + SHIFT_BAND // 2
+    for species_id, profile in sorted(profiles.items()):
+        if held(species_id):
+            continue
+        locked = profile.locked or []
+        care = means.get((species_id, EvolvedTrait.PARENTAL_CARE), 0)
+        if care > high and "litter_size" not in locked and profile.litter_size > 1:
+            with explaining():
+                term("trait_evolution.parental_care_mean", care, source_node_id=species_id)
+                profile.litter_size -= 1
+        learning = means.get((species_id, EvolvedTrait.SOCIAL_LEARNING), 0)
+        if learning > high and "fear_of_people" not in locked:
+            with explaining():
+                term("trait_evolution.social_learning_mean", learning, source_node_id=species_id)
+                profile.fear_of_people = clamp_int(profile.fear_of_people + 1, 0, PERCENT)
+        strength = means.get((species_id, EvolvedTrait.STRENGTH), 0)
+        if strength > high and "metabolism" not in locked:
+            with explaining():
+                term("trait_evolution.strength_mean", strength, source_node_id=species_id)
+                profile.metabolism = clamp_int(profile.metabolism + 1, 0, PERCENT)
 
 
 async def docility_of(session: AsyncSession, species_id: int) -> int:

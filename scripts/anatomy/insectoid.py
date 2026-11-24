@@ -120,6 +120,7 @@ def insectoid(states: dict[str, str]) -> Plan:
         Part("heart", "Heart", HEART, (150, 162), inner=True),
         Part("gut", "Gut", GUT, (150, 210), inner=True),
         Part("groin", "Ovipositor", GROIN, (150, 256), inner=True),
+        Part("carapace", "Carapace", " | ".join((ABDOMEN, THORAX)), (182, 120), inner=True, subtle=True),
     ]
     details = [*DETAILS, joints(FORELEG), mirror(joints(FORELEG)), joints(MIDLEG), mirror(joints(MIDLEG)), joints(HINDLEG), mirror(joints(HINDLEG))]
     marks = [

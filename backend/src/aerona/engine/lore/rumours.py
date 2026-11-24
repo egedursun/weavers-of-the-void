@@ -33,6 +33,7 @@ from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.life_traits import WitnessModeTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.records import RumourDistortion
 from aerona.domain.enums.travel import JourneyStatus
 from aerona.domain.models.entity_stats import LegendStats
 from aerona.engine.climes.shifts import current_coasts
@@ -396,6 +397,17 @@ async def doers_renown(ctx: TickContext, rumours: list[RumourRow]) -> dict[tuple
     return found
 
 
+async def motive_heard(ctx: TickContext, rumour: RumourRow, draft: RumourDistortionRow) -> None:
+    if draft.distortion is not RumourDistortion.MOTIVE_ADDED:
+        return
+    doer = await culprit(ctx, rumour.incident_id, rumour.carrier_entity_id)
+    if doer is None or held(doer, rumour.carrier_entity_id):
+        return
+    await change_relation(
+        ctx, rumour.carrier_entity_id, doer, -ctx.rules.rumours.motive_opinion, MemoryKind.ILL_WILL, note="heard a reason given for what was done"
+    )
+
+
 async def retell(ctx: TickContext, atlas: RegionAtlas, born: list[tuple[RumourRow, RumourRow]], told: dict[int, list[RumourDistortionRow]]) -> int:
     if not born:
         return 0
@@ -408,8 +420,9 @@ async def retell(ctx: TickContext, atlas: RegionAtlas, born: list[tuple[RumourRo
         telling = tellings.get(row.incident_id)
         rng = ctx.rng(f"rumour.distort.{row.incident_id}.{row.carrier_entity_id}.{ctx.epoch}")
         if telling is not None and rng.chance(chance):
-            draft = await draft_distortion(ctx.session, atlas, telling, before, rng)
+            draft = await draft_distortion(ctx.session, atlas, telling, before, rng, inflate_pct=ctx.rules.rumours.inflate_pct)
             if draft is not None:
+                await motive_heard(ctx, row, draft)
                 draft.rumour_id = row.id
                 draft.position = len(rows)
                 draft.epoch = ctx.epoch

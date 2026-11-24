@@ -10,6 +10,8 @@ import {
   Shield,
   Users,
   Vote,
+  ShieldOff,
+  Shirt,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -22,6 +24,12 @@ export const GUILD_ICON = Hammer
 export const SHARE_ICON = Coins
 
 export const PRIVILEGE_ICONS: Record<string, Named> = {
+  dress: { label: 'Dress of their rank', icon: Shirt, tone: 'gold' },
+  service_exemption: {
+    label: 'Freedom from service',
+    icon: ShieldOff,
+    tone: 'info',
+  },
   tax_exemption: { label: 'Freedom from taxes', icon: Coins, tone: 'gold' },
   monopoly: { label: 'A monopoly', icon: Building2, tone: 'warning' },
   council_seat: { label: 'A seat in council', icon: Users, tone: 'info' },

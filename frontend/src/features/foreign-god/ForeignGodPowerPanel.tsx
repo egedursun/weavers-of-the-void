@@ -81,6 +81,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
   if (god.status === 'dead')
     return (
       <Section
+        id='section-foreign-fate'
         title={
           god.death_epoch !== null
             ? `${god.name} died · Epoch ${god.death_epoch}`
@@ -97,6 +98,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
   const worldId = detail.world?.id ?? null
   return (
     <Section
+      id='section-foreign-power'
       title="God's power"
       description='Foreign gods wake, strike, raise land and raid temples on their own; here you can force each of these.'
       surface='card'

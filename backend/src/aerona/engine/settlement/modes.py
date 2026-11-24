@@ -145,6 +145,8 @@ async def weather_town(ctx: TickContext, book: EnvironmentBook, town: EntityRow,
     weather = book.weather(ctx.environment.world_seed, ctx.epoch, region, season, f"settle.{town.id}")
     harm = max(0, weather.effect(WeatherEffect.WIND)) + max(0, weather.effect(WeatherEffect.FLOOD))
     loss = round_half_up(harm / PERCENT * exposure_pct(ctx.rules, profile.settle_mode) / PERCENT * ctx.rules.settle_modes.exposure_prosperity)
+    if profile.settle_mode is SettleMode.CLIFF:
+        loss += round_half_up(ctx.rules.settle_modes.exposure_prosperity * (PERCENT - ctx.rules.settle_modes.cliff_trade_pct) / PERCENT)
     if loss > 0:
         shift_stat(town, "prosperity", -loss, ctx.rules.society.default_stat)
         tally.weathered += 1

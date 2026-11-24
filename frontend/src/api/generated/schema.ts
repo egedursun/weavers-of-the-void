@@ -2799,6 +2799,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/worlds/{world_id}/map/deep/{stratum}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_deep_map_api_worlds__world_id__map_deep__stratum__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/below': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_below_api_below_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/worlds/{world_id}/geography': {
     parameters: {
       query?: never
@@ -26559,6 +26591,166 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/deep_cell:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_cell_create_api_actions_deep_cell_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_cell:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_cell_edit_api_actions_deep_cell_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_cell:hold': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_cell_hold_api_actions_deep_cell_hold_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_cell:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_cell_delete_api_actions_deep_cell_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_passage:create': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_passage_create_api_actions_deep_passage_create_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_passage:edit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_passage_edit_api_actions_deep_passage_edit_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_passage:hold': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_passage_hold_api_actions_deep_passage_hold_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_passage:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_passage_delete_api_actions_deep_passage_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_knowledge:set': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_knowledge_set_api_actions_deep_knowledge_set_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/deep_knowledge:delete': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_deep_knowledge_delete_api_actions_deep_knowledge_delete_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/body_system:create': {
     parameters: {
       query?: never
@@ -30345,6 +30537,54 @@ export interface paths {
     get?: never
     put?: never
     post: operations['action_hero_raise_api_actions_hero_raise_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/mortal:shape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_mortal_shape_api_actions_mortal_shape_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/region:shape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_region_shape_api_actions_region_shape_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/actions/record:shape': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_record_shape_api_actions_record_shape_post']
     delete?: never
     options?: never
     head?: never
@@ -48595,6 +48835,8 @@ export interface components {
       | 'testimony'
       | 'genealogy'
       | 'song'
+      | 'travel_account'
+      | 'law_record'
     AccountMedium:
       | 'artwork'
       | 'book'
@@ -48603,13 +48845,21 @@ export interface components {
       | 'record'
       | 'performance'
       | 'mind_state'
+      | 'marks'
     AccountReviseInput: {
       account_id: number
       ousted_ids?: number[]
       new_ruler_id?: number | null
     }
     AccountStance:
-      'glorify' | 'vilify' | 'omit' | 'neutral' | 'justify' | 'lament' | 'mock'
+      | 'glorify'
+      | 'vilify'
+      | 'omit'
+      | 'neutral'
+      | 'justify'
+      | 'lament'
+      | 'mock'
+      | 'warn'
     AccountStanceDeleteInput: {
       account_id: number
       node_id: number
@@ -48679,6 +48929,7 @@ export interface components {
       | 'killed'
       | 'confessed'
       | 'fled'
+      | 'reconciled'
     AccusationView: {
       id: number
       town: components['schemas']['NodeRef'] | null
@@ -48830,6 +49081,14 @@ export interface components {
       | 'feeding_on_hosts'
       | 'killing_sacred_animal'
       | 'fixing_contests'
+      | 'abandoning_the_sick'
+      | 'breaking_hospitality'
+      | 'cruelty_to_animals'
+      | 'apologising'
+      | 'sheltering_strangers'
+      | 'laying_curses'
+      | 'enhancing_contestants'
+      | 'poison_wells'
     ActingMechanic: {
       key: string
       title: string
@@ -49278,6 +49537,9 @@ export interface components {
       charm_target_id?: number | null
       charm_kind?: components['schemas']['CharmKind'] | null
       charm_strength?: number | null
+      ageing_rate_pct?: number | null
+      forget_scope?: components['schemas']['ForgetScope'] | null
+      sleep_until?: components['schemas']['SleepUntil'] | null
       affliction_id: number
       stage?: number | null
       transmission?: components['schemas']['Transmission'] | null
@@ -49297,6 +49559,9 @@ export interface components {
       charm_target_id?: number | null
       charm_kind?: components['schemas']['CharmKind'] | null
       charm_strength?: number | null
+      ageing_rate_pct?: number | null
+      forget_scope?: components['schemas']['ForgetScope'] | null
+      sleep_until?: components['schemas']['SleepUntil'] | null
       bearer_id: number
       package: components['schemas']['PackageKind']
       transmission: components['schemas']['Transmission']
@@ -49332,6 +49597,7 @@ export interface components {
       | 'wandering'
       | 'union'
       | 'oblivion'
+      | 'among_living'
     AfterlifeState:
       'wandering' | 'judged' | 'in_realm' | 'reborn' | 'consumed' | 'released'
     AfterlifeStratumInput: {
@@ -49354,8 +49620,8 @@ export interface components {
       ruler_id?: number | null
       remove: boolean
     }
-    AgeBand: 'infant' | 'child' | 'youth' | 'adult' | 'elder'
-    AgeCycle: 'linear' | 'cyclic'
+    AgeBand: 'infant' | 'child' | 'youth' | 'adult' | 'elder' | 'ancient'
+    AgeCycle: 'linear' | 'cyclic' | 'spiral'
     AgeCycleInput: {
       cycle: components['schemas']['AgeCycle']
     }
@@ -49386,7 +49652,12 @@ export interface components {
       age_id: number
     }
     AgeGrade:
-      'children' | 'youths' | 'young_adults' | 'junior_elders' | 'senior_elders'
+      | 'children'
+      | 'youths'
+      | 'young_adults'
+      | 'junior_elders'
+      | 'senior_elders'
+      | 'ancients'
     AgeKind:
       | 'normal'
       | 'golden'
@@ -49584,6 +49855,7 @@ export interface components {
       | 'medicine'
       | 'soldiers'
       | 'knowledge'
+      | 'transport'
     AidView: {
       kind: components['schemas']['AssistiveAid']
       quality: number
@@ -49608,7 +49880,13 @@ export interface components {
       locked?: string[]
     }
     AirNeed:
-      'oxygen' | 'carbon_dioxide' | 'methane' | 'ammonia' | 'hydrogen' | 'none'
+      | 'oxygen'
+      | 'carbon_dioxide'
+      | 'methane'
+      | 'ammonia'
+      | 'hydrogen'
+      | 'none'
+      | 'sulphurous'
     AllelePoolFoundInput: {
       people_id: number
     }
@@ -49751,6 +50029,8 @@ export interface components {
       | 'reagent_source'
       | 'sport'
       | 'medicine'
+      | 'display'
+      | 'herding'
     AnomalyKind:
       | 'failed_prediction'
       | 'contrary_cure'
@@ -49802,6 +50082,7 @@ export interface components {
       | 'fear'
       | 'feeling'
       | 'bond'
+      | 'tradition'
     AppealView: {
       case_id: number
       accused: components['schemas']['NodeRef'] | null
@@ -49939,6 +50220,9 @@ export interface components {
       | 'reconciliation'
       | 'sacrifice'
       | 'discovery'
+      | 'betrayal'
+      | 'friendship'
+      | 'legacy'
     ArcView: {
       id: number
       subject: components['schemas']['NodeRef']
@@ -50142,6 +50426,8 @@ export interface components {
     }
     ArmyCard: {
       army: components['schemas']['NodeRef'] | null
+      stratum: components['schemas']['UndergroundStratum'] | null
+      battle_stratum: components['schemas']['UndergroundStratum'] | null
       owner: components['schemas']['NodeRef'] | null
       commander: components['schemas']['NodeRef'] | null
       war_id: number | null
@@ -50324,6 +50610,8 @@ export interface components {
       | 'curator'
       | 'critic'
       | 'forger'
+      | 'restorer'
+      | 'auctioneer'
     ArtMode:
       | 'verbal'
       | 'musical'
@@ -50342,6 +50630,8 @@ export interface components {
       | 'ritual_performance'
       | 'textile_image'
       | 'made_mind_art'
+      | 'tactile'
+      | 'mind'
     ArtMovementCreateInput: {
       town_id: number
     }
@@ -50568,6 +50858,8 @@ export interface components {
       | 'hearing_horn'
       | 'cane'
       | 'microscope'
+      | 'hearing_aid'
+      | 'tactile_script'
     AssistiveAidDeleteInput: {
       holder_id: number
       kind: components['schemas']['AssistiveAid']
@@ -50589,7 +50881,8 @@ export interface components {
       id: number
       name: string
     }
-    Atmosphere: 'none' | 'thin' | 'normal' | 'dense' | 'toxic'
+    Atmosphere:
+      'none' | 'thin' | 'normal' | 'dense' | 'toxic' | 'steam' | 'layered'
     AttackDelivery:
       | 'breath'
       | 'spit'
@@ -50601,6 +50894,8 @@ export interface components {
       | 'spores'
       | 'bite'
       | 'sting'
+      | 'projectile'
+      | 'constriction'
     AttackEffect:
       | 'heat'
       | 'cold'
@@ -50615,7 +50910,7 @@ export interface components {
       | 'confusion'
       | 'charm'
       | 'drain'
-    AttackRange: 'touch' | 'near' | 'far' | 'sight'
+    AttackRange: 'touch' | 'near' | 'far' | 'sight' | 'area'
     AttendanceReason:
       | 'host'
       | 'kin'
@@ -50819,7 +51114,15 @@ export interface components {
       avatar_id: number
     }
     Aversion:
-      'fire' | 'iron' | 'noise' | 'water' | 'holy_ground' | 'light' | 'cold'
+      | 'fire'
+      | 'iron'
+      | 'noise'
+      | 'water'
+      | 'holy_ground'
+      | 'light'
+      | 'cold'
+      | 'scent'
+      | 'true_name'
     AwakeningTrigger:
       | 'deep_mining'
       | 'desecration'
@@ -50827,6 +51130,8 @@ export interface components {
       | 'theft'
       | 'sky_sign'
       | 'summons'
+      | 'kin_harmed'
+      | 'season'
     AxesView: {
       ownership: components['schemas']['OwnershipRegime'] | null
       allocation: components['schemas']['AllocationMode'] | null
@@ -50902,9 +51207,22 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
-    BargainGain: 'essence' | 'power' | 'might' | 'knowledge' | 'longevity'
+    BargainGain:
+      | 'essence'
+      | 'power'
+      | 'might'
+      | 'knowledge'
+      | 'longevity'
+      | 'restored_life'
+      | 'protection'
     BargainPrice:
-      'world_sanity' | 'domain' | 'true_name' | 'worshippers' | 'descendants'
+      | 'world_sanity'
+      | 'domain'
+      | 'true_name'
+      | 'worshippers'
+      | 'descendants'
+      | 'memories'
+      | 'years'
     BatchDeepenLogEvent: {
       id: number
       kind: 'batch_deepen.log'
@@ -50953,6 +51271,7 @@ export interface components {
       | 'pursuit'
       | 'salvage'
       | 'aftermath'
+      | 'parley'
     BattlePhaseView: {
       position: number
       phase: components['schemas']['BattlePhase']
@@ -51083,6 +51402,9 @@ export interface components {
       charm_target_name: string | null
       charm_kind: components['schemas']['CharmKind'] | null
       charm_strength: number | null
+      ageing_rate_pct: number | null
+      forget_scope: components['schemas']['ForgetScope'] | null
+      sleep_until: components['schemas']['SleepUntil'] | null
     }
     BeastBindInput: {
       beast_id: number
@@ -51204,6 +51526,8 @@ export interface components {
       | 'wounded'
       | 'brooding'
       | 'cowed'
+      | 'migrating'
+      | 'fleeing'
     BeastTreasureInput: {
       beast_id: number
       item_id: number
@@ -51314,7 +51638,9 @@ export interface components {
       | 'intrusion'
       | 'surveillance'
       | 'made_mind_report'
-    BeliefStance: 'yield' | 'resist' | 'embrace'
+      | 'dream'
+      | 'omen'
+    BeliefStance: 'yield' | 'resist' | 'embrace' | 'bargain'
     BeliefView: {
       id: number
       subject: components['schemas']['NodeRef'] | null
@@ -51349,6 +51675,7 @@ export interface components {
       carvable: boolean
       layers: components['schemas']['RockLayerView'][]
       strata: components['schemas']['DepthStratumView'][]
+      passages: components['schemas']['DeepPassageView'][]
     }
     BetCreateInput: {
       match_id: number
@@ -51455,7 +51782,16 @@ export interface components {
       | 'realm'
       | 'network'
       | 'line'
-    BindingNeed: 'none' | 'water' | 'heat' | 'air' | 'offerings' | 'belief'
+      | 'name'
+    BindingNeed:
+      | 'none'
+      | 'water'
+      | 'heat'
+      | 'air'
+      | 'offerings'
+      | 'belief'
+      | 'place'
+      | 'name'
     Biochemistry:
       | 'carbon_water'
       | 'carbon_ammonia'
@@ -51465,6 +51801,7 @@ export interface components {
       | 'spirit'
       | 'carbon_methane'
       | 'plasma'
+      | 'metal'
     BiologyBodyView: {
       bleeds: boolean
       heals: boolean
@@ -51532,6 +51869,9 @@ export interface components {
       | 'colonial'
       | 'energy'
       | 'symbiotic'
+      | 'amphibious'
+      | 'metallic'
+      | 'liquid'
     BiologyVariantAddInput: {
       holder_id: number
       variant: components['schemas']['BiologyVariant']
@@ -51707,6 +52047,8 @@ export interface components {
       | 'horn'
       | 'tail'
       | 'presence'
+      | 'swim'
+      | 'climb'
     BodyHandednessInput: {
       bearer_id: number
       handedness: components['schemas']['Handedness']
@@ -51824,6 +52166,7 @@ export interface components {
       | 'tentacles'
       | 'carapace'
       | 'beak'
+      | 'pouch'
     BodyPlan:
       | 'humanoid'
       | 'quadruped'
@@ -51841,6 +52184,8 @@ export interface components {
       | 'centauroid'
       | 'radial'
       | 'colonial'
+      | 'hexapod'
+      | 'rooted'
     BodyPlanInput: {
       bearer_id: number
       plan: components['schemas']['BodyPlan']
@@ -51882,6 +52227,7 @@ export interface components {
       | 'reproduction'
       | 'structure'
       | 'none'
+      | 'excretion'
     BodySystemCreateInput: {
       table: string
       values: {
@@ -52304,6 +52650,7 @@ export interface components {
       | 'god'
       | 'company'
       | 'made_mind'
+      | 'household'
     BuildingForm:
       | 'hall'
       | 'longhouse'
@@ -52332,6 +52679,8 @@ export interface components {
       | 'modular'
       | 'grown'
       | 'carved'
+      | 'stilt'
+      | 'vault'
     BuildingGrade: 'plain' | 'fine' | 'splendid'
     BuildingTypeStats: {
       kind: 'building_type'
@@ -52579,6 +52928,8 @@ export interface components {
       | 'fertility'
       | 'endurance'
       | 'perception'
+      | 'stealth'
+      | 'labour'
     CapacityInsight: {
       capacity: number
       region_population: number
@@ -52631,6 +52982,7 @@ export interface components {
       | 'released'
       | 'executed'
       | 'recruited'
+      | 'adopted'
     CaptiveFreeInput: {
       captive_id: number
     }
@@ -52648,6 +53000,7 @@ export interface components {
       | 'ward'
       | 'paroled'
       | 'married_in'
+      | 'adopted'
     CaptiveTakeInput: {
       captor_id: number
       mortal_id: number
@@ -52723,6 +53076,8 @@ export interface components {
       | 'service'
       | 'arts'
       | 'settle'
+      | 'healing'
+      | 'wilds'
     CareerView: {
       role: components['schemas']['MortalRole'] | null
       ended_epoch: number | null
@@ -52782,6 +53137,7 @@ export interface components {
       | 'living'
       | 'rite'
       | 'network'
+      | 'sledge'
     CarrierView: {
       mortal: components['schemas']['NodeRef'] | null
       disease: components['schemas']['NodeRef'] | null
@@ -52814,6 +53170,7 @@ export interface components {
       | 'buried'
       | 'burned'
       | 'sunk'
+      | 'scavenged'
     CarrionView: {
       carrion: number
       scavenged: number
@@ -52961,7 +53318,13 @@ export interface components {
       end: components['schemas']['RiteEnd'] | null
     }
     CasualtyFate:
-      'killed' | 'wounded' | 'maimed' | 'captured' | 'missing' | 'deserted'
+      | 'killed'
+      | 'wounded'
+      | 'maimed'
+      | 'captured'
+      | 'missing'
+      | 'deserted'
+      | 'sick'
     CasusBelliKind:
       | 'claim'
       | 'holy_war'
@@ -52973,6 +53336,8 @@ export interface components {
       | 'debt_default'
       | 'resource_need'
       | 'conquest'
+      | 'broken_witnessed_pact'
+      | 'harbouring_fugitives'
     CasusBelliView: {
       id: number
       holder: components['schemas']['NodeRef'] | null
@@ -53005,6 +53370,8 @@ export interface components {
       | 'shore_gathering'
       | 'diving'
       | 'fish_ponds'
+      | 'egg_gathering'
+      | 'insect_gathering'
     CatchGroundDeleteInput: {
       source_id: number
       region_id: number
@@ -53133,7 +53500,8 @@ export interface components {
       updated_epoch: number
       locked: string[]
     }
-    CentralityRank: 'daily' | 'weekly' | 'seasonal' | 'rare' | 'metropolitan'
+    CentralityRank:
+      'daily' | 'weekly' | 'seasonal' | 'rare' | 'metropolitan' | 'regional'
     ChainHoldingDeleteInput: {
       holder_id: number
       town_id: number
@@ -53200,7 +53568,9 @@ export interface components {
       | 'runaway'
       | 'revelation'
       | 'migration_wave'
-    ChallengeResponse: 'stagnation' | 'response' | 'collapse'
+      | 'long_season'
+      | 'succession_crisis'
+    ChallengeResponse: 'stagnation' | 'response' | 'collapse' | 'transformation'
     ChallengeStrikeInput: {
       polity_id: number
       kind: components['schemas']['ChallengeKind']
@@ -53319,7 +53689,14 @@ export interface components {
     }
     CharmKind: 'love' | 'obedience' | 'devotion'
     CharmPower:
-      'protection' | 'fertility' | 'luck' | 'healing' | 'love' | 'travel'
+      | 'protection'
+      | 'fertility'
+      | 'luck'
+      | 'healing'
+      | 'love'
+      | 'travel'
+      | 'concealment'
+      | 'courage'
     CharmSetInput: {
       item_id: number
       power: components['schemas']['CharmPower']
@@ -53364,6 +53741,8 @@ export interface components {
       | 'glaze'
       | 'preservative'
       | 'acid'
+      | 'solvent'
+      | 'adhesive'
     ChemicalWorksDeleteInput: {
       settlement_id: number
       product: components['schemas']['ChemicalProduct']
@@ -53700,6 +54079,8 @@ export interface components {
       | 'craft_circle'
       | 'sport_club'
       | 'gaming_circle'
+      | 'reading_circle'
+      | 'mutual_aid'
     CircleMemberInput: {
       circle_id: number
       mortal_id: number
@@ -53761,6 +54142,15 @@ export interface components {
       | 'subtropical_calm'
       | 'banded'
       | 'super_rotation'
+      | 'monsoon'
+      | 'mountain_wind'
+    CityBelowView: {
+      stratum: components['schemas']['UndergroundStratum']
+      region: components['schemas']['NodeRef'] | null
+      cell_name: string | null
+      light: number
+      extent: number
+    }
     CityBuildingView: {
       node: components['schemas']['NodeRef']
       kind: components['schemas']['StructureKind']
@@ -53822,6 +54212,7 @@ export interface components {
       buildings: components['schemas']['CityBuildingView'][]
       zones: components['schemas']['ZoneShare'][]
       conurbation: components['schemas']['CityConurbation'] | null
+      below: components['schemas']['CityBelowView'] | null
     }
     CivicService:
       | 'education'
@@ -53894,6 +54285,7 @@ export interface components {
       | 'de_jure'
       | 'election'
       | 'adoption'
+      | 'prophecy'
     ClaimEditInput: {
       claim_id: number
       strength?: number | null
@@ -53910,11 +54302,11 @@ export interface components {
       basis: components['schemas']['ClaimBasis']
       office: components['schemas']['OfficeKind']
     }
-    ClaimKind: 'true' | 'shared' | 'false' | 'inflated'
+    ClaimKind: 'true' | 'shared' | 'false' | 'inflated' | 'borrowed'
     ClaimRevokeInput: {
       claim_id: number
     }
-    ClaimStatus: 'standing' | 'verified' | 'exposed' | 'disputed'
+    ClaimStatus: 'standing' | 'verified' | 'exposed' | 'disputed' | 'forgotten'
     ClaimView: {
       id: number
       claimant_id: number
@@ -53983,6 +54375,9 @@ export interface components {
       | 'no_plague_powers'
       | 'no_designed_disease'
       | 'mass_weapon_limit'
+      | 'return_of_refugees'
+      | 'shared_water'
+      | 'captive_exchange'
     ClauseView: {
       id: number
       kind: components['schemas']['ClauseKind']
@@ -54015,7 +54410,14 @@ export interface components {
       locked: boolean
     }
     ClientRole:
-      'household' | 'retainer' | 'official' | 'commander' | 'broker' | 'artist'
+      | 'household'
+      | 'retainer'
+      | 'official'
+      | 'commander'
+      | 'broker'
+      | 'artist'
+      | 'informant'
+      | 'scholar'
     ClimateAgeView: {
       era: components['schemas']['ClimateEra']
       label: string
@@ -54086,6 +54488,7 @@ export interface components {
       | 'astronomical'
       | 'chronometer'
       | 'electronic'
+      | 'fire_clock'
     ClockView: {
       kind: components['schemas']['ClockKind']
       precision: number
@@ -54097,6 +54500,9 @@ export interface components {
       maker_id?: number | null
     }
     ClubCreateInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       town_id: number
       kind?: components['schemas']['ClubKind'] | null
     }
@@ -54117,6 +54523,8 @@ export interface components {
       | 'athletics'
       | 'animal_contest'
       | 'mind_games'
+      | 'water_sport'
+      | 'hunt'
     ClubView: {
       faction: components['schemas']['NodeRef']
       kind: components['schemas']['ClubKind']
@@ -54271,6 +54679,8 @@ export interface components {
       | 'maimed'
       | 'orphaned'
       | 'displaced'
+      | 'indebted'
+      | 'gifted'
     CohortMishapView: {
       epoch: number
       injured: number
@@ -54457,6 +54867,9 @@ export interface components {
       | 'demonstration'
       | 'boycott'
       | 'exodus'
+      | 'vigil'
+      | 'occupation'
+      | 'petition'
     CollectiveTrigger:
       | 'price_spike'
       | 'execution'
@@ -54474,6 +54887,8 @@ export interface components {
       | 'victory'
       | 'great_funeral'
       | 'election'
+      | 'price_rise'
+      | 'arrest'
     CollectiveView: {
       node: components['schemas']['NodeRef']
       mood: components['schemas']['MoodView'] | null
@@ -54536,7 +54951,8 @@ export interface components {
       | 'pink'
       | 'orange'
       | 'grey'
-    CommandArea: 'fire' | 'shock' | 'manoeuvre' | 'siege' | 'logistics'
+    CommandArea:
+      'fire' | 'shock' | 'manoeuvre' | 'siege' | 'logistics' | 'intelligence'
     CommandToken:
       | 'none'
       | 'item'
@@ -54545,6 +54961,7 @@ export interface components {
       | 'office'
       | 'network_key'
       | 'true_name'
+      | 'gesture'
     CommanderTrait:
       | 'aggressive_assaulter'
       | 'defensive_genius'
@@ -54572,6 +54989,9 @@ export interface components {
       | 'disciplinarian'
       | 'signals_commander'
       | 'night_fighter'
+      | 'jungle_fighter'
+      | 'cold_fighter'
+      | 'river_crosser'
     CommanderTraitInput: {
       mortal_id: number
       trait: components['schemas']['CommanderTrait']
@@ -54655,6 +55075,10 @@ export interface components {
       | 'wax'
       | 'pottery'
       | 'books'
+      | 'paper'
+      | 'glassware'
+      | 'soap'
+      | 'ink'
     CommodityView: {
       kind: components['schemas']['CommodityKind']
       label: string
@@ -54694,8 +55118,17 @@ export interface components {
       | 'spectrum'
       | 'orbits'
       | 'source_ground'
+      | 'turbary'
+      | 'foraging_ground'
+      | 'shore'
     CommonsRule:
-      'open' | 'customary' | 'council' | 'enclosed' | 'state' | 'licensed'
+      | 'open'
+      | 'customary'
+      | 'council'
+      | 'enclosed'
+      | 'state'
+      | 'licensed'
+      | 'rotational'
     CommonsView: {
       id: number
       region: components['schemas']['NodeRef']
@@ -54959,6 +55392,9 @@ export interface components {
       | 'paralysis'
       | 'infertility'
       | 'chronic_pain'
+      | 'seizures'
+      | 'lasting_fear'
+      | 'breathlessness'
     ConditionKindChoice: {
       id: number
       name: string
@@ -55126,6 +55562,7 @@ export interface components {
       | 'ruined'
       | 'abandoned'
       | 'dismantled'
+      | 'restored'
     ConstructionStatus: 'active' | 'finished' | 'abandoned'
     ConstructionView: {
       id: number
@@ -55155,6 +55592,8 @@ export interface components {
       | 'basket'
       | 'skin'
       | 'tank'
+      | 'cage'
+      | 'net_bag'
     ContainerStockDeleteInput: {
       community_id: number
       kind: components['schemas']['ContainerKind']
@@ -55214,6 +55653,8 @@ export interface components {
       | 'storytelling'
       | 'race'
       | 'craft_contest'
+      | 'wrestling'
+      | 'hunt'
     ContestRemoveInput: {
       contest_id: number
     }
@@ -55227,6 +55668,8 @@ export interface components {
       | 'land'
       | 'freedom'
       | 'knowledge'
+      | 'title'
+      | 'rights'
     ContestView: {
       id: number
       kind: components['schemas']['ContestKind']
@@ -55350,6 +55793,7 @@ export interface components {
       | 'lost'
       | 'stranded'
       | 'quarantined'
+      | 'turned_back'
     ConvoyView: {
       id: number
       owner: components['schemas']['NodeRef'] | null
@@ -55367,6 +55811,7 @@ export interface components {
       season: number
       status: components['schemas']['ConvoyStatus']
       region: components['schemas']['NodeRef'] | null
+      stratum: components['schemas']['UndergroundStratum'] | null
       capacity: number
       departed_epoch: number
       arrived_epoch: number | null
@@ -55406,6 +55851,8 @@ export interface components {
       | 'aged'
       | 'extruded'
       | 'pressure_cooked'
+      | 'earth_oven'
+      | 'parched'
     CookingView: {
       community: components['schemas']['NodeRef']
       dish_id: number
@@ -55425,6 +55872,8 @@ export interface components {
       | 'credit'
       | 'granary'
       | 'herding'
+      | 'school'
+      | 'housing'
     CooperativeDeleteInput: {
       faction_id: number
     }
@@ -55570,6 +56019,9 @@ export interface components {
       | 'rogue_world'
       | 'gravity_well'
       | 'wandering_star'
+      | 'nebula'
+      | 'debris_ring'
+      | 'dark_body'
     CosmicOffice: 'dead' | 'gates' | 'stars' | 'oaths' | 'herald' | 'hunt'
     CosmicOfficeAppointInput: {
       office: components['schemas']['CosmicOffice']
@@ -55824,6 +56276,9 @@ export interface components {
       | 'regulate_made_minds'
       | 'regulate_powers'
       | 'regulate_living_craft'
+      | 'regulate_curses'
+      | 'open_inquiry'
+      | 'amnesty'
     CouncilOrderView: {
       procedure: components['schemas']['CouncilProcedureView']
       seats: components['schemas']['DivineSeatView'][]
@@ -55914,6 +56369,8 @@ export interface components {
       | 'oversee_works'
       | 'promote_trade'
       | 'advance_learning'
+      | 'public_health'
+      | 'secure_borders'
     CouncilTaskInput: {
       office_id: number
       task?: components['schemas']['CouncilTask'] | null
@@ -55985,6 +56442,7 @@ export interface components {
       oath_choices: components['schemas']['SealLinkChoice'][]
       power_choices: components['schemas']['SealLinkChoice'][]
       line_choices: components['schemas']['SealLinkChoice'][]
+      mind_choices: components['schemas']['SealLinkChoice'][]
       novelty: components['schemas']['NoveltyView'] | null
       sinecures: components['schemas']['SinecureView'][]
     }
@@ -56002,6 +56460,7 @@ export interface components {
       | 'guild'
       | 'military'
       | 'consular'
+      | 'appellate'
     CourtPosition:
       | 'steward'
       | 'champion'
@@ -56011,6 +56470,8 @@ export interface components {
       | 'master_of_revels'
       | 'jester'
       | 'seer'
+      | 'taster'
+      | 'interpreter'
     CourtView: {
       grandeur: number
       courtiers: number
@@ -56166,7 +56627,8 @@ export interface components {
       label: components['schemas']['CreatorMoodLabel']
       breakdown: components['schemas']['MoodInput'][]
     }
-    CreatorMoodAxis: 'contentment' | 'anger' | 'interest' | 'loneliness'
+    CreatorMoodAxis:
+      'contentment' | 'anger' | 'interest' | 'loneliness' | 'sorrow'
     CreatorMoodLabel:
       'angry' | 'distant' | 'lonely' | 'content' | 'uneasy' | 'serene'
     CreatorNature:
@@ -56180,6 +56642,8 @@ export interface components {
       | 'mercy'
       | 'creation'
       | 'silence'
+      | 'freedom'
+      | 'memory'
     CreatorPromise:
       'protection' | 'plenty' | 'guidance' | 'presence' | 'long_life'
     CreatorRecord: {
@@ -56230,6 +56694,8 @@ export interface components {
       | 'test'
       | 'reward'
       | 'covenant_offer'
+      | 'rebuke'
+      | 'invitation'
     CreatorStance:
       'worship' | 'reverence' | 'indifference' | 'fear' | 'rejection' | 'denial'
     CreatorStandingEditInput: {
@@ -56299,6 +56765,9 @@ export interface components {
       | 'wreck_works'
       | 'wander'
       | 'rest'
+      | 'carry_messages'
+      | 'teach'
+      | 'trade'
     CreatureGroupCreateInput: {
       table: string
       values: {
@@ -56338,7 +56807,7 @@ export interface components {
       hold: boolean
       release?: string[]
     }
-    CreatureLesson: 'reward' | 'punish'
+    CreatureLesson: 'reward' | 'punish' | 'warn'
     CreatureTrait:
       | 'flying'
       | 'venomous'
@@ -56440,6 +56909,7 @@ export interface components {
       | 'restructuring'
       | 'rescued'
       | 'repudiated'
+      | 'frozen'
     CreedAdherentInput: {
       ideology_id: number
       community_id: number
@@ -56584,7 +57054,9 @@ export interface components {
       | 'impersonation'
       | 'mind_compulsion'
       | 'fixing_contests'
-    CrimeStance: 'suppress' | 'co_opt' | 'tolerate' | 'license'
+      | 'enhancing_contestants'
+      | 'neglect'
+    CrimeStance: 'suppress' | 'co_opt' | 'tolerate' | 'license' | 'integrate'
     CrimeStanceDeleteInput: {
       polity_id: number
       faction_id: number
@@ -56622,6 +57094,8 @@ export interface components {
       | 'hand_over'
       | 'disarm'
       | 'open_trade'
+      | 'apology'
+      | 'release_captives'
     CrisisEditInput: {
       crisis_id: number
       escalation?: number | null
@@ -56645,7 +57119,8 @@ export interface components {
       state: components['schemas']['CrisisState']
     }
     CrisisSide: 'demander' | 'target'
-    CrisisState: 'escalating' | 'backed_down' | 'conceded' | 'war' | 'mediated'
+    CrisisState:
+      'escalating' | 'backed_down' | 'conceded' | 'war' | 'mediated' | 'frozen'
     CrisisView: {
       id: number
       demander: components['schemas']['NodeRef'] | null
@@ -56688,7 +57163,8 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
-    CrowdFeeling: 'anger' | 'fear' | 'fervour' | 'grief' | 'hope'
+    CrowdFeeling:
+      'anger' | 'fear' | 'fervour' | 'grief' | 'hope' | 'joy' | 'solidarity'
     CrowdFeelingSetInput: {
       town_id: number
       feeling: components['schemas']['CrowdFeeling']
@@ -56857,6 +57333,8 @@ export interface components {
       | 'symbiont'
       | 'transfer'
       | 'augment'
+      | 'release'
+      | 'site'
     CureResearchDeleteInput: {
       institution_id: number
       disease_id: number
@@ -56966,6 +57444,8 @@ export interface components {
       | 'compulsion'
       | 'aging'
       | 'exposure'
+      | 'isolation'
+      | 'weakness'
     CustomCatalog:
       | 'technique'
       | 'tenet'
@@ -57093,6 +57573,8 @@ export interface components {
       | 'sonic'
       | 'psychic'
       | 'asphyxia'
+      | 'soul'
+      | 'pressure'
     Danger: {
       id: number | null
       name: string
@@ -57260,7 +57742,12 @@ export interface components {
       | 'bombardment'
       | 'drowning'
       | 'sport'
-    DeathReading: 'glorious' | 'honourable' | 'plain' | 'shameful' | 'cursed'
+      | 'animal'
+      | 'crowd'
+      | 'medical'
+      | 'soul_loss'
+    DeathReading:
+      'glorious' | 'honourable' | 'plain' | 'shameful' | 'cursed' | 'pitied'
     DeathReadingCreateInput: {
       people_id: number
       cause: components['schemas']['DeathCause']
@@ -57495,6 +57982,159 @@ export interface components {
       deed: components['schemas']['CreatureDeed']
       weight: number
     }
+    DeepCellCreateInput: {
+      table: string
+      values: {
+        [key: string]:
+          | number
+          | string
+          | boolean
+          | unknown[]
+          | {
+              [key: string]: unknown
+            }
+          | null
+      }
+    }
+    DeepCellDeleteInput: {
+      table: string
+      key: {
+        [key: string]: number | string | boolean | null
+      }
+    }
+    DeepCellEditInput: {
+      table: string
+      key: {
+        [key: string]: number | string | boolean | null
+      }
+      values?: {
+        [key: string]:
+          | number
+          | string
+          | boolean
+          | unknown[]
+          | {
+              [key: string]: unknown
+            }
+          | null
+      }
+      hold: boolean
+      release?: string[]
+    }
+    DeepCellHoldInput: {
+      table: string
+      key: {
+        [key: string]: number | string | boolean | null
+      }
+      values?: {
+        [key: string]:
+          | number
+          | string
+          | boolean
+          | unknown[]
+          | {
+              [key: string]: unknown
+            }
+          | null
+      }
+      hold: boolean
+      release?: string[]
+    }
+    DeepKnowledgeDeleteInput: {
+      table: string
+      key: {
+        [key: string]: number | string | boolean | null
+      }
+    }
+    DeepKnowledgeSetInput: {
+      table: string
+      values: {
+        [key: string]:
+          | number
+          | string
+          | boolean
+          | unknown[]
+          | {
+              [key: string]: unknown
+            }
+          | null
+      }
+    }
+    DeepPassageCreateInput: {
+      table: string
+      values: {
+        [key: string]:
+          | number
+          | string
+          | boolean
+          | unknown[]
+          | {
+              [key: string]: unknown
+            }
+          | null
+      }
+    }
+    DeepPassageDeleteInput: {
+      table: string
+      key: {
+        [key: string]: number | string | boolean | null
+      }
+    }
+    DeepPassageEditInput: {
+      table: string
+      key: {
+        [key: string]: number | string | boolean | null
+      }
+      values?: {
+        [key: string]:
+          | number
+          | string
+          | boolean
+          | unknown[]
+          | {
+              [key: string]: unknown
+            }
+          | null
+      }
+      hold: boolean
+      release?: string[]
+    }
+    DeepPassageHoldInput: {
+      table: string
+      key: {
+        [key: string]: number | string | boolean | null
+      }
+      values?: {
+        [key: string]:
+          | number
+          | string
+          | boolean
+          | unknown[]
+          | {
+              [key: string]: unknown
+            }
+          | null
+      }
+      hold: boolean
+      release?: string[]
+    }
+    DeepPassageKind: 'level' | 'vertical' | 'opening'
+    DeepPassageOrigin: 'natural' | 'dug' | 'breach' | 'divine'
+    DeepPassageState: 'digging' | 'open' | 'flooded' | 'collapsed' | 'sealed'
+    DeepPassageView: {
+      id: number
+      kind: components['schemas']['DeepPassageKind']
+      state: components['schemas']['DeepPassageState']
+      origin: components['schemas']['DeepPassageOrigin']
+      width: number
+      progress: number
+      near_stratum: components['schemas']['UndergroundStratum'] | null
+      far_region: components['schemas']['NodeRef'] | null
+      far_stratum: components['schemas']['UndergroundStratum'] | null
+      place: components['schemas']['NodeRef'] | null
+      digger: components['schemas']['NodeRef'] | null
+      locked: string[]
+    }
     DeepSealDeleteInput: {
       seal_id: number
     }
@@ -57512,6 +58152,7 @@ export interface components {
       oath_id?: number | null
       power_id?: number | null
       line_id?: number | null
+      mind_id?: number | null
     }
     DeepSealUnsealInput: {
       seal_id: number
@@ -57610,6 +58251,8 @@ export interface components {
       | 'flood_approaches'
       | 'scorched_earth'
       | 'expel_mouths'
+      | 'burn_works'
+      | 'evacuate_by_sea'
     DeferredStepStatus: 'pending' | 'running' | 'done' | 'failed' | 'held'
     DemandRemoveInput: {
       mortal_id: number
@@ -57755,6 +58398,14 @@ export interface components {
       reached_epoch: number | null
       breached_epoch: number | null
       tapped_epoch: number | null
+      name: string | null
+      terrain: components['schemas']['TerrainKind']
+      extent: number
+      light: number
+      realm: components['schemas']['NodeRef'] | null
+      holder: components['schemas']['NodeRef'] | null
+      dwellers: components['schemas']['NodeRef'][]
+      dwellable: boolean
       locked: string[]
     }
     DescentGroup: 'lineage' | 'clan' | 'moiety' | 'house'
@@ -57969,6 +58620,7 @@ export interface components {
       | 'decomposer'
       | 'chemosynthetic'
       | 'energy'
+      | 'insectivore'
     DietDeleteInput: {
       holder_id: number
     }
@@ -58520,6 +59172,8 @@ export interface components {
       | 'intelligence'
       | 'order'
       | 'warning'
+      | 'condolence'
+      | 'congratulation'
     DispatchDeleteInput: {
       message_id: number
     }
@@ -58559,6 +59213,7 @@ export interface components {
       | 'delayed'
       | 'forged'
       | 'misread'
+      | 'refused'
     DispatchView: {
       id: number
       sender: components['schemas']['NodeRef'] | null
@@ -58700,6 +59355,9 @@ export interface components {
       | 'arcology'
       | 'camp'
       | 'lazaretto'
+      | 'pilgrim_quarter'
+      | 'caravan_quarter'
+      | 'floating'
     DistrictMoveInput: {
       district_id: number
       q: number
@@ -58783,6 +59441,8 @@ export interface components {
       | 'scrying'
       | 'spirit_consultation'
       | 'earth_signs'
+      | 'numerology'
+      | 'body_reading'
     DivinationQuestion:
       | 'battle'
       | 'war'
@@ -58792,6 +59452,8 @@ export interface components {
       | 'voyage'
       | 'founding'
       | 'illness'
+      | 'succession'
+      | 'lost_things'
     DivinationSystemCreateInput: {
       people_id: number
       kind: components['schemas']['DivinationKind']
@@ -58977,7 +59639,14 @@ export interface components {
       powers: components['schemas']['DivinePowerView'][]
     }
     DivineScale:
-      'order' | 'productivity' | 'heat' | 'growth' | 'fortune' | 'magic'
+      | 'order'
+      | 'productivity'
+      | 'heat'
+      | 'growth'
+      | 'fortune'
+      | 'magic'
+      | 'health'
+      | 'peace'
     DivineScope:
       'person' | 'community' | 'region' | 'world' | 'system' | 'dimension'
     DivineSeatDeleteInput: {
@@ -59106,6 +59775,8 @@ export interface components {
       | 'bound'
       | 'split_aspect'
       | 'forgotten_name'
+      | 'desecrated_seat'
+      | 'split_worship'
     DivineWoundRemoveInput: {
       wound_id: number
     }
@@ -59390,6 +60061,7 @@ export interface components {
       | 'domesticated'
       | 'breed'
       | 'feral'
+      | 'captive'
     DominionClaimView: {
       god: components['schemas']['NodeRef'] | null
       region: components['schemas']['NodeRef'] | null
@@ -59465,7 +60137,13 @@ export interface components {
       label: components['schemas']['DoomItem']
       value: number
     }
-    Dormancy: 'none' | 'hibernation' | 'aestivation' | 'torpor' | 'cryptobiosis'
+    Dormancy:
+      | 'none'
+      | 'hibernation'
+      | 'aestivation'
+      | 'torpor'
+      | 'cryptobiosis'
+      | 'diapause'
     DreamEditInput: {
       dream_id: number
       kind?: components['schemas']['DreamKind'] | null
@@ -59488,6 +60166,8 @@ export interface components {
       | 'prophetic'
       | 'visitation'
       | 'shared'
+      | 'lucid'
+      | 'memory'
     DreamLogView: {
       id: number
       kind: components['schemas']['DreamKind']
@@ -59569,7 +60249,8 @@ export interface components {
       amount: number
       epochs: number
     }
-    DuelContext: 'war' | 'honour' | 'trial' | 'champion' | 'god' | 'ritual'
+    DuelContext:
+      'war' | 'honour' | 'trial' | 'champion' | 'god' | 'ritual' | 'sport'
     DuelEnd:
       | 'yield'
       | 'disarm'
@@ -59579,6 +60260,7 @@ export interface components {
       | 'unconscious'
       | 'first_wound'
       | 'ring_out'
+      | 'stopped'
     DwellingKindOption: {
       id: number
       name: string
@@ -59649,8 +60331,10 @@ export interface components {
       release?: string[]
       echelon_id: number
     }
-    EchelonLevel: 'army_group' | 'army' | 'corps' | 'division' | 'brigade'
-    EchelonOrder: 'attack' | 'manoeuvre' | 'resupply' | 'hold' | 'standing'
+    EchelonLevel:
+      'army_group' | 'army' | 'corps' | 'division' | 'brigade' | 'detachment'
+    EchelonOrder:
+      'attack' | 'manoeuvre' | 'resupply' | 'hold' | 'standing' | 'screen'
     EchelonView: {
       id: number
       owner: components['schemas']['NodeRef']
@@ -59864,6 +60548,10 @@ export interface components {
       | 'curiosity'
       | 'compassion'
       | 'contempt'
+      | 'trust'
+      | 'anticipation'
+      | 'admiration'
+      | 'embarrassment'
     EmotionKindView: {
       emotion: components['schemas']['Emotion']
       label: string
@@ -60187,6 +60875,7 @@ export interface components {
       importance: components['schemas']['Importance'] | null
       images: components['schemas']['ImageRecord'][]
       insight: components['schemas']['EntityInsight']
+      level?: components['schemas']['EntityLevel'] | null
     }
     EntityFlag:
       | 'disaster'
@@ -60312,6 +61001,12 @@ export interface components {
       ancestors?: components['schemas']['NodeRef'][]
       descendants?: components['schemas']['NodeRef'][]
     }
+    EntityLevel: {
+      region: components['schemas']['NodeRef']
+      stratum: components['schemas']['UndergroundStratum'] | null
+      held: boolean
+      choices: components['schemas']['LevelChoice'][]
+    }
     EntityNoteRecord: {
       entity_id: number
       entity_name: string
@@ -60335,6 +61030,7 @@ export interface components {
       importance: number | null
       favorite: boolean
       pending_name: boolean
+      stratum?: components['schemas']['UndergroundStratum'] | null
       description: string
       stats:
         | components['schemas']['RegionStats']
@@ -60416,6 +61112,7 @@ export interface components {
       importance: number | null
       favorite: boolean
       pending_name: boolean
+      stratum?: components['schemas']['UndergroundStratum'] | null
     }
     EntityType:
       | 'region'
@@ -60520,6 +61217,7 @@ export interface components {
       | 'killed'
       | 'expelled'
       | 'defected'
+      | 'honoured'
     Epic: {
       title: string
       verse: string
@@ -61063,6 +61761,8 @@ export interface components {
       | 'judicial_immunity'
       | 'reserved_offices'
       | 'land_holding'
+      | 'service_exemption'
+      | 'dress'
     EstatePrivilegeInput: {
       estate_id: number
       privilege: components['schemas']['EstatePrivilege']
@@ -61498,6 +62198,8 @@ export interface components {
       | 'magic'
       | 'expert'
       | 'hearsay'
+      | 'record'
+      | 'body'
     EvidenceView: {
       id: number
       case_id: number
@@ -61524,6 +62226,9 @@ export interface components {
       | 'disease_resistance'
       | 'docility'
       | 'longevity'
+      | 'strength'
+      | 'parental_care'
+      | 'social_learning'
     ExamSittingDeleteInput: {
       sitting_id: number
     }
@@ -61808,6 +62513,7 @@ export interface components {
       | 'salvage'
       | 'living_harvest'
       | 'distillation'
+      | 'evaporating'
     FabricationView: {
       share_pct: number
       dividend_pct: number
@@ -61849,6 +62555,8 @@ export interface components {
       | 'humour'
       | 'sense_of_duty'
       | 'greed'
+      | 'forgiveness'
+      | 'adaptability'
     FacetGroup: 'emotional' | 'social' | 'drive' | 'mind'
     FacetPracticeCreateInput: {
       table: string
@@ -62019,6 +62727,9 @@ export interface components {
       release?: string[]
     }
     FactionFoundInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       community_id: number
       kind: components['schemas']['FactionKind']
     }
@@ -62051,6 +62762,8 @@ export interface components {
       | 'gain_privilege'
       | 'win_office'
       | 'ruin_rival'
+      | 'protect_members'
+      | 'found_settlement'
     FactionGoalView: {
       id: number
       kind: components['schemas']['FactionGoalKind']
@@ -62101,6 +62814,8 @@ export interface components {
       | 'worker_body'
       | 'street_gang'
       | 'trafficking_ring'
+      | 'fence_network'
+      | 'counterfeiting_ring'
     FactionMemberInput: {
       faction_id: number
       mortal_id: number
@@ -62283,6 +62998,8 @@ export interface components {
       | 'book_burning'
       | 'persecution'
       | 'millenarian_flight'
+      | 'charity'
+      | 'pilgrim_zeal'
     FandomLine: 'none' | 'class' | 'district' | 'faith'
     FateControlsView: {
       last_epoch: number | null
@@ -62366,6 +63083,8 @@ export interface components {
       | 'relief'
       | 'hospitality'
       | 'ransom'
+      | 'healing'
+      | 'teaching'
     FavourOweInput: {
       owed_by_id: number
       owed_to_id: number
@@ -62548,7 +63267,8 @@ export interface components {
       lost_epoch: number | null
       locked: string[]
     }
-    FermentKind: 'yeast' | 'starter' | 'mould' | 'lactic' | 'vinegar'
+    FermentKind:
+      'yeast' | 'starter' | 'mould' | 'lactic' | 'vinegar' | 'alkaline' | 'wild'
     Fertility:
       'sterile' | 'breeds_true' | 'breeds_wild' | 'needs_maker' | 'crosses_wild'
     FertilityMeansCreateInput: {
@@ -62656,6 +63376,7 @@ export interface components {
       | 'settled'
       | 'outlawed'
       | 'extinguished'
+      | 'dormant'
     FeudView: {
       id: number
       first: components['schemas']['NodeRef'] | null
@@ -62699,6 +63420,7 @@ export interface components {
       | 'exchange'
       | 'safe_conduct'
       | 'fraternisation'
+      | 'burial_truce'
     FieldAgreementState: 'kept' | 'ended' | 'broken' | 'repudiated'
     FieldAgreementView: {
       id: number
@@ -63186,7 +63908,7 @@ export interface components {
       release?: string[]
       foresight_id: number
     }
-    ForesightSource: 'power' | 'divination' | 'god' | 'made_oracle'
+    ForesightSource: 'power' | 'divination' | 'god' | 'made_oracle' | 'dream'
     ForesightStatus: 'pending' | 'fulfilled' | 'failed' | 'clouded'
     ForesightView: {
       id: number
@@ -63223,7 +63945,14 @@ export interface components {
       expert_id?: number | null
     }
     ForgeryKind:
-      'artwork' | 'relic' | 'document' | 'brand' | 'coin' | 'lineage' | 'seal'
+      | 'artwork'
+      | 'relic'
+      | 'document'
+      | 'brand'
+      | 'coin'
+      | 'lineage'
+      | 'seal'
+      | 'identity'
     ForgeryStatus: 'hidden' | 'exposed'
     ForgeryView: {
       id: number
@@ -63240,6 +63969,7 @@ export interface components {
       made_epoch: number
       locked: string[]
     }
+    ForgetScope: 'recent' | 'person' | 'skill' | 'all'
     Formation:
       | 'line'
       | 'column'
@@ -63253,6 +63983,7 @@ export interface components {
       | 'convoy'
       | 'screen'
       | 'layered'
+      | 'circle'
     FormationDeleteInput: {
       world_id: number
     }
@@ -63303,6 +64034,8 @@ export interface components {
       | 'liberation'
       | 'schism'
       | 'long_season'
+      | 'peace'
+      | 'persecution'
     FormativeView: {
       id: number
       label: string
@@ -63426,7 +64159,14 @@ export interface components {
       absent_reason: string | null
     }
     FossilReading:
-      'unread' | 'legend' | 'relic' | 'deep_time' | 'material' | 'medicine'
+      | 'unread'
+      | 'legend'
+      | 'relic'
+      | 'deep_time'
+      | 'material'
+      | 'medicine'
+      | 'sacred'
+      | 'omen'
     FossilSource:
       | 'extinct_species'
       | 'megafauna'
@@ -63435,6 +64175,8 @@ export interface components {
       | 'extinct_people'
       | 'god'
       | 'buried_dead'
+      | 'made'
+      | 'ancestor'
     FoundationHoldInput: {
       kind: components['schemas']['HoldKind']
       node_id: number
@@ -63494,6 +64236,8 @@ export interface components {
     FrontView: {
       first_region: components['schemas']['NodeRef'] | null
       second_region: components['schemas']['NodeRef'] | null
+      first_stratum: components['schemas']['UndergroundStratum'] | null
+      second_stratum: components['schemas']['UndergroundStratum'] | null
       since_epoch: number
       last_epoch: number
     }
@@ -63520,7 +64264,14 @@ export interface components {
       record_id: number
     }
     FugitiveKind:
-      'outlaw' | 'accused' | 'defector' | 'runaway' | 'deserter' | 'heretic'
+      | 'outlaw'
+      | 'accused'
+      | 'defector'
+      | 'runaway'
+      | 'deserter'
+      | 'heretic'
+      | 'escaped_captive'
+      | 'debtor'
     FugitiveView: {
       id: number
       mortal: components['schemas']['NodeRef']
@@ -63558,6 +64309,8 @@ export interface components {
       | 'none'
       | 'mummification'
       | 'secondary_burial'
+      | 'return_to_soil'
+      | 'memorial_only'
     FurnishingAddInput: {
       household_id: number
       item_id: number
@@ -63804,6 +64557,8 @@ export interface components {
       | 'cemetery'
       | 'botanic'
       | 'menagerie'
+      | 'kitchen_garden'
+      | 'roof_garden'
     GardenPlantInput: {
       garden_id: number
       species_id: number
@@ -63899,6 +64654,8 @@ export interface components {
       | 'sport_match'
       | 'commemoration'
       | 'muster'
+      | 'reunion'
+      | 'gift_exchange'
     GatheringOutcome:
       'convivial' | 'uneventful' | 'quarrelsome' | 'violent' | 'massacre'
     GatheringStatus: 'planned' | 'held' | 'disrupted' | 'cancelled'
@@ -63938,6 +64695,8 @@ export interface components {
       | 'trawls'
       | 'poison'
       | 'hunting_animals'
+      | 'dredges'
+      | 'decoys'
     GeasBreakInput: {
       geas_id: number
     }
@@ -63958,8 +64717,8 @@ export interface components {
       mode: components['schemas']['GeasMode']
       act: components['schemas']['ActKind']
     }
-    GeasLayer: 'seer' | 'god' | 'rite' | 'kin' | 'self'
-    GeasMode: 'taboo' | 'duty'
+    GeasLayer: 'seer' | 'god' | 'rite' | 'kin' | 'self' | 'law'
+    GeasMode: 'taboo' | 'duty' | 'condition'
     GeasState: 'kept' | 'broken'
     GeasView: {
       id: number
@@ -63973,6 +64732,8 @@ export interface components {
       laid_epoch: number
       last_kept_epoch: number
       broken_epoch: number | null
+      trigger: components['schemas']['ActKind'] | null
+      armed_epoch: number | null
       locked: string[]
     }
     GeneBankView: {
@@ -64159,6 +64920,9 @@ export interface components {
       | 'sea'
       | 'ruin'
       | 'battlefield'
+      | 'marsh'
+      | 'desert'
+      | 'glacier'
     GeniusView: {
       spirit: components['schemas']['NodeRef']
       place: components['schemas']['NodeRef'] | null
@@ -64257,6 +65021,9 @@ export interface components {
       | 'amends'
       | 'patronage'
       | 'hospitality'
+      | 'farewell'
+      | 'homecoming'
+      | 'initiation'
     GiftRecordView: {
       id: number
       giver: components['schemas']['NodeRef']
@@ -64294,6 +65061,7 @@ export interface components {
       | 'exceeded'
       | 'passed_on'
       | 'released'
+      | 'hoarded'
     GiftView: {
       school: components['schemas']['MagicSchool']
       aptitude: number
@@ -64851,7 +65619,13 @@ export interface components {
       grief_id: number
     }
     GriefStage:
-      'shock' | 'anger' | 'mourning' | 'yearning' | 'acceptance' | 'complicated'
+      | 'shock'
+      | 'anger'
+      | 'bargaining'
+      | 'mourning'
+      | 'yearning'
+      | 'acceptance'
+      | 'complicated'
     GriefStartInput: {
       mourner_id: number
       deceased_id: number
@@ -64899,6 +65673,8 @@ export interface components {
       | 'cell'
       | 'band'
       | 'team'
+      | 'congregation'
+      | 'school'
     GroupSectionView: {
       section: components['schemas']['VehicleSection']
       criticality: components['schemas']['Criticality']
@@ -64956,7 +65732,16 @@ export interface components {
       secrets: components['schemas']['Technique'][]
       known: components['schemas']['Technique'][]
     }
-    Habitat: 'land' | 'water' | 'sky' | 'deep' | 'void' | 'magma' | 'ethereal'
+    Habitat:
+      | 'land'
+      | 'water'
+      | 'sky'
+      | 'deep'
+      | 'void'
+      | 'magma'
+      | 'ethereal'
+      | 'ice'
+      | 'shore'
     HalfEpochState: {
       epoch: number
       phase: number
@@ -65005,6 +65790,9 @@ export interface components {
       | 'childbirth'
       | 'crime'
       | 'sport'
+      | 'animal'
+      | 'crowd'
+      | 'medical'
     HarvestView: {
       id: number
       epoch: number
@@ -65019,7 +65807,7 @@ export interface components {
     }
     HazardSeason: 'coldest' | 'wettest' | 'hottest' | 'warming' | 'driest'
     HealthReport: {
-      status: string
+      status: components['schemas']['HealthStatus']
       version: string
       uptime_seconds: number
       database: components['schemas']['DatabaseHealth']
@@ -65035,7 +65823,7 @@ export interface components {
       report: components['schemas']['HealthReport']
     }
     HealthResponse: {
-      status: string
+      status: components['schemas']['HealthStatus']
       version: string
       database_ok: boolean
       llm_enabled: boolean
@@ -65043,6 +65831,7 @@ export interface components {
       image_worker_configured: boolean
       running_jobs: number
     }
+    HealthStatus: 'ok' | 'warning' | 'bad' | 'degraded'
     HeavensPhysicsView: {
       epoch: number
       systems: components['schemas']['SystemView'][]
@@ -65432,6 +66221,8 @@ export interface components {
       | 'favour'
       | 'true_name'
       | 'title'
+      | 'knowledge'
+      | 'healing'
     HeroquestDeleteInput: {
       quest_id: number
     }
@@ -65565,6 +66356,7 @@ export interface components {
       | 'royal_collection'
       | 'museum'
       | 'trophy_hall'
+      | 'library'
     HoardState: 'hidden' | 'lost' | 'found' | 'spent'
     HoardView: {
       id: number
@@ -65598,6 +66390,8 @@ export interface components {
       | 'network'
       | 'shares'
       | 'lines'
+      | 'school'
+      | 'hospital'
     HoldingView: {
       kind: components['schemas']['HoldingKind']
       holding: components['schemas']['NodeRef'] | null
@@ -65727,7 +66521,7 @@ export interface components {
       hold: boolean
       release?: string[]
     }
-    HonourModel: 'dignity' | 'honour' | 'face' | 'none'
+    HonourModel: 'dignity' | 'honour' | 'face' | 'none' | 'purity'
     HonoursNodeView: {
       node: components['schemas']['NodeRef']
       realm: components['schemas']['NodeRef'] | null
@@ -65749,6 +66543,8 @@ export interface components {
       | 'appointment'
       | 'silence'
       | 'payment'
+      | 'release'
+      | 'information'
     HookEditInput: {
       hook_id: number
       strength?: components['schemas']['HookStrength'] | null
@@ -65762,7 +66558,14 @@ export interface components {
       strength: components['schemas']['HookStrength']
       source: components['schemas']['HookSource']
     }
-    HookSource: 'secret' | 'debt' | 'favour' | 'hostage' | 'true_name'
+    HookSource:
+      | 'secret'
+      | 'debt'
+      | 'favour'
+      | 'hostage'
+      | 'true_name'
+      | 'dependence'
+      | 'affection'
     HookStrength: 'weak' | 'strong'
     HookUseInput: {
       hook_id: number
@@ -65831,6 +66634,9 @@ export interface components {
       locked: string[]
     }
     HorrorOuterBeingInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       world_id: number
     }
     HorrorScope: 'person' | 'community' | 'region' | 'world'
@@ -65874,6 +66680,9 @@ export interface components {
       house_id: number
     }
     HouseFoundInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       mortal_id: number
     }
     HouseHeirloomInput: {
@@ -65995,6 +66804,7 @@ export interface components {
       | 'institutional'
       | 'mixed'
       | 'chosen'
+      | 'skipped_generation'
     HouseholdFoundInput: {
       head_id: number
     }
@@ -66106,6 +66916,8 @@ export interface components {
       | 'arcology_unit'
       | 'habitat_module'
       | 'ship_berth'
+      | 'shack'
+      | 'palace'
     HumourStyleCreateInput: {
       table: string
       values: {
@@ -66236,6 +67048,8 @@ export interface components {
       | 'language'
       | 'kind'
       | 'cause'
+      | 'gift'
+      | 'calling'
     IdentityReason:
       | 'spy'
       | 'blood_curse'
@@ -66245,6 +67059,7 @@ export interface components {
       | 'fugitive'
       | 'hidden_faith'
       | 'passing_kind'
+      | 'protection'
     IdentityUnmaskInput: {
       mortal_id: number
     }
@@ -66434,6 +67249,7 @@ export interface components {
       | 'called'
       | 'moon_fragment'
       | 'wreck'
+      | 'ejecta'
     ImpactCallInput: {
       world_id: number
       region_id?: number | null
@@ -66453,7 +67269,14 @@ export interface components {
       release?: string[]
       impact_id: number
     }
-    ImpactOutcome: 'pending' | 'struck' | 'deflected' | 'missed' | 'airburst'
+    ImpactOutcome:
+      | 'pending'
+      | 'struck'
+      | 'deflected'
+      | 'missed'
+      | 'airburst'
+      | 'captured'
+      | 'fragmented'
     ImpactRecord: {
       id: number
       world: components['schemas']['NodeRef'] | null
@@ -66965,6 +67788,8 @@ export interface components {
       | 'leavening'
       | 'preservative'
       | 'colouring'
+      | 'acid'
+      | 'aroma'
     IngredientView: {
       commodity: components['schemas']['CommodityKind']
       share: number
@@ -66981,6 +67806,7 @@ export interface components {
       | 'by_merit'
       | 'seniority'
       | 'designated'
+      | 'communal'
     InjuryKind:
       | 'bruise'
       | 'cut'
@@ -67009,6 +67835,9 @@ export interface components {
       | 'asphyxia'
       | 'dislocation'
       | 'internal_bleeding'
+      | 'sprain'
+      | 'torn_tendon'
+      | 'pressure_injury'
     InjuryState:
       | 'fresh'
       | 'infected'
@@ -67018,6 +67847,7 @@ export interface components {
       | 'healed_scar'
       | 'permanent'
       | 'lethal'
+      | 'chronic'
     InjuryView: {
       id: number
       part: string
@@ -67095,6 +67925,8 @@ export interface components {
       | 'artistic_vision'
       | 'technical_breakthrough'
       | 'spiritual_insight'
+      | 'healing_insight'
+      | 'civic_vision'
     InspirationState: 'burning' | 'fulfilled' | 'failed'
     InspirationView: {
       id: number
@@ -67123,6 +67955,7 @@ export interface components {
       | 'ownership'
       | 'lease'
       | 'symbiosis'
+      | 'debt'
     InstructionOrderCreateInput: {
       set_id: number
       kind: components['schemas']['OrderKind']
@@ -67200,7 +68033,18 @@ export interface components {
       | 'network'
       | 'body'
       | 'none'
-    InsuranceCover: 'cargo' | 'house' | 'life' | 'crop' | 'vessel' | 'livestock'
+      | 'weather_work'
+      | 'word'
+      | 'kept_animal'
+    InsuranceCover:
+      | 'cargo'
+      | 'house'
+      | 'life'
+      | 'crop'
+      | 'vessel'
+      | 'livestock'
+      | 'health'
+      | 'ransom'
     InsurancePolicyCreateInput: {
       insurer_entity_id: number
       holder_node_id: number
@@ -67505,6 +68349,8 @@ export interface components {
       | 'essence'
       | 'synthetic'
       | 'animal_derived'
+      | 'stimulant'
+      | 'resin'
     IntoxicantCustomDeleteInput: {
       people_id: number
       intoxicant: components['schemas']['Intoxicant']
@@ -67531,6 +68377,8 @@ export interface components {
       | 'forbidden'
       | 'medicine'
       | 'hospitality'
+      | 'work'
+      | 'courage'
     IntoxicantView: {
       intoxicant: components['schemas']['Intoxicant']
       use: components['schemas']['IntoxicantUse']
@@ -67556,6 +68404,7 @@ export interface components {
       | 'true_history'
       | 'hidden_power'
       | 'forgery'
+      | 'illness'
     IntrigueView: {
       node_id: number
       can_hold_identity: boolean
@@ -67832,6 +68681,8 @@ export interface components {
       | 'gathering'
       | 'industry'
       | 'arts'
+      | 'healing'
+      | 'teaching'
     JobAccepted: {
       job_id: string
     }
@@ -68029,6 +68880,8 @@ export interface components {
       | 'exile'
       | 'flight'
       | 'embassy'
+      | 'rescue'
+      | 'return'
     JourneyLoadInput: {
       journey_id: number
       convoy?: number | null
@@ -68073,7 +68926,8 @@ export interface components {
     }
     JourneyStatus:
       'underway' | 'waiting' | 'arrived' | 'lost' | 'recalled' | 'stranded'
-    JudgementDoctrine: 'deeds' | 'faith' | 'rite' | 'favour' | 'none'
+    JudgementDoctrine:
+      'deeds' | 'faith' | 'rite' | 'favour' | 'none' | 'remembrance'
     JudgementView: {
       epoch: number
       doctrine: components['schemas']['JudgementDoctrine']
@@ -68165,6 +69019,8 @@ export interface components {
       | 'seed_disperser'
       | 'regulator'
       | 'reef_builder'
+      | 'nutrient_fixer'
+      | 'grazer'
     KeystoneUse: 'navigation' | 'longevity' | 'prescience' | 'rite'
     KeystoneView: {
       id: number
@@ -68872,6 +69728,8 @@ export interface components {
       | 'pattern'
       | 'source'
       | 'secret'
+      | 'remedy'
+      | 'genealogy'
     KnowledgeLevelInput: {
       knowledge_id: number
       deepen: boolean
@@ -69036,6 +69894,8 @@ export interface components {
       | 'held'
       | 'law'
       | 'skill'
+      | 'debt'
+      | 'kin_duty'
     LabourReasonView: {
       job: components['schemas']['Job']
       reason: components['schemas']['LabourReason']
@@ -69068,6 +69928,8 @@ export interface components {
       | 'open_spring'
       | 'call_lava'
       | 'sink_coast'
+      | 'raise_island'
+      | 'open_underground'
     LandCover:
       | 'open'
       | 'forest'
@@ -69212,7 +70074,14 @@ export interface components {
       cover: components['schemas']['LandCover']
       river: boolean
     }
-    LandUseRing: 'gardens' | 'forestry' | 'grain' | 'ranching' | 'wilds'
+    LandUseRing:
+      | 'gardens'
+      | 'forestry'
+      | 'grain'
+      | 'ranching'
+      | 'wilds'
+      | 'industry'
+      | 'fallow'
     LandUseRuleCreateInput: {
       table: string
       values: {
@@ -69308,6 +70177,8 @@ export interface components {
       | 'tactile'
       | 'vibration'
       | 'electric'
+      | 'whistled'
+      | 'drummed'
     LanguageNode: {
       language: components['schemas']['EntitySummary']
       writing_system: components['schemas']['WritingSystem'] | null
@@ -69326,6 +70197,7 @@ export interface components {
       | 'revival'
       | 'protected'
       | 'standardised'
+      | 'bilingual'
     LanguagePolicyDeleteInput: {
       holder_id: number
       language_id: number
@@ -69378,7 +70250,13 @@ export interface components {
       share: number
     }
     LanguageStage:
-      'natural' | 'pidgin' | 'creole' | 'divine' | 'constructed' | 'revived'
+      | 'natural'
+      | 'pidgin'
+      | 'creole'
+      | 'divine'
+      | 'constructed'
+      | 'revived'
+      | 'endangered'
     LanguageStats: {
       kind: 'language'
       spread?: number | null
@@ -69450,6 +70328,8 @@ export interface components {
       | 'commerce'
       | 'faith'
       | 'labour'
+      | 'family'
+      | 'environment'
     LawCondition:
       | 'always'
       | 'at_war'
@@ -69489,6 +70369,8 @@ export interface components {
       | 'heroes'
       | 'avatars'
       | 'named_kind'
+      | 'office_holders'
+      | 'bargainers'
     LawExceptionCreateInput: {
       law_id: number
       kind: components['schemas']['LawExceptionKind']
@@ -69655,7 +70537,7 @@ export interface components {
     LawRepealInput: {
       law_id: number
     }
-    LawScope: 'cosmos' | 'dimension' | 'world' | 'region'
+    LawScope: 'cosmos' | 'dimension' | 'world' | 'region' | 'stratum'
     LawSource: 'authored' | 'enchantment'
     LawStats: {
       kind: 'law'
@@ -69856,6 +70738,9 @@ export interface components {
       faction_id: number
     }
     LeagueFoundInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       founder_id: number
       partner_ids: number[]
       aims: components['schemas']['LeagueAim'][]
@@ -70213,6 +71098,7 @@ export interface components {
       | 'divine_mandate'
       | 'popular'
       | 'performance'
+      | 'conquest'
     LeisurePursuitCreateInput: {
       table: string
       values: {
@@ -70258,6 +71144,12 @@ export interface components {
       lesson: components['schemas']['CreatureLesson']
       strength: number
       epoch: number
+    }
+    LevelChoice: {
+      stratum: components['schemas']['UndergroundStratum']
+      name: string | null
+      dwellable: boolean
+      reason: string | null
     }
     LevelView: {
       branch: components['schemas']['KnowledgeBranch']
@@ -70382,6 +71274,8 @@ export interface components {
       | 'subterranean'
       | 'under_ice'
       | 'cloud'
+      | 'vent'
+      | 'void'
     LifeGoal:
       | 'rule_a_realm'
       | 'found_a_house'
@@ -70431,7 +71325,8 @@ export interface components {
       biochemistries: components['schemas']['Biochemistry'][]
       locked: string[]
     }
-    LifeStage: 'infant' | 'child' | 'youth' | 'adult' | 'elder' | 'ancient'
+    LifeStage:
+      'infant' | 'child' | 'youth' | 'adult' | 'mature' | 'elder' | 'ancient'
     LifecycleCause:
       | 'living'
       | 'no_adherents'
@@ -70655,6 +71550,9 @@ export interface components {
       | 'fragment'
       | 'true_name'
       | 'possession'
+      | 'footprint'
+      | 'voice'
+      | 'birth_record'
     LinkView: {
       id: number
       holder: components['schemas']['NodeRef']
@@ -70814,6 +71712,7 @@ export interface components {
       | 'rescheduled'
       | 'collateral_seized'
       | 'sold'
+      | 'inherited'
     LoanView: {
       id: number
       lender_id: number
@@ -70891,6 +71790,7 @@ export interface components {
       | 'warded_seal'
       | 'worked'
       | 'electronic'
+      | 'living'
     Locus:
       | 'height'
       | 'build'
@@ -70991,6 +71891,7 @@ export interface components {
       | 'line'
       | 'reform'
       | 'exploration'
+      | 'restoration'
     LongPlanStatus: 'active' | 'completed' | 'abandoned'
     LongSeasonReach: 'world' | 'north' | 'south' | 'equator' | 'poles'
     LongSeasonView: {
@@ -71082,7 +71983,7 @@ export interface components {
       release?: string[]
     }
     LoreLanguage: 'english' | 'turkish'
-    LorePrice: 'wealth' | 'favour' | 'renown' | 'exchange' | 'service'
+    LorePrice: 'wealth' | 'favour' | 'renown' | 'exchange' | 'service' | 'oath'
     LoreTotals: {
       records: number
       by_type?: {
@@ -71218,6 +72119,8 @@ export interface components {
       | 'trade'
       | 'union'
       | 'building'
+      | 'learning'
+      | 'contest'
     LuckSign:
       | 'day'
       | 'number'
@@ -71228,6 +72131,7 @@ export interface components {
       | 'person'
       | 'animal'
       | 'colour'
+      | 'weather'
     MachineDesignView: {
       id: number
       owner: components['schemas']['NodeRef']
@@ -71339,6 +72243,8 @@ export interface components {
       | 'gateway'
       | 'tide_point'
       | 'depletion_scar'
+      | 'confluence'
+      | 'null_zone'
     MagicSiteRevealInput: {
       site_id: number
       finder_id?: number | null
@@ -71414,6 +72320,8 @@ export interface components {
       | 'broken_minded'
       | 'paralysed'
       | 'lost_fingers'
+      | 'lost_tail'
+      | 'lost_wing'
     MaimedView: {
       community_id: number
       population: number
@@ -71477,6 +72385,8 @@ export interface components {
       | 'enclosure'
       | 'ration'
       | 'corvee'
+      | 'quarantine'
+      | 'conscription'
     MandateState: 'active' | 'met' | 'failed'
     MandateView: {
       id: number
@@ -71492,7 +72402,14 @@ export interface components {
       state: components['schemas']['MandateState']
       locked: string[]
     }
-    Manifestation: 'radiant' | 'serene' | 'stern' | 'dreadful' | 'veiled'
+    Manifestation:
+      | 'radiant'
+      | 'serene'
+      | 'stern'
+      | 'dreadful'
+      | 'veiled'
+      | 'playful'
+      | 'sorrowful'
     MantlingDeleteInput: {
       mortal_id: number
     }
@@ -71503,7 +72420,8 @@ export interface components {
       release?: string[]
       mortal_id: number
     }
-    MantlingState: 'walking' | 'ascended' | 'replaced' | 'blocked' | 'failed'
+    MantlingState:
+      'walking' | 'ascended' | 'replaced' | 'blocked' | 'failed' | 'contested'
     MantlingView: {
       mortal: components['schemas']['NodeRef'] | null
       god: components['schemas']['NodeRef'] | null
@@ -71559,6 +72477,59 @@ export interface components {
       status: components['schemas']['ConvoyStatus']
       guards: number
       path: number[]
+    }
+    MapDeepCell: {
+      cell_id: number
+      region_id: number
+      name: string | null
+      terrain: components['schemas']['TerrainKind']
+      extent: number
+      light: number
+      holder_id: number | null
+      held: boolean
+      dwellable: boolean
+      settlements: number
+      peoples: number[]
+    }
+    MapDeepLevel: {
+      stratum: components['schemas']['UndergroundStratum']
+      cells: components['schemas']['MapDeepCell'][]
+      passages: components['schemas']['MapDeepPassage'][]
+    }
+    MapDeepOpening: {
+      passage_id: number
+      region_id: number
+      stratum: components['schemas']['UndergroundStratum']
+      place_id: number | null
+      state: components['schemas']['DeepPassageState']
+    }
+    MapDeepPassage: {
+      passage_id: number
+      kind: components['schemas']['DeepPassageKind']
+      state: components['schemas']['DeepPassageState']
+      width: number
+      progress: number
+      first_region_id: number
+      first_stratum: components['schemas']['UndergroundStratum'] | null
+      second_region_id: number
+      second_stratum: components['schemas']['UndergroundStratum'] | null
+    }
+    MapDeepRegion: {
+      region_id: number
+      strata: number
+      settlements: number
+      armies: number
+      peoples: number
+    }
+    MapDeepStratum: {
+      stratum: components['schemas']['UndergroundStratum']
+      cells: number
+      depth: number
+    }
+    MapDeepSummary: {
+      strata?: components['schemas']['MapDeepStratum'][]
+      openings?: components['schemas']['MapDeepOpening'][]
+      below?: components['schemas']['MapDeepRegion'][]
     }
     MapFront: {
       war_id: number
@@ -71742,6 +72713,8 @@ export interface components {
       lairs?: components['schemas']['MapLair'][]
       notes: components['schemas']['MapNoteRecord'][]
       time: components['schemas']['MapTime']
+      deep?: components['schemas']['MapDeepSummary']
+      level?: components['schemas']['MapDeepLevel'] | null
     }
     MapWar: {
       id: number
@@ -71791,6 +72764,8 @@ export interface components {
       | 'brand'
       | 'hair'
       | 'implant'
+      | 'paint'
+      | 'stain'
     MarkMeaning:
       | 'status'
       | 'clan'
@@ -71803,6 +72778,8 @@ export interface components {
       | 'faith'
       | 'profession'
       | 'beauty'
+      | 'healing'
+      | 'bound_labour'
     MarkReadRequest: {
       ids?: number[]
       every: boolean
@@ -71829,7 +72806,7 @@ export interface components {
       market_id: number
       premiums: components['schemas']['PremiumView'][]
     }
-    MarketPlay: 'corner' | 'dump' | 'rumour'
+    MarketPlay: 'corner' | 'dump' | 'rumour' | 'short'
     MarketPlayDeleteInput: {
       holder_id: number
       settlement_id: number
@@ -72129,6 +73106,9 @@ export interface components {
       | 'shell'
       | 'polymer'
       | 'composite'
+      | 'rubber'
+      | 'paper'
+      | 'lacquer'
     MaterialOrigin:
       | 'catalog'
       | 'dead_god'
@@ -72140,6 +73120,7 @@ export interface components {
       | 'fossil'
       | 'living_line'
       | 'salvage'
+      | 'outer_being'
     MaterialReleaseInput: {
       world_id: number
       material?: components['schemas']['MaterialKind'] | null
@@ -72232,6 +73213,7 @@ export interface components {
       | 'remedy'
       | 'travel_food'
       | 'famine_food'
+      | 'street'
     MeaningShiftDeleteInput: {
       shift_id: number
     }
@@ -72416,6 +73398,7 @@ export interface components {
       | 'genome_repair'
       | 'cellular_machines'
       | 'mind_medicine'
+      | 'anatomy'
     Medium:
       | 'envoy'
       | 'letter'
@@ -72427,6 +73410,8 @@ export interface components {
       | 'network'
       | 'mind_link'
       | 'broadcast'
+      | 'drum_and_whistle'
+      | 'courier_animal'
     MegastructureDeleteInput: {
       structure_id: number
     }
@@ -72465,6 +73450,8 @@ export interface components {
       | 'movement'
       | 'vote'
       | 'worship'
+      | 'assembly'
+      | 'education'
     MemberView: {
       id: number
       name: string
@@ -72479,6 +73466,7 @@ export interface components {
       | 'resident_foreigner'
       | 'protected_minority'
       | 'bound'
+      | 'stateless'
     MembershipCategoryDeleteInput: {
       polity_id: number
       category: components['schemas']['Membership']
@@ -72567,6 +73555,12 @@ export interface components {
       | 'aided_chosen'
       | 'memory_gap'
       | 'compelled_me'
+      | 'healed_me'
+      | 'sheltered_me'
+      | 'abandoned_me'
+      | 'survived_with'
+      | 'apologised_to_me'
+      | 'judged_me'
     MemoryOrigin: 'derived' | 'player'
     MemoryStrikeDeleteInput: {
       by_id: number
@@ -72769,9 +73763,18 @@ export interface components {
       | 'scriptorium'
       | 'copying_press'
       | 'rotary_press'
+      | 'duplicating_machine'
       | 'solar_pans'
       | 'boiling_pans'
       | 'vacuum_pans'
+      | 'hand_mould'
+      | 'stamping_mill'
+      | 'paper_machine'
+      | 'block_printing'
+      | 'movable_type'
+      | 'hand_laying'
+      | 'walk_laying'
+      | 'rope_machine'
     MethodRemoveInput: {
       community_id: number
       process: components['schemas']['ProcessKind']
@@ -73295,6 +74298,7 @@ export interface components {
       | 'broken_oath'
       | 'made_mind'
       | 'hidden_people'
+      | 'self'
     MishapCreateInput: {
       town_id: number
       kind: components['schemas']['MishapKind']
@@ -73343,6 +74347,8 @@ export interface components {
       | 'theft_suffered'
       | 'tool_broken'
       | 'near_miss'
+      | 'quake'
+      | 'flood'
     MishapResponse:
       | 'nothing'
       | 'rite'
@@ -73351,6 +74357,8 @@ export interface components {
       | 'accusation'
       | 'purification'
       | 'safety_custom'
+      | 'move_away'
+      | 'compensation'
     MishapTriggerInput: {
       victim_id: number
       kind: components['schemas']['MishapKind']
@@ -73447,6 +74455,8 @@ export interface components {
       | 'enriched'
       | 'ordained'
       | 'outcast'
+      | 'exiled'
+      | 'adopted'
     MobilityEventView: {
       id: number
       event: components['schemas']['MobilityEvent']
@@ -73636,7 +74646,8 @@ export interface components {
       hold: boolean
       release?: string[]
     }
-    MoneyBacking: 'metal' | 'commodity' | 'decree' | 'trust' | 'source'
+    MoneyBacking:
+      'metal' | 'commodity' | 'decree' | 'trust' | 'source' | 'land' | 'labour'
     MoneyForm:
       | 'coin'
       | 'commodity'
@@ -73649,6 +74660,9 @@ export interface components {
       | 'essence_backed'
       | 'labour_hours'
       | 'gift_tally'
+      | 'bill_of_exchange'
+      | 'warehouse_receipt'
+      | 'land_scrip'
     MonsoonSeasonDeleteInput: {
       world_id: number
       epoch: number
@@ -73707,9 +74721,25 @@ export interface components {
     MoodInput: {
       epoch: number
       axis: components['schemas']['CreatorMoodAxis']
-      item: string
+      item: components['schemas']['MoodItem']
       delta: number
     }
+    MoodItem:
+      | 'wars'
+      | 'godless'
+      | 'rebel_sons'
+      | 'doomsday_clock'
+      | 'contentment_soothes'
+      | 'cult'
+      | 'new_life'
+      | 'the_god_acted'
+      | 'shadow_of_anger'
+      | 'battles'
+      | 'blood_shed'
+      | 'leak'
+      | 'temperament'
+      | 'stir'
+      | 'passions'
     MoodState:
       | 'elated'
       | 'content'
@@ -73888,6 +74918,27 @@ export interface components {
       mortal_id: number
       sex: components['schemas']['SexKind']
     }
+    MortalShapeInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
+      community_id: number
+      role: components['schemas']['MortalRole']
+      sex?: components['schemas']['SexKind'] | null
+      power: number
+      strength?: number | null
+      agility?: number | null
+      intellect?: number | null
+      charisma?: number | null
+      endurance?: number | null
+      willpower?: number | null
+      perception?: number | null
+      wisdom?: number | null
+      creativity?: number | null
+      beauty?: number | null
+      age?: number | null
+      lifespan?: number | null
+    }
     MortalStats: {
       kind: 'mortal'
       hp?: number | null
@@ -74059,6 +75110,9 @@ export interface components {
       | 'commemorate'
       | 'dig_deeper'
       | 'bore'
+      | 'dig_passage'
+      | 'clear_passage'
+      | 'collapse_passage'
       | 'drill_reservoir'
       | 'seal_depth'
       | 'divert_river'
@@ -74462,6 +75516,8 @@ export interface components {
       | 'temperance'
       | 'mind_rights'
       | 'equal_standing'
+      | 'learning'
+      | 'health'
     MovementEditInput: {
       movement_id: number
       support?: number | null
@@ -74503,6 +75559,8 @@ export interface components {
       season: number
       from_region: components['schemas']['NodeRef'] | null
       to_region: components['schemas']['NodeRef'] | null
+      from_stratum: components['schemas']['UndergroundStratum'] | null
+      to_stratum: components['schemas']['UndergroundStratum'] | null
       stance: components['schemas']['Stance']
       supply_days: number
       attrition: number
@@ -74616,7 +75674,13 @@ export interface components {
       mortal_id: number
     }
     MysticState:
-      'seeker' | 'visionary' | 'revered' | 'persecuted' | 'founder' | 'lapsed'
+      | 'seeker'
+      | 'visionary'
+      | 'revered'
+      | 'persecuted'
+      | 'founder'
+      | 'lapsed'
+      | 'hermit'
     MysticView: {
       mortal: components['schemas']['NodeRef']
       state: components['schemas']['MysticState']
@@ -74672,6 +75736,8 @@ export interface components {
       | 'vow'
       | 'ascension'
       | 'posthumous'
+      | 'epithet'
+      | 'adoption'
     NameFormDeleteInput: {
       holder_id: number
       form: components['schemas']['NameForm']
@@ -74780,7 +75846,15 @@ export interface components {
       posthumous_names: boolean
       locked: string[]
     }
-    NamingPattern: 'given' | 'parent' | 'clan' | 'teknonym' | 'place' | 'trade'
+    NamingPattern:
+      | 'given'
+      | 'parent'
+      | 'clan'
+      | 'teknonym'
+      | 'place'
+      | 'trade'
+      | 'ancestral'
+      | 'event'
     NaturalLaw:
       | 'none'
       | 'immortality'
@@ -74848,6 +75922,7 @@ export interface components {
       | 'purchase'
       | 'grant'
       | 'union'
+      | 'adoption'
     NatureNodeView: {
       node: components['schemas']['NodeRef']
       region: components['schemas']['NodeRef'] | null
@@ -74871,6 +75946,8 @@ export interface components {
       | 'wayfinding'
       | 'beacons'
       | 'positioning'
+      | 'pilots'
+      | 'buoys'
     NavigationKitDeleteInput: {
       holder_id: number
       aid: components['schemas']['NavigationAid']
@@ -74895,7 +75972,7 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
-    NeedGroup: 'body' | 'social' | 'spirit' | 'action'
+    NeedGroup: 'body' | 'social' | 'spirit' | 'action' | 'mind'
     NeedKind:
       | 'sustenance'
       | 'safety'
@@ -74925,6 +76002,8 @@ export interface components {
       | 'stimulation'
       | 'continuity'
       | 'upkeep'
+      | 'justice'
+      | 'care'
     NeedView: {
       nutrient: components['schemas']['Nutrient']
       weight: number
@@ -75471,6 +76550,8 @@ export interface components {
       | 'sexagesimal'
       | 'octal'
       | 'body_tally'
+      | 'quinary'
+      | 'binary'
     Nutrient:
       | 'energy'
       | 'protein'
@@ -75480,7 +76561,8 @@ export interface components {
       | 'light'
       | 'essence'
       | 'charge'
-    NutrientKind: 'fixed' | 'mineral' | 'organic' | 'salinity'
+    NutrientKind:
+      'fixed' | 'mineral' | 'organic' | 'salinity' | 'seed_bank' | 'soil_life'
     NutrientNeedDeleteInput: {
       people_id: number
       nutrient: components['schemas']['Nutrient']
@@ -75552,6 +76634,7 @@ export interface components {
       | 'fidelity'
       | 'secrecy'
       | 'testimony'
+      | 'office'
     OathPenalty: 'shame' | 'fine' | 'exile' | 'outlawry' | 'curse'
     OathReleaseInput: {
       oath_id: number
@@ -75713,13 +76796,15 @@ export interface components {
     }
     OccupationView: {
       region: components['schemas']['NodeRef'] | null
+      stratum: components['schemas']['UndergroundStratum'] | null
       occupier: components['schemas']['NodeRef'] | null
       war_id: number | null
       since_epoch: number
       control: number
       resistance: number
     }
-    OceanCurrent: 'none' | 'warm' | 'cold' | 'upwelling' | 'tidal'
+    OceanCurrent:
+      'none' | 'warm' | 'cold' | 'upwelling' | 'tidal' | 'gyre' | 'counter'
     OfferingLedgerView: {
       god: components['schemas']['NodeRef']
       community: components['schemas']['NodeRef']
@@ -75732,7 +76817,8 @@ export interface components {
     OfficeAbolishInput: {
       office_id: number
     }
-    OfficeChoice: 'council' | 'creator' | 'conquest' | 'mantling'
+    OfficeChoice:
+      'council' | 'creator' | 'conquest' | 'mantling' | 'inheritance'
     OfficeCreateInput: {
       polity_id: number
       kind: components['schemas']['OfficeKind']
@@ -75753,6 +76839,8 @@ export interface components {
       | 'memory'
       | 'making'
       | 'healing'
+      | 'trade'
+      | 'learning'
     OfficeEditInput: {
       office_id: number
       title?: string | null
@@ -75786,6 +76874,7 @@ export interface components {
       | 'chief_scientist'
       | 'jester'
       | 'warden'
+      | 'censor'
     OfficeView: {
       id: number
       kind: components['schemas']['OfficeKind']
@@ -75874,7 +76963,15 @@ export interface components {
       hold: boolean
     }
     OpinionSubject:
-      'ruler' | 'law' | 'war' | 'god' | 'ideology' | 'faction' | 'foreign_power'
+      | 'ruler'
+      | 'law'
+      | 'war'
+      | 'god'
+      | 'ideology'
+      | 'faction'
+      | 'foreign_power'
+      | 'economy'
+      | 'neighbour_people'
     OpinionTermView: {
       key: string
       value: number
@@ -75978,6 +77075,8 @@ export interface components {
       | 'when_token_shown'
       | 'until_done'
       | 'at_set_times'
+      | 'while_holder_lives'
+      | 'when_named'
     OrderKind:
       | 'guard'
       | 'serve'
@@ -75994,6 +77093,9 @@ export interface components {
       | 'forbid'
       | 'carry'
       | 'tend'
+      | 'teach'
+      | 'heal'
+      | 'hunt'
     OrderKindView: {
       id: number
       name: string
@@ -76441,7 +77543,8 @@ export interface components {
       bound_epoch: number
       locked: string[]
     }
-    OuterHunger: 'souls' | 'knowledge' | 'light' | 'names' | 'memories'
+    OuterHunger:
+      'souls' | 'knowledge' | 'light' | 'names' | 'memories' | 'dreams' | 'time'
     OuterIncursionEditInput: {
       values?: {
         [key: string]: number | string | boolean | null
@@ -76644,6 +77747,9 @@ export interface components {
       | 'fortune'
       | 'transformation'
       | 'charm'
+      | 'ageing'
+      | 'forgetting'
+      | 'sleep'
     PackageMeta: {
       name: string
       epoch: number | null
@@ -76888,7 +77994,8 @@ export interface components {
       | 'house'
       | 'line'
       | 'moiety'
-    PartyRole: 'signatory' | 'overlord' | 'vassal' | 'guarantor' | 'mediator'
+    PartyRole:
+      'signatory' | 'overlord' | 'vassal' | 'guarantor' | 'mediator' | 'witness'
     PartyView: {
       id: number
       name: string
@@ -76925,6 +78032,8 @@ export interface components {
       | 'jealousy'
       | 'admiration'
       | 'obsession'
+      | 'vengeance'
+      | 'compassion'
     PassionRemoveInput: {
       passion_id: number
     }
@@ -77153,6 +78262,9 @@ export interface components {
       | 'captive_release'
       | 'champion'
       | 'white_peace'
+      | 'border_accord'
+      | 'return_of_refugees'
+      | 'apology'
     PeaceTermView: {
       id: number
       war_id: number
@@ -77312,7 +78424,11 @@ export interface components {
       into_id: number
     }
     PeopleVillageInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       people_id: number
+      settlers?: number | null
     }
     PerceivedAlignment: 'benevolent' | 'ambivalent' | 'malevolent'
     PerennialDeleteInput: {
@@ -77335,6 +78451,9 @@ export interface components {
       | 'timber'
       | 'plantation'
       | 'forest_garden'
+      | 'coppice'
+      | 'hedgerow'
+      | 'palm_stand'
     PerennialPlantInput: {
       region_id: number
       kind: components['schemas']['PerennialKind']
@@ -77441,6 +78560,8 @@ export interface components {
       | 'treaty'
       | 'surrender'
       | 'confession'
+      | 'alliance'
+      | 'release'
     PersuasionAttemptInput: {
       speaker_id: number
       target_id: number
@@ -77516,6 +78637,8 @@ export interface components {
       | 'rain'
       | 'protection'
       | 'vengeance'
+      | 'finding'
+      | 'justice'
     PetitionStatus:
       'filed' | 'delayed' | 'granted' | 'denied' | 'appealed' | 'dismissed'
     PetitionView: {
@@ -77554,6 +78677,9 @@ export interface components {
       amount: number
     }
     PhenomenonCreateInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       kind: components['schemas']['PhenomenonKind']
       region_id: number
       intensity: number
@@ -77661,6 +78787,8 @@ export interface components {
       | 'manuscript'
       | 'trophy'
       | 'regalia'
+      | 'map'
+      | 'instrument'
     PilgrimageClearInput: {
       entity_id: number
     }
@@ -77873,6 +79001,9 @@ export interface components {
       | 'prayer'
       | 'seek_cure'
       | 'sanitation'
+      | 'flee'
+      | 'inoculate'
+      | 'close_gatherings'
     PlagueResponseDeleteInput: {
       community_id: number
       disease_id: number
@@ -77947,7 +79078,8 @@ export interface components {
       finished_epoch: number | null
       locked: string[]
     }
-    PlanetaryCycle: 'carbon' | 'water' | 'nutrients' | 'oxygen' | 'rock'
+    PlanetaryCycle:
+      'carbon' | 'water' | 'nutrients' | 'oxygen' | 'rock' | 'heat' | 'ice'
     PlantAnatomyCreateInput: {
       table: string
       values: {
@@ -77995,6 +79127,8 @@ export interface components {
       | 'carnivorous'
       | 'stinging'
       | 'guardians'
+      | 'mimicry'
+      | 'regrowth'
     PlantEditInput: {
       species_id: number
       values?: {
@@ -78072,6 +79206,9 @@ export interface components {
       | 'resin'
       | 'stimulant'
       | 'fodder'
+      | 'medicine'
+      | 'building'
+      | 'fuel'
     PlayKind:
       'games' | 'mock_fights' | 'imitation' | 'riding' | 'archery' | 'songs'
     PlayerHints: {
@@ -78106,6 +79243,8 @@ export interface components {
       | 'geas_trap'
       | 'hide_fleet'
       | 'forge_work'
+      | 'fix_contest'
+      | 'incite_crowd'
     PluralSide: 'first' | 'second' | 'either'
     PointOfSail:
       'in_irons' | 'close_hauled' | 'reaching' | 'running' | 'under_oars'
@@ -78282,6 +79421,7 @@ export interface components {
       radiation?: number | null
       noise?: number | null
       light?: number | null
+      heat?: number | null
       hold: boolean
     }
     PoolView: {
@@ -78670,6 +79810,22 @@ export interface components {
     }
     PostSonsSummonBody: {
       world_id?: number | null
+      name?: string | null
+      title?: string | null
+      rarity?: components['schemas']['Rarity'] | null
+      domain_1?: components['schemas']['Domain'] | null
+      domain_2?: components['schemas']['Domain'] | null
+      appearance?: string | null
+      temperament?: string | null
+      obsession?: string | null
+      fear?: string | null
+      speech_style?: string | null
+      secret?: string | null
+      loyalty?: number | null
+      ambition?: number | null
+      wrath?: number | null
+      mercy?: number | null
+      inspiration: string
     }
     PostThreadsBody: {
       text: string
@@ -78679,6 +79835,7 @@ export interface components {
       how: string
     }
     PostWorldsBody: {
+      name?: string | null
       world_type?: components['schemas']['WorldType'] | null
       inspiration: string
       star_id?: number | null
@@ -78823,6 +79980,8 @@ export interface components {
       | 'burnout'
       | 'dependency'
       | 'attention'
+      | 'ageing'
+      | 'possession'
     PowerOrigin:
       | 'born'
       | 'awakened'
@@ -78990,7 +80149,8 @@ export interface components {
       | 'forgiveness'
       | 'none'
       | 'wish'
-    PrayerTone: 'thanks' | 'mercy' | 'request' | 'praise'
+    PrayerTone:
+      'thanks' | 'mercy' | 'request' | 'praise' | 'lament' | 'confession'
     PrayerView: {
       message: components['schemas']['MessageRecord']
       sender: components['schemas']['NodeRef'] | null
@@ -79126,6 +80286,7 @@ export interface components {
       | 'voyage'
       | 'phenomenon'
       | 'corpse'
+      | 'ruined'
     PrehistoryNodeView: {
       node: components['schemas']['NodeRef']
       world: components['schemas']['NodeRef'] | null
@@ -79205,6 +80366,8 @@ export interface components {
       | 'evacuation_routes'
       | 'ward'
       | 'reserves_of_energy'
+      | 'immunisation_plan'
+      | 'quake_building'
     PreparednessView: {
       settlement: components['schemas']['NodeRef']
       kind: components['schemas']['PreparednessKind']
@@ -79214,7 +80377,8 @@ export interface components {
       built_epoch: number
       locked: string[]
     }
-    Preservation: 'rock' | 'amber' | 'ice' | 'bog' | 'tar' | 'ash' | 'dry'
+    Preservation:
+      'rock' | 'amber' | 'ice' | 'bog' | 'tar' | 'ash' | 'dry' | 'cave'
     PreservationMethod:
       | 'none'
       | 'drying'
@@ -79242,6 +80406,9 @@ export interface components {
       | 'oppression'
       | 'disease_burden'
       | 'purposelessness'
+      | 'isolation'
+      | 'debt'
+      | 'persecution'
     PricePoint: {
       epoch: number
       price: number
@@ -79390,6 +80557,9 @@ export interface components {
       | 'dyeing'
       | 'copying'
       | 'evaporating'
+      | 'papermaking'
+      | 'printing'
+      | 'ropemaking'
     ProductPart:
       | 'flesh'
       | 'hide'
@@ -79824,6 +80994,7 @@ export interface components {
       | 'self'
       | 'current'
       | 'towed'
+      | 'pedal'
     ProspectStance: 'open' | 'blocked' | 'forced'
     ProsthesisView: {
       id: number
@@ -80041,6 +81212,8 @@ export interface components {
       | 'transportation'
       | 'community_work'
       | 'dampening'
+      | 'shunning'
+      | 'curse_sentence'
     Purification:
       | 'time'
       | 'washing'
@@ -80193,6 +81366,7 @@ export interface components {
     }
     PutEntitiesEntityIdLocationBody: {
       location_id: number
+      stratum?: components['schemas']['UndergroundStratum'] | null
     }
     PutEntitiesEntityIdNoteBody: {
       text: string
@@ -80307,7 +81481,14 @@ export interface components {
       | 'place'
       | 'incident_arc'
     QuestTrial:
-      'skill' | 'passion' | 'conviction' | 'faith' | 'cunning' | 'endurance'
+      | 'skill'
+      | 'passion'
+      | 'conviction'
+      | 'faith'
+      | 'cunning'
+      | 'endurance'
+      | 'mercy'
+      | 'sacrifice'
     QueueItem: {
       kind: components['schemas']['TargetKind']
       id: number
@@ -80407,6 +81588,8 @@ export interface components {
       | 'data_theft'
       | 'loan_sharking'
       | 'arms'
+      | 'forgery'
+      | 'poaching'
     RacketSetInput: {
       faction_id: number
       settlement_id: number
@@ -80614,7 +81797,7 @@ export interface components {
       ruler_repute: components['schemas']['ReputeView'] | null
       sentences: components['schemas']['SentenceView'][]
     }
-    RebirthPath: 'people' | 'house' | 'merit' | 'kind'
+    RebirthPath: 'people' | 'house' | 'merit' | 'kind' | 'place'
     RebuildCause:
       | 'fire'
       | 'flood'
@@ -80624,9 +81807,19 @@ export interface components {
       | 'eruption'
       | 'sea_wave'
       | 'landslide'
-    RebuildPlan: 'planned' | 'opportunistic' | 'relocated' | 'abandoned'
+      | 'sinkhole'
+      | 'plague'
+    RebuildPlan:
+      'planned' | 'opportunistic' | 'relocated' | 'abandoned' | 'restored'
     RechargeRule:
-      'site' | 'vis' | 'moon' | 'none' | 'sky_event' | 'bodily_offering'
+      | 'site'
+      | 'vis'
+      | 'moon'
+      | 'none'
+      | 'sky_event'
+      | 'bodily_offering'
+      | 'rest'
+      | 'worship'
     ReckoningCaseCreateInput: {
       table: string
       values: {
@@ -80898,6 +82091,25 @@ export interface components {
         [key: string]: components['schemas']['NodeRef']
       }
     }
+    RecordShapeInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
+      entity_type: 'celestial' | 'spirit' | 'natural_law' | 'cult'
+      god_id?: number | null
+      world_id?: number | null
+      location_id?: number | null
+      power: number
+      natural_law?: components['schemas']['NaturalLaw'] | null
+      brightness?: number | null
+      influence?: number | null
+      visibility?: number | null
+      cycle?: number | null
+      strength?: number | null
+      unrest?: number | null
+      followers?: number | null
+      zeal?: number | null
+    }
     RecordTableView: {
       kind: string
       label: string
@@ -80917,7 +82129,7 @@ export interface components {
       epoch: number
     }
     RecruitMotive:
-      'money' | 'ideology' | 'compromise' | 'ego' | 'love' | 'revenge'
+      'money' | 'ideology' | 'compromise' | 'ego' | 'love' | 'revenge' | 'faith'
     ReferendumCreateInput: {
       table: string
       values: {
@@ -81041,6 +82253,11 @@ export interface components {
       hostages: boolean
       updated_epoch: number
       locked: string[]
+    }
+    RegionBelow: {
+      region_id: number
+      strata: components['schemas']['UndergroundStratum'][]
+      towns: number
     }
     RegionClimateTurnInput: {
       region_id: number
@@ -81370,6 +82587,18 @@ export interface components {
     RegionSeedPlaceInput: {
       region_id: number
     }
+    RegionShapeInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
+      world_id: number
+      near_id?: number | null
+      water: boolean
+      breadth?: number | null
+      danger?: number | null
+      fertility?: number | null
+      magic?: number | null
+    }
     RegionStats: {
       kind: 'region'
       breadth?: number | null
@@ -81477,7 +82706,12 @@ export interface components {
       ley_works: components['schemas']['LeyWorkView'][]
     }
     RegionalStanding:
-      'hegemon' | 'great_power' | 'minor_power' | 'client' | 'neutral'
+      | 'hegemon'
+      | 'great_power'
+      | 'minor_power'
+      | 'client'
+      | 'neutral'
+      | 'isolated'
     RegionalTensionDeleteInput: {
       region_id: number
     }
@@ -81540,6 +82774,8 @@ export interface components {
       | 'birth'
       | 'death'
       | 'citizenship'
+      | 'will'
+      | 'licence'
     RegistryView: {
       id: number
       holder: components['schemas']['NodeRef'] | null
@@ -81597,7 +82833,8 @@ export interface components {
       kind: components['schemas']['MemoryKind']
       holder_id: number
     }
-    RelationLineKind: 'trade' | 'hostility' | 'rule' | 'hunt' | 'conurbation'
+    RelationLineKind:
+      'trade' | 'hostility' | 'rule' | 'hunt' | 'conurbation' | 'passage'
     RelationList: {
       entity_id: number
       relations: components['schemas']['RelationEntry'][]
@@ -81642,6 +82879,9 @@ export interface components {
       | 'betrothed'
       | 'sworn_kin'
       | 'foster'
+      | 'neighbour'
+      | 'guest_friend'
+      | 'estranged'
     RelicEditInput: {
       item_id: number
       values?: {
@@ -81657,7 +82897,8 @@ export interface components {
     RelicRemoveInput: {
       item_id: number
     }
-    RelicStance: 'sacred' | 'tool' | 'forbidden' | 'heritage' | 'studied'
+    RelicStance:
+      'sacred' | 'tool' | 'forbidden' | 'heritage' | 'studied' | 'traded'
     RelicState: 'working' | 'failing' | 'dormant' | 'broken' | 'restored'
     RelicUse:
       | 'as_made'
@@ -81707,6 +82948,8 @@ export interface components {
       | 'foster_care'
       | 'sick_house'
       | 'pension'
+      | 'public_kitchen'
+      | 'shelter'
     ReliefSendInput: {
       giver_id: number
       settlement_id: number
@@ -81962,6 +83205,8 @@ export interface components {
       | 'troublemaker'
       | 'mercy'
       | 'justice'
+      | 'reliability'
+      | 'hospitality'
     ReputationDriftInput: {
       son_id: number
     }
@@ -82089,6 +83334,8 @@ export interface components {
       | 'distance'
       | 'counter_source'
       | 'none'
+      | 'disbelief'
+      | 'ancestral'
     ResolutionDeleteInput: {
       resolution_id: number
     }
@@ -82112,6 +83359,8 @@ export interface components {
       | 'quarantine'
       | 'arbitration'
       | 'aid'
+      | 'peacekeeping'
+      | 'recognition'
     ResolutionProposeInput: {
       assembly_id: number
       kind: components['schemas']['ResolutionKind']
@@ -82389,6 +83638,8 @@ export interface components {
       | 'must_be_unseen'
       | 'must_touch'
       | 'only_with_token'
+      | 'only_in_company'
+      | 'only_by_name'
     ResurrectionOrder: {
       id: number
       name: string
@@ -82436,6 +83687,7 @@ export interface components {
       | 'expel_foreigners'
       | 'restore_land'
       | 'restore_rule'
+      | 'restore_law'
     RevivalStage:
       | 'steady'
       | 'stress'
@@ -82455,7 +83707,8 @@ export interface components {
       ended_epoch: number | null
       locked: string[]
     }
-    RevivalWay: 'restore' | 'synthesis' | 'adopt' | 'await' | 'withdraw'
+    RevivalWay:
+      'restore' | 'synthesis' | 'adopt' | 'await' | 'withdraw' | 'migrate'
     RewardInsight: {
       son: components['schemas']['NodeRef'] | null
       xp: number
@@ -82559,6 +83812,7 @@ export interface components {
       | 'granted'
       | 'won'
       | 'wed'
+      | 'shared'
     RightKind:
       | 'song'
       | 'dance'
@@ -82571,6 +83825,8 @@ export interface components {
       | 'market_privilege'
       | 'recipe'
       | 'technique'
+      | 'performance'
+      | 'likeness'
     RightLinkChoice: {
       id: number
       name: string
@@ -82608,6 +83864,8 @@ export interface components {
       | 'danced'
       | 'material'
       | 'mental'
+      | 'offered'
+      | 'communal'
     RiteComponentSetInput: {
       rite_id: number
       component: components['schemas']['RiteComponent']
@@ -82679,7 +83937,7 @@ export interface components {
       summon_form?: components['schemas']['SummonForm'] | null
       custom_kind_id?: number | null
     }
-    RiteEnd: 'caster_gone' | 'caster_struck' | 'condition_met'
+    RiteEnd: 'caster_gone' | 'caster_struck' | 'condition_met' | 'target_gone'
     RiteForbidInput: {
       rite_id: number
       authority_id: number
@@ -82703,7 +83961,14 @@ export interface components {
       }
     }
     RiteStage:
-      'birth' | 'naming' | 'coming_of_age' | 'union' | 'elderhood' | 'death'
+      | 'birth'
+      | 'naming'
+      | 'coming_of_age'
+      | 'union'
+      | 'elderhood'
+      | 'death'
+      | 'initiation'
+      | 'departure'
     RiteStats: {
       kind: 'rite'
       power?: number | null
@@ -82729,6 +83994,8 @@ export interface components {
       | 'works'
       | 'eruption'
       | 'landslide'
+      | 'ice'
+      | 'capture'
     RiverShiftView: {
       id: number
       from_region_id: number
@@ -82781,6 +84048,9 @@ export interface components {
       | 'iron'
       | 'carbon'
       | 'living_tissue'
+      | 'pumice'
+      | 'serpentinite'
+      | 'travertine'
     RockLayerView: {
       id: number
       depth_order: number
@@ -82888,6 +84158,8 @@ export interface components {
       officials: number
       spoilage: number
       pilferage: number
+      pirates: number
+      breakage: number
     }
     RouteFlowEditInput: {
       values?: {
@@ -82976,6 +84248,7 @@ export interface components {
       | 'unstable'
       | 'forgotten'
       | 'worn'
+      | 'guarded'
     RouteStatusRecord: {
       open: boolean
       state: components['schemas']['RouteState']
@@ -83068,6 +84341,8 @@ export interface components {
       | 'step_added'
       | 'step_dropped'
       | 'role_changed'
+      | 'count_inflated'
+      | 'motive_added'
     RumourDistortionCreateInput: {
       distortion?: components['schemas']['RumourDistortion'] | null
       role?: components['schemas']['IncidentRole'] | null
@@ -83200,7 +84475,10 @@ export interface components {
       | 'last_rites'
       | 'purification'
       | 'ordination'
-    SacramentProtection: 'routing' | 'possession' | 'unrest' | 'curse'
+      | 'penance'
+      | 'communion'
+    SacramentProtection:
+      'routing' | 'possession' | 'unrest' | 'curse' | 'fortune'
     SacramentView: {
       id: number
       mortal: components['schemas']['NodeRef']
@@ -83250,6 +84528,8 @@ export interface components {
       | 'commemoration'
       | 'election'
       | 'contest'
+      | 'disaster'
+      | 'arrivals'
     SalvageOpenInput: {
       site_id: number
       holder_id?: number | null
@@ -83314,7 +84594,14 @@ export interface components {
       record_id: number
     }
     SanctuaryKind:
-      'temple' | 'hospitality' | 'asylum' | 'wilds' | 'free_city' | 'embassy'
+      | 'temple'
+      | 'hospitality'
+      | 'asylum'
+      | 'wilds'
+      | 'free_city'
+      | 'embassy'
+      | 'ship'
+      | 'trade_hall'
     SanctuaryLawDeleteInput: {
       polity_id: number
     }
@@ -83370,7 +84657,7 @@ export interface components {
       release?: string[]
       record_id: number
     }
-    SatireSource: 'jester' | 'artwork' | 'mortal' | 'god'
+    SatireSource: 'jester' | 'artwork' | 'mortal' | 'god' | 'crowd' | 'outlet'
     SatireView: {
       id: number
       satirist: components['schemas']['NodeRef'] | null
@@ -83401,7 +84688,8 @@ export interface components {
       release?: string[]
       household_id: number
     }
-    SavingForm: 'hoard' | 'deposit' | 'investment' | 'land' | 'goods'
+    SavingForm:
+      'hoard' | 'deposit' | 'investment' | 'land' | 'goods' | 'livestock'
     SavingSetInput: {
       household_id: number
       share_pct: number
@@ -83645,6 +84933,7 @@ export interface components {
       | 'borrowing'
       | 'imposition'
       | 'revelation'
+      | 'technology'
     ScriptCreateInput: {
       language_id: number
       system: components['schemas']['WritingSystem']
@@ -83750,7 +85039,8 @@ export interface components {
       hold: boolean
       release?: string[]
     }
-    SealKind: 'structure' | 'rite' | 'divine' | 'power' | 'living' | 'pact'
+    SealKind:
+      'structure' | 'rite' | 'divine' | 'power' | 'living' | 'pact' | 'made'
     SealLinkChoice: {
       id: number
       label: string
@@ -83766,6 +85056,7 @@ export interface components {
       pact_oath_id: number | null
       power_id: number | null
       living_line_id: number | null
+      made_mind_id: number | null
       locked: string[]
     }
     SearchCategory:
@@ -84199,6 +85490,8 @@ export interface components {
       | 'heat'
       | 'electric'
       | 'ultraviolet'
+      | 'taste'
+      | 'pressure'
     SenseSetInput: {
       holder_id: number
       sense: components['schemas']['SenseKind']
@@ -84213,6 +85506,7 @@ export interface components {
       | 'restored'
       | 'extended'
       | 'associated'
+      | 'reversed'
     SenseView: {
       sense: components['schemas']['SenseKind']
       acuity: number
@@ -84328,7 +85622,14 @@ export interface components {
       role: components['schemas']['ServitorRole']
       post_id?: number | null
     }
-    ServitorOrigin: 'made' | 'raised' | 'summoned' | 'defected' | 'born'
+    ServitorOrigin:
+      | 'made'
+      | 'raised'
+      | 'summoned'
+      | 'defected'
+      | 'born'
+      | 'bargained'
+      | 'ascended'
     ServitorReleaseInput: {
       spirit_id: number
     }
@@ -84344,6 +85645,8 @@ export interface components {
       | 'worshipper'
       | 'warden'
       | 'scribe'
+      | 'healer'
+      | 'teacher'
     ServitorView: {
       spirit: components['schemas']['NodeRef'] | null
       god: components['schemas']['NodeRef'] | null
@@ -84368,6 +85671,8 @@ export interface components {
       | 'burrow'
       | 'submerged'
       | 'canopy'
+      | 'cliff'
+      | 'drift'
     SettlementAbandonInput: {
       settlement_id: number
     }
@@ -84738,6 +86043,8 @@ export interface components {
       | 'arcane'
       | 'thirst'
       | 'shelter'
+      | 'learning'
+      | 'justice'
     ShortfallSetInput: {
       community_id: number
       effect: components['schemas']['ShortfallEffect']
@@ -84755,6 +86062,7 @@ export interface components {
       | 'piercing'
       | 'guided'
       | 'energy'
+      | 'smoke'
     SiblingView: {
       son: components['schemas']['NodeRef']
       value: number
@@ -84772,7 +86080,14 @@ export interface components {
       budget: number
     }
     SiegeAction:
-      'blockade' | 'bombard' | 'mine' | 'assault' | 'negotiate' | 'suborn'
+      | 'blockade'
+      | 'bombard'
+      | 'mine'
+      | 'assault'
+      | 'negotiate'
+      | 'suborn'
+      | 'poison_supply'
+      | 'divert_river'
     SiegeEditInput: {
       siege_id: number
       values?: {
@@ -84784,7 +86099,13 @@ export interface components {
       army_id: number
       settlement_id: number
     }
-    SiegeStatus: 'ongoing' | 'breached' | 'repulsed' | 'lifted' | 'surrendered'
+    SiegeStatus:
+      | 'ongoing'
+      | 'breached'
+      | 'repulsed'
+      | 'lifted'
+      | 'surrendered'
+      | 'betrayed'
     SiegeTracker: {
       id: number
       besieged: components['schemas']['NodeRef'] | null
@@ -84818,7 +86139,12 @@ export interface components {
       rounds: number
     }
     SignCause:
-      'deafness' | 'silence_vow' | 'hunting_silence' | 'mutilation' | 'trade'
+      | 'deafness'
+      | 'silence_vow'
+      | 'hunting_silence'
+      | 'mutilation'
+      | 'trade'
+      | 'noise'
     SignInfluence: 'real' | 'believed'
     SignLanguageCreateInput: {
       community_id: number
@@ -84865,7 +86191,9 @@ export interface components {
       | 'radio_station'
       | 'mind_link_station'
       | 'grown_node'
-    SignalState: 'active' | 'captured' | 'burned' | 'disused' | 'jammed'
+      | 'drum_relay'
+    SignalState:
+      'active' | 'captured' | 'burned' | 'disused' | 'jammed' | 'restored'
     SignalView: {
       id: number
       owner: components['schemas']['NodeRef'] | null
@@ -84958,7 +86286,14 @@ export interface components {
       digs: components['schemas']['DigView'][]
       features: components['schemas']['FeatureView'][]
     }
-    SizeClass: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'colossal'
+    SizeClass:
+      | 'microscopic'
+      | 'tiny'
+      | 'small'
+      | 'medium'
+      | 'large'
+      | 'huge'
+      | 'colossal'
     SizeTier:
       | 'hamlet'
       | 'village'
@@ -85039,6 +86374,12 @@ export interface components {
       | 'computing'
       | 'science'
       | 'administration'
+      | 'farming'
+      | 'herding'
+      | 'cooking'
+      | 'music'
+      | 'climbing'
+      | 'diving'
     SkillSource: 'backfill' | 'birth' | 'practice' | 'teaching' | 'player'
     SkillView: {
       id: number
@@ -85110,6 +86451,7 @@ export interface components {
       price: number
       open: boolean
     }
+    SleepUntil: 'time' | 'deed' | 'act'
     SlotView: {
       slot: components['schemas']['EquipmentSlot']
       item: components['schemas']['NodeRef'] | null
@@ -85155,7 +86497,15 @@ export interface components {
       behaviour: components['schemas']['NormBehaviour']
       stance: components['schemas']['EthicalStance']
     }
-    Sociality: 'solitary' | 'pack' | 'herd' | 'hive' | 'colony' | 'swarm'
+    Sociality:
+      | 'solitary'
+      | 'pack'
+      | 'herd'
+      | 'hive'
+      | 'colony'
+      | 'swarm'
+      | 'pair'
+      | 'family_group'
     SocializationCreateInput: {
       table: string
       values: {
@@ -85286,6 +86636,8 @@ export interface components {
       | 'sailors'
       | 'youth'
       | 'soldiers'
+      | 'clergy'
+      | 'scholars'
     SociolectMergeInput: {
       kept_id: number
       merged_id: number
@@ -85574,6 +86926,8 @@ export interface components {
       | 'strip_divinity'
       | 'penance'
       | 'essence_fine'
+      | 'bound_to_world'
+      | 'rebuke'
     SonRecord: {
       id: number
       name: string
@@ -85882,6 +87236,7 @@ export interface components {
       | 'inspire_school'
       | 'designate_keystone'
       | 'inspire_relief'
+      | 'tend_soil_stock'
       | 'shape_vehicle_type'
       | 'shape_equipment'
       | 'shape_dish'
@@ -86561,6 +87916,7 @@ export interface components {
       | 'made'
       | 'colonial'
       | 'hybrid'
+      | 'lichen'
     SpeciesCreateInput: {
       name: string
       description: string
@@ -86825,7 +88181,7 @@ export interface components {
     SpeculationRemoveInput: {
       speculation_id: number
     }
-    SpeculationStatus: 'hoarding' | 'sold' | 'bust' | 'seized'
+    SpeculationStatus: 'hoarding' | 'sold' | 'bust' | 'seized' | 'spoiled'
     SpeechCreateInput: {
       table: string
       values: {
@@ -86872,6 +88228,7 @@ export interface components {
       | 'permanent'
       | 'sustained'
       | 'until_condition'
+      | 'lifetime'
     SpellForm:
       | 'fire'
       | 'water'
@@ -86894,9 +88251,20 @@ export interface components {
       | 'fate'
       | 'machine'
       | 'information'
-    SpellRange: 'touch' | 'sight' | 'region' | 'world' | 'linked' | 'cosmos'
+      | 'dream'
+      | 'law'
+    SpellRange:
+      'touch' | 'sight' | 'region' | 'world' | 'linked' | 'cosmos' | 'dimension'
     SpellTarget:
-      'one' | 'group' | 'structure' | 'region' | 'item' | 'line' | 'world'
+      | 'one'
+      | 'group'
+      | 'structure'
+      | 'region'
+      | 'item'
+      | 'line'
+      | 'world'
+      | 'species'
+      | 'people'
     SpellTechnique:
       | 'create'
       | 'perceive'
@@ -86908,6 +88276,9 @@ export interface components {
       | 'ward'
       | 'drain'
       | 'mimic'
+      | 'heal'
+      | 'move'
+      | 'speak'
     SphereRemoveInput: {
       power_id: number
       client_id: number
@@ -86933,6 +88304,8 @@ export interface components {
       | 'taboo'
       | 'bloodshed'
       | 'overharvest'
+      | 'trespass'
+      | 'noise'
     SpiritOfficeDeleteInput: {
       spirit_id: number
     }
@@ -87016,6 +88389,8 @@ export interface components {
       | 'migration'
       | 'gathering'
       | 'waterway'
+      | 'livestock'
+      | 'water_supply'
     SpyCellAddInput: {
       network_id: number
       handler_id?: number | null
@@ -87065,6 +88440,8 @@ export interface components {
       | 'infiltrate'
       | 'exfiltrate'
       | 'disinform'
+      | 'recruit_agent'
+      | 'surveil'
     StackKitView: {
       unit_id: number
       kind: components['schemas']['UnitKind']
@@ -87151,6 +88528,7 @@ export interface components {
       | 'winter_quarters'
       | 'pursue'
       | 'escort'
+      | 'disband'
     StanceRemoveInput: {
       proposal_id: number
       node_id: number
@@ -87178,6 +88556,8 @@ export interface components {
       piety?: number | null
       dread?: number | null
       tyranny?: number | null
+      trust?: number | null
+      learning?: number | null
       silenced_until?: number | null
       hold: boolean
     }
@@ -87186,6 +88566,8 @@ export interface components {
       piety: number
       dread: number
       tyranny: number
+      trust: number
+      learning: number
       silenced_until: number | null
       updated_epoch: number
       realm: components['schemas']['NodeRef'] | null
@@ -87394,7 +88776,8 @@ export interface components {
       timeline_total: number
       images: components['schemas']['ImageRecord'][]
     }
-    StarvationStage: 'none' | 'rationing' | 'famine' | 'taboo_broken'
+    StarvationStage:
+      'none' | 'rationing' | 'famine' | 'hunger_sickness' | 'taboo_broken'
     Stat:
       | 'strength'
       | 'endurance'
@@ -87794,6 +89177,9 @@ export interface components {
       | 'realm'
       | 'network_node'
       | 'none'
+      | 'stratum'
+      | 'dream'
+      | 'dimension'
     StepMetrics: {
       step: string
       calls: number
@@ -87860,6 +89246,11 @@ export interface components {
       | 'encircled'
       | 'routed'
       | 'rallied'
+      | 'drowning'
+      | 'charmed'
+      | 'asleep'
+      | 'poisoned'
+      | 'frightened'
     StockExchangeCreateInput: {
       table: string
       values: {
@@ -88156,6 +89547,8 @@ export interface components {
       | 'vice'
       | 'revelation'
       | 'withdrawal'
+      | 'dissociation'
+      | 'collapse'
     StressComponent:
       | 'population_pressure'
       | 'immiseration'
@@ -88582,6 +89975,8 @@ export interface components {
       | 'habitat_decks'
       | 'control_core'
       | 'shielding'
+      | 'cistern'
+      | 'chimney'
     StructureSectionDeleteInput: {
       structure_id: number
       section: components['schemas']['StructureSection']
@@ -88937,7 +90332,13 @@ export interface components {
       survey_id: number
     }
     SurveyLevel:
-      'unknown' | 'rumoured' | 'detected' | 'observed' | 'surveyed' | 'mapped'
+      | 'unknown'
+      | 'rumoured'
+      | 'charted_by_others'
+      | 'detected'
+      | 'observed'
+      | 'surveyed'
+      | 'mapped'
     SurveyRecord: {
       id: number
       observer: components['schemas']['NodeRef'] | null
@@ -88981,7 +90382,13 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
-    SymbiosisKind: 'mutualism' | 'commensalism' | 'parasitism' | 'mimicry'
+    SymbiosisKind:
+      | 'mutualism'
+      | 'commensalism'
+      | 'parasitism'
+      | 'mimicry'
+      | 'amensalism'
+      | 'farming'
     SympatheticLinkCreateInput: {
       holder_node_id: number
       target_node_id: number
@@ -89134,6 +90541,8 @@ export interface components {
       | 'orbital_bombardment'
       | 'drop_assault'
       | 'infiltration'
+      | 'river_crossing'
+      | 'fire_attack'
     TalesNodeView: {
       node: components['schemas']['NodeRef']
       formation: components['schemas']['FormationView'] | null
@@ -89217,6 +90626,8 @@ export interface components {
       | 'seigniorage'
       | 'pollution'
       | 'excise'
+      | 'toll'
+      | 'hearth'
     TaxRemoveInput: {
       polity_id: number
       kind: components['schemas']['TaxKind']
@@ -89498,6 +90909,8 @@ export interface components {
       | 'vengeful'
       | 'acquisitive'
       | 'protective'
+      | 'playful'
+      | 'proud'
     TemperatureBand:
       'frozen' | 'cold' | 'temperate' | 'warm' | 'hot' | 'searing'
     TenetKind:
@@ -89568,6 +90981,8 @@ export interface components {
       | 'dry'
       | 'brighten'
       | 'darken'
+      | 'seed_life'
+      | 'steady_seasons'
     TerraformEditInput: {
       values?: {
         [key: string]: number | string | boolean | string[] | null
@@ -89696,6 +91111,8 @@ export interface components {
       | 'disaster'
       | 'persecution'
       | 'long_season'
+      | 'leader_lost'
+      | 'schism'
     TheodicyCreateInput: {
       town_id: number
       cause: components['schemas']['TheodicyCause']
@@ -89776,7 +91193,8 @@ export interface components {
       adherents?: number | null
       explanatory?: number | null
     }
-    Thermoregulation: 'endotherm' | 'ectotherm' | 'heterotherm' | 'athermic'
+    Thermoregulation:
+      'endotherm' | 'ectotherm' | 'heterotherm' | 'athermic' | 'mesotherm'
     ThingKindsView: {
       node: components['schemas']['NodeRef']
       world_id: number | null
@@ -89994,6 +91412,18 @@ export interface components {
       | 'grew_curious'
       | 'felt_compassion'
       | 'felt_contempt'
+      | 'season_failed'
+      | 'storm_survived'
+      | 'quake_survived'
+      | 'home_lost_to_flood'
+      | 'beast_passed'
+      | 'fled_plague'
+      | 'gathering_closed'
+      | 'saw_accession'
+      | 'year_of_peace'
+      | 'charm_found'
+      | 'forgot'
+      | 'woke_from_sleep'
     ThoughtKindView: {
       kind: components['schemas']['ThoughtKind']
       label: string
@@ -90214,6 +91644,8 @@ export interface components {
       | 'gel'
       | 'energy'
       | 'insubstantial'
+      | 'liquid'
+      | 'woody'
     TitleClaimView: {
       title: components['schemas']['NodeRef']
       strength: number
@@ -90327,6 +91759,7 @@ export interface components {
       | 'faith_supreme'
       | 'military'
       | 'guild'
+      | 'league'
     TitlesView: {
       node_id: number
       detail: components['schemas']['TitleDetail'] | null
@@ -90489,7 +91922,17 @@ export interface components {
       | 'officials'
       | 'spoilage'
       | 'pilferage'
-    TradeMode: 'road' | 'river' | 'sea' | 'sky' | 'space' | 'rift' | 'network'
+      | 'pirates'
+      | 'breakage'
+    TradeMode:
+      | 'road'
+      | 'river'
+      | 'sea'
+      | 'sky'
+      | 'space'
+      | 'rift'
+      | 'network'
+      | 'underground'
     TradePolicyKind:
       | 'tariff'
       | 'subsidy'
@@ -90500,6 +91943,8 @@ export interface components {
       | 'free_trade'
       | 'export_ban'
       | 'sanction'
+      | 'toll'
+      | 'staple_right'
     TradePolicyRemoveInput: {
       policy_id: number
     }
@@ -90534,6 +91979,7 @@ export interface components {
       renown: number
       culture: number
       path: number[]
+      path_strata: (components['schemas']['UndergroundStratum'] | null)[]
       tolls: components['schemas']['TollView'][]
       controller_id: number | null
       blockaded_by_id: number | null
@@ -90567,6 +92013,9 @@ export interface components {
       release?: string[]
     }
     TradeRouteFoundInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       first_id: number
       second_id: number
       mode?: components['schemas']['TradeMode'] | null
@@ -90593,6 +92042,7 @@ export interface components {
       | 'decayed'
       | 'contested'
       | 'seasonal'
+      | 'tolled'
     TradeRouteTollInput: {
       route_id: number
       region_id: number
@@ -90625,6 +92075,7 @@ export interface components {
       renown: number
       culture: number
       path: number[]
+      path_strata: (components['schemas']['UndergroundStratum'] | null)[]
       tolls: components['schemas']['TollView'][]
       controller_id: number | null
       blockaded_by_id: number | null
@@ -90714,6 +92165,8 @@ export interface components {
       | 'vigil'
       | 'trade'
       | 'forage'
+      | 'healing'
+      | 'bonding'
     TraditionEffectView: {
       effect: components['schemas']['TraditionEffectKind']
       target: string
@@ -90740,6 +92193,9 @@ export interface components {
       | 'commemoration'
       | 'competition'
       | 'fair'
+      | 'welcome'
+      | 'reconciliation'
+      | 'thanksgiving'
     TraditionParticipationInput: {
       tradition_id: number
       community_id: number
@@ -90932,6 +92388,9 @@ export interface components {
       | 'retentive'
       | 'numerate'
       | 'musical'
+      | 'freedom_loving'
+      | 'egalitarian'
+      | 'adaptable'
     TraitPick: {
       trait: components['schemas']['LineTrait']
       strength: number
@@ -91121,6 +92580,8 @@ export interface components {
       | 'dark_age'
       | 'punishment'
       | 'backfill'
+      | 'devotion'
+      | 'deed'
     TransformationDeleteInput: {
       transformation_id: number
     }
@@ -91218,6 +92679,8 @@ export interface components {
       | 'void'
       | 'intimate'
       | 'objects'
+      | 'soil'
+      | 'sound'
     TransportCreateInput: {
       owner_id: number
       kind: components['schemas']['CarrierKind']
@@ -91357,6 +92820,8 @@ export interface components {
       | 'drain'
       | 'bleed'
       | 'medicate'
+      | 'transfuse'
+      | 'rest'
     TreatyBreakInput: {
       treaty_id: number
       breaker_id: number
@@ -91424,6 +92889,8 @@ export interface components {
       | 'divine_pact'
       | 'naval_limit'
       | 'arms_limit'
+      | 'mutual_aid'
+      | 'border_accord'
     TreatyParty: {
       party_id: number
       role: components['schemas']['PartyRole']
@@ -91438,6 +92905,9 @@ export interface components {
       party_id: number
     }
     TreatySignInput: {
+      name?: string | null
+      title?: string | null
+      description?: string | null
       kind: components['schemas']['TreatyKind']
       parties: components['schemas']['TreatyParty'][]
       clauses?: components['schemas']['TreatyClause'][]
@@ -91456,6 +92926,7 @@ export interface components {
       | 'proposed'
       | 'rejected'
       | 'suspended'
+      | 'renegotiating'
     TreatyView: {
       id: number
       name: string
@@ -91534,7 +93005,13 @@ export interface components {
       label: string
       techniques: components['schemas']['Technique'][]
     }
-    TrophicLevel: 'producer' | 'herbivore' | 'carnivore' | 'apex' | 'decomposer'
+    TrophicLevel:
+      | 'producer'
+      | 'herbivore'
+      | 'carnivore'
+      | 'apex'
+      | 'decomposer'
+      | 'parasite'
     TrophicView: {
       level: components['schemas']['TrophicLevel']
       biomass: number
@@ -91720,15 +93197,17 @@ export interface components {
       level: number
     }
     UndergroundStratum:
+      | 'permafrost_layer'
       | 'aquifer'
+      | 'under_ocean'
+      | 'reservoir'
       | 'cavern_upper'
       | 'cavern_middle'
-      | 'cavern_deep'
+      | 'fault_zone'
+      | 'cavern_lower'
+      | 'hollow_interior'
       | 'magma_sea'
       | 'deep_underworld'
-      | 'under_ocean'
-      | 'hollow_interior'
-      | 'reservoir'
     UndoResult: {
       entry_id: number
       applied?: string[]
@@ -91840,6 +93319,8 @@ export interface components {
       | 'massacre'
       | 'relief'
       | 'crossing'
+      | 'mercy'
+      | 'first_in'
     UnitHonourView: {
       id: number
       kind: components['schemas']['UnitHonourKind']
@@ -92027,6 +93508,8 @@ export interface components {
       | 'depot'
       | 'administration'
       | 'entertainment'
+      | 'lighting'
+      | 'pest_control'
     UsageBucket: 'epoch' | 'hour' | 'day'
     UsageCall: {
       id: number
@@ -92195,6 +93678,9 @@ export interface components {
       | 'competition'
       | 'perseverance_value'
       | 'leisure'
+      | 'freedom'
+      | 'equality'
+      | 'hospitality'
     ValueHolder:
       'culture' | 'doctrine' | 'agenda' | 'personal' | 'divine' | 'community'
     ValuePoint: {
@@ -92321,6 +93807,7 @@ export interface components {
       | 'burrower'
       | 'construct'
       | 'living'
+      | 'sledge'
     VehicleFrame:
       | 'riding_mount'
       | 'pack_mount'
@@ -92568,6 +94055,8 @@ export interface components {
       | 'tower'
       | 'platform'
       | 'core'
+      | 'galley'
+      | 'sick_bay'
     VehicleSectionView: {
       section: components['schemas']['VehicleSection']
       function: components['schemas']['DesignComponentKind']
@@ -92746,7 +94235,13 @@ export interface components {
       damage_type: components['schemas']['DamageType']
     }
     VeteranGrant:
-      'land' | 'pension' | 'none' | 'membership' | 'title' | 'tax_exemption'
+      | 'land'
+      | 'pension'
+      | 'none'
+      | 'membership'
+      | 'title'
+      | 'tax_exemption'
+      | 'office'
     VeteranGrantCreateInput: {
       polity_id: number
       kind: components['schemas']['VeteranGrant']
@@ -92789,7 +94284,7 @@ export interface components {
       amount: number
       locked: string[]
     }
-    Visibility: 'obvious' | 'noticeable' | 'hidden'
+    Visibility: 'obvious' | 'noticeable' | 'hidden' | 'marked'
     VisionCreateInput: {
       mystic_id: number
       sender_id?: number | null
@@ -92806,7 +94301,13 @@ export interface components {
       vision_id: number
     }
     VisionKind:
-      'vision' | 'union' | 'voice' | 'trance' | 'dream' | 'oracle_speech'
+      | 'vision'
+      | 'union'
+      | 'voice'
+      | 'trance'
+      | 'dream'
+      | 'oracle_speech'
+      | 'sign'
     VisionView: {
       id: number
       epoch: number
@@ -92894,6 +94395,8 @@ export interface components {
       | 'loot'
       | 'change_government'
       | 'seize_route'
+      | 'secure_water'
+      | 'return_refugees'
     WarArmyInput: {
       war_id: number
       community_id: number
@@ -92938,6 +94441,8 @@ export interface components {
       | 'raid'
       | 'liberation'
       | 'punitive'
+      | 'water'
+      | 'refugees'
     WarChoice: {
       id: number
       name: string
@@ -92980,6 +94485,7 @@ export interface components {
       | 'same_front'
       | 'no_side_left'
       | 'miracle'
+      | 'mediated'
     WarImposePeaceInput: {
       war_id: number
       victor_id: number
@@ -93105,6 +94611,7 @@ export interface components {
       | 'under_water'
       | 'space'
       | 'underground'
+      | 'dimension'
     WarVictoryInput: {
       war_id: number
       victor_id: number
@@ -93138,6 +94645,7 @@ export interface components {
       | 'steam_pump'
       | 'wind_pump'
       | 'electric_pump'
+      | 'animal_wheel'
     WaterLiftDeleteInput: {
       settlement_id: number
       device: components['schemas']['WaterLift']
@@ -93424,7 +94932,7 @@ export interface components {
       release?: string[]
       hunt_id: number
     }
-    WitnessMode: 'saw' | 'heard' | 'took_part' | 'was_told'
+    WitnessMode: 'saw' | 'heard' | 'took_part' | 'was_told' | 'sensed'
     WitnessRemoveInput: {
       case_id: number
       witness_id: number
@@ -93552,6 +95060,8 @@ export interface components {
       | 'taboo'
       | 'technical'
       | 'honorific'
+      | 'slang'
+      | 'legal'
     WordRegisterInput: {
       lexeme_id: number
       word_register: components['schemas']['WordRegister']
@@ -93680,6 +95190,7 @@ export interface components {
       radiation: number
       noise: number
       light: number
+      heat: number
       blight: number
       epoch: number | null
       held: string[]
@@ -93811,6 +95322,9 @@ export interface components {
       | 'dyeworks'
       | 'scriptorium'
       | 'evaporation_works'
+      | 'paper_mill'
+      | 'printing_house'
+      | 'ropewalk'
     WorkshopOwnerInput: {
       community_id: number
       kind: components['schemas']['WorkshopKind']
@@ -93976,6 +95490,8 @@ export interface components {
       | 'drowned'
       | 'burned'
       | 'devoured'
+      | 'emptied'
+      | 'merged'
     WorldEndCause:
       | 'impact'
       | 'divine_wrath'
@@ -93987,6 +95503,9 @@ export interface components {
       | 'runaway_climate'
       | 'war'
       | 'outer_hunger'
+      | 'plague'
+      | 'runaway_making'
+      | 'structure_failure'
     WorldEndDeclareInput: {
       world_id: number
       cause: components['schemas']['WorldEndCause']
@@ -94127,6 +95646,8 @@ export interface components {
       | 'ship_cycle'
       | 'fading_god'
       | 'none'
+      | 'bioluminescence'
+      | 'made_light'
     WorldMap: {
       seed: string
       world_type: components['schemas']['WorldType']
@@ -94157,10 +95678,12 @@ export interface components {
       nights: boolean
       fire: boolean
       soil: boolean
+      sea_roads: boolean
       timber_pct: number
       food_need_pct: number
       capacity_pct: number
       ore_yield_pct: number
+      ship_pct: number
       storm_pct: number
       quake_pct: number
       flood_pct: number
@@ -94392,6 +95915,9 @@ export interface components {
       | 'hollow'
       | 'ice_shell'
       | 'methane'
+      | 'rogue'
+      | 'archipelago'
+      | 'megastructure'
     WorldTypeInfo: {
       key: string
       label: string
@@ -94447,7 +95973,7 @@ export interface components {
       timeline_total: number
       images: components['schemas']['ImageRecord'][]
     }
-    WorshipMode: 'devotion' | 'appeasement' | 'bargain'
+    WorshipMode: 'devotion' | 'appeasement' | 'bargain' | 'union' | 'kinship'
     WoundCause:
       | 'duel'
       | 'god_war'
@@ -94457,6 +95983,8 @@ export interface components {
       | 'neglect'
       | 'betrayal'
       | 'mortal_slayer'
+      | 'schism'
+      | 'outer_being'
     WoundView: {
       by: components['schemas']['NodeRef'] | null
       epoch: number
@@ -94496,6 +96024,8 @@ export interface components {
       | 'silk'
       | 'wood_slips'
       | 'electronic'
+      | 'cloth'
+      | 'potsherd'
     WritingSystem:
       | 'alphabet'
       | 'syllabary'
@@ -94567,6 +96097,8 @@ export interface components {
       | 'scent'
       | 'honey'
       | 'wax'
+      | 'shell'
+      | 'scales'
     YieldView: {
       product: string
       commodity: components['schemas']['CommodityKind'] | null
@@ -94706,6 +96238,7 @@ export interface components {
       | 'transport'
       | 'military'
       | 'research'
+      | 'port'
     ZoneShare: {
       zone: components['schemas']['ZoneKind']
       districts: number
@@ -100494,6 +102027,65 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['MapView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_deep_map_api_worlds__world_id__map_deep__stratum__get: {
+    parameters: {
+      query?: {
+        epoch?: number | null
+      }
+      header?: never
+      path: {
+        stratum: components['schemas']['UndergroundStratum']
+        world_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MapView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_below_api_below_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RegionBelow'][]
         }
       }
       default: {
@@ -146179,6 +147771,316 @@ export interface operations {
       }
     }
   }
+  action_deep_cell_create_api_actions_deep_cell_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepCellCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_cell_edit_api_actions_deep_cell_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepCellEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_cell_hold_api_actions_deep_cell_hold_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepCellHoldInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_cell_delete_api_actions_deep_cell_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepCellDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_passage_create_api_actions_deep_passage_create_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepPassageCreateInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_passage_edit_api_actions_deep_passage_edit_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepPassageEditInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_passage_hold_api_actions_deep_passage_hold_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepPassageHoldInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_passage_delete_api_actions_deep_passage_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepPassageDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_knowledge_set_api_actions_deep_knowledge_set_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepKnowledgeSetInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_deep_knowledge_delete_api_actions_deep_knowledge_delete_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeepKnowledgeDeleteInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_body_system_create_api_actions_body_system_create_post: {
     parameters: {
       query?: never
@@ -153493,6 +155395,99 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['HeroRaiseInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_mortal_shape_api_actions_mortal_shape_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MortalShapeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_region_shape_api_actions_region_shape_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegionShapeInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  action_record_shape_api_actions_record_shape_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RecordShapeInput']
       }
     }
     responses: {
@@ -188719,6 +190714,8 @@ export const accountKindValues: ReadonlyArray<
   'testimony',
   'genealogy',
   'song',
+  'travel_account',
+  'law_record',
 ]
 export const accountMediumValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AccountMedium']
@@ -188730,13 +190727,32 @@ export const accountMediumValues: ReadonlyArray<
   'record',
   'performance',
   'mind_state',
+  'marks',
 ]
 export const accountStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AccountStance']
-> = ['glorify', 'vilify', 'omit', 'neutral', 'justify', 'lament', 'mock']
+> = [
+  'glorify',
+  'vilify',
+  'omit',
+  'neutral',
+  'justify',
+  'lament',
+  'mock',
+  'warn',
+]
 export const accusationOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AccusationOutcome']
-> = ['pending', 'cleared', 'punished', 'exiled', 'killed', 'confessed', 'fled']
+> = [
+  'pending',
+  'cleared',
+  'punished',
+  'exiled',
+  'killed',
+  'confessed',
+  'fled',
+  'reconciled',
+]
 export const achievementKeyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AchievementKey']
 > = [
@@ -188861,6 +190877,14 @@ export const actKindValues: ReadonlyArray<
   'feeding_on_hosts',
   'killing_sacred_animal',
   'fixing_contests',
+  'abandoning_the_sick',
+  'breaking_hospitality',
+  'cruelty_to_animals',
+  'apologising',
+  'sheltering_strangers',
+  'laying_curses',
+  'enhancing_contestants',
+  'poison_wells',
 ]
 export const actionGroupValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ActionGroup']
@@ -189170,19 +191194,27 @@ export const afterlifeModelValues: ReadonlyArray<
   'wandering',
   'union',
   'oblivion',
+  'among_living',
 ]
 export const afterlifeStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AfterlifeState']
 > = ['wandering', 'judged', 'in_realm', 'reborn', 'consumed', 'released']
 export const ageBandValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AgeBand']
-> = ['infant', 'child', 'youth', 'adult', 'elder']
+> = ['infant', 'child', 'youth', 'adult', 'elder', 'ancient']
 export const ageCycleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AgeCycle']
-> = ['linear', 'cyclic']
+> = ['linear', 'cyclic', 'spiral']
 export const ageGradeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AgeGrade']
-> = ['children', 'youths', 'young_adults', 'junior_elders', 'senior_elders']
+> = [
+  'children',
+  'youths',
+  'young_adults',
+  'junior_elders',
+  'senior_elders',
+  'ancients',
+]
 export const ageKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AgeKind']
 > = [
@@ -189237,10 +191269,19 @@ export const aidKindValues: ReadonlyArray<
   'medicine',
   'soldiers',
   'knowledge',
+  'transport',
 ]
 export const airNeedValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AirNeed']
-> = ['oxygen', 'carbon_dioxide', 'methane', 'ammonia', 'hydrogen', 'none']
+> = [
+  'oxygen',
+  'carbon_dioxide',
+  'methane',
+  'ammonia',
+  'hydrogen',
+  'none',
+  'sulphurous',
+]
 export const allocationModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AllocationMode']
 > = [
@@ -189273,6 +191314,8 @@ export const animalRoleValues: ReadonlyArray<
   'reagent_source',
   'sport',
   'medicine',
+  'display',
+  'herding',
 ]
 export const anomalyKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AnomalyKind']
@@ -189304,6 +191347,7 @@ export const appealKindValues: ReadonlyArray<
   'fear',
   'feeling',
   'bond',
+  'tradition',
 ]
 export const arcOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArcOutcome']
@@ -189358,6 +191402,9 @@ export const arcTemplateValues: ReadonlyArray<
   'reconciliation',
   'sacrifice',
   'discovery',
+  'betrayal',
+  'friendship',
+  'legacy',
 ]
 export const archiveAccessValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArchiveAccess']
@@ -189437,6 +191484,8 @@ export const artMarketRoleValues: ReadonlyArray<
   'curator',
   'critic',
   'forger',
+  'restorer',
+  'auctioneer',
 ]
 export const artModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArtMode']
@@ -189458,6 +191507,8 @@ export const artModeValues: ReadonlyArray<
   'ritual_performance',
   'textile_image',
   'made_mind_art',
+  'tactile',
+  'mind',
 ]
 export const artworkStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArtworkStats']['kind']
@@ -189471,10 +191522,12 @@ export const assistiveAidValues: ReadonlyArray<
   'hearing_horn',
   'cane',
   'microscope',
+  'hearing_aid',
+  'tactile_script',
 ]
 export const atmosphereValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Atmosphere']
-> = ['none', 'thin', 'normal', 'dense', 'toxic']
+> = ['none', 'thin', 'normal', 'dense', 'toxic', 'steam', 'layered']
 export const attackDeliveryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AttackDelivery']
 > = [
@@ -189488,6 +191541,8 @@ export const attackDeliveryValues: ReadonlyArray<
   'spores',
   'bite',
   'sting',
+  'projectile',
+  'constriction',
 ]
 export const attackEffectValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AttackEffect']
@@ -189508,7 +191563,7 @@ export const attackEffectValues: ReadonlyArray<
 ]
 export const attackRangeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AttackRange']
-> = ['touch', 'near', 'far', 'sight']
+> = ['touch', 'near', 'far', 'sight', 'area']
 export const attendanceReasonValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AttendanceReason']
 > = [
@@ -189572,7 +191627,17 @@ export const authenticityValues: ReadonlyArray<
 > = ['genuine', 'altered', 'forged', 'generated', 'unknown']
 export const aversionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Aversion']
-> = ['fire', 'iron', 'noise', 'water', 'holy_ground', 'light', 'cold']
+> = [
+  'fire',
+  'iron',
+  'noise',
+  'water',
+  'holy_ground',
+  'light',
+  'cold',
+  'scent',
+  'true_name',
+]
 export const awakeningTriggerValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AwakeningTrigger']
 > = [
@@ -189582,6 +191647,8 @@ export const awakeningTriggerValues: ReadonlyArray<
   'theft',
   'sky_sign',
   'summons',
+  'kin_harmed',
+  'season',
 ]
 export const backlashKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BacklashKind']
@@ -189591,10 +191658,26 @@ export const backupTakenEventKindValues: ReadonlyArray<
 > = ['backup.taken']
 export const bargainGainValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BargainGain']
-> = ['essence', 'power', 'might', 'knowledge', 'longevity']
+> = [
+  'essence',
+  'power',
+  'might',
+  'knowledge',
+  'longevity',
+  'restored_life',
+  'protection',
+]
 export const bargainPriceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BargainPrice']
-> = ['world_sanity', 'domain', 'true_name', 'worshippers', 'descendants']
+> = [
+  'world_sanity',
+  'domain',
+  'true_name',
+  'worshippers',
+  'descendants',
+  'memories',
+  'years',
+]
 export const batchDeepenLogEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BatchDeepenLogEvent']['kind']
 > = ['batch_deepen.log']
@@ -189622,6 +191705,7 @@ export const battlePhaseValues: ReadonlyArray<
   'pursuit',
   'salvage',
   'aftermath',
+  'parley',
 ]
 export const battlefieldFeatureValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BattlefieldFeature']
@@ -189642,6 +191726,8 @@ export const beastTemperValues: ReadonlyArray<
   'wounded',
   'brooding',
   'cowed',
+  'migrating',
+  'fleeing',
 ]
 export const beingAgendaValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BeingAgenda']
@@ -189703,10 +191789,12 @@ export const beliefSourceValues: ReadonlyArray<
   'intrusion',
   'surveillance',
   'made_mind_report',
+  'dream',
+  'omen',
 ]
 export const beliefStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BeliefStance']
-> = ['yield', 'resist', 'embrace']
+> = ['yield', 'resist', 'embrace', 'bargain']
 export const biasedDecisionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BiasedDecision']
 > = [
@@ -189738,10 +191826,11 @@ export const bindingKindValues: ReadonlyArray<
   'realm',
   'network',
   'line',
+  'name',
 ]
 export const bindingNeedValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BindingNeed']
-> = ['none', 'water', 'heat', 'air', 'offerings', 'belief']
+> = ['none', 'water', 'heat', 'air', 'offerings', 'belief', 'place', 'name']
 export const biochemistryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Biochemistry']
 > = [
@@ -189753,6 +191842,7 @@ export const biochemistryValues: ReadonlyArray<
   'spirit',
   'carbon_methane',
   'plasma',
+  'metal',
 ]
 export const biologyVariantValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BiologyVariant']
@@ -189773,6 +191863,9 @@ export const biologyVariantValues: ReadonlyArray<
   'colonial',
   'energy',
   'symbiotic',
+  'amphibious',
+  'metallic',
+  'liquid',
 ]
 export const biomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Biome']
@@ -189822,6 +191915,8 @@ export const bodyFunctionValues: ReadonlyArray<
   'horn',
   'tail',
   'presence',
+  'swim',
+  'climb',
 ]
 export const bodyPartValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BodyPart']
@@ -189880,6 +191975,7 @@ export const bodyPartValues: ReadonlyArray<
   'tentacles',
   'carapace',
   'beak',
+  'pouch',
 ]
 export const bodyPlanValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BodyPlan']
@@ -189900,6 +191996,8 @@ export const bodyPlanValues: ReadonlyArray<
   'centauroid',
   'radial',
   'colonial',
+  'hexapod',
+  'rooted',
 ]
 export const bodyReadingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BodyReading']
@@ -189919,6 +192017,7 @@ export const bodySystemValues: ReadonlyArray<
   'reproduction',
   'structure',
   'none',
+  'excretion',
 ]
 export const bondCategoryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BondCategory']
@@ -190060,6 +192159,7 @@ export const builderKindValues: ReadonlyArray<
   'god',
   'company',
   'made_mind',
+  'household',
 ]
 export const buildingFormValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BuildingForm']
@@ -190091,6 +192191,8 @@ export const buildingFormValues: ReadonlyArray<
   'modular',
   'grown',
   'carved',
+  'stilt',
+  'vault',
 ]
 export const buildingGradeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['BuildingGrade']
@@ -190144,6 +192246,8 @@ export const capacityValues: ReadonlyArray<
   'fertility',
   'endurance',
   'perception',
+  'stealth',
+  'labour',
 ]
 export const capacityUnitValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CapacityUnit']
@@ -190175,6 +192279,7 @@ export const captiveFateValues: ReadonlyArray<
   'released',
   'executed',
   'recruited',
+  'adopted',
 ]
 export const captiveStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CaptiveStatus']
@@ -190189,6 +192294,7 @@ export const captiveStatusValues: ReadonlyArray<
   'ward',
   'paroled',
   'married_in',
+  'adopted',
 ]
 export const cardOrderValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CardOrder']
@@ -190209,6 +192315,8 @@ export const careerPathValues: ReadonlyArray<
   'service',
   'arts',
   'settle',
+  'healing',
+  'wilds',
 ]
 export const carrierKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CarrierKind']
@@ -190228,6 +192336,7 @@ export const carrierKindValues: ReadonlyArray<
   'living',
   'rite',
   'network',
+  'sledge',
 ]
 export const carrionRestValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CarrionRest']
@@ -190240,6 +192349,7 @@ export const carrionRestValues: ReadonlyArray<
   'buried',
   'burned',
   'sunk',
+  'scavenged',
 ]
 export const cascadeOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CascadeOutcome']
@@ -190249,7 +192359,7 @@ export const caseStageValues: ReadonlyArray<
 > = ['investigation', 'trial', 'closed']
 export const casualtyFateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CasualtyFate']
-> = ['killed', 'wounded', 'maimed', 'captured', 'missing', 'deserted']
+> = ['killed', 'wounded', 'maimed', 'captured', 'missing', 'deserted', 'sick']
 export const casusBelliKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CasusBelliKind']
 > = [
@@ -190263,6 +192373,8 @@ export const casusBelliKindValues: ReadonlyArray<
   'debt_default',
   'resource_need',
   'conquest',
+  'broken_witnessed_pact',
+  'harbouring_fugitives',
 ]
 export const catchGroundValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CatchGround']
@@ -190275,6 +192387,8 @@ export const catchGroundValues: ReadonlyArray<
   'shore_gathering',
   'diving',
   'fish_ponds',
+  'egg_gathering',
+  'insect_gathering',
 ]
 export const catchRightValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CatchRight']
@@ -190287,7 +192401,7 @@ export const celestialStatsKindValues: ReadonlyArray<
 > = ['celestial']
 export const centralityRankValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CentralityRank']
-> = ['daily', 'weekly', 'seasonal', 'rare', 'metropolitan']
+> = ['daily', 'weekly', 'seasonal', 'rare', 'metropolitan', 'regional']
 export const challengeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChallengeKind']
 > = [
@@ -190303,10 +192417,12 @@ export const challengeKindValues: ReadonlyArray<
   'runaway',
   'revelation',
   'migration_wave',
+  'long_season',
+  'succession_crisis',
 ]
 export const challengeResponseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChallengeResponse']
-> = ['stagnation', 'response', 'collapse']
+> = ['stagnation', 'response', 'collapse', 'transformation']
 export const changeSignValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChangeSign']
 > = ['season', 'sky_event', 'emotion', 'word', 'none']
@@ -190326,7 +192442,16 @@ export const charmKindValues: ReadonlyArray<
 > = ['love', 'obedience', 'devotion']
 export const charmPowerValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CharmPower']
-> = ['protection', 'fertility', 'luck', 'healing', 'love', 'travel']
+> = [
+  'protection',
+  'fertility',
+  'luck',
+  'healing',
+  'love',
+  'travel',
+  'concealment',
+  'courage',
+]
 export const chatAttitudeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChatAttitude']
 > = ['loyal', 'distant', 'rebellious', 'afraid', 'grateful', 'mocking']
@@ -190345,6 +192470,8 @@ export const chemicalProductValues: ReadonlyArray<
   'glaze',
   'preservative',
   'acid',
+  'solvent',
+  'adhesive',
 ]
 export const chosenFavourValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChosenFavour']
@@ -190451,6 +192578,8 @@ export const circleKindValues: ReadonlyArray<
   'craft_circle',
   'sport_club',
   'gaming_circle',
+  'reading_circle',
+  'mutual_aid',
 ]
 export const circulationBandValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CirculationBand']
@@ -190465,6 +192594,8 @@ export const circulationBandValues: ReadonlyArray<
   'subtropical_calm',
   'banded',
   'super_rotation',
+  'monsoon',
+  'mountain_wind',
 ]
 export const civicServiceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CivicService']
@@ -190505,13 +192636,14 @@ export const claimBasisValues: ReadonlyArray<
   'de_jure',
   'election',
   'adoption',
+  'prophecy',
 ]
 export const claimKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClaimKind']
-> = ['true', 'shared', 'false', 'inflated']
+> = ['true', 'shared', 'false', 'inflated', 'borrowed']
 export const claimStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClaimStatus']
-> = ['standing', 'verified', 'exposed', 'disputed']
+> = ['standing', 'verified', 'exposed', 'disputed', 'forgotten']
 export const claudeAuthValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClaudeAuth']
 > = ['token', 'login']
@@ -190545,6 +192677,9 @@ export const clauseKindValues: ReadonlyArray<
   'no_plague_powers',
   'no_designed_disease',
   'mass_weapon_limit',
+  'return_of_refugees',
+  'shared_water',
+  'captive_exchange',
 ]
 export const clergyFunctionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClergyFunction']
@@ -190563,7 +192698,16 @@ export const clergyFunctionValues: ReadonlyArray<
 ]
 export const clientRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClientRole']
-> = ['household', 'retainer', 'official', 'commander', 'broker', 'artist']
+> = [
+  'household',
+  'retainer',
+  'official',
+  'commander',
+  'broker',
+  'artist',
+  'informant',
+  'scholar',
+]
 export const climateEraValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClimateEra']
 > = [
@@ -190599,6 +192743,7 @@ export const clockKindValues: ReadonlyArray<
   'astronomical',
   'chronometer',
   'electronic',
+  'fire_clock',
 ]
 export const clubKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClubKind']
@@ -190609,6 +192754,8 @@ export const clubKindValues: ReadonlyArray<
   'athletics',
   'animal_contest',
   'mind_games',
+  'water_sport',
+  'hunt',
 ]
 export const clusterKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClusterKind']
@@ -190641,6 +192788,8 @@ export const cohortConditionValues: ReadonlyArray<
   'maimed',
   'orphaned',
   'displaced',
+  'indebted',
+  'gifted',
 ]
 export const collectionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CollectionKind']
@@ -190719,6 +192868,9 @@ export const collectiveActKindValues: ReadonlyArray<
   'demonstration',
   'boycott',
   'exodus',
+  'vigil',
+  'occupation',
+  'petition',
 ]
 export const collectiveTriggerValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CollectiveTrigger']
@@ -190739,6 +192891,8 @@ export const collectiveTriggerValues: ReadonlyArray<
   'victory',
   'great_funeral',
   'election',
+  'price_rise',
+  'arrest',
 ]
 export const colourFocusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ColourFocus']
@@ -190757,10 +192911,19 @@ export const colourFocusValues: ReadonlyArray<
 ]
 export const commandAreaValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CommandArea']
-> = ['fire', 'shock', 'manoeuvre', 'siege', 'logistics']
+> = ['fire', 'shock', 'manoeuvre', 'siege', 'logistics', 'intelligence']
 export const commandTokenValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CommandToken']
-> = ['none', 'item', 'word', 'bloodline', 'office', 'network_key', 'true_name']
+> = [
+  'none',
+  'item',
+  'word',
+  'bloodline',
+  'office',
+  'network_key',
+  'true_name',
+  'gesture',
+]
 export const commanderTraitValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CommanderTrait']
 > = [
@@ -190790,6 +192953,9 @@ export const commanderTraitValues: ReadonlyArray<
   'disciplinarian',
   'signals_commander',
   'night_fighter',
+  'jungle_fighter',
+  'cold_fighter',
+  'river_crosser',
 ]
 export const commodityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Commodity']
@@ -190843,6 +193009,10 @@ export const commodityKindValues: ReadonlyArray<
   'wax',
   'pottery',
   'books',
+  'paper',
+  'glassware',
+  'soap',
+  'ink',
 ]
 export const commonsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CommonsKind']
@@ -190856,10 +193026,21 @@ export const commonsKindValues: ReadonlyArray<
   'spectrum',
   'orbits',
   'source_ground',
+  'turbary',
+  'foraging_ground',
+  'shore',
 ]
 export const commonsRuleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CommonsRule']
-> = ['open', 'customary', 'council', 'enclosed', 'state', 'licensed']
+> = [
+  'open',
+  'customary',
+  'council',
+  'enclosed',
+  'state',
+  'licensed',
+  'rotational',
+]
 export const communityRelationLabelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CommunityRelationLabel']
 > = [
@@ -190940,6 +193121,9 @@ export const conditionKindValues: ReadonlyArray<
   'paralysis',
   'infertility',
   'chronic_pain',
+  'seizures',
+  'lasting_fear',
+  'breathlessness',
 ]
 export const consciousnessValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Consciousness']
@@ -190954,6 +193138,7 @@ export const constructionStateValues: ReadonlyArray<
   'ruined',
   'abandoned',
   'dismantled',
+  'restored',
 ]
 export const constructionStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ConstructionStatus']
@@ -190971,6 +193156,8 @@ export const containerKindValues: ReadonlyArray<
   'basket',
   'skin',
   'tank',
+  'cage',
+  'net_bag',
 ]
 export const contestEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ContestEnd']
@@ -190987,6 +193174,8 @@ export const contestKindValues: ReadonlyArray<
   'storytelling',
   'race',
   'craft_contest',
+  'wrestling',
+  'hunt',
 ]
 export const contestStakeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ContestStake']
@@ -191000,6 +193189,8 @@ export const contestStakeValues: ReadonlyArray<
   'land',
   'freedom',
   'knowledge',
+  'title',
+  'rights',
 ]
 export const contextBlockKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ContextBlockKind']
@@ -191042,6 +193233,7 @@ export const convoyStatusValues: ReadonlyArray<
   'lost',
   'stranded',
   'quarantined',
+  'turned_back',
 ]
 export const cookingMethodValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CookingMethod']
@@ -191079,6 +193271,8 @@ export const cookingMethodValues: ReadonlyArray<
   'aged',
   'extruded',
   'pressure_cooked',
+  'earth_oven',
+  'parched',
 ]
 export const coopPurposeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CoopPurpose']
@@ -191091,6 +193285,8 @@ export const coopPurposeValues: ReadonlyArray<
   'credit',
   'granary',
   'herding',
+  'school',
+  'housing',
 ]
 export const cosmicBeingStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmicBeingStats']['kind']
@@ -191104,6 +193300,9 @@ export const cosmicFeatureKindValues: ReadonlyArray<
   'rogue_world',
   'gravity_well',
   'wandering_star',
+  'nebula',
+  'debris_ring',
+  'dark_body',
 ]
 export const cosmicOfficeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CosmicOffice']
@@ -191148,6 +193347,9 @@ export const councilMotionValues: ReadonlyArray<
   'regulate_made_minds',
   'regulate_powers',
   'regulate_living_craft',
+  'regulate_curses',
+  'open_inquiry',
+  'amnesty',
 ]
 export const councilSeatValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CouncilSeat']
@@ -191164,6 +193366,8 @@ export const councilTaskValues: ReadonlyArray<
   'oversee_works',
   'promote_trade',
   'advance_learning',
+  'public_health',
+  'secure_borders',
 ]
 export const councilVoteValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CouncilVote']
@@ -191178,6 +193382,7 @@ export const courtLevelValues: ReadonlyArray<
   'guild',
   'military',
   'consular',
+  'appellate',
 ]
 export const courtPositionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CourtPosition']
@@ -191190,6 +193395,8 @@ export const courtPositionValues: ReadonlyArray<
   'master_of_revels',
   'jester',
   'seer',
+  'taster',
+  'interpreter',
 ]
 export const covenantDutyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CovenantDuty']
@@ -191228,7 +193435,7 @@ export const creatorHintKindValues: ReadonlyArray<
 ]
 export const creatorMoodAxisValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreatorMoodAxis']
-> = ['contentment', 'anger', 'interest', 'loneliness']
+> = ['contentment', 'anger', 'interest', 'loneliness', 'sorrow']
 export const creatorMoodLabelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreatorMoodLabel']
 > = ['angry', 'distant', 'lonely', 'content', 'uneasy', 'serene']
@@ -191246,6 +193453,8 @@ export const creatorPassionValues: ReadonlyArray<
   'mercy',
   'creation',
   'silence',
+  'freedom',
+  'memory',
 ]
 export const creatorPromiseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreatorPromise']
@@ -191270,6 +193479,8 @@ export const creatorSignKindValues: ReadonlyArray<
   'test',
   'reward',
   'covenant_offer',
+  'rebuke',
+  'invitation',
 ]
 export const creatorStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreatorStance']
@@ -191285,10 +193496,13 @@ export const creatureDeedValues: ReadonlyArray<
   'wreck_works',
   'wander',
   'rest',
+  'carry_messages',
+  'teach',
+  'trade',
 ]
 export const creatureLessonValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreatureLesson']
-> = ['reward', 'punish']
+> = ['reward', 'punish', 'warn']
 export const creatureTraitValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreatureTrait']
 > = [
@@ -191338,7 +193552,15 @@ export const credentialKindValues: ReadonlyArray<
 ]
 export const creditStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CreditState']
-> = ['normal', 'strained', 'default', 'restructuring', 'rescued', 'repudiated']
+> = [
+  'normal',
+  'strained',
+  'default',
+  'restructuring',
+  'rescued',
+  'repudiated',
+  'frozen',
+]
 export const crewStationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrewStation']
 > = [
@@ -191432,10 +193654,12 @@ export const crimeKindValues: ReadonlyArray<
   'impersonation',
   'mind_compulsion',
   'fixing_contests',
+  'enhancing_contestants',
+  'neglect',
 ]
 export const crimeStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrimeStance']
-> = ['suppress', 'co_opt', 'tolerate', 'license']
+> = ['suppress', 'co_opt', 'tolerate', 'license', 'integrate']
 export const crisisDemandValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrisisDemand']
 > = [
@@ -191446,19 +193670,21 @@ export const crisisDemandValues: ReadonlyArray<
   'hand_over',
   'disarm',
   'open_trade',
+  'apology',
+  'release_captives',
 ]
 export const crisisSideValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrisisSide']
 > = ['demander', 'target']
 export const crisisStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrisisState']
-> = ['escalating', 'backed_down', 'conceded', 'war', 'mediated']
+> = ['escalating', 'backed_down', 'conceded', 'war', 'mediated', 'frozen']
 export const criticalityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Criticality']
 > = ['critical', 'major', 'minor']
 export const crowdFeelingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CrowdFeeling']
-> = ['anger', 'fear', 'fervour', 'grief', 'hope']
+> = ['anger', 'fear', 'fervour', 'grief', 'hope', 'joy', 'solidarity']
 export const cultStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CultStats']['kind']
 > = ['cult']
@@ -191493,6 +193719,8 @@ export const cureKindValues: ReadonlyArray<
   'symbiont',
   'transfer',
   'augment',
+  'release',
+  'site',
 ]
 export const cureSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CureSource']
@@ -191521,6 +193749,8 @@ export const curseKindValues: ReadonlyArray<
   'compulsion',
   'aging',
   'exposure',
+  'isolation',
+  'weakness',
 ]
 export const customCatalogValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CustomCatalog']
@@ -191574,6 +193804,8 @@ export const damageTypeValues: ReadonlyArray<
   'sonic',
   'psychic',
   'asphyxia',
+  'soul',
+  'pressure',
 ]
 export const dangerHarmValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DangerHarm']
@@ -191667,10 +193899,14 @@ export const deathCauseValues: ReadonlyArray<
   'bombardment',
   'drowning',
   'sport',
+  'animal',
+  'crowd',
+  'medical',
+  'soul_loss',
 ]
 export const deathReadingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DeathReading']
-> = ['glorious', 'honourable', 'plain', 'shameful', 'cursed']
+> = ['glorious', 'honourable', 'plain', 'shameful', 'cursed', 'pitied']
 export const debtRemedyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DebtRemedy']
 > = ['bondage', 'prison', 'jubilee']
@@ -191708,6 +193944,15 @@ export const decisionRuleValues: ReadonlyArray<
 export const decreeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DecreeKind']
 > = ['war', 'peace', 'alliance', 'marriage', 'trade']
+export const deepPassageKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DeepPassageKind']
+> = ['level', 'vertical', 'opening']
+export const deepPassageOriginValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DeepPassageOrigin']
+> = ['natural', 'dug', 'breach', 'divine']
+export const deepPassageStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DeepPassageState']
+> = ['digging', 'open', 'flooded', 'collapsed', 'sealed']
 export const deepTimeStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DeepTimeState']
 > = ['running', 'done', 'stopped']
@@ -191721,6 +193966,8 @@ export const defenderActionValues: ReadonlyArray<
   'flood_approaches',
   'scorched_earth',
   'expel_mouths',
+  'burn_works',
+  'evacuate_by_sea',
 ]
 export const deferredStepStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DeferredStepStatus']
@@ -191783,6 +194030,7 @@ export const dietValues: ReadonlyArray<
   'decomposer',
   'chemosynthetic',
   'energy',
+  'insectivore',
 ]
 export const dimensionElementValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DimensionElement']
@@ -191896,6 +194144,8 @@ export const dispatchContentValues: ReadonlyArray<
   'intelligence',
   'order',
   'warning',
+  'condolence',
+  'congratulation',
 ]
 export const dispatchStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DispatchState']
@@ -191907,6 +194157,7 @@ export const dispatchStateValues: ReadonlyArray<
   'delayed',
   'forged',
   'misread',
+  'refused',
 ]
 export const disputeOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DisputeOutcome']
@@ -191949,6 +194200,9 @@ export const districtKindValues: ReadonlyArray<
   'arcology',
   'camp',
   'lazaretto',
+  'pilgrim_quarter',
+  'caravan_quarter',
+  'floating',
 ]
 export const divinationKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivinationKind']
@@ -191962,6 +194216,8 @@ export const divinationKindValues: ReadonlyArray<
   'scrying',
   'spirit_consultation',
   'earth_signs',
+  'numerology',
+  'body_reading',
 ]
 export const divinationQuestionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivinationQuestion']
@@ -191974,6 +194230,8 @@ export const divinationQuestionValues: ReadonlyArray<
   'voyage',
   'founding',
   'illness',
+  'succession',
+  'lost_things',
 ]
 export const divinationValidityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivinationValidity']
@@ -192007,7 +194265,16 @@ export const divineObjectValues: ReadonlyArray<
 ]
 export const divineScaleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivineScale']
-> = ['order', 'productivity', 'heat', 'growth', 'fortune', 'magic']
+> = [
+  'order',
+  'productivity',
+  'heat',
+  'growth',
+  'fortune',
+  'magic',
+  'health',
+  'peace',
+]
 export const divineScopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivineScope']
 > = ['person', 'community', 'region', 'world', 'system', 'dimension']
@@ -192055,6 +194322,8 @@ export const divineWoundKindValues: ReadonlyArray<
   'bound',
   'split_aspect',
   'forgotten_name',
+  'desecrated_seat',
+  'split_worship',
 ]
 export const domainValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Domain']
@@ -192177,7 +194446,16 @@ export const domainHookValues: ReadonlyArray<
 ]
 export const domesticationStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DomesticationStage']
-> = ['wild', 'commensal', 'tamed', 'herded', 'domesticated', 'breed', 'feral']
+> = [
+  'wild',
+  'commensal',
+  'tamed',
+  'herded',
+  'domesticated',
+  'breed',
+  'feral',
+  'captive',
+]
 export const doomItemValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DoomItem']
 > = [
@@ -192209,10 +194487,19 @@ export const doomItemValues: ReadonlyArray<
 ]
 export const dormancyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Dormancy']
-> = ['none', 'hibernation', 'aestivation', 'torpor', 'cryptobiosis']
+> = ['none', 'hibernation', 'aestivation', 'torpor', 'cryptobiosis', 'diapause']
 export const dreamKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DreamKind']
-> = ['ordinary', 'nightmare', 'longing', 'prophetic', 'visitation', 'shared']
+> = [
+  'ordinary',
+  'nightmare',
+  'longing',
+  'prophetic',
+  'visitation',
+  'shared',
+  'lucid',
+  'memory',
+]
 export const dreamReadingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DreamReading']
 > = [
@@ -192245,7 +194532,7 @@ export const driftCauseValues: ReadonlyArray<
 ]
 export const duelContextValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DuelContext']
-> = ['war', 'honour', 'trial', 'champion', 'god', 'ritual']
+> = ['war', 'honour', 'trial', 'champion', 'god', 'ritual', 'sport']
 export const duelEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DuelEnd']
 > = [
@@ -192257,16 +194544,17 @@ export const duelEndValues: ReadonlyArray<
   'unconscious',
   'first_wound',
   'ring_out',
+  'stopped',
 ]
 export const dwellingTenureValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DwellingTenure']
 > = ['owned', 'rented', 'granted', 'squatted']
 export const echelonLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EchelonLevel']
-> = ['army_group', 'army', 'corps', 'division', 'brigade']
+> = ['army_group', 'army', 'corps', 'division', 'brigade', 'detachment']
 export const echelonOrderValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EchelonOrder']
-> = ['attack', 'manoeuvre', 'resupply', 'hold', 'standing']
+> = ['attack', 'manoeuvre', 'resupply', 'hold', 'standing', 'screen']
 export const edgeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EdgeKind']
 > = ['modifier', 'rule_switch', 'flow', 'trigger']
@@ -192307,6 +194595,10 @@ export const emotionValues: ReadonlyArray<
   'curiosity',
   'compassion',
   'contempt',
+  'trust',
+  'anticipation',
+  'admiration',
+  'embarrassment',
 ]
 export const encounterEffectValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EncounterEffect']
@@ -192591,7 +194883,15 @@ export const entityTypeValues: ReadonlyArray<
 ]
 export const envoyFateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EnvoyFate']
-> = ['received', 'insulted', 'imprisoned', 'killed', 'expelled', 'defected']
+> = [
+  'received',
+  'insulted',
+  'imprisoned',
+  'killed',
+  'expelled',
+  'defected',
+  'honoured',
+]
 export const epicWrittenEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EpicWrittenEvent']['kind']
 > = ['epic.written']
@@ -192826,6 +195126,8 @@ export const estatePrivilegeValues: ReadonlyArray<
   'judicial_immunity',
   'reserved_offices',
   'land_holding',
+  'service_exemption',
+  'dress',
 ]
 export const ethicalStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EthicalStance']
@@ -192925,6 +195227,8 @@ export const evidenceKindValues: ReadonlyArray<
   'magic',
   'expert',
   'hearsay',
+  'record',
+  'body',
 ]
 export const evolvedTraitValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EvolvedTrait']
@@ -192944,6 +195248,9 @@ export const evolvedTraitValues: ReadonlyArray<
   'disease_resistance',
   'docility',
   'longevity',
+  'strength',
+  'parental_care',
+  'social_learning',
 ]
 export const excavationFindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ExcavationFind']
@@ -193043,6 +195350,7 @@ export const extractionKindValues: ReadonlyArray<
   'salvage',
   'living_harvest',
   'distillation',
+  'evaporating',
 ]
 export const facetValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Facet']
@@ -193081,6 +195389,8 @@ export const facetValues: ReadonlyArray<
   'humour',
   'sense_of_duty',
   'greed',
+  'forgiveness',
+  'adaptability',
 ]
 export const facetGroupValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FacetGroup']
@@ -193151,6 +195461,8 @@ export const factionGoalKindValues: ReadonlyArray<
   'gain_privilege',
   'win_office',
   'ruin_rival',
+  'protect_members',
+  'found_settlement',
 ]
 export const factionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FactionKind']
@@ -193192,6 +195504,8 @@ export const factionKindValues: ReadonlyArray<
   'worker_body',
   'street_gang',
   'trafficking_ring',
+  'fence_network',
+  'counterfeiting_ring',
 ]
 export const factionRankValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FactionRank']
@@ -193215,6 +195529,8 @@ export const fanaticismKindValues: ReadonlyArray<
   'book_burning',
   'persecution',
   'millenarian_flight',
+  'charity',
+  'pilgrim_zeal',
 ]
 export const fandomLineValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FandomLine']
@@ -193246,6 +195562,8 @@ export const favourOriginValues: ReadonlyArray<
   'relief',
   'hospitality',
   'ransom',
+  'healing',
+  'teaching',
 ]
 export const fearKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FearKind']
@@ -193274,7 +195592,7 @@ export const feedCategoryValues: ReadonlyArray<
 ]
 export const fermentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FermentKind']
-> = ['yeast', 'starter', 'mould', 'lactic', 'vinegar']
+> = ['yeast', 'starter', 'mould', 'lactic', 'vinegar', 'alkaline', 'wild']
 export const fertilityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Fertility']
 > = ['sterile', 'breeds_true', 'breeds_wild', 'needs_maker', 'crosses_wild']
@@ -193294,6 +195612,7 @@ export const feudStatusValues: ReadonlyArray<
   'settled',
   'outlawed',
   'extinguished',
+  'dormant',
 ]
 export const fieldAgreementKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FieldAgreementKind']
@@ -193304,6 +195623,7 @@ export const fieldAgreementKindValues: ReadonlyArray<
   'exchange',
   'safe_conduct',
   'fraternisation',
+  'burial_truce',
 ]
 export const fieldAgreementStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FieldAgreementState']
@@ -193357,16 +195677,28 @@ export const foreignGodStatusValues: ReadonlyArray<
 > = ['awake', 'asleep', 'defeated', 'dead']
 export const foresightSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ForesightSource']
-> = ['power', 'divination', 'god', 'made_oracle']
+> = ['power', 'divination', 'god', 'made_oracle', 'dream']
 export const foresightStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ForesightStatus']
 > = ['pending', 'fulfilled', 'failed', 'clouded']
 export const forgeryKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ForgeryKind']
-> = ['artwork', 'relic', 'document', 'brand', 'coin', 'lineage', 'seal']
+> = [
+  'artwork',
+  'relic',
+  'document',
+  'brand',
+  'coin',
+  'lineage',
+  'seal',
+  'identity',
+]
 export const forgeryStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ForgeryStatus']
 > = ['hidden', 'exposed']
+export const forgetScopeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ForgetScope']
+> = ['recent', 'person', 'skill', 'all']
 export const formationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Formation']
 > = [
@@ -193382,6 +195714,7 @@ export const formationValues: ReadonlyArray<
   'convoy',
   'screen',
   'layered',
+  'circle',
 ]
 export const formationZoneValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FormationZone']
@@ -193406,6 +195739,8 @@ export const formativeKindValues: ReadonlyArray<
   'liberation',
   'schism',
   'long_season',
+  'peace',
+  'persecution',
 ]
 export const fortuneLawValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FortuneLaw']
@@ -193429,7 +195764,16 @@ export const fortuneSourceKindValues: ReadonlyArray<
 ]
 export const fossilReadingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FossilReading']
-> = ['unread', 'legend', 'relic', 'deep_time', 'material', 'medicine']
+> = [
+  'unread',
+  'legend',
+  'relic',
+  'deep_time',
+  'material',
+  'medicine',
+  'sacred',
+  'omen',
+]
 export const fossilSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FossilSource']
 > = [
@@ -193440,10 +195784,21 @@ export const fossilSourceValues: ReadonlyArray<
   'extinct_people',
   'god',
   'buried_dead',
+  'made',
+  'ancestor',
 ]
 export const fugitiveKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FugitiveKind']
-> = ['outlaw', 'accused', 'defector', 'runaway', 'deserter', 'heretic']
+> = [
+  'outlaw',
+  'accused',
+  'defector',
+  'runaway',
+  'deserter',
+  'heretic',
+  'escaped_captive',
+  'debtor',
+]
 export const funeralCustomValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FuneralCustom']
 > = [
@@ -193460,6 +195815,8 @@ export const funeralCustomValues: ReadonlyArray<
   'none',
   'mummification',
   'secondary_burial',
+  'return_to_soil',
+  'memorial_only',
 ]
 export const galacticEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GalacticEventKind']
@@ -193568,6 +195925,8 @@ export const gardenKindValues: ReadonlyArray<
   'cemetery',
   'botanic',
   'menagerie',
+  'kitchen_garden',
+  'roof_garden',
 ]
 export const gatheringKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GatheringKind']
@@ -193608,6 +195967,8 @@ export const gatheringKindValues: ReadonlyArray<
   'sport_match',
   'commemoration',
   'muster',
+  'reunion',
+  'gift_exchange',
 ]
 export const gatheringOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GatheringOutcome']
@@ -193628,13 +195989,15 @@ export const gearValues: ReadonlyArray<
   'trawls',
   'poison',
   'hunting_animals',
+  'dredges',
+  'decoys',
 ]
 export const geasLayerValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GeasLayer']
-> = ['seer', 'god', 'rite', 'kin', 'self']
+> = ['seer', 'god', 'rite', 'kin', 'self', 'law']
 export const geasModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GeasMode']
-> = ['taboo', 'duty']
+> = ['taboo', 'duty', 'condition']
 export const geasStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GeasState']
 > = ['kept', 'broken']
@@ -193716,6 +196079,9 @@ export const geniusLocusKindValues: ReadonlyArray<
   'sea',
   'ruin',
   'battlefield',
+  'marsh',
+  'desert',
+  'glacier',
 ]
 export const giantMigrationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GiantMigration']
@@ -193736,6 +196102,9 @@ export const giftOccasionValues: ReadonlyArray<
   'amends',
   'patronage',
   'hospitality',
+  'farewell',
+  'homecoming',
+  'initiation',
 ]
 export const giftStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GiftStance']
@@ -193751,6 +196120,7 @@ export const giftStateValues: ReadonlyArray<
   'exceeded',
   'passed_on',
   'released',
+  'hoarded',
 ]
 export const giftedAttitudeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GiftedAttitude']
@@ -193945,13 +196315,32 @@ export const greatFieldValues: ReadonlyArray<
 ]
 export const griefStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GriefStage']
-> = ['shock', 'anger', 'mourning', 'yearning', 'acceptance', 'complicated']
+> = [
+  'shock',
+  'anger',
+  'bargaining',
+  'mourning',
+  'yearning',
+  'acceptance',
+  'complicated',
+]
 export const groupFormValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GroupForm']
 > = ['pack', 'herd', 'colony', 'hive', 'troop', 'flock', 'solitary_range']
 export const groupKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GroupKind']
-> = ['household', 'court', 'circle', 'warband', 'crew', 'cell', 'band', 'team']
+> = [
+  'household',
+  'court',
+  'circle',
+  'warband',
+  'crew',
+  'cell',
+  'band',
+  'team',
+  'congregation',
+  'school',
+]
 export const growthCycleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['GrowthCycle']
 > = ['annual', 'perennial', 'tree']
@@ -193974,7 +196363,17 @@ export const guestRoleValues: ReadonlyArray<
 ]
 export const habitatValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Habitat']
-> = ['land', 'water', 'sky', 'deep', 'void', 'magma', 'ethereal']
+> = [
+  'land',
+  'water',
+  'sky',
+  'deep',
+  'void',
+  'magma',
+  'ethereal',
+  'ice',
+  'shore',
+]
 export const handednessValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Handedness']
 > = ['right', 'left', 'both']
@@ -194010,10 +196409,16 @@ export const harmCauseValues: ReadonlyArray<
   'childbirth',
   'crime',
   'sport',
+  'animal',
+  'crowd',
+  'medical',
 ]
 export const hazardSeasonValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HazardSeason']
 > = ['coldest', 'wettest', 'hottest', 'warming', 'driest']
+export const healthStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['HealthStatus']
+> = ['ok', 'warning', 'bad', 'degraded']
 export const heightClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HeightClass']
 > = ['short', 'average', 'tall', 'giant']
@@ -194229,6 +196634,8 @@ export const heroquestBoonValues: ReadonlyArray<
   'favour',
   'true_name',
   'title',
+  'knowledge',
+  'healing',
 ]
 export const heroquestStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HeroquestState']
@@ -194250,7 +196657,14 @@ export const hiddenTruthKindValues: ReadonlyArray<
 ]
 export const hoardKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HoardKind']
-> = ['cabinet', 'temple_treasury', 'royal_collection', 'museum', 'trophy_hall']
+> = [
+  'cabinet',
+  'temple_treasury',
+  'royal_collection',
+  'museum',
+  'trophy_hall',
+  'library',
+]
 export const hoardStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HoardState']
 > = ['hidden', 'lost', 'found', 'spent']
@@ -194268,10 +196682,12 @@ export const holdingKindValues: ReadonlyArray<
   'network',
   'shares',
   'lines',
+  'school',
+  'hospital',
 ]
 export const honourModelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HonourModel']
-> = ['dignity', 'honour', 'face', 'none']
+> = ['dignity', 'honour', 'face', 'none', 'purity']
 export const hookDemandValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HookDemand']
 > = [
@@ -194283,10 +196699,20 @@ export const hookDemandValues: ReadonlyArray<
   'appointment',
   'silence',
   'payment',
+  'release',
+  'information',
 ]
 export const hookSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HookSource']
-> = ['secret', 'debt', 'favour', 'hostage', 'true_name']
+> = [
+  'secret',
+  'debt',
+  'favour',
+  'hostage',
+  'true_name',
+  'dependence',
+  'affection',
+]
 export const hookStrengthValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HookStrength']
 > = ['weak', 'strong']
@@ -194356,6 +196782,7 @@ export const householdFormValues: ReadonlyArray<
   'institutional',
   'mixed',
   'chosen',
+  'skipped_generation',
 ]
 export const householdRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['HouseholdRole']
@@ -194383,6 +196810,8 @@ export const housingLevelValues: ReadonlyArray<
   'arcology_unit',
   'habitat_module',
   'ship_berth',
+  'shack',
+  'palace',
 ]
 export const ideaKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdeaKind']
@@ -194438,6 +196867,8 @@ export const identityLayerValues: ReadonlyArray<
   'language',
   'kind',
   'cause',
+  'gift',
+  'calling',
 ]
 export const identityReasonValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdentityReason']
@@ -194450,6 +196881,7 @@ export const identityReasonValues: ReadonlyArray<
   'fugitive',
   'hidden_faith',
   'passing_kind',
+  'protection',
 ]
 export const ideologyStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IdeologyStats']['kind']
@@ -194503,10 +196935,26 @@ export const imageStyleValues: ReadonlyArray<
 > = ['photoreal', 'painting', 'ink', 'watercolor', 'anime', 'custom']
 export const impactBodyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ImpactBody']
-> = ['asteroid', 'comet', 'rogue_world', 'called', 'moon_fragment', 'wreck']
+> = [
+  'asteroid',
+  'comet',
+  'rogue_world',
+  'called',
+  'moon_fragment',
+  'wreck',
+  'ejecta',
+]
 export const impactOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ImpactOutcome']
-> = ['pending', 'struck', 'deflected', 'missed', 'airburst']
+> = [
+  'pending',
+  'struck',
+  'deflected',
+  'missed',
+  'airburst',
+  'captured',
+  'fragmented',
+]
 export const importModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ImportMode']
 > = ['replace', 'merge', 'discovery']
@@ -194598,6 +197046,8 @@ export const ingredientRoleValues: ReadonlyArray<
   'leavening',
   'preservative',
   'colouring',
+  'acid',
+  'aroma',
 ]
 export const inheritanceCustomValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InheritanceCustom']
@@ -194610,6 +197060,7 @@ export const inheritanceCustomValues: ReadonlyArray<
   'by_merit',
   'seniority',
   'designated',
+  'communal',
 ]
 export const injuryKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InjuryKind']
@@ -194641,6 +197092,9 @@ export const injuryKindValues: ReadonlyArray<
   'asphyxia',
   'dislocation',
   'internal_bleeding',
+  'sprain',
+  'torn_tendon',
+  'pressure_injury',
 ]
 export const injuryStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InjuryState']
@@ -194653,6 +197107,7 @@ export const injuryStateValues: ReadonlyArray<
   'healed_scar',
   'permanent',
   'lethal',
+  'chronic',
 ]
 export const inspirationKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InspirationKind']
@@ -194663,13 +197118,25 @@ export const inspirationKindValues: ReadonlyArray<
   'artistic_vision',
   'technical_breakthrough',
   'spiritual_insight',
+  'healing_insight',
+  'civic_vision',
 ]
 export const inspirationStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InspirationState']
 > = ['burning', 'fulfilled', 'failed']
 export const instructionBindingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InstructionBinding']
-> = ['none', 'order', 'oath', 'geas', 'seal', 'ownership', 'lease', 'symbiosis']
+> = [
+  'none',
+  'order',
+  'oath',
+  'geas',
+  'seal',
+  'ownership',
+  'lease',
+  'symbiosis',
+  'debt',
+]
 export const instrumentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InstrumentKind']
 > = [
@@ -194687,10 +197154,22 @@ export const instrumentKindValues: ReadonlyArray<
   'network',
   'body',
   'none',
+  'weather_work',
+  'word',
+  'kept_animal',
 ]
 export const insuranceCoverValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['InsuranceCover']
-> = ['cargo', 'house', 'life', 'crop', 'vessel', 'livestock']
+> = [
+  'cargo',
+  'house',
+  'life',
+  'crop',
+  'vessel',
+  'livestock',
+  'health',
+  'ransom',
+]
 export const integrityTaskValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IntegrityTask']
 > = ['dead_bonds', 'schema_checks', 'checkpoint']
@@ -194741,6 +197220,8 @@ export const intoxicantValues: ReadonlyArray<
   'essence',
   'synthetic',
   'animal_derived',
+  'stimulant',
+  'resin',
 ]
 export const intoxicantUseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IntoxicantUse']
@@ -194752,6 +197233,8 @@ export const intoxicantUseValues: ReadonlyArray<
   'forbidden',
   'medicine',
   'hospitality',
+  'work',
+  'courage',
 ]
 export const intrigueSecretValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IntrigueSecret']
@@ -194774,6 +197257,7 @@ export const intrigueSecretValues: ReadonlyArray<
   'true_history',
   'hidden_power',
   'forgery',
+  'illness',
 ]
 export const intrusionAimValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IntrusionAim']
@@ -194885,6 +197369,8 @@ export const jobValues: ReadonlyArray<
   'gathering',
   'industry',
   'arts',
+  'healing',
+  'teaching',
 ]
 export const jobCancelledEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JobCancelledEvent']['kind']
@@ -194967,13 +197453,15 @@ export const journeyIntentValues: ReadonlyArray<
   'exile',
   'flight',
   'embassy',
+  'rescue',
+  'return',
 ]
 export const journeyStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JourneyStatus']
 > = ['underway', 'waiting', 'arrived', 'lost', 'recalled', 'stranded']
 export const judgementDoctrineValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JudgementDoctrine']
-> = ['deeds', 'faith', 'rite', 'favour', 'none']
+> = ['deeds', 'faith', 'rite', 'favour', 'none', 'remembrance']
 export const jurisdictionClaimValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JurisdictionClaim']
 > = ['clergy', 'guild', 'foreign']
@@ -195002,6 +197490,8 @@ export const keystoneRoleValues: ReadonlyArray<
   'seed_disperser',
   'regulator',
   'reef_builder',
+  'nutrient_fixer',
+  'grazer',
 ]
 export const keystoneUseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['KeystoneUse']
@@ -195134,6 +197624,8 @@ export const knowledgeKindValues: ReadonlyArray<
   'pattern',
   'source',
   'secret',
+  'remedy',
+  'genealogy',
 ]
 export const knowledgeStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['KnowledgeStats']['kind']
@@ -195150,6 +197642,8 @@ export const labourReasonValues: ReadonlyArray<
   'held',
   'law',
   'skill',
+  'debt',
+  'kin_duty',
 ]
 export const labourRegimeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LabourRegime']
@@ -195169,6 +197663,8 @@ export const landActValues: ReadonlyArray<
   'open_spring',
   'call_lava',
   'sink_coast',
+  'raise_island',
+  'open_underground',
 ]
 export const landCoverValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LandCover']
@@ -195193,7 +197689,7 @@ export const landReleaseInputFieldValues: ReadonlyArray<
 > = ['desertification', 'desertified', 'volcanic', 'volcanic_pressure']
 export const landUseRingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LandUseRing']
-> = ['gardens', 'forestry', 'grain', 'ranching', 'wilds']
+> = ['gardens', 'forestry', 'grain', 'ranching', 'wilds', 'industry', 'fallow']
 export const languageModalityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageModality']
 > = [
@@ -195207,6 +197703,8 @@ export const languageModalityValues: ReadonlyArray<
   'tactile',
   'vibration',
   'electric',
+  'whistled',
+  'drummed',
 ]
 export const languagePolicyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguagePolicy']
@@ -195217,13 +197715,22 @@ export const languagePolicyValues: ReadonlyArray<
   'revival',
   'protected',
   'standardised',
+  'bilingual',
 ]
 export const languageRegisterValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageRegister']
 > = ['court', 'common', 'liturgical', 'trade']
 export const languageStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageStage']
-> = ['natural', 'pidgin', 'creole', 'divine', 'constructed', 'revived']
+> = [
+  'natural',
+  'pidgin',
+  'creole',
+  'divine',
+  'constructed',
+  'revived',
+  'endangered',
+]
 export const languageStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LanguageStats']['kind']
 > = ['language']
@@ -195259,6 +197766,8 @@ export const lawAreaValues: ReadonlyArray<
   'commerce',
   'faith',
   'labour',
+  'family',
+  'environment',
 ]
 export const lawConditionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawCondition']
@@ -195280,6 +197789,8 @@ export const lawExceptionValues: ReadonlyArray<
   'heroes',
   'avatars',
   'named_kind',
+  'office_holders',
+  'bargainers',
 ]
 export const lawExceptionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawExceptionKind']
@@ -195353,7 +197864,7 @@ export const lawOperatorValues: ReadonlyArray<
 > = ['forbid', 'require', 'multiply', 'set', 'invert', 'bind_to_condition']
 export const lawScopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawScope']
-> = ['cosmos', 'dimension', 'world', 'region']
+> = ['cosmos', 'dimension', 'world', 'region', 'stratum']
 export const lawSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LawSource']
 > = ['authored', 'enchantment']
@@ -195482,13 +197993,23 @@ export const legitimacyTypeValues: ReadonlyArray<
   'divine_mandate',
   'popular',
   'performance',
+  'conquest',
 ]
 export const lifeComplexityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifeComplexity']
 > = ['none', 'microbial', 'simple', 'complex', 'sapient']
 export const lifeEnvironmentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifeEnvironment']
-> = ['marine', 'terrestrial', 'aerial', 'subterranean', 'under_ice', 'cloud']
+> = [
+  'marine',
+  'terrestrial',
+  'aerial',
+  'subterranean',
+  'under_ice',
+  'cloud',
+  'vent',
+  'void',
+]
 export const lifeGoalValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifeGoal']
 > = [
@@ -195510,7 +198031,7 @@ export const lifeGoalValues: ReadonlyArray<
 ]
 export const lifeStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifeStage']
-> = ['infant', 'child', 'youth', 'adult', 'elder', 'ancient']
+> = ['infant', 'child', 'youth', 'adult', 'mature', 'elder', 'ancient']
 export const lifecycleCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifecycleCause']
 > = [
@@ -195593,7 +198114,18 @@ export const linkGroupValues: ReadonlyArray<
 ]
 export const linkTokenValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LinkToken']
-> = ['hair', 'blood', 'name', 'portrait', 'fragment', 'true_name', 'possession']
+> = [
+  'hair',
+  'blood',
+  'name',
+  'portrait',
+  'fragment',
+  'true_name',
+  'possession',
+  'footprint',
+  'voice',
+  'birth_record',
+]
 export const livingCraftStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LivingCraftStance']
 > = ['abomination', 'permitted', 'sacred_duty', 'silent', 'regulated']
@@ -195613,6 +198145,7 @@ export const loanStatusValues: ReadonlyArray<
   'rescheduled',
   'collateral_seized',
   'sold',
+  'inherited',
 ]
 export const lockKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LockKind']
@@ -195624,6 +198157,7 @@ export const lockKindValues: ReadonlyArray<
   'warded_seal',
   'worked',
   'electronic',
+  'living',
 ]
 export const locusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Locus']
@@ -195718,6 +198252,7 @@ export const longPlanKindValues: ReadonlyArray<
   'line',
   'reform',
   'exploration',
+  'restoration',
 ]
 export const longPlanStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LongPlanStatus']
@@ -195730,7 +198265,7 @@ export const loreLanguageValues: ReadonlyArray<
 > = ['english', 'turkish']
 export const lorePriceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LorePrice']
-> = ['wealth', 'favour', 'renown', 'exchange', 'service']
+> = ['wealth', 'favour', 'renown', 'exchange', 'service', 'oath']
 export const loyaltyPartValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LoyaltyPart']
 > = [
@@ -195758,6 +198293,8 @@ export const luckReachValues: ReadonlyArray<
   'trade',
   'union',
   'building',
+  'learning',
+  'contest',
 ]
 export const luckSignValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LuckSign']
@@ -195771,6 +198308,7 @@ export const luckSignValues: ReadonlyArray<
   'person',
   'animal',
   'colour',
+  'weather',
 ]
 export const madeMindSoulsValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MadeMindSouls']
@@ -195801,7 +198339,16 @@ export const magicSchoolValues: ReadonlyArray<
 ]
 export const magicSiteKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MagicSiteKind']
-> = ['source', 'school_seat', 'ward', 'gateway', 'tide_point', 'depletion_scar']
+> = [
+  'source',
+  'school_seat',
+  'ward',
+  'gateway',
+  'tide_point',
+  'depletion_scar',
+  'confluence',
+  'null_zone',
+]
 export const magicSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MagicSource']
 > = ['ley', 'divine', 'blood', 'soul', 'reagent', 'void']
@@ -195819,6 +198366,8 @@ export const maimedKindValues: ReadonlyArray<
   'broken_minded',
   'paralysed',
   'lost_fingers',
+  'lost_tail',
+  'lost_wing',
 ]
 export const maintenanceTaskValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MaintenanceTask']
@@ -195856,16 +198405,18 @@ export const mandateKindValues: ReadonlyArray<
   'enclosure',
   'ration',
   'corvee',
+  'quarantine',
+  'conscription',
 ]
 export const mandateStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MandateState']
 > = ['active', 'met', 'failed']
 export const manifestationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Manifestation']
-> = ['radiant', 'serene', 'stern', 'dreadful', 'veiled']
+> = ['radiant', 'serene', 'stern', 'dreadful', 'veiled', 'playful', 'sorrowful']
 export const mantlingStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MantlingState']
-> = ['walking', 'ascended', 'replaced', 'blocked', 'failed']
+> = ['walking', 'ascended', 'replaced', 'blocked', 'failed', 'contested']
 export const manumissionPathValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ManumissionPath']
 > = ['purchase', 'will', 'service', 'law', 'revolt']
@@ -195882,6 +198433,8 @@ export const markKindValues: ReadonlyArray<
   'brand',
   'hair',
   'implant',
+  'paint',
+  'stain',
 ]
 export const markMeaningValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MarkMeaning']
@@ -195897,13 +198450,15 @@ export const markMeaningValues: ReadonlyArray<
   'faith',
   'profession',
   'beauty',
+  'healing',
+  'bound_labour',
 ]
 export const markerKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MarkerKind']
 > = ['battle', 'disaster', 'ruin', 'remnant', 'event']
 export const marketPlayValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MarketPlay']
-> = ['corner', 'dump', 'rumour']
+> = ['corner', 'dump', 'rumour', 'short']
 export const marriageEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MarriageEnd']
 > = ['death', 'divorce', 'annulment', 'war', 'term']
@@ -195978,6 +198533,9 @@ export const materialKindValues: ReadonlyArray<
   'shell',
   'polymer',
   'composite',
+  'rubber',
+  'paper',
+  'lacquer',
 ]
 export const materialOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MaterialOrigin']
@@ -195992,6 +198550,7 @@ export const materialOriginValues: ReadonlyArray<
   'fossil',
   'living_line',
   'salvage',
+  'outer_being',
 ]
 export const materialSlotValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MaterialSlot']
@@ -196010,6 +198569,7 @@ export const mealSlotValues: ReadonlyArray<
   'remedy',
   'travel_food',
   'famine_food',
+  'street',
 ]
 export const medicineTierValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MedicineTier']
@@ -196028,6 +198588,7 @@ export const medicineTierValues: ReadonlyArray<
   'genome_repair',
   'cellular_machines',
   'mind_medicine',
+  'anatomy',
 ]
 export const mediumValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Medium']
@@ -196042,6 +198603,8 @@ export const mediumValues: ReadonlyArray<
   'network',
   'mind_link',
   'broadcast',
+  'drum_and_whistle',
+  'courier_animal',
 ]
 export const memberRightValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemberRight']
@@ -196054,10 +198617,19 @@ export const memberRightValues: ReadonlyArray<
   'movement',
   'vote',
   'worship',
+  'assembly',
+  'education',
 ]
 export const membershipValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Membership']
-> = ['citizen', 'subject', 'resident_foreigner', 'protected_minority', 'bound']
+> = [
+  'citizen',
+  'subject',
+  'resident_foreigner',
+  'protected_minority',
+  'bound',
+  'stateless',
+]
 export const memorialFormValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemorialForm']
 > = ['monument', 'epic', 'lament', 'tradition', 'tale']
@@ -196101,6 +198673,12 @@ export const memoryKindValues: ReadonlyArray<
   'aided_chosen',
   'memory_gap',
   'compelled_me',
+  'healed_me',
+  'sheltered_me',
+  'abandoned_me',
+  'survived_with',
+  'apologised_to_me',
+  'judged_me',
 ]
 export const memoryOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemoryOrigin']
@@ -196248,9 +198826,18 @@ export const methodKindValues: ReadonlyArray<
   'scriptorium',
   'copying_press',
   'rotary_press',
+  'duplicating_machine',
   'solar_pans',
   'boiling_pans',
   'vacuum_pans',
+  'hand_mould',
+  'stamping_mill',
+  'paper_machine',
+  'block_printing',
+  'movable_type',
+  'hand_laying',
+  'walk_laying',
+  'rope_machine',
 ]
 export const migrationCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MigrationCause']
@@ -196377,6 +198964,7 @@ export const mishapAttributionValues: ReadonlyArray<
   'broken_oath',
   'made_mind',
   'hidden_people',
+  'self',
 ]
 export const mishapKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MishapKind']
@@ -196412,6 +199000,8 @@ export const mishapKindValues: ReadonlyArray<
   'theft_suffered',
   'tool_broken',
   'near_miss',
+  'quake',
+  'flood',
 ]
 export const mishapResponseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MishapResponse']
@@ -196423,6 +199013,8 @@ export const mishapResponseValues: ReadonlyArray<
   'accusation',
   'purification',
   'safety_custom',
+  'move_away',
+  'compensation',
 ]
 export const mobEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MobEnd']
@@ -196443,6 +199035,8 @@ export const mobilityEventValues: ReadonlyArray<
   'enriched',
   'ordained',
   'outcast',
+  'exiled',
+  'adopted',
 ]
 export const mobilityModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MobilityMode']
@@ -196486,7 +199080,7 @@ export const moleHuntOutcomeValues: ReadonlyArray<
 > = ['caught', 'cleared', 'purged', 'defected']
 export const moneyBackingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MoneyBacking']
-> = ['metal', 'commodity', 'decree', 'trust', 'source']
+> = ['metal', 'commodity', 'decree', 'trust', 'source', 'land', 'labour']
 export const moneyFormValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MoneyForm']
 > = [
@@ -196501,6 +199095,28 @@ export const moneyFormValues: ReadonlyArray<
   'essence_backed',
   'labour_hours',
   'gift_tally',
+  'bill_of_exchange',
+  'warehouse_receipt',
+  'land_scrip',
+]
+export const moodItemValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['MoodItem']
+> = [
+  'wars',
+  'godless',
+  'rebel_sons',
+  'doomsday_clock',
+  'contentment_soothes',
+  'cult',
+  'new_life',
+  'the_god_acted',
+  'shadow_of_anger',
+  'battles',
+  'blood_shed',
+  'leak',
+  'temperament',
+  'stir',
+  'passions',
 ]
 export const moodStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MoodState']
@@ -196707,6 +199323,9 @@ export const mortalToolIdValues: ReadonlyArray<
   'commemorate',
   'dig_deeper',
   'bore',
+  'dig_passage',
+  'clear_passage',
+  'collapse_passage',
   'drill_reservoir',
   'seal_depth',
   'divert_river',
@@ -197061,6 +199680,8 @@ export const movementCauseValues: ReadonlyArray<
   'temperance',
   'mind_rights',
   'equal_standing',
+  'learning',
+  'health',
 ]
 export const movementModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MovementMode']
@@ -197078,7 +199699,15 @@ export const movementModeValues: ReadonlyArray<
 ]
 export const mysticStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MysticState']
-> = ['seeker', 'visionary', 'revered', 'persecuted', 'founder', 'lapsed']
+> = [
+  'seeker',
+  'visionary',
+  'revered',
+  'persecuted',
+  'founder',
+  'lapsed',
+  'hermit',
+]
 export const mythicRealmValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MythicRealm']
 > = ['palace', 'dead', 'dream', 'sacred_site']
@@ -197093,10 +199722,21 @@ export const nameFormValues: ReadonlyArray<
   'vow',
   'ascension',
   'posthumous',
+  'epithet',
+  'adoption',
 ]
 export const namingPatternValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NamingPattern']
-> = ['given', 'parent', 'clan', 'teknonym', 'place', 'trade']
+> = [
+  'given',
+  'parent',
+  'clan',
+  'teknonym',
+  'place',
+  'trade',
+  'ancestral',
+  'event',
+]
 export const naturalLawValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NaturalLaw']
 > = [
@@ -197154,6 +199794,7 @@ export const naturalisationValues: ReadonlyArray<
   'purchase',
   'grant',
   'union',
+  'adoption',
 ]
 export const navigationAidValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NavigationAid']
@@ -197166,10 +199807,12 @@ export const navigationAidValues: ReadonlyArray<
   'wayfinding',
   'beacons',
   'positioning',
+  'pilots',
+  'buoys',
 ]
 export const needGroupValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NeedGroup']
-> = ['body', 'social', 'spirit', 'action']
+> = ['body', 'social', 'spirit', 'action', 'mind']
 export const needKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NeedKind']
 > = [
@@ -197201,6 +199844,8 @@ export const needKindValues: ReadonlyArray<
   'stimulation',
   'continuity',
   'upkeep',
+  'justice',
+  'care',
 ]
 export const nerveDamageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NerveDamage']
@@ -197340,7 +199985,16 @@ export const numberSystemValues: ReadonlyArray<
 > = ['none', 'singular_plural', 'dual', 'trial', 'paucal']
 export const numeralBaseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NumeralBase']
-> = ['decimal', 'vigesimal', 'duodecimal', 'sexagesimal', 'octal', 'body_tally']
+> = [
+  'decimal',
+  'vigesimal',
+  'duodecimal',
+  'sexagesimal',
+  'octal',
+  'body_tally',
+  'quinary',
+  'binary',
+]
 export const nutrientValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Nutrient']
 > = [
@@ -197355,7 +200009,7 @@ export const nutrientValues: ReadonlyArray<
 ]
 export const nutrientKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['NutrientKind']
-> = ['fixed', 'mineral', 'organic', 'salinity']
+> = ['fixed', 'mineral', 'organic', 'salinity', 'seed_bank', 'soil_life']
 export const oathKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OathKind']
 > = [
@@ -197372,6 +200026,7 @@ export const oathKindValues: ReadonlyArray<
   'fidelity',
   'secrecy',
   'testimony',
+  'office',
 ]
 export const oathPenaltyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OathPenalty']
@@ -197381,10 +200036,10 @@ export const oathStatusValues: ReadonlyArray<
 > = ['sworn', 'kept', 'broken', 'fulfilled']
 export const oceanCurrentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OceanCurrent']
-> = ['none', 'warm', 'cold', 'upwelling', 'tidal']
+> = ['none', 'warm', 'cold', 'upwelling', 'tidal', 'gyre', 'counter']
 export const officeChoiceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OfficeChoice']
-> = ['council', 'creator', 'conquest', 'mantling']
+> = ['council', 'creator', 'conquest', 'mantling', 'inheritance']
 export const officeDutyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OfficeDuty']
 > = [
@@ -197398,6 +200053,8 @@ export const officeDutyValues: ReadonlyArray<
   'memory',
   'making',
   'healing',
+  'trade',
+  'learning',
 ]
 export const officeKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OfficeKind']
@@ -197424,6 +200081,7 @@ export const officeKindValues: ReadonlyArray<
   'chief_scientist',
   'jester',
   'warden',
+  'censor',
 ]
 export const omenReadingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OmenReading']
@@ -197436,7 +200094,17 @@ export const opinionComponentValues: ReadonlyArray<
 > = ['trust', 'fear', 'respect', 'affection', 'grievance']
 export const opinionSubjectValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OpinionSubject']
-> = ['ruler', 'law', 'war', 'god', 'ideology', 'faction', 'foreign_power']
+> = [
+  'ruler',
+  'law',
+  'war',
+  'god',
+  'ideology',
+  'faction',
+  'foreign_power',
+  'economy',
+  'neighbour_people',
+]
 export const orderConditionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OrderCondition']
 > = [
@@ -197447,6 +200115,8 @@ export const orderConditionValues: ReadonlyArray<
   'when_token_shown',
   'until_done',
   'at_set_times',
+  'while_holder_lives',
+  'when_named',
 ]
 export const orderKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OrderKind']
@@ -197466,6 +200136,9 @@ export const orderKindValues: ReadonlyArray<
   'forbid',
   'carry',
   'tend',
+  'teach',
+  'heal',
+  'hunt',
 ]
 export const orderLabourValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OrderLabour']
@@ -197534,7 +200207,7 @@ export const outerGoalValues: ReadonlyArray<
 > = ['feed', 'enter', 'be_worshipped', 'unmake_law', 'gain_name', 'open_rift']
 export const outerHungerValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OuterHunger']
-> = ['souls', 'knowledge', 'light', 'names', 'memories']
+> = ['souls', 'knowledge', 'light', 'names', 'memories', 'dreams', 'time']
 export const outerPlanStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['OuterPlanState']
 > = ['active', 'achieved', 'thwarted']
@@ -197582,6 +200255,9 @@ export const packageKindValues: ReadonlyArray<
   'fortune',
   'transformation',
   'charm',
+  'ageing',
+  'forgetting',
+  'sleep',
 ]
 export const paletteDirectionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PaletteDirection']
@@ -197657,7 +200333,7 @@ export const partnerScopeValues: ReadonlyArray<
 > = ['none', 'people', 'class', 'caste', 'faith', 'house', 'line', 'moiety']
 export const partyRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PartyRole']
-> = ['signatory', 'overlord', 'vassal', 'guarantor', 'mediator']
+> = ['signatory', 'overlord', 'vassal', 'guarantor', 'mediator', 'witness']
 export const passionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Passion']
 > = ['loyalty', 'ambition', 'wrath', 'mercy']
@@ -197678,6 +200354,8 @@ export const passionKindValues: ReadonlyArray<
   'jealousy',
   'admiration',
   'obsession',
+  'vengeance',
+  'compassion',
 ]
 export const passionSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PassionSource']
@@ -197704,6 +200382,9 @@ export const peaceTermKindValues: ReadonlyArray<
   'captive_release',
   'champion',
   'white_peace',
+  'border_accord',
+  'return_of_refugees',
+  'apology',
 ]
 export const penanceDeedValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PenanceDeed']
@@ -197716,7 +200397,17 @@ export const perceivedAlignmentValues: ReadonlyArray<
 > = ['benevolent', 'ambivalent', 'malevolent']
 export const perennialKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PerennialKind']
-> = ['orchard', 'vineyard', 'grove', 'timber', 'plantation', 'forest_garden']
+> = [
+  'orchard',
+  'vineyard',
+  'grove',
+  'timber',
+  'plantation',
+  'forest_garden',
+  'coppice',
+  'hedgerow',
+  'palm_stand',
+]
 export const perkKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PerkKind']
 > = [
@@ -197763,7 +200454,17 @@ export const perkKindValues: ReadonlyArray<
 ]
 export const persuasionAimValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PersuasionAim']
-> = ['belief', 'decision', 'faith', 'vote', 'treaty', 'surrender', 'confession']
+> = [
+  'belief',
+  'decision',
+  'faith',
+  'vote',
+  'treaty',
+  'surrender',
+  'confession',
+  'alliance',
+  'release',
+]
 export const petitionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PetitionKind']
 > = [
@@ -197776,6 +200477,8 @@ export const petitionKindValues: ReadonlyArray<
   'rain',
   'protection',
   'vengeance',
+  'finding',
+  'justice',
 ]
 export const petitionStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PetitionStatus']
@@ -197864,6 +200567,8 @@ export const pieceKindValues: ReadonlyArray<
   'manuscript',
   'trophy',
   'regalia',
+  'map',
+  'instrument',
 ]
 export const placeCoverValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlaceCover']
@@ -197946,10 +200651,13 @@ export const plagueResponseValues: ReadonlyArray<
   'prayer',
   'seek_cure',
   'sanitation',
+  'flee',
+  'inoculate',
+  'close_gatherings',
 ]
 export const planetaryCycleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlanetaryCycle']
-> = ['carbon', 'water', 'nutrients', 'oxygen', 'rock']
+> = ['carbon', 'water', 'nutrients', 'oxygen', 'rock', 'heat', 'ice']
 export const plantDefenceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlantDefence']
 > = [
@@ -197960,6 +200668,8 @@ export const plantDefenceValues: ReadonlyArray<
   'carnivorous',
   'stinging',
   'guardians',
+  'mimicry',
+  'regrowth',
 ]
 export const plantYieldValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlantYield']
@@ -197980,6 +200690,9 @@ export const plantYieldValues: ReadonlyArray<
   'resin',
   'stimulant',
   'fodder',
+  'medicine',
+  'building',
+  'fuel',
 ]
 export const playKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlayKind']
@@ -198007,6 +200720,8 @@ export const plotKindValues: ReadonlyArray<
   'geas_trap',
   'hide_fleet',
   'forge_work',
+  'fix_contest',
+  'incite_crowd',
 ]
 export const pluralSideValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PluralSide']
@@ -198086,6 +200801,8 @@ export const powerHazardValues: ReadonlyArray<
   'burnout',
   'dependency',
   'attention',
+  'ageing',
+  'possession',
 ]
 export const powerOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PowerOrigin']
@@ -198150,7 +200867,7 @@ export const prayerRequestValues: ReadonlyArray<
 ]
 export const prayerToneValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PrayerTone']
-> = ['thanks', 'mercy', 'request', 'praise']
+> = ['thanks', 'mercy', 'request', 'praise', 'lament', 'confession']
 export const preferenceKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PreferenceKind']
 > = [
@@ -198196,6 +200913,7 @@ export const prehistoryKindValues: ReadonlyArray<
   'voyage',
   'phenomenon',
   'corpse',
+  'ruined',
 ]
 export const prehistorySourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PrehistorySource']
@@ -198218,10 +200936,12 @@ export const preparednessKindValues: ReadonlyArray<
   'evacuation_routes',
   'ward',
   'reserves_of_energy',
+  'immunisation_plan',
+  'quake_building',
 ]
 export const preservationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Preservation']
-> = ['rock', 'amber', 'ice', 'bog', 'tar', 'ash', 'dry']
+> = ['rock', 'amber', 'ice', 'bog', 'tar', 'ash', 'dry', 'cave']
 export const preservationMethodValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PreservationMethod']
 > = [
@@ -198254,6 +200974,9 @@ export const pressureKindValues: ReadonlyArray<
   'oppression',
   'disease_burden',
   'purposelessness',
+  'isolation',
+  'debt',
+  'persecution',
 ]
 export const processGroupValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ProcessGroup']
@@ -198304,6 +201027,9 @@ export const processKindValues: ReadonlyArray<
   'dyeing',
   'copying',
   'evaporating',
+  'papermaking',
+  'printing',
+  'ropemaking',
 ]
 export const productPartValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ProductPart']
@@ -198562,6 +201288,7 @@ export const propulsionValues: ReadonlyArray<
   'self',
   'current',
   'towed',
+  'pedal',
 ]
 export const prospectStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ProspectStance']
@@ -198604,6 +201331,8 @@ export const punishmentKindValues: ReadonlyArray<
   'transportation',
   'community_work',
   'dampening',
+  'shunning',
+  'curse_sentence',
 ]
 export const purificationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Purification']
@@ -198692,7 +201421,16 @@ export const questTargetKindValues: ReadonlyArray<
 ]
 export const questTrialValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['QuestTrial']
-> = ['skill', 'passion', 'conviction', 'faith', 'cunning', 'endurance']
+> = [
+  'skill',
+  'passion',
+  'conviction',
+  'faith',
+  'cunning',
+  'endurance',
+  'mercy',
+  'sacrifice',
+]
 export const quirkKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['QuirkKind']
 > = [
@@ -198729,6 +201467,8 @@ export const racketKindValues: ReadonlyArray<
   'data_theft',
   'loan_sharking',
   'arms',
+  'forgery',
+  'poaching',
 ]
 export const rangeTrendValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RangeTrend']
@@ -198760,7 +201500,7 @@ export const realmPurposeValues: ReadonlyArray<
 ]
 export const rebirthPathValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RebirthPath']
-> = ['people', 'house', 'merit', 'kind']
+> = ['people', 'house', 'merit', 'kind', 'place']
 export const rebuildCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RebuildCause']
 > = [
@@ -198772,22 +201512,36 @@ export const rebuildCauseValues: ReadonlyArray<
   'eruption',
   'sea_wave',
   'landslide',
+  'sinkhole',
+  'plague',
 ]
 export const rebuildPlanValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RebuildPlan']
-> = ['planned', 'opportunistic', 'relocated', 'abandoned']
+> = ['planned', 'opportunistic', 'relocated', 'abandoned', 'restored']
 export const rechargeRuleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RechargeRule']
-> = ['site', 'vis', 'moon', 'none', 'sky_event', 'bodily_offering']
+> = [
+  'site',
+  'vis',
+  'moon',
+  'none',
+  'sky_event',
+  'bodily_offering',
+  'rest',
+  'worship',
+]
 export const recordEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecordEnd']
 > = ['repeal', 'abandon', 'forget', 'disband', 'lose', 'assimilate']
 export const recordKeeperKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecordKeeperKind']
 > = ['chronicler', 'historian']
+export const recordShapeInputEntity_typeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['RecordShapeInput']['entity_type']
+> = ['celestial', 'spirit', 'natural_law', 'cult']
 export const recruitMotiveValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RecruitMotive']
-> = ['money', 'ideology', 'compromise', 'ego', 'love', 'revenge']
+> = ['money', 'ideology', 'compromise', 'ego', 'love', 'revenge', 'faith']
 export const referendumResultValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ReferendumResult']
 > = ['pending', 'passed', 'failed', 'void']
@@ -198816,7 +201570,7 @@ export const regionStatsKindValues: ReadonlyArray<
 > = ['region']
 export const regionalStandingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RegionalStanding']
-> = ['hegemon', 'great_power', 'minor_power', 'client', 'neutral']
+> = ['hegemon', 'great_power', 'minor_power', 'client', 'neutral', 'isolated']
 export const registryKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RegistryKind']
 > = [
@@ -198833,6 +201587,8 @@ export const registryKindValues: ReadonlyArray<
   'birth',
   'death',
   'citizenship',
+  'will',
+  'licence',
 ]
 export const reincarnationGateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ReincarnationGate']
@@ -198852,7 +201608,7 @@ export const relationComponentValues: ReadonlyArray<
 ]
 export const relationLineKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RelationLineKind']
-> = ['trade', 'hostility', 'rule', 'hunt', 'conurbation']
+> = ['trade', 'hostility', 'rule', 'hunt', 'conurbation', 'passage']
 export const relationTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RelationType']
 > = [
@@ -198877,10 +201633,13 @@ export const relationTypeValues: ReadonlyArray<
   'betrothed',
   'sworn_kin',
   'foster',
+  'neighbour',
+  'guest_friend',
+  'estranged',
 ]
 export const relicStanceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RelicStance']
-> = ['sacred', 'tool', 'forbidden', 'heritage', 'studied']
+> = ['sacred', 'tool', 'forbidden', 'heritage', 'studied', 'traded']
 export const relicStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RelicState']
 > = ['working', 'failing', 'dormant', 'broken', 'restored']
@@ -198905,6 +201664,8 @@ export const reliefKindValues: ReadonlyArray<
   'foster_care',
   'sick_house',
   'pension',
+  'public_kitchen',
+  'shelter',
 ]
 export const remainsTreatmentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RemainsTreatment']
@@ -198972,6 +201733,8 @@ export const reputationAxisValues: ReadonlyArray<
   'troublemaker',
   'mercy',
   'justice',
+  'reliability',
+  'hospitality',
 ]
 export const reputationLabelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ReputationLabel']
@@ -199021,6 +201784,8 @@ export const resistanceKindValues: ReadonlyArray<
   'distance',
   'counter_source',
   'none',
+  'disbelief',
+  'ancestral',
 ]
 export const resolutionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ResolutionKind']
@@ -199032,6 +201797,8 @@ export const resolutionKindValues: ReadonlyArray<
   'quarantine',
   'arbitration',
   'aid',
+  'peacekeeping',
+  'recognition',
 ]
 export const resolutionStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ResolutionState']
@@ -199075,6 +201842,8 @@ export const restrictionKindValues: ReadonlyArray<
   'must_be_unseen',
   'must_touch',
   'only_with_token',
+  'only_in_company',
+  'only_by_name',
 ]
 export const revivalGoalValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RevivalGoal']
@@ -199084,6 +201853,7 @@ export const revivalGoalValues: ReadonlyArray<
   'expel_foreigners',
   'restore_land',
   'restore_rule',
+  'restore_law',
 ]
 export const revivalStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RevivalStage']
@@ -199097,7 +201867,7 @@ export const revivalStageValues: ReadonlyArray<
 ]
 export const revivalWayValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RevivalWay']
-> = ['restore', 'synthesis', 'adopt', 'await', 'withdraw']
+> = ['restore', 'synthesis', 'adopt', 'await', 'withdraw', 'migrate']
 export const riftCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiftCause']
 > = [
@@ -199129,6 +201899,7 @@ export const rightAcquiredValues: ReadonlyArray<
   'granted',
   'won',
   'wed',
+  'shared',
 ]
 export const rightKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RightKind']
@@ -199144,10 +201915,22 @@ export const rightKindValues: ReadonlyArray<
   'market_privilege',
   'recipe',
   'technique',
+  'performance',
+  'likeness',
 ]
 export const riteComponentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteComponent']
-> = ['spoken', 'gestured', 'inscribed', 'sung', 'danced', 'material', 'mental']
+> = [
+  'spoken',
+  'gestured',
+  'inscribed',
+  'sung',
+  'danced',
+  'material',
+  'mental',
+  'offered',
+  'communal',
+]
 export const riteConditionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteCondition']
 > = ['act', 'time', 'word', 'deed']
@@ -199197,13 +201980,22 @@ export const riteEffectKindValues: ReadonlyArray<
 ]
 export const riteEndValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteEnd']
-> = ['caster_gone', 'caster_struck', 'condition_met']
+> = ['caster_gone', 'caster_struck', 'condition_met', 'target_gone']
 export const riteKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteKind']
 > = ['prayer', 'offering', 'blood', 'life', 'rite']
 export const riteStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteStage']
-> = ['birth', 'naming', 'coming_of_age', 'union', 'elderhood', 'death']
+> = [
+  'birth',
+  'naming',
+  'coming_of_age',
+  'union',
+  'elderhood',
+  'death',
+  'initiation',
+  'departure',
+]
 export const riteStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RiteStats']['kind']
 > = ['rite']
@@ -199221,6 +202013,8 @@ export const riverShiftCauseValues: ReadonlyArray<
   'works',
   'eruption',
   'landslide',
+  'ice',
+  'capture',
 ]
 export const roadKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RoadKind']
@@ -199253,6 +202047,9 @@ export const rockKindValues: ReadonlyArray<
   'iron',
   'carbon',
   'living_tissue',
+  'pumice',
+  'serpentinite',
+  'travertine',
 ]
 export const roleEligibilityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['RoleEligibility']
@@ -199313,6 +202110,7 @@ export const routeStateValues: ReadonlyArray<
   'unstable',
   'forgotten',
   'worn',
+  'guarded',
 ]
 export const routinisationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Routinisation']
@@ -199336,6 +202134,8 @@ export const rumourDistortionValues: ReadonlyArray<
   'step_added',
   'step_dropped',
   'role_changed',
+  'count_inflated',
+  'motive_added',
 ]
 export const sacramentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SacramentKind']
@@ -199346,10 +202146,12 @@ export const sacramentKindValues: ReadonlyArray<
   'last_rites',
   'purification',
   'ordination',
+  'penance',
+  'communion',
 ]
 export const sacramentProtectionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SacramentProtection']
-> = ['routing', 'possession', 'unrest', 'curse']
+> = ['routing', 'possession', 'unrest', 'curse', 'fortune']
 export const sacredClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SacredClass']
 > = ['profane', 'notable', 'holy']
@@ -199369,19 +202171,30 @@ export const salienceDriverValues: ReadonlyArray<
   'commemoration',
   'election',
   'contest',
+  'disaster',
+  'arrivals',
 ]
 export const sanctuaryKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SanctuaryKind']
-> = ['temple', 'hospitality', 'asylum', 'wilds', 'free_city', 'embassy']
+> = [
+  'temple',
+  'hospitality',
+  'asylum',
+  'wilds',
+  'free_city',
+  'embassy',
+  'ship',
+  'trade_hall',
+]
 export const sanctuaryStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SanctuaryState']
 > = ['sheltered', 'negotiating', 'besieged', 'violated', 'ended']
 export const satireSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SatireSource']
-> = ['jester', 'artwork', 'mortal', 'god']
+> = ['jester', 'artwork', 'mortal', 'god', 'crowd', 'outlet']
 export const savingFormValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SavingForm']
-> = ['hoard', 'deposit', 'investment', 'land', 'goods']
+> = ['hoard', 'deposit', 'investment', 'land', 'goods', 'livestock']
 export const scarKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ScarKind']
 > = [
@@ -199469,10 +202282,11 @@ export const scriptChangeCauseValues: ReadonlyArray<
   'borrowing',
   'imposition',
   'revelation',
+  'technology',
 ]
 export const sealKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SealKind']
-> = ['structure', 'rite', 'divine', 'power', 'living', 'pact']
+> = ['structure', 'rite', 'divine', 'power', 'living', 'pact', 'made']
 export const searchCategoryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SearchCategory']
 > = [
@@ -199611,6 +202425,8 @@ export const senseKindValues: ReadonlyArray<
   'heat',
   'electric',
   'ultraviolet',
+  'taste',
+  'pressure',
 ]
 export const senseShiftValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SenseShift']
@@ -199623,10 +202439,11 @@ export const senseShiftValues: ReadonlyArray<
   'restored',
   'extended',
   'associated',
+  'reversed',
 ]
 export const servitorOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ServitorOrigin']
-> = ['made', 'raised', 'summoned', 'defected', 'born']
+> = ['made', 'raised', 'summoned', 'defected', 'born', 'bargained', 'ascended']
 export const servitorRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ServitorRole']
 > = [
@@ -199641,6 +202458,8 @@ export const servitorRoleValues: ReadonlyArray<
   'worshipper',
   'warden',
   'scribe',
+  'healer',
+  'teacher',
 ]
 export const settleModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SettleMode']
@@ -199656,6 +202475,8 @@ export const settleModeValues: ReadonlyArray<
   'burrow',
   'submerged',
   'canopy',
+  'cliff',
+  'drift',
 ]
 export const settlementStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SettlementStats']['kind']
@@ -199715,6 +202536,8 @@ export const shortfallEffectValues: ReadonlyArray<
   'arcane',
   'thirst',
   'shelter',
+  'learning',
+  'justice',
 ]
 export const shotKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ShotKind']
@@ -199730,16 +202553,33 @@ export const shotKindValues: ReadonlyArray<
   'piercing',
   'guided',
   'energy',
+  'smoke',
 ]
 export const siegeActionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SiegeAction']
-> = ['blockade', 'bombard', 'mine', 'assault', 'negotiate', 'suborn']
+> = [
+  'blockade',
+  'bombard',
+  'mine',
+  'assault',
+  'negotiate',
+  'suborn',
+  'poison_supply',
+  'divert_river',
+]
 export const siegeStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SiegeStatus']
-> = ['ongoing', 'breached', 'repulsed', 'lifted', 'surrendered']
+> = ['ongoing', 'breached', 'repulsed', 'lifted', 'surrendered', 'betrayed']
 export const signCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SignCause']
-> = ['deafness', 'silence_vow', 'hunting_silence', 'mutilation', 'trade']
+> = [
+  'deafness',
+  'silence_vow',
+  'hunting_silence',
+  'mutilation',
+  'trade',
+  'noise',
+]
 export const signInfluenceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SignInfluence']
 > = ['real', 'believed']
@@ -199754,10 +202594,11 @@ export const signalKindValues: ReadonlyArray<
   'radio_station',
   'mind_link_station',
   'grown_node',
+  'drum_relay',
 ]
 export const signalStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SignalState']
-> = ['active', 'captured', 'burned', 'disused', 'jammed']
+> = ['active', 'captured', 'burned', 'disused', 'jammed', 'restored']
 export const siteChallengeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SiteChallenge']
 > = ['none', 'trap', 'guardian', 'puzzle', 'hazard', 'seal', 'maze']
@@ -199784,7 +202625,7 @@ export const siteRoomKindValues: ReadonlyArray<
 ]
 export const sizeClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SizeClass']
-> = ['tiny', 'small', 'medium', 'large', 'huge', 'colossal']
+> = ['microscopic', 'tiny', 'small', 'medium', 'large', 'huge', 'colossal']
 export const sizeTierValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SizeTier']
 > = [
@@ -199865,6 +202706,12 @@ export const skillKindValues: ReadonlyArray<
   'computing',
   'science',
   'administration',
+  'farming',
+  'herding',
+  'cooking',
+  'music',
+  'climbing',
+  'diving',
 ]
 export const skillSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SkillSource']
@@ -199885,6 +202732,9 @@ export const skyEventKindValues: ReadonlyArray<
 export const skyObjectValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SkyObject']
 > = ['star', 'galaxy', 'dimension']
+export const sleepUntilValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SleepUntil']
+> = ['time', 'deed', 'act']
 export const socialBiasValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SocialBias']
 > = ['prestige', 'conformity', 'content']
@@ -199909,10 +202759,30 @@ export const socialClassValues: ReadonlyArray<
 ]
 export const socialityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Sociality']
-> = ['solitary', 'pack', 'herd', 'hive', 'colony', 'swarm']
+> = [
+  'solitary',
+  'pack',
+  'herd',
+  'hive',
+  'colony',
+  'swarm',
+  'pair',
+  'family_group',
+]
 export const sociolectKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SociolectKind']
-> = ['class', 'caste', 'guild', 'court', 'cant', 'sailors', 'youth', 'soldiers']
+> = [
+  'class',
+  'caste',
+  'guild',
+  'court',
+  'cant',
+  'sailors',
+  'youth',
+  'soldiers',
+  'clergy',
+  'scholars',
+]
 export const soilKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SoilKind']
 > = [
@@ -199971,6 +202841,8 @@ export const sonPunishmentValues: ReadonlyArray<
   'strip_divinity',
   'penance',
   'essence_fine',
+  'bound_to_world',
+  'rebuke',
 ]
 export const sonStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonStatus']
@@ -200184,6 +203056,7 @@ export const sonToolIdValues: ReadonlyArray<
   'inspire_school',
   'designate_keystone',
   'inspire_relief',
+  'tend_soil_stock',
   'shape_vehicle_type',
   'shape_equipment',
   'shape_dish',
@@ -200417,16 +203290,25 @@ export const speciesClassValues: ReadonlyArray<
   'made',
   'colonial',
   'hybrid',
+  'lichen',
 ]
 export const speciesStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpeciesStats']['kind']
 > = ['species']
 export const speculationStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpeculationStatus']
-> = ['hoarding', 'sold', 'bust', 'seized']
+> = ['hoarding', 'sold', 'bust', 'seized', 'spoiled']
 export const spellDurationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpellDuration']
-> = ['instant', 'season', 'epoch', 'permanent', 'sustained', 'until_condition']
+> = [
+  'instant',
+  'season',
+  'epoch',
+  'permanent',
+  'sustained',
+  'until_condition',
+  'lifetime',
+]
 export const spellFormValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpellForm']
 > = [
@@ -200451,13 +203333,25 @@ export const spellFormValues: ReadonlyArray<
   'fate',
   'machine',
   'information',
+  'dream',
+  'law',
 ]
 export const spellRangeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpellRange']
-> = ['touch', 'sight', 'region', 'world', 'linked', 'cosmos']
+> = ['touch', 'sight', 'region', 'world', 'linked', 'cosmos', 'dimension']
 export const spellTargetValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpellTarget']
-> = ['one', 'group', 'structure', 'region', 'item', 'line', 'world']
+> = [
+  'one',
+  'group',
+  'structure',
+  'region',
+  'item',
+  'line',
+  'world',
+  'species',
+  'people',
+]
 export const spellTechniqueValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpellTechnique']
 > = [
@@ -200471,13 +203365,25 @@ export const spellTechniqueValues: ReadonlyArray<
   'ward',
   'drain',
   'mimic',
+  'heal',
+  'move',
+  'speak',
 ]
 export const spiritAlignmentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpiritAlignment']
 > = ['guardian', 'neutral', 'vengeful']
 export const spiritOffenceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpiritOffence']
-> = ['pollution', 'clearing', 'unpaid', 'taboo', 'bloodshed', 'overharvest']
+> = [
+  'pollution',
+  'clearing',
+  'unpaid',
+  'taboo',
+  'bloodshed',
+  'overharvest',
+  'trespass',
+  'noise',
+]
 export const spiritStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpiritStats']['kind']
 > = ['spirit']
@@ -200509,6 +203415,8 @@ export const spreadPathValues: ReadonlyArray<
   'migration',
   'gathering',
   'waterway',
+  'livestock',
+  'water_supply',
 ]
 export const spyCoverValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpyCover']
@@ -200526,6 +203434,8 @@ export const spyOperationValues: ReadonlyArray<
   'infiltrate',
   'exfiltrate',
   'disinform',
+  'recruit_agent',
+  'surveil',
 ]
 export const staffScaleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StaffScale']
@@ -200543,6 +203453,7 @@ export const stanceValues: ReadonlyArray<
   'winter_quarters',
   'pursue',
   'escort',
+  'disband',
 ]
 export const starAgeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StarAge']
@@ -200588,7 +203499,7 @@ export const starTypeValues: ReadonlyArray<
 ]
 export const starvationStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StarvationStage']
-> = ['none', 'rationing', 'famine', 'taboo_broken']
+> = ['none', 'rationing', 'famine', 'hunger_sickness', 'taboo_broken']
 export const statValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Stat']
 > = [
@@ -200877,6 +203788,9 @@ export const stepLocusValues: ReadonlyArray<
   'realm',
   'network_node',
   'none',
+  'stratum',
+  'dream',
+  'dimension',
 ]
 export const stepOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StepOutcome']
@@ -200941,6 +203855,11 @@ export const stepStateValues: ReadonlyArray<
   'encircled',
   'routed',
   'rallied',
+  'drowning',
+  'charmed',
+  'asleep',
+  'poisoned',
+  'frightened',
 ]
 export const storyletIdValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StoryletId']
@@ -201026,7 +203945,17 @@ export const streamHelloEventKindValues: ReadonlyArray<
 > = ['stream.hello']
 export const stressBreakValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StressBreak']
-> = ['rage', 'flight', 'despair', 'zeal', 'vice', 'revelation', 'withdrawal']
+> = [
+  'rage',
+  'flight',
+  'despair',
+  'zeal',
+  'vice',
+  'revelation',
+  'withdrawal',
+  'dissociation',
+  'collapse',
+]
 export const stressComponentValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StressComponent']
 > = [
@@ -201315,6 +204244,8 @@ export const structureSectionValues: ReadonlyArray<
   'habitat_decks',
   'control_core',
   'shielding',
+  'cistern',
+  'chimney',
 ]
 export const structureStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StructureStats']['kind']
@@ -201417,10 +204348,25 @@ export const surveillanceFocusValues: ReadonlyArray<
 ]
 export const surveyLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SurveyLevel']
-> = ['unknown', 'rumoured', 'detected', 'observed', 'surveyed', 'mapped']
+> = [
+  'unknown',
+  'rumoured',
+  'charted_by_others',
+  'detected',
+  'observed',
+  'surveyed',
+  'mapped',
+]
 export const symbiosisKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SymbiosisKind']
-> = ['mutualism', 'commensalism', 'parasitism', 'mimicry']
+> = [
+  'mutualism',
+  'commensalism',
+  'parasitism',
+  'mimicry',
+  'amensalism',
+  'farming',
+]
 export const systemErrorEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SystemErrorEvent']['kind']
 > = ['system.error']
@@ -201459,6 +204405,8 @@ export const tacticValues: ReadonlyArray<
   'orbital_bombardment',
   'drop_assault',
   'infiltration',
+  'river_crossing',
+  'fire_attack',
 ]
 export const targetClassValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TargetClass']
@@ -201485,6 +204433,8 @@ export const taxKindValues: ReadonlyArray<
   'seigniorage',
   'pollution',
   'excise',
+  'toll',
+  'hearth',
 ]
 export const teachingStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TeachingState']
@@ -201647,6 +204597,8 @@ export const temperamentValues: ReadonlyArray<
   'vengeful',
   'acquisitive',
   'protective',
+  'playful',
+  'proud',
 ]
 export const temperatureBandValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TemperatureBand']
@@ -201698,6 +204650,8 @@ export const terraformAimValues: ReadonlyArray<
   'dry',
   'brighten',
   'darken',
+  'seed_life',
+  'steady_seasons',
 ]
 export const terrainHazardValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TerrainHazard']
@@ -201753,7 +204707,16 @@ export const terrainKindValues: ReadonlyArray<
 ]
 export const theodicyCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TheodicyCause']
-> = ['plague', 'famine', 'defeat', 'disaster', 'persecution', 'long_season']
+> = [
+  'plague',
+  'famine',
+  'defeat',
+  'disaster',
+  'persecution',
+  'long_season',
+  'leader_lost',
+  'schism',
+]
 export const theodicyResolutionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TheodicyResolution']
 > = [
@@ -201783,7 +204746,7 @@ export const theoryStatsKindValues: ReadonlyArray<
 > = ['theory']
 export const thermoregulationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Thermoregulation']
-> = ['endotherm', 'ectotherm', 'heterotherm', 'athermic']
+> = ['endotherm', 'ectotherm', 'heterotherm', 'athermic', 'mesotherm']
 export const thoughtKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ThoughtKind']
 > = [
@@ -201940,6 +204903,18 @@ export const thoughtKindValues: ReadonlyArray<
   'grew_curious',
   'felt_compassion',
   'felt_contempt',
+  'season_failed',
+  'storm_survived',
+  'quake_survived',
+  'home_lost_to_flood',
+  'beast_passed',
+  'fled_plague',
+  'gathering_closed',
+  'saw_accession',
+  'year_of_peace',
+  'charm_found',
+  'forgot',
+  'woke_from_sleep',
 ]
 export const threadStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ThreadStatus']
@@ -202001,6 +204976,8 @@ export const tissueMaterialValues: ReadonlyArray<
   'gel',
   'energy',
   'insubstantial',
+  'liquid',
+  'woody',
 ]
 export const titleStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TitleStats']['kind']
@@ -202021,6 +204998,7 @@ export const titleTierValues: ReadonlyArray<
   'faith_supreme',
   'military',
   'guild',
+  'league',
 ]
 export const toolBlockValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ToolBlock']
@@ -202038,10 +205016,12 @@ export const tradeLossValues: ReadonlyArray<
   'officials',
   'spoilage',
   'pilferage',
+  'pirates',
+  'breakage',
 ]
 export const tradeModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TradeMode']
-> = ['road', 'river', 'sea', 'sky', 'space', 'rift', 'network']
+> = ['road', 'river', 'sea', 'sky', 'space', 'rift', 'network', 'underground']
 export const tradePolicyKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TradePolicyKind']
 > = [
@@ -202054,6 +205034,8 @@ export const tradePolicyKindValues: ReadonlyArray<
   'free_trade',
   'export_ban',
   'sanction',
+  'toll',
+  'staple_right',
 ]
 export const tradeRouteStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TradeRouteStats']['kind']
@@ -202068,6 +205050,7 @@ export const tradeRouteStatusValues: ReadonlyArray<
   'decayed',
   'contested',
   'seasonal',
+  'tolled',
 ]
 export const traditionEffectKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TraditionEffectKind']
@@ -202086,6 +205069,8 @@ export const traditionEffectKindValues: ReadonlyArray<
   'vigil',
   'trade',
   'forage',
+  'healing',
+  'bonding',
 ]
 export const traditionFunctionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TraditionFunction']
@@ -202110,6 +205095,9 @@ export const traditionFunctionValues: ReadonlyArray<
   'commemoration',
   'competition',
   'fair',
+  'welcome',
+  'reconciliation',
+  'thanksgiving',
 ]
 export const traditionStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TraditionStats']['kind']
@@ -202289,6 +205277,9 @@ export const traitKindValues: ReadonlyArray<
   'retentive',
   'numerate',
   'musical',
+  'freedom_loving',
+  'egalitarian',
+  'adaptable',
 ]
 export const traitSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TraitSource']
@@ -202396,6 +205387,8 @@ export const transformTriggerValues: ReadonlyArray<
   'dark_age',
   'punishment',
   'backfill',
+  'devotion',
+  'deed',
 ]
 export const transitionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TransitionKind']
@@ -202430,6 +205423,8 @@ export const transmissionValues: ReadonlyArray<
   'void',
   'intimate',
   'objects',
+  'soil',
+  'sound',
 ]
 export const transportKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TransportKind']
@@ -202522,6 +205517,8 @@ export const treatmentStepValues: ReadonlyArray<
   'drain',
   'bleed',
   'medicate',
+  'transfuse',
+  'rest',
 ]
 export const treatyKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TreatyKind']
@@ -202542,6 +205539,8 @@ export const treatyKindValues: ReadonlyArray<
   'divine_pact',
   'naval_limit',
   'arms_limit',
+  'mutual_aid',
+  'border_accord',
 ]
 export const treatyStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TreatyStats']['kind']
@@ -202556,6 +205555,7 @@ export const treatyStatusValues: ReadonlyArray<
   'proposed',
   'rejected',
   'suspended',
+  'renegotiating',
 ]
 export const trialKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TrialKind']
@@ -202581,7 +205581,7 @@ export const tributeStatusValues: ReadonlyArray<
 > = ['active', 'ended', 'revolted']
 export const trophicLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TrophicLevel']
-> = ['producer', 'herbivore', 'carnivore', 'apex', 'decomposer']
+> = ['producer', 'herbivore', 'carnivore', 'apex', 'decomposer', 'parasite']
 export const truthAttitudeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TruthAttitude']
 > = [
@@ -202636,15 +205636,17 @@ export const turnCounterValues: ReadonlyArray<
 export const undergroundStratumValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UndergroundStratum']
 > = [
+  'permafrost_layer',
   'aquifer',
+  'under_ocean',
+  'reservoir',
   'cavern_upper',
   'cavern_middle',
-  'cavern_deep',
+  'fault_zone',
+  'cavern_lower',
+  'hollow_interior',
   'magma_sea',
   'deep_underworld',
-  'under_ocean',
-  'hollow_interior',
-  'reservoir',
 ]
 export const unionArrangementValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UnionArrangement']
@@ -202691,7 +205693,17 @@ export const unitFamilyValues: ReadonlyArray<
 ]
 export const unitHonourKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UnitHonourKind']
-> = ['victory', 'stand', 'siege', 'survival', 'massacre', 'relief', 'crossing']
+> = [
+  'victory',
+  'stand',
+  'siege',
+  'survival',
+  'massacre',
+  'relief',
+  'crossing',
+  'mercy',
+  'first_in',
+]
 export const unitKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UnitKind']
 > = [
@@ -202773,6 +205785,8 @@ export const urbanServiceValues: ReadonlyArray<
   'depot',
   'administration',
   'entertainment',
+  'lighting',
+  'pest_control',
 ]
 export const usageBucketValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UsageBucket']
@@ -202816,6 +205830,9 @@ export const valueAxisValues: ReadonlyArray<
   'competition',
   'perseverance_value',
   'leisure',
+  'freedom',
+  'equality',
+  'hospitality',
 ]
 export const valueHolderValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ValueHolder']
@@ -202861,6 +205878,7 @@ export const vehicleFamilyValues: ReadonlyArray<
   'burrower',
   'construct',
   'living',
+  'sledge',
 ]
 export const vehicleFrameValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VehicleFrame']
@@ -203052,6 +206070,8 @@ export const vehicleSectionValues: ReadonlyArray<
   'tower',
   'platform',
   'core',
+  'galley',
+  'sick_bay',
 ]
 export const vehicleSizeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VehicleSize']
@@ -203076,13 +206096,21 @@ export const vesselStatusValues: ReadonlyArray<
 > = ['docked', 'afloat', 'damaged', 'wrecked', 'ghost']
 export const veteranGrantValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VeteranGrant']
-> = ['land', 'pension', 'none', 'membership', 'title', 'tax_exemption']
+> = [
+  'land',
+  'pension',
+  'none',
+  'membership',
+  'title',
+  'tax_exemption',
+  'office',
+]
 export const visibilityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Visibility']
-> = ['obvious', 'noticeable', 'hidden']
+> = ['obvious', 'noticeable', 'hidden', 'marked']
 export const visionKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VisionKind']
-> = ['vision', 'union', 'voice', 'trance', 'dream', 'oracle_speech']
+> = ['vision', 'union', 'voice', 'trance', 'dream', 'oracle_speech', 'sign']
 export const votingRuleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['VotingRule']
 > = ['unanimity', 'majority', 'weighted_by_standing', 'weighted_by_rank']
@@ -203120,6 +206148,8 @@ export const warAimKindValues: ReadonlyArray<
   'loot',
   'change_government',
   'seize_route',
+  'secure_water',
+  'return_refugees',
 ]
 export const warCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WarCause']
@@ -203152,6 +206182,8 @@ export const warCauseValues: ReadonlyArray<
   'raid',
   'liberation',
   'punitive',
+  'water',
+  'refugees',
 ]
 export const warEndingValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WarEnding']
@@ -203166,6 +206198,7 @@ export const warEndingValues: ReadonlyArray<
   'same_front',
   'no_side_left',
   'miracle',
+  'mediated',
 ]
 export const warSideValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WarSide']
@@ -203184,6 +206217,7 @@ export const warTerrainValues: ReadonlyArray<
   'under_water',
   'space',
   'underground',
+  'dimension',
 ]
 export const waterLiftValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WaterLift']
@@ -203195,6 +206229,7 @@ export const waterLiftValues: ReadonlyArray<
   'steam_pump',
   'wind_pump',
   'electric_pump',
+  'animal_wheel',
 ]
 export const waterSourceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WaterSource']
@@ -203267,7 +206302,7 @@ export const willCauseValues: ReadonlyArray<
 ]
 export const witnessModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WitnessMode']
-> = ['saw', 'heard', 'took_part', 'was_told']
+> = ['saw', 'heard', 'took_part', 'was_told', 'sensed']
 export const wordKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WordKind']
 > = [
@@ -203286,7 +206321,17 @@ export const wordOrderValues: ReadonlyArray<
 > = ['sov', 'svo', 'vso', 'vos', 'ovs', 'osv', 'free']
 export const wordRegisterValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WordRegister']
-> = ['common', 'sacred', 'poetic', 'archaic', 'taboo', 'technical', 'honorific']
+> = [
+  'common',
+  'sacred',
+  'poetic',
+  'archaic',
+  'taboo',
+  'technical',
+  'honorific',
+  'slang',
+  'legal',
+]
 export const workshopKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorkshopKind']
 > = [
@@ -203314,6 +206359,9 @@ export const workshopKindValues: ReadonlyArray<
   'dyeworks',
   'scriptorium',
   'evaporation_works',
+  'paper_mill',
+  'printing_house',
+  'ropewalk',
 ]
 export const worldAgeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldAge']
@@ -203339,6 +206387,8 @@ export const worldEndValues: ReadonlyArray<
   'drowned',
   'burned',
   'devoured',
+  'emptied',
+  'merged',
 ]
 export const worldEndCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldEndCause']
@@ -203353,6 +206403,9 @@ export const worldEndCauseValues: ReadonlyArray<
   'runaway_climate',
   'war',
   'outer_hunger',
+  'plague',
+  'runaway_making',
+  'structure_failure',
 ]
 export const worldLightValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldLight']
@@ -203365,6 +206418,8 @@ export const worldLightValues: ReadonlyArray<
   'ship_cycle',
   'fading_god',
   'none',
+  'bioluminescence',
+  'made_light',
 ]
 export const worldReplacedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldReplacedEvent']['kind']
@@ -203406,10 +206461,13 @@ export const worldTypeValues: ReadonlyArray<
   'hollow',
   'ice_shell',
   'methane',
+  'rogue',
+  'archipelago',
+  'megastructure',
 ]
 export const worshipModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorshipMode']
-> = ['devotion', 'appeasement', 'bargain']
+> = ['devotion', 'appeasement', 'bargain', 'union', 'kinship']
 export const woundCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WoundCause']
 > = [
@@ -203421,6 +206479,8 @@ export const woundCauseValues: ReadonlyArray<
   'neglect',
   'betrayal',
   'mortal_slayer',
+  'schism',
+  'outer_being',
 ]
 export const writingMediumValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WritingMedium']
@@ -203439,6 +206499,8 @@ export const writingMediumValues: ReadonlyArray<
   'silk',
   'wood_slips',
   'electronic',
+  'cloth',
+  'potsherd',
 ]
 export const writingSystemValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WritingSystem']
@@ -203474,6 +206536,8 @@ export const yieldProductValues: ReadonlyArray<
   'scent',
   'honey',
   'wax',
+  'shell',
+  'scales',
 ]
 export const zoneKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ZoneKind']
@@ -203488,4 +206552,5 @@ export const zoneKindValues: ReadonlyArray<
   'transport',
   'military',
   'research',
+  'port',
 ]

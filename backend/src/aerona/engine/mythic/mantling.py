@@ -123,6 +123,25 @@ async def ascend(ctx: TickContext, mortal: EntityRow, row: MantlingRow) -> SonRo
     return deification.son
 
 
+async def contested(ctx: TickContext, mortal: EntityRow, row: MantlingRow) -> bool:
+    if row.god_node_id is None:
+        return False
+    rival = await ctx.session.scalar(
+        select(MantlingRow)
+        .where(MantlingRow.god_node_id == row.god_node_id, MantlingRow.mortal_entity_id != mortal.id, MantlingRow.progress >= PERCENT)
+        .order_by(MantlingRow.mortal_entity_id)
+        .limit(1)
+    )
+    if rival is None:
+        return False
+    for claim in (row, rival):
+        if "state" not in claim.locked:
+            claim.state = MantlingState.CONTESTED
+    roles = {IncidentRole.ACTOR: mortal.id, IncidentRole.OPPONENT: rival.mortal_entity_id, IncidentRole.TARGET: row.god_node_id}
+    await record(ctx, "mantle.contested", roles=roles)
+    return True
+
+
 async def weigh(ctx: TickContext, mortal: EntityRow, tally: MantleTally) -> None:
     table = ctx.rules.mantling
     path = await path_of(ctx, mortal)
@@ -151,6 +170,8 @@ async def weigh(ctx: TickContext, mortal: EntityRow, tally: MantleTally) -> None
     if (row.god_node_id is not None and await goal_set(ctx, GodGoalKind.PREVENT_MANTLING, mortal.id)) and rng.chance(table.oppose_pct):
         row.state = MantlingState.BLOCKED
         tally.blocked += 1
+        return
+    if await contested(ctx, mortal, row):
         return
     sponsors = await goal_set(ctx, GodGoalKind.SPONSOR_MANTLING, mortal.id)
     if row.blocked or not rng.chance(table.fate_pct + (table.sponsor_pct if sponsors else 0)):

@@ -355,6 +355,7 @@ export function EventsPanel({
   )
   return (
     <Section
+      id='section-heaven-events'
       title='Events of the heavens'
       description='Galactic and dimensional events of the last ten epochs; those under way still act.'
       icon={Sparkles}

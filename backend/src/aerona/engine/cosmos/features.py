@@ -91,6 +91,19 @@ async def harbour_pirates(ctx: TickContext, cosmography: Cosmography) -> int:
     return raised
 
 
+async def veil_and_bend(ctx: TickContext, cosmography: Cosmography) -> int:
+    table = ctx.rules.cosmic_features
+    touched = 0
+    for kind, column, lift in ((CosmicFeatureKind.NEBULA, "piracy", table.nebula_piracy), (CosmicFeatureKind.DARK_BODY, "danger", table.dark_body_danger)):
+        for feature in await live_features(ctx, kind):
+            ids = {world.id for world in worlds_of(cosmography, feature.star_id)}
+            for route in await ctx.session.scalars(select(RouteRow).where(RouteRow.active.is_(True)).order_by(RouteRow.id)):
+                if (route.world_a_id in ids or route.world_b_id in ids) and column not in route.locked and not held(route.world_a_id, route.world_b_id):
+                    setattr(route, column, clamp_percent(getattr(route, column) + lift))
+                    touched += 1
+    return touched
+
+
 async def keep_wormholes(ctx: TickContext) -> int:
     table = ctx.rules.cosmic_features
     kept = 0

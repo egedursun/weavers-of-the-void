@@ -281,6 +281,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
 
   return (
     <Section
+      id='section-son-hand'
       title='Hand of God'
       description={`Every power you hold over ${son.name}. All of it also unfolds on its own as epochs pass.`}
       surface='card'

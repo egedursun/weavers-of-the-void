@@ -10,6 +10,7 @@ import {
   Briefcase,
   CarFront,
   CircuitBoard,
+  CloudFog,
   Coins,
   Compass,
   Cpu,
@@ -42,6 +43,7 @@ import {
   Mountain,
   Orbit,
   Palette,
+  PawPrint,
   Pickaxe,
   Plane,
   Radiation,
@@ -60,11 +62,14 @@ import {
   Store,
   Sword,
   Swords,
+  Syringe,
   Tent,
   ThumbsDown,
   TreeDeciduous,
+  Trees,
   Trophy,
   User,
+  UserX,
   Users,
   Wand,
   Waves,
@@ -73,6 +78,12 @@ import {
   Wrench,
   Zap,
   ZapOff,
+  Banknote,
+  Cog,
+  FlameKindling,
+  Moon,
+  BatteryLow,
+  HandCoins,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
@@ -112,6 +123,8 @@ export const CAREERS: Record<components['schemas']['CareerPath'], Named> = {
   service: { label: 'Serves a great house', icon: KeyRound, tone: 'gold' },
   arts: { label: 'Took up an art', icon: Palette, tone: 'verdigris' },
   settle: { label: 'Left to settle a frontier', icon: Tent, tone: 'success' },
+  healing: { label: 'Healing', icon: HeartPulse, tone: 'success' },
+  wilds: { label: 'The wilds', icon: Trees, tone: 'success' },
 }
 
 export const BREAKS: Record<components['schemas']['StressBreak'], Named> = {
@@ -122,6 +135,8 @@ export const BREAKS: Record<components['schemas']['StressBreak'], Named> = {
   vice: { label: 'Vice', icon: Gem, tone: 'warning' },
   revelation: { label: 'Revelation', icon: Zap, tone: 'verdigris' },
   withdrawal: { label: 'Withdrawal', icon: EyeOff, tone: 'muted' },
+  collapse: { label: 'Collapse', icon: BatteryLow, tone: 'danger' },
+  dissociation: { label: 'Dissociation', icon: CloudFog, tone: 'info' },
 }
 
 export const DEATHS: Record<components['schemas']['DeathCause'], Named> = {
@@ -142,10 +157,10 @@ export const DEATHS: Record<components['schemas']['DeathCause'], Named> = {
   magic: { label: 'Magic', icon: Wand, tone: 'verdigris' },
   divine: { label: 'A god', icon: Star, tone: 'gold' },
   poison: { label: 'Poison', icon: Flame, tone: 'danger' },
-  sacrifice: { label: 'Sacrifice', icon: Flame, tone: 'gold' },
+  sacrifice: { label: 'Sacrifice', icon: FlameKindling, tone: 'gold' },
   hardship: { label: 'Hardship', icon: Footprints, tone: 'muted' },
   despair: { label: 'Despair', icon: HeartCrack, tone: 'muted' },
-  unknown: { label: 'Unknown', icon: Ghost, tone: 'muted' },
+  unknown: { label: 'Unknown', icon: Moon, tone: 'muted' },
   bombardment: { label: 'Bombardment', icon: Bomb, tone: 'danger' },
   industrial: { label: 'Industrial accident', icon: Factory, tone: 'warning' },
   crash: { label: 'A crash', icon: CarFront, tone: 'danger' },
@@ -154,6 +169,10 @@ export const DEATHS: Record<components['schemas']['DeathCause'], Named> = {
   experiment: { label: 'An experiment', icon: FlaskConical, tone: 'warning' },
   drowning: { label: 'Drowning', icon: Waves, tone: 'info' },
   sport: { label: 'Sport', icon: Trophy, tone: 'warning' },
+  animal: { label: 'An animal', icon: PawPrint, tone: 'warning' },
+  crowd: { label: 'A crush of people', icon: Users, tone: 'danger' },
+  medical: { label: 'Treatment gone wrong', icon: Syringe, tone: 'danger' },
+  soul_loss: { label: 'Loss of the soul', icon: Eye, tone: 'danger' },
 }
 
 export const READINGS: Record<components['schemas']['DeathReading'], Named> = {
@@ -162,6 +181,7 @@ export const READINGS: Record<components['schemas']['DeathReading'], Named> = {
   plain: { label: 'Plain', icon: Minus, tone: 'muted' },
   shameful: { label: 'Shameful', icon: ThumbsDown, tone: 'warning' },
   cursed: { label: 'Cursed', icon: Skull, tone: 'danger' },
+  pitied: { label: 'Pitied', icon: HeartCrack, tone: 'info' },
 }
 
 export const KIN_KINDS: Record<string, Named & { out: string; in: string }> = {
@@ -253,7 +273,7 @@ export const PUNISHMENTS: Record<
   components['schemas']['PunishmentKind'],
   Named
 > = {
-  fine: { label: 'A fine', icon: Coins, tone: 'muted' },
+  fine: { label: 'A fine', icon: Banknote, tone: 'muted' },
   flogging: { label: 'Flogging', icon: Zap, tone: 'warning' },
   exile: { label: 'Exile', icon: Compass, tone: 'warning' },
   branding: { label: 'Branding', icon: Flame, tone: 'danger' },
@@ -272,12 +292,12 @@ export const PUNISHMENTS: Record<
   forced_edit: { label: 'Mind edited by force', icon: Wrench, tone: 'danger' },
   restitution: {
     label: 'Restoring what was taken',
-    icon: Coins,
+    icon: HandCoins,
     tone: 'muted',
   },
   compensation: {
     label: 'A price paid to the wronged',
-    icon: Coins,
+    icon: Gem,
     tone: 'muted',
   },
   penal_labour: {
@@ -334,6 +354,8 @@ export const PUNISHMENTS: Record<
     tone: 'warning',
   },
   erasure: { label: 'Erased', icon: Skull, tone: 'danger' },
+  curse_sentence: { label: 'A curse', icon: Ghost, tone: 'danger' },
+  shunning: { label: 'Shunning', icon: UserX, tone: 'warning' },
 }
 
 export const STANDING_FIELDS: Record<
@@ -441,7 +463,7 @@ export const PROFESSIONS: Record<string, Named> = {
   hunter: { label: 'Hunter', icon: Compass, tone: 'success' },
   sailor: { label: 'Sailor', icon: Wind, tone: 'info' },
   commander: { label: 'Commander', icon: Crown, tone: 'gold' },
-  engineer: { label: 'Engineer', icon: Wrench, tone: 'gold' },
+  engineer: { label: 'Engineer', icon: Cog, tone: 'gold' },
   scientist: { label: 'Scientist', icon: FlaskConical, tone: 'info' },
   pilot: { label: 'Pilot', icon: Plane, tone: 'info' },
   technician: { label: 'Technician', icon: CircuitBoard, tone: 'info' },

@@ -1,14 +1,16 @@
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from aerona.core.total import total
 from aerona.domain.enums.nature import Thermoregulation
+from aerona.rules.registry import Rules
 
 
 @dataclass(frozen=True)
 class ThermoSpec:
     keeps_warm: bool
     untouched: bool
+    food_pct: Callable[[Rules], int] | None = None
 
 
 THERMOREGULATION: Mapping[Thermoregulation, ThermoSpec] = total(
@@ -18,6 +20,7 @@ THERMOREGULATION: Mapping[Thermoregulation, ThermoSpec] = total(
         Thermoregulation.ECTOTHERM: ThermoSpec(keeps_warm=False, untouched=False),
         Thermoregulation.HETEROTHERM: ThermoSpec(keeps_warm=True, untouched=False),
         Thermoregulation.ATHERMIC: ThermoSpec(keeps_warm=False, untouched=True),
+        Thermoregulation.MESOTHERM: ThermoSpec(keeps_warm=True, untouched=False, food_pct=lambda rules: rules.dormancy.mesotherm_food_pct),
     },
 )
 WARM_KEEPING = frozenset(kind for kind, spec in THERMOREGULATION.items() if spec.keeps_warm)

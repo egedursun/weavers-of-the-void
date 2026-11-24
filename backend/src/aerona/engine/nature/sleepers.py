@@ -7,15 +7,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.ecology import SpeciesProfileRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.environment import SeasonOnsetRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.environment import TemperatureBand
+from aerona.domain.enums.environment import SeasonOnset, TemperatureBand
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature import Dormancy
 from aerona.engine.context import TickContext
 from aerona.engine.nature.seasons import activity, asleep, band_at, season_bands
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat
+from aerona.engine.recording.moments import epoch_span
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
@@ -81,7 +84,28 @@ async def keep_sleepers(ctx: TickContext, tally: SleeperTally) -> None:
                 tally.woken += 1
                 break
     await wake_long_sleepers(ctx, bands, tally)
+    await keep_paused_young(ctx)
     await ctx.session.flush()
+
+
+async def keep_paused_young(ctx: TickContext) -> None:
+    start, span = epoch_span(ctx)
+    failed = select(SeasonOnsetRow.world_id).where(SeasonOnsetRow.onset == SeasonOnset.FAILED, SeasonOnsetRow.year.between(start, start + span))
+    worlds = set(await ctx.session.scalars(failed.order_by(SeasonOnsetRow.world_id)))
+    if not worlds:
+        return
+    paused = set(await ctx.session.scalars(select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.dormancy == Dormancy.DIAPAUSE)))
+    keep = ctx.rules.dormancy.diapause_survival_pct
+    for row in await ctx.session.scalars(
+        select(SpeciesRangeRow)
+        .join(EntityRow, EntityRow.id == SpeciesRangeRow.species_entity_id)
+        .where(EntityRow.world_id.in_(sorted(worlds)))
+        .order_by(SpeciesRangeRow.species_entity_id, SpeciesRangeRow.region_entity_id)
+    ):
+        if held(row.species_entity_id) or "abundance" in (row.locked or []) or row.abundance <= 0:
+            continue
+        kept = keep if row.species_entity_id in paused else PERCENT - keep
+        row.abundance = clamp_int(round_half_up(row.abundance * (PERCENT + kept) / (2 * PERCENT)), 0, PERCENT)
 
 
 async def wake_long_sleepers(ctx: TickContext, bands: Mapping[int, TemperatureBand], tally: SleeperTally) -> None:

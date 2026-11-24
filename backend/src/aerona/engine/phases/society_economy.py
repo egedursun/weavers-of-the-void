@@ -55,6 +55,7 @@ from aerona.engine.economy.household import Meal, eat, enforce_storage, gather_c
 from aerona.engine.economy.materials import MaterialBook, armour_protection, curse_bonus, enchantment_cap, set_node_material, weapon_damage
 from aerona.engine.economy.refining import RefiningTally, kitchen
 from aerona.engine.economy.stocks import aggregate_need, goods_of, holding, lots_of, sync_aggregates
+from aerona.engine.environment.cells import light_below
 from aerona.engine.industry.energy import taste_meal
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lore.items import craft
@@ -575,7 +576,7 @@ async def consume(ctx: TickContext, entity: EntityRow, society: Society, world: 
 async def ground_share(ctx: TickContext, entity: EntityRow) -> float:
     view = await view_of(ctx.session, ctx.rules, entity.world_id)
     soil = PERCENT if view.soil else ctx.rules.world_views.soilless_harvest_pct
-    return light_pct(ctx.rules, view.light) / PERCENT * soil / PERCENT
+    return light_pct(ctx.rules, view.light) / PERCENT * soil / PERCENT * await light_below(ctx, entity)
 
 
 async def drifted_shares(ctx: TickContext, entity: EntityRow, society: Society, inputs: EconomyInputs) -> dict[SocialClass, float]:
@@ -704,6 +705,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.cuisines",
     "table.cult_tenets",
     "table.culture_values",
+    "table.deep_passages",
     "table.deterrence_postures",
     "table.dimensional_events",
     "table.dimensions",
@@ -766,6 +768,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",
+    "table.region_underground",
     "table.resource_commodities",
     "table.resource_profiles",
     "table.resource_workers",
@@ -782,6 +785,7 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.species_products",
     "table.species_profiles",
     "table.stars",
+    "table.structure_profiles",
     "table.supply_tiers",
     "table.treaty_parties",
     "table.tributes",
@@ -831,7 +835,9 @@ async def run_community(ctx: TickContext, entity: EntityRow, inputs: EconomyInpu
     "table.mobility_events",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.people_culture",
     "table.production_runs",
+    "table.region_pollution",
     "table.settlement_profiles",
     "table.workshops",
 )

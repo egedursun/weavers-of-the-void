@@ -21,11 +21,11 @@ def test_a_section_id_and_a_family_section_are_both_read() -> None:
     assert module.SECTION_ID.search("  section: 'section-kin',").group(1) == "section-kin"
 
 
-def test_a_node_page_rendered_in_the_atlas_is_caught() -> None:
+def test_a_node_page_rendered_outside_the_entry_window_is_caught() -> None:
     module = checker()
     assert module.NODE_PAGES.search("  if (parsed.kind === 'entity') return <EntityView id={parsed.id} />")
     assert not module.NODE_PAGES.search("  return <AtlasHome records={records} kinds={kinds} onSelect={onSelect} />")
 
 
-def test_no_two_sections_share_an_id_and_the_atlas_shows_no_node_page() -> None:
+def test_no_two_sections_share_an_id_and_no_node_page_renders_outside_the_window() -> None:
     assert checker().main() == 0

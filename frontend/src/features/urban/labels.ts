@@ -1,12 +1,15 @@
 import {
+  type LucideIcon,
   Archive,
   ArrowUpFromLine,
   Backpack,
   Bath,
   BookOpen,
+  Bug,
   Building,
   Building2,
   Cable,
+  CalendarX,
   Car,
   Castle,
   Church,
@@ -28,18 +31,22 @@ import {
   Hand,
   HandCoins,
   HandHeart,
+  Handshake,
   Home,
   Hospital,
   Hourglass,
   KeyRound,
   Landmark,
   Library,
+  Lightbulb,
+  MessageSquareWarning,
   Network,
   Orbit,
   Package,
   PackageOpen,
   PawPrint,
   Plane,
+  Rabbit,
   Radiation,
   RadioTower,
   Repeat,
@@ -47,6 +54,7 @@ import {
   Sailboat,
   Scale,
   ScrollText,
+  ShieldPlus,
   Ship,
   Shrub,
   Snowflake,
@@ -62,17 +70,18 @@ import {
   TrendingDown,
   TrendingUp,
   Truck,
-  type LucideIcon,
-  Users,
+  Undo2,
   UserX,
+  Users,
   Warehouse,
   Waves,
   Wheat,
   Wine,
   Zap,
-  MessageSquareWarning,
-  CalendarX,
-  ShieldPlus,
+  House,
+  MountainSnow,
+  TentTree,
+  Signature,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -86,7 +95,7 @@ export const HOUSING: Record<Schema['HousingLevel'], Named> = {
   hut: { label: 'Huts', icon: Tent, tone: 'muted' },
   cottage: { label: 'Cottages', icon: Home, tone: 'info' },
   house: { label: 'Houses', icon: Building, tone: 'verdigris' },
-  townhouse: { label: 'Townhouses', icon: Building2, tone: 'gold' },
+  townhouse: { label: 'Townhouses', icon: House, tone: 'gold' },
   manor: { label: 'Manors', icon: Castle, tone: 'gold' },
   apartment: { label: 'Apartments', icon: Building2, tone: 'info' },
   tenement: { label: 'Tenements', icon: Building, tone: 'muted' },
@@ -94,6 +103,8 @@ export const HOUSING: Record<Schema['HousingLevel'], Named> = {
   arcology_unit: { label: 'Arcology units', icon: Building2, tone: 'gold' },
   habitat_module: { label: 'Habitat modules', icon: Orbit, tone: 'info' },
   ship_berth: { label: 'Ship berths', icon: Rocket, tone: 'muted' },
+  shack: { label: 'Shacks', icon: TentTree, tone: 'muted' },
+  palace: { label: 'Palaces', icon: Castle, tone: 'muted' },
 }
 
 export const SERVICES: Record<Schema['UrbanService'], Named> = {
@@ -122,6 +133,8 @@ export const SERVICES: Record<Schema['UrbanService'], Named> = {
   depot: { label: 'Depots', icon: Warehouse, tone: 'muted' },
   administration: { label: 'Administration', icon: Building2, tone: 'info' },
   entertainment: { label: 'Entertainment', icon: Drama, tone: 'gold' },
+  pest_control: { label: 'Pest control', icon: Bug, tone: 'info' },
+  lighting: { label: 'Street lighting', icon: Lightbulb, tone: 'info' },
 }
 
 export const MORPHOLOGIES: Record<Schema['Morphology'], Named> = {
@@ -147,6 +160,8 @@ export const RACKETS: Record<Schema['RacketKind'], Named> = {
   data_theft: { label: 'Data theft', icon: Database, tone: 'danger' },
   loan_sharking: { label: 'Loan sharking', icon: Coins, tone: 'danger' },
   arms: { label: 'Arms', icon: Swords, tone: 'danger' },
+  poaching: { label: 'Poaching', icon: Rabbit, tone: 'danger' },
+  forgery: { label: 'Forged papers', icon: Signature, tone: 'danger' },
 }
 
 export const STANCES: Record<Schema['CrimeStance'], Named> = {
@@ -154,6 +169,7 @@ export const STANCES: Record<Schema['CrimeStance'], Named> = {
   co_opt: { label: 'Co-opted', icon: HandCoins, tone: 'gold' },
   tolerate: { label: 'Look away for bribes', icon: EyeOff, tone: 'warning' },
   license: { label: 'License the trade', icon: ScrollText, tone: 'gold' },
+  integrate: { label: 'Integrated', icon: Handshake, tone: 'danger' },
 }
 
 export const ORDER_LAWS: Record<Schema['OrderLaw'], Named> = {
@@ -203,6 +219,7 @@ export const CONVOY_STATUS: Record<Schema['ConvoyStatus'], Named> = {
     icon: ShieldPlus,
     tone: 'danger',
   },
+  turned_back: { label: 'Turned back', icon: Undo2, tone: 'warning' },
 }
 
 export const PRESERVATION: Record<Schema['PreservationMethod'], Named> = {
@@ -213,7 +230,7 @@ export const PRESERVATION: Record<Schema['PreservationMethod'], Named> = {
   pickling: { label: 'Pickling', icon: FlaskConical, tone: 'verdigris' },
   fermenting: { label: 'Fermenting', icon: Hourglass, tone: 'verdigris' },
   chilling: { label: 'Chilling', icon: Snowflake, tone: 'info' },
-  freezing: { label: 'Freezing', icon: Snowflake, tone: 'info' },
+  freezing: { label: 'Freezing', icon: MountainSnow, tone: 'info' },
   sealing: { label: 'Sealing', icon: Package, tone: 'muted' },
   canning: { label: 'Canning', icon: Archive, tone: 'muted' },
   irradiating: { label: 'Irradiating', icon: Radiation, tone: 'danger' },
@@ -251,4 +268,5 @@ export const PLAYS: Record<Schema['MarketPlay'], Named> = {
     icon: MessageSquareWarning,
     tone: 'gold',
   },
+  short: { label: 'Sold short', icon: TrendingDown, tone: 'danger' },
 }

@@ -19,7 +19,7 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
@@ -50,7 +50,7 @@ const PERCENT = 100
 const DEFAULT_SIZE = '-30'
 const WORKING = 'Working on it.'
 
-function drawerKind(kind: string): DrawerKind {
+function entryKind(kind: string): EntryKind {
   if (kind === 'son') return 'son'
   if (kind === 'foreign_god') return 'foreign-god'
   if (kind === 'creator') return 'creator'
@@ -180,7 +180,7 @@ function MemoryItem({
         <span className='flex min-w-0 flex-wrap items-center gap-1.5'>
           {memory.subject ? (
             <EntityLink
-              kind={drawerKind(memory.subject.kind)}
+              kind={entryKind(memory.subject.kind)}
               id={String(memory.subject.id)}
             >
               {memory.subject.name}
@@ -234,7 +234,7 @@ export function OpinionBreakdown({ opinion }: { opinion: MindOpinion }) {
         <Muted variant='caption'>regards</Muted>
         {opinion.subject && (
           <EntityLink
-            kind={drawerKind(opinion.subject.kind)}
+            kind={entryKind(opinion.subject.kind)}
             id={String(opinion.subject.id)}
           >
             {opinion.subject.name}

@@ -39,7 +39,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, MiniStat, PageHeader } from '@/components/domain'
 import { useThemeColors } from '@/components/domain/useThemeColors'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { useGlobalWorld, useWorldFilter } from '@/components/layout/worldFilter'
 import { Muted } from '@/components/typography'
 import {
@@ -79,7 +79,7 @@ import {
   type GraphMode,
   type GraphNode,
   GRAPH_MODES,
-  drawerKindOf,
+  entryKindOf,
   buildGraph,
   defaultFocus,
   filterGraph,
@@ -241,7 +241,7 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
   const globalWorld = useGlobalWorld()
   const setGlobalWorld = useWorldFilter((store) => store.setWorldId)
   const navigate = useNavigate()
-  const drawer = useDrawerStack()
+  const entryStack = useEntryStack()
   const tokens = useThemeColors()
   const rules = useRules()
   const catalogue = useCatalogue()
@@ -513,9 +513,11 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
   const focusNode = built.nodes.find((node) => node.id === focusId) ?? null
 
   const openNode = (node: GraphNode) => {
-    const kind = drawerKindOf(node.kind)
+    const kind = entryKindOf(node.kind)
     if (!kind) return
-    drawer.open(kind === 'creator' ? { kind } : { kind, id: String(node.id) })
+    entryStack.open(
+      kind === 'creator' ? { kind } : { kind, id: String(node.id) }
+    )
   }
   const setPath = (first: number | null, second: number | null) =>
     setSearch({ from: first ?? undefined, to: second ?? undefined })

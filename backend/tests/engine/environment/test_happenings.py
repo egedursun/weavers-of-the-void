@@ -36,7 +36,7 @@ RULES = Rules()
 
 
 async def cohorts(realm: Realm, town: EntityRow) -> None:
-    for age, count in ((AgeBand.INFANT, 200), (AgeBand.CHILD, 600), (AgeBand.YOUTH, 400), (AgeBand.ADULT, 1200), (AgeBand.ELDER, 600)):
+    for age, count in ((AgeBand.INFANT, 200), (AgeBand.CHILD, 600), (AgeBand.YOUTH, 400), (AgeBand.ADULT, 1200), (AgeBand.ELDER, 500), (AgeBand.ANCIENT, 100)):
         for sex in SexKind:
             realm.session.add(
                 CohortRow(

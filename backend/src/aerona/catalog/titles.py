@@ -14,6 +14,7 @@ RANK_WORDS: dict[TitleTier, str] = {
     TitleTier.FAITH_SUPREME: "Foremost seat of a faith",
     TitleTier.MILITARY: "Military command",
     TitleTier.GUILD: "Headship of an association",
+    TitleTier.LEAGUE: "Headship of a league",
 }
 TENURE_LABELS: dict[TitleTenure, str] = {
     TitleTenure.FOUNDED: "Founded",

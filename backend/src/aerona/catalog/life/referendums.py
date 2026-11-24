@@ -17,5 +17,7 @@ PETITIONS = total(
         MovementCause.TEMPERANCE: ReferendumSubject.LAW,
         MovementCause.MIND_RIGHTS: ReferendumSubject.LAW,
         MovementCause.EQUAL_STANDING: ReferendumSubject.CONSTITUTION,
+        MovementCause.LEARNING: ReferendumSubject.LAW,
+        MovementCause.HEALTH: ReferendumSubject.LAW,
     },
 )

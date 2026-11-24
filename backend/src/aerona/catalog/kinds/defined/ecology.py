@@ -32,6 +32,8 @@ HABITAT = total(
             checked_by=("engine.ecology.beast_ways.habitat_ways", "engine.ecology.contracts.reachable"),
             used_by=("engine.ecology.anatomy.HABITAT_TESTS",),
         ),
+        Habitat.ICE: Defined("Ice", checked_by=(), used_by=("engine.ecology.anatomy.HABITAT_TESTS",)),
+        Habitat.SHORE: Defined("Shore", checked_by=(), used_by=("engine.ecology.anatomy.HABITAT_TESTS",)),
     },
 )
 
@@ -83,7 +85,9 @@ RANGE_TREND = total(
 TISSUE_MATERIAL = total(
     TissueMaterial,
     {
-        TissueMaterial.SOFT_TISSUE: Defined("Soft tissue", checked_by=(), used_by=("catalog.creature_anatomy.PLAN_SKIN", "catalog.creature_anatomy.TISSUES")),
+        TissueMaterial.SOFT_TISSUE: Defined(
+            "Soft tissue", checked_by=(), used_by=("catalog.biology.BIOLOGY_VARIANTS", "catalog.creature_anatomy.PLAN_SKIN", "catalog.creature_anatomy.TISSUES")
+        ),
         TissueMaterial.HIDE: Defined(
             "Hide", checked_by=(), used_by=("catalog.creature_anatomy.PLAN_SKIN", "catalog.creature_anatomy.TISSUES", "db.tables.anatomy.CreatureAnatomyRow")
         ),
@@ -119,7 +123,15 @@ TISSUE_MATERIAL = total(
             ),
         ),
         TissueMaterial.METALLIC: Defined(
-            "Metallic", checked_by=(), used_by=("catalog.creature_anatomy.EXOTIC_TISSUES", "catalog.creature_anatomy.TISSUES", "catalog.life.ecology.BONE_OF")
+            "Metallic",
+            checked_by=(),
+            used_by=(
+                "catalog.biology.BIOLOGY_VARIANTS",
+                "catalog.creature_anatomy.EXOTIC_TISSUES",
+                "catalog.creature_anatomy.LIFE_SKIN",
+                "catalog.creature_anatomy.TISSUES",
+                "catalog.life.ecology.BONE_OF",
+            ),
         ),
         TissueMaterial.CRYSTALLINE: Defined(
             "Crystalline",
@@ -139,5 +151,7 @@ TISSUE_MATERIAL = total(
             checked_by=(),
             used_by=("catalog.creature_anatomy.LIFE_SKIN", "catalog.creature_anatomy.PLAN_SKIN", "catalog.creature_anatomy.TISSUES"),
         ),
+        TissueMaterial.LIQUID: Defined("Liquid", checked_by=(), used_by=("catalog.creature_anatomy.TISSUES",)),
+        TissueMaterial.WOODY: Defined("Woody", checked_by=(), used_by=("catalog.creature_anatomy.PLAN_SKIN", "catalog.creature_anatomy.TISSUES")),
     },
 )

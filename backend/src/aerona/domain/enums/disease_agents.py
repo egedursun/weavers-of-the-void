@@ -13,6 +13,8 @@ class DiseaseAgent(StrEnum):
     CURSE = "curse"
     MADE = "made"
     UNKNOWN = "unknown"
+    HEREDITARY = "hereditary"
+    AUTOIMMUNE = "autoimmune"
 
 
 class CureClass(StrEnum):
@@ -28,3 +30,5 @@ class CureClass(StrEnum):
     DESIGNED = "designed"
     SURGERY = "surgery"
     ANTIVIRAL = "antiviral"
+    IMMUNISATION = "immunisation"
+    DIET = "diet"

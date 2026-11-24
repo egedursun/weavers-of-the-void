@@ -363,6 +363,8 @@ TACTIC_COUNTERS: MappingProxyType[Tactic, frozenset[Tactic]] = total(
         Tactic.ORBITAL_BOMBARDMENT: frozenset({Tactic.HOLD_LINE, Tactic.ARMOURED_THRUST, Tactic.ARTILLERY_BARRAGE, Tactic.SIEGE_ASSAULT}),
         Tactic.DROP_ASSAULT: frozenset({Tactic.RIVER_DEFENCE, Tactic.HOLD_LINE, Tactic.ARTILLERY_BARRAGE}),
         Tactic.INFILTRATION: frozenset({Tactic.HOLD_LINE, Tactic.ARTILLERY_BARRAGE, Tactic.ELECTRONIC_WARFARE}),
+        Tactic.RIVER_CROSSING: frozenset({Tactic.RIVER_DEFENCE, Tactic.MISSILE_ATTRITION}),
+        Tactic.FIRE_ATTACK: frozenset({Tactic.SHIELD_WALL, Tactic.HOLD_LINE, Tactic.SIEGE_ASSAULT}),
     },
 )
 SUCCESSORS: MappingProxyType[UnitKind, UnitKind] = MappingProxyType(

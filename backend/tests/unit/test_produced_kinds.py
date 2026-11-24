@@ -12,7 +12,8 @@ def engine_text() -> str:
 
 
 def test_every_title_rank_has_an_engine_path_that_raises_it() -> None:
-    assert set(TitleTier) == set(TIER_RANKS) | SEAT_RANKS
+    assert set(TitleTier) == set(TIER_RANKS) | SEAT_RANKS | {TitleTier.LEAGUE}
+    assert "found_title(ctx, realm, TitleTier.LEAGUE" in engine_text()
 
 
 def test_every_subject_kind_is_chosen_by_the_engine() -> None:

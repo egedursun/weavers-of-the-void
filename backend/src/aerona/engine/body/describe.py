@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.body_plans import PLANS
 from aerona.catalog.conditions import CAPACITIES, CONDITIONS, MAIMS, OPEN_INJURY_STATES
-from aerona.catalog.effect_packages import PACKAGES
+from aerona.catalog.effect_packages import FORGET_SCOPES, PACKAGES, SLEEP_UNTILS
 from aerona.catalog.harm_kinds import INJURIES
 from aerona.catalog.tissues import digits_phrase
 from aerona.constants.units import PERCENT
@@ -73,16 +73,25 @@ def vitals(body: BodyRow, *, private: bool) -> list[str]:
     return found
 
 
+def shaped(row: AfflictionRow) -> str:
+    parts = [
+        *([f"ageing at {row.ageing_rate_pct}%"] if row.ageing_rate_pct is not None else []),
+        *([FORGET_SCOPES[row.forget_scope].lower()] if row.forget_scope is not None else []),
+        *([SLEEP_UNTILS[row.sleep_until].lower()] if row.sleep_until is not None else []),
+    ]
+    return f", {'; '.join(parts)}" if parts else ""
+
+
 async def afflictions_text(session: AsyncSession, bearer_id: int, *, private: bool) -> list[str]:
     live = (AfflictionRow.bearer_node_id == bearer_id, AfflictionRow.cured_epoch.is_(None), AfflictionRow.stage > 0)
     rows = await session.scalars(select(AfflictionRow).where(*live))
     found: list[str] = []
     for row in rows:
         spec = PACKAGES[row.package]
-        if spec.visibility is Visibility.HIDDEN and not private:
+        if spec.visibility in (Visibility.HIDDEN, Visibility.MARKED) and not private:
             continue
         stage = spec.stages[row.stage - 1] if row.stage <= len(spec.stages) else None
-        found.append(f"{spec.label.lower()} ({stage.label.lower()})" if stage is not None else spec.label.lower())
+        found.append((f"{spec.label.lower()} ({stage.label.lower()})" if stage is not None else spec.label.lower()) + shaped(row))
     return found
 
 

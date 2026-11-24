@@ -13,7 +13,7 @@ RULES = Rules()
 
 
 def test_eleven_duties_sixteen_pursuits_twelve_shares() -> None:
-    assert len(HouseDuty) == 11 and len(LeisureKind) == 16 and len(TIME_FIELDS) == 13
+    assert len(HouseDuty) == 13 and len(LeisureKind) == 19 and len(TIME_FIELDS) == 15
     assert {"civic", "training"} <= set(TIME_FIELDS)
 
 

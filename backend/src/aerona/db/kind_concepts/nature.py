@@ -197,6 +197,8 @@ DUTY_DOMAINS: Mapping[OfficeDuty, frozenset[Domain]] = total(
         D.MEMORY: frozenset({Domain.MEMORY, Domain.TIME, Domain.DREAM}),
         D.MAKING: frozenset({Domain.CRAFT, Domain.STONE, Domain.TECHNOLOGY, Domain.MACHINES}),
         D.HEALING: frozenset({Domain.LIFE, Domain.PLANTS, Domain.HARVEST}),
+        D.TRADE: frozenset({Domain.TRADE, Domain.ROAD}),
+        D.LEARNING: frozenset({Domain.KNOWLEDGE, Domain.SCIENCE, Domain.INFORMATION}),
     },
 )
 DUTY_FORMS: Mapping[OfficeDuty, frozenset[SpellForm]] = total(
@@ -207,6 +209,8 @@ DUTY_FORMS: Mapping[OfficeDuty, frozenset[SpellForm]] = total(
         D.MEMORY: frozenset({SpellForm.TIME, SpellForm.INFORMATION}),
         D.MAKING: frozenset({SpellForm.EARTH, SpellForm.MACHINE}),
         D.HEALING: frozenset({SpellForm.BODY, SpellForm.PLANT}),
+        D.TRADE: frozenset({SpellForm.FATE, SpellForm.INFORMATION}),
+        D.LEARNING: frozenset({SpellForm.MIND, SpellForm.INFORMATION}),
     },
 )
 
@@ -233,6 +237,8 @@ YIELD_PARTS: Mapping[YieldProduct, ProductPart] = total(
         YieldProduct.SCENT: P.REAGENT,
         YieldProduct.HONEY: P.SUGAR,
         YieldProduct.WAX: P.RESIN,
+        YieldProduct.SHELL: P.SHELL,
+        YieldProduct.SCALES: P.HIDE,
     },
 )
 PLANT_PARTS: Mapping[PlantYield, ProductPart] = total(
@@ -254,6 +260,9 @@ PLANT_PARTS: Mapping[PlantYield, ProductPart] = total(
         PlantYield.RESIN: P.RESIN,
         PlantYield.STIMULANT: P.STIMULANT,
         PlantYield.FODDER: P.FODDER,
+        PlantYield.MEDICINE: P.LEAF,
+        PlantYield.BUILDING: P.WOOD,
+        PlantYield.FUEL: P.WOOD,
     },
 )
 PRODUCT_PARTS: Mapping[str, ProductPart] = {

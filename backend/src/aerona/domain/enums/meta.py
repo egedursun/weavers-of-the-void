@@ -210,3 +210,10 @@ class ImageMime(StrEnum):
 class ImageOrigin(StrEnum):
     GENERATED = "generated"
     UPLOADED = "uploaded"
+
+
+class HealthStatus(StrEnum):
+    OK = "ok"
+    WARNING = "warning"
+    BAD = "bad"
+    DEGRADED = "degraded"

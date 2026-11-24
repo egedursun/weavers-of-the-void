@@ -177,6 +177,9 @@ CONDITIONS: Mapping[ConditionKind, ConditionSpec] = total(
             },
             curable=True,
         ),
+        K.SEIZURES: ConditionSpec("seizures", lambda rules: {C.COMMAND: rules.seizure_capacity_cut, C.CRAFT: rules.seizure_capacity_cut}, visible=True),
+        K.LASTING_FEAR: ConditionSpec("a lasting fear", lambda rules: {C.MELEE: rules.lasting_fear_melee, C.COMMAND: rules.lasting_fear_melee}, curable=True),
+        K.BREATHLESSNESS: ConditionSpec("breathlessness", lambda rules: {C.ENDURANCE: rules.breathless_endurance, C.LABOUR: rules.breathless_endurance}),
     },
 )
 
@@ -193,6 +196,8 @@ CAPACITIES: Mapping[Capacity, CapacitySpec] = total(
         C.FERTILITY: CapacitySpec("bearing children", alert=False, bedridden=False),
         C.ENDURANCE: CapacitySpec("hard work and long journeys", alert=False, bedridden=True),
         C.PERCEPTION: CapacitySpec("keeping watch and noticing", alert=True, bedridden=False),
+        C.STEALTH: CapacitySpec("going unseen", alert=True, bedridden=True),
+        C.LABOUR: CapacitySpec("work by strength", alert=False, bedridden=True),
     },
 )
 
@@ -224,6 +229,8 @@ MAIMS: Mapping[MaimedKind, MaimedSpec] = total(
             part=BodyPart.FINGERS,
             loss=lambda rules: rules.lost_fingers_craft_cut,
         ),
+        M.LOST_TAIL: MaimedSpec("tailless", lambda rules: rules.lost_tail, BodyFunction.TAIL, InjuryKind.SEVERED, part=BodyPart.TAIL),
+        M.LOST_WING: MaimedSpec("wing lost", lambda rules: rules.lost_wing, BodyFunction.FLIGHT, InjuryKind.SEVERED),
     },
 )
 
@@ -238,6 +245,7 @@ STATES: Mapping[InjuryState, StateSpec] = total(
         InjuryState.LETHAL: StateSpec(open=False, rank=6),
         InjuryState.GANGRENOUS: StateSpec(open=True, rank=5, festering=True),
         InjuryState.REOPENED: StateSpec(open=True, rank=2, fresh=True),
+        InjuryState.CHRONIC: StateSpec(open=False, rank=3),
     },
 )
 

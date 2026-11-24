@@ -22,6 +22,8 @@ function part(key: string, label: string, changes: Partial<Part> = {}): Part {
   }
 }
 
+const CORE_PLANS = new Set(['tentacled', 'radial'])
+
 describe('anatomy figure', () => {
   it('draws the killing wound and labels every wounded part', async () => {
     const parts = [
@@ -67,11 +69,21 @@ describe('anatomy figure', () => {
     'colossal',
     'construct',
     'divine_manifest',
+    'tentacled',
+    'centauroid',
+    'radial',
+    'colonial',
+    'hexapod',
+    'rooted',
   ])('draws the %s plan', async (plan) => {
     const { screen } = await renderScreen(
       <AnatomyFigure
         plan={plan}
-        parts={[part('torso', 'Torso', { state: 'fresh' })]}
+        parts={[
+          part(CORE_PLANS.has(plan) ? 'core' : 'torso', 'Torso', {
+            state: 'fresh',
+          }),
+        ]}
         describe={(item) => item.label}
       />
     )

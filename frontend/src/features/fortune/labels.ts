@@ -14,6 +14,7 @@ import {
   Sparkles,
   Sun,
   Unlink,
+  Skull,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -31,7 +32,7 @@ export const LAWS: Record<Schema['FortuneLaw'], Named> = {
 
 export const SOURCES: Record<Schema['FortuneSourceKind'], Named> = {
   blessing: { label: 'A blessing', icon: HandHeart, tone: 'success' },
-  curse: { label: 'A curse', icon: CloudRain, tone: 'danger' },
+  curse: { label: 'A curse', icon: Skull, tone: 'danger' },
   charm: { label: 'A charm', icon: Gem, tone: 'info' },
   divine_favour: { label: 'Divine favour', icon: Sun, tone: 'gold' },
   divine_disfavour: {

@@ -102,6 +102,7 @@ class SealView(ApiModel):
     pact_oath_id: int | None
     power_id: int | None
     living_line_id: int | None
+    made_mind_id: int | None
     locked: list[str]
 
 
@@ -151,5 +152,6 @@ class CouplingNodeView(ApiModel):
     oath_choices: list[SealLinkChoice]
     power_choices: list[SealLinkChoice]
     line_choices: list[SealLinkChoice]
+    mind_choices: list[SealLinkChoice]
     novelty: NoveltyView | None
     sinecures: list[SinecureView]

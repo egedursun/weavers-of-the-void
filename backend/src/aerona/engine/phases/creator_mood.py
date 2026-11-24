@@ -34,6 +34,7 @@ from aerona.engine.primitives.numbers import clamp_percent
     "table.stars",
     "table.war_sides",
     "table.wars",
+    "table.world_ends",
     "table.worlds",
 )
 @writes(

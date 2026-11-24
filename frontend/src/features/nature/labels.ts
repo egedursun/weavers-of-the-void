@@ -1,9 +1,9 @@
 import {
-  type LucideIcon,
   Bean,
   Bug,
   CircleSlash,
   Compass,
+  Copy,
   Drama,
   Droplets,
   Ear,
@@ -11,13 +11,17 @@ import {
   Eye,
   Flame,
   FlaskConical,
+  Gauge,
   Ghost,
   Handshake,
   Hourglass,
   Leaf,
+  MinusCircle,
   Moon,
   MoonStar,
+  PauseCircle,
   Radar,
+  RefreshCw,
   Shield,
   ShieldCheck,
   Skull,
@@ -26,10 +30,13 @@ import {
   Sun,
   SunDim,
   Thermometer,
+  Utensils,
   Vibrate,
   Wheat,
   Wind,
   Zap,
+  type LucideIcon,
+  ThermometerSun,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -63,6 +70,11 @@ export const SLEEP: Record<Schema['Dormancy'], Named> = {
     icon: Hourglass,
     tone: 'muted',
   },
+  diapause: {
+    label: 'Pauses its young until the season returns',
+    icon: PauseCircle,
+    tone: 'info',
+  },
 }
 
 export const WARMTH: Record<Schema['Thermoregulation'], Named> = {
@@ -78,6 +90,11 @@ export const WARMTH: Record<Schema['Thermoregulation'], Named> = {
     icon: CircleSlash,
     tone: 'muted',
   },
+  mesotherm: {
+    label: 'Warm core, cooler limbs',
+    icon: ThermometerSun,
+    tone: 'verdigris',
+  },
 }
 
 export const SENSES: Record<Schema['SenseKind'], Named> = {
@@ -92,6 +109,8 @@ export const SENSES: Record<Schema['SenseKind'], Named> = {
   heat: { label: 'Sensing heat', icon: Thermometer, tone: 'warning' },
   electric: { label: 'Electric sense', icon: Zap, tone: 'info' },
   ultraviolet: { label: 'Ultraviolet sight', icon: SunDim, tone: 'gold' },
+  taste: { label: 'Taste', icon: Utensils, tone: 'gold' },
+  pressure: { label: 'Sense of pressure', icon: Gauge, tone: 'info' },
 }
 
 export const BONDS: Record<Schema['SymbiosisKind'], Named> = {
@@ -99,6 +118,12 @@ export const BONDS: Record<Schema['SymbiosisKind'], Named> = {
   commensalism: { label: 'Commensalism', icon: Leaf, tone: 'verdigris' },
   parasitism: { label: 'Parasitism', icon: Bug, tone: 'danger' },
   mimicry: { label: 'Mimicry', icon: Drama, tone: 'gold' },
+  amensalism: {
+    label: 'Harms without gain',
+    icon: MinusCircle,
+    tone: 'warning',
+  },
+  farming: { label: 'Tends and harvests', icon: Sprout, tone: 'success' },
 }
 
 export const BOND_HINTS: Record<Schema['SymbiosisKind'], string> = {
@@ -106,6 +131,9 @@ export const BOND_HINTS: Record<Schema['SymbiosisKind'], string> = {
   commensalism: 'The first gains room and the second is left be',
   parasitism: 'The first feeds on the second, and on its herds',
   mimicry: 'The first passes for the second, so hunters spare it',
+  amensalism:
+    'One kind harms the other by its shade or the ground it fouls, and gains nothing',
+  farming: 'One kind tends, guards and harvests the other, and both grow',
 }
 
 export const DEFENCES: Record<Schema['PlantDefence'], Named> = {
@@ -124,6 +152,8 @@ export const DEFENCES: Record<Schema['PlantDefence'], Named> = {
     icon: ShieldCheck,
     tone: 'verdigris',
   },
+  mimicry: { label: 'Looks like a guarded plant', icon: Copy, tone: 'info' },
+  regrowth: { label: 'Grows back fast', icon: RefreshCw, tone: 'success' },
 }
 
 export const FERMENTS: Record<Schema['FermentKind'], Named> = {
@@ -132,4 +162,6 @@ export const FERMENTS: Record<Schema['FermentKind'], Named> = {
   mould: { label: 'Mould', icon: Moon, tone: 'muted' },
   lactic: { label: 'Lactic culture', icon: Droplets, tone: 'info' },
   vinegar: { label: 'Vinegar mother', icon: Zap, tone: 'warning' },
+  alkaline: { label: 'Alkaline culture', icon: FlaskConical, tone: 'gold' },
+  wild: { label: 'Wild culture of a place', icon: Wind, tone: 'verdigris' },
 }

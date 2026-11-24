@@ -6,6 +6,7 @@ import {
   CircleSlash,
   Crown,
   Dices,
+  DoorClosed,
   DoorOpen,
   Droplet,
   Feather,
@@ -17,20 +18,30 @@ import {
   HeartCrack,
   HeartHandshake,
   Home,
+  House,
   Landmark,
   Link,
   MessageSquareWarning,
+  PawPrint,
   Pickaxe,
   Rabbit,
   Shovel,
+  Skull,
   Snowflake,
   Sprout,
   Store,
   Swords,
+  Syringe,
   Unlink,
+  UserMinus,
   UserX,
   Wheat,
   Wine,
+  Book,
+  Droplets,
+  FlaskRound,
+  Sword,
+  Users,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type LoreNamed, TRADITION_TERMS, VALUES, lookup } from './model'
@@ -69,6 +80,8 @@ export const REGISTERS: Record<RegisterKind, LoreNamed> = {
 
 export const TRADITION_EFFECTS: Record<TraditionEffect['effect'], LoreNamed> = {
   cohesion: TRADITION_TERMS.cohesion,
+  healing: TRADITION_TERMS.healing,
+  bonding: TRADITION_TERMS.bonding,
   satisfaction: TRADITION_TERMS.satisfaction,
   piety: TRADITION_TERMS.piety,
   value: { label: 'A value pressed', icon: Feather, tone: 'info' },
@@ -105,13 +118,13 @@ export const ACTS: Record<ActKind, LoreNamed> = {
   },
   building_temples: { label: 'Building temples', icon: Landmark, tone: 'gold' },
   burning_books: { label: 'Burning books', icon: BookX, tone: 'danger' },
-  conquest: { label: 'Conquest', icon: Swords, tone: 'danger' },
+  conquest: { label: 'Conquest', icon: Sword, tone: 'danger' },
   raiding: { label: 'Raiding', icon: Swords, tone: 'warning' },
   duelling: { label: 'Duelling', icon: Swords, tone: 'warning' },
   ransom: { label: 'Ransom', icon: Link, tone: 'warning' },
   taking_captives: { label: 'Taking captives', icon: Link, tone: 'danger' },
   oathbreaking: { label: 'Oathbreaking', icon: HeartCrack, tone: 'danger' },
-  learning: { label: 'Learning', icon: GraduationCap, tone: 'info' },
+  learning: { label: 'Learning', icon: Book, tone: 'info' },
   hospitality: { label: 'Hospitality', icon: DoorOpen, tone: 'success' },
   winter_fighting: { label: 'War in winter', icon: Snowflake, tone: 'info' },
   guest_killing: { label: 'Killing a guest', icon: Ban, tone: 'danger' },
@@ -203,7 +216,7 @@ export const ACTS: Record<ActKind, LoreNamed> = {
   using_charms: { label: 'Using charms', icon: Gem, tone: 'verdigris' },
   feeding_on_hosts: {
     label: 'Feeding on a living host',
-    icon: Droplet,
+    icon: Droplets,
     tone: 'danger',
   },
   killing_sacred_animal: {
@@ -216,6 +229,34 @@ export const ACTS: Record<ActKind, LoreNamed> = {
     icon: Dices,
     tone: 'danger',
   },
+  abandoning_the_sick: {
+    label: 'Abandoning the sick',
+    icon: UserMinus,
+    tone: 'danger',
+  },
+  apologising: { label: 'Apologising', icon: Users, tone: 'success' },
+  breaking_hospitality: {
+    label: 'Breaking hospitality',
+    icon: DoorClosed,
+    tone: 'danger',
+  },
+  cruelty_to_animals: {
+    label: 'Cruelty to animals',
+    icon: PawPrint,
+    tone: 'danger',
+  },
+  enhancing_contestants: {
+    label: 'Enhancing contestants',
+    icon: Syringe,
+    tone: 'warning',
+  },
+  laying_curses: { label: 'Laying curses', icon: Skull, tone: 'danger' },
+  sheltering_strangers: {
+    label: 'Sheltering strangers',
+    icon: House,
+    tone: 'success',
+  },
+  poison_wells: { label: 'Poisoning wells', icon: FlaskRound, tone: 'danger' },
 }
 
 export function effectLabel(effect: TraditionEffect): string {

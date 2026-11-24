@@ -41,6 +41,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EngineKind, EntityType, LegendCategory
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import JudgementDoctrine, RebirthPath, TenetKind
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.mind import ActKind, TraitKind
 from aerona.domain.enums.nature import Dormancy, PlantDefence, Thermoregulation
@@ -216,6 +217,7 @@ def creation_input(entity_type: EntityType) -> type[CreationInput]:
     fields: dict[str, Any] = {"stats": (_stats_input(spec) | None, None), **_extra_fields(entity_type)}
     if spec.placeable:
         fields["location_id"] = (int | None, None)
+        fields["stratum"] = (UndergroundStratum | None, None)
     model: type[CreationInput] = create_model(
         f"Create{''.join(part.capitalize() for part in entity_type.value.split('_'))}Input", __base__=CreationInput, **fields
     )

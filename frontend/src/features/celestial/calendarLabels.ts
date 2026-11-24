@@ -17,6 +17,9 @@ import {
   Skull,
   Sparkles,
   Sword,
+  FlameKindling,
+  Sparkle,
+  HandHeart,
 } from 'lucide-react'
 import type { Named } from '@/features/entity/environment/labels'
 
@@ -28,7 +31,7 @@ export const TRADITION: Record<string, Named> = {
   marriage_rite: { label: 'Marriage rite', icon: HeartHandshake, tone: 'gold' },
   coming_of_age: { label: 'Coming of age', icon: Cake, tone: 'info' },
   taboo: { label: 'Taboo', icon: Ban, tone: 'danger' },
-  offering: { label: 'Offering', icon: Gift, tone: 'gold' },
+  offering: { label: 'Offering', icon: HandHeart, tone: 'gold' },
   pilgrimage: { label: 'Pilgrimage', icon: Footprints, tone: 'verdigris' },
   hospitality: { label: 'Hospitality', icon: Handshake, tone: 'success' },
   duel_custom: { label: 'Duel custom', icon: Sword, tone: 'danger' },
@@ -40,8 +43,8 @@ export const TRADITION: Record<string, Named> = {
   rest_custom: { label: 'Custom of rest', icon: Bed, tone: 'info' },
   vigil: { label: 'Vigil', icon: Moon, tone: 'verdigris' },
   gift_custom: { label: 'Custom of gifts', icon: Gift, tone: 'success' },
-  purification: { label: 'Purification', icon: Sparkles, tone: 'verdigris' },
-  commemoration: { label: 'Commemoration', icon: Flame, tone: 'muted' },
+  purification: { label: 'Purification', icon: Sparkle, tone: 'verdigris' },
+  commemoration: { label: 'Commemoration', icon: FlameKindling, tone: 'muted' },
   competition: { label: 'Competition', icon: Swords, tone: 'gold' },
 }
 

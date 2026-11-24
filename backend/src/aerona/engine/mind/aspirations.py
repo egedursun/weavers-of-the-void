@@ -535,7 +535,7 @@ async def open_wants(session: AsyncSession, mortal_id: int) -> set[WantKind]:
 
 def steered_values(rules: Rules, values: Mapping[ValueAxis, int], wants: set[WantKind]) -> Values:
     pushed = dict(values)
-    for want in wants:
+    for want in sorted(wants):
         for axis, weight in WANT_VALUES.get(want, {}).items():
             pushed[axis] = clamp_int(pushed.get(axis, 0) + weight * rules.aspirations.want_career_pct / PERCENT, -VALUE_SPAN, VALUE_SPAN)
     return pushed

@@ -1,9 +1,14 @@
 import {
+  type LucideIcon,
+  Apple,
   CalendarRange,
+  CalendarX,
   CloudLightning,
   Flag,
   Footprints,
   Gauge,
+  HandCoins,
+  Landmark,
   Map as MapIcon,
   Mountain,
   Package,
@@ -13,13 +18,10 @@ import {
   Skull,
   Sparkles,
   Swords,
-  Waves,
-  type LucideIcon,
-  Landmark,
-  Apple,
-  HandCoins,
-  CalendarX,
   Truck,
+  Unlink,
+  Waves,
+  Ghost,
 } from 'lucide-react'
 import { type KpiTone } from '@/components/domain'
 import { TRANSPORTS } from '@/features/operations/labels'
@@ -38,6 +40,8 @@ export type DangerKey =
   | 'officials'
   | 'spoilage'
   | 'pilferage'
+  | 'pirates'
+  | 'breakage'
 
 export const DANGERS: Record<
   DangerKey,
@@ -85,6 +89,18 @@ export const DANGERS: Record<
     tone: 'danger',
     hint: 'Guards and crews helping themselves where no patrol watches the way',
   },
+  breakage: {
+    label: 'Breakage',
+    icon: Unlink,
+    tone: 'warning',
+    hint: 'Fragile cargo broken on a long or rough way',
+  },
+  pirates: {
+    label: 'Pirates',
+    icon: Ghost,
+    tone: 'danger',
+    hint: 'Raiders from lawless coasts along a water route',
+  },
 }
 
 export const DANGER_KEYS: readonly DangerKey[] = [
@@ -95,6 +111,8 @@ export const DANGER_KEYS: readonly DangerKey[] = [
   'officials',
   'spoilage',
   'pilferage',
+  'pirates',
+  'breakage',
 ]
 
 export const DANGER_FIELD: Record<DangerKey, string> = {
@@ -105,6 +123,8 @@ export const DANGER_FIELD: Record<DangerKey, string> = {
   officials: 'danger_officials',
   spoilage: 'danger_spoilage',
   pilferage: 'danger_pilferage',
+  breakage: 'danger_breakage',
+  pirates: 'danger_pirates',
 }
 
 export const ROUTE_FIELD: Record<string, { label: string; icon: LucideIcon }> =

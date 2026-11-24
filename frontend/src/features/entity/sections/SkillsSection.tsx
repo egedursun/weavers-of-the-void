@@ -98,6 +98,12 @@ const ALL_SKILLS: Record<string, string> = {
   computing: 'Computing',
   science: 'Science',
   administration: 'Administration',
+  climbing: 'Climbing',
+  cooking: 'Cooking',
+  diving: 'Diving',
+  farming: 'Farming',
+  herding: 'Herding',
+  music: 'Music',
 }
 
 function SkillRow({

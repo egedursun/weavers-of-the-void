@@ -216,6 +216,7 @@ class PhenomenaRules:
     weather_epochs: int = rule(5, 1, 100, P, "Epochs of weather a phenomenon forces over its regions at a time")
     time_slip_age_pct: int = rule(30, 0, 300, P, "How much faster or slower those in a time slip age (%)")
     world_threshold: int = rule(95, 1, 100, P, "Intensity at which a phenomenon of the void, of dream or of time detaches as a world of its own")
+    wander_speed: int = rule(1, 1, 10, P, "Regions a wandering phenomenon moves each epoch")
 
 
 @dataclass(frozen=True)
@@ -255,6 +256,10 @@ class CosmographyRules:
     space_law_piracy: int = rule(
         3, 0, 100, T, "Piracy a route loses each epoch for each end that shares its claims, or gains for each end that leaves space open"
     )
+    guard_piracy: int = rule(40, 0, 100, T, "Piracy on a route that has a toll holder at which the holder sets guards on it")
+    guard_piracy_cut: int = rule(5, 0, 50, T, "Piracy a guarded route sheds each epoch")
+    guard_toll_pct: int = rule(5, 0, 50, T, "Toll a guarded route adds to what its holder takes of the goods it carries (%)")
+    guarded_risk_pct: int = rule(70, 0, 100, T, "Risk a journey on a guarded route keeps against an unguarded one (%)")
 
 
 @dataclass(frozen=True)

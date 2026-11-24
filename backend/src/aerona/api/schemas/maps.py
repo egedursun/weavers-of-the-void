@@ -10,7 +10,9 @@ from aerona.domain.enums.culture import ArtMode
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.ecology import BeastTemper
 from aerona.domain.enums.economy import MoneyForm, TradeMode, TradeRouteStatus
+from aerona.domain.enums.environment import TerrainKind
 from aerona.domain.enums.faith import HoldingKind
+from aerona.domain.enums.geology import DeepPassageKind, DeepPassageState, UndergroundStratum
 from aerona.domain.enums.kinds import KindConcept
 from aerona.domain.enums.mass_weapons import RemnantKind
 from aerona.domain.enums.military import Stance
@@ -28,6 +30,7 @@ class RelationLineKind(StrEnum):
     RULE = "rule"
     HUNT = "hunt"
     CONURBATION = "conurbation"
+    PASSAGE = "passage"
 
 
 class GeographyPreview(ApiModel):
@@ -257,6 +260,66 @@ class RegionProtection(ApiModel):
     strength: int
 
 
+class MapDeepStratum(ApiModel):
+    stratum: UndergroundStratum
+    cells: int
+    depth: int
+
+
+class MapDeepOpening(ApiModel):
+    passage_id: int
+    region_id: int
+    stratum: UndergroundStratum
+    place_id: int | None
+    state: DeepPassageState
+
+
+class MapDeepRegion(ApiModel):
+    region_id: int
+    strata: int
+    settlements: int
+    armies: int
+    peoples: int
+
+
+class MapDeepSummary(ApiModel):
+    strata: list[MapDeepStratum] = Field(default_factory=list)
+    openings: list[MapDeepOpening] = Field(default_factory=list)
+    below: list[MapDeepRegion] = Field(default_factory=list)
+
+
+class MapDeepCell(ApiModel):
+    cell_id: int
+    region_id: int
+    name: str | None
+    terrain: TerrainKind
+    extent: int
+    light: int
+    holder_id: int | None
+    held: bool
+    dwellable: bool
+    settlements: int
+    peoples: list[int]
+
+
+class MapDeepPassage(ApiModel):
+    passage_id: int
+    kind: DeepPassageKind
+    state: DeepPassageState
+    width: int
+    progress: int
+    first_region_id: int
+    first_stratum: UndergroundStratum | None
+    second_region_id: int
+    second_stratum: UndergroundStratum | None
+
+
+class MapDeepLevel(ApiModel):
+    stratum: UndergroundStratum
+    cells: list[MapDeepCell]
+    passages: list[MapDeepPassage]
+
+
 class MapView(ApiModel):
     world: WorldRecord
     geometry: WorldMap
@@ -293,3 +356,11 @@ class MapView(ApiModel):
     lairs: list[MapLair] = Field(default_factory=list)
     notes: list[MapNoteRecord]
     time: MapTime
+    deep: MapDeepSummary = Field(default_factory=MapDeepSummary)
+    level: MapDeepLevel | None = None
+
+
+class RegionBelow(ApiModel):
+    region_id: int
+    strata: list[UndergroundStratum]
+    towns: int

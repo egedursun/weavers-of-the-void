@@ -12,8 +12,8 @@ from tests.engine.society.factories import Realm, context, people, tuned
 def test_the_old_adopt_goal_is_gone_and_every_way_has_goals() -> None:
     assert not hasattr(RevivalGoal, "ADOPT_WAYS")
     assert not hasattr(customs_enums, "RevivalAim")
-    assert len(REVIVAL_WAYS) == len(RevivalWay) == 5
-    assert len(REVIVAL_GOALS) == len(RevivalGoal) == 5
+    assert len(REVIVAL_WAYS) == len(RevivalWay) == 6
+    assert len(REVIVAL_GOALS) == len(RevivalGoal) == 6
     assert set(GOAL_WORK) == set(RevivalGoal)
     assert all(spec.goals and spec.goals <= set(RevivalGoal) for spec in REVIVAL_WAYS.values())
 

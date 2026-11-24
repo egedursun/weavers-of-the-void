@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 
 from aerona.catalog.arcana import RECHARGES, SCHOOL_GRAMMAR, SKY_SIGNS
 from aerona.constants.units import PERCENT
@@ -9,7 +9,7 @@ from aerona.core.total import total
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow
-from aerona.db.tables.culture import ItemEnchantmentRow, ItemProfileRow, RiteProfileRow
+from aerona.db.tables.culture import CastingRow, ItemEnchantmentRow, ItemProfileRow, RiteProfileRow
 from aerona.db.tables.dominion import MagicSiteRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
@@ -125,6 +125,26 @@ async def by_offering(fill: Filling) -> bool:
     return True
 
 
+async def by_rest(fill: Filling) -> bool:
+    owner_id = await owner_of(fill.ctx, fill.item.id)
+    if owner_id is None:
+        return False
+    worked = await fill.ctx.session.scalar(select(CastingRow.id).where(CastingRow.caster_entity_id == owner_id, CastingRow.epoch == fill.ctx.epoch).limit(1))
+    return worked is None
+
+
+async def by_worship(fill: Filling) -> bool:
+    owner_id = await owner_of(fill.ctx, fill.item.id)
+    if owner_id is None:
+        return False
+    praying = await fill.ctx.session.scalar(
+        select(func.count())
+        .select_from(BondRow)
+        .where(BondRow.target_node_id == owner_id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE)
+    )
+    return int(praying or 0) > 0
+
+
 FILLERS: Mapping[RechargeRule, Callable[[Filling], Awaitable[bool]]] = total(
     RechargeRule,
     {
@@ -134,15 +154,29 @@ FILLERS: Mapping[RechargeRule, Callable[[Filling], Awaitable[bool]]] = total(
         RechargeRule.NONE: never,
         RechargeRule.SKY_EVENT: by_sky,
         RechargeRule.BODILY_OFFERING: by_offering,
+        RechargeRule.REST: by_rest,
+        RechargeRule.WORSHIP: by_worship,
     },
 )
+
+
+async def worship_scale(ctx: TickContext, spell: ItemEnchantmentRow, item: EntityRow) -> int:
+    if spell.recharge is not RechargeRule.WORSHIP:
+        return 1
+    owner_id = await owner_of(ctx, item.id)
+    praying = await ctx.session.scalar(
+        select(func.count())
+        .select_from(BondRow)
+        .where(BondRow.target_node_id == owner_id, BondRow.kind == BondKind.WORSHIPS, BondRow.state == BondState.ACTIVE)
+    )
+    return max(1, int(praying or 0) // PERCENT)
 
 
 async def recharge(ctx: TickContext, atlas: RegionAtlas, spell: ItemEnchantmentRow, item: EntityRow) -> int:
     room = spell.capacity - spell.charges
     if room <= 0 or not await FILLERS[spell.recharge](Filling(ctx, atlas, spell, item)):
         return 0
-    gained = min(room, RECHARGES[spell.recharge].fill(ctx.rules))
+    gained = min(room, RECHARGES[spell.recharge].fill(ctx.rules) * await worship_scale(ctx, spell, item))
     spell.charges += gained
     return gained
 

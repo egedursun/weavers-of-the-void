@@ -21,7 +21,7 @@ from aerona.tools.son.ages import world_in_reach
 from aerona.tools.son.support import require_essence
 
 Reason = Annotated[str, Field(min_length=REASON_MIN, max_length=REASON_MAX)]
-Share = Literal["timber_pct", "food_need_pct", "capacity_pct", "ore_yield_pct", "storm_pct", "quake_pct", "flood_pct", "drought_pct", "plague_pct"]
+Share = Literal["timber_pct", "food_need_pct", "capacity_pct", "ore_yield_pct", "ship_pct", "storm_pct", "quake_pct", "flood_pct", "drought_pct", "plague_pct"]
 
 
 class ShiftWorldNatureInput(ToolInput):

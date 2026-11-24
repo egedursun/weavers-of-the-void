@@ -61,6 +61,7 @@ from aerona.engine.military.engineering import engineer, engineers, leave_earthw
 from aerona.engine.military.finance import war_credit
 from aerona.engine.military.units import rearm, stacks_of, sync, take
 from aerona.engine.military.w52_war import escorted_chance, honour_crossing, keep_staff, refine_stance, scouted, winter_cut
+from aerona.engine.primitives.deep import front_cells
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -578,11 +579,25 @@ def in_contact(atlas: RegionAtlas, first: ArmyProfileRow, second: ArmyProfileRow
 async def mark_front(ctx: TickContext, war_id: int, first: ArmyProfileRow, second: ArmyProfileRow) -> CampaignFrontRow | None:
     if first.region_entity_id is None or second.region_entity_id is None:
         return None
-    pair = sorted((first.region_entity_id, second.region_entity_id))
-    query = select(CampaignFrontRow).where(CampaignFrontRow.war_id == war_id, CampaignFrontRow.first_region_id == pair[0])
-    row = await ctx.session.scalar(query.where(CampaignFrontRow.second_region_id == pair[1]))
+    low, high = front_cells((first.region_entity_id, first.stratum), (second.region_entity_id, second.stratum))
+    query = select(CampaignFrontRow).where(
+        CampaignFrontRow.war_id == war_id,
+        CampaignFrontRow.first_region_id == low[0],
+        CampaignFrontRow.second_region_id == high[0],
+        CampaignFrontRow.first_stratum.is_(None) if low[1] is None else CampaignFrontRow.first_stratum == low[1],
+        CampaignFrontRow.second_stratum.is_(None) if high[1] is None else CampaignFrontRow.second_stratum == high[1],
+    )
+    row = await ctx.session.scalar(query)
     if row is None:
-        row = CampaignFrontRow(war_id=war_id, first_region_id=pair[0], second_region_id=pair[1], since_epoch=ctx.epoch, last_epoch=ctx.epoch)
+        row = CampaignFrontRow(
+            war_id=war_id,
+            first_region_id=low[0],
+            first_stratum=low[1],
+            second_region_id=high[0],
+            second_stratum=high[1],
+            since_epoch=ctx.epoch,
+            last_epoch=ctx.epoch,
+        )
         ctx.session.add(row)
         await ctx.session.flush()
     row.last_epoch = ctx.epoch

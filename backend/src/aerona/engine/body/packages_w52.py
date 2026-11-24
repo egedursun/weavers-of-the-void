@@ -10,7 +10,7 @@ from aerona.db.tables.body import BodyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mind import ThoughtRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.affliction import ChangeSign, CharmKind, PackageKind, Transmission
+from aerona.domain.enums.affliction import ChangeSign, CharmKind, ForgetScope, PackageKind, SleepUntil, Transmission
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityType
@@ -44,6 +44,9 @@ class Shape:
     transform_mind_kept: bool | None = None
     charm_target_node_id: int | None = None
     charm_kind: CharmKind | None = None
+    ageing_rate_pct: int | None = None
+    forget_scope: ForgetScope | None = None
+    sleep_until: SleepUntil | None = None
 
 
 async def source_plan(ctx: TickContext, source_id: int | None) -> BodyPlan | None:
@@ -66,6 +69,12 @@ async def shape_row(ctx: TickContext, row: AfflictionRow, shape: Shape | None) -
         row.transform_plan = chosen or ctx.rng(f"transform.plan.{row.id}").pick(list(CHANGEABLE_PLANS))
         row.transform_trigger = given.transform_trigger or ChangeSign.NONE
         row.transform_mind_kept = True if given.transform_mind_kept is None else given.transform_mind_kept
+    if row.package is PackageKind.AGEING:
+        row.ageing_rate_pct = given.ageing_rate_pct if given.ageing_rate_pct is not None else table.ageing_rate_pct
+    if row.package is PackageKind.FORGETTING:
+        row.forget_scope = given.forget_scope or ForgetScope.ALL
+    if row.package is PackageKind.SLEEP:
+        row.sleep_until = given.sleep_until or SleepUntil.DEED
     if row.package is PackageKind.CHARM:
         row.charm_target_node_id = given.charm_target_node_id or row.source_node_id
         row.charm_kind = given.charm_kind or CharmKind.LOVE

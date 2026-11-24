@@ -156,7 +156,7 @@ def uncontrolled_tables(texts: dict[Path, str]) -> list[str]:
 
 
 NODE_ENUM = BACKEND / "domain/enums/node.py"
-DRAWER_PAGES = FRONTEND / "config/drawerPages.ts"
+ENTRY_PAGES = FRONTEND / "config/entryPages.ts"
 SHARED_SECTIONS = "<ThingSections"
 
 
@@ -204,12 +204,12 @@ def renders_shared(page: Path) -> bool:
 def pages_without_shared_sections() -> list[str]:
     kinds = node_kinds()
     found: list[str] = []
-    for kind, spec in re.findall(r"['\"]?([a-z-]+)['\"]?:\s*lazy\(\(\)\s*=>\s*import\('([^']+)'\)", DRAWER_PAGES.read_text(encoding="utf-8")):
+    for kind, spec in re.findall(r"['\"]?([a-z-]+)['\"]?:\s*lazy\(\(\)\s*=>\s*import\('([^']+)'\)", ENTRY_PAGES.read_text(encoding="utf-8")):
         if kind.replace("-", "_") not in kinds:
             continue
-        page = module_file(spec, DRAWER_PAGES)
+        page = module_file(spec, ENTRY_PAGES)
         if page is None or not renders_shared(page):
-            found.append(f"the {kind} drawer page does not render ThingSections, so features shared by every thing are missing there")
+            found.append(f"the {kind} entry page does not render ThingSections, so features shared by every thing are missing there")
     return found
 
 

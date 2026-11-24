@@ -30,6 +30,9 @@ class TraitEvolutionRules:
     drought_pressure: int = rule(2, 0, 20, E, "How far a land drier than a species needs moves its drought tolerance each epoch")
     senses_pct: int = rule(20, 0, 100, E, "How much keen senses spare a species from its hunters at full measure (%)")
     fecundity_pct: int = rule(20, 0, 100, E, "Extra growth a species of full fecundity gains (%)")
+    strength_pressure: int = rule(4, 0, 50, E, "How far work in harness, war and draught pushes a kept kind toward strength each epoch")
+    parental_care_pressure: int = rule(4, 0, 50, E, "How far hunters pressing a kind push it toward guarding its young each epoch")
+    social_learning_pressure: int = rule(4, 0, 50, E, "How far being hunted pushes a kind toward learning from its own kind each epoch")
 
 
 @dataclass(frozen=True)
@@ -65,6 +68,8 @@ class KeystoneRules:
     wetland_gain: int = rule(10, 0, 100, E, "Wetland a land's dam-builders hold at full strength")
     disease_relief: int = rule(8, 0, 100, E, "Disease load a land's scavengers keep away at full strength")
     lost_decay: int = rule(2, 0, 100, E, "Soil fertility and harvest a land loses each epoch once its keystone is gone")
+    fixer_fertility_pct: int = rule(10, 0, 100, E, "Soil fertility a land gains each epoch from the kinds that fix its nutrients at full strength, in tenths")
+    grazer_hold_pct: int = rule(50, 0, 100, E, "How strongly great grazers at full strength hold their land open against shrub and forest, in twentieths")
 
 
 @dataclass(frozen=True)
@@ -153,6 +158,11 @@ class PlagueResponseRules(Spanned):
     sanitation_works: int = rule(5, 0, 100, D, "Sanitation a town keeps for good from the works it builds while cleaning")
     sanitation_belief: int = rule(30, 0, 100, D, "Least hold a medical theory needs on a community before it backs cleaning against sickness")
 
+    flee_share_pct: int = rule(15, 0, 100, E, "Share of a stricken town that flees it when the able leave a sick town")
+    inoculate_cut: int = rule(10, 0, 100, E, "Virulence a sickness loses in a town that inoculates its folk at full strength")
+    gathering_morale: int = rule(5, 0, 100, E, "Stability a town loses while it closes its feasts, markets and rites against a sickness")
+    gathering_trade: int = rule(3, 0, 100, E, "Prosperity a town loses while its markets stay closed against a sickness")
+
     @property
     def length(self) -> int:
         return self.epochs(self.length_years)
@@ -210,6 +220,11 @@ class CycleRules:
     weathering_oxygen: int = rule(1, 0, 100, W, "Breathable air fresh weathering rock binds each epoch at full roughness")
     industry_oxygen: int = rule(2, 0, 100, W, "Breathable air the foul air of industry draws each epoch at full pollution")
     uplift_rock: int = rule(3, 0, 100, W, "Rock mountain building raises each epoch on a fully restless world")
+    heat_burial: int = rule(1, 0, 100, W, "Inner heat buried sediment and the slow working of the deep add each epoch")
+    heat_escape: int = rule(3, 0, 100, W, "Inner heat volcanoes let out each epoch at full volcanism")
+    heat_uplift: int = rule(2, 0, 100, W, "Inner heat mountain building spends each epoch at full plate motion")
+    ice_freeze: int = rule(4, 0, 100, W, "Ice a cold world binds each epoch for each degree of cold")
+    ice_melt: int = rule(4, 0, 100, W, "Ice a warm world frees each epoch for each degree of warmth")
     burial_rock: int = rule(1, 0, 100, W, "Rock sediment buried over deep time forms each epoch on a world of full erosion")
     erosion_rock: int = rule(2, 0, 100, W, "Rock erosion wears into sediment each epoch at full erosion")
 
@@ -237,6 +252,11 @@ class PlanetaryCyclesRules:
     oxygen_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the oxygen cycle gives up (%)")
     rock_source_pct: int = rule(100, 0, 300, W, "Share of its usual inflow the rock cycle takes in (%)")
     rock_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the rock cycle gives up (%)")
+    heat_source_pct: int = rule(100, 0, 300, W, "Share of its usual inflow the inner heat of a world takes in")
+    heat_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the inner heat of a world gives off")
+    ice_source_pct: int = rule(100, 0, 300, W, "Share of its usual inflow the ice of a world gathers")
+    ice_sink_pct: int = rule(100, 0, 300, W, "Share of its usual outflow the ice of a world melts")
+    heat_volcano_step: int = rule(2, 0, 50, W, "Volcanism a world loses in an epoch while its inner heat is low")
     oxygen_breath_floor: int = rule(30, 0, 100, W, "Breathable air stock below which the air of a world thins")
     oxygen_fire_draw: int = rule(5, 0, 50, W, "Breathable air fires and clearing draw each epoch at full burning")
     rock_weathering_pct: int = rule(5, 0, 50, W, "Rock weathering wears down each epoch on a fully rough world")

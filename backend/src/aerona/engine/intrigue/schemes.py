@@ -20,8 +20,8 @@ from aerona.db.tables.military import ArmyProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.operations import AdmiraltyRow
 from aerona.db.tables.polity import ClaimRow, OfficeRow, PolityMemberRow, PolityProfileRow
-from aerona.db.tables.relations import RelationshipRow
-from aerona.db.tables.settlement import SettlementTreasuryRow
+from aerona.db.tables.relations import ContestRow, RelationshipRow
+from aerona.db.tables.settlement import SettlementProfileRow, SettlementTreasuryRow
 from aerona.db.tables.warfare import CaptiveRow, SiegeRow
 from aerona.db.write_guard import free_rows, held
 from aerona.domain.enums.bond import BondKind
@@ -32,7 +32,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind, WeatherTrait
 from aerona.domain.enums.folkways import BiasedDecision
 from aerona.domain.enums.intrigue import FavourOrigin, HookDemand, HookSource, IdentityReason, IntrigueSecret, PlotKind, SchemePhase
-from aerona.domain.enums.mind import Attribute, MemoryKind, TraitKind
+from aerona.domain.enums.mind import ActKind, Attribute, MemoryKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CrimeKind, DeathCause
 from aerona.domain.enums.polity import ClaimBasis, OfficeKind
@@ -68,7 +68,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import connect, living_entity, spoken_language
-from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.records import death_path
@@ -569,6 +569,34 @@ async def forge_work(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, targ
         return f"{owner.name} found nothing of {target.name} worth forging"
     row = await forge(ctx, original, owner)
     return f"{owner.name} made a forgery of {original.name} ({spoken(row.kind)})"
+
+
+@STRIKES.on(PlotKind.FIX_CONTEST)
+async def fix_contest(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
+    contest = await ctx.session.scalar(
+        select(ContestRow)
+        .where(or_(ContestRow.challenger_node_id == target.id, ContestRow.defender_node_id == target.id))
+        .order_by(ContestRow.id.desc())
+        .limit(1)
+    )
+    if contest is None:
+        return f"{owner.name} found no contest of {target.name} to fix"
+    await judged(ctx, owner.id, target.id, ActKind.FIXING_CONTESTS, note="fixed a contest")
+    if stat(target, "renown") is not None:
+        shift_stat(target, "renown", -ctx.rules.intrigue.fixed_contest_renown)
+    return f"{owner.name} fixed a contest against {target.name}"
+
+
+@STRIKES.on(PlotKind.INCITE_CROWD)
+async def incite_crowd(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow) -> str:
+    town: EntityRow | None = target
+    if target.entity_type is not EntityType.SETTLEMENT:
+        town = await living_entity(ctx.session, target.location_id) if target.location_id else None
+    profile = await ctx.session.get(SettlementProfileRow, town.id) if town is not None else None
+    if profile is None or held(profile.settlement_entity_id) or "unrest" in profile.locked:
+        return f"{owner.name} found no crowd to stir against {target.name}"
+    profile.unrest = clamp_int(profile.unrest + ctx.rules.intrigue.incited_unrest, 0, PERCENT)
+    return f"{owner.name} stirred a crowd against {target.name}"
 
 
 async def strike(ctx: TickContext, scheme: SchemeRow, owner: EntityRow, target: EntityRow | None) -> str:

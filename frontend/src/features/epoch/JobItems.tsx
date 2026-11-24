@@ -13,7 +13,7 @@ import {
   ACTION_ORDER,
   FALLBACK_ACTION_ICON,
   actionLabel,
-  drawerOfNode,
+  entryOfNode,
 } from './jobItemVisuals'
 
 type JobItem = Job['items'][number]
@@ -29,7 +29,7 @@ function NodeName({
   id: number
   name: string
 }) {
-  const drawer = drawerOfNode(kind)
+  const drawer = entryOfNode(kind)
   if (!drawer) return <Text as='span'>{name}</Text>
   return (
     <EntityLink

@@ -251,7 +251,7 @@ export function FirstWorldFields({ draft, update, options }: StepProps) {
   return (
     <SettingGroup
       label='The first world'
-      description='Its kind, its land, its climate and its age. Each is left to the seed unless you fix it, and every value can be changed later in the world drawer.'
+      description='Its kind, its land, its climate and its age. Each is left to the seed unless you fix it, and every value can be changed later in the entry of the world.'
     >
       <div className='flex min-w-0 flex-col gap-5 rounded-md border surface-well border-gild/20 bg-muted/60 p-4'>
         <Part

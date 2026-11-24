@@ -11,7 +11,7 @@ from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.kinds import IngredientRole, MealSlot
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 
-FLAVOURS = ("sweet", "sour", "saline", "bitter", "savoury", "pungent", "cooling", "numbing", "smoky", "fermented")
+FLAVOURS = ("sweet", "sour", "saline", "bitter", "savoury", "pungent", "cooling", "numbing", "smoky", "fermented", "astringent", "rich")
 DISH_FIELDS = (
     "name",
     "description",
@@ -78,6 +78,8 @@ class DishRow(KindRow):
     numbing: Mapped[int] = mapped_column(default=0, server_default="0")
     smoky: Mapped[int] = mapped_column(default=0, server_default="0")
     fermented: Mapped[int] = mapped_column(default=0, server_default="0")
+    astringent: Mapped[int] = mapped_column(default=0, server_default="0")
+    rich: Mapped[int] = mapped_column(default=0, server_default="0")
 
 
 class DishIngredientRow(Base):

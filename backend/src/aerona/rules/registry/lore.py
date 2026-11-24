@@ -152,6 +152,11 @@ class TraditionsRules:
     rigid_threshold: int = rule(20, 0, 100, C, "Rigidity below which a tradition bends to laws and creeds without unrest")
     rigidity_pct: int = rule(100, 0, 300, C, "Weight of rigidity in the unrest a tradition stirs against what defies it (%)")
     creed_resistance: int = rule(3, 0, 100, C, "Adherence a creed loses where a rigid tradition it defies is kept")
+    welcome_cost: int = rule(1, 0, 500, C, "Food or goods a welcome of newcomers spends each time it is kept, for every thousand people who keep it")
+    reconciliation_cost: int = rule(1, 0, 500, C, "Food or goods a rite of reconciliation spends each time it is kept, for every thousand people who keep it")
+    thanksgiving_cost: int = rule(2, 0, 500, C, "Food or goods a thanksgiving spends each time it is kept, for every thousand people who keep it")
+    healing_effect: int = rule(3, 0, 50, C, "Health a tradition that heals gives those who keep it")
+    bonding_effect: int = rule(5, 0, 50, C, "Opinion a tradition that binds gives those who keep it of one another")
 
 
 @dataclass(frozen=True)

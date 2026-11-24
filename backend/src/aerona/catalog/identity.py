@@ -38,6 +38,8 @@ IDENTITY_LAYERS: Mapping[IdentityLayer, LayerSpec] = total(
         L.LANGUAGE: LayerSpec("Tongue", lambda rules: rules.identity.language_base_weight),
         L.KIND: LayerSpec("Kind of being", lambda rules: rules.identity.kind_base_weight),
         L.CAUSE: LayerSpec("Cause", lambda rules: rules.identity.cause_base_weight),
+        L.GIFT: LayerSpec("Gift", lambda rules: rules.identity.gift_base_weight),
+        L.CALLING: LayerSpec("Calling", lambda rules: rules.identity.calling_base_weight),
     },
 )
 SALIENCE_DRIVERS: Mapping[SalienceDriver, DriverSpec] = total(
@@ -58,6 +60,8 @@ SALIENCE_DRIVERS: Mapping[SalienceDriver, DriverSpec] = total(
         D.COMMEMORATION: DriverSpec("Remembering a shared past", frozenset({L.PEOPLE, L.POLITY}), lambda rules: rules.identity.commemoration_rise),
         D.ELECTION: DriverSpec("A vote", frozenset({L.CIRCLE, L.CLASS, L.POLITY, L.PEOPLE, L.FAITH}), lambda rules: rules.identity.election_rise),
         D.CONTEST: DriverSpec("A match between communities", frozenset({L.LOCALITY, L.CIRCLE}), lambda rules: rules.identity.contest_rise),
+        D.DISASTER: DriverSpec("A disaster shared", frozenset({L.LOCALITY, L.PEOPLE}), lambda rules: rules.identity.disaster_rise),
+        D.ARRIVALS: DriverSpec("Newcomers arriving", frozenset({L.PEOPLE, L.LANGUAGE, L.FAITH}), lambda rules: rules.identity.arrivals_rise),
     },
 )
 VOTE_LAYERS: Mapping[ReferendumSubject, IdentityLayer] = total(

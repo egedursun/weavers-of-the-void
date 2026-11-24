@@ -90,6 +90,9 @@ def _defaults(world_type: WorldType, terrain: WorldTerrainRules) -> tuple[int, i
         WorldType.HOLLOW: (terrain.hollow_sea_pct, terrain.hollow_mountains_pct, terrain.hollow_moisture_pct),
         WorldType.ICE_SHELL: (terrain.ice_shell_sea_pct, terrain.ice_shell_mountains_pct, terrain.ice_shell_moisture_pct),
         WorldType.METHANE: (terrain.methane_sea_pct, terrain.methane_mountains_pct, terrain.methane_moisture_pct),
+        WorldType.ROGUE: (terrain.rogue_sea_pct, terrain.rogue_mountains_pct, terrain.rogue_moisture_pct),
+        WorldType.ARCHIPELAGO: (terrain.archipelago_sea_pct, terrain.archipelago_mountains_pct, terrain.archipelago_moisture_pct),
+        WorldType.MEGASTRUCTURE: (terrain.megastructure_sea_pct, terrain.megastructure_mountains_pct, terrain.megastructure_moisture_pct),
     }
     return table[world_type]
 

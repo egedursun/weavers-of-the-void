@@ -12,7 +12,7 @@ from aerona.db.stored import stored_id
 from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.culture import RiteProfileRow
-from aerona.db.tables.ecology import BeastProfileRow
+from aerona.db.tables.ecology import BeastProfileRow, SpeciesRangeRow
 from aerona.db.tables.economy import ResourceProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -138,6 +138,18 @@ async def by_summons(ctx: TickContext, atlas: RegionAtlas, anatomy: CreatureAnat
     return True
 
 
+async def by_kin_harmed(ctx: TickContext, atlas: RegionAtlas, anatomy: CreatureAnatomyRow, region_id: int | None) -> bool:
+    row = await ctx.session.get(BeastProfileRow, anatomy.node_id)
+    if row is None or row.species_entity_id is None or region_id is None:
+        return False
+    kin = await ctx.session.get(SpeciesRangeRow, (row.species_entity_id, region_id))
+    return kin is not None and kin.hunted > 0 and ctx.rng(f"wake.kin.{anatomy.node_id}.{ctx.epoch}").chance(ctx.rules.beast_waking.kin_harmed_pct)
+
+
+async def by_season(ctx: TickContext, atlas: RegionAtlas, anatomy: CreatureAnatomyRow, region_id: int | None) -> bool:
+    return ctx.rng(f"wake.season.{anatomy.node_id}.{ctx.epoch}").chance(ctx.rules.beast_waking.season_pct)
+
+
 Trigger = Callable[[TickContext, RegionAtlas, CreatureAnatomyRow, int | None], Awaitable[bool]]
 TRIGGERS: Mapping[AwakeningTrigger, Trigger] = total(
     AwakeningTrigger,
@@ -148,6 +160,8 @@ TRIGGERS: Mapping[AwakeningTrigger, Trigger] = total(
         AwakeningTrigger.THEFT: by_theft,
         AwakeningTrigger.SKY_SIGN: by_sky_sign,
         AwakeningTrigger.SUMMONS: by_summons,
+        AwakeningTrigger.KIN_HARMED: by_kin_harmed,
+        AwakeningTrigger.SEASON: by_season,
     },
 )
 
@@ -295,7 +309,7 @@ async def strike(ctx: TickContext, beast: EntityRow, row: BeastProfileRow, town:
     if not living:
         return None
     victim = ctx.rng(f"attack.{beast.id}.{await stored_id(ctx.session, attack)}.{town.id}.{ctx.epoch}").pick(living)
-    victims = living if attack.range in WHOLE_TOWN else [victim]
+    victims = living[: ctx.rules.beast_acts.area_targets] if attack.range is AttackRange.AREA else living if attack.range in WHOLE_TOWN else [victim]
     damage_type = WOUNDS[attack.effect]
     if attack.effect is AttackEffect.VENOM:
         await afflict(ctx, victim, PackageKind.SNAKE_VENOM, CARRIED_BY[attack.delivery], source_node_id=beast.id)

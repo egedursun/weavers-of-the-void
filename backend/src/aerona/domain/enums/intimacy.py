@@ -9,6 +9,7 @@ class RelationContext(StrEnum):
     WITH_KIN = "with_kin"
     WITH_MADE_MINDS = "with_made_minds"
     WITH_OTHER_KINDS = "with_other_kinds"
+    WITH_SPIRITS_OR_GODS = "with_spirits_or_gods"
 
 
 class NormStance(StrEnum):
@@ -17,6 +18,7 @@ class NormStance(StrEnum):
     TOLERATED = "tolerated"
     ACCEPTED = "accepted"
     HONOURED = "honoured"
+    EXPECTED = "expected"
 
 
 class NormEnforcer(StrEnum):
@@ -74,6 +76,8 @@ class BirthComplication(StrEnum):
     LATE = "late"
     MULTIPLE = "multiple"
     NONE = "none"
+    STILLBIRTH = "stillbirth"
+    BIRTH_INJURY = "birth_injury"
 
 
 class PostnatalCustom(StrEnum):
@@ -83,6 +87,7 @@ class PostnatalCustom(StrEnum):
     SPECIALIST_CARE = "specialist_care"
     RITE = "rite"
     NONE = "none"
+    PARTNER_REST = "partner_rest"
 
 
 class BirthAttendant(StrEnum):

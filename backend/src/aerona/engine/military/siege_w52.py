@@ -26,8 +26,8 @@ from aerona.db.tables.warfare import SiegeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.environment import ScarKind
-from aerona.domain.enums.military import CaptiveFate, DefenderAction, SackChoice, SiegeAction, SiegeWork, UnitKind
+from aerona.domain.enums.environment import CoastKind, ScarKind
+from aerona.domain.enums.military import ArmyRole, CaptiveFate, DefenderAction, SackChoice, SiegeAction, SiegeWork, UnitKind
 from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import WaterSupply
@@ -39,6 +39,7 @@ from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lore.research import has_technique
 from aerona.engine.military.engineering import RIVERS
 from aerona.engine.military.units import stacks_of
+from aerona.engine.military.w52_war import officer, role_effect
 from aerona.engine.mind.hooks import judged
 from aerona.engine.primitives.levies import add_heads, levies_from
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -71,12 +72,12 @@ def finished(siege: SiegeRow, work: SiegeWork) -> bool:
     return int((siege.works or {}).get(work.value, 0)) >= PERCENT
 
 
-def progress(ctx: TickContext, siege: SiegeRow, works: list[SiegeWork]) -> list[SiegeWork]:
+def progress(ctx: TickContext, siege: SiegeRow, works: list[SiegeWork], boost: float = 1.0) -> list[SiegeWork]:
     built = dict(siege.works or {})
     done: list[SiegeWork] = []
     for work in works:
         before = int(built.get(work.value, 0))
-        built[work.value] = min(PERCENT, before + pace(ctx, work))
+        built[work.value] = min(PERCENT, before + round_half_up(pace(ctx, work) * boost))
         if before < PERCENT <= built[work.value]:
             done.append(work)
     siege.works = built
@@ -89,6 +90,9 @@ async def capable(ctx: TickContext, siege: SiegeRow, march: Besieging, engines: 
     found = {work for work, spec in SIEGE_WORKS.items() if not (spec.needs_flight or spec.needs_network or spec.needs_rites)}
     if engines <= 0:
         found.discard(SiegeWork.BOMBARDMENT)
+    ground = await ground_of(ctx, siege.besieged_entity_id)
+    if ground is None or ground.river_class not in RIVERS:
+        found.discard(SiegeWork.DAM)
     if any(UNITS[kind].flying for kind in kinds):
         found.add(SiegeWork.AIR_ASSAULT)
     if kinds & {UnitKind.BATTLE_CASTERS, UnitKind.SUPPORT_CASTERS}:
@@ -105,7 +109,9 @@ async def raise_works(ctx: TickContext, siege: SiegeRow, action: SiegeAction, ma
     wanted = [work for work in SIEGE_ACTION_SPECS[action].works if work in able]
     if SIEGE_ACTION_SPECS[action].batters or action is SiegeAction.ASSAULT:
         wanted += [work for work in SPECIAL_WORKS if work in able]
-    done = progress(ctx, siege, wanted)
+    master = await officer(ctx, march.army.id, ArmyRole.ENGINEER_MASTER)
+    boost = 1 + (role_effect(ctx, ArmyRole.ENGINEER_MASTER) / PERCENT if master is not None else 0)
+    done = progress(ctx, siege, wanted, boost)
     for work in done:
         await record(
             ctx,
@@ -119,6 +125,10 @@ async def raise_works(ctx: TickContext, siege: SiegeRow, action: SiegeAction, ma
 
 def breach_from_works(ctx: TickContext, siege: SiegeRow) -> float:
     return sum(strength(ctx, work) for work in BREACHING_WORKS | WALL_TOP_WORKS if finished(siege, work)) / PERCENT
+
+
+def water_from_works(ctx: TickContext, siege: SiegeRow, drunk: int) -> int:
+    return round_half_up(drunk * (PERCENT + (strength(ctx, SiegeWork.DAM) if finished(siege, SiegeWork.DAM) else 0)) / PERCENT)
 
 
 def hunger_from_works(ctx: TickContext, siege: SiegeRow, eaten: int) -> int:
@@ -196,11 +206,19 @@ async def harsh_defence(ctx: TickContext, siege: SiegeRow, march: Besieging, wal
     building = any(0 < int(value) < PERCENT for key, value in (siege.works or {}).items() if key != "famine")
     if building and await floodable(ctx, siege.besieged_entity_id, walls):
         return DefenderAction.FLOOD_APPROACHES
-    if march.profile.supply_days < ctx.rules.logistics.season_days and siege.supplies >= ctx.rules.urban.ration_supplies_days:
-        return DefenderAction.SCORCHED_EARTH
-    if siege.supplies < ctx.rules.siegecraft.famine_days:
-        return DefenderAction.EXPEL_MOUTHS
-    return None
+    famished = siege.supplies < ctx.rules.siegecraft.famine_days
+    choices = (
+        (march.profile.supply_days < ctx.rules.logistics.season_days and siege.supplies >= ctx.rules.urban.ration_supplies_days, DefenderAction.SCORCHED_EARTH),
+        (building and siege.sallies < ctx.rules.siege.burn_works_sallies, DefenderAction.BURN_WORKS),
+        (famished and await by_sea(ctx, siege.besieged_entity_id), DefenderAction.EVACUATE_BY_SEA),
+        (famished, DefenderAction.EXPEL_MOUTHS),
+    )
+    return next((defence for hit, defence in choices if hit), None)
+
+
+async def by_sea(ctx: TickContext, town_id: int) -> bool:
+    ground = await ground_of(ctx, town_id)
+    return ground is not None and ground.coast_kind is not CoastKind.NONE
 
 
 async def flood(ctx: TickContext, siege: SiegeRow) -> int:
@@ -251,6 +269,35 @@ async def expel(ctx: TickContext, siege: SiegeRow, besieged: EntityRow) -> int:
     return driven
 
 
+def burn_works(ctx: TickContext, siege: SiegeRow) -> int:
+    built = dict(siege.works or {})
+    burned = 0
+    for work in SiegeWork:
+        value = int(built.get(work.value, 0))
+        if value > 0:
+            cut = round_half_up(value * ctx.rules.siege.burn_works_pct / PERCENT)
+            built[work.value] = value - cut
+            burned += cut
+    siege.works = built
+    siege.sallies += 1
+    return burned
+
+
+async def evacuate(ctx: TickContext, siege: SiegeRow, besieged: EntityRow) -> int:
+    population = stat(besieged, "population") or 0
+    left = round_half_up(population * ctx.rules.siege.evacuate_share_pct / PERCENT)
+    if left <= 0:
+        return 0
+    with flowing(FlowCategory.MIGRATION):
+        shift_stat(besieged, "population", -left)
+    home = await living_entity(ctx.session, besieged.affiliated_entity_id) if besieged.affiliated_entity_id is not None else None
+    if home is not None and levies_from(home):
+        add_heads(ctx.rules, home, left, FlowCategory.MIGRATION)
+    if "supplies" not in siege.locked:
+        siege.supplies = 0
+    return left
+
+
 async def defend(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, march: Besieging, defence: DefenderAction) -> int:
     if defence is DefenderAction.FLOOD_APPROACHES:
         amount = await flood(ctx, siege)
@@ -258,6 +305,10 @@ async def defend(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, march: 
         amount = await scorch(ctx, siege, march)
     elif defence is DefenderAction.EXPEL_MOUTHS:
         amount = await expel(ctx, siege, besieged)
+    elif defence is DefenderAction.BURN_WORKS:
+        amount = burn_works(ctx, siege)
+    elif defence is DefenderAction.EVACUATE_BY_SEA:
+        amount = await evacuate(ctx, siege, besieged)
     else:
         return 0
     await record(
@@ -280,6 +331,8 @@ async def fall_choice(ctx: TickContext, siege: SiegeRow, victor: EntityRow, choi
         return SackChoice.RANSOM_CITY
     if bondage and rng.chance(table.deport_pick_pct):
         return SackChoice.DEPORT
+    if victor.affiliated_entity_id != siege.besieged_entity_id and rng.chance(table.resettle_pick_pct):
+        return SackChoice.RESETTLE
     return choice
 
 

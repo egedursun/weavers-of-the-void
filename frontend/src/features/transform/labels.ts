@@ -48,6 +48,9 @@ import {
   Users,
   Wand2,
   Zap,
+  Gem,
+  Moon,
+  Scroll,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -61,7 +64,7 @@ export const TRANSFORM_KINDS: Record<Schema['TransformKind'], Named> = {
   mantling: { label: 'Mantling', icon: Crown, tone: 'gold' },
   spirit_rising: { label: 'Rising as a spirit', icon: Ghost, tone: 'muted' },
   reincarnation: { label: 'Reincarnation', icon: RotateCcw, tone: 'verdigris' },
-  possession: { label: 'Possession', icon: Ghost, tone: 'warning' },
+  possession: { label: 'Possession', icon: Moon, tone: 'warning' },
   local_god: {
     label: 'A spirit raised to a local god',
     icon: Sparkles,
@@ -204,7 +207,7 @@ export const TRANSFORM_ENDS: Record<Schema['TransformEnd'], Named> = {
   house: { label: 'House', icon: Home, tone: 'gold' },
   settlement: { label: 'Settlement', icon: Tent, tone: 'info' },
   faction: { label: 'Faction', icon: Swords, tone: 'warning' },
-  title: { label: 'Title', icon: Crown, tone: 'gold' },
+  title: { label: 'Title', icon: Gem, tone: 'gold' },
   legend: { label: 'Legend', icon: BookOpen, tone: 'verdigris' },
   creation: {
     label: 'What a legend made real',
@@ -246,6 +249,16 @@ export const TRANSFORM_TRIGGERS: Record<Schema['TransformTrigger'], Named> = {
   backfill: {
     label: 'Found in the old record',
     icon: ScrollText,
+    tone: 'muted',
+  },
+  devotion: {
+    label: 'Devotion',
+    icon: Scroll,
+    tone: 'muted',
+  },
+  deed: {
+    label: 'Deed',
+    icon: BookOpen,
     tone: 'muted',
   },
 }

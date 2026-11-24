@@ -9,6 +9,7 @@ from aerona.domain.enums.ecology import AnimalRole, Biochemistry, HerdTraining, 
 from aerona.domain.enums.society import CreatureTrait
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.biochemistry import tolerated
+from aerona.engine.ecology.uses import give_use
 
 SOCIAL_FIXUP = "species.w52_social"
 BIOCHEMISTRY_FIXUP = "biochemistry.w52"
@@ -78,7 +79,7 @@ async def backfill_hunting_role(ctx: TickContext) -> int:
     for species_id in trained:
         if species_id in known or held(species_id):
             continue
-        ctx.session.add(SpeciesUseRow(species_entity_id=species_id, use=AnimalRole.HUNTING))
+        await give_use(ctx.session, species_id, AnimalRole.HUNTING)
         known.add(species_id)
         gained += 1
     await fixed(ctx, ROLES_FIXUP, {"species": gained})

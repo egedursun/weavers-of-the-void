@@ -251,6 +251,7 @@ async def _seize_from_neighbours(
     "table.community_societies",
     "table.community_stocks",
     "table.cosmos",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",
@@ -289,7 +290,7 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     for index, first in enumerate(traders):
         for second in traders[index + 1 :]:
             first_goods, second_goods = holdings[first.id], holdings[second.id]
-            if not first_goods or not second_goods or not atlas.same_region(first.id, second.id):
+            if not first_goods or not second_goods or not atlas.same_cell(first.id, second.id):
                 continue
             if bonds.between(first.id, second.id, BondKind.TRADES_WITH) or bonds.between(first.id, second.id, BondKind.ENEMY):
                 continue
@@ -318,6 +319,7 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "table.community_societies",
     "table.community_stocks",
     "table.currencies",
+    "table.deep_passages",
     "table.entities",
     "table.forced_weather",
     "table.herds",
@@ -377,6 +379,7 @@ async def currency(ctx: TickContext) -> None:
     ctx.count("adopted", tally.adopted)
     ctx.count("debased", tally.debased)
     ctx.count("reformed", tally.reformed)
+    ctx.count("money_failed", tally.failed)
 
 
 async def impose_trade(ctx: TickContext, first_id: int, second_id: int) -> bool:

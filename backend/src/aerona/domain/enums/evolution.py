@@ -17,6 +17,9 @@ class EvolvedTrait(StrEnum):
     DISEASE_RESISTANCE = "disease_resistance"
     DOCILITY = "docility"
     LONGEVITY = "longevity"
+    STRENGTH = "strength"
+    PARENTAL_CARE = "parental_care"
+    SOCIAL_LEARNING = "social_learning"
 
 
 class KeystoneRole(StrEnum):
@@ -27,6 +30,8 @@ class KeystoneRole(StrEnum):
     SEED_DISPERSER = "seed_disperser"
     REGULATOR = "regulator"
     REEF_BUILDER = "reef_builder"
+    NUTRIENT_FIXER = "nutrient_fixer"
+    GRAZER = "grazer"
 
 
 class PlanetaryCycle(StrEnum):
@@ -35,6 +40,8 @@ class PlanetaryCycle(StrEnum):
     NUTRIENTS = "nutrients"
     OXYGEN = "oxygen"
     ROCK = "rock"
+    HEAT = "heat"
+    ICE = "ice"
 
 
 class CycleSource(StrEnum):
@@ -68,6 +75,7 @@ class TrophicLevel(StrEnum):
     CARNIVORE = "carnivore"
     APEX = "apex"
     DECOMPOSER = "decomposer"
+    PARASITE = "parasite"
 
 
 class PlagueResponse(StrEnum):
@@ -78,6 +86,9 @@ class PlagueResponse(StrEnum):
     PRAYER = "prayer"
     SEEK_CURE = "seek_cure"
     SANITATION = "sanitation"
+    FLEE = "flee"
+    INOCULATE = "inoculate"
+    CLOSE_GATHERINGS = "close_gatherings"
 
 
 class SuccessionStage(StrEnum):

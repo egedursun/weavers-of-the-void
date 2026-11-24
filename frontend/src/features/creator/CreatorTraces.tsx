@@ -12,6 +12,7 @@ export function CreatorTraces({
   const older = useOlderLines('creator', null, traces.length, total)
   return (
     <ChronicleList
+      sectionId='section-creator-traces'
       title='Traces of the god'
       description='Chronicle entries where the Creator acted, newest first.'
       lines={traces}

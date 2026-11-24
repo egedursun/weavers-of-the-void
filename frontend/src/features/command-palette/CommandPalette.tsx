@@ -29,7 +29,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from '@/components/ui/command'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { useTakeBackup } from '@/features/backups/api'
 import { useNameIndex } from '@/features/chronicle/linkTargets'
 import { useCompleteEpoch, useStopEpoch } from '@/features/epoch/api'
@@ -75,7 +75,7 @@ export function CommandPalette() {
   const queryClient = useQueryClient()
   const { setTheme } = useTheme()
   const { open, setOpen } = useSearch()
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const [query, setQuery] = useState('')
   const [action, setAction] = useState<ActionItem | null>(null)
   const actions = useActionCatalogue(open)
@@ -168,7 +168,7 @@ export function CommandPalette() {
                   value={`favourite ${item.name}`}
                   onSelect={() =>
                     run(() =>
-                      drawers.open({ kind: 'entity', id: String(item.id) })
+                      entryStack.open({ kind: 'entity', id: String(item.id) })
                     )
                   }
                 >
@@ -288,7 +288,7 @@ export function CommandPalette() {
             </CommandItem>
             <CommandItem
               value='Help shortcuts glossary terms'
-              onSelect={() => run(() => drawers.open({ kind: 'help' }))}
+              onSelect={() => run(() => entryStack.open({ kind: 'help' }))}
             >
               <CircleHelp />
               <span className='min-w-0 flex-1 truncate'>Help</span>

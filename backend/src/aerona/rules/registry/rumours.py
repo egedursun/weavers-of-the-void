@@ -14,6 +14,8 @@ class RumoursRules(Spanned):
     barrier_loss: int = rule(30, 0, 100, C, "Fidelity lost crossing a tongue nobody shares, scaled by how little is understood")
     written_pct: int = rule(50, 0, 100, C, "Share of the garbling spared where the hearers read and write a settled tongue (%)")
     floor: int = rule(10, 0, 100, C, "Fidelity below which nobody bothers to pass a rumour on")
+    inflate_pct: int = rule(20, 0, 100, C, "How much a count of the dead, an army or riches grows at each telling that inflates it (%)")
+    motive_opinion: int = rule(3, 0, 50, C, "Regard a community loses for the doer when a telling it hears gives a reason the facts do not hold")
     max_hops: int = rule(20, 1, 1000, C, "Most tellings a rumour survives")
     route_chance: int = rule(60, 0, 100, C, "Word passes along a trade road in an epoch (%)")
     pilgrimage_chance: int = rule(30, 0, 100, C, "Word passes between pilgrims of one faith in an epoch (%)")

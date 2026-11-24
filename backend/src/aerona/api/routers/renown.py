@@ -147,6 +147,8 @@ async def renown_view(services: ServicesDep, node_id: int = Path(ge=1)) -> Renow
                 piety=purse.piety,
                 dread=purse.dread,
                 tyranny=purse.tyranny,
+                trust=purse.trust,
+                learning=purse.learning,
                 silenced_until=purse.silenced_until,
                 updated_epoch=purse.updated_epoch,
                 realm=await node_ref(session, realm),

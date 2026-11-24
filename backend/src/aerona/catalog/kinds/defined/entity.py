@@ -405,6 +405,7 @@ ENTITY_FLAG = total(
                 "engine.phases.exploration.pioneers",
                 "engine.phases.geography.seed_place",
                 "engine.phases.heroes.bear_hero",
+                "engine.phases.heroes.shape_mortal",
                 "engine.phases.heroes.train_apprentice",
                 "engine.phases.migration.migrate",
                 "engine.phases.travel._found_colony",
@@ -683,7 +684,9 @@ ENTITY_FLAG = total(
         ),
         EntityFlag.ESSENCE_DRAINED: Defined("Essence drained", checked_by=(), used_by=("engine.gods.acts.drain_mortal",)),
         EntityFlag.RETURNED_FROM_DEATH: Defined(
-            "Returned from death", checked_by=(), used_by=("engine.gods.acts.resurrect_mortal", "engine.gods.mortality.attempt_kill")
+            "Returned from death",
+            checked_by=(),
+            used_by=("engine.divine.outer.gain_life", "engine.gods.acts.resurrect_mortal", "engine.gods.mortality.attempt_kill"),
         ),
         EntityFlag.SAW_THE_CREATOR: Defined("Saw the creator", checked_by=(), used_by=("agents.mortal.mortal_prompts", "engine.gods.acts.manifest")),
         EntityFlag.DEIFIED: Defined(

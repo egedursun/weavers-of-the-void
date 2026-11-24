@@ -2,62 +2,62 @@ import { expect, test } from '@playwright/test'
 import { captureWrites, replyWith, writesTo } from './capture'
 import { mockApi } from './mockApi'
 
-const SETTLEMENT = '/chronicle?drawer=entity:43'
-const STRUCTURE = '/chronicle?drawer=entity:42'
-const MORTAL = '/chronicle?drawer=entity:45'
-const PEOPLE = '/chronicle?drawer=entity:44'
+const SETTLEMENT = '/chronicle?entry=entity:43'
+const STRUCTURE = '/chronicle?entry=entity:42'
+const MORTAL = '/chronicle?entry=entity:45'
+const PEOPLE = '/chronicle?entry=entity:44'
 
-async function openDrawer(page: import('@playwright/test').Page, url: string) {
+async function openEntry(page: import('@playwright/test').Page, url: string) {
   await mockApi(page)
   const writes = await captureWrites(page)
   await page.goto(url)
-  const drawer = page.getByRole('dialog').last()
-  await expect(drawer.getByRole('heading', { level: 2 }).first()).toBeVisible()
-  return { drawer, writes }
+  const entryWindow = page.getByRole('dialog').last()
+  await expect(entryWindow.getByRole('heading', { level: 2 }).first()).toBeVisible()
+  return { entryWindow, writes }
 }
 
 test('the hero shows the record identity and toggles the favourite', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, STRUCTURE)
-  await expect(drawer.getByText('Structure').first()).toBeVisible()
-  await expect(drawer.getByText('by Ithren the Unbowed')).toBeVisible()
-  await expect(drawer.getByRole('link', { name: 'Show on map' })).toBeVisible()
-  await expect(drawer.getByRole('link', { name: 'Show in network' })).toBeVisible()
-  await drawer.getByRole('button', { name: 'Favourite' }).click()
+  const { entryWindow, writes } = await openEntry(page, STRUCTURE)
+  await expect(entryWindow.getByText('Structure').first()).toBeVisible()
+  await expect(entryWindow.getByText('by Ithren the Unbowed')).toBeVisible()
+  await expect(entryWindow.getByRole('link', { name: 'Show on map' })).toBeVisible()
+  await expect(entryWindow.getByRole('link', { name: 'Show in network' })).toBeVisible()
+  await entryWindow.getByRole('button', { name: 'Favourite' }).click()
   await expect(page.getByText('Removed from favourites')).toBeVisible()
   expect(writesTo(writes, 'PUT', /\/api\/entities\/42\/favorite$/)[0]?.body).toEqual({ favorite: false })
 })
 
 test('the hero breadcrumb and Fate note show where the record stands', async ({ page }) => {
-  const { drawer } = await openDrawer(page, STRUCTURE)
-  const location = drawer.getByRole('navigation', { name: 'Location' })
+  const { entryWindow } = await openEntry(page, STRUCTURE)
+  const location = entryWindow.getByRole('navigation', { name: 'Location' })
   await expect(location.getByText('Velmora-under-the-Glass')).toBeVisible()
-  await expect(drawer.getByText('Accepted: the ossuary binds the town to its dead')).toBeVisible()
+  await expect(entryWindow.getByText('Accepted: the ossuary binds the town to its dead')).toBeVisible()
 })
 
 test('the section navigator lists the sections of the record', async ({ page }) => {
-  const { drawer } = await openDrawer(page, SETTLEMENT)
+  const { entryWindow } = await openEntry(page, SETTLEMENT)
   for (const name of ['Facts', 'Stats', 'Society', 'Depth', 'Hand of God', 'Commands', 'Bonds', 'Connections', 'Images', 'Chronicle', 'Edit']) {
-    await expect(drawer.getByRole('button', { name, exact: true }).first()).toBeVisible()
+    await expect(entryWindow.getByRole('button', { name, exact: true }).first()).toBeVisible()
   }
-  await drawer.getByRole('button', { name: 'Bonds', exact: true }).click()
-  await expect(drawer.locator('#section-bonds')).toBeInViewport()
+  await entryWindow.getByRole('button', { name: 'Bonds', exact: true }).click()
+  await expect(entryWindow.locator('#section-bonds')).toBeInViewport()
 })
 
 test('the timeline strip shows one column per epoch since birth', async ({ page }) => {
-  const { drawer } = await openDrawer(page, STRUCTURE)
-  await expect(drawer.getByRole('link', { name: 'Epoch 2: 1 records' })).toBeVisible()
-  await expect(drawer.getByRole('link', { name: 'Epoch 5: 1 records' })).toBeVisible()
-  await expect(drawer.getByRole('link', { name: 'Epoch 3: 0 records' })).toBeVisible()
+  const { entryWindow } = await openEntry(page, STRUCTURE)
+  await expect(entryWindow.getByRole('link', { name: 'Epoch 2: 1 records' })).toBeVisible()
+  await expect(entryWindow.getByRole('link', { name: 'Epoch 5: 1 records' })).toBeVisible()
+  await expect(entryWindow.getByRole('link', { name: 'Epoch 3: 0 records' })).toBeVisible()
 })
 
 test('canon facts can be added with a reason and retired after confirming', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, STRUCTURE)
-  await drawer.getByRole('button', { name: 'Add fact' }).click()
-  const fix = drawer.getByRole('button', { name: 'Fix it in canon' })
+  const { entryWindow, writes } = await openEntry(page, STRUCTURE)
+  await entryWindow.getByRole('button', { name: 'Add fact' }).click()
+  const fix = entryWindow.getByRole('button', { name: 'Fix it in canon' })
   await expect(fix).toBeDisabled()
-  await drawer.getByLabel('Predicate').fill('forbids')
+  await entryWindow.getByLabel('Predicate').fill('forbids')
   await expect(fix).toBeDisabled()
-  await drawer.getByLabel('Or plain text').fill('the singing after dusk')
+  await entryWindow.getByLabel('Or plain text').fill('the singing after dusk')
   await fix.click()
   await expect(page.getByText('Fact written into canon')).toBeVisible()
   expect(writesTo(writes, 'POST', /\/api\/facts$/)[0]?.body).toEqual({
@@ -66,7 +66,7 @@ test('canon facts can be added with a reason and retired after confirming', asyn
     object_id: null,
     object_text: 'the singing after dusk',
   })
-  await drawer.getByRole('button', { name: 'Retire this fact' }).first().click()
+  await entryWindow.getByRole('button', { name: 'Retire this fact' }).first().click()
   const confirm = page.getByRole('alertdialog')
   await expect(confirm.getByText('Retire this fact?')).toBeVisible()
   await confirm.getByRole('button', { name: 'Retire' }).click()
@@ -75,27 +75,27 @@ test('canon facts can be added with a reason and retired after confirming', asyn
 })
 
 test('settlement stats show the carrying capacity warning and exploration pressure', async ({ page }) => {
-  const { drawer } = await openDrawer(page, SETTLEMENT)
-  await expect(drawer.getByText('Last turn: epoch 6')).toBeVisible()
-  await expect(drawer.getByText(/Acts this epoch/)).toBeVisible()
-  await expect(drawer.getByText('Civilization tier 2')).toBeVisible()
-  await expect(drawer.getByText(/Full 108%: growth stops/)).toBeVisible()
-  await expect(drawer.getByText(/Spontaneous exploration pressure 2/)).toBeVisible()
-  await drawer.getByRole('button', { name: 'Adjust stats' }).click()
-  await expect(drawer.getByRole('spinbutton').first()).toBeVisible()
+  const { entryWindow } = await openEntry(page, SETTLEMENT)
+  await expect(entryWindow.getByText('Last turn: epoch 6')).toBeVisible()
+  await expect(entryWindow.getByText(/Acts this epoch/)).toBeVisible()
+  await expect(entryWindow.getByText('Civilization tier 2')).toBeVisible()
+  await expect(entryWindow.getByText(/Full 108%: growth stops/)).toBeVisible()
+  await expect(entryWindow.getByText(/Spontaneous exploration pressure 2/)).toBeVisible()
+  await entryWindow.getByRole('button', { name: 'Adjust stats' }).click()
+  await expect(entryWindow.getByRole('spinbutton').first()).toBeVisible()
 })
 
 test('mortal stats show the life line, lifespan breakdown and the cost of death', async ({ page }) => {
-  const { drawer } = await openDrawer(page, MORTAL)
-  await expect(drawer.getByText('61 years old · 13 years left')).toBeVisible()
-  await expect(drawer.getByText('60 base + 6 medicine + 8 renown = 74')).toBeVisible()
-  await expect(drawer.getByText('A son pays 18 essence for a 35% chance; you pay 15.')).toBeVisible()
-  await expect(drawer.getByRole('progressbar', { name: 'Sanity' })).toBeVisible()
+  const { entryWindow } = await openEntry(page, MORTAL)
+  await expect(entryWindow.getByText('61 years old · 13 years left')).toBeVisible()
+  await expect(entryWindow.getByText('60 base + 6 medicine + 8 renown = 74')).toBeVisible()
+  await expect(entryWindow.getByText('A son pays 18 essence for a 35% chance; you pay 15.')).toBeVisible()
+  await expect(entryWindow.getByRole('progressbar', { name: 'Sanity' })).toBeVisible()
 })
 
 test('society shows class shares, contentment, the uprising band and the stores', async ({ page }) => {
-  const { drawer } = await openDrawer(page, SETTLEMENT)
-  const society = drawer.locator('#section-society')
+  const { entryWindow } = await openEntry(page, SETTLEMENT)
+  const society = entryWindow.locator('#section-society')
   await expect(society.getByText('An uprising is near')).toBeVisible()
   await expect(society.getByText('Least content: Warrior')).toBeVisible()
   await expect(society.getByText('Farmer')).toBeVisible()
@@ -104,34 +104,34 @@ test('society shows class shares, contentment, the uprising band and the stores'
 })
 
 test('wars and relations list the ongoing war and the bands of every bond', async ({ page }) => {
-  const { drawer } = await openDrawer(page, SETTLEMENT)
-  await expect(drawer.getByText('The War of the Glass Wells').first()).toBeVisible()
-  await expect(drawer.getByLabel('Wars and relations').getByText('Ongoing')).toBeVisible()
-  await expect(drawer.getByText('Ally', { exact: true })).toBeVisible()
-  await expect(drawer.getByText('Once enemy')).toBeVisible()
-  await expect(drawer.getByText('Holds captive').first()).toBeVisible()
+  const { entryWindow } = await openEntry(page, SETTLEMENT)
+  await expect(entryWindow.getByText('The War of the Glass Wells').first()).toBeVisible()
+  await expect(entryWindow.getByLabel('Wars and relations').getByText('Ongoing')).toBeVisible()
+  await expect(entryWindow.getByText('Ally', { exact: true })).toBeVisible()
+  await expect(entryWindow.getByText('Once enemy')).toBeVisible()
+  await expect(entryWindow.getByText('Holds captive').first()).toBeVisible()
 })
 
 test('depth shows history, sayings, rumours and the hidden truth', async ({ page }) => {
-  const { drawer } = await openDrawer(page, STRUCTURE)
-  await expect(drawer.getByText('Built in the second tide by salt-masons who never spoke again.')).toBeVisible()
-  await expect(drawer.getByText('What the glass keeps, the glass sings.')).toBeVisible()
-  await expect(drawer.getByText('A tenth king sleeps in a wall nobody has found.')).toBeVisible()
-  await expect(drawer.getByRole('button', { name: 'Deepen again' })).toBeVisible()
-  await drawer.getByRole('button', { name: 'The hidden truth' }).click()
-  await expect(drawer.getByText('The kings are not dead; they are listening.')).toBeVisible()
+  const { entryWindow } = await openEntry(page, STRUCTURE)
+  await expect(entryWindow.getByText('Built in the second tide by salt-masons who never spoke again.')).toBeVisible()
+  await expect(entryWindow.getByText('What the glass keeps, the glass sings.')).toBeVisible()
+  await expect(entryWindow.getByText('A tenth king sleeps in a wall nobody has found.')).toBeVisible()
+  await expect(entryWindow.getByRole('button', { name: 'Deepen again' })).toBeVisible()
+  await entryWindow.getByRole('button', { name: 'The hidden truth' }).click()
+  await expect(entryWindow.getByText('The kings are not dead; they are listening.')).toBeVisible()
 })
 
 test('a settlement lists what it knows and grants knowledge for free', async ({ page }) => {
-  const { drawer } = await openDrawer(page, SETTLEMENT)
-  await expect(drawer.getByText('What it knows')).toBeVisible()
-  await expect(drawer.getByText('Salt Reading').first()).toBeVisible()
-  await expect(drawer.getByText('It knows everything there is')).toBeVisible()
+  const { entryWindow } = await openEntry(page, SETTLEMENT)
+  await expect(entryWindow.getByText('What it knows')).toBeVisible()
+  await expect(entryWindow.getByText('Salt Reading').first()).toBeVisible()
+  await expect(entryWindow.getByText('It knows everything there is')).toBeVisible()
 })
 
 test('the bonds are grouped, debts are shown and a bond breaks after confirming', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, SETTLEMENT)
-  const bonds = drawer.locator('#section-bonds')
+  const { entryWindow, writes } = await openEntry(page, SETTLEMENT)
+  const bonds = entryWindow.locator('#section-bonds')
   await expect(bonds.getByText(/12 .*barrels of brine-glass/)).toBeVisible()
   await bonds.getByRole('button', { name: 'Break this bond' }).first().click()
   const confirm = page.getByRole('alertdialog')
@@ -142,8 +142,8 @@ test('the bonds are grouped, debts are shown and a bond breaks after confirming'
 })
 
 test('creating a bond needs a type and another record', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, SETTLEMENT)
-  const bonds = drawer.locator('#section-bonds')
+  const { entryWindow, writes } = await openEntry(page, SETTLEMENT)
+  const bonds = entryWindow.locator('#section-bonds')
   await bonds.getByRole('button', { name: 'Create a bond' }).click()
   const create = bonds.getByRole('button', { name: /^Create/ }).last()
   await expect(create).toBeDisabled()
@@ -160,23 +160,23 @@ test('creating a bond needs a type and another record', async ({ page }) => {
 })
 
 test('similar records are suggested with their reasons', async ({ page }) => {
-  const { drawer } = await openDrawer(page, SETTLEMENT)
-  await expect(drawer.getByText('May be related')).toBeVisible()
-  await expect(drawer.getByText(/shared bonds/)).toBeVisible()
+  const { entryWindow } = await openEntry(page, SETTLEMENT)
+  await expect(entryWindow.getByText('May be related')).toBeVisible()
+  await expect(entryWindow.getByText(/shared bonds/)).toBeVisible()
 })
 
 test('the connection finder shows the bond chain to another record', async ({ page }) => {
-  const { drawer } = await openDrawer(page, STRUCTURE)
-  await drawer.getByRole('combobox', { name: 'Connected to' }).click()
+  const { entryWindow } = await openEntry(page, STRUCTURE)
+  await entryWindow.getByRole('combobox', { name: 'Connected to' }).click()
   await page.getByRole('option', { name: /Aeron/ }).click()
-  const chain = drawer.getByRole('list', { name: 'Bond chain' })
+  const chain = entryWindow.getByRole('list', { name: 'Bond chain' })
   await expect(chain).toBeVisible()
   await expect(chain.getByText('Ithren the Unbowed')).toBeVisible()
 })
 
 test('the personal note autosaves and can be deleted after confirming', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, STRUCTURE)
-  const note = drawer.getByRole('textbox', { name: 'My notes' })
+  const { entryWindow, writes } = await openEntry(page, STRUCTURE)
+  const note = entryWindow.getByRole('textbox', { name: 'My notes' })
   await expect(note).toHaveValue('Ask Ithren about the tenth king.')
   await note.fill('Ask Ithren about the tenth king and the door.')
   await note.blur()
@@ -184,30 +184,30 @@ test('the personal note autosaves and can be deleted after confirming', async ({
   expect(writesTo(writes, 'PUT', /\/api\/entities\/42\/note$/).at(-1)?.body).toMatchObject({
     text: 'Ask Ithren about the tenth king and the door.',
   })
-  await drawer.getByRole('button', { name: 'Delete note' }).click()
+  await entryWindow.getByRole('button', { name: 'Delete note' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete note' }).click()
   await expect(page.getByText('Note deleted')).toBeVisible()
   expect(writesTo(writes, 'DELETE', /\/api\/entities\/42\/note$/)).toHaveLength(1)
 })
 
 test('mentions list the chronicle entries of the record', async ({ page }) => {
-  const { drawer } = await openDrawer(page, STRUCTURE)
-  const section = drawer.locator('#section-chronicle')
+  const { entryWindow } = await openEntry(page, STRUCTURE)
+  const section = entryWindow.locator('#section-chronicle')
   await expect(section.getByText(/was raised under Velmora-under-the-Glass/)).toBeVisible()
   await expect(section.getByText(/Three hundred drowned/)).toBeVisible()
 })
 
 test('a people records how it tells of a god', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, PEOPLE)
-  await drawer.getByLabel('What they tell').fill('They say Ithren walked out of the tide.')
-  await drawer.getByRole('button', { name: /Write the account|Save the account|Write it/ }).first().click()
+  const { entryWindow, writes } = await openEntry(page, PEOPLE)
+  await entryWindow.getByLabel('What they tell').fill('They say Ithren walked out of the tide.')
+  await entryWindow.getByRole('button', { name: /Write the account|Save the account|Write it/ }).first().click()
   await expect(page.getByText('The account was written')).toBeVisible()
   expect(writesTo(writes, 'PUT', /\/api\/beliefs$/)).toHaveLength(1)
 })
 
 test('renaming a record sends the changed fields', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, STRUCTURE)
-  const edit = drawer.locator('#section-edit')
+  const { entryWindow, writes } = await openEntry(page, STRUCTURE)
+  const edit = entryWindow.locator('#section-edit')
   await edit.getByLabel('Name').fill('The Singing Ossuary')
   await edit.getByRole('button', { name: 'Save changes' }).click()
   await expect(page.getByText('The Singing Ossuary updated')).toBeVisible()
@@ -215,29 +215,29 @@ test('renaming a record sends the changed fields', async ({ page }) => {
 })
 
 test('striking a record from canon asks first, and merging needs the typed word', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, STRUCTURE)
-  await drawer.getByRole('button', { name: 'Dangerous operations' }).click()
-  await drawer.getByRole('button', { name: 'Delete from canon' }).click()
+  const { entryWindow, writes } = await openEntry(page, STRUCTURE)
+  await entryWindow.getByRole('button', { name: 'Dangerous operations' }).click()
+  await entryWindow.getByRole('button', { name: 'Delete from canon' }).click()
   const confirm = page.getByRole('alertdialog')
   await expect(confirm.getByText(/from canon\?/)).toBeVisible()
   await confirm.getByRole('button', { name: 'Delete from canon' }).click()
   await expect(page.getByText('Canon updated')).toBeVisible()
   expect(writesTo(writes, 'PUT', /\/api\/entities\/42\/canon$/)[0]?.body).toEqual({ status: 'rejected' })
-  const merge = drawer.getByRole('button', { name: 'Merge', exact: true })
+  const merge = entryWindow.getByRole('button', { name: 'Merge', exact: true })
   await expect(merge).toBeDisabled()
 })
 
 test('a rejected record offers to break Fate and return to canon', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, '/chronicle?drawer=entity:52')
-  await drawer.getByRole('button', { name: 'Dangerous operations' }).click()
-  await drawer.getByRole('button', { name: 'Break Fate, take into canon' }).click()
+  const { entryWindow, writes } = await openEntry(page, '/chronicle?entry=entity:52')
+  await entryWindow.getByRole('button', { name: 'Dangerous operations' }).click()
+  await entryWindow.getByRole('button', { name: 'Break Fate, take into canon' }).click()
   await expect(page.getByText('Canon updated')).toBeVisible()
   expect(writesTo(writes, 'PUT', /\/api\/entities\/52\/canon$/)[0]?.body).toEqual({ status: 'canon' })
 })
 
 test('hand of god gates miracles with reasons and sends a confirmed curse', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, SETTLEMENT)
-  const hand = drawer.locator('#section-hand')
+  const { entryWindow, writes } = await openEntry(page, SETTLEMENT)
+  const hand = entryWindow.locator('#section-hand')
   await expect(hand.getByRole('button', { name: 'Peace' })).toBeEnabled()
   await expect(hand.getByRole('button', { name: 'Healing' })).toBeEnabled()
   await expect(hand.getByText('It already knows all knowledge in the world.')).toBeVisible()
@@ -250,8 +250,8 @@ test('hand of god gates miracles with reasons and sends a confirmed curse', asyn
 })
 
 test('disasters strike only after confirming and healing runs directly', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, SETTLEMENT)
-  const hand = drawer.locator('#section-hand')
+  const { entryWindow, writes } = await openEntry(page, SETTLEMENT)
+  const hand = entryWindow.locator('#section-hand')
   await hand.getByRole('button', { name: 'Healing' }).click()
   await expect(page.getByText('Intervention done')).toBeVisible()
   await hand.getByRole('button', { name: 'Flood' }).click()
@@ -264,8 +264,8 @@ test('disasters strike only after confirming and healing runs directly', async (
 })
 
 test('a dream needs content before it can be sent', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, MORTAL)
-  const hand = drawer.locator('#section-hand')
+  const { entryWindow, writes } = await openEntry(page, MORTAL)
+  const hand = entryWindow.locator('#section-hand')
   const send = hand.getByRole('button', { name: 'Send the dream' })
   await expect(send).toBeDisabled()
   await hand.getByRole('textbox', { name: 'The dream' }).fill('A salt door opens in the north.')
@@ -298,12 +298,12 @@ test('commands are searchable, show their cost and offer undo after running', as
   })
   const writes = await captureWrites(page)
   await page.goto(SETTLEMENT)
-  const drawer = page.getByRole('dialog').last()
-  await drawer.getByRole('searchbox', { name: 'Find a command' }).fill('Convert')
-  const card = drawer.locator('[data-action-id]').first()
+  const entryWindow = page.getByRole('dialog').last()
+  await entryWindow.getByRole('searchbox', { name: 'Find a command' }).fill('Convert')
+  const card = entryWindow.locator('[data-action-id]').first()
   await expect(card).toBeVisible()
-  await expect(drawer.getByRole('button', { name: /Convert to the Creator, costs 30 essence/ })).toBeVisible()
-  await drawer.getByRole('button', { name: /Convert to the Creator, costs 30 essence/ }).click()
+  await expect(entryWindow.getByRole('button', { name: /Convert to the Creator, costs 30 essence/ })).toBeVisible()
+  await entryWindow.getByRole('button', { name: /Convert to the Creator, costs 30 essence/ }).click()
   await card.getByRole('button', { name: /^Convert to the Creator$/ }).last().click()
   const confirm = page.getByRole('alertdialog')
   await expect(confirm.getByText('Convert to the Creator?')).toBeVisible()
@@ -315,18 +315,18 @@ test('commands are searchable, show their cost and offer undo after running', as
 })
 
 test('searching the commands with no match says so', async ({ page }) => {
-  const { drawer } = await openDrawer(page, SETTLEMENT)
-  await drawer.getByRole('searchbox', { name: 'Find a command' }).fill('zzzz')
-  await expect(drawer.getByText('No command matches')).toBeVisible()
+  const { entryWindow } = await openEntry(page, SETTLEMENT)
+  await entryWindow.getByRole('searchbox', { name: 'Find a command' }).fill('zzzz')
+  await expect(entryWindow.getByText('No command matches')).toBeVisible()
 })
 
 test('the Mechanics tab lists the mechanics acting on a record and runs one on it', async ({ page }) => {
-  const { drawer, writes } = await openDrawer(page, MORTAL)
-  const mechanics = drawer.locator('#section-mechanics')
+  const { entryWindow, writes } = await openEntry(page, MORTAL)
+  const mechanics = entryWindow.locator('#section-mechanics')
   await mechanics.scrollIntoViewIfNeeded()
   await expect(mechanics.getByText('Typed injuries on body parts')).toBeVisible()
   await expect(mechanics.getByText('× 0.85 because a lingering illness saps their strength')).toBeVisible()
-  await expect(drawer.locator('#section-biography').getByText('Varn and Osk met at the ford.')).toBeVisible()
+  await expect(entryWindow.locator('#section-biography').getByText('Varn and Osk met at the ford.')).toBeVisible()
   await mechanics.getByRole('button', { name: 'Run on this record now' }).click()
   await expect.poll(() => writesTo(writes, 'POST', /\/api\/actions\/lever:run$/).length).toBe(1)
   expect(writesTo(writes, 'POST', /\/api\/actions\/lever:run$/)[0]?.body).toEqual({ mechanic: 'injuries', target_node_id: 45 })

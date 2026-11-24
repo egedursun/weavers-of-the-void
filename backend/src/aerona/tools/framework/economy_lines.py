@@ -255,6 +255,8 @@ async def route_line(session: AsyncSession, profile: TradeRouteProfileRow, names
         officials=profile.danger_officials,
         spoilage=profile.danger_spoilage,
         pilferage=profile.danger_pilferage,
+        pirates=profile.danger_pirates,
+        breakage=profile.danger_breakage,
         season_pct=profile.season_pct,
         closed_season=await closed_season_name(session, entity, profile),
         carrier=CARRIERS[profile.carrier].label.lower() if profile.carrier is not None else "",

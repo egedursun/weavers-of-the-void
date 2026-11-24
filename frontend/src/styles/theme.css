@@ -266,6 +266,10 @@
   --cosmos-seal: #c8a0ff;
   --cosmos-toxic: #9bdc5a;
   --cosmos-toxic-cloud: #b4d48a;
+  --cosmos-steam: #f2efe8;
+  --cosmos-steam-cloud: #fbfaf6;
+  --cosmos-layered: #7fb6d8;
+  --cosmos-layered-cloud: #c9b48a;
   --cosmos-city: #ffad5c;
   --cosmos-nebula-1: #6a4ab0;
   --cosmos-nebula-2: #3f8f8a;
@@ -495,7 +499,9 @@
   --spacing-scene-lg: 42rem;
   --spacing-topbar: 3.5rem;
   --spacing-label-track: 10rem;
-  --spacing-drawer: 45rem;
+  --spacing-entry: 94vw;
+  --spacing-entry-tall: 92dvh;
+  --spacing-entry-rail: 19rem;
   --spacing-reading: 72ch;
 
   --text-title: 1.25rem;

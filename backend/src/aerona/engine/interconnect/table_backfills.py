@@ -1,6 +1,8 @@
 from aerona.engine.interconnect.registry import Mechanic
 
 TABLE_BACKFILLS: dict[tuple[str, str], str] = {
+    ("the_deep", "deep_passages"): "resource_economy: passages form between the cells of every world below on its next epoch",
+    ("the_deep", "polity_deep_knowledge"): "resource_economy: every realm learns the cells beneath its lands on its next epoch",
     ("unions_and_birth", "restraint_customs"): "none: customs of restraint are set by peoples and gods from the next epoch",
     ("unions_and_birth", "child_recognitions"): "none: children are recognised from the next epoch",
     ("public_works", "public_work_stages"): "none: stages are set down as works are built from the next epoch",

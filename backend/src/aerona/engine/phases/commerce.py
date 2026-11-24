@@ -3,6 +3,7 @@ from aerona.domain.enums.region import DangerHarm
 from aerona.engine.context import TickContext
 from aerona.engine.economy.book import EconomyBook
 from aerona.engine.economy.chokepoints import route_grants
+from aerona.engine.economy.deep_routes import keep_deep_routes
 from aerona.engine.economy.markets import MarketTally, apply_aggregate_prices, epoch_prices, market_nodes, quote_market, raise_district, store_quotes
 from aerona.engine.economy.money import MoneyTally, collect, lend
 from aerona.engine.economy.realm_credit import collect_from_realms, lend_to_realms
@@ -26,6 +27,7 @@ from aerona.engine.economy.routes import (
 from aerona.engine.economy.stocks import sync_aggregates
 from aerona.engine.economy.toll_polities import Realms
 from aerona.engine.environment.dangers import weighted_dangers
+from aerona.engine.environment.deep_war import DeepWarTally
 from aerona.engine.environment.works import works_by_region
 from aerona.engine.factions.book import robber_ids
 from aerona.engine.finance.policy import PolicyBook
@@ -62,6 +64,7 @@ from aerona.engine.water.ice import ice_open_pct
     "table.galaxy_clusters",
     "table.good_kinds",
     "table.goods_flows",
+    "table.held_identities",
     "table.herds",
     "table.holder_levels",
     "table.holder_techniques",
@@ -88,6 +91,7 @@ from aerona.engine.water.ice import ice_open_pct
     "table.region_crops",
     "table.region_environment",
     "table.region_pollution",
+    "table.relationships",
     "table.reputations",
     "table.resource_profiles",
     "table.resource_workers",
@@ -172,6 +176,7 @@ async def markets(ctx: TickContext) -> None:
     "table.creator",
     "table.creature_groups",
     "table.cult_tenets",
+    "table.deep_passages",
     "table.deterrence_postures",
     "table.dimensions",
     "table.districts",
@@ -221,6 +226,7 @@ async def markets(ctx: TickContext) -> None:
     "table.polity_territories",
     "table.preferences",
     "table.price_wars",
+    "table.public_works",
     "table.region_crops",
     "table.region_cryosphere",
     "table.region_dangers",
@@ -292,6 +298,7 @@ async def markets(ctx: TickContext) -> None:
     "table.goods_flows",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_step_states",
     "table.incident_steps",
     "table.incidents",
     "table.insurance_policies",
@@ -327,6 +334,10 @@ async def trade_flow(ctx: TickContext) -> None:
     for key, value in (await route_backfill(ctx, realms)).items():
         ctx.count(f"backfilled_{key}", value)
     routes = await load_routes(ctx)
+    below = DeepWarTally()
+    await keep_deep_routes(ctx, routes, below)
+    ctx.count("routes_cut_below", below.cut)
+    ctx.count("routes_reopened_below", below.reopened)
     quotes = {market.id: await quote_market(ctx, book, market) for market in nodes}
     policies = await PolicyBook.load(ctx, book)
     for first, second, path in await contacts(ctx, book, nodes, routes, quotes):
@@ -389,6 +400,7 @@ async def trade_flow(ctx: TickContext) -> None:
     "table.entities",
     "table.faction_profiles",
     "table.forced_weather",
+    "table.geasa",
     "table.herds",
     "table.holder_levels",
     "table.holder_techniques",

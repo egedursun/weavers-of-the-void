@@ -45,6 +45,9 @@ PLANT_PRODUCTS: MappingProxyType[PlantYield, PlantProduct] = MappingProxyType(
             PlantProduct(Y.BREW_BASE, "Brew base", C.BREW_BASE, None, 1, False, lambda rules: rules.plant_products.brew_base_value),
             PlantProduct(Y.REAGENT, "Alchemical reagent", C.MAGICAL_REAGENTS, None, 1, False, lambda rules: rules.plant_products.reagent_value),
             PlantProduct(Y.POISON, "Poison", C.POISON, None, 1, False, lambda rules: rules.plant_products.poison_value),
+            PlantProduct(Y.MEDICINE, "Remedies", C.MEDICINE, None, 1, False, lambda rules: rules.plant_products.medicine_value),
+            PlantProduct(Y.BUILDING, "Building stuff", C.TIMBER, MaterialKind.WOOD, 2, False, lambda rules: rules.plant_products.building_value),
+            PlantProduct(Y.FUEL, "Fuel", C.FUEL, None, 2, False, lambda rules: rules.plant_products.fuel_value),
         )
     }
 )
@@ -73,6 +76,8 @@ ATMOSPHERE_LIFE: MappingProxyType[Atmosphere, tuple[Biochemistry, ...]] = Mappin
         Atmosphere.THIN: (B.CARBON_WATER, B.SILICON),
         Atmosphere.TOXIC: (B.CARBON_AMMONIA, B.SILICON),
         Atmosphere.NONE: (B.SILICON, B.CRYSTAL),
+        Atmosphere.STEAM: (B.CARBON_WATER, B.SILICON),
+        Atmosphere.LAYERED: (B.CARBON_WATER, B.CARBON_AMMONIA),
     }
 )
 WORLD_TYPE_LIFE: MappingProxyType[WorldType, tuple[Biochemistry, ...]] = MappingProxyType(
@@ -83,8 +88,8 @@ WORLD_TYPE_LIFE: MappingProxyType[WorldType, tuple[Biochemistry, ...]] = Mapping
         WorldType.GAS: (B.CARBON_AMMONIA,),
         WorldType.HOT_GIANT: (B.CARBON_AMMONIA, B.SILICON, B.PLASMA),
         WorldType.LAVA: (B.SILICON,),
-        WorldType.FORGE: (B.SILICON,),
-        WorldType.IRON: (B.SILICON,),
+        WorldType.FORGE: (B.SILICON, B.METAL),
+        WorldType.IRON: (B.METAL, B.SILICON),
         WorldType.CHTHONIAN: (B.SILICON,),
         WorldType.CARBON: (B.CARBON_WATER, B.CARBON_AMMONIA),
         WorldType.DREAM: (B.SPIRIT,),
@@ -105,6 +110,7 @@ BIOCHEMISTRY_LABELS: MappingProxyType[Biochemistry, str] = total(
         B.SPIRIT: "Spirit",
         B.CARBON_METHANE: "Carbon and methane",
         B.PLASMA: "Plasma",
+        B.METAL: "Metal",
     },
 )
 

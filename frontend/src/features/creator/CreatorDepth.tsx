@@ -24,6 +24,7 @@ export function CreatorDepth({ creator }: { creator: CreatorRecord }) {
   })
   return (
     <Section
+      id='section-creator-depth'
       title='Depth'
       surface='card'
       level={3}

@@ -88,6 +88,14 @@ ACT_RENOWN: Mapping[ActKind, ActRenown] = total(
         A.FEEDING_ON_HOSTS: renown(None, X.CRUELTY),
         A.KILLING_SACRED_ANIMAL: renown(X.HEROISM, X.CRUELTY),
         A.FIXING_CONTESTS: renown(X.TRICKERY, X.TRICKERY, X.TRICKERY),
+        A.ABANDONING_THE_SICK: renown(None, X.CRUELTY),
+        A.BREAKING_HOSPITALITY: renown(None, X.HOSPITALITY, X.TROUBLEMAKER),
+        A.CRUELTY_TO_ANIMALS: renown(None, X.CRUELTY),
+        A.APOLOGISING: renown(X.RELIABILITY, None),
+        A.SHELTERING_STRANGERS: renown(X.HOSPITALITY, None, X.HOSPITALITY),
+        A.LAYING_CURSES: renown(X.JUSTICE, X.CRUELTY),
+        A.ENHANCING_CONTESTANTS: renown(None, X.TRICKERY),
+        A.POISON_WELLS: renown(X.CRUELTY, X.TRICKERY),
     },
 )
 
@@ -103,6 +111,8 @@ CONTEST_RENOWN: Mapping[ContestKind, tuple[ReputationAxis, SkillKind | None]] = 
         ContestKind.STORYTELLING: (X.SKILL_RENOWN, SkillKind.LORE),
         ContestKind.RACE: (X.SKILL_RENOWN, SkillKind.RIDING),
         ContestKind.CRAFT_CONTEST: (X.SKILL_RENOWN, SkillKind.SMITHING),
+        ContestKind.WRESTLING: (X.HEROISM, SkillKind.UNARMED),
+        ContestKind.HUNT: (X.SKILL_RENOWN, SkillKind.HUNTING),
     },
 )
 
@@ -128,6 +138,8 @@ AXES: Mapping[ReputationAxis, AxisSpec] = total(
         X.TROUBLEMAKER: AxisSpec("Troublemaking", glorious=False, value=ValueAxis.LAW),
         X.MERCY: AxisSpec("Mercy", glorious=True, value=ValueAxis.MERCY),
         X.JUSTICE: AxisSpec("Justice", glorious=True, value=ValueAxis.LAW),
+        X.RELIABILITY: AxisSpec("Reliability", glorious=True, value=ValueAxis.LOYALTY),
+        X.HOSPITALITY: AxisSpec("Hospitality", glorious=True, value=ValueAxis.HOSPITALITY),
     },
 )
 AXIS_LABELS: Mapping[ReputationAxis, str] = {axis: spec.label for axis, spec in AXES.items()}
@@ -135,13 +147,32 @@ GLORIOUS = frozenset(axis for axis, spec in AXES.items() if spec.glorious)
 INFAMOUS = frozenset(axis for axis, spec in AXES.items() if not spec.glorious)
 
 CURRENCY_LABELS: MappingProxyType[Currency, str] = MappingProxyType(
-    {Currency.PRESTIGE: "Prestige", Currency.PIETY: "Piety", Currency.DREAD: "Dread", Currency.TYRANNY: "Tyranny"}
+    {
+        Currency.PRESTIGE: "Prestige",
+        Currency.PIETY: "Piety",
+        Currency.DREAD: "Dread",
+        Currency.TYRANNY: "Tyranny",
+        Currency.TRUST: "Trust",
+        Currency.LEARNING: "Learning",
+    }
 )
 CLAIM_LABELS: MappingProxyType[ClaimKind, str] = MappingProxyType(
-    {ClaimKind.TRUE: "True", ClaimKind.SHARED: "Shared", ClaimKind.FALSE: "False", ClaimKind.INFLATED: "The whole of a shared deed"}
+    {
+        ClaimKind.TRUE: "True",
+        ClaimKind.SHARED: "Shared",
+        ClaimKind.FALSE: "False",
+        ClaimKind.INFLATED: "The whole of a shared deed",
+        ClaimKind.BORROWED: "Another's deed",
+    }
 )
 STATUS_LABELS: MappingProxyType[ClaimStatus, str] = MappingProxyType(
-    {ClaimStatus.STANDING: "Believed", ClaimStatus.VERIFIED: "Proven", ClaimStatus.EXPOSED: "Exposed", ClaimStatus.DISPUTED: "Disputed"}
+    {
+        ClaimStatus.STANDING: "Believed",
+        ClaimStatus.VERIFIED: "Proven",
+        ClaimStatus.EXPOSED: "Exposed",
+        ClaimStatus.DISPUTED: "Disputed",
+        ClaimStatus.FORGOTTEN: "Forgotten",
+    }
 )
 LORE_LABELS: Mapping[KnowledgeKind, str] = {kind: spec.label for kind, spec in KNOWLEDGE.items()}
 PRICE_LABELS: MappingProxyType[LorePrice, str] = MappingProxyType(
@@ -151,6 +182,7 @@ PRICE_LABELS: MappingProxyType[LorePrice, str] = MappingProxyType(
         LorePrice.RENOWN: "Renown",
         LorePrice.EXCHANGE: "Knowledge for knowledge",
         LorePrice.SERVICE: "A deed done for the seller",
+        LorePrice.OATH: "An oath sworn to the seller",
     }
 )
 

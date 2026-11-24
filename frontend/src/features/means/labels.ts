@@ -1,4 +1,5 @@
 import {
+  type LucideIcon,
   Amphora,
   Anchor,
   Archive,
@@ -10,42 +11,49 @@ import {
   Compass,
   Construction,
   Cpu,
+  Cylinder,
+  Droplet,
   Droplets,
   Fan,
   Feather,
   FileText,
+  Flame,
+  Grid3x3,
   Hammer,
+  HardDrive,
   KeyRound,
   Layers,
   Leaf,
+  LifeBuoy,
   Lock,
   Map,
   Milk,
   Mountain,
   Package,
+  RefreshCw,
+  Ribbon,
+  Rows3,
   Ruler,
+  Satellite,
   Scroll,
   ScrollText,
+  Shell,
+  Shirt,
   ShoppingBag,
+  ShoppingBasket,
   Sparkles,
+  Sprout,
   Stamp,
+  Star,
   Tablet,
   Telescope,
-  type LucideIcon,
   Waves,
   Wind,
   Wine,
   Zap,
-  Shell,
-  Ribbon,
-  Rows3,
-  HardDrive,
-  Star,
-  Flame,
-  Satellite,
-  ShoppingBasket,
-  Droplet,
-  Cylinder,
+  IvBag,
+  Shield,
+  Ship,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -78,11 +86,13 @@ export const MEDIA: Record<Schema['WritingMedium'], Named> = {
   silk: { label: 'Silk', icon: Ribbon, tone: 'gold' },
   wood_slips: { label: 'Slips of wood or cane', icon: Rows3, tone: 'success' },
   electronic: { label: 'Electronic record', icon: HardDrive, tone: 'info' },
+  cloth: { label: 'Cloth', icon: Shirt, tone: 'muted' },
+  potsherd: { label: 'Potsherd', icon: Amphora, tone: 'muted' },
 }
 
 export const LOCKS: Record<Schema['LockKind'], Named> = {
   bar: { label: 'Bar and bolt', icon: Lock, tone: 'muted' },
-  warded: { label: 'Warded lock', icon: KeyRound, tone: 'info' },
+  warded: { label: 'Warded lock', icon: Shield, tone: 'info' },
   tumbler: { label: 'Tumbler lock', icon: KeyRound, tone: 'gold' },
   combination: { label: 'Combination lock', icon: Cog, tone: 'success' },
   warded_seal: { label: 'Warded lock with seal', icon: Stamp, tone: 'warning' },
@@ -92,6 +102,7 @@ export const LOCKS: Record<Schema['LockKind'], Named> = {
     tone: 'verdigris',
   },
   electronic: { label: 'Electronic lock', icon: Cpu, tone: 'info' },
+  living: { label: 'Living lock', icon: Sprout, tone: 'muted' },
 }
 
 export const LIFTS: Record<Schema['WaterLift'], Named> = {
@@ -102,6 +113,7 @@ export const LIFTS: Record<Schema['WaterLift'], Named> = {
   steam_pump: { label: 'Steam pump', icon: Waves, tone: 'danger' },
   wind_pump: { label: 'Wind pump', icon: Wind, tone: 'info' },
   electric_pump: { label: 'Electric pump', icon: Zap, tone: 'gold' },
+  animal_wheel: { label: 'Animal wheel', icon: RefreshCw, tone: 'muted' },
 }
 
 export const AIDS: Record<Schema['NavigationAid'], Named> = {
@@ -117,6 +129,8 @@ export const AIDS: Record<Schema['NavigationAid'], Named> = {
     icon: Satellite,
     tone: 'verdigris',
   },
+  buoys: { label: 'Buoys', icon: LifeBuoy, tone: 'info' },
+  pilots: { label: 'Pilots', icon: Ship, tone: 'info' },
 }
 
 export const CONTAINERS: Record<Schema['ContainerKind'], Named> = {
@@ -130,6 +144,8 @@ export const CONTAINERS: Record<Schema['ContainerKind'], Named> = {
   basket: { label: 'Basket', icon: ShoppingBasket, tone: 'gold' },
   skin: { label: 'Skin', icon: Droplet, tone: 'warning' },
   tank: { label: 'Tank', icon: Cylinder, tone: 'info' },
+  cage: { label: 'Cage', icon: Grid3x3, tone: 'muted' },
+  net_bag: { label: 'Net bag', icon: IvBag, tone: 'muted' },
 }
 
 export const PORT_ICON: LucideIcon = Anchor

@@ -147,6 +147,10 @@ def capacities(rules: Rules, stats: BearerStats, state: BodyState) -> dict[Capac
     values[C.PERCEPTION] = (
         PERCENT * perception_factor(table, round(levels[F.HEARING] * PERCENT), round(reading * PERCENT)) * blend(levels[F.COGNITION], table.command_cognition)
     )
+    values[C.STEALTH] = values[C.PERCEPTION] * blend(stride, table.stealth_stride) * state.presence_pct / PERCENT
+    values[C.LABOUR] = (
+        stats.strength * blend(grip, table.labour_grasp) * blend(stride, table.mobility_locomotion) * blend(levels[F.BREATH], table.mobility_breath) * hurt
+    )
     values[C.FERTILITY] = (
         PERCENT
         * blend(levels[F.REPRODUCTION], table.fertility_reproduction)

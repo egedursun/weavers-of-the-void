@@ -35,6 +35,7 @@ from aerona.domain.enums.ecology import (
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass
+from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.society import CreatureTrait
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.book import beast_plan, wild_plan
@@ -44,6 +45,7 @@ from aerona.engine.economy.stocks import holding
 from aerona.engine.nature.seasons import COLD
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.stats import stat
+from aerona.engine.renown.lore import holdings
 from aerona.rules.registry import Rules
 
 T = CreatureTrait
@@ -59,6 +61,8 @@ HABITAT_TESTS: tuple[tuple[HabitatTest, Habitat], ...] = (
     (lambda _plan, _traits, life, _deep: life is Biochemistry.SPIRIT, Habitat.ETHEREAL),
     (lambda _plan, _traits, life, deep: deep and life is Biochemistry.SILICON, Habitat.MAGMA),
     (lambda _plan, traits, _life, deep: deep or T.BURROWING in traits, Habitat.DEEP),
+    (lambda _plan, traits, _life, _deep: T.COLD_BREATHING in traits, Habitat.ICE),
+    (lambda _plan, traits, _life, _deep: T.AMPHIBIOUS in traits, Habitat.SHORE),
     (lambda plan, traits, _life, _deep: T.AQUATIC in traits or plan is BodyPlan.AQUATIC, Habitat.WATER),
     (lambda plan, traits, _life, _deep: T.FLYING in traits or plan in FLYERS, Habitat.SKY),
 )
@@ -338,6 +342,17 @@ async def by_cold(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool
     return land is not None and land.temperature_band in COLD and ctx.rng(f"ward.cold.{town.id}.{ctx.epoch}").chance(ctx.rules.aversions.cold_ward_pct)
 
 
+async def by_scent(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
+    return await holding(ctx.session, town.id, CommodityKind.INCENSE) > 0 and ctx.rng(f"ward.scent.{town.id}.{ctx.epoch}").chance(
+        ctx.rules.aversions.scent_turn_pct
+    )
+
+
+async def by_true_name(ctx: TickContext, atlas: RegionAtlas, town: EntityRow) -> bool:
+    known = await holdings(ctx.session, town.id, KnowledgeKind.TRUE_NAME)
+    return bool(known) and ctx.rng(f"ward.name.{town.id}.{ctx.epoch}").chance(ctx.rules.aversions.true_name_turn_pct)
+
+
 Ward = Callable[[TickContext, RegionAtlas, EntityRow], Awaitable[bool]]
 WARDS: Mapping[Aversion, Ward] = total(
     Aversion,
@@ -349,6 +364,8 @@ WARDS: Mapping[Aversion, Ward] = total(
         Aversion.HOLY_GROUND: by_holy_ground,
         Aversion.LIGHT: by_light,
         Aversion.COLD: by_cold,
+        Aversion.SCENT: by_scent,
+        Aversion.TRUE_NAME: by_true_name,
     },
 )
 

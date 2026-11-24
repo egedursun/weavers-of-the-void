@@ -11,10 +11,12 @@ export type CityBuilding = Schema['CityBuildingView']
 export type LandScene = Schema['LandSceneView']
 export type StructureTypes = Schema['StructureTypesView']
 export type StructureType = Schema['StructureTypeView']
+export type RegionBelow = Schema['RegionBelow']
 
 export const cityKeys = {
   city: (id: number) => [...queryKeys.world.all, 'city-scene', id] as const,
   land: (id: number) => [...queryKeys.world.all, 'land-scene', id] as const,
+  below: [...queryKeys.world.all, 'below'] as const,
   types: (id: number) =>
     [...queryKeys.world.all, 'structure-types', id] as const,
 }
@@ -73,4 +75,11 @@ export function useWorldsStructureTypes(
   worldIds: number[]
 ): ReadonlyMap<number, StructureTypes> {
   return useQueries({ queries: worldIds.map(typesQuery), combine: byWorld })
+}
+
+export function useBelow() {
+  return useQuery({
+    queryKey: cityKeys.below,
+    queryFn: () => unwrap(api.GET('/api/below')),
+  })
 }

@@ -45,7 +45,7 @@ import {
   RARITY_TEXT_CLASS,
   RARITY_WASH_CLASS,
 } from '@/components/domain/rarityClasses'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { HalfTurnChip } from '@/features/son/HalfTurnChip'
 import { type SonPublic } from './api'
@@ -130,7 +130,7 @@ export function SonCard({
   actions,
 }: SonCardProps) {
   const son = view.son
-  const { open } = useDrawerStack()
+  const { open } = useEntryStack()
   const rule = useRuleLookup()
   const { domain } = useLabels()
   const dead = isDead(son)

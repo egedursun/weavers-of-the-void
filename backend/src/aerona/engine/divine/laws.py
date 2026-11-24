@@ -11,6 +11,10 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine import AvatarRow, NaturalLawProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.foreign_gods import OuterBargainRow
+from aerona.db.tables.geology import RegionStratumRow
+from aerona.db.tables.mythic import CosmicOfficeRow, ServitorRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import ConditionKind
@@ -213,6 +217,46 @@ async def spares_kind(ctx: TickContext, row: NaturalLawProfileRow, entity: Entit
     return row.exempt_kind_entity_id is not None and await of_kind(ctx.session, entity, row.exempt_kind_entity_id)
 
 
+async def god_behind(ctx: TickContext, entity: EntityRow) -> int | None:
+    avatar = await ctx.session.get(AvatarRow, entity.id)
+    if avatar is not None:
+        return avatar.god_node_id
+    servitor = await ctx.session.get(ServitorRow, entity.id)
+    return servitor.god_node_id if servitor is not None else None
+
+
+async def spares_office(ctx: TickContext, row: NaturalLawProfileRow, entity: EntityRow) -> bool:
+    office = await ctx.session.get(CosmicOfficeRow, row.exempt_office) if row.exempt_office is not None else None
+    return office is not None and office.holder_node_id is not None and office.holder_node_id in (entity.id, await god_behind(ctx, entity))
+
+
+async def spares_bargainers(ctx: TickContext, _row: NaturalLawProfileRow, entity: EntityRow) -> bool:
+    god = await god_behind(ctx, entity)
+    son = await ctx.session.get(SonRow, god) if god is not None else None
+    return son is not None and await ctx.session.scalar(select(OuterBargainRow.son_id).where(OuterBargainRow.son_id == son.id).limit(1)) is not None
+
+
+async def in_stratum(ctx: TickContext, row: NaturalLawProfileRow, entity: EntityRow) -> bool:
+    if row.afterlife_stratum_id is not None:
+        spirit = await ctx.session.get(SpiritProfileRow, entity.id)
+        if spirit is not None and spirit.stratum_id == row.afterlife_stratum_id:
+            return True
+    if row.stratum is None or entity.location_id is None:
+        return False
+    found = await ctx.session.scalar(
+        select(RegionStratumRow.id).where(
+            RegionStratumRow.region_entity_id == entity.location_id, RegionStratumRow.stratum == row.stratum, RegionStratumRow.reached_epoch.is_not(None)
+        )
+    )
+    return found is not None
+
+
+async def outside_strata(ctx: TickContext, law: NaturalLaw, entity: EntityRow) -> bool:
+    rows = list(await ctx.session.scalars(select(NaturalLawProfileRow).where(NaturalLawProfileRow.effect == law).order_by(NaturalLawProfileRow.law_entity_id)))
+    layered = [row for row in rows if row.scope is LawScope.STRATUM]
+    return bool(layered) and len(layered) == len(rows) and not any([await in_stratum(ctx, row, entity) for row in layered])
+
+
 Spares = Callable[[TickContext, NaturalLawProfileRow, EntityRow], Awaitable[bool]]
 SPARES: Mapping[LawException, Spares] = total(
     LawException,
@@ -223,6 +267,8 @@ SPARES: Mapping[LawException, Spares] = total(
         LawException.HEROES: spares_heroes,
         LawException.AVATARS: spares_avatars,
         LawException.NAMED_KIND: spares_kind,
+        LawException.OFFICE_HOLDERS: spares_office,
+        LawException.BARGAINERS: spares_bargainers,
     },
 )
 
@@ -239,7 +285,7 @@ async def exempt(ctx: TickContext, entity: EntityRow, law: NaturalLaw) -> bool:
 
 async def binds(ctx: TickContext, law: NaturalLaw, entity: EntityRow) -> bool:
     laws = await ctx.laws()
-    return laws.has(law, entity.world_id) and not await exempt(ctx, entity, law)
+    return laws.has(law, entity.world_id) and not await exempt(ctx, entity, law) and not await outside_strata(ctx, law, entity)
 
 
 async def clash_scar(ctx: TickContext, world: WorldRow) -> None:

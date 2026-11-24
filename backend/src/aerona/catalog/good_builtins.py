@@ -31,7 +31,7 @@ BUILT_IN_GOODS: Mapping[CommodityKind, BuiltInGood] = total(
         C.FODDER: BuiltInGood(G.FODDER, S.SPECIES, T.STAPLE, 4, 50, 0, 0),
         C.TIMBER: BuiltInGood(G.TIMBER, S.SPECIES, T.ORDINARY, 0, 80, 5, 0),
         C.FUEL: BuiltInGood(G.FUEL, S.MATERIAL, T.STAPLE, 0, 50, 0, 0),
-        C.BREAD: BuiltInGood(G.GRAIN, S.METHOD, T.STAPLE, 1, 20, 5, 10),
+        C.BREAD: BuiltInGood(G.PREPARED_FOOD, S.METHOD, T.STAPLE, 1, 20, 5, 10),
         C.ORE: BuiltInGood(G.ORE, S.DEPOSIT, T.STRATEGIC, 0, 90, 5, 0),
         C.STONE: BuiltInGood(G.STONE, S.DEPOSIT, T.ORDINARY, 0, 95, 5, 5),
         C.CLOTH: BuiltInGood(G.TEXTILE, S.METHOD, T.ORDINARY, 0, 20, 20, 5),
@@ -42,7 +42,7 @@ BUILT_IN_GOODS: Mapping[CommodityKind, BuiltInGood] = total(
         C.SIEGE_MATERIEL: BuiltInGood(G.MACHINES, S.MAKING, T.STRATEGIC, 0, 90, 10, 0),
         C.MEDICINE: BuiltInGood(G.MEDICINE, S.METHOD, T.EXEMPT, 4, 10, 15, 10),
         C.LUXURIES: BuiltInGood(G.LUXURIES, S.MAKING, T.LUXURY, 0, 10, 70, 10),
-        C.INCENSE: BuiltInGood(G.SCENT_MATERIAL, S.SPECIES, T.LUXURY, 0, 10, 30, 60),
+        C.INCENSE: BuiltInGood(G.RESIN_AND_GUM, S.SPECIES, T.LUXURY, 0, 10, 30, 60),
         C.SACRED_GOODS: BuiltInGood(G.SACRED_GOODS, S.MAKING, T.EXEMPT, 0, 15, 40, 90),
         C.MAGICAL_REAGENTS: BuiltInGood(G.REAGENT, S.MATERIAL, T.LUXURY, 0, 10, 50, 40),
         C.MEAT: BuiltInGood(G.MEAT, S.SPECIES, T.STAPLE, 1, 30, 15, 5),
@@ -52,7 +52,7 @@ BUILT_IN_GOODS: Mapping[CommodityKind, BuiltInGood] = total(
         C.TUBERS: BuiltInGood(G.ROOT_AND_TUBER, S.SPECIES, T.STAPLE, 6, 45, 0, 0),
         C.COAL: BuiltInGood(G.FUEL, S.DEPOSIT, T.STRATEGIC, 0, 90, 0, 0),
         C.PEAT: BuiltInGood(G.FUEL, S.DEPOSIT, T.STAPLE, 0, 80, 0, 0),
-        C.DUNG: BuiltInGood(G.FUEL, S.SPECIES, T.EXEMPT, 0, 60, 0, 0),
+        C.DUNG: BuiltInGood(G.FERTILISER, S.SPECIES, T.EXEMPT, 0, 60, 0, 0),
         C.FIBRE: BuiltInGood(G.FIBRE, S.SPECIES, T.ORDINARY, 0, 40, 5, 0),
         C.DYE: BuiltInGood(G.DYE_AND_PIGMENT, S.SPECIES, T.LUXURY, 0, 10, 45, 10),
         C.HERBS: BuiltInGood(G.SEASONING, S.SPECIES, T.ORDINARY, 2, 10, 10, 20),
@@ -68,5 +68,11 @@ BUILT_IN_GOODS: Mapping[CommodityKind, BuiltInGood] = total(
         C.WAX: BuiltInGood(G.CHEMICAL, S.SPECIES, T.ORDINARY, 0, 15, 10, 20),
         C.POTTERY: BuiltInGood(G.CLAY_AND_CERAMIC, S.MAKING, T.ORDINARY, 0, 50, 10, 5),
         C.BOOKS: BuiltInGood(G.BOOKS_AND_RECORDS, S.MAKING, T.ORDINARY, 1, 15, 40, 20),
+        C.PAPER: BuiltInGood(G.BOOKS_AND_RECORDS, S.MAKING, T.ORDINARY, 0, 15, 15, 5),
+        C.GLASSWARE: BuiltInGood(G.GLASS, S.MAKING, T.ORDINARY, 0, 25, 25, 5),
+        C.SOAP: BuiltInGood(G.CHEMICAL, S.METHOD, T.ORDINARY, 2, 15, 10, 5),
+        C.INK: BuiltInGood(G.DYE_AND_PIGMENT, S.METHOD, T.ORDINARY, 1, 5, 20, 10),
     },
 )
+
+SEED_STOCK: frozenset[CommodityKind] = frozenset({C.GRAIN, C.TUBERS, C.LIVESTOCK})

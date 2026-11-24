@@ -21,7 +21,7 @@ SIGN_FIELDS = ("community_entity_id", "cause")
 CARRION_FIELDS = ("carrion", "scavenged", "preserved", "rest", "kept")
 TEACHING_FIELDS = ("kind", "fidelity", "state", "price")
 FIELD_AGREEMENT_FIELDS = ("kind", "state", "term_epoch", "honour")
-SEAL_FIELDS = ("kind", "strength", "decay", "pact_oath_id", "power_id", "living_line_id")
+SEAL_FIELDS = ("kind", "strength", "decay", "pact_oath_id", "power_id", "living_line_id", "made_mind_id")
 NOVELTY_FIELDS = ("novelty", "adoption", "revivals")
 
 
@@ -132,6 +132,7 @@ class DeepSealRow(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     place_entity_id: Mapped[int] = mapped_column(ForeignKey("entities.id", ondelete="CASCADE"))
+    passage_id: Mapped[int | None] = mapped_column(ForeignKey("deep_passages.id", ondelete="SET NULL"))
     kind: Mapped[SealKind] = mapped_column(enum_type(SealKind, "kind"))
     strength: Mapped[int] = mapped_column(default=60)
     decay: Mapped[int] = mapped_column(default=5)
@@ -139,6 +140,7 @@ class DeepSealRow(Base):
     pact_oath_id: Mapped[int | None] = mapped_column(ForeignKey("oaths.id", ondelete="SET NULL"))
     power_id: Mapped[int | None] = mapped_column(ForeignKey("powers.id", ondelete="SET NULL"))
     living_line_id: Mapped[int | None] = mapped_column(ForeignKey("living_lines.id", ondelete="SET NULL"))
+    made_mind_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     epoch: Mapped[int] = mapped_column(default=0)
     broken_epoch: Mapped[int | None]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

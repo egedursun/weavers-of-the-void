@@ -117,6 +117,9 @@ async def afflictions_of(services: ServicesDep, node_id: int = Path(ge=1)) -> Af
                     charm_target_name=name_in(names, row.charm_target_node_id),
                     charm_kind=row.charm_kind,
                     charm_strength=row.charm_strength,
+                    ageing_rate_pct=row.ageing_rate_pct,
+                    forget_scope=row.forget_scope,
+                    sleep_until=row.sleep_until,
                 )
                 for row in rows
             ],

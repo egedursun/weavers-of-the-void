@@ -27,6 +27,9 @@ class RockKind(StrEnum):
     IRON = "iron"
     CARBON = "carbon"
     LIVING_TISSUE = "living_tissue"
+    PUMICE = "pumice"
+    SERPENTINITE = "serpentinite"
+    TRAVERTINE = "travertine"
 
 
 class BuildingGrade(StrEnum):
@@ -36,12 +39,35 @@ class BuildingGrade(StrEnum):
 
 
 class UndergroundStratum(StrEnum):
+    PERMAFROST_LAYER = "permafrost_layer"
     AQUIFER = "aquifer"
+    UNDER_OCEAN = "under_ocean"
+    RESERVOIR = "reservoir"
     CAVERN_UPPER = "cavern_upper"
     CAVERN_MIDDLE = "cavern_middle"
-    CAVERN_DEEP = "cavern_deep"
+    FAULT_ZONE = "fault_zone"
+    CAVERN_LOWER = "cavern_lower"
+    HOLLOW_INTERIOR = "hollow_interior"
     MAGMA_SEA = "magma_sea"
     DEEP_UNDERWORLD = "deep_underworld"
-    UNDER_OCEAN = "under_ocean"
-    HOLLOW_INTERIOR = "hollow_interior"
-    RESERVOIR = "reservoir"
+
+
+class DeepPassageKind(StrEnum):
+    LEVEL = "level"
+    VERTICAL = "vertical"
+    OPENING = "opening"
+
+
+class DeepPassageState(StrEnum):
+    DIGGING = "digging"
+    OPEN = "open"
+    FLOODED = "flooded"
+    COLLAPSED = "collapsed"
+    SEALED = "sealed"
+
+
+class DeepPassageOrigin(StrEnum):
+    NATURAL = "natural"
+    DUG = "dug"
+    BREACH = "breach"
+    DIVINE = "divine"

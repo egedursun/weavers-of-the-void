@@ -48,6 +48,7 @@ class EncloseCommonsInput(ToolInput):
 
 class RuleCommonsInput(ToolInput):
     commons_id: int
+    by_turns: bool = False
 
 
 class SetCommonsRuleInput(ToolInput):
@@ -120,9 +121,10 @@ async def enclose_commons(call: MortalCall, args: EncloseCommonsInput) -> str:
 
 async def rule_commons(call: MortalCall, args: RuleCommonsInput) -> str:
     row = await common_here(call, args.commons_id, MortalResult.COUNCIL_REFUSED)
-    if row.rule in (CommonsRule.ENCLOSED, CommonsRule.COUNCIL):
+    rule = CommonsRule.ROTATIONAL if args.by_turns else CommonsRule.COUNCIL
+    if row.rule in (CommonsRule.ENCLOSED, rule):
         fail(MortalResult.COUNCIL_REFUSED, why=f"it is already {spoken(row.rule)}")
-    await control.edit_record(call.tick, "commons", row.id, {"rule": CommonsRule.COUNCIL.value}, [])
+    await control.edit_record(call.tick, "commons", row.id, {"rule": rule.value}, [])
     call.target(row.region_entity_id)
     await call.record(
         "tools.mortal.rule_commons",

@@ -10,6 +10,8 @@ class CatchGround(StrEnum):
     SHORE_GATHERING = "shore_gathering"
     DIVING = "diving"
     FISH_PONDS = "fish_ponds"
+    EGG_GATHERING = "egg_gathering"
+    INSECT_GATHERING = "insect_gathering"
 
 
 class CatchMedium(StrEnum):
@@ -31,6 +33,8 @@ class Gear(StrEnum):
     TRAWLS = "trawls"
     POISON = "poison"
     HUNTING_ANIMALS = "hunting_animals"
+    DREDGES = "dredges"
+    DECOYS = "decoys"
 
 
 class CatchRight(StrEnum):
@@ -51,6 +55,8 @@ class ChemicalProduct(StrEnum):
     GLAZE = "glaze"
     PRESERVATIVE = "preservative"
     ACID = "acid"
+    SOLVENT = "solvent"
+    ADHESIVE = "adhesive"
 
 
 class InsuranceCover(StrEnum):
@@ -60,6 +66,8 @@ class InsuranceCover(StrEnum):
     CROP = "crop"
     VESSEL = "vessel"
     LIVESTOCK = "livestock"
+    HEALTH = "health"
+    RANSOM = "ransom"
 
 
 class RightKind(StrEnum):
@@ -74,6 +82,8 @@ class RightKind(StrEnum):
     MARKET_PRIVILEGE = "market_privilege"
     RECIPE = "recipe"
     TECHNIQUE = "technique"
+    PERFORMANCE = "performance"
+    LIKENESS = "likeness"
 
 
 class RightAcquired(StrEnum):
@@ -85,6 +95,7 @@ class RightAcquired(StrEnum):
     GRANTED = "granted"
     WON = "won"
     WED = "wed"
+    SHARED = "shared"
 
 
 class AssistiveAid(StrEnum):
@@ -94,6 +105,8 @@ class AssistiveAid(StrEnum):
     HEARING_HORN = "hearing_horn"
     CANE = "cane"
     MICROSCOPE = "microscope"
+    HEARING_AID = "hearing_aid"
+    TACTILE_SCRIPT = "tactile_script"
 
 
 class ClockKind(StrEnum):
@@ -105,6 +118,7 @@ class ClockKind(StrEnum):
     ASTRONOMICAL = "astronomical"
     CHRONOMETER = "chronometer"
     ELECTRONIC = "electronic"
+    FIRE_CLOCK = "fire_clock"
 
 
 class Notation(StrEnum):
@@ -134,3 +148,6 @@ class LinkToken(StrEnum):
     FRAGMENT = "fragment"
     TRUE_NAME = "true_name"
     POSSESSION = "possession"
+    FOOTPRINT = "footprint"
+    VOICE = "voice"
+    BIRTH_RECORD = "birth_record"

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { SlidersHorizontal } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type components } from '@/api/generated/schema'
 import { formatDecimal } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -23,10 +24,9 @@ import {
   MOOD_EXPLANATION,
   MOOD_LABEL,
 } from '@/features/pantheon/labels'
-import { type MoodAxis } from './api'
-import { GAUGES, MOOD_AXES } from './mood'
+import { GAUGES, type GaugeAxis, MOOD_AXES, MOOD_ITEM } from './mood'
 
-type MoodValues = Record<MoodAxis, number>
+type MoodValues = Record<GaugeAxis, number>
 
 export function MoodGauges({
   values,
@@ -35,11 +35,25 @@ export function MoodGauges({
 }: {
   values: MoodValues
   short?: boolean
-  breakdown?: { axis: MoodAxis; item: string; delta: number; epoch: number }[]
+  breakdown?: components['schemas']['MoodInput'][]
 }) {
   const rule = useRuleLookup()
+  const sorrow = breakdown.filter((entry) => entry.axis === 'sorrow')
   return (
     <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
+      {!short && sorrow.length > 0 && (
+        <div className='flex min-w-0 flex-col gap-1 rounded-md border surface-framed border-gild/70 bg-card p-3 sm:col-span-2'>
+          <Text weight='medium'>Sorrow</Text>
+          <Muted variant='caption' truncate={3}>
+            {`Last epoch, softening wrath: ${sorrow
+              .map(
+                (entry) =>
+                  `${MOOD_ITEM[entry.item]} +${formatDecimal(entry.delta, 1)}`
+              )
+              .join(' · ')}`}
+          </Muted>
+        </div>
+      )}
       {GAUGES.map((gauge) => {
         const threshold = rule(gauge.rule)
         const value = values[gauge.axis]
@@ -83,7 +97,7 @@ export function MoodGauges({
                 {`Last epoch: ${inputs
                   .map(
                     (entry) =>
-                      `${entry.item} ${entry.delta >= 0 ? '+' : ''}${formatDecimal(entry.delta, 1)}`
+                      `${MOOD_ITEM[entry.item]} ${entry.delta >= 0 ? '+' : ''}${formatDecimal(entry.delta, 1)}`
                   )
                   .join(' · ')}`}
               </Muted>
@@ -151,12 +165,13 @@ export function MoodSetForm({ values }: { values: MoodValues }) {
 type MoodPanelProps = {
   label: keyof typeof MOOD_LABEL
   values: MoodValues
-  breakdown: { axis: MoodAxis; item: string; delta: number; epoch: number }[]
+  breakdown: components['schemas']['MoodInput'][]
 }
 
 export function MoodPanel({ label, values, breakdown }: MoodPanelProps) {
   return (
     <Section
+      id='section-creator-mood'
       title='Mood'
       description='Changes at each epoch end by faith, prayers and silence in the world.'
       surface='card'

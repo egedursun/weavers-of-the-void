@@ -44,9 +44,12 @@ async def lifecycle_ends(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.entities",
     "table.mass_weapons",
     "table.nodes",
     "table.outer_being_profiles",
+    "table.replicator_lines",
+    "table.replicator_presence",
     "table.rifts",
     "table.sky_events",
     "table.stars",

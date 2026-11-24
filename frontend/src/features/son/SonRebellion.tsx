@@ -25,6 +25,7 @@ export function SonRebellion({ sonId, name }: { sonId: number; name: string }) {
   })
   return (
     <Section
+      id='section-son-rebellion'
       title='Force a rebellion'
       description={`Make ${name} rise against you: their loyalty falls, their ambition grows and loyal siblings sour on them. It also happens on its own when their will outgrows their loyalty.`}
       level={3}

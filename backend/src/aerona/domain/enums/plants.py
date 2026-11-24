@@ -15,6 +15,8 @@ class PlantForm(StrEnum):
     MADE = "made"
     EPIPHYTE = "epiphyte"
     PARASITIC = "parasitic"
+    PALM = "palm"
+    GEOPHYTE = "geophyte"
 
 
 class PlantPart(StrEnum):
@@ -31,6 +33,8 @@ class PlantPart(StrEnum):
     FIBRE = "fibre"
     SPORE = "spore"
     RESIN = "resin"
+    POLLEN = "pollen"
+    NECTAR = "nectar"
 
 
 class PlantReproduction(StrEnum):

@@ -26,6 +26,9 @@ class OrderOfBattleRules:
     standing_edge_pct: int = rule(10, 0, 100, W, "Edge an army loses in battle when all its formations act on standing orders (%)")
     hold_entrench: int = rule(5, 0, 100, W, "Entrenchment an army gains in a season its formations hold orders to hold")
     manoeuvre_organisation: int = rule(4, 0, 100, W, "Organisation a stack regains in a season its formation holds orders to manoeuvre")
+    screen_edge_pct: int = rule(6, 0, 100, W, "Edge an army gains in battle when all its formations screen its moves, hiding them and catching scouts (%)")
+    detachment_cut_pct: int = rule(30, 0, 100, W, "Chance a detachment that lies two or more regions from its army is cut off in a season it raids (%)")
+    detachment_stacks: int = rule(4, 1, 100, W, "Stacks an army holds before it sets a detachment apart for raids, garrisons and escorts")
 
 
 @dataclass(frozen=True)

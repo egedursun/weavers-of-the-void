@@ -40,6 +40,9 @@ WORLD_TEMPERATURE: dict[WorldType, Callable[[Rules], int]] = {
     WorldType.HOLLOW: lambda rules: rules.environment.temperature_hollow,
     WorldType.ICE_SHELL: lambda rules: rules.environment.temperature_ice_shell,
     WorldType.METHANE: lambda rules: rules.environment.temperature_methane,
+    WorldType.ROGUE: lambda rules: rules.environment.temperature_rogue,
+    WorldType.ARCHIPELAGO: lambda rules: rules.environment.temperature_archipelago,
+    WorldType.MEGASTRUCTURE: lambda rules: rules.environment.temperature_megastructure,
 }
 
 
@@ -57,6 +60,7 @@ WORLD_TERRAIN: dict[WorldType, TerrainKind] = {
     WorldType.JUNGLE: TerrainKind.JUNGLE,
     WorldType.ICE_SHELL: TerrainKind.ICE_SHEET,
     WorldType.METHANE: TerrainKind.TUNDRA,
+    WorldType.ROGUE: TerrainKind.ICE_SHEET,
 }
 
 
@@ -80,6 +84,8 @@ WORLD_SOIL: dict[WorldType, SoilKind] = {
     WorldType.SHATTERED: SoilKind.THIN,
     WorldType.ICE_SHELL: SoilKind.PERMAFROST,
     WorldType.METHANE: SoilKind.THIN,
+    WorldType.ROGUE: SoilKind.PERMAFROST,
+    WorldType.MEGASTRUCTURE: SoilKind.ARTIFICIAL,
     WorldType.HYCEAN: SoilKind.SALINE,
     WorldType.GODS_PALACE: SoilKind.ARTIFICIAL,
     WorldType.GENERATION_SHIP: SoilKind.ARTIFICIAL,

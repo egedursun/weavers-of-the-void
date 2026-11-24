@@ -9,6 +9,7 @@ E = RuleGroup.ECONOMY
 @dataclass(frozen=True)
 class EndowmentRules:
     income_pct: int = rule(5, 0, 50, E, "Share of its capital an endowment yields each epoch for its beneficiary")
+    ransom_per_captive: int = rule(20, 1, 10000, E, "Coin a ransom endowment pays a captor to free one captive of its town")
     skim_chance_pct: int = rule(10, 0, 100, E, "Chance each epoch that a trustee skims part of an endowment's income")
     skim_share_pct: int = rule(30, 0, 100, E, "Share of the income a skimming trustee keeps")
     renown_per_epoch: int = rule(2, 0, 50, E, "Renown a living founder gains each epoch their endowment serves")

@@ -104,6 +104,16 @@ def trade_modes() -> tuple[MovementMode, ...]:
 
 
 FOOT = frozenset({M.ON_FOOT})
+SPIRIT_WAYS = frozenset({M.INCORPOREAL})
+ROCK_WAYS = frozenset({M.BURROWING, M.INCORPOREAL})
+SOAKED_WAYS = frozenset({M.SUBMERGED, M.INCORPOREAL})
+SEA_WAYS = frozenset({M.SUBMERGED, M.SWIMMING, M.BOAT, M.INCORPOREAL})
+CAVE_WAYS = frozenset(mode for mode, spec in MOVEMENT.items() if spec.medium in {MovementMedium.GROUND, MovementMedium.AIR} or mode is M.INCORPOREAL)
+UNDERWORLD_WAYS = frozenset({M.ON_FOOT, M.FLYING, M.INCORPOREAL})
+NARROW_WAYS = frozenset({M.ON_FOOT, M.CLIMBING, M.BURROWING, M.SWIMMING, M.SUBMERGED, M.INCORPOREAL})
+FLOODED_WAYS = frozenset({M.SUBMERGED, M.SWIMMING, M.INCORPOREAL})
+EVERY_WAY = frozenset(MovementMode)
+FOOT_WAYS = FOOT
 
 
 def breathes_under_water(plan: BodyPlan) -> bool:
@@ -129,12 +139,14 @@ BODY_MODES: Mapping[BodyPlan, frozenset[MovementMode]] = total(
         BodyPlan.CENTAUROID: frozenset({M.ON_FOOT, M.SWIMMING}),
         BodyPlan.RADIAL: frozenset({M.SUBMERGED, M.ON_FOOT}),
         BodyPlan.COLONIAL: frozenset({M.SWIMMING, M.SUBMERGED, M.ON_FOOT}),
+        BodyPlan.HEXAPOD: frozenset({M.ON_FOOT, M.CLIMBING}),
+        BodyPlan.ROOTED: frozenset({M.ON_FOOT}),
     },
 )
 
 
 def best_passage(passability: Mapping[str, int], modes: frozenset[MovementMode], default: int) -> int:
-    return max((passability.get(mode.value, default) for mode in modes), default=default)
+    return max((passability.get(mode.value, default) for mode in sorted(modes)), default=default)
 
 
 SPEED: Mapping[MovementMode, Callable[[Rules], int]] = total(
@@ -159,4 +171,4 @@ def mode_through(passability: Mapping[str, int], modes: frozenset[MovementMode],
 
 
 def fastest(rules: Rules, modes: frozenset[MovementMode]) -> int:
-    return max((SPEED[mode](rules) for mode in modes), default=rules.movement.on_foot_speed)
+    return max((SPEED[mode](rules) for mode in sorted(modes)), default=rules.movement.on_foot_speed)

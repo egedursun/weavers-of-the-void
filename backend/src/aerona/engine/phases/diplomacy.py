@@ -480,6 +480,7 @@ async def alliance_lifetimes(ctx: TickContext, communities: int) -> int:
     "table.culture_values",
     "table.deed_claims",
     "table.deeds",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.feeling_spread",

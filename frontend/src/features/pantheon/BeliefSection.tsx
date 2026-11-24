@@ -170,7 +170,11 @@ export function BeliefSection({
   const list = peoples.data?.items ?? []
   const page = useShowMore(views, VIEWS_SHOWN)
   return (
-    <Section title="Through the peoples' eyes" level={3}>
+    <Section
+      id='section-god-belief'
+      title="Through the peoples' eyes"
+      level={3}
+    >
       {views.length === 0 ? (
         <EmptyState
           icon={BookHeart}

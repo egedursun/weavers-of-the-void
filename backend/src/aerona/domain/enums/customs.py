@@ -7,6 +7,7 @@ class RevivalWay(StrEnum):
     ADOPT = "adopt"
     AWAIT = "await"
     WITHDRAW = "withdraw"
+    MIGRATE = "migrate"
 
 
 class RevivalStage(StrEnum):
@@ -24,6 +25,7 @@ class RevivalGoal(StrEnum):
     EXPEL_FOREIGNERS = "expel_foreigners"
     RESTORE_LAND = "restore_land"
     RESTORE_RULE = "restore_rule"
+    RESTORE_LAW = "restore_law"
 
 
 class Intoxicant(StrEnum):
@@ -36,6 +38,8 @@ class Intoxicant(StrEnum):
     ESSENCE = "essence"
     SYNTHETIC = "synthetic"
     ANIMAL_DERIVED = "animal_derived"
+    STIMULANT = "stimulant"
+    RESIN = "resin"
 
 
 class IntoxicantUse(StrEnum):
@@ -46,6 +50,8 @@ class IntoxicantUse(StrEnum):
     FORBIDDEN = "forbidden"
     MEDICINE = "medicine"
     HOSPITALITY = "hospitality"
+    WORK = "work"
+    COURAGE = "courage"
 
 
 class MarkKind(StrEnum):
@@ -59,6 +65,8 @@ class MarkKind(StrEnum):
     BRAND = "brand"
     HAIR = "hair"
     IMPLANT = "implant"
+    PAINT = "paint"
+    STAIN = "stain"
 
 
 class MarkMeaning(StrEnum):
@@ -73,6 +81,8 @@ class MarkMeaning(StrEnum):
     FAITH = "faith"
     PROFESSION = "profession"
     BEAUTY = "beauty"
+    HEALING = "healing"
+    BOUND_LABOUR = "bound_labour"
 
 
 class NamingPattern(StrEnum):
@@ -82,6 +92,8 @@ class NamingPattern(StrEnum):
     TEKNONYM = "teknonym"
     PLACE = "place"
     TRADE = "trade"
+    ANCESTRAL = "ancestral"
+    EVENT = "event"
 
 
 class NameForm(StrEnum):
@@ -93,6 +105,8 @@ class NameForm(StrEnum):
     VOW = "vow"
     ASCENSION = "ascension"
     POSTHUMOUS = "posthumous"
+    EPITHET = "epithet"
+    ADOPTION = "adoption"
 
 
 class AgeGrade(StrEnum):
@@ -101,6 +115,7 @@ class AgeGrade(StrEnum):
     YOUNG_ADULTS = "young_adults"
     JUNIOR_ELDERS = "junior_elders"
     SENIOR_ELDERS = "senior_elders"
+    ANCIENTS = "ancients"
 
 
 class GradeDuty(StrEnum):
@@ -119,6 +134,8 @@ class EvidenceKind(StrEnum):
     MAGIC = "magic"
     EXPERT = "expert"
     HEARSAY = "hearsay"
+    RECORD = "record"
+    BODY = "body"
 
 
 class Membership(StrEnum):
@@ -127,6 +144,7 @@ class Membership(StrEnum):
     RESIDENT_FOREIGNER = "resident_foreigner"
     PROTECTED_MINORITY = "protected_minority"
     BOUND = "bound"
+    STATELESS = "stateless"
 
 
 class MemberRight(StrEnum):
@@ -138,6 +156,8 @@ class MemberRight(StrEnum):
     MOVEMENT = "movement"
     VOTE = "vote"
     WORSHIP = "worship"
+    ASSEMBLY = "assembly"
+    EDUCATION = "education"
 
 
 class Naturalisation(StrEnum):
@@ -149,6 +169,7 @@ class Naturalisation(StrEnum):
     PURCHASE = "purchase"
     GRANT = "grant"
     UNION = "union"
+    ADOPTION = "adoption"
 
 
 class ReliefKind(StrEnum):
@@ -159,6 +180,8 @@ class ReliefKind(StrEnum):
     FOSTER_CARE = "foster_care"
     SICK_HOUSE = "sick_house"
     PENSION = "pension"
+    PUBLIC_KITCHEN = "public_kitchen"
+    SHELTER = "shelter"
 
 
 class CoopPurpose(StrEnum):
@@ -170,3 +193,5 @@ class CoopPurpose(StrEnum):
     CREDIT = "credit"
     GRANARY = "granary"
     HERDING = "herding"
+    SCHOOL = "school"
+    HOUSING = "housing"

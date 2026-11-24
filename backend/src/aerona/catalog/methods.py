@@ -21,6 +21,9 @@ COLD = frozenset({T.FROZEN, T.COLD})
 DRY_HEAT = frozenset({T.WARM, T.HOT, T.SEARING})
 
 
+WARMING_ENERGY = frozenset({EnergyKind.HEAT, EnergyKind.FUEL, EnergyKind.FISSION, EnergyKind.GEOTHERMAL})
+
+
 @dataclass(frozen=True)
 class MethodSpec:
     kind: MethodKind
@@ -56,6 +59,10 @@ class MethodSpec:
         return self.energy_need if self.process is ProcessKind.LIGHTING and self.energy is EnergyKind.ELECTRIC else 0
 
     @property
+    def heat(self) -> int:
+        return self.energy_need // 2 if self.energy in WARMING_ENERGY else 0
+
+    @property
     def fouls(self) -> int:
         return sum(max(0, self.pollution(pollutant)) for pollutant in Pollutant)
 
@@ -82,6 +89,7 @@ POLLUTANTS = total(
         Pollutant.RADIATION: PollutantSpec("Radiation", "radiation", "recover_radiation", "radiation_harm"),
         Pollutant.NOISE: PollutantSpec("Noise", "noise", "recover_noise", "noise_harm", "crowd_noise_per_10000"),
         Pollutant.LIGHT: PollutantSpec("Light", "light", "recover_light", "light_harm"),
+        Pollutant.HEAT: PollutantSpec("Heat", "heat", "recover_heat", "heat_harm"),
     },
 )
 
@@ -959,8 +967,19 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 technique=Technique.PRINTING_PRESS,
             ),
             m(
-                M.ROTARY_PRESS,
+                M.DUPLICATING_MACHINE,
                 P.COPYING,
+                "Duplicating machine",
+                "An electric machine copies page after page from one master",
+                E.ELECTRIC,
+                3,
+                output_pct=450,
+                labour_pct=20,
+                technique=Technique.ELECTRICITY,
+            ),
+            m(
+                M.ROTARY_PRESS,
+                P.PRINTING,
                 "Rotary press",
                 "Steam turns cylinders that print sheet after sheet",
                 E.FUEL,
@@ -969,6 +988,57 @@ METHODS: MappingProxyType[MethodKind, MethodSpec] = MappingProxyType(
                 labour_pct=20,
                 air=1,
                 technique=Technique.STEAM_POWER,
+            ),
+            m(M.BLOCK_PRINTING, P.PRINTING, "Block printing", "Carved blocks inked and pressed to the sheet", E.MUSCLE, 1, technique=Technique.PRINTING),
+            m(
+                M.MOVABLE_TYPE,
+                P.PRINTING,
+                "Movable type",
+                "Pages set from separate letters and pressed",
+                E.MUSCLE,
+                2,
+                output_pct=250,
+                technique=Technique.PRINTING_PRESS,
+            ),
+            m(M.HAND_MOULD, P.PAPERMAKING, "Hand mould", "Pulp lifted sheet by sheet on a screen", E.MUSCLE, 1, water=1, technique=Technique.PAPER),
+            m(
+                M.STAMPING_MILL,
+                P.PAPERMAKING,
+                "Stamping mill",
+                "Water-driven hammers beat fibre to pulp",
+                E.WATER,
+                2,
+                output_pct=180,
+                labour_pct=80,
+                water=2,
+                technique=Technique.PAPER,
+            ),
+            m(
+                M.PAPER_MACHINE,
+                P.PAPERMAKING,
+                "Paper machine",
+                "A continuous sheet of paper drawn off rollers",
+                E.FUEL,
+                4,
+                output_pct=500,
+                labour_pct=25,
+                water=3,
+                air=1,
+                technique=Technique.FACTORY_PRODUCTION,
+            ),
+            m(M.HAND_LAYING, P.ROPEMAKING, "Hand laying", "Strands twisted together by hand", E.MUSCLE, 1),
+            m(M.WALK_LAYING, P.ROPEMAKING, "Walk laying", "Strands laid along a long walk with a turning wheel", E.MUSCLE, 2, output_pct=170, labour_pct=90),
+            m(
+                M.ROPE_MACHINE,
+                P.ROPEMAKING,
+                "Rope machine",
+                "Machines spin and lay the strands",
+                E.FUEL,
+                3,
+                output_pct=400,
+                labour_pct=30,
+                air=1,
+                technique=Technique.MACHINE_TOOLS,
             ),
             m(M.SOLAR_PANS, P.EVAPORATING, "Solar pans", "Sun and wind dry brine in shallow pans", E.SOLAR, 1, coast=True, climate=DRY_HEAT),
             m(M.BOILING_PANS, P.EVAPORATING, "Boiling pans", "Brine boiled away over fire", E.HEAT, 3, output_pct=130, air=1),
@@ -1017,6 +1087,9 @@ PROCESS_LABELS: MappingProxyType[ProcessKind, str] = MappingProxyType(
         P.DYEING: "Dyeing",
         P.COPYING: "Copying writings",
         P.EVAPORATING: "Making salt",
+        P.PAPERMAKING: "Making paper",
+        P.PRINTING: "Printing",
+        P.ROPEMAKING: "Making rope",
     }
 )
 STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
@@ -1059,9 +1132,15 @@ STEP_PROCESS: MappingProxyType[str, ProcessKind] = MappingProxyType(
         "joinery": P.CARPENTRY,
         "fire_pottery": P.FIRING,
         "blow_glass": P.FIRING,
+        "blow_glassware": P.FIRING,
+        "make_ink": P.DYEING,
         "dye_works": P.DYEING,
         "copy_books": P.COPYING,
         "copy_books_rag": P.COPYING,
+        "make_paper": P.PAPERMAKING,
+        "make_rag_paper": P.PAPERMAKING,
+        "print_books": P.PRINTING,
+        "lay_rope": P.ROPEMAKING,
         "evaporate_salt": P.EVAPORATING,
         "press_oil": P.PRESSING,
         "render_wax": P.PRESERVING,
@@ -1238,6 +1317,9 @@ PROCESS_OUTPUT: MappingProxyType[ProcessKind, CommodityKind] = MappingProxyType(
         P.DYEING: CommodityKind.LUXURIES,
         P.COPYING: CommodityKind.BOOKS,
         P.EVAPORATING: CommodityKind.HALITE,
+        P.PAPERMAKING: CommodityKind.PAPER,
+        P.PRINTING: CommodityKind.BOOKS,
+        P.ROPEMAKING: CommodityKind.TOOLS,
     }
 )
 PROCESS_JOB: MappingProxyType[ProcessKind, Job] = MappingProxyType(
@@ -1246,6 +1328,9 @@ PROCESS_JOB: MappingProxyType[ProcessKind, Job] = MappingProxyType(
         P.FISHING: Job.FISHING,
         P.LOGGING: Job.BUILDING,
         P.MINING: Job.MINING,
+        P.PAPERMAKING: Job.CRAFTING,
+        P.PRINTING: Job.CRAFTING,
+        P.ROPEMAKING: Job.CRAFTING,
         P.MILKING: Job.HERDING,
         P.SHEARING: Job.HERDING,
         P.EGG_LAYING: Job.HERDING,
@@ -1270,6 +1355,9 @@ PROCESS_WORKSHOP: MappingProxyType[ProcessKind, WorkshopKind] = MappingProxyType
         P.FIRING: WorkshopKind.POTTERY,
         P.DYEING: WorkshopKind.DYEWORKS,
         P.COPYING: WorkshopKind.SCRIPTORIUM,
+        P.PAPERMAKING: WorkshopKind.PAPER_MILL,
+        P.PRINTING: WorkshopKind.PRINTING_HOUSE,
+        P.ROPEMAKING: WorkshopKind.ROPEWALK,
         P.EVAPORATING: WorkshopKind.EVAPORATION_WORKS,
     }
 )

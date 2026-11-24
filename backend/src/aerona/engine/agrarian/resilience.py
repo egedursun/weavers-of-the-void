@@ -17,6 +17,7 @@ from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.law_depth import RegistryRow
 from aerona.db.tables.polity import HouseProfileRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow, SettlementTreasuryRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agrarian import AidKind, PreparednessKind, RebuildPlan
 from aerona.domain.enums.bond import BondKind, BondState
@@ -32,6 +33,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import BuildMaterial, SizeTier, TreasuryEntry
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.statecraft import MandateKind, MandateState
+from aerona.domain.enums.structure import ConstructionState
 from aerona.domain.enums.urban import Morphology
 from aerona.engine.agrarian.rebuilding_ways import abandon_town, choose_way, rebuilt
 from aerona.engine.agrarian.rings import put
@@ -329,6 +331,13 @@ async def aid_medicine(ctx: TickContext, aid: Aid) -> None:
     await ease_land(ctx, aid, ctx.rules.relief.healer_disease * 2)
 
 
+@AID_EFFECTS.on(AidKind.TRANSPORT)
+async def aid_transport(ctx: TickContext, aid: Aid) -> None:
+    await send_grain(ctx, aid)
+    if aid.rebuild is not None:
+        shift(aid.rebuild, "progress", ctx.rules.relief.transport_progress)
+
+
 @AID_EFFECTS.on(AidKind.LABOUR)
 async def aid_labour(ctx: TickContext, aid: Aid) -> None:
     if aid.rebuild is not None:
@@ -500,6 +509,15 @@ async def seize(ctx: TickContext, row: ReconstructionRow, town: EntityRow, profi
     )
 
 
+async def monuments_of(ctx: TickContext, town_id: int) -> list[StructureProfileRow]:
+    rows = await ctx.session.scalars(
+        select(StructureProfileRow)
+        .where(StructureProfileRow.host_entity_id == town_id, StructureProfileRow.construction_state == ConstructionState.RUINED)
+        .order_by(StructureProfileRow.structure_entity_id)
+    )
+    return [row for row in rows if not held(row.structure_entity_id) and "construction_state" not in row.locked]
+
+
 async def plan_rebuild(ctx: TickContext, row: ReconstructionRow, town: EntityRow, profile: SettlementProfileRow, knowledge: KnowledgeMap) -> None:
     table = ctx.rules.reconstruction
     hasty = table.cost * (TIERS.index(profile.size_tier) + 1)
@@ -509,7 +527,10 @@ async def plan_rebuild(ctx: TickContext, row: ReconstructionRow, town: EntityRow
     if able and profile.treasury * 2 >= planned and "plan" not in row.locked:
         row.plan = RebuildPlan.PLANNED
     await choose_way(ctx, row, town)
-    put(row, "cost", planned if row.plan is RebuildPlan.PLANNED else hasty)
+    restored = hasty * ctx.rules.rebuilding.restored_cost_pct // PERCENT
+    if row.plan is RebuildPlan.OPPORTUNISTIC and "plan" not in row.locked and profile.treasury * 2 >= restored and await monuments_of(ctx, town.id):
+        row.plan = RebuildPlan.RESTORED
+    put(row, "cost", planned if row.plan is RebuildPlan.PLANNED else restored if row.plan is RebuildPlan.RESTORED else hasty)
     put(row, "planner_entity_id", planner.id if planner is not None and row.plan is RebuildPlan.PLANNED else None)
 
 
@@ -525,6 +546,10 @@ async def finish(ctx: TickContext, row: ReconstructionRow, town: EntityRow, prof
         put(profile, "morphology", Morphology.PLANNED)
         shift(profile, "fire_risk", -table.fire_cut)
         shift(built.infrastructure, "roads", 1, high=MOST_LEVEL)
+    if row.plan is RebuildPlan.RESTORED:
+        for monument in await monuments_of(ctx, town.id):
+            monument.construction_state = ConstructionState.RESTORED
+        shift_stat(town, "piety", ctx.rules.rebuilding.restored_memory)
     row.finished_epoch = ctx.epoch
     await rebuilt(ctx, row, town)
     await record(

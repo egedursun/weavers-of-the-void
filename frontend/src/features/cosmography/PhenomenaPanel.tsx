@@ -2,7 +2,14 @@ import { useState } from 'react'
 import { CloudFog, MapPin, Shield, Sparkles, X } from 'lucide-react'
 import { type ActionBody, type EditValues } from '@/api/actions'
 import { Button } from '@/components/ui/button'
-import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
+import {
+  EmptyState,
+  EntityLink,
+  PagedList,
+  Section,
+  ShapeFields,
+  useShape,
+} from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { MindPicker } from '@/features/entity/mind/parts'
@@ -221,12 +228,14 @@ function RaiseForm({
   const [kind, setKind] = useState('')
   const [region, setRegion] = useState<number | null>(null)
   const [intensity, setIntensity] = useState('50')
+  const naming = useShape()
   const raise = useCosmographyAction(
     'phenomenon:create',
     (place: number) => ({
       kind: kind as ActionBody<'phenomenon:create'>['kind'],
       region_id: place,
       intensity: Number(intensity) || 50,
+      ...naming.body,
     }),
     'A phenomenon took hold'
   )
@@ -253,6 +262,13 @@ function RaiseForm({
         </Button>
       }
     >
+      <div className='col-span-full min-w-0'>
+        <ShapeFields
+          shape={naming.shape}
+          onChange={naming.setShape}
+          blocked={busy}
+        />
+      </div>
       <MindPicker
         label='Kind'
         value={kind}

@@ -65,6 +65,9 @@ import {
   Users,
   Wand,
   Wheat,
+  Banknote,
+  Sword,
+  Binoculars,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -111,13 +114,13 @@ export const CHRONICLE_KIND_ICON: Record<ChronicleKind, LucideIcon> = {
   gift: Gift,
   worship: Church,
   world_birth: Earth,
-  prophecy: Eye,
+  prophecy: Binoculars,
   covenant: FileSignature,
   army: Shield,
   ascension: Crown,
   migration: Footprints,
   legendary_quest: Signpost,
-  war: Swords,
+  war: Sword,
   war_of_gods: Flame,
   cosmic_law: Gavel,
   horror: Eye,
@@ -139,7 +142,7 @@ export const CHRONICLE_KIND_ICON: Record<ChronicleKind, LucideIcon> = {
   spirit: Feather,
   curse: CircleSlash,
   denial: Ban,
-  ransom: Coins,
+  ransom: Banknote,
   prohibition: Ban,
 }
 

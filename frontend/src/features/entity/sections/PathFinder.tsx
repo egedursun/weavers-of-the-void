@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EntityLink, FormRow, Paged, Section } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Muted, Text } from '@/components/typography'
-import { drawerKindOf } from '@/features/chronicle/linkTargets'
+import { entryKindOf } from '@/features/chronicle/linkTargets'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { humanize } from '../actions/schema'
 import { useCatalogue, useNames, usePath } from '../api/queries'
@@ -29,7 +29,7 @@ function NodeName({
   name: string
   entry?: NameEntry
 }) {
-  const kind = entry ? drawerKindOf(entry.kind) : undefined
+  const kind = entry ? entryKindOf(entry.kind) : undefined
   if (!kind)
     return (
       <Text as='span' weight='medium'>

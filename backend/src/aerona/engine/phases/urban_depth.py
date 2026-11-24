@@ -36,6 +36,7 @@ async def district_coverage(ctx: TickContext) -> None:
 
 @reads(
     "settlement.population",
+    "table.deep_passages",
     "table.districts",
     "table.entities",
     "table.land_use_rules",
@@ -194,15 +195,20 @@ async def magical_orders(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.piety",
     "people.population",
     "people.prosperity",
     "people.wealth",
     "settlement.defense",
     "settlement.piety",
     "settlement.population",
+    "settlement.prosperity",
+    "settlement.wealth",
     "table.art_form_practitioners",
     "table.community_cohorts",
     "table.convoys",
+    "table.creator",
+    "table.dimensions",
     "table.disease_cures",
     "table.disease_profiles",
     "table.disease_routes",
@@ -210,6 +216,9 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.drink_kinds",
     "table.endemic_diseases",
     "table.entities",
+    "table.foreign_gods",
+    "table.galaxies",
+    "table.galaxy_clusters",
     "table.herds",
     "table.holder_techniques",
     "table.immunities",
@@ -228,13 +237,18 @@ async def magical_orders(ctx: TickContext) -> None:
     "table.species_hosts",
     "table.species_profiles",
     "table.species_ranges",
+    "table.stars",
     "table.structure_profiles",
     "table.theory_adherents",
     "table.theory_profiles",
     "table.trade_flows",
     "table.trade_route_profiles",
     "table.transport_fleets",
+    "table.treaty_clauses",
+    "table.treaty_profiles",
     "table.vehicle_groups",
+    "table.war_sides",
+    "table.worlds",
     "trade_route.capacity",
 )
 @writes(

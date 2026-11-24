@@ -98,6 +98,7 @@ class PowerRules:
     store_recovery: int = rule(4, 0, 100, H, "Strain each device that stores power takes from its holder's powers each epoch")
     sleep_stress: int = rule(40, 0, 100, H, "Stress under which a dream of the night can wake a power that wakes in sleep")
     danger_hp_pct: int = rule(30, 0, 100, H, "Share of full health below which a near kin, friend or charge is in danger enough to wake a power (%)")
+    hazard_years: int = rule(5, 0, 100, P, "Years a power that ages its user takes from it each time the hazard strikes")
 
 
 @dataclass(frozen=True)

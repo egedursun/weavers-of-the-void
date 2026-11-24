@@ -64,7 +64,7 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
         ),
         K.SMUGGLING: CrimeSpec(A.FISCAL, 30, (V.TRACE,), 30, P.CONFISCATION, "smuggling"),
         K.POACHING: CrimeSpec(
-            A.PROPERTY,
+            A.ENVIRONMENT,
             15,
             (
                 V.TRACE,
@@ -255,7 +255,8 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
             "poisoning the wells",
         ),
         K.TAINTED_GOODS: CrimeSpec(A.PUBLIC_HEALTH, 30, (V.TRACE,), 40, P.FINE, "selling tainted goods"),
-        K.UNLAWFUL_POLLUTION: CrimeSpec(A.PUBLIC_HEALTH, 25, (V.TRACE,), 40, P.FINE, "polluting against the law"),
+        K.UNLAWFUL_POLLUTION: CrimeSpec(A.ENVIRONMENT, 25, (V.TRACE,), 40, P.FINE, "polluting against the law"),
+        K.NEGLECT: CrimeSpec(A.FAMILY, 30, (V.WITNESS, V.BODY), 35, P.FINE, "neglecting one in their care"),
         K.UNION_OFFENCE: CrimeSpec(A.SOCIAL, 25, (V.WITNESS,), 40, P.PUBLIC_SHAMING, "an offence against a union the culture names"),
         K.SUMPTUARY_BREACH: CrimeSpec(A.SOCIAL, 10, (V.WITNESS,), 70, P.FINE, "dressing above one's station"),
         K.FORBIDDEN_FOOD: CrimeSpec(A.SOCIAL, 10, (V.WITNESS,), 50, P.PENANCE, "eating what is forbidden"),
@@ -362,6 +363,7 @@ CRIMES: Mapping[CrimeKind, CrimeSpec] = total(
         K.IMPERSONATION: CrimeSpec(A.CONSTITUTIONAL, 45, (V.DOCUMENT,), 30, P.FINE, "passing as another by a copy"),
         K.MIND_COMPULSION: CrimeSpec(A.PENAL, 70, (V.MAGIC,), 25, P.IMPRISONMENT, "bending a mind by a power"),
         K.FIXING_CONTESTS: CrimeSpec(A.PROPERTY, 35, (V.WITNESS,), 30, P.FINE, "fixing a contest"),
+        K.ENHANCING_CONTESTANTS: CrimeSpec(A.PROPERTY, 25, (V.WITNESS, V.TRACE), 30, P.FINE, "enhancing a contestant"),
     },
 )
 
@@ -415,6 +417,8 @@ PUNISHMENTS: Mapping[PunishmentKind, PunishmentSpec] = total(
         P.TRANSPORTATION: PunishmentSpec("transportation", 50, 5, 25, 10, -5, 0, 15, 30, "was carried off to a far settlement"),
         P.COMMUNITY_WORK: PunishmentSpec("community_work", 20, 35, 0, 15, 30, 5, 10, 5, "was set to work for the community"),
         P.DAMPENING: PunishmentSpec("dampening", 40, 20, 15, 0, 0, -10, 20, 25, "had their powers dampened by the law"),
+        P.SHUNNING: PunishmentSpec("shunning", 30, 30, 0, 0, 10, 25, 10, 10, "was shunned by its people"),
+        P.CURSE_SENTENCE: PunishmentSpec("curse", 50, 20, 5, 0, -30, 15, 15, 40, "was sentenced to bear a curse"),
     },
 )
 PENALTY_WORDS: Mapping[str, PunishmentKind] = {spec.word: kind for kind, spec in PUNISHMENTS.items()}

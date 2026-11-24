@@ -44,5 +44,8 @@ PREHISTORY_KIND = total(
             checked_by=(),
             used_by=("catalog.life.prehistory.DERIVE_PREHISTORY_KINDS", "catalog.prehistory.SIMULATED_KINDS", "catalog.prehistory.SPECIAL_KINDS"),
         ),
+        PrehistoryKind.RUINED: Defined(
+            "Ruined", checked_by=("engine.prehistory.run.derive",), used_by=("catalog.prehistory.SIMULATED_KINDS", "catalog.prehistory.SPECIAL_KINDS")
+        ),
     },
 )

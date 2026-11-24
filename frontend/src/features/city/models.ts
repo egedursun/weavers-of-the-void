@@ -607,6 +607,8 @@ const FORM_BODY: Record<Schema['BuildingForm'], Part> = {
   modular: { model: building('barracks', 'yellow') },
   grown: { model: nature('trees_A_large'), scale: 0.9 },
   carved: { model: nature('rock_single_C'), scale: 1.3 },
+  stilt: { model: building('home_B', 'yellow') },
+  vault: { model: building('home_B', 'blue') },
 }
 
 const STOREY_STEP = 0.06
@@ -637,6 +639,8 @@ export const HOUSING_LOOK: Record<Schema['HousingLevel'], Part> = {
   arcology_unit: { model: building('castle', 'yellow'), scale: 0.55 },
   habitat_module: { model: building('tower_base', 'blue'), scale: 0.5 },
   ship_berth: { model: neutral('building_bridge_B'), scale: 0.45 },
+  shack: { model: prop('tent'), scale: 0.45 },
+  palace: { model: building('home_B', 'blue'), scale: 0.8 },
 }
 
 export const SHELTER: Part = { model: prop('tent'), scale: 0.35 }
@@ -662,6 +666,92 @@ export const DISTRICT_DRESS: Partial<Record<Schema['DistrictKind'], Look>> = {
 }
 
 export const GROUND_TILE = hex('tiles/base/hex_grass')
+export type DepthSet =
+  | 'stalagmites'
+  | 'fungi'
+  | 'crystals'
+  | 'ice'
+  | 'kelp'
+  | 'meadow'
+  | 'cairns'
+  | 'cinders'
+export type DepthPart = Part & { glow: boolean }
+
+export const DEPTH_WALLS: Record<DepthSet, Part[]> = {
+  stalagmites: [
+    { model: nature('mountain_C'), scale: 0.7 },
+    { model: nature('mountain_B'), scale: 0.6 },
+    { model: nature('rock_single_D'), scale: 1.6 },
+  ],
+  fungi: [
+    { model: nature('mountain_C'), scale: 0.65 },
+    { model: nature('rock_single_D'), scale: 1.5 },
+  ],
+  crystals: [
+    { model: nature('rock_single_D'), scale: 1.8 },
+    { model: nature('mountain_C'), scale: 0.6 },
+  ],
+  ice: [
+    { model: nature('mountain_A'), scale: 0.55 },
+    { model: nature('rock_single_D'), scale: 1.7 },
+  ],
+  kelp: [
+    { model: nature('mountain_A'), scale: 0.5 },
+    { model: nature('rock_single_D'), scale: 1.6 },
+  ],
+  meadow: [
+    { model: nature('mountain_A_grass_trees'), scale: 0.6 },
+    { model: nature('hills_A_trees') },
+  ],
+  cairns: [
+    { model: nature('mountain_B'), scale: 0.7 },
+    { model: nature('rock_single_D'), scale: 1.4 },
+  ],
+  cinders: [
+    { model: nature('mountain_B'), scale: 0.65 },
+    { model: nature('mountain_C'), scale: 0.6 },
+  ],
+}
+
+export const DEPTH_PARTS: Record<DepthSet, DepthPart[]> = {
+  stalagmites: [
+    { model: nature('mountain_C'), scale: 0.32, glow: false },
+    { model: nature('rock_single_A'), scale: 2, glow: false },
+    { model: nature('rock_single_D'), scale: 1.2, glow: false },
+  ],
+  fungi: [
+    { model: nature('tree_single_B'), scale: 0.9, glow: true },
+    { model: nature('trees_B_small'), glow: true },
+    { model: nature('rock_single_B'), scale: 0.8, glow: false },
+  ],
+  crystals: [
+    { model: nature('mountain_C'), scale: 0.55, glow: true },
+    { model: nature('mountain_A'), scale: 0.45, glow: true },
+    { model: nature('rock_single_B'), scale: 0.8, glow: false },
+  ],
+  ice: [
+    { model: nature('rock_single_E'), scale: 1.2, glow: false },
+    { model: nature('rock_single_C'), scale: 1, glow: false },
+  ],
+  kelp: [
+    { model: nature('rock_single_D'), scale: 1.6, glow: true },
+    { model: nature('rock_single_C'), scale: 1.8, glow: true },
+    { model: nature('rock_single_E'), scale: 0.9, glow: false },
+  ],
+  meadow: [
+    { model: nature('trees_A_medium'), glow: false },
+    { model: nature('tree_single_A'), glow: false },
+  ],
+  cairns: [
+    { model: nature('rock_single_A'), scale: 1.2, glow: false },
+    { model: nature('rock_single_B'), scale: 1.1, glow: false },
+    { model: nature('rock_single_E'), scale: 0.9, glow: false },
+  ],
+  cinders: [
+    { model: nature('rock_single_E'), scale: 1, glow: true },
+    { model: nature('rock_single_B'), scale: 0.9, glow: false },
+  ],
+}
 export const WATER_TILE = hex('tiles/base/hex_water')
 export const RIVER_TILE = hex('tiles/rivers/hex_river_A')
 export const ROAD_LOOK: Record<RoadModel, string> = {

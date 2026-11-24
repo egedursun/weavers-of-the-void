@@ -8,10 +8,12 @@ from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.ecology import SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import LuckBeliefRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -20,6 +22,7 @@ from aerona.domain.enums.folkways import LuckReach, LuckSign
 from aerona.domain.enums.kind_crafts import ColourFocus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import ConstructionState
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in, towns_of_people
@@ -74,6 +77,20 @@ async def building(reading: Reading) -> None:
             work.progress = clamp_int(round_half_up(work.progress * (PERCENT - ctx.rules.luck.building_pct) / PERCENT), 0, PERCENT)
 
 
+async def learning(reading: Reading) -> None:
+    ctx = reading.ctx
+    people = await people_of(ctx.session, reading.town)
+    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    if culture is not None and not held(culture.people_entity_id) and "literacy" not in culture.locked:
+        culture.literacy = clamp_int(culture.literacy + reading.sign * ctx.rules.luck.learning_pct, 0, PERCENT)
+
+
+async def contest(reading: Reading) -> None:
+    profile = await reading.ctx.session.get(SettlementProfileRow, reading.town.id)
+    if profile is not None and "prestige" not in profile.locked:
+        profile.prestige = clamp_int(profile.prestige + reading.sign * reading.ctx.rules.luck.contest_prestige, 0, PERCENT)
+
+
 async def believed(_reading: Reading) -> None:
     return None
 
@@ -89,6 +106,8 @@ REACHES: Mapping[LuckReach, Callable[[Reading], Awaitable[None]]] = total(
         LuckReach.TRADE: trade,
         LuckReach.UNION: union,
         LuckReach.BUILDING: building,
+        LuckReach.LEARNING: learning,
+        LuckReach.CONTEST: contest,
     },
 )
 

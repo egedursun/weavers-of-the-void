@@ -20,6 +20,9 @@ class KinRole(StrEnum):
     GODPARENT = "godparent"
     SWORN_KIN = "sworn_kin"
     FOSTER_KIN = "foster_kin"
+    STEP_PARENT = "step_parent"
+    STEP_CHILD = "step_child"
+    HALF_SIBLING = "half_sibling"
 
 
 class KinDuty(StrEnum):

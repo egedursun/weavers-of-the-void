@@ -56,6 +56,8 @@ GATHERING_COLLECTIONS = total(
         G.SPORT_MATCH: C.COMPETITION,
         G.COMMEMORATION: C.CEREMONY,
         G.MUSTER: C.WAR,
+        G.REUNION: C.FEAST,
+        G.GIFT_EXCHANGE: C.FEAST,
     },
 )
 
@@ -98,6 +100,8 @@ GATHERING_THOUGHTS = total(
         G.SPORT_MATCH: ThoughtKind.FELT_STIMULATED,
         G.COMMEMORATION: ThoughtKind.BELONGED,
         G.MUSTER: ThoughtKind.FELT_PURPOSE,
+        G.REUNION: ThoughtKind.AMONG_KIN,
+        G.GIFT_EXCHANGE: ThoughtKind.AMONG_FRIENDS,
     },
 )
 

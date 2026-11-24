@@ -34,6 +34,15 @@ class GroundRules:
     missiles_depletion: int = rule(20, 0, 100, E, "How hard missiles press the stock they take from, slowing its regrowth (%)")
     trawls_pct: int = rule(180, 0, 400, E, "Catch with trawls (% of the plain catch)")
     trawls_depletion: int = rule(70, 0, 100, E, "How hard trawls press the stock they take from, slowing its regrowth (%)")
+    dredges_pct: int = rule(140, 0, 400, E, "Catch with dredges dragged over shellfish beds (% of the plain catch)")
+    dredges_depletion: int = rule(80, 0, 100, E, "How hard dredges press the beds they drag, slowing their regrowth")
+    dredge_bed_harm_pct: int = rule(20, 0, 100, E, "Scarring dredges leave on the bed they drag each epoch")
+    decoys_pct: int = rule(150, 0, 400, E, "Catch of fowl and game drawn in by decoys (% of the plain catch)")
+    decoys_depletion: int = rule(40, 0, 100, E, "How hard decoys press the stock they draw, slowing its regrowth")
+    egg_gathering_rate: int = rule(6, 0, 100, E, "Eggs gathering from the nesting grounds of a kind yields each epoch at full stock")
+    egg_gathering_depletion: int = rule(5, 0, 100, E, "Stock egg gathering wears from the nesting grounds of a kind each epoch at full effort")
+    insect_gathering_rate: int = rule(5, 0, 100, E, "Honey, wax and dye gathering larvae, swarms and nests yields each epoch at full stock")
+    insect_gathering_depletion: int = rule(3, 0, 100, E, "Stock insect gathering wears from the nests of a kind each epoch at full effort")
     poison_pct: int = rule(160, 0, 400, E, "Catch with poison (% of the plain catch)")
     poison_depletion: int = rule(60, 0, 100, E, "How hard poison press the stock they take from, slowing its regrowth (%)")
     hunting_animals_pct: int = rule(130, 0, 400, E, "Catch with hunting animals (% of the plain catch)")
@@ -92,6 +101,8 @@ class ChemistryRules:
     preservative_spoil_pct: int = rule(50, 0, 100, E, "Share of the spoiling of a town's food stores preservatives spare at full output (%)")
     acid_metal_pct: int = rule(20, 0, 100, E, "Extra output acids give a town's smiths and metal workers at full output (%)")
     acid_harm: int = rule(10, 0, 100, E, "Extra harm an accident at a works of acids deals")
+    solvent_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of solvent reaches (%)")
+    adhesive_yield: int = rule(100, 0, 100, E, "Share of its full working a chemical works of adhesive reaches (%)")
 
 
 @dataclass(frozen=True)
@@ -116,6 +127,8 @@ class InsuranceRules(Spanned):
     crop_payout_pct: int = rule(50, 0, 100, M, "Share of a lost harvest an insured town is paid back (%)")
     livestock_payout_pct: int = rule(50, 0, 100, M, "Share of lost herds an insured town is paid back (%)")
     vessel_payout: int = rule(15, 0, 100, M, "Means an insured vessel pays its home port when it is wrecked")
+    health_premium_pct: int = rule(120, 0, 500, M, "Premium for health cover against the base (%)")
+    ransom_premium_pct: int = rule(150, 0, 500, M, "Premium for ransom cover against the base (%)")
 
 
 @dataclass(frozen=True)

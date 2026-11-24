@@ -18,6 +18,7 @@ import {
   Skull,
   Sparkles,
   TreeDeciduous,
+  Bone,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -51,6 +52,11 @@ export const PREHISTORY_KINDS: Record<Schema['PrehistoryKind'], Named> = {
   corpse: {
     label: 'The god’s life, death and body',
     icon: Skull,
+    tone: 'danger',
+  },
+  ruined: {
+    label: 'Ruined',
+    icon: Bone,
     tone: 'danger',
   },
 }

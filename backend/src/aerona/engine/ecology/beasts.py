@@ -2,7 +2,7 @@ from collections import Counter
 
 from sqlalchemy import func, select
 
-from aerona.catalog.beast_tempers import ACTIVE_TEMPERS, AVENGING, HELD_TEMPERS, TEMPERS
+from aerona.catalog.beast_tempers import ACTIVE_TEMPERS, AVENGING, HELD_TEMPERS, TEMPERAMENTS, TEMPERS
 from aerona.catalog.goods_tables import TROPHY_CLASSES
 from aerona.catalog.goods_traits import commodities_with
 from aerona.catalog.life_traits import SIZE_CLASS_TRAITS, having
@@ -464,6 +464,8 @@ async def shift_temper(ctx: TickContext, beast: EntityRow, row: BeastProfileRow)
         return not await strikes_back(ctx, beast.id)
     if row.temper is BeastTemper.WOUNDED:
         row.temper, row.temper_epoch = BeastTemper.HUNGRY, ctx.epoch
+    if await wander(ctx, beast, row):
+        return False
     young = await fresh_young(ctx, beast.id)
     if young and row.temper is not BeastTemper.BROODING:
         row.temper, row.temper_epoch = BeastTemper.BROODING, ctx.epoch
@@ -471,6 +473,28 @@ async def shift_temper(ctx: TickContext, beast: EntityRow, row: BeastProfileRow)
     elif not young and row.temper is BeastTemper.BROODING:
         row.temper, row.temper_epoch = BeastTemper.TERRITORIAL, ctx.epoch
     return row.temper is BeastTemper.BROODING
+
+
+async def wander(ctx: TickContext, beast: EntityRow, row: BeastProfileRow) -> bool:
+    land = await ctx.session.get(RegionEnvironmentRow, beast.location_id) if beast.location_id is not None else None
+    burned = land is not None and land.burned_epoch is not None and land.burned_epoch >= ctx.epoch - 1
+    kind = await ctx.session.get(SpeciesProfileRow, row.species_entity_id) if row.species_entity_id is not None else None
+    anatomy = await anatomy_of(ctx.session, beast.id)
+    playful = anatomy is not None and anatomy.temperament is not None and TEMPERAMENTS[anatomy.temperament].befriends
+    if playful and row.temper is BeastTemper.HUNGRY and ctx.rng(f"beast.befriend.{beast.id}.{ctx.epoch}").chance(ctx.rules.beasts.playful_befriend_pct):
+        row.temper, row.temper_epoch = BeastTemper.COMPANION, ctx.epoch
+        return True
+    if burned and row.temper is not BeastTemper.FLEEING:
+        row.temper, row.temper_epoch = BeastTemper.FLEEING, ctx.epoch
+        await record_happening(ctx, "beast.fled", roles={IncidentRole.SUBJECT: beast.id}, facts={"temper": BeastTemper.FLEEING})
+        return True
+    if kind is not None and kind.migratory and row.temper is not BeastTemper.MIGRATING:
+        row.temper, row.temper_epoch = BeastTemper.MIGRATING, ctx.epoch
+        await record_happening(ctx, "beast.migrated", roles={IncidentRole.SUBJECT: beast.id}, facts={"temper": BeastTemper.MIGRATING})
+        return True
+    if row.temper is BeastTemper.FLEEING and not burned:
+        row.temper, row.temper_epoch = BeastTemper.TERRITORIAL, ctx.epoch
+    return row.temper is BeastTemper.MIGRATING
 
 
 async def strikes_back(ctx: TickContext, beast_id: int) -> bool:
@@ -491,6 +515,9 @@ async def fresh_young(ctx: TickContext, beast_id: int) -> list[int]:
 async def cow(ctx: TickContext, beast: EntityRow, by_node_id: int) -> None:
     row = await ctx.session.get(BeastProfileRow, beast.id)
     if row is None or "temper" in row.locked or held(beast.id) or row.temper in HELD:
+        return
+    anatomy = await anatomy_of(ctx.session, beast.id)
+    if anatomy is not None and anatomy.temperament is not None and TEMPERAMENTS[anatomy.temperament].honoured:
         return
     row.temper, row.temper_epoch = BeastTemper.COWED, ctx.epoch
     await record_happening(

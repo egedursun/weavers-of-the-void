@@ -54,6 +54,7 @@ type CreateWorldFormProps = {
 export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
   const [worldType, setWorldType] = useState<WorldType>('ordinary')
   const [inspiration, setInspiration] = useState('')
+  const [name, setName] = useState('')
   const [placement, setPlacement] = useState<Placement>('fate')
   const [starId, setStarId] = useState('')
   const [starOpen, setStarOpen] = useState(false)
@@ -72,6 +73,7 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
         world_type: worldType,
         inspiration,
         new_star: placement === 'new',
+        name: name.trim() || null,
       }
       if (placement === 'star') body.star_id = Number(star)
       if (placement === 'moon') body.parent_world_id = Number(parent)
@@ -131,6 +133,18 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
           )
         })}
       </RadioGroup>
+      <FormRow
+        label='Name'
+        description='Leave empty and the world names itself.'
+      >
+        {(id) => (
+          <Input
+            id={id}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+        )}
+      </FormRow>
       <FormRow
         label='Inspiration'
         description='Optional. Your draft is kept until the world is born.'

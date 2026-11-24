@@ -34,7 +34,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.folkways import BiasedDecision
-from aerona.domain.enums.mind import ActKind, Attribute, Facet, GratitudeDeed, MemoryKind, NeedKind, OpinionComponent, ThoughtKind, TraitKind
+from aerona.domain.enums.mind import ActKind, Attribute, Facet, GratitudeDeed, MemoryKind, MoodArousal, NeedKind, OpinionComponent, ThoughtKind, TraitKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import CareerPath, CrimeKind, DeathCause, StressBreak
 from aerona.domain.enums.polity import LawKind
@@ -42,9 +42,9 @@ from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch, SocialClass
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.bands import banded
-from aerona.engine.body.book import perception_of
+from aerona.engine.body.book import capacity_lean, perception_of
 from aerona.engine.body.conditions import gain_condition
-from aerona.engine.body.hits import Harm
+from aerona.engine.body.hits import Harm, severity_of
 from aerona.engine.collective.roles import breach_cost, career_open
 from aerona.engine.context import TickContext
 from aerona.engine.dominion.book import DominionBook
@@ -75,6 +75,7 @@ from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, reco
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.relations.passions import invoke
 from aerona.engine.services.war import ongoing_wars
+from aerona.rules.registry import Rules
 
 SCHEMERS = frozenset({TraitKind.AMBITIOUS, TraitKind.DECEITFUL})
 FIGHTERS = frozenset({MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.CAPTAIN, MortalRole.OFFICER})
@@ -180,6 +181,12 @@ async def accumulate_stress(ctx: TickContext, mortal: EntityRow, profile: Mortal
     profile.stress = clamp_int(profile.stress + gain * max(0.0, relief) * max(0.0, fragility) - table.decay * rest, 0, FULL)
 
 
+def arousal_factor(rules: Rules, arousal: MoodArousal) -> float:
+    if arousal is MoodArousal.AGITATED:
+        return rules.mind.agitated_rage_pct / PERCENT
+    return rules.mind.calm_rage_pct / PERCENT if arousal is MoodArousal.CALM else 1.0
+
+
 def break_weights(
     rules_flight_pct: int, traits: set[TraitKind], profile: MortalProfileRow, facets: Mapping[Facet, int] | None = None, facet_pct: int = 0
 ) -> dict[StressBreak, float]:
@@ -236,6 +243,32 @@ async def rage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, r
     harm = Harm(ctx.rules.skills.spar_hp, HarmCause.DUEL, f"attacked by {mortal.name} in a rage", killer_id=mortal.id)
     await apply_hits(ctx, enemy, harm, lethal=False)
     return Broke("stress.rage_at", {IncidentRole.TARGET: enemy.id}, {"harm": ctx.rules.skills.spar_hp})
+
+
+@BREAKS.on(StressBreak.DISSOCIATION)
+async def dissociation(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
+    await remember(
+        ctx.session,
+        ctx.rules,
+        holder_id=mortal.id,
+        subject_id=mortal.id,
+        kind=MemoryKind.MEMORY_GAP,
+        magnitude=-ctx.rules.stress.dissociation_gap,
+        epoch=ctx.epoch,
+    )
+    await gain_condition(
+        ctx, mortal, ConditionKind.COGNITIVE_DECLINE, HarmCause.ACCIDENT, severity=severity_of(ctx.rules.injury, ctx.rules.stress.dissociation_gap, rng)
+    )
+    return Broke("stress.dissociation", facts={"condition": ConditionKind.COGNITIVE_DECLINE})
+
+
+@BREAKS.on(StressBreak.COLLAPSE)
+async def collapse(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, rng: SeededRandom) -> Broke:
+    loss = ctx.rules.stress.collapse_health
+    if "health" not in (profile.locked or []):
+        profile.health = max(0, profile.health - loss)
+    await gain_condition(ctx, mortal, ConditionKind.CHRONIC_PAIN, HarmCause.ACCIDENT, severity=severity_of(ctx.rules.injury, loss, rng))
+    return Broke("stress.collapse", facts={"harm": loss})
 
 
 @BREAKS.on(StressBreak.FLIGHT)
@@ -321,6 +354,7 @@ async def stress_break(ctx: TickContext, mortal: EntityRow, profile: MortalProfi
     strain = profile.stress + max(0, -profile.mood_score) * ctx.rules.thoughts.mood_break_pct / PERCENT
     strain -= profile.conviction * ctx.rules.aspirations.conviction_break_pct / PERCENT
     strain *= madness_factor(ctx.rules, await ctx.session.get(GenomeRow, mortal.id))
+    strain *= arousal_factor(ctx.rules, profile.arousal)
     if strain < table.break_threshold:
         return None
     if await invoke(ctx, mortal, None) > 1:
@@ -416,6 +450,7 @@ async def plot(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -
         return False
     watch = await perception_of(ctx.session, ctx.rules, liege) * table.plot_discovery_pct / PERCENT
     cunning = await stored_attribute(ctx.session, mortal, Attribute.SOCIAL_AWARENESS) / 2 + (FULL // 4 if TraitKind.DECEITFUL in traits else 0)
+    cunning *= 1 + await capacity_lean(ctx.session, [mortal.id], "stealth", ctx.rules.capacities.stealth_cover_pct)
     if rng.chance(max(0.0, min(float(FULL), watch - cunning + FULL // 2))):
         await remember(
             ctx.session,

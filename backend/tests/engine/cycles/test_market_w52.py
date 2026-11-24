@@ -22,7 +22,7 @@ from tests.engine.core.test_cycles_w21 import context, town_of
 
 def test_seven_roles_with_judges_and_a_forger_that_keeps_nothing() -> None:
     assert set(ROLES) == set(ArtMarketRole)
-    assert {ArtMarketRole.CONNOISSEUR, ArtMarketRole.CURATOR, ArtMarketRole.CRITIC} == JUDGES
+    assert {ArtMarketRole.CONNOISSEUR, ArtMarketRole.CURATOR, ArtMarketRole.CRITIC, ArtMarketRole.RESTORER, ArtMarketRole.AUCTIONEER} == JUDGES
     assert ROLES[ArtMarketRole.FORGER].fakes and not ROLES[ArtMarketRole.FORGER].keeps
 
 

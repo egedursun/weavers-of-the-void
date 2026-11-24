@@ -38,6 +38,7 @@ class JudgementDoctrine(StrEnum):
     RITE = "rite"
     FAVOUR = "favour"
     NONE = "none"
+    REMEMBRANCE = "remembrance"
 
 
 class ClergyFunction(StrEnum):
@@ -63,6 +64,8 @@ class HoldingKind(StrEnum):
     NETWORK = "network"
     SHARES = "shares"
     LINES = "lines"
+    SCHOOL = "school"
+    HOSPITAL = "hospital"
 
 
 class FanaticismKind(StrEnum):
@@ -76,6 +79,8 @@ class FanaticismKind(StrEnum):
     BOOK_BURNING = "book_burning"
     PERSECUTION = "persecution"
     MILLENARIAN_FLIGHT = "millenarian_flight"
+    CHARITY = "charity"
+    PILGRIM_ZEAL = "pilgrim_zeal"
 
 
 class StratumKind(StrEnum):
@@ -151,6 +156,7 @@ class BindingKind(StrEnum):
     REALM = "realm"
     NETWORK = "network"
     LINE = "line"
+    NAME = "name"
 
 
 class ReincarnationGate(StrEnum):
@@ -165,3 +171,4 @@ class RebirthPath(StrEnum):
     HOUSE = "house"
     MERIT = "merit"
     KIND = "kind"
+    PLACE = "place"

@@ -131,7 +131,7 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
   const needed = xpNeeded(son.level, rule('core_rules.xp_per_level'))
   return (
     <>
-      <Section title='Stats' level={3}>
+      <Section id='section-son-stats' title='Stats' level={3}>
         <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3'>
           {STAT_GROUPS.map((group) => (
             <div
@@ -177,6 +177,7 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
         />
       </Section>
       <Section
+        id='section-son-passions'
         title='Passions'
         description='They shape their actions and their obedience.'
         level={3}
@@ -194,7 +195,7 @@ export function SonStats({ view, faith }: { view: SonPublic; faith: number }) {
           ))}
         </div>
       </Section>
-      <Section title='Resources' level={3}>
+      <Section id='section-son-resources' title='Resources' level={3}>
         <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
           <StatBar
             framed

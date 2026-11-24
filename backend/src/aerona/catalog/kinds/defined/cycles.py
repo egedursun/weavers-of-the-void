@@ -9,7 +9,7 @@ CHALLENGE_KIND = total(
             "Disaster", checked_by=("engine.cycles.challenge.kind_of",), used_by=("engine.cycles.challenge.FLOW_KINDS", "services.player.cycles.ChallengeDraft")
         ),
         ChallengeKind.CLIMATE: Defined("A turn of the climate", checked_by=(), used_by=("engine.cycles.challenge.kind_of",)),
-        ChallengeKind.INVASION: Defined("Invasion", checked_by=(), used_by=("engine.cycles.challenge.FLOW_KINDS",)),
+        ChallengeKind.INVASION: Defined("Invasion", checked_by=("engine.cycles.challenge.kind_of",), used_by=("engine.cycles.challenge.FLOW_KINDS",)),
         ChallengeKind.PLAGUE: Defined("Plague", checked_by=(), used_by=("engine.cycles.challenge.FLOW_KINDS",)),
         ChallengeKind.FAMINE: Defined("Famine", checked_by=(), used_by=("engine.cycles.challenge.FLOW_KINDS",)),
         ChallengeKind.COLLAPSE: Defined("Collapse", checked_by=(), used_by=("engine.cycles.challenge_signals.collapse",)),
@@ -19,6 +19,8 @@ CHALLENGE_KIND = total(
         ChallengeKind.RUNAWAY: Defined("Runaway", checked_by=(), used_by=("engine.cycles.challenge_signals.runaway",)),
         ChallengeKind.REVELATION: Defined("Revelation", checked_by=(), used_by=("engine.cycles.challenge_signals.revelation",)),
         ChallengeKind.MIGRATION_WAVE: Defined("Migration wave", checked_by=(), used_by=("engine.cycles.challenge_signals.migration_wave",)),
+        ChallengeKind.LONG_SEASON: Defined("Long season", checked_by=(), used_by=("engine.cycles.challenge.kind_of",)),
+        ChallengeKind.SUCCESSION_CRISIS: Defined("Succession crisis", checked_by=(), used_by=("engine.cycles.challenge.kind_of",)),
     },
 )
 
@@ -35,6 +37,9 @@ CHALLENGE_RESPONSE = total(
             "Collapse",
             checked_by=("engine.cycles.challenge.answer", "engine.cycles.challenge.meet_challenges"),
             used_by=("engine.cycles.challenge.response_to",),
+        ),
+        ChallengeResponse.TRANSFORMATION: Defined(
+            "Transformation", checked_by=("engine.cycles.challenge.answer",), used_by=("engine.cycles.challenge.response_to",)
         ),
     },
 )

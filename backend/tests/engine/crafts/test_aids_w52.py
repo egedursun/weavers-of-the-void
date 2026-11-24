@@ -8,7 +8,7 @@ from tests.engine.society.factories import Realm, mortal, settlement
 
 
 def test_six_aids_and_the_microscope_needs_its_technique() -> None:
-    assert len(AssistiveAid) == 6 and set(AID_NEEDS) == set(AssistiveAid)
+    assert len(AssistiveAid) == 8 and set(AID_NEEDS) == set(AssistiveAid)
     assert AID_NEEDS[AssistiveAid.MICROSCOPE] == (Technique.EMPIRICISM,) and FROM_SKILL[SkillKind.MEDICINE] is AssistiveAid.MICROSCOPE
 
 

@@ -11,3 +11,5 @@ class GardenKind(StrEnum):
     CEMETERY = "cemetery"
     BOTANIC = "botanic"
     MENAGERIE = "menagerie"
+    KITCHEN_GARDEN = "kitchen_garden"
+    ROOF_GARDEN = "roof_garden"

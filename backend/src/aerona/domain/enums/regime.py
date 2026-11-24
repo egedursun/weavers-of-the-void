@@ -20,6 +20,7 @@ class LegitimacyType(StrEnum):
     DIVINE_MANDATE = "divine_mandate"
     POPULAR = "popular"
     PERFORMANCE = "performance"
+    CONQUEST = "conquest"
 
 
 class Routinisation(StrEnum):
@@ -43,6 +44,8 @@ class ClientRole(StrEnum):
     COMMANDER = "commander"
     BROKER = "broker"
     ARTIST = "artist"
+    INFORMANT = "informant"
+    SCHOLAR = "scholar"
 
 
 class PowerStance(StrEnum):

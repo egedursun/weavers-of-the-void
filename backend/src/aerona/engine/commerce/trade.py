@@ -56,7 +56,10 @@ async def retail_short(session: AsyncSession, rules_pct: int, town_id: int) -> i
     if shop is not None:
         return 0
     tier = await session.scalar(select(SupplyTierRow.id).where(SupplyTierRow.market_entity_id == town_id, SupplyTierRow.tier == SupplyTier.RETAIL).limit(1))
-    return 0 if tier is not None else rules_pct
+    if tier is not None:
+        return 0
+    peddled = await session.scalar(select(SupplyTierRow.id).where(SupplyTierRow.market_entity_id == town_id, SupplyTierRow.tier == SupplyTier.PEDDLER).limit(1))
+    return rules_pct // 2 if peddled is not None else rules_pct
 
 
 def without_shops(worn: Wear, short: int) -> Wear:

@@ -38,6 +38,7 @@ from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat
 from aerona.engine.primitives.transfers import move_amount
 from aerona.engine.recording.record import record
+from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
 
 E = ShortfallEffect
@@ -297,6 +298,8 @@ def land_factor(rules: Rules, band: TemperatureBand | None) -> float:
 
 
 async def freeze(ctx: TickContext, community: EntityRow, short: int, band: TemperatureBand | None) -> int:
+    if await spare_warmth(ctx, community.id):
+        return 0
     population = stat(community, "population") or 0
     if band in COLD_BANDS and short >= ctx.rules.energy.shortfall_note_pct:
         await frostbite(ctx, community)
@@ -366,9 +369,20 @@ async def spare_warmth(ctx: TickContext, community_id: int) -> bool:
 async def expose(ctx: TickContext, community: EntityRow, short: int, band: TemperatureBand | None) -> int:
     table = ctx.rules.shortfall
     sick = await sicken(ctx, community, short, table.shelter_sickness_pct)
-    warmed = await spare_warmth(ctx, community.id)
-    cold = 0 if warmed else await freeze(ctx, community, round_half_up(short * table.shelter_cold_pct / PERCENT), band)
+    cold = await freeze(ctx, community, round_half_up(short * table.shelter_cold_pct / PERCENT), band)
     return sick + cold
+
+
+async def unschool(ctx: TickContext, community: EntityRow, short: int) -> int:
+    people = await people_of(ctx.session, community)
+    culture = await ctx.session.get(PeopleCultureRow, people.id) if people is not None else None
+    if culture is None or "literacy" in culture.locked:
+        return 0
+    loss = round_half_up(ctx.rules.shortfall.learning_literacy * short / PERCENT)
+    with explaining():
+        term("shortfall.learning_literacy", -loss, source_node_id=community.id)
+        culture.literacy = clamp_int(culture.literacy - loss, 0, PERCENT)
+    return loss
 
 
 async def apply_shortfalls(
@@ -401,6 +415,8 @@ async def apply_shortfalls(
             loss = round_half_up(table.insecurity_defense * short / PERCENT)
             shift_stat(community, "defense" if community.entity_type is EntityType.SETTLEMENT else "martiality", -loss)
             done[effect] = loss
+        elif effect is E.LEARNING:
+            done[effect] = await unschool(ctx, community, short)
         elif effect in APPLY_SHORTFALLS_SHORTFALL_EFFECTS:
             done[effect] = short
     return done

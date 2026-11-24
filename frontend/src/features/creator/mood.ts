@@ -1,8 +1,11 @@
 import { Eye, Flame, type LucideIcon, Moon, Smile } from 'lucide-react'
+import { type components } from '@/api/generated/schema'
 import { type MoodAxis } from './api'
 
+export type GaugeAxis = Exclude<MoodAxis, 'sorrow'>
+
 export type GaugeSpec = {
-  axis: MoodAxis
+  axis: GaugeAxis
   label: string
   icon: LucideIcon
   rule: string
@@ -50,4 +53,22 @@ export const GAUGES: GaugeSpec[] = [
   },
 ]
 
-export const MOOD_AXES: MoodAxis[] = GAUGES.map((gauge) => gauge.axis)
+export const MOOD_AXES: GaugeAxis[] = GAUGES.map((gauge) => gauge.axis)
+
+export const MOOD_ITEM: Record<components['schemas']['MoodItem'], string> = {
+  wars: 'Wars',
+  godless: 'Godless lands',
+  rebel_sons: 'Sons in revolt',
+  doomsday_clock: 'The doom clock',
+  contentment_soothes: 'Contentment soothing it',
+  cult: 'Worship',
+  new_life: 'New life',
+  the_god_acted: 'Your own deeds',
+  shadow_of_anger: 'Anger darkening it',
+  battles: 'Battles',
+  blood_shed: 'Blood shed',
+  leak: 'Leakage from outside',
+  temperament: 'Temperament',
+  stir: 'A passing stir',
+  passions: 'What it loves done',
+}

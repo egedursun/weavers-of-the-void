@@ -3,14 +3,19 @@ import {
   Apple,
   Axe,
   Beef,
+  Biohazard,
   Bird,
   BookOpen,
+  Bug,
+  Building2,
   Castle,
+  CircleDashed,
   Coins,
   DoorOpen,
   Drill,
   Droplets,
   Eye,
+  Factory,
   Fence,
   Fish,
   Flame,
@@ -23,6 +28,7 @@ import {
   HeartPulse,
   Home,
   Landmark,
+  Layers,
   Leaf,
   Map as MapIcon,
   Mountain,
@@ -30,11 +36,14 @@ import {
   MoveRight,
   Orbit,
   Package,
+  Palmtree,
   Pickaxe,
   RadioTower,
+  RefreshCw,
   Route,
   Ruler,
   Scale,
+  Shell,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -43,17 +52,23 @@ import {
   Sprout,
   Store,
   Sun,
+  Syringe,
   Telescope,
   Tent,
   Ticket,
   TreeDeciduous,
   TreePine,
   Trees,
+  Truck,
   type LucideIcon,
   Users,
   Waves,
   Wheat,
   Wind,
+  Bean,
+  Pyramid,
+  Ship,
+  Activity,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -68,14 +83,17 @@ export const RINGS: Record<Schema['LandUseRing'], Named> = {
   grain: { label: 'Grain', icon: Wheat, tone: 'gold' },
   ranching: { label: 'Herds', icon: Beef, tone: 'warning' },
   wilds: { label: 'Beyond the markets', icon: Mountain, tone: 'muted' },
+  industry: { label: 'Works and mines', icon: Factory, tone: 'danger' },
+  fallow: { label: 'Fallow', icon: Leaf, tone: 'muted' },
 }
 
 export const RANKS: Record<Schema['CentralityRank'], Named> = {
   daily: { label: 'Daily needs', icon: Tent, tone: 'muted' },
   weekly: { label: 'Weekly market', icon: Store, tone: 'info' },
   rare: { label: 'Rare goods', icon: Gem, tone: 'gold' },
-  seasonal: { label: 'Fair town', icon: Tent, tone: 'verdigris' },
+  seasonal: { label: 'Fair town', icon: Leaf, tone: 'verdigris' },
   metropolitan: { label: 'Metropolis', icon: Landmark, tone: 'gold' },
+  regional: { label: 'Regional market', icon: Coins, tone: 'verdigris' },
 }
 
 export const NUTRIENTS: Record<Schema['NutrientKind'], Named> = {
@@ -83,6 +101,8 @@ export const NUTRIENTS: Record<Schema['NutrientKind'], Named> = {
   mineral: { label: 'Minerals', icon: Mountain, tone: 'info' },
   organic: { label: 'Organic matter', icon: Sprout, tone: 'verdigris' },
   salinity: { label: 'Salt', icon: Droplets, tone: 'danger' },
+  seed_bank: { label: 'Seeds in the soil', icon: Bean, tone: 'success' },
+  soil_life: { label: 'Life of the soil', icon: Bug, tone: 'verdigris' },
 }
 
 export const PERENNIALS: Record<Schema['PerennialKind'], Named> = {
@@ -92,6 +112,9 @@ export const PERENNIALS: Record<Schema['PerennialKind'], Named> = {
   timber: { label: 'Timber plantation', icon: Trees, tone: 'info' },
   plantation: { label: 'Plantation', icon: Sprout, tone: 'success' },
   forest_garden: { label: 'Forest garden', icon: Trees, tone: 'success' },
+  coppice: { label: 'Coppice', icon: Axe, tone: 'warning' },
+  hedgerow: { label: 'Hedgerow', icon: Fence, tone: 'verdigris' },
+  palm_stand: { label: 'Palm stand', icon: Palmtree, tone: 'gold' },
 }
 
 export const COMMONS_KINDS: Record<Schema['CommonsKind'], Named> = {
@@ -108,6 +131,9 @@ export const COMMONS_KINDS: Record<Schema['CommonsKind'], Named> = {
   spectrum: { label: 'Spectrum', icon: RadioTower, tone: 'success' },
   orbits: { label: 'Orbits', icon: Orbit, tone: 'success' },
   source_ground: { label: 'Source ground', icon: Sparkles, tone: 'success' },
+  turbary: { label: 'Peat cutting', icon: Layers, tone: 'muted' },
+  foraging_ground: { label: 'Foraging ground', icon: Leaf, tone: 'success' },
+  shore: { label: 'Shore', icon: Shell, tone: 'info' },
 }
 
 export const COMMONS_RULES: Record<Schema['CommonsRule'], Named> = {
@@ -117,6 +143,7 @@ export const COMMONS_RULES: Record<Schema['CommonsRule'], Named> = {
   enclosed: { label: 'Enclosed', icon: Fence, tone: 'danger' },
   state: { label: 'Held by officials', icon: Scale, tone: 'warning' },
   licensed: { label: 'Sold by permit', icon: Ticket, tone: 'info' },
+  rotational: { label: 'Taken in turns', icon: RefreshCw, tone: 'success' },
 }
 
 export const WORKS: Record<Schema['PreparednessKind'], Named> = {
@@ -140,6 +167,16 @@ export const WORKS: Record<Schema['PreparednessKind'], Named> = {
     icon: Waves,
     tone: 'info',
   },
+  immunisation_plan: {
+    label: 'Plan of immunisation',
+    icon: Syringe,
+    tone: 'info',
+  },
+  quake_building: {
+    label: 'Building against quakes',
+    icon: Building2,
+    tone: 'info',
+  },
 }
 
 export const AID_KINDS: Record<Schema['AidKind'], Named> = {
@@ -150,9 +187,10 @@ export const AID_KINDS: Record<Schema['AidKind'], Named> = {
   credit: { label: 'Credit', icon: Landmark, tone: 'gold' },
   food: { label: 'Food', icon: Wheat, tone: 'gold' },
   shelter: { label: 'Shelter', icon: Home, tone: 'gold' },
-  medicine: { label: 'Medicine', icon: HeartPulse, tone: 'gold' },
+  medicine: { label: 'Medicine', icon: Activity, tone: 'gold' },
   soldiers: { label: 'Soldiers', icon: Shield, tone: 'gold' },
   knowledge: { label: 'Knowledge', icon: BookOpen, tone: 'gold' },
+  transport: { label: 'Transport', icon: Truck, tone: 'gold' },
 }
 
 export const PLANS: Record<Schema['RebuildPlan'], Named> = {
@@ -164,6 +202,7 @@ export const PLANS: Record<Schema['RebuildPlan'], Named> = {
     tone: 'info',
   },
   abandoned: { label: 'Left to ruin', icon: DoorOpen, tone: 'danger' },
+  restored: { label: 'Restored as it was', icon: Hammer, tone: 'success' },
 }
 
 export const CAUSES: Record<Schema['RebuildCause'], Named> = {
@@ -173,8 +212,10 @@ export const CAUSES: Record<Schema['RebuildCause'], Named> = {
   storm: { label: 'A storm', icon: Wind, tone: 'verdigris' },
   sack: { label: 'A sack', icon: Castle, tone: 'danger' },
   eruption: { label: 'An eruption', icon: MountainSnow, tone: 'danger' },
-  sea_wave: { label: 'A sea wave', icon: Waves, tone: 'warning' },
-  landslide: { label: 'A landslide', icon: Mountain, tone: 'danger' },
+  sea_wave: { label: 'A sea wave', icon: Ship, tone: 'warning' },
+  landslide: { label: 'A landslide', icon: Pyramid, tone: 'danger' },
+  plague: { label: 'A plague', icon: Biohazard, tone: 'danger' },
+  sinkhole: { label: 'A sinkhole', icon: CircleDashed, tone: 'danger' },
 }
 
 export const USES: Record<Schema['KeystoneUse'], Named> = {

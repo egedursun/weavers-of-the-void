@@ -500,6 +500,7 @@ describe('command forms', () => {
       world_type: 'ocean',
       inspiration: 'Bells under the waves.',
       new_star: false,
+      name: null,
       star_id: 2,
     })
   })

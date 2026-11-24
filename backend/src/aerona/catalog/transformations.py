@@ -89,6 +89,8 @@ HUNGER_DOMAINS = MappingProxyType(
         OuterHunger.LIGHT: Domain.SHADOW,
         OuterHunger.NAMES: Domain.OATH,
         OuterHunger.MEMORIES: Domain.MEMORY,
+        OuterHunger.DREAMS: Domain.DREAM,
+        OuterHunger.TIME: Domain.TIME,
     }
 )
 

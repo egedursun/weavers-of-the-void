@@ -9,7 +9,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Progress } from '@/components/ui/progress'
 import { EntityLink, Paged, Picture } from '@/components/domain'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { type LogLine } from './api'
@@ -32,7 +32,7 @@ const TONE_CLASS: Record<ImageLine['tone'], string> = {
   bulk: 'text-muted-foreground',
 }
 
-const DRAWER_OF: Partial<Record<string, DrawerKind>> = {
+const DRAWER_OF: Partial<Record<string, EntryKind>> = {
   entity: 'entity',
   son: 'son',
   foreign_god: 'foreign-god',

@@ -57,6 +57,7 @@ from aerona.engine.phases import (
     daily_life,
     dark_ages,
     death_work,
+    deepened,
     demography,
     departures,
     dialects,
@@ -202,6 +203,7 @@ from aerona.engine.phases import (
     tribute,
     urban_depth,
     vendettas,
+    w52_agent_l,
     warfare,
     water_and_ice,
     wilds,
@@ -320,6 +322,8 @@ EXPORTED_PHASES: tuple[Phase, ...] = (
     + orders.PHASES
     + honours.PHASES
     + world_views.PHASES
+    + w52_agent_l.PHASES
+    + deepened.PHASES
     + biology_variants.PHASES
     + lifecycle_ends.PHASES
     + fossils.PHASES
@@ -665,6 +669,10 @@ SOCIETY_ENGINE_STAGE = stage(
     "gardens",
     "world_views",
     "settle_modes",
+    "world_thoughts",
+    "time_shares",
+    "deepened_towns",
+    "deepened_realms",
     "networks",
     "intrusions",
     "surveillance",

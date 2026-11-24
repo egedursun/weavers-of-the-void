@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.catalog.catch import GEAR, GROUNDS
 from aerona.catalog.movement import breathes_under_water
+from aerona.catalog.senses import POISON
 from aerona.constants.units import PERCENT
 from aerona.db.tables.crafts import CatchGroundRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -20,6 +21,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of, holdings
 from aerona.engine.environment.book import add_scar
 from aerona.engine.lifecycle.wounds import apply_hits
+from aerona.engine.nature.senses import sense_score
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.naming import seed_of
@@ -147,17 +149,24 @@ async def harm_by_gear(ctx: TickContext, row: CatchGroundRow) -> None:
     land = await ctx.session.get(RegionEnvironmentRow, row.region_entity_id)
     if land is None or held(land.entity_id) or row.collapsed:
         return
+    harm = spec.bed_harm(ctx.rules) if spec.bed_harm is not None else ctx.rules.grounds.trawl_bed_harm
     if spec.harms_bed and "scar.eroded" not in land.locked:
-        add_scar(land, ScarKind.ERODED, ctx.rules.grounds.trawl_bed_harm)
+        add_scar(land, ScarKind.ERODED, harm)
         await record(
             ctx,
             "catch.bed_harmed",
             roles={IncidentRole.PLACE: land.entity_id},
-            facts={"gear": row.gear, "harm": ctx.rules.grounds.trawl_bed_harm},
+            facts={"gear": row.gear, "harm": harm},
             place=land.entity_id,
         )
     if spec.sickens and "disease_load" not in land.locked:
-        land.disease_load = clamp_int(land.disease_load + ctx.rules.grounds.poison_sickness_pct, 0, PERCENT)
+        town = next(iter((await RegionAtlas.load(ctx.session)).communities_in(row.region_entity_id)), None)
+        tasted = await sense_score(ctx.session, ctx.rules, town, POISON) if town is not None else 0.0
+        land.disease_load = clamp_int(
+            land.disease_load + round_half_up(ctx.rules.grounds.poison_sickness_pct * (1 - min(1.0, tasted) * ctx.rules.senses.taste_poison_cut_pct / PERCENT)),
+            0,
+            PERCENT,
+        )
         await record(
             ctx,
             "catch.poisoned_catch",
@@ -167,7 +176,47 @@ async def harm_by_gear(ctx: TickContext, row: CatchGroundRow) -> None:
         )
 
 
-WORKERS = {CatchGround.SHORE_GATHERING: work_shore, CatchGround.DIVING: work_beds, CatchGround.FISH_PONDS: work_ponds}
+async def gather_from(ctx: TickContext, row: CatchGroundRow, town: int, goods: tuple[CommodityKind, ...], *, rate: int, depletion: int) -> None:
+    yielded = round_half_up(rate * row.stock / PERCENT * GEAR[row.gear].rate(ctx.rules) / PERCENT)
+    for commodity in goods:
+        await goods_of(ctx.session, ctx.epoch).add(town, commodity, max(0, yielded // len(goods)), GoodsFlow.EXTRACTION)
+    row.last_catch = yielded
+    before = row.stock
+    row.stock = clamp_int(row.stock - round_half_up(depletion * row.effort / PERCENT) + ctx.rules.grounds.ground_regrow, 0, PERCENT)
+    if row.stock < row.collapse_at <= before:
+        await record(
+            ctx,
+            "catch.depleted",
+            roles={IncidentRole.SUBJECT: row.source_entity_id, IncidentRole.PLACE: row.region_entity_id},
+            facts={"ground": row.ground, "left": row.stock},
+            place=row.region_entity_id,
+        )
+
+
+async def work_nests(ctx: TickContext, row: CatchGroundRow, town: int) -> None:
+    table = ctx.rules.grounds
+    await gather_from(ctx, row, town, GROUNDS[row.ground].goods, rate=table.egg_gathering_rate, depletion=table.egg_gathering_depletion)
+
+
+async def work_insects(ctx: TickContext, row: CatchGroundRow, town: int) -> None:
+    table = ctx.rules.grounds
+    await gather_from(
+        ctx,
+        row,
+        town,
+        GROUNDS[row.ground].goods,
+        rate=table.insect_gathering_rate,
+        depletion=table.insect_gathering_depletion,
+    )
+
+
+WORKERS = {
+    CatchGround.SHORE_GATHERING: work_shore,
+    CatchGround.DIVING: work_beds,
+    CatchGround.FISH_PONDS: work_ponds,
+    CatchGround.EGG_GATHERING: work_nests,
+    CatchGround.INSECT_GATHERING: work_insects,
+}
 
 
 async def keep_worked_grounds(ctx: TickContext) -> int:

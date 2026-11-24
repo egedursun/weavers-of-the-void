@@ -61,6 +61,7 @@ CURE_KIND = total(
             checked_by=("engine.body.afflictions.cure", "engine.body.afflictions.try_cures"),
             used_by=(
                 "catalog.effect_packages.PACKAGES",
+                "catalog.effect_packages.SLEEP_CURES",
                 "engine.body.afflictions.package_turns",
                 "engine.body.afflictions.try_cures",
                 "engine.phases.body._addiction",
@@ -69,12 +70,23 @@ CURE_KIND = total(
         CureKind.QUEST: Defined(
             "Quest",
             checked_by=("engine.body.afflictions.try_cures",),
-            used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.try_cures", "engine.mythic.heroquests.settle_souls"),
+            used_by=(
+                "catalog.effect_packages.PACKAGES",
+                "catalog.effect_packages.SLEEP_CURES",
+                "engine.body.afflictions.try_cures",
+                "engine.mythic.heroquests.settle_souls",
+            ),
         ),
         CureKind.DIVINE: Defined("Divine", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.divine_cure")),
         CureKind.POWER: Defined("Power", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.power_cure")),
         CureKind.SYMBIONT: Defined("Symbiont", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.symbiont_cure")),
         CureKind.TRANSFER: Defined("Transfer", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.transfer_cure")),
         CureKind.AUGMENT: Defined("Augment", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.augment_cure")),
+        CureKind.RELEASE: Defined(
+            "Release",
+            checked_by=(),
+            used_by=("catalog.effect_packages.PACKAGES", "catalog.effect_packages.SLEEP_CURES", "engine.body.afflictions.release_cure"),
+        ),
+        CureKind.SITE: Defined("Site", checked_by=(), used_by=("catalog.effect_packages.PACKAGES", "engine.body.afflictions.site_cure")),
     },
 )

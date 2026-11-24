@@ -13,7 +13,9 @@ AMBUSH = "ambush"
 TRACKING = "tracking"
 NAVIGATION = "navigation"
 SPIRITS = "spirits"
-SENSE_PURPOSES = (AGENTS, NIGHT, AMBUSH, TRACKING, NAVIGATION, SPIRITS)
+POISON = "poison"
+WEATHER = "weather"
+SENSE_PURPOSES = (AGENTS, NIGHT, AMBUSH, TRACKING, NAVIGATION, SPIRITS, POISON, WEATHER)
 
 
 @dataclass(frozen=True)
@@ -39,6 +41,8 @@ SENSES: Mapping[SenseKind, SenseSpec] = total(
         S.HEAT: SenseSpec(C.COLD_HUNTER, {NIGHT: 0.2, TRACKING: 0.15}),
         S.ELECTRIC: SenseSpec(C.WATER_HUNTER, {AGENTS: 0.3, AMBUSH: 0.4}, told=True),
         S.ULTRAVIOLET: SenseSpec(C.FLOWER_SEEKER, {TRACKING: 0.3, NAVIGATION: 0.1}, told=True),
+        S.TASTE: SenseSpec(C.BASE, {POISON: 1.0}, people_base=True),
+        S.PRESSURE: SenseSpec(C.WATER_HUNTER, {WEATHER: 1.0, AMBUSH: 0.1}),
     },
 )
 

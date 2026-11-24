@@ -9,6 +9,7 @@ import { Model } from './Model'
 import { SceneFrame } from './SceneFrame'
 import { type SceneLabel, SceneLabels } from './SceneLabels'
 import { type CityBuilding, type CityDistrict, type CityScene } from './api'
+import { depthColors } from './cityDepths'
 import { roadDress, roadPaths, roadTiles, wallPieces } from './cityWalls'
 import {
   type Cell,
@@ -21,6 +22,8 @@ import {
 } from './hex'
 import { STATES, ZONES } from './labels'
 import {
+  DEPTH_PARTS,
+  DEPTH_WALLS,
   DISTRICT_DRESS,
   GROUND_TILE,
   HOUSING_LOOK,
@@ -56,6 +59,13 @@ const FIELDS: ReadonlySet<CityDistrict['kind']> = new Set([
 ])
 
 type Hover = { x: number; z: number; text: string } | null
+
+const COUNTRY_DIM = 0.42
+const WALL_DIM = 0.62
+const ICE_DIM = 0.95
+const PART_DIM = 0.9
+const GLOW_DIM = 0.75
+const STONE_EVERY = 4
 
 function freeSlots(
   cells: readonly Cell[],
@@ -263,16 +273,42 @@ export default function CityScene3D({
   const zoneOf = new Map(scene.districts.map((row) => [row.id, row.zone]))
   const pickDistrict = (id: number) => onPick({ kind: 'district', id })
   const [focusX, focusZ] = hexToWorld(center[0], center[1])
+  const below = scene.below
+  const depth = below ? depthColors(below.stratum) : null
+  const rock = depth?.floor ?? null
+  const wallRing = depth?.look.walls ? hexRing(radius + COUNTRYSIDE + 1) : []
+  const stones = depth?.look.stones
+    ? countryside.filter(
+        (cell) => (cell[0] * 7 + cell[1] * 13) % STONE_EVERY === 0
+      )
+    : []
+  const bare = depth !== null && !depth.look.textured
   return (
     <SceneFrame
       label={`City of ${scene.town.name}`}
       reach={(radius + 1) * 2}
       center={[focusX, focusZ]}
       fallback={fallback}
+      depth={
+        below && depth
+          ? {
+              light: below.light,
+              glow: depth.glow,
+              haze: depth.haze,
+              sky: depth.sky,
+              ambient: depth.look.ambient,
+              near: depth.look.near,
+              far: depth.look.far,
+            }
+          : null
+      }
     >
       <Suspense fallback={null}>
         <InstancedModel
           model={GROUND_TILE}
+          tint={rock}
+          dim={depth ? COUNTRY_DIM : 1}
+          bare={bare}
           items={countryside.map((cell) => ({
             cell,
             ...placeAt(cell),
@@ -285,6 +321,43 @@ export default function CityScene3D({
               : undefined
           }
         />
+        {depth &&
+          DEPTH_WALLS[depth.look.set].map((part, index, all) => (
+            <InstancedModel
+              key={`depth-wall-${part.model}`}
+              model={part.model}
+              tint={depth.look.textured ? null : depth.wall}
+              dim={depth.look.ice ? ICE_DIM : WALL_DIM}
+              bare={!depth.look.textured}
+              items={wallRing
+                .filter((_, at) => at % all.length === index)
+                .map((cell) => ({
+                  cell,
+                  ...placeAt(cell),
+                  scale: part.scale ?? 1,
+                }))}
+            />
+          ))}
+        {depth &&
+          DEPTH_PARTS[depth.look.set].map((part, index, all) => (
+            <InstancedModel
+              key={`depth-part-${part.model}`}
+              model={part.model}
+              tint={
+                depth.look.textured ? null : part.glow ? depth.lit : depth.wall
+              }
+              dim={part.glow ? GLOW_DIM : PART_DIM}
+              bare={!depth.look.textured && !part.glow}
+              glow={part.glow}
+              items={stones
+                .filter((_, at) => at % all.length === index)
+                .map((cell) => ({
+                  cell,
+                  ...placeAt(cell),
+                  scale: part.scale ?? 1,
+                }))}
+            />
+          ))}
         {scene.districts.map((district) => {
           const chosen =
             selected?.kind === 'district' && selected.id === district.id
@@ -301,6 +374,7 @@ export default function CityScene3D({
                 }
               })}
               tint={tokenHex(ZONES[district.zone].token)}
+              bare={bare}
               dim={
                 !visible(district.zone)
                   ? FADED
@@ -449,7 +523,14 @@ export default function CityScene3D({
             }
           })
         ).map(([model, items]) => (
-          <InstancedModel key={`road-${model}`} model={model} items={items} />
+          <InstancedModel
+            key={`road-${model}`}
+            model={model}
+            items={items}
+            tint={depth && bare ? depth.paving : null}
+            dim={depth && bare ? COUNTRY_DIM : 1}
+            bare={bare}
+          />
         ))}
         {(['stone', 'lantern', 'cart'] as const).flatMap((kind) =>
           ROAD_DRESS[kind].map((part, index) => (

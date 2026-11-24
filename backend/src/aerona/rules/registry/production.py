@@ -81,3 +81,7 @@ class MiningHazardsRules(Spanned):
     @property
     def seal_epochs(self) -> int:
         return self.epochs(self.seal_years)
+
+    falls_pct: int = rule(3, 0, 100, G, "Chance per sampled year of a fall at work where crews work at height, in quarries, on scaffolds and in rigging (%)")
+    burns_pct: int = rule(3, 0, 100, G, "Chance per sampled year of a burn at work where crews tend furnaces, boiling pans and kilns (%)")
+    dust_lung_pct: int = rule(2, 0, 100, G, "Chance per sampled year that dust of a mine, quarry or mill settles in a worker's lungs (%)")

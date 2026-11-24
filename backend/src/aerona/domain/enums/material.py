@@ -47,3 +47,6 @@ class MaterialKind(StrEnum):
     SHELL = "shell"
     POLYMER = "polymer"
     COMPOSITE = "composite"
+    RUBBER = "rubber"
+    PAPER = "paper"
+    LACQUER = "lacquer"

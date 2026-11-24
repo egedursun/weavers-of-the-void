@@ -2,13 +2,13 @@ import { Compass, Keyboard, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Section } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { useOnboarding } from '@/features/onboarding/onboardingStore'
 
 export function GuideSettings() {
   const reopen = useOnboarding((state) => state.reopen)
   const dismissed = useOnboarding((state) => state.dismissed)
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   return (
     <Section
       title='Guide and shortcuts'
@@ -32,7 +32,7 @@ export function GuideSettings() {
         </Button>
         <Button
           variant='outline'
-          onClick={() => void drawers.open({ kind: 'help' })}
+          onClick={() => void entryStack.open({ kind: 'help' })}
         >
           <Keyboard />
           Shortcuts and terms

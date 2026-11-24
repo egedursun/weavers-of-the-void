@@ -11,7 +11,7 @@ export function OnboardingTracker() {
   const navigate = useNavigate()
   const state = useWorldState()
   const location = useRouterState({ select: (router) => router.location })
-  const drawer = (location.search as { drawer?: string }).drawer
+  const drawer = (location.search as { entry?: string }).entry
 
   useEffect(() => {
     const step = stepForLocation(location.pathname, drawer)

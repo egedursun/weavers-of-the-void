@@ -14,5 +14,6 @@ HOARD_KIND = total(
         ),
         HoardKind.MUSEUM: Defined("Museum", checked_by=(), used_by=("engine.museums.hoards.HALLS", "tools.son.museums.found_museum")),
         HoardKind.TROPHY_HALL: Defined("Trophy hall", checked_by=(), used_by=("engine.museums.hoards.loot",)),
+        HoardKind.LIBRARY: Defined("Library", checked_by=("engine.deepening.towns_w52.keep_learning",), used_by=()),
     },
 )

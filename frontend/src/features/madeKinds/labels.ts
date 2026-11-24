@@ -1,13 +1,16 @@
 import {
+  type LucideIcon,
   Anchor,
   ArrowDown,
-  ArrowUp,
   ArrowLeftRight,
+  ArrowUp,
   Axe,
   Ban,
   Bomb,
   Bot,
   BowArrow,
+  Boxes,
+  Building,
   Building2,
   Car,
   Castle,
@@ -15,6 +18,7 @@ import {
   CircleDashed,
   CircleDot,
   CircleOff,
+  Citrus,
   Cloud,
   Cog,
   Construction,
@@ -24,12 +28,15 @@ import {
   Crosshair,
   Crown,
   Disc3,
+  Dna,
   Drill,
   Droplets,
   Egg,
   Fan,
   Fish,
   Flame,
+  FlaskConical,
+  Flower2,
   Footprints,
   Gem,
   Globe,
@@ -37,6 +44,8 @@ import {
   HardHat,
   Heart,
   HeartCrack,
+  Hexagon,
+  Landmark,
   Layers,
   Leaf,
   Map as MapIcon,
@@ -48,7 +57,9 @@ import {
   PawPrint,
   Pill,
   Plane,
+  Printer,
   Radar,
+  Radiation,
   Rocket,
   Rotate3d,
   Sailboat,
@@ -58,8 +69,12 @@ import {
   Ship,
   ShipWheel,
   Skull,
+  Snowflake,
   Soup,
   Sparkles,
+  Sprout,
+  Stethoscope,
+  Store,
   Sun,
   Sword,
   Swords,
@@ -69,23 +84,18 @@ import {
   TrainFront,
   Truck,
   Utensils,
+  WandSparkles,
   Waves,
   Wheat,
   Wind,
   Wine,
   Wrench,
   Zap,
-  type LucideIcon,
-  Stethoscope,
-  FlaskConical,
-  Printer,
-  Dna,
-  Snowflake,
-  Radiation,
-  WandSparkles,
-  Hexagon,
-  Boxes,
-  Sprout,
+  Earth,
+  HeartPulse,
+  House,
+  SunDim,
+  Cloudy,
 } from 'lucide-react'
 import {
   type components,
@@ -139,6 +149,7 @@ export const VEHICLE_FAMILY: Record<VehicleFamily, Named> = {
   burrower: { label: 'Burrower', icon: Drill, tone: 'muted' },
   construct: { label: 'Construct', icon: Bot, tone: 'verdigris' },
   living: { label: 'Living vehicle', icon: Heart, tone: 'success' },
+  sledge: { label: 'Sledge', icon: HeartPulse, tone: 'success' },
 }
 
 export const VEHICLE_DOMAIN: Record<Schema['VehicleDomain'], Named> = {
@@ -160,7 +171,7 @@ export const PROPULSION: Record<Schema['Propulsion'], Named> = {
   oars: { label: 'Oars', icon: ShipWheel, tone: 'muted' },
   sail: { label: 'Sail', icon: Sailboat, tone: 'info' },
   sail_and_oar: { label: 'Sail and oar', icon: Sailboat, tone: 'info' },
-  steam: { label: 'Steam', icon: Cloud, tone: 'warning' },
+  steam: { label: 'Steam', icon: Cloudy, tone: 'warning' },
   combustion: { label: 'Combustion', icon: Flame, tone: 'danger' },
   electric: { label: 'Electric', icon: Zap, tone: 'info' },
   reaction: { label: 'Reaction drive', icon: Rocket, tone: 'warning' },
@@ -172,6 +183,7 @@ export const PROPULSION: Record<Schema['Propulsion'], Named> = {
   self: { label: 'Moves itself', icon: Heart, tone: 'success' },
   current: { label: 'Current', icon: Waves, tone: 'info' },
   towed: { label: 'Towed', icon: Truck, tone: 'muted' },
+  pedal: { label: 'Pedal', icon: Footprints, tone: 'muted' },
 }
 
 export const VEHICLE_SIZE: Record<Schema['VehicleSize'], Named> = {
@@ -307,6 +319,8 @@ export const METHOD: Record<Schema['CookingMethod'], Named> = {
     icon: CookingPot,
     tone: 'warning',
   },
+  earth_oven: { label: 'Earth oven', icon: Earth, tone: 'warning' },
+  parched: { label: 'Parched', icon: SunDim, tone: 'warning' },
 }
 
 export const INGREDIENT_ROLE: Record<Schema['IngredientRole'], Named> = {
@@ -320,6 +334,8 @@ export const INGREDIENT_ROLE: Record<Schema['IngredientRole'], Named> = {
   leavening: { label: 'Leavening', icon: Wind, tone: 'muted' },
   preservative: { label: 'Preservative', icon: Package, tone: 'info' },
   colouring: { label: 'Colouring', icon: Gem, tone: 'gold' },
+  acid: { label: 'Acid', icon: Citrus, tone: 'warning' },
+  aroma: { label: 'Aroma', icon: Flower2, tone: 'verdigris' },
 }
 
 export const MEAL: Record<Schema['MealSlot'], Named> = {
@@ -331,6 +347,7 @@ export const MEAL: Record<Schema['MealSlot'], Named> = {
   remedy: { label: 'Remedy', icon: Pill, tone: 'success' },
   travel_food: { label: 'Travel food', icon: Footprints, tone: 'info' },
   famine_food: { label: 'Famine food', icon: HeartCrack, tone: 'danger' },
+  street: { label: 'Street food', icon: Store, tone: 'gold' },
 }
 
 export const COURSE: Record<Schema['DishCourse'], Named> = {
@@ -346,7 +363,7 @@ export const COURSE: Record<Schema['DishCourse'], Named> = {
 
 export const FORM: Record<Schema['BuildingForm'], Named> = {
   hall: { label: 'Hall', icon: Building2, tone: 'gold' },
-  longhouse: { label: 'Longhouse', icon: Building2, tone: 'muted' },
+  longhouse: { label: 'Longhouse', icon: House, tone: 'muted' },
   tower: { label: 'Tower', icon: TowerControl, tone: 'info' },
   keep: { label: 'Keep', icon: Castle, tone: 'danger' },
   dome: { label: 'Dome', icon: CircleDot, tone: 'verdigris' },
@@ -372,6 +389,8 @@ export const FORM: Record<Schema['BuildingForm'], Named> = {
   modular: { label: 'Modular', icon: Boxes, tone: 'muted' },
   grown: { label: 'Grown', icon: Sprout, tone: 'success' },
   carved: { label: 'Carved from rock', icon: Mountain, tone: 'muted' },
+  stilt: { label: 'On stilts', icon: Building, tone: 'gold' },
+  vault: { label: 'Vaulted', icon: Landmark, tone: 'gold' },
 }
 
 export const ROLE: Record<Schema['SectionRole'], Named> = {

@@ -20,9 +20,11 @@ from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.knowledge import KnowledgeKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.renown import LorePrice, ReputationAxis
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import connect, living_entity
@@ -221,6 +223,8 @@ async def settle_price(ctx: TickContext, seller: EntityRow, buyer: EntityRow, it
         return LorePrice.EXCHANGE, swap[0]
     if await owes_service(ctx, buyer, value):
         return LorePrice.SERVICE, None
+    if buyer.entity_type is EntityType.MORTAL and ctx.rng(seed_of("lore.oath", seller.id, buyer.id, ctx.epoch)).chance(ctx.rules.lore_trade.oath_price_pct):
+        return LorePrice.OATH, None
     return await pay(ctx, seller, buyer, value), None
 
 
@@ -231,6 +235,8 @@ async def trade(ctx: TickContext, seller: EntityRow, buyer: EntityRow, item: Ite
         return None
     if swapped is not None and LORE_PRICES[paid].swaps:
         await grant(ctx, seller, swapped)
+    if LORE_PRICES[paid].sworn:
+        await swear(ctx, buyer, OathKind.SECRECY, recipient_id=seller.id, note_text="to keep the lore as its seller set")
     task = ctx.rng(seed_of("lore.task", seller.id, buyer.id, ctx.epoch)).pick(list(SERVICE_TASKS)) if deferred else None
     row = LoreTradeRow(
         seller_node_id=seller.id,

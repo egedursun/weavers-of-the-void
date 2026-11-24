@@ -7,7 +7,7 @@ from aerona.rules.registry import Rules
 @dataclass(frozen=True)
 class SpokenNearby:
     language_id: int
-    same_region: bool
+    same_cell: bool
 
 
 def local_language(
@@ -40,7 +40,7 @@ def nearest_language(
     weights: dict[int, int] = {}
     region_weight = rules.deep_life.nearest_language_region_weight
     for speaker in world_speakers:
-        weights[speaker.language_id] = weights.get(speaker.language_id, 0) + (region_weight if speaker.same_region else 1)
+        weights[speaker.language_id] = weights.get(speaker.language_id, 0) + (region_weight if speaker.same_cell else 1)
     if not weights:
         return None
     return min(weights, key=lambda language: (-weights[language], language))

@@ -16,6 +16,8 @@ class LifeEnvironment(StrEnum):
     SUBTERRANEAN = "subterranean"
     UNDER_ICE = "under_ice"
     CLOUD = "cloud"
+    VENT = "vent"
+    VOID = "void"
 
 
 class AirNeed(StrEnum):
@@ -25,6 +27,7 @@ class AirNeed(StrEnum):
     AMMONIA = "ammonia"
     HYDROGEN = "hydrogen"
     NONE = "none"
+    SULPHUROUS = "sulphurous"
 
 
 class CosmicFeatureKind(StrEnum):
@@ -34,11 +37,15 @@ class CosmicFeatureKind(StrEnum):
     ROGUE_WORLD = "rogue_world"
     GRAVITY_WELL = "gravity_well"
     WANDERING_STAR = "wandering_star"
+    NEBULA = "nebula"
+    DEBRIS_RING = "debris_ring"
+    DARK_BODY = "dark_body"
 
 
 class SurveyLevel(StrEnum):
     UNKNOWN = "unknown"
     RUMOURED = "rumoured"
+    CHARTED_BY_OTHERS = "charted_by_others"
     DETECTED = "detected"
     OBSERVED = "observed"
     SURVEYED = "surveyed"
@@ -60,6 +67,7 @@ class ImpactBody(StrEnum):
     CALLED = "called"
     MOON_FRAGMENT = "moon_fragment"
     WRECK = "wreck"
+    EJECTA = "ejecta"
 
 
 class ImpactOutcome(StrEnum):
@@ -68,6 +76,8 @@ class ImpactOutcome(StrEnum):
     DEFLECTED = "deflected"
     MISSED = "missed"
     AIRBURST = "airburst"
+    CAPTURED = "captured"
+    FRAGMENTED = "fragmented"
 
 
 class TerraformAim(StrEnum):
@@ -80,3 +90,5 @@ class TerraformAim(StrEnum):
     DRY = "dry"
     BRIGHTEN = "brighten"
     DARKEN = "darken"
+    SEED_LIFE = "seed_life"
+    STEADY_SEASONS = "steady_seasons"

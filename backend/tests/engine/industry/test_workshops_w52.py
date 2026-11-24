@@ -13,7 +13,7 @@ NEW = (WorkshopKind.POTTERY, WorkshopKind.GLASSWORKS, WorkshopKind.DYEWORKS, Wor
 
 
 def test_twenty_four_workshops_each_labelled_and_running_its_processes() -> None:
-    assert len(WorkshopKind) == 24 and all(kind in WORKSHOP_LABELS and kind in WORKSHOP_TRAITS for kind in NEW)
+    assert len(WorkshopKind) == 27 and all(kind in WORKSHOP_LABELS and kind in WORKSHOP_TRAITS for kind in NEW)
     assert ProcessKind.FIRING in WORKSHOP_PROCESSES[WorkshopKind.POTTERY] and ProcessKind.FIRING in WORKSHOP_PROCESSES[WorkshopKind.GLASSWORKS]
     assert PROCESS_WORKSHOP[ProcessKind.COPYING] is WorkshopKind.SCRIPTORIUM and PROCESS_WORKSHOP[ProcessKind.EVAPORATING] is WorkshopKind.EVAPORATION_WORKS
     for kind in NEW:

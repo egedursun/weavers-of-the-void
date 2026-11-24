@@ -31,7 +31,7 @@ def selected(*, kept: bool = False, stricken: bool = False, hunted: bool = False
 
 
 def test_fifteen_traits_and_the_new_three_answer_their_pressures() -> None:
-    assert len(EvolvedTrait) == 15
+    assert len(EvolvedTrait) == 18
     profile = SpeciesProfileRow(stage=DomesticationStage.WILD, water_need=0)
     sick, row = selected(stricken=True)
     assert pressures(RULES, sick, row, profile, None)[E.DISEASE_RESISTANCE] == RULES.trait_evolution.resistance_gain

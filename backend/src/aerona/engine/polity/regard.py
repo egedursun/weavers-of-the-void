@@ -211,7 +211,11 @@ async def partners_of(session: AsyncSession, core: int, realm_id: int) -> tuple[
     )
     partners: list[int] = []
     for treaty_id in treaties:
-        for party in await session.scalars(select(TreatyPartyRow.party_node_id).where(TreatyPartyRow.treaty_entity_id == treaty_id)):
+        for party in await session.scalars(
+            select(TreatyPartyRow.party_node_id)
+            .join(EntityRow, EntityRow.id == TreatyPartyRow.party_node_id)
+            .where(TreatyPartyRow.treaty_entity_id == treaty_id)
+        ):
             if party != core:
                 partners.append(party)
     clients = await session.scalars(select(SphereRow.client_entity_id).where(SphereRow.power_entity_id == realm_id))

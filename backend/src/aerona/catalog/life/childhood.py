@@ -10,6 +10,7 @@ THEORY_SPEED = {
     PedagogyTheory.EXAMINATION: 70,
     PedagogyTheory.NETWORK_LEARNING: 100,
     PedagogyTheory.MIND_TRANSFER: 120,
+    PedagogyTheory.PEER_TEACHING: 75,
 }
 
 

@@ -8,6 +8,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.dominion import BeliefStance, CreatureDeed, MagicSiteKind
 from aerona.domain.enums.entity import ProphecyReading
 from aerona.domain.enums.foreign_god import ForeignGodStatus
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.intervention import Miracle
 from aerona.domain.enums.mind import Emotion
 from aerona.domain.enums.modifier import IncidentRole as R
@@ -1756,6 +1757,15 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         G.GODS,
         "{authority}'s hand: {target} was moved into {place}.",
         roles=(RoleSpec(R.TARGET), RoleSpec(R.PLACE), RoleSpec(R.AUTHORITY)),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=ProcessClock.PHASE,
+    ),
+    IncidentKindSpec(
+        "player.entity.moved_below",
+        G.GODS,
+        "{authority}'s hand: {target} was moved into the {stratum} beneath {place}.",
+        roles=(RoleSpec(R.TARGET), RoleSpec(R.PLACE), RoleSpec(R.AUTHORITY)),
+        facts=(FactSpec("stratum", FactValue.ENUM, enum=UndergroundStratum),),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
     ),

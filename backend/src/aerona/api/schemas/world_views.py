@@ -15,10 +15,12 @@ class WorldNatureView(ApiModel):
     nights: bool
     fire: bool
     soil: bool
+    sea_roads: bool
     timber_pct: int
     food_need_pct: int
     capacity_pct: int
     ore_yield_pct: int
+    ship_pct: int
     storm_pct: int
     quake_pct: int
     flood_pct: int

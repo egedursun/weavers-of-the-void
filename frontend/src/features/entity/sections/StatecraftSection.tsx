@@ -68,6 +68,7 @@ const ENDINGS: Record<
   conceded: 'The target concedes',
   mediated: 'A third power settles it',
   war: 'It comes to war',
+  frozen: 'Neither side moves',
 }
 type Ctx = { view: Statecraft; blocked: string | null; hold: boolean }
 type NodeRef = { id: number; kind: string; name: string }

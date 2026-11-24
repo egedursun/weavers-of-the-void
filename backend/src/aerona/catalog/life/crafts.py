@@ -23,6 +23,8 @@ AID_NEEDS: Mapping[AssistiveAid, tuple[Technique, ...]] = total(
         AssistiveAid.HEARING_HORN: (),
         AssistiveAid.CANE: (),
         AssistiveAid.MICROSCOPE: (Technique.EMPIRICISM,),
+        AssistiveAid.HEARING_AID: (),
+        AssistiveAid.TACTILE_SCRIPT: (Technique.ALPHABET,),
     },
 )
 
@@ -38,6 +40,7 @@ PRECISION: Mapping[ClockKind, int] = total(
         ClockKind.ASTRONOMICAL: 85,
         ClockKind.CHRONOMETER: 92,
         ClockKind.ELECTRONIC: 99,
+        ClockKind.FIRE_CLOCK: 30,
     },
 )
 LONGITUDE_CLOCKS = frozenset({ClockKind.CHRONOMETER, ClockKind.ELECTRONIC})
@@ -68,9 +71,14 @@ TOKEN_STRENGTH: Mapping[LinkToken, Callable[[Rules], int]] = total(
         LinkToken.FRAGMENT: lambda rules: rules.links.fragment_strength,
         LinkToken.TRUE_NAME: lambda rules: rules.links.true_name_strength,
         LinkToken.POSSESSION: lambda rules: rules.links.possession_strength,
+        LinkToken.FOOTPRINT: lambda rules: rules.links.footprint_strength,
+        LinkToken.VOICE: lambda rules: rules.links.voice_strength,
+        LinkToken.BIRTH_RECORD: lambda rules: rules.links.birth_record_strength,
     },
 )
 KNOWN_NAME_TOKENS = frozenset({LinkToken.TRUE_NAME})
+NAME_TOKENS = frozenset({LinkToken.NAME, LinkToken.TRUE_NAME})
 
-TOKENS_WITHIN_REACH_LINK_TOKENS = (LinkToken.HAIR, LinkToken.BLOOD)
+TOKENS_WITHIN_REACH_LINK_TOKENS = (LinkToken.HAIR, LinkToken.BLOOD, LinkToken.FOOTPRINT, LinkToken.VOICE)
+GUARDED_TOKENS = frozenset({LinkToken.FOOTPRINT, LinkToken.VOICE, LinkToken.BIRTH_RECORD})
 BURN_AND_FADE_LINK_TOKENS = frozenset({LinkToken.HAIR, LinkToken.BLOOD})

@@ -87,7 +87,9 @@ def fertility_factor(rules: Rules, row: RegionPollutionRow | None) -> float:
 
 
 def fish_factor(rules: Rules, row: RegionPollutionRow | None) -> float:
-    return 1 - (row.water if row is not None else 0) * rules.pollution.fish_water_pct / PERCENT / PERCENT
+    water = (row.water if row is not None else 0) * rules.pollution.fish_water_pct / PERCENT / PERCENT
+    heat = (row.heat if row is not None else 0) * rules.pollution.heat_harm / PERCENT / PERCENT
+    return max(0.0, 1 - water - heat)
 
 
 def disease_extra(rules: Rules, row: RegionPollutionRow | None) -> int:

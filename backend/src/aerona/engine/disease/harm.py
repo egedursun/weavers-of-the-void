@@ -92,7 +92,7 @@ async def region_targets(session: AsyncSession, region: int) -> frozenset[Diseas
 
 def sick_work(rules: Rules, job: Job, targets: frozenset[DiseaseTarget]) -> float:
     table = rules.epidemiology
-    hit = not targets or any(job in TARGET_JOBS[target] for target in targets)
+    hit = not targets or any(job in TARGET_JOBS[target] for target in sorted(targets))
     return (table.sick_work_pct if hit else table.sick_spared_work_pct) / PERCENT
 
 

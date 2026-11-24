@@ -91,6 +91,10 @@ class ChallengeResponseRules:
     collapse_asabiyya: int = rule(6, 0, 50, M, "Solidarity a realm loses when it collapses under its challenges")
     collapse_stability: int = rule(10, 0, 100, P, "Stability a realm loses when it collapses under its challenges")
     collapse_legitimacy: int = rule(8, 0, 100, P, "Legitimacy a realm loses when it collapses under its challenges")
+    transformation_pct: int = rule(
+        15, 0, 100, P, "Chance a society facing a crushing trial takes a new form instead of breaking, when a movement stirs in its capital (%)"
+    )
+    transformation_stability: int = rule(10, 0, 100, P, "Stability a society regains when it meets its trial by taking a new form")
 
 
 @dataclass(frozen=True)
@@ -109,6 +113,7 @@ class LongPlanRules:
     realm_gain: int = rule(10, 0, 100, P, "Administration and legitimacy a long plan to bind a realm gives")
     reform_cut: int = rule(15, 0, 100, P, "Corruption a long plan of reform takes away")
     routes_found: int = rule(2, 0, 50, P, "Hidden ways a long plan of exploration charts")
+    restoration_legitimacy: int = rule(15, 0, 100, P, "Legitimacy a realm regains when a plan to restore it is fulfilled")
 
 
 @dataclass(frozen=True)

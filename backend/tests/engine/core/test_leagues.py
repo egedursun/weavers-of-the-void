@@ -22,6 +22,7 @@ from aerona.engine.leagues.rise import apply_legacy, maybe_found
 from aerona.engine.leagues.tend import tend_league
 from aerona.engine.polity.laws import enact
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.stats import stat_or
 from tests.engine.core.factories import CoreWorld, entity, settlement, tuned_rules
 
 
@@ -177,3 +178,9 @@ async def test_three_realms_whose_cores_each_signed_alliances_with_the_others_fo
     profile = await session.scalar(select(PolityLeagueRow))
     assert tally.founded == 1 and profile is not None and profile.aims == [LeagueAim.DEFENCE.value]
     assert sorted(member.polity_entity_id for member in await members_of(session, profile.league_entity_id)) == sorted(realm.id for realm in realms)
+
+
+async def test_a_league_of_many_realms_keeps_its_strength_within_bounds(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
+    realms = [await realm(session, world, f"Realm {index}") for index in range(19)]
+    league = await found_league(ctx, realms, [LeagueAim.DEFENCE], LeagueVoteBasis.ONE_MEMBER_ONE_VOTE, LeagueTally())
+    assert 0 <= stat_or(league, "strength", 0) <= 100

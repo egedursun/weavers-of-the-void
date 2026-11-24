@@ -37,6 +37,8 @@ REBUILD_CAUSES: Mapping[RebuildCause, CauseSpec] = total(
         C.ERUPTION: CauseSpec("Eruption", K.EVACUATION_ROUTES, "eruption_lesson_pct"),
         C.SEA_WAVE: CauseSpec("Sea wave", K.SEAWALL, "sea_wave_lesson_pct"),
         C.LANDSLIDE: CauseSpec("Landslide", K.WARNING_NETWORK, "landslide_lesson_pct", Technique.TERRACING),
+        C.SINKHOLE: CauseSpec("Sinkhole", K.QUAKE_BUILDING, "sinkhole_lesson_pct"),
+        C.PLAGUE: CauseSpec("Plague", K.IMMUNISATION_PLAN, "plague_lesson_pct"),
     },
 )
 
@@ -47,5 +49,6 @@ REBUILD_PLANS: Mapping[RebuildPlan, PlanSpec] = total(
         P.OPPORTUNISTIC: PlanSpec("Opportunistic", False, False, True),
         P.RELOCATED: PlanSpec("Relocated", True, True, True),
         P.ABANDONED: PlanSpec("Abandoned", False, True, False),
+        P.RESTORED: PlanSpec("Restored as it was", False, False, True),
     },
 )

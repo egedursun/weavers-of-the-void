@@ -454,36 +454,19 @@ body {
     inset 0 0 0 3px color-mix(in oklch, var(--gild) 22%, transparent);
 }
 
-[data-layout='drawer'] {
-  border-inline-start: 0;
-}
-
-[data-layout='drawer']::before {
-  content: '';
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  z-index: 1;
-  width: 2px;
-  background: linear-gradient(
-    180deg,
-    var(--gild-lo),
-    var(--gild-hi) 18%,
-    var(--gild) 50%,
-    var(--gild-hi) 82%,
-    var(--gild-lo)
-  );
-  box-shadow: 0 0 12px color-mix(in oklch, var(--gild) 40%, transparent);
-  pointer-events: none;
-}
-
-[data-layout='drawer-header'] {
+[data-layout='entry-header'] {
   background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
 }
 
-[data-layout='drawer-header']::after {
+[data-layout='entry-header']::after,
+[data-layout='entry-rail']::after {
   content: '';
   position: absolute;
+  pointer-events: none;
+  box-shadow: 0 0 10px color-mix(in oklch, var(--gild) 35%, transparent);
+}
+
+[data-layout='entry-header']::after {
   inset-inline: 0;
   bottom: -1px;
   height: 2px;
@@ -495,13 +478,121 @@ body {
     var(--gild-lo) 90%,
     transparent
   );
-  box-shadow: 0 0 10px color-mix(in oklch, var(--gild) 35%, transparent);
-  pointer-events: none;
+}
+
+[data-layout='entry-rail'] {
+  background: linear-gradient(180deg, var(--plate-lo), var(--background));
+}
+
+[data-layout='entry-rail']::after {
+  inset-block: 0;
+  inset-inline-end: -1px;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--gild-lo) 12%,
+    var(--gild-hi) 50%,
+    var(--gild-lo) 88%,
+    transparent
+  );
+}
+
+[data-entry-filter='overview']
+  [data-entry-category]:not([data-entry-category='overview']),
+[data-entry-filter='body']
+  [data-entry-category]:not([data-entry-category='body']),
+[data-entry-filter='life']
+  [data-entry-category]:not([data-entry-category='life']),
+[data-entry-filter='society']
+  [data-entry-category]:not([data-entry-category='society']),
+[data-entry-filter='economy']
+  [data-entry-category]:not([data-entry-category='economy']),
+[data-entry-filter='faith']
+  [data-entry-category]:not([data-entry-category='faith']),
+[data-entry-filter='war']
+  [data-entry-category]:not([data-entry-category='war']),
+[data-entry-filter='land']
+  [data-entry-category]:not([data-entry-category='land']),
+[data-entry-filter='lore']
+  [data-entry-category]:not([data-entry-category='lore']),
+[data-entry-filter='control']
+  [data-entry-category]:not([data-entry-category='control']) {
+  display: none;
+}
+
+.ornate-frame[data-entry-collapsed] {
+  padding-bottom: 1.25rem;
+}
+
+.ornate-frame[data-entry-collapsed]
+  > :not([data-slot='nameplate']):not(.ornate-corner):not(.ornate-stud):not(
+    .ornate-crest
+  ):not(.ornate-gem) {
+  display: none;
+}
+
+[data-entry-collapsed]:not(.ornate-frame) > :not(:first-child) {
+  display: none;
+}
+
+[data-entry-flash] {
+  animation: entry-flash 1.4s ease-out;
+}
+
+@keyframes entry-flash {
+  0% {
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--gild-hi) 80%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+::highlight(entry-search) {
+  background-color: color-mix(in oklch, var(--gild) 32%, transparent);
+  color: inherit;
+}
+
+::highlight(entry-current) {
+  background-color: color-mix(in oklch, var(--gild-hi) 70%, transparent);
+  color: var(--background);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-entry-flash] {
+    animation: none;
+  }
 }
 
 [data-slot='skeleton'] {
   background-color: color-mix(in oklch, var(--plate-hi) 55%, transparent);
   border: 1px solid color-mix(in oklch, var(--gild) 14%, transparent);
+}
+
+.scene-corner {
+  position: absolute;
+  z-index: 31;
+  width: 2.75rem;
+  height: 2.75rem;
+  pointer-events: none;
+  user-select: none;
+}
+.scene-corner[data-scene-corner='tl'] {
+  top: 0;
+  left: 0;
+}
+.scene-corner[data-scene-corner='tr'] {
+  top: 0;
+  right: 0;
+}
+.scene-corner[data-scene-corner='bl'] {
+  bottom: 0;
+  left: 0;
+}
+.scene-corner[data-scene-corner='br'] {
+  right: 0;
+  bottom: 0;
 }
 
 @utility scene-frame {
@@ -514,11 +605,6 @@ body {
     pointer-events: none;
     border: 2px solid var(--gild-lo);
     border-radius: inherit;
-    background:
-      url('../assets/ornate/frame-tl.webp') top left / 2.75rem no-repeat,
-      url('../assets/ornate/frame-tr.webp') top right / 2.75rem no-repeat,
-      url('../assets/ornate/frame-bl.webp') bottom left / 2.75rem no-repeat,
-      url('../assets/ornate/frame-br.webp') bottom right / 2.75rem no-repeat;
     box-shadow:
       inset 0 0 0 1px var(--gild-deep),
       inset 0 0 0 4px color-mix(in oklch, var(--frame-lo) 60%, transparent),

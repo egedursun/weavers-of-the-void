@@ -7,7 +7,7 @@ from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.affliction import ChangeSign, CharmKind, CureKind, PackageKind, Transmission
+from aerona.domain.enums.affliction import ChangeSign, CharmKind, CureKind, ForgetScope, PackageKind, SleepUntil, Transmission
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.material import MaterialKind
 from aerona.engine.body.afflictions import STAGE_HOLD, active, afflict, bearable, cure, enter_stage, revert, spec_of
@@ -26,6 +26,9 @@ class PackageFields(Command):
     charm_target_id: int | None = None
     charm_kind: CharmKind | None = None
     charm_strength: int | None = Field(default=None, ge=0, le=100)
+    ageing_rate_pct: int | None = Field(default=None, ge=0, le=1000)
+    forget_scope: ForgetScope | None = None
+    sleep_until: SleepUntil | None = None
 
 
 class GiveAffliction(PackageFields):
@@ -63,6 +66,9 @@ def shape_of(command: PackageFields) -> Shape:
         transform_mind_kept=command.transform_mind_kept,
         charm_target_node_id=command.charm_target_id,
         charm_kind=command.charm_kind,
+        ageing_rate_pct=command.ageing_rate_pct,
+        forget_scope=command.forget_scope,
+        sleep_until=command.sleep_until,
     )
 
 
@@ -70,7 +76,18 @@ async def reshape(scope: PlayerScope, row: AfflictionRow, command: PackageFields
     shape = shape_of(command)
     if command.charm_target_id is not None:
         await source_of(scope, command.charm_target_id)
-    for key in ("fortune_strength", "transform_plan", "transform_species_id", "transform_substance", "transform_trigger", "transform_mind_kept", "charm_kind"):
+    for key in (
+        "fortune_strength",
+        "transform_plan",
+        "transform_species_id",
+        "transform_substance",
+        "transform_trigger",
+        "transform_mind_kept",
+        "charm_kind",
+        "ageing_rate_pct",
+        "forget_scope",
+        "sleep_until",
+    ):
         value = getattr(shape, key)
         if value is not None:
             setattr(row, key, value)

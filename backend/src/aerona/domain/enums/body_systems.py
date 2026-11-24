@@ -11,6 +11,7 @@ class BodySystem(StrEnum):
     REPRODUCTION = "reproduction"
     STRUCTURE = "structure"
     NONE = "none"
+    EXCRETION = "excretion"
 
 
 class Sensitivity(StrEnum):
@@ -22,3 +23,12 @@ class Sensitivity(StrEnum):
     TO_LIGHT = "to_light"
     TO_SOUND = "to_sound"
     TO_POWER = "to_power"
+    TO_PRESSURE = "to_pressure"
+
+
+class LimitWay(StrEnum):
+    EQUIPMENT = "equipment"
+    AUGMENT = "augment"
+    GROWN_ORGAN = "grown_organ"
+    POWER = "power"
+    RITE = "rite"

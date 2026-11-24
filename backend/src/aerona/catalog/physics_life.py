@@ -26,6 +26,8 @@ class LifePlaceSpec:
     buried: bool = False
     clouds: bool = False
     air: bool = False
+    void: bool = False
+    hot: bool = False
 
 
 AIR_NEEDS: Mapping[AirNeed, AirSpec] = total(
@@ -37,6 +39,7 @@ AIR_NEEDS: Mapping[AirNeed, AirSpec] = total(
         AirNeed.AMMONIA: AirSpec("Ammonia", "ammonia", frozenset({B.CARBON_AMMONIA}) | UNBOUND),
         AirNeed.HYDROGEN: AirSpec("Hydrogen", "hydrogen", frozenset({B.CARBON_METHANE, B.CARBON_AMMONIA, B.PLASMA}) | UNBOUND),
         AirNeed.NONE: AirSpec("Breathes nothing", None, frozenset(Biochemistry)),
+        AirNeed.SULPHUROUS: AirSpec("Sulphurous air", "sulphur_dioxide", frozenset({B.SILICON, B.CRYSTAL, B.PLASMA}) | UNBOUND),
     },
 )
 
@@ -49,6 +52,8 @@ LIFE_PLACES: Mapping[LifeEnvironment, LifePlaceSpec] = total(
         LifeEnvironment.SUBTERRANEAN: LifePlaceSpec("Beneath the ground", False, buried=True),
         LifeEnvironment.UNDER_ICE: LifePlaceSpec("Oceans under ice", False, sea=True, frozen=True),
         LifeEnvironment.CLOUD: LifePlaceSpec("Cloud layers", True, clouds=True),
+        LifeEnvironment.VENT: LifePlaceSpec("Deep hot vents", False, sea=True, hot=True),
+        LifeEnvironment.VOID: LifePlaceSpec("Between worlds", None, void=True),
     },
 )
 

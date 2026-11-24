@@ -318,11 +318,24 @@ async def broke_taboo(ctx: TickContext, row: GeniusLocusRow, place: EntityRow) -
     return bool(built and place.entity_type is EntityType.PLACE) or await dug_up(ctx, row, place)
 
 
+async def crowded(ctx: TickContext, place: EntityRow) -> bool:
+    if place.entity_type is not EntityType.PLACE:
+        return False
+    folk = await ctx.session.scalar(
+        select(func.count())
+        .select_from(EntityRow)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [place.id]))
+    )
+    return int(folk or 0) >= ctx.rules.genius_loci.trespass_folk
+
+
 async def place_offence(ctx: TickContext, row: GeniusLocusRow, place: EntityRow) -> SpiritOffence | None:
     found = (
         (await bloodshed_in(ctx, place) >= ctx.rules.genius_loci.bloodshed_deaths, SpiritOffence.BLOODSHED),
         (await broke_taboo(ctx, row, place), SpiritOffence.TABOO),
         (await overharvested(ctx, place), SpiritOffence.OVERHARVEST),
+        (await crowded(ctx, place), SpiritOffence.TRESPASS),
+        (stat_or(place, "population", 0) >= ctx.rules.genius_loci.noise_population, SpiritOffence.NOISE),
     )
     return next((offence for met, offence in found if met), None)
 

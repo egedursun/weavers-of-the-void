@@ -8,13 +8,17 @@ import {
   Brain,
   Briefcase,
   CalendarClock,
+  CalendarDays,
   Castle,
+  CheckCircle2,
   CircleCheck,
   CircleDot,
   CircleHelp,
   CircleX,
+  Clock,
   Coins,
   Copy,
+  Crosshair,
   Crown,
   Dumbbell,
   Eye,
@@ -29,13 +33,16 @@ import {
   Handshake,
   HardHat,
   Heart,
+  IdCard,
   Infinity as InfinityIcon,
   KeyRound,
+  KeySquare,
   Landmark,
   Link,
   Map as MapIcon,
   MessageSquare,
   MessageSquareQuote,
+  Moon,
   Mountain,
   Network,
   Package,
@@ -45,26 +52,27 @@ import {
   Pickaxe,
   Radio,
   Repeat,
+  Sailboat,
   ScrollText,
   Shield,
   ShieldCheck,
   Skull,
   Sparkles,
+  Sprout,
   Stamp,
   Star,
+  Sun,
   Swords,
   Target,
   Timer,
   Trophy,
   Users,
   Wrench,
-  KeySquare,
-  Sprout,
-  CheckCircle2,
-  Clock,
-  Sun,
-  Moon,
-  CalendarDays,
+  Clock1,
+  Clock10,
+  Leaf,
+  HeartPulse,
+  Pointer,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -88,6 +96,8 @@ export const MARKET_ROLES: Record<Schema['ArtMarketRole'], Named> = {
   curator: { label: 'Curator', icon: Landmark, tone: 'gold' },
   critic: { label: 'Critic', icon: MessageSquareQuote, tone: 'warning' },
   forger: { label: 'Forger', icon: Stamp, tone: 'danger' },
+  auctioneer: { label: 'Auctioneer', icon: Gavel, tone: 'gold' },
+  restorer: { label: 'Restorer', icon: Wrench, tone: 'info' },
 }
 
 export const FORGERY_KINDS: Record<Schema['ForgeryKind'], Named> = {
@@ -98,6 +108,7 @@ export const FORGERY_KINDS: Record<Schema['ForgeryKind'], Named> = {
   coin: { label: 'False coin', icon: Coins, tone: 'warning' },
   lineage: { label: 'A forged lineage', icon: GitBranch, tone: 'danger' },
   seal: { label: 'A forged seal', icon: Stamp, tone: 'info' },
+  identity: { label: 'False papers', icon: IdCard, tone: 'danger' },
 }
 
 export const FORGERY_STATUS: Record<Schema['ForgeryStatus'], Named> = {
@@ -120,6 +131,8 @@ export const CLUB_KINDS: Record<Schema['ClubKind'], Named> = {
   athletics: { label: 'Athletics', icon: Dumbbell, tone: 'gold' },
   animal_contest: { label: 'Animal contests', icon: PawPrint, tone: 'warning' },
   mind_games: { label: 'Games of the mind', icon: Brain, tone: 'verdigris' },
+  hunt: { label: 'The hunt', icon: Crosshair, tone: 'warning' },
+  water_sport: { label: 'Water sports', icon: Sailboat, tone: 'info' },
 }
 
 export const FANDOM_LINES: Record<Schema['FandomLine'], Named> = {
@@ -138,6 +151,7 @@ export const BINDINGS: Record<Schema['InstructionBinding'], Named> = {
   ownership: { label: 'Ownership', icon: KeyRound, tone: 'gold' },
   lease: { label: 'Lease', icon: CalendarClock, tone: 'info' },
   symbiosis: { label: 'Symbiosis', icon: Heart, tone: 'success' },
+  debt: { label: 'Debt', icon: HeartPulse, tone: 'success' },
 }
 
 export const TOKENS: Record<Schema['CommandToken'], Named> = {
@@ -148,6 +162,7 @@ export const TOKENS: Record<Schema['CommandToken'], Named> = {
   office: { label: 'An office', icon: Crown, tone: 'verdigris' },
   network_key: { label: 'A network key', icon: Network, tone: 'success' },
   true_name: { label: 'Its true name', icon: KeySquare, tone: 'gold' },
+  gesture: { label: 'Gesture', icon: Pointer, tone: 'gold' },
 }
 
 export const ORDERS: Record<Schema['OrderKind'], Named> = {
@@ -166,6 +181,9 @@ export const ORDERS: Record<Schema['OrderKind'], Named> = {
   forbid: { label: 'Forbid', icon: Ban, tone: 'danger' },
   carry: { label: 'Carry', icon: Package, tone: 'success' },
   tend: { label: 'Tend', icon: Sprout, tone: 'verdigris' },
+  hunt: { label: 'Hunt', icon: Leaf, tone: 'verdigris' },
+  heal: { label: 'Heal', icon: Heart, tone: 'verdigris' },
+  teach: { label: 'Teach', icon: GraduationCap, tone: 'verdigris' },
 }
 
 export const CONDITIONS: Record<Schema['OrderCondition'], Named> = {
@@ -188,6 +206,12 @@ export const CONDITIONS: Record<Schema['OrderCondition'], Named> = {
     tone: 'success',
   },
   at_set_times: { label: 'At set times', icon: Clock, tone: 'info' },
+  while_holder_lives: {
+    label: 'While its holder lives',
+    icon: Clock1,
+    tone: 'info',
+  },
+  when_named: { label: 'When its name is spoken', icon: Clock10, tone: 'info' },
 }
 
 export const ORDER_TIMES: Record<Schema['OrderTime'], Named> = {

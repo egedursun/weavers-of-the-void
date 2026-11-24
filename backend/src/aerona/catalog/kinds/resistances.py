@@ -5,7 +5,7 @@ from typing import Literal
 from aerona.core.total import total
 from aerona.domain.enums.powers import ResistanceKind
 
-Reads = Literal["devices", "willpower", "focus", "piety", "sanctity", "iron", "counter_power", "distance", "nothing"]
+Reads = Literal["devices", "willpower", "focus", "piety", "sanctity", "iron", "counter_power", "distance", "nothing", "disbelief", "ancestral"]
 
 
 @dataclass(frozen=True)
@@ -27,5 +27,7 @@ RESISTANCES: Mapping[ResistanceKind, Resistance] = total(
         R.DISTANCE: Resistance("distance", 25),
         R.COUNTER_SOURCE: Resistance("counter_power", 25),
         R.NONE: Resistance("nothing", 0),
+        R.DISBELIEF: Resistance("disbelief", 40),
+        R.ANCESTRAL: Resistance("ancestral", 35),
     },
 )

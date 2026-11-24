@@ -45,6 +45,8 @@ class CoastSpec:
     build: Callable[[Rules], int]
     wear: Callable[[Rules], int]
     silting_pct: int
+    grows_into: CoastForm | None = None
+    drowns: bool = False
 
 
 @dataclass(frozen=True)
@@ -52,6 +54,8 @@ class LocalCauseSpec:
     label: str
     heat: int
     humidity: int
+    wind: int
+    sickens: bool = False
 
 
 @dataclass(frozen=True)
@@ -68,6 +72,7 @@ class SedimentSpec:
     carriers: frozenset[SedimentCarrier]
     soil: SoilKind
     rock: RockKind
+    poisons: bool = False
 
 
 @dataclass(frozen=True)
@@ -90,6 +95,7 @@ BODY_SYSTEMS: MappingProxyType[BodySystem, SystemSpec] = total(
         B.REPRODUCTION: SystemSpec("Reproduction", False),
         B.STRUCTURE: SystemSpec("Structure", True),
         B.NONE: SystemSpec("No system", False),
+        B.EXCRETION: SystemSpec("Excretion", False),
     },
 )
 
@@ -105,6 +111,7 @@ SENSITIVITIES: MappingProxyType[Sensitivity, SensitivitySpec] = total(
         S.TO_LIGHT: SensitivitySpec("To light", False),
         S.TO_SOUND: SensitivitySpec("To sound", False),
         S.TO_POWER: SensitivitySpec("To a power", False),
+        S.TO_PRESSURE: SensitivitySpec("To pressure", False),
     },
 )
 
@@ -119,6 +126,7 @@ PRESERVATIONS: MappingProxyType[Preservation, PreservationSpec] = total(
         P.TAR: PreservationSpec("Tar", False, CommodityKind.COAL),
         P.ASH: PreservationSpec("Ash", False, None),
         P.DRY: PreservationSpec("Dry ground", False, None),
+        P.CAVE: PreservationSpec("Cave", True, None),
     },
 )
 
@@ -132,6 +140,8 @@ SPACE_WEATHER: MappingProxyType[SpaceWeatherKind, SpaceWeatherSpec] = total(
         W.FIELD_REVERSAL: SpaceWeatherSpec("Field reversal", False),
         W.COSMIC_RAY_BURST: SpaceWeatherSpec("Burst of rays", False),
         W.WIND_SURGE: SpaceWeatherSpec("Wind surge", True),
+        W.METEOR_SHOWER: SpaceWeatherSpec("Meteor shower", False),
+        W.STELLAR_DIMMING: SpaceWeatherSpec("Dimming of the star", True),
     },
 )
 
@@ -152,6 +162,8 @@ COAST_FORMS: MappingProxyType[CoastForm, CoastSpec] = total(
         C.BARRIER_ISLAND: CoastSpec(
             "Barrier island", lambda rules: rules.coasts.barrier_island_build_rate, lambda rules: rules.coasts.barrier_island_wear_rate, 60
         ),
+        C.SPIT: CoastSpec("Sand spit", lambda rules: rules.coasts.spit_build_rate, lambda rules: rules.coasts.spit_wear_rate, 220, grows_into=C.LAGOON),
+        C.ATOLL: CoastSpec("Ring island", lambda rules: rules.coasts.atoll_build_rate, lambda rules: rules.coasts.atoll_wear_rate, 40, drowns=True),
     },
 )
 
@@ -159,11 +171,13 @@ L = LocalClimateCause
 LOCAL_CAUSES: MappingProxyType[LocalClimateCause, LocalCauseSpec] = total(
     L,
     {
-        L.VALLEY: LocalCauseSpec("Valley", -2, 5),
-        L.SLOPE: LocalCauseSpec("Slope", -3, -3),
-        L.WATER: LocalCauseSpec("Water", -1, 8),
-        L.FOREST: LocalCauseSpec("Forest", -2, 6),
-        L.BUILT: LocalCauseSpec("Built land", 0, 0),
+        L.VALLEY: LocalCauseSpec("Valley", -2, 5, -10),
+        L.SLOPE: LocalCauseSpec("Slope", -3, -3, 10),
+        L.WATER_BODY: LocalCauseSpec("Water body", -1, 8, 5),
+        L.FOREST: LocalCauseSpec("Forest", -2, 6, -15),
+        L.BUILT_LAND: LocalCauseSpec("Built land", 3, -4, -5),
+        L.WETLAND: LocalCauseSpec("Wetland", 0, 15, 0, sickens=True),
+        L.ICE_FIELD: LocalCauseSpec("Ice field", -12, -6, 8),
     },
 )
 
@@ -235,6 +249,23 @@ SEDIMENTS: MappingProxyType[SedimentKind, SedimentSpec] = total(
             SoilKind.SALINE,
             RockKind.HALITE,
         ),
+        K.GLACIAL_FLOUR: SedimentSpec(
+            "Rock flour",
+            lambda rules: rules.sediment.glacial_flour_fertility,
+            lambda rules: rules.sediment.glacial_flour_fill,
+            frozenset({SedimentCarrier.ICE, SedimentCarrier.RIVER}),
+            SoilKind.SILT,
+            RockKind.SHALE,
+        ),
+        K.TAILINGS: SedimentSpec(
+            "Mine waste",
+            lambda rules: rules.sediment.tailings_fertility,
+            lambda rules: rules.sediment.tailings_fill,
+            frozenset({SedimentCarrier.WORKS, SedimentCarrier.RIVER}),
+            SoilKind.THIN,
+            RockKind.SANDSTONE,
+            poisons=True,
+        ),
     },
 )
 
@@ -244,9 +275,10 @@ CARRIERS: MappingProxyType[SedimentCarrier, CarrierSpec] = total(
     {
         R.RIVER: CarrierSpec("River", K.SILT),
         R.WIND: CarrierSpec("Wind", K.SAND),
-        R.ICE: CarrierSpec("Ice", K.GRAVEL),
+        R.ICE: CarrierSpec("Ice", K.GLACIAL_FLOUR),
         R.WAVE: CarrierSpec("Wave", K.SAND),
         R.SLOPE: CarrierSpec("Slope", K.GRAVEL),
+        R.WORKS: CarrierSpec("Works of a people", K.TAILINGS),
     },
 )
 

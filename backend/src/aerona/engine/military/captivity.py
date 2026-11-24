@@ -113,6 +113,8 @@ async def decide(ctx: TickContext, row: CaptiveCohortRow) -> CaptiveFate:
     if sacrificial and rng.chance(table.sacrifice_chance) and not await forbidden(ctx, captor.id, ActKind.SACRIFICE_OF_PEOPLE):
         await sacrifice(ctx, row, captor)
         return CaptiveFate.SACRIFICED
+    if values.get(ValueAxis.MERCY, 0) >= 0 and rng.chance(ctx.rules.captives.adopt_pct) and settle_into(ctx, captor, row.count):
+        return CaptiveFate.ADOPTED
     harsh = await harsher_fate(ctx, row, captor, home, mercy=values.get(ValueAxis.MERCY, 0), rng=rng)
     return harsh or CaptiveFate.HELD
 

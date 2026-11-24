@@ -52,6 +52,12 @@ import {
   Truck,
   UtensilsCrossed,
   Building,
+  Book,
+  HeartHandshake,
+  History,
+  Bird,
+  Flag,
+  HouseHeart,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 
@@ -79,7 +85,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   artwork: Paintbrush,
   law: Gavel,
   spirit: Ghost,
-  knowledge: Lightbulb,
+  knowledge: Book,
   prophecy: Eye,
   event: Zap,
   vessel: Ship,
@@ -87,7 +93,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   phenomenon: CloudLightning,
   cosmic_being: Orbit,
   vehicle_type: Truck,
-  unit_type: Swords,
+  unit_type: Flag,
   equipment_model: Hammer,
   dish: UtensilsCrossed,
   building_type: Building,
@@ -96,7 +102,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   trade_route: Route,
   disease: Biohazard,
   polity: Landmark,
-  house: Shield,
+  house: HouseHeart,
   treaty: Handshake,
   title: Crown,
   ideology: Lightbulb,
@@ -105,7 +111,7 @@ export const ENTITY_TYPE_ICON: Record<Schemas['EntityType'], LucideIcon> = {
   theory: Atom,
   art_form: Music,
   network: Network,
-  league: Handshake,
+  league: HeartHandshake,
 }
 
 export const STAT_ICON: Record<Schemas['Stat'], LucideIcon> = {
@@ -139,6 +145,8 @@ export const CREATOR_PASSION_ICON: Record<
   mercy: Heart,
   creation: Hammer,
   silence: VolumeX,
+  memory: History,
+  freedom: Bird,
 }
 
 export const COMMODITY_ICON: Record<Schemas['Commodity'], LucideIcon> = {

@@ -23,6 +23,7 @@ from aerona.domain.enums.entity import (
     MortalRole,
     ProphecyReading,
 )
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.limits import PERCENT_MAX, PERCENT_MIN
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch, NaturalLaw, ResourceMechanic, SocialClass
@@ -78,6 +79,7 @@ class EntityRow(NodeRow):
     maker_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
     world_id: Mapped[int] = mapped_column(ForeignKey("worlds.id", ondelete="RESTRICT"), index=True)
     location_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"), index=True)
+    stratum: Mapped[UndergroundStratum | None] = mapped_column(enum_type(UndergroundStratum, "stratum"))
     status: Mapped[EntityStatus] = mapped_column(enum_type(EntityStatus, "status"), default=EntityStatus.CANON)
     pending_name: Mapped[bool] = mapped_column(default=False)
     naming_attempts: Mapped[int] = mapped_column(default=0)

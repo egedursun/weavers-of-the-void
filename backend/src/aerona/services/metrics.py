@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.app import APP_VERSION
 from aerona.db.telemetry.setup import TelemetryDatabase
 from aerona.db.telemetry.tables import LiveEventRow, LlmCallRow
+from aerona.domain.enums.meta import HealthStatus
 from aerona.domain.enums.telemetry import LlmCallStatus
 from aerona.events.bus import Event
 from aerona.events.kinds import EventKind
@@ -36,12 +37,6 @@ MORTAL_TURN_GROUP = "Mortal turns"
 QUICK_CHECK_OK = "ok"
 WAL_SUFFIX = "-wal"
 EVENT_KIND_VALUES = frozenset(kind.value for kind in EventKind)
-
-
-class HealthStatus:
-    OK = "ok"
-    WARNING = "warning"
-    BAD = "bad"
 
 
 @dataclass(frozen=True)
@@ -164,7 +159,7 @@ class DatabaseHealth:
 
 @dataclass(frozen=True)
 class HealthReport:
-    status: str
+    status: HealthStatus
     version: str
     uptime_seconds: int
     database: DatabaseHealth

@@ -2,7 +2,7 @@ import { Ghost } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState, Section } from '@/components/domain'
-import { type DrawerPageProps } from '@/components/layout/drawer/DrawerStack'
+import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { Muted, Text } from '@/components/typography'
 import { GodDivinitySection } from '@/features/divine/GodDivinitySection'
 import { BodySection } from '@/features/entity/sections/BodySection'
@@ -21,7 +21,7 @@ import { ForeignGodProfile } from './ForeignGodProfile'
 import { ForeignGodRelations } from './ForeignGodRelations'
 import { editForeignGod, useForeignGod } from './api'
 
-export function ForeignGodPage({ id }: DrawerPageProps) {
+export function ForeignGodPage({ id }: EntryPageProps) {
   const godId = Number(id)
   const detail = useForeignGod(godId)
   if (!Number.isInteger(godId) || godId <= 0)
@@ -52,14 +52,18 @@ export function ForeignGodPage({ id }: DrawerPageProps) {
   return (
     <div className='flex min-w-0 flex-col gap-6'>
       <ForeignGodHero detail={data} />
-      <Section title='Description' level={3}>
+      <Section id='section-foreign-description' title='Description' level={3}>
         {god.description ? (
           <Text variant='prose'>{god.description}</Text>
         ) : (
           <Muted>No description yet; you can write one below.</Muted>
         )}
       </Section>
-      <Section title='Attitude to the pantheon' level={3}>
+      <Section
+        id='section-foreign-attitude'
+        title='Attitude to the pantheon'
+        level={3}
+      >
         <AttitudeBar stance={god.stance} />
       </Section>
       <ForeignGodPowerPanel detail={data} />
@@ -79,6 +83,7 @@ export function ForeignGodPage({ id }: DrawerPageProps) {
       <ForeignGodRelations detail={data} />
       <RecordGallery
         key={god.image_prompt ?? ''}
+        sectionId='section-foreign-images'
         title='Images'
         nodeId={god.id}
         name={god.name}

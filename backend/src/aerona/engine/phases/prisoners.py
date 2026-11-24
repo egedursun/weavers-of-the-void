@@ -27,7 +27,7 @@ from aerona.engine.intrigue.favours import owe
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.taboos import forbidden
 from aerona.engine.military.captivity import announce, cohort_fates, ransom_lawful, rich, wring_intel
-from aerona.engine.military.parole import ParoleTally, join_captors, keep_paroles, married_in_wars, offer_parole
+from aerona.engine.military.parole import ParoleTally, adopt_young, join_captors, keep_paroles, married_in_wars, offer_parole
 from aerona.engine.military.ransom import grow_ward, marry_captive, named_ransom, pay_from_treasury, release_by_opinion, ward_returns
 from aerona.engine.military.terms import terror, war_between
 from aerona.engine.mind.book import stored_values, values_for, write_values
@@ -172,6 +172,9 @@ async def foster(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: 
 async def bound_fate(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow, home: EntityRow | None) -> bool:
     if await marry_captive(ctx, row, captive, captor) is not None:
         await _told(ctx, "prisoner.married", captor.id, captive.id)
+        return True
+    if await adopt_young(ctx, row, captive, captor):
+        ctx.count("adopted")
         return True
     if await join_captors(ctx, row, captive, captor, home):
         ctx.count("married_in")

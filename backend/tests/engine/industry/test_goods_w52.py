@@ -24,7 +24,7 @@ NEW = (
 
 
 def test_forty_three_goods_each_with_category_price_and_use() -> None:
-    assert len(CommodityKind) == 43 and all(kind in COMMODITIES and kind in BUILT_IN_GOODS for kind in NEW)
+    assert len(CommodityKind) == 47 and all(kind in COMMODITIES and kind in BUILT_IN_GOODS for kind in NEW)
     rules = Rules()
     assert all(base_price(rules, kind) == COMMODITIES[kind].base_price for kind in CommodityKind)
 

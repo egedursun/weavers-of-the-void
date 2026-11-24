@@ -40,37 +40,37 @@ async function openCommands(page: Page, url: string) {
   await mockApi(page)
   const writes = await captureWrites(page)
   await page.goto(url)
-  const drawer = page.getByRole('dialog').last()
-  await expect(drawer.locator('[data-record-actions]')).toBeVisible()
-  return { drawer, writes }
+  const entryWindow = page.getByRole('dialog').last()
+  await expect(entryWindow.locator('[data-record-actions]')).toBeVisible()
+  return { entryWindow, writes }
 }
 
 test('a community offers its divine commands, each with the live cost in its label', async ({ page }) => {
-  const { drawer } = await openCommands(page, '/chronicle?drawer=entity:43')
+  const { entryWindow } = await openCommands(page, '/chronicle?entry=entity:43')
   for (const title of COMMUNITY_COMMANDS) {
     await expect(
-      drawer.locator('[data-action-id]').getByRole('button', { name: new RegExp(`^${title}`) }).first()
+      entryWindow.locator('[data-action-id]').getByRole('button', { name: new RegExp(`^${title}`) }).first()
     ).toBeVisible()
   }
-  await expect(drawer.getByRole('button', { name: 'Convert to the Creator, costs 30 essence' })).toBeVisible()
-  await expect(drawer.getByRole('button', { name: /^Manifest before mortals, costs 10 essence/ })).toBeVisible()
+  await expect(entryWindow.getByRole('button', { name: 'Convert to the Creator, costs 30 essence' })).toBeVisible()
+  await expect(entryWindow.getByRole('button', { name: /^Manifest before mortals, costs 10 essence/ })).toBeVisible()
 })
 
 test('a mortal offers its own commands and hides the community ones', async ({ page }) => {
-  const { drawer } = await openCommands(page, '/chronicle?drawer=entity:45')
+  const { entryWindow } = await openCommands(page, '/chronicle?entry=entity:45')
   for (const title of MORTAL_COMMANDS) {
     await expect(
-      drawer.locator('[data-action-id]').getByRole('button', { name: new RegExp(`^${title}`) }).first()
+      entryWindow.locator('[data-action-id]').getByRole('button', { name: new RegExp(`^${title}`) }).first()
     ).toBeVisible()
   }
-  await expect(drawer.getByRole('button', { name: /^Decree war, peace/ })).toHaveCount(0)
-  await expect(drawer.getByRole('button', { name: /^Set class shares/ })).toHaveCount(0)
+  await expect(entryWindow.getByRole('button', { name: /^Decree war, peace/ })).toHaveCount(0)
+  await expect(entryWindow.getByRole('button', { name: /^Set class shares/ })).toHaveCount(0)
 })
 
 test('wrath needs a reason, asks for confirmation and sends the reason', async ({ page }) => {
-  const { drawer, writes } = await openCommands(page, '/chronicle?drawer=entity:43')
-  await drawer.getByRole('searchbox', { name: 'Find a command' }).fill('Wrath')
-  const card = drawer.locator('[data-action-id="wrath"]')
+  const { entryWindow, writes } = await openCommands(page, '/chronicle?entry=entity:43')
+  await entryWindow.getByRole('searchbox', { name: 'Find a command' }).fill('Wrath')
+  const card = entryWindow.locator('[data-action-id="wrath"]')
   await card.getByRole('button', { name: /^Wrath upon a record/ }).click()
   await card.getByLabel('Why? Written in the chronicle').fill('It refused the tithe.')
   await card.getByRole('button', { name: 'Wrath upon a record', exact: true }).click()
@@ -83,10 +83,10 @@ test('wrath needs a reason, asks for confirmation and sends the reason', async (
 })
 
 test('the archive state command is inert until another state is chosen', async ({ page }) => {
-  const { drawer, writes } = await openCommands(page, '/chronicle?drawer=entity:45')
-  await expect(drawer.getByText('Records whose importance falls sink into history by themselves.')).toBeVisible()
-  await expect(drawer.getByText(/Importance 14 · last named in epoch 6/)).toBeVisible()
-  const row = drawer.locator('[data-domain="form-row"]').filter({ hasText: 'Archive' }).first()
+  const { entryWindow, writes } = await openCommands(page, '/chronicle?entry=entity:45')
+  await expect(entryWindow.getByText('Records whose importance falls sink into history by themselves.')).toBeVisible()
+  await expect(entryWindow.getByText(/Importance 14 · last named in epoch 6/)).toBeVisible()
+  const row = entryWindow.locator('[data-domain="form-row"]').filter({ hasText: 'Archive' }).first()
   const assign = row.getByRole('button', { name: 'Assign' })
   await expect(assign).toHaveAttribute('aria-disabled', 'true')
   await row.getByRole('combobox').click()
@@ -97,9 +97,9 @@ test('the archive state command is inert until another state is chosen', async (
 })
 
 test('the arrange block shows the current patron and can leave the record godless', async ({ page }) => {
-  const { drawer, writes } = await openCommands(page, '/chronicle?drawer=entity:43')
-  await expect(drawer.getByText('Now: Ithren the Unbowed')).toBeVisible()
-  const row = drawer.locator('[data-domain="form-row"]').filter({ hasText: 'Patron' }).first()
+  const { entryWindow, writes } = await openCommands(page, '/chronicle?entry=entity:43')
+  await expect(entryWindow.getByText('Now: Ithren the Unbowed')).toBeVisible()
+  const row = entryWindow.locator('[data-domain="form-row"]').filter({ hasText: 'Patron' }).first()
   const assign = row.getByRole('button', { name: 'Assign' })
   await expect(assign).toHaveAttribute('aria-disabled', 'true')
   await row.getByRole('combobox').click()
@@ -110,8 +110,8 @@ test('the arrange block shows the current patron and can leave the record godles
 })
 
 test('bonds can be proposed by Fate and marks changed from the arrange block', async ({ page }) => {
-  const { drawer } = await openCommands(page, '/chronicle?drawer=entity:45')
-  await expect(drawer.getByRole('button', { name: 'Let Fate suggest bonds' })).toBeVisible()
-  await expect(drawer.getByRole('button', { name: 'Change marks' })).toBeVisible()
-  await expect(drawer.getByText('Not travelling. Send it with the expedition command below.')).toBeVisible()
+  const { entryWindow } = await openCommands(page, '/chronicle?entry=entity:45')
+  await expect(entryWindow.getByRole('button', { name: 'Let Fate suggest bonds' })).toBeVisible()
+  await expect(entryWindow.getByRole('button', { name: 'Change marks' })).toBeVisible()
+  await expect(entryWindow.getByText('Not travelling. Send it with the expedition command below.')).toBeVisible()
 })

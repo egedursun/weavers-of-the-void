@@ -14,6 +14,8 @@ class CirculationBand(StrEnum):
     SUBTROPICAL_CALM = "subtropical_calm"
     BANDED = "banded"
     SUPER_ROTATION = "super_rotation"
+    MONSOON = "monsoon"
+    MOUNTAIN_WIND = "mountain_wind"
 
 
 class OscillationPhase(StrEnum):

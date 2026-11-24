@@ -7,6 +7,7 @@ class EchelonLevel(StrEnum):
     CORPS = "corps"
     DIVISION = "division"
     BRIGADE = "brigade"
+    DETACHMENT = "detachment"
 
 
 class EchelonOrder(StrEnum):
@@ -15,6 +16,7 @@ class EchelonOrder(StrEnum):
     RESUPPLY = "resupply"
     HOLD = "hold"
     STANDING = "standing"
+    SCREEN = "screen"
 
 
 class CarrierKind(StrEnum):
@@ -33,6 +35,7 @@ class CarrierKind(StrEnum):
     LIVING = "living"
     RITE = "rite"
     NETWORK = "network"
+    SLEDGE = "sledge"
 
 
 class ShotKind(StrEnum):
@@ -47,6 +50,7 @@ class ShotKind(StrEnum):
     PIERCING = "piercing"
     GUIDED = "guided"
     ENERGY = "energy"
+    SMOKE = "smoke"
 
 
 class PointOfSail(StrEnum):

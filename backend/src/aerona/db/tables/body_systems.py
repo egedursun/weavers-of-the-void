@@ -18,6 +18,9 @@ class BodySystemRow(Base):
         between("diet_range", 0, 100),
         between("sleep_need", 0, 100),
         between("toxin_tolerance", 0, 100),
+        between("radiation_max", 0, 100),
+        between("light_min", 0, 100),
+        between("humidity_range", 0, 100),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -31,6 +34,9 @@ class BodySystemRow(Base):
     diet_range: Mapped[int] = mapped_column(default=50)
     sleep_need: Mapped[int] = mapped_column(default=30)
     toxin_tolerance: Mapped[int] = mapped_column(default=40)
+    radiation_max: Mapped[int] = mapped_column(default=40, server_default="40")
+    light_min: Mapped[int] = mapped_column(default=0, server_default="0")
+    humidity_range: Mapped[int] = mapped_column(default=100, server_default="100")
     strained: Mapped[bool] = mapped_column(default=False)
     failed: Mapped[bool] = mapped_column(default=False)
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

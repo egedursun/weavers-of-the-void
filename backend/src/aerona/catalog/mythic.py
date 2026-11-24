@@ -51,6 +51,7 @@ GEAS_ACTS = total(
             ActKind.HOARDING_IN_FAMINE,
         ),
         GeasMode.DUTY: (ActKind.HOSPITALITY, ActKind.MERCY_TO_ENEMY, ActKind.BUILDING_TEMPLES, ActKind.LEARNING),
+        GeasMode.CONDITION: (ActKind.HOSPITALITY, ActKind.MERCY_TO_ENEMY, ActKind.BUILDING_TEMPLES, ActKind.LEARNING),
     },
 )
 
@@ -99,13 +100,13 @@ ARCHETYPE_TRIALS = total(
         A.LOST_GOLDEN_AGE: (Q.FAITH, Q.PASSION, Q.SKILL),
         A.CHOSEN_ONE: (Q.FAITH, Q.CONVICTION, Q.SKILL),
         A.CURSED_LINE: (Q.PASSION, Q.FAITH, Q.SKILL),
-        A.RETURN_OF_A_RULER: (Q.CONVICTION, Q.SKILL, Q.PASSION),
+        A.RETURN_OF_A_RULER: (Q.CONVICTION, Q.MERCY, Q.PASSION),
         A.HAUNTED_PLACE: (Q.CONVICTION, Q.SKILL, Q.FAITH),
         A.FOUNDING: (Q.SKILL, Q.CONVICTION, Q.FAITH),
-        A.EXILE: (Q.ENDURANCE, Q.PASSION, Q.SKILL),
+        A.EXILE: (Q.ENDURANCE, Q.PASSION, Q.MERCY),
         A.TRANSFORMATION: (Q.FAITH, Q.SKILL, Q.PASSION),
         A.BARGAIN: (Q.CONVICTION, Q.CUNNING, Q.FAITH),
-        A.SACRIFICE: (Q.FAITH, Q.ENDURANCE, Q.CONVICTION),
+        A.SACRIFICE: (Q.FAITH, Q.SACRIFICE, Q.CONVICTION),
         A.RIVALRY: (Q.SKILL, Q.PASSION, Q.SKILL),
         A.DISCOVERY: (Q.SKILL, Q.CUNNING, Q.CONVICTION),
         A.DECEPTION: (Q.CUNNING, Q.CONVICTION, Q.SKILL),
@@ -231,6 +232,12 @@ SKILL_DOMAINS = total(
         S.COMPUTING: frozenset({D.INFORMATION, D.TECHNOLOGY}),
         S.SCIENCE: frozenset({D.SCIENCE, D.KNOWLEDGE}),
         S.ADMINISTRATION: frozenset({D.CITIES, D.KNOWLEDGE}),
+        S.FARMING: frozenset({D.HARVEST, D.PLANTS}),
+        S.HERDING: frozenset({D.LIFE, D.ROAD}),
+        S.COOKING: frozenset({D.FIRE, D.HUNGER}),
+        S.MUSIC: frozenset({D.SOUND, D.LOVE}),
+        S.CLIMBING: frozenset({D.STONE, D.SKY}),
+        S.DIVING: frozenset({D.SEA, D.ICE}),
     },
 )
 
@@ -241,6 +248,7 @@ class GeasLayerSpec:
     passes_to_line: bool = False
     sworn: bool = False
     dooms: bool = True
+    by_law: bool = False
 
 
 GEAS_LAYERS = total(
@@ -251,6 +259,10 @@ GEAS_LAYERS = total(
         GeasLayer.RITE: GeasLayerSpec("Laid by a rite"),
         GeasLayer.KIN: GeasLayerSpec("Laid by kin", passes_to_line=True),
         GeasLayer.SELF: GeasLayerSpec("Sworn by its bearer", sworn=True, dooms=False),
+        GeasLayer.LAW: GeasLayerSpec("Laid by a court", by_law=True),
     },
 )
 LINE_LAYERS = frozenset(layer for layer, spec in GEAS_LAYERS.items() if spec.passes_to_line)
+
+
+BINDING_MODES = frozenset({GeasMode.DUTY, GeasMode.CONDITION})

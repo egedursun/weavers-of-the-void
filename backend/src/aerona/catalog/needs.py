@@ -61,6 +61,10 @@ SHORTFALL_EFFECTS: Mapping[CommodityKind, ShortfallEffect] = total(
         C.WAX: E.STATUS,
         C.POTTERY: E.TOIL,
         C.BOOKS: E.STATUS,
+        C.PAPER: E.STATUS,
+        C.GLASSWARE: E.STATUS,
+        C.SOAP: E.SICKNESS,
+        C.INK: E.STATUS,
     },
 )
 
@@ -200,6 +204,8 @@ EFFECT_BASKET: Mapping[ShortfallEffect, Mapping[SocialClass, int]] = MappingProx
         ),
         E.THIRST: MappingProxyType({}),
         E.SHELTER: MappingProxyType({}),
+        E.LEARNING: MappingProxyType({}),
+        E.JUSTICE: MappingProxyType({}),
     }
 )
 
@@ -225,6 +231,8 @@ SHORTFALLS: Mapping[ShortfallEffect, ShortfallSpec] = total(
         E.ARCANE: ShortfallSpec("Arcane want", "magical reagents", True),
         E.THIRST: ShortfallSpec("Thirst", "water", False),
         E.SHELTER: ShortfallSpec("Shelter", "a roof", False),
+        E.LEARNING: ShortfallSpec("Learning", "a school or teacher", False),
+        E.JUSTICE: ShortfallSpec("Justice", "a court", False),
     },
 )
 OUTER_SHORTFALLS: frozenset[ShortfallEffect] = frozenset(effect for effect, spec in SHORTFALLS.items() if not spec.from_goods)
@@ -275,10 +283,10 @@ JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = total(
         J.HERDING: (C.LIVESTOCK, C.FODDER, C.MOUNTS, C.MEAT, C.MILK, C.CHEESE, C.DUNG, C.EGGS, C.WOOL),
         J.FISHING: (C.FISH,),
         J.MINING: (C.ORE, C.STONE, C.COAL, C.PEAT, C.HALITE),
-        J.CRAFTING: (C.TOOLS, C.CLOTH, C.WEAPONS, C.ARMOUR, C.FUEL, C.MEDICINE, C.POTTERY, C.OIL),
+        J.CRAFTING: (C.TOOLS, C.CLOTH, C.WEAPONS, C.ARMOUR, C.FUEL, C.MEDICINE, C.POTTERY, C.OIL, C.PAPER, C.GLASSWARE, C.SOAP),
         J.TRADE: (C.LUXURIES,),
         J.CLERGY: (C.INCENSE, C.SACRED_GOODS),
-        J.SCHOLARSHIP: (C.MAGICAL_REAGENTS, C.BOOKS),
+        J.SCHOLARSHIP: (C.MAGICAL_REAGENTS, C.BOOKS, C.INK),
         J.BUILDING: (C.TIMBER, C.SIEGE_MATERIEL),
         J.SOLDIERING: (),
         J.SERVICE: (),
@@ -288,6 +296,8 @@ JOB_GOODS: Mapping[Job, tuple[CommodityKind, ...]] = total(
         J.GATHERING: (C.HERBS, C.FRUIT, C.TIMBER, C.HONEY, C.WAX, C.SPICE),
         J.INDUSTRY: (C.TOOLS, C.CLOTH, C.FUEL),
         J.ARTS: (C.LUXURIES,),
+        J.HEALING: (),
+        J.TEACHING: (),
     },
 )
 
@@ -320,6 +330,9 @@ WORKSHOP_JOBS: Mapping[WorkshopKind, Job] = total(
         W.DYEWORKS: J.CRAFTING,
         W.SCRIPTORIUM: J.SCHOLARSHIP,
         W.EVAPORATION_WORKS: J.MINING,
+        W.PAPER_MILL: J.CRAFTING,
+        W.PRINTING_HOUSE: J.SCHOLARSHIP,
+        W.ROPEWALK: J.CRAFTING,
     },
 )
 

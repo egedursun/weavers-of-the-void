@@ -7,7 +7,14 @@ from aerona.domain.enums.records import StepAction
 def test_damage_traits_keep_their_memberships() -> None:
     assert damage_where(lambda spec: spec.edged) == {DamageType.CUT, DamageType.PIERCE, DamageType.BALLISTIC}
     assert damage_where(lambda spec: spec.searing) == {DamageType.FIRE, DamageType.COLD, DamageType.ENERGY, DamageType.ELECTRIC, DamageType.CHEMICAL}
-    assert damage_where(lambda spec: spec.deep) == {DamageType.PIERCE, DamageType.BLUNT, DamageType.VENOM, DamageType.BALLISTIC, DamageType.EXPLOSIVE}
+    assert damage_where(lambda spec: spec.deep) == {
+        DamageType.PIERCE,
+        DamageType.BLUNT,
+        DamageType.VENOM,
+        DamageType.BALLISTIC,
+        DamageType.EXPLOSIVE,
+        DamageType.PRESSURE,
+    }
     assert DAMAGE[DamageType.PIERCE].blow is StepAction.THRUST and DAMAGE[DamageType.FIRE].spared is InjuryKind.BURN
 
 
@@ -22,6 +29,15 @@ def test_injury_traits_keep_their_memberships() -> None:
 def test_conditions_capacities_and_states_keep_their_memberships() -> None:
     assert MADNESS_CONDITIONS == (ConditionKind.PARANOIA, ConditionKind.VISIONS, ConditionKind.RAGE, ConditionKind.MELANCHOLY)
     assert set(AGE_CONDITIONS) == {ConditionKind.AGE_BLINDNESS, ConditionKind.AGE_DEAFNESS, ConditionKind.CHRONIC_ILLNESS, ConditionKind.INFERTILITY}
-    assert set(BEDRIDDEN_LOSSES) == {Capacity.MELEE, Capacity.MISSILE, Capacity.COMMAND, Capacity.MOBILITY, Capacity.CRAFT, Capacity.ENDURANCE}
+    assert set(BEDRIDDEN_LOSSES) == {
+        Capacity.MELEE,
+        Capacity.MISSILE,
+        Capacity.COMMAND,
+        Capacity.MOBILITY,
+        Capacity.CRAFT,
+        Capacity.ENDURANCE,
+        Capacity.STEALTH,
+        Capacity.LABOUR,
+    }
     assert {InjuryState.FRESH, InjuryState.INFECTED, InjuryState.HEALING, InjuryState.REOPENED, InjuryState.GANGRENOUS} == OPEN_INJURY_STATES
     assert sorted(STATES, key=lambda state: STATES[state].rank)[-1] is InjuryState.LETHAL

@@ -55,6 +55,10 @@ COMMODITY_TRAITS: Mapping[CommodityKind, frozenset[CommodityTrait]] = total(
         C.WAX: frozenset({CommodityTrait.RAW_MATERIAL, CommodityTrait.RENEWABLE}),
         C.POTTERY: frozenset({CommodityTrait.CIVILIAN}),
         C.BOOKS: frozenset({CommodityTrait.CIVILIAN, CommodityTrait.HOARD}),
+        C.PAPER: frozenset({CommodityTrait.CIVILIAN, CommodityTrait.RAW_MATERIAL}),
+        C.GLASSWARE: frozenset({CommodityTrait.CIVILIAN}),
+        C.SOAP: frozenset({CommodityTrait.CIVILIAN, CommodityTrait.HEALING}),
+        C.INK: frozenset({CommodityTrait.CIVILIAN, CommodityTrait.RAW_MATERIAL}),
     },
 )
 
@@ -118,6 +122,9 @@ MATERIAL_TRAITS: Mapping[MaterialKind, frozenset[MaterialTrait]] = total(
         M.SHELL: frozenset({MaterialTrait.PRECIOUS}),
         M.POLYMER: frozenset({MaterialTrait.CONSTRUCT_BODY}),
         M.COMPOSITE: frozenset({MaterialTrait.CONSTRUCT_BODY, MaterialTrait.STRATEGIC}),
+        M.RUBBER: frozenset({MaterialTrait.STRATEGIC}),
+        M.PAPER: frozenset({MaterialTrait.COMMON, MaterialTrait.FEVER}),
+        M.LACQUER: frozenset({MaterialTrait.PRECIOUS}),
     },
 )
 
@@ -148,6 +155,9 @@ WORKSHOP_TRAITS: Mapping[WorkshopKind, frozenset[WorkshopTrait]] = total(
         W.DYEWORKS: frozenset(),
         W.SCRIPTORIUM: frozenset(),
         W.EVAPORATION_WORKS: frozenset({WorkshopTrait.CELLAR}),
+        W.PAPER_MILL: frozenset({WorkshopTrait.MILLING}),
+        W.PRINTING_HOUSE: frozenset(),
+        W.ROPEWALK: frozenset(),
     },
 )
 

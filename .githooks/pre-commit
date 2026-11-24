@@ -36,6 +36,8 @@ run transfers "$PYTHON" scripts/check_transfers.py
 run import_cycles "$PYTHON" scripts/check_import_cycles.py
 run hidden_controls "$PYTHON" scripts/check_hidden_controls.py
 run duplicate_buttons "$PYTHON" scripts/check_duplicate_buttons.py
+run stacked_triggers "$PYTHON" scripts/check_stacked_triggers.py
+run clipped_frames "$PYTHON" scripts/check_clipped_frames.py
 run lever_costs "$PYTHON" scripts/check_lever_costs.py
 run model_enum_text "$PYTHON" scripts/check_model_enum_text.py
 run stat_keys "$PYTHON" scripts/check_stat_keys.py
@@ -44,6 +46,7 @@ run label_maps "$PYTHON" scripts/check_label_maps.py
 run unpaged_lists "$PYTHON" scripts/check_unpaged_lists.py
 run raw_ids "$PYTHON" scripts/check_raw_ids.py
 run section_ids "$PYTHON" scripts/check_section_ids.py
+run entry_categories "$PYTHON" scripts/check_entry_categories.py
 run record_steps "$PYTHON" scripts/check_record_steps.py
 run negative_scales "$PYTHON" scripts/check_negative_scales.py
 run pane_grids "$PYTHON" scripts/check_pane_grids.py
@@ -83,6 +86,7 @@ run war_foes "$PYTHON" scripts/check_war_foes.py
 run treaty_parties "$PYTHON" scripts/check_treaty_parties.py
 run literal_enum_sets "$PYTHON" scripts/check_literal_enum_sets.py
 run movement_modes "$PYTHON" scripts/check_movement_modes.py
+run depth_positions "$PYTHON" scripts/check_depth_positions.py
 run season_positions "$PYTHON" scripts/check_season_positions.py
 run calendar_slots "$PYTHON" scripts/check_calendar_slots.py
 run cycle_fields "$PYTHON" scripts/check_cycle_fields.py

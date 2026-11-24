@@ -33,7 +33,7 @@ from aerona.db.tables.folk_knowledge import FolkClassRow, FolkKnowledgeRow
 from aerona.db.tables.forecasting import ObservationMethodRow
 from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.tables.gatherings import CollectionRow
-from aerona.db.tables.geology import RegionStratumRow
+from aerona.db.tables.geology import DeepPassageRow, RegionStratumRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.intimacy import LegitimacyRuleRow
@@ -92,7 +92,7 @@ from aerona.domain.enums.folk_knowledge import FolkDomain, FolkTaking
 from aerona.domain.enums.forecasting import ObservationMethod
 from aerona.domain.enums.fossil import FossilSource
 from aerona.domain.enums.gathering import CollectionKind
-from aerona.domain.enums.geology import UndergroundStratum
+from aerona.domain.enums.geology import DeepPassageOrigin, DeepPassageState, UndergroundStratum
 from aerona.domain.enums.intimacy import ChildLegitimacy, LegitimacyPath
 from aerona.domain.enums.intrigue import HookSource, HookStrength, IntrigueSecret
 from aerona.domain.enums.justice import CaseStage, Verdict
@@ -205,6 +205,44 @@ async def deep_land(session: AsyncSession, realm: Realm) -> Ids:
             session.add(RegionStratumRow(region_entity_id=region, stratum=stratum, volume=volume, pressure=20, locked=[]))
     await session.flush()
     return {}
+
+
+async def deep_ways(session: AsyncSession, realm: Realm) -> Ids:
+    await deep_land(session, realm)
+    region = realm.cosmos.region_id
+    present = set(await session.scalars(select(RegionStratumRow.stratum).where(RegionStratumRow.region_entity_id == region)))
+    if UndergroundStratum.CAVERN_UPPER not in present:
+        session.add(RegionStratumRow(region_entity_id=region, stratum=UndergroundStratum.CAVERN_UPPER, volume=0, pressure=0, locked=[]))
+    for holder in (realm.settlement_id, realm.people_id, realm.mortal_id):
+        if await session.get(HolderLevelRow, (holder, KnowledgeBranch.METALLURGY)) is None:
+            session.add(HolderLevelRow(holder_entity_id=holder, branch=KnowledgeBranch.METALLURGY, level=3))
+    world = (await session.get(EntityRow, region)).world_id
+    passage = DeepPassageRow(
+        world_id=world,
+        first_region_entity_id=region,
+        first_stratum=None,
+        second_region_entity_id=region,
+        second_stratum=UndergroundStratum.CAVERN_UPPER,
+        state=DeepPassageState.COLLAPSED,
+        origin=DeepPassageOrigin.NATURAL,
+        width=50,
+        progress=0,
+        opened=True,
+        created_epoch=1,
+        locked=[],
+    )
+    session.add(passage)
+    await session.flush()
+    return {"passage": passage.id}
+
+
+async def open_deep_way(session: AsyncSession, realm: Realm) -> Ids:
+    ids = await deep_ways(session, realm)
+    passage = await session.get(DeepPassageRow, ids["passage"])
+    if passage is not None:
+        passage.state, passage.progress = DeepPassageState.OPEN, 100
+    await session.flush()
+    return ids
 
 
 async def shore_ground(session: AsyncSession, realm: Realm) -> Ids:

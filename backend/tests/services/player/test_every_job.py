@@ -8,6 +8,7 @@ import pytest
 from aerona.db.session import Database
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.job import JobStatus
+from aerona.domain.models.son_design import SonDesign
 from aerona.events.bus import EventBus
 from aerona.jobs.manager import JobManager
 from aerona.rules.registry import Rules
@@ -36,7 +37,7 @@ JOBS: Mapping[str, Lever] = {
 
 
 class Ports:
-    async def summon(self, world_id: int | None) -> int:
+    async def summon(self, world_id: int | None, design: SonDesign | None = None) -> int:
         return 1
 
     async def birth(self, parent_son_id: int, inspiration: str, co_parent_son_id: int | None) -> int:

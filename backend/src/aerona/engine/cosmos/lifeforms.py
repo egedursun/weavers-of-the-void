@@ -51,6 +51,8 @@ def place_holds(rules: Rules, place: LifeEnvironment, world: WorldRow, physics: 
             not spec.buried or world.world_type in BURIED_WORLDS,
             not spec.clouds or temperate,
             not spec.air or gas or (physics is not None and physics.pressure > 0),
+            not spec.hot or heat >= table.vent_heat,
+            not spec.void or physics is None or physics.pressure < rules.orbits.no_air_hundredths / PERCENT,
         )
     )
 

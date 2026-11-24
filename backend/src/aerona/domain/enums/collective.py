@@ -14,6 +14,9 @@ class CollectiveActKind(StrEnum):
     DEMONSTRATION = "demonstration"
     BOYCOTT = "boycott"
     EXODUS = "exodus"
+    VIGIL = "vigil"
+    OCCUPATION = "occupation"
+    PETITION = "petition"
 
 
 class CollectiveTrigger(StrEnum):
@@ -33,6 +36,8 @@ class CollectiveTrigger(StrEnum):
     VICTORY = "victory"
     GREAT_FUNERAL = "great_funeral"
     ELECTION = "election"
+    PRICE_RISE = "price_rise"
+    ARREST = "arrest"
 
 
 class CrowdFeeling(StrEnum):
@@ -41,6 +46,8 @@ class CrowdFeeling(StrEnum):
     FERVOUR = "fervour"
     GRIEF = "grief"
     HOPE = "hope"
+    JOY = "joy"
+    SOLIDARITY = "solidarity"
 
 
 class CascadeOutcome(StrEnum):
@@ -85,6 +92,8 @@ class AccountKind(StrEnum):
     TESTIMONY = "testimony"
     GENEALOGY = "genealogy"
     SONG = "song"
+    TRAVEL_ACCOUNT = "travel_account"
+    LAW_RECORD = "law_record"
 
 
 class AccountStance(StrEnum):
@@ -95,6 +104,7 @@ class AccountStance(StrEnum):
     JUSTIFY = "justify"
     LAMENT = "lament"
     MOCK = "mock"
+    WARN = "warn"
 
 
 class AccountMedium(StrEnum):
@@ -105,6 +115,7 @@ class AccountMedium(StrEnum):
     RECORD = "record"
     PERFORMANCE = "performance"
     MIND_STATE = "mind_state"
+    MARKS = "marks"
 
 
 class StoryletId(StrEnum):
@@ -228,6 +239,8 @@ class FormativeKind(StrEnum):
     LIBERATION = "liberation"
     SCHISM = "schism"
     LONG_SEASON = "long_season"
+    PEACE = "peace"
+    PERSECUTION = "persecution"
 
 
 class RoleKind(StrEnum):

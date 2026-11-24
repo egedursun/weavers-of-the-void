@@ -12,6 +12,8 @@ class RecordForm(StrEnum):
     LIVING = "living"
     CRAFTED = "crafted"
     MENTAL = "mental"
+    SCENT = "scent"
+    TACTILE = "tactile"
 
 
 class MediaItemKind(StrEnum):
@@ -23,6 +25,9 @@ class MediaItemKind(StrEnum):
     PROMOTION = "promotion"
     DEVOTION = "devotion"
     OFFICIAL = "official"
+    SATIRE = "satire"
+    SPORT = "sport"
+    NOTICES = "notices"
 
 
 class OutletFunding(StrEnum):

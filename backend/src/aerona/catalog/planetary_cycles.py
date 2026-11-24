@@ -23,6 +23,8 @@ class CycleSpec:
     sinks: tuple[CycleFlow, ...]
     moves: frozenset[CycleEffect]
     seeded_by: frozenset[CycleSource] = frozenset()
+    cools: bool = False
+    inverse: bool = False
 
 
 CYCLES: Mapping[PlanetaryCycle, CycleSpec] = total(
@@ -92,6 +94,25 @@ CYCLES: Mapping[PlanetaryCycle, CycleSpec] = total(
             frozenset({CycleEffect.SOIL}),
             frozenset({S.VOLCANOES, S.UPLIFT, S.WEATHERING}),
         ),
+        PlanetaryCycle.HEAT: CycleSpec(
+            "Inner heat",
+            (CycleFlow(S.BURIAL, lambda rules: rules.world_cycles.heat_burial),),
+            (
+                CycleFlow(S.VOLCANOES, lambda rules: rules.world_cycles.heat_escape),
+                CycleFlow(S.UPLIFT, lambda rules: rules.world_cycles.heat_uplift),
+            ),
+            frozenset(),
+            frozenset({S.VOLCANOES, S.UPLIFT}),
+            cools=True,
+        ),
+        PlanetaryCycle.ICE: CycleSpec(
+            "Ice",
+            (CycleFlow(S.FREEZING, lambda rules: rules.world_cycles.ice_freeze),),
+            (CycleFlow(S.MELTING, lambda rules: rules.world_cycles.ice_melt),),
+            frozenset({CycleEffect.SEA_LEVEL}),
+            frozenset({S.FREEZING}),
+            inverse=True,
+        ),
     },
 )
 SCALES: Mapping[PlanetaryCycle, tuple[Rate, Rate]] = total(
@@ -102,6 +123,8 @@ SCALES: Mapping[PlanetaryCycle, tuple[Rate, Rate]] = total(
         PlanetaryCycle.NUTRIENTS: (lambda rules: rules.cycles.nutrients_source_pct, lambda rules: rules.cycles.nutrients_sink_pct),
         PlanetaryCycle.OXYGEN: (lambda rules: rules.cycles.oxygen_source_pct, lambda rules: rules.cycles.oxygen_sink_pct),
         PlanetaryCycle.ROCK: (lambda rules: rules.cycles.rock_source_pct, lambda rules: rules.cycles.rock_sink_pct),
+        PlanetaryCycle.HEAT: (lambda rules: rules.cycles.heat_source_pct, lambda rules: rules.cycles.heat_sink_pct),
+        PlanetaryCycle.ICE: (lambda rules: rules.cycles.ice_source_pct, lambda rules: rules.cycles.ice_sink_pct),
     },
 )
 

@@ -14,6 +14,7 @@ class GriefSpec:
     open: bool
     angry: bool = False
     yearning: bool = False
+    bargains: bool = False
 
 
 GRIEF_STAGES: Mapping[GriefStage, GriefSpec] = total(
@@ -21,10 +22,11 @@ GRIEF_STAGES: Mapping[GriefStage, GriefSpec] = total(
     {
         G.SHOCK: GriefSpec("Shock", 0, open=True),
         G.ANGER: GriefSpec("Anger", 1, open=True, angry=True),
-        G.MOURNING: GriefSpec("Mourning", 2, open=True),
-        G.YEARNING: GriefSpec("Yearning", 3, open=True, yearning=True),
-        G.ACCEPTANCE: GriefSpec("Acceptance", 4, open=False),
-        G.COMPLICATED: GriefSpec("Complicated", 5, open=False),
+        G.BARGAINING: GriefSpec("Bargaining", 2, open=True, bargains=True),
+        G.MOURNING: GriefSpec("Mourning", 3, open=True),
+        G.YEARNING: GriefSpec("Yearning", 4, open=True, yearning=True),
+        G.ACCEPTANCE: GriefSpec("Acceptance", 5, open=False),
+        G.COMPLICATED: GriefSpec("Complicated", 6, open=False),
     },
 )
 OPEN_GRIEF_STAGES = tuple(stage for stage, spec in sorted(GRIEF_STAGES.items(), key=lambda item: item[1].order) if spec.open)

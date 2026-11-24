@@ -4,8 +4,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life_traits import RECORD_FORM_TRAITS, having
-from aerona.catalog.media_shapes import FORM_DECAY_PCT, FUNDING_REVENUE_PCT, ITEM_SWAY_PCT, UNCENSORED_FUNDING
+from aerona.catalog.media_shapes import FORM_DECAY_PCT, FUNDING_REVENUE_PCT, ITEM_SWAY_PCT, NOTICE_PREFIXES, SPORT_PREFIXES, UNCENSORED_FUNDING
 from aerona.constants.units import PERCENT
+from aerona.db.tables.belonging import SatireRow
 from aerona.db.tables.communication import PublicOpinionRow
 from aerona.db.tables.customs import EvidenceRow
 from aerona.db.tables.economy import MarketPriceRow
@@ -16,6 +17,7 @@ from aerona.db.tables.media import MediaItemRow, MediaOutletRow, RecordMediumRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.urban import MarketPlayRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.belonging import SatireSource
 from aerona.domain.enums.customs import EvidenceKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.life_traits import RecordFormTrait
@@ -73,6 +75,15 @@ async def reach_and_revenue(ctx: TickContext, outlet: MediaOutletRow, medium: Re
         await shift_points(ctx.session, owner, revenue)
 
 
+async def mocks_ruler(ctx: TickContext, outlet: MediaOutletRow) -> bool:
+    found = await ctx.session.scalar(
+        select(SatireRow.id)
+        .where(SatireRow.source == SatireSource.OUTLET, SatireRow.satirist_entity_id == outlet.owner_node_id, SatireRow.epoch == ctx.epoch)
+        .limit(1)
+    )
+    return found is not None
+
+
 async def report(ctx: TickContext, outlet: MediaOutletRow, medium: RecordMediumRow | None, tally: MediaTally) -> None:
     incident = await ctx.session.scalar(
         select(IncidentRow)
@@ -83,6 +94,12 @@ async def report(ctx: TickContext, outlet: MediaOutletRow, medium: RecordMediumR
     if incident is None:
         return
     kind = MediaItemKind.RECORD_OF_EVENT if medium is not None and medium.form in RECORDED_FORMS else MediaItemKind.NEWS
+    if incident.kind.startswith(NOTICE_PREFIXES):
+        kind = MediaItemKind.NOTICES
+    elif incident.kind.startswith(SPORT_PREFIXES):
+        kind = MediaItemKind.SPORT
+    elif await mocks_ruler(ctx, outlet):
+        kind = MediaItemKind.SATIRE
     item = MediaItemRow(
         outlet_id=outlet.id,
         owner_node_id=outlet.owner_node_id,

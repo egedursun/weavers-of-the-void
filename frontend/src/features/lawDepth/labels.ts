@@ -40,6 +40,8 @@ import {
   Users,
   Wind,
   type LucideIcon,
+  Banknote,
+  FileCheck,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -66,11 +68,12 @@ export const COURTS: Record<Schema['CourtLevel'], Named> = {
   guild: { label: 'Guild court', icon: Hammer, tone: 'info' },
   military: { label: 'Military court', icon: Swords, tone: 'danger' },
   consular: { label: 'Court of foreigners', icon: Globe, tone: 'verdigris' },
+  appellate: { label: 'Court of appeal', icon: Scale, tone: 'muted' },
 }
 
 export const REGISTRY_KINDS: Record<Schema['RegistryKind'], Named> = {
   land_title: { label: 'Title to land', icon: MapPinned, tone: 'gold' },
-  debt: { label: 'Debt', icon: Coins, tone: 'warning' },
+  debt: { label: 'Debt', icon: Banknote, tone: 'warning' },
   sale: { label: 'Sale', icon: HandCoins, tone: 'info' },
   union_payment: {
     label: 'Payment made at a union',
@@ -86,6 +89,8 @@ export const REGISTRY_KINDS: Record<Schema['RegistryKind'], Named> = {
   birth: { label: 'Birth', icon: Baby, tone: 'gold' },
   death: { label: 'Death', icon: Skull, tone: 'gold' },
   citizenship: { label: 'Citizenship', icon: BadgeCheck, tone: 'gold' },
+  licence: { label: 'Licence', icon: FileCheck, tone: 'gold' },
+  will: { label: 'Will', icon: ScrollText, tone: 'gold' },
 }
 
 export const CLAIMS: Record<Schema['JurisdictionClaim'], Named> = {
@@ -101,6 +106,7 @@ export const MOTIVES: Record<Schema['RecruitMotive'], Named> = {
   ego: { label: 'For pride', icon: Gem, tone: 'info' },
   love: { label: 'For love of a handler', icon: Heart, tone: 'success' },
   revenge: { label: 'For revenge', icon: Swords, tone: 'danger' },
+  faith: { label: 'For faith', icon: Church, tone: 'warning' },
 }
 
 export const HUNT_OUTCOMES: Record<Schema['MoleHuntOutcome'], Named> = {

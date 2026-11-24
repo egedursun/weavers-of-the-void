@@ -9,7 +9,7 @@ NEW = (ProcessKind.SMITHING, ProcessKind.CARPENTRY, ProcessKind.FIRING, ProcessK
 
 
 def test_twenty_six_processes_each_with_its_methods_by_era() -> None:
-    assert len(ProcessKind) == 26 and len(MethodKind) == len(METHODS)
+    assert len(ProcessKind) == 29 and len(MethodKind) == len(METHODS)
     for process in NEW:
         methods = PROCESS_METHODS[process]
         assert len(methods) >= 3 and process in PROCESS_LABELS and process in PROCESS_OUTPUT
@@ -24,3 +24,9 @@ def test_a_methods_output_and_hands_come_from_its_rules() -> None:
     assert method_output(rules, spec) == spec.output_pct and method_labour(rules, spec) == spec.labour_pct
     faster = tuned(rules, production={"trip_hammer_output": 300})
     assert method_output(faster, spec) == 300
+
+
+def test_every_method_has_output_and_hands_rules_that_match_its_catalogue_row() -> None:
+    rules = Rules()
+    unmatched = [kind.value for kind, spec in METHODS.items() if (method_output(rules, spec), method_labour(rules, spec)) != (spec.output_pct, spec.labour_pct)]
+    assert unmatched == []

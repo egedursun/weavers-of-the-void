@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 
 @dataclass(frozen=True)
-class CouncilRules:
+class CouncilRules(Spanned):
     max_members: int = rule(9, 2, 200, RuleGroup.COUNCIL, "Maximum sons joining the council, the greatest in level and fame first")
     min_members: int = rule(2, 2, 30, RuleGroup.COUNCIL, "Minimum sons required for the council to convene")
     same_vote_closeness: int = rule(3, 0, 50, RuleGroup.COUNCIL, "Rapprochement between those casting the same vote")
@@ -81,3 +81,7 @@ class CouncilRules:
     advance_learning_effect: int = rule(
         10, 0, 100, RuleGroup.POLITY, "Research an officer advancing learning adds to the realm's seat each epoch at full skill and diligence"
     )
+    public_health_effect: int = rule(20, 0, 100, RuleGroup.POLITY, "Share a councillor for public health adds to sanitation and cure in the realm (%)")
+    secure_borders_effect: int = rule(25, 0, 100, RuleGroup.POLITY, "Share a councillor for the borders takes from smuggling and raids into the realm (%)")
+    rebuke_renown: int = rule(2, 0, 200, RuleGroup.COUNCIL, "Renown a god loses when the council rebukes it")
+    bound_world_years: int = span(50, 1, 2500, RuleGroup.COUNCIL, "Years a god the council binds to one world cannot act beyond it")

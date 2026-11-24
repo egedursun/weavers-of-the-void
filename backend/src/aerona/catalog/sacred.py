@@ -42,15 +42,15 @@ PLACE_SPIRITS = partial(
         P.CAVE: G.CAVE,
         P.CAVERN_SYSTEM: G.CAVE,
         P.ISLAND: G.SHORE,
-        P.SWAMP: G.WILDS,
+        P.SWAMP: G.MARSH,
         P.WELL: G.WELL,
         P.VALLEY: G.FIELD,
         P.CLIFF: G.SHORE,
         P.VOLCANO: G.MOUNTAIN,
         P.CROSSROADS: G.CROSSROADS,
         P.REEF: G.SHORE,
-        P.GLACIER: G.MOUNTAIN,
-        P.DUNES: G.WILDS,
+        P.GLACIER: G.GLACIER,
+        P.DUNES: G.DESERT,
         P.CANYON: G.WILDS,
         P.OASIS: G.SPRING,
         P.GEYSER: G.SPRING,
@@ -103,6 +103,9 @@ SPIRIT_RANKS = total(
         G.SEA: BureauRank.PROVINCE,
         G.RUIN: BureauRank.LOCAL,
         G.BATTLEFIELD: BureauRank.LOCAL,
+        G.MARSH: BureauRank.LOCAL,
+        G.DESERT: BureauRank.PROVINCE,
+        G.GLACIER: BureauRank.PROVINCE,
     },
 )
 
@@ -126,6 +129,9 @@ SPIRIT_MOODS: Mapping[GeniusLocusKind, RuleRead] = total(
         G.SEA: lambda rules: rules.genius_loci.sea_mood_rate,
         G.RUIN: lambda rules: rules.genius_loci.ruin_mood_rate,
         G.BATTLEFIELD: lambda rules: rules.genius_loci.battlefield_mood_rate,
+        G.MARSH: lambda rules: rules.genius_loci.marsh_mood_rate,
+        G.DESERT: lambda rules: rules.genius_loci.desert_mood_rate,
+        G.GLACIER: lambda rules: rules.genius_loci.glacier_mood_rate,
     },
 )
 
@@ -138,6 +144,8 @@ OFFENCE_WEIGHTS: Mapping[SpiritOffence, RuleRead] = total(
         SpiritOffence.TABOO: lambda rules: rules.genius_loci.taboo_weight,
         SpiritOffence.BLOODSHED: lambda rules: rules.genius_loci.bloodshed_weight,
         SpiritOffence.OVERHARVEST: lambda rules: rules.genius_loci.overharvest_weight,
+        SpiritOffence.TRESPASS: lambda rules: rules.genius_loci.trespass_weight,
+        SpiritOffence.NOISE: lambda rules: rules.genius_loci.noise_weight,
     },
 )
 
@@ -206,6 +214,8 @@ SACRAMENT_GUARDS = total(
         SacramentKind.LAST_RITES: SacramentProtection.ROUTING,
         SacramentKind.PURIFICATION: SacramentProtection.CURSE,
         SacramentKind.ORDINATION: SacramentProtection.POSSESSION,
+        SacramentKind.PENANCE: SacramentProtection.FORTUNE,
+        SacramentKind.COMMUNION: SacramentProtection.UNREST,
     },
 )
 
@@ -218,6 +228,8 @@ SACRAMENT_COSTS: Mapping[SacramentKind, RuleRead] = total(
         SacramentKind.LAST_RITES: lambda rules: rules.sacraments.last_rites_cost,
         SacramentKind.PURIFICATION: lambda rules: rules.sacraments.purification_cost,
         SacramentKind.ORDINATION: lambda rules: rules.sacraments.ordination_cost,
+        SacramentKind.PENANCE: lambda rules: rules.sacraments.penance_cost,
+        SacramentKind.COMMUNION: lambda rules: rules.sacraments.communion_cost,
     },
 )
 
@@ -238,6 +250,7 @@ VISIONS: Mapping[VisionKind, VisionSpec] = total(
         VisionKind.TRANCE: VisionSpec(lambda rules: rules.mystics.trance_weight),
         VisionKind.DREAM: VisionSpec(lambda rules: rules.mystics.dream_weight, asleep=True),
         VisionKind.ORACLE_SPEECH: VisionSpec(lambda rules: rules.mystics.oracle_speech_weight, public=True),
+        VisionKind.SIGN: VisionSpec(lambda rules: rules.mystics.sign_weight, public=True),
     },
 )
 
@@ -250,6 +263,8 @@ THEODICY_SUFFERING: Mapping[TheodicyCause, RuleRead] = total(
         TheodicyCause.DISASTER: lambda rules: rules.theodicy.disaster_suffering,
         TheodicyCause.PERSECUTION: lambda rules: rules.theodicy.persecution_suffering,
         TheodicyCause.LONG_SEASON: lambda rules: rules.theodicy.long_season_suffering,
+        TheodicyCause.LEADER_LOST: lambda rules: rules.theodicy.leader_lost_suffering,
+        TheodicyCause.SCHISM: lambda rules: rules.theodicy.schism_suffering,
     },
 )
 
@@ -285,7 +300,7 @@ MODEL_STRATA = partial(
         M.REALM_OF_LINE: StratumKind.BY_LINE,
         M.OBLIVION: StratumKind.DISSOLUTION,
     },
-    without=(M.REBIRTH, M.WANDERING, M.UNION),
+    without=(M.REBIRTH, M.WANDERING, M.UNION, M.AMONG_LIVING),
 )
 
 DIVINATION_LAWS = partial(
@@ -297,7 +312,14 @@ DIVINATION_LAWS = partial(
         DivinationKind.SPIRIT_CONSULTATION: NaturalLaw.THE_DEAD_SPEAK,
         DivinationKind.SCRYING: NaturalLaw.DREAMS_ARE_REAL,
     },
-    without=(DivinationKind.AUGURY, DivinationKind.ASTROLOGY, DivinationKind.LOTS, DivinationKind.EARTH_SIGNS),
+    without=(
+        DivinationKind.AUGURY,
+        DivinationKind.ASTROLOGY,
+        DivinationKind.LOTS,
+        DivinationKind.EARTH_SIGNS,
+        DivinationKind.NUMEROLOGY,
+        DivinationKind.BODY_READING,
+    ),
 )
 
 DIVINATION_ACCURACY: Mapping[DivinationKind, RuleRead] = total(
@@ -312,5 +334,7 @@ DIVINATION_ACCURACY: Mapping[DivinationKind, RuleRead] = total(
         DivinationKind.SCRYING: lambda rules: rules.divination.scrying_accuracy,
         DivinationKind.SPIRIT_CONSULTATION: lambda rules: rules.divination.spirit_consultation_accuracy,
         DivinationKind.EARTH_SIGNS: lambda rules: rules.divination.earth_signs_accuracy,
+        DivinationKind.NUMEROLOGY: lambda rules: rules.divination.numerology_accuracy,
+        DivinationKind.BODY_READING: lambda rules: rules.divination.body_reading_accuracy,
     },
 )

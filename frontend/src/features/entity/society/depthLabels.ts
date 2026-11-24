@@ -1,6 +1,7 @@
 import {
   Anvil,
   Ban,
+  Banknote,
   Beef,
   Building2,
   Church,
@@ -14,10 +15,12 @@ import {
   HandCoins,
   Handshake,
   HardHat,
+  HeartHandshake,
   HeartPulse,
   Landmark,
   Link,
   Lock,
+  LogOut,
   Pickaxe,
   Scale,
   Shield,
@@ -25,15 +28,16 @@ import {
   Snowflake,
   Sparkles,
   Sprout,
-  Tent,
   Swords,
+  Tent,
   Trophy,
   Unlink,
-  UserX,
   Users,
+  UserX,
   UtensilsCrossed,
   Wheat,
   Wind,
+  Users2,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Spec } from './labels'
@@ -113,6 +117,18 @@ export const EFFECT_SPEC: Record<ShortfallEffect, Spec> = {
     tone: 'warning',
     hint: 'Homes destroyed or overcrowded: exposure brings sickness and cold',
   },
+  learning: {
+    label: 'Learning',
+    icon: GraduationCap,
+    tone: 'danger',
+    hint: 'No school or teacher in reach: the young learn less',
+  },
+  justice: {
+    label: 'Justice',
+    icon: Scale,
+    tone: 'danger',
+    hint: 'No court in reach: wrongs go unanswered and feuds rise',
+  },
 }
 export const EFFECT_ORDER = Object.keys(EFFECT_SPEC) as ShortfallEffect[]
 
@@ -171,6 +187,18 @@ export const REASON_SPEC: Record<LabourReason, Spec> = {
     tone: 'info',
     hint: 'Drawn to the trades their people know best, where law allows',
   },
+  debt: {
+    label: 'Debt',
+    icon: Banknote,
+    tone: 'muted',
+    hint: "Debtors work their creditors' work",
+  },
+  kin_duty: {
+    label: 'Kin duty',
+    icon: Users2,
+    tone: 'muted',
+    hint: "Household and kin set each one's work by role",
+  },
 }
 
 export const CAUSE_SPEC: Record<DriftCause, Spec> = {
@@ -211,6 +239,8 @@ export const EVENT_SPEC: Record<MobilityEvent, Spec> = {
   enriched: { label: 'Risen by wealth', icon: Coins, tone: 'gold' },
   ordained: { label: 'Ordained', icon: Church, tone: 'verdigris' },
   outcast: { label: 'Cast out', icon: UserX, tone: 'danger' },
+  adopted: { label: 'Adopted', icon: HeartHandshake, tone: 'success' },
+  exiled: { label: 'Exiled', icon: LogOut, tone: 'danger' },
 }
 
 export const STANDING_LABEL: Record<string, string> = {

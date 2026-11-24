@@ -83,6 +83,7 @@ MEDICINE_ORDER = (
     MedicineTier.NONE,
     MedicineTier.HERBS,
     MedicineTier.SURGERY,
+    MedicineTier.ANATOMY,
     MedicineTier.ANTISEPSIS,
     MedicineTier.ANAESTHESIA,
     MedicineTier.PROSTHETICS,

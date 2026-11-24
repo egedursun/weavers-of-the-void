@@ -22,6 +22,7 @@ from aerona.domain.enums.customs import RevivalGoal, RevivalStage, RevivalWay
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.polity import LawKind
 from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.settlement import BuildMaterial, DistrictKind
 from aerona.domain.enums.society_depth import DriftCause
@@ -33,6 +34,7 @@ from aerona.engine.collective.feelings import stir_feelings
 from aerona.engine.context import TickContext
 from aerona.engine.lore.names import tongue_of
 from aerona.engine.mind.book import clamp_value, stored_values, write_values
+from aerona.engine.polity.laws import ruling_law
 from aerona.engine.primitives.faith import change_religion, is_living_god, patron_node
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import seed_of
@@ -217,6 +219,17 @@ async def restore_rule(ctx: TickContext, row: RevivalRow, people: EntityRow) -> 
     return await dominant_of(ctx, people.id) is None
 
 
+async def restore_law(ctx: TickContext, row: RevivalRow, people: EntityRow) -> bool:
+    realm = await dominant_of(ctx, people.id)
+    if realm is None or await ruling_law(ctx.session, realm, LawKind.CUSTOM) is not None:
+        return True
+    for town in await towns_of(ctx, people.id):
+        loyalty = await ctx.session.get(PolityLoyaltyRow, (realm, town))
+        if loyalty is not None and not held(town) and "grievances" not in loyalty.locked:
+            loyalty.grievances += ctx.rules.revival.law_grievance
+    return False
+
+
 async def restore_old_god(ctx: TickContext, row: RevivalRow, people: EntityRow) -> bool:
     return await restore_god(ctx, row, people)
 
@@ -229,6 +242,7 @@ GOAL_WORK: Mapping[RevivalGoal, Callable[[TickContext, RevivalRow, EntityRow], A
         RevivalGoal.EXPEL_FOREIGNERS: expel_foreigners,
         RevivalGoal.RESTORE_LAND: restore_land,
         RevivalGoal.RESTORE_RULE: restore_rule,
+        RevivalGoal.RESTORE_LAW: restore_law,
     },
 )
 

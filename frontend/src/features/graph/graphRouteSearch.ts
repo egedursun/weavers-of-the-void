@@ -1,6 +1,6 @@
-import { type DrawerSearch } from '@/components/layout/drawer/drawerEntries'
+import { type EntrySearch } from '@/components/layout/entry/entryStack'
 
-export type GraphSearch = DrawerSearch & {
+export type GraphSearch = EntrySearch & {
   focus?: number
   from?: number
   to?: number

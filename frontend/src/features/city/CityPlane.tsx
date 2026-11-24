@@ -13,7 +13,7 @@ import {
 import { postAction } from '@/api/actions'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
-import { OrnateFrame } from '@/components/ui/ornate'
+import { OrnateFrame, SceneCorners } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Toggle } from '@/components/ui/toggle'
@@ -32,6 +32,7 @@ import { KIND_SPEC } from '@/features/entity/society/structureLabels'
 import { Ref } from '@/features/gatherings/parts'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { MORPHOLOGIES } from '@/features/urban/labels'
+import { CityBelow } from './CityBelow'
 import { BuildForge, BuildingPanel, DistrictPanel } from './CityControls'
 import { CityLegend } from './CityLegend'
 import { CityPlan2D } from './CityPlan2D'
@@ -185,6 +186,7 @@ function CityBody({
         className='relative flex min-w-0 scroll-mt-16 flex-col'
       >
         <div className='scene-frame relative h-scene min-w-0 overflow-hidden bg-card lg:h-scene-lg'>
+          <SceneCorners />
           {empty ? (
             <div className='flex h-full items-center justify-center p-6'>
               <EmptyState
@@ -211,6 +213,11 @@ function CityBody({
             </Suspense>
           )}
           <div className='pointer-events-none absolute top-3 bottom-3 left-3 flex w-full max-w-md min-w-0 flex-col gap-2 overflow-y-auto'>
+            {scene.below && (
+              <div className='pointer-events-auto'>
+                <CityBelow scene={scene} />
+              </div>
+            )}
             {moving !== null && (
               <div className='pointer-events-auto flex items-center gap-2 rounded-md border surface-framed border-primary bg-card p-3 shadow-lg'>
                 <Text variant='caption'>

@@ -7,6 +7,7 @@ class HoardKind(StrEnum):
     ROYAL_COLLECTION = "royal_collection"
     MUSEUM = "museum"
     TROPHY_HALL = "trophy_hall"
+    LIBRARY = "library"
 
 
 class PieceKind(StrEnum):
@@ -18,3 +19,5 @@ class PieceKind(StrEnum):
     MANUSCRIPT = "manuscript"
     TROPHY = "trophy"
     REGALIA = "regalia"
+    MAP = "map"
+    INSTRUMENT = "instrument"

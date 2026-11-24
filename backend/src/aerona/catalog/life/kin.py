@@ -38,6 +38,9 @@ KIN_ROLES: Mapping[KinRole, KinRoleSpec] = total(
         R.GODPARENT: KinRoleSpec("Godparent", raises=4),
         R.SWORN_KIN: KinRoleSpec("Sworn kin", avenges=True, raises=6),
         R.FOSTER_KIN: KinRoleSpec("Foster kin", avenges=True, raises=7),
+        R.STEP_PARENT: KinRoleSpec("Step-parent", close=True, raises=8),
+        R.STEP_CHILD: KinRoleSpec("Step-child", close=True),
+        R.HALF_SIBLING: KinRoleSpec("Half-sibling", close=True, extended=True, avenges=True),
     },
 )
 RAISE_ORDER = tuple(

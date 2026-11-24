@@ -17,6 +17,10 @@ class DressRules:
         2, 0, 100, G, "Crime a town gains each epoch when its folk wear a garment of high status signal that a sumptuary law of its realm restrains"
     )
     signal_floor: int = rule(60, 0, 100, G, "Status signal from which a garment counts as fine dress under a sumptuary law")
+    work_wear_prosperity: int = rule(
+        2, 0, 50, G, "Prosperity a town gains each epoch where its folk wear slings, packs or wear for water at their work, at full strength"
+    )
+    rest_wear_calm: int = rule(1, 0, 50, G, "Unrest a town loses each epoch where its folk sleep in wear made for it, at full strength")
     fashion_pull_pct: int = rule(
         20,
         0,
@@ -47,6 +51,7 @@ class ScentRules:
 @dataclass(frozen=True)
 class HouseholdGoodsRules:
     comfort_calm_pct: int = rule(3, 0, 100, G, "Share of a furnishing's comfort that eases unrest in the towns of its users each epoch (%)")
+    play_skill_pct: int = rule(2, 0, 100, G, "Share of a play furnishing's comfort that adds to the prosperity of its towns as the young learn by it (%)")
     prestige_pct: int = rule(2, 0, 100, G, "Share of a furnishing's, instrument's or tradition's prestige a town of its holders gains each epoch (%)")
     sanitation_pct: int = rule(
         4, 0, 100, G, "Share of the comfort of a sanitation furnishing or the quality of a medical tool that raises a town's sanitation (%)"

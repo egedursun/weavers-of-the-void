@@ -1,6 +1,7 @@
 import { type ThemeColors } from '@/components/domain/useThemeColors'
 import { familyOf } from '@/features/graph/families'
 import { type MapNote, type MapView } from './api'
+import { drawShafts } from './deepLayer'
 import { type DomainAnchor, regionOutline } from './mapEdges'
 import {
   EVENT_RADIUS,
@@ -255,6 +256,8 @@ function drawUnexplored(context: CanvasRenderingContext2D, input: SceneInput) {
 
 let grainTile: HTMLCanvasElement | null = null
 const grainPatterns = new WeakMap<CanvasRenderingContext2D, CanvasPattern>()
+const LEAK_STRONG = 0.28
+const LEAK_FAINT = 0.16
 
 function grainOf(context: CanvasRenderingContext2D): CanvasPattern | null {
   const known = grainPatterns.get(context)
@@ -313,27 +316,18 @@ function drawVignette(context: CanvasRenderingContext2D, input: SceneInput) {
 function drawLeak(context: CanvasRenderingContext2D, input: SceneInput) {
   if (input.leakLevel === 0) return
   const { width, height } = input.size
-  const breathing = input.animate
-    ? 0.5 + 0.5 * Math.sin(input.time / 1200)
-    : 0.5
-  const strength = input.leakLevel === 2 ? 0.55 : 0.32
+  const strength = input.leakLevel === 2 ? LEAK_STRONG : LEAK_FAINT
   const gradient = context.createRadialGradient(
     width / 2,
     height / 2,
-    Math.min(width, height) * 0.25,
+    Math.min(width, height) * 0.45,
     width / 2,
     height / 2,
-    Math.max(width, height) * 0.75
+    Math.hypot(width, height) / 2
   )
   gradient.addColorStop(0, 'transparent')
   gradient.addColorStop(1, input.tokens['rarity-epic'])
-  context.globalAlpha = strength * (0.7 + 0.3 * breathing)
-  if (
-    input.leakLevel === 2 &&
-    input.animate &&
-    Math.sin(input.time / 97) > 0.97
-  )
-    context.globalAlpha = Math.min(1, context.globalAlpha + 0.25)
+  context.globalAlpha = strength
   context.fillStyle = gradient
   context.fillRect(0, 0, width, height)
   context.globalAlpha = 1
@@ -687,6 +681,7 @@ export const drawScene: DrawScene = (context, input) => {
     context.globalAlpha = fade
     drawTexture(context, view.geometry, input.fog)
   }
+  drawShafts(context, view, tokens, transform.k, fade)
   const hovered = hoveredRegion(input)
   if (hovered !== null)
     drawOutline(
@@ -713,7 +708,7 @@ export const drawScene: DrawScene = (context, input) => {
 
   drawGrain(context, input)
   drawAmbient(context, input)
-  if (overlays.fog) drawUnexplored(context, input)
+  if (overlays.fog && !view.level) drawUnexplored(context, input)
 
   context.globalAlpha = fade
   drawStacks(context, input, layout)

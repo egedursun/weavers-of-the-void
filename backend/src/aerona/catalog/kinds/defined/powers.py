@@ -74,6 +74,8 @@ RESTRICTION_KIND = total(
         RestrictionKind.MUST_BE_UNSEEN: Defined("Must be unseen", checked_by=(), used_by=("engine.powers.use.seen",)),
         RestrictionKind.MUST_TOUCH: Defined("Must touch", checked_by=(), used_by=("engine.powers.use.out_of_reach",)),
         RestrictionKind.ONLY_WITH_TOKEN: Defined("Only with a token", checked_by=(), used_by=("engine.powers.use.tokenless",)),
+        RestrictionKind.ONLY_IN_COMPANY: Defined("Only in company", checked_by=(), used_by=("engine.powers.use.alone",)),
+        RestrictionKind.ONLY_BY_NAME: Defined("Only by name", checked_by=(), used_by=("engine.powers.use.nameless",)),
     },
 )
 

@@ -138,3 +138,6 @@ class ContestRules:
     race_endurance_pct: int = rule(50, 0, 100, G, "Weight of endurance in a race against the mount or vessel that carries the racer (%)")
     craft_masterwork_pct: int = rule(10, 0, 100, G, "Chance the winning work of a craft contest becomes a masterwork (%)")
     favour_followers_pct: int = rule(5, 0, 100, G, "Followers a god's cult gains when its priest wins a contest for favour (%)")
+    rights_prosperity: int = rule(
+        4, 0, 50, G, "Prosperity a community moves to the winner's when it loses its rights of water, grazing or passage in a contest"
+    )

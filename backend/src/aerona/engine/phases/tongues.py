@@ -59,6 +59,7 @@ async def grammar(ctx: TickContext) -> None:
     "beast.terror",
     "table.bonds",
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.foreign_gods",

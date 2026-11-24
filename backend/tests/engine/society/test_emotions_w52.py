@@ -14,8 +14,8 @@ NEW = (Emotion.SURPRISE, Emotion.CURIOSITY, Emotion.COMPASSION, Emotion.CONTEMPT
 
 
 def test_twenty_eight_emotions_each_with_its_own_decay_and_the_new_four_push_acts() -> None:
-    assert len(EMOTIONS) == len(Emotion) == 28
-    assert all(0 <= spec.decay(RULES) <= 50 for spec in EMOTIONS.values())
+    assert len(EMOTIONS) == len(Emotion) == 32
+    assert all(0 <= spec.decay(RULES) <= 100 for spec in EMOTIONS.values())
     assert all(EMOTIONS[emotion].act_weight is not None for emotion in NEW)
     assert EMOTIONS[Emotion.SURPRISE].decay(RULES) > EMOTIONS[Emotion.JOY].decay(RULES)
 

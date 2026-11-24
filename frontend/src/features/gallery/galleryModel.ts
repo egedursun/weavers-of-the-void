@@ -1,6 +1,6 @@
 import { type LucideIcon } from 'lucide-react'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
-import { DRAWER_KIND_ICON } from '@/components/domain/drawerKindIcon'
+import { ENTRY_KIND_ICON } from '@/components/domain/entryKindIcon'
 import { humanize } from '@/features/entity/actions/schema'
 import { type ImageListView } from '@/features/images/api'
 
@@ -19,15 +19,15 @@ export const SORT_LABEL: Record<GallerySort, string> = {
 export const DIVINE_KINDS = new Set(['creator', 'son', 'foreign_god', 'world'])
 
 const KIND_ICON: Record<string, LucideIcon> = {
-  creator: DRAWER_KIND_ICON.creator,
-  son: DRAWER_KIND_ICON.son,
-  foreign_god: DRAWER_KIND_ICON['foreign-god'],
-  world: DRAWER_KIND_ICON.world,
-  star: DRAWER_KIND_ICON.star,
-  entity: DRAWER_KIND_ICON.entity,
-  galaxy: DRAWER_KIND_ICON.galaxy,
-  cluster: DRAWER_KIND_ICON.cluster,
-  dimension: DRAWER_KIND_ICON.dimension,
+  creator: ENTRY_KIND_ICON.creator,
+  son: ENTRY_KIND_ICON.son,
+  foreign_god: ENTRY_KIND_ICON['foreign-god'],
+  world: ENTRY_KIND_ICON.world,
+  star: ENTRY_KIND_ICON.star,
+  entity: ENTRY_KIND_ICON.entity,
+  galaxy: ENTRY_KIND_ICON.galaxy,
+  cluster: ENTRY_KIND_ICON.cluster,
+  dimension: ENTRY_KIND_ICON.dimension,
 }
 
 const KIND_LABEL: Record<string, string> = {
@@ -52,7 +52,7 @@ export const CATEGORY_ICON: Record<string, LucideIcon | undefined> = {
   ...KIND_ICON,
 }
 
-export const FALLBACK_ICON: LucideIcon = DRAWER_KIND_ICON.entity
+export const FALLBACK_ICON: LucideIcon = ENTRY_KIND_ICON.entity
 
 export function categoryLabel(category: string): string {
   return KIND_LABEL[category] ?? humanize(category)

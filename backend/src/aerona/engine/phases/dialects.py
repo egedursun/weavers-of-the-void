@@ -99,8 +99,7 @@ async def dialect_divergence(ctx: TickContext) -> None:
             if member is not None and member.id != settlement.id and member.entity_type in HOMELAND_TYPES:
                 homeland.append(member)
         in_contact = any(
-            atlas.same_region(settlement.id, member.id) or any(contacts.between(settlement.id, member.id, kind) for kind in CONTACT_KINDS)
-            for member in homeland
+            atlas.same_cell(settlement.id, member.id) or any(contacts.between(settlement.id, member.id, kind) for kind in CONTACT_KINDS) for member in homeland
         )
         if not dialect_should_split(ctx.epoch - settlement.birth_epoch, len(homeland), in_contact, rng.random, rules):
             continue

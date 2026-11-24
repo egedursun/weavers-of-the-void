@@ -42,6 +42,7 @@ from aerona.engine.cosmos.foreign_gods import powers_of, stat_effect
 from aerona.engine.cosmos.star_types import rekindle_cost
 from aerona.engine.cosmos.stars import extinguish_star, hang_star, rekindle_star
 from aerona.engine.cosmos.worlds import declare_holy_world
+from aerona.engine.divine.council_order import bound_elsewhere
 from aerona.engine.environment.control import force_weather, reorder_seasons, sever_ley, world_seasons
 from aerona.engine.phases.afterlife import soul_bind
 from aerona.prompts import SonToolId
@@ -168,6 +169,8 @@ async def move_to_world(call: SonCall, args: WorldInput) -> str:
         )
         if others is None and inhabited is not None:
             fail(SonResult.SOLE_GOD, name=current.name)
+    if bound_elsewhere(call.son, target.id, call.tick.epoch):
+        fail(SonResult.SOLE_GOD, name=current.name if current is not None else target.name)
     call.son.current_world_id = target.id
     call.target(target.id)
     await call.record(

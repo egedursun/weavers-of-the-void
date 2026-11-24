@@ -28,6 +28,7 @@ class CohortsRules:
     )
     promotion_injury_severity: int = rule(4, 1, 5, G, "Severity of the matching wound a mortal raised from a mass maiming bears")
     promotion_orphan_intensity: int = rule(70, 0, 100, G, "Weight of the famine memory a mortal raised as a famine orphan carries")
+    ancient_pct: int = rule(2, 0, 50, G, "Share of a community that has lived past old age when its ages are not yet counted (%)")
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,7 @@ class DemographyRules:
     orphan_emerge_pct: int = rule(5, 0, 100, G, "Added chance an orphan or one of the displaced steps out of the crowd as a named mortal (%)")
     displaced_settle_pct: int = rule(50, 0, 100, G, "Share of the displaced who settle among their hosts each epoch (%)")
     elder_death_pct_per_year: int = rule(8, 0, 100, G, "Elders who die in a year at a neutral health (%)")
+    ancient_death_pct_per_year: int = rule(20, 0, 100, G, "Those who have lived past old age who die in a year at a neutral health (%)")
     hunger_birth_pct: int = rule(60, 0, 100, G, "Births lost at the worst hunger (%)")
     hunger_death_pct: int = rule(150, 0, 1000, G, "Extra deaths at the worst hunger (%)")
     crowding_death_pct: int = rule(60, 0, 1000, G, "Extra deaths where a land holds more people than its capacity (%)")

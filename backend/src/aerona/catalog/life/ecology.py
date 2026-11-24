@@ -28,6 +28,8 @@ CARRIED_BY: Mapping[AttackDelivery, Transmission] = total(
         AttackDelivery.SPORES: Transmission.INHALATION,
         AttackDelivery.BITE: Transmission.BITE,
         AttackDelivery.STING: Transmission.BLOOD,
+        AttackDelivery.PROJECTILE: Transmission.BLOOD,
+        AttackDelivery.CONSTRICTION: Transmission.CONTACT,
     },
 )
 
@@ -35,13 +37,29 @@ CARRIED_BY: Mapping[AttackDelivery, Transmission] = total(
 OPEN = (ContractStatus.POSTED, ContractStatus.TAKEN)
 
 
-LIFESPAN = {SizeClass.TINY: 2, SizeClass.SMALL: 6, SizeClass.MEDIUM: 15, SizeClass.LARGE: 25, SizeClass.HUGE: 60, SizeClass.COLOSSAL: 200}
+LIFESPAN = {
+    SizeClass.MICROSCOPIC: 1,
+    SizeClass.TINY: 2,
+    SizeClass.SMALL: 6,
+    SizeClass.MEDIUM: 15,
+    SizeClass.LARGE: 25,
+    SizeClass.HUGE: 60,
+    SizeClass.COLOSSAL: 200,
+}
 
 
-LITTER = {SizeClass.TINY: 8, SizeClass.SMALL: 5, SizeClass.MEDIUM: 3, SizeClass.LARGE: 1, SizeClass.HUGE: 1, SizeClass.COLOSSAL: 1}
+LITTER = {SizeClass.MICROSCOPIC: 50, SizeClass.TINY: 8, SizeClass.SMALL: 5, SizeClass.MEDIUM: 3, SizeClass.LARGE: 1, SizeClass.HUGE: 1, SizeClass.COLOSSAL: 1}
 
 
-METABOLISM = {SizeClass.TINY: 80, SizeClass.SMALL: 65, SizeClass.MEDIUM: 50, SizeClass.LARGE: 40, SizeClass.HUGE: 30, SizeClass.COLOSSAL: 20}
+METABOLISM = {
+    SizeClass.MICROSCOPIC: 95,
+    SizeClass.TINY: 80,
+    SizeClass.SMALL: 65,
+    SizeClass.MEDIUM: 50,
+    SizeClass.LARGE: 40,
+    SizeClass.HUGE: 30,
+    SizeClass.COLOSSAL: 20,
+}
 
 
 PLANT_PLANS = {SpeciesClass.PLANT: BodyPlan.ARBOREAL, SpeciesClass.FUNGUS: BodyPlan.AMORPHOUS}

@@ -35,7 +35,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail, state_reason
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import BindSpiritInput, KeepPetInput, MergeSpeciesInput, RuinsInput, TameInput, TrainHerdInput
-from aerona.tools.mortal.support import first_stat, i_know, name_free, near, practised, same_region, wits_of
+from aerona.tools.mortal.support import first_stat, i_know, name_free, near, practised, same_cell, wits_of
 
 PERCENT = 100
 SKILL_CHAIN = ("craft", "intellect")
@@ -57,7 +57,7 @@ async def tame_species(call: MortalCall, args: TameInput) -> str:
     await practised(call, (SkillKind.BEAST_HANDLING,), call.rules.skills.hunt_xp)
     tools = call.rules.mortal_tools
     species = await _species(call, args.species_id)
-    if not (await same_region(call, species) or await near(call, species)):
+    if not (await same_cell(call, species) or await near(call, species)):
         fail(MortalResult.SPECIES_FAR)
     bonds = BondRepository(call.session)
     if await bonds.exists_between(call.me.id, species.id, BondKind.TAMED):
@@ -174,7 +174,7 @@ async def search_ruins(call: MortalCall, args: RuinsInput) -> str:
     ruin = await call.session.get(EntityRow, args.target_id)
     if ruin is None or not await _is_ruin(call, ruin):
         fail(MortalResult.NOT_A_RUIN)
-    if ruin.world_id != call.me.world_id or not (await same_region(call, ruin) or await near(call, ruin)):
+    if ruin.world_id != call.me.world_id or not (await same_cell(call, ruin) or await near(call, ruin)):
         fail(MortalResult.TOO_FAR)
     shares = await class_shares(call.session, call.rules, call.me.id)
     reason = (await wits_of(call)) + shares.get(SocialClass.SCRIBE, 0.0) * tools.relic_scribe_mult + call.die(tools.relic_die, "ruins")

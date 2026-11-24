@@ -8,7 +8,9 @@ from aerona.db.tables.collective import SocialNormRow
 from aerona.db.tables.culture import ArtworkProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import BiasWeightRow
+from aerona.db.tables.media import MediaOutletRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import SatireSource
 from aerona.domain.enums.collective import NormBehaviour, NormSituation
@@ -136,6 +138,54 @@ async def works(ctx: TickContext, tally: SatireTally) -> None:
         tally.works += 1
 
 
+async def outlets_and_crowds(ctx: TickContext, tally: SatireTally) -> None:
+    table = ctx.rules.satire
+    seated = {polity: ruler for ruler, polity in (await rulers(ctx)).items()}
+    for outlet in list(await ctx.session.scalars(select(MediaOutletRow).where(MediaOutletRow.lean <= -table.outlet_lean).order_by(MediaOutletRow.id))):
+        realm = await realm_of(ctx.session, outlet.seat_entity_id)
+        ruler = seated.get(realm) if realm is not None else None
+        owner = await living_entity(ctx.session, outlet.owner_node_id)
+        if ruler is None or owner is None or held(owner.id, ruler) or owner.id == ruler:
+            continue
+        ctx.session.add(
+            SatireRow(
+                satirist_entity_id=owner.id,
+                target_entity_id=ruler,
+                polity_entity_id=realm,
+                source=SatireSource.OUTLET,
+                bite=table.bite,
+                epoch=ctx.epoch,
+                locked=[],
+            )
+        )
+        tally.works += 1
+    for town in list(
+        await ctx.session.scalars(
+            select(SettlementProfileRow).where(SettlementProfileRow.unrest >= table.crowd_unrest).order_by(SettlementProfileRow.settlement_entity_id)
+        )
+    ):
+        realm = await realm_of(ctx.session, town.settlement_entity_id)
+        ruler = seated.get(realm) if realm is not None else None
+        if (
+            ruler is None
+            or held(town.settlement_entity_id, ruler)
+            or not ctx.rng(seed_of("satire.crowd", town.settlement_entity_id, ctx.epoch)).chance(table.crowd_chance)
+        ):
+            continue
+        ctx.session.add(
+            SatireRow(
+                satirist_entity_id=town.settlement_entity_id,
+                target_entity_id=ruler,
+                polity_entity_id=realm,
+                source=SatireSource.CROWD,
+                bite=table.bite,
+                epoch=ctx.epoch,
+                locked=[],
+            )
+        )
+        tally.works += 1
+
+
 async def judge(ctx: TickContext, row: SatireRow, tally: SatireTally) -> None:
     table = ctx.rules.satire
     row.judged = True
@@ -168,6 +218,7 @@ async def judge(ctx: TickContext, row: SatireRow, tally: SatireTally) -> None:
 async def keep_satire(ctx: TickContext, tally: SatireTally) -> None:
     await jests(ctx, tally)
     await works(ctx, tally)
+    await outlets_and_crowds(ctx, tally)
     await ctx.session.flush()
     for row in list(await ctx.session.scalars(select(SatireRow).where(SatireRow.judged.is_(False)).order_by(SatireRow.id))):
         if held(row.target_entity_id):

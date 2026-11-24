@@ -42,6 +42,7 @@ CREATION_FIELDS: dict[str, str] = {
         "{% if entity.location_required %}. It must have a location: if you leave it empty it is inferred from the region, place or settlement among your bonds "
         "(or from where the community you bond to is located){% endif %}"
     ),
+    "stratum": "Only when the place is a region: the level beneath it where it stands ({{ underground_strata | join(', ') }}), or empty for the surface",
 }
 
 WORSHIPPED_SON_FIELD = {"worshipped_son_id": "Whom they worship (son id){% if entity.type == 'cult' %}; you if empty{% endif %}. Faith flows this way."}
@@ -401,7 +402,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.CALL_COSMIC_BEING: ToolText(
         "You call a cosmic being of a kind you choose into a region. It roams, shows itself and acts on its own aim. "
         "{{ rules.cosmic_beings.call_essence }} essence, 1 action.",
-        {"kind": "The kind of being", "region_id": "The id of the region where it arrives", "reason": "Why you call it"},
+        {
+            "kind": "The kind of being",
+            "region_id": "The id of the region where it arrives",
+            "stratum": "Only when the place is a region: the level beneath it where it stands ({{ underground_strata | join(', ') }}), or empty for the surface",
+            "reason": "Why you call it",
+        },
     ),
     T.BIND_COSMIC_BEING: ToolText(
         "You bind a cosmic being to your service; a bound being stops acting on its own aim. {{ rules.cosmic_beings.bind_essence }} essence, 1 action.",
@@ -649,7 +655,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SPREAD_WORD: ToolText(
         "You spread word of someone in a community: their name grows or darkens there for one kind of reputation "
-        "(heroism, honour, cruelty, piety, generosity, wisdom, trickery, skill_renown, troublemaker, mercy or justice). "
+        "(heroism, honour, cruelty, piety, generosity, wisdom, trickery, skill_renown, troublemaker, mercy, justice, reliability or hospitality). "
         "Costs {{ rules.costs.influence }} essence and one action.",
         {
             "subject_id": "Whose name you spread",
@@ -813,7 +819,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "symmetry": "How much they favour balance, from 0 (asymmetric) to 100 (strictly symmetric)",
             "funeral_rite": "How the dead are handled: {{ funeral_rites | join(', ') }}",
             "remains_treatment": "What is done with the remains, within what the funeral rite allows: {{ remains_treatments | join(', ') }}",
-            "inheritance": "Inheritance (equal_shares, primogeniture, ultimogeniture, through_second_line, elective, by_merit, seniority, designated)",
+            "inheritance": "Inheritance (equal_shares, primogeniture, ultimogeniture, through_second_line, elective, by_merit, seniority, designated, communal)",
             "diet": "What they eat: {{ diets | join(', ') }}",
             "practice": "A practice of theirs to set: {{ practices | join(', ') }}",
             "practice_level": "How far they keep that practice, from 0 (not at all) to 100 (fully); it then follows what they know, hold and build",
@@ -1124,14 +1130,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You reshape a land: move its river into a neighbouring land (shift_river), parch it into desert (parch), "
         "bring the grass back to a desert (green), make its soil saline (make_saline), make its soil rich (enrich_soil), raise or lower "
         "the land (raise_land, lower_land), carve a valley or fill one (carve_valley, fill_valley), open a spring (open_spring), call up "
-        "lava (call_lava) or sink a coast under the sea (sink_coast). Each reshaping bows only to gods of these domains: {{ land_domains }}. Wells and fields follow the "
+        "lava (call_lava), sink a coast under the sea (sink_coast), raise an island from the sea (raise_island) or open the ground to the strata "
+        "beneath (open_underground). Each reshaping bows only to gods of these domains: {{ land_domains }}. Wells and fields follow the "
         "river, deserts lose their rain and harvests, saline soil bears little, a raised or lowered land keeps the height you give it, lava "
         "burns the woods and raises the world's volcanism, a sunken coast floods. The folk of the land hold you in more awe when you water, "
         "raise or enrich it and in less when you drown, burn, parch or make it saline. {{ rules.son_tools.reshape_land_essence }} essence, "
         "{{ rules.son_tools.reshape_land_ap | several('action', 'actions') }}.",
         {
             "region_id": "The land's id",
-            "act": "shift_river, parch, green, make_saline, enrich_soil, raise_land, lower_land, carve_valley, fill_valley, open_spring, call_lava or sink_coast",
+            "act": "shift_river, parch, green, make_saline, enrich_soil, raise_land, lower_land, carve_valley, fill_valley, open_spring, call_lava, sink_coast, "
+            "raise_island or open_underground",
             "target_region_id": "For shift_river: the neighbouring land the river should flow into (leave empty to let it find the lowest bed)",
             "reason": "Why you do it",
         },
@@ -1154,13 +1162,27 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.OPEN_THE_DEEP: ToolText(
         "You open a depth beneath a region ({{ underground_strata | join(', ') }}): it counts as reached, and what it holds breaks loose. "
-        "{{ rules.underground.open_essence }} essence, 1 action.",
-        {"region_id": "The region's id", "stratum": "Which depth", "reason": "Why you open it"},
+        "Where no such depth lies beneath the region yet and the land allows it, you make it. Naming a second end opens a passage instead "
+        "({{ deep_passage_kinds | join(', ') }}), made by your hand. {{ rules.underground.open_essence }} essence, 1 action.",
+        {
+            "region_id": "The region's id",
+            "stratum": "Which depth",
+            "to_region_id": "For a passage: the region at its other end",
+            "to_stratum": "For a passage: the level at its other end, or empty for that region's surface",
+            "reason": "Why you open it",
+        },
     ),
     T.CLOSE_THE_DEEP: ToolText(
-        "You close a depth beneath a region ({{ underground_strata | join(', ') }}), so that it counts as unreached again. "
-        "{{ rules.underground.open_essence }} essence, 1 action.",
-        {"region_id": "The region's id", "stratum": "Which depth", "reason": "Why you close it"},
+        "You close a depth beneath a region ({{ underground_strata | join(', ') }}), so that it counts as unreached again; a depth no one dwells "
+        "in is taken away. Naming a second end brings down the passage between the two instead. {{ rules.underground.open_essence }} essence, "
+        "1 action.",
+        {
+            "region_id": "The region's id",
+            "stratum": "Which depth",
+            "to_region_id": "For a passage: the region at its other end",
+            "to_stratum": "For a passage: the level at its other end, or empty for that region's surface",
+            "reason": "Why you close it",
+        },
     ),
     T.QUELL_DANGER: ToolText(
         "You quell a danger of a region ({{ danger_sources | join(', ') }}), lowering its strength; a danger the land breeds may grow back. "
@@ -1247,12 +1269,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You bind two or more parties (realms, communities, houses, cults, beasts) by a typed treaty sealed in your name: its kind decides how it behaves "
         "and its clauses run every age. Costs essence.",
         {
-            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact, naval_limit or arms_limit",
-            "parties": "Each party's id and role (signatory, overlord, vassal, guarantor, mediator)",
-            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield, no_mind_compulsion, no_plague_powers, no_designed_disease, mass_weapon_limit), who owes it, who gains, and its terms by name, as the clause kind requires",
+            "kind": "peace, truce, alliance_defensive, alliance_offensive, non_aggression, vassalage, tribute, marriage_pact, trade_pact, condotta, guarantee, interworld, coalition, divine_pact, naval_limit, arms_limit, mutual_aid or border_accord",
+            "parties": "Each party's id and role (signatory, overlord, vassal, guarantor, mediator, witness)",
+            "clauses": "Typed clauses: kind (call_to_arms, tribute, cession, hostage, marriage, trade_rights, tolls_waived, religious_freedom, demilitarised, champion, extradition, wergild, non_aggression, route_control, resource_demand, research_agreement, fleet_limit, autonomous_weapons_ban, mind_seizure_ban, soldier_copy_ban, replicator_weapon_ban, civil_network_shield, civil_host_shield, no_mind_compulsion, no_plague_powers, no_designed_disease, mass_weapon_limit, return_of_refugees, shared_water, captive_exchange), who owes it, who gains, and its terms by name, as the clause kind requires",
             "epochs": "How many ages it holds; empty for ever",
             "parties.party_id": "The party's id",
-            "parties.role": "Its role: signatory, overlord, vassal, guarantor or mediator",
+            "parties.role": "Its role: signatory, overlord, vassal, guarantor, mediator or witness",
             "clauses.kind": "The clause's kind",
             "clauses.obligor_id": "Who owes it",
             "clauses.beneficiary_id": "Who gains by it",
@@ -1596,6 +1618,16 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "reason": "Why you make it so",
         },
     ),
+    T.TEND_SOIL_STOCK: ToolText(
+        "You raise or lower a hidden stock of the soil of a land in your reach ({{ nutrient_kinds }}): what the crops draw on, the seeds "
+        "lying in it that heal its scars, the life in it that turns the dead back into soil, or the salt that spoils it. 1 action.",
+        {
+            "region_id": "The land whose soil you tend",
+            "stock": "Which stock of the soil",
+            "change": "How far you raise it, or lower it below zero",
+            "reason": "Why you tend it",
+        },
+    ),
     T.INSPIRE_RELIEF: ToolText(
         "You move a realm or a cult in your reach to send aid to a town ({{ aid_kinds }}); aid earns gratitude, a favour and a gift owed in "
         "return, and love for the giver's god, though a rival may turn it away. 1 action.",
@@ -1824,11 +1856,11 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"long_season_id": "The id of the long season (see LONG SEASONS)", "reason": "Why you end it"},
     ),
     T.SHIFT_WORLD_NATURE: ToolText(
-        "You move one share of the nature of the world you walk: how much timber, food, ore and room for life it gives, and how often "
+        "You move one share of the nature of the world you walk: how much timber, food, ore and room for life it gives, how readily its shipyards launch hulls, and how often "
         "its storms, quakes, floods, droughts and plagues come. 1 action.",
         {
             "world_id": "The world you walk",
-            "share": "The share you move: timber_pct, food_need_pct, capacity_pct, ore_yield_pct, storm_pct, quake_pct, flood_pct, drought_pct or plague_pct",
+            "share": "The share you move: timber_pct, food_need_pct, capacity_pct, ore_yield_pct, ship_pct, storm_pct, quake_pct, flood_pct, drought_pct or plague_pct",
             "change": "How far you move it, up or down",
             "reason": "Why you move it",
         },
@@ -1868,13 +1900,15 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.SEAL_BREACH: ToolText(
         "You seal the deep beneath a place in your reach, so that nothing comes up from it and no one digs into it until the seal wears away or is broken. "
-        "Choose what holds it ({{ seal_kinds | join(', ') }}); a pact names its oath, a power its power and a grown barrier its living line. 1 action.",
+        "Choose what holds it ({{ seal_kinds | join(', ') }}); a pact names its oath, a power its power, a grown barrier its living line "
+        "and a made seal the made mind that keeps it, which fails when the mind sleeps, goes free or drifts from its making. 1 action.",
         {
             "place_id": "The place whose deep you seal (an id)",
             "kind": "What holds the seal",
             "oath_id": "For a pact: the oath that binds it",
             "power_id": "For a power: the power that holds it",
             "line_id": "For a grown barrier: the living line grown as it",
+            "mind_id": "For a made seal: the made mind that keeps it",
             "reason": "Why you seal it",
         },
     ),
@@ -2185,11 +2219,12 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.BIND_SPECIES: ToolText(
         "You bind two kinds of creature or plant on the world you stand on so that each changes the other where they share a land: mutualism helps both,"
         " commensalism helps the first and leaves the second be, parasitism lets the first feed on the second, and mimicry lets the first pass for the"
-        " second so hunters spare it. 1 action.",
+        " second so hunters spare it, amensalism lets the first harm the second without gain, and farming lets the first tend and harvest the"
+        " second so both grow. 1 action.",
         {
             "first_species_id": "The first kind",
             "second_species_id": "The second kind",
-            "kind": "The bond: mutualism, commensalism, parasitism or mimicry",
+            "kind": "The bond: mutualism, commensalism, parasitism, mimicry, amensalism or farming",
             "reason": "Why you bind them",
         },
     ),
@@ -2197,7 +2232,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You sharpen one sense of a kind of creature or of a people on the world you stand on, so it finds, tracks, sees or steers better. 1 action.",
         {
             "holder_id": "The kind or the people",
-            "sense": "The sense: sight, night_vision, smell, hearing, echolocation, vibration, magnetic, spirit_sight, heat, electric or ultraviolet",
+            "sense": "The sense: sight, night_vision, smell, hearing, echolocation, vibration, magnetic, spirit_sight, heat, electric, ultraviolet, taste or pressure",
             "reason": "Why you sharpen it",
         },
     ),
@@ -2279,8 +2314,9 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You give a being in your reach a power of your own giving, at a cost in essence. 1 action.",
         {
             "holder_id": "Who receives it",
-            "technique": "What it does: create, perceive, transform, destroy, control, bind, summon, ward, drain or mimic",
-            "form": "What it works on: fire, water, air, earth, plant, animal, body, mind, image, spirit, time, void, death, light, space, force, sound, emotion, fate, machine or information",
+            "technique": "What it does: create, perceive, transform, destroy, control, bind, summon, ward, drain, mimic, heal, move or speak",
+            "form": "What it works on: fire, water, air, earth, plant, animal, body, mind, image, spirit, time, void, death, light, space, force, sound, emotion, fate, machine, "
+            "information, dream or law",
             "strength": "Its strength (1 to 10)",
             "reason": "Why you give it",
         },

@@ -2,14 +2,14 @@ from collections import Counter
 
 from sqlalchemy import delete, select
 
-from aerona.catalog.cosmography import PHENOMENON_KINDS, PHENOMENON_MODEL, PHENOMENON_REAGENTS, PHENOMENON_WEATHER, SCOPE_SPREAD
+from aerona.catalog.cosmography import PHENOMENON_KINDS, PHENOMENON_MODEL, PHENOMENON_REAGENTS, PHENOMENON_RHYTHMS, PHENOMENON_WEATHER, RHYTHMS, SCOPE_SPREAD
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError
 from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import ForcedWeatherRow, RegionEnvironmentRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind, PhenomenonPersistence
+from aerona.domain.enums.cosmography import PhenomenonCause, PhenomenonKind, PhenomenonPersistence, PhenomenonRhythm
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.modifier import IncidentRole
@@ -74,6 +74,9 @@ async def form_phenomenon(
             cause=cause,
             cause_node_id=cause_node_id,
             formed_epoch=ctx.epoch,
+            rhythm=PHENOMENON_RHYTHMS[kind],
+            rhythm_period=RHYTHMS[PHENOMENON_RHYTHMS[kind]].period,
+            path_region_ids=[region.id],
             locked=[],
         )
     )
@@ -163,6 +166,42 @@ async def weather_forced(ctx: TickContext, region_id: int, weather: WeatherKind)
 
 
 @reads("table.phenomenon_profiles")
+async def present_now(ctx: TickContext, entity: EntityRow, profile: PhenomenonProfileRow, prints: list[PhenomenonFootprintRow]) -> bool:
+    period = profile.rhythm_period
+    if profile.rhythm is PhenomenonRhythm.CONSTANT or period <= 0:
+        return True
+    if (ctx.epoch - profile.formed_epoch) % period != 0:
+        return False
+    if ctx.epoch != profile.formed_epoch:
+        for row in prints:
+            roles = {IncidentRole.SUBJECT: entity.id, IncidentRole.PLACE: row.region_entity_id}
+            await record(ctx, "phenomenon.arrived", roles=roles, facts={"rhythm": profile.rhythm}, place=row.region_entity_id)
+    return True
+
+
+async def wander(
+    ctx: TickContext, atlas: RegionAtlas, entity: EntityRow, profile: PhenomenonProfileRow, prints: list[PhenomenonFootprintRow]
+) -> list[PhenomenonFootprintRow]:
+    moved: list[PhenomenonFootprintRow] = []
+    for row in prints:
+        place = row.region_entity_id
+        for _step in range(ctx.rules.phenomena.wander_speed):
+            near = sorted(atlas.neighbours(place))
+            if not near:
+                break
+            place = ctx.rng(f"phenomenon.wander.{entity.id}.{place}.{ctx.epoch}").pick(near)
+        if place != row.region_entity_id and not held(place):
+            row.region_entity_id = place
+            if "path_region_ids" not in profile.locked:
+                profile.path_region_ids = [*profile.path_region_ids, place]
+            await record(
+                ctx, "phenomenon.arrived", roles={IncidentRole.SUBJECT: entity.id, IncidentRole.PLACE: place}, facts={"rhythm": profile.rhythm}, place=place
+            )
+        moved.append(row)
+    return moved
+
+
+@reads("table.deep_passages", "table.phenomenon_profiles")
 async def phenomena_cycles(ctx: TickContext) -> None:
     table = ctx.rules.phenomena
     atlas = await RegionAtlas.load(ctx.session)
@@ -185,6 +224,13 @@ async def phenomena_cycles(ctx: TickContext) -> None:
             row.intensity = clamp_percent(min(profile.intensity, row.intensity + max(0, round(growth))))
         if profile.intensity <= table.fade_at and (persistence is not PhenomenonPersistence.PERMANENT or profile.containment >= PERCENT):
             await fade(ctx, entity, profile, len(prints))
+            continue
+        if RHYTHMS[profile.rhythm].once and ctx.epoch > profile.formed_epoch:
+            await fade(ctx, entity, profile, len(prints))
+            continue
+        if RHYTHMS[profile.rhythm].wanders:
+            prints = await wander(ctx, atlas, entity, profile, prints)
+        elif not await present_now(ctx, entity, profile, prints):
             continue
         ctx.count("phenomena_spread", await spread(ctx, atlas, entity, profile, prints))
         await effects(ctx, profile, prints)

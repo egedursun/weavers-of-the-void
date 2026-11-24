@@ -182,6 +182,8 @@ async def sign(
     ctx.session.add(profile)
     for party, role in parties:
         ctx.session.add(TreatyPartyRow(treaty_entity_id=treaty.id, party_node_id=party, role=role))
+    if witness is not None and witness.id not in {party for party, _ in parties}:
+        ctx.session.add(TreatyPartyRow(treaty_entity_id=treaty.id, party_node_id=witness.id, role=PartyRole.WITNESS))
     for clause in chosen:
         ctx.session.add(
             TreatyClauseRow(

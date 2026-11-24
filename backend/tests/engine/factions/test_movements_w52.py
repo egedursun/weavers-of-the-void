@@ -5,7 +5,7 @@ from aerona.engine.factions.movements import PRESSURES
 
 
 def test_twelve_movement_causes_each_with_a_pressure_and_a_goal() -> None:
-    assert len(MOVEMENT_CAUSES) == len(MovementCause) == 12
+    assert len(MOVEMENT_CAUSES) == len(MovementCause) == 14
     assert set(PRESSURES) == set(MovementCause)
     assert ENACTED[MovementCause.LABOUR] is LawKind.LABOUR_LAW
     assert ENACTED[MovementCause.MIND_RIGHTS] is LawKind.MIND_STATUS

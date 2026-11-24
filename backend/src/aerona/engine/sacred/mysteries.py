@@ -5,11 +5,12 @@ from sqlalchemy import select
 from aerona.catalog.sacred import THEODICY_SUFFERING, VISIONS
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import ProphecyConditionRow
 from aerona.db.tables.culture_kinds import ReadingKindRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import HolyOrderProfileRow
-from aerona.db.tables.faith import CultDoctrineRow, CultOfficeRow, CultTenetRow
+from aerona.db.tables.faith import CultDoctrineRow, CultHoldingRow, CultOfficeRow, CultTenetRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.sacred import FaithClimateRow, MillenarianRow, MysticRow, TheodicyCrisisRow, VisionRow
@@ -20,7 +21,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.collective import CollectiveActKind, CollectiveTrigger
 from aerona.domain.enums.culture import ProphecyState, Technique
 from aerona.domain.enums.economy import GoodsFlow
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.kinds import KindConcept
@@ -28,6 +29,7 @@ from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.mind import DreamKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import LawKind
+from aerona.domain.enums.records import StepAction, StepLocus, StepState
 from aerona.domain.enums.sacred import MillenarianStage, MysticState, TheodicyCause, TheodicyResolution, VisionKind
 from aerona.domain.enums.society import Commodity
 from aerona.domain.models.entity_stats import CultStats
@@ -48,12 +50,13 @@ from aerona.engine.mind.dreams import DreamDraft, visit
 from aerona.engine.mind.thoughts import think
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.polity.laws import law_param
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
-from aerona.engine.recording.record import record
+from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import church_of, patron_of, plagued_regions, realm_of_town, region_of, ruler_of, town_of
 from aerona.engine.sacred.signs import defeated_realms, miracles_by_region, omen_worlds, struck_regions
 
@@ -145,8 +148,13 @@ async def see_vision(
     tally.visions += 1
     if spec.public:
         await speak_in_public(ctx, row, mortal, sender)
+    dreamt = kind is VisionKind.DREAM
     await record(
-        ctx, "mystic.vision", roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.ORIGIN: sender}, facts={"vision": kind, "answered": int(sender is not None)}
+        ctx,
+        "mystic.vision",
+        roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.ORIGIN: sender},
+        facts={"vision": kind, "answered": int(sender is not None)},
+        steps=(StepDraft(StepAction.ENTER, actor=mortal.id, locus_kind=StepLocus.DREAM, states=((mortal.id, StepState.ASLEEP),)),) if dreamt else (),
     )
     await gain_condition(ctx, mortal, ConditionKind.VISIONS, HarmCause.GOD if sender is not None else HarmCause.RITUAL, source_node_id=sender, announce=False)
     await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.TOUCHED_BY_A_GOD, ctx.epoch, subject_id=sender)
@@ -252,6 +260,17 @@ async def found_order(ctx: TickContext, row: MysticRow, mortal: EntityRow, town:
     return order
 
 
+async def went_apart(ctx: TickContext, row: MysticRow, mortal: EntityRow) -> bool:
+    table = ctx.rules.mysticism
+    alone = row.followers == 0 and row.visions >= table.visionary_at
+    if row.state is not MysticState.HERMIT and not (alone and ctx.rng(f"hermit.{mortal.id}.{ctx.epoch}").chance(table.hermit_pct)):
+        return False
+    row.state = MysticState.HERMIT
+    if "reverence" not in row.locked:
+        row.reverence = clamp_int(row.reverence + table.hermit_draw, 0, PERCENT)
+    return True
+
+
 async def judge_mystic(ctx: TickContext, row: MysticRow, mortal: EntityRow, tally: MysteryTally) -> None:
     table = ctx.rules.mysticism
     doctrine = await ctx.session.get(CultDoctrineRow, row.cult_entity_id) if row.cult_entity_id is not None else None
@@ -274,6 +293,8 @@ async def judge_mystic(ctx: TickContext, row: MysticRow, mortal: EntityRow, tall
         return
     if persecuted:
         row.state = MysticState.PERSECUTED
+    elif await went_apart(ctx, row, mortal):
+        return
     elif row.reverence >= table.revered_at:
         row.state = MysticState.REVERED
     elif row.visions >= table.visionary_at:
@@ -485,12 +506,30 @@ async def suffering_of(ctx: TickContext, town: EntityRow, signs: tuple[set[int],
         TheodicyCause.DISASTER: region is not None and region.id in struck,
         TheodicyCause.PERSECUTION: await persecuted_here(ctx, town, realm),
         TheodicyCause.LONG_SEASON: await long_season_grinds(ctx, town),
+        TheodicyCause.LEADER_LOST: await ruler_fell(ctx, town),
+        TheodicyCause.SCHISM: await worship_split(ctx, town),
     }
     found = [(THEODICY_SUFFERING[cause](ctx.rules), cause) for cause, met in causes.items() if met]
     if not found:
         return 0, None
     worst = max(found, key=lambda item: (item[0], item[1].value))
     return clamp_int(sum(item[0] for item in found), 0, PERCENT), worst[1]
+
+
+async def ruler_fell(ctx: TickContext, town: EntityRow) -> bool:
+    fallen = await ctx.session.scalar(
+        select(EntityRow.id)
+        .where(EntityRow.mortal_role == MortalRole.RULER, EntityRow.end_epoch == ctx.epoch, await present_among(ctx.session, [town.id]))
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    return fallen is not None
+
+
+async def worship_split(ctx: TickContext, town: EntityRow) -> bool:
+    cults = select(CultHoldingRow.cult_entity_id).where(CultHoldingRow.holding_entity_id == town.id)
+    gods = list(await ctx.session.scalars(select(BondRow.target_node_id).where(BondRow.source_node_id.in_(cults), BondRow.kind == BondKind.WORSHIPS)))
+    return len(gods) != len(set(gods))
 
 
 async def persecuted_here(ctx: TickContext, town: EntityRow, realm_id: int | None) -> bool:

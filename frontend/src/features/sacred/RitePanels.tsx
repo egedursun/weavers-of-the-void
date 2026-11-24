@@ -643,7 +643,7 @@ export function FaithClimatePanel({
         <Muted variant='caption'>
           {town
             ? 'This town’s faith has not been weighed yet.'
-            : 'Faith is weighed town by town; a town’s drawer shows its own.'}
+            : 'Faith is weighed town by town; a town’s entry shows its own.'}
         </Muted>
       )}
       <ForgeCard
@@ -665,7 +665,7 @@ export function FaithClimatePanel({
         }
       >
         <Muted variant='caption'>
-          {town ? 'The town of this drawer.' : NOT_TOWN}
+          {town ? 'The town of this entry.' : NOT_TOWN}
         </Muted>
       </ForgeCard>
     </div>

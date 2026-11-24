@@ -5,7 +5,7 @@ from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.lifecycle.succession import designate_heir
-from aerona.engine.phases.births import awaken_species, bless_with_child, crown_ruler, order_village, raise_notable_by_hand, trigger_ethnogenesis
+from aerona.engine.phases.births import awaken_species, bless_with_child, crown_ruler, raise_notable_by_hand, trigger_ethnogenesis
 from aerona.engine.phases.ruins import abandon_settlement, protect_from_ruin
 from aerona.engine.phases.settlements import order_resettlement
 from aerona.engine.phases.spirits import lay_spirit_to_rest
@@ -124,12 +124,6 @@ async def raise_notable(scope: PlayerScope, command: Notable) -> Effect:
 async def crown(scope: PlayerScope, command: CommunityTarget) -> Effect:
     ruler = await crown_ruler(await scope.context("crown_ruler"), command.community_id)
     return Effect(f"{ruler.name} came to rule.", ruler.id, created_ids=(ruler.id,))
-
-
-@player_action("people:village", ActionKind.FOUND_SETTLEMENT)
-async def found_village(scope: PlayerScope, command: PeopleTarget) -> Effect:
-    village = await order_village(await scope.context("found_village"), command.people_id)
-    return Effect(f"{village.name} was founded.", village.id, created_ids=(village.id,))
 
 
 @player_action("settlement:ethnogenesis", ActionKind.ETHNOGENESIS)

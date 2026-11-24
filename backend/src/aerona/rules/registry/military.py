@@ -113,6 +113,8 @@ class TacticsRules:
     wounded_pct: int = rule(40, 0, 100, W, "Share of losses who are wounded rather than killed (%)")
     fortune_pct: int = rule(10, 0, 50, W, "Fortune each stack meets in a phase of battle, either way (%)")
     stalemate_ratio_pct: int = rule(115, 100, 300, W, "Strength ratio after battle below which it is a stalemate (%)")
+    parley_ratio_pct: int = rule(40, 0, 100, W, "Strength a side must fall below, against its foe, before it will yield at a parley (%)")
+    parley_pct: int = rule(35, 0, 100, W, "Chance a much weaker side yields at a parley before battle (%)")
 
 
 @dataclass(frozen=True)
@@ -135,6 +137,11 @@ class SiegecraftRules:
     wall_defence_pct: int = rule(20, 0, 100, W, "Defence each level of walls lends the garrison (%)")
     sack_loot: int = rule(20, 0, 100, W, "Wealth a sack carries off")
     sack_prosperity: int = rule(15, 0, 100, W, "Prosperity a sack destroys")
+    hunger_sickness_seasons: int = rule(2, 0, 20, W, "Seasons of famine after which hunger sickness takes a besieged town before its taboos break")
+    hunger_sickness_death_pct: int = rule(3, 0, 100, W, "Share of a besieged town's people hunger sickness kills each season (%)")
+    hunger_sickness_disease: int = rule(10, 0, 100, W, "Disease load hunger sickness adds to the region of a besieged town each season")
+    poison_water_days: int = rule(30, 0, 365, W, "Days of water a poisoned supply takes from a besieged town each season")
+    poison_after_rounds: int = rule(3, 0, 100, W, "Rounds of a siege after which besiegers who will turn to poison its water")
 
 
 @dataclass(frozen=True)
@@ -286,6 +293,8 @@ class PeaceRules(Spanned):
     def treaty_epochs(self) -> int:
         return self.epochs(self.treaty_years)
 
+    apology_prestige: int = rule(5, 0, 50, W, "Prestige a side gives up, and its foe gains, when a peace makes it own its wrong")
+
 
 @dataclass(frozen=True)
 class VendettaRules(Spanned):
@@ -320,3 +329,9 @@ class VendettaRules(Spanned):
     @property
     def generation_epochs(self) -> int:
         return self.epochs(self.generation_years)
+
+    amends_chance: int = rule(10, 0, 100, W, "An aggrieved side seeks amends in goods or rites to end the feud (%)")
+    amends_wealth: int = rule(5, 0, 100, W, "Wealth the side that did the wrong gives as amends to end a feud")
+    swear_off_chance: int = rule(5, 0, 100, W, "An honour-minded side swears an oath with its foe to end the feud; breaking it is oathbreaking (%)")
+    dormant_years: int = span(500, 50, 5000, W, "Years without an act after which a feud lies dormant")
+    wake_pct: int = rule(10, 0, 100, W, "Chance a dormant feud wakes in an epoch by a new offence, an insult or a remembered date (%)")

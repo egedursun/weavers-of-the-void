@@ -51,6 +51,7 @@ class RouteRow(CreatedAtMixin, Base):
     toll_controller_entity_id: Mapped[int | None] = mapped_column(ForeignKey("entities.id", ondelete="SET NULL"))
     toll_pct: Mapped[int] = mapped_column(default=0)
     piracy: Mapped[int] = mapped_column(default=0)
+    guarded: Mapped[bool] = mapped_column(default=False, server_default="0")
     wear: Mapped[int] = mapped_column(default=0)
     window_every: Mapped[int] = mapped_column(default=0)
     window_offset: Mapped[int] = mapped_column(default=0)

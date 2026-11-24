@@ -158,7 +158,7 @@ test('markers can be hovered and clicked to open their record', async ({ page })
   await page.mouse.click(spot.x + 1, spot.y)
   const stack = page.locator('[data-map-stack]')
   if (await stack.waitFor({ timeout: 800 }).then(() => true, () => false)) await stack.getByRole('listitem').first().getByRole('button').click()
-  await expect(page).toHaveURL(/drawer=entity/)
+  await expect(page).toHaveURL(/entry=entity/)
 })
 
 test('dragging a marker saves its new map position', async ({ page }) => {
@@ -205,7 +205,7 @@ test('a note pin opens its read popup and deletes after confirming', async ({ pa
       opened = true
       break
     }
-    if (/drawer=/.test(page.url())) await page.goBack()
+    if (/entry=/.test(page.url())) await page.goBack()
     if (await page.locator('[data-map-stack]').isVisible()) await page.keyboard.press('Escape')
   }
   expect(opened).toBe(true)

@@ -32,6 +32,7 @@ class VehicleKind(StrEnum):
     LIVING = "living"
     RIFT = "rift"
     ON_FOOT = "on_foot"
+    DRIFT = "drift"
 
 
 class JourneyIntent(StrEnum):
@@ -43,6 +44,8 @@ class JourneyIntent(StrEnum):
     EXILE = "exile"
     FLIGHT = "flight"
     EMBASSY = "embassy"
+    RESCUE = "rescue"
+    RETURN = "return"
 
 
 class JourneyStatus(StrEnum):
@@ -122,6 +125,7 @@ class RouteState(StrEnum):
     UNSTABLE = "unstable"
     FORGOTTEN = "forgotten"
     WORN = "worn"
+    GUARDED = "guarded"
 
 
 class EncounterEffect(StrEnum):

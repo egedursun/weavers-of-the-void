@@ -36,6 +36,8 @@ TRADE_CLASS: MappingProxyType[Job, SocialClass] = total(
         J.GATHERING: C.FARMER,
         J.INDUSTRY: C.WORKER,
         J.ARTS: C.ARTISAN,
+        J.HEALING: C.PROFESSIONAL,
+        J.TEACHING: C.SCRIBE,
     },
 )
 TRADE_FORM: MappingProxyType[Job, WorkerBodyForm] = total(
@@ -58,6 +60,8 @@ TRADE_FORM: MappingProxyType[Job, WorkerBodyForm] = total(
         J.GATHERING: F.MUTUAL_AID,
         J.INDUSTRY: F.INDUSTRIAL_UNION,
         J.ARTS: F.COMPANION_SOCIETY,
+        J.HEALING: F.CRAFT_UNION,
+        J.TEACHING: F.CRAFT_UNION,
     },
 )
 STANDING_COVERAGE_PCT: MappingProxyType[LegalStanding, int] = total(LegalStanding, {L.BANNED: 15, L.TOLERATED: 35, L.RECOGNISED: 60, L.COMPULSORY: 100})
@@ -111,6 +115,8 @@ REASONS: MappingProxyType[LabourReason, ReasonSpec] = total(
         R.HELD: ReasonSpec("Held", "held by a god", False),
         R.LAW: ReasonSpec("Law", "kept by statute, caste or guild right", False),
         R.SKILL: ReasonSpec("Skill", "drawn by what their people know", True),
+        R.DEBT: ReasonSpec("Debt", "bound to a creditor's work", False),
+        R.KIN_DUTY: ReasonSpec("Kin duty", "set by household and kin by role", False),
     },
 )
 
@@ -134,5 +140,7 @@ JOB_BRANCH: MappingProxyType[Job, KnowledgeBranch | None] = total(
         J.GATHERING: K.AGRICULTURE,
         J.INDUSTRY: K.METALLURGY,
         J.ARTS: None,
+        J.HEALING: K.MEDICINE,
+        J.TEACHING: K.WRITING,
     },
 )

@@ -21,6 +21,7 @@ from aerona.db.tables.warfare import WarRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import LIVING_STATUSES, EngineKind, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.environment import LandUse
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.war import WarStatus
 from aerona.domain.models.records import GroundSnapshot, MapSnapshotData, RegionControl
@@ -142,7 +143,7 @@ def share_of(rules: Rules, entity: EntityRow) -> float:
     return float(stat(entity, "population") or 0)
 
 
-async def political_map(session: AsyncSession, rules: Rules, world_id: int | None = None) -> dict[int, RegionControl]:
+async def political_map(session: AsyncSession, rules: Rules, world_id: int | None = None, level: UndergroundStratum | None = None) -> dict[int, RegionControl]:
     entities = await _canon(session, world_id)
     by_id = {entity.id: entity for entity in entities}
     rulers = await _rulers(session)
@@ -152,7 +153,7 @@ async def political_map(session: AsyncSession, rules: Rules, world_id: int | Non
         if entity.entity_type not in POLITICAL_TYPES:
             continue
         region = atlas.top_region(entity.id)
-        if region is None:
+        if region is None or atlas.level_of(entity.id) is not level:
             continue
         holder = entity
         current = entity.id

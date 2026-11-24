@@ -91,7 +91,7 @@ describe('world header', () => {
       .toBeInTheDocument()
     await mood.click()
     await expect
-      .poll(() => String(router.state.location.search.drawer ?? ''))
+      .poll(() => String(router.state.location.search.entry ?? ''))
       .toContain('creator')
   })
 

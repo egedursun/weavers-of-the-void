@@ -74,6 +74,14 @@ class GeniusLociRules(Spanned):
     def unpaid_epochs(self) -> int:
         return self.epochs(self.unpaid_years)
 
+    marsh_mood_rate: int = rule(45, 0, 100, R, "How fast the mood of a spirit of a marsh turns with offerings and offences (50 = as the step gives)")
+    desert_mood_rate: int = rule(35, 0, 100, R, "How fast the mood of a spirit of a desert turns with offerings and offences (50 = as the step gives)")
+    glacier_mood_rate: int = rule(30, 0, 100, R, "How fast the mood of a spirit of a glacier turns with offerings and offences (50 = as the step gives)")
+    trespass_weight: int = rule(45, 0, 100, R, "How deeply entering a sacred spot unbidden offends a place spirit (50 = as the step gives)")
+    noise_weight: int = rule(35, 0, 100, R, "How deeply loud works, mills and armies offend a place spirit (50 = as the step gives)")
+    trespass_folk: int = rule(5, 1, 1000, R, "Mortals gathered at an untouched place at which its spirit counts them as trespassers")
+    noise_population: int = rule(20000, 1, 10000000, R, "Population of a town at which its spirit counts its din as an offence")
+
 
 @dataclass(frozen=True)
 class CelestialBureaucracyRules(Spanned):
@@ -138,6 +146,9 @@ class MysticismRules(Spanned):
     def lapse_epochs(self) -> int:
         return self.epochs(self.lapse_years)
 
+    hermit_pct: int = rule(15, 0, 100, R, "Chance a visionary mystic with no followers goes apart as a hermit in an epoch (%)")
+    hermit_draw: int = rule(4, 0, 100, R, "Reverence a hermit gains each epoch from the seekers and gifts it draws while staying apart")
+
 
 @dataclass(frozen=True)
 class MillenarianRules(Spanned):
@@ -199,6 +210,9 @@ class TheodicyRules(Spanned):
     def window(self) -> int:
         return self.epochs(self.window_years)
 
+    leader_lost_suffering: int = rule(35, 0, 100, R, "Suffering the death of the head of a faith brings its followers")
+    schism_suffering: int = rule(40, 0, 100, R, "Suffering a split in a faith brings its followers")
+
 
 @dataclass(frozen=True)
 class SacramentRules:
@@ -223,6 +237,15 @@ class SacramentRules:
     )
     purification_guilt: int = rule(20, 0, 100, R, "Stress of guilt a purification lifts from the one cleansed")
     ordination_piety: int = rule(5, 0, 100, R, "Piety an ordination binds into the one made clergy")
+    penance_cost: int = rule(3, 0, 100, R, "Goods a town gives its church for a penance (supply index, 100 = one epoch of its needs)")
+    communion_cost: int = rule(4, 0, 100, R, "Goods a town gives its church for a shared sacred meal (supply index, 100 = one epoch of its needs)")
+    penance_guilt: int = rule(25, 0, 100, R, "Stress of guilt a penance lifts from the one who does it")
+    penance_standing: int = rule(3, 0, 100, R, "Renown a penance gives back to one who did a judged act")
+    communion_cohesion: int = rule(1, 0, 20, R, "Cohesion a people gains for each shared sacred meal its folk take")
+    communion_spread: int = rule(
+        2, 0, 100, R, "Folk an open outbreak in a region gains for each shared sacred meal taken there, where food and cups pass between them"
+    )
+    fortune_ward_pct: int = rule(60, 0, 100, R, "Chance at full strength that a rite guarding fortune turns aside a curse of ill fortune (%)")
 
 
 @dataclass(frozen=True)
@@ -280,6 +303,11 @@ class DivinationRules:
     harvest_food: int = rule(
         2, 0, 1000, R, "Food stores each of a realm's towns loses when sowing waits on an ill harvest omen (supply index, 100 = one epoch of its needs)"
     )
+    numerology_accuracy: int = rule(35, 0, 100, R, "How often a valid reading by numbers reads true (50 = as the step gives)")
+    body_reading_accuracy: int = rule(40, 0, 100, R, "How often a valid reading of the body reads true (50 = as the step gives)")
+    succession_age_pct: int = rule(80, 0, 100, R, "Share of its span a ruler has lived from which its court asks the omens about who comes after it (%)")
+    succession_legitimacy: int = rule(4, 0, 100, R, "Legitimacy a realm gains or loses when a heeded omen on who comes after its ruler is good or bad")
+    lost_things_goods: int = rule(2, 0, 100, R, "Goods each town of a realm finds again when a heeded omen on lost things is good (supply index)")
 
 
 @dataclass(frozen=True)
@@ -295,6 +323,7 @@ class PrescienceRules:
     likely_at: int = rule(45, 0, 100, R, "Chance from which the forecast counts a future as likely")
     renown_step: int = rule(4, 0, 100, R, "Renown a seer gains when a foresight comes true or loses when it fails")
     proclaim_at: int = rule(70, 0, 100, R, "Certainty from which a mortal seer proclaims a foresight as prophecy")
+    dream_intensity: int = rule(60, 0, 100, R, "Strength from which a prophetic or visiting dream counts as foresight where dreams are real")
 
 
 @dataclass(frozen=True)

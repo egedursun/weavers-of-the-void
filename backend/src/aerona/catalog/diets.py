@@ -55,6 +55,7 @@ DIETS: Mapping[Diet, DietSpec] = total(
         Diet.CHEMOSYNTHETIC: DietSpec(
             False, False, False, False, True, False, False, True, (N.ENERGY, N.MINERAL), "draws its strength from chemicals in the deep"
         ),
+        Diet.INSECTIVORE: DietSpec(True, False, True, False, True, True, False, False, (N.ENERGY, N.PROTEIN, N.FAT), "lives on the insects of its land"),
         Diet.ENERGY: DietSpec(
             False, False, False, False, False, False, False, True, (N.ENERGY, N.ESSENCE), "feeds on heat, light and power and cannot be eaten"
         ),

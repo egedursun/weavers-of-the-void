@@ -8,6 +8,8 @@ class DivineScale(StrEnum):
     GROWTH = "growth"
     FORTUNE = "fortune"
     MAGIC = "magic"
+    HEALTH = "health"
+    PEACE = "peace"
 
 
 class PerceivedAlignment(StrEnum):
@@ -20,6 +22,8 @@ class WorshipMode(StrEnum):
     DEVOTION = "devotion"
     APPEASEMENT = "appeasement"
     BARGAIN = "bargain"
+    UNION = "union"
+    KINSHIP = "kinship"
 
 
 class PrayerTone(StrEnum):
@@ -27,6 +31,8 @@ class PrayerTone(StrEnum):
     MERCY = "mercy"
     REQUEST = "request"
     PRAISE = "praise"
+    LAMENT = "lament"
+    CONFESSION = "confession"
 
 
 class Manifestation(StrEnum):
@@ -35,12 +41,15 @@ class Manifestation(StrEnum):
     STERN = "stern"
     DREADFUL = "dreadful"
     VEILED = "veiled"
+    PLAYFUL = "playful"
+    SORROWFUL = "sorrowful"
 
 
 class BeliefStance(StrEnum):
     YIELD = "yield"
     RESIST = "resist"
     EMBRACE = "embrace"
+    BARGAIN = "bargain"
 
 
 class MagicSiteKind(StrEnum):
@@ -50,6 +59,8 @@ class MagicSiteKind(StrEnum):
     GATEWAY = "gateway"
     TIDE_POINT = "tide_point"
     DEPLETION_SCAR = "depletion_scar"
+    CONFLUENCE = "confluence"
+    NULL_ZONE = "null_zone"
 
 
 class CreatureDeed(StrEnum):
@@ -61,8 +72,12 @@ class CreatureDeed(StrEnum):
     WRECK_WORKS = "wreck_works"
     WANDER = "wander"
     REST = "rest"
+    CARRY_MESSAGES = "carry_messages"
+    TEACH = "teach"
+    TRADE = "trade"
 
 
 class CreatureLesson(StrEnum):
     REWARD = "reward"
     PUNISH = "punish"
+    WARN = "warn"

@@ -20,6 +20,7 @@ MEDIUM_FADE: Mapping[AccountMedium, int] = total(
         AccountMedium.RECORD: 0,
         AccountMedium.PERFORMANCE: 50,
         AccountMedium.MIND_STATE: 10,
+        AccountMedium.MARKS: 20,
     },
 )
 
@@ -85,6 +86,8 @@ ACCOUNT_KINDS = total(
         K.TESTIMONY: AccountKindSpec("Testimony", 110, False),
         K.GENEALOGY: AccountKindSpec("Genealogy", 40, False, backs_claims=True),
         K.SONG: AccountKindSpec("Song", 30, True, sung=True),
+        K.TRAVEL_ACCOUNT: AccountKindSpec("Travel account", 90, True),
+        K.LAW_RECORD: AccountKindSpec("Law record", 20, False, backs_claims=True),
     },
 )
 
@@ -110,6 +113,7 @@ ACCOUNT_STANCES = total(
         S_.JUSTIFY: AccountStanceSpec("Admits and justifies", 5, "justify_standing_effect"),
         S_.LAMENT: AccountStanceSpec("Laments", 4, "lament_standing_effect", grieves=True),
         S_.MOCK: AccountStanceSpec("Mocks", 10, "mock_standing_effect"),
+        S_.WARN: AccountStanceSpec("Warns", 6, "warn_standing_effect"),
     },
 )
 REMEMBERING_KINDS = tuple(kind for kind, spec in ACCOUNT_KINDS.items() if spec.remembers)

@@ -38,11 +38,11 @@ AGE_PROFILES: Mapping[FlowCategory, Mapping[AgeBand, float]] = partial(
     FlowCategory,
     MappingProxyType(
         {
-            FC.FAMINE: {A.INFANT: 3.0, A.CHILD: 2.0, A.YOUTH: 0.8, A.ELDER: 2.0, A.ADULT: 0.5},
+            FC.FAMINE: {A.INFANT: 3.0, A.CHILD: 2.0, A.YOUTH: 0.8, A.ELDER: 2.0, A.ADULT: 0.5, A.ANCIENT: 3.0},
             FC.CASUALTY: {A.YOUTH: 8.0, A.ADULT: 8.0, A.ELDER: 0.4},
             FC.LEVY: {A.YOUTH: 9.0, A.ADULT: 9.0, A.ELDER: 0.3},
-            FC.PLAGUE: {A.INFANT: 2.5, A.CHILD: 1.5, A.YOUTH: 0.7, A.ELDER: 2.5, A.ADULT: 0.7},
-            FC.DEATH: {A.INFANT: 2.0, A.ELDER: 3.0, A.ADULT: 0.7, A.YOUTH: 0.5, A.CHILD: 0.8},
+            FC.PLAGUE: {A.INFANT: 2.5, A.CHILD: 1.5, A.YOUTH: 0.7, A.ELDER: 2.5, A.ADULT: 0.7, A.ANCIENT: 3.5},
+            FC.DEATH: {A.INFANT: 2.0, A.ELDER: 3.0, A.ADULT: 0.7, A.YOUTH: 0.5, A.CHILD: 0.8, A.ANCIENT: 5.0},
             FC.BIRTH: {A.INFANT: 1.0},
             FC.GROWTH: {A.INFANT: 1.5, A.CHILD: 1.0, A.YOUTH: 1.0, A.ADULT: 1.0},
             FC.MIGRATION: {A.ADULT: 2.25, A.YOUTH: 2.0, A.CHILD: 0.8, A.INFANT: 0.5, A.ELDER: 0.3},
@@ -86,7 +86,13 @@ def pyramid(rules: Rules) -> dict[AgeBand, float]:
     young, elder = table.child_pct / PERCENT, table.elder_pct / PERCENT
     shares = {band: spec.youth_share or 0.0 for band, spec in AGE_BANDS.items()}
     whole = sum(shares.values()) or 1.0
-    return {**{band: young * share / whole for band, share in shares.items() if share}, A.ELDER: elder, A.ADULT: max(0.0, 1 - young - elder)}
+    ancient = min(elder, table.ancient_pct / PERCENT)
+    return {
+        **{band: young * share / whole for band, share in shares.items() if share},
+        A.ELDER: elder - ancient,
+        A.ANCIENT: ancient,
+        A.ADULT: max(0.0, 1 - young - elder),
+    }
 
 
 def sexes(rules: Rules, spec: SexSpec = SEX_SYSTEMS[ReproductiveSystem.TWO_SEX]) -> dict[SexKind, float]:

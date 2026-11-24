@@ -644,6 +644,7 @@ async def plague_faith(ctx: TickContext) -> int:
     "table.cosmos",
     "table.creator",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",

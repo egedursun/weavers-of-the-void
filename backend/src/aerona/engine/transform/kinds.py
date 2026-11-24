@@ -93,7 +93,7 @@ KINDS = MappingProxyType(
         K.SECULARISATION: Kind(faiths.secularisation_pressures, faiths.cult_check, faiths.secularise, lambda rules: rules.transform.secularisation_epochs),
         K.PROGENITOR: Kind(creatures.progenitor_pressures, creatures.beast_check, creatures.found_line, lambda rules: rules.transform.progenitor_epochs),
         K.LOCAL_GOD: Kind(
-            engine_pushes(beings.local_god_pressures, TransformTrigger.ENGINE),
+            engine_pushes(beings.local_god_pressures, TransformTrigger.DEVOTION),
             beings.spirit_check,
             beings.raise_spirit,
             lambda rules: rules.transform.local_god_epochs,

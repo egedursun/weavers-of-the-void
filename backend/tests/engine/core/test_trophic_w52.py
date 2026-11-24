@@ -21,7 +21,7 @@ def levels(region_id: int, living: int, workers: int) -> dict[TrophicLevel, list
 
 
 def test_five_trophic_levels_and_decomposers_take_their_own() -> None:
-    assert len(TrophicLevel) == 5
+    assert len(TrophicLevel) == 6
     assert trophic_level(Diet.DECOMPOSER, SizeClass.SMALL) is TrophicLevel.DECOMPOSER
 
 

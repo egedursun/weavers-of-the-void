@@ -4,7 +4,7 @@ import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Paged } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Muted, Text } from '@/components/typography'
 import {
   type ClusterRecord,
@@ -92,7 +92,7 @@ function Row({
   onSelect: (kind: ScaleKind, id: number) => void
   children?: ReactNode
 }) {
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const chosen = selection?.kind === kind && selection.id === id
   return (
     <li className='flex min-w-0 flex-col gap-1.5'>
@@ -124,7 +124,7 @@ function Row({
           variant='ghost'
           size='sm'
           aria-label={`Open the page of ${name}`}
-          onClick={() => drawers.open({ kind, id: String(id) })}
+          onClick={() => entryStack.open({ kind, id: String(id) })}
         >
           <ExternalLink />
         </Button>

@@ -119,6 +119,7 @@ class ExpeditionGroundTrait(StrEnum):
 
 class ExtractionKindTrait(StrEnum):
     ARTISAN_KINDS = "artisan_kinds"
+    TAKES_FROM_RUINS = "takes_from_ruins"
 
 
 class FactionActionKindTrait(StrEnum):
@@ -291,6 +292,7 @@ class OrderKindTrait(StrEnum):
 
 class PackageKindTrait(StrEnum):
     BEAST_CURSES = "beast_curses"
+    HIDDEN_BY_BEARER = "hidden_by_bearer"
 
 
 class PassionKindTrait(StrEnum):

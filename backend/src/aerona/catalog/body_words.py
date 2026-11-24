@@ -22,5 +22,7 @@ BODY_WORDS: Mapping[BodyPlan, tuple[str, ...]] = total(
         BodyPlan.CENTAUROID: ("centaur",),
         BodyPlan.RADIAL: ("starfish", "urchin", "radial"),
         BodyPlan.COLONIAL: ("colony", "coral", "siphonophore"),
+        BodyPlan.HEXAPOD: ("hexapod", "six-legged"),
+        BodyPlan.ROOTED: ("rooted", "sessile"),
     },
 )

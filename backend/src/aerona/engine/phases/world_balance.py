@@ -445,6 +445,7 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.bonds",
     "table.community_societies",
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",

@@ -1,4 +1,5 @@
 import {
+  type LucideIcon,
   Anchor,
   ArrowRight,
   ArrowUpFromLine,
@@ -59,13 +60,17 @@ import {
   Tent,
   TrainFront,
   Truck,
-  type LucideIcon,
   Users,
   Utensils,
   Waves,
   Wind,
   Wrench,
   Zap,
+  FlameKindling,
+  ThermometerSnowflake,
+  UsersRound,
+  Bolt,
+  EyeOff,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -80,6 +85,7 @@ export const ECHELONS: Record<Schema['EchelonLevel'], Named> = {
   corps: { label: 'Corps', icon: Flag, tone: 'verdigris' },
   division: { label: 'Division', icon: Shield, tone: 'success' },
   brigade: { label: 'Brigade', icon: Users, tone: 'muted' },
+  detachment: { label: 'Detachment', icon: UsersRound, tone: 'muted' },
 }
 
 export const ORDERS: Record<Schema['EchelonOrder'], Named> = {
@@ -88,6 +94,7 @@ export const ORDERS: Record<Schema['EchelonOrder'], Named> = {
   resupply: { label: 'Resupply', icon: Package, tone: 'gold' },
   hold: { label: 'Hold', icon: Shield, tone: 'verdigris' },
   standing: { label: 'Standing orders', icon: PauseCircle, tone: 'muted' },
+  screen: { label: 'Screen', icon: EyeOff, tone: 'muted' },
 }
 
 export const TRANSPORTS: Record<Schema['CarrierKind'], Named> = {
@@ -110,13 +117,14 @@ export const TRANSPORTS: Record<Schema['CarrierKind'], Named> = {
   living: { label: 'Living carriers', icon: PawPrint, tone: 'success' },
   rite: { label: 'Bound conveyance', icon: Sparkles, tone: 'verdigris' },
   network: { label: 'Networks', icon: Network, tone: 'info' },
+  sledge: { label: 'Sledges', icon: Snowflake, tone: 'info' },
 }
 
 export const SHOTS: Record<Schema['ShotKind'], Named> = {
   round: { label: 'Round shot', icon: Target, tone: 'danger' },
   chain: { label: 'Chain shot', icon: Link2, tone: 'warning' },
   grape: { label: 'Grapeshot', icon: Crosshair, tone: 'gold' },
-  fire: { label: 'Fire', icon: Flame, tone: 'danger' },
+  fire: { label: 'Fire', icon: FlameKindling, tone: 'danger' },
   solid: { label: 'Solid', icon: Circle, tone: 'danger' },
   spread: { label: 'Spread', icon: Sparkle, tone: 'danger' },
   incendiary: { label: 'Incendiary', icon: Flame, tone: 'danger' },
@@ -124,6 +132,7 @@ export const SHOTS: Record<Schema['ShotKind'], Named> = {
   piercing: { label: 'Piercing', icon: ArrowRight, tone: 'danger' },
   guided: { label: 'Guided', icon: Target, tone: 'danger' },
   energy: { label: 'Energy', icon: Zap, tone: 'danger' },
+  smoke: { label: 'Smoke', icon: Bolt, tone: 'danger' },
 }
 
 export const POINTS_OF_SAIL: Record<Schema['PointOfSail'], Named> = {
@@ -238,7 +247,11 @@ export const QUIRK_LABELS: Record<Schema['QuirkKind'], Named> = {
   restless: { label: 'Restless', icon: Route, tone: 'info' },
   light_fingered: { label: 'Light-fingered', icon: Hand, tone: 'warning' },
   claustrophobic: { label: 'Fears close places', icon: Box, tone: 'danger' },
-  cold_hardy: { label: 'Cold-hardy', icon: Snowflake, tone: 'success' },
+  cold_hardy: {
+    label: 'Cold-hardy',
+    icon: ThermometerSnowflake,
+    tone: 'success',
+  },
   swimmer: { label: 'Swimmer', icon: Fish, tone: 'success' },
   lucky: { label: 'Lucky', icon: Clover, tone: 'success' },
 }

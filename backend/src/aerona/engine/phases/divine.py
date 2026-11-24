@@ -14,7 +14,7 @@ from aerona.engine.divine.outer_agency import outer_agency
 from aerona.engine.divine.pantheon import keep_pantheons
 from aerona.engine.divine.rulings import enforce_rulings
 from aerona.engine.divine.standing import tend_standing
-from aerona.engine.divine.wounds import heal_wounds, mark_neglect, neglect_wounds
+from aerona.engine.divine.wounds import heal_wounds, mark_neglect, neglect_wounds, worship_wounds
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
@@ -125,10 +125,12 @@ async def divine_standing(ctx: TickContext) -> None:
     "table.entities",
     "table.foreign_god_powers",
     "table.foreign_gods",
+    "table.node_births",
     "table.nodes",
     "table.pressures",
     "table.son_powers",
     "table.sons",
+    "table.world_domain_hooks",
 )
 @writes(
     "table.applied_fixups",
@@ -140,6 +142,7 @@ async def divine_standing(ctx: TickContext) -> None:
     "table.entities",
     "table.goods_flows",
     "table.hidden_truths",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.living_lines",
@@ -155,6 +158,7 @@ async def divine_standing(ctx: TickContext) -> None:
 async def divine_wounds(ctx: TickContext) -> None:
     ctx.count("neglect_marked", await mark_neglect(ctx))
     ctx.count("neglected", await neglect_wounds(ctx))
+    ctx.count("worship_wounds", await worship_wounds(ctx))
     ctx.count("healed", await heal_wounds(ctx))
     await keep_powers(ctx)
 

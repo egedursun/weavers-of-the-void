@@ -422,7 +422,7 @@ from aerona.db.tables.fossils import FossilBedRow
 from aerona.db.tables.gardens import GardenRow
 from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionPlaceRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.genetics import AllelePoolRow, GenomeRow, HouseResemblanceRow
-from aerona.db.tables.geology import RegionGeologyRow, RegionStratumRow
+from aerona.db.tables.geology import DeepPassageRow, PolityDeepKnowledgeRow, RegionGeologyRow, RegionStratumRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgCliqueRow, OrgGovernanceRow, OrgMergerRow, OrgResearchRow, OrgSeatRow
 from aerona.db.tables.grave_goods import GraveGoodsRow
 from aerona.db.tables.happenings import EventCasualtyRow, EventFootprintRow, EventProfileRow, RegionGeomorphRow, RiverShiftRow
@@ -985,6 +985,7 @@ __all__ = [
     "DecipherWorkRow",
     "DeedClaimRow",
     "DeedRow",
+    "DeepPassageRow",
     "DeepSealRow",
     "DeepTimeEventRow",
     "DeepTimeRunRow",
@@ -1428,6 +1429,7 @@ __all__ = [
     "PlantPartRow",
     "PlantProfileRow",
     "PolicyApprovalRow",
+    "PolityDeepKnowledgeRow",
     "PolityEraRow",
     "PolityLeagueRow",
     "PolityLoyaltyRow",

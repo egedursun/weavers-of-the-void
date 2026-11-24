@@ -21,6 +21,7 @@ from aerona.db.tables.environment import NotableYearRow, RegionEnvironmentRow
 from aerona.db.tables.faith import SpiritProfileRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.write_guard import held
@@ -31,7 +32,7 @@ from aerona.domain.enums.culture import CalendarSlot, CustomCatalog, Technique, 
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
-from aerona.domain.enums.mind import ActKind, MemoryKind, ValueAxis, ValueHolder
+from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.region import DangerSource
 from aerona.domain.enums.society import Commodity, SocialClass
@@ -48,6 +49,7 @@ from aerona.engine.lore.research import has_technique
 from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.space import value_distance
+from aerona.engine.mind.thoughts import think
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import folk_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -91,6 +93,8 @@ SPEC_EFFECTS = {
     "hospitality": E.SAFETY,
     "rest": E.REST,
     "vigil": E.VIGIL,
+    "healing": E.HEALING,
+    "bonding": E.BONDING,
 }
 
 CLOSED_SLOTS = "closed_slots"
@@ -118,6 +122,8 @@ def default_magnitude(ctx: TickContext, effect: TraditionEffectKind) -> int:
         E.VIGIL: table.vigil_pct,
         E.TRADE: table.fair_trade_pct,
         E.FORAGE: table.forage_food_pct,
+        E.HEALING: table.healing_effect,
+        E.BONDING: table.bonding_effect,
     }[effect]
 
 
@@ -352,6 +358,32 @@ async def wed(ctx: TickContext, community: EntityRow, pct: float) -> int:
     return born
 
 
+async def keepers_of(ctx: TickContext, community: EntityRow) -> list[EntityRow]:
+    statement = select(EntityRow).where(
+        EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await folk_of(ctx.session, community)
+    )
+    return list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
+
+
+async def heal_keepers(ctx: TickContext, community: EntityRow, step: int) -> bool:
+    healed = False
+    for mortal in await keepers_of(ctx, community):
+        profile = await ctx.session.get(MortalProfileRow, mortal.id)
+        if profile is None or held(mortal.id) or "health" in (profile.locked or []):
+            continue
+        profile.health = clamp_int(profile.health + step, 0, PERCENT)
+        healed = True
+    return healed
+
+
+async def bond_keepers(ctx: TickContext, community: EntityRow, step: int) -> bool:
+    await cohere(ctx, community, step)
+    for mortal in await keepers_of(ctx, community):
+        if not held(mortal.id):
+            await think(ctx.session, ctx.rules, mortal.id, ThoughtKind.BELONGED, ctx.epoch, subject_id=community.id)
+    return True
+
+
 async def gladden(ctx: TickContext, community: EntityRow, step: int, target: str) -> None:
     society = await ctx.session.get(CommunitySocietyRow, community.id)
     if society is None:
@@ -463,6 +495,8 @@ EFFECT_KEEPERS.update(
         E.SAFETY: lambda keep: welcome(keep.ctx, keep.community, keep.atlas, keep.amount),
         E.TRADE: lambda keep: hold_fair(keep.ctx, keep.community, keep.amount),
         E.FORAGE: lambda keep: forage(keep.ctx, keep.community, keep.atlas, keep.amount),
+        E.HEALING: lambda keep: heal_keepers(keep.ctx, keep.community, keep.amount),
+        E.BONDING: lambda keep: bond_keepers(keep.ctx, keep.community, keep.amount),
     }
 )
 EFFECT_KEEPERS.seal()

@@ -44,6 +44,7 @@ class CrisisTally:
     conceded: int = 0
     wars: int = 0
     mediated: int = 0
+    frozen: int = 0
 
 
 @dataclass(frozen=True)

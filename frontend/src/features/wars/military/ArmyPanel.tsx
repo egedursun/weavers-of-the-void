@@ -58,6 +58,7 @@ import {
   TimelineItem,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { StratumBadge } from '@/features/map/StratumBadge'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { StackArms } from './ArmyDepth'
 import { ArmyWorks, CommanderAreas } from './ArmyWorks'
@@ -735,6 +736,8 @@ function Marches({ army }: { army: ArmyCard }) {
             >
               <div className='flex min-w-0 flex-wrap gap-1'>
                 <Tag item={stance} />
+                <StratumBadge stratum={move.from_stratum} prefix='From' />
+                <StratumBadge stratum={move.to_stratum} prefix='Into' />
                 <Plain
                   icon={Wheat}
                 >{`${plural(move.supply_days, 'day', 'days')} of food`}</Plain>
@@ -799,6 +802,13 @@ export function ArmyPanel({
             <TableTag table={DOCTRINE} value={army.doctrine} />
             {army.region && (
               <Plain icon={MapPin}>{`In ${army.region.name}`}</Plain>
+            )}
+            <StratumBadge stratum={army.stratum} prefix='Below, in the' />
+            {army.battle_stratum !== army.stratum && (
+              <StratumBadge
+                stratum={army.battle_stratum}
+                prefix='Fights in the'
+              />
             )}
             {army.target && (
               <Plain icon={Target}>{`Bound for ${army.target.name}`}</Plain>

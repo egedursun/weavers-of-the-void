@@ -27,6 +27,7 @@ class PartSpec:
     commodity: CommodityKind | None
     product: ProductPart
     also: frozenset[ProductPart] = frozenset()
+    feeds_pollinators: bool = False
 
     @property
     def yields(self) -> frozenset[ProductPart]:
@@ -49,6 +50,8 @@ FORMS: MappingProxyType[PlantForm, FormSpec] = total(
         F.MADE: FormSpec("Made plant", (P.SEED, P.FIBRE), R.MADE, 10, False, False),
         F.EPIPHYTE: FormSpec("Epiphyte", (P.LEAF, P.FLOWER, P.SPORE), R.WIND_SEED, 20, True, False),
         F.PARASITIC: FormSpec("Parasitic plant", (P.STEM, P.FLOWER, P.SEED), R.ANIMAL_SEED, 5, False, False),
+        F.PALM: FormSpec("Palm", (P.WOOD, P.FRUIT, P.SAP, P.FIBRE, P.LEAF), R.ANIMAL_SEED, 80, True, False),
+        F.GEOPHYTE: FormSpec("Geophyte", (P.TUBER, P.ROOT, P.FLOWER, P.NECTAR), R.RUNNER, 10, False, False),
     },
 )
 
@@ -68,5 +71,7 @@ PARTS: MappingProxyType[PlantPart, PartSpec] = total(
         P.FIBRE: PartSpec("Fibre", CommodityKind.FIBRE, ProductPart.FIBRE),
         P.SPORE: PartSpec("Spore", CommodityKind.MAGICAL_REAGENTS, ProductPart.REAGENT, frozenset({ProductPart.TOXIN})),
         P.RESIN: PartSpec("Resin", CommodityKind.INCENSE, ProductPart.RESIN),
+        P.POLLEN: PartSpec("Pollen", CommodityKind.HERBS, ProductPart.REAGENT, frozenset({ProductPart.SUGAR}), feeds_pollinators=True),
+        P.NECTAR: PartSpec("Nectar", CommodityKind.HONEY, ProductPart.SUGAR, frozenset({ProductPart.STIMULANT}), feeds_pollinators=True),
     },
 )

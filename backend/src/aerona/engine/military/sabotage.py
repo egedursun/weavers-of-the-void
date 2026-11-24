@@ -4,7 +4,9 @@ from sqlalchemy import or_, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.law_depth import RegistryRow
 from aerona.db.tables.networks import NetworkNodeRow, NetworkOutageRow
 from aerona.db.tables.powers import PowerSourceRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -100,6 +102,38 @@ async def seize_machines(ctx: TickContext, spymaster: EntityRow, target: EntityR
         await shift_standing(ctx.session, spymaster, "wealth", ctx.rules.espionage.spy_sabotage_damage // 2, ctx.epoch, default=0)
 
 
+async def tamper_records(ctx: TickContext, spymaster: EntityRow, target: EntityRow) -> None:
+    row = await ctx.session.scalar(
+        select(RegistryRow).where(RegistryRow.holder_entity_id == target.id, RegistryRow.owner_entity_id.is_not(None)).order_by(RegistryRow.id).limit(1)
+    )
+    if row is not None and "owner_entity_id" not in row.locked:
+        row.owner_entity_id = spymaster.id
+
+
+async def block_routes(ctx: TickContext, _spymaster: EntityRow, target: EntityRow) -> None:
+    rows = await ctx.session.scalars(
+        select(TradeRouteProfileRow)
+        .where(or_(TradeRouteProfileRow.first_market_id == target.id, TradeRouteProfileRow.second_market_id == target.id))
+        .order_by(TradeRouteProfileRow.route_entity_id)
+    )
+    for row in list(rows):
+        if not held(row.route_entity_id) and "danger_bandits" not in row.locked:
+            row.danger_bandits = clamp_int(row.danger_bandits + ctx.rules.espionage.route_block_danger, 0, PERCENT)
+
+
+async def has_records(ctx: TickContext, target: EntityRow) -> bool:
+    return await ctx.session.scalar(select(RegistryRow.id).where(RegistryRow.holder_entity_id == target.id).limit(1)) is not None
+
+
+async def has_routes(ctx: TickContext, target: EntityRow) -> bool:
+    found = await ctx.session.scalar(
+        select(TradeRouteProfileRow.route_entity_id)
+        .where(or_(TradeRouteProfileRow.first_market_id == target.id, TradeRouteProfileRow.second_market_id == target.id))
+        .limit(1)
+    )
+    return found is not None
+
+
 async def has_networks(ctx: TickContext, target: EntityRow) -> bool:
     return bool(await networks_at(ctx, target))
 
@@ -142,6 +176,8 @@ WIDER_SABOTAGE: Mapping[SabotageKind, tuple[Strike, Fits]] = {
     SabotageKind.RITE_DISRUPTION: (disrupt_rites, has_rites),
     SabotageKind.SOURCE_POISONING: (poison_sources, has_sources),
     SabotageKind.MACHINE_SEIZURE: (seize_machines, has_machines),
+    SabotageKind.RECORD_TAMPERING: (tamper_records, has_records),
+    SabotageKind.ROUTE_BLOCKING: (block_routes, has_routes),
 }
 
 

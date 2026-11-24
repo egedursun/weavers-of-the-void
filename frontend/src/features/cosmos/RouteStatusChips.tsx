@@ -28,6 +28,7 @@ const STATE_VARIANT: Record<RouteStateKey, BadgeVariant> = {
   collapsed: 'destructive',
   snapped: 'destructive',
   worn: 'warning',
+  guarded: 'warning',
 }
 
 function ruleNote(route: RouteRecord, rules: RuleBook): string | null {

@@ -501,6 +501,7 @@ SON_CASES: dict[str, Case] = {
     "free_learning": Case(plain(structure_id=created("structure"), level=70, reason=REASON), learning_house),
     "inspire_school": Case(plain(founder_id=mortal, name="The First School", reason=REASON)),
     "designate_keystone": Case(plain(species_id=lambda realm, ids: realm.species_id, region_id=region, name="The First Yield", use="rite", reason=REASON)),
+    "tend_soil_stock": Case(plain(region_id=region, stock="seed_bank", change=10, reason=REASON)),
     "inspire_relief": Case(plain(giver_id=lambda realm, ids: realm.cult_id, settlement_id=settlement, kind="healers", reason=REASON)),
     "send_expedition": Case(plain(leader_id=mortal, target_id=region, reason=REASON)),
     "stock_depot": Case(plain(owner_id=people, region_id=region, reason=REASON)),

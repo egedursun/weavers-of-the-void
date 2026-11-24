@@ -31,7 +31,7 @@ class Shape:
 
 def difficulty_of(rules: Rules, shape: Shape, power: int) -> int:
     return (
-        TECHNIQUE_COST[shape.technique]
+        TECHNIQUE_COST[shape.technique](rules)
         + FORM_COST[shape.form]
         + RANGE_STEP[shape.range]
         + DURATION_STEP[shape.duration]
@@ -78,7 +78,8 @@ async def write_grammar(
 
 
 def cost_factor(rules: Rules, row: RiteGrammarRow) -> float:
-    beyond = rules.arcana.cosmos_cost_pct / PERCENT if RANGES[row.range].beyond_world else 1.0
+    spec = RANGES[row.range]
+    beyond = (rules.arcana.dimension_cost_pct if spec.across_dimension else rules.arcana.cosmos_cost_pct) / PERCENT if spec.beyond_world else 1.0
     return (1 + row.difficulty * rules.spell_grammar.cost_per_difficulty_pct / PERCENT) * beyond
 
 
@@ -88,6 +89,10 @@ def link_factor(rules: Rules, row: RiteGrammarRow, linked: int) -> float:
 
 def power_suffices(rules: Rules, row: RiteGrammarRow, power: int) -> bool:
     return not TARGETS[row.target].world or power >= rules.arcana.world_rite_power
+
+
+def members_cost(rules: Rules, row: RiteGrammarRow, members: int) -> int:
+    return members // PERCENT * rules.arcana.member_cost_per_100 if TARGETS[row.target].members else 0
 
 
 async def worlds_joined(session: AsyncSession, first: int | None, second: int | None) -> bool:
@@ -117,7 +122,7 @@ def reaches(atlas: RegionAtlas, row: RiteGrammarRow, caster: EntityRow, target: 
     if spec.through_link:
         return linked > 0
     if spec.beyond_world:
-        return target is None or target.world_id == caster.world_id or joined
+        return joined if spec.across_dimension else target is None or target.world_id == caster.world_id or joined
     if target is None or row.range is SpellRange.WORLD:
         return target is None or target.world_id == caster.world_id
     if row.range is SpellRange.TOUCH:

@@ -106,6 +106,31 @@ def visited(level: SurveyLevel, trips: list[tuple[int, JourneyIntent]], world_id
     return level
 
 
+async def share_charts(ctx: TickContext, known: dict[tuple[int, int], WorldSurveyRow]) -> int:
+    charted = index_of(SurveyLevel.SURVEYED)
+    shared = 0
+    trades = await ctx.session.scalars(select(BondRow).where(BondRow.kind == BondKind.TRADES_WITH, BondRow.state == BondState.ACTIVE).order_by(BondRow.id))
+    for bond in list(trades):
+        for giver, taker in ((bond.source_node_id, bond.target_node_id), (bond.target_node_id, bond.source_node_id)):
+            if held(taker):
+                continue
+            for (observer, world_id), row in sorted(known.items()):
+                if observer != giver or index_of(row.level) < charted:
+                    continue
+                mine = known.get((taker, world_id))
+                if mine is not None and ("level" in mine.locked or index_of(mine.level) >= index_of(SurveyLevel.CHARTED_BY_OTHERS)):
+                    continue
+                if not ctx.rng(f"charts.{taker}.{world_id}.{ctx.epoch}").chance(ctx.rules.survey.chart_share_pct):
+                    continue
+                if mine is None:
+                    mine = WorldSurveyRow(observer_entity_id=taker, world_id=world_id, level=SurveyLevel.CHARTED_BY_OTHERS, epoch=ctx.epoch, locked=[])
+                    ctx.session.add(mine)
+                    known[(taker, world_id)] = mine
+                mine.level, mine.epoch = SurveyLevel.CHARTED_BY_OTHERS, ctx.epoch
+                shared += 1
+    return shared
+
+
 async def survey_cycle(ctx: TickContext, cosmography: Cosmography) -> int:
     knowledge = await KnowledgeMap.load(ctx.session)
     raised = 0
@@ -139,5 +164,6 @@ async def survey_cycle(ctx: TickContext, cosmography: Cosmography) -> int:
                 known[(observer.id, world.id)] = row
             row.level, row.epoch = level, ctx.epoch
             raised += 1
+    raised += await share_charts(ctx, known)
     await ctx.session.flush()
     return raised

@@ -193,6 +193,20 @@ COMMODITIES: MappingProxyType[CommodityKind, CommoditySpec] = MappingProxyType(
                 consumption=lambda rules: rules.consumption.pottery_per_1000,
             ),
             CommoditySpec(C.BOOKS, "Books", F.LUXURY, Commodity.GOODS, 240, materials=(), consumption=lambda rules: rules.consumption.books_per_1000),
+            CommoditySpec(
+                C.PAPER, "Paper", F.INDUSTRIAL, Commodity.GOODS, 60, materials=(M.PAPER,), consumption=lambda rules: rules.consumption.paper_per_1000
+            ),
+            CommoditySpec(
+                C.GLASSWARE,
+                "Glassware",
+                F.INDUSTRIAL,
+                Commodity.GOODS,
+                110,
+                materials=(M.GLASS,),
+                consumption=lambda rules: rules.consumption.glassware_per_1000,
+            ),
+            CommoditySpec(C.SOAP, "Soap", F.SUBSISTENCE, Commodity.GOODS, 45, materials=(), consumption=lambda rules: rules.consumption.soap_per_1000),
+            CommoditySpec(C.INK, "Ink", F.INDUSTRIAL, Commodity.GOODS, 80, materials=(), consumption=lambda rules: rules.consumption.ink_per_1000),
         )
     }
 )

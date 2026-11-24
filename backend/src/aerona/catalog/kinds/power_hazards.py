@@ -5,7 +5,7 @@ from typing import Literal
 from aerona.core.total import total
 from aerona.domain.enums.powers import PowerHazard
 
-Harm = Literal["wound", "stress", "exhaust", "mutate", "strain", "notice", "spill"]
+Harm = Literal["wound", "stress", "exhaust", "mutate", "strain", "notice", "spill", "age", "possess"]
 
 
 @dataclass(frozen=True)
@@ -27,5 +27,7 @@ POWER_HAZARDS: Mapping[PowerHazard, Hazard] = total(
         H.BURNOUT: Hazard("exhaust"),
         H.DEPENDENCY: Hazard("stress"),
         H.ATTENTION: Hazard("notice"),
+        H.AGEING: Hazard("age"),
+        H.POSSESSION: Hazard("possess"),
     },
 )

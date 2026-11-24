@@ -40,6 +40,8 @@ BEAST_PRODUCTS: Mapping[YieldProduct, BeastProductSpec] = total(
         YieldProduct.SCENT: BeastProductSpec(lambda rules: rules.beast_products.scent_value, lambda rules: rules.beast_products.scent_yield),
         YieldProduct.HONEY: BeastProductSpec(lambda rules: rules.beast_products.honey_value, lambda rules: rules.beast_products.honey_yield),
         YieldProduct.WAX: BeastProductSpec(lambda rules: rules.beast_products.wax_value, lambda rules: rules.beast_products.wax_yield),
+        YieldProduct.SHELL: BeastProductSpec(lambda rules: rules.beast_products.shell_value, lambda rules: rules.beast_products.shell_yield),
+        YieldProduct.SCALES: BeastProductSpec(lambda rules: rules.beast_products.scales_value, lambda rules: rules.beast_products.scales_yield),
     },
 )
 BY_PRODUCT_NAME: Mapping[str, YieldProduct] = {**{item.value: item for item in YieldProduct}, "magic reagents": YieldProduct.MAGIC_REAGENTS}

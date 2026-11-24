@@ -10,6 +10,8 @@ class HumourForm(StrEnum):
     IRONY = "irony"
     STORYTELLING = "storytelling"
     RITUAL_CLOWNING = "ritual_clowning"
+    PARODY = "parody"
+    RIDDLING = "riddling"
 
 
 class SpeechVenue(StrEnum):
@@ -20,6 +22,8 @@ class SpeechVenue(StrEnum):
     SCHOOL = "school"
     CAMP = "camp"
     OUTLET = "outlet"
+    MARKET = "market"
+    FUNERAL = "funeral"
 
 
 class SpeechAim(StrEnum):
@@ -30,3 +34,5 @@ class SpeechAim(StrEnum):
     RALLY = "rally"
     DEFEND = "defend"
     ACCUSE = "accuse"
+    PRAISE = "praise"
+    WARN = "warn"

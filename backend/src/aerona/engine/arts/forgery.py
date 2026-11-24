@@ -20,13 +20,16 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import ItemClass
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.intrigue import IntrigueSecret
+from aerona.domain.enums.kinds import GoodCategory
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClaimBasis
 from aerona.domain.enums.records import StepAction
 from aerona.domain.models.entity_stats import ArtworkStats, ItemStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.good_kinds import good_book
 from aerona.engine.economy.money import issued_by
 from aerona.engine.economy.purse import receive_coin, take_coin
+from aerona.engine.economy.stocks import holdings
 from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.lore.items import profile_of
 from aerona.engine.polity.trials import report_crime
@@ -299,6 +302,15 @@ async def renowned_brand(ctx: TickContext, world_id: int | None) -> BrandRow | N
     )
 
 
+async def relic_lure(ctx: TickContext, maker: EntityRow) -> float:
+    if maker.location_id is None:
+        return 1.0
+    goods = await good_book(ctx.session)
+    stock = await holdings(ctx.session, maker.location_id)
+    traded = any(stock.get(kind, 0) > 0 for kind in goods.of_category(GoodCategory.RELICS_AND_ANTIQUITIES))
+    return ctx.rules.goods.relic_forgery_pct / PERCENT if traded else 1.0
+
+
 async def forge_works(ctx: TickContext, tally: ForgeryTally) -> None:
     table = ctx.rules.forgery
     makers = await ctx.session.scalars(
@@ -311,7 +323,11 @@ async def forge_works(ctx: TickContext, tally: ForgeryTally) -> None:
     for maker in ctx.rng("forge.order").shuffled(makers):
         if quota.full(maker.world_id):
             continue
-        if held(maker.id) or stat_or(maker, "creativity", 0) < table.skill_floor or not ctx.rng(f"forge.{maker.id}").chance(table.forge_chance):
+        if (
+            held(maker.id)
+            or stat_or(maker, "creativity", 0) < table.skill_floor
+            or not ctx.rng(f"forge.{maker.id}").chance(table.forge_chance * await relic_lure(ctx, maker))
+        ):
             continue
         original = await worth_forging(ctx, maker.world_id)
         brand = None if original is not None else await renowned_brand(ctx, maker.world_id)

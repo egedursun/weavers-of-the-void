@@ -48,6 +48,7 @@ class LongSeasonRules(Spanned):
     far_share_pct: int = rule(25, 0, 100, E, "Share of an eruption winter that regions outside its reach still feel (%)")
     stellar_dim_pct: int = rule(10, 1, 100, E, "Fall of a star's brightness in an epoch that brings a long winter to the worlds it lights (%)")
     stellar_bright_pct: int = rule(10, 1, 100, E, "Rise of a star's brightness in an epoch that brings a long summer to the worlds it lights (%)")
+    supernova_severity: int = rule(60, 0, 100, E, "Severity of the long winter a supernova brings to every world its star lit")
     stacking_share_pct: int = rule(30, 0, 100, E, "Share of each weaker spell of the same kind added to the strongest on one world (%)")
     summer_harvest_pct: int = rule(30, 0, 100, E, "Share of the harvest a long summer of full severity takes from hot or dry regions (%)")
     summer_cold_gain_pct: int = rule(15, 0, 100, E, "Harvest a long summer of full severity adds to cold regions (%)")
@@ -86,6 +87,7 @@ class AgeRules:
     echoes_per_age: int = rule(5, 0, 100, A, "Great figures of an ended age who echo into the next")
     rebirth_chance: int = rule(30, 0, 100, A, "Chance each epoch that an unborn echo is reborn into a newborn (%)")
     period_epochs: int = rule(0, 0, 10000, A, "Epochs after which an age turns by itself in a cosmos that turns in ages; 0 lets only the doom clock turn it")
+    spiral_change_pct: int = rule(30, 0, 100, A, "Share of laws and kinds a spiral cosmos changes each time it turns; the rest it keeps (%)")
 
 
 @dataclass(frozen=True)
@@ -124,3 +126,6 @@ class ArcRules(Spanned):
     counterpoint: int = rule(15, 0, 100, F, "Drama a counterpart's arc gains when its counterpart's arc takes a beat")
     lapse_epochs: int = rule(10, 1, 100, F, "Epochs after which an unpaid setup lapses")
     setup_pull: int = rule(10, 0, 100, F, "Drama an open arc gains each epoch while a setup about its subject waits to be paid off")
+    betrayal_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of betrayal, a bond broken by one trusted (50 is neutral)")
+    friendship_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of friendship kept through trials (50 is neutral)")
+    legacy_weight: int = rule(50, 0, 100, F, "How readily a life is read as a tale of what it leaves and who keeps it (50 is neutral)")

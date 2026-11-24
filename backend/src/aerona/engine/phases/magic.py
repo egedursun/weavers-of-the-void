@@ -38,6 +38,7 @@ WARDED_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PLACE})
     "region.magic",
     "resource.might",
     "table.bonds",
+    "table.deep_passages",
     "table.entities",
     "table.ley_lines",
     "table.name_registry",

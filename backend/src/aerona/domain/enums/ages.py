@@ -52,6 +52,7 @@ class SeasonSpell(StrEnum):
 class AgeCycle(StrEnum):
     LINEAR = "linear"
     CYCLIC = "cyclic"
+    SPIRAL = "spiral"
 
 
 class ArcTemplate(StrEnum):
@@ -74,6 +75,9 @@ class ArcTemplate(StrEnum):
     RECONCILIATION = "reconciliation"
     SACRIFICE = "sacrifice"
     DISCOVERY = "discovery"
+    BETRAYAL = "betrayal"
+    FRIENDSHIP = "friendship"
+    LEGACY = "legacy"
 
 
 class ArcStage(StrEnum):

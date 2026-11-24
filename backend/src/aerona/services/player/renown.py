@@ -43,6 +43,8 @@ class SetStanding(Command):
     piety: int | None = Field(default=None, ge=0, le=SPAN)
     dread: int | None = Field(default=None, ge=0, le=SPAN)
     tyranny: int | None = Field(default=None, ge=0, le=SPAN)
+    trust: int | None = Field(default=None, ge=0, le=SPAN)
+    learning: int | None = Field(default=None, ge=0, le=SPAN)
     silenced_until: int | None = Field(default=None, ge=0)
     hold: bool = True
 

@@ -109,6 +109,10 @@ class GodImageRules:
     will_resist_pct: int = rule(50, 0, 100, D, "Share of a god's will and ambition that resists its believed image (%)")
     facet_pull_pct: int = rule(50, 0, 200, D, "Share of the pull that moves a god's anger and altruism toward its believed wrath and mercy (%)")
     folk_credence_pct: int = rule(50, 0, 100, D, "Share of belief intensity that comes from the peoples who tell their own stories of the god (%)")
+    bargain_pull_pct: int = rule(
+        60, 0, 400, D, "Share of the pull of belief a people that bargains with belief lets through, giving belief only for returns (%)"
+    )
+    playful_below: int = rule(10, 0, 100, D, "Believed wrath and mercy both below which a god neither loved nor hated is seen as playful")
 
 
 @dataclass(frozen=True)
@@ -140,6 +144,8 @@ class MagicSiteRules:
     ward_pct: int = rule(25, 0, 200, D, "Extra warding rites gain in a warded site's region at full strength (%)")
     sacredness: int = rule(10, 0, 100, D, "Sacredness a found magic site adds to its place")
     war_aim_pct: int = rule(30, 0, 100, D, "Chance each epoch a realm covets a found magic site its rival holds (%)")
+    confluence_pct: int = rule(150, 0, 500, D, "Reagents a site where sources meet gives its holder, against a single source (%)")
+    confluence_danger: int = rule(2, 0, 50, D, "Danger the place of a site where sources meet gains each epoch")
 
 
 @dataclass(frozen=True)
@@ -159,6 +165,9 @@ class DivineCreatureRules:
     dominion_per_deed: int = rule(5, 0, 100, D, "Dominion a deed of the creature wins its god in the region where it acted")
     raise_cost: int = rule(120, 0, 100000, P, "Essence a son spends to raise a divine creature")
     teach_cost: int = rule(10, 0, 10000, P, "Essence a son spends to reward or punish its creature")
+    message_love: int = rule(2, 0, 100, D, "Love each town near a god's creature gains when it carries its god's word")
+    teach_literacy: int = rule(1, 0, 20, D, "Literacy a people near a god's creature gains when it teaches them")
+    trade_prosperity: int = rule(2, 0, 50, D, "Prosperity a town near a god's creature gains when it trades with them")
 
 
 @dataclass(frozen=True)

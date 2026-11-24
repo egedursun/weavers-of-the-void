@@ -32,7 +32,7 @@ from tests.engine.trade.helpers import lay_route, seasons_of
 def test_route_environment_is_gone_and_the_media_are_one_taxonomy() -> None:
     for module in pkgutil.iter_modules(enum_package.__path__):
         assert not hasattr(importlib.import_module(f"aerona.domain.enums.{module.name}"), "RouteEnvironment")
-    assert set(TRADE_MODES) == set(TradeMode) and len(TradeMode) == 7
+    assert set(TRADE_MODES) == set(TradeMode) and len(TradeMode) == 8
     assert "caravan" not in {mode.value for mode in TradeMode}
     assert TradeMode.ROAD in CARRIERS[CarrierKind.PACK_ANIMALS].modes
     assert set(NAVIGATED_MODES) == {TradeMode.SEA, TradeMode.SKY}

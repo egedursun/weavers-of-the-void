@@ -15,7 +15,17 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.world import WorldType
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.features import adopt_comets, devour, ensure_wells, harbour_pirates, keep_wormholes, mine_fields, pass_rogues, return_comets
+from aerona.engine.cosmos.features import (
+    adopt_comets,
+    devour,
+    ensure_wells,
+    harbour_pirates,
+    keep_wormholes,
+    mine_fields,
+    pass_rogues,
+    return_comets,
+    veil_and_bend,
+)
 from aerona.engine.cosmos.impacts import forecast, impact_winters, resolve
 from aerona.engine.cosmos.lifeforms import fit_peoples, inferred_life, quicken, rederive_gravity, rehome_life
 from aerona.engine.cosmos.orbits import Moon, apply_to_world, calibrate, counted_moons, derive, infer, lose_air, rogue_worlds, root_of, sky_of
@@ -216,8 +226,81 @@ async def settle_heavens(session: AsyncSession, rules: Rules) -> int:
     return made + await survey_cycle(ctx, await Cosmography.load(session))
 
 
-@reads("table.cosmos", "table.nodes", "table.region_environment", "table.world_cycles", "table.world_physics", "table.worlds")
-@writes("table.chronicle", "table.incidents", "table.region_environment", "table.world_physics")
+@reads(
+    "cult.followers",
+    "mortal.age",
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.endurance",
+    "mortal.hp",
+    "mortal.intellect",
+    "mortal.lifespan",
+    "mortal.strength",
+    "mortal.willpower",
+    "people.population",
+    "people.prosperity",
+    "place.fertility",
+    "region.fertility",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.augment_effects",
+    "table.augments",
+    "table.bonds",
+    "table.charms",
+    "table.conditions",
+    "table.cosmos",
+    "table.cult_tenets",
+    "table.deep_passages",
+    "table.districts",
+    "table.dwelling_furnishings",
+    "table.dwellings",
+    "table.entities",
+    "table.entity_flags",
+    "table.foreign_gods",
+    "table.holder_levels",
+    "table.household_members",
+    "table.households",
+    "table.incubating_ideas",
+    "table.injuries",
+    "table.item_profiles",
+    "table.mind_attributes",
+    "table.node_births",
+    "table.nodes",
+    "table.polity_profiles",
+    "table.preparedness",
+    "table.prostheses",
+    "table.reconstructions",
+    "table.region_environment",
+    "table.structure_profiles",
+    "table.world_cycles",
+    "table.world_physics",
+    "table.worlds",
+)
+@writes(
+    "mortal.hp",
+    "people.population",
+    "people.prosperity",
+    "place.fertility",
+    "region.fertility",
+    "settlement.population",
+    "settlement.prosperity",
+    "table.bodies",
+    "table.body_customs",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.districts",
+    "table.entities",
+    "table.incident_facts",
+    "table.incident_participants",
+    "table.incident_steps",
+    "table.incident_terms",
+    "table.incidents",
+    "table.injuries",
+    "table.mortal_profiles",
+    "table.reconstructions",
+    "table.region_environment",
+    "table.world_physics",
+)
 async def planetary(ctx: TickContext) -> None:
     worlds = {row.id: row for row in await ctx.session.scalars(select(WorldRow).order_by(WorldRow.id))}
     rows = {row.world_id: row for row in await ctx.session.scalars(select(WorldPhysicsRow))}
@@ -247,6 +330,7 @@ async def cosmic_features(ctx: TickContext) -> None:
     ctx.count("comets_adopted", await adopt_comets(ctx))
     ctx.count("fields_mined", await mine_fields(ctx, cosmography))
     ctx.count("routes_raided", await harbour_pirates(ctx, cosmography))
+    ctx.count("routes_veiled", await veil_and_bend(ctx, cosmography))
     ctx.count("wormholes_kept", await keep_wormholes(ctx))
     ctx.count("worlds_devoured", await devour(ctx, cosmography))
     ctx.count("orbits_perturbed", await pass_rogues(ctx, cosmography))

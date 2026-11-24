@@ -12,7 +12,7 @@ RULES = Rules()
 
 
 def test_eighteen_damage_types_and_asphyxia_reaches_every_table() -> None:
-    assert len(DamageType) == 18
+    assert len(DamageType) == 20
     assert DAMAGE[DamageType.ASPHYXIA].breathing and DamageType.ASPHYXIA in DAMAGE_SECTIONS
     drowning = {hazard for hazard, spec in HAZARDS.items() if spec.damage is DamageType.ASPHYXIA}
     assert {TerrainHazard.THIN_ICE, TerrainHazard.FLASH_FLOOD, TerrainHazard.SPRING_FLOOD} <= drowning

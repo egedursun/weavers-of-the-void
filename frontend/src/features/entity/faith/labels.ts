@@ -46,6 +46,11 @@ import {
   Users,
   Utensils,
   WandSparkles,
+  GraduationCap,
+  School,
+  Binoculars,
+  Heart,
+  Hospital,
 } from 'lucide-react'
 import {
   FUNERAL_SPEC,
@@ -167,6 +172,12 @@ export const JUDGEMENTS: Record<string, Named & { hint: string }> = {
     tone: 'muted',
     hint: 'All souls fall alike',
   },
+  remembrance: {
+    label: 'By remembrance',
+    icon: ScrollText,
+    tone: 'info',
+    hint: 'By the memory the living keep of them; forgetting harms them',
+  },
 }
 
 export const FANATICISMS: Record<string, Named> = {
@@ -184,9 +195,9 @@ export const CLERGY: Record<string, Named> = {
     icon: Eye,
     tone: 'danger',
   },
-  teacher: { label: 'Teacher', icon: BookOpen, tone: 'info' },
-  healer: { label: 'Healer', icon: Church, tone: 'success' },
-  seer: { label: 'Seer', icon: Eye, tone: 'verdigris' },
+  teacher: { label: 'Teacher', icon: GraduationCap, tone: 'info' },
+  healer: { label: 'Healer', icon: Heart, tone: 'success' },
+  seer: { label: 'Seer', icon: Binoculars, tone: 'verdigris' },
   keeper_of_sites: {
     label: 'Keeper of holy sites',
     icon: Church,
@@ -206,6 +217,8 @@ export const HOLDINGS: Record<string, Named> = {
   network: { label: 'Networks', icon: Network, tone: 'info' },
   shares: { label: 'Shares in companies', icon: Coins, tone: 'gold' },
   lines: { label: 'Holy lines', icon: GitBranch, tone: 'verdigris' },
+  school: { label: 'School', icon: School, tone: 'verdigris' },
+  hospital: { label: 'Hospital', icon: Hospital, tone: 'verdigris' },
 }
 
 export const STRATA: Record<string, Named & { depth: number }> = {
@@ -278,6 +291,12 @@ export const REBIRTH_PATHS: Record<string, Named & { hint: string }> = {
     icon: PawPrint,
     tone: 'success',
     hint: 'Born again as a creature of its land',
+  },
+  place: {
+    label: 'By place',
+    icon: MapIcon,
+    tone: 'verdigris',
+    hint: 'Born again tied to the place it died or was laid',
   },
 }
 

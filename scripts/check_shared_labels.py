@@ -53,8 +53,8 @@ def main() -> int:
     found = [item for path in shared_files() for item in generics_in(path)]
     for item in found:
         print(
-            f"{item.path.relative_to(ROOT)}:{item.line}: the field label '{item.label}' is drawn in every node drawer and clashes with the "
-            "drawer's own fields; name what it is"
+            f"{item.path.relative_to(ROOT)}:{item.line}: the field label '{item.label}' is drawn in every node entry window and clashes with the "
+            "window's own fields; name what it is"
         )
     print(f"shared labels: {len(found)}")
     return 1 if found else 0

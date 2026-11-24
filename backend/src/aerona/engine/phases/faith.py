@@ -24,6 +24,7 @@ from aerona.engine.faith.works import (
     saints,
     spend,
     survey_holdings,
+    tend_works,
     tithe,
 )
 from aerona.engine.faith.zeal import stir
@@ -101,6 +102,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     cult = church.cult.id
     ctx.count("clergy_appointed", await staff(ctx, church))
     ctx.count("holdings_added", await survey_holdings(ctx, church))
+    ctx.count("works_tended", await tend_works(ctx, church))
     ctx.count("holding_income", await holding_income(ctx, church))
     ctx.count("tithes", await tithe(ctx, church, laws))
     ctx.count("devotion", await devotion(ctx, church, book.faith.patron(cult)))
@@ -183,6 +185,7 @@ async def church_year(ctx: TickContext, church: Church, book: FaithBook, *, laws
     "table.cult_offices",
     "table.cult_tenets",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensions",
     "table.disease_cures",
     "table.disease_profiles",
@@ -345,6 +348,7 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.culture_values",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.divine_wounds",

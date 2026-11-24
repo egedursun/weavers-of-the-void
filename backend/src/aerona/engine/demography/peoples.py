@@ -268,6 +268,7 @@ def customs_of(values: dict[ValueAxis, int]) -> tuple[InheritanceCustom, bool]:
         (kinship >= LEAN and values.get(ValueAxis.TRADITION, 0) >= LEAN, InheritanceCustom.SENIORITY),
         (values.get(ValueAxis.KNOWLEDGE, 0) >= LEAN, InheritanceCustom.BY_MERIT),
         (values.get(ValueAxis.LAW, 0) >= LEAN, InheritanceCustom.DESIGNATED),
+        (values.get(ValueAxis.EQUALITY, 0) >= LEAN, InheritanceCustom.COMMUNAL),
         (hierarchy <= -LEAN, InheritanceCustom.ELECTIVE),
     )
     inheritance = next((custom for matched, custom in ladder if matched), InheritanceCustom.EQUAL_SHARES)
@@ -289,8 +290,10 @@ def funeral_of(region: RegionEnvironmentRow | None, levels: dict[KnowledgeBranch
         (kinship >= LEAN * 2, FuneralCustom.ANCESTOR_SHRINE),
         (kinship >= LEAN and death >= 0 and values.get(ValueAxis.TRADITION, 0) >= LEAN, FuneralCustom.SECONDARY_BURIAL),
         (kinship >= LEAN and values.get(ValueAxis.MERCY, 0) <= -LEAN * 2, FuneralCustom.ENDOCANNIBALISM),
+        (death <= -LEAN * 2, FuneralCustom.MEMORIAL_ONLY),
         (terrain in SKY_LANDS, FuneralCustom.SKY_BURIAL),
         (coastal and levels.get(KnowledgeBranch.SEAFARING, 0) >= 1, FuneralCustom.SEA_BURIAL),
+        (values.get(ValueAxis.NATURE, 0) >= LEAN, FuneralCustom.RETURN_TO_SOIL),
         (values.get(ValueAxis.PIETY, 0) >= LEAN or (region is not None and region.forest_cover >= LEAN * 2), FuneralCustom.CREMATION),
     )
     return next((rite for matched, rite in ladder if matched), FuneralCustom.BURIAL)

@@ -17,3 +17,4 @@ class PrehistoryRules:
     deep_time_max_epochs: int = rule(100, 1, 1000, C, "Most epochs one fast-forward of deep time may run")
     deep_time_cost: int = rule(50, 0, 100000, C, "Essence the Creator spends for each epoch of a fast-forward of deep time")
     deep_time_digest_size: int = rule(12, 1, 200, C, "Happenings of a fast-forward, by magnitude, kept in its digest")
+    ruin_prosperity: int = rule(30, 0, 100, C, "Prosperity each community of a made world loses when its prehistory ends with its makers gone")

@@ -1,6 +1,6 @@
-import { type DrawerSearch } from '@/components/layout/drawer/drawerEntries'
+import { type EntrySearch } from '@/components/layout/entry/entryStack'
 
-export type MapSearch = DrawerSearch & {
+export type MapSearch = EntrySearch & {
   world?: number
   epoch?: number
   focus?: number

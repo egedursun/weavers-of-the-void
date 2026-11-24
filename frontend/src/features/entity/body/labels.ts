@@ -6,6 +6,7 @@ import {
   Baby,
   Bandage,
   BatteryLow,
+  Bed,
   Biohazard,
   Bird,
   Bomb,
@@ -36,6 +37,7 @@ import {
   FlaskConical,
   Footprints,
   Frown,
+  Gauge,
   Ghost,
   Hammer,
   Hand,
@@ -45,9 +47,11 @@ import {
   Layers,
   MicOff,
   Moon,
+  Mountain,
   PersonStanding,
   Pill,
   Radiation,
+  Repeat,
   ScanSearch,
   Scissors,
   Shell,
@@ -65,12 +69,19 @@ import {
   Syringe,
   Target,
   TreeDeciduous,
+  TreePine,
   Unplug,
   Utensils,
   Waves,
   Wind,
   Worm,
   Zap,
+  Bolt,
+  Layers2,
+  Route,
+  Wrench,
+  BugOff,
+  Unlink,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { MATERIAL_LABEL } from '../economy/labels'
@@ -98,11 +109,13 @@ export const PLANS: Record<components['schemas']['BodyPlan'], Named> = {
   tentacled: { label: 'Many-armed', icon: Waves, tone: 'info' },
   centauroid: {
     label: 'Upright on four legs',
-    icon: Footprints,
+    icon: Route,
     tone: 'warning',
   },
   radial: { label: 'Built round a centre', icon: Sun, tone: 'verdigris' },
   colonial: { label: 'Many living members', icon: Boxes, tone: 'success' },
+  hexapod: { label: 'Six-limbed', icon: BugOff, tone: 'warning' },
+  rooted: { label: 'Rooted', icon: TreePine, tone: 'success' },
 }
 
 export const FUNCTIONS: Record<string, Named> = {
@@ -121,6 +134,8 @@ export const FUNCTIONS: Record<string, Named> = {
   horn: { label: 'Horn', icon: Target, tone: 'warning' },
   tail: { label: 'Tail', icon: Worm },
   presence: { label: 'Presence', icon: Crown, tone: 'gold' },
+  swim: { label: 'Swimming', icon: Waves, tone: 'info' },
+  climb: { label: 'Climbing', icon: Mountain, tone: 'gold' },
 }
 
 export const CAPACITIES: Record<
@@ -197,6 +212,20 @@ export const CAPACITIES: Record<
     hint: 'Sight and hearing sharpened by the senses a body has. Watch, scouting, ambush and tracking read it.',
     base: 'perception',
   },
+  stealth: {
+    label: 'Stealth',
+    icon: EyeOff,
+    tone: 'muted',
+    base: 'perception',
+    hint: 'Going unseen, from the senses, size and conditions of a body. Scouts, spies and hunters read it.',
+  },
+  labour: {
+    label: 'Labour',
+    icon: Wrench,
+    tone: 'gold',
+    base: 'strength',
+    hint: 'Work by strength and endurance; it sets work output.',
+  },
 }
 
 export const INJURIES: Record<components['schemas']['InjuryKind'], Named> = {
@@ -241,12 +270,15 @@ export const INJURIES: Record<components['schemas']['InjuryKind'], Named> = {
     tone: 'verdigris',
   },
   asphyxia: { label: 'Loss of breath', icon: Wind, tone: 'danger' },
-  dislocation: { label: 'Dislocated joint', icon: Bone, tone: 'warning' },
+  dislocation: { label: 'Dislocated joint', icon: Unlink, tone: 'warning' },
   internal_bleeding: {
     label: 'Bleeding inside',
     icon: Droplet,
     tone: 'danger',
   },
+  sprain: { label: 'Sprain', icon: Bandage, tone: 'warning' },
+  torn_tendon: { label: 'Torn tendon', icon: Activity, tone: 'danger' },
+  pressure_injury: { label: 'Injury of pressure', icon: Gauge, tone: 'danger' },
 }
 
 export const STATES: Record<
@@ -276,13 +308,19 @@ export const STATES: Record<
   lethal: { label: 'Fatal', icon: Skull, tone: 'danger', badge: 'destructive' },
   gangrenous: {
     label: 'Gangrenous',
-    icon: Biohazard,
+    icon: Ghost,
     tone: 'danger',
     badge: 'destructive',
   },
   reopened: {
     label: 'Reopened',
-    icon: Bandage,
+    icon: Droplets,
+    tone: 'warning',
+    badge: 'warning',
+  },
+  chronic: {
+    label: 'Chronic',
+    icon: Repeat,
     tone: 'warning',
     badge: 'warning',
   },
@@ -310,6 +348,8 @@ export const DAMAGE: Record<components['schemas']['DamageType'], string> = {
   sonic: 'Sonic',
   psychic: 'Psychic',
   asphyxia: 'Lack of air',
+  soul: 'Soul',
+  pressure: 'Pressure',
 }
 
 export const CAUSES: Record<components['schemas']['HarmCause'], string> = {
@@ -342,6 +382,9 @@ export const CAUSES: Record<components['schemas']['HarmCause'], string> = {
   childbirth: 'Giving birth',
   crime: 'Violent crime',
   sport: 'Sport',
+  animal: 'Animals',
+  crowd: 'Crowd',
+  medical: 'Treatment',
 }
 
 export const CONDITION_CAUSES: Record<
@@ -368,6 +411,7 @@ export const BODY_SYSTEMS: Record<components['schemas']['BodySystem'], string> =
     reproduction: 'Reproduction',
     structure: 'Frame',
     none: 'No system',
+    excretion: 'Excretion',
   }
 
 export const CONDITION_COURSES: Record<
@@ -418,6 +462,9 @@ export const CONDITIONS: Record<components['schemas']['ConditionKind'], Named> =
     paralysis: { label: 'Paralysis', icon: Accessibility, tone: 'danger' },
     infertility: { label: 'Infertility', icon: Baby, tone: 'muted' },
     chronic_pain: { label: 'Lasting pain', icon: Zap, tone: 'warning' },
+    seizures: { label: 'Seizures', icon: Zap, tone: 'danger' },
+    lasting_fear: { label: 'Lasting fear', icon: Ghost, tone: 'warning' },
+    breathlessness: { label: 'Breathlessness', icon: Wind, tone: 'warning' },
   }
 
 export const MEDICINE: Record<
@@ -508,6 +555,12 @@ export const MEDICINE: Record<
     tone: 'gold',
     hint: 'Minute machines repair the body from within.',
   },
+  anatomy: {
+    label: 'Anatomy',
+    icon: BookOpen,
+    tone: 'info',
+    hint: 'Knowledge from dissection and study makes surgery and setting surer.',
+  },
 }
 
 export const READINGS: Record<string, Named & { hint: string }> = {
@@ -548,7 +601,9 @@ export const MAIMED: Record<components['schemas']['MaimedKind'], Named> = {
   scarred: { label: 'Disfigured', icon: Bandage, tone: 'muted' },
   broken_minded: { label: 'Broken in mind', icon: Brain, tone: 'verdigris' },
   paralysed: { label: 'Paralysed', icon: Accessibility, tone: 'danger' },
-  lost_fingers: { label: 'Missing fingers', icon: Hand, tone: 'warning' },
+  lost_fingers: { label: 'Missing fingers', icon: HandHeart, tone: 'warning' },
+  lost_tail: { label: 'Tail lost', icon: Scissors, tone: 'warning' },
+  lost_wing: { label: 'Wing lost', icon: Feather, tone: 'warning' },
 }
 
 export const MATERIALS: Record<string, string> = MATERIAL_LABEL
@@ -604,7 +659,7 @@ export const TISSUES: Record<string, Named> = {
   scale: { label: 'Scales', icon: Shell, tone: 'verdigris' },
   chitin: { label: 'Chitin', icon: Bug, tone: 'verdigris' },
   bark: { label: 'Bark', icon: TreeDeciduous, tone: 'success' },
-  fat: { label: 'Fat', icon: Layers, tone: 'muted' },
+  fat: { label: 'Fat', icon: Layers2, tone: 'muted' },
   muscle: { label: 'Muscle', icon: Activity, tone: 'warning' },
   tendon: { label: 'Tendons and ligaments', icon: Unplug, tone: 'warning' },
   bone: { label: 'Bone', icon: Bone, tone: 'warning' },
@@ -615,7 +670,7 @@ export const TISSUES: Record<string, Named> = {
 }
 
 export const NERVES: Record<string, Named> = {
-  none: { label: 'Nerves whole', icon: Zap, tone: 'success' },
+  none: { label: 'Nerves whole', icon: Bolt, tone: 'success' },
   motor: { label: 'Limp: motor nerve cut', icon: Zap, tone: 'danger' },
   sensory: { label: 'Numb: sensory nerve cut', icon: Zap, tone: 'info' },
 }
@@ -662,6 +717,8 @@ export const TREATMENTS: Record<components['schemas']['TreatmentStep'], Named> =
     drain: { label: 'Drain', icon: Droplets, tone: 'info' },
     bleed: { label: 'Let blood', icon: Droplet, tone: 'danger' },
     medicate: { label: 'Give a remedy', icon: Pill, tone: 'success' },
+    transfuse: { label: 'Give blood', icon: Droplet, tone: 'danger' },
+    rest: { label: 'Rest', icon: Bed, tone: 'success' },
   }
 
 export const BLOOD_ICON = Droplet

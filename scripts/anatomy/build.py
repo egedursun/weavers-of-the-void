@@ -8,15 +8,21 @@ from amorphous import amorphous
 from aquatic import aquatic
 from arboreal import arboreal
 from avian import avian
+from centauroid import centauroid
+from colonial import colonial
 from colossal import colossal
 from construct import construct
 from divine import divine
+from hexapod import hexapod
 from humanoid import humanoid
 from incorporeal import incorporeal
 from insectoid import insectoid
 from quadruped import quadruped
+from radial import radial
 from render import DEFS, LOOKS, STATE_LABEL, SWATCH, C, Part, Plan, glyph
+from rooted import rooted
 from serpentine import serpentine
+from tentacled import tentacled
 
 OUT = Path(__file__).resolve().parents[2] / "frontend" / "src" / "features" / "entity" / "body" / "anatomy"
 PLANS: dict[str, Callable[[dict[str, str]], Plan]] = {
@@ -32,6 +38,12 @@ PLANS: dict[str, Callable[[dict[str, str]], Plan]] = {
     "colossal": colossal,
     "construct": construct,
     "divine_manifest": divine,
+    "tentacled": tentacled,
+    "centauroid": centauroid,
+    "radial": radial,
+    "colonial": colonial,
+    "hexapod": hexapod,
+    "rooted": rooted,
 }
 STATES = ("open", "festering", "scarred", "lasting", "lost", "prosthesis", "fatal")
 TOKENS = {

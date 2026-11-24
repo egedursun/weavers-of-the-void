@@ -4,6 +4,7 @@ import re
 import sys
 from pathlib import Path
 
+from forms import teeth
 from render import C, Part, Plan, draw, ellipse, page
 
 OUT = Path(__file__).parent
@@ -158,6 +159,8 @@ def serpentine(states: dict[str, str]) -> Plan:
         Part("lungs", "Lung", band(0.185, 0.37, 0.42, 60, cap=True), anchor(0.28), inner=True),
         Part("gut", "Gut", band(0.42, 0.68, 0.48, 80, cap=True), anchor(0.55), inner=True),
         Part("groin", "Vent", band(0.703, 0.733, 0.55, 20, cap=True), anchor(0.718), inner=True),
+        Part("teeth", "Fangs", teeth(150, 26.6, 13, 2.6, 5), (150, 26.6), inner=True, subtle=True),
+        Part("spine", "Spine", band(0.02, 0.97, 0.12, 200, cap=True), anchor(0.33), inner=True, subtle=True),
     ]
     details = [side_line(0.62, 0.02, 0.97), side_line(-0.62, 0.02, 0.97), BROW, mirror_x(BROW), *HEAD_SCALES]
     marks = [f'<path d="{diamond(t / 100)}" fill="#000" fill-opacity="0.22" stroke="{C["detail"]}" stroke-width="0.6"/>' for t in range(4, 97, 4)]

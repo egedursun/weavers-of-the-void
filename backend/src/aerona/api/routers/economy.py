@@ -68,6 +68,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import MaterialOrigin, WorkshopKind
 from aerona.domain.enums.entity import SOCIETY_TYPES, EntityType
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.polity import DebtRemedy, LawKind
 from aerona.domain.enums.society import Commodity
 from aerona.engine.economy.extraction import extraction_kind
@@ -435,9 +436,9 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
     if not ids:
         return []
     entities = {row.id: row for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_(ids)))}
-    paths: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    paths: dict[int, list[tuple[int, int, UndergroundStratum | None]]] = defaultdict(list)
     for step in await session.scalars(select(TradeRouteRegionRow).where(TradeRouteRegionRow.route_entity_id.in_(ids))):
-        paths[step.route_entity_id].append((step.position, step.region_entity_id))
+        paths[step.route_entity_id].append((step.position, step.region_entity_id, step.stratum))
     tolls: dict[int, list[TradeRouteTollRow]] = defaultdict(list)
     for toll in await session.scalars(select(TradeRouteTollRow).where(TradeRouteTollRow.route_entity_id.in_(ids))):
         tolls[toll.route_entity_id].append(toll)
@@ -451,7 +452,7 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
     wanted = {row.first_market_id for row in profiles} | {row.second_market_id for row in profiles}
     wanted |= {toll.region_entity_id for items in tolls.values() for toll in items} | {toll.controller_entity_id for items in tolls.values() for toll in items}
     wanted |= {toll.polity_entity_id for items in tolls.values() for toll in items if toll.polity_entity_id is not None}
-    wanted |= {region for steps in paths.values() for _, region in steps}
+    wanted |= {region for steps in paths.values() for _, region, _ in steps}
     names = await names_of(session, wanted)
     son_ids = [row.closed_by_son_id for row in profiles if row.closed_by_son_id is not None]
     sons = {son_id: name for son_id, name in await session.execute(select(SonRow.id, SonRow.name).where(SonRow.id.in_(son_ids)))} if son_ids else {}
@@ -482,7 +483,8 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
                 danger=stat(entity, "danger") or 0,
                 renown=stat(entity, "renown") or 0,
                 culture=stat(entity, "culture") or 0,
-                path=[region for _, region in sorted(paths[row.route_entity_id])],
+                path=[region for _, region, _ in sorted(paths[row.route_entity_id], key=lambda step: step[0])],
+                path_strata=[stratum for _, _, stratum in sorted(paths[row.route_entity_id], key=lambda step: step[0])],
                 tolls=[
                     TollView(
                         region_id=toll.region_entity_id,
@@ -513,6 +515,8 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
                     officials=row.danger_officials,
                     spoilage=row.danger_spoilage,
                     pilferage=row.danger_pilferage,
+                    pirates=row.danger_pirates,
+                    breakage=row.danger_breakage,
                 ),
                 season_pct=row.season_pct,
                 closed_season=row.closed_season,
@@ -521,7 +525,7 @@ async def route_views(session: AsyncSession, profiles: list[TradeRouteProfileRow
                 chokepoint=row.chokepoint,
                 locked=[key for key in row.locked or [] if not key.startswith(UNTOLLED)],
                 untolled=untolled_of(row.locked),
-                region_names={region: names.get(region, "") for _, region in paths[row.route_entity_id]},
+                region_names={region: names.get(region, "") for _, region, _ in paths[row.route_entity_id]},
             )
         )
     return views

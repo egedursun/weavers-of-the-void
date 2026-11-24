@@ -31,7 +31,23 @@ INTOXICANT_FIELDS = ("use", "acceptance")
 MARK_CUSTOM_FIELDS = ("meaning",)
 GRADE_DUTY_FIELDS = ("grade",)
 MARK_FIELDS = ("kind", "meaning", "placed_epoch")
-TIME_FIELDS = ("work", "rest", "worship", "leisure", "travel", "service", "learning", "care", "art", "housework", "sleep", "civic", "training")
+TIME_FIELDS = (
+    "work",
+    "rest",
+    "worship",
+    "leisure",
+    "travel",
+    "service",
+    "learning",
+    "care",
+    "art",
+    "housework",
+    "sleep",
+    "civic",
+    "training",
+    "socialising",
+    "mourning",
+)
 NAMING_FIELDS = ("pattern", "secret_names", "taboo_epochs", "rename_on_initiation", "rename_on_marriage", "rename_on_vow", "posthumous_names")
 NAME_FORM_FIELDS = ("name", "given_epoch")
 AGE_SET_FIELDS = ("name", "initiated_from", "initiated_to", "grade", "promoted_epoch")
@@ -120,6 +136,8 @@ class TimeBudgetRow(Base):
     sleep: Mapped[int] = mapped_column(default=0, server_default="0")
     civic: Mapped[int] = mapped_column(default=0, server_default="0")
     training: Mapped[int] = mapped_column(default=0, server_default="0")
+    socialising: Mapped[int] = mapped_column(default=0, server_default="0")
+    mourning: Mapped[int] = mapped_column(default=0, server_default="0")
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)
 
 

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.domain import STANDING_STATES
-from aerona.catalog.urban import HOME_DISTRICT, NUISANCES, REACH_RULE, SERVICE_OF
+from aerona.catalog.urban import DERIVED_SERVICES, HOME_DISTRICT, NUISANCES, REACH_RULE, SERVICE_OF
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.entities import EntityRow
@@ -139,11 +139,21 @@ async def cover_town(ctx: TickContext, settlement: EntityRow, tally: CoverageTal
             if row is None:
                 row = DistrictServiceRow(district_id=district.id, service=service, coverage=0, locked=[])
                 ctx.session.add(row)
+                stored[(district.id, service)] = row
             if "coverage" not in row.locked:
                 row.coverage = clamp_int(round_half_up(share), 0, PERCENT)
             row.epoch = ctx.epoch
             tally.covered += 1
+        derive(ctx.rules, district.id, stored)
     await ctx.session.flush()
+
+
+def derive(rules: Rules, district_id: int, stored: dict[tuple[int, UrbanService], DistrictServiceRow]) -> None:
+    for service, source, key in DERIVED_SERVICES:
+        row, base = stored.get((district_id, service)), stored.get((district_id, source))
+        if row is None or base is None or "coverage" in row.locked:
+            continue
+        row.coverage = max(row.coverage, clamp_int(round_half_up(base.coverage * int(getattr(rules.coverage, key)) / PERCENT), 0, PERCENT))
 
 
 async def cover_towns(ctx: TickContext, tally: CoverageTally) -> None:

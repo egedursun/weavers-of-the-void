@@ -1,6 +1,7 @@
 from aerona.api.schemas.common import ApiModel
-from aerona.domain.enums.environment import RiverClass
-from aerona.domain.enums.geology import BuildingGrade, RockKind, UndergroundStratum
+from aerona.api.schemas.records import NodeRef
+from aerona.domain.enums.environment import RiverClass, TerrainKind
+from aerona.domain.enums.geology import BuildingGrade, DeepPassageKind, DeepPassageOrigin, DeepPassageState, RockKind, UndergroundStratum
 from aerona.domain.enums.region import DangerHarm, DangerOrigin, DangerSource, HazardSeason, MemoryOrigin, RegionMemoryKind, TerrainHazard
 
 
@@ -124,6 +125,29 @@ class DepthStratumView(ApiModel):
     reached_epoch: int | None
     breached_epoch: int | None
     tapped_epoch: int | None
+    name: str | None
+    terrain: TerrainKind
+    extent: int
+    light: int
+    realm: NodeRef | None
+    holder: NodeRef | None
+    dwellers: list[NodeRef]
+    dwellable: bool
+    locked: list[str]
+
+
+class DeepPassageView(ApiModel):
+    id: int
+    kind: DeepPassageKind
+    state: DeepPassageState
+    origin: DeepPassageOrigin
+    width: int
+    progress: int
+    near_stratum: UndergroundStratum | None
+    far_region: NodeRef | None
+    far_stratum: UndergroundStratum | None
+    place: NodeRef | None
+    digger: NodeRef | None
     locked: list[str]
 
 
@@ -134,3 +158,4 @@ class BeneathView(ApiModel):
     carvable: bool
     layers: list[RockLayerView]
     strata: list[DepthStratumView]
+    passages: list[DeepPassageView]

@@ -100,7 +100,7 @@ async def enter_realm(ctx: TickContext, mind_id: int, realm_id: int) -> MindProf
         "realm.entered",
         roles={IncidentRole.ACTOR: mind_id, IncidentRole.DESTINATION: realm.dimension_id},
         facts={"purpose": realm.realm_purpose, "time_ratio": realm.time_ratio_pct},
-        steps=(StepDraft(StepAction.ENTER, actor=mind_id, locus_kind=StepLocus.REALM, locus_node=realm.dimension_id),),
+        steps=(StepDraft(StepAction.ENTER, actor=mind_id, locus_kind=StepLocus.DIMENSION, locus_node=realm.dimension_id),),
     )
     return mind
 
@@ -122,7 +122,9 @@ async def withdraw(ctx: TickContext, people_id: int, realm_id: int) -> int:
         "realm.withdrawal",
         roles={IncidentRole.ACTOR: people_id, IncidentRole.DESTINATION: realm.dimension_id},
         facts={"moved": moved, "purpose": realm.realm_purpose},
-        steps=(StepDraft(StepAction.ENTER, actor=people_id, locus_kind=StepLocus.REALM, locus_node=realm.dimension_id, amount=moved, unit=FactUnit.PEOPLE),),
+        steps=(
+            StepDraft(StepAction.ENTER, actor=people_id, locus_kind=StepLocus.DIMENSION, locus_node=realm.dimension_id, amount=moved, unit=FactUnit.PEOPLE),
+        ),
     )
     return moved
 
@@ -140,7 +142,9 @@ async def escapes(ctx: TickContext, realm: MadeRealmRow, minds: list[MindProfile
             "realm.escape",
             roles={IncidentRole.ACTOR: mind.node_id, IncidentRole.ORIGIN: realm.dimension_id},
             facts={"chance": chance, "awareness": realm.aware_inside},
-            steps=(StepDraft(StepAction.ESCAPE, actor=mind.node_id, locus_kind=StepLocus.REALM, locus_node=realm.dimension_id, outcome=StepOutcome.ESCAPED),),
+            steps=(
+                StepDraft(StepAction.ESCAPE, actor=mind.node_id, locus_kind=StepLocus.DIMENSION, locus_node=realm.dimension_id, outcome=StepOutcome.ESCAPED),
+            ),
         )
 
 

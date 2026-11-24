@@ -522,7 +522,7 @@ export function CosmosStep({ draft, update, options, peoplesMax }: StepProps) {
       />
       <SettingGroup
         label='Storyteller'
-        description='How the tension of the world rises and falls across the epochs. You can change it later in the world drawer.'
+        description='How the tension of the world rises and falls across the epochs. You can change it later in the entry of the world.'
       >
         <ChoiceTiles
           label='Storyteller'
@@ -534,7 +534,7 @@ export function CosmosStep({ draft, update, options, peoplesMax }: StepProps) {
       </SettingGroup>
       <SettingGroup
         label='Ages'
-        description='Whether the end of the cosmos is final or turns a new age. You can change it later in the drawer of any record, under tales and ages.'
+        description='Whether the end of the cosmos is final or turns a new age. You can change it later in the entry of any record, under tales and ages.'
       >
         <ChoiceTiles
           label='Ages'

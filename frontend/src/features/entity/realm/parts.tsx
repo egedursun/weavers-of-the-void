@@ -20,7 +20,7 @@ import {
   PagedList,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useNames } from '../api/queries'
 import { ControlPanel, FormBar, NodePicker } from '../mind/parts'
@@ -393,7 +393,7 @@ export function RefLink({
 }: {
   node: { id: number; kind: string; name: string }
 }) {
-  const kind: DrawerKind =
+  const kind: EntryKind =
     node.kind === 'foreign_god'
       ? 'foreign-god'
       : node.kind === 'son' ||

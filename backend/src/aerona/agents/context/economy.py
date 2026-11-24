@@ -22,6 +22,7 @@ from aerona.engine.economy.routes import LIVE_STATUSES
 from aerona.engine.economy.stocks import aggregate_index
 from aerona.engine.gods.queries import community_of
 from aerona.engine.industry.quality import tier_of
+from aerona.engine.primitives.deep_paths import route_passages
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.prompts.contexts.mortal import StoresLine
 from aerona.rules.registry import Rules
@@ -70,6 +71,9 @@ async def stores_for(session: AsyncSession, rules: Rules, me: EntityRow) -> Stor
             )
             if on
         ]
+        ways = await route_passages(session, profile.route_entity_id)
+        if ways:
+            flags.append("through passages " + ", ".join(spoken(state) if state is not None else "not yet dug" for state in ways))
         routes.append(
             f"{line.name} to {line.partner} by {line.mode}, danger {line.danger} "
             f"(bandits {line.bandits}, beasts {line.beasts}, weather {line.weather}, sea {line.sea}, officials {line.officials}, "

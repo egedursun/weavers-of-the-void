@@ -1,17 +1,24 @@
 import {
   Brain,
+  CircleDashed,
   CloudLightning,
   Clover,
   Crown,
   Droplet,
   Eclipse,
+  Eraser,
   Eye,
   EyeOff,
+  Fingerprint,
   Flame,
   FlaskConical,
   Ghost,
+  Hand,
+  HandHeart,
   Heart,
   HeartHandshake,
+  History,
+  Hourglass,
   Leaf,
   Lock,
   MessageCircle,
@@ -21,9 +28,12 @@ import {
   Skull,
   Sparkles,
   Sun,
+  Swords,
   Syringe,
+  UserMinus,
   Utensils,
   Wine,
+  Bed,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '../environment/labels'
@@ -39,7 +49,7 @@ export const PACKAGE_LOOKS: Record<
   vampirism: { label: 'Blood curse', icon: Droplet, tone: 'danger' },
   divine_blessing: { label: 'Divine blessing', icon: Sun, tone: 'gold' },
   void_taint: { label: 'Void taint', icon: Eclipse, tone: 'danger' },
-  possession: { label: 'Possession', icon: Ghost, tone: 'verdigris' },
+  possession: { label: 'Possession', icon: Eye, tone: 'verdigris' },
   trauma: { label: 'Trauma', icon: Brain, tone: 'info' },
   hunger_curse: { label: 'Hunger curse', icon: Utensils, tone: 'danger' },
   warping: { label: 'Warping', icon: Sparkles, tone: 'verdigris' },
@@ -53,6 +63,9 @@ export const PACKAGE_LOOKS: Record<
   fortune: { label: 'Fortune', icon: Clover, tone: 'gold' },
   transformation: { label: 'Transformation', icon: Shuffle, tone: 'verdigris' },
   charm: { label: 'Charm', icon: HeartHandshake, tone: 'warning' },
+  ageing: { label: 'Ageing', icon: Hourglass, tone: 'warning' },
+  forgetting: { label: 'Forgetting', icon: CircleDashed, tone: 'warning' },
+  sleep: { label: 'Sleep', icon: Bed, tone: 'info' },
 }
 
 export const TRANSMISSIONS: Record<
@@ -74,6 +87,8 @@ export const TRANSMISSIONS: Record<
   void: 'The void',
   intimate: 'Intimacy',
   objects: 'Goods and bedding',
+  soil: 'lying in the ground',
+  sound: 'carried by a sound',
 }
 
 export const CURES: Record<string, string> = {
@@ -95,6 +110,11 @@ export const VISIBILITY: Record<
     badge: 'secondary',
   },
   hidden: { label: 'Hidden', icon: EyeOff, badge: 'outline' },
+  marked: {
+    label: 'Marked for those who know',
+    icon: Fingerprint,
+    badge: 'warning',
+  },
 }
 
 export const STAT_LABELS: Record<string, string> = {
@@ -127,3 +147,24 @@ export const FORTUNE_SIGNS: Record<string, Named> = {
   '1': { label: 'Good fortune', icon: Clover, tone: 'success' },
   '-1': { label: 'Ill fortune', icon: CloudLightning, tone: 'danger' },
 }
+
+export const FORGET_SCOPES: Record<
+  components['schemas']['ForgetScope'],
+  Named
+> = {
+  recent: { label: 'What came last', icon: History, tone: 'info' },
+  person: {
+    label: 'A person and all tied to them',
+    icon: UserMinus,
+    tone: 'warning',
+  },
+  skill: { label: 'What the hands knew', icon: Hand, tone: 'warning' },
+  all: { label: 'A share of everything', icon: Eraser, tone: 'danger' },
+}
+
+export const SLEEP_UNTILS: Record<components['schemas']['SleepUntil'], Named> =
+  {
+    time: { label: 'Until its time runs out', icon: Hourglass, tone: 'info' },
+    deed: { label: 'Until a deed is done', icon: Swords, tone: 'gold' },
+    act: { label: 'Until one person acts', icon: HandHeart, tone: 'success' },
+  }

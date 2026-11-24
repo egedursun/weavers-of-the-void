@@ -12,5 +12,7 @@ DREAM_TRUTH: Mapping[DreamKind, int] = total(
         DreamKind.PROPHETIC: 100,
         DreamKind.VISITATION: 50,
         DreamKind.SHARED: 50,
+        DreamKind.LUCID: 60,
+        DreamKind.MEMORY: 90,
     },
 )

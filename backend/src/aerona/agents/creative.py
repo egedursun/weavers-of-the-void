@@ -14,6 +14,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.world import StarType, WorldType
+from aerona.domain.models.son_design import SonDesign
 
 CREATOR_PORTRAIT = "creator_portrait"
 CREATOR_EPIC = "creator_epic"
@@ -81,8 +82,8 @@ class AgentSonSummoner:
     def __init__(self, runtime: AgentRuntime) -> None:
         self._runtime = runtime
 
-    async def summon(self, world_id: int | None) -> int:
-        return (await summon_son(self._runtime, world_id)).id
+    async def summon(self, world_id: int | None, design: SonDesign | None = None) -> int:
+        return (await summon_son(self._runtime, world_id, design=design)).id
 
     async def birth(self, parent_son_id: int, inspiration: str, co_parent_son_id: int | None) -> int:
         return (await birth_child(self._runtime, parent_son_id, inspiration or None, co_parent_son_id)).id

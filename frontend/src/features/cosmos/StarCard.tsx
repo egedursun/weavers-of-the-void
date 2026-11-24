@@ -10,7 +10,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { PagedList, Section } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
 import { CosmicActionButton } from './CosmicActionButton'
 import { StarDisc } from './Glyphs'
@@ -29,7 +29,7 @@ type StarCardProps = {
 }
 
 export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const planets = index.planetsOf(star.id)
   const orbiting = index.worlds.filter((item) => item.world.star_id === star.id)
   const rekindle = useCosmicAction({
@@ -117,7 +117,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
       <Button
         variant='outline'
         className='self-start'
-        onClick={() => drawers.open({ kind: 'star', id: String(star.id) })}
+        onClick={() => entryStack.open({ kind: 'star', id: String(star.id) })}
       >
         <BookOpen />
         Lore and history

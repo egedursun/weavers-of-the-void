@@ -55,3 +55,5 @@ class CuisineRow(KindRow):
     numbing: Mapped[int] = mapped_column(default=0)
     smoky: Mapped[int] = mapped_column(default=0)
     fermented: Mapped[int] = mapped_column(default=0)
+    astringent: Mapped[int] = mapped_column(default=0, server_default="0")
+    rich: Mapped[int] = mapped_column(default=0, server_default="0")

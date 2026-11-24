@@ -72,6 +72,7 @@ from aerona.engine.phases.dominion import count
     "table.naming_customs",
     "table.node_births",
     "table.nodes",
+    "table.notable_years",
     "table.polity_members",
     "table.prostheses",
     "table.revivals",

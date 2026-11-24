@@ -17,7 +17,7 @@ RULES = Rules()
 
 
 def test_four_regulations_and_heterotherms_switch_while_athermic_bodies_never_slow() -> None:
-    assert len(Thermoregulation) == 4
+    assert len(Thermoregulation) == 5
     cold = TemperatureBand.FROZEN
     assert activity(RULES, Thermoregulation.ATHERMIC, cold) == activity(RULES, Thermoregulation.ATHERMIC, TemperatureBand.SEARING) == 1.0
     deep = tuned_rules(thermoregulation={"heterotherm_switch": 90})

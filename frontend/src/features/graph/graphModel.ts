@@ -336,10 +336,10 @@ export type GraphMode = '2d' | '3d'
 export const GRAPH_MODES: readonly GraphMode[] = ['2d', '3d']
 export const RADII = [1, 2, 3] as const
 
-export type NodeDrawerKind =
+export type NodeEntryKind =
   'son' | 'foreign-god' | 'creator' | 'world' | 'entity'
 
-export function drawerKindOf(kind: string | undefined): NodeDrawerKind | null {
+export function entryKindOf(kind: string | undefined): NodeEntryKind | null {
   switch (kind) {
     case 'son':
       return 'son'

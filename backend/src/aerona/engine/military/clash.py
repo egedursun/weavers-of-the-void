@@ -95,6 +95,8 @@ HILLS = terrains(TerrainTrait.HIGH)
 WOODS = terrains(TerrainTrait.WOODED)
 DRYLANDS = terrains(TerrainTrait.ARID) | terrains(TerrainTrait.ROUGH, without=(TerrainTrait.HIGH,))
 WETLANDS = terrains(TerrainTrait.WET)
+JUNGLES = terrains(TerrainTrait.WOODED) & terrains(TerrainTrait.HOT)
+COLDLANDS = terrains(TerrainTrait.COLD)
 HIDDEN_TACTICS = having(TACTIC_TRAITS, TacticTrait.HIDDEN_TACTICS)
 GUNS_TACTICS = having(TACTIC_TRAITS, TacticTrait.GUNS_TACTICS)
 LARGE_HOST = 5000
@@ -149,7 +151,7 @@ async def design_specs(ctx: TickContext, design_ids: set[int]) -> dict[int, Unit
 async def hardness_of(ctx: TickContext, world_id: int, materials: set[str]) -> dict[str, int]:
     book = await MaterialBook.load(ctx.session)
     found: dict[str, int] = {}
-    for material in materials:
+    for material in sorted(materials):
         try:
             props = book.props(world_id, MaterialKind(material))
         except ValueError:
@@ -519,6 +521,9 @@ def wanted_traits(side: Side, *, won: bool, result: BattleResult, ground: Field,
         (won and ground.terrain in WOODS, CommanderTrait.FOREST_FIGHTER),
         (won and ground.terrain in DRYLANDS, CommanderTrait.DESERT_FIGHTER),
         (won and ground.terrain in WETLANDS, CommanderTrait.MARSH_FIGHTER),
+        (won and ground.terrain in JUNGLES, CommanderTrait.JUNGLE_FIGHTER),
+        (won and ground.terrain in COLDLANDS, CommanderTrait.COLD_FIGHTER),
+        (won and ground.river and not ground.bridge, CommanderTrait.RIVER_CROSSER),
         (won and fliers >= CAVALRY_SHARE, CommanderTrait.SKY_COMMANDER),
         (won and voidborne >= CAVALRY_SHARE, CommanderTrait.SPACE_COMMANDER),
         (won and side.tactic in GUNS_TACTICS, CommanderTrait.ARTILLERIST),

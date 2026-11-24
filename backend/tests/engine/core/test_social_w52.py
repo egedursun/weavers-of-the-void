@@ -15,8 +15,8 @@ from tests.engine.core.factories import CoreWorld, tuned_rules
 from tests.engine.core.living_kinds import kind, land, range_of, told
 
 
-def test_six_social_forms_and_every_one_can_arise_from_a_kind_s_nature() -> None:
-    assert len(SOCIALITIES) == len(Sociality) == 6
+def test_eight_social_forms_and_every_one_can_arise_from_a_kind_s_nature() -> None:
+    assert len(SOCIALITIES) == len(Sociality) == 8
     reached = {
         sociality_of(Diet.HERBIVORE, {CreatureTrait.HIVE_MIND}, None),
         sociality_of(Diet.CARNIVORE, {CreatureTrait.PACK_HUNTER}, None),
@@ -24,6 +24,8 @@ def test_six_social_forms_and_every_one_can_arise_from_a_kind_s_nature() -> None
         sociality_of(Diet.PISCIVORE, {CreatureTrait.FLYING}, None),
         sociality_of(Diet.HERBIVORE, set(), None),
         sociality_of(Diet.CARNIVORE, set(), None),
+        sociality_of(Diet.HERBIVORE, {CreatureTrait.LONG_LIVED}, None),
+        sociality_of(Diet.CARNIVORE, {CreatureTrait.FLYING}, None),
     }
     assert reached == set(Sociality)
 

@@ -64,6 +64,14 @@ import {
   Waves,
   Wind,
   Zap,
+  Bomb,
+  CloudDrizzle,
+  CloudSunRain,
+  MountainSnow,
+  Music,
+  Satellite,
+  SunDim,
+  Tornado,
 } from 'lucide-react'
 import {
   type ClimateEra,
@@ -105,7 +113,7 @@ export const TEMPLATE_ICON: Record<WizardTemplate['key'], LucideIcon> = {
   cosmic_horror: Skull,
   fairy_tale: TreePine,
   star_myth: Star,
-  desert_world: Flame,
+  desert_world: SunDim,
   primordial_dawn: Sunrise,
   court_intrigue: Gem,
   drowned_world: Anchor,
@@ -124,8 +132,8 @@ export const TEMPLATE_ICON: Record<WizardTemplate['key'], LucideIcon> = {
   advanced_age: Atom,
   made_minds: BrainCircuit,
   after_abundance: Pickaxe,
-  gunpowder_age: Flame,
-  interstellar_age: Rocket,
+  gunpowder_age: Bomb,
+  interstellar_age: Satellite,
   beyond_age: Orbit,
 }
 
@@ -141,10 +149,10 @@ export const CLIMATE_ICON: Record<ClimateEra, LucideIcon> = {
   rain: Droplets,
   ice_age: Snowflake,
   scorching: Flame,
-  hothouse: Leaf,
-  snowball: Leaf,
-  variable: Leaf,
-  wet_cold: Leaf,
+  hothouse: CloudSunRain,
+  snowball: MountainSnow,
+  variable: Shuffle,
+  wet_cold: CloudDrizzle,
   warming: ThermometerSun,
   cooling: ThermometerSnowflake,
 }
@@ -197,7 +205,7 @@ export const LANGUAGE_ICON: Record<LanguageTexture, LucideIcon> = {
   free: Sparkle,
   tonal: AudioWaveform,
   clicking: Pointer,
-  whistled: Wind,
+  whistled: Music,
   non_vocal: Hand,
 }
 
@@ -245,11 +253,13 @@ export const STORYTELLER_HINT: Record<StorytellerProfile, string> = {
 export const AGE_CYCLE_ICON: Record<AgeCycle, LucideIcon> = {
   linear: MoveRight,
   cyclic: RefreshCcw,
+  spiral: Tornado,
 }
 
 export const AGE_CYCLE_HINT: Record<AgeCycle, string> = {
   linear: 'The cosmos runs on to its end; an apocalypse ruins a world',
   cyclic: 'Each end turns a new age that half-remembers the last',
+  spiral: 'Each turn keeps a set share of the last age and changes the rest',
 }
 
 export const LORE_LANGUAGE_ICON: Record<LoreLanguage, LucideIcon> = {

@@ -377,6 +377,11 @@ DWELLINGS: Mapping[DwellingKind, DwellingSpec] = total(
             since_w52=True,
             bodily=True,
         ),
+        D.GROWN: DwellingSpec(D.GROWN, "Grown dwelling", HousingLevel.HOUSE, 3, 50, 1, since_w52=True),
+        D.ROCK_CUT: DwellingSpec(
+            D.ROCK_CUT, "Rock-cut dwelling", HousingLevel.HOUSE, 4, 55, 1, cold=lambda rules: rules.dwellings.burrow_cold_cut_pct, since_w52=True
+        ),
+        D.COURTYARD: DwellingSpec(D.COURTYARD, "Courtyard house", HousingLevel.TOWNHOUSE, 6, 62, 5, stores=True, since_w52=True),
     },
 )
 BODILY_DWELLING_KEYS = frozenset(kind.value for kind, spec in DWELLINGS.items() if spec.bodily)

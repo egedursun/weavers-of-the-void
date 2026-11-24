@@ -19,6 +19,7 @@ from aerona.domain.enums.statecraft import SubjectKind
 from aerona.engine.polity import control
 from aerona.engine.polity.oath_terms import OathTerms
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
+from aerona.services.player.shaping import Shaped, shape_after
 
 
 class EditPolity(Command):
@@ -80,7 +81,7 @@ class ProtectLaw(Command):
     release: list[str] = Field(default_factory=list)
 
 
-class FoundHouse(Command):
+class FoundHouse(Shaped):
     mortal_id: int
 
 
@@ -113,7 +114,7 @@ class TreatyClause(Command):
     params: dict[str, int | str | bool] = Field(default_factory=dict)
 
 
-class SignTreaty(Command):
+class SignTreaty(Shaped):
     kind: TreatyKind
     parties: list[TreatyParty] = Field(min_length=2)
     clauses: list[TreatyClause] = Field(default_factory=list)
@@ -231,6 +232,7 @@ async def edit_law(scope: PlayerScope, command: EditLaw) -> Effect:
 @player_action("house:found", ActionKind.CREATE_ENTITY)
 async def found_house(scope: PlayerScope, command: FoundHouse) -> Effect:
     house = await control.found_house_by_hand(await scope.context("house_found"), command.mortal_id)
+    await shape_after(scope, house.id, command)
     return Effect(f"{house.name} is founded.", command.mortal_id, created_ids=(house.id,))
 
 
@@ -263,6 +265,7 @@ async def sign_treaty(scope: PlayerScope, command: SignTreaty) -> Effect:
         [(clause.kind, clause.obligor_id, clause.beneficiary_id, clause.params) for clause in command.clauses],
         epochs=command.epochs,
     )
+    await shape_after(scope, treaty.id, command)
     return Effect(f"{treaty.name} is sealed.", command.parties[0].party_id, created_ids=(treaty.id,))
 
 

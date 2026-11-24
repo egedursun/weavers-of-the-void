@@ -23,6 +23,8 @@ ARRIVALS: Mapping[JourneyIntent, ArrivalOutcome] = total(
         JourneyIntent.EXILE: ArrivalOutcome.SETTLERS,
         JourneyIntent.FLIGHT: ArrivalOutcome.REFUGEES,
         JourneyIntent.EMBASSY: ArrivalOutcome.SETTLERS,
+        JourneyIntent.RESCUE: ArrivalOutcome.SETTLERS,
+        JourneyIntent.RETURN: ArrivalOutcome.SETTLERS,
     },
 )
 
@@ -39,6 +41,8 @@ AIR: dict[Atmosphere, tuple[float, dict[str, int]]] = {
     Atmosphere.NORMAL: (1.0, {"nitrogen": 78, "oxygen": 21, "carbon_dioxide": 1, "methane": 0, "water_vapour": 0, "exotic_gas": 0}),
     Atmosphere.DENSE: (4.0, {"nitrogen": 75, "oxygen": 18, "carbon_dioxide": 5, "methane": 0, "water_vapour": 2, "exotic_gas": 0}),
     Atmosphere.TOXIC: (1.5, {"nitrogen": 40, "oxygen": 2, "carbon_dioxide": 40, "methane": 8, "water_vapour": 0, "exotic_gas": 10}),
+    Atmosphere.STEAM: (6.0, {"nitrogen": 20, "oxygen": 2, "carbon_dioxide": 18, "methane": 0, "water_vapour": 60, "exotic_gas": 0}),
+    Atmosphere.LAYERED: (1.2, {"nitrogen": 70, "oxygen": 14, "carbon_dioxide": 8, "methane": 2, "water_vapour": 2, "exotic_gas": 4}),
 }
 
 
@@ -62,6 +66,7 @@ VEHICLE_TECHNIQUES: Mapping[VehicleKind, Technique | None] = total(
         VehicleKind.LIVING: Technique.GENETIC_ENGINEERING,
         VehicleKind.RIFT: None,
         VehicleKind.ON_FOOT: None,
+        VehicleKind.DRIFT: None,
     },
 )
 
@@ -79,6 +84,9 @@ CAUSE_END: Mapping[WorldEndCause, WorldEnd] = total(
         WorldEndCause.RUNAWAY_CLIMATE: WorldEnd.BURNED,
         WorldEndCause.WAR: WorldEnd.BURNED,
         WorldEndCause.OUTER_HUNGER: WorldEnd.DEVOURED,
+        WorldEndCause.PLAGUE: WorldEnd.EMPTIED,
+        WorldEndCause.RUNAWAY_MAKING: WorldEnd.CONSUMED,
+        WorldEndCause.STRUCTURE_FAILURE: WorldEnd.SHATTERED,
     },
 )
 
@@ -94,10 +102,12 @@ END_REMNANT: Mapping[WorldEnd, WorldType | None] = total(
         WorldEnd.DROWNED: WorldType.OCEAN,
         WorldEnd.BURNED: WorldType.DEAD,
         WorldEnd.DEVOURED: WorldType.VOID_POCKET,
+        WorldEnd.EMPTIED: None,
+        WorldEnd.MERGED: None,
     },
 )
 
-SOURCED_CAUSES = frozenset({WorldEndCause.WAR, WorldEndCause.OUTER_HUNGER})
+SOURCED_CAUSES = frozenset({WorldEndCause.WAR, WorldEndCause.OUTER_HUNGER, WorldEndCause.RUNAWAY_MAKING})
 
 END_WORLD_WORLD_ENDS = frozenset(end for end, remnant in END_REMNANT.items() if remnant is not None) | {WorldEnd.TRANSFIGURED}
 
@@ -121,5 +131,7 @@ COLONIES: Mapping[JourneyIntent, ColonyOf] = total(
         JourneyIntent.EXILE: ColonyOf("settlement of exiles", ruled=False),
         JourneyIntent.FLIGHT: ColonyOf("refuge", ruled=False),
         JourneyIntent.EMBASSY: ColonyOf("colony"),
+        JourneyIntent.RESCUE: ColonyOf("rescue camp"),
+        JourneyIntent.RETURN: ColonyOf("homecoming", ruled=False),
     },
 )

@@ -15,7 +15,7 @@ from tests.engine.society.factories import Realm, context, settlement
 
 def test_six_pollutants_each_with_recovery_and_harm_rules() -> None:
     table = Rules().pollution
-    assert len(POLLUTANTS) == 6 and all(hasattr(table, spec.recover_rule) and hasattr(table, spec.harm_rule) for spec in POLLUTANTS.values())
+    assert len(POLLUTANTS) == 7 and all(hasattr(table, spec.recover_rule) and hasattr(table, spec.harm_rule) for spec in POLLUTANTS.values())
     assert METHODS[MethodKind.STEAM_HAMMER].pollution(Pollutant.NOISE) > 0 and METHODS[MethodKind.HAND_JOINERY].pollution(Pollutant.NOISE) == 0
     assert "pollutant" in LAW_PARAMS[LawKind.ENVIRONMENT_LAW]
 

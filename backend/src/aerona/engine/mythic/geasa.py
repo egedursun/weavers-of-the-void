@@ -37,8 +37,11 @@ class GeasTally:
     broken: int = 0
 
 
-async def lay_geas(ctx: TickContext, bearer: EntityRow, *, layer_node_id: int | None, layer: GeasLayer, mode: GeasMode, act: ActKind) -> GeasRow:
+async def lay_geas(
+    ctx: TickContext, bearer: EntityRow, *, layer_node_id: int | None, layer: GeasLayer, mode: GeasMode, act: ActKind, trigger: ActKind | None = None
+) -> GeasRow:
     row = GeasRow(
+        trigger=trigger if mode is GeasMode.CONDITION else None,
         bearer_entity_id=bearer.id,
         layer_node_id=layer_node_id,
         layer=layer,
@@ -100,10 +103,11 @@ async def birth_geas(ctx: TickContext, child: EntityRow, patron_id: int | None) 
     rng = ctx.rng(f"geas.birth.{child.id}")
     if not rng.chance(ctx.rules.geasa.birth_pct):
         return None
-    mode = GeasMode.DUTY if rng.chance(PERCENT // 4) else GeasMode.TABOO
+    mode = GeasMode.DUTY if rng.chance(PERCENT // 4) else GeasMode.CONDITION if rng.chance(PERCENT // 4) else GeasMode.TABOO
     seer = await seer_near(ctx, child.location_id)
     layer = GeasLayer.SEER if seer is not None else GeasLayer.GOD
-    return await lay_geas(ctx, child, layer_node_id=patron_id, layer=layer, mode=mode, act=rng.pick(list(GEAS_ACTS[mode])))
+    trigger = rng.pick(list(GEAS_ACTS[GeasMode.TABOO])) if mode is GeasMode.CONDITION else None
+    return await lay_geas(ctx, child, layer_node_id=patron_id, layer=layer, mode=mode, act=rng.pick(list(GEAS_ACTS[mode])), trigger=trigger)
 
 
 async def doom(ctx: TickContext, row: GeasRow, bearer: EntityRow, why: str) -> None:
@@ -164,7 +168,9 @@ async def tend_geasa(ctx: TickContext, tally: GeasTally) -> None:
         bearer = await ctx.session.get(EntityRow, row.bearer_entity_id)
         if bearer is None or bearer.status is not EntityStatus.CANON or bearer.entity_type is not EntityType.MORTAL or held(bearer.id):
             continue
-        if row.mode is GeasMode.DUTY and ctx.epoch - row.last_kept_epoch > table.duty_epochs:
+        if (
+            row.mode is GeasMode.DUTY or (row.mode is GeasMode.CONDITION and row.armed_epoch is not None)
+        ) and ctx.epoch - row.last_kept_epoch > table.duty_epochs:
             await doom(ctx, row, bearer, f"it left undone {spoken(row.act)}")
             tally.broken += 1
             continue

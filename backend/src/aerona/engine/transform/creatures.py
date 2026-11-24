@@ -6,6 +6,7 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProductRow, SpeciesRangeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.renown import DeedRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.ecology import SizeClass
@@ -64,7 +65,13 @@ async def progenitor_pressures(ctx: TickContext) -> dict[int, Push]:
             continue
         if await offspring_of(ctx, beast.id) >= need or await god_touched(ctx, beast.id):
             found[beast.id] = (PERCENT, TransformTrigger.ENGINE)
+        elif await deeds_of(ctx, beast.id) >= ctx.rules.transform.progenitor_deeds:
+            found[beast.id] = (PERCENT, TransformTrigger.DEED)
     return found
+
+
+async def deeds_of(ctx: TickContext, beast_id: int) -> int:
+    return int(await ctx.session.scalar(select(func.count()).select_from(DeedRow).where(DeedRow.doer_node_id == beast_id)) or 0)
 
 
 async def beast_check(ctx: TickContext, beast_id: int) -> str | None:

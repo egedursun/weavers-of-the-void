@@ -8,6 +8,8 @@ import {
   ScrollText,
   Telescope,
   VenetianMask,
+  Swords,
+  Target,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -26,9 +28,9 @@ export const PHASES: Record<string, Named> = {
   prepare: { label: 'Preparing', icon: Crosshair, tone: 'warning' },
   execute: { label: 'Striking', icon: Crosshair, tone: 'danger' },
   succeeded: { label: 'Succeeded', icon: Crosshair, tone: 'success' },
-  failed: { label: 'Failed', icon: Crosshair, tone: 'muted' },
+  failed: { label: 'Failed', icon: Target, tone: 'muted' },
   exposed: { label: 'Exposed', icon: Eye, tone: 'danger' },
-  abandoned: { label: 'Abandoned', icon: Crosshair, tone: 'muted' },
+  abandoned: { label: 'Abandoned', icon: Swords, tone: 'muted' },
 }
 
 export const OPEN_PHASES = new Set(['recruit', 'prepare', 'execute'])

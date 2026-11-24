@@ -408,7 +408,7 @@ class Duel:
             rider.entity.id,
             round_no,
             index,
-            InstrumentKind.CREATURE,
+            InstrumentKind.KEPT_ANIMAL,
             mount_id,
             None,
             pick(self.rng, rider.parts.get(BodyRegion.LEGS, ())),
@@ -643,14 +643,26 @@ def set_footing(rules: Rules, fighter: Fighter, terrain: TerrainKind | None, wea
     fighter.footing = max(table.footing_floor, footing)
 
 
+def spoken_steps(result: Bout) -> tuple[list[StepDraft], list[StepDraft]]:
+    winner, loser = result.winner.entity.id, result.loser.entity.id
+    opening = [StepDraft(StepAction.INSULT, actor=winner, target=loser, instrument_kind=InstrumentKind.WORD, states=((loser, StepState.FRIGHTENED),))]
+    closing = [StepDraft(StepAction.PLEAD, actor=loser, target=winner, instrument_kind=InstrumentKind.WORD)] if result.end is DuelEnd.YIELD else []
+    return opening, closing
+
+
 def drafts(result: Bout) -> list[StepDraft]:
+    opening, closing = spoken_steps(result)
+    return opening + fought(result, len(opening)) + closing
+
+
+def fought(result: Bout, shift: int = 0) -> list[StepDraft]:
     return [
         StepDraft(
             step.action,
             actor=step.actor,
             target=step.target,
             round=step.round,
-            parent=step.parent,
+            parent=step.parent + shift if step.parent is not None else None,
             instrument_kind=step.instrument_kind,
             instrument_node=step.instrument_node,
             instrument_key=step.instrument_key,
@@ -698,7 +710,7 @@ async def settle_bout(
     written = await record(ctx, "duel.bout", roles=roles, facts=duel_facts(result, terrain, weather), steps=drafts(result), place=place_id, cause=cause)
     statement = select(IncidentStepRow).where(IncidentStepRow.incident_id == written.incident_id).order_by(IncidentStepRow.position)
     rows = list(await ctx.session.scalars(statement))
-    for step, row in zip(result.steps, rows, strict=False):
+    for step, row in zip(result.steps, rows[len(spoken_steps(result)[0]) :], strict=False):
         if step.harm <= 0 or step.target is None:
             continue
         target = await ctx.session.get(EntityRow, step.target)

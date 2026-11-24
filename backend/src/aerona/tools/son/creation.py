@@ -38,6 +38,7 @@ from aerona.engine.body.book import ensure_species_body
 from aerona.engine.ecology.anatomy import beast_anatomy, give_attacks
 from aerona.engine.ecology.beasts import profile_beast
 from aerona.engine.ecology.profiles import SpeciesSpec, profile_of
+from aerona.engine.environment.levels import level_fault
 from aerona.engine.gods.progress import power_ceiling
 from aerona.engine.gods.rewards import RewardDraft, creation_gains, creation_value, fade_pct, record_reward
 from aerona.engine.mind.book import add_trait
@@ -242,6 +243,9 @@ async def _prepare(call: SonCall, args: CreationInput, entity_type: EntityType) 
             fail(SonResult.WORSHIPPED_DEAD, id=worshipped_id)
     linked = await check_links(call, links, creating=True)
     location = await resolve_location(call, entity_type, args.option("location_id"), linked)
+    level = await level_fault(call.session, location, args.option("stratum"), entity_type)
+    if level is not None:
+        fail(SonResult.LEVEL_REFUSED, why=level)
     rewarded = crowded and await _land_relief(call, entity_type, location)
     if free_land and not rewarded:
         free_land = False
@@ -479,6 +483,7 @@ async def _mortal_nature(call: SonCall, args: CreationInput, created: EntityRow)
 async def create_entity(call: SonCall, args: CreationInput, entity_type: EntityType) -> str:
     plan = await _prepare(call, args, entity_type)
     created = await _insert(call, plan)
+    created.stratum = args.option("stratum")
     call.target(created.id)
     if entity_type is EntityType.SPECIES:
         await ensure_species_body(call.session, created, args.option("body_plan"))

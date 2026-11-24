@@ -29,5 +29,8 @@ WAR_GROUNDS: Mapping[WarTerrain, GroundSpec] = total(
         WarTerrain.UNDERGROUND: GroundSpec(
             "In tunnels and caverns", fighters=frozenset({F.INFANTRY, F.ENGINEER, F.MISSILE, F.BEAST, F.MAGIC, F.EXOTIC, F.SPECIAL}), blind=True
         ),
+        WarTerrain.DIMENSION: GroundSpec(
+            "Across dimensions, through rifts and gates", fighters=frozenset({F.MAGIC, F.SPACE, F.EXOTIC, F.SPECIAL}), three_dimensional=True
+        ),
     },
 )

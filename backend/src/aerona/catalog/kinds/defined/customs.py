@@ -40,5 +40,7 @@ INTOXICANT_USE = total(
             used_by=("catalog.life.customs.KEEP_INTOXICATION_INTOXICANT_USES_2", "engine.customs.intoxicants.adopt_new"),
         ),
         IntoxicantUse.HOSPITALITY: Defined("Offered to guests", checked_by=("engine.customs.intoxicants.keep_intoxication",), used_by=()),
+        IntoxicantUse.WORK: Defined("At work", checked_by=(), used_by=()),
+        IntoxicantUse.COURAGE: Defined("For courage", checked_by=(), used_by=()),
     },
 )

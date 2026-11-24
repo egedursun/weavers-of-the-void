@@ -67,7 +67,7 @@ APEX_SIZES = frozenset({SizeClass.LARGE, SizeClass.HUGE, SizeClass.COLOSSAL})
 LITTLE = frozenset({SizeClass.TINY, SizeClass.SMALL})
 DAM_SIZES = frozenset({SizeClass.SMALL, SizeClass.MEDIUM})
 DISPERSER_DIETS = frozenset({Diet.HERBIVORE, Diet.OMNIVORE})
-TROPHIC_ORDER = tuple(level for level in TrophicLevel if level is not TrophicLevel.DECOMPOSER)
+TROPHIC_ORDER = tuple(level for level in TrophicLevel if level not in (TrophicLevel.DECOMPOSER, TrophicLevel.PARASITE))
 
 NEUTRAL = PERCENT // 2
 SEEDED_HIGH = 70
@@ -107,9 +107,12 @@ def next_stage(stage: SuccessionStage, wet: bool, *, poor: bool = False, dune: b
     return path[index + 1] if index + 1 < len(path) else None
 
 
+FIXED_LEVELS: Mapping[Diet, TrophicLevel] = {Diet.DECOMPOSER: TrophicLevel.DECOMPOSER, Diet.PARASITE: TrophicLevel.PARASITE}
+
+
 def trophic_level(diet: Diet, size: SizeClass) -> TrophicLevel | None:
-    if diet is Diet.DECOMPOSER:
-        return TrophicLevel.DECOMPOSER
+    if diet in FIXED_LEVELS:
+        return FIXED_LEVELS[diet]
     if diet in PRODUCER_DIETS:
         return TrophicLevel.PRODUCER
     if diet in PLANT_EATERS:
@@ -123,6 +126,8 @@ def trophic_level(diet: Diet, size: SizeClass) -> TrophicLevel | None:
 
 KeystoneTest = Callable[[BodyPlan, Diet, SizeClass, set[CreatureTrait]], bool]
 KEYSTONE_TESTS: tuple[tuple[KeystoneTest, KeystoneRole], ...] = (
+    (lambda _plan, diet, size, _traits: diet in PRODUCER_DIETS and size in LITTLE, KeystoneRole.NUTRIENT_FIXER),
+    (lambda _plan, diet, size, traits: diet is Diet.HERBIVORE and size in APEX_SIZES and T.FLYING not in traits, KeystoneRole.GRAZER),
     (lambda _plan, diet, _size, _traits: diet is Diet.SCAVENGER, KeystoneRole.SCAVENGER),
     (
         lambda plan, diet, size, traits: size in LITTLE and diet in DISPERSER_DIETS and (T.FLYING in traits or plan in (BodyPlan.INSECTOID, BodyPlan.AVIAN)),
@@ -152,6 +157,7 @@ STAGE_DOCILITY: Mapping[DomesticationStage, int] = total(
         DomesticationStage.DOMESTICATED: 75,
         DomesticationStage.BREED: 85,
         DomesticationStage.FERAL: 30,
+        DomesticationStage.CAPTIVE: 40,
     },
 )
 
@@ -195,6 +201,9 @@ def seeded_trait(
             EvolvedTrait.DISEASE_RESISTANCE: NEUTRAL,
             EvolvedTrait.DOCILITY: bounded(max(tameability, STAGE_DOCILITY[stage])),
             EvolvedTrait.LONGEVITY: bounded(NEUTRAL * lifespan / LIFESPAN_NEUTRAL),
+            EvolvedTrait.STRENGTH: round(SIZE_ORDER.index(size) * PERCENT / (len(SIZE_ORDER) - 1)),
+            EvolvedTrait.PARENTAL_CARE: bounded(PERCENT - litter * 10),
+            EvolvedTrait.SOCIAL_LEARNING: bounded(intelligence),
         },
     )
     return seeds[trait]

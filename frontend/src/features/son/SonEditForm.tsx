@@ -158,7 +158,12 @@ export function SonEditForm({ view }: { view: SonPublic }) {
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <Section title={`Edit ${son.name}`} surface='card' level={3}>
+        <Section
+          id='section-son-edit'
+          title={`Edit ${son.name}`}
+          surface='card'
+          level={3}
+        >
           <FieldTile group label='Passions'>
             <FormRow label='Name'>
               {(id) => (

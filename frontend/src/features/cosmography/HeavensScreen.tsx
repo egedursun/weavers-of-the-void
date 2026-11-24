@@ -18,6 +18,7 @@ import {
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SceneCorners } from '@/components/ui/ornate'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EmptyState, KpiTile, PagedList, PageHeader } from '@/components/domain'
@@ -263,6 +264,7 @@ export function HeavensView({
         className='relative flex min-w-0 flex-col border-b'
       >
         <div className='scene-frame relative h-scene min-w-0 bg-cosmos-void text-cosmos-label lg:h-scene-lg'>
+          <SceneCorners />
           {data.dimensions.length === 0 ? (
             <div className='flex h-full items-center justify-center p-6'>
               <EmptyState

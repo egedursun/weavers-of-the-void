@@ -34,6 +34,7 @@ WONDER_GROUP = "wonder"
     "table.creator",
     "table.cult_doctrines",
     "table.cult_tenets",
+    "table.deep_passages",
     "table.dimensions",
     "table.divine_wounds",
     "table.entities",
@@ -90,6 +91,7 @@ async def modifier_upkeep(ctx: TickContext) -> None:
 
 @reads(
     "table.calendars",
+    "table.deep_passages",
     "table.entities",
     "table.forced_weather",
     "table.irregular_seasons",

@@ -59,7 +59,7 @@ def upgrades(weights: Mapping[UnitKind, int], doctrine: MartialStyle, allowed: s
         spec = UNITS[kind]
         better = [
             other
-            for other in allowed
+            for other in sorted(allowed)
             if other not in weights
             and other not in found.values()
             and UNITS[other].family is spec.family

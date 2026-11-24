@@ -32,6 +32,8 @@ ROLES: Mapping[ArtMarketRole, RoleSpec] = total(
         A.CURATOR: RoleSpec("Curator", keeps=True, judges=True, fakes=False),
         A.CRITIC: RoleSpec("Critic", keeps=False, judges=True, fakes=False),
         A.FORGER: RoleSpec("Forger", keeps=False, judges=False, fakes=True),
+        A.RESTORER: RoleSpec("Restorer", keeps=False, judges=True, fakes=False),
+        A.AUCTIONEER: RoleSpec("Auctioneer", keeps=False, judges=True, fakes=False),
     },
 )
 JUDGES = frozenset(role for role, spec in ROLES.items() if spec.judges)
@@ -56,6 +58,9 @@ FORGERIES: Mapping[ForgeryKind, ForgerySpec] = total(
         F.COIN: ForgerySpec("False coin", CrimeKind.COUNTERFEITING, lambda rules: rules.forgery.coin_detect_pct, SkillKind.SMITHING, against="realm"),
         F.LINEAGE: ForgerySpec("A forged lineage", CrimeKind.FORGED_LINE, lambda rules: rules.forgery.lineage_detect_pct, SkillKind.LORE, against="title"),
         F.SEAL: ForgerySpec("A forged seal", CrimeKind.IMPERSONATION, lambda rules: rules.forgery.seal_detect_pct, SkillKind.LAW, against="realm"),
+        F.IDENTITY: ForgerySpec(
+            "False papers and a false person", CrimeKind.IMPERSONATION, lambda rules: rules.forgery.identity_detect_pct, SkillKind.LAW, against="person"
+        ),
     },
 )
 FORGERY_CRIMES = frozenset(spec.crime for spec in FORGERIES.values())
@@ -79,6 +84,7 @@ WAYS: Mapping[RightAcquired, WaySpec] = total(
         W.GRANTED: WaySpec("Granted", needs_contest=False, needs_union=False),
         W.WON: WaySpec("Won in a contest", needs_contest=True, needs_union=False),
         W.WED: WaySpec("Passed with a union", needs_contest=False, needs_union=True),
+        W.SHARED: WaySpec("Held in common", needs_contest=False, needs_union=False),
     },
 )
 
@@ -100,6 +106,8 @@ CLUBS: Mapping[ClubKind, ClubSpec] = total(
         K.ATHLETICS: ClubSpec("Athletics", lambda rules: rules.clubs.athletics_fan_draw, keeps_animals=False, trains_minds=False),
         K.ANIMAL_CONTEST: ClubSpec("Animal contests", lambda rules: rules.clubs.animal_contest_fan_draw, keeps_animals=True, trains_minds=False),
         K.MIND_GAMES: ClubSpec("Games of the mind", lambda rules: rules.clubs.mind_games_fan_draw, keeps_animals=False, trains_minds=True),
+        K.WATER_SPORT: ClubSpec("Water sports", lambda rules: rules.clubs.water_sport_fan_draw, keeps_animals=False, trains_minds=False),
+        K.HUNT: ClubSpec("The hunt", lambda rules: rules.clubs.hunt_fan_draw, keeps_animals=True, trains_minds=False),
     },
 )
 ANIMAL_CLUBS = frozenset(kind for kind, spec in CLUBS.items() if spec.keeps_animals)

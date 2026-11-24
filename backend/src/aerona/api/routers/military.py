@@ -100,6 +100,8 @@ async def army_cards(session: AsyncSession, rows: list[ArmyRow], rules: Rules) -
         cards.append(
             ArmyCard(
                 army=ref(refs, row.entity_id),
+                stratum=profile.stratum,
+                battle_stratum=profile.battle_stratum,
                 owner=ref(refs, row.owner_entity_id),
                 commander=ref(refs, row.commander_entity_id),
                 war_id=row.war_id,
@@ -204,6 +206,8 @@ def movement_view(row: ArmyMovementRow, refs: Refs) -> MovementView:
         season=row.season,
         from_region=ref(refs, row.from_region_id),
         to_region=ref(refs, row.to_region_id),
+        from_stratum=row.from_stratum,
+        to_stratum=row.to_stratum,
         stance=row.stance,
         supply_days=row.supply_days,
         attrition=row.attrition,
@@ -305,6 +309,7 @@ def siege_view(row: SiegeRow, refs: Refs) -> SiegeTracker:
 def occupation_view(row: OccupationRow, refs: Refs) -> OccupationView:
     return OccupationView(
         region=ref(refs, row.region_entity_id),
+        stratum=row.stratum,
         occupier=ref(refs, row.occupier_entity_id),
         war_id=row.war_id,
         since_epoch=row.since_epoch,
@@ -341,7 +346,12 @@ def aim_view(row: WarAimRow, refs: Refs) -> AimView:
 
 def front_view(row: CampaignFrontRow, refs: Refs) -> FrontView:
     return FrontView(
-        first_region=ref(refs, row.first_region_id), second_region=ref(refs, row.second_region_id), since_epoch=row.since_epoch, last_epoch=row.last_epoch
+        first_region=ref(refs, row.first_region_id),
+        second_region=ref(refs, row.second_region_id),
+        first_stratum=row.first_stratum,
+        second_stratum=row.second_stratum,
+        since_epoch=row.since_epoch,
+        last_epoch=row.last_epoch,
     )
 
 

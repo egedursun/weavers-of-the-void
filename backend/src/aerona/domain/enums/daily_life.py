@@ -13,6 +13,8 @@ class HouseDuty(StrEnum):
     REPAIRS = "repairs"
     SICKCARE = "sickcare"
     HOUSEHOLD_RITES = "household_rites"
+    TEACHING = "teaching"
+    ACCOUNTS = "accounts"
 
 
 class LeisureKind(StrEnum):
@@ -32,6 +34,9 @@ class LeisureKind(StrEnum):
     DANCE = "dance"
     STORYTELLING = "storytelling"
     HUNTING = "hunting"
+    GARDENING = "gardening"
+    BATHING = "bathing"
+    ANIMAL_KEEPING = "animal_keeping"
 
 
 class WashFrequency(StrEnum):

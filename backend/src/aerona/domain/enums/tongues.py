@@ -62,6 +62,8 @@ class NumeralBase(StrEnum):
     SEXAGESIMAL = "sexagesimal"
     OCTAL = "octal"
     BODY_TALLY = "body_tally"
+    QUINARY = "quinary"
+    BINARY = "binary"
 
 
 class SenseShift(StrEnum):
@@ -73,6 +75,7 @@ class SenseShift(StrEnum):
     RESTORED = "restored"
     EXTENDED = "extended"
     ASSOCIATED = "associated"
+    REVERSED = "reversed"
 
 
 class WordRegister(StrEnum):
@@ -83,6 +86,8 @@ class WordRegister(StrEnum):
     TABOO = "taboo"
     TECHNICAL = "technical"
     HONORIFIC = "honorific"
+    SLANG = "slang"
+    LEGAL = "legal"
 
 
 class ScriptChangeCause(StrEnum):
@@ -92,6 +97,7 @@ class ScriptChangeCause(StrEnum):
     BORROWING = "borrowing"
     IMPOSITION = "imposition"
     REVELATION = "revelation"
+    TECHNOLOGY = "technology"
 
 
 class LanguageModality(StrEnum):
@@ -105,6 +111,8 @@ class LanguageModality(StrEnum):
     TACTILE = "tactile"
     VIBRATION = "vibration"
     ELECTRIC = "electric"
+    WHISTLED = "whistled"
+    DRUMMED = "drummed"
 
 
 class LanguageStage(StrEnum):
@@ -114,6 +122,7 @@ class LanguageStage(StrEnum):
     DIVINE = "divine"
     CONSTRUCTED = "constructed"
     REVIVED = "revived"
+    ENDANGERED = "endangered"
 
 
 class LanguagePolicy(StrEnum):
@@ -123,6 +132,7 @@ class LanguagePolicy(StrEnum):
     REVIVAL = "revival"
     PROTECTED = "protected"
     STANDARDISED = "standardised"
+    BILINGUAL = "bilingual"
 
 
 class ScriptFate(StrEnum):

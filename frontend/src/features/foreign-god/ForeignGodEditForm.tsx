@@ -234,7 +234,12 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <Section title={`Edit ${god.name}`} surface='card' level={3}>
+          <Section
+            id='section-foreign-edit'
+            title={`Edit ${god.name}`}
+            surface='card'
+            level={3}
+          >
             <FormRow label='Name'>
               {(id) => (
                 <Input
@@ -365,7 +370,12 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <Section title={`Shape ${god.name}`} surface='card' level={3}>
+          <Section
+            id='section-foreign-shape'
+            title={`Shape ${god.name}`}
+            surface='card'
+            level={3}
+          >
             <FieldTile group label='Stats'>
               <div className='grid min-w-0 grid-cols-2 gap-3'>
                 {STATS.map((stat) => (

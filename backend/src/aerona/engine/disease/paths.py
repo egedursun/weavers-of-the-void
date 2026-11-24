@@ -2,12 +2,16 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
-from aerona.catalog.spread_paths import SPREAD_PATHS
+from aerona.catalog.disease_agents import AGENTS
+from aerona.catalog.spread_paths import SPREAD_PATHS, WATER_WORKS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.disease import OutbreakRow
+from aerona.db.tables.disease_agents import DiseaseAgentRow
+from aerona.db.tables.ecology import HerdRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
+from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import SpreadPath
@@ -46,6 +50,9 @@ async def carry(ctx: TickContext, book: DiseaseBook, move: Carry, tally: PathTal
     disease = book.diseases.get(move.source.disease_entity_id)
     chance = SPREAD_PATHS[move.path].chance
     if disease is None or chance is None or held(move.region_id) or book.active_of(disease.id, move.region_id) is not None:
+        return
+    agent = await ctx.session.get(DiseaseAgentRow, disease.id)
+    if agent is not None and not AGENTS[agent.agent].spreads:
         return
     if not travels_by(book, move.source, move.path) or not ctx.rng(f"disease.path.{move.key}.{ctx.epoch}").chance(chance(ctx.rules)):
         return
@@ -119,10 +126,35 @@ async def by_gathering(ctx: TickContext, book: DiseaseBook, tally: PathTally) ->
                 await carry(ctx, book, Carry(outbreak, home, SpreadPath.GATHERING, f"crowd.{gathering.id}.{home}.{outbreak.id}"), tally)
 
 
+async def by_livestock(ctx: TickContext, book: DiseaseBook, tally: PathTally) -> None:
+    herding = set(await ctx.session.scalars(select(HerdRow.community_entity_id).where(HerdRow.head > 0).order_by(HerdRow.community_entity_id)))
+    herd_lands = {region for town in herding if (region := book.atlas.top_region(town)) is not None}
+    for outbreak in sources(book):
+        if outbreak.region_entity_id not in herd_lands:
+            continue
+        for region_id in sorted(book.atlas.neighbour_regions(outbreak.region_entity_id)):
+            if region_id in herd_lands:
+                await carry(ctx, book, Carry(outbreak, region_id, SpreadPath.LIVESTOCK, f"herds.{outbreak.id}.{region_id}"), tally)
+
+
+async def by_water_supply(ctx: TickContext, book: DiseaseBook, tally: PathTally) -> None:
+    works = select(StructureProfileRow.host_entity_id).where(StructureProfileRow.kind.in_(sorted(WATER_WORKS)))
+    supplied = {
+        region
+        for town in await ctx.session.scalars(works.order_by(StructureProfileRow.host_entity_id))
+        if town is not None and (region := book.atlas.top_region(town)) is not None
+    }
+    for outbreak in sources(book):
+        if outbreak.region_entity_id not in supplied:
+            continue
+        for region_id in sorted(book.atlas.neighbour_regions(outbreak.region_entity_id)):
+            await carry(ctx, book, Carry(outbreak, region_id, SpreadPath.WATER_SUPPLY, f"supply.{outbreak.id}.{region_id}"), tally)
+
+
 async def carry_by_paths(ctx: TickContext) -> PathTally:
     book = await DiseaseBook.load(ctx.session, ctx.rules, ctx.epoch)
     tally = PathTally()
-    for step in (by_waterway, by_wildlife, by_migration, by_gathering):
+    for step in (by_waterway, by_wildlife, by_migration, by_gathering, by_livestock, by_water_supply):
         await step(ctx, book, tally)
     await ctx.session.flush()
     return tally

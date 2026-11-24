@@ -10,6 +10,8 @@ class WorldLight(StrEnum):
     SHIP_CYCLE = "ship_cycle"
     FADING_GOD = "fading_god"
     NONE = "none"
+    BIOLUMINESCENCE = "bioluminescence"
+    MADE_LIGHT = "made_light"
 
 
 class SettleMode(StrEnum):
@@ -24,6 +26,8 @@ class SettleMode(StrEnum):
     BURROW = "burrow"
     SUBMERGED = "submerged"
     CANOPY = "canopy"
+    CLIFF = "cliff"
+    DRIFT = "drift"
 
 
 class WarTerrain(StrEnum):
@@ -35,6 +39,7 @@ class WarTerrain(StrEnum):
     UNDER_WATER = "under_water"
     SPACE = "space"
     UNDERGROUND = "underground"
+    DIMENSION = "dimension"
 
 
 class BindingNeed(StrEnum):
@@ -44,3 +49,5 @@ class BindingNeed(StrEnum):
     AIR = "air"
     OFFERINGS = "offerings"
     BELIEF = "belief"
+    PLACE = "place"
+    NAME = "name"

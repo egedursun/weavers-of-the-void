@@ -39,6 +39,9 @@ class DistrictKind(StrEnum):
     ARCOLOGY = "arcology"
     CAMP = "camp"
     LAZARETTO = "lazaretto"
+    PILGRIM_QUARTER = "pilgrim_quarter"
+    CARAVAN_QUARTER = "caravan_quarter"
+    FLOATING = "floating"
 
 
 class DistrictHarm(StrEnum):

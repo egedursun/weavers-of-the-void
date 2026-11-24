@@ -112,7 +112,9 @@ async def test_master_handlers_train_herds_for_war_hunting_and_guarding(ctx: Tic
 async def test_mortals_take_pets_are_comforted_and_mourn_them(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:
     region = await make_region(ctx.session, "Hearth Vale", cosmos.home.id)
     hold = await town(ctx.session, cosmos, region.id)
-    hound = await kind(ctx, cosmos, region.id, "Hearth Hound", SpeciesSpec(size_class=SizeClass.SMALL, diet=Diet.CARNIVORE), AnimalRole.GUARD)
+    hound = await kind(
+        ctx, cosmos, region.id, "Hearth Hound", SpeciesSpec(size_class=SizeClass.SMALL, diet=Diet.CARNIVORE), AnimalRole.GUARD, AnimalRole.HUNTING
+    )
     ctx.session.add(herd(hold, hound, head=20))
     owner = await make_entity(ctx.session, "Mira", EntityType.MORTAL, MortalStats(hp=30, age=30, lifespan=70), world_id=cosmos.home.id, location_id=hold)
     await ctx.session.flush()

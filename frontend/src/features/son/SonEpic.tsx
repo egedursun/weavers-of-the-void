@@ -29,6 +29,7 @@ export function SonEpic({ son }: { son: SonRecord }) {
   })
   return (
     <Section
+      id='section-son-epic'
       title='Epic'
       surface='card'
       level={3}

@@ -14,11 +14,12 @@ from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.faith import SpiritProfileRow
+from aerona.db.tables.geology import RegionStratumRow
 from aerona.db.tables.kind_crafts import ColourMeaningRow
 from aerona.db.tables.law_grammar import LawExceptionRow
-from aerona.db.tables.military import SpyNetworkRow
+from aerona.db.tables.military import ArmyProfileRow, SpyNetworkRow
 from aerona.db.tables.routes import RouteRow
-from aerona.db.tables.warfare import SiegeRow
+from aerona.db.tables.warfare import ArmyRow, SiegeRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.cosmography import (
     BeingAgenda,
@@ -40,14 +41,26 @@ from aerona.domain.enums.economy import CommodityKind, CurrencyIssuer, GoodsFlow
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.faith import SpiritAlignment
+from aerona.domain.enums.geology import DeepPassageOrigin, DeepPassageState, UndergroundStratum
 from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.kind_crafts import ColourMeaning
 from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
 from aerona.domain.enums.law_grammar import LawCondition, LawExceptionKind, LawOperator, LawTarget
 from aerona.domain.enums.material import MaterialKind
+from aerona.domain.enums.military import Stance
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.society import KnowledgeBranch
-from aerona.domain.models.entity_stats import BeastStats, FactionStats, ItemStats, NaturalLawStats, OuterBeingStats, PeopleStats, SpeciesStats, SpiritStats
+from aerona.domain.models.entity_stats import (
+    ArmyStats,
+    BeastStats,
+    FactionStats,
+    ItemStats,
+    NaturalLawStats,
+    OuterBeingStats,
+    PeopleStats,
+    SpeciesStats,
+    SpiritStats,
+)
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.beings import create_being
@@ -60,6 +73,7 @@ from aerona.engine.divine.creator_bonds import WIDER_SIGNS, offer
 from aerona.engine.divine.law_grammar import set_grammar
 from aerona.engine.ecology.beasts import profile_beast
 from aerona.engine.economy.stocks import goods_of
+from aerona.engine.environment.cells import make_passage
 from aerona.engine.gods.queries import creator_row
 from aerona.engine.intrigue.schemes import begin_scheme
 from aerona.engine.kinds.acts import hold_kind, make_kind
@@ -150,6 +164,40 @@ async def stir(session: AsyncSession, cosmos: RichCosmos) -> None:
     await session.flush()
     await stir_heavens(ctx, cosmos)
     await stir_kinds(ctx, cosmos, town, other)
+    await stir_below(ctx, cosmos)
+
+
+async def stir_below(ctx: TickContext, cosmos: RichCosmos) -> None:
+    home = cosmos.home
+    first, second = home.regions[0], home.regions[1]
+    for region in (first, second):
+        for stratum in (UndergroundStratum.CAVERN_UPPER, UndergroundStratum.AQUIFER):
+            ctx.session.add(RegionStratumRow(region_entity_id=region.id, stratum=stratum, volume=40, pressure=20, locked=[]))
+    await ctx.session.flush()
+    folk = await entity(ctx.session, "Stirring Deep Folk", EntityType.PEOPLE, PeopleStats(population=2000), world_id=home.world.id, location_id=first.id)
+    folk.stratum = UndergroundStratum.CAVERN_UPPER
+    hall = await settlement(ctx.session, "Stirring Deep Hall", home, first, population=1500)
+    hall.stratum = UndergroundStratum.CAVERN_UPPER
+    far = await settlement(ctx.session, "Stirring Far Hall", home, second, population=1500)
+    far.stratum = UndergroundStratum.CAVERN_UPPER
+    up = UndergroundStratum.CAVERN_UPPER
+    ends = (
+        ((first.id, None), (first.id, up), DeepPassageState.OPEN),
+        ((first.id, up), (second.id, up), DeepPassageState.OPEN),
+        ((second.id, None), (second.id, up), DeepPassageState.FLOODED),
+        ((first.id, up), (first.id, UndergroundStratum.AQUIFER), DeepPassageState.DIGGING),
+        ((second.id, up), (second.id, UndergroundStratum.AQUIFER), DeepPassageState.COLLAPSED),
+        ((first.id, UndergroundStratum.AQUIFER), (second.id, UndergroundStratum.AQUIFER), DeepPassageState.SEALED),
+    )
+    for one, two, state in ends:
+        await make_passage(ctx, home.world.id, one, two, origin=DeepPassageOrigin.NATURAL, state=state)
+    army = await entity(ctx.session, "Stirring Deep Host", EntityType.ARMY, ArmyStats(size=300, morale=60), world_id=home.world.id, location_id=first.id)
+    army.stratum = up
+    ctx.session.add(ArmyRow(entity_id=army.id, owner_entity_id=hall.id, raised_epoch=1))
+    ctx.session.add(
+        ArmyProfileRow(army_entity_id=army.id, region_entity_id=second.id, stratum=up, stance=Stance.MARCH, doctrine="shieldwall", supply_line=[], locked=[])
+    )
+    await ctx.session.flush()
 
 
 async def stir_laws(ctx: TickContext, cosmos: RichCosmos, town: EntityRow, mark: EntityRow) -> None:

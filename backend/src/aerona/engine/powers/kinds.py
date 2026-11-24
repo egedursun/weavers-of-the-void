@@ -18,6 +18,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.powers import MagicSystemRow, PowerRegistryRow, PowerRow, PowerSourceRow, SourceTideRow
 from aerona.db.tables.warfare import SiegeRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.life_traits import PowerOriginTrait
@@ -36,6 +37,7 @@ from aerona.domain.enums.powers import (
     TideCycle,
 )
 from aerona.domain.enums.war import SiegeStatus
+from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of
@@ -308,3 +310,7 @@ async def harm(ctx: TickContext, user: EntityRow, power: PowerRow, kind: str) ->
         power.state = PowerState.STRAINED
     elif kind == "notice" and user.location_id is not None:
         await shift_standing(ctx.session, user, "renown", table.hazard_stress // 2, ctx.epoch, default=0)
+    elif kind == "age":
+        shift_stat(user, "age", table.hazard_years, 0)
+    elif kind == "possess":
+        await afflict(ctx, user, PackageKind.POSSESSION, Transmission.EXPERIENCE, source_node_id=power.source_id)

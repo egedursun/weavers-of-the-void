@@ -66,6 +66,7 @@ import {
   Wheat,
   Wind,
   Zap,
+  Sparkle,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain'
@@ -133,7 +134,7 @@ export const SOIL: Record<components['schemas']['SoilKind'], string> = {
 
 export const BAND: Record<string, Named> = {
   frozen: { label: 'Frozen', icon: Snowflake, tone: 'info' },
-  cold: { label: 'Cold', icon: Snowflake, tone: 'info' },
+  cold: { label: 'Cold', icon: ThermometerSnowflake, tone: 'info' },
   temperate: { label: 'Temperate', icon: CloudSun, tone: 'success' },
   warm: { label: 'Warm', icon: Sun, tone: 'gold' },
   hot: { label: 'Hot', icon: ThermometerSun, tone: 'warning' },
@@ -177,7 +178,7 @@ export const WEATHER: Record<string, Named> = {
   downpour: { label: 'Downpour', icon: CloudRain, tone: 'info' },
   storm: { label: 'Storm', icon: CloudLightning, tone: 'warning' },
   fog: { label: 'Fog', icon: CloudFog, tone: 'muted' },
-  snow: { label: 'Snow', icon: Snowflake, tone: 'info' },
+  snow: { label: 'Snow', icon: SunSnow, tone: 'info' },
   blizzard: { label: 'Blizzard', icon: Snowflake, tone: 'danger' },
   heat_wave: { label: 'Heat wave', icon: ThermometerSun, tone: 'warning' },
   drought_wind: { label: 'Drought wind', icon: Wind, tone: 'warning' },
@@ -187,7 +188,7 @@ export const WEATHER: Record<string, Named> = {
   ash_fall: { label: 'Ash fall', icon: Flame, tone: 'danger' },
   void_rain: { label: 'Void rain', icon: Eclipse, tone: 'danger' },
   eclipse_dark: { label: 'Eclipse darkness', icon: Eclipse, tone: 'muted' },
-  aurora: { label: 'Aurora', icon: Sparkles, tone: 'info' },
+  aurora: { label: 'Aurora', icon: Sparkle, tone: 'info' },
   frost: { label: 'Frost', icon: ThermometerSnowflake, tone: 'info' },
   ice_storm: { label: 'Ice storm', icon: CloudSnow, tone: 'danger' },
   drizzle: { label: 'Drizzle', icon: CloudSunRain, tone: 'info' },

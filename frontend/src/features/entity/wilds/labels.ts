@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Angry,
   Apple,
   Axe,
@@ -15,7 +14,9 @@ import {
   Candy,
   Carrot,
   Coffee,
+  Cog,
   Crosshair,
+  Crown,
   Dna,
   Dog,
   Drama,
@@ -36,8 +37,10 @@ import {
   Gem,
   Ghost,
   Grape,
+  Hammer,
   Hand,
   HandHeart,
+  Heart,
   HeartCrack,
   HeartPulse,
   Hexagon,
@@ -50,6 +53,7 @@ import {
   LeafyGreen,
   Link2,
   Lock,
+  Microscope,
   Milk,
   Minus,
   Moon,
@@ -66,6 +70,7 @@ import {
   Rat,
   Recycle,
   Repeat,
+  Route,
   ScanEye,
   Send,
   Shield,
@@ -102,6 +107,12 @@ import {
   WheatOff,
   Wind,
   Zap,
+  type LucideIcon,
+  GlassWater,
+  HouseCog,
+  UsersRound,
+  FlameKindling,
+  Worm,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type ProgressTone } from '@/components/ui/progress'
@@ -184,9 +195,16 @@ export const SIZE: Record<string, Named & { rank: number; hint: string }> = {
     rank: 6,
     hint: 'Shakes the ground it walks',
   },
+  microscopic: {
+    label: 'Too small to see',
+    icon: Microscope,
+    tone: 'muted',
+    rank: 0,
+    hint: 'Counted in thousands upon thousands',
+  },
 }
 
-export const SIZE_STEPS = 6
+export const SIZE_STEPS = 7
 
 export const DIET: Record<components['schemas']['Diet'], Named> = {
   herbivore: { label: 'Grazer', icon: Leaf, tone: 'success' },
@@ -208,6 +226,7 @@ export const DIET: Record<components['schemas']['Diet'], Named> = {
     tone: 'verdigris',
   },
   energy: { label: 'Power-fed', icon: Zap, tone: 'gold' },
+  insectivore: { label: 'Eats insects', icon: Worm, tone: 'success' },
 }
 
 export const SOCIALITY: Record<string, Named> = {
@@ -217,6 +236,12 @@ export const SOCIALITY: Record<string, Named> = {
   hive: { label: 'Lives in a hive', icon: Hexagon, tone: 'gold' },
   colony: { label: 'Lives in colonies', icon: Network, tone: 'info' },
   swarm: { label: 'Moves in swarms', icon: Wind, tone: 'warning' },
+  pair: { label: 'Lives in mated pairs', icon: Heart, tone: 'info' },
+  family_group: {
+    label: 'Lives in family groups',
+    icon: UsersRound,
+    tone: 'success',
+  },
 }
 
 export const STAGE: Record<string, Named & { step: number; hint: string }> = {
@@ -257,7 +282,7 @@ export const STAGE: Record<string, Named & { step: number; hint: string }> = {
   },
   commensal: {
     label: 'Lives beside people',
-    icon: House,
+    icon: HouseCog,
     tone: 'verdigris',
     step: 1,
     hint: 'Lives off what towns leave behind and tames more easily',
@@ -268,6 +293,13 @@ export const STAGE: Record<string, Named & { step: number; hint: string }> = {
     tone: 'warning',
     step: 0,
     hint: 'Once kept, now wild again where its keepers are gone',
+  },
+  captive: {
+    label: 'Kept captive',
+    icon: Lock,
+    tone: 'warning',
+    step: 2,
+    hint: 'Kept but not bred, for show, rite, arena or study',
   },
 }
 
@@ -293,12 +325,12 @@ export const PRODUCT_PARTS: Record<ProductPart, Named> = {
   sap: { label: 'Sap', icon: Droplets, tone: 'gold' },
   dye: { label: 'Dye', icon: Palette, tone: 'info' },
   toxin: { label: 'Toxin', icon: Skull, tone: 'danger' },
-  oil: { label: 'Oil', icon: Droplet, tone: 'gold' },
+  oil: { label: 'Oil', icon: Waves, tone: 'gold' },
   sugar: { label: 'Sugar', icon: Candy, tone: 'success' },
   spice: { label: 'Spice', icon: Sparkle, tone: 'warning' },
-  resin: { label: 'Resin', icon: Droplets, tone: 'gold' },
+  resin: { label: 'Resin', icon: GlassWater, tone: 'gold' },
   stimulant: { label: 'Stimulant', icon: Coffee, tone: 'warning' },
-  fodder: { label: 'Fodder', icon: Wheat, tone: 'success' },
+  fodder: { label: 'Fodder', icon: Sprout, tone: 'success' },
 }
 
 export const USE: Record<string, Named> = {
@@ -323,6 +355,8 @@ export const USE: Record<string, Named> = {
   },
   sport: { label: 'Sport and racing', icon: Trophy, tone: 'gold' },
   medicine: { label: 'Source of remedies', icon: Pill, tone: 'success' },
+  display: { label: 'Kept for show and rank', icon: Crown, tone: 'gold' },
+  herding: { label: 'Drives and guards herds', icon: Fence, tone: 'success' },
 }
 
 export const SPECIES_CLASS: Record<string, Named & { hint: string }> = {
@@ -349,6 +383,12 @@ export const SPECIES_CLASS: Record<string, Named & { hint: string }> = {
     icon: Rat,
     tone: 'warning',
     hint: 'Spoils stores, eats crops and spreads sickness',
+  },
+  lichen: {
+    label: 'Lichen',
+    icon: Leaf,
+    tone: 'verdigris',
+    hint: 'Fungus and grower as one, first on bare rock',
   },
 }
 
@@ -400,6 +440,12 @@ export const BIOCHEMISTRY: Record<string, Named & { hint: string }> = {
     icon: Zap,
     tone: 'gold',
     hint: 'Life held in charged gas',
+  },
+  metal: {
+    label: 'Metal',
+    icon: Cog,
+    tone: 'warning',
+    hint: 'Life of metal on iron worlds and hot crusts',
   },
 }
 
@@ -479,6 +525,9 @@ export const PLANT_YIELD: Record<components['schemas']['PlantYield'], Named> = {
   spice: { label: 'Spice', icon: Flame, tone: 'danger' },
   stimulant: { label: 'Stimulant', icon: Zap, tone: 'warning' },
   sugar: { label: 'Sugar', icon: Candy, tone: 'gold' },
+  medicine: { label: 'Remedies', icon: Pill, tone: 'success' },
+  building: { label: 'Building stuff', icon: Hammer, tone: 'gold' },
+  fuel: { label: 'Fuel', icon: FlameKindling, tone: 'warning' },
 }
 
 export const TREND: Record<string, Named & { badge: BadgeTone }> = {
@@ -557,6 +606,18 @@ export const TEMPER: Record<string, Named & { hint: string }> = {
     icon: ShieldOff,
     tone: 'muted',
     hint: 'Keeps away from where it was driven off',
+  },
+  migrating: {
+    label: 'On its seasonal path',
+    icon: Route,
+    tone: 'info',
+    hint: 'Passes through lands, towns and routes in turn',
+  },
+  fleeing: {
+    label: 'Driven from its land',
+    icon: Wind,
+    tone: 'warning',
+    hint: 'Left after defeat, fire or the loss of its lair',
   },
 }
 
@@ -666,6 +727,9 @@ export const MATERIAL: Record<string, string> = {
   hydraulic_concrete: 'Hydraulic concrete',
   thatch: 'Thatch',
   tile: 'Tile',
+  lacquer: 'Lacquer',
+  paper: 'Paper',
+  rubber: 'Rubber',
 }
 
 export const TEMPERAMENT: {

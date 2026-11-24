@@ -11,6 +11,8 @@ class WorldEnd(StrEnum):
     DROWNED = "drowned"
     BURNED = "burned"
     DEVOURED = "devoured"
+    EMPTIED = "emptied"
+    MERGED = "merged"
 
 
 class WorldEndCause(StrEnum):
@@ -24,3 +26,6 @@ class WorldEndCause(StrEnum):
     RUNAWAY_CLIMATE = "runaway_climate"
     WAR = "war"
     OUTER_HUNGER = "outer_hunger"
+    PLAGUE = "plague"
+    RUNAWAY_MAKING = "runaway_making"
+    STRUCTURE_FAILURE = "structure_failure"

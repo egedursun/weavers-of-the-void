@@ -8,7 +8,7 @@ import {
 import {
   allKeys,
   buildAtlasTree,
-  drawerFor,
+  entryFor,
   flattenVisible,
   isFiltering,
   matchesEntity,
@@ -284,11 +284,8 @@ describe('atlas tree', () => {
   })
 })
 
-describe('drawerFor', () => {
-  const node = (
-    kind: Parameters<typeof drawerFor>[0]['kind'],
-    id?: number
-  ) => ({
+describe('entryFor', () => {
+  const node = (kind: Parameters<typeof entryFor>[0]['kind'], id?: number) => ({
     key: `${kind}:${id ?? ''}`,
     label: kind,
     kind,
@@ -297,9 +294,9 @@ describe('drawerFor', () => {
   })
 
   it('opens every record and every node of the heavens in its own drawer', () => {
-    expect(drawerFor(node('entity', 7))).toEqual({ kind: 'entity', id: '7' })
-    expect(drawerFor(node('son', 2))).toEqual({ kind: 'son', id: '2' })
-    expect(drawerFor(node('foreign-god', 3))).toEqual({
+    expect(entryFor(node('entity', 7))).toEqual({ kind: 'entity', id: '7' })
+    expect(entryFor(node('son', 2))).toEqual({ kind: 'son', id: '2' })
+    expect(entryFor(node('foreign-god', 3))).toEqual({
       kind: 'foreign-god',
       id: '3',
     })
@@ -310,14 +307,14 @@ describe('drawerFor', () => {
       'cluster',
       'dimension',
     ] as const)
-      expect(drawerFor(node(kind, 5))).toEqual({ kind, id: '5' })
-    expect(drawerFor(node('creator'))).toEqual({ kind: 'creator' })
+      expect(entryFor(node(kind, 5))).toEqual({ kind, id: '5' })
+    expect(entryFor(node('creator'))).toEqual({ kind: 'creator' })
   })
 
   it('keeps groups and type pages in the atlas pane', () => {
-    expect(drawerFor(node('group'))).toBeNull()
-    expect(drawerFor(node('building-type', 4))).toBeNull()
-    expect(drawerFor(node('dwelling-type', 4))).toBeNull()
-    expect(drawerFor(node('entity'))).toBeNull()
+    expect(entryFor(node('group'))).toBeNull()
+    expect(entryFor(node('building-type', 4))).toBeNull()
+    expect(entryFor(node('dwelling-type', 4))).toBeNull()
+    expect(entryFor(node('entity'))).toBeNull()
   })
 })

@@ -49,3 +49,6 @@ class CityPlanRules:
     almshouse_shelter: int = rule(40, 0, 10000, S, "Homeless each level of an almshouse shelters each epoch")
     almshouse_calm: int = rule(2, 0, 100, S, "Unrest each almshouse calms each epoch")
     almshouse_need_pct: int = rule(5, 0, 100, S, "Share of its people homeless past which a town wants an almshouse (%)")
+    pilgrim_quarter_housing_pct: int = rule(140, 0, 400, S, "People a pilgrim quarter houses against a district of its level that is only homes (%)")
+    caravan_quarter_housing_pct: int = rule(70, 0, 400, S, "People a caravan quarter houses against a district of its level that is only homes (%)")
+    floating_housing_pct: int = rule(80, 0, 400, S, "People a district on rafts and boats houses against a district of its level that is only homes (%)")

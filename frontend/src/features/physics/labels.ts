@@ -33,6 +33,16 @@ import {
   Wind,
   Zap,
   Cog,
+  AirVent,
+  Bean,
+  Calendar,
+  Moon,
+  Sparkle,
+  Tornado,
+  CircleOff,
+  FlaskConical,
+  Fan,
+  Asterisk,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -80,6 +90,24 @@ export const FEATURE_KINDS: Record<
     tone: 'gold',
     hint: 'A light that crosses the sky of its star and returns at its period, raising festivals and prophecies',
   },
+  nebula: {
+    label: 'Nebula',
+    icon: Sparkle,
+    tone: 'verdigris',
+    hint: 'A cloud where stars are born and fleets can hide',
+  },
+  debris_ring: {
+    label: 'Ring of debris',
+    icon: CircleDot,
+    tone: 'warning',
+    hint: 'A ring of broken matter that raises the chance of strikes on the worlds within it',
+  },
+  dark_body: {
+    label: 'Unseen mass',
+    icon: Moon,
+    tone: 'muted',
+    hint: 'A mass that gives no light and bends routes and orbits near it',
+  },
 }
 
 export const SURVEY_LEVELS: Record<
@@ -88,10 +116,16 @@ export const SURVEY_LEVELS: Record<
 > = {
   unknown: { label: 'Unknown', icon: HelpCircle, tone: 'muted', rank: 0 },
   rumoured: { label: 'Rumoured', icon: Users, tone: 'muted', rank: 1 },
-  detected: { label: 'Detected', icon: Radar, tone: 'info', rank: 2 },
-  observed: { label: 'Observed', icon: Telescope, tone: 'info', rank: 3 },
-  surveyed: { label: 'Surveyed', icon: Footprints, tone: 'verdigris', rank: 4 },
-  mapped: { label: 'Mapped', icon: MapIcon, tone: 'success', rank: 5 },
+  charted_by_others: {
+    label: 'Charted by others',
+    icon: MapIcon,
+    tone: 'muted',
+    rank: 2,
+  },
+  detected: { label: 'Detected', icon: Radar, tone: 'info', rank: 3 },
+  observed: { label: 'Observed', icon: Telescope, tone: 'info', rank: 4 },
+  surveyed: { label: 'Surveyed', icon: Footprints, tone: 'verdigris', rank: 5 },
+  mapped: { label: 'Mapped', icon: MapIcon, tone: 'success', rank: 6 },
 }
 
 export const SYSTEM_ROLES: Record<Schema['SystemRole'], Named> = {
@@ -110,6 +144,7 @@ export const IMPACT_BODIES: Record<Schema['ImpactBody'], Named> = {
     tone: 'warning',
   },
   wreck: { label: 'Fallen made thing', icon: Cog, tone: 'danger' },
+  ejecta: { label: 'Ejecta', icon: Asterisk, tone: 'danger' },
 }
 
 export const IMPACT_OUTCOMES: Record<Schema['ImpactOutcome'], Named> = {
@@ -118,6 +153,8 @@ export const IMPACT_OUTCOMES: Record<Schema['ImpactOutcome'], Named> = {
   deflected: { label: 'Turned aside', icon: ShieldCheck, tone: 'success' },
   missed: { label: 'Missed', icon: Ban, tone: 'muted' },
   airburst: { label: 'Burst in the air', icon: Wind, tone: 'danger' },
+  captured: { label: 'Captured', icon: Tornado, tone: 'danger' },
+  fragmented: { label: 'Fragmented', icon: Fan, tone: 'danger' },
 }
 
 export const TERRAFORM_AIMS: Record<Schema['TerraformAim'], Named> = {
@@ -134,6 +171,12 @@ export const TERRAFORM_AIMS: Record<Schema['TerraformAim'], Named> = {
   dry: { label: 'Dry it', icon: Sun, tone: 'gold' },
   brighten: { label: 'Brighten its face', icon: Sparkles, tone: 'gold' },
   darken: { label: 'Darken its face', icon: Eye, tone: 'muted' },
+  seed_life: { label: 'Seed life', icon: Bean, tone: 'muted' },
+  steady_seasons: {
+    label: 'Steady the seasons',
+    icon: Calendar,
+    tone: 'muted',
+  },
 }
 
 export const COMPLEXITY: Record<
@@ -154,6 +197,8 @@ export const ENVIRONMENTS: Record<Schema['LifeEnvironment'], Named> = {
   subterranean: { label: 'Underground', icon: Compass, tone: 'warning' },
   under_ice: { label: 'Oceans under ice', icon: Snowflake, tone: 'info' },
   cloud: { label: 'Cloud layers', icon: CloudFog, tone: 'muted' },
+  void: { label: 'Void', icon: CircleOff, tone: 'muted' },
+  vent: { label: 'Vent', icon: AirVent, tone: 'muted' },
 }
 
 export const AIR_NEEDS: Record<Schema['AirNeed'], Named> = {
@@ -167,6 +212,7 @@ export const AIR_NEEDS: Record<Schema['AirNeed'], Named> = {
   ammonia: { label: 'Breathes ammonia', icon: Atom, tone: 'danger' },
   hydrogen: { label: 'Breathes hydrogen', icon: Atom, tone: 'info' },
   none: { label: 'Needs no air', icon: Check, tone: 'muted' },
+  sulphurous: { label: 'Sulphurous', icon: FlaskConical, tone: 'muted' },
 }
 
 export const STAR_STAGES: Record<Schema['StarAge'], string> = {

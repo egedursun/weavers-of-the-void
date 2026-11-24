@@ -3,7 +3,7 @@ import { type components } from '@/api/generated/schema'
 import { formatDuration, plural } from '@/lib/units'
 import { JOB_KIND_LABEL, isJobKind } from '@/constants/jobs'
 import { type TimelineTone } from '@/components/domain'
-import { type DrawerEntry } from '@/components/layout/drawer/drawerEntries'
+import { type EntryRef } from '@/components/layout/entry/entryStack'
 import {
   type FeedMeta,
   type FeedStream,
@@ -85,7 +85,7 @@ export type FeedSymbol =
   | 'tool'
   | 'writing'
 
-export type FeedLink = DrawerEntry & { label: string }
+export type FeedLink = EntryRef & { label: string }
 
 export type FeedLine = {
   id: number

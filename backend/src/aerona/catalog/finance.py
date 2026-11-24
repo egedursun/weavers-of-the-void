@@ -28,6 +28,8 @@ POLICY_LABELS: MappingProxyType[TradePolicyKind, str] = MappingProxyType(
         TradePolicyKind.FREE_TRADE: "Free trade",
         TradePolicyKind.EXPORT_BAN: "Export ban",
         TradePolicyKind.SANCTION: "Sanction",
+        TradePolicyKind.TOLL: "Toll",
+        TradePolicyKind.STAPLE_RIGHT: "Staple right",
     }
 )
 CREDIT_LABELS: MappingProxyType[CreditState, str] = MappingProxyType(
@@ -38,10 +40,17 @@ CREDIT_LABELS: MappingProxyType[CreditState, str] = MappingProxyType(
         CreditState.RESTRUCTURING: "Restructuring",
         CreditState.RESCUED: "Rescued",
         CreditState.REPUDIATED: "Repudiated its debts",
+        CreditState.FROZEN: "Frozen",
     }
 )
 SPECULATION_LABELS: MappingProxyType[SpeculationStatus, str] = MappingProxyType(
-    {SpeculationStatus.HOARDING: "Hoarding", SpeculationStatus.SOLD: "Sold", SpeculationStatus.BUST: "Bust", SpeculationStatus.SEIZED: "Seized"}
+    {
+        SpeculationStatus.HOARDING: "Hoarding",
+        SpeculationStatus.SOLD: "Sold",
+        SpeculationStatus.BUST: "Bust",
+        SpeculationStatus.SEIZED: "Seized",
+        SpeculationStatus.SPOILED: "Spoiled in store",
+    }
 )
 
 
@@ -62,6 +71,7 @@ LOAN_STATES = total(
         LoanStatus.RESCHEDULED: LoanSpec("Rescheduled", True),
         LoanStatus.COLLATERAL_SEIZED: LoanSpec("Collateral seized", False),
         LoanStatus.SOLD: LoanSpec("Sold to a new lender", True),
+        LoanStatus.INHERITED: LoanSpec("Inherited by an heir", True),
     },
 )
 OWED_LOANS = tuple(status for status, spec in LOAN_STATES.items() if spec.owed)
@@ -81,6 +91,7 @@ SAVING_FORMS = total(
         SavingForm.INVESTMENT: SavingSpec("An investment in the town", None),
         SavingForm.LAND: SavingSpec("Land that earns rent", "land"),
         SavingForm.GOODS: SavingSpec("Stored goods and herds", "goods"),
+        SavingForm.LIVESTOCK: SavingSpec("Herds kept as wealth", "livestock"),
     },
 )
 
@@ -100,6 +111,8 @@ COVERS = total(
         InsuranceCover.CROP: CoverSpec("Crop", "crop_premium_pct"),
         InsuranceCover.VESSEL: CoverSpec("Vessel", "vessel_premium_pct"),
         InsuranceCover.LIVESTOCK: CoverSpec("Livestock", "livestock_premium_pct"),
+        InsuranceCover.HEALTH: CoverSpec("Health", "health_premium_pct"),
+        InsuranceCover.RANSOM: CoverSpec("Ransom", "ransom_premium_pct"),
     },
 )
 TOWN_COVERS = (InsuranceCover.CARGO, InsuranceCover.HOUSE, InsuranceCover.CROP, InsuranceCover.LIVESTOCK, InsuranceCover.VESSEL)
@@ -117,5 +130,6 @@ PLAYS = total(
         MarketPlay.CORNER: PlaySpec("Cornering the market", False),
         MarketPlay.DUMP: PlaySpec("Dumping stock", False),
         MarketPlay.RUMOUR: PlaySpec("Spreading a false report", True),
+        MarketPlay.SHORT: PlaySpec("Selling short", False),
     },
 )

@@ -58,6 +58,9 @@ VALUE_LABELS = MappingProxyType(
         V.COMPETITION: ("Harmony", "Competition"),
         V.PERSEVERANCE: ("Ease", "Perseverance"),
         V.LEISURE: ("Industry", "Leisure"),
+        V.FREEDOM: ("Order", "Freedom"),
+        V.EQUALITY: ("Rank", "Equality"),
+        V.HOSPITALITY: ("Wariness of strangers", "Hospitality"),
     }
 )
 
@@ -739,6 +742,9 @@ TRAITS: MappingProxyType[TraitKind, TraitSpec] = total(
             None, {V.KNOWLEDGE: 5}, capacities={Capacity.SCHOLARSHIP: 5, Capacity.CRAFT: 5}, effects={E.LEARNING: 10}, heritable=True, label="Numerate"
         ),
         T.MUSICAL: _trait(None, {V.ARTWORK: 10}, capacities={Capacity.PRESENCE: 5}, effects={E.CHARM: 10}, heritable=True, label="Musical"),
+        T.FREEDOM_LOVING: _trait(None, {V.FREEDOM: 25, V.HIERARCHY: -10}, effects={E.DRIFT: 10, E.EXPLORATION: 10}, heritable=True, label="Freedom-loving"),
+        T.EGALITARIAN: _trait(None, {V.EQUALITY: 25, V.HIERARCHY: -15}, effects={E.JUSTICE: 10, E.TRUST: 5}, label="Egalitarian"),
+        T.ADAPTABLE: _trait(None, {V.TRADITION: -10, V.PERSEVERANCE: 10}, effects={E.RESILIENCE: 20, E.LEARNING: 10}, heritable=True, label="Adaptable"),
     },
 )
 TF = TraitFamily
@@ -880,6 +886,9 @@ TRAIT_FAMILY: Mapping[TraitKind, TraitFamily] = total(
         T.RETENTIVE: TF.INTELLECT,
         T.NUMERATE: TF.INTELLECT,
         T.MUSICAL: TF.FEELING,
+        T.FREEDOM_LOVING: TF.TEMPERAMENT,
+        T.EGALITARIAN: TF.VIRTUE,
+        T.ADAPTABLE: TF.COPING,
     },
 )
 FAMILY_LIMIT: Mapping[TraitFamily, int] = total(
@@ -1005,6 +1014,12 @@ SKILLS: MappingProxyType[SkillKind, SkillSpec] = total(
         S.COMPUTING: _skill(KN, Capacity.SCHOLARSHIP, "Computing"),
         S.SCIENCE: _skill(KN, Capacity.SCHOLARSHIP, "Science"),
         S.ADMINISTRATION: _skill(CM, Capacity.COMMAND, "Administration"),
+        S.FARMING: _skill(SU, Capacity.CRAFT, "Farming", physical=True),
+        S.HERDING: _skill(SU, Capacity.PRESENCE, "Herding", physical=True),
+        S.COOKING: _skill(CR, Capacity.CRAFT, "Cooking"),
+        S.MUSIC: _skill(SO, Capacity.PRESENCE, "Music"),
+        S.CLIMBING: _skill(SU, Capacity.MOBILITY, "Climbing", physical=True),
+        S.DIVING: _skill(SU, Capacity.MOBILITY, "Diving", physical=True),
     },
 )
 
@@ -1176,6 +1191,12 @@ MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = total(
         M.ILL_WILL: _memory({OC.GRIEVANCE: 50, OC.TRUST: 35, OC.FEAR: 15}, 12, {V.XENOPHILIA: -15, V.HONOUR: 10}, "Showed us ill will"),
         M.STOLE_FAITHFUL: _memory({OC.GRIEVANCE: 60, OC.TRUST: 40}, 8, {V.LOYALTY: 15, V.COMPETITION: 15}, "Took our faithful"),
         M.AIDED_CHOSEN: _memory({OC.AFFECTION: 50, OC.TRUST: 50}, 10, {V.FRIENDSHIP: 15, V.LOYALTY: 10}, "Aided our chosen"),
+        M.HEALED_ME: _memory({OC.AFFECTION: 40, OC.TRUST: 40, OC.RESPECT: 20}, 6, {V.MERCY: 20}, "Healed us"),
+        M.SHELTERED_ME: _memory({OC.AFFECTION: 40, OC.TRUST: 45, OC.RESPECT: 15}, 6, {V.HOSPITALITY: 25, V.MERCY: 10}, "Sheltered us", A.SHELTERING_STRANGERS),
+        M.ABANDONED_ME: _memory({OC.GRIEVANCE: 55, OC.TRUST: 45}, 6, {V.KINSHIP: 25, V.MERCY: 20}, "Abandoned us", A.ABANDONING_THE_SICK),
+        M.SURVIVED_WITH: _memory({OC.AFFECTION: 45, OC.TRUST: 45, OC.RESPECT: 10}, 3, {V.KINSHIP: 15, V.FRIENDSHIP: 20}, "Survived with us"),
+        M.APOLOGISED_TO_ME: _memory({OC.TRUST: 50, OC.RESPECT: 30, OC.AFFECTION: 20}, 10, {V.HONOUR: 15, V.MERCY: 15}, "Asked our pardon", A.APOLOGISING),
+        M.JUDGED_ME: _memory({OC.GRIEVANCE: 40, OC.FEAR: 30, OC.RESPECT: 30}, 8, {V.LAW: 25}, "Judged us"),
     },
 )
 
@@ -1242,6 +1263,14 @@ ACT_READINGS: MappingProxyType[ActKind, MappingProxyType[ValueAxis, int]] = Mapp
             A.FEEDING_ON_HOSTS: {V.NATURE: 25, V.MERCY: -35, V.KINSHIP: -10},
             A.KILLING_SACRED_ANIMAL: {V.PIETY: -50, V.NATURE: -35, V.SUPERSTITION: -20, V.MARTIAL: 10},
             A.FIXING_CONTESTS: {V.TRUTH: -40, V.COMPETITION: -45, V.HONOUR: -25},
+            A.ABANDONING_THE_SICK: {V.MERCY: -45, V.KINSHIP: -30, V.SUPERSTITION: 10},
+            A.BREAKING_HOSPITALITY: {V.HOSPITALITY: -60, V.HONOUR: -30, V.PIETY: -10},
+            A.CRUELTY_TO_ANIMALS: {V.MERCY: -35, V.NATURE: -40},
+            A.APOLOGISING: {V.HONOUR: 15, V.MERCY: 20, V.FRIENDSHIP: 15},
+            A.SHELTERING_STRANGERS: {V.HOSPITALITY: 45, V.XENOPHILIA: 25, V.MERCY: 15},
+            A.LAYING_CURSES: {V.SUPERSTITION: 30, V.MERCY: -25, V.LAW: -15},
+            A.ENHANCING_CONTESTANTS: {V.COMPETITION: -40, V.TRUTH: -30, V.HONOUR: -20},
+            A.POISON_WELLS: {V.MERCY: -55, V.HONOUR: -40, V.PURITY: -30, V.MARTIAL: 10},
         }.items()
     }
 )
@@ -1262,6 +1291,9 @@ PRESSURE_LABELS = MappingProxyType(
         P.OPPRESSION: "Oppression",
         P.DISEASE_BURDEN: "Burden of disease",
         P.PURPOSELESSNESS: "Want of purpose",
+        P.ISOLATION: "Isolation",
+        P.DEBT: "Debt",
+        P.PERSECUTION: "Persecution",
     }
 )
 

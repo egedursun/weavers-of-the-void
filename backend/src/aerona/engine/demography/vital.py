@@ -55,6 +55,7 @@ def death_rate(rules: Rules, band: AgeBand) -> float:
         A.YOUTH: table.adult_death_pct_per_year,
         A.ADULT: table.adult_death_pct_per_year,
         A.ELDER: table.elder_death_pct_per_year,
+        A.ANCIENT: table.ancient_death_pct_per_year,
     }
     return rates[band] / PERCENT
 

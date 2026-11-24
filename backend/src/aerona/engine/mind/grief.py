@@ -169,6 +169,11 @@ async def grieve_by_stage(ctx: TickContext, mourner: EntityRow, row: GriefRow) -
                 epoch=ctx.epoch,
                 note="the anger of grief",
             )
+    if spec.bargains and rng.chance(table.bargaining_relief_pct):
+        await think(ctx.session, ctx.rules, mourner.id, ThoughtKind.PRAYED_IN_PEACE, ctx.epoch, subject_id=row.deceased_node_id)
+        row.length_epochs = max(1, row.length_epochs - 1)
+    elif spec.bargains:
+        await think(ctx.session, ctx.rules, mourner.id, ThoughtKind.PRAYER_IGNORED, ctx.epoch, subject_id=row.deceased_node_id)
     if spec.yearning and rng.chance(table.yearning_rite_pct):
         await think(ctx.session, ctx.rules, mourner.id, ThoughtKind.DREAMED_OF_LONGING, ctx.epoch, subject_id=row.deceased_node_id)
         await remember(
@@ -192,6 +197,8 @@ async def advance(ctx: TickContext, mourner: EntityRow, tally: GriefTally) -> No
         if row.stage is GriefStage.SHOCK and ctx.epoch - row.stage_epoch >= table.shock_epochs:
             row.stage, row.stage_epoch = GriefStage.ANGER, ctx.epoch
         if row.stage is GriefStage.ANGER and ctx.epoch - row.stage_epoch >= table.epochs(table.anger_years):
+            row.stage, row.stage_epoch = GriefStage.BARGAINING, ctx.epoch
+        if row.stage is GriefStage.BARGAINING and ctx.epoch - row.stage_epoch >= table.epochs(table.bargaining_years):
             row.stage, row.stage_epoch = GriefStage.MOURNING, ctx.epoch
         if row.stage is GriefStage.MOURNING and ctx.epoch - row.stage_epoch >= row.length_epochs:
             row.stage, row.stage_epoch = GriefStage.YEARNING, ctx.epoch

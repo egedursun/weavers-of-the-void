@@ -244,6 +244,12 @@ function sealFields(view: View): readonly Field[] {
       kind: 'pick',
       table: choiceTable(view.line_choices),
     },
+    {
+      key: 'made_mind_id',
+      label: 'The made mind that keeps it',
+      kind: 'pick',
+      table: choiceTable(view.mind_choices),
+    },
   ]
 }
 const NOVELTY_FIELDS: readonly Field[] = [
@@ -1312,8 +1318,11 @@ function Seals({ view, blocked }: Props) {
         ? view.power_choices
         : kind === 'living'
           ? view.line_choices
-          : []
-  const needsLink = kind === 'pact' || kind === 'power' || kind === 'living'
+          : kind === 'made'
+            ? view.mind_choices
+            : []
+  const needsLink =
+    kind === 'pact' || kind === 'power' || kind === 'living' || kind === 'made'
   const linkId = link === '' ? null : Number(link)
   const sealing = useCouplingAction(
     'deep_seal:seal',
@@ -1324,6 +1333,7 @@ function Seals({ view, blocked }: Props) {
       oath_id: kind === 'pact' ? linkId : null,
       power_id: kind === 'power' ? linkId : null,
       line_id: kind === 'living' ? linkId : null,
+      mind_id: kind === 'made' ? linkId : null,
     }),
     'The deep is sealed'
   )
@@ -1333,7 +1343,7 @@ function Seals({ view, blocked }: Props) {
     <Section
       id='section-seals'
       title='Seals over the deep'
-      description='Walls, warding rites, a god’s hand, an innate power, a grown barrier or a pact hold back what lies below; they wear, are tested and can be dug through.'
+      description='Walls, warding rites, a god’s hand, an innate power, a grown barrier, a pact or a made mind hold back what lies below; they wear, are tested and can be dug through.'
       icon={Lock}
       tone='info'
     >

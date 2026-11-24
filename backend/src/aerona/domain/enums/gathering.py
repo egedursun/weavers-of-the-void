@@ -38,6 +38,8 @@ class GatheringKind(StrEnum):
     SPORT_MATCH = "sport_match"
     COMMEMORATION = "commemoration"
     MUSTER = "muster"
+    REUNION = "reunion"
+    GIFT_EXCHANGE = "gift_exchange"
 
 
 class GatheringStatus(StrEnum):

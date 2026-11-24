@@ -224,6 +224,7 @@ class TerrainTrait(StrEnum):
     WATERY = "watery"
     UNDERGROUND = "underground"
     BUILT = "built"
+    RUINED = "ruined"
     AMBUSH_COVER = "ambush_cover"
     CONFINED = "confined"
     SLIPPERY = "slippery"

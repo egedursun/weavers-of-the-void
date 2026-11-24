@@ -44,6 +44,8 @@ EXPLAINERS: Mapping[MishapKind, KnowledgeBranch | None] = total(
         MishapKind.THEFT_SUFFERED: None,
         MishapKind.TOOL_BROKEN: None,
         MishapKind.NEAR_MISS: None,
+        MishapKind.QUAKE: KnowledgeBranch.ARCHITECTURE,
+        MishapKind.FLOOD: KnowledgeBranch.ARCHITECTURE,
     },
 )
 
@@ -63,6 +65,7 @@ LEANINGS: Mapping[MishapAttribution, tuple[ValueAxis, ...]] = {
     MishapAttribution.BROKEN_OATH: (ValueAxis.HONOUR, ValueAxis.LAW),
     MishapAttribution.MADE_MIND: (ValueAxis.TRADITION, ValueAxis.PURITY),
     MishapAttribution.HIDDEN_PEOPLE: (ValueAxis.SUPERSTITION, ValueAxis.NATURE),
+    MishapAttribution.SELF: (ValueAxis.HONOUR, ValueAxis.PIETY),
 }
 
 
@@ -81,6 +84,7 @@ RESPONSES: Mapping[MishapAttribution, MishapResponse] = {
     MishapAttribution.BROKEN_OATH: MishapResponse.NOTHING,
     MishapAttribution.MADE_MIND: MishapResponse.ACCUSATION,
     MishapAttribution.HIDDEN_PEOPLE: MishapResponse.OFFERING,
+    MishapAttribution.SELF: MishapResponse.RITE,
 }
 
 
@@ -96,6 +100,7 @@ SIGN_WORDS: Mapping[LuckSign, str] = total(
         LuckSign.PERSON: "kind of person",
         LuckSign.ANIMAL: "kind of creature",
         LuckSign.COLOUR: "colour",
+        LuckSign.WEATHER: "weather",
     },
 )
 
@@ -111,6 +116,7 @@ SIGN_WEIGHTS: Mapping[LuckSign, Callable[[Rules], int]] = total(
         LuckSign.PERSON: lambda rules: rules.luck.person_weight,
         LuckSign.ANIMAL: lambda rules: rules.luck.animal_weight,
         LuckSign.COLOUR: lambda rules: rules.luck.colour_weight,
+        LuckSign.WEATHER: lambda rules: rules.luck.weather_weight,
     },
 )
 
@@ -123,6 +129,8 @@ CHARM_EFFECTS: Mapping[CharmPower, Callable[[Rules], int]] = total(
         CharmPower.HEALING: lambda rules: rules.charms.healing_effect,
         CharmPower.LOVE: lambda rules: rules.charms.love_effect,
         CharmPower.TRAVEL: lambda rules: rules.charms.travel_effect,
+        CharmPower.CONCEALMENT: lambda rules: rules.charms.concealment_effect,
+        CharmPower.COURAGE: lambda rules: rules.charms.courage_effect,
     },
 )
 
@@ -131,3 +139,6 @@ PENALTY_OUTCOMES = {PunishmentKind.DEATH: AccusationOutcome.KILLED, PunishmentKi
 
 WEIGHTS_FOR_MISHAP_ATTRIBUTIONS = (MishapAttribution.OMEN, MishapAttribution.FATE)
 ANSWER_MISHAP_RESPONSES = (MishapResponse.RITE, MishapResponse.OFFERING)
+
+
+BLAMING = frozenset({MishapAttribution.WITCHCRAFT, MishapAttribution.ENEMY_SCHEME, MishapAttribution.CURSE})

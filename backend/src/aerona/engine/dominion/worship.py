@@ -6,23 +6,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.dominion import ALIGNMENT_LOOKS, BARGAINING_MODES, PRAYER_TONES
 from aerona.catalog.peoples import STYLE_AXES, Style
 from aerona.constants.units import PERCENT
-from aerona.db.tables.divine import DivineStandingRow
+from aerona.db.tables.divine import DivineStandingRow, WorldAttentionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import MessageRow
+from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.sacred import MysticRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.dominion import PerceivedAlignment, PrayerTone, WorshipMode
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.structure import StructureKind
+from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import god_of
 from aerona.engine.lore.style import axis_of
-from aerona.engine.mind.book import stored_values
+from aerona.engine.mind.book import stored_values, write_values
+from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import has_stat, shift_stat, stat_or
+from aerona.engine.sacred.mysteries import MysteryTally, become_mystic
 from aerona.engine.structures.profiles import style_column
 from aerona.rules.registry import Rules
 
@@ -100,6 +105,38 @@ async def prayer_essence(ctx: TickContext, tally: WorshipTally) -> None:
         standing = await ctx.session.get(DivineStandingRow, (community, god_id)) if community is not None and spec.praises else None
         if standing is not None and not held(community) and "awe" not in standing.locked:
             standing.awe = clamp_int(standing.awe + ctx.rules.worship.praise_renown, 0, PERCENT)
+        await answer_tone(ctx, tone, god_id, sender)
+
+
+async def answer_tone(ctx: TickContext, tone: PrayerTone, god_id: int, sender: EntityRow | None) -> None:
+    if tone is PrayerTone.LAMENT and sender is not None and sender.world_id is not None:
+        attention = await ctx.session.get(WorldAttentionRow, sender.world_id)
+        if attention is not None and "attention" not in attention.locked:
+            attention.attention = clamp_int(attention.attention + ctx.rules.worship.lament_notice, 0, PERCENT)
+    if tone is PrayerTone.CONFESSION and sender is not None and not held(sender.id):
+        profile = await ctx.session.get(MortalProfileRow, sender.id)
+        if profile is not None and "stress" not in profile.locked:
+            profile.stress = max(0, profile.stress - ctx.rules.worship.confession_guilt)
+
+
+async def draw_near(ctx: TickContext, row: DivineStandingRow, community: EntityRow) -> None:
+    table = ctx.rules.worship
+    if row.mode is WorshipMode.UNION and ctx.rng(f"union.{community.id}.{ctx.epoch}").chance(table.union_mystic_pct // 10):
+        seekers = list(
+            await ctx.session.scalars(
+                select(EntityRow)
+                .where(await present_among(ctx.session, [community.id]), EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+                .order_by(EntityRow.id)
+            )
+        )
+        free = [mortal for mortal in seekers if not held(mortal.id) and await ctx.session.get(MysticRow, mortal.id) is None]
+        if free:
+            await become_mystic(ctx, ctx.rng(f"union.seeker.{community.id}.{ctx.epoch}").pick(free), row.god_node_id, MysteryTally())
+    people = await people_of(ctx.session, community) if row.mode is WorshipMode.KINSHIP else None
+    if people is not None and not held(people.id):
+        values = await stored_values(ctx.session, ValueHolder.CULTURE, people.id)
+        values[ValueAxis.FAMILY] = clamp_int(values.get(ValueAxis.FAMILY, 0) + table.kinship_ancestor, -PERCENT, PERCENT)
+        await write_values(ctx.session, ValueHolder.CULTURE, people.id, values)
 
 
 Altars = dict[tuple[int, int], list[tuple[EntityRow, StructureProfileRow]]]
@@ -161,6 +198,7 @@ async def view_worship(ctx: TickContext, tally: WorshipTally) -> None:
             tally.offerings += await give_faith(ctx, row.god_node_id, offering)
         else:
             tally.devoted += 1
+            await draw_near(ctx, row, community)
             if has_stat(community, "piety"):
                 shift_stat(community, "piety", table.devotion_morale if stat_or(community, "piety", 0) < PERCENT else 0)
         await reshape_temples(ctx, temples.get((community.id, row.god_node_id), []), row.perceived or perceived, tally)

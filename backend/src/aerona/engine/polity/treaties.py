@@ -4,16 +4,17 @@ from sqlalchemy import select
 
 from aerona.catalog.life.polity import DEFAULT_CLAUSES, HOSTILITIES_TREATY_KINDS, KEEP_CLAUSES_TREATY_KINDS, KEEP_CLAUSES_TREATY_KINDS_2
 from aerona.catalog.life_traits import CLAUSE_KIND_TRAITS, TREATY_KIND_TRAITS, having
-from aerona.catalog.pacts import PARTY_ROLES, PRINCIPAL_ROLES
+from aerona.catalog.pacts import BINDING_STATES, PARTY_ROLES, PRINCIPAL_ROLES, TERM_CLAUSES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.tables.belonging import FugitiveRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import TradeRouteTollRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import OathRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow, TreatyPartyRow, TreatyProfileRow, VassalageRow
+from aerona.db.tables.polity import OathRow, PolityMemberRow, PolityProfileRow, TreatyBreachRow, TreatyClauseRow, TreatyPartyRow, TreatyProfileRow, VassalageRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.db.tables.warfare import ArmyRow, TributeRow, WarRow, WarSideRow
+from aerona.db.tables.warfare import ArmyRow, CaptiveRow, TributeRow, WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.economy import GoodsFlow
@@ -25,7 +26,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import ClauseKind, OathBreach, PartyRole, TreatyBreach, TreatyKind, TreatyStatus
 from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.unions import UnionPurpose
-from aerona.domain.enums.war import TributeStatus, WarCause, WarSide, WarStatus
+from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.engine.communication.post import proposal_pending
 from aerona.engine.context import TickContext
 from aerona.engine.intrigue.beliefs import daring
@@ -40,12 +41,13 @@ from aerona.engine.polity.accords import Clause, accept, clause_pairs, end_treat
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.loyalty import vassal_loyalty
 from aerona.engine.polity.mediation import settle_dispute, tend_suspended
+from aerona.engine.polity.neighbour_accords import keep_accords, seek_accords
 from aerona.engine.polity.oaths import break_oath
 from aerona.engine.polity.regard import on_breach
 from aerona.engine.polity.repute import shift_honour, shift_infamy
 from aerona.engine.polity.subjects import kind_for, pays_tribute, sends_levies
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.society import move_stock
@@ -114,7 +116,9 @@ def tribute_terms(ctx: TickContext) -> dict[str, int | str | bool]:
 
 async def in_force(ctx: TickContext) -> list[TreatyProfileRow]:
     return list(
-        await ctx.session.scalars(select(TreatyProfileRow).where(TreatyProfileRow.status == TreatyStatus.IN_FORCE).order_by(TreatyProfileRow.treaty_entity_id))
+        await ctx.session.scalars(
+            select(TreatyProfileRow).where(TreatyProfileRow.status.in_(sorted(BINDING_STATES))).order_by(TreatyProfileRow.treaty_entity_id)
+        )
     )
 
 
@@ -135,6 +139,12 @@ async def breach(
 ) -> None:
     with explaining():
         await broken_treaty(ctx, profile, breaker_id=breaker_id, clause=clause, reason=reason, occasion=occasion)
+
+
+async def witnessed_breach(ctx: TickContext, breaker: EntityRow) -> None:
+    realm = await ctx.session.get(PolityProfileRow, breaker.id)
+    if realm is not None and "legitimacy" not in realm.locked and not held(breaker.id):
+        realm.legitimacy = clamp_int(realm.legitimacy - ctx.rules.diplomacy.witness_breach_cost, 0, PERCENT)
 
 
 async def broken_treaty(
@@ -168,6 +178,8 @@ async def broken_treaty(
     if ruler is not None:
         await shift_honour(ctx, ruler.id, -table.breach_honour)
         await shift_infamy(ctx, ruler.id, table.breach_infamy)
+    if any(PARTY_ROLES[party.role].witnesses for party in await parties_of(ctx.session, profile.treaty_entity_id)):
+        await witnessed_breach(ctx, breaker)
     if profile.oath_id is not None:
         oath = await ctx.session.get(OathRow, profile.oath_id)
         if oath is not None:
@@ -268,6 +280,8 @@ async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
     table = ctx.rules.treaties
     counts = {"expired": 0, "renewed": 0, "broken": 0, "kept": 0, "guarded": 0}
     counts.update(await tend_suspended(ctx, book))
+    counts.update(await seek_accords(ctx, book))
+    counts.update(await keep_accords(ctx))
     strength = await MilitaryStrength.load(ctx.session, ctx.rules)
     treaties = await in_force(ctx)
     terms = await clauses_by_treaty(ctx, [profile.treaty_entity_id for profile in treaties])
@@ -279,11 +293,17 @@ async def keep_clauses(ctx: TickContext, book: RealmBook) -> dict[str, int]:
             continue
         if profile.until_epoch is not None and ctx.epoch >= profile.until_epoch and "until_epoch" not in profile.locked:
             parties = [party.party_node_id for party in await parties_of(ctx.session, profile.treaty_entity_id)]
-            friendly = len(parties) >= 2 and await relation(ctx.session, ctx.rules, parties[0], parties[1]) >= table.renew_relation
+            regard = await relation(ctx.session, ctx.rules, parties[0], parties[1]) if len(parties) >= 2 else 0
+            friendly = len(parties) >= 2 and regard >= table.renew_relation
             if friendly and profile.kind not in KEEP_CLAUSES_TREATY_KINDS:
                 profile.until_epoch = ctx.epoch + table.alliance_epochs
                 profile.renewals += 1
+                profile.status = TreatyStatus.IN_FORCE
                 counts["renewed"] += 1
+            elif len(parties) >= 2 and regard >= 0 and profile.status is TreatyStatus.IN_FORCE and profile.kind not in KEEP_CLAUSES_TREATY_KINDS:
+                profile.status = TreatyStatus.RENEGOTIATING
+                profile.until_epoch = ctx.epoch + 1
+                counts["renegotiating"] = counts.get("renegotiating", 0) + 1
             else:
                 await end_treaty(
                     ctx, profile, TreatyStatus.FULFILLED if profile.kind in KEEP_CLAUSES_TREATY_KINDS_2 else TreatyStatus.EXPIRED, "its term ran out"
@@ -351,6 +371,69 @@ async def armed_breach(ctx: TickContext, profile: TreatyProfileRow, clause: Trea
     return False
 
 
+async def exchange_captives(ctx: TickContext, clause: TreatyClauseRow) -> bool:
+    if clause.obligor_node_id is None or clause.beneficiary_node_id is None:
+        return False
+    rows = await ctx.session.scalars(
+        select(CaptiveRow)
+        .where(
+            CaptiveRow.captor_entity_id == clause.obligor_node_id,
+            CaptiveRow.home_entity_id == clause.beneficiary_node_id,
+            CaptiveRow.status == CaptiveStatus.HELD,
+        )
+        .order_by(CaptiveRow.id)
+    )
+    for row in list(rows):
+        if not held(row.captive_entity_id) and "status" not in (row.locked or []):
+            row.status = CaptiveStatus.RELEASED
+    return True
+
+
+async def return_refugees(ctx: TickContext, clause: TreatyClauseRow) -> bool:
+    if clause.obligor_node_id is None or clause.beneficiary_node_id is None:
+        return False
+    rows = await ctx.session.scalars(
+        select(FugitiveRow).where(FugitiveRow.pursuer_entity_id == clause.beneficiary_node_id, FugitiveRow.caught_epoch.is_(None)).order_by(FugitiveRow.id)
+    )
+    for row in list(rows):
+        mortal = await living_entity(ctx.session, row.mortal_entity_id)
+        if mortal is not None and not held(mortal.id) and await under(ctx, mortal, clause.obligor_node_id):
+            row.caught_epoch = ctx.epoch
+            mortal.location_id = clause.beneficiary_node_id
+    return True
+
+
+async def under(ctx: TickContext, mortal: EntityRow, realm_id: int) -> bool:
+    if mortal.location_id is None:
+        return False
+    member = await ctx.session.scalar(
+        select(PolityMemberRow.member_entity_id).where(PolityMemberRow.polity_entity_id == realm_id, PolityMemberRow.member_entity_id == mortal.location_id)
+    )
+    return member is not None or mortal.location_id == realm_id
+
+
+async def share_water(ctx: TickContext, clause: TreatyClauseRow) -> bool:
+    if clause.obligor_node_id is None or clause.beneficiary_node_id is None:
+        return False
+    await change_relation(
+        ctx, clause.obligor_node_id, clause.beneficiary_node_id, ctx.rules.treaties.shared_water_regard, MemoryKind.GOODWILL, note="shared a river by treaty"
+    )
+    return True
+
+
+async def keep_terms(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow) -> bool:
+    kept = False
+    if clause.kind is ClauseKind.TOLLS_WAIVED:
+        kept = await tolls_kept(ctx, profile, clause)
+    elif clause.kind is ClauseKind.CAPTIVE_EXCHANGE:
+        kept = await exchange_captives(ctx, clause)
+    elif clause.kind is ClauseKind.RETURN_OF_REFUGEES:
+        kept = await return_refugees(ctx, clause)
+    elif clause.kind is ClauseKind.SHARED_WATER:
+        kept = await share_water(ctx, clause)
+    return kept
+
+
 async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: TreatyClauseRow, strength: MilitaryStrength) -> bool:
     if await misread_breach(ctx, profile, clause):
         return False
@@ -358,8 +441,8 @@ async def keep_clause(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
         return await pay_tribute(ctx, profile, clause)
     if clause.kind is ClauseKind.HOSTAGE:
         return await keep_hostage(ctx, profile, clause)
-    if clause.kind is ClauseKind.TOLLS_WAIVED:
-        return await tolls_kept(ctx, profile, clause)
+    if clause.kind in TERM_CLAUSES:
+        return await keep_terms(ctx, profile, clause)
     if await armed_breach(ctx, profile, clause):
         return False
     if clause.kind is ClauseKind.MARRIAGE and "first_id" in clause.params and "second_id" in clause.params:

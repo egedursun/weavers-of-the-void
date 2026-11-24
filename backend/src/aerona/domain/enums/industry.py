@@ -30,6 +30,7 @@ class Pollutant(StrEnum):
     RADIATION = "radiation"
     NOISE = "noise"
     LIGHT = "light"
+    HEAT = "heat"
 
 
 class QualityTier(StrEnum):
@@ -69,6 +70,9 @@ class ProcessKind(StrEnum):
     DYEING = "dyeing"
     COPYING = "copying"
     EVAPORATING = "evaporating"
+    PAPERMAKING = "papermaking"
+    PRINTING = "printing"
+    ROPEMAKING = "ropemaking"
 
 
 class MethodKind(StrEnum):
@@ -183,9 +187,18 @@ class MethodKind(StrEnum):
     SCRIPTORIUM = "scriptorium"
     COPYING_PRESS = "copying_press"
     ROTARY_PRESS = "rotary_press"
+    DUPLICATING_MACHINE = "duplicating_machine"
     SOLAR_PANS = "solar_pans"
     BOILING_PANS = "boiling_pans"
     VACUUM_PANS = "vacuum_pans"
+    HAND_MOULD = "hand_mould"
+    STAMPING_MILL = "stamping_mill"
+    PAPER_MACHINE = "paper_machine"
+    BLOCK_PRINTING = "block_printing"
+    MOVABLE_TYPE = "movable_type"
+    HAND_LAYING = "hand_laying"
+    WALK_LAYING = "walk_laying"
+    ROPE_MACHINE = "rope_machine"
 
 
 class OwnerClass(StrEnum):

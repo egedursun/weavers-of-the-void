@@ -64,6 +64,7 @@ export function ReputationPanel({
     (sons.data ?? []).find((view) => view.son.id === sonId)
   return (
     <Section
+      id='section-creator-reputation'
       title='Reputation and passions'
       description='How your sons see you, and what you are known to love.'
       surface='card'

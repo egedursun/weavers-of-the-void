@@ -3,14 +3,14 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.life.nature import CULTURED, FOUNDED
+from aerona.catalog.life.nature import CULTURED, FOUNDED, PULSE_GOODS
 from aerona.catalog.life_traits import CARRYING_ROUTES
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.agrarian import SoilNutrientRow
 from aerona.db.tables.cuisine import CommunityDishRow, DishRow
 from aerona.db.tables.disease import OutbreakRow
-from aerona.db.tables.economy import TradeRouteProfileRow
+from aerona.db.tables.economy import CommunityStockRow, TradeRouteProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.industry import RegionPollutionRow
@@ -21,11 +21,13 @@ from aerona.domain.enums.agrarian import NutrientKind
 from aerona.domain.enums.cuisine import CookingMethod, DishCourse
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature import FermentKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 
 F = FermentKind
@@ -145,8 +147,17 @@ async def found_cultures(ctx: TickContext, tally: MicrobeTally) -> None:
         .order_by(CommunityDishRow.community_entity_id, DishRow.id)
     )
     wanted: dict[int, set[FermentKind]] = {}
+    alkaline = await bean_towns(ctx)
     for town, method, course in pairs:
-        kind = F.YEAST if course is DishCourse.DRINK else FOUNDED.get(method)
+        kind = (
+            F.YEAST
+            if course is DishCourse.DRINK
+            else F.WILD
+            if ctx.rng(seed_of("culture.wild", town, ctx.epoch)).chance(table.wild_found_pct)
+            else FOUNDED.get(method)
+        )
+        if kind is F.LACTIC and town in alkaline:
+            kind = F.ALKALINE
         if kind is not None:
             wanted.setdefault(town, set()).add(kind)
     for town, kinds in wanted.items():
@@ -159,6 +170,21 @@ async def found_cultures(ctx: TickContext, tally: MicrobeTally) -> None:
                 tally.founded += 1
 
 
+async def bean_towns(ctx: TickContext) -> set[int]:
+    holders = select(CommunityStockRow.community_entity_id).where(CommunityStockRow.commodity.in_(sorted(PULSE_GOODS)), CommunityStockRow.quantity > 0)
+    return set(await ctx.session.scalars(holders.order_by(CommunityStockRow.community_entity_id)))
+
+
+async def spoil_wild(ctx: TickContext, row: FermentCultureRow) -> bool:
+    if row.kind is not FermentKind.WILD or "lost_epoch" in row.locked:
+        return False
+    if not ctx.rng(seed_of("culture.wild_spoil", row.id, ctx.epoch)).chance(ctx.rules.fermentation.wild_spoil_pct):
+        return False
+    row.lost_epoch = ctx.epoch
+    await record(ctx, "ferment.culture_lost", roles={IncidentRole.SUBJECT: row.holder_entity_id}, facts={"culture": row.kind}, place=row.holder_entity_id)
+    return True
+
+
 async def tend_cultures(ctx: TickContext, tally: MicrobeTally) -> None:
     table = ctx.rules.fermentation
     atlas = await RegionAtlas.load(ctx.session)
@@ -166,6 +192,9 @@ async def tend_cultures(ctx: TickContext, tally: MicrobeTally) -> None:
     for row in list(await ctx.session.scalars(select(FermentCultureRow).where(FermentCultureRow.lost_epoch.is_(None)).order_by(FermentCultureRow.id))):
         holder = await ctx.session.get(EntityRow, row.holder_entity_id)
         if holder is None or holder.status is not EntityStatus.CANON or held(holder.id):
+            continue
+        if await spoil_wild(ctx, row):
+            tally.lost += 1
             continue
         region = atlas.top_region(holder.id)
         if region in sick and "lost_epoch" not in row.locked and ctx.rng(seed_of("culture.plague", row.id, ctx.epoch)).chance(table.plague_loss_chance):

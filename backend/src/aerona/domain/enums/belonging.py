@@ -14,6 +14,8 @@ class IdentityLayer(StrEnum):
     LANGUAGE = "language"
     KIND = "kind"
     CAUSE = "cause"
+    GIFT = "gift"
+    CALLING = "calling"
 
 
 class SalienceDriver(StrEnum):
@@ -30,6 +32,8 @@ class SalienceDriver(StrEnum):
     COMMEMORATION = "commemoration"
     ELECTION = "election"
     CONTEST = "contest"
+    DISASTER = "disaster"
+    ARRIVALS = "arrivals"
 
 
 class PlayKind(StrEnum):
@@ -48,6 +52,8 @@ class SanctuaryKind(StrEnum):
     WILDS = "wilds"
     FREE_CITY = "free_city"
     EMBASSY = "embassy"
+    SHIP = "ship"
+    TRADE_HALL = "trade_hall"
 
 
 class FugitiveKind(StrEnum):
@@ -57,6 +63,8 @@ class FugitiveKind(StrEnum):
     RUNAWAY = "runaway"
     DESERTER = "deserter"
     HERETIC = "heretic"
+    ESCAPED_CAPTIVE = "escaped_captive"
+    DEBTOR = "debtor"
 
 
 class SanctuaryState(StrEnum):
@@ -72,3 +80,5 @@ class SatireSource(StrEnum):
     ARTWORK = "artwork"
     MORTAL = "mortal"
     GOD = "god"
+    CROWD = "crowd"
+    OUTLET = "outlet"

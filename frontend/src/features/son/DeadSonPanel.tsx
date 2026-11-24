@@ -37,6 +37,7 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
   })
   return (
     <Section
+      id='section-son-fate'
       title={
         deathEpoch !== null
           ? `${son.name} died · Epoch ${deathEpoch}`

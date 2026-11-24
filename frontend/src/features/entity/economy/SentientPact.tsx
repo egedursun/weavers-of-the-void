@@ -9,6 +9,9 @@ import {
   Hourglass,
   ScrollText,
   Unlock,
+  HourglassCog,
+  Repeat,
+  CirclePause,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -52,13 +55,18 @@ const STATUS: Record<
     variant: 'success' | 'destructive' | 'outline'
   }
 > = {
+  renegotiating: {
+    label: 'Under renegotiation',
+    icon: Repeat,
+    variant: 'outline',
+  },
   in_force: { label: 'In force', icon: CircleCheck, variant: 'success' },
   broken: { label: 'Broken', icon: CircleX, variant: 'destructive' },
   fulfilled: { label: 'Released', icon: Unlock, variant: 'outline' },
-  expired: { label: 'Lapsed', icon: Hourglass, variant: 'outline' },
+  expired: { label: 'Lapsed', icon: HourglassCog, variant: 'outline' },
   proposed: { label: 'Proposed', icon: Hourglass, variant: 'outline' },
   rejected: { label: 'Rejected', icon: CircleX, variant: 'destructive' },
-  suspended: { label: 'Suspended', icon: Hourglass, variant: 'outline' },
+  suspended: { label: 'Suspended', icon: CirclePause, variant: 'outline' },
 }
 const GOODS: Record<string, string> = {
   [NO_GOODS]: 'Prosperity, not goods',

@@ -23,3 +23,5 @@ class StressRules:
     despair_suicide_chance: int = rule(10, 0, 100, G, "Chance a despairing break ends in suicide when allowed (%)")
     revelation_seer_chance: int = rule(25, 0, 100, G, "Chance a revelation makes a mortal a seer (%)")
     flight_chance_pct: int = rule(100, 0, 400, G, "How likely a break is flight (%)")
+    dissociation_gap: int = rule(20, 0, 100, G, "Strength of the gap in memory a being that dissociates under strain is left with")
+    collapse_health: int = rule(15, 0, 100, G, "Health a being loses when its body fails under strain")

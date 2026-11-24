@@ -131,6 +131,8 @@ KNOWLEDGE: Mapping[KnowledgeKind, KnowledgeSpec] = total(
         K.PATTERN: KnowledgeSpec("A pattern of a made thing", dies=False, worth=lambda rules: rules.knowledge.pattern_value),
         K.SOURCE: KnowledgeSpec("Where a source of power lies", dies=True, worth=lambda rules: rules.knowledge.source_value),
         K.SECRET: KnowledgeSpec("A secret of a person, house or realm", dies=True, worth=lambda rules: rules.knowledge.secret_value),
+        K.REMEDY: KnowledgeSpec("A remedy", dies=True, worth=lambda rules: rules.knowledge.remedy_value),
+        K.GENEALOGY: KnowledgeSpec("A line of descent", dies=False, worth=lambda rules: rules.knowledge.genealogy_value),
     },
 )
 DYING_KNOWLEDGE = frozenset(kind for kind, spec in KNOWLEDGE.items() if spec.dies)

@@ -11,6 +11,7 @@ import {
   Users,
   Vote,
   Wallet,
+  HeartHandshake,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -24,7 +25,7 @@ export const LEAGUE_AIMS: Record<Schema['LeagueAim'], Named> = {
   currency_union: { label: 'Currency union', icon: Coins, tone: 'gold' },
   law: { label: 'Law', icon: Scale, tone: 'info' },
   faith: { label: 'Faith', icon: Church, tone: 'verdigris' },
-  peace: { label: 'Peace', icon: Handshake, tone: 'success' },
+  peace: { label: 'Peace', icon: HeartHandshake, tone: 'success' },
   research: { label: 'Research', icon: FlaskConical, tone: 'info' },
   migration: { label: 'Migration', icon: Footprints, tone: 'warning' },
 }

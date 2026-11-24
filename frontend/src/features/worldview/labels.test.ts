@@ -9,7 +9,7 @@ import { SETTLES, WARS } from './labels'
 
 describe('ways of settling, grounds of war and journey intents', () => {
   it('names and draws every way of settling', () => {
-    expect(settleModeValues).toHaveLength(11)
+    expect(settleModeValues).toHaveLength(13)
     for (const mode of settleModeValues) {
       expect(SETTLES[mode].label).toBeTruthy()
       expect(SETTLES[mode].icon).toBeTruthy()
@@ -17,14 +17,14 @@ describe('ways of settling, grounds of war and journey intents', () => {
   })
 
   it('names and draws every ground of war', () => {
-    expect(warTerrainValues).toHaveLength(8)
+    expect(warTerrainValues).toHaveLength(9)
     for (const ground of warTerrainValues) {
       expect(WARS[ground].label).toBeTruthy()
     }
   })
 
   it('names every journey intent', () => {
-    expect(journeyIntentValues).toHaveLength(8)
+    expect(journeyIntentValues).toHaveLength(10)
     for (const intent of journeyIntentValues) {
       expect(JOURNEY_INTENT_LABEL[intent]).toBeTruthy()
     }

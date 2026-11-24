@@ -28,5 +28,7 @@ RELIEF_KINDS: Mapping[ReliefKind, ReliefSpec] = total(
         R.FOSTER_CARE: ReliefSpec("Foster care", False, CohortCondition.ORPHANED, False, "foster_care_cost", "foster_care_effect"),
         R.SICK_HOUSE: ReliefSpec("Sick house", False, CohortCondition.SICK, False, "sick_house_cost", "sick_house_effect"),
         R.PENSION: ReliefSpec("Pension", False, None, True, "pension_cost", "pension_effect"),
+        R.PUBLIC_KITCHEN: ReliefSpec("Public kitchen", True, None, False, "public_kitchen_cost", "public_kitchen_effect"),
+        R.SHELTER: ReliefSpec("Night shelter", True, None, False, "shelter_cost", "shelter_effect"),
     },
 )

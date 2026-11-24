@@ -7,11 +7,14 @@ from aerona.db.tables.agrarian import BrandRow
 from aerona.db.tables.commerce import ShopGoodRow, ShopRow, SupplyTierRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import TradeRouteProfileRow, WorkshopRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.commerce import ShopForm, SupplyTier
 from aerona.domain.enums.economy import WorkshopKind
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.engine.commerce.trade import living
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.distance import RegionAtlas
 
 COMMON_TIERS_FIXUP = "commerce.common_tiers"
 
@@ -46,9 +49,10 @@ async def seed_tiers(ctx: TickContext, tally: CommerceSeedTally) -> None:
     markets = await ctx.session.scalars(
         select(WorkshopRow.community_entity_id).where(WorkshopRow.kind == WorkshopKind.MARKET).order_by(WorkshopRow.community_entity_id).distinct()
     )
-    traders = set(await ctx.session.scalars(select(TradeRouteProfileRow.first_market_id))) | set(
-        await ctx.session.scalars(select(TradeRouteProfileRow.second_market_id))
-    )
+    routes = [
+        frozenset(pair) for pair in (await ctx.session.execute(select(TradeRouteProfileRow.first_market_id, TradeRouteProfileRow.second_market_id))).all()
+    ]
+    traders = {market for route in routes for market in route}
     table = ctx.rules.commerce
     for market_id in list(markets):
         if market_id in tiered or held(market_id) or await living(ctx.session, market_id) is None:
@@ -62,7 +66,35 @@ async def seed_tiers(ctx: TickContext, tally: CommerceSeedTally) -> None:
                     market_entity_id=market_id, tier=SupplyTier.WHOLESALE, holder_node_id=market_id, share=100, margin=table.wholesale_margin_pct, locked=[]
                 )
             )
+        partners = sum(1 for route in routes if market_id in route)
+        if partners >= table.broker_routes:
+            ctx.session.add(
+                SupplyTierRow(
+                    market_entity_id=market_id, tier=SupplyTier.BROKER, holder_node_id=market_id, share=100, margin=table.broker_margin_pct, locked=[]
+                )
+            )
         tiered.add(market_id)
+        tally.tiers += 1
+    await seed_peddlers(ctx, tiered, tally)
+
+
+async def seed_peddlers(ctx: TickContext, tiered: set[int], tally: CommerceSeedTally) -> None:
+    table = ctx.rules.commerce
+    atlas = await RegionAtlas.load(ctx.session)
+    markets = sorted(tiered)
+    towns = await ctx.session.scalars(
+        select(EntityRow.id).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    )
+    for town in list(towns):
+        if town in tiered or held(town):
+            continue
+        near = next((market for market in markets if (hops := atlas.hops(market, town)) is not None and hops <= table.peddler_hops), None)
+        if near is None:
+            continue
+        ctx.session.add(
+            SupplyTierRow(market_entity_id=town, tier=SupplyTier.PEDDLER, holder_node_id=near, share=100, margin=table.peddler_margin_pct, locked=[])
+        )
+        tiered.add(town)
         tally.tiers += 1
 
 

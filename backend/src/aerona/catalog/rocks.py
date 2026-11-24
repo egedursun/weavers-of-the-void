@@ -22,6 +22,7 @@ class RockSpec:
     worlds: frozenset[WorldType] = frozenset()
     seals: bool = False
     organic: bool = False
+    floats: bool = False
 
 
 GASSY_ROCKS = frozenset({RockKind.COAL, RockKind.SHALE, RockKind.FROZEN_METHANE})
@@ -335,6 +336,37 @@ ROCKS: Mapping[RockKind, RockSpec] = total(
             ),
             SoilKind.HUMIC,
             frozenset({WorldType.LIVING}),
+        ),
+        RockKind.PUMICE: RockSpec(
+            "Pumice",
+            lambda rules: rules.rocks.pumice_hardness,
+            lambda rules: rules.rocks.pumice_porosity,
+            lambda rules: rules.rocks.pumice_solubility,
+            lambda rules: rules.rocks.pumice_workability,
+            BuildingGrade.PLAIN,
+            (MaterialKind.STONE,),
+            SoilKind.TEPHRA,
+            floats=True,
+        ),
+        RockKind.SERPENTINITE: RockSpec(
+            "Serpentinite",
+            lambda rules: rules.rocks.serpentinite_hardness,
+            lambda rules: rules.rocks.serpentinite_porosity,
+            lambda rules: rules.rocks.serpentinite_solubility,
+            lambda rules: rules.rocks.serpentinite_workability,
+            BuildingGrade.FINE,
+            (MaterialKind.STONE,),
+            SoilKind.THIN,
+        ),
+        RockKind.TRAVERTINE: RockSpec(
+            "Travertine",
+            lambda rules: rules.rocks.travertine_hardness,
+            lambda rules: rules.rocks.travertine_porosity,
+            lambda rules: rules.rocks.travertine_solubility,
+            lambda rules: rules.rocks.travertine_workability,
+            BuildingGrade.SPLENDID,
+            (MaterialKind.STONE,),
+            SoilKind.CALCAREOUS,
         ),
     },
 )

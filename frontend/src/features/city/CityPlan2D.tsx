@@ -3,14 +3,17 @@ import { cn } from '@/lib/utils'
 import { DISTRICT_SPEC } from '@/features/entity/society/labels'
 import { type CityPick } from './CityScene3D'
 import { type CityScene } from './api'
-import { hexRing, hexToWorld } from './hex'
+import { depthColors } from './cityDepths'
+import { hexDistance, hexRing, hexToWorld } from './hex'
 import { STATES, ZONES } from './labels'
 
 const CORNERS = Array.from({ length: 6 }, (_, index) => {
   const angle = (Math.PI / 3) * index + Math.PI / 6
   return [Math.cos(angle) * 1.15, Math.sin(angle) * 1.15] as const
 })
-const PAD = 3
+const PAD = 1
+const MIN_REACH = 4
+const MARGIN = 2
 const NAME_SIZE = 0.55
 const CHAR = 0.5
 
@@ -80,11 +83,25 @@ export function CityPlan2D({
   const walls = scene.walls_radius
     ? hexRing(scene.walls_radius).map((cell) => hexToWorld(cell[0], cell[1]))
     : []
-  const points = [
-    ...cells.map((item) => item.at),
-    ...walls,
-    [0, 0] as [number, number],
-  ]
+  const taken = new Set(
+    scene.districts.flatMap((district) =>
+      district.cells.map((cell) => `${cell[0]},${cell[1]}`)
+    )
+  )
+  const farthest = Math.max(
+    scene.walls_radius ?? 0,
+    ...scene.districts.flatMap((district) =>
+      district.cells.map((cell) => hexDistance([0, 0], [cell[0], cell[1]]))
+    )
+  )
+  const reach = Math.max(MIN_REACH, farthest + MARGIN)
+  const ground = Array.from({ length: reach + 1 }, (_, ring) => hexRing(ring))
+    .flat()
+    .filter((cell) => !taken.has(`${cell[0]},${cell[1]}`))
+    .map((cell) => hexToWorld(cell[0], cell[1]))
+  const rim = hexRing(reach + 1).map((cell) => hexToWorld(cell[0], cell[1]))
+  const depth = scene.below ? depthColors(scene.below.stratum) : null
+  const points = [...ground, ...rim]
   const xs = points.map(([x]) => x)
   const zs = points.map(([, z]) => z)
   const box = [
@@ -98,13 +115,33 @@ export function CityPlan2D({
       viewBox={box.join(' ')}
       role='img'
       aria-label={`Plan of ${scene.town.name}: ${plural(scene.districts.length, 'district', 'districts')} and ${plural(scene.buildings.length, 'building', 'buildings')}`}
-      className={fill ? 'block h-full w-full' : 'block h-auto w-full'}
+      className={fill ? 'block h-full w-full' : 'block aspect-video w-full'}
     >
+      {ground.map(([x, z], index) => (
+        <polygon
+          key={`ground-${index}`}
+          points={hexPoints(x, z)}
+          fill={depth?.plain}
+          className={cn('stroke-background', !depth && 'fill-success/25')}
+          strokeWidth={0.06}
+        />
+      ))}
+      {depth &&
+        rim.map(([x, z], index) => (
+          <polygon
+            key={`rim-${index}`}
+            points={hexPoints(x, z)}
+            fill={depth.plainRim}
+            className='stroke-background'
+            strokeWidth={0.06}
+          />
+        ))}
       {walls.map(([x, z], index) => (
         <polygon
           key={`wall-${index}`}
           points={hexPoints(x, z)}
-          className='fill-muted stroke-foreground'
+          fill={depth?.plainRim}
+          className={cn('stroke-foreground', !depth && 'fill-muted-foreground')}
           strokeWidth={0.08}
         />
       ))}

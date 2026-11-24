@@ -27,6 +27,7 @@ CONVOY_WORDS = total(
         ConvoyStatus.LOST: "lost",
         ConvoyStatus.STRANDED: "stranded by the season",
         ConvoyStatus.QUARANTINED: "held in quarantine",
+        ConvoyStatus.TURNED_BACK: "turned back",
     },
 )
 SHUTTING_RESPONSES = (PlagueResponse.CLOSE_BORDERS, PlagueResponse.QUARANTINE)
@@ -58,6 +59,9 @@ HAZARD_HARM: Mapping[HazardKind, tuple[DamageType, str, int]] = total(
         HazardKind.BEAST_ATTACK: (DamageType.PIERCE, "attacked by the beasts it tended", 30),
         HazardKind.SOURCE_BACKLASH: (DamageType.MAGIC, "struck by the backlash of the source", 35),
         HazardKind.MACHINE_ACCIDENT: (DamageType.CUT, "caught in the machinery", 35),
+        HazardKind.FALLS: (DamageType.BLUNT, "fell from a height at work", 35),
+        HazardKind.BURNS: (DamageType.FIRE, "burned at the furnace", 30),
+        HazardKind.DUST_LUNG: (DamageType.ASPHYXIA, "choked by years of dust", 25),
     },
 )
 
@@ -79,6 +83,9 @@ HAZARD_MAIMS: Mapping[HazardKind, MaimedKind] = total(
         HazardKind.BEAST_ATTACK: MaimedKind.LAME,
         HazardKind.SOURCE_BACKLASH: MaimedKind.BROKEN_MINDED,
         HazardKind.MACHINE_ACCIDENT: MaimedKind.ONE_ARMED,
+        HazardKind.FALLS: MaimedKind.LAME,
+        HazardKind.BURNS: MaimedKind.SCARRED,
+        HazardKind.DUST_LUNG: MaimedKind.BROKEN_MINDED,
     },
 )
 
@@ -104,6 +111,7 @@ KIND_JOBS = total(
         ExtractionKind.SALVAGE: Job.CRAFTING,
         ExtractionKind.LIVING_HARVEST: Job.HERDING,
         ExtractionKind.DISTILLATION: Job.CRAFTING,
+        ExtractionKind.EVAPORATING: Job.GATHERING,
     },
 )
 
@@ -125,6 +133,9 @@ HAZARD_RULES: Mapping[HazardKind, str] = total(
         HazardKind.BEAST_ATTACK: "beast_attack_pct",
         HazardKind.SOURCE_BACKLASH: "source_backlash_pct",
         HazardKind.MACHINE_ACCIDENT: "machine_accident_pct",
+        HazardKind.FALLS: "falls_pct",
+        HazardKind.BURNS: "burns_pct",
+        HazardKind.DUST_LUNG: "dust_lung_pct",
     },
 )
 
@@ -138,6 +149,8 @@ DANGER_KEYS: MappingProxyType[TradeLoss, str] = MappingProxyType(
         TradeLoss.OFFICIALS: "danger_officials",
         TradeLoss.SPOILAGE: "danger_spoilage",
         TradeLoss.PILFERAGE: "danger_pilferage",
+        TradeLoss.PIRATES: "danger_pirates",
+        TradeLoss.BREAKAGE: "danger_breakage",
     }
 )
 

@@ -75,6 +75,10 @@ async def _row(session: AsyncSession, first: int, second: int) -> CommunityRelat
     return await session.get(CommunityRelationRow, pair_key(first, second))
 
 
+async def between_entities(session: AsyncSession, first: int, second: int) -> bool:
+    return await session.get(EntityRow, first) is not None and await session.get(EntityRow, second) is not None
+
+
 async def _ensure_row(session: AsyncSession, rules: Rules, first: int, second: int) -> CommunityRelationRow:
     row = await _row(session, first, second)
     if row is None:
@@ -88,6 +92,8 @@ async def _ensure_row(session: AsyncSession, rules: Rules, first: int, second: i
 async def remember_relation(session: AsyncSession, rules: Rules, first: int, second: int) -> int:
     if first == second:
         return RELATION_MAX
+    if not await between_entities(session, first, second):
+        return await relation(session, rules, first, second)
     return (await _ensure_row(session, rules, first, second)).value
 
 
@@ -109,6 +115,8 @@ async def relation(session: AsyncSession, rules: Rules, first: int, second: int)
 async def refresh_relation(session: AsyncSession, rules: Rules, epoch: int, first: int, second: int) -> int:
     if first == second:
         return RELATION_MAX
+    if not await between_entities(session, first, second):
+        return await relation(session, rules, first, second)
     row = await _ensure_row(session, rules, first, second)
     row.value = clamp_int(
         await pair_relation(session, rules, epoch, first, second) + await held_offset(session, rules, first, second), RELATION_MIN, RELATION_MAX
@@ -130,7 +138,7 @@ async def change_relation(
     session, rules, epoch = ctx.session, ctx.rules, ctx.epoch
     if first == second:
         return RELATION_MAX
-    if delta == 0:
+    if delta == 0 or not await between_entities(session, first, second):
         return await relation(session, rules, first, second)
     if delta > 0:
         delta *= await barrier(session, rules, first, second, epoch)
@@ -147,6 +155,8 @@ async def set_relation(ctx: TickContext, first: int, second: int, value: int, no
     session, rules, epoch = ctx.session, ctx.rules, ctx.epoch
     if first == second:
         return RELATION_MAX
+    if not await between_entities(session, first, second):
+        return await relation(session, rules, first, second)
     target = clamp_int(value, RELATION_MIN, RELATION_MAX)
     current = await refresh_relation(session, rules, epoch, first, second)
     for _ in range(SET_PASSES):

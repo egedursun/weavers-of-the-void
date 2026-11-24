@@ -44,6 +44,7 @@ STANCES: Mapping[Stance, StanceSpec] = total(
         Stance.WINTER_QUARTERS: StanceSpec("Winter quarters", resting=True, feeds=True, plunders=False, entrenches=True),
         Stance.PURSUE: StanceSpec("Pursue", resting=False, feeds=False, plunders=False, entrenches=False),
         Stance.ESCORT: StanceSpec("Escort", resting=False, feeds=True, plunders=False, entrenches=False, winters=True),
+        Stance.DISBAND: StanceSpec("Disband", resting=True, feeds=False, plunders=False, entrenches=False),
     },
 )
 
@@ -69,6 +70,8 @@ ARMY_ROLES: Mapping[ArmyRole, RoleSpec] = total(
         ArmyRole.CHAPLAIN: RoleSpec("Chaplain", "chaplain_effect", MortalRole.PRIEST),
         ArmyRole.PAYMASTER: RoleSpec("Paymaster", "paymaster_effect", MortalRole.MERCHANT),
         ArmyRole.SCOUT_MASTER: RoleSpec("Master of scouts", "scout_master_effect", MortalRole.HUNTER),
+        ArmyRole.ENGINEER_MASTER: RoleSpec("Master of engineers", "engineer_master_effect", MortalRole.ENGINEER),
+        ArmyRole.INTERPRETER: RoleSpec("Interpreter", "interpreter_effect", MortalRole.SCRIBE),
     },
 )
 STAFF_ROLES = frozenset(role for role in ArmyRole if role is not ArmyRole.COMMANDER)
@@ -92,6 +95,8 @@ UNIT_HONOURS: Mapping[UnitHonourKind, HonourSpec] = total(
         UnitHonourKind.MASSACRE: HonourSpec("Massacre", "massacre_esprit", -1),
         UnitHonourKind.RELIEF: HonourSpec("Relief of a siege", "relief_esprit", 1),
         UnitHonourKind.CROSSING: HonourSpec("A crossing under arms", "crossing_esprit", 1),
+        UnitHonourKind.MERCY: HonourSpec("Mercy shown", "mercy_esprit", 1),
+        UnitHonourKind.FIRST_IN: HonourSpec("First through the breach", "first_in_esprit", 1),
     },
 )
 
@@ -112,6 +117,7 @@ VETERAN_GRANTS: Mapping[VeteranGrant, GrantSpec] = total(
         VeteranGrant.MEMBERSHIP: GrantSpec("Membership", "membership_loyalty", "membership_cost"),
         VeteranGrant.TITLE: GrantSpec("A lesser title", "title_loyalty", "title_cost"),
         VeteranGrant.TAX_EXEMPTION: GrantSpec("Freedom from taxes", "tax_exemption_loyalty", "tax_exemption_cost"),
+        VeteranGrant.OFFICE: GrantSpec("An office", "office_loyalty", "office_cost"),
     },
 )
 
@@ -134,6 +140,7 @@ CASUALTY_FATES: Mapping[CasualtyFate, CasualtySpec] = total(
         CasualtyFate.CAPTURED: CasualtySpec("Captured", lost=True, unresolved=False),
         CasualtyFate.MISSING: CasualtySpec("Missing", lost=True, unresolved=True),
         CasualtyFate.DESERTED: CasualtySpec("Deserted", lost=True, unresolved=False),
+        CasualtyFate.SICK: CasualtySpec("Taken by camp sickness", lost=True, unresolved=False),
     },
 )
 UNRESOLVED_FATES = frozenset(fate for fate, spec in CASUALTY_FATES.items() if spec.unresolved)
@@ -160,6 +167,7 @@ CAPTIVE_FATES: Mapping[CaptiveFate, CaptiveSpec] = total(
         CaptiveFate.RELEASED: CaptiveSpec("Released", settles_home=True, settles_captor=False, killed=False, serves_captor=False),
         CaptiveFate.EXECUTED: CaptiveSpec("Executed", settles_home=False, settles_captor=False, killed=True, serves_captor=False),
         CaptiveFate.RECRUITED: CaptiveSpec("Recruited", settles_home=False, settles_captor=False, killed=False, serves_captor=True),
+        CaptiveFate.ADOPTED: CaptiveSpec("Adopted", settles_home=False, settles_captor=True, killed=False, serves_captor=False),
     },
 )
 HOMEWARD_FATES = frozenset(fate for fate, spec in CAPTIVE_FATES.items() if spec.settles_home)
@@ -182,6 +190,8 @@ SIEGE_ACTION_SPECS: Mapping[SiegeAction, SiegeActionSpec] = total(
         SiegeAction.ASSAULT: SiegeActionSpec("Assault", False, (SiegeWork.LADDERS, SiegeWork.RAMS, SiegeWork.RAMP)),
         SiegeAction.NEGOTIATE: SiegeActionSpec("Negotiate", False, ()),
         SiegeAction.SUBORN: SiegeActionSpec("Suborn the garrison", False, ()),
+        SiegeAction.POISON_SUPPLY: SiegeActionSpec("Poison the supply", False, ()),
+        SiegeAction.DIVERT_RIVER: SiegeActionSpec("Divert the river", False, (SiegeWork.DAM,)),
     },
 )
 
@@ -219,6 +229,7 @@ SIEGE_WORKS: Mapping[SiegeWork, SiegeWorkSpec] = total(
         ),
         SiegeWork.RITE_BREACH: SiegeWorkSpec("Breaching rite", "rite_breach_labour", "rite_breach_effect", True, False, False, False, False, True),
         SiegeWork.RAMP: SiegeWorkSpec("Siege ramp", "ramp_labour", "ramp_effect", False, False, True, False, False, False),
+        SiegeWork.DAM: SiegeWorkSpec("Dam", "dam_labour", "dam_effect", False, False, False, False, False, False),
     },
 )
 BREACHING_WORKS = frozenset(work for work, spec in SIEGE_WORKS.items() if spec.breaches)
@@ -245,6 +256,8 @@ DEFENCES: Mapping[DefenderAction, DefenceSpec] = total(
         DefenderAction.FLOOD_APPROACHES: DefenceSpec("Flood the approaches", rations=False, needs_water=True),
         DefenderAction.SCORCHED_EARTH: DefenceSpec("Burn the land around", rations=True, needs_water=False),
         DefenderAction.EXPEL_MOUTHS: DefenceSpec("Expel those who cannot fight", rations=True, needs_water=False),
+        DefenderAction.BURN_WORKS: DefenceSpec("Burn the siege works", rations=False, needs_water=False),
+        DefenderAction.EVACUATE_BY_SEA: DefenceSpec("Leave by sea", rations=False, needs_water=True),
     },
 )
 
@@ -265,6 +278,7 @@ FALL_CHOICES: Mapping[SackChoice, FallSpec] = total(
         SackChoice.RAZE: FallSpec("Raze", plunders=True, razes=True, spares=False),
         SackChoice.RANSOM_CITY: FallSpec("Ransom the city", plunders=False, razes=False, spares=True),
         SackChoice.DEPORT: FallSpec("Deport its people", plunders=False, razes=False, spares=False),
+        SackChoice.RESETTLE: FallSpec("Settle the victors' people", plunders=False, razes=False, spares=False),
     },
 )
 
@@ -284,6 +298,7 @@ SIEGE_STATES: Mapping[SiegeStatus, SiegeStateSpec] = total(
         SiegeStatus.REPULSED: SiegeStateSpec("Repulsed", ended=True, fallen=False),
         SiegeStatus.LIFTED: SiegeStateSpec("Lifted", ended=True, fallen=False),
         SiegeStatus.SURRENDERED: SiegeStateSpec("Surrendered on terms", ended=True, fallen=True),
+        SiegeStatus.BETRAYED: SiegeStateSpec("Betrayed from within", ended=True, fallen=True),
     },
 )
 FALLEN_STATES = frozenset(state for state, spec in SIEGE_STATES.items() if spec.fallen)
@@ -310,6 +325,8 @@ OPERATIONS: Mapping[SpyOperation, OperationSpec] = total(
         SpyOperation.INFILTRATE: OperationSpec("Infiltrate an institution", False, True, "infiltrate_difficulty"),
         SpyOperation.EXFILTRATE: OperationSpec("Bring an agent out", True, True, "exfiltrate_difficulty"),
         SpyOperation.DISINFORM: OperationSpec("Feed false beliefs", True, True, "disinform_difficulty"),
+        SpyOperation.RECRUIT_AGENT: OperationSpec("Recruit an agent", True, True, "recruit_agent_difficulty"),
+        SpyOperation.SURVEIL: OperationSpec("Watch", True, True, "surveil_difficulty"),
     },
 )
 WAR_OPERATIONS = tuple(operation for operation, spec in OPERATIONS.items() if spec.in_war)
@@ -335,6 +352,7 @@ MOTIVES: Mapping[RecruitMotive, MotiveSpec] = total(
         RecruitMotive.EGO: MotiveSpec("Pride", "ego_loyalty", "ego_double_risk", "for pride", bonded=False, vengeful=False),
         RecruitMotive.LOVE: MotiveSpec("Love", "love_loyalty", "love_double_risk", "for love of a handler", bonded=True, vengeful=False),
         RecruitMotive.REVENGE: MotiveSpec("Revenge", "revenge_loyalty", "revenge_double_risk", "for revenge", bonded=False, vengeful=True),
+        RecruitMotive.FAITH: MotiveSpec("Faith", "faith_loyalty", "faith_double_risk", "for their faith", bonded=False, vengeful=False),
     },
 )
 
@@ -356,6 +374,7 @@ AGENT_STATES: Mapping[AgentStatus, AgentStateSpec] = total(
         AgentStatus.RETIRED: AgentStateSpec("Retired", reports=False, at_large=False),
         AgentStatus.MISSING: AgentStateSpec("Missing", reports=False, at_large=True),
         AgentStatus.EXPOSED: AgentStateSpec("Exposed", reports=True, at_large=True),
+        AgentStatus.SLEEPER: AgentStateSpec("Sleeper", reports=False, at_large=True),
     },
 )
 WORKING_STATES = frozenset(state for state, spec in AGENT_STATES.items() if spec.reports)

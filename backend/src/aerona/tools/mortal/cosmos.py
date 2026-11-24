@@ -42,6 +42,7 @@ from aerona.tools.mortal.support import (
     i_know,
     name_free,
     near,
+    refuse_level,
 )
 
 PERCENT = 100
@@ -102,6 +103,8 @@ async def explore_land(call: MortalCall, args: ExploreInput) -> str:
     if similar is not None:
         fail(MortalResult.NAME_TOO_SIMILAR, name=args.name, other=similar)
     parent = await _explore_parent(call, args)
+    kind = EntityType.REGION if args.kind is LandKind.REGION else EntityType.PLACE
+    await refuse_level(call, parent, args.stratum if kind is EntityType.PLACE else None, kind)
     await call.bump(TurnCounter.EXPLORATIONS)
     knows_way = any([await i_know(call, branch) for branch in WAY_KNOWLEDGE])
     wits = first_stat(call.me, EXPLORER_WITS, call.rules.mortal_tools.default_stat)
@@ -111,7 +114,6 @@ async def explore_land(call: MortalCall, args: ExploreInput) -> str:
             "tools.mortal.explore_failed", roles={IncidentRole.ACTOR: call.me.id}, facts={"roll": roll, "needed": exploration.tool_success_threshold}
         )
         return result(MortalResult.EXPLORE_FAILED, roll=roll, needed=exploration.tool_success_threshold)
-    kind = EntityType.REGION if args.kind is LandKind.REGION else EntityType.PLACE
     stats = land_stats(call.tick, kind, call.rng("land")).model_dump(exclude={"kind"}, exclude_none=True)
     land = await create_record(
         call,
@@ -122,6 +124,7 @@ async def explore_land(call: MortalCall, args: ExploreInput) -> str:
             subtype=args.subtype,
             stats=stats,
             location_id=parent.id if parent is not None else None,
+            stratum=args.stratum if kind is EntityType.PLACE else None,
             image_prompt=args.image_prompt,
         ),
     )

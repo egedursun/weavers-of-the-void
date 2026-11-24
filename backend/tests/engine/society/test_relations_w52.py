@@ -35,7 +35,7 @@ def bond(holder: int, subject: int, friendship: int = 0, kinds: list[str] | None
 
 
 def test_twenty_one_relation_types_each_with_floor_duties_and_ending() -> None:
-    assert len(RELATIONS) == len(RelationType) == 21
+    assert len(RELATIONS) == len(RelationType) == 24
     assert {RelationType.SWORN_KIN, RelationType.FOSTER, RelationType.BETROTHED} <= DUTY_RELATIONS
     assert {RelationType.SWORN_KIN, RelationType.FOSTER} <= INHERITING_RELATIONS
     assert all(spec.ends for spec in RELATIONS.values())

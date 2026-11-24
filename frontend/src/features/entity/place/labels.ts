@@ -45,6 +45,13 @@ import {
   Waves,
   Waypoints,
   Wind,
+  Building,
+  FlameKindling,
+  Layers,
+  Leaf,
+  Pyramid,
+  Ship,
+  Blend,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named, plain } from '../environment/labels'
@@ -152,7 +159,7 @@ export const KIND: Record<Schema['PlaceKind'], Named & { hint: string }> = {
   },
   cliff: {
     label: 'Cliff',
-    icon: Mountain,
+    icon: Pyramid,
     tone: 'warning',
     hint: 'A sheer face and a chokepoint',
   },
@@ -284,7 +291,7 @@ export const KIND: Record<Schema['PlaceKind'], Named & { hint: string }> = {
   },
   waterfall: {
     label: 'Waterfall',
-    icon: Waves,
+    icon: Ship,
     tone: 'info',
     hint: 'A river falling from height; it turns mills and draws pilgrims',
   },
@@ -296,7 +303,7 @@ export const KIND: Record<Schema['PlaceKind'], Named & { hint: string }> = {
   },
   plateau: {
     label: 'Plateau',
-    icon: Mountain,
+    icon: Gem,
     tone: 'muted',
     hint: 'High flat ground that favours its defenders',
   },
@@ -308,31 +315,31 @@ export const KIND: Record<Schema['PlaceKind'], Named & { hint: string }> = {
   },
   hot_spring: {
     label: 'Hot spring',
-    icon: Droplets,
+    icon: FlameKindling,
     tone: 'gold',
     hint: 'Warm water that eases wounds and draws bathers',
   },
   mesa: {
     label: 'Mesa',
-    icon: Mountain,
+    icon: Layers,
     tone: 'warning',
     hint: 'A flat-topped height that is hard to take',
   },
   natural_arch: {
     label: 'Natural arch',
-    icon: Landmark,
+    icon: Building,
     tone: 'verdigris',
     hint: 'Stone worn into an arch',
   },
   tar_pit: {
     label: 'Tar pit',
-    icon: CircleDot,
+    icon: Blend,
     tone: 'danger',
     hint: 'Ground that traps the beasts that cross it',
   },
   meadow: {
     label: 'Meadow',
-    icon: Sprout,
+    icon: Leaf,
     tone: 'success',
     hint: 'Open grassland with water',
   },
@@ -413,7 +420,7 @@ export const SECRET: Record<Schema['SecretKind'], Named & { hint: string }> = {
   },
   hidden_grave: {
     label: 'Hidden grave',
-    icon: Skull,
+    icon: Eye,
     tone: 'warning',
     hint: 'Found, it brings its dead to light',
   },

@@ -119,6 +119,14 @@
 {{ facts(world.facts) }}
 <div class="clear"></div>
 {{ picture(world.picture, links, world.world.name ~ ": the known world") }}
+{% if world.below %}
+<div class="box"><span class="label">The world below</span>
+{% for level in world.below %}
+<p id="{{ level.anchor }}"><b class="small">{{ level.label }}.</b> {{ level.cells }} {{ "cell" if level.cells == 1 else "cells" }}{% if level.realms %}; held by {% for realm in level.realms %}{{ realm.holder }} <span class="meta">({{ realm.cell }})</span>{% if not loop.last %}, {% endif %}{% endfor %}{% else %}; held by no realm{% endif %}.</p>
+{% endfor %}
+</div>
+{% for level in world.below %}{% if level.picture %}{{ picture(level.picture, links, world.world.name ~ ": the " ~ (level.label | lower), "Passage") }}{% endif %}{% endfor %}
+{% endif %}
 {% if world.wheel %}<figure class="heaven"><div class="sky">{{ world.wheel }}</div><figcaption>The year of {{ world.world.name }}, its seasons sized by their share</figcaption></figure>{% endif %}
 {% if world.world.cosmology %}<p class="sublabel">What its peoples believe</p>{{ world.world.cosmology | paragraphs }}{% endif %}
 {{ entity_depth(world.world.depth) }}

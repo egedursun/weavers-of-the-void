@@ -121,6 +121,8 @@ class MishapKind(StrEnum):
     THEFT_SUFFERED = "theft_suffered"
     TOOL_BROKEN = "tool_broken"
     NEAR_MISS = "near_miss"
+    QUAKE = "quake"
+    FLOOD = "flood"
 
 
 class MishapAttribution(StrEnum):
@@ -138,6 +140,7 @@ class MishapAttribution(StrEnum):
     BROKEN_OATH = "broken_oath"
     MADE_MIND = "made_mind"
     HIDDEN_PEOPLE = "hidden_people"
+    SELF = "self"
 
 
 class MishapResponse(StrEnum):
@@ -148,6 +151,8 @@ class MishapResponse(StrEnum):
     ACCUSATION = "accusation"
     PURIFICATION = "purification"
     SAFETY_CUSTOM = "safety_custom"
+    MOVE_AWAY = "move_away"
+    COMPENSATION = "compensation"
 
 
 class LuckSign(StrEnum):
@@ -160,6 +165,7 @@ class LuckSign(StrEnum):
     PERSON = "person"
     ANIMAL = "animal"
     COLOUR = "colour"
+    WEATHER = "weather"
 
 
 class LuckReach(StrEnum):
@@ -171,6 +177,8 @@ class LuckReach(StrEnum):
     TRADE = "trade"
     UNION = "union"
     BUILDING = "building"
+    LEARNING = "learning"
+    CONTEST = "contest"
 
 
 class CharmPower(StrEnum):
@@ -180,6 +188,8 @@ class CharmPower(StrEnum):
     HEALING = "healing"
     LOVE = "love"
     TRAVEL = "travel"
+    CONCEALMENT = "concealment"
+    COURAGE = "courage"
 
 
 class AccusationOutcome(StrEnum):
@@ -190,6 +200,7 @@ class AccusationOutcome(StrEnum):
     KILLED = "killed"
     CONFESSED = "confessed"
     FLED = "fled"
+    RECONCILED = "reconciled"
 
 
 class IdeaStrain(StrEnum):

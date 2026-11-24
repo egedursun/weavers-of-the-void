@@ -18,5 +18,6 @@ CARRIERS: MappingProxyType[TradeMode, tuple[frozenset[VehicleDomain], frozenset[
         TradeMode.SPACE: (frozenset({VehicleDomain.SPACE}), frozenset()),
         TradeMode.RIFT: (frozenset({VehicleDomain.PLANAR}), frozenset()),
         TradeMode.NETWORK: (frozenset(), frozenset()),
+        TradeMode.UNDERGROUND: (frozenset({VehicleDomain.LAND}), frozenset({VehicleFamily.CART, VehicleFamily.RAIL, VehicleFamily.MOUNT})),
     }
 )

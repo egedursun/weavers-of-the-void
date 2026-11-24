@@ -21,6 +21,7 @@ AID_KIND = total(
         AidKind.MEDICINE: Defined("Medicine", checked_by=(), used_by=("engine.agrarian.resilience.aid_kind", "engine.agrarian.resilience.aid_medicine")),
         AidKind.SOLDIERS: Defined("Soldiers", checked_by=(), used_by=("engine.agrarian.resilience.EVENT_AID", "engine.agrarian.resilience.aid_soldiers")),
         AidKind.KNOWLEDGE: Defined("Knowledge", checked_by=(), used_by=("engine.agrarian.resilience.aid_kind", "engine.agrarian.resilience.aid_knowledge")),
+        AidKind.TRANSPORT: Defined("Transport", checked_by=(), used_by=("engine.agrarian.resilience.aid_transport",)),
     },
 )
 
@@ -61,5 +62,11 @@ NUTRIENT_KIND = total(
             ),
             used_by=("engine.agrarian.book.readout",),
         ),
+        NutrientKind.SEED_BANK: Defined(
+            "Seeds in the soil",
+            checked_by=("engine.agrarian.soil.feed_soils", "engine.agrarian.soil.stored_change"),
+            used_by=("engine.phases.environment.environment_derive",),
+        ),
+        NutrientKind.SOIL_LIFE: Defined("Life of the soil", checked_by=("engine.agrarian.soil.stored_change",), used_by=()),
     },
 )

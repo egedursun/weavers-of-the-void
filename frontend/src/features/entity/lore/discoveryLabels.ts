@@ -51,6 +51,7 @@ import {
   Users,
   Wrench,
   Zap,
+  BookOpenText,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { MEDIUMS, type LoreNamed } from './model'
@@ -67,7 +68,7 @@ export const GREAT_FIELDS: Record<Schemas['GreatField'], LoreNamed> = {
   explorer: { label: 'Great explorer', icon: Compass, tone: 'success' },
   healer: { label: 'Great healer', icon: Stethoscope, tone: 'success' },
   lawgiver: { label: 'Great lawgiver', icon: Gavel, tone: 'gold' },
-  teacher: { label: 'Great teacher', icon: GraduationCap, tone: 'info' },
+  teacher: { label: 'Great teacher', icon: BookOpenText, tone: 'info' },
   reformer: { label: 'Great reformer', icon: Megaphone, tone: 'warning' },
 }
 

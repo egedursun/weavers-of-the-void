@@ -29,5 +29,7 @@ MOBILITY_EVENTS: Mapping[MobilityEvent, MobilitySpec] = total(
         ),
         M.ORDAINED: MobilitySpec("Ordained", rises=True, lands_in=C.PRIEST),
         M.OUTCAST: MobilitySpec("Cast out", rises=False, lands_in=C.OUTCAST),
+        M.EXILED: MobilitySpec("Sent into exile", rises=False, lands_in=C.OUTCAST),
+        M.ADOPTED: MobilitySpec("Taken into a new house", rises=True),
     },
 )

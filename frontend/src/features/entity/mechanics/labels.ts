@@ -23,6 +23,7 @@ import {
   Sun,
   Wand2,
   Zap,
+  Gem,
 } from 'lucide-react'
 import { type Named } from '../environment/labels'
 
@@ -36,7 +37,7 @@ export const MODIFIER_SOURCE: Record<string, Named> = {
   artwork: { label: 'Artwork', icon: Palette, tone: 'verdigris' },
   doctrine: { label: 'Doctrine', icon: BookOpenText, tone: 'info' },
   treaty: { label: 'Treaty', icon: Scale, tone: 'gold' },
-  title: { label: 'Title', icon: Crown, tone: 'gold' },
+  title: { label: 'Title', icon: Gem, tone: 'gold' },
   structure: { label: 'Structure', icon: Landmark },
   wonder: { label: 'Wonder', icon: Crown, tone: 'gold' },
   terrain: { label: 'Terrain', icon: Mountain },

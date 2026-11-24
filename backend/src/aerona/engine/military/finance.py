@@ -156,7 +156,13 @@ async def pay_contracts(ctx: TickContext) -> dict[str, int]:
                 await turn_company(ctx, row, army, employer)
                 found["turned"] += 1
                 continue
-        if row.seasons_left <= 0:
+        if row.seasons_left <= 0 and row.status is ContractStatus.ACTIVE and row.loyalty >= table.renew_loyalty and "status" not in row.locked:
+            row.status = ContractStatus.RENEWED
+            row.seasons_left = table.renew_seasons
+            if "loyalty" not in row.locked:
+                row.loyalty = clamp_int(row.loyalty + table.renew_loyalty_gain, 0, PERCENT)
+            found["renewed"] = found.get("renewed", 0) + 1
+        elif row.seasons_left <= 0:
             row.status = ContractStatus.ENDED
             found["ended"] += 1
     return found

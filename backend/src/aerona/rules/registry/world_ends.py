@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from aerona.rules.groups import RuleGroup
-from aerona.rules.model import rule
+from aerona.rules.model import Spanned, rule, span
 
 C = RuleGroup.COSMOS
 
 
 @dataclass(frozen=True)
-class WorldEndRules:
+class WorldEndRules(Spanned):
     frozen_epochs: int = rule(3, 1, 100, C, "Epochs a world lit only by its star lives on under a dead star before it freezes dead")
     end_cost: int = rule(1000, 0, 100000, C, "Essence the Creator spends to bring a world to its end")
     giant_epochs: int = rule(20, 1, 1000, C, "Epochs a giant star burns before it swells over its nearest worlds")
@@ -20,3 +20,6 @@ class WorldEndRules:
     war_weapons: int = rule(3, 1, 100, C, "Weapons that reach a whole world, used on one world in one epoch, at which a war destroys it")
     hunger_unfed_epochs: int = rule(10, 1, 1000, C, "Epochs an outer being with a breach on a world goes unfed before its hunger reaches the world's core")
     hunger_reach: int = rule(5, 1, 100, C, "Reach an outer being needs before its hunger can devour a world")
+    plague_years: int = span(50, 0, 500, C, "Years back an outbreak on a world counts toward a plague that left it empty")
+    failure_fertility: int = rule(3, 0, 100, C, "Mean fertility of a made world's regions at or below which the structure fails and the world ends")
+    runaway_making_mass: int = rule(500, 1, 100000, C, "Mass of runaway replicators on a world from which they unmake it")

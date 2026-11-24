@@ -19,6 +19,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.world import Discovery, SonDistribution
 from aerona.engine.cosmos.canon_domains import canon_counts
+from aerona.engine.divine.council_order import bound_elsewhere
 from aerona.epoch.context import EpochContext
 from aerona.epoch.state import attempted
 from aerona.events.kinds import EventKind
@@ -91,7 +92,13 @@ async def patronless_moves(session: AsyncSession, rules: Rules, epoch: int, sons
             continue
         wanted = await wanted_domains(session, world)
         candidates = [
-            son for son in sons if not son.chained and not protected(rules, son, epoch) and son.current_world_id != world.id and donor_ok(rules, son, sons)
+            son
+            for son in sons
+            if not son.chained
+            and not bound_elsewhere(son, world.id, epoch)
+            and not protected(rules, son, epoch)
+            and son.current_world_id != world.id
+            and donor_ok(rules, son, sons)
         ]
         if not candidates:
             continue

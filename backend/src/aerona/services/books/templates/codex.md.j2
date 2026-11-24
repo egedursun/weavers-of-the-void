@@ -483,6 +483,19 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 ![{{ world.world.name }}: the known world]({{ links.terrain(world.picture) }})
 
 {% endif %}
+{% if world.below %}
+**The world below**
+
+| Stratum | Cells | Realms |
+|---|---|---|
+{% for level in world.below %}| {{ level.label | cell }} | {{ level.cells }} | {% if level.realms %}{% for realm in level.realms %}{{ realm.holder | cell }} ({{ realm.cell | cell }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %}none{% endif %} |
+{% endfor %}
+
+{% for level in world.below %}{% if level.svg %}
+![{{ world.world.name }}: the {{ level.label | lower }}]({{ links.heaven(level.anchor, level.svg) }})
+
+{% endif %}{% endfor %}
+{% endif %}
 {% if world.wheel %}
 ![The year of {{ world.world.name | cell }}]({{ links.heaven(world.anchor ~ "-year", world.wheel) }})
 

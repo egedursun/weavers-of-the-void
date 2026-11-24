@@ -338,6 +338,7 @@ async def decline_round(ctx: TickContext, scene: KnowledgeScene) -> int:
     "table.chemical_works",
     "table.community_societies",
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.endemic_diseases",
     "table.entities",

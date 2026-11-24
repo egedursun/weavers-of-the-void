@@ -1,0 +1,15 @@
+DEPTH_POSITIONS: tuple[tuple[str, str, str], ...] = (
+    ("entities", "location_id", "stratum"),
+    ("region_underground", "region_entity_id", "stratum"),
+    ("deep_passages", "first_region_entity_id", "first_stratum"),
+    ("deep_passages", "second_region_entity_id", "second_stratum"),
+    ("army_profiles", "region_entity_id", "stratum"),
+    ("army_profiles", "battle_region_id", "battle_stratum"),
+    ("army_movements", "from_region_id", "from_stratum"),
+    ("army_movements", "to_region_id", "to_stratum"),
+    ("convoys", "region_entity_id", "stratum"),
+    ("occupations", "region_entity_id", "stratum"),
+    ("campaign_fronts", "first_region_id", "first_stratum"),
+    ("campaign_fronts", "second_region_id", "second_stratum"),
+    ("trade_route_regions", "region_entity_id", "stratum"),
+)

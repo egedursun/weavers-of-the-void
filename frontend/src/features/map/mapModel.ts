@@ -53,6 +53,7 @@ export const LAYER_MODES = [
   'protected',
   'waves',
   'groups',
+  'deep',
 ] as const
 export type LayerMode = (typeof LAYER_MODES)[number]
 
@@ -98,6 +99,7 @@ export const LAYER_LABEL: Record<LayerMode, string> = {
   waves: 'Sea waves',
   groups: 'Creature groups',
   protected: 'Protected lands',
+  deep: 'The world below',
 }
 
 export const LAYER_SURFACE: Partial<Record<LayerMode, string>> = {
@@ -219,8 +221,42 @@ export const LABELLED_TYPES = new Set([
 ])
 export const POWERFUL_LEVEL = 5
 
-export function fitTransform(map: WorldMap, size: Size): Transform {
+const LAND_FIT_FLOOR = 0.45
+const UNKNOWN_CELL = 0
+
+export function framedExtent(map: WorldMap): {
+  x: number
+  y: number
+  width: number
+  height: number
+} {
   const extent = map.extent
+  const cells = map.cells as WorldMap['cells'] | undefined
+  if (!cells) return extent
+  let left = Infinity
+  let top = Infinity
+  let right = -Infinity
+  let bottom = -Infinity
+  for (let index = 0; index < cells.x.length; index += 1) {
+    if (cells.water[index] || cells.known[index] === UNKNOWN_CELL) continue
+    left = Math.min(left, cells.x[index])
+    right = Math.max(right, cells.x[index])
+    top = Math.min(top, cells.y[index])
+    bottom = Math.max(bottom, cells.y[index])
+  }
+  if (!Number.isFinite(left)) return extent
+  const width = Math.max(right - left, extent.width * LAND_FIT_FLOOR)
+  const height = Math.max(bottom - top, extent.height * LAND_FIT_FLOOR)
+  return {
+    x: (left + right) / 2 - width / 2,
+    y: (top + bottom) / 2 - height / 2,
+    width,
+    height,
+  }
+}
+
+export function fitTransform(map: WorldMap, size: Size): Transform {
+  const extent = framedExtent(map)
   const k = Math.min(
     size.width / (extent.width * FIT_MARGIN),
     size.height / (extent.height * FIT_MARGIN)
@@ -456,4 +492,66 @@ export function positionedPoints(view: MapView): PositionedPoint[] {
 
 export function isDead(status: string): boolean {
   return status === 'dead' || status === 'destroyed'
+}
+
+export type DepthUse = { works: true } | { works: false; reason: string }
+
+const SOIL = 'Reads the soil and fields of the surface'
+const SKY = 'Reads the sky'
+const BELOW: DepthUse = { works: true }
+
+export const DEPTH_LAYERS: Record<LayerMode, DepthUse> = {
+  terrain: BELOW,
+  political: BELOW,
+  realms: BELOW,
+  de_jure: BELOW,
+  regions: BELOW,
+  creators: BELOW,
+  religions: BELOW,
+  dominion: BELOW,
+  languages: BELOW,
+  ground: { works: false, reason: SOIL },
+  soil: { works: false, reason: SOIL },
+  climate: { works: false, reason: SKY },
+  land_use: { works: false, reason: SOIL },
+  rainfall: { works: false, reason: SKY },
+  danger: BELOW,
+  scars: { works: false, reason: 'Marks the surface land' },
+  sacred: BELOW,
+  ley: { works: false, reason: "Reads the land's surface density" },
+  population: BELOW,
+  followers: BELOW,
+  soldiers: BELOW,
+  wildlife: BELOW,
+  species_range: BELOW,
+  desirability: BELOW,
+  coverage: BELOW,
+  niches: BELOW,
+  solidarity: BELOW,
+  rings: { works: false, reason: SOIL },
+  centrality: BELOW,
+  nutrients: { works: false, reason: SOIL },
+  networks: BELOW,
+  hidden: BELOW,
+  works: { works: false, reason: 'Reads the works built on the surface' },
+  cuisines: BELOW,
+  dress: BELOW,
+  organisations: BELOW,
+  money: BELOW,
+  remnants: {
+    works: false,
+    reason: 'Reads the surface land a war left behind',
+  },
+  protected: { works: false, reason: 'Reads the protected surface land' },
+  waves: { works: false, reason: 'Reads the coasts of the surface' },
+  groups: BELOW,
+  deep: BELOW,
+}
+
+export function depthReason(
+  mode: LayerMode,
+  depth: string | null
+): string | null {
+  const use = DEPTH_LAYERS[mode]
+  return depth !== null && !use.works ? use.reason : null
 }

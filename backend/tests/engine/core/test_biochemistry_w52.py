@@ -17,8 +17,8 @@ from tests.engine.core.living_kinds import kind, land, range_of, told
 SPEC = SpeciesSpec()
 
 
-def test_eight_biochemistries_and_every_one_can_arise_from_a_kind_and_its_world() -> None:
-    assert len(BIOCHEMISTRIES) == len(Biochemistry) == 8
+def test_nine_biochemistries_and_every_one_can_arise_from_a_kind_and_its_world() -> None:
+    assert len(BIOCHEMISTRIES) == len(Biochemistry) == 9
     reached = {
         biochemistry_of(SPEC, BodyPlan.QUADRUPED, Diet.HERBIVORE, None, ()),
         biochemistry_of(SPEC, BodyPlan.QUADRUPED, Diet.HERBIVORE, None, (Biochemistry.CARBON_AMMONIA,)),
@@ -28,6 +28,7 @@ def test_eight_biochemistries_and_every_one_can_arise_from_a_kind_and_its_world(
         biochemistry_of(SPEC, BodyPlan.INCORPOREAL, Diet.SOUL, None, ()),
         biochemistry_of(SPEC, BodyPlan.QUADRUPED, Diet.HERBIVORE, None, world_life(WorldType.ICE_GIANT, Atmosphere.NONE)),
         biochemistry_of(SPEC, BodyPlan.AMORPHOUS, Diet.ENERGY, None, (), kind=SpeciesClass.ENERGY),
+        biochemistry_of(SPEC, BodyPlan.QUADRUPED, Diet.HERBIVORE, None, world_life(WorldType.IRON, Atmosphere.NONE)),
     }
     assert reached == set(Biochemistry)
     assert Biochemistry.PLASMA in world_life(WorldType.HOT_GIANT, Atmosphere.DENSE)

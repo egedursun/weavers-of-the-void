@@ -6,8 +6,10 @@ from aerona.engine.phase import Phase
 
 
 @reads(
+    "table.bonds",
     "table.entities",
     "table.incidents",
+    "table.language_profiles",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.media_items",

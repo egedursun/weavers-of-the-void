@@ -46,6 +46,11 @@ class CurrencyRules(Spanned):
     def silence_epochs(self) -> int:
         return self.epochs(self.silence_years)
 
+    trust_pct: int = rule(30, 0, 100, G, "Trust a ruler gains each epoch at full renown for reliability among its people")
+    trust_fade: int = rule(5, 0, 100, G, "Trust a ruler loses each epoch as old promises are forgotten")
+    learning_pct: int = rule(25, 0, 100, G, "Learning a ruler gains each epoch at full renown for wisdom among its people")
+    learning_fade: int = rule(4, 0, 100, G, "Learning a ruler loses each epoch as its scholars pass")
+
 
 @dataclass(frozen=True)
 class LoreTradeRules:
@@ -55,10 +60,11 @@ class LoreTradeRules:
     favour_friendship: int = rule(10, 0, 100, G, "Friendship a mortal gains toward one who tells them a wanted secret, at full value")
     renown_per_value: int = rule(10, 1, 100, G, "Value that wins one point of wisdom where the lore is given")
     confide_pct: int = rule(30, 0, 100, G, "Chance a confidence between mortals passes on a technique their place keeps secret (%)")
+    oath_price_pct: int = rule(15, 0, 100, G, "Chance a seller asks a mortal buyer for an oath to keep the lore as it sets, instead of coin (%)")
 
 
 @dataclass(frozen=True)
-class ClaimRules:
+class ClaimRules(Spanned):
     inflated_expose_pct: int = rule(20, 0, 100, G, "Chance each epoch beyond a false claim's that a claim to the whole of a shared deed is exposed (%)")
     claim_pct: int = rule(15, 0, 100, G, "Chance a vain and deceitful mortal who shares a place claims another's great deed (%)")
     claim_at: int = rule(20, 0, 100, G, "Size of a deed worth claiming falsely")
@@ -79,3 +85,6 @@ class ClaimRules:
     election_strength: int = rule(90, 0, 100, RuleGroup.POLITY, "How much a claim won by an electorate's vote weighs when it is pressed (%)")
     adoption_strength: int = rule(70, 0, 100, RuleGroup.POLITY, "How much a claim by adoption as heir weighs when it is pressed (%)")
     adopted_claim: int = rule(60, 0, 100, RuleGroup.POLITY, "Strength of the claim an heir named by adoption holds")
+    prophecy_strength: int = rule(40, 0, 100, RuleGroup.POLITY, "Strength of a claim made by prophecy, scaled by how far the people believe it")
+    borrowed_pct: int = rule(30, 0, 100, RuleGroup.POLITY, "Share of false claims to a deed made by claiming another's deed as one's own (%)")
+    forgotten_years: int = span(150, 1, 5000, RuleGroup.POLITY, "Years after which an unproven claim to a deed is forgotten and loses its renown")

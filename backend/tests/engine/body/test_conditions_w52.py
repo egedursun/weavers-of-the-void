@@ -14,7 +14,7 @@ def capacity_with(kind: ConditionKind | None) -> dict[Capacity, int]:
 
 
 def test_twenty_one_conditions_and_the_new_three_weigh_on_their_capacities() -> None:
-    assert len(ConditionKind) == len(CONDITIONS) == 21
+    assert len(ConditionKind) == len(CONDITIONS) == 24
     whole = capacity_with(None)
     assert capacity_with(ConditionKind.PARALYSIS)[Capacity.MOBILITY] < whole[Capacity.MOBILITY] * 0.2
     assert capacity_with(ConditionKind.INFERTILITY)[Capacity.FERTILITY] == 0

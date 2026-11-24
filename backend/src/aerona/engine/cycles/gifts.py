@@ -442,6 +442,8 @@ async def pass_circuit(ctx: TickContext, circuit: CircuitRow, tally: GiftTally) 
         return False
     here = stops[circuit.position % len(stops)]
     there = stops[(circuit.position + 1) % len(stops)]
+    if await hoard(ctx, circuit, here):
+        return False
     circuit.position = (circuit.position + 1) % len(stops)
     circuit.passes += 1
     await pass_on(ctx, circuit, here, there)
@@ -455,6 +457,23 @@ async def pass_circuit(ctx: TickContext, circuit: CircuitRow, tally: GiftTally) 
         roles={IncidentRole.GIVER: here, IncidentRole.RECEIVER: there, IncidentRole.INSTRUMENT: circuit.item_entity_id},
         facts={"circuit": circuit.name, "passes": circuit.passes, "value": table.pass_value},
     )
+    return True
+
+
+async def hoard(ctx: TickContext, circuit: CircuitRow, here: int) -> bool:
+    if not ctx.rng(f"circuit.hoard.{circuit.id}.{ctx.epoch}").chance(ctx.rules.gifts.hoard_chance_pct):
+        return False
+    kept = await ctx.session.scalar(
+        select(GiftRow)
+        .where(GiftRow.circuit_id == circuit.id, GiftRow.receiver_node_id == here, GiftRow.state.in_(list(HOLDING)))
+        .order_by(GiftRow.id.desc())
+        .limit(1)
+    )
+    if kept is None or "state" in kept.locked:
+        return False
+    kept.state = GiftState.HOARDED
+    await raise_standing(ctx, here, -ctx.rules.gifts.hoard_shame)
+    await record(ctx, "gift.hoarded", roles={IncidentRole.ACTOR: here, IncidentRole.INSTRUMENT: circuit.item_entity_id}, facts={"circuit": circuit.name})
     return True
 
 

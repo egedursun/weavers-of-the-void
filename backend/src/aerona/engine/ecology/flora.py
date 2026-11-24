@@ -30,6 +30,7 @@ from aerona.domain.enums.society import CreatureTrait, KnowledgeBranch
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.biochemistry import bearable, tolerated
 from aerona.engine.ecology.profiles import PEST_HUNTERS, SHELLED, Nature, SpeciesSpec, add_plant_profile, cycle_of, plant_products, profile_of
+from aerona.engine.ecology.uses import give_use
 from aerona.engine.environment.weather import Weather
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
@@ -560,7 +561,7 @@ async def flora_backfill(ctx: TickContext) -> dict[str, int]:
             counts["biochemistry"] += 1
         hunter = profile.species_class not in GROWN and profile.diet in PEST_HUNTERS and profile.size_class in SHELLED_SIZES
         if hunter and await ctx.session.get(SpeciesUseRow, (profile.species_entity_id, AnimalRole.PEST_CONTROL)) is None:
-            ctx.session.add(SpeciesUseRow(species_entity_id=profile.species_entity_id, use=AnimalRole.PEST_CONTROL))
+            await give_use(ctx.session, profile.species_entity_id, AnimalRole.PEST_CONTROL)
             counts["pest_hunters"] += 1
     for item in list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.product.in_(list(HERD_GOODS))))):
         kind = HERD_GOODS[item.product]

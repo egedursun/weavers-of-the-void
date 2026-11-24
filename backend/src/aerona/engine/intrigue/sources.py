@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.intrigue import BELIEF_ATTRIBUTES
 from aerona.catalog.life.intrigue import FALSE_CAMPFIRES_SKILL_KINDS
+from aerona.catalog.life_traits import PACKAGE_KIND_TRAITS, having
 from aerona.catalog.pacts import WILLLESS_LAWS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.afflictions import AfflictionRow
@@ -22,13 +23,14 @@ from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow, SpyAgentRow, 
 from aerona.db.tables.minds import MindLawRow, MindProfileRow
 from aerona.db.tables.warfare import ArmyRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.affliction import PackageKind, Visibility
+from aerona.domain.enums.affliction import Visibility
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.communication import DispatchContent, Medium
 from aerona.domain.enums.culture import MagicSchool
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.intrigue import BeliefSource, IdentityReason, IntrigueSecret
+from aerona.domain.enums.life_traits import PackageKindTrait
 from aerona.domain.enums.military import AgentStatus, UnitKind
 from aerona.domain.enums.mind import Facet
 from aerona.domain.enums.society import SocialClass
@@ -47,7 +49,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import bond_exists, living_entity
 from aerona.engine.primitives.stats import stat
 
-CURSED_PACKAGES = frozenset({PackageKind.VAMPIRISM})
+CURSED_PACKAGES = having(PACKAGE_KIND_TRAITS, PackageKindTrait.HIDDEN_BY_BEARER)
 NEIGHBOUR_HOPS = 1
 DECEIVE_DEPTH = 60
 SOLDIERS = "soldiers"

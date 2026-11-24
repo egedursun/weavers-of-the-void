@@ -231,6 +231,7 @@ export function CelestialDepthSection({
   const specifics = Object.entries(depth?.specifics ?? {})
   return (
     <Section
+      id='section-celestial-depth'
       title='Lore and depth'
       description={
         written && depth

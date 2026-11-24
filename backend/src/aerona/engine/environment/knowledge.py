@@ -148,7 +148,7 @@ async def well_charted(session: AsyncSession, rules: Rules, polity_id: int | Non
 async def charted_share(session: AsyncSession, rules: Rules, polity_id: int, regions: set[int]) -> float:
     if not regions:
         return 0.0
-    charted = [region for region in regions if await well_charted(session, rules, polity_id, region)]
+    charted = [region for region in sorted(regions) if await well_charted(session, rules, polity_id, region)]
     return len(charted) / len(regions)
 
 

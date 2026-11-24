@@ -70,3 +70,4 @@ class TransformRules:
     context_prospects: int = rule(12, 0, 200, T, "Changes of kind under way an agent sees in its context, the nearest to coming first")
     colossal_yield: int = rule(5, 1, 100, T, "Times the usual corpse yield the remains of a colossal beast hold as materials")
     colossal_power: int = rule(70, 0, 100, T, "Power at or above which a beast's body becomes a place of its own when it dies")
+    progenitor_deeds: int = rule(5, 1, 1000, T, "Named deeds after which a beast founds a line of its own by the weight of its deeds")

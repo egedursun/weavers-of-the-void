@@ -7,6 +7,7 @@ from aerona.api.dependencies import ServicesDep
 from aerona.api.schemas.health import HealthReportResponse, HealthResponse
 from aerona.constants.app import APP_VERSION
 from aerona.constants.http import HEALTH_PATH
+from aerona.domain.enums.meta import HealthStatus
 from aerona.services.application import database_path
 from aerona.services.metrics import health as health_report
 
@@ -19,7 +20,7 @@ async def health(services: ServicesDep) -> HealthResponse:
         check = await session.execute(text("PRAGMA quick_check"))
         database_ok = check.scalar_one() == "ok"
     return HealthResponse(
-        status="ok" if database_ok else "degraded",
+        status=HealthStatus.OK if database_ok else HealthStatus.DEGRADED,
         version=APP_VERSION,
         database_ok=database_ok,
         llm_enabled=services.settings.llm_enabled,

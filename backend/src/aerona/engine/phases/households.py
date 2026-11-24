@@ -13,6 +13,7 @@ from aerona.engine.polity.laws import LawBook
 @reads(
     "settlement.population",
     "table.bonds",
+    "table.deep_passages",
     "table.districts",
     "table.dwelling_kinds",
     "table.dwellings",

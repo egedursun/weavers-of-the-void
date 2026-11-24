@@ -22,7 +22,7 @@ from aerona.domain.enums.economy import WorkshopKind
 from aerona.domain.enums.integrity import SectionHazard, SectionState
 from aerona.domain.enums.military import VesselStatus
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.vehicles import FireControl, MountArc, MountKind, VehicleFrame, VehicleSection, VehicleSize
+from aerona.domain.enums.vehicles import FireControl, MountArc, MountKind, Propulsion, VehicleFrame, VehicleSection, VehicleSize
 from aerona.engine.collective.book import shift
 from aerona.engine.collective.embodied import embody, settle
 from aerona.engine.context import TickContext
@@ -255,7 +255,7 @@ def catalogue_fields(spec: FrameSpec, quality: int) -> dict[str, object]:
         "fuel": fuel,
         "fuel_use": SIZE_SCALE[spec.size] if fuel is not None else 0,
         "cost": round_half_up((spec.structure + spec.armour + spec.crew // 5 + spec.slots * 10) * (0.5 + quality / PERCENT)),
-        "upkeep": max(1, SIZE_SCALE[spec.size] * (1 + spec.slots // 2)),
+        "upkeep": max(1, SIZE_SCALE[spec.size] * (1 + spec.slots // 2) // (2 if spec.propulsion is Propulsion.PEDAL else 1)),
         "tech_level": spec.level,
         "strangeness": spec.strangeness,
     }

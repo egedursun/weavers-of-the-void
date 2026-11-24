@@ -23,6 +23,8 @@ TECHNIQUE_AXES: dict[SocializationTechnique, ValueAxis] = {
     SocializationTechnique.SCHOOLING: ValueAxis.KNOWLEDGE,
     SocializationTechnique.PEER_GROUP: ValueAxis.FRIENDSHIP,
     SocializationTechnique.AGE_SET: ValueAxis.LOYALTY,
+    SocializationTechnique.MENTORING: ValueAxis.CRAFTSMANSHIP,
+    SocializationTechnique.TRAVEL: ValueAxis.XENOPHILIA,
 }
 
 
@@ -58,6 +60,8 @@ VENUE_REACH = {
     SpeechVenue.SCHOOL: 30,
     SpeechVenue.CAMP: 40,
     SpeechVenue.OUTLET: 0,
+    SpeechVenue.MARKET: 45,
+    SpeechVenue.FUNERAL: 25,
 }
 
 
@@ -82,6 +86,8 @@ ACT_WORDS = {
     LandAct.OPEN_SPRING: "opened a spring",
     LandAct.CALL_LAVA: "called up lava",
     LandAct.SINK_COAST: "sank its coast",
+    LandAct.RAISE_ISLAND: "raised an island from the sea",
+    LandAct.OPEN_UNDERGROUND: "opened the ground to the strata beneath",
 }
 
 RAISE_CHILD_SOCIALIZATION_TECHNIQUES = (SocializationTechnique.SHAME, SocializationTechnique.PUNISHMENT, SocializationTechnique.RITUAL_ORDEAL)

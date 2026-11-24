@@ -69,7 +69,7 @@ PASSION_MIDPOINT = 50
 
 def add_into(target: dict[ValueAxis, float], source: Mapping[ValueAxis, int], scale: float) -> None:
     for axis, weight in source.items():
-        target[axis] += weight * scale
+        target[axis] = target.get(axis, 0) + weight * scale
 
 
 def finished(raw: Mapping[ValueAxis, float]) -> Values:
@@ -288,7 +288,7 @@ def pull_toward(target: dict[ValueAxis, float], current: Values, source: Values 
     if not source:
         return
     for axis in ValueAxis:
-        target[axis] += (source.get(axis, 0) - current.get(axis, 0)) * share_pct / PERCENT
+        target[axis] = target.get(axis, 0) + (source.get(axis, 0) - current.get(axis, 0)) * share_pct / PERCENT
 
 
 async def pressure_causes(ctx: TickContext, community: EntityRow, index: ValueIndex, current: Values, plagued: set[int]) -> Causes:

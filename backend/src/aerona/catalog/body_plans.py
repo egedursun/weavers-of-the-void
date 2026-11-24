@@ -86,6 +86,8 @@ PLANS: dict[BodyPlan, PlanSpec] = {
         PlanSpec(BodyPlan.CENTAUROID, "an upright body with arms set on four legs", HeightClass.TALL, BodyBuild.HEAVY),
         PlanSpec(BodyPlan.RADIAL, "arms set round a centre, with no front and no head", HeightClass.SHORT, BodyBuild.SLIGHT),
         PlanSpec(BodyPlan.COLONIAL, "one body made of many living members", HeightClass.AVERAGE, BodyBuild.AVERAGE),
+        PlanSpec(BodyPlan.HEXAPOD, "a body set on six limbs", HeightClass.AVERAGE, BodyBuild.HEAVY),
+        PlanSpec(BodyPlan.ROOTED, "a body held in the ground by roots", HeightClass.TALL, BodyBuild.HEAVY),
     )
 }
 
@@ -124,6 +126,8 @@ HUNGER_PLANS: MappingProxyType[OuterHunger, BodyPlan] = total(
         OuterHunger.LIGHT: BodyPlan.COLOSSAL,
         OuterHunger.NAMES: BodyPlan.INCORPOREAL,
         OuterHunger.MEMORIES: BodyPlan.AMORPHOUS,
+        OuterHunger.DREAMS: BodyPlan.INCORPOREAL,
+        OuterHunger.TIME: BodyPlan.AMORPHOUS,
     },
 )
 
@@ -159,6 +163,8 @@ PLAN_TEXT = {
     BodyPlan.CENTAUROID: "moves as a rider moves and fights with both hands",
     BodyPlan.RADIAL: "has no front and cannot be taken from the flank",
     BodyPlan.COLONIAL: "loses members to harm and grows them back, dying only when too few remain",
+    BodyPlan.HEXAPOD: "stands steady on six limbs, carries great loads and climbs well",
+    BodyPlan.ROOTED: "stays where it grows, drawing water and food through its roots, and moves only slowly",
 }
 MINED_PLANS = (BodyPlan.COLOSSAL, BodyPlan.INSECTOID)
 FALLBACK_PLANS = frozenset({BodyPlan.QUADRUPED, BodyPlan.AQUATIC})

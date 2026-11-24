@@ -12,14 +12,18 @@ from aerona.db.tables.belonging import SatireRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import DwellingRow, HouseholdMemberRow
+from aerona.db.tables.intrigue import SchemeRow
 from aerona.db.tables.lifecycle import DesignatedHeirRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import PolityProfileRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.belonging import SatireSource
+from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.intrigue import PlotKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import TreasuryEntry
@@ -34,6 +38,7 @@ from aerona.engine.polity.mandates import units_of
 from aerona.engine.polity.regard import shift_regard
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import record
 
@@ -180,6 +185,29 @@ async def jester(ctx: TickContext, seat: Seat) -> None:
     )
 
 
+async def taster(ctx: TickContext, seat: Seat) -> None:
+    rows = await ctx.session.scalars(
+        select(SchemeRow).where(SchemeRow.kind == PlotKind.MURDER, SchemeRow.target_node_id == seat.ruler.id).order_by(SchemeRow.id)
+    )
+    for scheme in list(rows):
+        if not held(scheme.owner_node_id) and "progress" not in scheme.locked:
+            scheme.progress = clamp_int(scheme.progress - ctx.rules.court.taster_guard, 0, PERCENT)
+
+
+async def interpreter(ctx: TickContext, seat: Seat) -> None:
+    tongues = set(await spoken_by(ctx.session, seat.realm.entity.id))
+    others = await ctx.session.scalars(
+        select(PolityProfileRow.polity_entity_id).where(PolityProfileRow.polity_entity_id != seat.realm.entity.id).order_by(PolityProfileRow.polity_entity_id)
+    )
+    for other in list(others):
+        if tongues and not tongues & set(await spoken_by(ctx.session, other)):
+            await shift_regard(ctx, other, seat.realm.entity.id, trust=ctx.rules.court.interpreter_trust)
+
+
+async def spoken_by(session: AsyncSession, node_id: int) -> list[int]:
+    return [bond.target_node_id for bond in await active_bonds(session, [BondKind.SPEAKS], sources=[node_id])]
+
+
 async def seer(ctx: TickContext, seat: Seat) -> None:
     profile = await ctx.session.get(MortalProfileRow, seat.holder.id)
     renown = profile.renown if profile is not None else 0
@@ -231,6 +259,8 @@ DUTIES: Mapping[CourtPosition, Callable[[TickContext, Seat], Awaitable[None]]] =
         CourtPosition.CHRONICLER: chronicler,
         CourtPosition.JESTER: jester,
         CourtPosition.SEER: seer,
+        CourtPosition.TASTER: taster,
+        CourtPosition.INTERPRETER: interpreter,
     },
     without={CourtPosition.MASTER_OF_REVELS},
 )

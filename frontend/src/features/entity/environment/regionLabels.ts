@@ -31,6 +31,10 @@ import {
   Wheat,
   Wind,
   Zap,
+  Droplets,
+  Gem,
+  ThermometerSnowflake,
+  WavesLadder,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import type { KpiTone } from '@/components/domain'
@@ -104,7 +108,7 @@ export const DANGER_SOURCE: Record<
   },
   currents: {
     label: 'Currents',
-    icon: Waves,
+    icon: Droplets,
     tone: 'info',
     hint: 'Strong rivers and coasts that drag people down',
   },
@@ -173,7 +177,7 @@ export const MEMORY: Record<Schema['RegionMemoryKind'], Named> = {
   discovery: { label: 'Discovery', icon: Compass, tone: 'info' },
   uprising: { label: 'Uprising', icon: Flag, tone: 'warning' },
   union: { label: 'Union', icon: Link2, tone: 'success' },
-  accession: { label: 'Accession to rule', icon: Crown, tone: 'gold' },
+  accession: { label: 'Accession to rule', icon: Gem, tone: 'gold' },
 }
 
 export const HAZARD: Record<
@@ -212,25 +216,25 @@ export const HAZARD: Record<
   },
   flash_flood: {
     label: 'Flash flood',
-    icon: Waves,
+    icon: WavesLadder,
     tone: 'danger',
     season: 'in the wettest season',
   },
   thin_ice: {
     label: 'Thin ice',
-    icon: Snowflake,
+    icon: ThermometerSnowflake,
     tone: 'info',
     season: 'in the warming season',
   },
   ice_jam: {
     label: 'Ice jam',
-    icon: Snowflake,
+    icon: Thermometer,
     tone: 'warning',
     season: 'in the warming season',
   },
   storm_surge: {
     label: 'Storm surge',
-    icon: Waves,
+    icon: Zap,
     tone: 'danger',
     season: 'in the stormiest season',
   },

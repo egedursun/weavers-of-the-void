@@ -76,6 +76,9 @@ import {
   Tag,
   Truck,
   Shovel,
+  Binoculars,
+  TreePine,
+  Signature,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -176,6 +179,8 @@ export const RESISTANCES: Record<Schema['ResistanceKind'], Named> = {
   distance: { label: 'Distance', icon: Footprints, tone: 'muted' },
   counter_source: { label: 'A counter source', icon: Repeat, tone: 'warning' },
   none: { label: 'Nothing', icon: CircleOff, tone: 'muted' },
+  disbelief: { label: 'Disbelief', icon: Ban, tone: 'muted' },
+  ancestral: { label: 'Ancestral', icon: TreePine, tone: 'muted' },
 }
 
 export const VISIBILITIES: Record<Schema['PowerVisibility'], Named> = {
@@ -194,6 +199,8 @@ export const HAZARDS: Record<Schema['PowerHazard'], Named> = {
   burnout: { label: 'The power gives out', icon: Flame, tone: 'warning' },
   dependency: { label: 'Dependency', icon: Link2, tone: 'warning' },
   attention: { label: 'Draws attention', icon: Eye, tone: 'danger' },
+  possession: { label: 'Possession', icon: Binoculars, tone: 'danger' },
+  ageing: { label: 'Ageing', icon: Hourglass, tone: 'danger' },
 }
 
 export const RELATIONS: Record<Schema['SourceRelation'], Named> = {
@@ -253,7 +260,7 @@ export const ORIGINS: Record<Schema['PowerOrigin'], Named> = {
     icon: ArrowRightLeft,
     tone: 'danger',
   },
-  bargain: { label: 'An outer bargain', icon: Handshake, tone: 'danger' },
+  bargain: { label: 'An outer bargain', icon: HeartHandshake, tone: 'danger' },
 }
 
 export const STATES: Record<Schema['PowerState'], Named> = {
@@ -307,6 +314,8 @@ export const RESTRICTIONS: Record<Schema['RestrictionKind'], Named> = {
   must_be_unseen: { label: 'Must be unseen', icon: EyeOff, tone: 'info' },
   must_touch: { label: 'Must touch', icon: Hand, tone: 'info' },
   only_with_token: { label: 'Only with a token', icon: Key, tone: 'info' },
+  only_in_company: { label: 'Only in company', icon: KeyRound, tone: 'info' },
+  only_by_name: { label: 'Only by name', icon: Signature, tone: 'info' },
 }
 
 export const ATTITUDES: Record<Schema['GiftedAttitude'], Named> = {
@@ -412,7 +421,7 @@ export const TRUTH_ATTITUDES: Record<Schema['TruthAttitude'], Named> = {
   accepted: { label: 'Accepted', icon: Handshake, tone: 'success' },
   exploited: { label: 'Used', icon: Coins, tone: 'warning' },
   protected: { label: 'Protected', icon: ShieldCheck, tone: 'success' },
-  bargained: { label: 'Bargained', icon: Handshake, tone: 'gold' },
+  bargained: { label: 'Bargained', icon: HeartHandshake, tone: 'gold' },
 }
 
 export const BREACH_CAUSES: Record<Schema['BreachCause'], Named> = {

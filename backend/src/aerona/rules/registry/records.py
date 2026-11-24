@@ -10,6 +10,9 @@ class RecordsRules:
     fidelity_saw: int = rule(90, 0, 100, RuleGroup.CHRONICLE, "How true the account of a witness who saw a happening is (percent)")
     fidelity_heard: int = rule(60, 0, 100, RuleGroup.CHRONICLE, "How true the account of a witness who heard of a happening nearby is (percent)")
     fidelity_told: int = rule(40, 0, 100, RuleGroup.CHRONICLE, "How true the account of one who was told of a happening is (percent)")
+    fidelity_sensed: int = rule(
+        70, 0, 100, RuleGroup.CHRONICLE, "How true the account of a witness who sensed a happening by smell, touch, tremor or spirit sight is (percent)"
+    )
     distortion_per_hop_pct: int = rule(10, 0, 100, RuleGroup.CHRONICLE, "Chance that each retelling of an account changes one of its facts or steps")
     naming_magnitude: int = rule(70, 0, 100, RuleGroup.CHRONICLE, "Magnitude from which a happening is given a name of its own")
     checkpoint_epochs: int = rule(5, 1, 100, RuleGroup.CHRONICLE, "Epochs between checkpoints of the recorded state of the world")

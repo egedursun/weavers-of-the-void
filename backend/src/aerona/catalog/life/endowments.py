@@ -5,4 +5,5 @@ TOWN_EFFECTS: dict[EndowmentPurpose, tuple[str, int]] = {
     EndowmentPurpose.HEALTH: ("sanitation", 1),
     EndowmentPurpose.WORSHIP: ("piety", 1),
     EndowmentPurpose.WORKS: ("prosperity", 1),
+    EndowmentPurpose.HOSPITALITY: ("unrest", -1),
 }

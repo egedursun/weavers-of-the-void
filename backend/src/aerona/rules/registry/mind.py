@@ -162,6 +162,8 @@ class CareersRules:
     sea_loss_pct: int = rule(5, 0, 100, G, "Chance each epoch one who lives by the sea is lost to it (%)")
     settle_found_pct: int = rule(10, 0, 100, G, "Chance each epoch one bound for a frontier moves to a frontier settlement (%)")
     service_skill_xp: int = rule(30, 0, 500, G, "Practice each epoch on a path gives the skills that path trains")
+    healing_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to healing (50 is neutral)")
+    wilds_weight: int = rule(50, 0, 100, G, "How strongly the young are drawn to the wilds, to hunting, foraging and guiding (50 is neutral)")
 
 
 @dataclass(frozen=True)
@@ -438,6 +440,9 @@ class GriefRules(Spanned):
     @property
     def mourning_epochs(self) -> int:
         return self.epochs(self.mourning_years)
+
+    bargaining_years: int = span(5, 0, 250, G, "Years a mourner spends bargaining with the powers for the dead before mourning begins")
+    bargaining_relief_pct: int = rule(30, 0, 100, G, "Chance each epoch a bargaining mourner finds relief and its mourning shortens (%)")
 
 
 @dataclass(frozen=True)

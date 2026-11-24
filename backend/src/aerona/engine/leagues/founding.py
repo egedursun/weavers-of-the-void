@@ -1,3 +1,4 @@
+from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
@@ -8,6 +9,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.entity_stats import LeagueStats
 from aerona.engine.context import TickContext
 from aerona.engine.leagues.book import LeagueTally, membership
+from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.recording.record import record
 
@@ -56,7 +58,7 @@ async def found_league(
             entity_type=EntityType.LEAGUE,
             name=f"the league of {first.name.removeprefix('the ')}",
             body=f"A league of {', '.join(polity.name for polity in polities)}.",
-            stats=LeagueStats(strength=ctx.rules.leagues.strength_per_member * len(polities), cohesion=50, members=len(polities)),
+            stats=LeagueStats(strength=clamp_int(ctx.rules.leagues.strength_per_member * len(polities), 0, PERCENT), cohesion=50, members=len(polities)),
             power=max(polity.power_level for polity in polities),
             world_id=first.world_id,
             subtype="league",

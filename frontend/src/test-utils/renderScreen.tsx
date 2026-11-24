@@ -13,7 +13,7 @@ import { render } from 'vitest-browser-react'
 import { ThemeProvider } from '@/context/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { validateDrawerSearch } from '@/components/layout/drawer/drawerEntries'
+import { validateEntrySearch } from '@/components/layout/entry/entryStack'
 import { FakeEventSource } from './fakeEventSource'
 import { type MockRoutes, startMockServer } from './mockServer'
 
@@ -42,7 +42,7 @@ export async function renderScreen(
     },
   })
   const rootRoute = createRootRoute({
-    validateSearch: validateDrawerSearch,
+    validateSearch: validateEntrySearch,
     component: () => (
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>

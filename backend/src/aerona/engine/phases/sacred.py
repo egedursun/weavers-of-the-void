@@ -221,6 +221,7 @@ async def mysteries(ctx: TickContext) -> None:
 @writes(
     "settlement.piety",
     "spirit.unrest",
+    "table.applied_fixups",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_societies",
@@ -235,6 +236,7 @@ async def mysteries(ctx: TickContext) -> None:
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.outbreaks",
     "table.personality_values",
     "table.sacraments",
     "table.thoughts",
@@ -261,6 +263,7 @@ async def rites_of_passage(ctx: TickContext) -> None:
     "table.divination_systems",
     "table.divinations",
     "table.divine_wounds",
+    "table.dreams",
     "table.entities",
     "table.faction_profiles",
     "table.forecast_models",

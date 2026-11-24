@@ -48,6 +48,7 @@ from aerona.engine.phases.dominion import count
     "table.cult_tenets",
     "table.culture_values",
     "table.custom_kinds",
+    "table.deep_passages",
     "table.dimensions",
     "table.dishes",
     "table.divine_wounds",
@@ -216,6 +217,7 @@ async def learning_aids(ctx: TickContext) -> None:
 @reads(
     "region.magic",
     "table.accusations",
+    "table.deep_passages",
     "table.emotion_spirits",
     "table.material_affinities",
     "table.node_births",

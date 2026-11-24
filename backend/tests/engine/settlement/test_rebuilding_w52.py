@@ -15,7 +15,7 @@ CERTAIN = tuned(rebuilding={f"{cause.value}_lesson_pct": 100 for cause in Rebuil
 
 
 def test_eight_causes_and_four_ways_each_with_their_lesson() -> None:
-    assert len(RebuildCause) == 8 and set(REBUILD_CAUSES) == set(RebuildCause)
+    assert len(RebuildCause) == 10 and set(REBUILD_CAUSES) == set(RebuildCause)
     assert REBUILD_CAUSES[RebuildCause.SEA_WAVE].lesson is PreparednessKind.SEAWALL
     assert REBUILD_CAUSES[RebuildCause.LANDSLIDE].technique is Technique.TERRACING
     assert REBUILD_PLANS[RebuildPlan.RELOCATED].moves and not REBUILD_PLANS[RebuildPlan.ABANDONED].builds

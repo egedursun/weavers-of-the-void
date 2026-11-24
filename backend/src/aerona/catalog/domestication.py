@@ -20,6 +20,7 @@ class SocialSpec:
     trait: CreatureTrait | None
     keeps_numbers: bool
     rule: str | None
+    nests: bool = False
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,7 @@ STAGES: Mapping[DomesticationStage, StageSpec] = total(
         S.DOMESTICATED: StageSpec(kept=True, housed=True, rule="domestication.domesticate_chance"),
         S.BREED: StageSpec(kept=True, housed=True, rule="domestication.breed_chance"),
         S.FERAL: StageSpec(kept=False, housed=False, rule="domestication_depth.feral_chance_pct"),
+        S.CAPTIVE: StageSpec(kept=True, housed=True, rule="domestication_depth.captive_escape_pct"),
     },
 )
 
@@ -48,9 +50,11 @@ SOCIALITIES: Mapping[Sociality, SocialSpec] = total(
         Sociality.SOLITARY: SocialSpec(None, keeps_numbers=False, rule=None),
         Sociality.PACK: SocialSpec(CreatureTrait.PACK_HUNTER, keeps_numbers=False, rule="habitat.pack_pct"),
         Sociality.HERD: SocialSpec(None, keeps_numbers=True, rule="habitat.herd_pct"),
-        Sociality.HIVE: SocialSpec(CreatureTrait.HIVE_MIND, keeps_numbers=True, rule="habitat.herd_pct"),
-        Sociality.COLONY: SocialSpec(None, keeps_numbers=True, rule="species_forms.colony_harvest_pct"),
+        Sociality.HIVE: SocialSpec(CreatureTrait.HIVE_MIND, keeps_numbers=True, rule="habitat.herd_pct", nests=True),
+        Sociality.COLONY: SocialSpec(None, keeps_numbers=True, rule="species_forms.colony_harvest_pct", nests=True),
         Sociality.SWARM: SocialSpec(None, keeps_numbers=True, rule="species_forms.swarm_move"),
+        Sociality.PAIR: SocialSpec(None, keeps_numbers=False, rule="species_forms.pair_widow_pct"),
+        Sociality.FAMILY_GROUP: SocialSpec(None, keeps_numbers=True, rule="species_forms.family_teach_pct"),
     },
 )
 
@@ -65,6 +69,7 @@ BIOCHEMISTRIES: Mapping[Biochemistry, BiochemistrySpec] = total(
         Biochemistry.SPIRIT: BiochemistrySpec(unbound=True, charged=False, athermic=True),
         Biochemistry.CARBON_METHANE: BiochemistrySpec(unbound=False, charged=False),
         Biochemistry.PLASMA: BiochemistrySpec(unbound=True, charged=True, athermic=True),
+        Biochemistry.METAL: BiochemistrySpec(unbound=False, charged=True),
     },
 )
 

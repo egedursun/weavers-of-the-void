@@ -4,21 +4,23 @@ from sqlalchemy import select
 
 from aerona.catalog.life.communication import CARRIER_MEDIUM, MEDIUM_RANK, SPEED_RULES, TEXTS
 from aerona.catalog.life_traits import MEDIUM_TRAITS, having
-from aerona.catalog.pacts import CARRYING_STATES
+from aerona.catalog.pacts import CARRYING_SIGNALS, CARRYING_STATES
 from aerona.constants.units import PERCENT
 from aerona.db.tables.communication import CipherRow, SignalLinkRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import WorldSeasonRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.polity import PolityMemberRow
+from aerona.db.tables.works import StateEnterpriseRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agent import MessageIntent
-from aerona.domain.enums.communication import DispatchContent, DispatchState, Medium
+from aerona.domain.enums.communication import DispatchContent, DispatchState, Medium, SignalKind
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.ecology import AnimalRole
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.life_traits import MediumTrait
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.works import EnterpriseForm
 from aerona.engine.context import TickContext
 from aerona.engine.ecology.domestication import kept_for
 from aerona.engine.eras.effects import tech_bonus
@@ -73,6 +75,17 @@ async def posted(ctx: TickContext, owner_id: int) -> bool:
     return await holders_know(ctx.session, [*holders, *([realm] if realm is not None else [])], Technique.POSTAL_SERVICE)
 
 
+async def state_post(ctx: TickContext, owner_id: int) -> bool:
+    owner = await ctx.session.get(EntityRow, owner_id)
+    holders = [owner_id, *([owner.location_id] if owner is not None and owner.location_id is not None else [])]
+    realm = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id.in_(holders)).limit(1))
+    candidates = [*holders, *([realm] if realm is not None else [])]
+    found = await ctx.session.scalar(
+        select(StateEnterpriseRow.id).where(StateEnterpriseRow.form == EnterpriseForm.POST, StateEnterpriseRow.polity_entity_id.in_(candidates)).limit(1)
+    )
+    return found is not None
+
+
 async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_id: int, *, medium: Medium, owner_id: int) -> int:
     if medium in INSTANT:
         return 0
@@ -90,11 +103,13 @@ async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_
     speed = int(getattr(table, SPEED_RULES[medium]))
     if medium is Medium.LETTER and await posted(ctx, owner_id):
         speed += ctx.rules.technique_effects.postal_hops
+    if medium is Medium.LETTER and await state_post(ctx, owner_id):
+        speed += ctx.rules.state_enterprise.state_post_hops
     reach = await epoch_reach(ctx, origin.world_id, speed, medium in OVERLAND)
     if medium is Medium.LETTER:
         reach += await tech_bonus(ctx.session, ctx.rules, owner_id, EraChannel.MESSAGES)
     epochs = int(hops // max(1.0, reach))
-    if medium is Medium.LETTER and await kept_for(ctx, owner_id, AnimalRole.MESSENGER) > 0:
+    if medium is Medium.COURIER_ANIMAL and await kept_for(ctx, owner_id, AnimalRole.MESSENGER) > 0:
         epochs -= round(epochs * ctx.rules.species_roles.messenger_speed / PERCENT)
     if await signalled(ctx, owner_id):
         epochs = max(0, epochs - table.signal_cut)
@@ -102,7 +117,7 @@ async def delay(ctx: TickContext, atlas: RegionAtlas, origin_id: int, recipient_
 
 
 async def carried_by_beasts(ctx: TickContext, row: MessageRow) -> None:
-    if row.medium is not Medium.LETTER or await kept_for(ctx, row.sender_node_id, AnimalRole.MESSENGER) <= 0:
+    if row.medium is not Medium.COURIER_ANIMAL or await kept_for(ctx, row.sender_node_id, AnimalRole.MESSENGER) <= 0:
         return
     if ctx.rng(f"messenger.{row.sender_node_id}.{row.recipient_node_id}.{ctx.epoch}").chance(ctx.rules.species_roles.messenger_intercept_pct):
         row.state = DispatchState.INTERCEPTED
@@ -111,9 +126,22 @@ async def carried_by_beasts(ctx: TickContext, row: MessageRow) -> None:
     )
 
 
+async def drummed(ctx: TickContext, sender_id: int) -> bool:
+    found = await ctx.session.scalar(
+        select(SignalLinkRow.id)
+        .where(SignalLinkRow.owner_node_id == sender_id, SignalLinkRow.kind == SignalKind.DRUM_RELAY, SignalLinkRow.state.in_(sorted(CARRYING_SIGNALS)))
+        .limit(1)
+    )
+    return found is not None
+
+
 async def upgraded(ctx: TickContext, sender_id: int, recipient_id: int, medium: Medium) -> Medium:
     if medium is not Medium.LETTER:
         return medium
+    if await drummed(ctx, sender_id):
+        return Medium.DRUM_AND_WHISTLE
+    if await kept_for(ctx, sender_id, AnimalRole.MESSENGER) > 0:
+        return Medium.COURIER_ANIMAL
     offered = {CARRIER_MEDIUM[row.carrier] for row in await shared_networks(ctx.session, sender_id, recipient_id, ctx.epoch) if row.carries_messages}
     return next((item for item in MEDIUM_RANK if item in offered), medium)
 

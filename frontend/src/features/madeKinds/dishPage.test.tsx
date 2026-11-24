@@ -26,6 +26,8 @@ const FLAVOURS = [
   'numbing',
   'smoky',
   'fermented',
+  'astringent',
+  'rich',
 ].map((flavour, index) => ({
   flavour,
   label: `${flavour[0].toUpperCase()}${flavour.slice(1)}`,

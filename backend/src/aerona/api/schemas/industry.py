@@ -75,6 +75,7 @@ class WorksPollutionView(ApiModel):
     radiation: int
     noise: int
     light: int
+    heat: int
     blight: int
     epoch: int | None
     held: list[str]

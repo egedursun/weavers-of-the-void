@@ -425,3 +425,7 @@ async def regulation_motion(ctx: TickContext) -> Motion | None:
     if len(failed) == table.failed_councils and not any(failed) and procedure.voting_rule is not VotingRule.MAJORITY:
         return Motion(M.SET_COUNCIL_RULES, voting_rule=VotingRule.MAJORITY)
     return None
+
+
+def bound_elsewhere(son: SonRow, world_id: int, epoch: int) -> bool:
+    return son.bound_world_id is not None and son.bound_world_id != world_id and (son.bound_until_epoch is None or son.bound_until_epoch >= epoch)

@@ -49,6 +49,7 @@ import {
   GraduationCap,
   Lightbulb,
   Trees,
+  Combine,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/entity/environment/labels'
@@ -71,7 +72,7 @@ export const METHODS: Record<Schema['CultivationMethod'], Named> = {
   cloning: { label: 'Cloning', icon: Copy, tone: 'info' },
   merging: { label: 'Merging species', icon: Orbit, tone: 'warning' },
   induction: { label: 'Induction', icon: Zap, tone: 'gold' },
-  hybridising: { label: 'Hybridising', icon: GitMerge, tone: 'success' },
+  hybridising: { label: 'Hybridising', icon: Combine, tone: 'success' },
   wild_release: { label: 'Release to the wild', icon: Trees, tone: 'warning' },
 }
 

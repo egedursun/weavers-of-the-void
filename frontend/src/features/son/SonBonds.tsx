@@ -29,7 +29,7 @@ import {
   useShowMore,
   Paged,
 } from '@/components/domain'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { NamePicker } from '@/features/pantheon/NamePicker'
@@ -41,7 +41,7 @@ import { type BondView } from './api'
 type BondKind = components['schemas']['BondKind']
 type NodeKind = components['schemas']['NodeKind']
 
-const DRAWER_OF: Partial<Record<NodeKind, DrawerKind>> = {
+const DRAWER_OF: Partial<Record<NodeKind, EntryKind>> = {
   entity: 'entity',
   son: 'son',
   foreign_god: 'foreign-god',
@@ -288,7 +288,7 @@ export function SonBonds({
     (bond) => !(bond.kind === 'worships' && !bond.outgoing)
   )
   return (
-    <Section title='Their hand in the world' level={3}>
+    <Section id='section-son-bonds' title='Their hand in the world' level={3}>
       <BondList bonds={shown} total={total} editable />
       <CreateBondForm sourceId={sonId} />
     </Section>

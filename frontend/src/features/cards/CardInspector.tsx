@@ -46,7 +46,7 @@ import {
   Section,
   StatBar,
 } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, PageTitle, Stat, Text } from '@/components/typography'
 import { GenerateImageButton } from '@/features/images/GenerateImageButton'
 import { useRuleLookup } from '@/features/pantheon/gate'
@@ -60,7 +60,7 @@ import {
   FRAME_ICON,
   STAT_GROUP_ICON,
   type StatGroupKey,
-  drawerOf,
+  entryOf,
   frameOf,
   isDivine,
   kindLabel,
@@ -264,7 +264,7 @@ export function CardInspector({
   const [flipped, setFlipped] = useState(false)
   const [unveiled, setUnveiled] = useState<number | null>(null)
   const seals = useCardSeals()
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const rule = useRuleLookup()
   const { domain, entityType } = useLabels()
   const card = index === null ? undefined : visible[index]
@@ -529,7 +529,7 @@ export function CardInspector({
                     <Button
                       onClick={() => {
                         close()
-                        drawers.open(drawerOf(card))
+                        entryStack.open(entryOf(card))
                       }}
                     >
                       <ExternalLink />

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.dangers import HAZARDS, HazardSpec
+from aerona.catalog.senses import WEATHER
 from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
@@ -28,6 +29,7 @@ from aerona.engine.environment.years import grant_sub_steps, sampled_years
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.units import stacks_of, sync, take
+from aerona.engine.nature.senses import sense_score
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import round_half_up, scaled_cap
@@ -264,6 +266,11 @@ async def strike(
     tally.soldiers += soldiers
 
 
+async def forewarned(ctx: TickContext, atlas: RegionAtlas, region_id: int) -> float:
+    scores = [await sense_score(ctx.session, ctx.rules, town, WEATHER) for town in sorted(atlas.communities_in(region_id))]
+    return min(1.0, max(scores, default=0.0))
+
+
 async def roll_hazards(ctx: TickContext) -> HazardTally:
     rules = ctx.rules
     tally = HazardTally()
@@ -292,6 +299,7 @@ async def roll_hazards(ctx: TickContext) -> HazardTally:
                 weather = book.weather(ctx.environment.world_seed, ctx.epoch, ground, season, f"hazard.{hazard.value}.{year.year}")
                 power = strength_of(rules, hazard, spec, dict(weather.effects))
                 fanned = await fire_wind(ctx.session, rules, region_id) if hazard is TerrainHazard.WILDFIRE else 1.0
+                fanned *= 1 - await forewarned(ctx, atlas, region_id) * rules.senses.pressure_warning_pct / PERCENT
                 if power and ctx.rng(f"hazard.{region_id}.{hazard.value}.{year.year}").chance(
                     chance_of(rules, hazard, ground.built) * power / PERCENT * fanned
                 ):

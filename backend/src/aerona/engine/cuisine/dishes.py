@@ -17,6 +17,7 @@ from aerona.catalog.life.cuisine import (
     SAVOUR_DISH_COURSES,
     SAVOUR_DISH_COURSES_2,
     SAVOUR_DISH_COURSES_3,
+    SOURING_CATEGORIES,
 )
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
@@ -49,6 +50,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import StepDraft, record
+from aerona.rules.registry import Rules
 
 D = DishCourse
 C = CommodityKind
@@ -91,6 +93,17 @@ def dish_traits(method: CookingMethod, course: DishCourse, chosen: list[Commodit
     }
 
 
+def role_in(rules: Rules, good: GoodKindRow | None, flavours: dict[str, int]) -> IngredientRole:
+    if good is None:
+        return IngredientRole.BASE
+    role = CATEGORY_ROLES[good.category]
+    if good.category in SOURING_CATEGORIES and flavours.get("sour", 0) >= rules.cuisine.acid_sour:
+        return IngredientRole.ACID
+    if role is IngredientRole.SEASONING and flavours.get("pungent", 0) >= rules.cuisine.aroma_pungent:
+        return IngredientRole.AROMA
+    return role
+
+
 async def found_dish(
     ctx: TickContext,
     origin: EntityRow | None,
@@ -125,7 +138,7 @@ async def found_dish(
     ctx.session.add(DishStepRow(dish_id=row.id, step=1, method=method, duration=1, locked=[]))
     for index, food in enumerate(chosen):
         good = goods.rows.get(food)
-        role = CATEGORY_ROLES[good.category] if good is not None else IngredientRole.BASE
+        role = role_in(ctx.rules, good, flavours or {})
         ctx.session.add(
             DishIngredientRow(
                 dish_id=row.id, commodity=food, share=max(1, PERCENT // len(chosen) - index), role=role, good_kind_id=good.id if good is not None else None

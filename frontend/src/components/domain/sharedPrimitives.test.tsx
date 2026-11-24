@@ -227,7 +227,7 @@ describe('MentionText', () => {
     await screen.getByRole('link', { name: 'Velmora' }).click()
     await expect
       .poll(() => router.state.location.search)
-      .toMatchObject({ drawer: 'entity:12' })
+      .toMatchObject({ entry: 'entity:12' })
   })
 
   it('links names of records returned with the text without asking for names', async () => {
@@ -240,7 +240,7 @@ describe('MentionText', () => {
     await screen.getByRole('link', { name: 'Marsh Folk' }).click()
     await expect
       .poll(() => router.state.location.search)
-      .toMatchObject({ drawer: 'entity:40' })
+      .toMatchObject({ entry: 'entity:40' })
     expect(server.calls).toHaveLength(0)
   })
 
@@ -276,7 +276,7 @@ describe('RecordNavLink', () => {
     await expect.element(climate).toBeVisible()
     expect(
       decodeURIComponent(climate.element().getAttribute('href') ?? '')
-    ).toContain('drawer=world:3')
+    ).toContain('entry=world:3')
     await expect
       .element(screen.getByRole('link', { name: 'Peoples' }))
       .toHaveAttribute('href', '/atlas?type=people')

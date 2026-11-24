@@ -83,6 +83,7 @@ JUSTICE_FULL = 100
     "table.creator",
     "table.culture_values",
     "table.custom_kinds",
+    "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",
     "table.district_services",

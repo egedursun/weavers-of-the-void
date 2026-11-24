@@ -66,6 +66,8 @@ async def ages(ctx: TickContext) -> None:
     "table.oaths",
     "table.office_history",
     "table.offices",
+    "table.polity_members",
+    "table.polity_profiles",
     "table.prophecy_conditions",
     "table.secrets",
     "table.sentences",

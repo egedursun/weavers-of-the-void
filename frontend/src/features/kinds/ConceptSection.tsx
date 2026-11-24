@@ -162,12 +162,14 @@ function ConceptBlock({
                   <Muted variant='caption'>
                     {`${STANCES[holding.stance].label} · strength ${holding.strength} of ${FULL} · ${SPREADS[holding.spread].label.toLowerCase()} · since epoch ${holding.since_epoch}`}
                   </Muted>
-                  <KindCard
-                    info={info}
-                    row={row}
-                    siblings={known}
-                    blocked={blocked}
-                  />
+                  <ul className='flex min-w-0 flex-col'>
+                    <KindCard
+                      info={info}
+                      row={row}
+                      siblings={known}
+                      blocked={blocked}
+                    />
+                  </ul>
                 </li>
               ) : null
             )}

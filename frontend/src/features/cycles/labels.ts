@@ -1,7 +1,7 @@
 import {
-  type LucideIcon,
   Activity,
   AlertTriangle,
+  Archive,
   ArrowDownUp,
   Baby,
   Ban,
@@ -22,12 +22,16 @@ import {
   GitBranch,
   GitFork,
   GitMerge,
+  Hand,
+  Hammer,
   HandHeart,
   Handshake,
   HardHat,
   Heart,
   HeartHandshake,
+  Home,
   Hourglass,
+  KeyRound,
   Landmark,
   Languages,
   Lightbulb,
@@ -44,6 +48,8 @@ import {
   ScrollText,
   Shield,
   ShieldAlert,
+  Shuffle,
+  Snowflake,
   Sparkles,
   Split,
   Sprout,
@@ -51,12 +57,21 @@ import {
   Tent,
   TrendingDown,
   TrendingUp,
+  type LucideIcon,
   Undo2,
   Users,
   Wallet,
   Wheat,
   Wind,
   Wrench,
+  Gavel,
+  MountainSnow,
+  UserRound,
+  UsersRound,
+  Minus,
+  Pyramid,
+  Group,
+  LineStyle,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -116,12 +131,19 @@ export const CHALLENGES: Record<Schema['ChallengeKind'], Named> = {
     icon: CloudLightning,
     tone: 'danger',
   },
+  long_season: { label: 'Long season', icon: Snowflake, tone: 'danger' },
+  succession_crisis: {
+    label: 'Succession crisis',
+    icon: Crown,
+    tone: 'danger',
+  },
 }
 
 export const RESPONSES: Record<Schema['ChallengeResponse'], Named> = {
   stagnation: { label: 'Stagnation', icon: Hourglass, tone: 'muted' },
   response: { label: 'A creative answer', icon: Sparkles, tone: 'success' },
   collapse: { label: 'Collapse', icon: TrendingDown, tone: 'danger' },
+  transformation: { label: 'Transformation', icon: Shuffle, tone: 'muted' },
 }
 
 export const PLAN_KINDS: Record<Schema['LongPlanKind'], Named> = {
@@ -140,12 +162,12 @@ export const PLAN_KINDS: Record<Schema['LongPlanKind'], Named> = {
   forecast: { label: 'Steering a forecast', icon: Activity, tone: 'verdigris' },
   network: {
     label: 'Network',
-    icon: Mountain,
+    icon: MountainSnow,
     tone: 'verdigris',
   },
   megastructure: {
     label: 'Megastructure',
-    icon: Mountain,
+    icon: Pyramid,
     tone: 'verdigris',
   },
   programme: {
@@ -160,7 +182,7 @@ export const PLAN_KINDS: Record<Schema['LongPlanKind'], Named> = {
   },
   line: {
     label: 'Line',
-    icon: Mountain,
+    icon: LineStyle,
     tone: 'verdigris',
   },
   reform: {
@@ -171,6 +193,11 @@ export const PLAN_KINDS: Record<Schema['LongPlanKind'], Named> = {
   exploration: {
     label: 'Exploration',
     icon: Mountain,
+    tone: 'verdigris',
+  },
+  restoration: {
+    label: 'Restoration',
+    icon: Hammer,
     tone: 'verdigris',
   },
 }
@@ -189,7 +216,11 @@ export const OCCASIONS: Record<Schema['GiftOccasion'], Named> = {
   marriage: { label: 'A marriage gift', icon: Heart, tone: 'success' },
   return: { label: 'A return gift', icon: Undo2, tone: 'success' },
   alliance: { label: 'Between allies', icon: Handshake, tone: 'info' },
-  relief: { label: 'Aid in a stricken hour', icon: HandHeart, tone: 'success' },
+  relief: {
+    label: 'Aid in a stricken hour',
+    icon: HeartHandshake,
+    tone: 'success',
+  },
   birth: { label: 'At a birth', icon: Baby, tone: 'success' },
   funeral: { label: 'To the bereaved', icon: Flower2, tone: 'muted' },
   amends: { label: 'Amends for a wrong', icon: Scale, tone: 'warning' },
@@ -199,6 +230,9 @@ export const OCCASIONS: Record<Schema['GiftOccasion'], Named> = {
     icon: DoorOpen,
     tone: 'info',
   },
+  farewell: { label: 'At a parting', icon: Hand, tone: 'info' },
+  homecoming: { label: 'At a homecoming', icon: Home, tone: 'success' },
+  initiation: { label: 'Initiation', icon: KeyRound, tone: 'gold' },
 }
 
 export const GIFT_STATES: Record<Schema['GiftState'], Named> = {
@@ -226,6 +260,7 @@ export const GIFT_STATES: Record<Schema['GiftState'], Named> = {
     icon: HandHeart,
     tone: 'success',
   },
+  hoarded: { label: 'Hoarded', icon: Archive, tone: 'warning' },
 }
 
 export const DESCENTS: Record<Schema['KinshipDescent'], Named> = {
@@ -338,10 +373,14 @@ export const FIRST_SIDES: Record<Schema['SexKind'], Named> = {
     icon: Users,
     tone: 'verdigris',
   },
-  begetter: { label: 'The begetting side is first', icon: Users, tone: 'info' },
-  both: { label: 'Not a side', icon: Users, tone: 'muted' },
-  neither: { label: 'Not a side', icon: Users, tone: 'muted' },
-  none: { label: 'Not a side', icon: Users, tone: 'muted' },
+  begetter: {
+    label: 'The begetting side is first',
+    icon: UsersRound,
+    tone: 'info',
+  },
+  both: { label: 'Not a side', icon: UserRound, tone: 'muted' },
+  neither: { label: 'Not a side', icon: Minus, tone: 'muted' },
+  none: { label: 'Not a side', icon: Group, tone: 'muted' },
 }
 
 export const SYSTEMS: Record<Schema['ReproductiveSystem'], Named> = {
@@ -389,7 +428,7 @@ export const LEGACIES: Record<Schema['LegacyKind'], Named> = {
   innovation: { label: 'Innovation', icon: Lightbulb, tone: 'info' },
   art_form: { label: 'Art form', icon: Palette, tone: 'gold' },
   technique: { label: 'Technique', icon: Wrench, tone: 'danger' },
-  law: { label: 'Law', icon: Scale, tone: 'danger' },
+  law: { label: 'Law', icon: Gavel, tone: 'danger' },
   institution: { label: 'Institution', icon: Landmark, tone: 'danger' },
   language: { label: 'Language', icon: Languages, tone: 'danger' },
 }

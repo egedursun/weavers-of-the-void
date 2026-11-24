@@ -41,6 +41,8 @@ METHOD_GATES: MappingProxyType[CookingMethod, tuple[KnowledgeBranch | None, int]
         CookingMethod.AGED: (KnowledgeBranch.AGRICULTURE, 1),
         CookingMethod.EXTRUDED: (KnowledgeBranch.METALLURGY, 6),
         CookingMethod.PRESSURE_COOKED: (KnowledgeBranch.METALLURGY, 5),
+        CookingMethod.EARTH_OVEN: (None, 0),
+        CookingMethod.PARCHED: (None, 0),
     },
 )
 
@@ -81,6 +83,8 @@ METHOD_KEEPS: MappingProxyType[CookingMethod, int] = total(
         CookingMethod.AGED: 5,
         CookingMethod.EXTRUDED: 3,
         CookingMethod.PRESSURE_COOKED: 0,
+        CookingMethod.EARTH_OVEN: 1,
+        CookingMethod.PARCHED: 4,
     },
 )
 
@@ -153,7 +157,7 @@ CATEGORY_ROLES: MappingProxyType[GoodCategory, IngredientRole] = total(
         GoodCategory.GLASS: IngredientRole.BASE,
         GoodCategory.CHEMICAL: IngredientRole.PRESERVATIVE,
         GoodCategory.DYE_AND_PIGMENT: IngredientRole.COLOURING,
-        GoodCategory.SCENT_MATERIAL: IngredientRole.SEASONING,
+        GoodCategory.SCENT_MATERIAL: IngredientRole.AROMA,
         GoodCategory.REAGENT: IngredientRole.LEAVENING,
         GoodCategory.TOOLS: IngredientRole.BASE,
         GoodCategory.WEAPONS: IngredientRole.BASE,
@@ -173,8 +177,16 @@ CATEGORY_ROLES: MappingProxyType[GoodCategory, IngredientRole] = total(
         GoodCategory.LUXURIES: IngredientRole.GARNISH,
         GoodCategory.LIVESTOCK: IngredientRole.PROTEIN,
         GoodCategory.MOUNTS: IngredientRole.PROTEIN,
+        GoodCategory.VEHICLES: IngredientRole.BASE,
+        GoodCategory.PREPARED_FOOD: IngredientRole.BASE,
+        GoodCategory.SEED_AND_STOCK: IngredientRole.BASE,
+        GoodCategory.FERTILISER: IngredientRole.BASE,
+        GoodCategory.RESIN_AND_GUM: IngredientRole.AROMA,
+        GoodCategory.RELICS_AND_ANTIQUITIES: IngredientRole.GARNISH,
     },
 )
+
+SOURING_CATEGORIES = frozenset({GoodCategory.FRUIT, GoodCategory.VEGETABLE, GoodCategory.DAIRY})
 
 
 FIRST_COURSES = (
@@ -204,6 +216,8 @@ CATEGORY_WORDS = total(
         DrinkCategory.MEDICINAL: "Draught",
         DrinkCategory.RITUAL: "Rite drink",
         DrinkCategory.SYNTHESISED: "Made drink",
+        DrinkCategory.SPARKLING: "Sparkling drink",
+        DrinkCategory.SAP_DRINK: "Sap drink",
     },
 )
 

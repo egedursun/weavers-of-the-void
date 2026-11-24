@@ -30,7 +30,7 @@ from aerona.tools.framework.spec import ToolMeta, ToolSpec, mortal_standard_acti
 from aerona.tools.framework.validation import fail
 from aerona.tools.mortal import lines
 from aerona.tools.mortal.inputs import ChooseResearchInput, DevelopKnowledgeInput, InventArtFormInput, LearnInput, ProposeTheoryInput
-from aerona.tools.mortal.support import MortalCreation, craft_of, create_record, name_free, practised, require_lore, same_region
+from aerona.tools.mortal.support import MortalCreation, craft_of, create_record, name_free, practised, require_lore, same_cell
 
 LEARNING_BONDS = (BondKind.TRADES_WITH, BondKind.ALLY, BondKind.RULES)
 
@@ -118,7 +118,7 @@ async def develop_knowledge(call: MortalCall, args: DevelopKnowledgeInput) -> st
 async def may_learn_from(call: MortalCall, teacher: EntityRow) -> bool:
     if await BondRepository(call.session).active_between(call.me.id, teacher.id, LEARNING_BONDS):
         return True
-    return await same_region(call, teacher)
+    return await same_cell(call, teacher)
 
 
 async def teachers_of(call: MortalCall, knowledge_id: int) -> str:

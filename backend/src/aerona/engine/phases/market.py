@@ -293,6 +293,7 @@ async def resource_market(ctx: TickContext) -> None:
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
+    "table.geasa",
     "table.held_identities",
     "table.holder_levels",
     "table.incident_participants",

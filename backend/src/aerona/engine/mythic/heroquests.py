@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
+from aerona.catalog.life.divine import RESTORING_BOONS
+from aerona.catalog.life.faith import TENDED_ROUTES
 from aerona.catalog.life.mythic import QUEST_SKILLS
 from aerona.catalog.mythic import ARCHETYPE_REALMS, ARCHETYPE_SKILLS, CUNNING_SKILLS, REALM_PHRASES, trial_at
 from aerona.constants.units import PERCENT
@@ -19,7 +21,7 @@ from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.mythic import HeroquestMemberRow, HeroquestRow, ServitorRow
 from aerona.db.tables.relations import PassionRow
-from aerona.db.tables.renown import ReputationRow
+from aerona.db.tables.renown import DeedRow, ReputationRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission
 from aerona.domain.enums.body import HarmCause
@@ -28,7 +30,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.loops import BalanceLoop
-from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import HeroquestBoon, HeroquestState, MythicRealm, QuestTrial
 from aerona.domain.models.entity_stats import ItemStats
@@ -51,7 +53,7 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.primitives.stats import has_stat, put_stat, shift_stat, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.transform.bodies import lift_fallen
 
@@ -133,6 +135,21 @@ async def by_endurance(trial: Trial) -> int:
     return ((body.endurance if body is not None else PERCENT) + stat_or(trial.quester, "willpower", 0)) // 2
 
 
+async def by_mercy(trial: Trial) -> int:
+    spared = await trial.ctx.session.scalar(
+        select(func.count()).select_from(DeedRow).where(DeedRow.doer_node_id == trial.quester.id, DeedRow.act == ActKind.MERCY_TO_ENEMY)
+    )
+    return min(PERCENT, int(spared or 0) * trial.ctx.rules.heroquests.mercy_per_deed + trial.piety // 2)
+
+
+async def by_sacrifice(trial: Trial) -> int:
+    wealth = stat_or(trial.quester, "wealth", 0)
+    given = wealth * trial.ctx.rules.heroquests.sacrifice_share_pct // PERCENT
+    if given > 0 and not held(trial.quester.id):
+        put_stat(trial.ctx.rules, trial.quester, "wealth", wealth - given)
+    return min(PERCENT, given + trial.piety // 2)
+
+
 TRIALS: Mapping[QuestTrial, Callable[[Trial], Awaitable[int]]] = total(
     QuestTrial,
     {
@@ -142,6 +159,8 @@ TRIALS: Mapping[QuestTrial, Callable[[Trial], Awaitable[int]]] = total(
         QuestTrial.FAITH: by_faith,
         QuestTrial.CUNNING: by_cunning,
         QuestTrial.ENDURANCE: by_endurance,
+        QuestTrial.MERCY: by_mercy,
+        QuestTrial.SACRIFICE: by_sacrifice,
     },
 )
 
@@ -250,6 +269,19 @@ async def grant(ctx: TickContext, row: HeroquestRow, quester: EntityRow) -> None
     await renew(ctx, row, quester)
 
 
+async def restore(ctx: TickContext, quester: EntityRow, boon: HeroquestBoon) -> None:
+    table = ctx.rules.heroquests
+    if boon is HeroquestBoon.KNOWLEDGE:
+        if has_stat(quester, "intelligence"):
+            shift_stat(quester, "intelligence", table.knowledge_boon)
+        return
+    for affliction in await active(ctx.session, quester.id):
+        if affliction.transmission in TENDED_ROUTES:
+            await cure(ctx, quester, affliction, None)
+    if has_stat(quester, "hp"):
+        shift_stat(quester, "hp", table.healing_boon)
+
+
 async def bestow(ctx: TickContext, row: HeroquestRow, quester: EntityRow) -> None:
     boon = row.boon or HeroquestBoon.FAVOUR
     if boon is HeroquestBoon.BLESSING:
@@ -271,6 +303,8 @@ async def bestow(ctx: TickContext, row: HeroquestRow, quester: EntityRow) -> Non
         await connect(ctx.session, quester.id, item.id, BondKind.OWNS, ctx.epoch, description="won on a heroquest")
     elif boon is HeroquestBoon.RITE:
         await grant_rite(ctx, quester)
+    elif boon in RESTORING_BOONS:
+        await restore(ctx, quester, boon)
     elif boon is HeroquestBoon.LIFTED_CURSE:
         for affliction in await active(ctx.session, quester.id):
             if affliction.transmission in CURSED:

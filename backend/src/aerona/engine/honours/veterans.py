@@ -7,7 +7,7 @@ from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.honours import VeteranGrantRow, VeteranPolicyRow
-from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.warfare import WarRow
 from aerona.db.write_guard import held
@@ -244,6 +244,29 @@ async def honour_grant(ctx: TickContext, realm: EntityRow, kind: VeteranGrant, v
                 await change_relation(ctx, town_id, realm.id, loyalty, MemoryKind.GOODWILL, note=f"granted its veterans {spec.label.lower()}")
     if kind is VeteranGrant.TITLE:
         await raise_veteran(ctx, realm, towns)
+    if kind is VeteranGrant.OFFICE:
+        await seat_veteran(ctx, realm, towns)
+
+
+async def seat_veteran(ctx: TickContext, realm: EntityRow, towns: list[int]) -> OfficeRow | None:
+    office = await ctx.session.scalar(
+        select(OfficeRow).where(OfficeRow.polity_entity_id == realm.id, OfficeRow.holder_entity_id.is_(None)).order_by(OfficeRow.id).limit(1)
+    )
+    veteran = await ctx.session.scalar(
+        select(EntityRow)
+        .where(
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            EntityRow.mortal_role.in_(list(VETERAN_ROLES)),
+            await present_among(ctx.session, set(towns)),
+        )
+        .order_by(EntityRow.id)
+        .limit(1)
+    )
+    if office is None or veteran is None or held(veteran.id) or "holder_entity_id" in (office.locked or []):
+        return None
+    office.holder_entity_id, office.since_epoch = veteran.id, ctx.epoch
+    return office
 
 
 async def raise_veteran(ctx: TickContext, realm: EntityRow, towns: list[int]) -> EntityRow | None:

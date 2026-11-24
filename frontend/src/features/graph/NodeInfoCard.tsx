@@ -13,14 +13,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Medallion, Paged } from '@/components/domain'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, Text } from '@/components/typography'
 import { useNameIndex } from '@/features/chronicle/linkTargets'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
 import { typeIcon } from '@/features/map/iconPaths'
 import { NodePicker, type PickableNode } from './NodePicker'
 import { typeLabel } from './families'
-import { type GraphNode, drawerKindOf } from './graphModel'
+import { type GraphNode, entryKindOf } from './graphModel'
 
 export type NodeTie = { id: number; name: string; label: string }
 
@@ -55,8 +55,8 @@ export function NodeInfoCard({
   onPathTo,
   pathTarget,
 }: NodeInfoCardProps) {
-  const drawer = useDrawerStack()
-  const kind = drawerKindOf(node.kind)
+  const entryStack = useEntryStack()
+  const kind = entryKindOf(node.kind)
   const world = node.kind === 'world'
   const names = useNameIndex()
   const hasCover = Boolean(names.get(node.id)?.cover)
@@ -111,7 +111,7 @@ export function NodeInfoCard({
                 size='sm'
                 variant='outline'
                 onClick={() =>
-                  drawer.open({ kind: 'world', id: String(node.id) })
+                  entryStack.open({ kind: 'world', id: String(node.id) })
                 }
               >
                 <BookOpen />
@@ -121,7 +121,7 @@ export function NodeInfoCard({
                 size='sm'
                 variant='outline'
                 onClick={() =>
-                  drawer.open({ kind: 'world-guide', id: String(node.id) })
+                  entryStack.open({ kind: 'world-guide', id: String(node.id) })
                 }
               >
                 <Compass />
@@ -135,7 +135,7 @@ export function NodeInfoCard({
                 size='sm'
                 variant='outline'
                 onClick={() =>
-                  drawer.open(
+                  entryStack.open(
                     kind === 'creator'
                       ? { kind }
                       : { kind, id: String(node.id) }

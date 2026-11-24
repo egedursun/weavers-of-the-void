@@ -19,6 +19,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.rules.registry import Rules
+from aerona.rules.registry.mortal_life import AgingRules
 
 SEXES = (SexKind.BEARER, SexKind.BEGETTER)
 SEX_HASH = 2654435761
@@ -32,6 +33,7 @@ class StageBounds:
     youth: float
     elder: float
     ancient: float
+    mature: float
 
 
 def stage_bounds(rules: Rules, biology: PeopleBiologyRow | None, lifespan: int) -> StageBounds:
@@ -41,28 +43,38 @@ def stage_bounds(rules: Rules, biology: PeopleBiologyRow | None, lifespan: int) 
         youth = float(biology.maturity_years)
         elder = float(biology.maturity_years + biology.adult_years)
         ancient = max(elder + 1, float(biology.maturity_years + biology.adult_years + biology.elder_years))
-        return StageBounds(youth * table.infant_end_pct / table.youth_end_pct, youth * table.child_end_pct / table.youth_end_pct, youth, elder, ancient)
+        return StageBounds(
+            youth * table.infant_end_pct / table.youth_end_pct,
+            youth * table.child_end_pct / table.youth_end_pct,
+            youth,
+            elder,
+            ancient,
+            mature_from(table, youth, elder),
+        )
     return StageBounds(
         span * table.infant_end_pct / PERCENT,
         span * table.child_end_pct / PERCENT,
         span * table.youth_end_pct / PERCENT,
         span * table.elder_start_pct / PERCENT,
         span * table.ancient_start_pct / PERCENT,
+        mature_from(table, span * table.youth_end_pct / PERCENT, span * table.elder_start_pct / PERCENT),
     )
 
 
+def mature_from(table: AgingRules, youth: float, elder: float) -> float:
+    return youth + (elder - youth) * table.mature_end_pct / PERCENT
+
+
 def stage_for(bounds: StageBounds, age: int) -> LifeStage:
-    if age < bounds.infant:
-        return LifeStage.INFANT
-    if age < bounds.child:
-        return LifeStage.CHILD
-    if age < bounds.youth:
-        return LifeStage.YOUTH
-    if age < bounds.elder:
-        return LifeStage.ADULT
-    if age < bounds.ancient:
-        return LifeStage.ELDER
-    return LifeStage.ANCIENT
+    ladder = (
+        (bounds.infant, LifeStage.INFANT),
+        (bounds.child, LifeStage.CHILD),
+        (bounds.youth, LifeStage.YOUTH),
+        (bounds.mature, LifeStage.ADULT),
+        (bounds.elder, LifeStage.MATURE),
+        (bounds.ancient, LifeStage.ELDER),
+    )
+    return next((stage for bound, stage in ladder if age < bound), LifeStage.ANCIENT)
 
 
 def sex_of_stats(mortal: EntityRow) -> SexKind:

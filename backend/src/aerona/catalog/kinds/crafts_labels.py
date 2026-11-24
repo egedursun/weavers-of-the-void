@@ -37,6 +37,9 @@ GARMENT_LABELS = plain(
         GarmentCategory.WORK_PROTECTION: "Work protection",
         GarmentCategory.ENVIRONMENT_SUIT: "Environment suit",
         GarmentCategory.BODY_MARKING: "Body marking",
+        GarmentCategory.SLEEPWEAR: "Sleepwear",
+        GarmentCategory.WATER_WEAR: "Wear for water",
+        GarmentCategory.CARRIER: "Sling or pack for carrying",
     },
 )
 WEARING_LABELS = plain(
@@ -77,6 +80,9 @@ MEANING_LABELS = plain(
         ColourMeaning.JOY: "Joy",
         ColourMeaning.FACTION: "Faction",
         ColourMeaning.NONE: "No meaning",
+        ColourMeaning.HEALTH: "Health",
+        ColourMeaning.PURITY: "Purity",
+        ColourMeaning.LIFE_STAGE: "A stage of life",
     },
 )
 SCENT_LABELS = plain(
@@ -119,6 +125,8 @@ FURNISHING_LABELS = plain(
         FurnishingCategory.DECORATION: "Decoration",
         FurnishingCategory.SANITATION: "Sanitation",
         FurnishingCategory.SHRINE: "Household shrine",
+        FurnishingCategory.BATHING: "Bathing furnishing",
+        FurnishingCategory.PLAY: "Toys and play things",
     },
 )
 TOOL_LABELS = plain(
@@ -150,6 +158,7 @@ INSTRUMENT_LABELS = plain(
         InstrumentCategory.ELECTRONIC: "Electronic",
         InstrumentCategory.MADE: "Made instrument",
         InstrumentCategory.LIVING: "Living instrument",
+        InstrumentCategory.WATER: "Water instrument",
     },
 )
 ENSEMBLE_LABELS = plain(
@@ -190,6 +199,8 @@ GAME_LABELS = plain(
         GameCategory.SPECTACLE: "Spectacle",
         GameCategory.GAMBLING: "Gambling",
         GameCategory.NETWORK: "Networked game",
+        GameCategory.PUZZLE: "Puzzle",
+        GameCategory.ANIMAL_CONTEST: "Animal contest",
     },
 )
 SUBSTANCE_LABELS = plain(
@@ -205,3 +216,6 @@ SUBSTANCE_LABELS = plain(
     },
 )
 SKILL_LABELS = {skill.value: spoken(skill).capitalize() for skill in SkillKind}
+
+CLEANSING_FURNISHINGS = frozenset({FurnishingCategory.SANITATION, FurnishingCategory.BATHING})
+WORKING_WEAR = frozenset({GarmentCategory.CARRIER, GarmentCategory.WATER_WEAR})

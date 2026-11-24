@@ -32,4 +32,7 @@ class FossilRules:
     dead_god_draw: int = rule(20, 0, 100, E, "Sacredness a found bed of a dead god's remains adds to its land")
     material_yield: int = rule(10, 0, 100, E, "Goods every ten points of richness give a people that works its find as a substance")
     medicine_demand: int = rule(10, 0, 100, E, "Medicine every ten points of richness give a people that grinds its find into remedies")
+    sacred_draw: int = rule(15, 0, 100, E, "Sacredness a find read as sacred adds to its land, where a shrine is raised over it")
+    ancestor_doubt: int = rule(15, 0, 100, E, "Strength the beliefs of a people about its own origin lose when it finds the older forms of its own kind")
+    ancestor_age_epochs: int = rule(40, 0, 10000, E, "Age in epochs from which a living people's older forms lie in the ground of its world")
     medicine_effect: int = rule(0, -50, 50, E, "Health a finder who takes ground remains as medicine gains, or loses where the remedy harms")

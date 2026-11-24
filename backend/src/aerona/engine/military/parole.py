@@ -21,6 +21,7 @@ from aerona.engine.mind.book import stored_values, values_for, write_values
 from aerona.engine.mind.memories import remember
 from aerona.engine.polity.oaths import break_oath, swear
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.services.war import release_captive
@@ -49,6 +50,22 @@ async def offer_parole(ctx: TickContext, row: CaptiveRow, captive: EntityRow, ca
         facts={"oath_kind": OathKind.NONVIOLENCE},
         place=home.id,
     )
+    return True
+
+
+async def adopt_young(ctx: TickContext, row: CaptiveRow, captive: EntityRow, captor: EntityRow) -> bool:
+    table = ctx.rules.captives
+    young = stat_or(captive, "age", 0) < ctx.rules.skills.adult_age
+    long_held = ctx.epoch - row.taken_epoch >= table.epochs(table.adoption_years)
+    if not young or not long_held or "status" in row.locked or frozen(captive.id, captor.id):
+        return False
+    if not ctx.rng(f"adopted.{row.id}.{ctx.epoch}").chance(table.adoption_pct):
+        return False
+    await release_captive(ctx, row, CaptiveStatus.ADOPTED)
+    people = await people_id_of(ctx.session, captor)
+    if people is not None:
+        captive.affiliated_entity_id = people
+    captive.location_id = captor.location_id if captor.entity_type is not EntityType.SETTLEMENT else captor.id
     return True
 
 

@@ -7,6 +7,8 @@ class FermentKind(StrEnum):
     MOULD = "mould"
     LACTIC = "lactic"
     VINEGAR = "vinegar"
+    ALKALINE = "alkaline"
+    WILD = "wild"
 
 
 class SymbiosisKind(StrEnum):
@@ -14,6 +16,8 @@ class SymbiosisKind(StrEnum):
     COMMENSALISM = "commensalism"
     PARASITISM = "parasitism"
     MIMICRY = "mimicry"
+    AMENSALISM = "amensalism"
+    FARMING = "farming"
 
 
 class Dormancy(StrEnum):
@@ -22,6 +26,7 @@ class Dormancy(StrEnum):
     AESTIVATION = "aestivation"
     TORPOR = "torpor"
     CRYPTOBIOSIS = "cryptobiosis"
+    DIAPAUSE = "diapause"
 
 
 class Thermoregulation(StrEnum):
@@ -29,6 +34,7 @@ class Thermoregulation(StrEnum):
     ECTOTHERM = "ectotherm"
     HETEROTHERM = "heterotherm"
     ATHERMIC = "athermic"
+    MESOTHERM = "mesotherm"
 
 
 class SenseKind(StrEnum):
@@ -43,6 +49,8 @@ class SenseKind(StrEnum):
     HEAT = "heat"
     ELECTRIC = "electric"
     ULTRAVIOLET = "ultraviolet"
+    TASTE = "taste"
+    PRESSURE = "pressure"
 
 
 class SenseCause(StrEnum):
@@ -67,3 +75,5 @@ class PlantDefence(StrEnum):
     CARNIVOROUS = "carnivorous"
     STINGING = "stinging"
     GUARDIANS = "guardians"
+    MIMICRY = "mimicry"
+    REGROWTH = "regrowth"

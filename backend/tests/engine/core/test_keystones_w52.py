@@ -14,7 +14,7 @@ RULES = Rules()
 
 
 def test_seven_keystone_roles_and_losing_a_disperser_slows_the_forest_while_a_reef_breaks_waves() -> None:
-    assert len(KeystoneRole) == 7
+    assert len(KeystoneRole) == 9
     assert dispersal(RULES, None) == 1.0 == dispersal(RULES, {KeystoneRole.SEED_DISPERSER: 60})
     assert dispersal(RULES, {KeystoneRole.SEED_DISPERSER: 0}) == 1 - RULES.keystones.disperser_succession_pct / 100
     assert reef_shield(RULES, {KeystoneRole.REEF_BUILDER: 100}) == 1 - RULES.keystones.reef_wave_cut_pct / 100

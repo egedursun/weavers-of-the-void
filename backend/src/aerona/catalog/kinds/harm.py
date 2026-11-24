@@ -26,6 +26,9 @@ HARM_CAUSES: Mapping[HarmCause, HarmCauseSpec] = total(
         H.CHILDBIRTH: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "childbirth_tear"),), noted=True),
         H.CRIME: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "crime_cut"), (D.PIERCE, "crime_pierce"), (D.BLUNT, "crime_blunt")), noted=True),
         H.SPORT: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.BLUNT, "sport_blunt"), (D.CUT, "sport_cut")), noted=True),
+        H.ANIMAL: HarmCauseSpec("fire_heat", InjuryKind.BITE, ((D.BLUNT, "animal_blunt"), (D.PIERCE, "animal_pierce")), noted=True),
+        H.CROWD: HarmCauseSpec("fire_heat", InjuryKind.CRUSH, ((D.BLUNT, "crowd_blunt"), (D.ASPHYXIA, "crowd_asphyxia")), noted=True),
+        H.MEDICAL: HarmCauseSpec("fire_heat", InjuryKind.CUT, ((D.CUT, "medical_cut"), (D.CHEMICAL, "medical_chemical")), noted=True),
         H.PUNISHMENT: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "punishment_cut"), (D.BLUNT, "punishment_blunt"), (D.FIRE, "punishment_fire"))),
         H.TORTURE: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.CUT, "torture_cut"), (D.BLUNT, "torture_blunt"), (D.FIRE, "torture_fire"))),
         H.ACCIDENT: HarmCauseSpec("fire_heat", InjuryKind.PUNCTURE, ((D.BLUNT, "accident_blunt"), (D.CUT, "accident_cut"), (D.FIRE, "accident_fire"))),
@@ -114,6 +117,9 @@ HARM_DEATHS: Mapping[HarmCause, DeathCause] = total(
         HarmCause.CHILDBIRTH: DeathCause.CHILDBIRTH,
         HarmCause.CRIME: DeathCause.MURDER,
         HarmCause.SPORT: DeathCause.SPORT,
+        HarmCause.ANIMAL: DeathCause.ACCIDENT,
+        HarmCause.CROWD: DeathCause.ACCIDENT,
+        HarmCause.MEDICAL: DeathCause.ACCIDENT,
     },
 )
 HONOURED_CAUSES = frozenset({HarmCause.BATTLE, HarmCause.DUEL, HarmCause.MONSTER, HarmCause.QUEST})

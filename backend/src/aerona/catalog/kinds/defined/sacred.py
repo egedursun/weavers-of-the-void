@@ -24,6 +24,7 @@ SACRAMENT_PROTECTION = total(
         SacramentProtection.POSSESSION: Defined("Possession", checked_by=(), used_by=("catalog.sacred.SACRAMENT_GUARDS", "engine.sacred.guards.warded_hosts")),
         SacramentProtection.UNREST: Defined("Unrest at death", checked_by=(), used_by=("catalog.sacred.SACRAMENT_GUARDS", "engine.sacred.guards.unrest_shift")),
         SacramentProtection.CURSE: Defined("Curses", checked_by=(), used_by=("catalog.sacred.SACRAMENT_GUARDS", "engine.sacred.guards.curse_ward")),
+        SacramentProtection.FORTUNE: Defined("Fortune", checked_by=(), used_by=("catalog.sacred.SACRAMENT_GUARDS", "engine.sacred.bureau.avenge")),
     },
 )
 

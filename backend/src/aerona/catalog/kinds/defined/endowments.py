@@ -18,6 +18,8 @@ ENDOWMENT_PURPOSE = total(
         EndowmentPurpose.KIN: Defined("Kin", checked_by=("engine.endowments.trust.serve",), used_by=()),
         EndowmentPurpose.MEMORY: Defined("Memory", checked_by=("engine.endowments.trust.serve",), used_by=()),
         EndowmentPurpose.RESEARCH: Defined("Research", checked_by=("engine.endowments.trust.serve",), used_by=()),
+        EndowmentPurpose.HOSPITALITY: Defined("Hospitality", checked_by=("catalog.life.endowments.TOWN_EFFECTS",), used_by=()),
+        EndowmentPurpose.RANSOM: Defined("Ransom", checked_by=("engine.endowments.trust.serve",), used_by=()),
     },
 )
 

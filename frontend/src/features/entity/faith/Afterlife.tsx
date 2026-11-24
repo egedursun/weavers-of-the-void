@@ -946,7 +946,7 @@ export function AfterlifeSection({
             </div>
           </>
         )}
-        <div className='flex min-w-0 flex-col'>
+        <div className='flex min-w-0 flex-col items-start gap-2'>
           <AdjustPanel
             trigger='Make a stratum'
             title='Make a new stratum'

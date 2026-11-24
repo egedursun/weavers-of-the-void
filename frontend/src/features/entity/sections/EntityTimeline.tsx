@@ -40,9 +40,14 @@ export function EntityTimeline({
     () => timelineColumns(lines, birthEpoch, currentEpoch),
     [lines, birthEpoch, currentEpoch]
   )
-  if (columns.length < 2 && lines.length < 2) return null
+  const recorded = columns.filter((column) => column.count > 0).length
+  if (recorded === 0 || (columns.length < 2 && lines.length < 2)) return null
   return (
-    <nav aria-label='Timeline' className='min-w-0 overflow-x-auto'>
+    <nav
+      aria-label='Its records by epoch'
+      className='flex min-w-0 flex-col gap-1 overflow-x-auto'
+    >
+      <Label variant='overline'>Its records by epoch</Label>
       <ol className='flex min-w-max items-end gap-1 pb-1'>
         <Paged items={columns} as='li'>
           {(column) => (

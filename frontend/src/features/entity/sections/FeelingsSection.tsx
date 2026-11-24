@@ -17,7 +17,7 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { AdjustStats } from '@/features/pantheon/AdjustStats'
@@ -53,7 +53,7 @@ const PERCENT = 100
 const STEP = 10
 const WORKING = 'Working on it.'
 
-function nodeKind(kind: string): DrawerKind {
+function nodeKind(kind: string): EntryKind {
   if (kind === 'son') return 'son'
   if (kind === 'foreign_god') return 'foreign-god'
   return 'entity'

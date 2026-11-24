@@ -10,6 +10,7 @@ from aerona.engine.phase import Phase
     "people.wealth",
     "table.collaborations",
     "table.collection_members",
+    "table.deep_passages",
     "table.entities",
     "table.leader_cults",
     "table.node_births",

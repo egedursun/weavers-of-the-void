@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Medallion, MiniStat } from '@/components/domain'
-import { useDrawerStack } from '@/components/layout/drawer/useDrawerStack'
+import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, Stat } from '@/components/typography'
 import { type Cosmography, type CosmographyCatalog, catalogLabel } from './api'
 import { BETWEEN_GALAXIES, galaxyName } from './cosmosGalaxy'
@@ -113,7 +113,7 @@ export function CosmosGalaxyPanel({
   leaving: number
   onChange: (galaxyId: number) => void
 }) {
-  const drawers = useDrawerStack()
+  const entryStack = useEntryStack()
   const [open, setOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const ladder = ladderOf(heavens)
@@ -266,7 +266,7 @@ export function CosmosGalaxyPanel({
             <Button
               size='sm'
               onClick={() =>
-                drawers.open({ kind: 'galaxy', id: String(galaxy.id) })
+                entryStack.open({ kind: 'galaxy', id: String(galaxy.id) })
               }
             >
               <Eye />

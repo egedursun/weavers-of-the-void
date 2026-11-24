@@ -32,7 +32,7 @@ import {
   RecordPick,
   RecordRow,
 } from './parts'
-import { drawerKindOf } from './visual/drawerKind'
+import { entryKindOf } from './visual/entryKind'
 
 const phaseTable = Object.fromEntries(
   Object.entries(BEING_PHASES).map(([key, value]) => [key, value.label])
@@ -165,7 +165,7 @@ export function BeingCard({
             'Bound by',
             <NodeLink
               key='bound'
-              kind={drawerKindOf(named.get(being.bound_by_node_id ?? 0)?.kind)}
+              kind={entryKindOf(named.get(being.bound_by_node_id ?? 0)?.kind)}
               id={being.bound_by_node_id}
               name={nameOf(being.bound_by_node_id, 'No one')}
             />,

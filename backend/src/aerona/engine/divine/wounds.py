@@ -4,10 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.life.divine import NEGLECT_KINDS, STRUCK_KINDS, WOUND_CAUSES, WOUND_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import CastingRow
 from aerona.db.tables.divine import AvatarRow, DivineStandingRow, DivineWoundRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.faith import CultHoldingRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
@@ -15,7 +17,8 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine import DivineWoundKind, WoundCause
 from aerona.domain.enums.domain import Domain
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.faith import HoldingKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import ExistenceMode, SonDeathCause
 from aerona.domain.models.profiles import ExistenceProfile
@@ -253,6 +256,38 @@ async def neglect_wounds(ctx: TickContext) -> int:
             continue
         if await inflict(ctx, god, kind, WoundCause.NEGLECT, severity=table.neglect_severity) is not None:
             wounded += 1
+    return wounded
+
+
+async def worship_wounds(ctx: TickContext) -> int:
+    table = ctx.rules.divine_wounds
+    wounded = 0
+    for god in await living_gods(ctx.session):
+        if held(god.id):
+            continue
+        cults = list(
+            await ctx.session.scalars(
+                select(BondRow.source_node_id).where(BondRow.target_node_id == god.id, BondRow.kind == BondKind.WORSHIPS).order_by(BondRow.source_node_id)
+            )
+        )
+        temples = select(CultHoldingRow.holding_entity_id).where(CultHoldingRow.cult_entity_id.in_(cults), CultHoldingRow.kind == HoldingKind.TEMPLE)
+        ruined = await ctx.session.scalar(
+            select(EntityRow.id).where(EntityRow.id.in_(temples), EntityRow.status != EntityStatus.CANON, EntityRow.end_epoch == ctx.epoch).limit(1)
+        )
+        found = (
+            (ruined is not None, W.DESECRATED_SEAT, WoundCause.NEGLECT),
+            (len(cults) >= table.split_cults, W.SPLIT_WORSHIP, WoundCause.SCHISM),
+        )
+        for met, kind, cause in found:
+            if not met or await open_wounds(ctx.session, god.id, kind):
+                continue
+            if not ctx.rng(f"divine_wound.{kind.value}.{god.id}.{ctx.epoch}").chance(table.worship_wound_pct):
+                continue
+            if (
+                await inflict(ctx, god, kind, cause, severity=table.worship_wound_severity, cause_node_id=ruined if kind is W.DESECRATED_SEAT else None)
+                is not None
+            ):
+                wounded += 1
     return wounded
 
 

@@ -17,11 +17,13 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.cosmography import OPEN_RIFT_STATES, BeingKind, ClusterKind, DimensionElement, DimensionKind, GalaxyType, RiftCause
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import ClimateTurn
+from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.physics import ImpactBody, ImpactOutcome, TerraformAim
 from aerona.engine.cosmos import control, physics_control
 from aerona.engine.cosmos.ladder import NEW_CLUSTER_RADIUS, NEW_GALAXY_RADIUS
 from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.environment.levels import level_fault
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
 from aerona.tools.framework.call import SonCall
@@ -50,6 +52,7 @@ class RiftInput(ToolInput):
 class CallBeingInput(ToolInput):
     kind: BeingKind
     region_id: int
+    stratum: UndergroundStratum | None = None
     reason: Reason
 
 
@@ -185,9 +188,14 @@ async def seal_rift(call: SonCall, args: RiftInput) -> str:
 async def call_being(call: SonCall, args: CallBeingInput) -> str:
     region = require_type(await require_canon(call.session, args.region_id), {EntityType.REGION}, SonResult.NOT_A_REGION, name="region")
     await ensure_in_reach(call, region)
+    level = await level_fault(call.session, region, args.stratum, EntityType.COSMIC_BEING)
+    if level is not None:
+        fail(SonResult.LEVEL_REFUSED, why=level)
     cost = call.rules.cosmic_beings.call_essence
     require_essence(call, cost)
     being = await control.call_being(call.tick, args.kind, region.world_id, region_id=region.id, home_dimension_id=None, name=None)
+    if being.location_id == region.id:
+        being.stratum = args.stratum
     call.spend_essence(cost)
     call.target(being.id)
     await call.record(

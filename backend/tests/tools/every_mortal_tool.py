@@ -24,6 +24,7 @@ from tests.tools.every_setup import (
     crime_boss,
     dead_script,
     deep_land,
+    deep_ways,
     devout,
     dig_ready,
     elder_in_town,
@@ -58,6 +59,7 @@ from tests.tools.every_setup import (
     market,
     merchant_house,
     mortal_vis,
+    open_deep_way,
     open_mind,
     open_school,
     order_master,
@@ -295,6 +297,10 @@ def folk(arguments: Any, setup: Any = None, **options: Any) -> Case:
     return Case(arguments, setup, by_people, **options) if setup is not None else Case(arguments, actor=by_people, **options)
 
 
+def region_here(realm: Any, _ids: Any) -> int:
+    return int(realm.cosmos.region_id)
+
+
 MORTAL_CASES: dict[str, Case] = {
     "look_at_world": named(plain()),
     "inspect_entity": named(plain(id=people)),
@@ -455,6 +461,9 @@ MORTAL_CASES: dict[str, Case] = {
     "dig_deeper": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id), deep_land),
     "bore": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id, stratum="aquifer"), deep_land),
     "drill_reservoir": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id), deep_land),
+    "dig_passage": named(plain(from_region_id=region_here, to_region_id=region_here, to_stratum="aquifer"), deep_ways),
+    "clear_passage": named(plain(passage_id=lambda _realm, ids: ids["passage"]), deep_ways),
+    "collapse_passage": named(plain(passage_id=lambda _realm, ids: ids["passage"]), open_deep_way),
     "commemorate": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id, memory="treaty", title="The peace by the ford"), poisoned_land),
     "cleanse_land": named(plain(region_id=lambda realm, _ids: realm.cosmos.region_id, method="works"), poisoned_land),
     "confer_honour": named(

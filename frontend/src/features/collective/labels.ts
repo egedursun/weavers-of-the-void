@@ -13,6 +13,7 @@ import {
   Castle,
   Church,
   CloudLightning,
+  CloudRain,
   Coins,
   Compass,
   Crosshair,
@@ -22,15 +23,18 @@ import {
   Eye,
   EyeOff,
   Feather,
+  Fingerprint,
   Flag,
   Flame,
   Flower2,
   Footprints,
   Gavel,
   Gem,
+  GitBranch,
   Globe,
   Hammer,
   HandCoins,
+  HandHelping,
   Handshake,
   Heart,
   HeartCrack,
@@ -39,11 +43,15 @@ import {
   Hourglass,
   KeyRound,
   Landmark,
+  Laugh,
+  Lock,
+  Map,
   Medal,
   Megaphone,
   MessageCircle,
   Moon,
   Mountain,
+  Music,
   PartyPopper,
   Plane,
   Repeat,
@@ -65,6 +73,8 @@ import {
   Swords,
   Tent,
   TrendingDown,
+  TrendingUp,
+  TriangleAlert,
   Trophy,
   Truck,
   Unlock,
@@ -77,10 +87,14 @@ import {
   Wind,
   Wrench,
   Zap,
-  GitBranch,
-  Music,
-  CloudRain,
-  Laugh,
+  Building2,
+  FlameKindling,
+  User2,
+  Speech,
+  Banknote,
+  Scroll,
+  UserRound,
+  UserRoundCheck,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -100,9 +114,12 @@ export const ACTS: Record<Schema['CollectiveActKind'], Named> = {
   procession: { label: 'Procession', icon: Megaphone, tone: 'info' },
   revival: { label: 'Revival', icon: Church, tone: 'gold' },
   jubilation: { label: 'Jubilation', icon: PartyPopper, tone: 'gold' },
-  demonstration: { label: 'Demonstration', icon: Megaphone, tone: 'info' },
+  demonstration: { label: 'Demonstration', icon: Speech, tone: 'info' },
   boycott: { label: 'Boycott', icon: Ban, tone: 'warning' },
   exodus: { label: 'Exodus', icon: Footprints, tone: 'muted' },
+  occupation: { label: 'Occupation', icon: Flag, tone: 'warning' },
+  petition: { label: 'Petition', icon: ScrollText, tone: 'info' },
+  vigil: { label: 'Vigil', icon: FlameKindling, tone: 'gold' },
 }
 
 export const TRIGGERS: Record<Schema['CollectiveTrigger'], Named> = {
@@ -122,6 +139,8 @@ export const TRIGGERS: Record<Schema['CollectiveTrigger'], Named> = {
   victory: { label: 'A victory', icon: Medal, tone: 'gold' },
   great_funeral: { label: 'A great funeral', icon: Flower2, tone: 'muted' },
   election: { label: 'An election', icon: Vote, tone: 'info' },
+  arrest: { label: 'An arrest', icon: Lock, tone: 'danger' },
+  price_rise: { label: 'Rising prices', icon: TrendingUp, tone: 'warning' },
 }
 
 export const FEELINGS: Record<Schema['CrowdFeeling'], Named> = {
@@ -130,6 +149,8 @@ export const FEELINGS: Record<Schema['CrowdFeeling'], Named> = {
   fervour: { label: 'Fervour', icon: Sparkles, tone: 'gold' },
   grief: { label: 'Grief', icon: Moon, tone: 'muted' },
   hope: { label: 'Hope', icon: Sun, tone: 'success' },
+  joy: { label: 'Joy', icon: Laugh, tone: 'gold' },
+  solidarity: { label: 'Solidarity', icon: HandHelping, tone: 'success' },
 }
 
 export const OUTCOMES: Record<Schema['CascadeOutcome'], Named> = {
@@ -180,16 +201,26 @@ export const ACCOUNT_KINDS: Record<Schema['AccountKind'], Named> = {
   },
   record: {
     label: 'Record',
-    icon: Landmark,
+    icon: Scroll,
     tone: 'gold',
   },
   testimony: {
     label: 'Testimony',
-    icon: Landmark,
+    icon: Building2,
     tone: 'gold',
   },
   genealogy: { label: 'Genealogy', icon: GitBranch, tone: 'gold' },
   song: { label: 'Song', icon: Music, tone: 'verdigris' },
+  law_record: {
+    label: 'Law record',
+    icon: Gavel,
+    tone: 'info',
+  },
+  travel_account: {
+    label: 'Travel account',
+    icon: Map,
+    tone: 'info',
+  },
 }
 
 export const STANCES: Record<Schema['AccountStance'], Named> = {
@@ -200,6 +231,7 @@ export const STANCES: Record<Schema['AccountStance'], Named> = {
   justify: { label: 'Admits and justifies', icon: Gavel, tone: 'warning' },
   lament: { label: 'Laments', icon: CloudRain, tone: 'info' },
   mock: { label: 'Mocks', icon: Laugh, tone: 'danger' },
+  warn: { label: 'Warns', icon: TriangleAlert, tone: 'warning' },
 }
 
 export const MEDIA: Record<Schema['AccountMedium'], Named> = {
@@ -210,6 +242,7 @@ export const MEDIA: Record<Schema['AccountMedium'], Named> = {
   record: { label: 'Record', icon: Database, tone: 'verdigris' },
   performance: { label: 'Performance', icon: Drama, tone: 'verdigris' },
   mind_state: { label: 'Mind state', icon: Brain, tone: 'verdigris' },
+  marks: { label: 'Marks on the body', icon: Fingerprint, tone: 'muted' },
 }
 
 export const STORYLET_STATES: Record<Schema['StoryletStatus'], Named> = {
@@ -265,7 +298,7 @@ export const SITUATIONS: Record<Schema['NormSituation'], Named> = {
   wedding: { label: 'At a wedding', icon: Heart, tone: 'success' },
   court: { label: 'At court', icon: Crown, tone: 'gold' },
   temple: { label: 'In a temple', icon: Church, tone: 'info' },
-  market: { label: 'At market', icon: Coins, tone: 'info' },
+  market: { label: 'At market', icon: Banknote, tone: 'info' },
   battle: { label: 'In battle', icon: Swords, tone: 'danger' },
   duel: { label: 'In a duel', icon: Sword, tone: 'danger' },
   hospitality: { label: 'As a guest or host', icon: Home, tone: 'success' },
@@ -276,7 +309,7 @@ export const SITUATIONS: Record<Schema['NormSituation'], Named> = {
   network_space: { label: 'Within a network', icon: Globe, tone: 'info' },
   realm: { label: 'In a made realm', icon: Sparkles, tone: 'verdigris' },
   workplace: { label: 'At work', icon: Coins, tone: 'info' },
-  council: { label: 'In council', icon: Landmark, tone: 'gold' },
+  council: { label: 'In council', icon: Building2, tone: 'gold' },
   encounter_with_made_mind: {
     label: 'Meeting a made mind',
     icon: KeyRound,
@@ -359,6 +392,8 @@ export const FORMATIVE: Record<Schema['FormativeKind'], Named> = {
   liberation: { label: 'Liberation', icon: Unlock, tone: 'danger' },
   schism: { label: 'Schism', icon: Split, tone: 'danger' },
   long_season: { label: 'A long season', icon: Snowflake, tone: 'info' },
+  peace: { label: 'Peace', icon: Feather, tone: 'success' },
+  persecution: { label: 'Persecution', icon: ShieldAlert, tone: 'danger' },
 }
 
 export const ROLES: Record<Schema['RoleKind'], Named> = {
@@ -378,17 +413,17 @@ export const ELIGIBILITY: Record<Schema['RoleEligibility'], Named> = {
   },
   begetters_only: {
     label: 'Those who beget young only',
-    icon: User,
+    icon: User2,
     tone: 'warning',
   },
   bearers_preferred: {
     label: 'Those who bear young first',
-    icon: User,
+    icon: UserRound,
     tone: 'info',
   },
   begetters_preferred: {
     label: 'Those who beget young first',
-    icon: User,
+    icon: UserRoundCheck,
     tone: 'info',
   },
 }

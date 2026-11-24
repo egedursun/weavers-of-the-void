@@ -12,6 +12,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.evolution import PlanetaryCycle
 from aerona.domain.enums.mass_weapons import MassReach
 from aerona.domain.enums.outer import OuterFate
+from aerona.domain.enums.world import WorldType
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 from aerona.domain.models.entity_stats import OuterBeingStats
 from aerona.engine.context import TickContext
@@ -19,9 +20,8 @@ from aerona.engine.cosmos.world_end_control import declare_end
 from aerona.engine.cosmos.world_ends import EndingTally, keep_world_ends
 from aerona.engine.divine.outer import outer_profile
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.stats import put_stat
 from tests.engine.core.factories import CoreWorld, entity
-
-CYCLE = next(iter(PlanetaryCycle))
 
 
 async def at(session: AsyncSession, epoch: int) -> TickContext:
@@ -40,18 +40,46 @@ async def ended(session: AsyncSession, world: CoreWorld) -> WorldEndRow:
 def test_every_new_end_leaves_its_remnant_and_only_war_and_hunger_name_a_source() -> None:
     assert set(END_REMNANT) == set(WorldEnd)
     assert CAUSE_END[WorldEndCause.OUTER_HUNGER] is WorldEnd.DEVOURED
-    assert {WorldEndCause.WAR, WorldEndCause.OUTER_HUNGER} == SOURCED_CAUSES
+    assert {WorldEndCause.WAR, WorldEndCause.OUTER_HUNGER, WorldEndCause.RUNAWAY_MAKING} == SOURCED_CAUSES
+    assert CAUSE_END[WorldEndCause.STRUCTURE_FAILURE] is WorldEnd.SHATTERED
 
 
-@pytest.mark.parametrize(("sea", "state"), [(0.2, WorldEnd.BURNED), (1.0, WorldEnd.DROWNED)])
-async def test_a_runaway_climate_burns_a_dry_world_and_drowns_a_wet_one(session: AsyncSession, world: CoreWorld, sea: float, state: WorldEnd) -> None:
+@pytest.mark.parametrize(
+    ("cycle", "sea", "state"),
+    [
+        (PlanetaryCycle.CARBON, 0.2, WorldEnd.BURNED),
+        (PlanetaryCycle.CARBON, 1.0, WorldEnd.BURNED),
+        (PlanetaryCycle.WATER, 1.0, WorldEnd.DROWNED),
+        (PlanetaryCycle.WATER, 0.2, None),
+        (PlanetaryCycle.ICE, 0.2, WorldEnd.FROZEN_DEAD),
+        (PlanetaryCycle.NUTRIENTS, 0.2, None),
+    ],
+)
+async def test_a_runaway_cycle_ends_a_world_only_as_its_effect_allows(
+    session: AsyncSession, world: CoreWorld, cycle: PlanetaryCycle, sea: float, state: WorldEnd | None
+) -> None:
     ctx = await at(session, 3)
     world.world.terrain_sea = sea
-    session.add(WorldCycleRow(world_id=world.world.id, cycle=CYCLE, stock=ctx.rules.world_ends.runaway_stock, locked=[]))
+    session.add(WorldCycleRow(world_id=world.world.id, cycle=cycle, stock=ctx.rules.world_ends.runaway_stock, locked=[]))
     await session.flush()
     await keep_world_ends(ctx, EndingTally())
-    row = await ended(session, world)
-    assert row.state is state and row.cause is WorldEndCause.RUNAWAY_CLIMATE and row.source_node_id is None
+    row = await session.get(WorldEndRow, world.world.id)
+    assert (row.state if row is not None else None) is state
+    assert row is None or (row.cause is WorldEndCause.RUNAWAY_CLIMATE and row.source_node_id is None)
+
+
+@pytest.mark.parametrize(("world_type", "worn"), [(WorldType.MEGASTRUCTURE, True), (WorldType.MEGASTRUCTURE, False), (WorldType.ORDINARY, True)])
+async def test_a_made_world_whose_ground_wears_out_fails_and_shatters(session: AsyncSession, world: CoreWorld, world_type: WorldType, worn: bool) -> None:
+    ctx = await at(session, 3)
+    world.world.world_type = world_type
+    for region in world.regions:
+        put_stat(ctx.rules, region, "fertility", ctx.rules.world_ends.failure_fertility if worn else 60)
+    await session.flush()
+    await keep_world_ends(ctx, EndingTally())
+    row = await session.get(WorldEndRow, world.world.id)
+    failed = row is not None and row.cause is WorldEndCause.STRUCTURE_FAILURE
+    assert failed is (world_type is WorldType.MEGASTRUCTURE and worn)
+    assert not failed or (row is not None and row.state is WorldEnd.SHATTERED)
 
 
 async def test_a_war_of_world_weapons_unmakes_the_world_and_names_its_maker(session: AsyncSession, world: CoreWorld) -> None:

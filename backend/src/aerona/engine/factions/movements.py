@@ -1,7 +1,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.catalog.movement_causes import CAUSE_LABELS, ENACTED, GOALS, LAW_TARGETS, MOVEMENT_CAUSES
 from aerona.constants.units import PERCENT
@@ -9,6 +9,7 @@ from aerona.core.dispatch import Handlers
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.customs import IntoxicantCustomRow
 from aerona.db.tables.demography import PeopleCultureRow
+from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.estates import EstatePrivilegeRow, EstateProfileRow, MovementProfileRow, MovementSupportRow
 from aerona.db.tables.factions import FactionGoalRow, FactionProfileRow
@@ -21,6 +22,7 @@ from aerona.db.tables.warfare import WarRow, WarSideRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import Job
+from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind, MovementCause
 from aerona.domain.enums.labour import WorkerBodyForm
@@ -211,6 +213,25 @@ async def temperance(ctx: TickContext, ground: Ground) -> float:
     if not accepted:
         return 0.0
     return max(0.0, ground.values.get(ValueAxis.PURITY, 0) / 2 + (sum(accepted) / len(accepted) - HALF) / 2)
+
+
+@PRESSURES.on(MovementCause.LEARNING)
+async def learning(ctx: TickContext, ground: Ground) -> float:
+    if ground.laws.in_force(ground.realm.entity.id, LawKind.CENSORSHIP) is None:
+        return 0.0
+    learned = ground.shares.get(SocialClass.SCRIBE, 0.0) + ground.shares.get(SocialClass.PROFESSIONAL, 0.0)
+    return max(0.0, ground.values.get(ValueAxis.KNOWLEDGE, 0) / 2 + learned - ground.values.get(ValueAxis.TRADITION, 0) / 4)
+
+
+@PRESSURES.on(MovementCause.HEALTH)
+async def health(ctx: TickContext, ground: Ground) -> float:
+    if ground.laws.in_force(ground.realm.entity.id, LawKind.SANITATION) is not None:
+        return 0.0
+    region_id = ground.community.location_id
+    sickness = await ctx.session.scalar(
+        select(func.count()).select_from(OutbreakRow).where(OutbreakRow.region_entity_id == region_id, OutbreakRow.status != OutbreakStatus.ENDED)
+    )
+    return max(0.0, (sickness or 0) * HALF / 2 + ground.values.get(ValueAxis.KNOWLEDGE, 0) / 4 - ground.values.get(ValueAxis.SUPERSTITION, 0) / 4)
 
 
 @PRESSURES.on(MovementCause.MIND_RIGHTS)

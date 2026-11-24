@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  Baby,
   Building,
   Coins,
   Flame,
@@ -8,6 +9,10 @@ import {
   Lamp,
   Tent,
   Users,
+  BedSingle,
+  Building2,
+  UserRound,
+  UsersRound,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -27,15 +32,28 @@ const WORKING = 'Working on it.'
 
 const HOUSEHOLD_FORMS: Record<Schema['HouseholdForm'], Named> = {
   nuclear: { label: 'Partners and their children', icon: Home, tone: 'info' },
-  extended: { label: 'Several generations', icon: Users, tone: 'verdigris' },
+  extended: {
+    label: 'Several generations',
+    icon: UsersRound,
+    tone: 'verdigris',
+  },
   stem: { label: 'One wedded heir stays', icon: Home, tone: 'gold' },
   joint: { label: 'Wedded siblings together', icon: Users, tone: 'info' },
   polygamous: { label: 'Several partners', icon: Users, tone: 'warning' },
-  communal: { label: 'Communal', icon: Building, tone: 'success' },
-  single: { label: 'Living alone', icon: Home, tone: 'muted' },
+  communal: { label: 'Communal', icon: Building2, tone: 'success' },
+  single: { label: 'Living alone', icon: BedSingle, tone: 'muted' },
   institutional: { label: 'An institution', icon: Building, tone: 'muted' },
-  mixed: { label: 'Born and made together', icon: Users, tone: 'verdigris' },
+  mixed: {
+    label: 'Born and made together',
+    icon: UserRound,
+    tone: 'verdigris',
+  },
   chosen: { label: 'Chosen kin', icon: Users, tone: 'success' },
+  skipped_generation: {
+    label: 'Grandparents and grandchildren',
+    icon: Baby,
+    tone: 'info',
+  },
 }
 
 const TENURES: Record<Schema['DwellingTenure'], Named> = {

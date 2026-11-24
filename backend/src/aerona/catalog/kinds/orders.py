@@ -26,5 +26,6 @@ ECHELON_ORDERS: Mapping[EchelonOrder, EchelonOrderSpec] = total(
         E.STANDING: EchelonOrderSpec(
             "order_cost", organisation_rule="standing_organisation", organisation_sign=-1, edge_rule="standing_edge_pct", edge_sign=-1
         ),
+        E.SCREEN: EchelonOrderSpec("order_cost", edge_rule="screen_edge_pct", edge_sign=1),
     },
 )

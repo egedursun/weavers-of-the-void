@@ -1834,6 +1834,7 @@ async def campaign(ctx: TickContext, theatre: Theatre, item: OngoingWar, armies:
     "table.custom_kinds",
     "table.deed_claims",
     "table.deeds",
+    "table.deep_passages",
     "table.demographic_transitions",
     "table.depots",
     "table.design_components",

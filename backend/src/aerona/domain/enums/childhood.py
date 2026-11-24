@@ -43,6 +43,8 @@ class SocializationTechnique(StrEnum):
     SCHOOLING = "schooling"
     PEER_GROUP = "peer_group"
     AGE_SET = "age_set"
+    MENTORING = "mentoring"
+    TRAVEL = "travel"
 
 
 class PedagogyTheory(StrEnum):
@@ -54,3 +56,4 @@ class PedagogyTheory(StrEnum):
     EXAMINATION = "examination"
     NETWORK_LEARNING = "network_learning"
     MIND_TRANSFER = "mind_transfer"
+    PEER_TEACHING = "peer_teaching"

@@ -5,7 +5,7 @@ from aerona.engine.body.treatment import wanted_steps
 
 
 def test_thirteen_steps_and_the_three_new_ones_are_told() -> None:
-    assert len(TreatmentStep) == len(STEPS) == 13
+    assert len(TreatmentStep) == len(STEPS) == 15
     assert all(STEPS[step].noted for step in (TreatmentStep.DRAIN, TreatmentStep.BLEED, TreatmentStep.MEDICATE))
 
 

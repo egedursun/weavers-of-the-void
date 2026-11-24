@@ -9,6 +9,7 @@ from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.life.lore import RANK
 from aerona.catalog.life_traits import WITNESS_MODE_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine import WorldAttentionRow
@@ -49,6 +50,7 @@ def fidelity_of(rules: Rules, mode: WitnessMode) -> int:
         WitnessMode.TOOK_PART: table.fidelity_saw,
         WitnessMode.HEARD: table.fidelity_heard,
         WitnessMode.WAS_TOLD: table.fidelity_told,
+        WitnessMode.SENSED: table.fidelity_sensed,
     }[mode]
 
 
@@ -61,10 +63,14 @@ def within(atlas: RegionAtlas, region: int, radius: int) -> list[int]:
     return sorted(found)
 
 
+UNSIGHTED = 20
+
+
 @dataclass
 class Folk:
     at: dict[int, list[int]] = field(default_factory=lambda: defaultdict(list))
     affiliation: dict[int, int | None] = field(default_factory=dict)
+    unsighted: set[int] = field(default_factory=set)
 
 
 async def folk(session: AsyncSession) -> Folk:
@@ -78,6 +84,7 @@ async def folk(session: AsyncSession) -> Folk:
         if location is not None:
             found.at[location].append(mortal)
         found.affiliation[mortal] = affiliation
+    found.unsighted = set(await session.scalars(select(BodyRow.node_id).where(BodyRow.sight < UNSIGHTED)))
     return found
 
 
@@ -146,7 +153,8 @@ def present(atlas: RegionAtlas, people: Folk, place: int, involved: set[int], *,
         seen.add(community, WitnessMode.SAW if community == place else WitnessMode.HEARD)
     for mortal in people.at.get(place, ()):
         affiliation = people.affiliation.get(mortal)
-        seen.add(mortal, WitnessMode.TOOK_PART if affiliation is not None and affiliation in involved else WitnessMode.SAW)
+        sensed = WitnessMode.SENSED if mortal in people.unsighted else WitnessMode.SAW
+        seen.add(mortal, WitnessMode.TOOK_PART if affiliation is not None and affiliation in involved else sensed)
 
 
 def told(kind: str) -> bool:

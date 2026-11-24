@@ -56,6 +56,7 @@ export function SonBirthChild({
   })
   return (
     <Section
+      id='section-son-child'
       title='Bear a child'
       description='Fate rolls the child below their own class; the lowest class bears at the floor.'
       level={3}

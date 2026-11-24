@@ -1,11 +1,11 @@
 import { renderScreen } from '@/test-utils/renderScreen'
 import { describe, expect, it } from 'vitest'
-import { HelpDrawer } from './HelpDrawer'
+import { HelpPage } from './HelpPage'
 import { GLOSSARY } from './glossary'
 
 describe('help drawer', () => {
   it('lists the fixed and navigation shortcuts', async () => {
-    const { screen } = await renderScreen(<HelpDrawer />)
+    const { screen } = await renderScreen(<HelpPage />)
     await expect
       .element(screen.getByRole('heading', { name: 'Shortcuts and terms' }))
       .toBeInTheDocument()
@@ -22,7 +22,7 @@ describe('help drawer', () => {
   })
 
   it('explains every game term in the glossary', async () => {
-    const { screen } = await renderScreen(<HelpDrawer />)
+    const { screen } = await renderScreen(<HelpPage />)
     for (const name of [
       'Chronicle',
       'Codex',

@@ -19,8 +19,9 @@ from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import ScarKind
 from aerona.domain.enums.folkways import BiasedDecision
+from aerona.domain.enums.honours import UnitHonourKind
 from aerona.domain.enums.military import DefenderAction, SackChoice, SiegeAction, SiegeWork, StarvationStage, UnitKind
-from aerona.domain.enums.mind import MemoryKind
+from aerona.domain.enums.mind import ActKind, MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction, StepLocus, StepOutcome, StepState
 from aerona.domain.enums.relations import AppealKind, PersuasionAim
@@ -35,6 +36,7 @@ from aerona.engine.couplings.field import offer_terms
 from aerona.engine.economy.equipment import siege_engines
 from aerona.engine.economy.purse import receive_coin, riches_of
 from aerona.engine.environment.book import region_environment, scar_region
+from aerona.engine.environment.deep_war import press_below
 from aerona.engine.folkways.biases import lean_community
 from aerona.engine.happenings.emergence import record_sack
 from aerona.engine.honours.units import HonourTally, honour_siege
@@ -43,6 +45,7 @@ from aerona.engine.kinds.nature import sturdiness
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.art import smash
 from aerona.engine.lore.blueprints import design_factor
+from aerona.engine.military.engineering import RIVERS
 from aerona.engine.military.logistics import March, desert, dishearten
 from aerona.engine.military.siege_depth import (
     bombard_factor,
@@ -65,12 +68,28 @@ from aerona.engine.military.siege_depth import (
     water_days,
     works_breach,
 )
-from aerona.engine.military.siege_w52 import can_suborn, defend, deport, harsh_defence, hunger_from_works, ordered, raise_works, ransom_city, sapped, suborn
+from aerona.engine.military.siege_w52 import (
+    can_suborn,
+    defend,
+    deport,
+    finished,
+    harsh_defence,
+    hunger_from_works,
+    ordered,
+    raise_works,
+    ransom_city,
+    sapped,
+    suborn,
+    water_from_works,
+)
 from aerona.engine.military.units import stacks_of, sync, take
+from aerona.engine.military.w52_war import honour_army
+from aerona.engine.mind.hooks import judged
 from aerona.engine.museums.hoards import loot
 from aerona.engine.powers.war import breach_by_power
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
+from aerona.engine.primitives.levies import add_heads
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
@@ -161,7 +180,7 @@ async def starve(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, rationi
     if "supplies" not in siege.locked:
         siege.supplies = max(0, siege.supplies - eaten)
     if "water" not in siege.locked:
-        siege.water = max(0, siege.water - days)
+        siege.water = max(0, siege.water - water_from_works(ctx, siege, days))
     hungry = siege.supplies <= table.famine_days or siege.water <= table.famine_days
     if not hungry:
         siege.starvation = StarvationStage.RATIONING if rationing else StarvationStage.NONE
@@ -170,7 +189,27 @@ async def starve(ctx: TickContext, siege: SiegeRow, besieged: EntityRow, rationi
     famine = int(siege.works.get("famine", 0)) + (ctx.rules.shortfall.thirst_siege_seasons if parched else 1)
     siege.works = {**siege.works, "famine": famine}
     broke = famine > table.taboo_seasons and not await taboo_holds(ctx, besieged)
-    siege.starvation = StarvationStage.TABOO_BROKEN if broke else StarvationStage.FAMINE
+    sick = famine > table.hunger_sickness_seasons
+    siege.starvation = StarvationStage.TABOO_BROKEN if broke else StarvationStage.HUNGER_SICKNESS if sick else StarvationStage.FAMINE
+    if siege.starvation is StarvationStage.HUNGER_SICKNESS:
+        await hunger_sickness(ctx, besieged)
+
+
+async def hunger_sickness(ctx: TickContext, besieged: EntityRow) -> None:
+    population = stat(besieged, "population") or 0
+    dead = round_half_up(population * ctx.rules.siegecraft.hunger_sickness_death_pct / PERCENT)
+    if dead > 0 and not held(besieged.id):
+        with flowing(FlowCategory.DEATH):
+            shift_stat(besieged, "population", -dead)
+    ground = await region_environment(ctx.session, besieged.id)
+    if ground is not None and not held(ground.entity_id):
+        ground.disease_load = clamp_int(ground.disease_load + ctx.rules.siegecraft.hunger_sickness_disease, 0, PERCENT)
+
+
+async def poison_supply(ctx: TickContext, siege: SiegeRow) -> None:
+    if "water" not in siege.locked:
+        siege.water = max(0, siege.water - ctx.rules.siegecraft.poison_water_days)
+    await judged(ctx, siege.besieger_entity_id, siege.besieged_entity_id, ActKind.POISON_WELLS, note="poisoned the water of a besieged town")
 
 
 async def action_for(ctx: TickContext, siege: SiegeRow, march: March, engines: float) -> SiegeAction:
@@ -183,11 +222,18 @@ async def action_for(ctx: TickContext, siege: SiegeRow, march: March, engines: f
         (siege.breaches >= table.assault_breaches > 0, SiegeAction.ASSAULT),
         (STARVATION[siege.starvation].starving, SiegeAction.NEGOTIATE),
         (await can_suborn(ctx, siege), SiegeAction.SUBORN),
+        (await river_to_turn(ctx, siege), SiegeAction.DIVERT_RIVER),
         (sappers, SiegeAction.MINE),
         (engines > 0, SiegeAction.BOMBARD),
         (siege.starvation is StarvationStage.RATIONING, SiegeAction.NEGOTIATE),
+        (siege.rounds >= table.poison_after_rounds and siege.water > table.famine_days, SiegeAction.POISON_SUPPLY),
     )
     return next((action for hit, action in choices if hit), SiegeAction.BLOCKADE)
+
+
+async def river_to_turn(ctx: TickContext, siege: SiegeRow) -> bool:
+    ground = await region_environment(ctx.session, siege.besieged_entity_id)
+    return ground is not None and ground.river_class in RIVERS and not finished(siege, SiegeWork.DAM) and siege.breaches == 0
 
 
 def gate_factor(ctx: TickContext, walls: SettlementInfrastructureRow) -> float:
@@ -226,6 +272,8 @@ async def batter(ctx: TickContext, siege: SiegeRow, walls: SettlementInfrastruct
         damage = round_half_up(table.bombard_breach * engines * bombard_factor(ctx, material) * gates / max(0.1, sturdy))
         walls.walls_condition = clamp_int(walls.walls_condition - damage, 0, PERCENT)
         await strike_defences(ctx, siege.besieged_entity_id, damage, "the siege engines")
+    if action is SiegeAction.POISON_SUPPLY:
+        await poison_supply(ctx, siege)
     if action is SiegeAction.MINE:
         ground = await region_environment(ctx.session, siege.besieged_entity_id)
         if ctx.rng(f"mine.{siege.id}.{siege.rounds}").chance(table.mine_chance * mining_factor(ctx, ground)) and "walls_condition" not in (walls.locked or []):
@@ -316,6 +364,7 @@ async def siege_season(ctx: TickContext, war: WarRow, besieged: EntityRow, march
     breaches_before, works_before = siege.breaches, dict(siege.works or {})
     await starve(ctx, siege, besieged, DEFENCES[defence].rations or siege.starvation is not StarvationStage.NONE)
     action = await action_for(ctx, siege, march, engines)
+    await press_below(ctx, besieged, march, action, atlas)
     await raise_works(ctx, siege, action, march, engines)
     await batter(ctx, siege, walls, action, engines)
     await press_siege(ctx, siege, besieged, march, (action, defence), walls=walls)
@@ -484,6 +533,8 @@ async def sack(
     report = await sack_city(ctx, besieged, profile, homeward=homeward, victor=victor, siege=siege, choice=choice)
     if profile is not None and victor is not None:
         await honour_siege(ctx, profile.army_entity_id, besieged, HonourTally())
+        if siege is not None and siege.breaches > 0:
+            await honour_army(ctx, profile.army_entity_id, UnitHonourKind.FIRST_IN, besieged.name, HonourTally())
     return report.dead
 
 
@@ -517,6 +568,9 @@ async def sack_city(
     depth = ctx.rules.siege_depth
     report = SackReport(choice)
     if choice is SackChoice.MERCY:
+        if profile is not None and victor is not None:
+            await honour_army(ctx, profile.army_entity_id, UnitHonourKind.MERCY, besieged.name, HonourTally())
+            await judged(ctx, victor.id, besieged.id, ActKind.MERCY_TO_ENEMY, note="spared a fallen city")
         if victor is not None:
             await change_relation(ctx, besieged.id, victor.id, depth.infamy, MemoryKind.GOODWILL, note="spared the city")
         ctx.count("cities_spared")
@@ -592,8 +646,26 @@ async def spared_otherwise(ctx: TickContext, report: SackReport, besieged: Entit
         report.coin = await ransom_city(ctx, besieged, victor)
         ctx.count("cities_ransomed")
         return True
+    if report.choice is SackChoice.RESETTLE:
+        report.captives = await resettle(ctx, besieged, victor)
+        ctx.count("cities_resettled")
+        return False
     if report.choice is SackChoice.DEPORT:
         report.captives = await deport(ctx, besieged, victor, siege.war_id if siege is not None else 0)
         ctx.count("cities_deported")
         return True
     return False
+
+
+async def resettle(ctx: TickContext, besieged: EntityRow, victor: EntityRow) -> int:
+    population = stat(besieged, "population") or 0
+    driven = round_half_up(population * ctx.rules.sack.resettle_share_pct / PERCENT)
+    if driven > 0 and not held(besieged.id):
+        with flowing(FlowCategory.MIGRATION):
+            shift_stat(besieged, "population", -driven)
+        add_heads(ctx.rules, besieged, driven, FlowCategory.MIGRATION)
+        besieged.affiliated_entity_id = victor.id
+    await change_relation(
+        ctx, besieged.id, victor.id, -ctx.rules.campaigns.conquest_relation, MemoryKind.CONQUERED_US, note="settled its own people in the city"
+    )
+    return driven

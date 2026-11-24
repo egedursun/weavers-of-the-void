@@ -21,6 +21,7 @@ export function SonOpportunities({
   }))
   return (
     <Section
+      id='section-son-opportunities'
       title='Opportunities'
       description='What this son sees when their turn begins, exactly as the server phrases it. The tools named are the ones they may use now.'
       level={3}

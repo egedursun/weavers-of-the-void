@@ -22,11 +22,12 @@ import {
   Sparkles,
   Star,
   Tornado,
+  Zap,
 } from 'lucide-react'
 import { RARITY_LABEL, type Rarity } from '@/constants/rarity'
 import { ENTITY_TYPE_ICON } from '@/components/domain/domainIcons'
-import { DRAWER_KIND_ICON } from '@/components/domain/drawerKindIcon'
-import { type DrawerEntry } from '@/components/layout/drawer/drawerEntries'
+import { ENTRY_KIND_ICON } from '@/components/domain/entryKindIcon'
+import { type EntryRef } from '@/components/layout/entry/entryStack'
 import { STATS } from '@/features/pantheon/labels'
 import {
   type CardFilters,
@@ -59,9 +60,9 @@ export type Deck = {
 }
 
 export const FRAME_ICON: Record<CardFrame, LucideIcon> = {
-  creator: DRAWER_KIND_ICON.creator,
-  son: DRAWER_KIND_ICON.son,
-  foreign_god: DRAWER_KIND_ICON['foreign-god'],
+  creator: ENTRY_KIND_ICON.creator,
+  son: ENTRY_KIND_ICON.son,
+  foreign_god: ENTRY_KIND_ICON['foreign-god'],
   mortal: ENTITY_TYPE_ICON.mortal,
   beast: ENTITY_TYPE_ICON.beast,
   spirit: ENTITY_TYPE_ICON.spirit,
@@ -311,7 +312,7 @@ const OWN_META: Record<string, Omit<StatMeta, 'effect'>> = {
   existence: { icon: Orbit, abbr: 'EXI', group: 'Vitals' },
   faith: { icon: HandHeart, abbr: 'FAI', group: 'Vitals' },
   fame: { icon: Star, abbr: 'FAM', group: 'Vitals' },
-  power: { icon: Flame, abbr: 'POW', group: 'Vitals' },
+  power: { icon: Zap, abbr: 'POW', group: 'Vitals' },
   intellect: { icon: Brain, abbr: 'INT', group: 'Traits' },
   age: { icon: CalendarClock, abbr: 'AGE', group: 'Traits' },
   lifespan: { icon: HeartPulse, abbr: 'LIF', group: 'Traits' },
@@ -394,7 +395,7 @@ export function statText(stat: CharacterCardStat): string {
     : `${stat.value}/${stat.maximum}`
 }
 
-export function drawerOf(card: CharacterCard): DrawerEntry {
+export function entryOf(card: CharacterCard): EntryRef {
   if (card.node_kind === 'creator') return { kind: 'creator' }
   if (card.node_kind === 'son') return { kind: 'son', id: String(card.node_id) }
   if (card.node_kind === 'foreign_god')

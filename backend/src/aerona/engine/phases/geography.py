@@ -110,6 +110,12 @@ WORLD_NATURES: Mapping[WorldType, tuple[Nature, ...]] = partial(
         ),
         WorldType.ICE_SHELL: (Nature("geyser", "Geyser", "danger", PlaceKind.GEYSER), Nature("vent garden", "Vent Garden", "fertility", PlaceKind.SPRING)),
         WorldType.METHANE: (Nature("methane lake", "Methane Lake", "danger", PlaceKind.LAKE), Nature("haze dune", "Haze Dune", "mystery", PlaceKind.DUNES)),
+        WorldType.ROGUE: (Nature("frozen sea", "Frozen Sea", "danger", PlaceKind.GLACIER), Nature("warm vent", "Warm Vent", "fertility", PlaceKind.HOT_SPRING)),
+        WorldType.ARCHIPELAGO: (Nature("island chain", "Island Chain", "fertility", PlaceKind.ISLAND), Nature("strait", "Strait", "danger", PlaceKind.ISTHMUS)),
+        WorldType.MEGASTRUCTURE: (
+            Nature("section breach", "Breach", "danger", PlaceKind.ANOMALY),
+            Nature("old works", "Old Works", "mystery", PlaceKind.MEGASTRUCTURE_RUIN),
+        ),
     },
     without=(
         WorldType.ORDINARY,

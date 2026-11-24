@@ -1,5 +1,4 @@
 import {
-  type LucideIcon,
   Activity,
   ArrowUpFromLine,
   Ban,
@@ -15,6 +14,7 @@ import {
   Link2,
   Moon,
   Orbit,
+  RefreshCw,
   Repeat,
   Shield,
   Sparkles,
@@ -22,9 +22,12 @@ import {
   Star,
   Sun,
   Swords,
+  Undo2,
   Waves,
   Workflow,
   Zap,
+  type LucideIcon,
+  ThermometerSnowflake,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -235,9 +238,11 @@ export const OMENS: Record<Schema['OmenReading'], Named> = {
 export const CURRENTS: Record<Schema['OceanCurrent'], Named> = {
   none: { label: 'No current', icon: CircleDashed, tone: 'muted' },
   warm: { label: 'Warm current', icon: Waves, tone: 'warning' },
-  cold: { label: 'Cold current', icon: Waves, tone: 'info' },
+  cold: { label: 'Cold current', icon: ThermometerSnowflake, tone: 'info' },
   upwelling: { label: 'Upwelling', icon: ArrowUpFromLine, tone: 'success' },
   tidal: { label: 'Tidal stream', icon: Moon, tone: 'verdigris' },
+  gyre: { label: 'Gyre', icon: RefreshCw, tone: 'muted' },
+  counter: { label: 'Counter current', icon: Undo2, tone: 'info' },
 }
 
 export const CLIMATE_TURNS = {

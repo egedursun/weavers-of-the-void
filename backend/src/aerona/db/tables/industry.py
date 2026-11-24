@@ -27,7 +27,7 @@ ENERGY_COLUMNS = (
     "belief",
     "void",
 )
-POLLUTION_COLUMNS = ("air", "water", "soil", "radiation", "noise", "light")
+POLLUTION_COLUMNS = ("air", "water", "soil", "radiation", "noise", "light", "heat")
 
 
 class CommunityMethodRow(Base):
@@ -111,6 +111,7 @@ class RegionPollutionRow(Base):
     radiation: Mapped[int] = mapped_column(default=0, server_default="0")
     noise: Mapped[int] = mapped_column(default=0, server_default="0")
     light: Mapped[int] = mapped_column(default=0, server_default="0")
+    heat: Mapped[int] = mapped_column(default=0, server_default="0")
     polluters: Mapped[dict[str, int]] = mapped_column(JSON, default=dict)
     epoch: Mapped[int]
     locked: Mapped[list[str]] = mapped_column(JSON, default=list)

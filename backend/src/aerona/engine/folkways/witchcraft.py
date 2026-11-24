@@ -381,11 +381,22 @@ async def flee(ctx: TickContext, row: AccusationRow, case: CrimeCaseRow) -> None
         await declare_outlaw(ctx, accused, await realm_of_town(ctx.session, row.settlement_entity_id) if row.settlement_entity_id is not None else None)
 
 
+async def reconcile(ctx: TickContext, row: AccusationRow) -> None:
+    row.outcome, row.closed_epoch = AccusationOutcome.RECONCILED, ctx.epoch
+    if row.accuser_node_id is not None:
+        for memory in await ctx.session.scalars(
+            select(MemoryRow).where(MemoryRow.holder_node_id == row.accused_node_id, MemoryRow.subject_node_id == row.accuser_node_id, MemoryRow.magnitude < 0)
+        ):
+            memory.magnitude = 0
+
+
 async def before_judgement(ctx: TickContext, row: AccusationRow, case: CrimeCaseRow, tally: WitchTally) -> None:
     table = ctx.rules.hunts
     rng = ctx.rng(f"accusation.before.{row.id}.{ctx.epoch}")
     if rng.chance(table.true_confession_pct if row.guilty_in_truth else ctx.rules.persuasion.false_confession_pct):
         await confess(ctx, row, case, tally)
+    elif rng.chance(table.reconcile_pct):
+        await reconcile(ctx, row)
     elif rng.chance(table.flight_pct):
         await flee(ctx, row, case)
     else:

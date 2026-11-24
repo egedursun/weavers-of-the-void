@@ -13,6 +13,8 @@ class ReputationAxis(StrEnum):
     TROUBLEMAKER = "troublemaker"
     MERCY = "mercy"
     JUSTICE = "justice"
+    RELIABILITY = "reliability"
+    HOSPITALITY = "hospitality"
 
 
 class Currency(StrEnum):
@@ -20,6 +22,8 @@ class Currency(StrEnum):
     PIETY = "piety"
     DREAD = "dread"
     TYRANNY = "tyranny"
+    TRUST = "trust"
+    LEARNING = "learning"
 
 
 class ClaimKind(StrEnum):
@@ -27,6 +31,7 @@ class ClaimKind(StrEnum):
     SHARED = "shared"
     FALSE = "false"
     INFLATED = "inflated"
+    BORROWED = "borrowed"
 
 
 class ClaimStatus(StrEnum):
@@ -34,6 +39,7 @@ class ClaimStatus(StrEnum):
     VERIFIED = "verified"
     EXPOSED = "exposed"
     DISPUTED = "disputed"
+    FORGOTTEN = "forgotten"
 
 
 class LorePrice(StrEnum):
@@ -42,6 +48,7 @@ class LorePrice(StrEnum):
     RENOWN = "renown"
     EXCHANGE = "exchange"
     SERVICE = "service"
+    OATH = "oath"
 
 
 class ServiceTask(StrEnum):

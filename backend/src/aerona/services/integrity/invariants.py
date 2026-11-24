@@ -320,6 +320,14 @@ from aerona.services.integrity.w52_agent_g import (
 )
 from aerona.services.integrity.w52_agent_h import clear_ordnance, misgrounded_expeditions, reground_expedition, remnantless_ordnance
 from aerona.services.integrity.w52_agent_i import place_regional_being, sourceless_rifts, unplaced_regional_beings, unsource_rift
+from aerona.services.integrity.w52_agent_j import (
+    drop_passage,
+    lift_to_surface,
+    misplaced_below,
+    settle_passage_state,
+    unbound_passages,
+    wrong_passage_states,
+)
 from aerona.services.integrity.wave_links import stray_coasts, strike_stray_coast
 
 LOCKED = "locked"
@@ -677,6 +685,9 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "wound_part_in_plan": (strayed_wounds, settle_strayed_wound),
     "betrothal_living": (dead_promises, end_promise),
     "spirit_fits_place": (misplaced_spirits, refit_spirit),
+    "deep_positions_valid": (misplaced_below, lift_to_surface),
+    "passage_state_fits": (wrong_passage_states, settle_passage_state),
+    "passage_ends_exist": (unbound_passages, drop_passage),
     "vengeance_names_target": (targetless_vengeance, dismiss_petition),
     "luck_sign_marked": (unmarked_signs, drop_sign),
     "rebirth_kind_named": (kindless_rebirths, rebirth_by_people),

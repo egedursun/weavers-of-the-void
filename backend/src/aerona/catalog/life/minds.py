@@ -33,6 +33,7 @@ BINDING_HOLD: Mapping[InstructionBinding, int] = total(
         InstructionBinding.OWNERSHIP: 30,
         InstructionBinding.LEASE: 20,
         InstructionBinding.SYMBIOSIS: 60,
+        InstructionBinding.DEBT: 50,
     },
 )
 

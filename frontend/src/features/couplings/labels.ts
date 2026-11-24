@@ -1,12 +1,14 @@
 import {
-  type LucideIcon,
   Anchor,
   ArrowDownToLine,
   Ban,
+  Bird,
   BookOpen,
   Brain,
   Castle,
+  Church,
   Cog,
+  Cpu,
   Crown,
   Eye,
   EyeOff,
@@ -16,6 +18,8 @@ import {
   Footprints,
   Gem,
   Ghost,
+  GitBranch,
+  GraduationCap,
   Hammer,
   Hand,
   HandHelping,
@@ -30,6 +34,7 @@ import {
   MicOff,
   Music,
   PenLine,
+  Pill,
   Repeat,
   ScrollText,
   Shield,
@@ -42,9 +47,15 @@ import {
   Swords,
   Target,
   Users,
+  Volume2,
   Waves,
   Wind,
   Zap,
+  type LucideIcon,
+  BrainCircuit,
+  Lightbulb,
+  UsersRound,
+  MapPinHouse,
 } from 'lucide-react'
 import { type components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -61,6 +72,8 @@ export const RITE_COMPONENTS: Record<Schema['RiteComponent'], Named> = {
   danced: { label: 'Danced', icon: Footprints, tone: 'gold' },
   material: { label: 'Material', icon: Gem, tone: 'warning' },
   mental: { label: 'Of the mind', icon: Brain, tone: 'muted' },
+  offered: { label: 'Offered', icon: BrainCircuit, tone: 'muted' },
+  communal: { label: 'Communal', icon: Lightbulb, tone: 'muted' },
 }
 
 export const RESTRAINTS: Record<Schema['RestraintKind'], Named> = {
@@ -78,6 +91,8 @@ export const SOCIOLECT_KINDS: Record<Schema['SociolectKind'], Named> = {
   sailors: { label: 'Speech of sailors', icon: Anchor, tone: 'verdigris' },
   youth: { label: 'Speech of the young', icon: Sprout, tone: 'success' },
   soldiers: { label: 'Speech of soldiers', icon: Swords, tone: 'warning' },
+  clergy: { label: 'Speech of the clergy', icon: Church, tone: 'gold' },
+  scholars: { label: 'Speech of scholars', icon: GraduationCap, tone: 'info' },
 }
 
 export const SIGN_CAUSES: Record<Schema['SignCause'], Named> = {
@@ -90,6 +105,7 @@ export const SIGN_CAUSES: Record<Schema['SignCause'], Named> = {
   },
   mutilation: { label: 'Many who cannot speak', icon: Skull, tone: 'danger' },
   trade: { label: 'Trade between many tongues', icon: Handshake, tone: 'gold' },
+  noise: { label: 'The din of works', icon: Volume2, tone: 'warning' },
 }
 
 export const TEACHING_KINDS: Record<Schema['KnowledgeKind'], Named> = {
@@ -102,12 +118,14 @@ export const TEACHING_KINDS: Record<Schema['KnowledgeKind'], Named> = {
   treasure: { label: 'Where a treasure lies', icon: MapPin, tone: 'gold' },
   language: { label: 'A language', icon: Languages, tone: 'info' },
   account: { label: 'The memory of an age', icon: BookOpen, tone: 'muted' },
-  site: { label: 'A hidden site', icon: MapPin, tone: 'verdigris' },
+  site: { label: 'A hidden site', icon: MapPinHouse, tone: 'verdigris' },
   map: { label: 'Knowledge of a land', icon: MapIcon, tone: 'info' },
   weakness: { label: 'A weakness', icon: Target, tone: 'danger' },
   pattern: { label: 'A pattern of a made thing', icon: Cog, tone: 'muted' },
   source: { label: 'Where a source of power lies', icon: Zap, tone: 'gold' },
   secret: { label: 'A secret', icon: EyeOff, tone: 'warning' },
+  remedy: { label: 'A remedy', icon: Pill, tone: 'success' },
+  genealogy: { label: 'A line of descent', icon: GitBranch, tone: 'gold' },
 }
 
 export const TEACHING_STATES: Record<Schema['TeachingState'], Named> = {
@@ -127,6 +145,7 @@ export const AGREEMENT_KINDS: Record<Schema['FieldAgreementKind'], Named> = {
   },
   safe_conduct: { label: 'Safe conduct', icon: Shield, tone: 'info' },
   fraternisation: { label: 'Fraternisation', icon: Users, tone: 'muted' },
+  burial_truce: { label: 'Burial truce', icon: UsersRound, tone: 'muted' },
 }
 
 export const AGREEMENT_STATES: Record<Schema['FieldAgreementState'], Named> = {
@@ -147,6 +166,7 @@ export const SEAL_KINDS: Record<Schema['SealKind'], Named> = {
     icon: Handshake,
     tone: 'verdigris',
   },
+  made: { label: 'A made mind', icon: Cpu, tone: 'info' },
 }
 
 export const CARRION_ICON: LucideIcon = Wind
@@ -166,4 +186,5 @@ export const CARRION_RESTS: Record<Schema['CarrionRest'], Named> = {
   buried: { label: 'Buried', icon: Shovel, tone: 'muted' },
   burned: { label: 'Burned', icon: Flame, tone: 'warning' },
   sunk: { label: 'Sunk to the floor of the waters', icon: Waves, tone: 'info' },
+  scavenged: { label: 'Eaten and scattered', icon: Bird, tone: 'muted' },
 }

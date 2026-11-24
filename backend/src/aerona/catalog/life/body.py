@@ -14,7 +14,15 @@ FUNCTION_LEVELS = (
 )
 
 
-AIR: dict[Atmosphere, int] = {Atmosphere.NONE: 0, Atmosphere.THIN: 25, Atmosphere.NORMAL: 50, Atmosphere.DENSE: 75, Atmosphere.TOXIC: 50}
+AIR: dict[Atmosphere, int] = {
+    Atmosphere.NONE: 0,
+    Atmosphere.THIN: 25,
+    Atmosphere.NORMAL: 50,
+    Atmosphere.DENSE: 75,
+    Atmosphere.TOXIC: 50,
+    Atmosphere.STEAM: 70,
+    Atmosphere.LAYERED: 40,
+}
 
 
 GRAVITY: dict[Gravity, int] = {band: spec.body for band, spec in GRAVITY_BANDS.items()}

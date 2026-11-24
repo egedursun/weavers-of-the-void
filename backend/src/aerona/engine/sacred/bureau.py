@@ -3,11 +3,13 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
-from aerona.catalog.life.sacred import COMMON_NEEDS, PETITION_GRANTS, WRONGS
+from aerona.catalog.life.sacred import COMMON_NEEDS, PETITION_GRANTS, TARGETED_PETITIONS, WRONGS
+from aerona.catalog.life_traits import MISHAP_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.db.tables.folkways import MishapRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.sacred import GeniusLocusRow, PetitionRow, SpiritOfficeRow
@@ -16,9 +18,10 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.affliction import PackageKind, Transmission
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.life_traits import MishapKindTrait
 from aerona.domain.enums.mind import ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.sacred import PetitionKind, PetitionStatus
+from aerona.domain.enums.sacred import PetitionKind, PetitionStatus, SacramentProtection
 from aerona.domain.enums.society import Commodity
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.context import TickContext
@@ -31,12 +34,16 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import record
+from aerona.engine.sacred.guards import guarded
 from aerona.engine.sacred.places import region_of
 from aerona.engine.sacred.spirits import rank_above, rank_below
 
 OPEN = (PetitionStatus.FILED, PetitionStatus.DELAYED, PetitionStatus.APPEALED)
 TEN = 10
 HALF = 50
+
+
+LOSSES = having(MISHAP_KIND_TRAITS, MishapKindTrait.LOSSES)
 
 
 @dataclass
@@ -72,7 +79,7 @@ async def file_petition(
         office_spirit_id=office.spirit_entity_id,
         kind=kind,
         defendant_spirit_id=defendant_id if kind is PetitionKind.SUIT else None,
-        target_node_id=target_id if kind is PetitionKind.VENGEANCE else None,
+        target_node_id=target_id if kind in TARGETED_PETITIONS else None,
         bribe=max(0, bribe),
         status=PetitionStatus.FILED,
         filed_epoch=ctx.epoch,
@@ -113,6 +120,11 @@ async def need_of(ctx: TickContext, community: EntityRow, office: SpiritOfficeRo
     profile = await ctx.session.get(SettlementProfileRow, community.id)
     if profile is not None and profile.unrest >= ctx.rules.petitions.protection_unrest_at:
         return PetitionKind.PROTECTION, None
+    lost = await ctx.session.scalar(
+        select(MishapRow.id).where(MishapRow.settlement_entity_id == community.id, MishapRow.epoch == ctx.epoch, MishapRow.kind.in_(sorted(LOSSES))).limit(1)
+    )
+    if lost is not None:
+        return PetitionKind.FINDING, None
     return ctx.rng(f"petition.need.{community.id}").pick(COMMON_NEEDS), None
 
 
@@ -124,6 +136,11 @@ async def wronged_by(ctx: TickContext, petitioner_id: int) -> int | None:
         .limit(1)
     )
     return int(found) if found is not None and not held(int(found)) else None
+
+
+async def courts_fail(ctx: TickContext, community: EntityRow) -> bool:
+    profile = await ctx.session.get(SettlementProfileRow, community.id)
+    return profile is not None and profile.public_order < ctx.rules.petitions.justice_order_below
 
 
 async def petitioner_in(ctx: TickContext, community: EntityRow) -> int:
@@ -158,7 +175,7 @@ async def file_petitions(ctx: TickContext, tally: BureauTally) -> None:
         petitioner = await petitioner_in(ctx, community)
         wrongdoer = await wronged_by(ctx, petitioner) if kind in COMMON_NEEDS else None
         if wrongdoer is not None:
-            kind = PetitionKind.VENGEANCE
+            kind = PetitionKind.JUSTICE if await courts_fail(ctx, community) else PetitionKind.VENGEANCE
         await file_petition(ctx, petitioner, office, kind, defendant_id=defendant, bribe=bribe, target_id=wrongdoer)
         tally.filed += 1
 
@@ -235,8 +252,27 @@ async def ward(plea: Plea) -> None:
 
 async def avenge(plea: Plea) -> None:
     target = await living_entity(plea.ctx.session, plea.petition.target_node_id)
-    if target is not None and not held(target.id):
-        await afflict(plea.ctx, target, PackageKind.FORTUNE, Transmission.CURSE, source_node_id=plea.office.spirit_entity_id)
+    if target is None or held(target.id):
+        return
+    strength, _ = await guarded(plea.ctx, target.id, SacramentProtection.FORTUNE)
+    if plea.ctx.rng(f"fortune_ward.{plea.petition.id}.{target.id}").chance(plea.ctx.rules.sacraments.fortune_ward_pct * strength / PERCENT):
+        return
+    await afflict(plea.ctx, target, PackageKind.FORTUNE, Transmission.CURSE, source_node_id=plea.office.spirit_entity_id)
+
+
+async def find_lost(plea: Plea) -> None:
+    if plea.town is not None and not held(plea.town.id):
+        table = plea.ctx.rules.petitions
+        await shift_stock(plea.ctx.session, plea.ctx.rules, plea.town.id, Commodity.GOODS, table.finding_goods, epoch=plea.ctx.epoch, flow=GoodsFlow.AID)
+
+
+async def do_justice(plea: Plea) -> None:
+    wrongdoer = await living_entity(plea.ctx.session, plea.petition.target_node_id)
+    profile = await plea.ctx.session.get(MortalProfileRow, wrongdoer.id) if wrongdoer is not None else None
+    if profile is not None and not held(profile.entity_id) and "renown" not in profile.locked:
+        profile.renown = clamp_int(profile.renown - plea.ctx.rules.petitions.justice_renown, 0, PERCENT)
+    if plea.profile is not None and "stress" not in plea.profile.locked:
+        plea.profile.stress = max(0, plea.profile.stress - plea.ctx.rules.petitions.justice_calm)
 
 
 ANSWERS: Mapping[PetitionKind, Callable[[Plea], Awaitable[None]]] = total(
@@ -251,6 +287,8 @@ ANSWERS: Mapping[PetitionKind, Callable[[Plea], Awaitable[None]]] = total(
         PetitionKind.RAIN: bring_rain,
         PetitionKind.PROTECTION: ward,
         PetitionKind.VENGEANCE: avenge,
+        PetitionKind.FINDING: find_lost,
+        PetitionKind.JUSTICE: do_justice,
     },
 )
 

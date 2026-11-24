@@ -29,7 +29,7 @@ from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.record import StepDraft, record
 
 PET_USES = frozenset({AnimalRole.COMPANION, AnimalRole.GUARD, AnimalRole.WAR, AnimalRole.PEST_CONTROL})
-HUNTING_USES = frozenset({AnimalRole.GUARD, AnimalRole.WAR})
+HUNTING_USES = frozenset({AnimalRole.HUNTING})
 
 
 @dataclass

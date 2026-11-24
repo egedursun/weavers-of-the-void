@@ -15,7 +15,7 @@ RULES = Rules()
 
 
 def test_thirteen_paths_each_with_skills_weight_and_the_old_tables_read_from_the_catalogue() -> None:
-    assert len(CAREERS) == len(CareerPath) == 13
+    assert len(CAREERS) == len(CareerPath) == 15
     assert all(0 <= spec.weight(RULES) <= 100 for spec in CAREERS.values())
     assert {CareerPath.SEA, CareerPath.SERVICE, CareerPath.ARTS, CareerPath.SETTLE} <= set(CAREER_ROLES)
     assert CareerPath.ARTS in OPEN_PATHS and CareerPath.SEA not in OPEN_PATHS

@@ -27,6 +27,14 @@ import {
   TreePine,
   Waves,
   Wind,
+  Droplet,
+  Lamp,
+  MoonStar,
+  Sparkle,
+  Star,
+  Layers3,
+  MountainSnow,
+  Sailboat,
 } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
 import { type Named } from '@/features/collective/labels'
@@ -40,10 +48,12 @@ export const LIGHTS: Record<Schema['WorldLight'], Named> = {
   lava_glow: { label: 'The glow of lava', icon: Flame, tone: 'danger' },
   magic: { label: 'Light made by magic', icon: Sparkles, tone: 'info' },
   inner_sun: { label: 'A sun within', icon: Sunrise, tone: 'gold' },
-  divine: { label: 'The light of a god', icon: Sparkles, tone: 'gold' },
+  divine: { label: 'The light of a god', icon: Star, tone: 'gold' },
   ship_cycle: { label: 'The cycles of a ship', icon: Rocket, tone: 'info' },
   fading_god: { label: 'A dead god fading', icon: SunDim, tone: 'muted' },
   none: { label: 'No light', icon: Moon, tone: 'muted' },
+  bioluminescence: { label: 'Bioluminescence', icon: MoonStar, tone: 'muted' },
+  made_light: { label: 'Made light', icon: Lamp, tone: 'muted' },
 }
 
 export const NEEDS: Record<Schema['BindingNeed'], Named> = {
@@ -53,6 +63,8 @@ export const NEEDS: Record<Schema['BindingNeed'], Named> = {
   air: { label: 'Air', icon: Wind, tone: 'info' },
   offerings: { label: 'Offerings', icon: HandHeart, tone: 'gold' },
   belief: { label: 'Belief', icon: Sparkles, tone: 'verdigris' },
+  place: { label: 'Place', icon: Sparkle, tone: 'verdigris' },
+  name: { label: 'Name', icon: Star, tone: 'verdigris' },
 }
 
 export const SETTLES: Record<Schema['SettleMode'], Named> = {
@@ -65,8 +77,10 @@ export const SETTLES: Record<Schema['SettleMode'], Named> = {
   band: { label: 'In a habitable band', icon: Layers, tone: 'gold' },
   deck: { label: 'On decks', icon: Ship, tone: 'info' },
   burrow: { label: 'In burrows', icon: Shovel, tone: 'warning' },
-  submerged: { label: 'Beneath the water', icon: Waves, tone: 'verdigris' },
+  submerged: { label: 'Beneath the water', icon: Droplet, tone: 'verdigris' },
   canopy: { label: 'In the canopy', icon: TreePine, tone: 'success' },
+  cliff: { label: 'Cliff', icon: MountainSnow, tone: 'success' },
+  drift: { label: 'Drift', icon: Sailboat, tone: 'success' },
 }
 
 export const WARS: Record<Schema['WarTerrain'], Named> = {
@@ -82,6 +96,11 @@ export const WARS: Record<Schema['WarTerrain'], Named> = {
     icon: Pickaxe,
     tone: 'warning',
   },
+  dimension: {
+    label: 'Dimension',
+    icon: Layers3,
+    tone: 'warning',
+  },
 }
 
 export const SHARES = [
@@ -94,6 +113,7 @@ export const SHARES = [
   { key: 'flood_pct', label: 'Floods', icon: Waves },
   { key: 'drought_pct', label: 'Droughts', icon: Sun },
   { key: 'plague_pct', label: 'Plagues', icon: CircleSlash },
+  { key: 'ship_pct', label: 'Hulls its shipyards launch', icon: Ship },
 ] as const
 
 export const NUMBERS = [
@@ -110,4 +130,5 @@ export const FLAGS = [
   { key: 'nights', label: 'Nights', icon: Moon },
   { key: 'fire', label: 'Fire', icon: Flame },
   { key: 'soil', label: 'Soil', icon: Mountain },
+  { key: 'sea_roads', label: 'Every road by sea', icon: Anchor },
 ] as const

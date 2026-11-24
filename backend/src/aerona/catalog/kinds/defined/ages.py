@@ -96,6 +96,7 @@ SEASON_SPELL = total(
                 "engine.environment.long_seasons.bite",
                 "engine.environment.long_seasons.lost_cause",
                 "engine.environment.long_seasons.stellar_spells",
+                "engine.environment.long_seasons.supernova_winter",
                 "engine.environment.long_seasons.turn",
                 "engine.environment.spells.pull_of",
                 "engine.folkways.nutrition.light_of",

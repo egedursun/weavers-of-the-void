@@ -114,6 +114,7 @@ class HouseholdForm(StrEnum):
     INSTITUTIONAL = "institutional"
     MIXED = "mixed"
     CHOSEN = "chosen"
+    SKIPPED_GENERATION = "skipped_generation"
 
 
 class DwellingKind(StrEnum):
@@ -132,6 +133,9 @@ class DwellingKind(StrEnum):
     BURROW = "burrow"
     NEST = "nest"
     SUBMERGED = "submerged"
+    GROWN = "grown"
+    ROCK_CUT = "rock_cut"
+    COURTYARD = "courtyard"
 
 
 class DwellingTenure(StrEnum):

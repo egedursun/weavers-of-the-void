@@ -14,6 +14,7 @@ from aerona.engine.phase import Phase
     "table.community_cohorts",
     "table.community_stocks",
     "table.currencies",
+    "table.deep_passages",
     "table.districts",
     "table.entities",
     "table.feuds",

@@ -51,6 +51,9 @@ import {
   Radiation,
   TreePine,
   Waves,
+  Bean,
+  MountainSnow,
+  ShieldHalf,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -77,7 +80,9 @@ import {
 } from '@/components/ui/tooltip'
 import { FieldTile } from '@/components/domain'
 import { Label } from '@/components/typography'
+import { STRATUM } from '@/features/entity/environment/geologyLabels'
 import { MapSearch } from './MapSearch'
+import { type MapStratum } from './api'
 import {
   type LayerMode,
   type Overlay,
@@ -87,6 +92,7 @@ import {
   OVERLAYS,
   OVERLAY_LABEL,
   OVERLAY_SURFACE,
+  depthReason,
 } from './mapModel'
 
 const LAYER_ICON: Record<LayerMode, LucideIcon> = {
@@ -99,7 +105,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   religions: Church,
   dominion: Sparkles,
   languages: Languages,
-  ground: Mountain,
+  ground: MountainSnow,
   soil: Sprout,
   climate: Thermometer,
   land_use: Wheat,
@@ -116,10 +122,10 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   desirability: Building2,
   coverage: Droplets,
   niches: Network,
-  solidarity: Shield,
+  solidarity: ShieldHalf,
   rings: Wheat,
   centrality: Store,
-  nutrients: Sprout,
+  nutrients: Bean,
   networks: Wifi,
   hidden: EyeOff,
   works: Construction,
@@ -131,6 +137,7 @@ const LAYER_ICON: Record<LayerMode, LucideIcon> = {
   waves: Waves,
   groups: PawPrint,
   protected: TreePine,
+  deep: Layers,
 }
 
 const OVERLAY_ICON: Record<Overlay, LucideIcon> = {
@@ -150,9 +157,14 @@ const OVERLAY_ICON: Record<Overlay, LucideIcon> = {
 
 export type WorldOption = { id: number; name: string; typeLabel: string }
 
+export type DepthOption = { stratum: MapStratum; cells: number; depth: number }
+
 type MapToolbarProps = {
   mode: LayerMode
   onMode: (mode: LayerMode) => void
+  depth: MapStratum | null
+  depths: readonly DepthOption[]
+  onDepth: (depth: MapStratum | null) => void
   overlays: Record<Overlay, boolean>
   onOverlay: (overlay: Overlay, on: boolean) => void
   worlds: readonly WorldOption[]
@@ -171,12 +183,61 @@ type MapToolbarProps = {
   mobile: boolean
 }
 
+const SURFACE_DEPTH = 'surface'
+const NO_DEPTHS = 'No world below: this world has no strata beneath its regions'
+
+function DepthControl({
+  depth,
+  depths,
+  onDepth,
+}: Pick<MapToolbarProps, 'depth' | 'depths' | 'onDepth'>) {
+  const none = depths.length === 0
+  return (
+    <FieldTile group label='Map depth' aside={none ? NO_DEPTHS : undefined}>
+      <ToggleGroup
+        type='single'
+        size='sm'
+        variant='outline'
+        value={depth ?? SURFACE_DEPTH}
+        aria-label='Map depth'
+        disabled={none}
+        className='flex-wrap justify-start'
+        onValueChange={(value) =>
+          value &&
+          onDepth(value === SURFACE_DEPTH ? null : (value as MapStratum))
+        }
+      >
+        <ToggleGroupItem
+          value={SURFACE_DEPTH}
+          title={none ? NO_DEPTHS : undefined}
+        >
+          <MapIcon aria-hidden='true' />
+          Surface
+        </ToggleGroupItem>
+        {depths.map((option) => {
+          const Icon = STRATUM[option.stratum].icon
+          return (
+            <ToggleGroupItem key={option.stratum} value={option.stratum}>
+              <Icon aria-hidden='true' />
+              {`${STRATUM[option.stratum].label} (${option.cells})`}
+            </ToggleGroupItem>
+          )
+        })}
+      </ToggleGroup>
+    </FieldTile>
+  )
+}
+
 function LayerControls({
   mode,
   onMode,
   overlays,
   onOverlay,
-}: Pick<MapToolbarProps, 'mode' | 'onMode' | 'overlays' | 'onOverlay'>) {
+  depth,
+}: Pick<
+  MapToolbarProps,
+  'mode' | 'onMode' | 'overlays' | 'onOverlay' | 'depth'
+>) {
   return (
     <div className='flex min-w-0 flex-col gap-2'>
       <FieldTile group label='Map layer'>
@@ -191,11 +252,14 @@ function LayerControls({
         >
           {LAYER_MODES.map((option) => {
             const Icon = LAYER_ICON[option]
+            const blocked = depthReason(option, depth)
             return (
               <ToggleGroupItem
                 key={option}
                 value={option}
                 data-surface={LAYER_SURFACE[option]}
+                disabled={blocked !== null}
+                title={blocked ?? undefined}
               >
                 <Icon aria-hidden='true' />
                 {LAYER_LABEL[option]}
@@ -274,6 +338,7 @@ export function MapToolbar(props: MapToolbarProps) {
       data-map-toolbar
       className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-4'
     >
+      {!mobile && <DepthControl {...props} />}
       {!mobile && <LayerControls {...props} />}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         {worlds.length > 1 && (
@@ -314,6 +379,7 @@ export function MapToolbar(props: MapToolbarProps) {
               </SheetHeader>
               <div className='flex flex-col gap-3 px-4 pb-6'>
                 <Label variant='overline'>Colour by</Label>
+                <DepthControl {...props} />
                 <LayerControls {...props} />
               </div>
             </SheetContent>

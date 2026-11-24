@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import { EntityLink } from '@/components/domain'
-import { type DrawerKind } from '@/components/layout/drawer/drawerEntries'
+import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Muted } from '@/components/typography'
 import { useNames } from './api/queries'
 import { type NodeKind } from './api/types'
 
-const DRAWER_OF: Record<NodeKind, DrawerKind> = {
+const DRAWER_OF: Record<NodeKind, EntryKind> = {
   entity: 'entity',
   son: 'son',
   creator: 'creator',

@@ -43,6 +43,8 @@ TREATY_WORDS = MappingProxyType(
         TreatyKind.DIVINE_PACT: "the Divine Pact",
         TreatyKind.NAVAL_LIMIT: "the Naval Treaty",
         TreatyKind.ARMS_LIMIT: "the Arms Treaty",
+        TreatyKind.MUTUAL_AID: "the Pact of Mutual Aid",
+        TreatyKind.BORDER_ACCORD: "the Border Accord",
     }
 )
 
@@ -65,6 +67,8 @@ DEFAULT_CLAUSES = MappingProxyType(
         TreatyKind.DIVINE_PACT: (ClauseKind.NON_AGGRESSION,),
         TreatyKind.NAVAL_LIMIT: (ClauseKind.FLEET_LIMIT,),
         TreatyKind.ARMS_LIMIT: (ClauseKind.MASS_WEAPON_LIMIT,),
+        TreatyKind.MUTUAL_AID: (ClauseKind.SHARED_WATER,),
+        TreatyKind.BORDER_ACCORD: (ClauseKind.RETURN_OF_REFUGEES, ClauseKind.CAPTIVE_EXCHANGE),
     }
 )
 
@@ -101,6 +105,8 @@ TASKS: dict[OfficeKind, CouncilTask] = {
     OfficeKind.AMBASSADOR: CouncilTask.PROMOTE_TRADE,
     OfficeKind.COURT_SCHOLAR: CouncilTask.ADVANCE_LEARNING,
     OfficeKind.CHIEF_SCIENTIST: CouncilTask.ADVANCE_LEARNING,
+    OfficeKind.CENSOR: CouncilTask.COLLECT_TAXES,
+    OfficeKind.WARDEN: CouncilTask.SECURE_BORDERS,
 }
 
 
@@ -113,6 +119,8 @@ POSITION_STATS: dict[CourtPosition, str] = {
     CourtPosition.MASTER_OF_REVELS: "charisma",
     CourtPosition.JESTER: "creativity",
     CourtPosition.SEER: "wisdom",
+    CourtPosition.TASTER: "wisdom",
+    CourtPosition.INTERPRETER: "intellect",
 }
 
 
@@ -124,6 +132,8 @@ CRISIS_CAUSES: dict[WarCause, CrisisDemand] = {
     WarCause.ESPIONAGE: CrisisDemand.HAND_OVER,
     WarCause.VENDETTA: CrisisDemand.HAND_OVER,
     WarCause.RIVALRY: CrisisDemand.DISARM,
+    WarCause.GRUDGE: CrisisDemand.APOLOGY,
+    WarCause.RAID: CrisisDemand.RELEASE_CAPTIVES,
 }
 
 
@@ -144,6 +154,8 @@ AREA_LOBBIES: Mapping[LawArea, frozenset[FactionKind]] = total(
         LawArea.COMMERCE: frozenset({FactionKind.MERCHANT_GUILD, FactionKind.CRAFT_GUILD, FactionKind.FINANCIERS, FactionKind.CHARTERED_COMPANY}),
         LawArea.FAITH: frozenset({FactionKind.PRIESTHOOD, FactionKind.HOLY_ORDER, FactionKind.MOVEMENT}),
         LawArea.LABOUR: frozenset({FactionKind.WORKERS_UNION, FactionKind.PEASANT_LEAGUE, FactionKind.CRAFT_GUILD}),
+        LawArea.FAMILY: frozenset({FactionKind.ESTATE, FactionKind.PRIESTHOOD, FactionKind.MOVEMENT}),
+        LawArea.ENVIRONMENT: frozenset({FactionKind.PEASANT_LEAGUE, FactionKind.MOVEMENT, FactionKind.CHARTERED_COMPANY}),
     },
 )
 
@@ -163,6 +175,8 @@ AREA_ORDER: Mapping[LawArea, int] = total(
         LawArea.COMMERCE: 100,
         LawArea.FAITH: 90,
         LawArea.LABOUR: 100,
+        LawArea.FAMILY: 90,
+        LawArea.ENVIRONMENT: 100,
     },
 )
 
@@ -212,6 +226,7 @@ MODEL_PENALTIES: Mapping[HonourModel, OathPenalty | None] = total(
         HonourModel.HONOUR: OathPenalty.SHAME,
         HonourModel.FACE: OathPenalty.SHAME,
         HonourModel.NONE: None,
+        HonourModel.PURITY: OathPenalty.SHAME,
     },
 )
 
@@ -239,6 +254,7 @@ OFFICE_SKILLS = partial(
         OfficeKind.CHIEF_SCIENTIST: ((SkillKind.SCIENCE, SkillKind.COMPUTING, SkillKind.ENGINEERING), "intellect"),
         OfficeKind.JESTER: ((SkillKind.ORATORY, SkillKind.DECEPTION, SkillKind.ETIQUETTE), "charisma"),
         OfficeKind.WARDEN: ((SkillKind.HUNTING, SkillKind.TRACKING, SkillKind.LAW), "wisdom"),
+        OfficeKind.CENSOR: ((SkillKind.LAW, SkillKind.ETIQUETTE, SkillKind.ORATORY), "intellect"),
     },
     without={OfficeKind.HEIR_DESIGNATE, OfficeKind.RULER},
 )
@@ -260,6 +276,7 @@ COUNCIL = (
     OfficeKind.ADMIRAL,
     OfficeKind.SPEAKER,
     OfficeKind.CHIEF_SCIENTIST,
+    OfficeKind.CENSOR,
 )
 
 
@@ -287,6 +304,7 @@ DEFAULT_POWERS: Mapping[OfficeKind, tuple[OfficePower, ...]] = MappingProxyType(
         OfficeKind.CHIEF_SCIENTIST: (OfficePower.RESEARCH,),
         OfficeKind.JESTER: (OfficePower.JEST,),
         OfficeKind.WARDEN: (OfficePower.JUDGE,),
+        OfficeKind.CENSOR: (OfficePower.CENSUS,),
     }
 )
 
@@ -306,6 +324,7 @@ POWER_SKILLS: Mapping[OfficePower, OfficeKind] = MappingProxyType(
         OfficePower.PREACH: OfficeKind.CHAPLAIN,
         OfficePower.RESEARCH: OfficeKind.COURT_SCHOLAR,
         OfficePower.JEST: OfficeKind.JESTER,
+        OfficePower.CENSUS: OfficeKind.CENSOR,
     }
 )
 
@@ -331,6 +350,8 @@ AREA_SECRETS: Mapping[LawArea, frozenset[IntrigueSecret]] = total(
         LawArea.COMMERCE: frozenset({IntrigueSecret.CRIME, IntrigueSecret.DEBT}),
         LawArea.FAITH: frozenset({IntrigueSecret.SECRET_CULT_MEMBERSHIP, IntrigueSecret.CRIME}),
         LawArea.LABOUR: frozenset({IntrigueSecret.CRIME, IntrigueSecret.DEBT}),
+        LawArea.FAMILY: frozenset({IntrigueSecret.AFFAIR, IntrigueSecret.ILLEGITIMATE_CHILD, IntrigueSecret.TRUE_PARENTAGE}),
+        LawArea.ENVIRONMENT: frozenset({IntrigueSecret.ECOSABOTAGE, IntrigueSecret.CRIME}),
     },
 )
 
@@ -373,6 +394,7 @@ CLAIM_STRENGTHS: Mapping[ClaimBasis, str] = total(
         ClaimBasis.DE_JURE: "de_jure_strength",
         ClaimBasis.ELECTION: "election_strength",
         ClaimBasis.ADOPTION: "adoption_strength",
+        ClaimBasis.PROPHECY: "prophecy_strength",
     },
 )
 
@@ -392,7 +414,9 @@ AREA_CLASH: Mapping[LawArea, str] = total(
         LawArea.COMMERCE: "commerce_clash_weight",
         LawArea.FAITH: "faith_clash_weight",
         LawArea.LABOUR: "labour_clash_weight",
+        LawArea.FAMILY: "family_clash_weight",
+        LawArea.ENVIRONMENT: "environment_clash_weight",
     },
 )
 
-SERVING_CLIENTS = (ClientRole.BROKER, ClientRole.ARTIST)
+SERVING_CLIENTS = (ClientRole.BROKER, ClientRole.ARTIST, ClientRole.SCHOLAR, ClientRole.INFORMANT)
