@@ -1,9 +1,12 @@
 import pytest
+from sqlalchemy import func, select
 
 from aerona.agents.tool_ports import AgentReadViews
 from aerona.db.session import Database
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.mind import PressureRow
 from aerona.domain.enums.mind import PressureKind
+from aerona.domain.enums.node import ActorKind
 from aerona.tools.framework.ports import BornChild, BornWorld, ToolPorts, WorldBirthOrder
 from aerona.tools.mortal.registry import mortal_specs
 from aerona.tools.son.registry import son_specs
@@ -47,6 +50,21 @@ async def staged(database: Database, case: Case) -> tuple[Realm, dict[str, int]]
     return realm, ids
 
 
+async def last_change(database: Database) -> int:
+    async with database.read() as session:
+        return int(await session.scalar(select(func.coalesce(func.max(StateChangeRow.id), 0))) or 0)
+
+
+async def unowned_changes(database: Database, mark: int) -> list[str]:
+    async with database.read() as session:
+        rows = await session.execute(
+            select(StateChangeRow.table_name, StateChangeRow.field).where(
+                StateChangeRow.id > mark, (StateChangeRow.actor_kind == ActorKind.SYSTEM) | (StateChangeRow.epoch == 0)
+            )
+        )
+    return sorted({f"{table}.{field}" for table, field in rows})
+
+
 def test_every_son_tool_has_a_working_case() -> None:
     assert sorted(SON_CASES) == sorted(SON_SPECS)
 
@@ -62,8 +80,10 @@ async def test_son_tool_runs(database: Database, name: str) -> None:
     actor = case.actor(realm, ids) if case.actor is not None else realm.son_id
     toolkit = await son_toolkit(database, actor, action_points=case.action_points, ports=PORTS)
     assert name in toolkit.catalogue.names, f"{name} is not offered to the son"
+    mark = await last_change(database)
     outcome = await toolkit.runtime.call(name, complete(SON_SPECS[name].input_model, case.arguments(realm, ids)))
     assert not outcome.is_error, outcome.text
+    assert await unowned_changes(database, mark) == []
 
 
 @pytest.mark.parametrize("name", sorted(MORTAL_CASES))
@@ -73,8 +93,10 @@ async def test_mortal_tool_runs(database: Database, name: str) -> None:
     actor = case.actor(realm, ids) if case.actor is not None else realm.mortal_id
     toolkit = await mortal_toolkit(database, actor, action_points=case.action_points, ports=PORTS)
     assert name in toolkit.catalogue.names, f"{name} is not offered to this actor"
+    mark = await last_change(database)
     outcome = await toolkit.runtime.call(name, complete(MORTAL_SPECS[name].input_model, case.arguments(realm, ids)))
     assert not outcome.is_error, outcome.text
+    assert await unowned_changes(database, mark) == []
 
 
 @pytest.mark.parametrize("label", sorted(COMMUNITY_CASES))

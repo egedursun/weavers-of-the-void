@@ -12,6 +12,7 @@ from aerona.constants.tool_inputs import ERROR_EXCERPT
 from aerona.core.errors import AeronaError
 from aerona.core.grammar import spoken
 from aerona.db.ledger_capture import RowChange
+from aerona.db.record_context import acting
 from aerona.db.session import Database
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.write_guard import chosen_bonds
@@ -240,35 +241,37 @@ class ToolRuntime[CallT: ToolCall]:
     async def _write(self, spec: ToolSpec[CallT, Any], parsed: ToolInput) -> ToolResult | PendingLongJob:
         async with self._database.write() as session:
             call = await self.build_call(await self._environment(session, spec, writable=True))
-            blocked = await self.gate(call, spec)
-            if blocked is not None:
-                if blocked.exhaust:
-                    call.turn.exhaust()
-                await session.flush()
-                return ToolResult(blocked.text, True)
-            self.precheck(call, spec)
-            self._check_long_job(call, spec)
-            marker = await chronicle_marker(session)
-            recorder = change_capture(session)
-            try:
-                with chosen_bonds():
-                    async with tool_holds(session, self.settings.epoch, spec.name) as restored:
-                        outcome = await spec.handler(call, parsed)
-                        await session.flush()
-                refuse_restored(restored)
-                if isinstance(outcome, LongJob):
-                    call.turn.set_pending_job(PendingJob(kind=outcome.kind, essence=outcome.essence, action_points=outcome.action_points, epoch=call.epoch))
+            with acting(call.actor_kind, call.actor_id, call.epoch, key=f"actor.{spec.name}"):
+                blocked = await self.gate(call, spec)
+                if blocked is not None:
+                    if blocked.exhaust:
+                        call.turn.exhaust()
                     await session.flush()
-                    return PendingLongJob(spec, outcome, summarize(parsed.model_dump(mode="json", exclude_none=True)), await recorder.changes())
-                if call.log.actions_charged is None:
-                    call.charge_actions(spec.meta.actions(self.rules))
-                await self.attribute_chronicle(call, marker)
+                    return ToolResult(blocked.text, True)
+                self.precheck(call, spec)
+                self._check_long_job(call, spec)
+                marker = await chronicle_marker(session)
+                recorder = change_capture(session)
+                try:
+                    with chosen_bonds():
+                        async with tool_holds(session, self.settings.epoch, spec.name) as restored:
+                            outcome = await spec.handler(call, parsed)
+                            await session.flush()
+                    refuse_restored(restored)
+                    if isinstance(outcome, LongJob):
+                        call.turn.set_pending_job(PendingJob(kind=outcome.kind, essence=outcome.essence, action_points=outcome.action_points, epoch=call.epoch))
+                        await session.flush()
+                        return PendingLongJob(spec, outcome, summarize(parsed.model_dump(mode="json", exclude_none=True)), await recorder.changes())
+                    if call.log.actions_charged is None:
+                        call.charge_actions(spec.meta.actions(self.rules))
+                    await self.attribute_chronicle(call, marker)
+                    await session.flush()
+                finally:
+                    recorder.stop()
+                text = self.epilogue(call, outcome)
+                await self._record(call, spec, summarize(parsed.model_dump(mode="json", exclude_none=True)), text, await recorder.changes())
                 await session.flush()
-            finally:
-                recorder.stop()
-            text = self.epilogue(call, outcome)
-            await self._record(call, spec, summarize(parsed.model_dump(mode="json", exclude_none=True)), text, await recorder.changes())
-            return ToolResult(text, False)
+                return ToolResult(text, False)
 
     def _check_long_job(self, call: CallT, spec: ToolSpec[CallT, Any]) -> None:
         if spec.meta.long_job is None:
@@ -313,20 +316,22 @@ class ToolRuntime[CallT: ToolCall]:
         spec = pending.spec
         async with self._database.write() as session:
             call = await self.build_call(await self._environment(session, spec, writable=True))
-            call.turn.set_pending_job(None)
-            recorder = change_capture(session)
-            try:
-                with chosen_bonds():
-                    async with tool_holds(session, self.settings.epoch, spec.name) as restored:
-                        body = await pending.job.finish(call, value)
-                        await session.flush()
-                refuse_restored(restored)
-            finally:
-                recorder.stop()
-            call.turn.add_long_job_trace(LongJobTrace(tool=spec.name, key=pending.job.trace_key(value), summary=body))
-            call.log.essence_spent = pending.job.essence
-            text = self.epilogue(call, body)
-            await self._record(call, spec, pending.summary, text, [*pending.changes, *await recorder.changes()])
+            with acting(call.actor_kind, call.actor_id, call.epoch, key=f"actor.{spec.name}"):
+                call.turn.set_pending_job(None)
+                recorder = change_capture(session)
+                try:
+                    with chosen_bonds():
+                        async with tool_holds(session, self.settings.epoch, spec.name) as restored:
+                            body = await pending.job.finish(call, value)
+                            await session.flush()
+                    refuse_restored(restored)
+                finally:
+                    recorder.stop()
+                call.turn.add_long_job_trace(LongJobTrace(tool=spec.name, key=pending.job.trace_key(value), summary=body))
+                call.log.essence_spent = pending.job.essence
+                text = self.epilogue(call, body)
+                await self._record(call, spec, pending.summary, text, [*pending.changes, *await recorder.changes()])
+                await session.flush()
         return ToolResult(text, False)
 
     async def refund_essence(self, call: CallT, amount: int) -> None:

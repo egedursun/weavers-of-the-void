@@ -34,7 +34,7 @@ class DiseaseLoads:
         for row in await session.scalars(select(EndemicDiseaseRow)):
             lasting.setdefault(row.region_entity_id, []).append(row.load)
         acute: dict[int, list[int]] = {}
-        for outbreak in await session.scalars(select(OutbreakRow).where(OutbreakRow.status != OutbreakStatus.ENDED)):
+        for outbreak in await session.scalars(select(OutbreakRow).where(OutbreakRow.status != OutbreakStatus.ENDED, OutbreakRow.event_entity_id.is_(None))):
             acute.setdefault(outbreak.region_entity_id, []).append(outbreak.severity // 2)
         relief = await soap_relief(session, rules)
         regions: dict[int, int] = {}

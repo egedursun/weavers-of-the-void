@@ -15,6 +15,7 @@ from aerona.domain.enums.happening import EventPhase
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.context import TickContext
+from aerona.engine.disease.book import DiseaseBook
 from aerona.engine.environment.book import add_scar, region_environment
 from aerona.engine.environment.geomorph import erupted
 from aerona.engine.happenings.profile import flow_of, footprint_of, record_casualties
@@ -101,10 +102,23 @@ async def peak_harm(ctx: TickContext, event: EntityRow, profile: EventProfileRow
             return 0
         return await kill_share(ctx, event, town, table.siege_peak_starvation_pct * hunger * scale, category=category, phase=EventPhase.PEAK)
     pct = table.famine_peak_death_pct if event.engine_kind is EngineKind.FAMINE else table.plague_peak_death_pct
+    spared = await immune_shares(ctx, event) if event.engine_kind is EngineKind.PLAGUE else {}
     dead = 0
     for community in await struck_communities(ctx, event, atlas):
-        dead += await kill_share(ctx, event, community, pct * scale, category=category, phase=EventPhase.PEAK)
+        exposed = 1 - spared.get(community.id, 0.0)
+        dead += await kill_share(ctx, event, community, pct * scale * exposed, category=category, phase=EventPhase.PEAK)
     return dead
+
+
+async def immune_shares(ctx: TickContext, event: EntityRow) -> dict[int, float]:
+    disease_id = await ctx.session.scalar(
+        select(OutbreakRow.disease_entity_id).where(OutbreakRow.event_entity_id == event.id).order_by(OutbreakRow.id).limit(1)
+    )
+    if disease_id is None:
+        return {}
+    book = await DiseaseBook.load(ctx.session, ctx.rules, ctx.epoch)
+    holders = {community_id for community_id, disease in book.immunity if disease == disease_id}
+    return {community_id: book.immune_share(community_id, disease_id) for community_id in sorted(holders)}
 
 
 async def aftermath(ctx: TickContext, event: EntityRow, profile: EventProfileRow, atlas: RegionAtlas) -> int:
