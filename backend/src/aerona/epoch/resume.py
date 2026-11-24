@@ -4,10 +4,12 @@ from datetime import UTC, datetime
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.record_context import acting
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.epochs import EpochRunRow
 from aerona.db.tables.routes import HorizonIntuitionRow
 from aerona.domain.enums.epoch import EpochPhase
+from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.travel import HorizonStatus
 from aerona.epoch.state import plan_steps, require_run, run_of
 
@@ -43,17 +45,19 @@ async def half_epoch(session: AsyncSession) -> HalfEpoch | None:
 
 async def begin_run(session: AsyncSession) -> RunStart:
     cosmos = await CosmosRepository(session).require_cosmos()
-    run = await run_of(session, cosmos.epoch)
-    resuming = is_half(run, cosmos.epoch)
-    if run is not None and run.finished:
-        run.finished = False
-        run.phase = EpochPhase.NOT_STARTED
-        run.started = False
-    run = await require_run(session, cosmos.epoch)
-    await plan_steps(session, cosmos.epoch)
-    run.resumed = run.resumed or resuming
-    if run.started_at is None:
-        run.started_at = datetime.now(UTC)
+    with acting(ActorKind.SYSTEM, None, cosmos.epoch, key="epoch.begin"):
+        run = await run_of(session, cosmos.epoch)
+        resuming = is_half(run, cosmos.epoch)
+        if run is not None and run.finished:
+            run.finished = False
+            run.phase = EpochPhase.NOT_STARTED
+            run.started = False
+        run = await require_run(session, cosmos.epoch)
+        await plan_steps(session, cosmos.epoch)
+        run.resumed = run.resumed or resuming
+        if run.started_at is None:
+            run.started_at = datetime.now(UTC)
+        await session.flush()
     return RunStart(cosmos.epoch, resuming, run.phase, run.started)
 
 

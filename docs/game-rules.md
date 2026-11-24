@@ -10814,7 +10814,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-everyday_mishaps-deadly_damage"></a>Harm a deadly mishap does before armour and toughness | 80 | 0 to 200 | — |
 | <a id="r-everyday_mishaps-small_stress"></a>Stress a small mishap or a near miss lays on its victim | 3 | 0 to 100 | — |
 | <a id="r-everyday_mishaps-loss_wealth"></a>Wealth a mishap of loss takes from its victim | 2 | 0 to 100 | — |
-| <a id="r-everyday_mishaps-cohort_rate_per_mil"></a>Accidental deaths per year per thousand of a town's people of ordinary exposure | 1 | 0 to 1,000 | Fortune is reckoned from blessings, curses, charms, oaths, powers over fate and a streak of its own, and moves the mishaps and draws of a life |
+| <a id="r-everyday_mishaps-cohort_rate_per_mil"></a>Accidental deaths per year per thousand of a town's people of ordinary exposure; the ordinary death rates carry them, so only crowding and cold above it add deaths | 1 | 0 to 1,000 | Fortune is reckoned from blessings, curses, charms, oaths, powers over fate and a streak of its own, and moves the mishaps and draws of a life |
 
 #### Life cycles
 

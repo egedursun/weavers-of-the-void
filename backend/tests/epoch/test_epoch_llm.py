@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from aerona.agents.runtime import AgentRuntime
 from aerona.db.session import Database
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import CreationVerdictRow
 from aerona.db.tables.epochs import EpochEnginePhaseRow, EpochRow, EpochRunRow
@@ -52,10 +53,16 @@ async def counts(database: Database) -> tuple[int, int, int]:
 
 async def test_full_epoch_with_scripted_model(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
     script_full_epoch(model, world)
+    async with database.read() as session:
+        mark = int(await session.scalar(select(func.coalesce(func.max(StateChangeRow.id), 0))) or 0)
     report = await EpochOrchestrator(runtime).run()
     async with database.read() as session:
         age = await session.get(EpochRow, 1)
         verdict = await session.get(CreationVerdictRow, world.creation.id)
+        undated = list(
+            await session.execute(select(StateChangeRow.table_name, StateChangeRow.field).where(StateChangeRow.id > mark, StateChangeRow.epoch == 0))
+        )
+    assert sorted({f"{table}.{field}" for table, field in undated}) == []
     words, rewards, epoch = await counts(database)
     assert not report.stopped
     assert epoch == 2

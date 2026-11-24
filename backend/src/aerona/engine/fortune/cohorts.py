@@ -12,6 +12,7 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.stats import headcount, set_stats
 
 PER_MIL = 1000
+ORDINARY_CROWDING = PERCENT // 5
 
 
 async def keep_cohort_mishaps(ctx: TickContext) -> int:
@@ -22,11 +23,12 @@ async def keep_cohort_mishaps(ctx: TickContext) -> int:
         if held(town.id) or await ctx.session.get(CohortMishapRateRow, (town.id, ctx.epoch)) is not None:
             continue
         profile = await ctx.session.get(SettlementProfileRow, town.id)
-        crowding = profile.fire_risk if profile is not None else PERCENT // 5
+        crowding = profile.fire_risk if profile is not None else ORDINARY_CROWDING
         cold = table.winter_pct if ctx.epoch % 4 == 3 else PERCENT
         rate = table.per_epoch(table.cohort_rate_per_mil) * (PERCENT + crowding) // PERCENT * cold // PERCENT
+        ordinary = table.per_epoch(table.cohort_rate_per_mil) * (PERCENT + ORDINARY_CROWDING) // PERCENT
         people = headcount(town)
-        dead = round_half_up(people * rate / PER_MIL)
+        dead = round_half_up(people * max(0, rate - ordinary) / PER_MIL)
         injured = dead * 4
         if dead and people > dead:
             with flowing(FlowCategory.DEATH):

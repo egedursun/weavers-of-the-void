@@ -3,8 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.folkways import MishapRow
 from aerona.db.tables.fortune import CohortMishapRateRow, FortuneLawRow, FortuneProfileRow, FortuneSourceRow
+from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.folkways import MishapKind
 from aerona.domain.enums.fortune import FortuneLaw, FortuneSourceKind
+from aerona.domain.enums.settlement import SizeTier
 from aerona.engine.fortune.cohorts import keep_cohort_mishaps
 from aerona.engine.fortune.everyday import everyday, trigger
 from aerona.engine.fortune.profiles import keep_fortune, shift_fortune, streak_of
@@ -63,11 +65,16 @@ async def test_a_triggered_deadly_mishap_wounds_by_its_kind(session: AsyncSessio
 
 
 async def test_towns_count_their_accidental_dead_each_epoch(session: AsyncSession, world: CoreWorld) -> None:
-    await settlement(session, "Greenmere", world, world.regions[0], population=10000)
+    ordinary = await settlement(session, "Greenmere", world, world.regions[0], population=10000)
+    crowded = await settlement(session, "Stackwell", world, world.regions[0], population=10000)
+    session.add(SettlementProfileRow(settlement_entity_id=crowded.id, size_tier=SizeTier.TOWN, fire_risk=80, locked=[], foreigners={}))
+    await session.flush()
     ctx = await at(session, 2)
-    assert await keep_cohort_mishaps(ctx) >= 1
+    assert await keep_cohort_mishaps(ctx) >= 2
     assert await keep_cohort_mishaps(ctx) == 0
-    dead = await session.scalar(select(func.sum(CohortMishapRateRow.dead)))
-    assert int(dead or 0) > 0
+    calm = await session.get(CohortMishapRateRow, (ordinary.id, 2))
+    pressed = await session.get(CohortMishapRateRow, (crowded.id, 2))
+    assert calm is not None and calm.dead == 0
+    assert pressed is not None and pressed.dead > 0
     assert await session.scalar(select(func.count()).select_from(MishapRow)) == 0
     assert await session.scalar(select(func.count()).select_from(FortuneSourceRow)) == 0

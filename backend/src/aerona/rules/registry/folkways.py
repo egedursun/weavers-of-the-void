@@ -174,4 +174,10 @@ class EverydayMishapRules(Spanned):
     deadly_damage: int = rule(80, 0, 200, R, "Harm a deadly mishap does before armour and toughness")
     small_stress: int = rule(3, 0, 100, R, "Stress a small mishap or a near miss lays on its victim")
     loss_wealth: int = rule(2, 0, 100, R, "Wealth a mishap of loss takes from its victim")
-    cohort_rate_per_mil: int = rule(1, 0, 1000, R, "Accidental deaths per year per thousand of a town's people of ordinary exposure")
+    cohort_rate_per_mil: int = rule(
+        1,
+        0,
+        1000,
+        R,
+        "Accidental deaths per year per thousand of a town's people of ordinary exposure; the ordinary death rates carry them, so only crowding and cold above it add deaths",
+    )

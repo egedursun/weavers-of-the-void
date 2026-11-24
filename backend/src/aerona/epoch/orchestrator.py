@@ -7,9 +7,11 @@ from aerona.agents.runtime import AgentRuntime
 from aerona.agents.son import SonTurnResult, run_son_turn
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import several
+from aerona.db.record_context import acting
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.node import ActorKind
 from aerona.epoch.concurrency import WORLD_GROUP, EpochStoppedError, StopSignal
 from aerona.epoch.context import EpochContext
 from aerona.epoch.phases.auto_council import auto_council
@@ -102,7 +104,7 @@ class EpochOrchestrator:
         async with self.runtime.database.read() as session:
             stale = [run.epoch for run in await stale_runs(session)]
         for epoch in stale:
-            with metrics_epoch(epoch):
+            with metrics_epoch(epoch), acting(ActorKind.SYSTEM, None, epoch, key="epoch"):
                 await self.after_transition(EpochContext(self.runtime, self.hooks, self.stop, epoch, resuming=True, job=job))
 
     async def run(self, job: JobContext | None = None) -> EpochReport:
@@ -112,7 +114,7 @@ class EpochOrchestrator:
         async with self.runtime.database.write() as session:
             start = await begin_run(session)
         ec = EpochContext(self.runtime, self.hooks, self.stop, start.epoch, start.resuming, job)
-        with metrics_epoch(start.epoch):
+        with metrics_epoch(start.epoch), acting(ActorKind.SYSTEM, None, start.epoch, key="epoch"):
             return await self.run_epoch(ec, start.phase)
 
     async def run_epoch(self, ec: EpochContext, phase: int) -> EpochReport:
