@@ -228,6 +228,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.entity_flags",
     "table.feuds",
     "table.goods",
+    "table.hooks",
     "table.house_members",
     "table.house_profiles",
     "table.incident_facts",

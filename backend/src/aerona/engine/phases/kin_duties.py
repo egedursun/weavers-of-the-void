@@ -33,6 +33,7 @@ from aerona.engine.phase import Phase
     "table.stars",
     "table.title_holders",
     "table.title_profiles",
+    "table.traits",
     "table.worlds",
 )
 @writes(

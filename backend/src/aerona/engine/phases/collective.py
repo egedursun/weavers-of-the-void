@@ -163,6 +163,7 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     "table.name_registry",
     "table.node_births",
     "table.nodes",
+    "table.polity_members",
     "table.sons",
     "table.stars",
     "table.worlds",

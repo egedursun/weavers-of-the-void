@@ -308,6 +308,7 @@ async def barter_and_rivalry(ctx: TickContext) -> None:
     "faction.wealth",
     "people.prosperity",
     "people.wealth",
+    "settlement.population",
     "settlement.prosperity",
     "settlement.wealth",
     "table.army_profiles",

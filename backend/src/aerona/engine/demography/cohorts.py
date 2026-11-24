@@ -208,8 +208,9 @@ def weights_for(
 
 
 async def apply_flow(session: AsyncSession, rules: Rules, community: EntityRow, delta: int, *, category: FlowCategory, epoch: int) -> None:
+    kept = bool(await cohorts_of(session, community.id))
     rows = await seed(session, rules, community, epoch)
-    if not rows:
+    if not rows or not kept:
         return
     with explaining():
         term(f"flows.{category.value}", delta, source_node_id=community.id)

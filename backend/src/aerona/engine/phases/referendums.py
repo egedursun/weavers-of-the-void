@@ -6,7 +6,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.referendums.tend import tend_referendums
 
 
-@reads("table.movement_profiles", "table.polity_profiles", "table.public_opinion", "table.referendums")
+@reads("table.entities", "table.movement_profiles", "table.nodes", "table.polity_profiles", "table.public_opinion", "table.referendums")
 @writes("table.offices", "table.order_transitions", "table.polity_profiles", "table.referendums", "table.treaty_profiles")
 async def referendums(ctx: TickContext) -> None:
     for key, value in asdict(await tend_referendums(ctx)).items():

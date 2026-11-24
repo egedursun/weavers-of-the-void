@@ -503,3 +503,12 @@ async def test_works_a_community_holds_in_common_pass_to_separate_households_und
         await pass_commons(ctx, town, work, tally)
         await realm.session.flush()
     assert sorted(work.owner_node_id or 0 for work in works) == sorted(keeper.id for keeper in keepers) and tally.owned == 2
+
+
+async def test_a_town_never_works_more_hands_than_it_has_people(realm: Realm) -> None:
+    town = await settlement(realm, "Thinfold", population=500)
+    realm.session.add(LabourRow(community_entity_id=town.id, job=Job.FARMING, workers=4000, output_pct=100, epoch=1))
+    realm.session.add(LabourRow(community_entity_id=town.id, job=Job.CRAFTING, workers=1000, output_pct=100, epoch=1))
+    await realm.session.flush()
+    book = await loaded(realm)
+    assert book.hands(town.id, Job.FARMING) == 400

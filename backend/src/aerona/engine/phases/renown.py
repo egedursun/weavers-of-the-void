@@ -98,6 +98,7 @@ async def renown_hearsay(ctx: TickContext) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.memories",
+    "table.reputations",
 )
 async def renown_claims(ctx: TickContext) -> None:
     tally = DeedTally()

@@ -36,6 +36,7 @@ from aerona.engine.environment.book import EnvironmentBook
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import canon
+from aerona.engine.primitives.stats import headcount
 
 HOME_BONDS = (BondKind.LIVES_IN, BondKind.MEMBER_OF)
 
@@ -176,7 +177,10 @@ class EconomyBook:
         rows = self.labour.get(community_id)
         if not rows:
             return None
-        return sum(round_half_up(rows[job].workers * rows[job].output_pct / PERCENT) for job in jobs if job in rows)
+        working = sum(row.workers for row in rows.values())
+        community = self.entities.get(community_id)
+        scale = min(1.0, headcount(community) / working) if community is not None and working > 0 else 1.0
+        return sum(round_half_up(rows[job].workers * scale * rows[job].output_pct / PERCENT) for job in jobs if job in rows)
 
     def community_of(self, entity_id: int) -> EntityRow | None:
         home = self.affiliated.get(entity_id)

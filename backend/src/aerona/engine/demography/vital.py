@@ -11,7 +11,7 @@ from aerona.domain.enums.demography import AgeBand, CohortCondition
 from aerona.domain.enums.modifier import ModifierOp
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.engine.context import TickContext
-from aerona.engine.demography.cohorts import CohortKey, age_cohorts, row_for, seed, sex_spec, sexes, total
+from aerona.engine.demography.cohorts import CohortKey, age_cohorts, reconcile, row_for, seed, sex_spec, sexes, total
 from aerona.engine.environment.years import world_years
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.numbers import apportion, round_half_up
@@ -53,7 +53,9 @@ async def war_share(ctx: TickContext, community_id: int) -> float:
         profile = await ctx.session.get(EventProfileRow, found.war.event_entity_id) if found.war.event_entity_id is not None else None
         began = max(start, profile.start_year) if profile is not None and profile.start_year is not None else start
         ended = min(end, profile.end_year) if profile is not None and profile.end_year is not None else end
-        share = max(share, max(0, ended - began) / span)
+        fought = found.war.last_clash_epoch == ctx.epoch
+        weight = 1.0 if fought else ctx.rules.demography.quiet_war_stress_pct / PERCENT
+        share = max(share, max(0, ended - began) / span * weight)
     return min(1.0, share)
 
 
@@ -139,6 +141,7 @@ async def demographic_step(ctx: TickContext, community: EntityRow, biology: Peop
     rows = await seed(ctx.session, ctx.rules, community, ctx.epoch)
     if not rows:
         return 0
+    await reconcile(ctx.session, ctx.rules, community, rows, ctx.epoch)
     before = total(rows)
     sampled = len(world_years(ctx.environment, community.world_id or 0, "births"))
     births = 0

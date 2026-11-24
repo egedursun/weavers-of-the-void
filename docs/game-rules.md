@@ -6,7 +6,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 
 | The rule book at a glance | |
 |---|---:|
-| Rules | 20,727 |
+| Rules | 20,728 |
 | Chapters | 74 |
 | Topics | 1,051 |
 | Rules counted in years | 220 |
@@ -27,7 +27,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
    - [War and diplomacy](#g-war-and-diplomacy) (1,851)
    - [Minds, values and memory](#g-minds-values-and-memory) (1,075)
    - [Reputation](#g-reputation) (226)
-   - [Population and growth](#g-population-and-growth) (535)
+   - [Population and growth](#g-population-and-growth) (536)
    - [Engine phases](#g-engine-phases) (509)
    - [Weather](#g-weather) (428)
    - [Bodies and wounds](#g-bodies-and-wounds) (591)
@@ -116,7 +116,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | [War and diplomacy](#g-war-and-diplomacy) | 103 | 1,851 |
 | [Minds, values and memory](#g-minds-values-and-memory) | 68 | 1,075 |
 | [Reputation](#g-reputation) | 11 | 226 |
-| [Population and growth](#g-population-and-growth) | 39 | 535 |
+| [Population and growth](#g-population-and-growth) | 39 | 536 |
 | [Engine phases](#g-engine-phases) | 2 | 509 |
 | [Weather](#g-weather) | 5 | 428 |
 | [Bodies and wounds](#g-bodies-and-wounds) | 19 | 591 |
@@ -7826,7 +7826,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Population and growth
 
-535 rules in 39 topics: harvest, nutrition, time budgets, age sets, taverns, welfare, commuting, cooperatives, scale, generations, diaspora, demographic transition, sex ratio, structural demography, reproduction systems, clones, climate effects, climate world type, deep life, deep world, disasters, cohorts, demography, childhood, unions and birth, youth, population policy, fertility means, peoples, biology, customs, empty world, limits, mortal tools, society, son tools, world effects, world engine, world epoch transition.
+536 rules in 39 topics: harvest, nutrition, time budgets, age sets, taverns, welfare, commuting, cooperatives, scale, generations, diaspora, demographic transition, sex ratio, structural demography, reproduction systems, clones, climate effects, climate world type, deep life, deep world, disasters, cohorts, demography, childhood, unions and birth, youth, population policy, fertility means, peoples, biology, customs, empty world, limits, mortal tools, society, son tools, world effects, world engine, world epoch transition.
 
 #### Harvest
 
@@ -8291,6 +8291,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-demography-disease_death_pct"></a>Extra deaths at the heaviest disease load (%) | 80% | 0% to 1,000% | Disease load slows births and raises deaths |
 | <a id="r-demography-endemic_baseline"></a>Disease load the ordinary death rates already carry in a mild land; in a warmer or wetter land they carry the disease its own climate brings, and only the load above it adds deaths | 30 | 0 to 100 | — |
 | <a id="r-demography-stress_birth_pct"></a>Births lost at war or in deep unrest (%) | 30% | 0% to 100% | — |
+| <a id="r-demography-quiet_war_stress_pct"></a>Hardship a war declared but not fought in an epoch lays on births, against one fought (%) | 20% | 0% to 100% | — |
 | <a id="r-demography-immortality_death_pct"></a>Deaths kept under the immortality law (%) | 10% | 0% to 1,000% | — |
 | <a id="r-demography-short_life_death_pct"></a>Deaths under the short-life law (%) | 200% | 0% to 1,000% | — |
 

@@ -167,6 +167,7 @@ JUSTICE_FULL = 100
 )
 @writes(
     "faction.strength",
+    "people.wealth",
     "settlement.defense",
     "settlement.piety",
     "settlement.population",

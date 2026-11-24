@@ -10,6 +10,7 @@ from aerona.engine.structures.upkeep import upkeep_all
 
 @reads(
     "structure.durability",
+    "structure.function",
     "table.applied_fixups",
     "table.bonds",
     "table.camps",
@@ -32,6 +33,7 @@ from aerona.engine.structures.upkeep import upkeep_all
     "table.sons",
     "table.structure_designs",
     "table.structure_profiles",
+    "table.structure_sections",
     "table.structure_staff",
     "table.unit_designs",
     "table.workshops",

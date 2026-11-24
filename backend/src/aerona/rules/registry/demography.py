@@ -56,6 +56,7 @@ class DemographyRules:
         "Disease load the ordinary death rates already carry in a mild land; in a warmer or wetter land they carry the disease its own climate brings, and only the load above it adds deaths",
     )
     stress_birth_pct: int = rule(30, 0, 100, G, "Births lost at war or in deep unrest (%)")
+    quiet_war_stress_pct: int = rule(20, 0, 100, G, "Hardship a war declared but not fought in an epoch lays on births, against one fought (%)")
     immortality_death_pct: int = rule(10, 0, 1000, G, "Deaths kept under the immortality law (%)")
     short_life_death_pct: int = rule(200, 0, 1000, G, "Deaths under the short-life law (%)")
 
