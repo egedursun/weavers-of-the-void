@@ -89,7 +89,6 @@ export const INVALIDATIONS: { [K in EventKind]: InvalidationRule<K> } = {
   'fate.step': nothing,
   'fate.finished': world,
   'council.held': world,
-  'son.chat_replied': world,
   'son.new': world,
   'son.ascended': world,
   'creator.revelation': world,
@@ -136,6 +135,14 @@ export const INVALIDATIONS: { [K in EventKind]: InvalidationRule<K> } = {
     queryKeys.divineWill.forecast(event.payload.forecast_id),
   ],
   'divine_will.index_progress': () => [queryKeys.divineWill.index],
+  'presence.session_changed': () => [queryKeys.presence.all],
+  'presence.exchange_started': () => [queryKeys.presence.all],
+  'presence.exchange_finished': () => [
+    queryKeys.presence.all,
+    queryKeys.world.all,
+    queryKeys.ledger.all,
+    queryKeys.usage.all,
+  ],
 }
 
 const lastRun = new Map<string, number>()

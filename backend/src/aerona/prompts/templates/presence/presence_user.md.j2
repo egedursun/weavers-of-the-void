@@ -1,0 +1,26 @@
+{% if forgotten %}
+{{ forgotten | several("earlier exchange", "earlier exchanges") }} of this audience {{ "lies" if forgotten == 1 else "lie" }} beyond your memory.
+{% endif %}
+{% if remembered %}
+EARLIER IN THIS AUDIENCE, OLDEST FIRST:
+{% for exchange in remembered %}
+{{ caller[:1] | upper }}{{ caller[1:] }} said: {{ exchange.player_text }}
+{% for act in exchange.acts %}
+- you used {{ act.tool }}: {% if act.failed %}it failed: {% endif %}{{ act.outcome }}
+{% endfor %}
+You answered: {{ exchange.reply_text }}
+
+{% endfor %}
+{% endif %}
+{{ caller | upper }} SAYS NOW:
+{{ player_text }}
+{% if trace %}
+
+YOUR ANSWER SO FAR (the connection broke; go on from the last line and do not repeat an act that is already done):
+{% set labels = {"text": "you said", "thought": "your thought", "tool_call": "you called", "tool_result": "result of", "error": "error", "retry": "the connection broke"} %}
+{% for line in trace %}
+[{{ labels[line.kind] }}{% if line.tool %} {{ line.tool }}{% endif %}] {{ line.text }}
+{% endfor %}
+{% endif %}
+
+{% if player_language %}Answer in {{ player_language }}{% else %}Answer in the language of the words above{% endif %}, keeping your own names and terms as the world writes them in {{ lore_language | language_name }}.

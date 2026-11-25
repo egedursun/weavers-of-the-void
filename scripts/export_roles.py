@@ -169,10 +169,6 @@ ROLES: dict[AgentRole, Role] = {
         Stage.ASKED,
         "Writes the words an image of a star, a world, a galaxy or another body of the cosmos is drawn from, for those that have none.",
     ),
-    AgentRole.SON_CHAT: Role(
-        Stage.ASKED,
-        "Lets you talk with one of your sons. The son answers in its own voice, and its attitude and loyalty may change.",
-    ),
     AgentRole.TRANSLATION: Role(
         Stage.ASKED,
         "Translates a text into one of the world's own languages, with its pronunciation and word-by-word meaning, "

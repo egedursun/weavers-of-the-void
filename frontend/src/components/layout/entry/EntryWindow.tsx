@@ -30,6 +30,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { ENTRY_KIND_ICON, Medallion } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
+import { SpeakWithThem } from '@/features/presence/SpeakWithThem'
 import { isTypingTarget } from '../useGlobalShortcuts'
 import { type EntryFilter, EntryRail } from './EntryRail'
 import { ENTRY_CATEGORIES } from './entryCategories'
@@ -439,6 +440,7 @@ function EntryBody({
           >
             <ListTree />
           </Button>
+          <SpeakWithThem entry={entry} />
           <Button
             variant='outline'
             size='sm'

@@ -530,6 +530,11 @@ export const MEMORY_ICONS: Record<components['schemas']['MemoryKind'], Named> =
       tone: 'muted',
     },
     divine_will: { label: 'The gods willed it', icon: Sparkles, tone: 'gold' },
+    audience: {
+      label: 'Held an audience with us',
+      icon: MessagesSquare,
+      tone: 'gold',
+    },
     goodwill: { label: 'Showed us goodwill', icon: Smile, tone: 'success' },
     ill_will: { label: 'Showed us ill will', icon: Frown, tone: 'warning' },
     long_history: {

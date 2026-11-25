@@ -36,6 +36,17 @@ describe('stream lines', () => {
     ).not.toBeNull()
   })
 
+  it('leaves an audience of Summon to Presence to its own screen', () => {
+    for (const kind of ['agent.stream', 'agent.thought', 'agent.tool_result']) {
+      const spoken = event(11, kind, {
+        ...ACTOR,
+        channel: 'presence:4',
+        text: 'I hear you.',
+      })
+      expect(toFeedLine(spoken)).toBeNull()
+    }
+  })
+
   it('joins streamed text into one line and closes it with the thought', () => {
     const lines = appendLines(
       [],

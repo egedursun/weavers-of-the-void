@@ -75,6 +75,7 @@ from aerona.services.books.history import HandEpoch, creator_hand, ending_line, 
 from aerona.services.books.kinds import add_kind_sections
 from aerona.services.books.made import KindArticle, made_kinds
 from aerona.services.books.mapsvg import MapPicture, map_picture
+from aerona.services.books.presence import SpeakerAudiences, audiences_by_speaker
 from aerona.services.books.records import Ledger, add_history_sections, record_tables
 from aerona.services.books.seasons import add_season_sections, festival_plan
 from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection, title_of
@@ -188,6 +189,7 @@ class EntityArticle:
     family: FamilyPlan | None = None
     festivals: Plan | None = None
     made: KindArticle | None = None
+    audiences: SpeakerAudiences = field(default_factory=SpeakerAudiences)
 
 
 @dataclass
@@ -206,6 +208,7 @@ class SonArticle:
     cover: str | None
     fate: list[str] = field(default_factory=list)
     typed: list[TypedSection] = field(default_factory=list)
+    audiences: SpeakerAudiences = field(default_factory=SpeakerAudiences)
 
 
 @dataclass
@@ -297,6 +300,7 @@ class GodArticle:
     fate: list[str] = field(default_factory=list)
     anchor: str = ""
     typed: list[TypedSection] = field(default_factory=list)
+    audiences: SpeakerAudiences = field(default_factory=SpeakerAudiences)
 
 
 @dataclass
@@ -470,6 +474,7 @@ class BookBuilder:
         self.ledger = Ledger({})
         self.wheels: dict[int, Markup] = {}
         self.kin: set[int] = set()
+        self.audiences: dict[int, SpeakerAudiences] = {}
 
     async def load_common(self) -> None:
         rows = await self.session.execute(select(EntityRow.id, EntityRow.name))
@@ -499,6 +504,7 @@ class BookBuilder:
         self.wheels = await add_season_sections(self.session, self.typed)
         await add_kind_sections(self.session, self.typed)
         self.ledger = await add_history_sections(self.session, self.typed)
+        self.audiences = await audiences_by_speaker(self.session, self.names)
 
     def bond_lines(self, node_id: int) -> tuple[list[str], list[str]]:
         active: list[str] = []
@@ -545,6 +551,7 @@ class BookBuilder:
             family=await family_plan(self.session, entity.id, entity.name) if entity.id in self.kin else None,
             festivals=await festival_plan(self.session, entity) if entity.entity_type is EntityType.PEOPLE else None,
             made=self.made.get(entity.id),
+            audiences=self.audiences.get(entity.id, SpeakerAudiences()),
         )
 
     async def plan_of(self, entity: EntityRow) -> Plan | None:
@@ -590,6 +597,7 @@ class BookBuilder:
             cover=await cover_of(self.session, son.id),
             fate=await son_fate(self.session, son, self.names),
             typed=self.typed.of(son.id),
+            audiences=self.audiences.get(son.id, SpeakerAudiences()),
         )
 
     async def sky_worship(self) -> dict[int, list[str]]:
@@ -1142,7 +1150,15 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         fate = await god_fate(session, god, builder.names)
         gods.append(
             GodArticle(
-                god, builder.names.get(god.world_id, "?"), powers, stats, await cover_of(session, god.id), fate, god_anchor(god.id), builder.typed.of(god.id)
+                god,
+                builder.names.get(god.world_id, "?"),
+                powers,
+                stats,
+                await cover_of(session, god.id),
+                fate,
+                god_anchor(god.id),
+                builder.typed.of(god.id),
+                builder.audiences.get(god.id, SpeakerAudiences()),
             )
         )
     routes = [

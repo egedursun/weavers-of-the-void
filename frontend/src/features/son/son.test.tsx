@@ -1,9 +1,8 @@
 import { ruleList, worldState } from '@/test-utils/fixtures'
-import { failure } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { HandOfGodPanel } from './HandOfGodPanel'
-import { SonChat } from './SonChat'
+import { SonRecords } from './SonRecords'
 
 const STATS = {
   strength: 20,
@@ -236,106 +235,45 @@ describe('hand of god panel', () => {
   })
 })
 
-describe('son chat', () => {
-  beforeEach(() => localStorage.clear())
-  const record = (overrides: Record<string, unknown> = {}) =>
-    son(overrides) as never
-
-  it('shows the transcript with the son and the creator on opposite sides', async () => {
-    const { screen } = await renderScreen(
-      <SonChat son={record()} cover={null} />,
-      routes(
-        {},
+describe('son records', () => {
+  it('keeps the old words spoken with the son among its words', async () => {
+    const creator = { id: 1, kind: 'creator', name: 'Aeron' }
+    const ithren = { id: 7, kind: 'son', name: 'Ithren' }
+    const detail = {
+      worshippers: [],
+      creations: [],
+      messages: [
         {
-          'GET /api/sons/7/chat': [
-            { id: 1, epoch: 2, sender_node_id: 99, text: 'Speak, Ithren.' },
-            { id: 2, epoch: 2, sender_node_id: 7, text: 'I listen, father.' },
-          ],
-          'GET /api/rules': [
-            ...RULES,
-            ...ruleList({ 'council.chat_max_chars': 400 }),
-          ],
-        }
-      )
-    )
-    await expect.element(screen.getByText('Speak, Ithren.')).toBeInTheDocument()
-    await expect
-      .element(screen.getByText('I listen, father.'))
-      .toBeInTheDocument()
-    await expect.element(screen.getByText('You · Epoch 2')).toBeInTheDocument()
-  })
-
-  it('shows empty and dead states', async () => {
-    const alive = await renderScreen(
-      <SonChat son={record({ id: 8 })} cover={null} />,
-      routes({}, { 'GET /api/sons/8/chat': [] })
-    )
-    await expect
-      .element(alive.screen.getByText('No words yet'))
-      .toBeInTheDocument()
-  })
-
-  it('does not reach a dead son', async () => {
-    const { screen } = await renderScreen(
-      <SonChat son={record({ id: 9, status: 'dead' })} cover={null} />,
-      routes({}, { 'GET /api/sons/9/chat': [] })
-    )
-    await expect
-      .element(screen.getByText('Too late', { exact: true }))
-      .toBeInTheDocument()
-    await expect
-      .element(screen.getByLabelText('What do you say to Ithren?'))
-      .toBeDisabled()
-  })
-
-  it('sends words, shows the reply attitude and loyalty change', async () => {
-    const { screen, server } = await renderScreen(
-      <SonChat son={record({ id: 10 })} cover={null} />,
-      routes(
-        {},
+          id: 1,
+          epoch: 3,
+          sender: creator,
+          recipient: ithren,
+          intent: 'chat',
+          text: 'Where were you when the river rose?',
+          tone: null,
+          answered: true,
+        },
         {
-          'GET /api/sons/10/chat': [],
-          'POST /api/sons/10/chat': {
-            attitude: 'loyal',
-            change: 3,
-            loyalty: 70,
-            reply: 'ok',
-          },
-        }
-      )
-    )
-    const say = screen.getByRole('button', { name: 'Say' })
-    await expect
-      .element(say)
-      .toHaveAttribute('aria-description', 'Write something first.')
-    await screen.getByLabelText('What do you say to Ithren?').fill('Be brave')
-    await say.click()
-    await expect
-      .element(screen.getByText('Loyalty +3 → 70'))
-      .toBeInTheDocument()
-    expect(server.callsTo('POST /api/sons/10/chat')[0].body).toEqual({
-      text: 'Be brave',
-    })
-  })
-
-  it('returns failed text to the box and shows the error', async () => {
+          id: 2,
+          epoch: 3,
+          sender: ithren,
+          recipient: creator,
+          intent: 'prayer',
+          text: 'Grant the harvest.',
+          tone: null,
+          answered: false,
+        },
+      ],
+    } as never
     const { screen } = await renderScreen(
-      <SonChat son={record({ id: 11 })} cover={null} />,
-      routes(
-        {},
-        {
-          'GET /api/sons/11/chat': [],
-          'POST /api/sons/11/chat': failure(503, 'The model did not answer.'),
-        }
-      )
+      <SonRecords detail={detail} />,
+      routes()
     )
-    await screen.getByLabelText('What do you say to Ithren?').fill('Hear me')
-    await screen.getByRole('button', { name: 'Say' }).click()
     await expect
-      .element(screen.getByText('The model did not answer.'))
+      .element(screen.getByText('"Where were you when the river rose?"'))
       .toBeInTheDocument()
     await expect
-      .element(screen.getByLabelText('What do you say to Ithren?'))
-      .toHaveValue('Hear me')
+      .element(screen.getByText('"Grant the harvest."'))
+      .toBeInTheDocument()
   })
 })

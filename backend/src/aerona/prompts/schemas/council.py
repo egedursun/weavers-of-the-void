@@ -52,21 +52,6 @@ class CouncilOutput(OutputModel):
     )
 
 
-class ChatAttitude(StrEnum):
-    LOYAL = "loyal"
-    DISTANT = "distant"
-    REBELLIOUS = "rebellious"
-    AFRAID = "afraid"
-    GRATEFUL = "grateful"
-    MOCKING = "mocking"
-
-
-class SonChatOutput(OutputModel):
-    reply: str = Field(description="1 to 4 sentences, fully in character, in their own manner of speech")
-    attitude: ChatAttitude
-    loyalty_change: int = Field(description="How the Creator's words affected their loyalty")
-
-
 class WordGlossOutput(OutputModel):
     word: str
     meaning: str

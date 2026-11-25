@@ -1137,12 +1137,20 @@ class MemorySpec:
     label: str
     act: ActKind | None = None
     inherited: bool = True
+    names_subject: bool = True
 
 
 def _memory(
-    components: dict[OpinionComponent, int], decay_pct: int, cares: dict[ValueAxis, int], label: str, act: ActKind | None = None, *, inherited: bool = True
+    components: dict[OpinionComponent, int],
+    decay_pct: int,
+    cares: dict[ValueAxis, int],
+    label: str,
+    act: ActKind | None = None,
+    *,
+    inherited: bool = True,
+    names_subject: bool = True,
 ) -> MemorySpec:
-    return MemorySpec(MappingProxyType(components), decay_pct, MappingProxyType(cares), label, act, inherited)
+    return MemorySpec(MappingProxyType(components), decay_pct, MappingProxyType(cares), label, act, inherited, names_subject)
 
 
 MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = total(
@@ -1197,6 +1205,7 @@ MEMORIES: MappingProxyType[MemoryKind, MemorySpec] = total(
         M.SURVIVED_WITH: _memory({OC.AFFECTION: 45, OC.TRUST: 45, OC.RESPECT: 10}, 3, {V.KINSHIP: 15, V.FRIENDSHIP: 20}, "Survived with us"),
         M.APOLOGISED_TO_ME: _memory({OC.TRUST: 50, OC.RESPECT: 30, OC.AFFECTION: 20}, 10, {V.HONOUR: 15, V.MERCY: 15}, "Asked our pardon", A.APOLOGISING),
         M.JUDGED_ME: _memory({OC.GRIEVANCE: 40, OC.FEAR: 30, OC.RESPECT: 30}, 8, {V.LAW: 25}, "Judged us"),
+        M.AUDIENCE: _memory({OC.TRUST: 34, OC.AFFECTION: 33, OC.RESPECT: 33}, 10, {}, "An audience", inherited=False, names_subject=False),
     },
 )
 

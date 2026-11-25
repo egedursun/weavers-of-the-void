@@ -22,7 +22,7 @@ const WORDS_SHOWN = 5
 
 export function SonRecords({ detail }: { detail: SonDetail }) {
   const { entityType } = useLabels()
-  const words = detail.messages.filter((message) => message.intent !== 'chat')
+  const words = detail.messages
   const worshippers = useShowMore(detail.worshippers, ROWS_SHOWN)
   const creations = useShowMore(detail.creations, ROWS_SHOWN)
   const spoken = useShowMore(words, WORDS_SHOWN)

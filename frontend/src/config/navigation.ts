@@ -30,6 +30,7 @@ import {
   Share2,
   SlidersHorizontal,
   Sparkles,
+  Speech,
   Swords,
   SunMoon,
   Target,
@@ -46,6 +47,7 @@ export type NavRoute =
   | '/cards'
   | '/goals'
   | '/council'
+  | '/presence'
   | '/prayers'
   | '/cosmos'
   | '/heavens'
@@ -221,6 +223,14 @@ export const NAV_GROUPS: NavGroup[] = [
         to: '/council',
         icon: UsersRound,
         description: 'Councils of the pantheon and their verdicts.',
+      },
+      {
+        id: 'presence',
+        title: 'Summon to Presence',
+        to: '/presence',
+        icon: Speech,
+        description:
+          'Call any son, foreign god, mortal, spirit, being or beast that can speak, living or dead, and speak with it one to one.',
       },
       {
         id: 'goals',

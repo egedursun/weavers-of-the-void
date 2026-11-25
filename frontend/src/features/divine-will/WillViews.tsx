@@ -259,13 +259,23 @@ function PastTranscript({ view }: { view: WillSessionView }) {
             .filter(Boolean)
             .join(' · ')}
         </Muted>
+        {summary.closed_at && (
+          <Muted variant='caption'>
+            You began anew here, so the Divine Will no longer keeps this session
+            in mind. Every exchange stays readable here, in the lore book and in
+            the Codex.
+          </Muted>
+        )}
       </div>
       {view.cycles.length === 0 ? (
         <Muted variant='caption'>
           This session closed before any exchange.
         </Muted>
       ) : (
-        <CycleList cycles={view.cycles} boundary={view.memory_boundary} />
+        <CycleList
+          cycles={view.cycles}
+          boundary={summary.closed_at ? 0 : view.memory_boundary}
+        />
       )}
       {view.has_earlier && (
         <Muted variant='caption'>

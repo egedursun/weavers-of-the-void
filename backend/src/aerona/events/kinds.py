@@ -35,7 +35,6 @@ class EventKind(StrEnum):
     FATE_STEP = "fate.step"
     FATE_FINISHED = "fate.finished"
     COUNCIL_HELD = "council.held"
-    SON_CHAT_REPLIED = "son.chat_replied"
     NEW_SON = "son.new"
     SON_ASCENDED = "son.ascended"
     REVELATION = "creator.revelation"
@@ -73,6 +72,9 @@ class EventKind(StrEnum):
     DIVINE_WILL_PLAN_CHANGED = "divine_will.plan_changed"
     DIVINE_WILL_FORECAST_PROGRESS = "divine_will.forecast_progress"
     DIVINE_WILL_INDEX_PROGRESS = "divine_will.index_progress"
+    PRESENCE_SESSION_CHANGED = "presence.session_changed"
+    PRESENCE_EXCHANGE_STARTED = "presence.exchange_started"
+    PRESENCE_EXCHANGE_FINISHED = "presence.exchange_finished"
 
 
 TRANSIENT_KINDS = frozenset(

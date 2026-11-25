@@ -40,6 +40,7 @@ export const JOB_KIND_LABEL: Record<JobKind, string> = {
   divine_will: 'Divine Will exchange',
   divine_will_plan: 'Divine Will plan',
   divine_will_forecast: 'Divine Will forecast',
+  presence: 'Audience in presence',
   divine_will_index: 'Divine Will reading the world',
 }
 

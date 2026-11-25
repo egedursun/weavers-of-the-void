@@ -1,4 +1,4 @@
-import { type ServerEvent, willCycleOf } from '@/realtime'
+import { type ServerEvent, presenceExchangeOf, willCycleOf } from '@/realtime'
 import { type components } from '@/api/generated/schema'
 import { formatDuration, plural } from '@/lib/units'
 import { JOB_KIND_LABEL, isJobKind } from '@/constants/jobs'
@@ -357,11 +357,6 @@ function describe(event: ServerEvent): Draft | null {
           ? 'The motion passed.'
           : 'The motion failed.',
       })
-    case 'son.chat_replied':
-      return draft('gods', 'son', 'A son answered you', {
-        detail: `Attitude: ${event.payload.attitude}`,
-        link: sonLink(event.payload.son_id, 'Open the son'),
-      })
     case 'son.new':
       return draft(
         'gods',
@@ -548,7 +543,11 @@ function describeStream(event: ServerEvent): Draft | null {
 }
 
 export function toFeedLine(event: ServerEvent): FeedLine | null {
-  if (QUIET_KINDS.has(event.kind) || willCycleOf(event.payload) !== null)
+  if (
+    QUIET_KINDS.has(event.kind) ||
+    willCycleOf(event.payload) !== null ||
+    presenceExchangeOf(event.payload) !== null
+  )
     return null
   const described = describe(event)
   if (!described) return null

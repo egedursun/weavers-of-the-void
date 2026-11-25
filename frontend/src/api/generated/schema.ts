@@ -639,22 +639,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/sons/{son_id}/chat': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations['read_chat_api_sons__son_id__chat_get']
-    put?: never
-    post: operations['chat_api_sons__son_id__chat_post']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/api/sons/{son_id}/act': {
     parameters: {
       query?: never
@@ -8345,6 +8329,134 @@ export interface paths {
     get?: never
     put?: never
     post: operations['cancel_forecast_api_divine_will_forecasts__forecast_id__cancel_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence/speakers': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_speakers_api_presence_speakers_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence/speakers/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_speaker_api_presence_speakers__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence/sessions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['open_session_api_presence_sessions_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence/sessions/{session_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_session_api_presence_sessions__session_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence/sessions/{session_id}/exchanges': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['start_exchange_api_presence_sessions__session_id__exchanges_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence/exchanges/{exchange_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_exchange_api_presence_exchanges__exchange_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence/exchanges/{exchange_id}/cancel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['cancel_exchange_api_presence_exchanges__exchange_id__cancel_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence/sessions/{session_id}/close': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['close_session_api_presence_sessions__session_id__close_post']
     delete?: never
     options?: never
     head?: never
@@ -54210,25 +54322,6 @@ export interface components {
       strength: number
       locked: string[]
     }
-    ChatAttitude:
-      'loyal' | 'distant' | 'rebellious' | 'afraid' | 'grateful' | 'mocking'
-    ChatPayload: {
-      epoch?: number | null
-      son_id: number
-      attitude: string
-      change: number
-    } & {
-      [key: string]: unknown
-    }
-    ChatReply: {
-      reply: string
-      attitude: components['schemas']['ChatAttitude']
-      loyalty: number
-      change: number
-    }
-    ChatRequest: {
-      text: string
-    }
     ChemicalProduct:
       | 'dye'
       | 'soap'
@@ -62907,7 +63000,6 @@ export interface components {
       | 'fate.step'
       | 'fate.finished'
       | 'council.held'
-      | 'son.chat_replied'
       | 'son.new'
       | 'son.ascended'
       | 'creator.revelation'
@@ -62945,6 +63037,9 @@ export interface components {
       | 'divine_will.plan_changed'
       | 'divine_will.forecast_progress'
       | 'divine_will.index_progress'
+      | 'presence.session_changed'
+      | 'presence.exchange_started'
+      | 'presence.exchange_finished'
     EventLinkRecord: {
       id: number
       kind: string
@@ -69722,6 +69817,7 @@ export interface components {
       | 'divine_will_plan'
       | 'divine_will_forecast'
       | 'divine_will_index'
+      | 'presence'
     JobPayload: {
       epoch?: number | null
       job_id: string
@@ -74531,6 +74627,7 @@ export interface components {
       | 'survived_with'
       | 'apologised_to_me'
       | 'judged_me'
+      | 'audience'
     MemoryOrigin: 'derived' | 'player'
     MemoryStrikeDeleteInput: {
       by_id: number
@@ -81355,6 +81452,178 @@ export interface components {
       built_epoch: number
       locked: string[]
     }
+    PresenceClosedView: {
+      session_id: number
+      node_id: number
+      kept: boolean
+    }
+    PresenceEventKind:
+      'text' | 'thought' | 'tool_call' | 'tool_result' | 'error' | 'retry'
+    PresenceEventView: {
+      id: number
+      ordinal: number
+      kind: components['schemas']['PresenceEventKind']
+      tool: string
+      payload: {
+        [key: string]: unknown
+      }
+      created_at: string
+    }
+    PresenceExchangeAccepted: {
+      exchange_id: number
+      session_id: number
+      ordinal: number
+    }
+    PresenceExchangeFinishedEvent: {
+      id: number
+      kind: 'presence.exchange_finished'
+      payload: components['schemas']['PresenceExchangeFinishedPayload']
+      at: string
+    }
+    PresenceExchangeFinishedPayload: {
+      epoch?: number | null
+      exchange_id: number
+      session_id: number
+      node_id: number
+      ordinal: number
+      status: components['schemas']['PresenceExchangeStatus']
+      steps: number
+      input_tokens: number
+      output_tokens: number
+      error: string
+    } & {
+      [key: string]: unknown
+    }
+    PresenceExchangePayload: {
+      epoch?: number | null
+      exchange_id: number
+      session_id: number
+      node_id: number
+      ordinal: number
+      status: components['schemas']['PresenceExchangeStatus']
+    } & {
+      [key: string]: unknown
+    }
+    PresenceExchangeStartedEvent: {
+      id: number
+      kind: 'presence.exchange_started'
+      payload: components['schemas']['PresenceExchangePayload']
+      at: string
+    }
+    PresenceExchangeStatus: 'running' | 'done' | 'failed' | 'cancelled'
+    PresenceExchangeView: {
+      id: number
+      session_id: number
+      ordinal: number
+      epoch: number
+      player_text: string
+      reply_text: string
+      remember_text: string
+      status: components['schemas']['PresenceExchangeStatus']
+      error: string
+      model: string
+      input_tokens: number
+      output_tokens: number
+      steps: number
+      started_at: string
+      finished_at: string | null
+      events: components['schemas']['PresenceEventView'][]
+    }
+    PresenceGuise: 'creator' | 'unnamed_power' | 'dream_voice' | 'ordinary'
+    PresenceOpenRequest: {
+      node_id: number
+      guise: components['schemas']['PresenceGuise']
+      record: components['schemas']['PresenceRecord']
+    }
+    PresenceRecord: 'on_record' | 'off_record'
+    PresenceSayRequest: {
+      text: string
+    }
+    PresenceSessionChangedEvent: {
+      id: number
+      kind: 'presence.session_changed'
+      payload: components['schemas']['PresenceSessionPayload']
+      at: string
+    }
+    PresenceSessionPayload: {
+      epoch?: number | null
+      session_id: number
+      node_id: number
+      guise: components['schemas']['PresenceGuise']
+      record: components['schemas']['PresenceRecord']
+      status: components['schemas']['PresenceStatus']
+      kept: boolean
+    } & {
+      [key: string]: unknown
+    }
+    PresenceSessionSummary: {
+      id: number
+      node_id: number
+      guise: components['schemas']['PresenceGuise']
+      record: components['schemas']['PresenceRecord']
+      status: components['schemas']['PresenceStatus']
+      dead_when_summoned: boolean
+      title: string
+      opened_epoch: number
+      opened_at: string
+      closed_at: string | null
+      exchange_count: number
+    }
+    PresenceSessionView: {
+      session: components['schemas']['PresenceSessionSummary']
+      exchanges: components['schemas']['PresenceExchangeView'][]
+      memory_boundary: number
+      remembered_exchanges: number
+      running_exchange_id: number | null
+    }
+    PresenceSpeakerCard: {
+      node_id: number
+      name: string
+      epithet: string
+      kind: components['schemas']['NodeKind']
+      entity_type: components['schemas']['EntityType'] | null
+      group: components['schemas']['SpeakerGroup']
+      son_status: components['schemas']['SonStatus'] | null
+      foreign_god_status: components['schemas']['ForeignGodStatus'] | null
+      entity_status: components['schemas']['EntityStatus'] | null
+      place_name: string
+      world_name: string
+      patron_name: string
+      faith: number | null
+      languages: string[]
+      dead: boolean
+      death_epoch: number | null
+      son_death_cause: components['schemas']['SonDeathCause'] | null
+      mortal_death_cause: components['schemas']['DeathCause'] | null
+      death_line: string
+      cover: string | null
+      can_act: boolean
+    }
+    PresenceSpeakerItem: {
+      node_id: number
+      name: string
+      kind: components['schemas']['NodeKind']
+      entity_type: components['schemas']['EntityType'] | null
+      group: components['schemas']['SpeakerGroup']
+      dead: boolean
+      cover: string | null
+      open_session_id: number | null
+    }
+    PresenceSpeakerPage: {
+      speakers: components['schemas']['PresenceSpeakerItem'][]
+      total: number
+      offset: number
+      limit: number
+      has_more: boolean
+    }
+    PresenceSpeakerView: {
+      card: components['schemas']['PresenceSpeakerCard']
+      open_session: components['schemas']['PresenceSessionSummary'] | null
+      past_sessions: components['schemas']['PresenceSessionSummary'][]
+      model_enabled: boolean
+      remembered_exchanges: number
+    }
+    PresenceStatus: 'open' | 'closed'
     Preservation:
       'rock' | 'amber' | 'ice' | 'bog' | 'tar' | 'ash' | 'dry' | 'cave'
     PreservationMethod:
@@ -81722,6 +81991,7 @@ export interface components {
       | 'agent'
       | 'localisation'
       | 'divine_will'
+      | 'presence'
     PromptCatalogue: {
       prompts: components['schemas']['PromptEntry'][]
       son_tools: components['schemas']['ToolEntry'][]
@@ -81835,8 +82105,6 @@ export interface components {
       | 'council_agenda'
       | 'council_session_system'
       | 'council_session_user'
-      | 'son_chat_system'
-      | 'son_chat_user'
       | 'translate_system'
       | 'translate_user'
       | 'new_world_system'
@@ -81861,6 +82129,9 @@ export interface components {
       | 'divine_will_user'
       | 'divine_will_translate_system'
       | 'divine_will_translate_user'
+      | 'presence_system'
+      | 'presence_user'
+      | 'presence_closing'
       | 'mortal_context'
       | 'son_opportunities'
       | 'mortal_opportunities'
@@ -87754,12 +88025,6 @@ export interface components {
       best_friend: components['schemas']['Kin'] | null
       worst_rival: components['schemas']['Kin'] | null
     }
-    SonChatRepliedEvent: {
-      id: number
-      kind: 'son.chat_replied'
-      payload: components['schemas']['ChatPayload']
-      at: string
-    }
     SonClearAnchorInput: {
       son_id: number
     }
@@ -88822,6 +89087,8 @@ export interface components {
       hold: boolean
       release?: string[]
     }
+    SpeakerGroup:
+      'sons' | 'foreign_gods' | 'mortals' | 'spirits' | 'beings' | 'beasts'
     SpeakerKind: 'native' | 'second' | 'liturgical'
     SpeakerView: {
       community: components['schemas']['NodeRef'] | null
@@ -97814,7 +98081,6 @@ export interface operations {
             | components['schemas']['FateStepEvent']
             | components['schemas']['FateFinishedEvent']
             | components['schemas']['CouncilHeldEvent']
-            | components['schemas']['SonChatRepliedEvent']
             | components['schemas']['SonNewEvent']
             | components['schemas']['SonAscendedEvent']
             | components['schemas']['CreatorRevelationEvent']
@@ -97852,6 +98118,9 @@ export interface operations {
             | components['schemas']['DivineWillPlanChangedEvent']
             | components['schemas']['DivineWillForecastProgressEvent']
             | components['schemas']['DivineWillIndexProgressEvent']
+            | components['schemas']['PresenceSessionChangedEvent']
+            | components['schemas']['PresenceExchangeStartedEvent']
+            | components['schemas']['PresenceExchangeFinishedEvent']
           )[]
         }
       }
@@ -98793,68 +99062,6 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DeadSonPanel']
-        }
-      }
-      default: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  read_chat_api_sons__son_id__chat_get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        son_id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['MessageRecord'][]
-        }
-      }
-      default: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
-  chat_api_sons__son_id__chat_post: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        son_id: number
-      }
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ChatRequest']
-      }
-    }
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ChatReply']
         }
       }
       default: {
@@ -113737,6 +113944,248 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DivineWillForecast']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_speakers_api_presence_speakers_get: {
+    parameters: {
+      query?: {
+        q?: string
+        group?: components['schemas']['SpeakerGroup'] | null
+        dead?: boolean
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceSpeakerPage']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_speaker_api_presence_speakers__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceSpeakerView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  open_session_api_presence_sessions_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PresenceOpenRequest']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceSessionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_session_api_presence_sessions__session_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        session_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceSessionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  start_exchange_api_presence_sessions__session_id__exchanges_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        session_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PresenceSayRequest']
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceExchangeAccepted']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_exchange_api_presence_exchanges__exchange_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        exchange_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceExchangeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cancel_exchange_api_presence_exchanges__exchange_id__cancel_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        exchange_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceExchangeView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  close_session_api_presence_sessions__session_id__close_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        session_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceClosedView']
         }
       }
       default: {
@@ -194637,9 +195086,6 @@ export const charmPowerValues: ReadonlyArray<
   'concealment',
   'courage',
 ]
-export const chatAttitudeValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['ChatAttitude']
-> = ['loyal', 'distant', 'rebellious', 'afraid', 'grateful', 'mocking']
 export const chemicalProductValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChemicalProduct']
 > = [
@@ -197483,7 +197929,6 @@ export const eventKindValues: ReadonlyArray<
   'fate.step',
   'fate.finished',
   'council.held',
-  'son.chat_replied',
   'son.new',
   'son.ascended',
   'creator.revelation',
@@ -197521,6 +197966,9 @@ export const eventKindValues: ReadonlyArray<
   'divine_will.plan_changed',
   'divine_will.forecast_progress',
   'divine_will.index_progress',
+  'presence.session_changed',
+  'presence.exchange_started',
+  'presence.exchange_finished',
 ]
 export const eventPhaseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EventPhase']
@@ -199754,6 +200202,7 @@ export const jobKindValues: ReadonlyArray<
   'divine_will_plan',
   'divine_will_forecast',
   'divine_will_index',
+  'presence',
 ]
 export const jobProgressEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JobProgressEvent']['kind']
@@ -201033,6 +201482,7 @@ export const memoryKindValues: ReadonlyArray<
   'survived_with',
   'apologised_to_me',
   'judged_me',
+  'audience',
 ]
 export const memoryOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MemoryOrigin']
@@ -203296,6 +203746,30 @@ export const preparednessKindValues: ReadonlyArray<
   'immunisation_plan',
   'quake_building',
 ]
+export const presenceEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PresenceEventKind']
+> = ['text', 'thought', 'tool_call', 'tool_result', 'error', 'retry']
+export const presenceExchangeFinishedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PresenceExchangeFinishedEvent']['kind']
+> = ['presence.exchange_finished']
+export const presenceExchangeStartedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PresenceExchangeStartedEvent']['kind']
+> = ['presence.exchange_started']
+export const presenceExchangeStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PresenceExchangeStatus']
+> = ['running', 'done', 'failed', 'cancelled']
+export const presenceGuiseValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PresenceGuise']
+> = ['creator', 'unnamed_power', 'dream_voice', 'ordinary']
+export const presenceRecordValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PresenceRecord']
+> = ['on_record', 'off_record']
+export const presenceSessionChangedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PresenceSessionChangedEvent']['kind']
+> = ['presence.session_changed']
+export const presenceStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PresenceStatus']
+> = ['open', 'closed']
 export const preservationValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Preservation']
 > = ['rock', 'amber', 'ice', 'bog', 'tar', 'ash', 'dry', 'cave']
@@ -203472,6 +203946,7 @@ export const promptAreaValues: ReadonlyArray<
   'agent',
   'localisation',
   'divine_will',
+  'presence',
 ]
 export const promptIdValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PromptId']
@@ -203561,8 +204036,6 @@ export const promptIdValues: ReadonlyArray<
   'council_agenda',
   'council_session_system',
   'council_session_user',
-  'son_chat_system',
-  'son_chat_user',
   'translate_system',
   'translate_user',
   'new_world_system',
@@ -203587,6 +204060,9 @@ export const promptIdValues: ReadonlyArray<
   'divine_will_user',
   'divine_will_translate_system',
   'divine_will_translate_user',
+  'presence_system',
+  'presence_user',
+  'presence_closing',
   'mortal_context',
   'son_opportunities',
   'mortal_opportunities',
@@ -205177,9 +205653,6 @@ export const soilKindValues: ReadonlyArray<
 export const sonAscendedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonAscendedEvent']['kind']
 > = ['son.ascended']
-export const sonChatRepliedEventKindValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['SonChatRepliedEvent']['kind']
-> = ['son.chat_replied']
 export const sonDeathCauseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SonDeathCause']
 > = [
@@ -205641,6 +206114,9 @@ export const sourceRenewalValues: ReadonlyArray<
   'offering',
   'none',
 ]
+export const speakerGroupValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['SpeakerGroup']
+> = ['sons', 'foreign_gods', 'mortals', 'spirits', 'beings', 'beasts']
 export const speakerKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['SpeakerKind']
 > = ['native', 'second', 'liturgical']

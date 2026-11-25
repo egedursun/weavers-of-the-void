@@ -94,11 +94,6 @@ def council_constraints(rules: Rules) -> list[Constraint]:
     return [ArrayBounds(("alliances",), max_items=rules.council.alliance_rupture_cap)]
 
 
-def son_chat_constraints(rules: Rules) -> list[Constraint]:
-    limit = rules.council.chat_loyalty_max_change
-    return [NumberBounds(("loyalty_change",), -limit, limit)]
-
-
 def translation_constraints(rules: Rules) -> list[Constraint]:
     return [ArrayBounds(("new_words",), max_items=rules.council.translate_new_words_max)]
 

@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, create_model
 from aerona.domain.enums.chronicle import FeedCategory
 from aerona.domain.enums.divine_will import ConfirmationReason, CycleStatus, DivineWillMode, ForecastStatus, IndexStatus, PlanStatus
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.presence import PresenceExchangeStatus, PresenceGuise, PresenceRecord, PresenceStatus
 from aerona.domain.enums.rarity import Rarity
 from aerona.events.kinds import EventKind
 
@@ -197,12 +198,6 @@ class CouncilPayload(EventPayload):
     motion: str | None = None
 
 
-class ChatPayload(EventPayload):
-    son_id: int
-    attitude: str
-    change: int
-
-
 class NewSonPayload(EventPayload):
     son_id: int
     name: str | None = None
@@ -328,6 +323,30 @@ class DivineWillCycleFinishedPayload(DivineWillCyclePayload):
     error: str = ""
 
 
+class PresenceSessionPayload(EventPayload):
+    session_id: int
+    node_id: int
+    guise: PresenceGuise
+    record: PresenceRecord
+    status: PresenceStatus
+    kept: bool = True
+
+
+class PresenceExchangePayload(EventPayload):
+    exchange_id: int
+    session_id: int
+    node_id: int
+    ordinal: int
+    status: PresenceExchangeStatus
+
+
+class PresenceExchangeFinishedPayload(PresenceExchangePayload):
+    steps: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    error: str = ""
+
+
 class DivineWillConfirmationPayload(EventPayload):
     cycle_id: int
     confirmation_id: int
@@ -401,7 +420,6 @@ PAYLOADS: dict[EventKind, type[EventPayload]] = {
     EventKind.FATE_STEP: TextPayload,
     EventKind.FATE_FINISHED: FateFinishedPayload,
     EventKind.COUNCIL_HELD: CouncilPayload,
-    EventKind.SON_CHAT_REPLIED: ChatPayload,
     EventKind.NEW_SON: NewSonPayload,
     EventKind.SON_ASCENDED: SonAscendedPayload,
     EventKind.REVELATION: RevelationPayload,
@@ -431,6 +449,9 @@ PAYLOADS: dict[EventKind, type[EventPayload]] = {
     EventKind.DIVINE_WILL_PLAN_CHANGED: DivineWillPlanPayload,
     EventKind.DIVINE_WILL_FORECAST_PROGRESS: DivineWillForecastPayload,
     EventKind.DIVINE_WILL_INDEX_PROGRESS: DivineWillIndexPayload,
+    EventKind.PRESENCE_SESSION_CHANGED: PresenceSessionPayload,
+    EventKind.PRESENCE_EXCHANGE_STARTED: PresenceExchangePayload,
+    EventKind.PRESENCE_EXCHANGE_FINISHED: PresenceExchangeFinishedPayload,
 }
 
 

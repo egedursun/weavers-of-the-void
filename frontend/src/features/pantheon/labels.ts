@@ -23,7 +23,6 @@ type ReputationLabel = components['schemas']['ReputationLabel']
 type MoodLabel = components['schemas']['CreatorMoodLabel']
 type ExistenceBand = components['schemas']['ExistenceBand']
 type PowerEffect = components['schemas']['PowerEffect']
-type ChatAttitude = components['schemas']['ChatAttitude']
 type ForeignGodStatus = components['schemas']['ForeignGodStatus']
 type SonPassion = 'loyalty' | 'ambition' | 'wrath' | 'mercy'
 
@@ -216,24 +215,6 @@ export const POWER_EFFECT_LABEL: Record<PowerEffect, string> = {
   reviving: 'Reviving',
   bounty_giver: 'Bounty giver',
   curser: 'Curser',
-}
-
-export const ATTITUDE_LABEL: Record<ChatAttitude, string> = {
-  loyal: 'Loyal',
-  grateful: 'Grateful',
-  distant: 'Distant',
-  afraid: 'Frightened',
-  rebellious: 'Rebellious',
-  mocking: 'Mocking',
-}
-
-export const ATTITUDE_BADGE: Record<ChatAttitude, BadgeVariant> = {
-  loyal: 'success',
-  grateful: 'success',
-  distant: 'secondary',
-  afraid: 'warning',
-  rebellious: 'destructive',
-  mocking: 'outline',
 }
 
 export const FOREIGN_STATUS_LABEL: Record<ForeignGodStatus, string> = {

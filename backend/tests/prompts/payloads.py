@@ -34,6 +34,7 @@ NODE = {"name": "Vel", "subtype": "sea", "description": "Deep.", "danger": 10, "
 
 PAYLOADS: dict[PromptId, dict[str, Any]] = {
     PromptId.LOCALISE_USER: {"lines": [{"id": 4, "text": "Nehir Velar'in uzerine yukseldi."}]},
+    PromptId.PRESENCE_CLOSING: {"reply": "Bug\u00fcn de\u011fil.", "remember": "Someone of my own world asked me to cross.", "feeling": -10},
     PromptId.DIVINE_WILL_TRANSLATE_USER: {"text": "Plan 3 bekliyor; Sohmar (d\u00fc\u011f\u00fcm 18) onay\u0131n\u0131z\u0131 bekliyor."},
     PromptId.GENESIS_USER: {
         "world_name": "Aerona",
@@ -179,7 +180,6 @@ PAYLOADS: dict[PromptId, dict[str, Any]] = {
         "minutes": "They spoke.",
         "agenda": "the salt war",
     },
-    PromptId.SON_CHAT_USER: {"reply": "Always, father.", "attitude": "loyal", "loyalty_change": 3},
     PromptId.TRANSLATE_USER: {
         "translation": "Vesh ka.",
         "pronunciation": "vesh-ka",

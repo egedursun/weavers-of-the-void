@@ -3,6 +3,7 @@ from collections.abc import Callable
 from aerona.domain.enums.agent import AgentKind, PendingJobKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.node import NodeKind
+from aerona.domain.enums.presence import PresenceGuise
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.son import ReputationLabel
 from aerona.domain.enums.world import LoreLanguage
@@ -20,6 +21,7 @@ from aerona.prompts.contexts import (
     mortal,
     narrative,
     opportunities,
+    presence,
     son_turn,
 )
 from aerona.prompts.contexts import divine_will as will
@@ -697,23 +699,6 @@ def council_session() -> council.CouncilSessionContext:
     )
 
 
-def son_chat() -> council.SonChatContext:
-    return council.SonChatContext(
-        lore_language=LORE,
-        rules=RULES,
-        member=MEMBER,
-        world_name="Aerona",
-        creator_name="Ul",
-        multi_world=True,
-        appearance="Tall",
-        fear="Fire",
-        secret="A drowned brother",
-        memory="MEMORY",
-        history=[council.ChatLine(from_creator=True, text="Are you loyal?"), council.ChatLine(from_creator=False, text="Always.")],
-        text="Prove it.",
-    )
-
-
 def translate() -> council.TranslateContext:
     return council.TranslateContext(
         lore_language=LORE,
@@ -803,6 +788,67 @@ def divine_will_user() -> will.DivineWillUserContext:
             will.WillTraceLine(kind=kind, text="line", tool="search_lore" if kind == "tool_call" else "", handle="h2" if kind == "tool_result" else "")
             for kind in ("thought", "text", "tool_call", "tool_result", "confirmation_request", "confirmation_reply", "notice", "retry", "error")
         ],
+    )
+
+
+def presence_system() -> presence.PresenceSystemContext:
+    return presence.PresenceSystemContext(
+        lore_language=LORE,
+        rules=RULES,
+        speaker_name="Mira",
+        epithet="keeper of the ford",
+        kind_label="mortal",
+        world_name="Aerona",
+        caller="Ilyar",
+        guise=PresenceGuise.CREATOR,
+        on_record=True,
+        may_act=True,
+        action_points=2,
+        read_tools=["inspect_entity", "look_at_world"],
+        dead=True,
+        death_epoch=4,
+        death_how="old age",
+        death_line="Mira died at the ford.",
+        self_lines=["Speech style: short"],
+        blocks=[presence.PresenceBlock(title="YOU AND YOUR WORLD", text="YOU: Mira")],
+    )
+
+
+def presence_user() -> presence.PresenceUserContext:
+    return presence.PresenceUserContext(
+        lore_language=LORE,
+        rules=RULES,
+        caller="the voice in the dream",
+        player_text="What do you remember of the ford?",
+        player_language="English",
+        forgotten=1,
+        remembered=[
+            presence.PresenceRemembered(
+                ordinal=2,
+                player_text="Who are you?",
+                reply_text="I keep the ford.",
+                acts=[
+                    presence.PresenceAct(tool="inspect_entity", outcome="Mira, a mortal"),
+                    presence.PresenceAct(tool="build", outcome="no actions left", failed=True),
+                ],
+            )
+        ],
+        trace=[
+            presence.PresenceTraceLine(kind=kind, text="line", tool="build" if kind == "tool_call" else "")
+            for kind in ("thought", "text", "tool_call", "tool_result", "retry", "error")
+        ],
+    )
+
+
+def presence_closing() -> presence.PresenceClosingContext:
+    return presence.PresenceClosingContext(
+        rules=RULES,
+        caller="the one who speaks",
+        guise=PresenceGuise.ORDINARY,
+        player_text="Will you cross?",
+        reply_text="Not today.",
+        player_language="Turkish",
+        acts=[presence.PresenceAct(tool="look_at_world", outcome="the ford is high")],
     )
 
 
@@ -1083,8 +1129,6 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
     P.COUNCIL_AGENDA: lambda: council.CouncilAgendaContext(rules=RULES, kind=council.AgendaKind.OPEN_THREAD, subject="salt " * 100),
     P.COUNCIL_SESSION_SYSTEM: council_session,
     P.COUNCIL_SESSION_USER: council_session,
-    P.SON_CHAT_SYSTEM: son_chat,
-    P.SON_CHAT_USER: son_chat,
     P.TRANSLATE_SYSTEM: translate,
     P.LOCALISE_SYSTEM: localise,
     P.LOCALISE_USER: localise,
@@ -1170,6 +1214,9 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
     P.DIVINE_WILL_USER: divine_will_user,
     P.DIVINE_WILL_TRANSLATE_SYSTEM: divine_will_translate,
     P.DIVINE_WILL_TRANSLATE_USER: divine_will_translate,
+    P.PRESENCE_SYSTEM: presence_system,
+    P.PRESENCE_USER: presence_user,
+    P.PRESENCE_CLOSING: presence_closing,
 }
 
 

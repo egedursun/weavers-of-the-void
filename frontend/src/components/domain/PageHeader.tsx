@@ -32,7 +32,7 @@ export function PageHeader({
         <div className='flex min-w-0 items-center gap-4 @3xl/page-header:col-start-1'>
           {icon && <Medallion icon={icon} tone='gold' />}
           <div className='flex min-w-0 flex-col gap-1'>
-            <PageTitle truncate className='text-gilded'>
+            <PageTitle truncate={2} className='text-gilded'>
               {title}
             </PageTitle>
             <Divider className='w-64' />

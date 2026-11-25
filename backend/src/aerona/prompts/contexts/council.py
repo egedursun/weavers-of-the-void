@@ -75,24 +75,6 @@ class CouncilSessionContext(LoreRulesContext):
     seated_gods: list[str] = Field(default_factory=list)
 
 
-class ChatLine(ContextItem):
-    from_creator: bool
-    text: str
-
-
-class SonChatContext(LoreRulesContext):
-    member: CouncilMember
-    world_name: str
-    creator_name: str
-    multi_world: bool = False
-    appearance: str = ""
-    fear: str = ""
-    secret: str = ""
-    memory: str
-    history: list[ChatLine] = Field(default_factory=list)
-    text: str
-
-
 class TranslateContext(LoreRulesContext):
     world_name: str
     language_name: str

@@ -5,7 +5,6 @@ import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
 
 export type SonDetail = components['schemas']['SonDetail']
-export type ChatReply = components['schemas']['ChatReply']
 export type LedgerPage = components['schemas']['LedgerPage']
 export type BondView = components['schemas']['BondView']
 
@@ -15,8 +14,6 @@ export const sonKeys = {
   detail: (sonId: number) => [...queryKeys.world.all, 'son', sonId] as const,
   resurrection: (sonId: number) =>
     [...queryKeys.world.all, 'son', sonId, 'resurrection'] as const,
-  chat: (sonId: number) =>
-    [...queryKeys.world.all, 'son', sonId, 'chat'] as const,
   ledger: (sonId: number) =>
     [...queryKeys.world.all, 'son', sonId, 'ledger'] as const,
 }
@@ -29,18 +26,6 @@ export function useSonDetail(sonId: number) {
         api.GET('/api/sons/{son_id}', { params: { path: { son_id: sonId } } })
       ),
     enabled: Number.isInteger(sonId) && sonId > 0,
-  })
-}
-
-export function useSonChat(sonId: number) {
-  return useQuery({
-    queryKey: sonKeys.chat(sonId),
-    queryFn: () =>
-      unwrap(
-        api.GET('/api/sons/{son_id}/chat', {
-          params: { path: { son_id: sonId } },
-        })
-      ),
   })
 }
 

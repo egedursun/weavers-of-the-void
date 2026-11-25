@@ -1,0 +1,53 @@
+{% from "divine_will.md.j2" import will_facts %}
+{% macro audiences(record, name) -%}
+{% if record.shown %}
+**Audiences** · *{{ record.tally }}*
+
+{% for audience in record.items %}
+<a id="audience-{{ audience.id }}"></a>
+
+**{{ audience.heading }}** · *epoch {{ audience.epoch }} · heard as {{ audience.guise | lower }}*{% if audience.from_death %} · **Summoned from death**{% endif %}
+
+
+{{ will_facts(audience.facts) }}
+
+{% for exchange in audience.exchanges %}
+***Exchange {{ exchange.ordinal }} · epoch {{ exchange.epoch }} · {{ exchange.status | lower }}***
+
+{{ will_facts(exchange.facts) }}
+
+> **The Creator.** {{ exchange.player_text | prose }}
+
+{% if exchange.steps %}
+**The exchange step by step.**
+
+{% for step in exchange.steps %}
+{{ step.ordinal }}. **{{ step.label }}**{% if step.tool %} · `{{ step.tool }}`{% endif %}
+
+
+{{ will_facts(step.facts) | indent(4, true) }}
+{% endfor %}
+
+{% endif %}
+{% if exchange.tools %}
+**Tools it used:** {{ exchange.tools | join(", ") }}
+
+{% endif %}
+{% if exchange.reply_text %}
+**{{ name }} answered.**
+
+{{ exchange.reply_text | prose }}
+
+{% endif %}
+{% if exchange.remember_text %}
+**What {{ name }} kept in memory.** {{ exchange.remember_text | prose }}
+
+{% endif %}
+{% if exchange.error %}
+*Error: {{ exchange.error }}*
+
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{%- endmacro %}

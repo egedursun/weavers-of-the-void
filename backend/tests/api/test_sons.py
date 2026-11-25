@@ -45,10 +45,9 @@ async def test_essence_refusal_names_the_rule(api: ApiWorld) -> None:
 
 async def test_llm_bound_son_endpoints_refuse_offline(api: ApiWorld) -> None:
     son = seeded(api).core.son
-    assert (await api.http.post(f"/api/sons/{son.id}/chat", json={"text": "Speak."})).status_code == 409
     assert (await api.http.post(f"/api/sons/{son.id}/act")).status_code == 409
     assert (await api.http.post("/api/sons/summon", json={})).status_code in (400, 409)
-    assert (await api.http.get(f"/api/sons/{son.id}/chat")).json() == []
+    assert (await api.http.post(f"/api/sons/{son.id}/chat", json={"text": "Speak."})).status_code in (404, 405)
     assert (await api.http.get("/api/sons/relations")).status_code == 200
 
 

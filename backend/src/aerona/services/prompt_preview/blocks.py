@@ -68,7 +68,7 @@ BLOCKS: tuple[ContextBlockInfo, ...] = (
     ContextBlockInfo(kind=K.ENTITY_LINE, needs_son=False, needs_entity=True, audience="every listing", rows=["CTX-023"]),
     ContextBlockInfo(kind=K.ENTITY_DETAIL, needs_son=False, needs_entity=True, audience="inspect tools, Fate", rows=["CTX-025", "CTX-026", "CTX-027"]),
     ContextBlockInfo(kind=K.BOND_LINES, needs_son=False, needs_entity=True, audience="inspect tools, Fate", rows=["CTX-024"]),
-    ContextBlockInfo(kind=K.SON_MEMORY, needs_son=True, needs_entity=False, audience="son, council, son chat", rows=["CTX-029", "CTX-030", "CTX-031"]),
+    ContextBlockInfo(kind=K.SON_MEMORY, needs_son=True, needs_entity=False, audience="son, council", rows=["CTX-029", "CTX-030", "CTX-031"]),
     ContextBlockInfo(kind=K.RECENT_EVENTS, needs_son=False, needs_entity=False, audience="son, Fate", rows=["CTX-032", "CORE-014"]),
     ContextBlockInfo(kind=K.POWERS, needs_son=True, needs_entity=False, audience="son", rows=["CTX-028"]),
     ContextBlockInfo(kind=K.SKY_CALENDAR, needs_son=False, needs_entity=False, audience="son", rows=["CTX-006"]),

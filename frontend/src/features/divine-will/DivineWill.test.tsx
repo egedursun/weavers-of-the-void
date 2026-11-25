@@ -194,8 +194,11 @@ describe('Divine Will panel', () => {
     await screen.getByRole('button', { name: /The first session/ }).click()
     await expect.element(screen.getByText('An old answer')).toBeInTheDocument()
     await expect
-      .element(screen.getByRole('separator', { name: 'Beyond memory' }))
+      .element(screen.getByText(/You began anew here/))
       .toBeInTheDocument()
+    expect(
+      screen.getByRole('separator', { name: 'Beyond memory' }).elements()
+    ).toHaveLength(0)
     await screen.getByRole('button', { name: 'Every past session' }).click()
     await expect
       .element(screen.getByText('Closed sessions'))

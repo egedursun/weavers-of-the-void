@@ -25,7 +25,6 @@ class AgentRole(StrEnum):
     ENTITY_IMAGE_PROMPTS = "Entity image prompts"
     COSMOS_IMAGE_PROMPTS = "Cosmos image prompts"
     COUNCIL = "Council of the gods"
-    SON_CHAT = "Son chat"
     TRANSLATION = "Translation"
     WORLD_BIRTH = "World birth"
     BOND_SUGGESTION = "Fate bond suggestion"

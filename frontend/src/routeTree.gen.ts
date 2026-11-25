@@ -34,6 +34,7 @@ import { Route as AppNetworkRouteImport } from './routes/_app/network'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
 import { Route as AppPantheonRouteImport } from './routes/_app/pantheon'
 import { Route as AppPrayersRouteImport } from './routes/_app/prayers'
+import { Route as AppPresenceRouteImport } from './routes/_app/presence'
 import { Route as AppSettingsRouteRouteImport } from './routes/_app/settings/route'
 import { Route as AppUsageRouteImport } from './routes/_app/usage'
 import { Route as AppWarsRouteImport } from './routes/_app/wars'
@@ -173,6 +174,11 @@ const AppPrayersRoute = AppPrayersRouteImport.update({
   path: '/prayers',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppPresenceRoute = AppPresenceRouteImport.update({
+  id: '/presence',
+  path: '/presence',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppSettingsRouteRoute = AppSettingsRouteRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -270,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/pantheon': typeof AppPantheonRoute
   '/prayers': typeof AppPrayersRoute
+  '/presence': typeof AppPresenceRoute
   '/usage': typeof AppUsageRoute
   '/wars': typeof AppWarsRoute
   '/settings/appearance': typeof AppSettingsAppearanceRoute
@@ -308,6 +315,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/pantheon': typeof AppPantheonRoute
   '/prayers': typeof AppPrayersRoute
+  '/presence': typeof AppPresenceRoute
   '/usage': typeof AppUsageRoute
   '/wars': typeof AppWarsRoute
   '/': typeof AppIndexRoute
@@ -350,6 +358,7 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/pantheon': typeof AppPantheonRoute
   '/_app/prayers': typeof AppPrayersRoute
+  '/_app/presence': typeof AppPresenceRoute
   '/_app/usage': typeof AppUsageRoute
   '/_app/wars': typeof AppWarsRoute
   '/_app/': typeof AppIndexRoute
@@ -393,6 +402,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/pantheon'
     | '/prayers'
+    | '/presence'
     | '/usage'
     | '/wars'
     | '/settings/appearance'
@@ -431,6 +441,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/pantheon'
     | '/prayers'
+    | '/presence'
     | '/usage'
     | '/wars'
     | '/'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/_app/notifications'
     | '/_app/pantheon'
     | '/_app/prayers'
+    | '/_app/presence'
     | '/_app/usage'
     | '/_app/wars'
     | '/_app/'
@@ -670,6 +682,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPrayersRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/presence': {
+      id: '/_app/presence'
+      path: '/presence'
+      fullPath: '/presence'
+      preLoaderRoute: typeof AppPresenceRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -826,6 +845,7 @@ interface AppRouteRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppPantheonRoute: typeof AppPantheonRoute
   AppPrayersRoute: typeof AppPrayersRoute
+  AppPresenceRoute: typeof AppPresenceRoute
   AppUsageRoute: typeof AppUsageRoute
   AppWarsRoute: typeof AppWarsRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -855,6 +875,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppPantheonRoute: AppPantheonRoute,
   AppPrayersRoute: AppPrayersRoute,
+  AppPresenceRoute: AppPresenceRoute,
   AppUsageRoute: AppUsageRoute,
   AppWarsRoute: AppWarsRoute,
   AppIndexRoute: AppIndexRoute,

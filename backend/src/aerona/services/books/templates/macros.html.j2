@@ -1,3 +1,4 @@
+{% from "presence.html.j2" import audiences %}
 {% macro link(kind, id, name, single) -%}
 {% if single %}<a href="?{{ kind }}_id={{ id }}">{{ name }}</a>{% else %}<a href="#{{ kind }}-{{ id }}">{{ name }}</a>{% endif %}
 {%- endmacro %}
@@ -128,6 +129,7 @@
 {% if article.made %}{{ made_kind(article.made) }}{% endif %}
 {{ entity_depth(article.entity.depth) }}
 {{ typed(article.typed) }}
+{{ audiences(article.audiences, article.entity.name) }}
 {% if article.ending %}<div class="box"><span class="label">Ending</span>{{ article.ending }}</div>{% elif article.entity.fate_note %}<div class="box"><span class="label">Fate's judgement</span>{{ article.entity.fate_note }}</div>{% endif %}
 {% if article.bonds or article.past_bonds %}<p class="sublabel">Ties</p><ul class="bonds">{% for bond in article.bonds %}<li>{{ bond }}</li>{% endfor %}{% for bond in article.past_bonds %}<li class="muted"><span class="relation">once</span>{{ bond }}</li>{% endfor %}</ul>{% endif %}
 {{ chips(article.tags) }}
@@ -149,6 +151,7 @@
 </div>
 {{ personality(article.son.personality) }}
 {{ typed(article.typed) }}
+{{ audiences(article.audiences, article.son.name) }}
 {{ existence(article.son.existence_profile) }}
 {% if article.powers %}<p class="sublabel">Powers</p><ul>{% for power in article.powers %}<li><b>{{ power.label }}</b>: {{ power.value }}</li>{% endfor %}</ul>{% endif %}
 {% if article.son.plan %}<div class="box"><span class="label">Plan</span>{{ article.son.plan }}</div>{% endif %}
@@ -174,6 +177,7 @@
 {% if article.powers %}<p class="sublabel">Powers</p><ul>{% for power in article.powers %}<li><b>{{ power.label }}</b>: {{ power.value }}</li>{% endfor %}</ul>{% endif %}
 {{ god_depth(article.god.depth) }}
 {{ typed(article.typed) }}
+{{ audiences(article.audiences, article.god.name) }}
 {% if article.fate %}<p class="sublabel">Fate</p><ul class="timeline">{% for line in article.fate %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
 <div class="clear"></div>
 </article>

@@ -298,6 +298,9 @@ RECORD_TABLES = frozenset(
         "state_change_terms",
         "state_checkpoints",
         "chronicle",
+        "presence_sessions",
+        "presence_exchanges",
+        "presence_events",
         LedgerEntryRow.__tablename__,
         LedgerChangeRow.__tablename__,
     }

@@ -684,6 +684,7 @@ from aerona.db.tables.powers import (
     SystemRestrictionRow,
 )
 from aerona.db.tables.prehistory import DeepTimeEventRow, DeepTimeRunRow, PrehistoryEventRow, PrehistoryRow
+from aerona.db.tables.presence import PresenceEventRow, PresenceExchangeRow, PresenceSessionRow
 from aerona.db.tables.protected_nature import ConservationMovementRow, ProtectedAreaRow, SpeciesProtectionRow
 from aerona.db.tables.reckoning import ReckoningCaseRow, ReckoningMeasureRow, ReckoningRow
 from aerona.db.tables.record_keepers import RecordKeeperRow
@@ -1488,6 +1489,9 @@ __all__ = [
     "PrehistoryEventRow",
     "PrehistoryRow",
     "PreparednessRow",
+    "PresenceEventRow",
+    "PresenceExchangeRow",
+    "PresenceSessionRow",
     "PressureRow",
     "PriceWarRow",
     "PrisonRow",

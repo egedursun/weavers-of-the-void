@@ -6,9 +6,9 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 
 | The rule book at a glance | |
 |---|---:|
-| Rules | 20,728 |
+| Rules | 20,731 |
 | Chapters | 74 |
-| Topics | 1,051 |
+| Topics | 1,055 |
 | Rules counted in years | 220 |
 | Rules tied to a named mechanic | 2,969 |
 | Sets of rules that must stay in order | 145 |
@@ -18,14 +18,14 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 1. [How to read this booklet](#how-to-read-this-booklet)
 2. [The chapters](#the-chapters)
 3. [The rules, chapter by chapter](#the-rules-chapter-by-chapter)
-   - [Agents and model](#g-agents-and-model) (42)
+   - [Agents and model](#g-agents-and-model) (46)
    - [Cosmos](#g-cosmos) (197)
    - [Interconnection](#g-interconnection) (203)
    - [Fate and chronicle](#g-fate-and-chronicle) (221)
    - [Environment and seasons](#g-environment-and-seasons) (2,038)
    - [Exploration](#g-exploration) (175)
    - [War and diplomacy](#g-war-and-diplomacy) (1,851)
-   - [Minds, values and memory](#g-minds-values-and-memory) (1,075)
+   - [Minds, values and memory](#g-minds-values-and-memory) (1,077)
    - [Reputation](#g-reputation) (226)
    - [Population and growth](#g-population-and-growth) (536)
    - [Engine phases](#g-engine-phases) (509)
@@ -72,11 +72,11 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
    - [Content jobs](#g-content-jobs) (24)
    - [Son tools](#g-son-tools) (272)
    - [Creator and essence](#g-creator-and-essence) (130)
-   - [Council](#g-council) (42)
-   - [Interface](#g-interface) (40)
+   - [Council](#g-council) (40)
    - [Organisations](#g-organisations) (22)
    - [Opportunities](#g-opportunities) (34)
    - [Epoch flow](#g-epoch-flow) (7)
+   - [Interface](#g-interface) (39)
    - [Foreign gods](#g-foreign-gods) (45)
    - [Genesis](#g-genesis) (8)
    - [Goals and achievements](#g-goals-and-achievements) (71)
@@ -107,14 +107,14 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 
 | Chapter | Topics | Rules |
 |---|---:|---:|
-| [Agents and model](#g-agents-and-model) | 10 | 42 |
+| [Agents and model](#g-agents-and-model) | 12 | 46 |
 | [Cosmos](#g-cosmos) | 12 | 197 |
 | [Interconnection](#g-interconnection) | 6 | 203 |
 | [Fate and chronicle](#g-fate-and-chronicle) | 11 | 221 |
 | [Environment and seasons](#g-environment-and-seasons) | 67 | 2,038 |
 | [Exploration](#g-exploration) | 6 | 175 |
 | [War and diplomacy](#g-war-and-diplomacy) | 103 | 1,851 |
-| [Minds, values and memory](#g-minds-values-and-memory) | 68 | 1,075 |
+| [Minds, values and memory](#g-minds-values-and-memory) | 69 | 1,077 |
 | [Reputation](#g-reputation) | 11 | 226 |
 | [Population and growth](#g-population-and-growth) | 39 | 536 |
 | [Engine phases](#g-engine-phases) | 2 | 509 |
@@ -156,16 +156,16 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | [Batch jobs](#g-batch-jobs) | 1 | 6 |
 | [Cosmic actions](#g-cosmic-actions) | 3 | 15 |
 | [Cartography](#g-cartography) | 2 | 170 |
-| [Context budgets](#g-context-budgets) | 10 | 123 |
+| [Context budgets](#g-context-budgets) | 12 | 123 |
 | [God and son costs](#g-god-and-son-costs) | 6 | 84 |
 | [Content jobs](#g-content-jobs) | 2 | 24 |
 | [Son tools](#g-son-tools) | 3 | 272 |
 | [Creator and essence](#g-creator-and-essence) | 4 | 130 |
-| [Council](#g-council) | 1 | 42 |
-| [Interface](#g-interface) | 4 | 40 |
+| [Council](#g-council) | 1 | 40 |
 | [Organisations](#g-organisations) | 1 | 22 |
 | [Opportunities](#g-opportunities) | 2 | 34 |
 | [Epoch flow](#g-epoch-flow) | 2 | 7 |
+| [Interface](#g-interface) | 3 | 39 |
 | [Foreign gods](#g-foreign-gods) | 2 | 45 |
 | [Genesis](#g-genesis) | 1 | 8 |
 | [Goals and achievements](#g-goals-and-achievements) | 1 | 71 |
@@ -188,7 +188,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 
 ### Agents and model
 
-42 rules in 10 topics: agents, awakening, chronicle audit, council, fate, genesis, model, naming, narrative, server.
+46 rules in 12 topics: agents, awakening, chronicle audit, council, fate, genesis, model, divine will, presence, naming, narrative, server.
 
 #### Agents
 
@@ -222,7 +222,6 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | Rule | Starts at | Range | Tied to |
 |---|---:|---|---|
 | <a id="r-council-timeout"></a>Council timeout (s) | 240 | 30 to 3,600 | — |
-| <a id="r-council-chat_timeout"></a>Chat timeout (s) | 120 | 10 to 3,600 | — |
 | <a id="r-council-translate_timeout"></a>Translation timeout (s) | 120 | 10 to 3,600 | — |
 
 #### Fate
@@ -259,6 +258,21 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | <a id="r-model-restart_wait"></a>Wait before a restart (s; multiplied by the attempt number) | 3 | 0 to 600 | — |
 | <a id="r-model-max_continuations"></a>Maximum continuation sessions for an interrupted turn | 2 | 0 to 10 | — |
 | <a id="r-model-continuation_wait"></a>Wait before a continuation session after a connection error (s) | 3 | 0 to 600 | — |
+
+#### Divine will
+
+| Rule | Starts at | Range | Tied to |
+|---|---:|---|---|
+| <a id="r-divine_will-max_steps"></a>Model replies one exchange with the Divine Will may take | 40 | 5 to 200 | — |
+| <a id="r-divine_will-costly_essence"></a>Essence at or above which an act of the Divine Will asks the player first | 25 | 0 to 100,000 | — |
+| <a id="r-divine_will-forecast_max_epochs"></a>Most epochs a Divine Will forecast may live on its copy of the world | 3 | 1 to 10 | — |
+| <a id="r-divine_will-index_batch"></a>Passages the Divine Will index embeds in one batch | 16 | 1 to 256 | — |
+
+#### Presence
+
+| Rule | Starts at | Range | Tied to |
+|---|---:|---|---|
+| <a id="r-presence-max_steps"></a>Model replies one exchange with a summoned being may take | 24 | 3 to 200 | — |
 
 #### Naming
 
@@ -6088,7 +6102,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Minds, values and memory
 
-1,075 rules in 68 topics: opinion subjects, biases, identities, identity, peer groups, satire, culture drift, traits, skills, mind split, ideas, needs depth, needs wider, preference depth, belief depth, norm depth, witchcraft depth, thoughts, grief, dreams, preferences, ethics, aspirations, social, relations, interactions, circles, passions, persuasion, pecking, contests, belief state, collective behaviour, norms, volition, social learning, generations, role norms, asabiyya, challenge response, reciprocity, potlatch, ceremonial circuits, nomadism, legacy traits, mind, careers, emotions, breaks, memory, opinion, needs, stress, loyalty, acts, minds, mind making, mind awakening, mind will, continuity, interfaces, made realms, made peoples, mind law, instructions, gifts, folk knowledge, community relations.
+1,077 rules in 69 topics: opinion subjects, biases, identities, identity, peer groups, satire, culture drift, traits, skills, mind split, ideas, needs depth, needs wider, preference depth, belief depth, norm depth, witchcraft depth, thoughts, grief, dreams, preferences, ethics, aspirations, social, relations, interactions, circles, passions, persuasion, pecking, contests, belief state, collective behaviour, norms, volition, social learning, generations, role norms, asabiyya, challenge response, reciprocity, potlatch, ceremonial circuits, nomadism, legacy traits, mind, careers, emotions, breaks, memory, opinion, needs, stress, loyalty, acts, minds, mind making, mind awakening, mind will, continuity, interfaces, made realms, made peoples, mind law, instructions, gifts, folk knowledge, presence, community relations.
 
 #### Opinion subjects
 
@@ -7519,6 +7533,13 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-folk_knowledge-numerology_piety"></a>Piety a town gains in an epoch whose number its people reads as sacred | 3 | 0 to 100 | Folk knowledge: how each people classes weather, sky, matter, land, waters, plants, animals, body, illness, mind, society, number and time, how accurate it is and what its numbers mean |
 | <a id="r-folk_knowledge-numerology_unrest"></a>Unrest a town gains in an epoch whose number its people reads as unlucky or forbidden, and loses in one read as lucky | 3 | 0 to 100 | — |
 | <a id="r-folk_knowledge-numerology_name_renown"></a>Renown a child born in an epoch its people reads as lucky starts with | 5 | 0 to 100 | Folk knowledge: how each people classes weather, sky, matter, land, waters, plants, animals, body, illness, mind, society, number and time, how accurate it is and what its numbers mean |
+
+#### Presence
+
+| Rule | Starts at | Range | Tied to |
+|---|---:|---|---|
+| <a id="r-presence-audience_magnitude"></a>Strength of the memory a being keeps of one exchange of an audience on the record, at its strongest feeling | 20 | 1 to 100 | — |
+| <a id="r-presence-audience_decay_pct"></a>Share of an audience memory's strength that fades each epoch | 10% | 0% to 100% | — |
 
 #### Community relations
 
@@ -24472,7 +24493,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Context budgets
 
-123 rules in 10 topics: chronicle audit, content, context, council, fate, god actions, model, mortal tools, son tools, summoning.
+123 rules in 12 topics: chronicle audit, content, context, council, fate, god actions, model, divine will, presence, mortal tools, son tools, summoning.
 
 #### Chronicle audit
 
@@ -24578,14 +24599,10 @@ The rules counted in years here follow your world's epoch length.
 |---|---:|---|---|
 | <a id="r-council-agenda_thread_max_chars"></a>Maximum length of an open story taken onto the agenda (characters) | 260 | 20 to 5,000 | — |
 | <a id="r-council-agenda_cut_chars"></a>A long story is cut at the last space before this character | 250 | 10 to 5,000 | — |
-| <a id="r-council-persona_temperament_chars"></a>Council and chat: son's temperament (characters) | 160 | 0 to 5,000 | — |
-| <a id="r-council-persona_style_chars"></a>Council and chat: son's style (characters) | 120 | 0 to 5,000 | — |
-| <a id="r-council-persona_obsession_chars"></a>Council and chat: son's obsession (characters) | 100 | 0 to 5,000 | — |
-| <a id="r-council-persona_plan_chars"></a>Council and chat: son's plan (characters) | 160 | 0 to 5,000 | — |
-| <a id="r-council-chat_appearance_chars"></a>Chat: son's appearance (characters) | 200 | 0 to 5,000 | — |
-| <a id="r-council-chat_fear_secret_chars"></a>Chat: son's fear and secret (characters, each) | 120 | 0 to 5,000 | — |
-| <a id="r-council-chat_memory_chars"></a>Chat: son's memory (characters) | 24,000 | 200 to 100,000 | — |
-| <a id="r-council-chat_history_messages"></a>Chat: number of previous messages in the prompt | 30 | 0 to 200 | — |
+| <a id="r-council-persona_temperament_chars"></a>Council: son's temperament (characters) | 160 | 0 to 5,000 | — |
+| <a id="r-council-persona_style_chars"></a>Council: son's style (characters) | 120 | 0 to 5,000 | — |
+| <a id="r-council-persona_obsession_chars"></a>Council: son's obsession (characters) | 100 | 0 to 5,000 | — |
+| <a id="r-council-persona_plan_chars"></a>Council: son's plan (characters) | 160 | 0 to 5,000 | — |
 
 #### Fate
 
@@ -24619,6 +24636,20 @@ The rules counted in years here follow your world's epoch length.
 | Rule | Starts at | Range | Tied to |
 |---|---:|---|---|
 | <a id="r-model-continuation_action_summary_chars"></a>Summary of each performed action in the continuation prompt (characters) | 220 | 40 to 5,000 | — |
+
+#### Divine will
+
+| Rule | Starts at | Range | Tied to |
+|---|---:|---|---|
+| <a id="r-divine_will-remembered_cycles"></a>Completed exchanges of the session the Divine Will keeps in mind, each a question and its final answer with every step between | 10 | 1 to 100 | — |
+| <a id="r-divine_will-page_tokens"></a>Token budget of one page of a Divine Will tool result; the rest is read page by page | 6,000 | 500 to 50,000 | — |
+| <a id="r-divine_will-search_page"></a>Hits on one page of a Divine Will search | 12 | 3 to 100 | — |
+
+#### Presence
+
+| Rule | Starts at | Range | Tied to |
+|---|---:|---|---|
+| <a id="r-presence-remembered_exchanges"></a>Finished exchanges of an audience the summoned being keeps in mind, each the player's words and its answer | 10 | 1 to 100 | — |
 
 #### Mortal tools
 
@@ -25260,7 +25291,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Council
 
-42 rules in 1 topic: council.
+40 rules in 1 topic: council.
 
 #### Council
 
@@ -25280,8 +25311,6 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-council-relation_min_magnitude"></a>Minimum magnitude (±) of sibling relations written into the council prompt | 20 | 0 to 100 | — |
 | <a id="r-council-alliance_rupture_cap"></a>Maximum alliances or ruptures in one council | 3 | 0 to 20 | — |
 | <a id="r-council-default_interval"></a>On a world with no set council frequency, a council convenes once every this many epochs | 4 | 0 to 100 | — |
-| <a id="r-council-chat_max_chars"></a>Longest message the Creator can send to a son (characters) | 800 | 10 to 20,000 | — |
-| <a id="r-council-chat_loyalty_max_change"></a>Maximum amount a chat changes the son's loyalty (±) | 6 | 0 to 100 | — |
 | <a id="r-council-dream_max_chars"></a>Longest text of a dream sent to a mortal (characters) | 600 | 10 to 20,000 | — |
 | <a id="r-council-dream_min_chars"></a>Shortest text of a dream (characters) | 5 | 1 to 1,000 | — |
 | <a id="r-council-ruling_epochs"></a>Epochs a lasting ruling of the council holds | 6 | 1 to 200 | Made realms, interworld networks, outer plans and the council's rulings act across worlds through the same rifts, gates and registry edges; The council lays down typed rulings that bind the gods for epochs: truces, outlawed rites, punishments, holy worlds and the division of worlds |
@@ -25310,72 +25339,6 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-council-failed_councils"></a>Councils in a row that pass nothing before the council moves to change how it decides | 3 | 1 to 20 | — |
 | <a id="r-council-rebuke_renown"></a>Renown a god loses when the council rebukes it | 2 | 0 to 200 | — |
 | <a id="r-council-bound_world_years"></a>Years a god the council binds to one world cannot act beyond it | 50 years | 1 year to 2,500 years | — |
-
-<a id="g-interface"></a>
-
-### Interface
-
-40 rules in 4 topics: council, epoch flow, server, ui.
-
-#### Council
-
-| Rule | Starts at | Range | Tied to |
-|---|---:|---|---|
-| <a id="r-council-chat_list_messages"></a>Messages shown in chat history | 40 | 1 to 1,000 | — |
-
-#### Epoch flow
-
-| Rule | Starts at | Range | Tied to |
-|---|---:|---|---|
-| <a id="r-epoch_flow-live_log_memory"></a>Recent live-feed events kept in memory | 600 | 10 to 100,000 | — |
-| <a id="r-epoch_flow-live_log_db"></a>Recent live-feed events kept in the database | 1,000 | 10 to 1,000,000 | — |
-| <a id="r-epoch_flow-epoch_end_summary_lines"></a>Summary lines shown in the epoch-ended notification | 6 | 0 to 100 | — |
-
-#### Server
-
-| Rule | Starts at | Range | Tied to |
-|---|---:|---|---|
-| <a id="r-server-community_relations_shown"></a>Relations shown on the community page | 10 | 0 to 1,000 | — |
-| <a id="r-server-son_chronicle_lines"></a>Chronicle lines shown on the son page | 80 | 0 to 10,000 | — |
-| <a id="r-server-foreign_god_chronicle_lines"></a>Chronicle lines shown on the foreign-god page | 80 | 0 to 10,000 | — |
-| <a id="r-server-son_messages_shown"></a>Messages shown on the son page | 40 | 0 to 10,000 | — |
-| <a id="r-server-entity_dreams_shown"></a>Dreams shown in each direction in the entity dream inbox | 40 | 0 to 10,000 | — |
-| <a id="r-server-entity_canon_facts"></a>Canon facts shown on the entity page | 30 | 0 to 10,000 | — |
-| <a id="r-server-people_perspective_lines"></a>Partisan chronicle (perspectives) shown on the people page | 8 | 0 to 1,000 | — |
-| <a id="r-server-chronicle_latest"></a>Chronicle: latest lines returned for a request without parameters | 600 | 1 to 100,000 | — |
-| <a id="r-server-chronicle_page_size"></a>Chronicle: backward page size | 200 | 1 to 100,000 | — |
-| <a id="r-server-chronicle_page_max"></a>Chronicle: largest page that can be requested | 500 | 1 to 100,000 | — |
-| <a id="r-server-lexicon_words_per_language"></a>Words per language shown on the lexicon page | 2,000 | 1 to 1,000,000 | — |
-| <a id="r-server-language_sample_names"></a>Sample names generated for each language in the language tree | 4 | 0 to 50 | — |
-| <a id="r-server-notification_page_size"></a>Page size of the notification list | 60 | 1 to 100,000 | — |
-| <a id="r-server-notification_page_max"></a>Largest page of the notification list | 500 | 1 to 100,000 | — |
-| <a id="r-server-ledger_page_size"></a>Fate's ledger: page size | 80 | 1 to 100,000 | — |
-| <a id="r-server-ledger_page_max"></a>Fate's ledger: largest page | 300 | 1 to 100,000 | — |
-| <a id="r-server-metrics_default_epochs"></a>Model metrics: default epoch window | 10 | 1 to 10,000 | — |
-| <a id="r-server-metrics_max_epochs"></a>Model metrics: widest epoch window | 50 | 1 to 10,000 | — |
-| <a id="r-server-usage_page_size"></a>Token usage log: page size | 50 | 1 to 100,000 | — |
-| <a id="r-server-usage_page_max"></a>Token usage log: largest page | 500 | 1 to 100,000 | — |
-| <a id="r-server-live_feed_history"></a>Latest events returned in the live-feed history | 300 | 1 to 100,000 | — |
-| <a id="r-server-stream_emit_interval_ms"></a>Live feed: milliseconds between streamed-text batches | 150 | 10 to 60,000 | — |
-| <a id="r-server-tool_write_step_chars"></a>Live feed: characters of tool input between writing-progress events | 200 | 1 to 100,000 | — |
-| <a id="r-server-writing_emit_interval_ms"></a>Live feed: milliseconds between long-write progress events | 1,000 | 50 to 600,000 | — |
-| <a id="r-server-cosmic_chronicle_default"></a>Cosmic chronicle: default lines | 30 | 1 to 100,000 | — |
-| <a id="r-server-cosmic_chronicle_max"></a>Cosmic chronicle: maximum lines | 200 | 1 to 100,000 | — |
-| <a id="r-server-gallery_missing"></a>Gallery: list of important records missing an image | 40 | 1 to 100,000 | — |
-| <a id="r-server-gallery_missing_max"></a>Gallery: largest size of the missing-image list | 500 | 1 to 100,000 | — |
-| <a id="r-server-prayer_list"></a>Prayers: shown separately from sons and from mortals | 100 | 1 to 100,000 | — |
-| <a id="r-server-council_minutes_list"></a>Council minutes list | 30 | 1 to 100,000 | — |
-| <a id="r-server-god_traces"></a>Chronicle traces on the god page | 40 | 0 to 100,000 | — |
-
-#### Ui
-
-| Rule | Starts at | Range | Tied to |
-|---|---:|---|---|
-| <a id="r-ui-graph_focus_node_cap"></a>Graph: maximum nodes shown around the focus (if exceeded, the step count is reduced) | 10,000 | 10 to 100,000 | — |
-| <a id="r-ui-graph_auto_focus_max_links"></a>Graph: maximum links of an automatically chosen focus node (so hub nodes don't become the focus and turn the view into a hairball) | 50 | 3 to 100,000 | — |
-| <a id="r-ui-map_population_trend_min_pct"></a>Minimum change for population to count as growing or shrinking on the map (%) | 5% | 0% to 100% | — |
-| <a id="r-ui-delta_max_changes"></a>Maximum changes in one incremental-update response (more triggers a full refresh) | 1,500 | 50 to 100,000 | — |
-| <a id="r-ui-change_log_max_rows"></a>Maximum rows kept in the change log (pruned at epoch end) | 20,000 | 100 to 10,000,000 | — |
 
 <a id="g-organisations"></a>
 
@@ -25484,6 +25447,66 @@ The rules counted in years here follow your world's epoch length.
 |---|---:|---|---|
 | <a id="r-time-years_per_epoch"></a>Length of one epoch (years) | 50 | 1 to 100,000 | — |
 | <a id="r-time-sampled_years"></a>Years of each epoch the engine lives through one by one | 5 | 1 to 100 | — |
+
+<a id="g-interface"></a>
+
+### Interface
+
+39 rules in 3 topics: epoch flow, server, ui.
+
+#### Epoch flow
+
+| Rule | Starts at | Range | Tied to |
+|---|---:|---|---|
+| <a id="r-epoch_flow-live_log_memory"></a>Recent live-feed events kept in memory | 600 | 10 to 100,000 | — |
+| <a id="r-epoch_flow-live_log_db"></a>Recent live-feed events kept in the database | 1,000 | 10 to 1,000,000 | — |
+| <a id="r-epoch_flow-epoch_end_summary_lines"></a>Summary lines shown in the epoch-ended notification | 6 | 0 to 100 | — |
+
+#### Server
+
+| Rule | Starts at | Range | Tied to |
+|---|---:|---|---|
+| <a id="r-server-community_relations_shown"></a>Relations shown on the community page | 10 | 0 to 1,000 | — |
+| <a id="r-server-son_chronicle_lines"></a>Chronicle lines shown on the son page | 80 | 0 to 10,000 | — |
+| <a id="r-server-foreign_god_chronicle_lines"></a>Chronicle lines shown on the foreign-god page | 80 | 0 to 10,000 | — |
+| <a id="r-server-son_messages_shown"></a>Messages shown on the son page | 40 | 0 to 10,000 | — |
+| <a id="r-server-entity_dreams_shown"></a>Dreams shown in each direction in the entity dream inbox | 40 | 0 to 10,000 | — |
+| <a id="r-server-entity_canon_facts"></a>Canon facts shown on the entity page | 30 | 0 to 10,000 | — |
+| <a id="r-server-people_perspective_lines"></a>Partisan chronicle (perspectives) shown on the people page | 8 | 0 to 1,000 | — |
+| <a id="r-server-chronicle_latest"></a>Chronicle: latest lines returned for a request without parameters | 600 | 1 to 100,000 | — |
+| <a id="r-server-chronicle_page_size"></a>Chronicle: backward page size | 200 | 1 to 100,000 | — |
+| <a id="r-server-chronicle_page_max"></a>Chronicle: largest page that can be requested | 500 | 1 to 100,000 | — |
+| <a id="r-server-lexicon_words_per_language"></a>Words per language shown on the lexicon page | 2,000 | 1 to 1,000,000 | — |
+| <a id="r-server-language_sample_names"></a>Sample names generated for each language in the language tree | 4 | 0 to 50 | — |
+| <a id="r-server-notification_page_size"></a>Page size of the notification list | 60 | 1 to 100,000 | — |
+| <a id="r-server-notification_page_max"></a>Largest page of the notification list | 500 | 1 to 100,000 | — |
+| <a id="r-server-ledger_page_size"></a>Fate's ledger: page size | 80 | 1 to 100,000 | — |
+| <a id="r-server-ledger_page_max"></a>Fate's ledger: largest page | 300 | 1 to 100,000 | — |
+| <a id="r-server-metrics_default_epochs"></a>Model metrics: default epoch window | 10 | 1 to 10,000 | — |
+| <a id="r-server-metrics_max_epochs"></a>Model metrics: widest epoch window | 50 | 1 to 10,000 | — |
+| <a id="r-server-usage_page_size"></a>Token usage log: page size | 50 | 1 to 100,000 | — |
+| <a id="r-server-usage_page_max"></a>Token usage log: largest page | 500 | 1 to 100,000 | — |
+| <a id="r-server-live_feed_history"></a>Latest events returned in the live-feed history | 300 | 1 to 100,000 | — |
+| <a id="r-server-stream_emit_interval_ms"></a>Live feed: milliseconds between streamed-text batches | 150 | 10 to 60,000 | — |
+| <a id="r-server-tool_write_step_chars"></a>Live feed: characters of tool input between writing-progress events | 200 | 1 to 100,000 | — |
+| <a id="r-server-writing_emit_interval_ms"></a>Live feed: milliseconds between long-write progress events | 1,000 | 50 to 600,000 | — |
+| <a id="r-server-cosmic_chronicle_default"></a>Cosmic chronicle: default lines | 30 | 1 to 100,000 | — |
+| <a id="r-server-cosmic_chronicle_max"></a>Cosmic chronicle: maximum lines | 200 | 1 to 100,000 | — |
+| <a id="r-server-gallery_missing"></a>Gallery: list of important records missing an image | 40 | 1 to 100,000 | — |
+| <a id="r-server-gallery_missing_max"></a>Gallery: largest size of the missing-image list | 500 | 1 to 100,000 | — |
+| <a id="r-server-prayer_list"></a>Prayers: shown separately from sons and from mortals | 100 | 1 to 100,000 | — |
+| <a id="r-server-council_minutes_list"></a>Council minutes list | 30 | 1 to 100,000 | — |
+| <a id="r-server-god_traces"></a>Chronicle traces on the god page | 40 | 0 to 100,000 | — |
+
+#### Ui
+
+| Rule | Starts at | Range | Tied to |
+|---|---:|---|---|
+| <a id="r-ui-graph_focus_node_cap"></a>Graph: maximum nodes shown around the focus (if exceeded, the step count is reduced) | 10,000 | 10 to 100,000 | — |
+| <a id="r-ui-graph_auto_focus_max_links"></a>Graph: maximum links of an automatically chosen focus node (so hub nodes don't become the focus and turn the view into a hairball) | 50 | 3 to 100,000 | — |
+| <a id="r-ui-map_population_trend_min_pct"></a>Minimum change for population to count as growing or shrinking on the map (%) | 5% | 0% to 100% | — |
+| <a id="r-ui-delta_max_changes"></a>Maximum changes in one incremental-update response (more triggers a full refresh) | 1,500 | 50 to 100,000 | — |
+| <a id="r-ui-change_log_max_rows"></a>Maximum rows kept in the change log (pruned at epoch end) | 20,000 | 100 to 10,000,000 | — |
 
 <a id="g-foreign-gods"></a>
 

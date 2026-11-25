@@ -16,6 +16,7 @@ import {
   PenLine,
   RotateCw,
   Sparkles,
+  Speech,
   Sunrise,
   Tag,
   Telescope,
@@ -50,6 +51,7 @@ export const JOB_KIND_ICON: Record<JobKind, LucideIcon> = {
   divine_will_plan: ListChecks,
   divine_will_forecast: Telescope,
   divine_will_index: DatabaseZap,
+  presence: Speech,
 }
 
 export const JOB_STATUS_TONE: Record<JobStatus, KpiTone> = {

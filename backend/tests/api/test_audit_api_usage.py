@@ -15,12 +15,12 @@ def load_script() -> ModuleType:
 
 def test_audit_matches_typed_calls_and_url_templates(tmp_path: Path) -> None:
     audit = load_script()
-    source = "api.GET('/api/jobs/{job_id}', {})\nconst url = `/api/sons/${son.id}/chat?x=1`\n"
+    source = "api.GET('/api/jobs/{job_id}', {})\nconst url = `/api/sons/${son.id}/resurrection?x=1`\n"
     callers = audit.callers_in(source, tmp_path / "caller.ts")
     routes = [
         audit.Route("GET", "/api/jobs/{job_id}"),
         audit.Route("POST", "/api/jobs/{job_id}/cancel"),
-        audit.Route("GET", "/api/sons/{son_id}/chat"),
+        audit.Route("GET", "/api/sons/{son_id}/resurrection"),
     ]
     missing = audit.uncalled(routes, callers)
     assert [route.path for route in missing] == ["/api/jobs/{job_id}/cancel"]

@@ -432,6 +432,7 @@ class MemoryKind(StrEnum):
     SURVIVED_WITH = "survived_with"
     APOLOGISED_TO_ME = "apologised_to_me"
     JUDGED_ME = "judged_me"
+    AUDIENCE = "audience"
 
 
 class OpinionComponent(StrEnum):

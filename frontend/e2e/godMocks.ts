@@ -662,7 +662,6 @@ const RULE_VALUES: [string, string, number][] = [
   ['awakening', 'batch_cap', 3],
   ['council', 'min_members', 2],
   ['council', 'default_interval', 4],
-  ['council', 'chat_max_chars', 800],
   ['core_rules', 'xp_per_level', 100],
   ['core_rules', 'relation_sibling', 75],
   ['core_rules', 'relation_close_friend', 45],
@@ -768,11 +767,6 @@ const LEDGER: Schemas['LedgerPage'] = {
   ],
 }
 
-const CHAT: Schemas['MessageRecord'][] = [
-  { id: 401, epoch: 11, sender_node_id: 1, recipient_node_id: 7, intent: 'chat', text: 'Why do the bells ring at night?', tone: null, request: null, wish: null, is_read: true, answered: true, answered_epoch: 11, answer_essence: null, created_at: NOW },
-  { id: 402, epoch: 11, sender_node_id: 7, recipient_node_id: 1, intent: 'chat', text: 'To remind the drowned that someone still counts them, father.', tone: null, request: null, wish: null, is_read: true, answered: false, answered_epoch: null, answer_essence: null, created_at: NOW },
-]
-
 const ACCEPTED = { action: 'mock', message: 'Done.', essence_spent: 0, essence_gained: 0 }
 
 const GET_ROUTES: Record<string, unknown> = {
@@ -787,11 +781,8 @@ const GET_ROUTES: Record<string, unknown> = {
   '/api/sons/9/tools': { ...TOOL_VIEW, son_id: 9 },
   '/api/sons/10/tools': { ...TOOL_VIEW, son_id: 10 },
   '/api/opportunities/creator': { lines: [{ kind: 'unanswered_prayers', text: '3 prayers await an answer: answering raises loyalty and faith.' }, { kind: 'rich_essence', text: 'You have 900 essence: enough for a new world, son or star.' }] },
-  '/api/sons/7/chat': CHAT,
   '/api/sons/9': { ...SON_DETAIL, son: SON_RECORDS.find((record) => record.id === 9) ?? SON_RECORDS[0] },
-  '/api/sons/9/chat': CHAT,
   '/api/sons/10': { ...SON_DETAIL, son: SON_RECORDS.find((record) => record.id === 10) ?? SON_RECORDS[0] },
-  '/api/sons/10/chat': CHAT,
   '/api/sons/10/resurrection': {
     son_id: 10,
     name: 'Mirel',

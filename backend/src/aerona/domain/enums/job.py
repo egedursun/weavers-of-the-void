@@ -35,6 +35,7 @@ class JobKind(StrEnum):
     DIVINE_WILL_PLAN = "divine_will_plan"
     DIVINE_WILL_FORECAST = "divine_will_forecast"
     DIVINE_WILL_INDEX = "divine_will_index"
+    PRESENCE = "presence"
 
 
 TERMINAL_JOB_STATUSES = frozenset({JobStatus.SUCCEEDED, JobStatus.FAILED, JobStatus.CANCELLED, JobStatus.INTERRUPTED})

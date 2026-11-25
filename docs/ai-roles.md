@@ -6,11 +6,11 @@ The world engine lives the world by its rules. Language models give it a voice: 
 
 | The voices at a glance | |
 |---|---:|
-| Roles | 29 |
+| Roles | 28 |
 | Roles when a world is made | 6 |
 | Roles in every epoch | 12 |
-| Roles when you ask, or the world needs it | 11 |
-| Prompts the roles are given | 63 |
+| Roles when you ask, or the world needs it | 10 |
+| Prompts the roles are given | 61 |
 
 ## Contents
 
@@ -60,7 +60,6 @@ The world engine lives the world by its rules. Language models give it a voice: 
 | [Son epic](#v-son_epic) | When you ask, or the world needs it |
 | [Entity image prompts](#v-entity_image_prompts) | When you ask, or the world needs it |
 | [Cosmos image prompts](#v-cosmos_image_prompts) | When you ask, or the world needs it |
-| [Son chat](#v-son_chat) | When you ask, or the world needs it |
 | [Translation](#v-translation) | When you ask, or the world needs it |
 
 <a id="s-making"></a>
@@ -332,16 +331,6 @@ Writes the words an image of a star, a world, a galaxy or another body of the co
 
 - **Writes** prompts.
 - **Prompts** it is given, in Settings › Prompts: `cosmos_image_prompts_system` and `cosmos_image_prompts_user`.
-
-<a id="v-son_chat"></a>
-
-### Son chat
-
-Lets you talk with one of your sons. The son answers in its own voice, and its attitude and loyalty may change.
-
-- **Writes** reply, attitude and loyalty change.
-- **Time allowed:** 120 seconds, set by the world rules.
-- **Prompts** it is given, in Settings › Prompts: `son_chat_system` and `son_chat_user`.
 
 <a id="v-translation"></a>
 

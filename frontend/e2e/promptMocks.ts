@@ -3,7 +3,7 @@ const LONG_SON = 'Vaelithrandor of the Ninefold Unspoken Dawn, Keeper of Salt-Ti
 const BLOCKS = [
   { kind: 'world-header', needs_son: false, needs_entity: false, audience: 'every agent', rows: ['CTX-004'] },
   { kind: 'world-summary', needs_son: false, needs_entity: false, audience: 'son, Fate', rows: ['CTX-014'] },
-  { kind: 'son-memory', needs_son: true, needs_entity: false, audience: 'son, council, son chat', rows: ['CTX-029'] },
+  { kind: 'son-memory', needs_son: true, needs_entity: false, audience: 'son, council', rows: ['CTX-029'] },
   { kind: 'entity-detail', needs_son: false, needs_entity: true, audience: 'inspect tools, Fate', rows: ['CTX-025'] },
   { kind: 'tired-images', needs_son: false, needs_entity: false, audience: 'son, Fate', rows: ['CTX-019'] },
 ]

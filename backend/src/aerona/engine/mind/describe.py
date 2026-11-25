@@ -346,9 +346,9 @@ async def mind_lines(session: AsyncSession, rules: Rules, node: Holder, epoch: i
         lines.append("Pressures on you: " + ", ".join(f"{PRESSURE_LABELS[kind_].lower()} {value}/{PERCENT}" for kind_, value in heaviest))
     lines.extend(await borne_pressures(session, rules, node))
     for item in await strongest(session, node.id, epoch, table.mind_memories_shown):
-        name = await name_of(session, item.row.subject_node_id)
         feeling = "warmly" if item.strength > 0 else "bitterly"
         tail = f" ({item.row.note})" if item.row.note else ""
         what = MEMORIES[item.row.kind].label.lower()
-        lines.append(f"You remember {feeling} and {strength_word(item.strength)}: {name}: {what}{tail}, epoch {item.row.epoch}")
+        who = "" if not MEMORIES[item.row.kind].names_subject else f"{await name_of(session, item.row.subject_node_id)}: "
+        lines.append(f"You remember {feeling} and {strength_word(item.strength)}: {who}{what}{tail}, epoch {item.row.epoch}")
     return lines

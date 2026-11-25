@@ -1,4 +1,4 @@
-import { renderApp } from '@/test-utils/fakeApi'
+import { renderScreen } from '@/test-utils/renderScreen'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import { Section } from '@/components/domain'
@@ -57,8 +57,9 @@ describe('entry window', () => {
   })
 
   it('opens one large window with the parts of the entry and starts on its overview', async () => {
-    const { screen } = await renderApp(
+    const { screen } = await renderScreen(
       <EntryWindow pages={PAGES} />,
+      {},
       '/?entry=entity:1'
     )
     await expect
@@ -85,8 +86,9 @@ describe('entry window', () => {
   })
 
   it('shows only the chosen part and everything on demand', async () => {
-    const { screen } = await renderApp(
+    const { screen } = await renderScreen(
       <EntryWindow pages={PAGES} />,
+      {},
       '/?entry=entity:1'
     )
     const rail = screen.getByRole('navigation', {
@@ -109,8 +111,9 @@ describe('entry window', () => {
   })
 
   it('finds a value inside a section of another part and jumps to it', async () => {
-    const { screen } = await renderApp(
+    const { screen } = await renderScreen(
       <EntryWindow pages={PAGES} />,
+      {},
       '/?entry=entity:1'
     )
     const search = screen.getByRole('searchbox', { name: 'Search this entry' })
@@ -124,8 +127,9 @@ describe('entry window', () => {
   })
 
   it('opens the section a link names', async () => {
-    const { screen } = await renderApp(
+    const { screen } = await renderScreen(
       <EntryWindow pages={PAGES} />,
+      {},
       '/?entry=entity:1&at=section-kin'
     )
     await expect
@@ -134,8 +138,9 @@ describe('entry window', () => {
   })
 
   it('goes back and forward through the entries opened inside it', async () => {
-    const { screen, router } = await renderApp(
+    const { screen, router } = await renderScreen(
       <EntryWindow pages={PAGES} />,
+      {},
       '/?entry=entity:1,entity:2'
     )
     await expect
@@ -151,8 +156,9 @@ describe('entry window', () => {
   })
 
   it('focuses the search with slash and clears it with escape before closing', async () => {
-    const { screen, router } = await renderApp(
+    const { screen, router } = await renderScreen(
       <EntryWindow pages={PAGES} />,
+      {},
       '/?entry=entity:1'
     )
     await expect
@@ -171,8 +177,9 @@ describe('entry window', () => {
   })
 
   it('jumps to the god controls from the header', async () => {
-    const { screen } = await renderApp(
+    const { screen } = await renderScreen(
       <EntryWindow pages={PAGES} />,
+      {},
       '/?entry=entity:1'
     )
     await screen

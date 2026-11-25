@@ -1311,6 +1311,7 @@ MEMORY_KIND_TRAITS: Mapping[MemoryKind, frozenset[MemoryKindTrait]] = total(
         MemoryKind.SURVIVED_WITH: frozenset({MemoryKindTrait.CARES}),
         MemoryKind.APOLOGISED_TO_ME: frozenset({MemoryKindTrait.CARES}),
         MemoryKind.JUDGED_ME: frozenset({MemoryKindTrait.GRIEVANCES}),
+        MemoryKind.AUDIENCE: frozenset(),
     },
 )
 

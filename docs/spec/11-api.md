@@ -285,8 +285,7 @@ All POSTs below return the updated son (raw row, not SonPublic) unless noted. "A
 | PUT `/sons/{id}/world` | `/ogullar/:id/dunya` | `{dunya_id}` | — | Move son's active world (not if dead / forgotten world / already there). | `ogul:dunya` |
 | PATCH `/sons/{id}` | `/ogullar/:id/duzenle` | `{ad?, unvan?, plan?, kisilik?: {gorunus, mizac, takinti, korku, uslup, sir}, tutku?: {sadakat, hirs, ofke, merhamet}, statlar?: {9 stats 1–100}, kaynak?: {oz, can, un, inanc, seviye, yildiz, varlik}, nadirlik?}` | — | Manual editor. Name change propagates through all texts and is rejected if taken or too similar to an existing name. | `ogul:duzenle` |
 | PUT `/sons/{id}/image-prompt` | `/ogullar/:id/prompt` | `{prompt: string}` | — | | `ogul:prompt` |
-| GET `/sons/{id}/chat` | GET `/ogullar/:id/sohbet` | — | | `[{kimden_tip: 't'|'o', metin, cag, olusturma}]` chat history (intent `sohbet`). | |
-| POST `/sons/{id}/chat` | POST `/ogullar/:id/sohbet` | `{metin}` (≤ `KONSEY.sohbet_metin`) | — | **Synchronous** LLM call (timeout `KONSEY.sohbet_sure` s; structured output `{cevap (reply, 1–4 sentences in character), tavir (attitude: 'sadik' loyal / 'mesafeli' distant / 'asi' rebellious / 'korkmus' afraid / 'minnettar' grateful / 'alayci' mocking), sadakat_degisim (loyalty delta, ±KONSEY.sohbet_sadakat)}`). Applies the loyalty delta, stores both messages (intent `sohbet`). Returns `{cevap, tavir, sadakat (new loyalty), degisim (applied delta)}`. 400 if dead/empty. | |
+| GET, POST `/sons/{id}/chat` | `/ogullar/:id/sohbet` | — | — | Removed (spec 19 §12). Speaking with a son, a foreign god or a minded being is Summon to Presence: `/api/presence/*` (spec 19 §9). | |
 
 Allowed fields for the son editor are published in `rules.OGUL_DUZEN_ALANLAR`.
 

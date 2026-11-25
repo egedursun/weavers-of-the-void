@@ -21,6 +21,7 @@ class PromptArea(StrEnum):
     AGENT = "agent"
     LOCALISATION = "localisation"
     DIVINE_WILL = "divine_will"
+    PRESENCE = "presence"
 
 
 class PromptId(StrEnum):
@@ -119,8 +120,6 @@ class PromptId(StrEnum):
     COUNCIL_AGENDA = "council_agenda"
     COUNCIL_SESSION_SYSTEM = "council_session_system"
     COUNCIL_SESSION_USER = "council_session_user"
-    SON_CHAT_SYSTEM = "son_chat_system"
-    SON_CHAT_USER = "son_chat_user"
 
     TRANSLATE_SYSTEM = "translate_system"
     TRANSLATE_USER = "translate_user"
@@ -150,6 +149,9 @@ class PromptId(StrEnum):
     DIVINE_WILL_USER = "divine_will_user"
     DIVINE_WILL_TRANSLATE_SYSTEM = "divine_will_translate_system"
     DIVINE_WILL_TRANSLATE_USER = "divine_will_translate_user"
+    PRESENCE_SYSTEM = "presence_system"
+    PRESENCE_USER = "presence_user"
+    PRESENCE_CLOSING = "presence_closing"
     MORTAL_CONTEXT = "mortal_context"
 
     SON_OPPORTUNITIES = "son_opportunities"

@@ -15,6 +15,7 @@ from aerona.prompts.contexts import (
     mortal,
     narrative,
     opportunities,
+    presence,
     son_turn,
 )
 from aerona.prompts.contexts import agent as agent_contexts
@@ -30,6 +31,7 @@ from aerona.prompts.schemas import fate as fate_schemas
 from aerona.prompts.schemas import genesis as genesis_schemas
 from aerona.prompts.schemas import localisation as localisation_schemas
 from aerona.prompts.schemas import narrative as narrative_schemas
+from aerona.prompts.schemas import presence as presence_schemas
 from aerona.prompts.schemas import shared as shared_schemas
 from aerona.prompts.schemas.base import OutputModel
 from aerona.prompts.schemas.build import build_json_schema
@@ -178,8 +180,6 @@ SPECS: tuple[PromptSpec, ...] = (
         defaults.council_constraints,
         {"attendance": DEFAULT_ATTENDANCE},
     ),
-    PromptSpec(P.SON_CHAT_SYSTEM, A.COUNCIL, council.SonChatContext),
-    PromptSpec(P.SON_CHAT_USER, A.COUNCIL, council.SonChatContext, council_schemas.SonChatOutput, defaults.son_chat_constraints),
     PromptSpec(P.TRANSLATE_SYSTEM, A.TRANSLATION, council.TranslateContext),
     PromptSpec(P.TRANSLATE_USER, A.TRANSLATION, council.TranslateContext, council_schemas.TranslationOutput, defaults.translation_constraints),
     PromptSpec(P.NEW_WORLD_SYSTEM, A.WORLD_BIRTH, cosmos.NewWorldContext),
@@ -228,6 +228,9 @@ SPECS: tuple[PromptSpec, ...] = (
     PromptSpec(P.DIVINE_WILL_USER, A.DIVINE_WILL, divine_will.DivineWillUserContext),
     PromptSpec(P.DIVINE_WILL_TRANSLATE_SYSTEM, A.DIVINE_WILL, divine_will.DivineWillTranslateContext),
     PromptSpec(P.DIVINE_WILL_TRANSLATE_USER, A.DIVINE_WILL, divine_will.DivineWillTranslateContext, will_schemas.WillAnswerInLanguage),
+    PromptSpec(P.PRESENCE_SYSTEM, A.PRESENCE, presence.PresenceSystemContext),
+    PromptSpec(P.PRESENCE_USER, A.PRESENCE, presence.PresenceUserContext),
+    PromptSpec(P.PRESENCE_CLOSING, A.PRESENCE, presence.PresenceClosingContext, presence_schemas.PresenceAnswer),
 )
 
 PROMPTS: dict[PromptId, PromptSpec] = {spec.prompt_id: spec for spec in SPECS}

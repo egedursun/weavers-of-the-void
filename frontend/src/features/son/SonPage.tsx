@@ -14,14 +14,12 @@ import {
   useSons,
   useWorldState,
 } from '@/features/pantheon/api'
-import { mediaUrl } from '@/features/pantheon/media'
 import { SonPromptLink } from '@/features/prompts/SonPromptLink'
 import { DeadSonPanel } from './DeadSonPanel'
 import { HandOfGodPanel } from './HandOfGodPanel'
 import { SonBeliefs } from './SonBeliefs'
 import { SonBirthChild } from './SonBirthChild'
 import { SonBonds } from './SonBonds'
-import { SonChat } from './SonChat'
 import { SonEditForm } from './SonEditForm'
 import { SonEpic } from './SonEpic'
 import { SonHero } from './SonHero'
@@ -107,7 +105,6 @@ export function SonPage({ id }: EntryPageProps) {
       {!dead && <SonOuterBargain son={son} />}
       {!dead && <SonPromptLink sonId={son.id} name={son.name} />}
       <SonReputation son={son} reputation={data.reputation} />
-      <SonChat son={son} cover={mediaUrl(view.cover)} />
       <SonEpic son={son} />
       <SonPowers view={view} />
       <SonIdentity son={son} />

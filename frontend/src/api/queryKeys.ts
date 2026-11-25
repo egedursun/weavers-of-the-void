@@ -44,4 +44,7 @@ export const queryKeys = {
     plan: (id: number) => ['divine-will', 'plan', id] as const,
     forecast: (id: number) => ['divine-will', 'forecast', id] as const,
   },
+  presence: {
+    all: ['presence'] as const,
+  },
 }

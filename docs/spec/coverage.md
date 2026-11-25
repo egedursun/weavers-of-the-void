@@ -176,7 +176,6 @@ Each row belongs to exactly one module. Assign implementation agents by module (
 | agents | `agents/network_repair.py` | 15 | ACT-016..020, LLM-126..127, INV-045..047, INV-049..053 |
 | agents | `agents/revelation.py` | 4 | LLM-104..107 |
 | agents | `agents/son.py` | 10 | LLM-038..044, LLM-051..052, NEW-004 |
-| agents | `agents/son_chat.py` | 1 | LLM-124 |
 | agents | `agents/summoner.py` | 10 | LLM-027, LLM-031..037, LLM-116..117 |
 | agents | `agents/translator.py` | 1 | LLM-125 |
 | agents | `agents/world_birth.py` | 2 | COS-003, LLM-128 |
@@ -208,10 +207,11 @@ Each row belongs to exactly one module. Assign implementation agents by module (
 | api | `api/routers/notifications.py` | 4 | API-156..159 |
 | api | `api/routers/player.py` | 3 | API-018, API-090, API-178 |
 | api | `api/routers/prayers.py` | 2 | API-131..132 |
+| api | `api/routers/presence.py` | 2 | API-051..052 |
 | api | `api/routers/rules.py` | 2 | API-166..167 |
 | api | `api/routers/search.py` | 2 | API-003..004 |
 | api | `api/routers/settings.py` | 1 | API-168 |
-| api | `api/routers/sons.py` | 23 | API-007, API-016, API-032..052 |
+| api | `api/routers/sons.py` | 21 | API-007, API-016, API-032..050 |
 | api | `api/routers/state.py` | 1 | API-001 |
 | api | `api/security.py` | 1 | SVC-142 |
 | api | `api/static.py` | 1 | API-182 |
@@ -410,6 +410,7 @@ Each row belongs to exactly one module. Assign implementation agents by module (
 | services | `services/player/interventions.py` | 36 | INT-001..004, INT-006..022, ACT-002, ACT-022..023, ACT-027..033, ACT-062..066 |
 | services | `services/player/messages.py` | 6 | CNCL-016, ACT-021, ACT-034..037 |
 | services | `services/player/settings.py` | 1 | SVC-196 |
+| services | `services/presence/speakers.py` | 4 | CNCL-013..015, LLM-124 |
 | services | `services/search.py` | 5 | CORE-053, SVC-128, SVC-171..173 |
 | services | `services/son_relations.py` | 2 | CORE-047..048 |
 | services | `services/sons.py` | 10 | TOOL-S-027, CORE-008, CORE-046, CAT-016..022 |
@@ -703,6 +704,7 @@ Each row belongs to exactly one module. Assign implementation agents by module (
 | pantheon | `features/pantheon/ThisEpochBox.tsx` | 1 | UI-098 |
 | prayers | `features/prayers/PrayerAnswerForm.tsx` | 1 | UI-118 |
 | prayers | `features/prayers/PrayersScreen.tsx` | 1 | UI-117 |
+| presence | `features/presence/PresenceStage.tsx` | 2 | UI-289..290 |
 | settings | `features/settings/AppearanceSettings.tsx` | 1 | UI-224 |
 | settings | `features/settings/BookCodexLinks.tsx` | 1 | UI-233 |
 | settings | `features/settings/CheatEssence.tsx` | 1 | UI-232 |
@@ -721,7 +723,6 @@ Each row belongs to exactly one module. Assign implementation agents by module (
 | son | `features/son/HandOfGodPanel.tsx` | 8 | UI-279..286 |
 | son | `features/son/SonBeliefs.tsx` | 1 | UI-295 |
 | son | `features/son/SonBonds.tsx` | 1 | UI-299 |
-| son | `features/son/SonChat.tsx` | 2 | UI-289..290 |
 | son | `features/son/SonEditForm.tsx` | 1 | UI-294 |
 | son | `features/son/SonEpic.tsx` | 1 | UI-291 |
 | son | `features/son/SonHero.tsx` | 2 | UI-276..277 |
@@ -3062,9 +3063,9 @@ For these legacy endpoints, two packages each wrote an ACT row: one for the `epo
 
 | ID | Mechanic | Legacy source | Spec section | New module | Auto trigger | Manual control | UI surface | Test | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| CNCL-013 | Chat with a son: living son, text trimmed to cap, last chat messages as history (prompt son_chat) | src/konsey.js:ogulSohbet (L143-158) | 07 §7 › 7.4 Chat with a son (`chatWithSon(sonId, text)`) — player action, free, not ledgered | `services/council.py` | — | POST /api/sons/{id}/chat (old POST /api/ogullar/:id/sohbet) | features/son/SonDrawer › Chat | backend/tests/agents/test_roles.py | implemented |
-| CNCL-014 | Chat changes son's loyalty within plus-minus chat_loyalty; both messages stored | src/konsey.js:ogulSohbet (L159-166) | 07 §7 › 7.4 Chat with a son (`chatWithSon(sonId, text)`) — player action, free, not ledgered | `services/council.py` | — | POST /api/sons/{id}/chat (old POST /api/ogullar/:id/sohbet) | features/son/SonDrawer › Chat | backend/tests/agents/test_roles.py | implemented |
-| CNCL-015 | Chat history: last chat_list messages between creator and son, chronological | src/konsey.js:sohbetGecmisi (L167-169) | 07 §7 › 7.4 Chat with a son (`chatWithSon(sonId, text)`) — player action, free, not ledgered | `services/council.py` | On request | GET /api/sons/{id}/chat (old GET /api/ogullar/:id/sohbet) | features/son/SonDrawer › Chat | backend/tests/api/test_reads.py | implemented |
+| CNCL-013 | Chat with a son. Retired by spec 19 §12: the son chat is removed whole; speaking with any son, foreign god or minded being is Summon to Presence | src/konsey.js:ogulSohbet (L143-158) | 19 §12 › removal; 19 §1–§4 | `services/presence/speakers.py` | — | POST /api/presence/sessions, POST /api/presence/sessions/{id}/exchanges | features/presence | backend/tests/api/test_sons.py | done |
+| CNCL-014 | Chat once moved a son's loyalty. Retired by spec 19 §12: the son chat is removed whole; speaking with any son, foreign god or minded being is Summon to Presence, and speaking never changes loyalty by itself | src/konsey.js:ogulSohbet (L159-166) | 19 §4 › speaking changes nothing by itself | `services/presence/speakers.py` | — | POST /api/presence/sessions/{id}/exchanges | features/presence | backend/tests/api/test_sons.py | done |
+| CNCL-015 | Chat history between the Creator and a son. Retired by spec 19 §12: the son chat is removed whole; speaking with any son, foreign god or minded being is Summon to Presence, whose sessions keep every exchange | src/konsey.js:sohbetGecmisi (L167-169) | 19 §3 › sessions and memory window | `services/presence/speakers.py` | On request | GET /api/presence/sessions/{id} | features/presence | backend/tests/api/test_sons.py | done |
 
 #### CNCL › Dreams
 
@@ -3709,7 +3710,7 @@ For these legacy endpoints, two packages each wrote an ACT row: one for the `epo
 | ID | Mechanic | Legacy source | Spec section | New module | Auto trigger | Manual control | UI surface | Test | Status |
 |---|---|---|---|---|---|---|---|---|---|
 | LLM-123 | Council of the Gods session call (prompt council.session) narrates speeches, one motion, votes and alliances | src/konsey.js:konseyTopla | 08 §6 › Role: Council of the Gods (konseyTopla, konsey.js) | `agents/council.py` | Deferred end-of-epoch step every N epochs (decision 34) | POST /api/council (old POST /api/konsey) | features/council/CouncilPanel | tests/agents | done |
-| LLM-124 | Son chat call (prompt son_chat) replies in character with attitude and bounded loyalty change | src/konsey.js:ogulSohbet | 08 §6 › Role: Son chat (ogulSohbet, konsey.js) | `agents/son_chat.py` | — | POST /api/sons/{id}/chat (old POST /api/ogullar/:id/sohbet) | features/son/SonChat | tests/agents | done |
+| LLM-124 | Son chat call. Retired by spec 19 §12: the son chat is removed whole; speaking with any son, foreign god or minded being is Summon to Presence | src/konsey.js:ogulSohbet | 19 §12 › removal | `services/presence/speakers.py` | — | POST /api/presence/sessions/{id}/exchanges | features/presence | backend/tests/api/test_sons.py | done |
 | LLM-125 | Translation call (prompt linguist.translate) into a world language using lexicon and syllables, coining new words | src/konsey.js:cevir | 08 §6 › Role: Linguist / translation (cevir, konsey.js) | `agents/translator.py` | — | POST /api/languages/{id}/translate (old POST /api/cevir) | features/languages/TranslatePanel | tests/agents | done |
 | LLM-126 | Fate knowledge-network bond suggestion call (prompt fate_bonds.suggest) for weakly connected records from candidates | src/agonar.js:kaderBagOner; src/agents.js:askKader (L173) | 08 §6 › Role: Fate — knowledge-network bond suggestion (kaderBagOner, agonar.js) | `agents/network_repair.py` | Post-epoch network repair job when network fate_auto is on | POST /api/graph/fate-repair (old POST /api/ag/kader) | features/graph/NetworkRepairPanel | tests/agents | done |
 | LLM-127 | Fate naming of vague related bonds call (prompt fate_bonds.name_related): concrete type or close | src/agonar.js:ilgiliAdlandir | 08 §6 › Role: Fate — naming vague related bonds (ilgiliAdlandir, agonar.js) | `agents/network_repair.py` | Post-epoch network repair job after suggestions | POST /api/graph/fate-repair (old POST /api/ag/kader) | features/graph/NetworkRepairPanel | tests/agents | done |
@@ -4976,8 +4977,8 @@ For these legacy endpoints, two packages each wrote an ACT row: one for the `epo
 | API-048 | Move a son active world (not dead, not forgotten world, not same) | server.js:POST /api/ogullar/:id/dunya (L860) | 11 §2.6 › PUT /sons/{id}/world | `api/routers/sons.py` | Son distribution over worlds each epoch when automatic | PUT /api/sons/{id}/world (old POST /api/ogullar/:id/dunya) | features/son/SonDrawer › World | `tests/api/test_sons.py` | done |
 | API-049 | Manual son editor with name-uniqueness check and rename propagation | server.js:POST /api/ogullar/:id/duzenle (L861) | 11 §2.6 › PATCH /sons/{id} | `api/routers/sons.py` | — | PATCH /api/sons/{id} (old POST /api/ogullar/:id/duzenle) | features/son/SonEditor | `tests/api/test_sons.py` | done |
 | API-050 | Set a son image prompt (ledger ogul:prompt) | server.js:POST /api/ogullar/:id/prompt (L929) | 11 §2.6 › PUT /sons/{id}/image-prompt | `api/routers/sons.py` | Startup completion writes missing prompts (decision 62) | PUT /api/sons/{id}/image-prompt (old POST /api/ogullar/:id/prompt) | features/images/ImagePromptEditor | `tests/api/test_sons.py` | done |
-| API-051 | Return chat history between creator and son | server.js:GET /api/ogullar/:id/sohbet (L903) | 11 §2.6 › GET /sons/{id}/chat | `api/routers/sons.py` | On chat panel open | GET /api/sons/{id}/chat (old GET /api/ogullar/:id/sohbet) | features/son/SonChat | `tests/api/test_sons.py` | done |
-| API-052 | Synchronous in-character son reply with attitude and loyalty delta | server.js:POST /api/ogullar/:id/sohbet (L904) | 11 §2.6 › POST /sons/{id}/chat | `api/routers/sons.py` | — | POST /api/sons/{id}/chat (old POST /api/ogullar/:id/sohbet) | features/son/SonChat › Send | `tests/api/test_sons.py` | done |
+| API-051 | Chat history between the Creator and a son. Retired by spec 19 §12: the son chat is removed whole; speaking with any son, foreign god or minded being is Summon to Presence | server.js:GET /api/ogullar/:id/sohbet (L903) | 19 §9 › API | `api/routers/presence.py` | On request | GET /api/presence/sessions/{id} | features/presence | `tests/api/test_sons.py` | done |
+| API-052 | Synchronous son chat reply. Retired by spec 19 §12: the son chat is removed whole; speaking with any son, foreign god or minded being is Summon to Presence | server.js:POST /api/ogullar/:id/sohbet (L904) | 19 §9 › API | `api/routers/presence.py` | — | POST /api/presence/sessions/{id}/exchanges | features/presence | `tests/api/test_sons.py` | done |
 
 #### API › Entities
 
@@ -5695,8 +5696,8 @@ For these legacy endpoints, two packages each wrote an ACT row: one for the `epo
 | UI-286 | Send son to another world (protected from automatic distribution for a few epochs) | public/views/ogul.js:sonDrawer (L215-L218) | 12 §3.2.3 › Hand of God panel (son) — all god-power controls | `features/son/HandOfGodPanel.tsx` | Silent re-render when change feed reports this son or son relations changed, on SSE is_sirada/is_basla/is_bitti and busy change, after every action | Send to world -> POST /api/sons/{id}/world {dunya_id} (old POST /api/ogullar/:id/dunya) | /sons/:id › Hand of God › World | frontend/src/features/son/sonPage.test.tsx | done |
 | UI-287 | This epoch's opportunities for the son | public/views/ogul.js:sonDrawer (L221) | 12 §3.2.4 › Remaining sections (render order) | `features/son/SonOpportunities.tsx` | Silent re-render when change feed reports this son or son relations changed, on SSE is_sirada/is_basla/is_bitti and busy change, after every action; opportunities reload when stale | GET /api/opportunities (old GET /api/firsatlar) | /sons/:id › Opportunities | frontend/src/features/son/sonPage.test.tsx | done |
 | UI-288 | How the son sees his father: label, unanswered prayers, last contact, gauges; nudge love, fear or memory within manual caps | public/views/ogul.js:sonDrawer (L222-L230); public/views/ogul.js:ITIBAR_EKSEN | 12 §3.2.4 › Remaining sections (render order) | `features/son/SonReputation.tsx` | Silent re-render when change feed reports this son or son relations changed, on SSE is_sirada/is_basla/is_bitti and busy change, after every action | Win his heart / Spread fear / Remind him -> POST /api/sons/{id}/reputation-nudge {sevgi\|korku\|unutma} (old POST /api/ogullar/:id/itibar) | /sons/:id › How he sees his father | frontend/src/features/son/sonPage.test.tsx | done |
-| UI-289 | Chat transcript with the son: bubbles, pending bubble and typing indicator, empty and dead states; draft kept across re-renders | public/views/ogul.js:sohbetHtml; public/views/ogul.js:sohbetDurum; public/views/ogul.js:SOHBET; public/views/ogul.js:sohbetYenile; public/views/ogul.js:bindSonDrawer (L294-L300) | 12 §3.2.5 › Chat with the son (Onunla konuş) — `sohbetHtml`, `sohbetGonder` | `features/son/SonChat.tsx` | Silent re-render when change feed reports this son or son relations changed, on SSE is_sirada/is_basla/is_bitti and busy change, after every action | GET /api/sons/{id}/chat (old GET /api/ogullar/:id/sohbet); Enter sends, Shift+Enter newline | /sons/:id › Talk with him | todo | planned |
-| UI-290 | Send words to a son; reply attitude and loyalty change shown; failed text returns to the box | public/views/ogul.js:sohbetGonder; public/views/ogul.js:TAVIR | 12 §3.2.5 › Chat with the son (Onunla konuş) — `sohbetHtml`, `sohbetGonder` | `features/son/SonChat.tsx` | — | Say -> POST /api/sons/{id}/chat {metin} (old POST /api/ogullar/:id/sohbet) | /sons/:id › Talk with him | todo | planned |
+| UI-289 | Chat transcript with the son. Retired by spec 19 §12: the son chat is removed whole; speaking with any son, foreign god or minded being is Summon to Presence | public/views/ogul.js:sohbetHtml; public/views/ogul.js:sohbetDurum; public/views/ogul.js:SOHBET; public/views/ogul.js:sohbetYenile; public/views/ogul.js:bindSonDrawer (L294-L300) | 19 §10 › frontend | `features/presence/PresenceStage.tsx` | — | — | /presence | son.test.tsx | done |
+| UI-290 | Send words to a son. Retired by spec 19 §12: the son chat is removed whole; speaking with any son, foreign god or minded being is Summon to Presence | public/views/ogul.js:sohbetGonder; public/views/ogul.js:TAVIR | 19 §10 › frontend | `features/presence/PresenceStage.tsx` | — | — | /presence | son.test.tsx | done |
 | UI-291 | Son epic display and write or rewrite | public/views/ogul.js:sonDrawer (L232-L234); public/views/ogul.js:bindSonDrawer (L301) | 12 §3.2.4 › Remaining sections (render order) | `features/son/SonEpic.tsx` | Disabled while job o<id>:destan runs | Write/Rewrite epic -> POST /api/sons/{id}/epic (old POST /api/ogullar/:id/destan) | /sons/:id › Epic | frontend/src/features/son/sonPage.test.tsx | done |
 | UI-292 | Son powers: three slots with effect, parameter, unlock level, locked styling | public/views/ogul.js:sonDrawer (L116-L123, L235) | 12 §3.2.4 › Remaining sections (render order) | `features/son/SonPowers.tsx` | Silent re-render when change feed reports this son or son relations changed, on SSE is_sirada/is_basla/is_bitti and busy change, after every action | — | /sons/:id › Powers | frontend/src/features/son/sonPage.test.tsx | done |
 | UI-293 | Son existence (nature, state, manifestation, true name) and identity (appearance, temperament, obsession, fear, speech, secret) | public/views/ogul.js:sonDrawer (L236-L239) | 12 §3.2.4 › Remaining sections (render order) | `features/son/SonIdentity.tsx` | Silent re-render when change feed reports this son or son relations changed, on SSE is_sirada/is_basla/is_bitti and busy change, after every action | — | /sons/:id › Existence, Who he is | frontend/src/features/son/sonPage.test.tsx | done |

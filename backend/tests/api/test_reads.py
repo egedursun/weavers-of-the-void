@@ -67,7 +67,6 @@ async def test_record_reads_answer_for_seeded_records(api: ApiWorld) -> None:
     world = seeded(api).core
     paths = (
         f"/api/sons/{world.son.id}",
-        f"/api/sons/{world.son.id}/chat",
         f"/api/entities/{world.people.id}",
         f"/api/entities/{world.people.id}/bonds",
         f"/api/entities/{world.people.id}/chronicle",

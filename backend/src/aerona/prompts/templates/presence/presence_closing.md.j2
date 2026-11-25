@@ -1,0 +1,11 @@
+This exchange of the audience has just ended.
+{{ caller[:1] | upper }}{{ caller[1:] }} said: {{ player_text }}
+{% for act in acts %}
+- you used {{ act.tool }}: {% if act.failed %}it failed: {% endif %}{{ act.outcome }}
+{% endfor %}
+You answered: {{ reply_text }}
+
+Give back:
+- reply: your answer above, whole and unchanged in meaning{% if player_language %}, written in {{ player_language }}{% endif %}.
+- remember: one short line in your own voice of what you keep of this exchange{% if guise == "dream_voice" %}, as one who heard a voice in a dream{% elif guise == "ordinary" %}, as one who spoke with someone of your own world{% elif guise == "unnamed_power" %}, as one who heard a divine presence{% endif %}.
+- feeling: how this exchange left you toward {{ caller }}, from -100 through 0 to 100.

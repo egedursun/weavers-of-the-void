@@ -6,14 +6,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 
 | Axis | Count |
 |---|---|
-| table | 1012 |
-| enum | 1614 |
+| table | 1015 |
+| enum | 1619 |
 | step | 505 |
 | incident | 5 |
 | tool | 775 |
 | lever | 2297 |
-| screen | 1464 |
-| text | 205 |
+| screen | 1475 |
+| text | 206 |
 
 | Axis | Item | Proven by | Open layers and the rows that close them |
 |---|---|---|---|
@@ -726,6 +726,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | prehistories | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | prehistory_events | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | preparedness | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | presence_events | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | presence_exchanges | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | presence_sessions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | pressures | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | price_wars | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | prisoners | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -2226,6 +2229,12 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.prehistory.PrehistoryKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.prehistory.PrehistorySource | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.prehistory.PrehistoryState | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.presence.PresenceEventKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.presence.PresenceExchangeStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.presence.PresenceGuise | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.presence.PresenceRecord | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.presence.PresenceStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.presence.SpeakerGroup | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.protected_nature.ProtectedUse | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.protected_nature.ProtectionBasis | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.protected_nature.ProtectionMeasure | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2581,7 +2590,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | prompts.schemas.cosmos.NativeKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.schemas.cosmos.PlacementChoice | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.schemas.council.AllianceChange | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
-| enum | prompts.schemas.council.ChatAttitude | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.schemas.fate.VerdictDecision | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.tools.divine_will_ids.DivineWillToolId | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.tools.ids.MortalToolId | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -7462,6 +7470,18 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/prayers/PrayersScreen | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/prehistory/DeepTimePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/prehistory/PrehistorySection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/AudiencePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/BeginAnewButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/DeadSeal | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/ExchangeList | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/PastAudiences | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/PresenceComposer | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/PresenceScreen | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/PresenceStage | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/SessionBadges | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/SpeakWithThem | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/SpeakerRail | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/presence/SummonForm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/professions/ProfessionsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/prompts/ContextBlocksView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/prompts/PromptCatalogueView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -7560,7 +7580,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/son/SonBeliefs | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/son/SonBirthChild | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/son/SonBonds | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
-| screen | features/son/SonChat | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/son/SonEditForm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/son/SonEpic | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/son/SonHero | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -7737,8 +7756,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | text | prompts/templates/council/council_persona.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/council/council_session_system.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/council/council_session_user.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
-| text | prompts/templates/council/son_chat_system.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
-| text | prompts/templates/council/son_chat_user.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/deepening/_god.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/deepening/creator_deepen_system.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/deepening/creator_deepen_user.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
@@ -7872,6 +7889,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | text | prompts/templates/opportunities/son/worshipper_wars.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/opportunities/son/your_enemies.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/opportunities/son_opportunities.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/presence/presence_closing.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/presence/presence_system.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/presence/presence_user.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/shared/_epic_rule.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/shared/_harm_narration.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/shared/image_prompt_rules.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |

@@ -74,9 +74,8 @@ def test_default_constraints_follow_live_rules() -> None:
     regions = schema["properties"]["regions"]
     assert regions["minItems"] == RULES.genesis.regions_min
     assert regions["maxItems"] == RULES.genesis.regions_max
-    chat = output_schema(PromptId.SON_CHAT_USER, RULES)["properties"]["loyalty_change"]
-    assert chat["maximum"] == RULES.council.chat_loyalty_max_change
-    assert chat["minimum"] == -RULES.council.chat_loyalty_max_change
+    translation = output_schema(PromptId.TRANSLATE_USER, RULES)["properties"]["new_words"]
+    assert translation["maxItems"] == RULES.council.translate_new_words_max
     rationale = output_schema(PromptId.FATE_EXTRA_JUDGMENT_USER, RULES)["properties"]["verdicts"]["items"]["properties"]["rationale"]
     assert f"at most {RULES.fate.reason_max_words} words" in rationale["description"]
 
@@ -114,11 +113,20 @@ def test_object_fields_and_variables() -> None:
 
 def test_bad_paths_and_missing_outputs_raise() -> None:
     with pytest.raises(SchemaPathError):
-        output_schema(PromptId.SON_CHAT_USER, RULES, [ArrayBounds(("nothing",), 1, 2)])
+        output_schema(PromptId.TRANSLATE_USER, RULES, [ArrayBounds(("nothing",), 1, 2)])
     with pytest.raises(PromptOutputMissingError):
         output_model(PromptId.WORLD_HEADER)
 
 
 def test_invalid_payload_is_rejected() -> None:
     with pytest.raises(ValidationError):
-        validate_output(PromptId.SON_CHAT_USER, {"reply": "x", "attitude": "bored", "loyalty_change": 1})
+        validate_output(
+            PromptId.TRANSLATE_USER,
+            {
+                "translation": "x",
+                "pronunciation": "x",
+                "word_by_word": [],
+                "new_words": [{"word": "x", "meaning": "x", "kind": "bored", "origin": "x"}],
+                "note": "x",
+            },
+        )

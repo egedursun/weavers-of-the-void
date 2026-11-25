@@ -18,7 +18,6 @@ from aerona.agents.mortal import choose_mortal_agents, run_mortal_turn, world_sh
 from aerona.agents.network_repair import network_fate_repair, network_rule_repair, node_key
 from aerona.agents.revelation import reveal
 from aerona.agents.runtime import AgentRuntime
-from aerona.agents.son_chat import chat_with_son
 from aerona.agents.summoner import birth_child, child_rarity, complete_son_powers, summon_son
 from aerona.agents.translator import translate
 from aerona.agents.world_birth import BirthPlan, birth_world
@@ -30,7 +29,7 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow, CreatorRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.lore import ChronicleRow, CouncilRow, FolkBeliefRow, HistorianViewRow, LexemeRow, MessageRow
+from aerona.db.tables.lore import ChronicleRow, CouncilRow, FolkBeliefRow, HistorianViewRow, LexemeRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
@@ -185,16 +184,12 @@ async def test_image_prompts_and_portrait(runtime: AgentRuntime, model: FakeMode
     assert creator.title == "the Salt"
 
 
-async def test_chat_and_translation(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
-    model.script(output_model(PromptId.SON_CHAT_USER), payload(PromptId.SON_CHAT_USER))
-    reply = await chat_with_son(runtime, world.core.son.id, "Will you obey?")
-    assert reply.change == 3
+async def test_translation(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
     model.script(output_model(PromptId.TRANSLATE_USER), payload(PromptId.TRANSLATE_USER))
     result = await translate(runtime, world.core.language.id, "salt remembers")
     async with database.read() as session:
-        messages = int(await session.scalar(select(func.count()).select_from(MessageRow)) or 0)
         added = int(await session.scalar(select(func.count()).select_from(LexemeRow).where(LexemeRow.word == "ka")) or 0)
-    assert messages == 2 and added == 1 and len(result.new_words) == 1
+    assert added == 1 and len(result.new_words) == 1
 
 
 async def test_network_repair(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:

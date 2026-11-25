@@ -405,7 +405,6 @@ export const SECTION_CATEGORY: Readonly<Record<string, EntryCategory>> = {
   'section-society': 'society',
   'section-son-bargains': 'faith',
   'section-son-bonds': 'life',
-  'section-son-chat': 'overview',
   'section-son-child': 'life',
   'section-son-creations': 'lore',
   'section-son-edit': 'control',

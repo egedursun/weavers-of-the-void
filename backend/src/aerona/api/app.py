@@ -111,6 +111,7 @@ from aerona.api.routers import (
     powers,
     prayers,
     prehistory,
+    presence,
     previews,
     profiles,
     prompt_context,
@@ -294,6 +295,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     divine_will,
     divine_will_attachments,
     divine_will_library,
+    presence,
     actions,
 )
 IMAGE_UPLOAD_SUFFIX = "/images"

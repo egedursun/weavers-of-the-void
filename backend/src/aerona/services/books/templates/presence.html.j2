@@ -1,0 +1,26 @@
+{% from "divine_will.html.j2" import will_facts %}
+{% macro audiences(record, name) -%}
+{% if record.shown %}
+<section class="audiences">
+<p class="sublabel">Audiences · {{ record.tally }}</p>
+{% for audience in record.items %}
+<section class="will-session audience" id="audience-{{ audience.id }}">
+<h5>{{ audience.heading }} <span class="meta small">epoch {{ audience.epoch }} · heard as {{ audience.guise | lower }}</span>{% if audience.from_death %} <span class="death-seal">Summoned from death</span>{% endif %}</h5>
+{{ will_facts(audience.facts) }}
+{% for exchange in audience.exchanges %}
+<article class="will-cycle">
+<p class="will-step">Exchange {{ exchange.ordinal }} · epoch {{ exchange.epoch }} · {{ exchange.status | lower }}</p>
+{{ will_facts(exchange.facts) }}
+<div class="quote"><span class="label">The Creator</span>{{ exchange.player_text | paragraphs }}</div>
+{% if exchange.steps %}<p class="sublabel">The exchange step by step</p><ol class="will-trace">{% for step in exchange.steps %}<li><span class="will-step">{{ step.label }}{% if step.tool %} · {{ step.tool }}{% endif %}</span>{{ will_facts(step.facts) }}</li>{% endfor %}</ol>{% endif %}
+{% if exchange.tools %}<p class="small"><b>Tools it used:</b> {{ exchange.tools | join(", ") }}</p>{% endif %}
+{% if exchange.reply_text %}<div class="box"><span class="label">{{ name }} answered</span>{{ exchange.reply_text | paragraphs }}</div>{% endif %}
+{% if exchange.remember_text %}<div class="box"><span class="label">What {{ name }} kept in memory</span>{{ exchange.remember_text | paragraphs }}</div>{% endif %}
+{% if exchange.error %}<p class="meta small">Error: {{ exchange.error }}</p>{% endif %}
+</article>
+{% endfor %}
+</section>
+{% endfor %}
+</section>
+{% endif %}
+{%- endmacro %}

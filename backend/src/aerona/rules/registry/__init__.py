@@ -572,6 +572,7 @@ from aerona.rules.registry.population_policy import PopulationPolicyRules
 from aerona.rules.registry.power_unlock_levels import PowerUnlockLevelsRules
 from aerona.rules.registry.powers import ConcealmentRules, MagicSystemRules, PoweredSocietyRules, PowerRules, PowerSourceRules
 from aerona.rules.registry.prehistory import PrehistoryRules
+from aerona.rules.registry.presence import PresenceRules
 from aerona.rules.registry.production import ExtractionRules, MiningHazardsRules, RefiningRules
 from aerona.rules.registry.protected_nature import ProtectedNatureRules
 from aerona.rules.registry.public_works import PublicWorksRules, StateEnterpriseRules
@@ -1606,6 +1607,7 @@ class Rules:
     metrics: MetricsRules = field(default_factory=MetricsRules)
     model: ModelRules = field(default_factory=ModelRules)
     divine_will: DivineWillRules = field(default_factory=DivineWillRules)
+    presence: PresenceRules = field(default_factory=PresenceRules)
     mortal_agents: MortalAgentsRules = field(default_factory=MortalAgentsRules)
     mortal_tools: MortalToolsRules = field(default_factory=MortalToolsRules)
     naming: NamingRules = field(default_factory=NamingRules)

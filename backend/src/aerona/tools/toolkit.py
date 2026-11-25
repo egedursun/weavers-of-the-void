@@ -101,6 +101,22 @@ class Toolkits:
         settings = RuntimeSettings(world.rules, epoch, world.seed, world.language, son_id, self._publish)
         return TurnToolkit(SonToolRuntime(self._database, settings, specs, self._ports), texts)
 
+    async def speaker_toolkit(self, node_id: int, epoch: int, *, acting: bool) -> TurnToolkit:
+        async with self._database.read() as session:
+            world = await self._world(session)
+            settings = RuntimeSettings(world.rules, epoch, world.seed, world.language, node_id, self._publish)
+            son = await session.get(SonRow, node_id)
+            if son is not None:
+                specs = [spec for spec in await self.son_specs_for(session, son) if acting or spec.meta.read_only]
+                texts = {spec.name: tool_text(SonToolId(spec.name), world.rules, await son_text_context(session, world.rules, son, spec)) for spec in specs}
+                return TurnToolkit(SonToolRuntime(self._database, settings, specs, self._ports), texts)
+            mortal = await session.get(EntityRow, node_id)
+            if mortal is None:
+                raise NotFoundError("No such being.")
+            chosen = [spec for spec in await self.mortal_specs_for(session, mortal) if acting or spec.meta.read_only]
+            told = {spec.name: tool_text(MortalToolId(spec.name), world.rules, mortal_text_context(spec)) for spec in chosen}
+        return TurnToolkit(MortalToolRuntime(self._database, settings, chosen, self._ports), told)
+
     async def mortal_toolkit(self, entity_id: int, epoch: int, action_points: int) -> TurnToolkit:
         async with self._database.write() as session:
             world = await self._world(session)

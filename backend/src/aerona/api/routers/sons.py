@@ -1,14 +1,12 @@
 from fastapi import APIRouter, Path, Query, status
-from pydantic import Field
 from sqlalchemy import or_, select
 
-from aerona.agents.son_chat import ChatReply, chat_with_son
 from aerona.api.actions import Alias, mount_all
 from aerona.api.background import require_llm
 from aerona.api.dependencies import ServicesDep, reader, world_rules
-from aerona.api.schemas.common import JobAccepted, RequestModel
+from aerona.api.schemas.common import JobAccepted
 from aerona.api.schemas.gods import DeadSonPanel, DistributionPreviewView, FolkView, MessageView, ResurrectionOrder, SiblingView, SonDetail, SonReputation
-from aerona.api.schemas.records import EntitySummary, MessageRecord, NodeRef, SonPublic, SonRecord
+from aerona.api.schemas.records import EntitySummary, NodeRef, SonPublic, SonRecord
 from aerona.api.schemas.state import SonRelationItem
 from aerona.api.views.common import bond_count, bond_views, images_of, node_refs, son_public
 from aerona.api.views.scoped_lines import scoped_lines
@@ -19,8 +17,6 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import FolkBeliefRow, MessageRow
 from aerona.db.tables.sons import SonRelationRow, SonRow
-from aerona.domain.enums.action import ActionKind
-from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleScope
 from aerona.engine.gods.devotion import resurrection_state
@@ -33,9 +29,7 @@ from aerona.services.state import son_views
 router = APIRouter(tags=["sons"])
 
 NO_SON = "No such son."
-CHAT_TOOL = "son:chat"
 NOT_DEAD = "That son is not dead."
-CHAT_MAX_LENGTH = 20000
 
 ALIASES = (
     Alias("POST", "/sons/summon", "summon_son"),
@@ -62,10 +56,6 @@ ALIASES = (
     Alias("POST", "/sons/{son_id}/reset-counters", "son:reset_counters", path_fields={"son_id": "son_id"}),
     Alias("PUT", "/sons/{son_id}/image-prompt", "son:image_prompt", path_fields={"son_id": "son_id"}),
 )
-
-
-class ChatRequest(RequestModel):
-    text: str = Field(min_length=1, max_length=CHAT_MAX_LENGTH)
 
 
 @router.get("/sons", response_model=list[SonPublic])
@@ -214,32 +204,6 @@ async def read_dead_son_panel(services: ServicesDep, son_id: int = Path(ge=1)) -
             orders=[ResurrectionOrder(id=order.id, name=order.name, devotion=order.devotion, followers=order.followers) for order in state.orders],
             loyal_communities=[EntitySummary.model_validate(entity) for entity in state.faithful],
         )
-
-
-@router.get("/sons/{son_id}/chat", response_model=list[MessageRecord])
-async def read_chat(services: ServicesDep, son_id: int = Path(ge=1)) -> list[MessageRecord]:
-    async with reader(services) as session:
-        rules = await world_rules(services, session)
-        if await session.get(SonRow, son_id) is None:
-            raise NotFoundError(NO_SON)
-        rows = list(
-            await session.scalars(
-                select(MessageRow)
-                .where(MessageRow.intent == MessageIntent.CHAT, or_(MessageRow.sender_node_id == son_id, MessageRow.recipient_node_id == son_id))
-                .order_by(MessageRow.id.desc())
-                .limit(rules.council.chat_list_messages)
-            )
-        )
-    return [MessageRecord.model_validate(row) for row in reversed(rows)]
-
-
-@router.post("/sons/{son_id}/chat", response_model=ChatReply)
-async def chat(request: ChatRequest, services: ServicesDep, son_id: int = Path(ge=1)) -> ChatReply:
-    require_llm(services, "Speaking with a son")
-    reply = await chat_with_son(services.agents, son_id, request.text)
-    async with services.database.write() as session, services.application.ledger.creator_action(session, CHAT_TOOL, ActionKind.CHAT, {"son_id": son_id}):
-        pass
-    return reply
 
 
 @router.post("/sons/{son_id}/act", response_model=JobAccepted, status_code=status.HTTP_202_ACCEPTED)

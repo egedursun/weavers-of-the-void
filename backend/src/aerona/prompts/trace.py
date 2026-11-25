@@ -34,7 +34,6 @@ SPEC_PROMPTS: dict[str, tuple[PromptId, ...]] = {
     "council.persona": (P.COUNCIL_PERSONA,),
     "council.agenda": (P.COUNCIL_AGENDA,),
     "council.session": (P.COUNCIL_SESSION_SYSTEM, P.COUNCIL_SESSION_USER),
-    "son_chat": (P.SON_CHAT_SYSTEM, P.SON_CHAT_USER),
     "linguist.translate": (P.TRANSLATE_SYSTEM, P.TRANSLATE_USER),
     "cosmos.new_world": (P.NEW_WORLD_SYSTEM, P.NEW_WORLD_USER),
     "cosmos.inspiration": (P.WORLD_INSPIRATION,),

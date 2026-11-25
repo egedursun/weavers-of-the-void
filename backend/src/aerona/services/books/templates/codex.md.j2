@@ -1,4 +1,5 @@
 {% from "divine_will.md.j2" import will_record, will_writings %}
+{% from "presence.md.j2" import audiences %}
 {% macro image(file, name) -%}
 {% if file %}![{{ name | cell }}]({{ links.media(file) }})
 
@@ -241,6 +242,7 @@
 {% endif %}
 {{ entity_depth(article.entity.depth) }}
 {{ typed(article.typed) }}
+{{ audiences(article.audiences, article.entity.name) }}
 {% if article.ending %}
 *{{ article.ending }}*
 
@@ -579,6 +581,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 {% endif %}
 {{ god_depth(article.god.depth) }}
 {{ typed(article.typed) }}
+{{ audiences(article.audiences, article.god.name) }}
 {{ bullets("Fate", article.fate) }}
 {% endfor %}
 {% endif %}
@@ -603,6 +606,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 *Passions:* {{ inline_stats(article.passions) }}
 
 {{ typed(article.typed) }}
+{{ audiences(article.audiences, article.son.name) }}
 
 {{ personality(article.son.personality) }}
 {{ existence(article.son.existence_profile) }}
