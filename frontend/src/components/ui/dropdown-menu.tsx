@@ -84,11 +84,17 @@ function DropdownMenuItem({
       )}
       {...props}
     >
-      {children}
-      {refusal !== null && (
-        <span className='ms-auto min-w-0 text-caption text-muted-foreground'>
-          {refusal}
-        </span>
+      {props.asChild ? (
+        children
+      ) : (
+        <>
+          {children}
+          {refusal !== null && (
+            <span className='ms-auto min-w-0 text-caption text-muted-foreground'>
+              {refusal}
+            </span>
+          )}
+        </>
       )}
     </DropdownMenuPrimitive.Item>
   )
