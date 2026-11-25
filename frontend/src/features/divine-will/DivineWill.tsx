@@ -48,7 +48,7 @@ function DivineWillPanel() {
   return (
     <div className='@container/will flex min-h-0 min-w-0 flex-1 flex-col'>
       <div className='flex min-w-0 flex-col gap-3 border-b bg-linear-to-b from-primary/8 to-transparent px-4 pt-4 pb-3'>
-        <div className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2'>
+        <div className='flex min-w-0 items-center gap-3'>
           <DivineCrest size='md' tone={signals.awaiting ? 'warning' : 'gold'} />
           <div className='flex min-w-0 flex-1 flex-col'>
             <Label variant='overline'>The Creator’s own hand</Label>
@@ -60,8 +60,26 @@ function DivineWillPanel() {
               The Divine Will
             </Text>
           </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant='ghost'
+                size='icon-sm'
+                aria-label='Close the Divine Will'
+                onClick={() => setOpen(false)}
+              >
+                <X />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className='flex items-center gap-2'>
+              Close
+              <Kbd>Esc</Kbd>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <div className='flex min-w-0 flex-wrap items-center gap-2'>
           {signals.ready && (
-            <div className='order-last flex w-full min-w-0 @xl/will:order-none @xl/will:w-72'>
+            <div className='flex min-w-0 flex-1 basis-60'>
               <MemoryMeter
                 remembered={signals.remembered}
                 limit={signals.limit}
@@ -81,22 +99,6 @@ function DivineWillPanel() {
             busy={signals.running || signals.awaiting}
             empty={signals.total === 0}
           />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='ghost'
-                size='icon-sm'
-                aria-label='Close the Divine Will'
-                onClick={() => setOpen(false)}
-              >
-                <X />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className='flex items-center gap-2'>
-              Close
-              <Kbd>Esc</Kbd>
-            </TooltipContent>
-          </Tooltip>
         </div>
       </div>
       <Tabs
