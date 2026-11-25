@@ -21,6 +21,12 @@ export const holdGuard: Middleware = {
     if (held.length === 0) return undefined
     const cleared = { ...record }
     for (const field of held) cleared[field] = false
-    return new Request(request, { body: JSON.stringify(cleared) })
+    return new Request(request.url, {
+      method: request.method,
+      headers: request.headers,
+      body: JSON.stringify(cleared),
+      credentials: request.credentials,
+      signal: request.signal,
+    })
   },
 }

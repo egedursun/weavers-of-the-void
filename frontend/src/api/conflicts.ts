@@ -1,8 +1,10 @@
 import { useSyncExternalStore } from 'react'
 import { type Middleware } from 'openapi-fetch'
+import { WRITE_PERMISSIONS } from '@/features/team/writePermissions'
 import { takeReason } from './actReason'
 import { pinnedRevision, settleEdit } from './editSession'
 import { type components } from './generated/schema'
+import { matches } from './teamGate'
 
 export type ConflictChange = components['schemas']['EditConflictChange']
 
@@ -16,13 +18,48 @@ export type PendingConflict = {
 }
 
 const WRITES = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
-const OUTSIDE = /^\/api\/(library|auth|accounts|workspaces|team|presence)(\/|$)/
 const CONFLICT = 409
 const CONFLICT_CODE = 'edit_conflict'
 const KEPT_CODE = 'edit_kept'
 const KEPT_MESSAGE = 'You kept their change; yours was not applied.'
 const REASON_PARAM = 'reason'
 const REVISION_PARAM = 'expected_revision'
+
+const LEVER_PREFIX = '/api/actions/'
+
+const LEVER_ROUTES: readonly (readonly [string, string])[] = Object.entries(
+  WRITE_PERMISSIONS
+).flatMap(([path, methods]) =>
+  Object.entries(methods as Record<string, unknown>)
+    .filter(
+      ([, rule]) => rule !== null && typeof rule === 'object' && 'lever' in rule
+    )
+    .map(([method]) => [method, path] as const)
+)
+
+export function isLeverRoute(method: string, path: string): boolean {
+  if (path.startsWith(LEVER_PREFIX)) return true
+  return LEVER_ROUTES.some(
+    ([known, template]) => known === method && matches(template, path)
+  )
+}
+
+export async function withQuery(request: Request, url: URL): Promise<Request> {
+  const body = await request.clone().text()
+  return new Request(url, {
+    method: request.method,
+    headers: request.headers,
+    body: body === '' ? undefined : body,
+    credentials: request.credentials,
+    mode: request.mode,
+    cache: request.cache,
+    redirect: request.redirect,
+    referrer: request.referrer,
+    integrity: request.integrity,
+    keepalive: request.keepalive,
+    signal: request.signal,
+  })
+}
 
 let pending: PendingConflict | null = null
 const listeners = new Set<() => void>()
@@ -91,17 +128,17 @@ function kept(): Response {
 }
 
 export const actNoteMiddleware: Middleware = {
-  onRequest({ request }) {
+  async onRequest({ request }) {
     if (!WRITES.has(request.method)) return undefined
     const url = new URL(request.url, window.location.origin)
-    if (OUTSIDE.test(url.pathname)) return undefined
+    if (!isLeverRoute(request.method, url.pathname)) return undefined
     const reason = takeReason()
     const revision = pinnedRevision()
     if (reason === null && revision === null) return undefined
     if (reason !== null) url.searchParams.set(REASON_PARAM, reason)
     if (revision !== null)
       url.searchParams.set(REVISION_PARAM, String(revision))
-    const next = new Request(url, request)
+    const next = await withQuery(request, url)
     originals.set(next, next.clone())
     return next
   },
@@ -129,7 +166,7 @@ export const actNoteMiddleware: Middleware = {
     }
     const url = new URL(original.url)
     url.searchParams.delete(REVISION_PARAM)
-    const retried = await globalThis.fetch(new Request(url, original))
+    const retried = await globalThis.fetch(await withQuery(original, url))
     if (retried.ok) settleEdit()
     return retried
   },

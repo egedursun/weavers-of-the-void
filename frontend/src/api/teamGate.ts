@@ -49,7 +49,7 @@ export function setHoldFields(
   holds = next
 }
 
-function matches(template: string, path: string): boolean {
+export function matches(template: string, path: string): boolean {
   if (!template.includes('{')) return template === path
   const parts = template.split('/')
   const given = path.split('/')
