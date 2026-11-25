@@ -458,6 +458,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
       note='Wake or lull it, bind it to a master, move its lair, fill its hoard or set any of its values. What you set is held until you let the world decide again.'
       head={
         <Held
+          act={edit}
           keys={card.locked}
           label={fieldLabel}
           busy={busy}

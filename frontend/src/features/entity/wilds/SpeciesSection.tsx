@@ -1617,6 +1617,7 @@ function SpeciesControls({ id, card, blocked }: Blocked) {
       note='Set its body, temper, lands, yields and taming. Whatever you set is held until you let the world decide again; every change goes into the ledger.'
       head={
         <Held
+          act={save}
           keys={card.locked}
           label={fieldLabel}
           busy={busy}

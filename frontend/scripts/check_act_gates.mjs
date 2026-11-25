@@ -300,8 +300,9 @@ for (const file of sourceFiles(SOURCE)) {
           if (!submitButtonsHaveAct(node, sf, wanted))
             problems.push(`${where(node)}: the form that fires ${[...wanted].join(', ')} needs a control with act={…}`)
         } else {
-          const given = attrs.find((a) => a.name.getText(sf) === 'act')
-          const names = given ? actNames(given) : new Set()
+          const names = new Set(
+            attrs.filter((a) => /^acts?$/.test(a.name.getText(sf))).flatMap((a) => [...actNames(a)])
+          )
           const stated = attrs
             .filter((a) => /^(disabled|aria-disabled)$/.test(a.name.getText(sf)))
             .map((a) => a.initializer?.getText(sf) ?? '')
