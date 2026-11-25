@@ -154,17 +154,24 @@ class JobManager:
         if self._tasks:
             await asyncio.wait(list(self._tasks.values()), timeout=JOB_SHUTDOWN_GRACE_SECONDS)
 
+    def _live(self, row: JobRow) -> JobRow:
+        context = self._contexts.get(row.id)
+        if context is not None and row.status is JobStatus.RUNNING:
+            row.progress = context.progress
+            row.stage = context.stage
+        return row
+
     async def get(self, job_id: str) -> JobRow:
         async with self._database.read() as session:
             row = await session.get(JobRow, job_id)
         if row is None:
             raise NotFoundError("Job not found.")
-        return row
+        return self._live(row)
 
     async def list_recent(self, limit: int) -> list[JobRow]:
         async with self._database.read() as session:
             rows = await session.scalars(select(JobRow).order_by(JobRow.created_at.desc()).limit(limit))
-            return list(rows)
+            return [self._live(row) for row in rows]
 
     async def _items(self, log: ActivityLog) -> list[dict[str, Any]]:
         if not log.items:

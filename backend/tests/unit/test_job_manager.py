@@ -103,3 +103,24 @@ async def test_a_duplicate_key_returns_the_running_job(tmp_path: Path, open_data
     first = await jobs.submit(JobKind.EPOCH, slow, dedupe_key="deepen:7")
     assert await jobs.submit(JobKind.EPOCH, slow, dedupe_key="deepen:7") == first
     release.set()
+
+
+async def test_a_running_job_is_read_with_the_progress_it_reported(tmp_path: Path, open_database: OpenDatabase) -> None:
+    manager, database = await build_manager(tmp_path, open_database)
+    release = asyncio.Event()
+
+    async def work(context: JobContext) -> dict[str, int]:
+        context.report(0.4, "Sons are acting")
+        await release.wait()
+        return {}
+
+    job_id = await manager.submit(JobKind.EPOCH, work, exclusive_group="world")
+    await until(lambda: manager.busy_group("world") is not None)
+    await asyncio.sleep(0)
+    row = await manager.get(job_id)
+    listed = next(item for item in await manager.list_recent(5) if item.id == job_id)
+    assert (row.progress, row.stage) == (0.4, "Sons are acting")
+    assert (listed.progress, listed.stage) == (0.4, "Sons are acting")
+    release.set()
+    await manager.shutdown()
+    await database.dispose()
