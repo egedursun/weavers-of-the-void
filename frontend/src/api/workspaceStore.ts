@@ -47,11 +47,13 @@ export function workspaceFromSearch(search: string): string | null {
 
 function firstWorkspace(): string | null {
   if (typeof window === 'undefined') return null
-  return (
-    workspaceFromSearch(window.location.search) ??
-    readId('session', TAB_KEY) ??
-    readId('local', LAST_KEY)
-  )
+  const linked = workspaceFromSearch(window.location.search)
+  if (linked !== null) {
+    writeId('session', TAB_KEY, linked)
+    writeId('local', LAST_KEY, linked)
+    return linked
+  }
+  return readId('session', TAB_KEY) ?? readId('local', LAST_KEY)
 }
 
 let current: string | null = firstWorkspace()

@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 import { QUERY_STALE_TIME_MS } from '@/constants/ui'
+import { subscribeWorkspace } from './workspaceStore'
 
 const universeClients = new Map<string, QueryClient>()
 
@@ -16,6 +17,10 @@ export function createQueryClient(): QueryClient {
 }
 
 export const libraryQueryClient = createQueryClient()
+
+subscribeWorkspace(() => {
+  void libraryQueryClient.resetQueries()
+})
 
 export function queryClientFor(universeId: string): QueryClient {
   const known = universeClients.get(universeId)

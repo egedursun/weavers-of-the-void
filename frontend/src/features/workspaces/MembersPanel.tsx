@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   EllipsisVertical,
   KeyRound,
+  Plus,
   Search,
   UserMinus,
   UserPlus,
@@ -50,6 +51,7 @@ import { TemporaryPassword } from '@/features/accounts/TemporaryPassword'
 import { STATUS_LOOK } from '@/features/accounts/accountLook'
 import { useSignedInAccount } from '@/features/accounts/api'
 import { AddMemberDialog } from './AddMemberDialog'
+import { CreateWorkspaceDialog } from './CreateWorkspaceDialog'
 import {
   useChangeMemberRole,
   useMembers,
@@ -58,6 +60,7 @@ import {
   useSetMemberActive,
 } from './api'
 import { type Member, type Workspace, type WorkspaceRole } from './types'
+import { useSwitchWorkspace } from './useActiveWorkspace'
 import { WORKSPACE_ROLES, WORKSPACE_ROLE_LOOK } from './workspaceLook'
 
 const MEMBERS_SHOWN = 12
@@ -252,17 +255,30 @@ function MemberRow({
   )
 }
 
-export function MembersPanel({ workspace }: { workspace: Workspace }) {
+export function MembersPanel({
+  workspace,
+  adding,
+  onAdding,
+}: {
+  workspace: Workspace
+  adding?: boolean
+  onAdding?: (open: boolean) => void
+}) {
+  const [ownAdding, setOwnAdding] = useState(false)
+  const isAdding = adding ?? ownAdding
+  const setAdding = onAdding ?? setOwnAdding
   const members = useMembers(workspace.id)
   const me = useSignedInAccount()
   const remove = useRemoveMember()
   const reset = useResetMemberPassword()
   const setActive = useSetMemberActive()
-  const [adding, setAdding] = useState(false)
+  const [founding, setFounding] = useState(false)
+  const switchTo = useSwitchWorkspace()
   const [query, setQuery] = useState('')
   const [pending, setPending] = useState<Pending | null>(null)
   const [issued, setIssued] = useState<Issued | null>(null)
-  const manage = workspace.role === 'admin'
+  const personal = workspace.kind === 'personal'
+  const manage = workspace.role === 'admin' && !personal
   const list = useMemo(() => members.data ?? [], [members.data])
   const admins = list.filter((member) => member.role === 'admin').length
   const needle = query.trim().toLowerCase()
@@ -336,13 +352,36 @@ export function MembersPanel({ workspace }: { workspace: Workspace }) {
         <Button
           type='button'
           disabled={!manage}
-          disabledReason='Only administrators of the workspace add members.'
+          disabledReason={
+            personal
+              ? 'A personal workspace has you alone. Found a team workspace to add people.'
+              : 'Only administrators of the workspace add members.'
+          }
           onClick={() => setAdding(true)}
         >
           <UserPlus />
           Add a member
         </Button>
       </div>
+      {personal && (
+        <div className='flex min-w-0 flex-wrap items-center gap-3 rounded-md p-3 sealed-well'>
+          <Medallion icon={UsersRound} tone='gold' size='sm' />
+          <div className='flex min-w-0 flex-1 basis-60 flex-col gap-0.5'>
+            <Text as='span' weight='medium'>
+              This workspace is yours alone
+            </Text>
+            <Muted as='span' variant='caption'>
+              To work with others, found a team workspace. You become its
+              administrator and add people there; move a universe into it from
+              its card in the Library.
+            </Muted>
+          </div>
+          <Button type='button' onClick={() => setFounding(true)}>
+            <Plus />
+            Found a team workspace
+          </Button>
+        </div>
+      )}
       {members.isPending ? (
         <LoadingBlock label='Reading the members' />
       ) : members.isError ? (
@@ -388,7 +427,7 @@ export function MembersPanel({ workspace }: { workspace: Workspace }) {
       )}
       <AddMemberDialog
         workspace={workspace}
-        open={adding}
+        open={isAdding}
         onClose={() => setAdding(false)}
       />
       <ConfirmDialog
@@ -458,6 +497,14 @@ export function MembersPanel({ workspace }: { workspace: Workspace }) {
           )}
         </DialogContent>
       </Dialog>
+      <CreateWorkspaceDialog
+        open={founding}
+        onClose={() => setFounding(false)}
+        onCreated={(created) => {
+          setFounding(false)
+          switchTo(created, { part: 'members', add: true })
+        }}
+      />
     </div>
   )
 }

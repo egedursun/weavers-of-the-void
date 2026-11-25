@@ -42,7 +42,6 @@ import {
   useShowMore,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
-import { SettingsPage } from '@/features/workspaces/SettingsPage'
 import { AccountAvatar } from './AccountAvatar'
 import { CreateAccountDialog } from './CreateAccountDialog'
 import { TemporaryPassword } from './TemporaryPassword'
@@ -274,7 +273,7 @@ function confirmCopy(pending: Pending): {
   }
 }
 
-export function ServerAccountsScreen() {
+export function ServerAccountsPanel() {
   const me = useSignedInAccount()
   const allowed = me !== null && managesAccounts(me.server_role)
   const accounts = useAccounts(allowed)
@@ -364,11 +363,7 @@ export function ServerAccountsScreen() {
     waiting: list.filter((account) => account.must_change_password).length,
   }
   return (
-    <SettingsPage
-      title='Server accounts'
-      lead='Everyone who can sign in to this server. Only the owner and server admins see this page.'
-      crest={<Medallion icon={UsersRound} />}
-    >
+    <div className='flex min-w-0 flex-col gap-6'>
       {!allowed ? (
         <EmptyState
           icon={ShieldCheck}
@@ -507,6 +502,6 @@ export function ServerAccountsScreen() {
           )}
         </DialogContent>
       </Dialog>
-    </SettingsPage>
+    </div>
   )
 }

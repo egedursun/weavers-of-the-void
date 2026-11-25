@@ -1,6 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ServerAccountsScreen } from '@/features/accounts/ServerAccountsScreen'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/accounts')({
-  component: ServerAccountsScreen,
+  beforeLoad: () => {
+    throw redirect({ to: '/workspace', search: { part: 'accounts' } })
+  },
 })

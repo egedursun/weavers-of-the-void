@@ -4,7 +4,7 @@ import {
   KeySquare,
   LogOut,
   Monitor,
-  Settings2,
+  UserCog,
   UserRoundPen,
   UsersRound,
 } from 'lucide-react'
@@ -91,10 +91,12 @@ export function AccountMenu() {
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuItem
-              onSelect={() => void navigate({ to: '/workspace' })}
+              onSelect={() =>
+                void navigate({ to: '/workspace', search: { part: 'members' } })
+              }
             >
-              <Settings2 />
-              Workspace settings
+              <UsersRound />
+              Team and workspace
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={!canManage}
@@ -103,9 +105,14 @@ export function AccountMenu() {
                   ? undefined
                   : 'Only the server owner and server admins manage accounts.'
               }
-              onSelect={() => void navigate({ to: '/accounts' })}
+              onSelect={() =>
+                void navigate({
+                  to: '/workspace',
+                  search: { part: 'accounts' },
+                })
+              }
             >
-              <UsersRound />
+              <UserCog />
               Server accounts
               {!canManage && (
                 <Muted as='span' variant='caption' className='ms-auto'>

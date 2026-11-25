@@ -2,7 +2,11 @@ import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { libraryQueryClient } from '@/api/queryClients'
-import { chooseWorkspace, currentWorkspace } from '@/api/workspaceStore'
+import {
+  WORKSPACE_HEADER,
+  chooseWorkspace,
+  currentWorkspace,
+} from '@/api/workspaceStore'
 import {
   access,
   member,
@@ -10,6 +14,7 @@ import {
   workspace,
 } from '@/features/accounts/accountFixtures'
 import { Providers } from '@/features/accounts/providerFixtures'
+import { useUniverses, NO_UNIVERSE_FILTERS } from '@/features/universes/api'
 import {
   universePage,
   universeSummary,
@@ -297,4 +302,42 @@ describe('the workspace switcher', () => {
     expect(currentWorkspace()).toBe(String(TEAM.id))
     expect(server.callsTo('GET /api/workspaces').length).toBeGreaterThan(0)
   })
+
+  it('shows the universes of the workspace just chosen', async () => {
+    const own = workspace({
+      id: 1,
+      name: 'Mara Ilven',
+      kind: 'personal',
+      member_count: 1,
+    })
+    const { screen } = await renderScreen(
+      <Providers>
+        <WorkspaceSwitcher />
+        <ShelfNames />
+      </Providers>,
+      {
+        'GET /api/auth/state': signedIn(),
+        'GET /api/workspaces': [own, TEAM],
+        'GET /api/library/universes': ({ headers }: { headers: Headers }) =>
+          universePage(
+            headers.get(WORKSPACE_HEADER) === String(TEAM.id)
+              ? [universeSummary({ name: 'Team World' })]
+              : [universeSummary({ name: 'Own World' })]
+          ),
+      }
+    )
+    await expect.element(screen.getByText('Own World')).toBeVisible()
+    await screen
+      .getByRole('button', { name: 'Mara Ilven: switch workspace' })
+      .click()
+    await screen.getByRole('menuitem', { name: /Studio Team/ }).click()
+    await expect.element(screen.getByText('Team World')).toBeVisible()
+    expect(screen.getByText('Own World').query()).toBeNull()
+  })
 })
+
+function ShelfNames() {
+  const universes = useUniverses(NO_UNIVERSE_FILTERS)
+  const first = universes.data?.pages[0]?.items[0]
+  return <span>{first?.name ?? ''}</span>
+}

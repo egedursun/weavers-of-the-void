@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { navItem } from '@/config/navigation'
 import { BookLock, Hourglass, Radio, UsersRound } from 'lucide-react'
 import { useUniverseId } from '@/api/universeStore'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   EmptyState,
@@ -120,11 +122,19 @@ export function TeamScreen() {
         description={ITEM.description}
         icon={ITEM.icon}
         actions={
-          role && (
-            <Badge variant='default'>
-              {`You are ${role === 'viewer' ? 'a' : 'an'} ${ROLE_LOOK[role].label} of ${team?.universe}`}
-            </Badge>
-          )
+          <span className='flex min-w-0 flex-wrap items-center gap-2'>
+            {role && (
+              <Badge variant='default'>
+                {`You are ${role === 'viewer' ? 'a' : 'an'} ${ROLE_LOOK[role].label} of ${team?.universe}`}
+              </Badge>
+            )}
+            <Button asChild variant='outline' size='sm'>
+              <Link to='/workspace' search={{ part: 'members' }}>
+                <UsersRound />
+                Members and roles
+              </Link>
+            </Button>
+          </span>
         }
       />
       <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4'>

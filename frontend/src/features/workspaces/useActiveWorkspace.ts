@@ -1,10 +1,9 @@
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { libraryQueryClient } from '@/api/queryClients'
 import { chooseUniverse } from '@/api/universeStore'
 import { chooseWorkspace, useWorkspaceId } from '@/api/workspaceStore'
-import { libraryKeys } from '@/features/universes/api'
 import { useWorkspaces } from './api'
+import { type TeamSearch } from './teamParts'
 import { type Workspace } from './types'
 
 export function pickWorkspace(
@@ -33,10 +32,11 @@ export function useActiveWorkspace() {
 
 export function useSwitchWorkspace() {
   const navigate = useNavigate()
-  return (workspace: Workspace) => {
+  return (workspace: Workspace, team?: TeamSearch) => {
     chooseWorkspace(String(workspace.id))
     chooseUniverse(null)
-    libraryQueryClient.removeQueries({ queryKey: libraryKeys.all })
-    void navigate({ to: '/' })
+    void (team
+      ? navigate({ to: '/workspace', search: team })
+      : navigate({ to: '/' }))
   }
 }

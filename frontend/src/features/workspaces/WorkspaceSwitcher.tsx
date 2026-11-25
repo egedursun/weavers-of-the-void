@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Check, ChevronsUpDown, Plus, Settings2 } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus } from 'lucide-react'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -17,9 +17,12 @@ import {
 import { Muted, Text } from '@/components/typography'
 import { CreateWorkspaceDialog } from './CreateWorkspaceDialog'
 import { WorkspaceCrest } from './WorkspaceCrest'
+import { TEAM_PART_LOOK, type TeamPart } from './teamParts'
 import { type Workspace } from './types'
 import { useActiveWorkspace, useSwitchWorkspace } from './useActiveWorkspace'
 import { WORKSPACE_KIND_LOOK, WORKSPACE_ROLE_LOOK } from './workspaceLook'
+
+const TEAM_MENU: readonly TeamPart[] = ['members', 'universes', 'general']
 
 function WorkspaceLine({ workspace }: { workspace: Workspace }) {
   const kind = WORKSPACE_KIND_LOOK[workspace.kind]
@@ -112,13 +115,22 @@ export function WorkspaceSwitcher({ compact = false }: { compact?: boolean }) {
             <Plus />
             Found a team workspace
           </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={active === null}
-            onSelect={() => void navigate({ to: '/workspace' })}
-          >
-            <Settings2 />
-            Settings of this workspace
-          </DropdownMenuItem>
+          {TEAM_MENU.map((part) => {
+            const look = TEAM_PART_LOOK[part]
+            const Icon = look.icon
+            return (
+              <DropdownMenuItem
+                key={part}
+                disabled={active === null}
+                onSelect={() =>
+                  void navigate({ to: '/workspace', search: { part } })
+                }
+              >
+                <Icon />
+                {look.menu}
+              </DropdownMenuItem>
+            )
+          })}
         </DropdownMenuContent>
       </DropdownMenu>
       <CreateWorkspaceDialog

@@ -14,7 +14,7 @@ import { PresenceBeacon, PresentFaces } from '@/features/team/Presence'
 import { QueueTray } from '@/features/team/Queue'
 import { TeamViewOpener } from '@/features/team/TeamViewOpener'
 import { UniverseSwitcher } from '@/features/universes/UniverseSwitcher'
-import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
+import { WorkspaceBar } from '@/features/workspaces/WorkspaceBar'
 import { WorldHeader } from '@/features/world-header/WorldHeader'
 import { ActivityStrip } from './ActivityStrip'
 import { JobsMenu } from './JobsMenu'
@@ -28,7 +28,7 @@ export function ShellContext() {
   return (
     <>
       <span className='hidden min-w-0 @6xl/topbar:inline-flex'>
-        <WorkspaceSwitcher compact />
+        <WorkspaceBar compact />
       </span>
       <span className='hidden min-w-0 @4xl/topbar:inline-flex'>
         <UniverseSwitcher />

@@ -2,7 +2,7 @@ import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { libraryQueryClient } from '@/api/queryClients'
-import { ServerAccountsScreen } from './ServerAccountsScreen'
+import { ServerAccountsPanel } from './ServerAccountsPanel'
 import { account, signedIn } from './accountFixtures'
 import { Providers } from './providerFixtures'
 
@@ -30,7 +30,7 @@ describe('the accounts of the server', () => {
   it('makes an account and shows its temporary password once', async () => {
     const { screen, server } = await renderScreen(
       <Providers>
-        <ServerAccountsScreen />
+        <ServerAccountsPanel />
       </Providers>,
       {
         'GET /api/auth/state': signedIn(),
@@ -64,7 +64,7 @@ describe('the accounts of the server', () => {
   it('deletes an account only after a dialog that names it', async () => {
     const { screen, server } = await renderScreen(
       <Providers>
-        <ServerAccountsScreen />
+        <ServerAccountsPanel />
       </Providers>,
       {
         'GET /api/auth/state': signedIn(),
@@ -87,7 +87,7 @@ describe('the accounts of the server', () => {
   it('keeps the owner and oneself out of reach of the row acts', async () => {
     const { screen } = await renderScreen(
       <Providers>
-        <ServerAccountsScreen />
+        <ServerAccountsPanel />
       </Providers>,
       {
         'GET /api/auth/state': signedIn(),
@@ -102,7 +102,7 @@ describe('the accounts of the server', () => {
   it('tells a member the page is for server admins', async () => {
     const { screen, server } = await renderScreen(
       <Providers>
-        <ServerAccountsScreen />
+        <ServerAccountsPanel />
       </Providers>,
       {
         'GET /api/auth/state': signedIn({ server_role: 'member' }),

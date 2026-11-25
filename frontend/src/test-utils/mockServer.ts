@@ -4,6 +4,7 @@ export type MockRequest = {
   method: string
   path: string
   query: URLSearchParams
+  headers: Headers
   body: unknown
 }
 
@@ -37,7 +38,9 @@ function compile(key: string): { method: string; pattern: RegExp } {
   const source = path
     .split(/(\{[^}]+\})/)
     .map((part) =>
-      part.startsWith('{') ? '[^/]+' : part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      part.startsWith('{')
+        ? '[^/]+'
+        : part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     )
     .join('')
   return { method, pattern: new RegExp(`^${source}$`) }
@@ -73,11 +76,13 @@ export function startMockServer(routes: MockRoutes): MockServer {
       method: request.method,
       path: url.pathname,
       query: url.searchParams,
+      headers: request.headers,
       body: await readBody(request),
     }
     calls.push(mockRequest)
     const route = compiled.find(
-      (item) => item.method === request.method && item.pattern.test(url.pathname)
+      (item) =>
+        item.method === request.method && item.pattern.test(url.pathname)
     )
     if (!route) return jsonResponse({ detail: 'Not found' }, 404)
     const reply =
