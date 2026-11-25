@@ -40,6 +40,9 @@ from aerona.api.routers import (
     discovery,
     divine,
     divine_powers,
+    divine_will,
+    divine_will_attachments,
+    divine_will_library,
     dominion,
     economy,
     economy_depth,
@@ -145,9 +148,10 @@ from aerona.api.routers import (
 )
 from aerona.api.schemas.common import ErrorResponse
 from aerona.api.security import BodyLimit
-from aerona.constants.api import ERROR_DESCRIPTION, IMAGE_UPLOAD_MAX_BYTES, PACKAGE_UPLOAD_MAX_BYTES
+from aerona.constants.api import ERROR_DESCRIPTION, IMAGE_UPLOAD_MAX_BYTES, MEGABYTE, MULTIPART_OVERHEAD_BYTES, PACKAGE_UPLOAD_MAX_BYTES
 from aerona.constants.http import API_PREFIX
 from aerona.core.errors import NotFoundError
+from aerona.settings import Settings
 
 ROUTERS: tuple[ModuleType, ...] = (
     health,
@@ -287,17 +291,23 @@ ROUTERS: tuple[ModuleType, ...] = (
     wilds,
     structures,
     foundations,
+    divine_will,
+    divine_will_attachments,
+    divine_will_library,
     actions,
 )
 IMAGE_UPLOAD_SUFFIX = "/images"
 PACKAGE_UPLOAD_SUFFIX = "/world/import"
+ATTACHMENT_UPLOAD_SUFFIX = "/divine-will/attachments"
 UNKNOWN_ENDPOINT = "Unknown endpoint."
 
 
-def body_limits() -> tuple[BodyLimit, ...]:
+def body_limits(configured: Settings) -> tuple[BodyLimit, ...]:
+    attachments = configured.divine_will_upload_max_files * configured.divine_will_upload_max_mb * MEGABYTE + MULTIPART_OVERHEAD_BYTES
     return (
         BodyLimit(f"{API_PREFIX}{IMAGE_UPLOAD_SUFFIX}", IMAGE_UPLOAD_MAX_BYTES, binary=True),
         BodyLimit(f"{API_PREFIX}{PACKAGE_UPLOAD_SUFFIX}", PACKAGE_UPLOAD_MAX_BYTES, binary=True),
+        BodyLimit(f"{API_PREFIX}{ATTACHMENT_UPLOAD_SUFFIX}", attachments, binary=False, multipart=True),
     )
 
 

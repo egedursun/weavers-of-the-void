@@ -17,7 +17,10 @@ describe('help drawer', () => {
       .element(screen.getByText('Close the open window'))
       .toBeInTheDocument()
     await expect
-      .element(screen.getByText(/digits and \? are not shortcuts/))
+      .element(screen.getByText(/digits, letters and \? are not shortcuts/))
+      .toBeInTheDocument()
+    await expect
+      .element(screen.getByText('Open or close the Divine Will'))
       .toBeInTheDocument()
   })
 

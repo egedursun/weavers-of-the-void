@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any, Protocol
 
 from claude_agent_sdk import SdkMcpTool
@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
+from aerona.llm.content import AgentWatch, ImagePart, ModelCapabilities
 from aerona.llm.records import AgentRun
 
 Publish = Callable[[EventKind, dict[str, Any]], None]
@@ -40,7 +41,11 @@ class LanguageModel(Protocol):
         tools: list[SdkMcpTool[Any]],
         max_turns: int | None = None,
         timeout_seconds: int | None = None,
+        images: Sequence[ImagePart] = (),
+        watch: AgentWatch | None = None,
     ) -> AgentRun: ...
+
+    async def capabilities(self) -> ModelCapabilities: ...
 
 
 def bus_publisher(bus: EventBus) -> Publish:

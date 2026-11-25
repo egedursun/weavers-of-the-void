@@ -173,6 +173,7 @@ function Divider({ className }: { className?: string }) {
 export {
   Divider,
   Flourish,
+  Ornament,
   FrameCorners,
   GEM_CLASS,
   OrnateFrame,

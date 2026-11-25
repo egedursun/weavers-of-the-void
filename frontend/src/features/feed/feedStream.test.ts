@@ -21,6 +21,21 @@ function lineOf(id: number, kind: string, payload: Record<string, unknown>) {
 }
 
 describe('stream lines', () => {
+  it('leaves the Divine Will stream to its own panel', () => {
+    for (const kind of ['agent.stream', 'agent.thought', 'agent.tool_call']) {
+      const willEvent = event(9, kind, {
+        ...ACTOR,
+        actor_kind: 'creator',
+        channel: 'divine_will:12',
+        text: 'The plan is written.',
+      })
+      expect(toFeedLine(willEvent)).toBeNull()
+    }
+    expect(
+      toFeedLine(event(10, 'agent.thought', { ...ACTOR, text: 'Plain.' }))
+    ).not.toBeNull()
+  })
+
   it('joins streamed text into one line and closes it with the thought', () => {
     const lines = appendLines(
       [],

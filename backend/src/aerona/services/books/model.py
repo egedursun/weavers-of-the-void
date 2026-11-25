@@ -68,6 +68,7 @@ from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_table
 from aerona.services.books.command import add_command_areas
 from aerona.services.books.deeds import DeedsChapter, deeds_chapter
 from aerona.services.books.deepsvg import DeepStratum, world_below
+from aerona.services.books.divine_will import DivineWillRecord, DivineWillWritings, divine_will_record, divine_will_writings
 from aerona.services.books.familysvg import FamilyPlan, family_plan
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
@@ -419,6 +420,8 @@ class BookModel:
     records: list[RecordTable] = field(default_factory=list)
     ledger_changes: dict[int, list[LedgerChange]] = field(default_factory=dict)
     creation: list[Labelled] = field(default_factory=list)
+    divine_will: DivineWillRecord = field(default_factory=DivineWillRecord)
+    writings: DivineWillWritings = field(default_factory=DivineWillWritings)
 
 
 def humanize(value: str) -> str:
@@ -1197,6 +1200,8 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         records=[*builder.typed.records, *await type_tables(session, rules), *await record_tables(session, builder.ledger)],
         ledger_changes=builder.typed.ledger_changes(await session.scalars(select(LedgerChangeRow).order_by(LedgerChangeRow.entry_id, LedgerChangeRow.id))),
         creation=creation_facts(cosmos),
+        divine_will=await divine_will_record(session, builder.names),
+        writings=await divine_will_writings(session, builder.names),
     )
 
 

@@ -5,6 +5,7 @@
 @import './chrome.css';
 @import './cards.css';
 @import './packs.css';
+@import './divine-will.css';
 
 @custom-variant dark (&:is(.dark *):not(.dark .light *));
 

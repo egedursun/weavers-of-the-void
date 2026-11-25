@@ -290,6 +290,21 @@ from aerona.db.tables.divine import (
 )
 from aerona.db.tables.divine_conceptions import DivineConceptionRow, GodReadingRow
 from aerona.db.tables.divine_powers import DivinePowerRow
+from aerona.db.tables.divine_will import (
+    DivineWillArtifactNodeRow,
+    DivineWillArtifactRow,
+    DivineWillArtifactVersionRow,
+    DivineWillAttachmentRow,
+    DivineWillChunkRow,
+    DivineWillConfirmationRow,
+    DivineWillCycleRow,
+    DivineWillEventRow,
+    DivineWillForecastRow,
+    DivineWillHandleRow,
+    DivineWillPlanRow,
+    DivineWillPlanStepRow,
+    DivineWillSessionRow,
+)
 from aerona.db.tables.dominion import (
     CreatureLessonRow,
     DivineCreatureRow,
@@ -1026,6 +1041,19 @@ __all__ = [
     "DivineSeatRow",
     "DivineStandingRow",
     "DivineTongueRow",
+    "DivineWillArtifactNodeRow",
+    "DivineWillArtifactRow",
+    "DivineWillArtifactVersionRow",
+    "DivineWillAttachmentRow",
+    "DivineWillChunkRow",
+    "DivineWillConfirmationRow",
+    "DivineWillCycleRow",
+    "DivineWillEventRow",
+    "DivineWillForecastRow",
+    "DivineWillHandleRow",
+    "DivineWillPlanRow",
+    "DivineWillPlanStepRow",
+    "DivineWillSessionRow",
     "DivineWoundRow",
     "DoctrineAfterlifeRow",
     "DoctrineSacramentRow",

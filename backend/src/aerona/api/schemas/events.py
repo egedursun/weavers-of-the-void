@@ -6,6 +6,7 @@ from typing import Annotated, Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, create_model
 
 from aerona.domain.enums.chronicle import FeedCategory
+from aerona.domain.enums.divine_will import ConfirmationReason, CycleStatus, DivineWillMode, ForecastStatus, IndexStatus, PlanStatus
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.rarity import Rarity
 from aerona.events.kinds import EventKind
@@ -312,6 +313,60 @@ class BulkLogPayload(EventPayload):
     line: str | None = None
 
 
+class DivineWillCyclePayload(EventPayload):
+    cycle_id: int
+    session_id: int
+    ordinal: int
+    mode: DivineWillMode
+    status: CycleStatus
+
+
+class DivineWillCycleFinishedPayload(DivineWillCyclePayload):
+    steps: int = 0
+    input_tokens: int = 0
+    output_tokens: int = 0
+    error: str = ""
+
+
+class DivineWillConfirmationPayload(EventPayload):
+    cycle_id: int
+    confirmation_id: int
+    action_id: str
+    reason: ConfirmationReason
+    preview: dict[str, Any] = Field(default_factory=dict)
+
+
+class DivineWillArtifactPayload(EventPayload):
+    artifact_id: int
+    version: int = 0
+    cycle_id: int | None = None
+    deleted: bool = False
+
+
+class DivineWillPlanPayload(EventPayload):
+    plan_id: int
+    status: PlanStatus
+    cycle_id: int | None = None
+    step: int | None = None
+
+
+class DivineWillForecastPayload(EventPayload):
+    forecast_id: int
+    status: ForecastStatus
+    done_epochs: int = 0
+    epochs: int = 0
+    eta_seconds: int = 0
+    progress: float = 0.0
+
+
+class DivineWillIndexPayload(EventPayload):
+    indexed: int = 0
+    total: int = 0
+    finished: bool = False
+    status: IndexStatus = IndexStatus.BUILDING
+    note: str = ""
+
+
 PAYLOADS: dict[EventKind, type[EventPayload]] = {
     EventKind.JOB_QUEUED: JobPayload,
     EventKind.JOB_STARTED: JobPayload,
@@ -369,6 +424,13 @@ PAYLOADS: dict[EventKind, type[EventPayload]] = {
     EventKind.IMAGE_STATUS: EmptyPayload,
     EventKind.IMAGE_BULK_LOG: BulkLogPayload,
     EventKind.BATCH_DEEPEN_LOG: BulkLogPayload,
+    EventKind.DIVINE_WILL_CYCLE_STARTED: DivineWillCyclePayload,
+    EventKind.DIVINE_WILL_CYCLE_FINISHED: DivineWillCycleFinishedPayload,
+    EventKind.DIVINE_WILL_CONFIRMATION_REQUESTED: DivineWillConfirmationPayload,
+    EventKind.DIVINE_WILL_ARTIFACT_CHANGED: DivineWillArtifactPayload,
+    EventKind.DIVINE_WILL_PLAN_CHANGED: DivineWillPlanPayload,
+    EventKind.DIVINE_WILL_FORECAST_PROGRESS: DivineWillForecastPayload,
+    EventKind.DIVINE_WILL_INDEX_PROGRESS: DivineWillIndexPayload,
 }
 
 

@@ -6,14 +6,14 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 
 | Axis | Count |
 |---|---|
-| table | 999 |
-| enum | 1589 |
+| table | 1012 |
+| enum | 1614 |
 | step | 505 |
 | incident | 5 |
 | tool | 775 |
 | lever | 2297 |
-| screen | 1420 |
-| text | 195 |
+| screen | 1464 |
+| text | 205 |
 
 | Axis | Item | Proven by | Open layers and the rows that close them |
 |---|---|---|---|
@@ -267,6 +267,19 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | table | divine_powers | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | divine_standing | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | divine_tongues | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_artifact_nodes | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_artifact_versions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_artifacts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_attachments | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_chunks | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_confirmations | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_cycles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_events | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_forecasts | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_handles | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_plan_steps | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_plans | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
+| table | divine_will_sessions | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | divine_wounds | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | doctrine_afterlives | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
 | table | doctrine_sacraments | check_wiring.py; check_control.py; test_frontend_reads_every_field.py; test_god_control.py | integrity of every value: 47.13; history, changes, moments and terms: F58.5; F58.6; F58.7 |
@@ -1022,6 +1035,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | agents.turns.session.SessionStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | api.schemas.cards.CardOrder | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | api.schemas.common.ErrorCode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | api.schemas.divine_will.ConfirmationDecision | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | api.schemas.maps.RelationLineKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | cartography.biomes.Biome | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | cartography.model.BorderKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -1444,6 +1458,24 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | domain.enums.divine_conceptions.DivineNearness | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine_conceptions.DivinePersonhood | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.divine_conceptions.GodReading | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.ArtifactFormat | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.ArtifactKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.ArtifactStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.AttachmentKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.AttachmentStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.ChunkSource | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.ConfirmationReason | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.ConfirmationStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.CycleEventKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.CycleNotice | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.CycleStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.DivineWillMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.ExportFormat | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.ForecastStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.IndexStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.PlanStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.StepImpact | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | domain.enums.divine_will.StepStatus | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.domain.Domain | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.dominion.BeliefStance | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | domain.enums.dominion.CreatureDeed | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2551,6 +2583,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | prompts.schemas.council.AllianceChange | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.schemas.council.ChatAttitude | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.schemas.fate.VerdictDecision | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | prompts.tools.divine_will_ids.DivineWillToolId | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.tools.ids.MortalToolId | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.tools.ids.SonToolId | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | prompts.tools.results.CommonResult | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2559,6 +2592,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | rules.groups.RuleGroup | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | services.bulk_deepen.LogLevel | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | services.bulk_deepen.TargetKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | services.divine_will.embedding.TextRole | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | services.divine_will.fountain.Element | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | services.engine_phases.PhaseStage | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | services.exchange.ImportMode | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | services.images.queue.ImageClass | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -2588,6 +2623,9 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | services.wiki.MarkerKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | services.wiki.RoadKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | services.wiki.SettlementTier | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | tools.divine_will.framework.Toolset | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | tools.divine_will.library_ports.LibrarySort | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
+| enum | tools.divine_will.read.NodePart | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.framework.lore_inputs.LoreToolResult | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.framework.shared_inputs.LinkTarget | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
 | enum | tools.framework.shared_inputs.WordKind | check_wiring.py; check_label_maps.py; check_raw_enums.mjs | every value read: 47.7; two layers for content concepts: W48 |
@@ -6267,6 +6305,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | components/layout/about/AboutDialog | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/about/AboutVision | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/about/SectionHeading | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | components/layout/divine-will/DivineCrest | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | components/layout/divine-will/DivineWillDock | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/entry/EntryRail | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/entry/EntryWindow | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/typography/Label | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6417,6 +6457,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/collective/StoryletPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/command-palette/ActionDialog | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/command-palette/CommandPalette | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/command-palette/FieldControl | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/commerce/CommerceSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/conditionKinds/ConditionKindsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/cosmography/ApocalypseVariantPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6634,6 +6675,45 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/design/SurfaceSpecimens | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/design/TypographySpecimens | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/diseaseAgents/DiseaseAgentsSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ArtifactLink | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/AttachmentChip | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/AttachmentTrayList | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ChatView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/Composer | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ConfirmationCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/CycleBlock | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/CycleList | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/DivineWill | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ErrorCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ForecastCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/IndexNotice | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/LiveToolCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/MemoryBoundary | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/MemoryMeter | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ModeBar | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/NodeRef | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/NoticeCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/PastSessionsView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/PlanCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/PlanStepEditor | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ResetSessionButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/RetryCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/SuggestModeCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ThoughtGroup | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/ToolCallCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/UndoButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/WillMarkdown | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/WritingsView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/ArtifactBrowser | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/ArtifactDetail | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/ArtifactPreview | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/DiffView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/ExportMenu | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/FountainView | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/HtmlFrame | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/KindSelectItems | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/LibraryScreen | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/divine-will/library/MetaDialog | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/divine/CouncilOrderPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/divine/CouncilRulingsPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/divine/CreatorDivinityPanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -6840,6 +6920,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/entity/mortal/KinSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/mortal/LifeSection | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/mortal/StressCard | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/entity/mortal/tree/FamilyTreeCanvas | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | features/entity/mortal/tree/FamilyTreePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/place/CreatePlace | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/place/PlaceHolds | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/entity/place/PlaceSecrets | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -7177,8 +7259,6 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | features/languages/AddWordsForm | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/Dictionary | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/FamilyChart | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
-| screen | features/entity/mortal/tree/FamilyTreeCanvas | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
-| screen | features/entity/mortal/tree/FamilyTreePanel | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/KnowledgeTree | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/LanguageSeal | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | features/languages/LanguageShaper | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
@@ -7672,6 +7752,16 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | text | prompts/templates/deepening/foreign_god_deepen_user.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/deepening/son_epic_system.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/deepening/son_epic_user.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_ask_lore.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_command.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_creative_work.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_foresight.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_mechanics_guide.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_plan.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_system.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_translate_system.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_translate_user.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
+| text | prompts/templates/divine_will/divine_will_user.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/fate/_events.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/fate/_prescreen.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |
 | text | prompts/templates/fate/age_events.md.j2 | check_prompt_bias.py; check_canned_lines.py | a full read against rule 2: 47.14 |

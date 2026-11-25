@@ -20,6 +20,7 @@ class PromptArea(StrEnum):
     OPPORTUNITIES = "opportunities"
     AGENT = "agent"
     LOCALISATION = "localisation"
+    DIVINE_WILL = "divine_will"
 
 
 class PromptId(StrEnum):
@@ -138,6 +139,17 @@ class PromptId(StrEnum):
     FALLEN_SON_TURN = "fallen_son_turn"
     MORTAL_TURN_USER = "mortal_turn_user"
     MORTAL_TURN_CONTINUATION = "mortal_turn_continuation"
+
+    DIVINE_WILL_SYSTEM = "divine_will_system"
+    DIVINE_WILL_COMMAND = "divine_will_command"
+    DIVINE_WILL_PLAN = "divine_will_plan"
+    DIVINE_WILL_ASK_LORE = "divine_will_ask_lore"
+    DIVINE_WILL_CREATIVE_WORK = "divine_will_creative_work"
+    DIVINE_WILL_MECHANICS_GUIDE = "divine_will_mechanics_guide"
+    DIVINE_WILL_FORESIGHT = "divine_will_foresight"
+    DIVINE_WILL_USER = "divine_will_user"
+    DIVINE_WILL_TRANSLATE_SYSTEM = "divine_will_translate_system"
+    DIVINE_WILL_TRANSLATE_USER = "divine_will_translate_user"
     MORTAL_CONTEXT = "mortal_context"
 
     SON_OPPORTUNITIES = "son_opportunities"

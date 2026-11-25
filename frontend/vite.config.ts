@@ -59,6 +59,7 @@ export default defineConfig({
     expect: { poll: { timeout: ELEMENT_WAIT_MS } },
     browser: {
       enabled: true,
+      screenshotDirectory: path.resolve(ROOT, '.vitest-screenshots'),
       provider: playwright(),
       instances: [{ browser: 'chromium' }],
     },

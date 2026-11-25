@@ -1,0 +1,44 @@
+{% macro will_facts(items) -%}
+{% if items %}<dl class="facts will-facts">{% for item in items %}<div><dt>{{ item.label }}</dt><dd class="will-value">{{ item.value }}</dd></div>{% endfor %}</dl>{% endif %}
+{%- endmacro %}
+
+{% macro will_record(record, changes) -%}
+{% if record.shown %}
+<h3 class="bm2" id="divine-will">The Divine Will</h3>
+<p class="meta small">{{ record.tally }}</p>
+{% for will in record.sessions %}
+<section class="will-session" id="divine-will-session-{{ will.id }}">
+<h4>{{ will.title or "Session " ~ will.id }} <span class="meta small">{{ "the open session" if will.open else "closed" }}</span></h4>
+{{ will_facts(will.facts) }}
+{% for cycle in will.cycles %}
+<article class="will-cycle">
+<h5>Exchange {{ cycle.ordinal }} · {{ cycle.mode }} · epoch {{ cycle.epoch }}</h5>
+<p class="meta small">{{ cycle.status }}</p>
+{{ will_facts(cycle.facts) }}
+<div class="quote"><span class="label">The player</span>{{ cycle.player_text | paragraphs }}</div>
+{% if cycle.events %}<p class="sublabel">The exchange step by step</p><ol class="will-trace">{% for event in cycle.events %}<li><span class="will-step">{{ event.label }}{% if event.tool %} · {{ event.tool }}{% endif %}</span>{{ will_facts(event.facts) }}{% if event.handle %}<p class="meta small">Result kept under handle {{ event.handle }}{% if event.handle_text %}: {{ event.handle_text }}{% endif %}</p>{% endif %}</li>{% endfor %}</ol>{% endif %}
+{% for item in cycle.confirmations %}<div class="box"><span class="label">Approval asked for {{ item.action_id }}</span><p>{{ item.reason }} · {{ item.decision }}{% if item.decided %} on {{ item.decided }}{% endif %}{% if item.entry_id %} · ledger entry {{ item.entry_id }}{% endif %}</p><p class="sublabel">Input</p><pre class="will-source">{{ item.input }}</pre>{% if item.preview %}<p class="sublabel">What the rehearsal showed</p>{{ will_facts(item.preview) }}{% endif %}</div>{% endfor %}
+{% if cycle.acts %}<p class="sublabel">Acts upon the world</p><ul class="timeline">{% for act in cycle.acts %}<li><span class="when">Epoch {{ act.epoch }} · ledger entry {{ act.entry_id }}</span>{{ act.tool }}{% if act.undone %} <span class="meta">undone</span>{% endif %}{% if act.summary %} <span class="meta small">— {{ act.summary | plain }}</span>{% endif %}{% if act.nodes %}<br><span class="small">Touched {% for anchor, name in act.nodes %}<a href="#{{ anchor }}">{{ name }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span>{% endif %}{% set found = changes.get(act.entry_id, []) %}{% if found %}<ul class="changes">{% for change in found %}<li><b>{{ change.verb }}</b> {{ change.target }}{% if change.details %}<span class="meta small"> — {{ change.details | join(" · ") }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>{% endif %}
+{% if cycle.final_text %}<div class="box"><span class="label">The answer</span>{{ cycle.final_text | paragraphs }}</div>{% endif %}
+{% if cycle.error %}<p class="meta small">Error: {{ cycle.error }}</p>{% endif %}
+</article>
+{% endfor %}
+</section>
+{% endfor %}
+{% if record.plans %}<h4 id="divine-will-plans">Plans</h4>{% for plan in record.plans %}<article class="will-cycle"><h5>{{ plan.title }} <span class="meta small">{{ plan.status }}</span></h5>{{ will_facts(plan.facts) }}{% if plan.steps %}<ol class="will-trace">{% for step in plan.steps %}<li><span class="will-step">Step {{ step.ordinal }} · {{ step.title }}</span>{{ will_facts(step.facts) }}{% if step.result %}<p class="small">{{ step.result }}</p>{% endif %}{% if step.error %}<p class="meta small">Error: {{ step.error }}</p>{% endif %}</li>{% endfor %}</ol>{% endif %}</article>{% endfor %}{% endif %}
+{% if record.forecasts %}<h4 id="divine-will-forecasts">Forecasts</h4>{% for forecast in record.forecasts %}<article class="will-cycle"><h5>Forecast {{ forecast.id }} <span class="meta small">{{ forecast.status }}</span></h5>{{ will_facts(forecast.facts) }}{% if forecast.interventions %}<p class="sublabel">Interventions</p>{{ will_facts(forecast.interventions) }}{% endif %}{% if forecast.report %}<p class="sublabel">Report</p>{{ will_facts(forecast.report) }}{% endif %}</article>{% endfor %}{% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro will_writings(writings) -%}
+{% for writing in writings.writings %}
+<article class="entry" id="writing-{{ writing.id }}">
+<div class="head"><h3 class="bm2">{{ writing.title }}</h3></div>
+{{ will_facts(writing.facts) }}
+{% if writing.markup or writing.script %}<pre class="will-source">{{ writing.body }}</pre>{% else %}{{ writing.body | paragraphs }}{% endif %}
+{% if writing.versions %}<p class="sublabel">Versions</p><table><thead><tr><th>Version</th><th>What changed</th><th>Exchange</th><th>Written</th><th>Length</th></tr></thead><tbody>{% for version in writing.versions %}<tr><td>{{ version.version }}</td><td>{{ version.summary }}</td><td>{{ version.exchange }}</td><td>{{ version.when }}</td><td>{{ version.characters }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+</article>
+{% endfor %}
+{% if writings.attachments %}<h3 class="bm2">What the player brought</h3>{% for attachment in writings.attachments %}<section class="typed"><p class="sublabel">{{ attachment.filename }}</p>{{ will_facts(attachment.facts) }}{% if attachment.note %}<p class="small">{{ attachment.note }}</p>{% endif %}</section>{% endfor %}{% endif %}
+{% if writings.index %}<h3 class="bm2">The Divine Will's index</h3><table><thead><tr><th>Source</th><th>Passages</th><th>Tokens</th><th>Last indexed</th></tr></thead><tbody>{% for line in writings.index %}<tr><td>{{ line.source }}</td><td>{{ line.passages }}</td><td>{{ line.tokens }}</td><td>{{ line.updated }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{%- endmacro %}

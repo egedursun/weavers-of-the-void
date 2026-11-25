@@ -7,6 +7,7 @@ from claude_agent_sdk import SdkMcpTool
 from pydantic import BaseModel
 
 from aerona.agents.turns.ports import DoneAction, ToolCatalogue
+from aerona.llm.content import AgentWatch, ImagePart, ModelCapabilities
 from aerona.llm.errors import LlmDisabledError
 from aerona.llm.records import AgentRun, Usage
 
@@ -29,6 +30,7 @@ class FakeModel:
     fallback: dict[type[BaseModel], Responder] = field(default_factory=dict)
     default_run: AgentRun | None = None
     calls: list[Call] = field(default_factory=list)
+    vision: bool = True
 
     def script(self, output: type[BaseModel], *responses: BaseModel | Exception | Responder) -> None:
         self.scripted[output].extend(responses)
@@ -70,6 +72,8 @@ class FakeModel:
         tools: list[SdkMcpTool[Any]],
         max_turns: int | None = None,
         timeout_seconds: int | None = None,
+        images: Sequence[ImagePart] = (),
+        watch: AgentWatch | None = None,
     ) -> AgentRun:
         if not self.enabled:
             raise LlmDisabledError("LLM calls are disabled.")
@@ -80,6 +84,9 @@ class FakeModel:
         if isinstance(item, Exception):
             raise item
         return item() if callable(item) else item
+
+    async def capabilities(self) -> ModelCapabilities:
+        return ModelCapabilities(images=self.vision and self.enabled, probed=self.enabled)
 
 
 def spoken(text: str, completed: bool = True, stop_reason: str | None = "success") -> AgentRun:

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { shortcutItems } from '@/config/navigation'
+import { isDivineWillKey, shortcutItems } from '@/config/navigation'
+import { useWillDock } from './divine-will/dockStore'
 import { useEntryStack } from './entry/useEntryStack'
 
 const HELP_KEY = '?'
@@ -39,6 +40,11 @@ export function useGlobalShortcuts() {
       if (event.key === HELP_KEY) {
         event.preventDefault()
         open({ kind: 'help' })
+        return
+      }
+      if (isDivineWillKey(event.key)) {
+        event.preventDefault()
+        useWillDock.getState().toggle()
         return
       }
       const item = shortcutItems().find(

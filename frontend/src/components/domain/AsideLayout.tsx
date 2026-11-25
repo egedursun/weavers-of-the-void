@@ -27,7 +27,7 @@ export function AsideLayout({
         className={cn(
           'flex min-w-0 flex-col gap-4',
           quarter ? 'lg:col-span-3' : 'xl:col-span-2',
-          side === 'start' && (quarter ? 'lg:order-2' : 'xl:order-2')
+          side === 'start' && 'order-2'
         )}
       >
         {children}
@@ -37,7 +37,7 @@ export function AsideLayout({
           className={cn(
             'flex min-w-0 flex-col gap-4',
             quarter ? 'lg:sticky lg:top-topbar' : 'xl:sticky xl:top-topbar',
-            side === 'start' && (quarter ? 'lg:order-1' : 'xl:order-1')
+            side === 'start' && 'order-1'
           )}
         >
           {aside}

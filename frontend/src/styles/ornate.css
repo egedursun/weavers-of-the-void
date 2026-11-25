@@ -399,6 +399,17 @@
   }
 }
 
+@container ornate (width < 30rem) {
+  .ornate-nameplate {
+    max-width: calc(100% - 9rem);
+    gap: 0;
+    padding-inline: 1.5rem;
+  }
+  .ornate-nameplate > [data-domain='medallion'] {
+    display: none;
+  }
+}
+
 .ornate-nameplate > [data-typography] {
   letter-spacing: 0.04em;
 }

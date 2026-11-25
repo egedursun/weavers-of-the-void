@@ -1,0 +1,36 @@
+{% if forgotten %}
+{{ forgotten | several("earlier exchange", "earlier exchanges") }} of this session lie beyond your memory and are not shown.
+{% endif %}
+{% if remembered %}
+EARLIER EXCHANGES OF THIS SESSION, OLDEST FIRST:
+{% for exchange in remembered %}
+Exchange {{ exchange.ordinal }}, mode {{ exchange.mode_name }}.
+The player said: {{ exchange.player_text }}
+{% for step in exchange.steps %}
+- {{ step.tool }} {{ step.arguments }}: {% if step.failed %}failed: {% endif %}{{ step.outcome }}{% if step.handle %} (handle {{ step.handle }}){% endif %}
+
+{% endfor %}
+You answered: {{ exchange.final_text }}
+
+{% endfor %}
+{% endif %}
+{% if attachments %}
+FILES THE PLAYER ATTACHED TO THIS REQUEST:
+{% for file in attachments %}
+- {{ file.filename }} (attachment {{ file.attachment_id }}, {{ file.kind_name }}){% if not file.seen %}: you cannot see this picture{% endif %}{% if file.note %}. {{ file.note }}{% endif %}
+
+{% endfor %}
+{% endif %}
+MODE NOW: {{ mode_name }}.
+THE PLAYER SAYS:
+{{ player_text }}
+{% if trace %}
+
+THIS EXCHANGE SO FAR, IN ORDER (go on from the last line; do not repeat an act that is already done):
+{% set labels = {"player": "the player", "thought": "your thought", "text": "you wrote", "tool_call": "you called", "tool_result": "result of", "confirmation_request": "act waiting for the player", "confirmation_reply": "the player's decision", "notice": "notice", "retry": "the connection broke and the exchange started again", "error": "error"} %}
+{% for line in trace %}
+[{{ labels[line.kind] }}{% if line.tool %} {{ line.tool }}{% endif %}{% if line.handle %}, handle {{ line.handle }}{% endif %}] {{ line.text }}
+{% endfor %}
+{% endif %}
+
+Write into the world in {{ lore_language | language_name }}. {% if player_language %}The player writes in {{ player_language }}: write your answer to the player in {{ player_language }}, whatever language the tool results are in.{% else %}Write your answer to the player in the language of the player's words above, whatever language the tool results are in.{% endif %}

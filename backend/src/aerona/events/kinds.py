@@ -66,6 +66,13 @@ class EventKind(StrEnum):
     AGENT_TOOL_CALLED = "agent.tool_called"
     AGENT_TOOL_RESULT = "agent.tool_result"
     AGENT_WRITING = "agent.writing"
+    DIVINE_WILL_CYCLE_STARTED = "divine_will.cycle_started"
+    DIVINE_WILL_CYCLE_FINISHED = "divine_will.cycle_finished"
+    DIVINE_WILL_CONFIRMATION_REQUESTED = "divine_will.confirmation_requested"
+    DIVINE_WILL_ARTIFACT_CHANGED = "divine_will.artifact_changed"
+    DIVINE_WILL_PLAN_CHANGED = "divine_will.plan_changed"
+    DIVINE_WILL_FORECAST_PROGRESS = "divine_will.forecast_progress"
+    DIVINE_WILL_INDEX_PROGRESS = "divine_will.index_progress"
 
 
 TRANSIENT_KINDS = frozenset(

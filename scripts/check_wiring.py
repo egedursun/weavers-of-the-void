@@ -400,7 +400,7 @@ def unfilled_lines(texts: dict[Path, str]) -> list[str]:
 
 INT_LIST = re.compile(r"^    ([a-z_]+): Mapped\[list\[int\]\]", re.MULTILINE)
 TYPED_BOOK = BACKEND / "services/books/typed.py"
-LIST_SETS = ("ID_LISTS", "INDEXED_LISTS", "REFERENCE_LISTS", "PAIRED_LISTS", "PERCENT_LISTS")
+LIST_SETS = ("ID_LISTS", "INDEXED_LISTS", "REFERENCE_LISTS", "PAIRED_LISTS", "PERCENT_LISTS", "ORDINAL_LISTS")
 
 
 def unlabelled_lists(texts: dict[Path, str]) -> list[str]:

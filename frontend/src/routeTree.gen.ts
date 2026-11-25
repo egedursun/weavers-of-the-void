@@ -28,6 +28,7 @@ import { Route as AppInterconnectionsRouteImport } from './routes/_app/interconn
 import { Route as AppKindsRouteImport } from './routes/_app/kinds'
 import { Route as AppLanguagesRouteImport } from './routes/_app/languages'
 import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
+import { Route as AppLibraryRouteImport } from './routes/_app/library'
 import { Route as AppMapRouteImport } from './routes/_app/map'
 import { Route as AppNetworkRouteImport } from './routes/_app/network'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
@@ -140,6 +141,11 @@ const AppLanguagesRoute = AppLanguagesRouteImport.update({
 const AppLedgerRoute = AppLedgerRouteImport.update({
   id: '/ledger',
   path: '/ledger',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppLibraryRoute = AppLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppMapRoute = AppMapRouteImport.update({
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/kinds': typeof AppKindsRoute
   '/languages': typeof AppLanguagesRoute
   '/ledger': typeof AppLedgerRoute
+  '/library': typeof AppLibraryRoute
   '/map': typeof AppMapRoute
   '/network': typeof AppNetworkRoute
   '/notifications': typeof AppNotificationsRoute
@@ -295,6 +302,7 @@ export interface FileRoutesByTo {
   '/kinds': typeof AppKindsRoute
   '/languages': typeof AppLanguagesRoute
   '/ledger': typeof AppLedgerRoute
+  '/library': typeof AppLibraryRoute
   '/map': typeof AppMapRoute
   '/network': typeof AppNetworkRoute
   '/notifications': typeof AppNotificationsRoute
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/_app/kinds': typeof AppKindsRoute
   '/_app/languages': typeof AppLanguagesRoute
   '/_app/ledger': typeof AppLedgerRoute
+  '/_app/library': typeof AppLibraryRoute
   '/_app/map': typeof AppMapRoute
   '/_app/network': typeof AppNetworkRoute
   '/_app/notifications': typeof AppNotificationsRoute
@@ -378,6 +387,7 @@ export interface FileRouteTypes {
     | '/kinds'
     | '/languages'
     | '/ledger'
+    | '/library'
     | '/map'
     | '/network'
     | '/notifications'
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/kinds'
     | '/languages'
     | '/ledger'
+    | '/library'
     | '/map'
     | '/network'
     | '/notifications'
@@ -455,6 +466,7 @@ export interface FileRouteTypes {
     | '/_app/kinds'
     | '/_app/languages'
     | '/_app/ledger'
+    | '/_app/library'
     | '/_app/map'
     | '/_app/network'
     | '/_app/notifications'
@@ -614,6 +626,13 @@ declare module '@tanstack/react-router' {
       path: '/ledger'
       fullPath: '/ledger'
       preLoaderRoute: typeof AppLedgerRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/library': {
+      id: '/_app/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AppLibraryRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/map': {
@@ -801,6 +820,7 @@ interface AppRouteRouteChildren {
   AppKindsRoute: typeof AppKindsRoute
   AppLanguagesRoute: typeof AppLanguagesRoute
   AppLedgerRoute: typeof AppLedgerRoute
+  AppLibraryRoute: typeof AppLibraryRoute
   AppMapRoute: typeof AppMapRoute
   AppNetworkRoute: typeof AppNetworkRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
@@ -829,6 +849,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppKindsRoute: AppKindsRoute,
   AppLanguagesRoute: AppLanguagesRoute,
   AppLedgerRoute: AppLedgerRoute,
+  AppLibraryRoute: AppLibraryRoute,
   AppMapRoute: AppMapRoute,
   AppNetworkRoute: AppNetworkRoute,
   AppNotificationsRoute: AppNotificationsRoute,

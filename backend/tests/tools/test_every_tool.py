@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from sqlalchemy import func, select
 
@@ -7,9 +9,13 @@ from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.mind import PressureRow
 from aerona.domain.enums.mind import PressureKind
 from aerona.domain.enums.node import ActorKind
+from aerona.prompts.tools.divine_will_ids import DivineWillToolId
+from aerona.tools.divine_will.catalogue import tool_by_name
+from aerona.tools.divine_will.framework import MODE_TOOLSETS
 from aerona.tools.framework.ports import BornChild, BornWorld, ToolPorts, WorldBirthOrder
 from aerona.tools.mortal.registry import mortal_specs
 from aerona.tools.son.registry import son_specs
+from tests.tools.every_divine_will_tool import WILL_CASES, run_will_case
 from tests.tools.every_mortal_tool import COMMUNITY_CASES, MORTAL_CASES
 from tests.tools.every_son_tool import SON_CASES
 from tests.tools.every_tool import Case, complete
@@ -71,6 +77,22 @@ def test_every_son_tool_has_a_working_case() -> None:
 
 def test_every_mortal_tool_has_a_working_case() -> None:
     assert sorted(MORTAL_CASES) == sorted(MORTAL_SPECS)
+
+
+def test_every_divine_will_tool_has_a_working_case() -> None:
+    assert sorted(WILL_CASES) == sorted(DivineWillToolId)
+
+
+@pytest.mark.parametrize("tool", sorted(WILL_CASES))
+async def test_divine_will_tool_runs(database: Database, tmp_path: Path, tool: DivineWillToolId) -> None:
+    case = WILL_CASES[tool]
+    found = tool_by_name(tool.value)
+    assert found is not None and found.toolsets & MODE_TOOLSETS[case.mode], f"{tool} is not offered in {case.mode} mode"
+    result = await run_will_case(database, tool, case, tmp_path)
+    assert not result.is_error, result.text
+    assert result.pause is case.pause, result.text
+    missing = [text for text in case.expect if text not in result.text]
+    assert not missing, f"{tool} result lacks {missing}: {result.text}"
 
 
 @pytest.mark.parametrize("name", sorted(SON_CASES))

@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     llm_enabled: bool = True
     claude_code_oauth_token: SecretStr = Field(default=SecretStr(""), validation_alias="CLAUDE_CODE_OAUTH_TOKEN")
     image_worker_url: str = ""
+    divine_will_upload_max_mb: int = 50
+    divine_will_upload_max_files: int = 10
+    embed_threads: int = 2
+    embed_model_dir: Path | None = None
     secondary_backup_dir: Path | None = None
     static_dir: Path | None = None
     allowed_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173", "http://127.0.0.1:5173"])

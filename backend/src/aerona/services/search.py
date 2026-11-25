@@ -146,7 +146,7 @@ def snippet(text: str, query: str) -> str:
     return f"{prefix}{piece}{suffix}".strip()
 
 
-def _match_expression(query: str) -> str:
+def match_expression(query: str) -> str:
     terms = [term.replace('"', "") for term in fold(query).split() if term]
     return " ".join(f'"{term}"*' for term in terms)
 
@@ -209,7 +209,7 @@ class SearchIndex:
     def query(self, category: SearchCategory, query: str, limit: int) -> list[tuple[int, int | None, bool]]:
         if limit <= 0:
             return []
-        expression = _match_expression(query)
+        expression = match_expression(query)
         if not expression:
             return []
         like = f"%{fold(query)}%"
@@ -438,6 +438,11 @@ async def _neighbours(session: AsyncSession, node_id: int, kind: NodeKind) -> li
     if extra is not None:
         found.extend(await extra(session, node_id))
     return found
+
+
+async def neighbours(session: AsyncSession, node_id: int) -> list[Neighbour]:
+    kind = await NodeRepository(session).kind_of(node_id)
+    return await _neighbours(session, node_id, kind) if kind is not None else []
 
 
 async def find_path(session: AsyncSession, first: int, second: int, max_depth: int = DEFAULT_PATH_DEPTH) -> PathResult:

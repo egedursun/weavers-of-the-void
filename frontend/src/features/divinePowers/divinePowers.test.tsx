@@ -64,6 +64,24 @@ describe('the divine powers section', () => {
       .toHaveLength(1)
   })
 
+  it('names the old gift a power came from, for a son and a foreign god', async () => {
+    serveBase()
+    onApi('GET', '/api/divine/powers/of/2', {
+      node: SON,
+      powers: [
+        power({ son_preset: 'harvester' }),
+        power({ id: 8, name: 'The Watch', foreign_preset: 'caller' }),
+      ],
+    })
+    const { screen } = await renderApp(<DivinePowersSection nodeId={2} />)
+    await expect
+      .element(screen.getByText('From the old gift harvester'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('From the old gift caller'))
+      .toBeVisible()
+  })
+
   it('grants a new power', async () => {
     serveBase()
     onApi('GET', '/api/divine/powers/of/2', { node: SON, powers: [] })

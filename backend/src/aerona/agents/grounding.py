@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any
 
 from claude_agent_sdk import SdkMcpTool
@@ -12,6 +13,7 @@ from aerona.core.grammar import spoken
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.db.tables.technology import TECH_LEVEL_MAX, TechnologyProfileRow
+from aerona.llm.content import AgentWatch, ImagePart, ModelCapabilities
 from aerona.llm.records import AgentRun
 
 GROUND_HEAD = "WHAT THE PLAYER SET FOR THIS WORLD (everything you write follows it):"
@@ -90,10 +92,22 @@ class GroundedModel:
         tools: list[SdkMcpTool[Any]],
         max_turns: int | None = None,
         timeout_seconds: int | None = None,
+        images: Sequence[ImagePart] = (),
+        watch: AgentWatch | None = None,
     ) -> AgentRun:
         return await self.inner.run_agent(
-            label, grounded(await self.ground(), system_prompt), prompt, tools=tools, max_turns=max_turns, timeout_seconds=timeout_seconds
+            label,
+            grounded(await self.ground(), system_prompt),
+            prompt,
+            tools=tools,
+            max_turns=max_turns,
+            timeout_seconds=timeout_seconds,
+            images=images,
+            watch=watch,
         )
+
+    async def capabilities(self) -> ModelCapabilities:
+        return await self.inner.capabilities()
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.inner, name)

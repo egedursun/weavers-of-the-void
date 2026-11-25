@@ -21,7 +21,7 @@ export function AboutDeveloper() {
   return (
     <section
       aria-labelledby='about-developer'
-      className='card-foil relative flex flex-col gap-8 overflow-hidden rounded-2xl border border-brand-gold/40 bg-linear-to-br from-brand-violet/25 via-card/60 to-brand-night/80 p-6 shadow-xl shadow-brand-violet/20 sm:p-8'
+      className='card-foil flex flex-col gap-8 rounded-2xl border border-brand-gold/40 bg-linear-to-br from-brand-violet/25 via-card/60 to-brand-night/80 p-6 shadow-xl shadow-brand-violet/20 sm:p-8'
     >
       <div className='flex flex-col gap-8 md:flex-row'>
         <div className='flex shrink-0 flex-col items-center gap-3'>

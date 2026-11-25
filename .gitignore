@@ -12,6 +12,7 @@ frontend/dist/
 image-worker/.venv/
 data-fresh*/
 frontend/.vitest-attachments/
+frontend/.vitest-screenshots/
 *.tmp.mjs
 .claude/worktrees/
 .claude/scheduled_tasks.lock

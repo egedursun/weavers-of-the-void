@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { shortcutItems } from '@/config/navigation'
+import { PANEL_SHORTCUTS, shortcutItems } from '@/config/navigation'
 import {
   BookA,
   CircleHelp,
@@ -61,6 +61,12 @@ export function HelpPage() {
   )
   const shortcuts: Shortcut[] = [
     ...FIXED_SHORTCUTS,
+    ...PANEL_SHORTCUTS.map((item) => ({
+      key: item.id,
+      label: item.title,
+      keys: item.keys,
+      icon: item.icon,
+    })),
     ...shortcutItems().map((item) => ({
       key: item.id,
       label: item.title,
@@ -89,7 +95,7 @@ export function HelpPage() {
           </Paged>
         </ul>
         <Muted variant='caption'>
-          While you type in a text box, digits and ? are not shortcuts.
+          While you type in a text box, digits, letters and ? are not shortcuts.
         </Muted>
       </Section>
       <Section

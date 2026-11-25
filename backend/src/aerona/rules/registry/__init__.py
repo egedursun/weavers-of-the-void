@@ -231,6 +231,7 @@ from aerona.rules.registry.divine import (
     SonGoalRules,
 )
 from aerona.rules.registry.divine_conceptions import DivineConceptionsRules
+from aerona.rules.registry.divine_will import DivineWillRules
 from aerona.rules.registry.doctrine import (
     AfterlifeRules,
     DoctrineRules,
@@ -1604,6 +1605,7 @@ class Rules:
     link_graph: LinkGraphRules = field(default_factory=LinkGraphRules)
     metrics: MetricsRules = field(default_factory=MetricsRules)
     model: ModelRules = field(default_factory=ModelRules)
+    divine_will: DivineWillRules = field(default_factory=DivineWillRules)
     mortal_agents: MortalAgentsRules = field(default_factory=MortalAgentsRules)
     mortal_tools: MortalToolsRules = field(default_factory=MortalToolsRules)
     naming: NamingRules = field(default_factory=NamingRules)

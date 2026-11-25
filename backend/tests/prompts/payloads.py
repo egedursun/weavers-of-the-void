@@ -34,6 +34,7 @@ NODE = {"name": "Vel", "subtype": "sea", "description": "Deep.", "danger": 10, "
 
 PAYLOADS: dict[PromptId, dict[str, Any]] = {
     PromptId.LOCALISE_USER: {"lines": [{"id": 4, "text": "Nehir Velar'in uzerine yukseldi."}]},
+    PromptId.DIVINE_WILL_TRANSLATE_USER: {"text": "Plan 3 bekliyor; Sohmar (d\u00fc\u011f\u00fcm 18) onay\u0131n\u0131z\u0131 bekliyor."},
     PromptId.GENESIS_USER: {
         "world_name": "Aerona",
         "cosmology": "A salt lake.",

@@ -206,7 +206,7 @@ const WORD_TABLES = new Map<ReadonlyArray<string>, Record<string, string>>()
 
 export function wordOf<T extends string>(
   values: ReadonlyArray<T>,
-  value: T
+  value: NoInfer<T>
 ): string {
   const known = WORD_TABLES.get(values) ?? valueTable(values)
   WORD_TABLES.set(values, known)

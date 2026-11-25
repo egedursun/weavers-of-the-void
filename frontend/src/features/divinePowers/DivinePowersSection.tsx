@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { CirclePlus, Trash2, Wand2, X } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
-import { domainHookValues, domainValues } from '@/api/generated/schema'
+import {
+  domainValues,
+  foreignGodPowerEffectValues,
+  powerEffectValues,
+} from '@/api/generated/schema'
 import {
   EmptyState,
   LoadingBlock,
@@ -119,7 +123,11 @@ function Power({
   const resting = row.ready ? null : 'It is resting until its cooldown passes'
   const domains = row.domains as string[]
   const shownDomains = useShowMore(domains, DOMAINS_SHOWN, DOMAINS_SHOWN)
-  const preset = row.son_preset ?? row.foreign_preset
+  const preset = row.son_preset
+    ? wordOf(powerEffectValues, row.son_preset)
+    : row.foreign_preset
+      ? wordOf(foreignGodPowerEffectValues, row.foreign_preset)
+      : null
   return (
     <RecordRow
       icon={verb.icon}
@@ -128,9 +136,7 @@ function Power({
       caption={`${SCOPES[row.scope].label}, ${MODES[row.mode].label.toLowerCase()}, strength ${row.strength}; costs ${row.cost_amount} ${COSTS[row.cost].label.toLowerCase()}, rests ${row.cooldown} epoch${row.cooldown === 1 ? '' : 's'}; granted in epoch ${row.granted_epoch}${row.last_used_epoch !== null ? `, last used in epoch ${row.last_used_epoch}` : ''}`}
     >
       {preset ? (
-        <Chip icon={POWER_ICON}>
-          From the old gift {wordOf(domainHookValues, preset).toLowerCase()}
-        </Chip>
+        <Chip icon={POWER_ICON}>From the old gift {preset.toLowerCase()}</Chip>
       ) : null}
       <div className='flex min-w-0 flex-wrap gap-2'>
         {shownDomains.visible.map((item) => (

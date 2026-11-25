@@ -16,7 +16,7 @@ from aerona.settings import Settings, get_settings
 def create_app(settings: Settings | None = None, *, model: LanguageModel | None = None) -> FastAPI:
     resolved = settings or get_settings()
     app = FastAPI(title=APP_NAME, version=APP_VERSION, lifespan=lifespan_for(resolved, model))
-    app.add_middleware(OriginGuard, allowed_origins=resolved.allowed_origins, limits=body_limits())
+    app.add_middleware(OriginGuard, allowed_origins=resolved.allowed_origins, limits=body_limits(resolved))
     app.add_middleware(CORSMiddleware, allow_origins=resolved.allowed_origins, allow_methods=["*"], allow_headers=["*"])
     app.add_middleware(GZipMiddleware, minimum_size=GZIP_MINIMUM_BYTES, compresslevel=GZIP_LEVEL)
     install_error_handlers(app)

@@ -1,0 +1,49 @@
+:root{--paper:#f6efe0;--card:#fbf6ea;--ink:#2b2219;--soft:#4a3d2e;--faint:#7a6a52;--accent:#5b2391;--gold:#b07d10;--rule:#d9c8a6;
+--serif:"Book Serif",Alegreya,Georgia,serif;--display:"Book Display","Cormorant Garamond",Georgia,serif;--mono:"Courier Prime","Courier New",Courier,monospace}
+@media screen and (prefers-color-scheme: dark){:root{--paper:#16130e;--card:#1d1812;--ink:#ece2cf;--soft:#d6c9b1;--faint:#a3937a;
+--accent:#c9a2f2;--gold:#f2c94c;--rule:#3d3427}}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:18px;line-height:1.62;hyphens:auto;-webkit-font-smoothing:antialiased}
+main{max-width:760px;margin:0 auto;padding:40px 22px 96px}
+header.title{text-align:center;padding:24px 0 28px;margin-bottom:32px;border-bottom:1px solid var(--rule)}
+header.title .overline{font-variant:small-caps;letter-spacing:.22em;color:var(--gold);font-size:.86em;margin:0}
+header.title h1{font-family:var(--display);font-weight:600;font-size:3em;line-height:1.1;margin:.2em 0 .25em}
+header.title .meta{color:var(--faint);font-style:italic;margin:0}
+h1,h2,h3,h4,h5,h6{font-family:var(--display);font-weight:600;line-height:1.15;margin:1.4em 0 .4em;break-after:avoid}
+h1{font-size:2.4em}h2{font-size:1.9em}h3{font-size:1.5em}h4{font-size:1.25em}h5,h6{font-size:1.1em}
+p{margin:.6em 0}
+a{color:var(--accent)}
+blockquote{margin:1em 0;padding:.2em 1.1em;border-left:3px solid var(--gold);color:var(--soft);font-style:italic}
+code,pre{font-family:var(--mono);font-size:.9em}
+pre{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;white-space:pre-wrap;word-break:break-word}
+hr{border:none;text-align:center;margin:1.6em 0}
+hr::after{content:"\2042";color:var(--gold);font-size:1.3em}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.94em}
+th,td{border:1px solid var(--rule);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--card);font-variant:small-caps;letter-spacing:.05em}
+ul,ol{padding-left:1.3em}
+li::marker{color:var(--gold)}
+footer.imprint{margin-top:56px;padding-top:14px;border-top:1px solid var(--rule);text-align:center;color:var(--faint);font-size:.82em;letter-spacing:.08em}
+.screenplay{font-family:var(--mono);font-size:16px;line-height:1.4;max-width:620px;margin:0 auto}
+.screenplay p{margin:0 0 1em}
+.screenplay .fn-scene{font-family:var(--mono);font-size:1em;font-weight:700;text-transform:uppercase;margin:1.6em 0 1em}
+.screenplay .fn-character{margin:1em 0 0 37%;text-transform:uppercase}
+.screenplay .fn-parenthetical{margin:0 0 0 28%;max-width:40%}
+.screenplay .fn-dialogue{margin:0 auto 1em 17%;max-width:60%}
+.screenplay .fn-transition{text-align:right;text-transform:uppercase}
+.screenplay .fn-centered{text-align:center}
+.screenplay .fn-lyric{font-style:italic;margin-left:17%}
+.screenplay .fn-synopsis{color:var(--faint);font-style:italic}
+.screenplay .fn-section{font-family:var(--display);color:var(--accent)}
+.screenplay .fn-page-break{border-top:1px dashed var(--rule)}
+.screenplay .fn-page-break::after{content:none}
+.fn-title-page{text-align:center;margin-bottom:2.4em}
+.fn-title-row{margin:.3em 0}
+.fn-key{display:block;font-variant:small-caps;color:var(--faint);font-size:.8em;letter-spacing:.1em}
+@media print{body{font-size:11pt;background:#fff}main{max-width:none;padding:0}header.title{page-break-after:always;border:none;padding-top:30%}}
+@page{size:A5;margin:18mm 16mm 20mm;@bottom-center{content:counter(page);font-family:"Book Serif",Georgia,serif;font-size:9pt;color:#7a6a52}}
+@page :first{@bottom-center{content:none}}
+@page screenplay{size:letter;margin:1in 1in 1in 1.5in}
+.screenplay-print .screenplay{page:screenplay;font-size:12pt;max-width:none}
+@media (max-width:560px){body{font-size:16px}header.title h1{font-size:2.2em}main{padding:24px 16px 64px}}

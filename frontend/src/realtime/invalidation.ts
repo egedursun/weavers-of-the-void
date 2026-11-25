@@ -112,6 +112,30 @@ export const INVALIDATIONS: { [K in EventKind]: InvalidationRule<K> } = {
   'image.status': images,
   'image.bulk_log': nothing,
   'batch_deepen.log': batchDeepen,
+  'divine_will.cycle_started': () => [queryKeys.divineWill.session],
+  'divine_will.cycle_finished': (event) => [
+    queryKeys.divineWill.session,
+    queryKeys.divineWill.cycle(event.payload.cycle_id),
+    queryKeys.divineWill.artifacts,
+    queryKeys.world.all,
+    queryKeys.ledger.all,
+    queryKeys.usage.all,
+  ],
+  'divine_will.confirmation_requested': (event) => [
+    queryKeys.divineWill.session,
+    queryKeys.divineWill.cycle(event.payload.cycle_id),
+  ],
+  'divine_will.artifact_changed': () => [queryKeys.divineWill.artifacts],
+  'divine_will.plan_changed': (event) => [
+    queryKeys.divineWill.plan(event.payload.plan_id),
+    queryKeys.divineWill.session,
+    queryKeys.world.all,
+    queryKeys.ledger.all,
+  ],
+  'divine_will.forecast_progress': (event) => [
+    queryKeys.divineWill.forecast(event.payload.forecast_id),
+  ],
+  'divine_will.index_progress': () => [queryKeys.divineWill.index],
 }
 
 const lastRun = new Map<string, number>()

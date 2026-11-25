@@ -2,6 +2,7 @@ import {
   Archive,
   BookOpen,
   Bot,
+  DatabaseZap,
   Eye,
   FastForward,
   FileInput,
@@ -10,12 +11,14 @@ import {
   Hourglass,
   ImageIcon,
   Layers,
+  ListChecks,
   type LucideIcon,
   PenLine,
   RotateCw,
   Sparkles,
   Sunrise,
   Tag,
+  Telescope,
   Wand2,
   Wrench,
 } from 'lucide-react'
@@ -43,6 +46,10 @@ export const JOB_KIND_ICON: Record<JobKind, LucideIcon> = {
   maintenance: Wrench,
   prehistory: Hourglass,
   deep_time: FastForward,
+  divine_will: Eye,
+  divine_will_plan: ListChecks,
+  divine_will_forecast: Telescope,
+  divine_will_index: DatabaseZap,
 }
 
 export const JOB_STATUS_TONE: Record<JobStatus, KpiTone> = {

@@ -1,0 +1,176 @@
+{% macro will_facts(items) -%}
+{% for item in items %}
+{% if "\n" in item.value %}
+- **{{ item.label }}:**
+
+````
+{{ item.value }}
+````
+{% else %}
+- **{{ item.label }}:** {{ item.value }}
+{% endif %}
+{% endfor %}
+{%- endmacro %}
+{% macro will_record(record, changes) -%}
+{% if record.shown %}
+### The Divine Will
+
+*{{ record.tally }}*
+
+{% for will in record.sessions %}
+#### {{ will.title or "Session " ~ will.id }} ({{ "the open session" if will.open else "closed" }})
+
+{{ will_facts(will.facts) }}
+
+{% for cycle in will.cycles %}
+##### Exchange {{ cycle.ordinal }} · {{ cycle.mode }} · epoch {{ cycle.epoch }}
+
+*{{ cycle.status }}*
+
+{{ will_facts(cycle.facts) }}
+
+> **The player.** {{ cycle.player_text | prose }}
+
+{% if cycle.events %}
+**The exchange step by step.**
+
+{% for event in cycle.events %}
+{{ event.ordinal }}. **{{ event.label }}**{% if event.tool %} · `{{ event.tool }}`{% endif %}{% if event.handle %} · result kept under handle `{{ event.handle }}`{% if event.handle_text %} ({{ event.handle_text }}){% endif %}{% endif %}
+
+{{ will_facts(event.facts) | indent(4, true) }}
+{% endfor %}
+
+{% endif %}
+{% for item in cycle.confirmations %}
+**Approval asked for `{{ item.action_id }}`.** {{ item.reason }} · {{ item.decision }}{% if item.decided %} on {{ item.decided }}{% endif %}{% if item.entry_id %} · ledger entry {{ item.entry_id }}{% endif %}
+
+````
+{{ item.input }}
+````
+
+{% if item.preview %}
+*What the rehearsal showed:*
+
+{{ will_facts(item.preview) }}
+{% endif %}
+
+{% endfor %}
+{% if cycle.acts %}
+**Acts upon the world.**
+
+{% for act in cycle.acts %}
+- Epoch {{ act.epoch }} · ledger entry {{ act.entry_id }} · `{{ act.tool }}`{% if act.undone %} *(undone)*{% endif %}{% if act.summary %} — {{ act.summary | plain }}{% endif %}{% if act.nodes %}; touched {% for anchor, name in act.nodes %}[{{ name }}](#{{ anchor }}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+
+{% for change in changes.get(act.entry_id, []) %}
+    - **{{ change.verb }}** {{ change.target }}{% if change.details %} — {{ change.details | join(" · ") }}{% endif %}
+
+{% endfor %}
+{% endfor %}
+
+{% endif %}
+{% if cycle.final_text %}
+**The answer.**
+
+{{ cycle.final_text | prose }}
+
+{% endif %}
+{% if cycle.error %}
+*Error: {{ cycle.error }}*
+
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% if record.plans %}
+#### Plans
+
+{% for plan in record.plans %}
+##### {{ plan.title }} ({{ plan.status }})
+
+{{ will_facts(plan.facts) }}
+
+{% for step in plan.steps %}
+{{ step.ordinal }}. **{{ step.title }}**
+
+{{ will_facts(step.facts) | indent(4, true) }}
+{% if step.result %}
+    {{ step.result }}
+{% endif %}
+{% if step.error %}
+    *Error: {{ step.error }}*
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+{% if record.forecasts %}
+#### Forecasts
+
+{% for forecast in record.forecasts %}
+##### Forecast {{ forecast.id }} ({{ forecast.status }})
+
+{{ will_facts(forecast.facts) }}
+
+{% if forecast.interventions %}
+*Interventions:*
+
+{{ will_facts(forecast.interventions) }}
+{% endif %}
+{% if forecast.report %}
+*Report:*
+
+{{ will_facts(forecast.report) }}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+{% endif %}
+{%- endmacro %}
+{% macro will_writings(writings) -%}
+{% for writing in writings.writings %}
+<a id="writing-{{ writing.id }}"></a>
+
+### {{ writing.title }}
+
+{{ will_facts(writing.facts) }}
+
+{% if writing.markup or writing.script %}
+````{{ "html" if writing.markup else "fountain" }}
+{{ writing.body }}
+````
+{% else %}
+{{ writing.body | prose }}
+{% endif %}
+
+{% if writing.versions %}
+| Version | What changed | Exchange | Written | Length |
+|---|---|---|---|---|
+{% for version in writing.versions %}
+| {{ version.version }} | {{ version.summary | cell }} | {{ version.exchange }} | {{ version.when }} | {{ version.characters }} |
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+{% if writings.attachments %}
+### What the player brought
+
+{% for attachment in writings.attachments %}
+**{{ attachment.filename }}**
+
+{{ will_facts(attachment.facts) }}
+{% if attachment.note %}
+
+{{ attachment.note }}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+{% if writings.index %}
+### The Divine Will's index
+
+| Source | Passages | Tokens | Last indexed |
+|---|---|---|---|
+{% for line in writings.index %}
+| {{ line.source }} | {{ line.passages }} | {{ line.tokens }} | {{ line.updated }} |
+{% endfor %}
+{% endif %}
+{%- endmacro %}

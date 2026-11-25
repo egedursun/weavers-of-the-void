@@ -35,4 +35,13 @@ export const queryKeys = {
   catalogue: {
     all: ['catalogue'] as const,
   },
+  divineWill: {
+    all: ['divine-will'] as const,
+    session: ['divine-will', 'session'] as const,
+    artifacts: ['divine-will', 'artifacts'] as const,
+    index: ['divine-will', 'index'] as const,
+    cycle: (id: number) => ['divine-will', 'cycle', id] as const,
+    plan: (id: number) => ['divine-will', 'plan', id] as const,
+    forecast: (id: number) => ['divine-will', 'forecast', id] as const,
+  },
 }

@@ -41,7 +41,7 @@ import {
 
 const UNSET = '__unset'
 
-function FieldControl({
+export function FieldControl({
   field,
   id,
   value,

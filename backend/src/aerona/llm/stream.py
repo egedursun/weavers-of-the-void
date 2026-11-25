@@ -27,6 +27,13 @@ class StreamActor:
     id: int
     name: str
     read_only_tools: frozenset[str] = frozenset()
+    channel: str = ""
+
+    def fields(self) -> dict[str, Any]:
+        found: dict[str, Any] = {"actor_kind": self.kind.value, "actor_id": self.id, "actor_name": self.name}
+        if self.channel:
+            found["channel"] = self.channel
+        return found
 
 
 current_actor: ContextVar[StreamActor | None] = ContextVar("current_stream_actor", default=None)
@@ -95,7 +102,7 @@ class StreamReporter:
         actor = self._actor
         if actor is None:
             return {}
-        return {"actor_kind": actor.kind.value, "actor_id": actor.id, "actor_name": actor.name}
+        return actor.fields()
 
     def _emit(self, kind: EventKind, **fields: Any) -> None:
         self._publish(kind, {**self._actor_fields(), **fields})

@@ -15,6 +15,7 @@ from aerona.constants.api import (
     JSON_CONTENT_TYPE,
     LOCAL_HOSTS,
     MEGABYTE,
+    MULTIPART_CONTENT_TYPE,
     NULL_ORIGIN,
     OCTET_STREAM,
     SAFE_METHODS,
@@ -25,6 +26,7 @@ LOCAL_ONLY = "This server can only be used via localhost."
 FOREIGN_ORIGIN = "Requests from another site are refused."
 WRONG_CONTENT_TYPE = "Writes must send JSON, or raw bytes for uploads."
 TOO_LARGE = "File too large (max {limit} MB)."
+UNSIGNED_FORM = "A file upload must come from this app's own page."
 
 
 @dataclass(frozen=True)
@@ -32,6 +34,7 @@ class BodyLimit:
     path_suffix: str
     max_bytes: int
     binary: bool
+    multipart: bool = False
 
 
 class RefusalError(Exception):
@@ -120,6 +123,10 @@ class OriginGuard:
             raise RefusalError(413, TOO_LARGE.format(limit=limit.max_bytes // MEGABYTE), ErrorCode.TOO_LARGE)
         kind = media_type(headers)
         if not kind:
+            return
+        if limit.multipart and kind == MULTIPART_CONTENT_TYPE:
+            if headers.get("origin") is None and headers.get("sec-fetch-site") is None:
+                raise RefusalError(403, UNSIGNED_FORM, ErrorCode.FORBIDDEN)
             return
         if kind in SIMPLE_CONTENT_TYPES:
             raise RefusalError(415, WRONG_CONTENT_TYPE, ErrorCode.INVALID)

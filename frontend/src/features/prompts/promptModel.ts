@@ -58,6 +58,7 @@ export const AREA_LABEL: Record<PromptArea, string> = {
   opportunities: 'Opportunities',
   agent: 'Agent',
   localisation: 'Localisation',
+  divine_will: 'Divine Will',
 }
 
 export function matchesPrompt(entry: PromptEntry, query: string): boolean {

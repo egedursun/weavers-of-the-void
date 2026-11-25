@@ -37,6 +37,10 @@ export const JOB_KIND_LABEL: Record<JobKind, string> = {
   content: 'Writing',
   retry: 'Retry',
   maintenance: 'Maintenance',
+  divine_will: 'Divine Will exchange',
+  divine_will_plan: 'Divine Will plan',
+  divine_will_forecast: 'Divine Will forecast',
+  divine_will_index: 'Divine Will reading the world',
 }
 
 export const JOB_STATUS_LABEL: Record<JobStatus, string> = {

@@ -7871,6 +7871,486 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/divine-will/session': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_active_session_api_divine_will_session_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/sessions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_closed_sessions_api_divine_will_sessions_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/sessions/{session_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_session_api_divine_will_sessions__session_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/cycles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['start_cycle_api_divine_will_cycles_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/cycles/{cycle_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_cycle_api_divine_will_cycles__cycle_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/cycles/{cycle_id}/cancel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['cancel_cycle_api_divine_will_cycles__cycle_id__cancel_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/confirmations/{confirmation_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['decide_confirmation_api_divine_will_confirmations__confirmation_id__post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/session/reset': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['reset_session_api_divine_will_session_reset_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/modes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_modes_api_divine_will_modes_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/capabilities': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_capabilities_api_divine_will_capabilities_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/attachments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['upload_attachments_api_divine_will_attachments_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/attachments/{attachment_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_attachment_api_divine_will_attachments__attachment_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/attachments/{attachment_id}/file': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['attachment_file_api_divine_will_attachments__attachment_id__file_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/index': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['index_state_api_divine_will_index_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/artifacts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_artifacts_api_divine_will_artifacts_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/artifacts/{artifact_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_artifact_api_divine_will_artifacts__artifact_id__get']
+    put?: never
+    post?: never
+    delete: operations['delete_artifact_api_divine_will_artifacts__artifact_id__delete']
+    options?: never
+    head?: never
+    patch: operations['patch_artifact_api_divine_will_artifacts__artifact_id__patch']
+    trace?: never
+  }
+  '/api/divine-will/artifacts/{artifact_id}/versions/{version}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_artifact_version_api_divine_will_artifacts__artifact_id__versions__version__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/artifacts/{artifact_id}/diff': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['diff_artifact_api_divine_will_artifacts__artifact_id__diff_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/artifacts/{artifact_id}/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['export_artifact_api_divine_will_artifacts__artifact_id__export_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_plan_api_divine_will_plans__plan_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}/steps': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['revise_plan_api_divine_will_plans__plan_id__steps_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}/approve': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['approve_plan_api_divine_will_plans__plan_id__approve_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}/execute': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['execute_plan_api_divine_will_plans__plan_id__execute_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}/pause': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['pause_plan_api_divine_will_plans__plan_id__pause_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}/resume': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['resume_plan_api_divine_will_plans__plan_id__resume_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}/abandon': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['abandon_plan_api_divine_will_plans__plan_id__abandon_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}/steps/{ordinal}/skip': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['skip_step_api_divine_will_plans__plan_id__steps__ordinal__skip_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/plans/{plan_id}/steps/{ordinal}/undo': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['undo_step_api_divine_will_plans__plan_id__steps__ordinal__undo_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/forecasts/{forecast_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_forecast_api_divine_will_forecasts__forecast_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/divine-will/forecasts/{forecast_id}/cancel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['cancel_forecast_api_divine_will_forecasts__forecast_id__cancel_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions': {
     parameters: {
       query?: never
@@ -50712,6 +51192,22 @@ export interface components {
       epoch: number
       locked: string[]
     }
+    ArtifactFormat: 'markdown' | 'fountain' | 'html'
+    ArtifactKind:
+      | 'story'
+      | 'chapter'
+      | 'novel'
+      | 'screenplay'
+      | 'poem'
+      | 'chronicle'
+      | 'encyclopedia'
+      | 'outline'
+      | 'notes'
+      | 'report'
+      | 'plan'
+      | 'forecast'
+      | 'html_page'
+    ArtifactStatus: 'draft' | 'final'
     ArtworkCard: {
       medium: components['schemas']['ArtMode']
       performed: boolean
@@ -50883,6 +51379,8 @@ export interface components {
     }
     Atmosphere:
       'none' | 'thin' | 'normal' | 'dense' | 'toxic' | 'steam' | 'layered'
+    AttachmentKind: 'image' | 'document'
+    AttachmentStatus: 'stored' | 'converted' | 'indexed' | 'unreadable'
     AttackDelivery:
       | 'breath'
       | 'spit'
@@ -52319,6 +52817,9 @@ export interface components {
       reading: components['schemas']['BodyReading'] | null
       wholeness_required: boolean
       updated_epoch: number
+    }
+    Body_upload_attachments_api_divine_will_attachments_post: {
+      files: string[]
     }
     BondCategory: 'mechanical' | 'event' | 'narrative'
     BondKind:
@@ -54024,6 +54525,23 @@ export interface components {
     }
     ChronicleScope:
       'world' | 'star' | 'node' | 'son' | 'creator' | 'foreign_god'
+    ChunkSource:
+      | 'entity'
+      | 'typed_section'
+      | 'chronicle'
+      | 'incident'
+      | 'son'
+      | 'foreign_god'
+      | 'world'
+      | 'star'
+      | 'creator'
+      | 'word'
+      | 'epoch'
+      | 'note'
+      | 'message'
+      | 'council'
+      | 'artifact'
+      | 'attachment'
     CipherBreakInput: {
       owner_id: number
       breaker_id: number
@@ -55450,6 +55968,9 @@ export interface components {
       dissolved_epoch: number | null
       locked: string[]
     }
+    ConfirmationDecision: 'approve' | 'decline'
+    ConfirmationReason: 'destructive' | 'costly' | 'both'
+    ConfirmationStatus: 'pending' | 'approved' | 'declined' | 'expired'
     Consciousness: 'awake' | 'nauseous' | 'dizzy' | 'unconscious'
     ConservationMovementCreateInput: {
       table: string
@@ -57510,11 +58031,24 @@ export interface components {
       relief: components['schemas']['ReliefView'] | null
       measures: components['schemas']['MeasureView'] | null
     }
+    CycleEventKind:
+      | 'player'
+      | 'thought'
+      | 'text'
+      | 'tool_call'
+      | 'tool_result'
+      | 'confirmation_request'
+      | 'confirmation_reply'
+      | 'notice'
+      | 'retry'
+      | 'error'
     CycleFlowView: {
       source: components['schemas']['CycleSource']
       source_label: string
       rate: number
     }
+    CycleNotice:
+      'suggest_mode' | 'vision_unavailable' | 'step_limit' | 'translated'
     CyclePhase: 'growth' | 'stagflation' | 'crisis' | 'depression'
     CycleSource:
       | 'volcanoes'
@@ -57531,6 +58065,8 @@ export interface components {
       | 'industry'
       | 'uplift'
       | 'burial'
+    CycleStatus:
+      'running' | 'awaiting_confirmation' | 'done' | 'failed' | 'cancelled'
     CyclesView: {
       node: components['schemas']['NodeRef']
       stress: components['schemas']['StressView'] | null
@@ -59750,6 +60286,397 @@ export interface components {
       | 'wake'
       | 'remember'
       | 'erase'
+    DivineWillAppliedIntervention: {
+      action_id: string
+      action_title: string
+      message: string
+      essence_spent: number
+    }
+    DivineWillArtifact: {
+      artifact: components['schemas']['DivineWillArtifactSummary']
+      body: string
+      version: number
+      versions: components['schemas']['DivineWillArtifactVersionSummary'][]
+    }
+    DivineWillArtifactChangedEvent: {
+      id: number
+      kind: 'divine_will.artifact_changed'
+      payload: components['schemas']['DivineWillArtifactPayload']
+      at: string
+    }
+    DivineWillArtifactDiff: {
+      artifact_id: number
+      a: number
+      b: number
+      text: string
+      added: number
+      removed: number
+    }
+    DivineWillArtifactPage: {
+      items: components['schemas']['DivineWillArtifactSummary'][]
+      total: number
+      offset: number
+      limit: number
+      languages: string[]
+      tags: string[]
+    }
+    DivineWillArtifactPatch: {
+      title?: string | null
+      status?: components['schemas']['ArtifactStatus'] | null
+      tags?: string[] | null
+      kind?: components['schemas']['ArtifactKind'] | null
+      node_ids?: number[] | null
+    }
+    DivineWillArtifactPayload: {
+      epoch?: number | null
+      artifact_id: number
+      version: number
+      cycle_id?: number | null
+      deleted: boolean
+    } & {
+      [key: string]: unknown
+    }
+    DivineWillArtifactSummary: {
+      id: number
+      title: string
+      kind: components['schemas']['ArtifactKind']
+      format: components['schemas']['ArtifactFormat']
+      status: components['schemas']['ArtifactStatus']
+      language: string
+      mode: components['schemas']['DivineWillMode']
+      tags: string[]
+      subjects: components['schemas']['DivineWillSubject'][]
+      current_version: number
+      characters: number
+      created_cycle_id: number | null
+      plan_id: number | null
+      created_at: string
+      updated_at: string
+    }
+    DivineWillArtifactVersion: {
+      artifact_id: number
+      version: number
+      body: string
+      summary: string
+      cycle_id: number | null
+      created_at: string
+    }
+    DivineWillArtifactVersionSummary: {
+      version: number
+      summary: string
+      cycle_id: number | null
+      characters: number
+      created_at: string
+    }
+    DivineWillAttachmentDetail: {
+      id: number
+      cycle_id: number | null
+      kind: components['schemas']['AttachmentKind']
+      filename: string
+      mime: string
+      size: number
+      status: components['schemas']['AttachmentStatus']
+      seen_by_model: boolean
+      note: string
+      created_at: string
+      markdown: string
+    }
+    DivineWillAttachmentUpload: {
+      attachments: components['schemas']['DivineWillAttachmentView'][]
+    }
+    DivineWillAttachmentView: {
+      id: number
+      cycle_id: number | null
+      kind: components['schemas']['AttachmentKind']
+      filename: string
+      mime: string
+      size: number
+      status: components['schemas']['AttachmentStatus']
+      seen_by_model: boolean
+      note: string
+      created_at: string
+    }
+    DivineWillConfirmationPayload: {
+      epoch?: number | null
+      cycle_id: number
+      confirmation_id: number
+      action_id: string
+      reason: components['schemas']['ConfirmationReason']
+      preview?: {
+        [key: string]: unknown
+      }
+    } & {
+      [key: string]: unknown
+    }
+    DivineWillConfirmationRequestedEvent: {
+      id: number
+      kind: 'divine_will.confirmation_requested'
+      payload: components['schemas']['DivineWillConfirmationPayload']
+      at: string
+    }
+    DivineWillCycleFinishedEvent: {
+      id: number
+      kind: 'divine_will.cycle_finished'
+      payload: components['schemas']['DivineWillCycleFinishedPayload']
+      at: string
+    }
+    DivineWillCycleFinishedPayload: {
+      epoch?: number | null
+      cycle_id: number
+      session_id: number
+      ordinal: number
+      mode: components['schemas']['DivineWillMode']
+      status: components['schemas']['CycleStatus']
+      steps: number
+      input_tokens: number
+      output_tokens: number
+      error: string
+    } & {
+      [key: string]: unknown
+    }
+    DivineWillCyclePayload: {
+      epoch?: number | null
+      cycle_id: number
+      session_id: number
+      ordinal: number
+      mode: components['schemas']['DivineWillMode']
+      status: components['schemas']['CycleStatus']
+    } & {
+      [key: string]: unknown
+    }
+    DivineWillCycleStartedEvent: {
+      id: number
+      kind: 'divine_will.cycle_started'
+      payload: components['schemas']['DivineWillCyclePayload']
+      at: string
+    }
+    DivineWillFlowDeaths: {
+      category: components['schemas']['FlowCategory']
+      deaths: number
+    }
+    DivineWillForecast: {
+      id: number
+      cycle_id: number | null
+      epochs: number
+      status: components['schemas']['ForecastStatus']
+      eta_seconds: number
+      interventions: components['schemas']['DivineWillIntervention'][]
+      report: components['schemas']['DivineWillForecastReport'] | null
+      job_id: string
+      error: string
+      epochs_done: number
+      started_at: string | null
+      finished_at: string | null
+      created_at: string
+    }
+    DivineWillForecastLine: {
+      epoch: number
+      year: number | null
+      text: string
+    }
+    DivineWillForecastPayload: {
+      epoch?: number | null
+      forecast_id: number
+      status: components['schemas']['ForecastStatus']
+      done_epochs: number
+      epochs: number
+      eta_seconds: number
+      progress: number
+    } & {
+      [key: string]: unknown
+    }
+    DivineWillForecastProgressEvent: {
+      id: number
+      kind: 'divine_will.forecast_progress'
+      payload: components['schemas']['DivineWillForecastPayload']
+      at: string
+    }
+    DivineWillForecastReport: {
+      start_epoch: number
+      end_epoch: number
+      start_population: number
+      start_prosperity: number
+      start_communities: number
+      start_wars: number
+      interventions: components['schemas']['DivineWillAppliedIntervention'][]
+      baseline: components['schemas']['DivineWillScenario']
+      intervened: components['schemas']['DivineWillScenario']
+      seconds: number
+    }
+    DivineWillIndexPayload: {
+      epoch?: number | null
+      indexed: number
+      total: number
+      finished: boolean
+      status: components['schemas']['IndexStatus']
+      note: string
+    } & {
+      [key: string]: unknown
+    }
+    DivineWillIndexProgressEvent: {
+      id: number
+      kind: 'divine_will.index_progress'
+      payload: components['schemas']['DivineWillIndexPayload']
+      at: string
+    }
+    DivineWillIndexSource: {
+      source: components['schemas']['ChunkSource']
+      passages: number
+      embedded: number
+    }
+    DivineWillIndexView: {
+      status: components['schemas']['IndexStatus']
+      note: string
+      semantic: boolean
+      passages: number
+      embedded: number
+      pending: number
+      sources: components['schemas']['DivineWillIndexSource'][]
+      built_at: string | null
+      model: string
+    }
+    DivineWillIntervention: {
+      action_id: string
+      input: {
+        [key: string]: unknown
+      }
+    }
+    DivineWillMode:
+      | 'command'
+      | 'plan'
+      | 'ask_lore'
+      | 'creative_work'
+      | 'mechanics_guide'
+      | 'foresight'
+    DivineWillPlan: {
+      id: number
+      title: string
+      status: components['schemas']['PlanStatus']
+      cycle_id: number | null
+      artifact_id: number | null
+      approved_at: string | null
+      finished_at: string | null
+      created_at: string
+      steps: components['schemas']['DivineWillPlanStep'][]
+      job_id: string
+      waiting_step: number | null
+    }
+    DivineWillPlanChangedEvent: {
+      id: number
+      kind: 'divine_will.plan_changed'
+      payload: components['schemas']['DivineWillPlanPayload']
+      at: string
+    }
+    DivineWillPlanPayload: {
+      epoch?: number | null
+      plan_id: number
+      status: components['schemas']['PlanStatus']
+      cycle_id?: number | null
+      step?: number | null
+    } & {
+      [key: string]: unknown
+    }
+    DivineWillPlanStep: {
+      ordinal: number
+      title: string
+      action_id: string
+      action_title: string
+      input: {
+        [key: string]: unknown
+      }
+      depends_on: number[]
+      declared_impact: components['schemas']['StepImpact']
+      estimated_essence: number
+      status: components['schemas']['StepStatus']
+      ledger_entry_id: number | null
+      job_id: string
+      result_text: string
+      error: string
+    }
+    DivineWillPlanStepInput: {
+      title: string
+      action_id: string
+      input?: {
+        [key: string]: unknown
+      }
+      depends_on?: number[]
+      declared_impact: components['schemas']['StepImpact']
+      estimated_essence: number
+    }
+    DivineWillPlanSteps: {
+      steps: components['schemas']['DivineWillPlanStepInput'][]
+      title?: string | null
+    }
+    DivineWillScenario: {
+      population: number
+      prosperity: number
+      communities: number
+      deaths: components['schemas']['DivineWillFlowDeaths'][]
+      wars: components['schemas']['DivineWillWarTally']
+      nodes: components['schemas']['DivineWillTouchedNode'][]
+      chronicle: components['schemas']['DivineWillForecastLine'][]
+      seconds: number
+    }
+    DivineWillSubject: {
+      node_id: number
+      name: string
+      kind: components['schemas']['NodeKind']
+    }
+    DivineWillToolId:
+      | 'search_lore'
+      | 'read_node'
+      | 'read_records'
+      | 'enumerate'
+      | 'graph_neighbours'
+      | 'graph_path'
+      | 'chronicle'
+      | 'explain'
+      | 'state_at'
+      | 'ledger'
+      | 'world_overview'
+      | 'read_more'
+      | 'search_actions'
+      | 'describe_action'
+      | 'perform_action'
+      | 'job_status'
+      | 'undo_action'
+      | 'set_rule'
+      | 'reset_rule'
+      | 'search_rules'
+      | 'read_rule'
+      | 'search_mechanics'
+      | 'read_mechanic'
+      | 'read_game_rules'
+      | 'plan_create'
+      | 'plan_read'
+      | 'plan_revise'
+      | 'forecast_estimate'
+      | 'forecast_run'
+      | 'forecast_read'
+      | 'artifact_create'
+      | 'artifact_read'
+      | 'artifact_edit'
+      | 'artifact_update'
+      | 'artifact_list'
+      | 'attachment_list'
+      | 'attachment_read'
+      | 'attachment_search'
+      | 'suggest_mode'
+    DivineWillTouchedNode: {
+      node_id: number
+      name: string
+      kind: components['schemas']['NodeKind'] | null
+      exists: boolean
+      status: components['schemas']['EntityStatus'] | null
+      stats: {
+        [key: string]: number
+      }
+    }
+    DivineWillWarTally: {
+      ongoing: number
+      begun: number
+      ended: number
+    }
     DivineWoundEditInput: {
       values?: {
         [key: string]: number | string | boolean | null
@@ -62011,6 +62938,13 @@ export interface components {
       | 'agent.tool_called'
       | 'agent.tool_result'
       | 'agent.writing'
+      | 'divine_will.cycle_started'
+      | 'divine_will.cycle_finished'
+      | 'divine_will.confirmation_requested'
+      | 'divine_will.artifact_changed'
+      | 'divine_will.plan_changed'
+      | 'divine_will.forecast_progress'
+      | 'divine_will.index_progress'
     EventLinkRecord: {
       id: number
       kind: string
@@ -62493,6 +63427,7 @@ export interface components {
       pressure: number
       narrow: boolean
     }
+    ExportFormat: 'md' | 'html' | 'pdf' | 'epub' | 'docx' | 'fountain'
     Exposure: 'none' | 'context' | 'tool'
     ExtractionKind:
       | 'mining'
@@ -63576,6 +64511,25 @@ export interface components {
       condition: number
       locked: string[]
     }
+    FlowCategory:
+      | 'birth'
+      | 'growth'
+      | 'death'
+      | 'casualty'
+      | 'disaster'
+      | 'famine'
+      | 'plague'
+      | 'migration'
+      | 'levy'
+      | 'journey'
+      | 'captive'
+      | 'conversion'
+      | 'merge'
+      | 'creation'
+      | 'divine'
+      | 'player'
+      | 'transformation'
+      | 'unspecified'
     FlowView: {
       commodity: components['schemas']['CommodityKind']
       flow: components['schemas']['GoodsFlow']
@@ -63759,6 +64713,7 @@ export interface components {
       horizon: number
       locked: string[]
     }
+    ForecastStatus: 'queued' | 'running' | 'done' | 'failed' | 'cancelled'
     ForecastView: {
       id: number
       long_season_id: number
@@ -67680,6 +68635,7 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
+    IndexStatus: 'fetching' | 'building' | 'waiting' | 'ready' | 'unavailable'
     IndicatorEditInput: {
       indicator_id: number
       output?: number | null
@@ -68762,6 +69718,10 @@ export interface components {
       | 'retry'
       | 'prehistory'
       | 'deep_time'
+      | 'divine_will'
+      | 'divine_will_plan'
+      | 'divine_will_forecast'
+      | 'divine_will_index'
     JobPayload: {
       epoch?: number | null
       job_id: string
@@ -71257,6 +72217,7 @@ export interface components {
       function: number | null
       locked: string[]
     }
+    LibrarySort: 'relevance' | 'updated' | 'created' | 'title' | 'length'
     LifeClassEditInput: {
       values?: {
         [key: string]: number | string | boolean | string[] | null
@@ -79069,6 +80030,14 @@ export interface components {
     PlanExposeInput: {
       plan_id: number
     }
+    PlanStatus:
+      | 'draft'
+      | 'approved'
+      | 'running'
+      | 'paused'
+      | 'done'
+      | 'failed'
+      | 'abandoned'
     PlanView: {
       id: number
       holder: components['schemas']['NodeRef']
@@ -80752,6 +81721,7 @@ export interface components {
       | 'opportunities'
       | 'agent'
       | 'localisation'
+      | 'divine_will'
     PromptCatalogue: {
       prompts: components['schemas']['PromptEntry'][]
       son_tools: components['schemas']['ToolEntry'][]
@@ -80881,6 +81851,16 @@ export interface components {
       | 'fallen_son_turn'
       | 'mortal_turn_user'
       | 'mortal_turn_continuation'
+      | 'divine_will_system'
+      | 'divine_will_command'
+      | 'divine_will_plan'
+      | 'divine_will_ask_lore'
+      | 'divine_will_creative_work'
+      | 'divine_will_mechanics_guide'
+      | 'divine_will_foresight'
+      | 'divine_will_user'
+      | 'divine_will_translate_system'
+      | 'divine_will_translate_user'
       | 'mortal_context'
       | 'son_opportunities'
       | 'mortal_opportunities'
@@ -89171,6 +90151,7 @@ export interface components {
       | 'awaken'
       | 'link_minds'
       | 'unlink'
+    StepImpact: 'safe' | 'costly' | 'destructive'
     StepLocus:
       | 'body_part'
       | 'vehicle_section'
@@ -89260,6 +90241,7 @@ export interface components {
       | 'asleep'
       | 'poisoned'
       | 'frightened'
+    StepStatus: 'pending' | 'running' | 'done' | 'skipped' | 'failed' | 'undone'
     StockExchangeCreateInput: {
       table: string
       values: {
@@ -91864,6 +92846,18 @@ export interface components {
       long_job: boolean
       minimum_rarity: components['schemas']['Rarity'] | null
     }
+    Toolset:
+      | 'read'
+      | 'act'
+      | 'catalog_read'
+      | 'mechanics'
+      | 'rules_read'
+      | 'plan'
+      | 'foresight'
+      | 'artifacts'
+      | 'artifacts_read'
+      | 'attachments'
+      | 'notices'
     Totals: {
       calls: number
       milliseconds: number
@@ -94942,6 +95936,24 @@ export interface components {
       label: string
       value: number
     }
+    WillActiveView: {
+      session: components['schemas']['WillSessionSummary'] | null
+      cycles: components['schemas']['WillCycleView'][]
+      memory_boundary: number
+      has_earlier: boolean
+      remembered_cycles: number
+      running_cycle_id: number | null
+      capabilities: components['schemas']['WillCapabilitiesView']
+    }
+    WillCapabilitiesView: {
+      enabled: boolean
+      images: boolean
+      probed: boolean
+      note: string
+      model: string
+      upload_max_files: number
+      upload_max_mb: number
+    }
     WillCause:
       | 'capacity'
       | 'run_time'
@@ -94955,12 +95967,112 @@ export interface components {
       | 'exceeding'
       | 'kinship'
       | 'faith'
+    WillConfirmationView: {
+      id: number
+      cycle_id: number
+      action_id: string
+      input: {
+        [key: string]: unknown
+      }
+      reason: components['schemas']['ConfirmationReason']
+      preview: {
+        [key: string]: unknown
+      }
+      status: components['schemas']['ConfirmationStatus']
+      decided_at: string | null
+      ledger_entry_id: number | null
+      created_at: string
+    }
+    WillCycleAccepted: {
+      cycle_id: number
+      session_id: number
+      ordinal: number
+    }
+    WillCycleAttachment: {
+      id: number
+      kind: components['schemas']['AttachmentKind']
+      filename: string
+      mime: string
+      size: number
+      status: components['schemas']['AttachmentStatus']
+      seen_by_model: boolean
+      note: string
+    }
+    WillCycleRequest: {
+      text: string
+      mode: components['schemas']['DivineWillMode']
+      attachment_ids?: number[]
+    }
+    WillCycleView: {
+      id: number
+      session_id: number
+      ordinal: number
+      mode: components['schemas']['DivineWillMode']
+      epoch: number
+      status: components['schemas']['CycleStatus']
+      player_text: string
+      final_text: string
+      model: string
+      input_tokens: number
+      output_tokens: number
+      steps: number
+      error: string
+      started_at: string
+      finished_at: string | null
+      events: components['schemas']['WillEventView'][]
+      confirmations: components['schemas']['WillConfirmationView'][]
+      attachments: components['schemas']['WillCycleAttachment'][]
+    }
+    WillDecisionRequest: {
+      decision: components['schemas']['ConfirmationDecision']
+    }
+    WillEventView: {
+      id: number
+      ordinal: number
+      kind: components['schemas']['CycleEventKind']
+      tool: string
+      payload: {
+        [key: string]: unknown
+      }
+      handle: string
+      created_at: string
+      readonly notice: components['schemas']['CycleNotice'] | null
+    }
     WillHeirView: {
       heir: components['schemas']['NodeRef']
       share: number
     }
+    WillModeView: {
+      mode: components['schemas']['DivineWillMode']
+      name: string
+      purpose: string
+      changes_world: boolean
+      toolsets: components['schemas']['Toolset'][]
+      tools: components['schemas']['DivineWillToolId'][]
+    }
+    WillModesView: {
+      modes: components['schemas']['WillModeView'][]
+    }
     WillRemoveInput: {
       testator_id: number
+    }
+    WillSessionList: {
+      sessions: components['schemas']['WillSessionSummary'][]
+    }
+    WillSessionSummary: {
+      id: number
+      title: string
+      opened_epoch: number
+      opened_at: string
+      closed_epoch: number | null
+      closed_at: string | null
+      cycle_count: number
+    }
+    WillSessionView: {
+      session: components['schemas']['WillSessionSummary']
+      cycles: components['schemas']['WillCycleView'][]
+      memory_boundary: number
+      has_earlier: boolean
     }
     WillSetInput: {
       testator_id: number
@@ -96733,6 +97845,13 @@ export interface operations {
             | components['schemas']['AgentToolCalledEvent']
             | components['schemas']['AgentToolResultEvent']
             | components['schemas']['AgentWritingEvent']
+            | components['schemas']['DivineWillCycleStartedEvent']
+            | components['schemas']['DivineWillCycleFinishedEvent']
+            | components['schemas']['DivineWillConfirmationRequestedEvent']
+            | components['schemas']['DivineWillArtifactChangedEvent']
+            | components['schemas']['DivineWillPlanChangedEvent']
+            | components['schemas']['DivineWillForecastProgressEvent']
+            | components['schemas']['DivineWillIndexProgressEvent']
           )[]
         }
       }
@@ -111666,6 +112785,958 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DedicationView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_active_session_api_divine_will_session_get: {
+    parameters: {
+      query?: {
+        before?: number | null
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillActiveView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_closed_sessions_api_divine_will_sessions_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillSessionList']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_session_api_divine_will_sessions__session_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        session_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillSessionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  start_cycle_api_divine_will_cycles_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WillCycleRequest']
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillCycleAccepted']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_cycle_api_divine_will_cycles__cycle_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        cycle_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillCycleView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cancel_cycle_api_divine_will_cycles__cycle_id__cancel_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        cycle_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillCycleView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  decide_confirmation_api_divine_will_confirmations__confirmation_id__post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        confirmation_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WillDecisionRequest']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillConfirmationView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  reset_session_api_divine_will_session_reset_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillActiveView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_modes_api_divine_will_modes_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillModesView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_capabilities_api_divine_will_capabilities_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillCapabilitiesView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  upload_attachments_api_divine_will_attachments_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_upload_attachments_api_divine_will_attachments_post']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillAttachmentUpload']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_attachment_api_divine_will_attachments__attachment_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        attachment_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillAttachmentDetail']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  attachment_file_api_divine_will_attachments__attachment_id__file_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        attachment_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  index_state_api_divine_will_index_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillIndexView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_artifacts_api_divine_will_artifacts_get: {
+    parameters: {
+      query?: {
+        q?: string
+        kind?: components['schemas']['ArtifactKind'] | null
+        status?: components['schemas']['ArtifactStatus'] | null
+        format?: components['schemas']['ArtifactFormat'] | null
+        language?: string | null
+        mode?: components['schemas']['DivineWillMode'] | null
+        tag?: string | null
+        node_id?: number | null
+        sort?: components['schemas']['LibrarySort'] | null
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillArtifactPage']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_artifact_api_divine_will_artifacts__artifact_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        artifact_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillArtifact']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  delete_artifact_api_divine_will_artifacts__artifact_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        artifact_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  patch_artifact_api_divine_will_artifacts__artifact_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        artifact_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineWillArtifactPatch']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillArtifact']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_artifact_version_api_divine_will_artifacts__artifact_id__versions__version__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        artifact_id: number
+        version: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillArtifactVersion']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  diff_artifact_api_divine_will_artifacts__artifact_id__diff_get: {
+    parameters: {
+      query: {
+        a: number
+        b: number
+      }
+      header?: never
+      path: {
+        artifact_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillArtifactDiff']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  export_artifact_api_divine_will_artifacts__artifact_id__export_get: {
+    parameters: {
+      query: {
+        format: components['schemas']['ExportFormat']
+        version?: number | null
+      }
+      header?: never
+      path: {
+        artifact_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/octet-stream': unknown
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_plan_api_divine_will_plans__plan_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  revise_plan_api_divine_will_plans__plan_id__steps_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DivineWillPlanSteps']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  approve_plan_api_divine_will_plans__plan_id__approve_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  execute_plan_api_divine_will_plans__plan_id__execute_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  pause_plan_api_divine_will_plans__plan_id__pause_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  resume_plan_api_divine_will_plans__plan_id__resume_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  abandon_plan_api_divine_will_plans__plan_id__abandon_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  skip_step_api_divine_will_plans__plan_id__steps__ordinal__skip_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+        ordinal: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  undo_step_api_divine_will_plans__plan_id__steps__ordinal__undo_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+        ordinal: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_forecast_api_divine_will_forecasts__forecast_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        forecast_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillForecast']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cancel_forecast_api_divine_will_forecasts__forecast_id__cancel_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        forecast_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillForecast']
         }
       }
       default: {
@@ -191595,6 +193666,29 @@ export const artModeValues: ReadonlyArray<
   'tactile',
   'mind',
 ]
+export const artifactFormatValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ArtifactFormat']
+> = ['markdown', 'fountain', 'html']
+export const artifactKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ArtifactKind']
+> = [
+  'story',
+  'chapter',
+  'novel',
+  'screenplay',
+  'poem',
+  'chronicle',
+  'encyclopedia',
+  'outline',
+  'notes',
+  'report',
+  'plan',
+  'forecast',
+  'html_page',
+]
+export const artifactStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ArtifactStatus']
+> = ['draft', 'final']
 export const artworkStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ArtworkStats']['kind']
 > = ['artwork']
@@ -191613,6 +193707,12 @@ export const assistiveAidValues: ReadonlyArray<
 export const atmosphereValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Atmosphere']
 > = ['none', 'thin', 'normal', 'dense', 'toxic', 'steam', 'layered']
+export const attachmentKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AttachmentKind']
+> = ['image', 'document']
+export const attachmentStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AttachmentStatus']
+> = ['stored', 'converted', 'indexed', 'unreadable']
 export const attackDeliveryValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AttackDelivery']
 > = [
@@ -192650,6 +194750,26 @@ export const chronicleKindValues: ReadonlyArray<
 export const chronicleScopeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ChronicleScope']
 > = ['world', 'star', 'node', 'son', 'creator', 'foreign_god']
+export const chunkSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ChunkSource']
+> = [
+  'entity',
+  'typed_section',
+  'chronicle',
+  'incident',
+  'son',
+  'foreign_god',
+  'world',
+  'star',
+  'creator',
+  'word',
+  'epoch',
+  'note',
+  'message',
+  'council',
+  'artifact',
+  'attachment',
+]
 export const circleKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CircleKind']
 > = [
@@ -193210,6 +195330,15 @@ export const conditionKindValues: ReadonlyArray<
   'lasting_fear',
   'breathlessness',
 ]
+export const confirmationDecisionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ConfirmationDecision']
+> = ['approve', 'decline']
+export const confirmationReasonValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ConfirmationReason']
+> = ['destructive', 'costly', 'both']
+export const confirmationStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ConfirmationStatus']
+> = ['pending', 'approved', 'declined', 'expired']
 export const consciousnessValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Consciousness']
 > = ['awake', 'nauseous', 'dizzy', 'unconscious']
@@ -193847,6 +195976,23 @@ export const customCatalogValues: ReadonlyArray<
   'item_class',
   'rite_effect',
 ]
+export const cycleEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CycleEventKind']
+> = [
+  'player',
+  'thought',
+  'text',
+  'tool_call',
+  'tool_result',
+  'confirmation_request',
+  'confirmation_reply',
+  'notice',
+  'retry',
+  'error',
+]
+export const cycleNoticeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CycleNotice']
+> = ['suggest_mode', 'vision_unavailable', 'step_limit', 'translated']
 export const cyclePhaseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CyclePhase']
 > = ['growth', 'stagflation', 'crisis', 'depression']
@@ -193868,6 +196014,9 @@ export const cycleSourceValues: ReadonlyArray<
   'uplift',
   'burial',
 ]
+export const cycleStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CycleStatus']
+> = ['running', 'awaiting_confirmation', 'done', 'failed', 'cancelled']
 export const damageTypeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DamageType']
 > = [
@@ -194394,6 +196543,80 @@ export const divineVerbValues: ReadonlyArray<
   'wake',
   'remember',
   'erase',
+]
+export const divineWillArtifactChangedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillArtifactChangedEvent']['kind']
+> = ['divine_will.artifact_changed']
+export const divineWillConfirmationRequestedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillConfirmationRequestedEvent']['kind']
+> = ['divine_will.confirmation_requested']
+export const divineWillCycleFinishedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillCycleFinishedEvent']['kind']
+> = ['divine_will.cycle_finished']
+export const divineWillCycleStartedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillCycleStartedEvent']['kind']
+> = ['divine_will.cycle_started']
+export const divineWillForecastProgressEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillForecastProgressEvent']['kind']
+> = ['divine_will.forecast_progress']
+export const divineWillIndexProgressEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillIndexProgressEvent']['kind']
+> = ['divine_will.index_progress']
+export const divineWillModeValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillMode']
+> = [
+  'command',
+  'plan',
+  'ask_lore',
+  'creative_work',
+  'mechanics_guide',
+  'foresight',
+]
+export const divineWillPlanChangedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillPlanChangedEvent']['kind']
+> = ['divine_will.plan_changed']
+export const divineWillToolIdValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['DivineWillToolId']
+> = [
+  'search_lore',
+  'read_node',
+  'read_records',
+  'enumerate',
+  'graph_neighbours',
+  'graph_path',
+  'chronicle',
+  'explain',
+  'state_at',
+  'ledger',
+  'world_overview',
+  'read_more',
+  'search_actions',
+  'describe_action',
+  'perform_action',
+  'job_status',
+  'undo_action',
+  'set_rule',
+  'reset_rule',
+  'search_rules',
+  'read_rule',
+  'search_mechanics',
+  'read_mechanic',
+  'read_game_rules',
+  'plan_create',
+  'plan_read',
+  'plan_revise',
+  'forecast_estimate',
+  'forecast_run',
+  'forecast_read',
+  'artifact_create',
+  'artifact_read',
+  'artifact_edit',
+  'artifact_update',
+  'artifact_list',
+  'attachment_list',
+  'attachment_read',
+  'attachment_search',
+  'suggest_mode',
 ]
 export const divineWoundKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['DivineWoundKind']
@@ -195291,6 +197514,13 @@ export const eventKindValues: ReadonlyArray<
   'agent.tool_called',
   'agent.tool_result',
   'agent.writing',
+  'divine_will.cycle_started',
+  'divine_will.cycle_finished',
+  'divine_will.confirmation_requested',
+  'divine_will.artifact_changed',
+  'divine_will.plan_changed',
+  'divine_will.forecast_progress',
+  'divine_will.index_progress',
 ]
 export const eventPhaseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EventPhase']
@@ -195411,6 +197641,9 @@ export const expeditionRoleValues: ReadonlyArray<
 export const expeditionStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ExpeditionStatus']
 > = ['underway', 'camped', 'returned', 'lost']
+export const exportFormatValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ExportFormat']
+> = ['md', 'html', 'pdf', 'epub', 'docx', 'fountain']
 export const exposureValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Exposure']
 > = ['none', 'context', 'tool']
@@ -195724,6 +197957,28 @@ export const fireControlValues: ReadonlyArray<
   'automatic',
   'guided',
 ]
+export const flowCategoryValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['FlowCategory']
+> = [
+  'birth',
+  'growth',
+  'death',
+  'casualty',
+  'disaster',
+  'famine',
+  'plague',
+  'migration',
+  'levy',
+  'journey',
+  'captive',
+  'conversion',
+  'merge',
+  'creation',
+  'divine',
+  'player',
+  'transformation',
+  'unspecified',
+]
 export const focusKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FocusKind']
 > = [
@@ -195742,6 +197997,9 @@ export const foeNatureValues: ReadonlyArray<
 export const foodLinkValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['FoodLink']
 > = ['pinned', 'barred', 'derived']
+export const forecastStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ForecastStatus']
+> = ['queued', 'running', 'done', 'failed', 'cancelled']
 export const foreignGodDeepenedEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ForeignGodDeepenedEvent']['kind']
 > = ['foreign_god.deepened']
@@ -197118,6 +199376,9 @@ export const incidentTierValues: ReadonlyArray<
 export const incursionStageValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IncursionStage']
 > = ['probing', 'breach', 'manifestation', 'receding']
+export const indexStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['IndexStatus']
+> = ['fetching', 'building', 'waiting', 'ready', 'unavailable']
 export const ingredientRoleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['IngredientRole']
 > = [
@@ -197489,6 +199750,10 @@ export const jobKindValues: ReadonlyArray<
   'retry',
   'prehistory',
   'deep_time',
+  'divine_will',
+  'divine_will_plan',
+  'divine_will_forecast',
+  'divine_will_index',
 ]
 export const jobProgressEventKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['JobProgressEvent']['kind']
@@ -198081,6 +200346,9 @@ export const legitimacyTypeValues: ReadonlyArray<
   'performance',
   'conquest',
 ]
+export const librarySortValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LibrarySort']
+> = ['relevance', 'updated', 'created', 'title', 'length']
 export const lifeComplexityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifeComplexity']
 > = ['none', 'microbial', 'simple', 'complex', 'sapient']
@@ -200741,6 +203009,9 @@ export const plagueResponseValues: ReadonlyArray<
   'inoculate',
   'close_gatherings',
 ]
+export const planStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['PlanStatus']
+> = ['draft', 'approved', 'running', 'paused', 'done', 'failed', 'abandoned']
 export const planetaryCycleValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PlanetaryCycle']
 > = ['carbon', 'water', 'nutrients', 'oxygen', 'rock', 'heat', 'ice']
@@ -201200,6 +203471,7 @@ export const promptAreaValues: ReadonlyArray<
   'opportunities',
   'agent',
   'localisation',
+  'divine_will',
 ]
 export const promptIdValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PromptId']
@@ -201305,6 +203577,16 @@ export const promptIdValues: ReadonlyArray<
   'fallen_son_turn',
   'mortal_turn_user',
   'mortal_turn_continuation',
+  'divine_will_system',
+  'divine_will_command',
+  'divine_will_plan',
+  'divine_will_ask_lore',
+  'divine_will_creative_work',
+  'divine_will_mechanics_guide',
+  'divine_will_foresight',
+  'divine_will_user',
+  'divine_will_translate_system',
+  'divine_will_translate_user',
   'mortal_context',
   'son_opportunities',
   'mortal_opportunities',
@@ -203857,6 +206139,9 @@ export const stepActionValues: ReadonlyArray<
   'link_minds',
   'unlink',
 ]
+export const stepImpactValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StepImpact']
+> = ['safe', 'costly', 'destructive']
 export const stepLocusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StepLocus']
 > = [
@@ -203947,6 +206232,9 @@ export const stepStateValues: ReadonlyArray<
   'poisoned',
   'frightened',
 ]
+export const stepStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['StepStatus']
+> = ['pending', 'running', 'done', 'skipped', 'failed', 'undone']
 export const storyletIdValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['StoryletId']
 > = [
@@ -205089,6 +207377,21 @@ export const titleTierValues: ReadonlyArray<
 export const toolBlockValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ToolBlock']
 > = ['rarity', 'actor_type', 'civilization_tier', 'world_state', 'unwired']
+export const toolsetValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Toolset']
+> = [
+  'read',
+  'act',
+  'catalog_read',
+  'mechanics',
+  'rules_read',
+  'plan',
+  'foresight',
+  'artifacts',
+  'artifacts_read',
+  'attachments',
+  'notices',
+]
 export const touristSightValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TouristSight']
 > = ['wonder', 'baths', 'sacred', 'battlefield', 'city', 'collection', 'garden']

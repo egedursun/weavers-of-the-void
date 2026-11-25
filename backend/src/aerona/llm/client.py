@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterable, AsyncIterator, Awaitable, Callable, Sequence
 from typing import Any, Protocol
 
 from claude_agent_sdk import AssistantMessage, ClaudeAgentOptions, CLIConnectionError, ProcessError, ResultMessage, SdkMcpTool, TextBlock, query
@@ -12,7 +12,19 @@ from aerona.constants.agents import ERROR_REASON_CHARS
 from aerona.constants.llm import HAIKU_MODEL_ID, RETRY_KIND, TRANSIENT_HTTP_STATUSES
 from aerona.core.grammar import several
 from aerona.events.kinds import EventKind
-from aerona.llm.errors import LlmDisabledError, LlmPermanentError, LlmTimeoutError, LlmTransientError
+from aerona.llm.content import (
+    PROBE_ANSWER,
+    PROBE_LABEL,
+    PROBE_PROMPT,
+    PROBE_SYSTEM,
+    PROBE_TURNS,
+    AgentWatch,
+    ImagePart,
+    ModelCapabilities,
+    probe_image,
+    streamed_prompt,
+)
+from aerona.llm.errors import LlmDisabledError, LlmError, LlmPermanentError, LlmTimeoutError, LlmTransientError
 from aerona.llm.json_text import first_json_value
 from aerona.llm.records import AgentRun, CallKind, CallOutcome, CallRecord, Usage
 from aerona.llm.sandbox import build_options
@@ -23,6 +35,9 @@ from aerona.rules.registry.model import ModelRules
 
 LOGGER = logging.getLogger(__name__)
 ROOT_FIELD = "(root)"
+DISABLED_NOTE = "The language model is disabled, so pictures cannot be shown to it."
+UNSEEN_NOTE = "The model answered the test picture without seeing it."
+PAUSED_REASON = "paused"
 MetricsSink = Callable[[CallRecord], Awaitable[None]]
 QueryFunction = Callable[..., AsyncIterator[Any]]
 
@@ -60,6 +75,8 @@ class LlmClient:
         self._enabled = enabled
         self._metrics = metrics
         self._query = query_function
+        self._vision: ModelCapabilities | None = None
+        self._vision_lock = asyncio.Lock()
 
     @property
     def enabled(self) -> bool:
@@ -113,6 +130,8 @@ class LlmClient:
         tools: list[SdkMcpTool[Any]],
         max_turns: int | None = None,
         timeout_seconds: int | None = None,
+        images: Sequence[ImagePart] = (),
+        watch: AgentWatch | None = None,
     ) -> AgentRun:
         model_rules = self._rules.current.model
         options = build_options(system_prompt, max_turns or model_rules.agent_max_steps, tools=tools)
@@ -123,7 +142,7 @@ class LlmClient:
             reporter = StreamReporter(self._publish, self._rules.current.server, current_actor.get(), label)
             meter = TokenMeter(system_prompt, *(tool_text(tool) for tool in tools), prompt)
             try:
-                run = await self._collect_agent(prompt, options, usage, reporter, meter)
+                run = await self._collect_agent(prompt, options, usage, reporter, meter, images=images, watch=watch)
             finally:
                 reporter.close()
                 usage.count(meter)
@@ -155,22 +174,65 @@ class LlmClient:
                 raise LlmTransientError("model returned unparseable output") from error
         raise LlmTransientError("model returned empty output")
 
-    async def _collect_agent(self, prompt: str, options: ClaudeAgentOptions, usage: Usage, reporter: StreamReporter, meter: TokenMeter) -> AgentRun:
+    async def _collect_agent(
+        self,
+        prompt: str,
+        options: ClaudeAgentOptions,
+        usage: Usage,
+        reporter: StreamReporter,
+        meter: TokenMeter,
+        *,
+        images: Sequence[ImagePart] = (),
+        watch: AgentWatch | None = None,
+    ) -> AgentRun:
         texts: list[str] = []
         result: ResultMessage | None = None
-        async for message in self._query(prompt=prompt, options=options):
+        source: str | AsyncIterable[dict[str, Any]] = streamed_prompt(prompt, images) if images else prompt
+        async for message in self._query(prompt=source, options=options):
             reporter.feed(message)
             meter.read(message)
             if isinstance(message, AssistantMessage):
                 texts.extend(block.text for block in message.content if isinstance(block, TextBlock))
             elif isinstance(message, ResultMessage):
                 result = message
+            if watch is not None:
+                await watch.seen(message)
+                if watch.stopped:
+                    return AgentRun(text="\n".join(texts), usage=usage, completed=False, stop_reason=PAUSED_REASON)
         if result is None:
             return AgentRun(text="\n".join(texts), usage=usage, completed=False, stop_reason=None)
         if meter.replies == 0 and result.result:
             meter.reply(result.result)
         usage.absorb(result.total_cost_usd, result.num_turns)
         return AgentRun(text="\n".join(texts), usage=usage, completed=not result.is_error, stop_reason=result.stop_reason or result.subtype)
+
+    async def capabilities(self) -> ModelCapabilities:
+        if self._vision is not None:
+            return self._vision
+        async with self._vision_lock:
+            if self._vision is None:
+                found = await self._probe_vision()
+                if found.probed:
+                    self._vision = found
+                return found
+            return self._vision
+
+    async def _probe_vision(self) -> ModelCapabilities:
+        if not self._enabled:
+            return ModelCapabilities(images=False, probed=False, note=DISABLED_NOTE)
+        options = build_options(PROBE_SYSTEM, PROBE_TURNS)
+        reporter = StreamReporter(mute, self._rules.current.server, None, PROBE_LABEL)
+        meter = TokenMeter(PROBE_SYSTEM, PROBE_PROMPT)
+        usage = Usage()
+        probing = self._collect_agent(PROBE_PROMPT, options, usage, reporter, meter, images=(probe_image(),))
+        try:
+            run = await asyncio.wait_for(probing, timeout=self._rules.current.model.structured_timeout)
+        except (LlmError, CLIConnectionError, ProcessError, TimeoutError) as error:
+            return ModelCapabilities(images=False, probed=False, note=str(error) or type(error).__name__)
+        finally:
+            usage.count(meter)
+        seen = run.completed and PROBE_ANSWER in run.text.lower()
+        return ModelCapabilities(images=seen, probed=True, note="" if seen else UNSEEN_NOTE)
 
     @staticmethod
     def _raise_for_result(result: ResultMessage) -> None:
@@ -184,9 +246,11 @@ class LlmClient:
 
     def _announce_retry(self, label: str, attempt: int, total: int, reason: str, wait: int) -> None:
         actor = current_actor.get()
+        channel = {"channel": actor.channel} if actor is not None and actor.channel else {}
         self._publish(
             EventKind.AGENT_RETRY,
             {
+                **channel,
                 "actor": actor.name if actor is not None else label,
                 "kind": RETRY_KIND,
                 "attempt": attempt,

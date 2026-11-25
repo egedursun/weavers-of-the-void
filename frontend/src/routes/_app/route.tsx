@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { ENTRY_PAGES } from '@/config/entryPages'
 import { AppShell } from '@/components/layout/AppShell'
 import { CommandPalette } from '@/features/command-palette/CommandPalette'
+import { DivineWill } from '@/features/divine-will/DivineWill'
 import {
   ShellActions,
   ShellAside,
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/_app')({
           <ShellServices />
           <CommandPalette />
           <SonRevealOverlay />
+          <DivineWill />
         </>
       }
     />

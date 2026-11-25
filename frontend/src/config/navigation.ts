@@ -6,6 +6,7 @@ import {
   BookOpen,
   ChartColumnBig,
   Cpu,
+  Eye,
   FileText,
   Crown,
   Gamepad2,
@@ -15,6 +16,7 @@ import {
   Images,
   Languages,
   Layers,
+  LibraryBig,
   LayoutDashboard,
   type LucideIcon,
   Map as MapIcon,
@@ -58,6 +60,7 @@ export type NavRoute =
   | '/chronicle'
   | '/languages'
   | '/gallery'
+  | '/library'
   | '/ledger'
   | '/usage'
   | '/notifications'
@@ -338,6 +341,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Images,
         description: 'Every image of the world and the missing ones.',
       },
+      {
+        id: 'library',
+        title: 'Library',
+        to: '/library',
+        icon: LibraryBig,
+        description:
+          'Every writing of the Divine Will, with its versions, its subjects and its exports.',
+      },
     ],
   },
   {
@@ -404,6 +415,28 @@ export function allNavItems(): NavItem[] {
     ),
     GENESIS_ITEM,
   ]
+}
+
+export type PanelShortcut = {
+  id: string
+  title: string
+  key: string
+  keys: string
+  icon: LucideIcon
+}
+
+export const DIVINE_WILL_SHORTCUT: PanelShortcut = {
+  id: 'divine-will',
+  title: 'Open or close the Divine Will',
+  key: 'w',
+  keys: 'W',
+  icon: Eye,
+}
+
+export const PANEL_SHORTCUTS: PanelShortcut[] = [DIVINE_WILL_SHORTCUT]
+
+export function isDivineWillKey(key: string): boolean {
+  return key === DIVINE_WILL_SHORTCUT.key
 }
 
 export const SHORTCUT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']

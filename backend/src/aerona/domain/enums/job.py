@@ -31,6 +31,10 @@ class JobKind(StrEnum):
     RETRY = "retry"
     PREHISTORY = "prehistory"
     DEEP_TIME = "deep_time"
+    DIVINE_WILL = "divine_will"
+    DIVINE_WILL_PLAN = "divine_will_plan"
+    DIVINE_WILL_FORECAST = "divine_will_forecast"
+    DIVINE_WILL_INDEX = "divine_will_index"
 
 
 TERMINAL_JOB_STATUSES = frozenset({JobStatus.SUCCEEDED, JobStatus.FAILED, JobStatus.CANCELLED, JobStatus.INTERRUPTED})

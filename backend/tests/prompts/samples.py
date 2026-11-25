@@ -22,6 +22,7 @@ from aerona.prompts.contexts import (
     opportunities,
     son_turn,
 )
+from aerona.prompts.contexts import divine_will as will
 from aerona.prompts.contexts.base import EmptyContext, LoreContext, PromptContext, RulesContext
 from aerona.prompts.contexts.common import (
     ChronicleRow,
@@ -33,6 +34,7 @@ from aerona.prompts.contexts.common import (
     SonBrief,
     WorldItem,
 )
+from aerona.prompts.data.divine_will import MODE_TEXTS
 from aerona.prompts.data.images import CosmosSubjectKind
 from aerona.prompts.ids import PromptId
 from aerona.rules.registry import Rules
@@ -761,6 +763,49 @@ def localise() -> localisation.LocaliseContext:
     )
 
 
+def divine_will_system() -> will.DivineWillSystemContext:
+    return will.DivineWillSystemContext(
+        lore_language=LORE,
+        rules=RULES,
+        world_name="Aerona",
+        creator_name="Ul",
+        mode_name="Command",
+        modes=[
+            will.WillModeLine(value=mode.value, name=text.name, purpose=text.purpose, current=index == 0)
+            for index, (mode, text) in enumerate(MODE_TEXTS.items())
+        ],
+        tools=["read_more", "suggest_mode", "forecast_estimate"],
+    )
+
+
+def divine_will_translate() -> will.DivineWillTranslateContext:
+    return will.DivineWillTranslateContext(rules=RULES, language="Turkish", text="**The hill stands** (node 12).")
+
+
+def divine_will_user() -> will.DivineWillUserContext:
+    return will.DivineWillUserContext(
+        lore_language=LORE,
+        rules=RULES,
+        mode_name="Ask Lore",
+        player_text="Who rules the north now?",
+        forgotten=2,
+        remembered=[
+            will.RememberedExchange(
+                ordinal=3,
+                mode_name="Command",
+                player_text="Raise a hill by the river.",
+                final_text="The hill stands.",
+                steps=[will.WillToolStep(tool="perform_action", arguments='{"action_id": "creator:mood"}', outcome="done", handle="h1")],
+            )
+        ],
+        attachments=[will.WillAttachmentLine(attachment_id=1, filename="map.png", kind_name="picture", seen=False, note="Kept but not shown.")],
+        trace=[
+            will.WillTraceLine(kind=kind, text="line", tool="search_lore" if kind == "tool_call" else "", handle="h2" if kind == "tool_result" else "")
+            for kind in ("thought", "text", "tool_call", "tool_result", "confirmation_request", "confirmation_reply", "notice", "retry", "error")
+        ],
+    )
+
+
 SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
     P.IMAGE_PROMPT_RULES: EmptyContext,
     P.SECTION_KEYS_RULE: EmptyContext,
@@ -1115,6 +1160,16 @@ SAMPLES: dict[PromptId, Callable[[], PromptContext]] = {
     P.ENTITY_STATE_REASON: lambda: agent.EntityStateContext(kind=agent.EntityStateKind.DEAD, id=12, name="Vesh Hollow", age=4),
     P.FIELD_ERROR: lambda: agent.FieldErrorContext(kind=agent.FieldErrorKind.TOO_BIG, field="power_level", limit=10, given="12"),
     P.PER_EPOCH_LIMIT: lambda: agent.PerEpochLimitContext(rule_path="son_tools.gift_per_epoch", value=1),
+    P.DIVINE_WILL_SYSTEM: divine_will_system,
+    P.DIVINE_WILL_COMMAND: divine_will_system,
+    P.DIVINE_WILL_PLAN: divine_will_system,
+    P.DIVINE_WILL_ASK_LORE: divine_will_system,
+    P.DIVINE_WILL_CREATIVE_WORK: divine_will_system,
+    P.DIVINE_WILL_MECHANICS_GUIDE: divine_will_system,
+    P.DIVINE_WILL_FORESIGHT: divine_will_system,
+    P.DIVINE_WILL_USER: divine_will_user,
+    P.DIVINE_WILL_TRANSLATE_SYSTEM: divine_will_translate,
+    P.DIVINE_WILL_TRANSLATE_USER: divine_will_translate,
 }
 
 

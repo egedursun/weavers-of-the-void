@@ -348,7 +348,9 @@ export function PrehistorySection({
                 label='World'
                 value={
                   query.data.world
-                    ? `${query.data.world.name}, ${wordOf(worldTypeValues, query.data.world_type ?? 'none')}`
+                    ? query.data.world_type
+                      ? `${query.data.world.name}, ${wordOf(worldTypeValues, query.data.world_type)}`
+                      : query.data.world.name
                     : `${query.data.node.name} stands on no world`
                 }
                 icon={PREHISTORY_ICON}

@@ -36,6 +36,8 @@ from aerona.services.books.cache import BookWarmer
 from aerona.services.bulk_deepen import BulkDeepening
 from aerona.services.chronicle import ChronicleWriter
 from aerona.services.discovery import DiscoveryService
+from aerona.services.divine_will.embedding import download, model_directory
+from aerona.services.divine_will.index import LoreIndex
 from aerona.services.exchange import ExchangeService, WorldChangedHook
 from aerona.services.images.media import Thumbnailer
 from aerona.services.images.queue import ImageQueue
@@ -104,6 +106,7 @@ class ApplicationServices:
     image_client: ImageWorkerClient
     model: LanguageModel
     agents: AgentRuntime
+    lore_index: LoreIndex
     background: set[asyncio.Task[Any]] = field(default_factory=set)
     repairs_ready: asyncio.Event = field(default_factory=ready_event)
 
@@ -205,6 +208,16 @@ async def build_application(
     images = ImageQueue(database, image_client, image_records, current, bus=bus, prompts=lore.prompts, read_only=lambda: discovery.active, jobs=jobs)
     bulk = BulkDeepening(database, current, lore.deepener, namer=lore.namer, bus=bus, read_only=lambda: discovery.active, jobs=jobs)
     completion = StartupCompletion(database, current, lore, read_only=lambda: discovery.active)
+    lore_index = LoreIndex(
+        database,
+        current,
+        directory=model_directory(settings),
+        threads=settings.embed_threads,
+        fetch=download if settings.llm_enabled else None,
+        media=store,
+        read_only=lambda: discovery.active,
+    )
+    lore_index.attach(bus)
     application = ApplicationServices(
         feed=feed,
         notifier=notifier,
@@ -234,6 +247,7 @@ async def build_application(
         image_client=image_client,
         model=language_model,
         agents=agents,
+        lore_index=lore_index,
     )
     world_changed.register(live_log.world_changed)
     world_changed.register(rules.load)
@@ -327,11 +341,13 @@ async def start_application(application: ApplicationServices, database: Database
     _spawn(application, run_maintenance(application, database, rules))
     if llm_enabled:
         _spawn(application, schedule_completion(application, jobs, rules))
+        application.lore_index.start(jobs)
 
 
 async def stop_application(application: ApplicationServices) -> None:
     for task in list(application.background):
         task.cancel()
+    await application.lore_index.stop()
     await application.notification_stream.drain()
     await application.live_log.drain()
     await application.images.shutdown()

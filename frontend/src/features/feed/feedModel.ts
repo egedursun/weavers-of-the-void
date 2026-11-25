@@ -1,4 +1,4 @@
-import { type ServerEvent } from '@/realtime'
+import { type ServerEvent, willCycleOf } from '@/realtime'
 import { type components } from '@/api/generated/schema'
 import { formatDuration, plural } from '@/lib/units'
 import { JOB_KIND_LABEL, isJobKind } from '@/constants/jobs'
@@ -548,7 +548,8 @@ function describeStream(event: ServerEvent): Draft | null {
 }
 
 export function toFeedLine(event: ServerEvent): FeedLine | null {
-  if (QUIET_KINDS.has(event.kind)) return null
+  if (QUIET_KINDS.has(event.kind) || willCycleOf(event.payload) !== null)
+    return null
   const described = describe(event)
   if (!described) return null
   return {

@@ -28,6 +28,7 @@ class Database:
         self._write_lock = asyncio.Lock()
         self.generation = 0
         event.listen(self.engine.sync_engine, "connect", self._configure_connection)
+        event.listen(self.engine.sync_engine, "begin", self._begin)
         install_activity_capture()
         install_flush_batching()
         install_ordered_reads()
@@ -47,6 +48,11 @@ class Database:
         cursor.execute(f"PRAGMA cache_size=-{SQLITE_CACHE_KIB}")
         cursor.execute(f"PRAGMA mmap_size={SQLITE_MMAP_BYTES}")
         cursor.close()
+        connection.isolation_level = None
+
+    @staticmethod
+    def _begin(connection: Any) -> None:
+        connection.exec_driver_sql("BEGIN")
 
     @asynccontextmanager
     async def read(self) -> AsyncIterator[AsyncSession]:

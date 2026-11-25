@@ -1,3 +1,4 @@
+{% from "divine_will.md.j2" import will_record, will_writings %}
 {% macro image(file, name) -%}
 {% if file %}![{{ name | cell }}]({{ links.media(file) }})
 
@@ -310,6 +311,9 @@
 {% if book.ledger %}
 - [Fate's Ledger](#ledger)
 {% endif %}
+{% if book.writings.shown %}
+- [Writings of the Divine Will](#writings)
+{% endif %}
 {% if book.records %}
 - [Records of the Cosmos](#records)
 {% endif %}
@@ -403,6 +407,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 {% endfor %}
 {% endif %}
+{{ will_record(book.divine_will, book.ledger_changes) }}
 {% endif %}
 ---
 
@@ -929,6 +934,17 @@ Score **{{ book.deeds.total }}** · Achievements **{{ book.deeds.earned | length
 
 {% endfor %}
 {% endfor %}
+{% endif %}
+{% if book.writings.shown %}
+---
+
+<a id="writings"></a>
+
+## Writings of the Divine Will
+
+*Every work the Divine Will wrote, in its current version, and everything the player brought to it.*
+
+{{ will_writings(book.writings) }}
 {% endif %}
 {% if book.records %}
 ---

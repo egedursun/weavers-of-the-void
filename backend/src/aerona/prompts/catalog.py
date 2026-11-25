@@ -7,6 +7,7 @@ from aerona.prompts.contexts import (
     chronicler,
     cosmos,
     council,
+    divine_will,
     fate,
     genesis,
     imagery,
@@ -24,6 +25,7 @@ from aerona.prompts.ids import PromptArea, PromptId
 from aerona.prompts.schemas import cosmos as cosmos_schemas
 from aerona.prompts.schemas import council as council_schemas
 from aerona.prompts.schemas import defaults
+from aerona.prompts.schemas import divine_will as will_schemas
 from aerona.prompts.schemas import fate as fate_schemas
 from aerona.prompts.schemas import genesis as genesis_schemas
 from aerona.prompts.schemas import localisation as localisation_schemas
@@ -216,6 +218,16 @@ SPECS: tuple[PromptSpec, ...] = (
     PromptSpec(P.PER_EPOCH_LIMIT, A.AGENT, agent_contexts.PerEpochLimitContext),
     PromptSpec(P.LOCALISE_SYSTEM, A.LOCALISATION, localisation.LocaliseContext),
     PromptSpec(P.LOCALISE_USER, A.LOCALISATION, localisation.LocaliseContext, localisation_schemas.LocalisedLinesOutput),
+    PromptSpec(P.DIVINE_WILL_SYSTEM, A.DIVINE_WILL, divine_will.DivineWillSystemContext),
+    PromptSpec(P.DIVINE_WILL_COMMAND, A.DIVINE_WILL, divine_will.DivineWillSystemContext),
+    PromptSpec(P.DIVINE_WILL_PLAN, A.DIVINE_WILL, divine_will.DivineWillSystemContext),
+    PromptSpec(P.DIVINE_WILL_ASK_LORE, A.DIVINE_WILL, divine_will.DivineWillSystemContext),
+    PromptSpec(P.DIVINE_WILL_CREATIVE_WORK, A.DIVINE_WILL, divine_will.DivineWillSystemContext),
+    PromptSpec(P.DIVINE_WILL_MECHANICS_GUIDE, A.DIVINE_WILL, divine_will.DivineWillSystemContext),
+    PromptSpec(P.DIVINE_WILL_FORESIGHT, A.DIVINE_WILL, divine_will.DivineWillSystemContext),
+    PromptSpec(P.DIVINE_WILL_USER, A.DIVINE_WILL, divine_will.DivineWillUserContext),
+    PromptSpec(P.DIVINE_WILL_TRANSLATE_SYSTEM, A.DIVINE_WILL, divine_will.DivineWillTranslateContext),
+    PromptSpec(P.DIVINE_WILL_TRANSLATE_USER, A.DIVINE_WILL, divine_will.DivineWillTranslateContext, will_schemas.WillAnswerInLanguage),
 )
 
 PROMPTS: dict[PromptId, PromptSpec] = {spec.prompt_id: spec for spec in SPECS}

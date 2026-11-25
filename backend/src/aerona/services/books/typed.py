@@ -44,6 +44,19 @@ SKIPPED_TABLES = frozenset(
         "design_sections",
         "design_techniques",
         "dish_ingredients",
+        "divine_will_artifact_nodes",
+        "divine_will_artifact_versions",
+        "divine_will_artifacts",
+        "divine_will_attachments",
+        "divine_will_chunks",
+        "divine_will_confirmations",
+        "divine_will_cycles",
+        "divine_will_events",
+        "divine_will_forecasts",
+        "divine_will_handles",
+        "divine_will_plan_steps",
+        "divine_will_plans",
+        "divine_will_sessions",
         "entities",
         "entity_tags",
         "epoch_stats",
@@ -130,6 +143,8 @@ PERCENT_LISTS = frozenset({"milestones"})
 NODE_SHARES = frozenset({"sellers"})
 REFERENCE_LISTS = {"rivals": "creature_groups", "revealed_aims": "war_aims", "works": "workshops", "incident_ids": "incidents", "journey_ids": "journeys"}
 PAIRED_LISTS = {"martial_record": ("won", "lost")}
+
+ORDINAL_LISTS = {"depends_on": "step"}
 PERCENT_SIGN = "%"
 NOTHING = "none"
 
@@ -323,6 +338,13 @@ def _rows(mapper: Mapper[Any], table: str) -> Select[Any]:
     return statement.where(found) if found is not None else statement
 
 
+def marked_items(key: str, items: list[Any]) -> str | None:
+    if key in PERCENT_LISTS:
+        return ", ".join(f"{item}{PERCENT_SIGN}" for item in items)
+    ordinal = ORDINAL_LISTS.get(key)
+    return ", ".join(f"{ordinal} {item}" for item in items) if ordinal is not None else None
+
+
 SEASON_COLUMNS: dict[tuple[str, str], SeasonPosition] = {
     (position.table, position.column): position for position in SEASON_POSITIONS if position.dating is SeasonDating.POSITION
 }
@@ -403,6 +425,46 @@ class TypedIndex:
                 index.sections[node_id].append(index._section(table, columns, rows, single))
         return index
 
+    @classmethod
+    async def load_node(cls, session: AsyncSession, names: dict[int, str], node_id: int) -> "TypedIndex":
+        index = cls(names)
+        await index.load_seasons(session)
+        found: list[tuple[str, list[KeyedColumnElement[Any]], list[Any], bool]] = []
+        for mapper in sorted(Base.registry.mappers, key=table_name):
+            table = table_name(mapper)
+            owner = _owner(mapper) if table not in SKIPPED_TABLES and table not in KIND_TABLES else None
+            if owner is None:
+                continue
+            columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS and column.key != owner]
+            rows = list(await session.scalars(_rows(mapper, table).where(getattr(mapper.class_, owner) == node_id))) if columns else []
+            if rows:
+                found.append((table, columns, rows, shape_of_table(table) is not None))
+        await index.load_referenced(session, [(columns, rows) for _, columns, rows, _ in found])
+        index.sections[node_id] = [index._section(table, columns, rows, single) for table, columns, rows, single in found]
+        return index
+
+    async def load_referenced(self, session: AsyncSession, groups: list[tuple[list[KeyedColumnElement[Any]], list[Any]]]) -> None:
+        wanted: dict[str, set[int]] = defaultdict(set)
+        for columns, rows in groups:
+            for column in columns:
+                listed = REFERENCE_LISTS.get(column.key)
+                target = listed or next((foreign.column.table.name for foreign in column.foreign_keys), None)
+                if target is None or target in NAMED_TABLES:
+                    continue
+                for row in rows:
+                    value = attribute_of(row, column)
+                    items = value if listed is not None and isinstance(value, list) else [value]
+                    wanted[target].update(item for item in items if isinstance(item, int) and not isinstance(item, bool))
+        mappers = {table_name(mapper): mapper for mapper in Base.registry.mappers}
+        for target, ids in sorted(wanted.items()):
+            mapper = mappers.get(target)
+            label = (REFERENCE_LABELS.get(target) or _named_label(mapper)) if mapper is not None else None
+            if mapper is None or label is None or not ids:
+                continue
+            key = mapper.primary_key[0]
+            known = self.references.setdefault(target, {})
+            known.update({row.id: label(row, self.names) for row in await session.scalars(select(mapper.class_).where(key.in_(sorted(ids))))})
+
     async def load_records(self, session: AsyncSession, mapper: Mapper[Any]) -> None:
         self.add_records(mapper, list(await session.scalars(_rows(mapper, table_name(mapper)))))
 
@@ -475,8 +537,9 @@ class TypedIndex:
             return ", ".join(self.references.get(reference, {}).get(item) or f"{words(reference).lower()} {item}" for item in items)
         if column.key in ID_LISTS:
             return ", ".join(self.names.get(item, f"#{item}") for item in items)
-        if column.key in PERCENT_LISTS:
-            return ", ".join(f"{item}{PERCENT_SIGN}" for item in items)
+        marked = marked_items(column.key, items)
+        if marked is not None:
+            return marked
         pair = PAIRED_LISTS.get(column.key)
         if pair is not None and len(items) == len(pair):
             return ", ".join(f"{item} {label}" for item, label in zip(items, pair, strict=True))
