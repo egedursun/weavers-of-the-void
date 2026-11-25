@@ -11,6 +11,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.account_scope import detached
 from aerona.core.activity import ActivityLog, collecting
 from aerona.core.errors import BusyError, ConflictError
 from aerona.core.grammar import several
@@ -182,7 +183,7 @@ class BulkDeepening:
             self._tracked = await self._jobs.begin_external(
                 JobKind.DEEPEN, {JOB_LABEL_KEY: f"bulk deepening of {several(len(queue), 'record', 'records')}", "total": len(queue)}
             )
-        self._task = asyncio.create_task(self._run(queue))
+        self._task = detached(self._run(queue))
         return self.state
 
     def stop(self) -> BulkState:
@@ -227,7 +228,7 @@ class BulkDeepening:
                 unnamed = await unnamed_count(session)
             if unnamed and self._namer is not None:
                 self.log(LogLevel.INFO, f"{several(unnamed, 'unnamed record is', 'unnamed records are')} also being named.")
-                naming = asyncio.create_task(self._namer.name_pending())
+                naming = detached(self._namer.name_pending())
             seen = {(item.kind, item.id) for item in queue}
             await self._round(deque(queue))
             if naming is not None and not self.state.stop_requested:

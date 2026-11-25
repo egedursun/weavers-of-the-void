@@ -29,6 +29,7 @@ export function BeginAnewButton({
   return (
     <>
       <Button
+        act={close}
         variant='outline'
         size='sm'
         disabled={reason !== null}
@@ -39,6 +40,7 @@ export function BeginAnewButton({
         Begin anew
       </Button>
       <ConfirmDialog
+        act={close}
         open={open}
         onOpenChange={setOpen}
         title='Begin anew?'

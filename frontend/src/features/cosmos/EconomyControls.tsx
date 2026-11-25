@@ -140,6 +140,7 @@ export function ImmunityList({
 
 function useCureAddiction() {
   return useCosmicAction({
+    writes: [{ lever: 'addiction:cure' }],
     run: ({ entityId, resourceId }: Cure) =>
       unwrap(
         api.POST('/api/actions/addiction:cure', {
@@ -193,6 +194,7 @@ export function AddictionList({
                 </Badge>
               )}
               <CosmicActionButton
+                act={cure}
                 actionId='addiction:cure'
                 label='Cure'
                 icon={Pill}
@@ -264,9 +266,11 @@ export function EconomyControls() {
   const addictions = useAddictions()
   const immunities = useImmunities()
   const resources = useCosmicAction({
+    writes: [{ lever: 'economy:resources' }],
     run: () => unwrap(api.POST('/api/actions/economy:resources')),
   })
   const cosmic = useCosmicAction({
+    writes: [{ lever: 'economy:cosmic' }],
     run: () => unwrap(api.POST('/api/actions/economy:cosmic')),
   })
   return (
@@ -277,6 +281,7 @@ export function EconomyControls() {
       </Muted>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <CosmicActionButton
+          act={resources}
           actionId='economy:resources'
           label='Run the resource mechanics'
           icon={Pickaxe}
@@ -284,6 +289,7 @@ export function EconomyControls() {
           onRun={() => resources.mutate()}
         />
         <CosmicActionButton
+          act={cosmic}
           actionId='economy:cosmic'
           label='Run the cosmic economy'
           icon={Coins}

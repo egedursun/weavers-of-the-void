@@ -19,6 +19,7 @@ export function CreatorDepth({ creator }: { creator: CreatorRecord }) {
     paramEquals(job, 'kind', 'creator_deepen')
   )
   const deepen = useGodAction({
+    writes: [{ lever: 'creator:content' }],
     run: () => unwrap(api.POST('/api/creator/deepen')),
     success: 'Deepening the Creator',
   })
@@ -30,6 +31,7 @@ export function CreatorDepth({ creator }: { creator: CreatorRecord }) {
       level={3}
       actions={
         <ActionButton
+          act={deepen}
           label={creator.depth ? 'Deepen again' : 'Deepen'}
           icon={Layers}
           blocked={

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Sparkles, Star, StarOff } from 'lucide-react'
 import { entityTypeValues } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +29,7 @@ const COVER_WIDTH = 320
 
 function useToggleFavorite() {
   return useLoreMutation({
+    writes: [{ lever: 'record:favorite' }],
     run: ({ id, next }: { id: number; next: boolean }) => setFavorite(id, next),
     success: (_result, { next }) =>
       next ? 'Added to favourites' : 'Removed from favourites',
@@ -39,11 +41,13 @@ function Card({
   pinned,
   busy,
   onToggle,
+  act,
 }: {
   card: FavoriteCard
   pinned: boolean
   busy: boolean
   onToggle: () => void
+  act?: ActProp
 }) {
   const entity = card.entity
   const Icon = ENTITY_TYPE_ICON[entity.entity_type]
@@ -76,6 +80,7 @@ function Card({
         </span>
         <span className='absolute top-2 right-2'>
           <Button
+            act={act}
             size='icon-sm'
             variant={pinned ? 'default' : 'secondary'}
             aria-label={
@@ -120,6 +125,7 @@ function CardGrid({
       <Paged items={cards} as='li'>
         {(card) => (
           <Card
+            act={toggle}
             key={card.entity.id}
             card={card}
             pinned={pinned}
@@ -188,6 +194,7 @@ export function Bookmarks() {
         actions={
           <div className='w-full min-w-0 sm:w-72'>
             <RecordCombobox
+              act={toggle}
               options={options}
               value={picked}
               placeholder='Star any record'

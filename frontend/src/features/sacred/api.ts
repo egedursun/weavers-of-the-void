@@ -86,6 +86,7 @@ export function useSacredAction<Name extends SacredAction, T>(
   success?: string
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
   })

@@ -100,6 +100,7 @@ function QuestEditor({ expedition }: { expedition: GreatExpedition }) {
   )
   return (
     <RecordEditor
+      act={editing}
       title='Set the legendary quest'
       note='Values you set are held against the engine until you release them.'
       fields={QUEST_FIELDS}

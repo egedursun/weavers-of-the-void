@@ -20,6 +20,7 @@ export function useWillSignals() {
       ).length
   )
   return {
+    session: head?.session ?? null,
     ready: head !== null,
     running,
     awaiting,

@@ -1,12 +1,16 @@
 from collections.abc import AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any
 
-from sqlalchemy import case, delete, func, select
+from sqlalchemy import Select, case, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
+from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
+from aerona.core.account_scope import current_account
+from aerona.core.act_note import current_note
 from aerona.core.errors import BusyError, ConflictError, NotFoundError
 from aerona.db.ledger_capture import LedgerDraft
 from aerona.db.ledger_rows import Change, compacted, to_change
@@ -45,6 +49,25 @@ class EpochCount:
     epoch: int
     entries: int
     undone: int
+
+
+@dataclass(frozen=True)
+class LedgerFilters:
+    author_account_id: int | None = None
+    action_kind: ActionKind | None = None
+    since: datetime | None = None
+    until: datetime | None = None
+
+    def applied(self, statement: Select[LedgerEntryRow]) -> Select[LedgerEntryRow]:
+        if self.author_account_id is not None:
+            statement = statement.where(LedgerEntryRow.author_account_id == self.author_account_id)
+        if self.action_kind is not None:
+            statement = statement.where(LedgerEntryRow.action_kind == self.action_kind)
+        if self.since is not None:
+            statement = statement.where(LedgerEntryRow.created_at >= self.since)
+        if self.until is not None:
+            statement = statement.where(LedgerEntryRow.created_at <= self.until)
+        return statement
 
 
 @dataclass(frozen=True)
@@ -168,6 +191,7 @@ class Ledger:
         epoch: int | None = None,
         actor_kind: ActorKind | None = None,
         actor_node_id: int | None = None,
+        filters: LedgerFilters | None = None,
     ) -> LedgerView:
         cosmos = await CosmosRepository(session).require_cosmos()
         statement = select(LedgerEntryRow)
@@ -177,6 +201,8 @@ class Ledger:
             statement = statement.where(LedgerEntryRow.actor_kind == actor_kind)
         if actor_node_id is not None:
             statement = statement.where(LedgerEntryRow.actor_node_id == actor_node_id)
+        if filters is not None:
+            statement = filters.applied(statement)
         entries = list(await session.scalars(statement.order_by(LedgerEntryRow.id.desc()).limit(limit)))
         counts = await session.execute(
             select(LedgerEntryRow.epoch, func.count(), func.sum(case((LedgerEntryRow.undone.is_(True), 1), else_=0)))
@@ -209,6 +235,9 @@ class Ledger:
         cosmos = await CosmosRepository(session).require_cosmos()
         changes = await changes_of(session, entry.id)
         report = await undo_entry(session, entry.id, cosmos.epoch, label_names(changes, await node_names(session, changes)))
+        undoer = current_account()
+        entry.undone_by_account_id = undoer.id if undoer is not None else None
+        entry.undone_by_name = undoer.name[:AUTHOR_NAME_MAX_LENGTH] if undoer is not None else None
         if chronicle:
             creator = await CosmosRepository(session).require_creator()
             ctx = await manual_context(session, "ledger.undo", rules, key=f"undo.{entry.id}")
@@ -225,6 +254,9 @@ class Ledger:
                     actor_node_id=creator.id,
                     kind=ActionKind.LEDGER_UNDO,
                     summary=written.text[:LEDGER_SUMMARY_MAX_LENGTH],
+                    reason=current_note().reason,
+                    author_account_id=undoer.id if undoer is not None else None,
+                    author_name=undoer.name[:AUTHOR_NAME_MAX_LENGTH] if undoer is not None else None,
                 )
             )
             await session.flush()

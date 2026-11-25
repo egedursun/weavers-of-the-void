@@ -10,6 +10,7 @@ import {
   Undo2,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { DialogFooter } from '@/components/ui/dialog'
@@ -126,10 +127,12 @@ function PaintPanel({
   universeId,
   painting,
   onPaint,
+  act,
 }: {
   universeId: string
   painting: boolean
   onPaint: (prompt: string) => void
+  act?: ActProp
 }) {
   const offered = useCoverPrompt(universeId)
   const model = useUniverseImageModel(universeId)
@@ -179,6 +182,7 @@ function PaintPanel({
           Back to the seed
         </Button>
         <Button
+          act={act}
           type='button'
           disabled={blocked !== null || empty || painting}
           disabledReason={
@@ -343,6 +347,7 @@ export function CoverDialog({ universe, onClose }: ActDialogProps) {
         </TabsContent>
         <TabsContent value='paint'>
           <PaintPanel
+            act={paint}
             universeId={universe.id}
             painting={paint.isPending}
             onPaint={startPaint}
@@ -351,6 +356,7 @@ export function CoverDialog({ universe, onClose }: ActDialogProps) {
       </Tabs>
       <DialogFooter>
         <Button
+          act={clear}
           type='button'
           variant='ghost'
           className='text-destructive'
@@ -374,6 +380,7 @@ export function CoverDialog({ universe, onClose }: ActDialogProps) {
           Cancel
         </Button>
         <Button
+          act={[setCover, fromMedia]}
           type='button'
           disabled={!ready || working}
           disabledReason={

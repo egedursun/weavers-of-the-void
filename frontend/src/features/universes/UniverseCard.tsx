@@ -1,5 +1,6 @@
 import { type ReactNode, useId, useState } from 'react'
 import {
+  ArrowRightLeft,
   Archive,
   ArchiveRestore,
   BookOpen,
@@ -20,6 +21,7 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { type ActProp } from '@/api/mutation'
 import { formatCompact, formatInteger } from '@/lib/format'
 import { formatBytes } from '@/lib/units'
 import { cn } from '@/lib/utils'
@@ -63,6 +65,7 @@ function CardAction({
   reason = null,
   tone = 'default',
   pressed,
+  act,
 }: {
   icon: LucideIcon
   label: string
@@ -70,9 +73,11 @@ function CardAction({
   reason?: string | null
   tone?: 'default' | 'danger'
   pressed?: boolean
+  act?: ActProp
 }) {
   const button = (
     <Button
+      act={act}
       type='button'
       variant='ghost'
       size='icon-sm'
@@ -167,6 +172,7 @@ function InlineName({
           }}
         />
         <Button
+          act={edit}
           type='submit'
           size='icon-sm'
           aria-label='Save the name'
@@ -306,6 +312,7 @@ export function UniverseCard({
           <InlineName universe={universe} reason={shelved} />
         </div>
         <CardAction
+          act={edit}
           icon={Star}
           label={
             universe.pinned ? `Unpin ${universe.name}` : `Pin ${universe.name}`
@@ -421,8 +428,15 @@ export function UniverseCard({
             reason={shelved}
             onClick={() => onAct('export')}
           />
+          <CardAction
+            icon={ArrowRightLeft}
+            label='Move to another workspace'
+            reason={shelved}
+            onClick={() => onAct('move')}
+          />
           {universe.is_open && (
             <CardAction
+              act={close}
               icon={Power}
               label='Close it'
               reason={busy ?? (close.isPending ? 'It is being closed.' : null)}
@@ -430,6 +444,7 @@ export function UniverseCard({
             />
           )}
           <CardAction
+            act={archive}
             icon={archived ? ArchiveRestore : Archive}
             label={archived ? 'Restore to the shelf' : 'Archive'}
             reason={

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { type LucideIcon } from 'lucide-react'
 import { type ActionBody, type ActionName, postAction } from '@/api/actions'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import { Muted } from '@/components/typography'
 import { EntityPicker } from '@/features/cosmos/EntityPicker'
@@ -12,6 +13,7 @@ export function useLoreAction<Name extends ActionName, T>(
   body: (value: T) => ActionBody<Name>
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (value) => postAction(name, body(value)),
   })
 }
@@ -26,6 +28,7 @@ export function PickAndRun({
   note,
   onRun,
   variant = 'outline',
+  act,
 }: {
   types: readonly string[]
   placeholder: string
@@ -36,6 +39,7 @@ export function PickAndRun({
   note?: string
   onRun: (id: number) => void
   variant?: 'outline' | 'default' | 'destructive'
+  act?: ActProp
 }) {
   const [picked, setPicked] = useState<number | null>(null)
   const busy = busyOf(blocked, pending)
@@ -49,6 +53,7 @@ export function PickAndRun({
         placeholder={placeholder}
       />
       <Button
+        act={act}
         size='sm'
         variant={variant}
         className='self-start'

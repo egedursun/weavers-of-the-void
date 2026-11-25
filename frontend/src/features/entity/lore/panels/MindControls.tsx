@@ -70,6 +70,7 @@ export function ProphecyControls({
           placeholder='Whom it touches…'
         />
         <Button
+          act={edit}
           size='sm'
           className='self-start'
           disabled={busy !== null}
@@ -139,6 +140,7 @@ export function IdeologyControls({
             const held = card.custom_tenets.includes(kind.id)
             return (
               <Button
+                act={tenet}
                 key={kind.id}
                 size='sm'
                 variant={held ? 'default' : 'outline'}
@@ -156,6 +158,7 @@ export function IdeologyControls({
       </AdjustBlock>
       <AdjustBlock title='Suppress it' icon={Gavel}>
         <PickAndRun
+          act={suppress}
           types={AUTHORITIES}
           placeholder='Choose who hunts it down…'
           label='Suppress the creed'

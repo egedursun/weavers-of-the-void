@@ -214,17 +214,19 @@ describe('the query cache', () => {
 describe('universe storage', () => {
   it('keeps the data of each universe under its own key', async () => {
     chooseUniverse(FIRST_ID)
-    expect(universeKey('aerona.bookmarks')).toBe(`aerona.bookmarks@${FIRST_ID}`)
-    useOnboarding.getState().mark('map')
-    expect(localStorage.getItem(`aerona.onboarding@${FIRST_ID}`)).toContain(
-      'map'
+    expect(universeKey('aerona.bookmarks')).toBe(
+      `aerona.bookmarks@${FIRST_ID}~nobody`
     )
+    useOnboarding.getState().mark('map')
+    expect(
+      localStorage.getItem(`aerona.onboarding@${FIRST_ID}~nobody`)
+    ).toContain('map')
     chooseUniverse(SECOND_ID)
     await expect.poll(() => useOnboarding.getState().done).toEqual([])
     chooseUniverse(FIRST_ID)
     await expect.poll(() => useOnboarding.getState().done).toEqual(['map'])
-    localStorage.removeItem(`aerona.onboarding@${FIRST_ID}`)
-    localStorage.removeItem(`aerona.onboarding@${SECOND_ID}`)
+    localStorage.removeItem(`aerona.onboarding@${FIRST_ID}~nobody`)
+    localStorage.removeItem(`aerona.onboarding@${SECOND_ID}~nobody`)
   })
 
   it('moves the data of the old single universe into the adopted one', () => {
@@ -232,16 +234,16 @@ describe('universe storage', () => {
     localStorage.setItem('aerona.map.layer', '"terrain"')
     localStorage.setItem('aerona.probe-preference', 'dark')
     adoptLegacyStorage(FIRST_ID)
-    expect(localStorage.getItem(`aerona.bookmarks@${FIRST_ID}`)).toBe(
+    expect(localStorage.getItem(`aerona.bookmarks@${FIRST_ID}~nobody`)).toBe(
       '["son:1"]'
     )
-    expect(localStorage.getItem(`aerona.map.layer@${FIRST_ID}`)).toBe(
+    expect(localStorage.getItem(`aerona.map.layer@${FIRST_ID}~nobody`)).toBe(
       '"terrain"'
     )
     expect(localStorage.getItem('aerona.bookmarks')).toBeNull()
     expect(localStorage.getItem('aerona.probe-preference')).toBe('dark')
-    localStorage.removeItem(`aerona.bookmarks@${FIRST_ID}`)
-    localStorage.removeItem(`aerona.map.layer@${FIRST_ID}`)
+    localStorage.removeItem(`aerona.bookmarks@${FIRST_ID}~nobody`)
+    localStorage.removeItem(`aerona.map.layer@${FIRST_ID}~nobody`)
     localStorage.removeItem('aerona.probe-preference')
   })
 })

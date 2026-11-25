@@ -19,6 +19,7 @@ from aerona.db.tables.divine_will import DivineWillAttachmentRow, DivineWillConf
 from aerona.domain.enums.divine_will import ConfirmationReason, ConfirmationStatus, CycleEventKind, CycleNotice, CycleStatus, DivineWillMode
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.node import ActorKind
+from aerona.events.audience import addressed_to, private_audience
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JOB_LABEL_KEY, JobContext
 from aerona.jobs.manager import JobManager
@@ -119,8 +120,13 @@ class DivineWillRuntime:
     def model(self) -> LanguageModel:
         return self.services.application.model
 
-    def publish(self, kind: EventKind, payload: dict[str, Any]) -> None:
-        self.services.bus.publish(kind, payload)
+    def publish(self, kind: EventKind, payload: dict[str, Any], audience: int | None = None) -> None:
+        self.services.bus.publish(kind, payload, audience=audience)
+
+    async def audience_of(self, session_id: int) -> int | None:
+        async with self.services.database.read() as session:
+            holder = await session.get(DivineWillSessionRow, session_id)
+        return private_audience(holder.author_account_id, holder.shared) if holder is not None else None
 
     def trace(self, cycle_id: int) -> CycleTrace:
         return CycleTrace(self.services.database, cycle_id)
@@ -166,7 +172,9 @@ class DivineWillRuntime:
                 payload={"text": said, "mode": mode.value, "attachment_ids": [row.id for row in files]},
             )
         for row in settled:
-            self.publish(EventKind.DIVINE_WILL_CYCLE_FINISHED, {**cycle_payload(row), "error": row.error})
+            self.publish(
+                EventKind.DIVINE_WILL_CYCLE_FINISHED, {**cycle_payload(row), "error": row.error}, private_audience(holder.author_account_id, holder.shared)
+            )
         await self.launch(cycle)
         return cycle
 
@@ -176,12 +184,16 @@ class DivineWillRuntime:
         async def handler(context: JobContext) -> dict[str, Any]:
             return await self.drive(cycle_id)
 
-        try:
-            await self.services.jobs.submit(JobKind.DIVINE_WILL, handler, {CYCLE_KEY: cycle_id, JOB_LABEL_KEY: LABEL}, exclusive_group=DIVINE_WILL_GROUP)
-        except BusyError:
-            await self.finish(cycle_id, CycleStatus.FAILED, error=BUSY_TEXT)
-            raise
-        self.publish(EventKind.DIVINE_WILL_CYCLE_STARTED, cycle_payload(cycle))
+        audience = await self.audience_of(cycle.session_id)
+        with addressed_to(audience):
+            try:
+                await self.services.jobs.submit(
+                    JobKind.DIVINE_WILL, handler, {CYCLE_KEY: cycle_id, JOB_LABEL_KEY: LABEL}, exclusive_group=DIVINE_WILL_GROUP, as_person=True
+                )
+            except BusyError:
+                await self.finish(cycle_id, CycleStatus.FAILED, error=BUSY_TEXT)
+                raise
+            self.publish(EventKind.DIVINE_WILL_CYCLE_STARTED, cycle_payload(cycle))
 
     async def drive(self, cycle_id: int) -> dict[str, Any]:
         try:
@@ -379,7 +391,8 @@ class DivineWillRuntime:
             if status is not CycleStatus.AWAITING_CONFIRMATION:
                 cycle.finished_at = now()
             payload = finished_payload(cycle)
-        self.publish(EventKind.DIVINE_WILL_CYCLE_FINISHED, payload)
+            session_id = cycle.session_id
+        self.publish(EventKind.DIVINE_WILL_CYCLE_FINISHED, payload, await self.audience_of(session_id))
         return status
 
     async def cancel(self, cycle_id: int) -> DivineWillCycleRow:
@@ -391,11 +404,12 @@ class DivineWillRuntime:
                 raise ConflictError(NOT_RUNNING)
             await end_cycle(session, cycle, CycleStatus.CANCELLED)
             payload = finished_payload(cycle)
+            session_id = cycle.session_id
         if self.running_cycle_id() == cycle_id:
             job_id = self.services.jobs.busy_group(DIVINE_WILL_GROUP)
             if job_id is not None:
                 await self.services.jobs.cancel(job_id)
-        self.publish(EventKind.DIVINE_WILL_CYCLE_FINISHED, payload)
+        self.publish(EventKind.DIVINE_WILL_CYCLE_FINISHED, payload, await self.audience_of(session_id))
         return cycle
 
     async def decide(self, confirmation_id: int, decision: str) -> DivineWillConfirmationRow:
@@ -453,11 +467,12 @@ class DivineWillRuntime:
             cosmos = await CosmosRepository(session).get()
             epoch = cosmos.epoch if cosmos is not None else 0
             current = await active_session(session)
+            audience = private_audience(current.author_account_id, current.shared) if current is not None else None
             if current is not None:
                 closed = await close_session(session, current, epoch)
             fresh = DivineWillSessionRow(opened_epoch=epoch)
             session.add(fresh)
             await session.flush()
         for cycle in closed:
-            self.publish(EventKind.DIVINE_WILL_CYCLE_FINISHED, {**cycle_payload(cycle), "error": cycle.error})
+            self.publish(EventKind.DIVINE_WILL_CYCLE_FINISHED, {**cycle_payload(cycle), "error": cycle.error}, audience)
         return fresh

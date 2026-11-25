@@ -8,7 +8,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
+from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
+from aerona.core.account_scope import current_account
+from aerona.core.act_note import current_note
 from aerona.core.errors import ValidationFailedError
+from aerona.db.authorship import hand_of
 from aerona.db.ledger_capture import LedgerDraft
 from aerona.db.record_context import acting
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -21,9 +25,11 @@ from aerona.engine.context import Publisher, TickContext
 from aerona.engine.primitives.manual import manual_context, silent
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
+from aerona.services.accounts.guard import ensure_lever_allowed
 from aerona.services.ledger import compact_entry, summarize_inputs
 from aerona.services.player.journal import RowJournal
 from aerona.services.player.ports import ActionLedger
+from aerona.services.team.revisions import latest_revision, refuse_conflicts
 
 
 class Command(BaseModel):
@@ -89,10 +95,14 @@ def refusal(error: IntegrityError) -> str:
 
 
 async def perform(scope: PlayerScope, action: str, kind: ActionKind, command: BaseModel, body: Callable[[], Awaitable[Effect]]) -> ActionOutcome:
+    ensure_lever_allowed(action, command)
     session = scope.session
     try:
         async with session.begin_nested(), scope.ledger.capture(session) as capture:
             marker = await _last_action_id(session)
+            revision = await latest_revision(session)
+            note = current_note()
+            hand = hand_of(ActorKind.CREATOR)
             acting_creator = await scope.creator()
             essence_before = acting_creator.essence
             with chosen_bonds(), acting(ActorKind.CREATOR, acting_creator.id, await scope.epoch(), key=f"actor.{action}"):
@@ -113,6 +123,9 @@ async def perform(scope: PlayerScope, action: str, kind: ActionKind, command: Ba
                         target_node_id=effect.target_node_id,
                         essence_spent=spent,
                         summary=effect.message[:LEDGER_SUMMARY_MAX_LENGTH] or None,
+                        reason=note.reason,
+                        author_account_id=hand.id if hand is not None else None,
+                        author_name=hand.name[:AUTHOR_NAME_MAX_LENGTH] if hand is not None else None,
                     )
                 )
                 await session.flush()
@@ -124,7 +137,10 @@ async def perform(scope: PlayerScope, action: str, kind: ActionKind, command: Ba
                 tool=effect.tool or action,
                 action_kind=recorded_kind,
                 input_summary=summarize_inputs(command.model_dump(mode="json")) or effect.message[:LEDGER_SUMMARY_MAX_LENGTH],
+                reason=note.reason,
             )
+            await session.flush()
+            await refuse_conflicts(session, note.expected_revision, revision, current_account())
             entry_id = await capture.seal(draft)
             if entry_id is not None:
                 await compact_entry(session, entry_id)

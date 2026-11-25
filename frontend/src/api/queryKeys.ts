@@ -1,5 +1,11 @@
 export const queryKeys = {
   health: ['health'] as const,
+  team: {
+    all: ['team'] as const,
+    view: ['team', 'view'] as const,
+    queue: (status: string) => ['team', 'queue', status] as const,
+    proposals: (status: string) => ['team', 'proposals', status] as const,
+  },
   jobs: {
     all: ['jobs'] as const,
     list: (limit: number) => ['jobs', 'list', limit] as const,

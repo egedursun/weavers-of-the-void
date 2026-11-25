@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lock, Minus, Moon, Plus, Send, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -119,11 +120,13 @@ function ThoughtRow({
   blocked,
   onNudge,
   onRemove,
+  act,
 }: {
   item: FeelingThought
   blocked: string | null
   onNudge: (intensity: number) => void
   onRemove: () => void
+  act?: ActProp
 }) {
   const spec = named(EMOTION_ICONS, item.emotion)
   return (
@@ -160,6 +163,7 @@ function ThoughtRow({
       </div>
       <div className='flex min-w-0 flex-wrap items-center justify-end gap-1'>
         <Button
+          act={act}
           size='icon-sm'
           variant='ghost'
           aria-label={`Soften ${item.label}`}
@@ -170,6 +174,7 @@ function ThoughtRow({
           <Minus />
         </Button>
         <Button
+          act={act}
           size='icon-sm'
           variant='ghost'
           aria-label={`Sharpen ${item.label}`}
@@ -180,6 +185,7 @@ function ThoughtRow({
           <Plus />
         </Button>
         <Button
+          act={act}
           size='icon-sm'
           variant='ghost'
           aria-label={`Take away ${item.label}`}
@@ -202,6 +208,7 @@ function Thoughts({
   blocked: string | null
 }) {
   const nudge = useGodAction({
+    writes: [{ lever: 'thought:edit' }],
     run: ({ id, intensity }: { id: number; intensity: number }) =>
       unwrap(
         api.POST('/api/actions/thought:edit', {
@@ -210,6 +217,7 @@ function Thoughts({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'thought:remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/thought:remove', { body: { thought_id: id } })
@@ -255,6 +263,7 @@ function Thoughts({
           >
             {(item) => (
               <ThoughtRow
+                act={[nudge, remove]}
                 key={item.id}
                 item={item}
                 blocked={busy}
@@ -304,11 +313,13 @@ function GriefCard({
   blocked,
   onStage,
   onRemove,
+  act,
 }: {
   item: FeelingGrief
   blocked: string | null
   onStage: (stage: GriefStage) => void
   onRemove: () => void
+  act?: ActProp
 }) {
   const stage = named(GRIEF_STAGES, item.stage)
   return (
@@ -336,6 +347,7 @@ function GriefCard({
       <div className='flex min-w-0 items-end gap-2'>
         <div className='min-w-0 flex-1'>
           <MindPicker
+            act={act}
             label='Stage'
             value={item.stage}
             table={Object.fromEntries(
@@ -349,6 +361,7 @@ function GriefCard({
           />
         </div>
         <Button
+          act={act}
           size='icon-sm'
           variant='ghost'
           aria-label='Lift this grief'
@@ -365,6 +378,7 @@ function GriefCard({
 
 function Griefs({ view, blocked }: { view: Feelings; blocked: string | null }) {
   const stage = useGodAction({
+    writes: [{ lever: 'grief:edit' }],
     run: ({ id, next }: { id: number; next: GriefStage }) =>
       unwrap(
         api.POST('/api/actions/grief:edit', {
@@ -373,6 +387,7 @@ function Griefs({ view, blocked }: { view: Feelings; blocked: string | null }) {
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'grief:remove' }],
     run: (id: number) =>
       unwrap(api.POST('/api/actions/grief:remove', { body: { grief_id: id } })),
   })
@@ -394,6 +409,7 @@ function Griefs({ view, blocked }: { view: Feelings; blocked: string | null }) {
         <Paged items={view.griefs} initial={3} noun={['grief', 'griefs']}>
           {(item) => (
             <GriefCard
+              act={[stage, remove]}
               key={item.id}
               item={item}
               blocked={busy}
@@ -413,12 +429,14 @@ function DreamCard({
   blocked,
   onRead,
   onRemove,
+  act,
 }: {
   item: FeelingDream
   readings: Record<string, string>
   blocked: string | null
   onRead: (reading: DreamReading) => void
   onRemove: () => void
+  act?: ActProp
 }) {
   const kind = named(DREAM_KINDS, item.kind)
   return (
@@ -454,6 +472,7 @@ function DreamCard({
       <div className='flex min-w-0 items-end gap-2'>
         <div className='min-w-0 flex-1'>
           <MindPicker
+            act={act}
             label={
               item.reader
                 ? `Read by ${item.reader.name}${item.reading_true === null ? '' : item.reading_true ? ', truly' : ', wrongly'}`
@@ -466,6 +485,7 @@ function DreamCard({
           />
         </div>
         <Button
+          act={act}
           size='icon-sm'
           variant='ghost'
           aria-label={`Forget ${item.label}`}
@@ -482,6 +502,7 @@ function DreamCard({
 
 function Dreams({ view, blocked }: { view: Feelings; blocked: string | null }) {
   const read = useGodAction({
+    writes: [{ lever: 'dream:edit' }],
     run: ({ id, reading }: { id: number; reading: DreamReading }) =>
       unwrap(
         api.POST('/api/actions/dream:edit', {
@@ -490,6 +511,7 @@ function Dreams({ view, blocked }: { view: Feelings; blocked: string | null }) {
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'dream:remove' }],
     run: (id: number) =>
       unwrap(api.POST('/api/actions/dream:remove', { body: { dream_id: id } })),
   })
@@ -516,6 +538,7 @@ function Dreams({ view, blocked }: { view: Feelings; blocked: string | null }) {
           <Paged items={view.dreams} initial={4} noun={['dream', 'dreams']}>
             {(item) => (
               <DreamCard
+                act={[read, remove]}
                 key={item.id}
                 item={item}
                 readings={readings}
@@ -540,6 +563,7 @@ function FeelingControls({ view }: { view: Feelings }) {
   const [lost, setLost] = useState<string | null>(null)
   const names = useNames()
   const lock = useGodAction({
+    writes: [{ lever: 'mind:lock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/mind:lock', {
@@ -548,6 +572,7 @@ function FeelingControls({ view }: { view: Feelings }) {
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'mind:unlock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/mind:unlock', {
@@ -556,6 +581,7 @@ function FeelingControls({ view }: { view: Feelings }) {
       ),
   })
   const send = useGodAction({
+    writes: [{ lever: 'thought:send' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/thought:send', {
@@ -569,6 +595,7 @@ function FeelingControls({ view }: { view: Feelings }) {
       ),
   })
   const dream = useGodAction({
+    writes: [{ lever: 'dream:send' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/dream:send', {
@@ -582,6 +609,7 @@ function FeelingControls({ view }: { view: Feelings }) {
       ),
   })
   const mourn = useGodAction({
+    writes: [{ lever: 'grief:start' }],
     run: (deceased: number) =>
       unwrap(
         api.POST('/api/actions/grief:start', {
@@ -640,6 +668,7 @@ function FeelingControls({ view }: { view: Feelings }) {
         {(field) =>
           held.has(field) ? (
             <Button
+              act={release}
               key={field}
               size='sm'
               variant='outline'
@@ -652,6 +681,7 @@ function FeelingControls({ view }: { view: Feelings }) {
             </Button>
           ) : (
             <Button
+              act={lock}
               key={field}
               size='sm'
               variant='ghost'
@@ -683,6 +713,7 @@ function FeelingControls({ view }: { view: Feelings }) {
             onPick={setEmotion}
           />
           <Button
+            act={send}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -701,6 +732,7 @@ function FeelingControls({ view }: { view: Feelings }) {
             onPick={setDreamKind}
           />
           <Button
+            act={dream}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -723,6 +755,7 @@ function FeelingControls({ view }: { view: Feelings }) {
             />
           </FieldTile>
           <Button
+            act={mourn}
             size='sm'
             disabled={busy !== null || lost === null}
             disabledReason={busy ?? 'Choose who they mourn first.'}

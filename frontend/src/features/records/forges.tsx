@@ -16,6 +16,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog, RangeField, FieldTile } from '@/components/domain'
@@ -101,6 +102,7 @@ export function HoldBar({
   blocked: string | null
 }) {
   const hold = useGodAction<{ part: string; held: boolean }>({
+    writes: [{ lever: 'incident:hold' }],
     run: ({ part, held }) =>
       unwrap(
         api.POST('/api/actions/incident:hold', {
@@ -117,6 +119,7 @@ export function HoldBar({
         const held = account.locked.includes(part)
         return (
           <StepButton
+            act={hold}
             key={part}
             icon={held ? Lock : LockOpen}
             label={`${held ? 'Held' : 'Hold'}: ${spec.label.toLowerCase()}`}
@@ -144,6 +147,7 @@ export function FactForge({
   const [nodeId, setNodeId] = useState<number | null>(null)
   const [name, setName] = useState('')
   const add = useGodAction({
+    writes: [{ lever: 'incident_fact:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_fact:create', {
@@ -180,6 +184,7 @@ export function FactForge({
       columns={3}
       action={
         <StepButton
+          act={add}
           icon={Plus}
           label='Set it down'
           variant='default'
@@ -279,6 +284,7 @@ export function StepForge({
     ),
   }
   const add = useGodAction({
+    writes: [{ lever: 'incident_step:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_step:create', {
@@ -324,6 +330,7 @@ export function StepForge({
       columns={3}
       action={
         <StepButton
+          act={add}
           icon={Plus}
           label='Add the step'
           variant='default'
@@ -484,6 +491,7 @@ export function WitnessForge({
   const [fidelity, setFidelity] = useState(FULL)
   const [teller, setTeller] = useState('witness')
   const add = useGodAction({
+    writes: [{ lever: 'incident_witness:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_witness:create', {
@@ -510,6 +518,7 @@ export function WitnessForge({
       columns={2}
       action={
         <StepButton
+          act={add}
           icon={Plus}
           label='Name them'
           variant='default'
@@ -564,23 +573,27 @@ export function StruckButton({
   description,
   busy,
   onConfirm,
+  act,
 }: {
   label: string
   title: string
   description: string
   busy: string | null
   onConfirm: () => void
+  act?: ActProp
 }) {
   const [open, setOpen] = useState(false)
   return (
     <>
       <StepButton
+        act={act}
         icon={Trash2}
         label={label}
         busy={busy}
         onClick={() => setOpen(true)}
       />
       <ConfirmDialog
+        act={act}
         open={open}
         onOpenChange={setOpen}
         title={title}
@@ -605,6 +618,7 @@ export function ChangeControls({
 }) {
   const [confirming, setConfirming] = useState(false)
   const revert = useGodAction({
+    writes: [{ lever: 'state_change:revert' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/state_change:revert', {
@@ -614,6 +628,7 @@ export function ChangeControls({
     success: 'The value is set back; the reversal is kept in history',
   })
   const erase = useGodAction({
+    writes: [{ lever: 'state_change:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/state_change:delete', {
@@ -630,12 +645,14 @@ export function ChangeControls({
   return (
     <div className='flex min-w-0 flex-wrap gap-2'>
       <StepButton
+        act={revert}
         icon={Undo2}
         label='Set it back'
         busy={busy}
         onClick={() => setConfirming(true)}
       />
       <ConfirmDialog
+        act={revert}
         open={confirming}
         onOpenChange={setConfirming}
         title='Set this value back?'
@@ -647,6 +664,7 @@ export function ChangeControls({
         }}
       />
       <StruckButton
+        act={erase}
         label='Erase'
         title='Erase this change from history?'
         description='The record of this change is removed. The value itself stays as it is now.'
@@ -678,6 +696,7 @@ export function FactEditor({
           ? 'enum'
           : 'name'
   const edit = useGodAction({
+    writes: [{ lever: 'incident_fact:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_fact:edit', {
@@ -752,6 +771,7 @@ export function FactEditor({
         </FieldTile>
       ) : null}
       <StepButton
+        act={edit}
         icon={Check}
         label='Keep it'
         variant='default'
@@ -785,6 +805,7 @@ export function StepEditor({
     step.amount === null ? '' : String(step.amount)
   )
   const edit = useGodAction({
+    writes: [{ lever: 'incident_step:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_step:edit', {
@@ -871,6 +892,7 @@ export function StepEditor({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={edit}
           icon={Check}
           label='Keep it'
           variant='default'
@@ -903,6 +925,7 @@ export function WitnessEditor({
   const [fidelity, setFidelity] = useState(witness.fidelity ?? FULL)
   const teller = witness.role === 'teller'
   const edit = useGodAction({
+    writes: [{ lever: 'incident_witness:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_witness:edit', {
@@ -919,6 +942,7 @@ export function WitnessEditor({
     onDone: () => setOpen(false),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'incident_witness:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_witness:delete', {
@@ -957,6 +981,7 @@ export function WitnessEditor({
           />
           <div className='flex min-w-0 flex-wrap gap-2'>
             <StepButton
+              act={edit}
               icon={Check}
               label='Keep it'
               variant='default'
@@ -975,12 +1000,14 @@ export function WitnessEditor({
       ) : (
         <div className='flex min-w-0 flex-wrap gap-2'>
           <StepButton
+            act={edit}
             icon={PenLine}
             label='Rewrite'
             busy={reason}
             onClick={() => setOpen(true)}
           />
           <StruckButton
+            act={strike}
             label='Strike'
             title={teller ? 'Strike this teller?' : 'Strike this witness?'}
             description='They no longer appear as knowing of this happening.'
@@ -1024,6 +1051,7 @@ export function IncidentEditor({
     account.destination_id
   )
   const edit = useGodAction({
+    writes: [{ lever: 'incident:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident:edit', {
@@ -1053,6 +1081,7 @@ export function IncidentEditor({
     onDone: () => setOpen(false),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'incident:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident:delete', {
@@ -1085,6 +1114,7 @@ export function IncidentEditor({
           onClick={() => setOpen(true)}
         />
         <StruckButton
+          act={strike}
           label='Strike it from history'
           title='Strike this happening from history?'
           description='It is removed from the record; what it caused now follows from its own cause. This cannot be undone here.'
@@ -1114,6 +1144,7 @@ export function IncidentEditor({
             onClick={() => setOpen(false)}
           />
           <StepButton
+            act={edit}
             icon={Check}
             label='Keep it'
             variant='default'

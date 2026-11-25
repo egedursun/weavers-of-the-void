@@ -6,6 +6,7 @@ from io import BytesIO
 from PIL import Image
 
 from aerona.constants.media import THUMBNAIL_CONTENT_TYPE, THUMBNAIL_FORMAT, THUMBNAIL_QUALITY, THUMBNAIL_WIDTHS, UNRESIZED_EXTENSIONS
+from aerona.core.account_scope import detached
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.media.errors import MediaStoreError
 from aerona.media.keys import extension_of, thumbnail_key
@@ -74,7 +75,7 @@ class Thumbnailer:
             return thumbnail
         task = self._pending.get(key)
         if task is None:
-            task = asyncio.create_task(self._render(image.object_key, key, width))
+            task = detached(self._render(image.object_key, key, width))
             self._pending[key] = task
             task.add_done_callback(lambda _done: self._pending.pop(key, None))
         try:

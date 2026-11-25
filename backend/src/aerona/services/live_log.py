@@ -5,6 +5,7 @@ from collections.abc import Callable
 from sqlalchemy import select
 
 from aerona.constants.limits import LIVE_LOG_PRUNE_EVERY
+from aerona.core.account_scope import detached
 from aerona.db.session import Database
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.events.bus import Event, EventBus
@@ -51,12 +52,12 @@ class LiveLog:
         self._key = None
 
     def enqueue(self, event: Event) -> None:
-        if event.kind in UNSTORED_KINDS:
+        if event.kind in UNSTORED_KINDS or event.audience is not None:
             return
         self._pending.append((event, self._key))
         if self._task is None or self._task.done():
             try:
-                self._task = asyncio.get_running_loop().create_task(self.flush())
+                self._task = detached(self.flush())
             except RuntimeError:
                 self._pending.clear()
 

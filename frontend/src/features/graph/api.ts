@@ -1,9 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { fetchJobs } from '@/api/system'
+import { type WriteTarget } from '@/features/team/writeGate'
 
 export type GraphNodeRecord = components['schemas']['GraphNode']
 export type GraphLinkRecord = components['schemas']['GraphLink']
@@ -102,10 +104,12 @@ export function usePath(first: number | null, second: number | null) {
 }
 
 function useGraphMutation<TInput, TOutput>(
+  writes: readonly WriteTarget[],
   run: (input: TInput) => Promise<TOutput>
 ) {
   const client = useQueryClient()
   return useMutation({
+    writes,
     mutationFn: run,
     onSettled: () => {
       void client.invalidateQueries({ queryKey: graphKeys.all })
@@ -115,17 +119,24 @@ function useGraphMutation<TInput, TOutput>(
 }
 
 export function useRepairNetwork() {
-  return useGraphMutation(() => unwrap(api.POST('/api/graph/repair')))
+  return useGraphMutation([{ method: 'POST', path: '/api/graph/repair' }], () =>
+    unwrap(api.POST('/api/graph/repair'))
+  )
 }
 
 export function useFateLink() {
-  return useGraphMutation((request: FateLinkRequest) =>
-    unwrap(api.POST('/api/graph/fate-link', { body: request }))
+  return useGraphMutation(
+    [{ method: 'POST', path: '/api/graph/fate-link' }],
+    (request: FateLinkRequest) =>
+      unwrap(api.POST('/api/graph/fate-link', { body: request }))
   )
 }
 
 export function useStopFateLink() {
-  return useGraphMutation(() => unwrap(api.POST('/api/graph/fate-link/stop')))
+  return useGraphMutation(
+    [{ method: 'POST', path: '/api/graph/fate-link/stop' }],
+    () => unwrap(api.POST('/api/graph/fate-link/stop'))
+  )
 }
 
 export function isFateLinkJob(job: components['schemas']['JobResponse']) {

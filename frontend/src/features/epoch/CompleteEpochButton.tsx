@@ -81,6 +81,7 @@ export function CompleteEpochButton({
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
+          act={complete}
           size={size}
           aria-description={lines.join(' ')}
           onClick={() =>

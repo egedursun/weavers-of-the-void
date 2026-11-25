@@ -149,6 +149,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
                           <Chip icon={Crown}>Primary</Chip>
                         ) : (
                           <Button
+                            act={move}
                             size='sm'
                             variant='ghost'
                             disabled={busy !== null}
@@ -170,6 +171,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
                   )}
                 </PagedList>
                 <RecordEditor
+                  act={edit}
                   title='Name and spacing'
                   note='How far apart its stars stand sets how much light a world near one of them takes from the other.'
                   fields={[
@@ -232,6 +234,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
               meta={<Chip icon={Orbit}>{plural(members.size, 'star')}</Chip>}
               action={
                 <Button
+                  act={move}
                   size='sm'
                   disabled={busy !== null || missing !== null}
                   disabledReason={busy ?? missing ?? undefined}
@@ -273,6 +276,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
             </ForgeCard>
             <div className='flex min-w-0 flex-wrap gap-2'>
               <Button
+                act={create}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -283,6 +287,7 @@ export function StarSystemSection({ starId }: { starId: number }) {
                 Give it a system of its own
               </Button>
               <Button
+                act={breakUp}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null || system === null}

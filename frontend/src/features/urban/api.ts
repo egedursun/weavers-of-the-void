@@ -80,6 +80,7 @@ export function useUrbanAction<Name extends UrbanAction, T>(
   success?: string
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
   })

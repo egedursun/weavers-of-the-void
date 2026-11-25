@@ -145,6 +145,7 @@ export function BondsPanel({
         columns={2}
         action={
           <Button
+            act={binding}
             size='sm'
             disabled={bindBusy !== null}
             disabledReason={bindBusy ?? undefined}

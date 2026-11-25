@@ -158,6 +158,7 @@ export function CosmicFeaturesPanel({
               }
               aside={
                 <Button
+                  act={remove}
                   size='sm'
                   variant='ghost'
                   aria-label='Unmake it'
@@ -197,6 +198,7 @@ export function CosmicFeaturesPanel({
                 <Muted variant='caption'>{row.description}</Muted>
               )}
               <RecordEditor
+                act={edit}
                 title='Its nature'
                 note={FEATURE_KINDS[row.kind].hint}
                 fields={[
@@ -331,6 +333,7 @@ export function CosmicFeaturesPanel({
         }
         action={
           <Button
+            act={create}
             size='sm'
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}

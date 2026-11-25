@@ -70,6 +70,7 @@ from aerona.services.books.deeds import DeedsChapter, deeds_chapter
 from aerona.services.books.deepsvg import DeepStratum, world_below
 from aerona.services.books.divine_will import DivineWillRecord, DivineWillWritings, divine_will_record, divine_will_writings
 from aerona.services.books.familysvg import FamilyPlan, family_plan
+from aerona.services.books.hands import TeamRecord, team_record
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.kinds import add_kind_sections
@@ -425,6 +426,7 @@ class BookModel:
     ledger_changes: dict[int, list[LedgerChange]] = field(default_factory=dict)
     creation: list[Labelled] = field(default_factory=list)
     divine_will: DivineWillRecord = field(default_factory=DivineWillRecord)
+    team: TeamRecord = field(default_factory=TeamRecord)
     writings: DivineWillWritings = field(default_factory=DivineWillWritings)
 
 
@@ -1217,6 +1219,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         ledger_changes=builder.typed.ledger_changes(await session.scalars(select(LedgerChangeRow).order_by(LedgerChangeRow.entry_id, LedgerChangeRow.id))),
         creation=creation_facts(cosmos),
         divine_will=await divine_will_record(session, builder.names),
+        team=await team_record(session),
         writings=await divine_will_writings(session, builder.names),
     )
 

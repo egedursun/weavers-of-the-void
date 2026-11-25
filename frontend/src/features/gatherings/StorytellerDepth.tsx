@@ -65,6 +65,7 @@ function RegionRow({ row, blocked }: { row: Region; blocked: string | null }) {
       caption={`measured in epoch ${row.updated_epoch}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the region’s tension'
         note={HOLD}
         fields={TENSION_FIELDS}
@@ -74,6 +75,7 @@ function RegionRow({ row, blocked }: { row: Region; blocked: string | null }) {
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Measure afresh'
         busy={why(blocked, removing.isPending)}
@@ -116,6 +118,7 @@ function PartRow({
       caption={`measured in epoch ${row.updated_epoch}`}
     >
       <RecordEditor
+        act={editing}
         title='Set this part’s tension'
         note={HOLD}
         fields={TENSION_FIELDS}
@@ -125,6 +128,7 @@ function PartRow({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Measure afresh'
         busy={why(blocked, removing.isPending)}
@@ -162,6 +166,7 @@ function TargetPoints({
       columns={2}
       action={
         <StepButton
+          act={saving}
           icon={CirclePlus}
           label='Add the point'
           variant='default'
@@ -195,6 +200,7 @@ function TargetPoints({
         )}
       </div>
       <StepButton
+        act={saving}
         icon={Trash2}
         label='Clear the points'
         busy={why(
@@ -229,6 +235,7 @@ function RegionForge({ blocked }: { blocked: string | null }) {
       columns={2}
       action={
         <StepButton
+          act={setting}
           icon={Flame}
           label='Set it'
           busy={why(blocked ?? missing, setting.isPending)}

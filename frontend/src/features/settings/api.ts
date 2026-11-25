@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 
 export type WorldSettings = components['schemas']['WorldSettingsView']
@@ -32,6 +33,7 @@ function useInvalidateWorld() {
 export function usePatchSettings() {
   const invalidate = useInvalidateWorld()
   return useMutation({
+    writes: [{ lever: 'settings' }],
     mutationFn: (body: SettingsPatch) =>
       unwrap(api.PATCH('/api/settings', { body })),
     onSuccess: invalidate,
@@ -41,6 +43,7 @@ export function usePatchSettings() {
 export function useCheatEssence() {
   const invalidate = useInvalidateWorld()
   return useMutation({
+    writes: [{ lever: 'cheat:essence' }],
     mutationFn: (amount: number) =>
       unwrap(api.POST('/api/cheats/essence', { body: { amount } })),
     onSuccess: invalidate,
@@ -50,6 +53,7 @@ export function useCheatEssence() {
 export function useWriteMissingPrompts() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/entities/prompts/write-missing' }],
     mutationFn: () => unwrap(api.POST('/api/entities/prompts/write-missing')),
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all }),
@@ -67,6 +71,7 @@ export function useHealthReport() {
 export function useResetWorld() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/world/reset' }],
     mutationFn: (confirm: string) =>
       unwrap(api.POST('/api/world/reset', { body: { confirm } })),
     onSuccess: () => void queryClient.invalidateQueries(),

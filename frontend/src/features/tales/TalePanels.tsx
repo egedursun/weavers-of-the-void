@@ -140,6 +140,7 @@ function ArcForges({ arc, blocked }: { arc: Arc; blocked: string | null }) {
         columns={2}
         action={
           <Button
+            act={adding}
             size='sm'
             disabled={figureBusy !== null}
             disabledReason={figureBusy ?? undefined}
@@ -175,6 +176,7 @@ function ArcForges({ arc, blocked }: { arc: Arc; blocked: string | null }) {
         columns={2}
         action={
           <Button
+            act={beating}
             size='sm'
             disabled={beatBusy !== null}
             disabledReason={beatBusy ?? undefined}
@@ -389,6 +391,7 @@ export function TalesPanel({
         columns={4}
         action={
           <Button
+            act={beginning}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -569,6 +572,7 @@ export function SetupsPanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

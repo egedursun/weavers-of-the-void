@@ -105,6 +105,7 @@ function EffectEditor({
     target: string
     magnitude: number
   }>({
+    writes: [{ lever: 'tradition:effect' }],
     run: (body) =>
       unwrap(
         api.POST('/api/actions/tradition:effect', {
@@ -118,6 +119,7 @@ function EffectEditor({
       ),
   })
   const reseed = useGodAction({
+    writes: [{ lever: 'tradition:reseed' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/tradition:reseed', {
@@ -139,6 +141,7 @@ function EffectEditor({
         <RowEditors>
           {effects.map((row) => (
             <RowEditor
+              act={set}
               key={`${row.effect}.${row.target}`}
               label={effectLabel(row)}
               icon={lookup(TRADITION_EFFECTS, row.effect).icon}
@@ -155,6 +158,7 @@ function EffectEditor({
               }
             >
               <Button
+                act={set}
                 size='icon'
                 variant='ghost'
                 aria-label={`Remove ${effectLabel(row)}`}
@@ -206,6 +210,7 @@ function EffectEditor({
         </FieldTile>
         <div className='flex min-w-0 items-end gap-2'>
           <Button
+            act={set}
             size='sm'
             disabled={busy !== null || problem !== null}
             disabledReason={busy ?? problem ?? undefined}
@@ -215,6 +220,7 @@ function EffectEditor({
             Add
           </Button>
           <Button
+            act={reseed}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -240,6 +246,7 @@ export function TraditionPanel({
   blocked: string | null
 }) {
   const keep = useGodAction<{ community: number; value: number }>({
+    writes: [{ lever: 'tradition:participation' }],
     run: ({ community, value }) =>
       unwrap(
         api.POST('/api/actions/tradition:participation', {
@@ -252,6 +259,7 @@ export function TraditionPanel({
       ),
   })
   const release = useGodAction<{ community: number }>({
+    writes: [{ lever: 'tradition:release_participation' }],
     run: ({ community }) =>
       unwrap(
         api.POST('/api/actions/tradition:release_participation', {
@@ -518,6 +526,7 @@ export function TraditionPanel({
               <Paged items={card.keepers}>
                 {(row) => (
                   <RowEditor
+                    act={keep}
                     key={row.community?.id}
                     label={row.community?.name ?? 'Unknown'}
                     icon={Users}
@@ -530,6 +539,7 @@ export function TraditionPanel({
                   >
                     {row.held && (
                       <Button
+                        act={release}
                         size='icon'
                         variant='ghost'
                         aria-label={`Let ${row.community?.name ?? 'them'} decide again`}

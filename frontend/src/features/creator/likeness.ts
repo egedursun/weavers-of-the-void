@@ -8,6 +8,7 @@ export function useRedrawLikeness() {
     paramEquals(job, 'kind', 'creator_portrait')
   )
   const action = useGodAction({
+    writes: [{ lever: 'creator:content' }],
     run: () => unwrap(api.POST('/api/creator/portrait')),
     success: 'The likeness is being redrawn',
   })

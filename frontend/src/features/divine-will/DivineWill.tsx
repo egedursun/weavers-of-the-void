@@ -23,6 +23,7 @@ import {
 } from '@/components/layout/divine-will/dockStore'
 import { Label, Text } from '@/components/typography'
 import { FEED_DOCK_REM, useFeedDock } from '@/features/feed/useFeedDock'
+import { ShareToggle } from '@/features/team/share'
 import { MemoryMeter, ResetSessionButton } from './SessionTools'
 import { ChatView, PastSessionsView, WritingsView } from './WillViews'
 import { useWillSignals } from './useWillSignals'
@@ -66,6 +67,15 @@ function DivineWillPanel() {
                 limit={signals.limit}
               />
             </div>
+          )}
+          {signals.session && (
+            <ShareToggle
+              kind='session'
+              id={signals.session.id}
+              shared={signals.session.shared}
+              mine={signals.session.mine}
+              author={signals.session.author?.name}
+            />
           )}
           <ResetSessionButton
             busy={signals.running || signals.awaiting}

@@ -23,6 +23,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -334,11 +335,13 @@ function LeyLines({
   blocked: string | null
 }) {
   const sever = useGodAction({
+    writes: [{ lever: 'ley:sever' }],
     run: (lineId: number) =>
       unwrap(api.POST('/api/actions/ley:sever', { body: { line_id: lineId } })),
     success: 'The ley line is cut',
   })
   const restore = useGodAction({
+    writes: [{ lever: 'ley:restore' }],
     run: (lineId: number) =>
       unwrap(
         api.POST('/api/actions/ley:restore', { body: { line_id: lineId } })
@@ -387,6 +390,7 @@ function LeyLines({
               />
             </div>
             <Button
+              act={[restore, sever]}
               size='sm'
               variant='outline'
               disabled={reason !== null}
@@ -486,16 +490,23 @@ function ChoiceRow({
   table,
   blocked,
   onPick,
+  act,
 }: {
   label: string
   value: string
   table: Record<string, string>
   blocked: string | null
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   return (
     <FieldTile label={label}>
-      <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+      <Select
+        act={act}
+        value={value}
+        onValueChange={onPick}
+        disabled={blocked !== null}
+      >
         <SelectTrigger aria-label={label}>
           <SelectValue />
         </SelectTrigger>
@@ -555,10 +566,16 @@ function RegionControls({
     )
   }
   const choose = useGodAction({
+    writes: [
+      { lever: 'environment:mineral' },
+      { lever: 'environment:scar' },
+      { lever: 'environment:set' },
+    ],
     run,
     success: (_result, change: Change) => `${fieldLabel(change.key)} set`,
   })
   const release = useGodAction({
+    writes: [{ lever: 'environment:unlock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/environment:unlock', {
@@ -583,6 +600,7 @@ function RegionControls({
         </div>
         <label className='flex shrink-0 items-center gap-2'>
           <Switch
+            permission='lock_canon'
             checked={hold}
             onCheckedChange={setHold}
             aria-label='Hold what I set'
@@ -595,6 +613,7 @@ function RegionControls({
           <Lock aria-hidden='true' className='size-icon-xs text-primary' />
           {ground.locked.map((key) => (
             <Button
+              act={release}
               key={key}
               size='sm'
               variant='outline'
@@ -611,6 +630,7 @@ function RegionControls({
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/env:grid-cols-2 @3xl/env:grid-cols-4'>
         {REGION_CHOICES.map((item) => (
           <ChoiceRow
+            act={choose}
             key={item.key}
             label={fieldLabel(item.key)}
             value={String(ground[item.key])}
@@ -819,6 +839,7 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
       })
     )
   const set = useGodAction({
+    writes: [{ lever: 'environment:place' }],
     run,
     success: (_result, change: Change) =>
       `${change.key === 'nexus' ? 'Ley nexus' : fieldLabel(change.key)} set`,
@@ -910,6 +931,7 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
             <div className='grid min-w-0 grid-cols-1 gap-3 @md/env:grid-cols-2 @3xl/env:grid-cols-5'>
               {PLACE_CHOICES.map((item) => (
                 <ChoiceRow
+                  act={set}
                   key={item.key}
                   label={item.label}
                   value={ground[item.key] ?? 'inherit'}
@@ -919,6 +941,7 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
                 />
               ))}
               <ChoiceRow
+                act={set}
                 label='Chokepoint'
                 value={ground.chokepoint ? 'yes' : 'no'}
                 table={YES_NO}
@@ -928,6 +951,7 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
                 }
               />
               <ChoiceRow
+                act={set}
                 label='Ley nexus'
                 value={ground.nexus ? 'yes' : 'no'}
                 table={YES_NO}

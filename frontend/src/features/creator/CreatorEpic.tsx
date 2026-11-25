@@ -19,6 +19,7 @@ export function CreatorEpic({ creator }: { creator: CreatorRecord }) {
     paramEquals(job, 'kind', 'creator_epic')
   )
   const write = useGodAction({
+    writes: [{ lever: 'creator:content' }],
     run: () => unwrap(api.POST('/api/creator/epic')),
     success: "The bard is writing the Creator's epic",
   })
@@ -30,6 +31,7 @@ export function CreatorEpic({ creator }: { creator: CreatorRecord }) {
       level={3}
       actions={
         <ActionButton
+          act={write}
           label={creator.epic ? 'Rewrite the epic' : 'Write the epic'}
           icon={Feather}
           blocked={

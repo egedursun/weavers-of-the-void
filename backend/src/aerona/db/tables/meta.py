@@ -12,6 +12,8 @@ from aerona.constants.schema import (
     NOTIFICATION_TITLE_MAX_LENGTH,
     TITLE_MAX_LENGTH,
 )
+from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
+from aerona.db.authorship import account_id, account_name
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, between, enum_type, max_length
 from aerona.db.types import PydanticJSON
@@ -106,6 +108,7 @@ class NotificationRow(CreatedAtMixin, Base):
     chronicle_id: Mapped[int | None] = mapped_column(ForeignKey("chronicle.id", ondelete="CASCADE"))
     is_read: Mapped[bool] = mapped_column(default=False)
     job_id: Mapped[str | None] = mapped_column(String(JOB_ID_LENGTH))
+    recipient_account_id: Mapped[int | None] = mapped_column(index=True)
 
 
 class MapSnapshotRow(CreatedAtMixin, Base):
@@ -126,6 +129,8 @@ class MapNoteRow(CreatedAtMixin, Base):
     y: Mapped[float]
     text: Mapped[str] = mapped_column(String(MAP_NOTE_MAX_LENGTH))
     color: Mapped[str | None] = mapped_column(String(MAP_NOTE_COLOR_MAX_LENGTH))
+    author_account_id: Mapped[int | None] = mapped_column(default=account_id)
+    author_name: Mapped[str | None] = mapped_column(String(AUTHOR_NAME_MAX_LENGTH), default=account_name)
 
 
 class ImageRow(CreatedAtMixin, Base):

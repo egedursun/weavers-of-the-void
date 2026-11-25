@@ -92,7 +92,11 @@ function AgentCard({
           tone='warning'
         />
       </div>
-      <Adjust title='Agent' note='Their cover, skill, exposure and fate.'>
+      <Adjust
+        acts={[actions.save, actions.release, actions.remove]}
+        title='Agent'
+        note='Their cover, skill, exposure and fate.'
+      >
         <FieldGrid>
           <ChoiceField
             label='Cover'
@@ -153,6 +157,7 @@ function NetworkCommand({
   const spymaster = value('spymaster_entity_id')
   return (
     <Adjust
+      acts={[actions.save, actions.release, actions.remove]}
       title='Aim the network'
       note='Turn its eyes on another community, give it a spymaster, or say whose spies they are.'
       label='Aim'
@@ -248,6 +253,7 @@ export function NetworkAgents({
           <NetworkCommand row={network} ownerId={ownerId} blocked={blocked} />
         )}
         <Adjust
+          acts={[create]}
           title='Place an agent'
           note='A living mortal goes under cover for this network.'
           label='Place an agent'
@@ -271,6 +277,7 @@ export function NetworkAgents({
             />
           </FieldGrid>
           <Button
+            act={create}
             size='sm'
             className='self-start'
             disabled={busy !== null || mortal === null}
@@ -313,6 +320,7 @@ export function FoundNetwork({
       hint='Plant a network inside another community'
     >
       <Adjust
+        acts={[create]}
         title='Found a spy network'
         note='Its agents gather intel, steal secrets and stir trouble inside the target.'
         label='Found a network'
@@ -336,6 +344,7 @@ export function FoundNetwork({
           />
         </FieldGrid>
         <Button
+          act={create}
           size='sm'
           className='self-start'
           disabled={busy !== null || target === null}

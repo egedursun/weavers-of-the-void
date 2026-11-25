@@ -112,6 +112,7 @@ export function RecordButtons({
   return (
     <div className='flex flex-wrap gap-2'>
       <Button
+        act={actions.save}
         size='sm'
         disabled={busy !== null || empty}
         disabledReason={why(busy !== null || empty, 'Change a value first')}
@@ -121,6 +122,7 @@ export function RecordButtons({
         Set and hold
       </Button>
       <Button
+        act={actions.save}
         size='sm'
         variant='outline'
         disabled={busy !== null || empty}
@@ -131,6 +133,7 @@ export function RecordButtons({
         Set once
       </Button>
       <Button
+        act={actions.release}
         size='sm'
         variant='outline'
         disabled={busy !== null || locked.length === 0}
@@ -145,6 +148,7 @@ export function RecordButtons({
       </Button>
       {deletable && (
         <Button
+          act={actions.remove}
           size='sm'
           variant='destructive'
           disabled={busy !== null}

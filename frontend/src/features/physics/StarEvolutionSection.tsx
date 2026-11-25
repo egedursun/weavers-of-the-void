@@ -146,6 +146,7 @@ export function StarEvolutionSection({ starId }: { starId: number }) {
           <div className='flex min-w-0 flex-col gap-1'>
             <Label>Reshape its body</Label>
             <RecordEditor
+              act={edit}
               title='Mass, metal, age and upkeep'
               note='Mass sets its light and how long each stage lasts; a held value is kept against the engine.'
               fields={[
@@ -191,6 +192,7 @@ export function StarEvolutionSection({ starId }: { starId: number }) {
               onRelease={(release) => edit.mutate({ release })}
             />
             <RecordEditor
+              act={edit}
               title='Light, life and temperate band'
               note='Its mass works these out each epoch; a value you hold here stands by your will.'
               fields={[

@@ -184,6 +184,7 @@ export function LoreForge({
   const worlds = state.data?.worlds ?? []
   const { reason } = useGodGate()
   const forge = useGodAction({
+    writes: [{ lever: 'lore:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/lore:create', {
@@ -233,7 +234,12 @@ export function LoreForge({
       }}
     >
       <DialogTrigger asChild>
-        <Button size='sm' variant='outline' data-surface='LoreForge'>
+        <Button
+          act={forge}
+          size='sm'
+          variant='outline'
+          data-surface='LoreForge'
+        >
           <Anvil />
           {triggerLabel ?? `Forge a new ${spec.label.toLowerCase()}`}
         </Button>
@@ -354,6 +360,7 @@ export function LoreForge({
         </div>
         <DialogFooter>
           <Button
+            act={forge}
             disabled={blocked !== null}
             disabledReason={blocked ?? undefined}
             onClick={() => forge.mutate()}

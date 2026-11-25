@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 
 export type EnginePhase = components['schemas']['EnginePhaseView']
@@ -35,6 +36,7 @@ export function useEngineSeed() {
 export function useRunPhase() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ lever: 'engine:run_phase' }],
     mutationFn: (phase: string) =>
       unwrap(
         api.POST('/api/actions/engine:run_phase', {
@@ -51,6 +53,7 @@ export function useRunPhase() {
 export function useSetPhaseSwitch() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'PUT', path: '/api/rules/{namespace}/{key}' }],
     mutationFn: (change: { rule: string; on: boolean }) =>
       unwrap(
         api.PUT('/api/rules/{namespace}/{key}', {
@@ -75,6 +78,7 @@ export function useIntegrityTasks() {
 export function useRunIntegrity() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/integrity/{task}' }],
     mutationFn: (task: IntegrityTask['task']) =>
       unwrap(api.POST('/api/integrity/{task}', { params: { path: { task } } })),
     onSettled: () => {
@@ -95,6 +99,7 @@ export function useIntegrityFindings() {
 export function useResolveFinding() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/integrity/findings/resolve' }],
     mutationFn: (finding: IntegrityFinding) =>
       unwrap(
         api.POST('/api/integrity/findings/resolve', {

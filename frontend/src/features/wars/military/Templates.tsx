@@ -212,6 +212,7 @@ function TemplateCard({
       <MixBars mix={mixOf(row.values.composition)} />
       <div className='mt-auto flex min-w-0 flex-col gap-2'>
         <Adjust
+          acts={[actions.save, actions.release, actions.remove]}
           title='Reshape the template'
           note='Its name, way of war, kinds of soldier and their shares; held values are never refitted by the marshal.'
         >
@@ -278,6 +279,7 @@ function NewTemplate({
   const trimmed = name.trim()
   return (
     <Adjust
+      acts={[create]}
       title='Draw up a new template'
       note='Name the host, pick its way of war and the shares of each kind; armies raised by the realm fill from the template in use.'
       label='Draw up a template'
@@ -300,6 +302,7 @@ function NewTemplate({
       </FieldGrid>
       <MixEditor mix={mix} onChange={setMix} blocked={blocked} />
       <Button
+        act={create}
         size='sm'
         className='self-start'
         disabled={busy !== null || !trimmed}

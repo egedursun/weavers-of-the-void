@@ -302,6 +302,7 @@ function MetaForm({
           Cancel
         </Button>
         <Button
+          act={patch}
           type='submit'
           disabled={block !== null}
           disabledReason={block ?? undefined}

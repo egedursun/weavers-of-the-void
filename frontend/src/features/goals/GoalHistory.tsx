@@ -45,6 +45,7 @@ type Entry = ScenarioHistory & { key: ScenarioKey }
 function HistoryEntry({ entry }: { entry: Entry }) {
   const { reason } = useGodGate()
   const strike = useGodAction({
+    writes: [{ lever: 'scenario:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/scenarios/{scenario_id}/delete', {
@@ -89,6 +90,7 @@ function HistoryEntry({ entry }: { entry: Entry }) {
           </div>
         </div>
         <ActionButton
+          act={strike}
           label='Strike'
           icon={Trash2}
           size='sm'

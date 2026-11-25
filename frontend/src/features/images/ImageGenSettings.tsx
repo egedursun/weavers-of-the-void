@@ -26,6 +26,7 @@ import {
   SettingRow,
 } from '@/components/domain/SettingsKit'
 import { Muted, Text } from '@/components/typography'
+import { toastDone } from '@/features/team/outcome'
 import {
   type Rule,
   useResetGroup,
@@ -138,9 +139,9 @@ export function ImageGenSettings() {
       if (rule) changes.set(rule, next)
     }
     save.mutate(changes, {
-      onSuccess: () => {
+      onSuccess: (result) => {
         setDraft({})
-        toast.success('Image settings saved')
+        toastDone(result, 'Image settings saved')
       },
       onError: (error) => toast.error(error.message),
     })
@@ -155,15 +156,16 @@ export function ImageGenSettings() {
       actions={
         <>
           <Button
+            act={reset}
             variant='outline'
             size='sm'
             disabled={customized.length === 0 || reset.isPending}
             disabledReason='Everything is already at its default'
             onClick={() =>
               reset.mutate(customized, {
-                onSuccess: () => {
+                onSuccess: (result) => {
                   setDraft({})
-                  toast.success('Image settings back to their defaults')
+                  toastDone(result, 'Image settings back to their defaults')
                 },
                 onError: (error) => toast.error(error.message),
               })
@@ -173,6 +175,7 @@ export function ImageGenSettings() {
             Defaults
           </Button>
           <Button
+            act={save}
             size='sm'
             disabled={changed.length === 0 || save.isPending}
             disabledReason='Nothing has changed'

@@ -31,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ENTRY_KIND_ICON, Medallion } from '@/components/domain'
 import { Label, Muted } from '@/components/typography'
 import { SpeakWithThem } from '@/features/presence/SpeakWithThem'
+import { EntryActivity } from '@/features/team/Presence'
 import { isTypingTarget } from '../useGlobalShortcuts'
 import { type EntryFilter, EntryRail } from './EntryRail'
 import { ENTRY_CATEGORIES } from './entryCategories'
@@ -440,6 +441,7 @@ function EntryBody({
           >
             <ListTree />
           </Button>
+          <EntryActivity nodeId={entryNodeId(entry)} />
           <SpeakWithThem entry={entry} />
           <Button
             variant='outline'
@@ -549,6 +551,18 @@ function EntryBody({
       </div>
     </div>
   )
+}
+
+const NOT_NODES: ReadonlySet<EntryRef['kind']> = new Set([
+  'world-guide',
+  'help',
+  'incident',
+])
+
+function entryNodeId(entry: EntryRef): number | null {
+  if (NOT_NODES.has(entry.kind) || entry.id === undefined) return null
+  const id = Number(entry.id)
+  return Number.isInteger(id) && id > 0 ? id : null
 }
 
 export function EntryWindow({ pages }: { pages: EntryPages }) {

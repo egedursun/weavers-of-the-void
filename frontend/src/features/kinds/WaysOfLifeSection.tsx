@@ -90,6 +90,7 @@ function Holding({
       caption={`${info?.label ?? row.category_label} · ${row.category_label} · strength ${row.strength} of ${FULL} · ${spread.label.toLowerCase()} · since epoch ${row.since_epoch}`}
     >
       <RecordEditor
+        act={editing}
         title={`Set how ${row.kind_name} is held`}
         note={HOLD}
         fields={holdingFields(god)}
@@ -99,6 +100,7 @@ function Holding({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Let it go'
         busy={why(blocked, removing.isPending)}
@@ -176,6 +178,7 @@ function Giving({
       columns={2}
       action={
         <StepButton
+          act={giving}
           icon={CirclePlus}
           label={god ? 'Set the blessing' : 'Give the kind'}
           variant='default'

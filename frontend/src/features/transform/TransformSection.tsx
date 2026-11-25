@@ -193,6 +193,7 @@ function Change({
         <Ref node={other} empty={otherName || 'a thing no longer kept'} />
       </div>
       <RecordEditor
+        act={editing}
         title='Set this record'
         note='Values you set are held against the engine until you release them.'
         fields={RECORD_FIELDS}
@@ -203,6 +204,7 @@ function Change({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={reverting}
           icon={Undo2}
           label='Undo it'
           busy={why(
@@ -217,6 +219,7 @@ function Change({
           onClick={() => reverting.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Strike out the record'
           busy={why(blocked, removing.isPending)}
@@ -266,6 +269,7 @@ function Prospect({
       aside={<Chip icon={stance.icon}>{stance.label}</Chip>}
     >
       <RecordEditor
+        act={editing}
         title='Set this prospect'
         note='Values you set are held against the engine until you release them.'
         fields={PROSPECT_FIELDS}
@@ -276,12 +280,14 @@ function Prospect({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={blocking}
           icon={row.stance === 'blocked' ? ShieldCheck : Ban}
           label={row.stance === 'blocked' ? 'Let it come' : 'Block it'}
           busy={why(blocked, blocking.isPending)}
           onClick={() => blocking.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Strike out the prospect'
           busy={why(blocked, removing.isPending)}
@@ -339,6 +345,7 @@ function Hand({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={forcing}
             size='sm'
             disabled={why(forceReason, forcing.isPending) !== null}
             disabledReason={why(forceReason, forcing.isPending) ?? undefined}
@@ -348,6 +355,7 @@ function Hand({
             Force it now
           </Button>
           <Button
+            act={blocking}
             size='sm'
             variant='outline'
             disabled={why(blocked ?? noKind, blocking.isPending) !== null}
@@ -360,6 +368,7 @@ function Hand({
             Block it
           </Button>
           <Button
+            act={releasing}
             size='sm'
             variant='ghost'
             disabled={why(blocked ?? noKind, releasing.isPending) !== null}
@@ -411,6 +420,7 @@ function Rescue({
     'Bargains with the outside are forbidden to the son'
   )
   const chaining = useGodAction({
+    writes: [{ lever: 'punish' }],
     run: () =>
       unwrap(
         api.POST('/api/sons/{son_id}/punish', {
@@ -466,30 +476,35 @@ function Rescue({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <StepButton
+            act={cleansing}
             icon={Sun}
             label='Cleanse its mind'
             busy={why(blocked, cleansing.isPending)}
             onClick={() => cleansing.mutate()}
           />
           <StepButton
+            act={forbidding}
             icon={Ban}
             label='Forbid bargains'
             busy={why(blocked, forbidding.isPending)}
             onClick={() => forbidding.mutate()}
           />
           <StepButton
+            act={chaining}
             icon={Lock}
             label='Chain it'
             busy={why(blocked, chaining.isPending)}
             onClick={() => chaining.mutate()}
           />
           <StepButton
+            act={ruling}
             icon={Gavel}
             label='Have the council hold it'
             busy={why(blocked, ruling.isPending)}
             onClick={() => ruling.mutate()}
           />
           <StepButton
+            act={questing}
             icon={Swords}
             label='Send a redemption heroquest'
             busy={why(questReason, questing.isPending)}
@@ -553,6 +568,7 @@ function Modifier({
         </div>
       ) : null}
       <RecordEditor
+        act={editing}
         title='Set this change'
         note='Values you set are held against the engine until you release them.'
         fields={modifierFields(view)}
@@ -562,6 +578,7 @@ function Modifier({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Lift this change'
         busy={why(blocked, removing.isPending)}
@@ -623,6 +640,7 @@ function StarLight({
         columns={3}
         action={
           <Button
+            act={making}
             size='sm'
             disabled={why(blocked, making.isPending) !== null}
             disabledReason={why(blocked, making.isPending) ?? undefined}

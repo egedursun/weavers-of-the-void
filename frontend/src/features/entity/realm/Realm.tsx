@@ -424,6 +424,7 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
   const [office, setOffice] = useState<string>('chancellor')
   const [mortal, setMortal] = useState<number | null>(null)
   const appoint = useGodAction({
+    writes: [{ lever: 'polity:appoint' }],
     run: (holder: number | null) =>
       unwrap(
         api.POST('/api/actions/polity:appoint', {
@@ -436,6 +437,7 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
       ),
   })
   const depose = useGodAction({
+    writes: [{ lever: 'polity:depose' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/polity:depose', {
@@ -481,6 +483,7 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
           </Paged>
         </ul>
         <AdjustPanel
+          acts={[appoint, depose]}
           trigger='Adjust the court'
           title='Appoint and dismiss'
           note='Seat a mortal in any office, empty a seat, or cast the ruler down. Every change goes into the ledger.'
@@ -504,6 +507,7 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
           </div>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Button
+              act={appoint}
               size='sm'
               disabled={busy !== null || mortal === null}
               disabledReason={busy ?? 'Choose a mortal first'}
@@ -513,6 +517,7 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
               Appoint
             </Button>
             <Button
+              act={appoint}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -523,6 +528,7 @@ function Court({ realm, blocked }: { realm: Realm; blocked: string | null }) {
               Empty the seat
             </Button>
             <Button
+              act={depose}
               size='sm'
               variant='destructive'
               disabled={busy !== null || !ruler?.holder_id}
@@ -937,6 +943,7 @@ function LawCard({
   >({ ...law.params })
   const [enforcement, setEnforcement] = useState(law.enforcement)
   const save = useGodAction({
+    writes: [{ lever: 'law:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/law:edit', {
@@ -949,6 +956,7 @@ function LawCard({
       ),
   })
   const repeal = useGodAction({
+    writes: [{ lever: 'law:repeal' }],
     run: () =>
       unwrap(api.POST('/api/actions/law:repeal', { body: { law_id: law.id } })),
   })
@@ -1002,6 +1010,7 @@ function LawCard({
         />
       </div>
       <AdjustPanel
+        acts={[save, repeal]}
         trigger='Amend'
         title='Amend this law'
         note='Rewrite its terms or how hard it is enforced, or strike it from the code.'
@@ -1035,6 +1044,7 @@ function LawCard({
         <LawProtection law={law} blocked={busy} />
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -1044,6 +1054,7 @@ function LawCard({
             Rewrite the law
           </Button>
           <Button
+            act={repeal}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -1063,6 +1074,7 @@ function LawCode({ realm, blocked }: { realm: Realm; blocked: string | null }) {
   const kinds = useLawKinds()
   const [kind, setKind] = useState<string>('quarantine')
   const enact = useGodAction({
+    writes: [{ lever: 'law:enact' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/law:enact', {
@@ -1126,6 +1138,7 @@ function LawCode({ realm, blocked }: { realm: Realm; blocked: string | null }) {
         )
       })}
       <AdjustPanel
+        acts={[enact]}
         trigger='Lay down a law'
         title='Lay down a new law'
         note='The law starts with its usual terms; amend it afterwards to change them.'
@@ -1141,6 +1154,7 @@ function LawCode({ realm, blocked }: { realm: Realm; blocked: string | null }) {
             />
           </div>
           <Button
+            act={enact}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -1172,6 +1186,7 @@ function RealmForm({
     debt: String(realm.debt),
   })
   const save = useGodAction({
+    writes: [{ lever: 'polity:edit' }],
     run: (release: string[]) =>
       unwrap(
         api.POST('/api/actions/polity:edit', {
@@ -1195,6 +1210,7 @@ function RealmForm({
       ),
   })
   const free = useGodAction({
+    writes: [{ lever: 'polity:independence' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/polity:independence', {
@@ -1207,6 +1223,7 @@ function RealmForm({
     setValues((current) => ({ ...current, [key]: value }))
   return (
     <AdjustPanel
+      acts={[save, free]}
       trigger='Adjust the realm'
       title='Shape the realm'
       note='Set its government and its fortunes. What you set is held against the world until you let the realm change again. Every change goes into the ledger.'
@@ -1316,6 +1333,7 @@ function RealmForm({
       )}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -1326,6 +1344,7 @@ function RealmForm({
         </Button>
         {realm.locked.length > 0 && (
           <Button
+            act={save}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -1338,6 +1357,7 @@ function RealmForm({
         )}
         {realm.overlord && (
           <Button
+            act={free}
             size='sm'
             variant='outline'
             disabled={busy !== null}

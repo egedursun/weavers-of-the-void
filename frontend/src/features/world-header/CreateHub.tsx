@@ -18,6 +18,7 @@ import {
   CreateBeastDialog,
   CreateSpeciesDialog,
 } from '@/features/entity/wilds/CreateWilds'
+import { type WriteTarget, useWriteRefusal } from '@/features/team/writeGate'
 import {
   FoundSettlementDialog,
   RaiseRegionDialog,
@@ -27,11 +28,29 @@ import {
   SummonOuterBeingDialog,
 } from './ShapeDialogs'
 
+const HUB_WRITES: readonly WriteTarget[] = [
+  { lever: 'mortal:shape' },
+  { lever: 'summon_son' },
+  { lever: 'record:shape' },
+  { lever: 'horror:outer_being' },
+  { lever: 'region:shape' },
+  { lever: 'people:village' },
+  { lever: 'species:create' },
+  { lever: 'beast:create' },
+  { lever: 'lore:create' },
+]
+
 export function CreateHub() {
+  const refusal = useWriteRefusal(HUB_WRITES)
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant='outline' size='sm' data-surface='CreateHub'>
+        <Button
+          act={{ blockedReason: refusal }}
+          variant='outline'
+          size='sm'
+          data-surface='CreateHub'
+        >
           <Hammer />
           Create
         </Button>

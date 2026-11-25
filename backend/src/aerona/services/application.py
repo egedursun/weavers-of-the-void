@@ -15,6 +15,7 @@ from aerona.agents.metrics import TelemetrySink
 from aerona.agents.ports import LanguageModel, bus_publisher
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.tool_ports import attach_toolkits
+from aerona.core.account_scope import detached
 from aerona.db.attr_history import history_of
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
@@ -291,7 +292,7 @@ async def seed_bus_epoch(database: Database, bus: EventBus) -> None:
 
 
 def _spawn(application: ApplicationServices, work: Any) -> None:
-    task = asyncio.create_task(work)
+    task = detached(work)
     application.background.add(task)
     task.add_done_callback(application.background.discard)
 

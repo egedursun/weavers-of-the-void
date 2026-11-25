@@ -228,6 +228,7 @@ export function StorytellerSection({
             <StorytellerPalette view={view} blocked={busy} />
             <Label variant='overline'>Choose the storyteller</Label>
             <ChoiceTiles
+              act={set}
               label='Storyteller'
               value={view.profile}
               columns={4}
@@ -249,6 +250,7 @@ export function StorytellerSection({
             />
             <Spotlight view={view} busy={busy} onSet={set.mutate} />
             <RecordEditor
+              act={set}
               title='Hold the tension and pace'
               note='Values you set are held: the storyteller stops moving them until you release them.'
               fields={[

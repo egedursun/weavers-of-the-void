@@ -35,6 +35,7 @@ export function EntityLevel({
   readOnlyReason: string | null
 }) {
   const move = useLoreMutation({
+    writes: [{ lever: 'entity:move' }],
     run: (next: string) =>
       unwrap(
         api.PUT('/api/entities/{entity_id}/location', {
@@ -70,6 +71,7 @@ export function EntityLevel({
         </Badge>
       )}
       <Select
+        act={move}
         value={level.stratum ?? SURFACE}
         onValueChange={(next) => move.mutate(next)}
         disabled={reason !== null || move.isPending}

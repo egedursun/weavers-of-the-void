@@ -142,6 +142,7 @@ export function useDivineAction<Name extends DivineAction, T>(
   onDone?: () => void
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => runDivine(name, toBody(vars)),
     onDone: () => onDone?.(),
   })

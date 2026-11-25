@@ -96,6 +96,7 @@ function ClimateAge({
   const [epochs, setEpochs] = useState('')
   const parsed = epochs.trim() === '' ? undefined : Number(epochs)
   const command = useGodAction({
+    writes: [{ lever: 'climate' }],
     run: () =>
       unwrap(
         api.PUT('/api/climate', {
@@ -169,6 +170,7 @@ function ClimateAge({
           />
         </FieldTile>
         <Button
+          act={command}
           disabled={reason !== null}
           disabledReason={reason ?? undefined}
           onClick={() => command.mutate()}
@@ -243,6 +245,7 @@ function SeasonCard({
   blocked: string | null
 }) {
   const reorder = useGodAction({
+    writes: [{ lever: 'seasons:reorder' }],
     run: (order: number[]) =>
       unwrap(
         api.POST('/api/actions/seasons:reorder', {
@@ -273,6 +276,7 @@ function SeasonCard({
           </Badge>
         )}
         <Button
+          act={reorder}
           size='icon'
           variant='ghost'
           aria-label={`Move ${season.name} earlier`}
@@ -283,6 +287,7 @@ function SeasonCard({
           <ArrowUp />
         </Button>
         <Button
+          act={reorder}
           size='icon'
           variant='ghost'
           aria-label={`Move ${season.name} later`}
@@ -350,6 +355,7 @@ function CalendarCard({
 }) {
   const [names, setNames] = useState(calendar.month_names.join(', '))
   const rename = useGodAction({
+    writes: [{ lever: 'calendar:rename' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:rename', {
@@ -362,6 +368,7 @@ function CalendarCard({
     success: 'The months were renamed',
   })
   const drop = useGodAction({
+    writes: [{ lever: 'calendar:drop' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:drop', {
@@ -389,6 +396,7 @@ function CalendarCard({
           </Muted>
         </div>
         <Button
+          act={drop}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -437,6 +445,7 @@ function CalendarCard({
           />
         </FieldTile>
         <Button
+          act={rename}
           variant='outline'
           disabled={renameReason !== null}
           disabledReason={renameReason ?? undefined}
@@ -458,6 +467,7 @@ function Calendars({
 }) {
   const [record, setRecord] = useState('')
   const adopt = useGodAction({
+    writes: [{ lever: 'calendar:adopt' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:adopt', {
@@ -507,6 +517,7 @@ function Calendars({
             </Select>
           </FieldTile>
           <Button
+            act={adopt}
             variant='outline'
             disabled={reason !== null}
             disabledReason={reason ?? undefined}
@@ -626,6 +637,7 @@ function SeasonName({
 }) {
   const [name, setName] = useState(season.name)
   const save = useGodAction({
+    writes: [{ lever: 'seasons:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:edit', {
@@ -659,6 +671,7 @@ function SeasonName({
         />
       </FieldTile>
       <Button
+        act={save}
         type='submit'
         variant='outline'
         disabled={reason !== null}

@@ -73,6 +73,7 @@ export function MechanicsControls() {
       <div className='flex min-w-0 flex-wrap gap-2'>
         {RUNS.map((item) => (
           <CosmicActionButton
+            act={action}
             key={item.id}
             actionId={item.id}
             label={item.label}

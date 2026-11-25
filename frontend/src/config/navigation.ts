@@ -35,6 +35,7 @@ import {
   SunMoon,
   Target,
   UsersRound,
+  Handshake,
   WalletCards,
   Waypoints,
   Wrench,
@@ -48,6 +49,7 @@ export type NavRoute =
   | '/goals'
   | '/council'
   | '/presence'
+  | '/team'
   | '/prayers'
   | '/cosmos'
   | '/heavens'
@@ -231,6 +233,14 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Speech,
         description:
           'Call any son, foreign god, mortal, spirit, being or beast that can speak, living or dead, and speak with it one to one.',
+      },
+      {
+        id: 'team',
+        title: 'Team',
+        to: '/team',
+        icon: Handshake,
+        description:
+          'Who shares this universe and their roles, who is here now, acts waiting for the age to end and canon proposals to review.',
       },
       {
         id: 'goals',

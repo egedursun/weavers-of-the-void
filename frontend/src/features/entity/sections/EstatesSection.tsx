@@ -74,6 +74,7 @@ function Ref({
 function EstateRow({ row, ctx }: { row: Estate; ctx: Ctx }) {
   const [privilege, setPrivilege] = useState('')
   const toggle = useGodAction({
+    writes: [{ lever: 'estate:privilege' }],
     run: ({ which, grant }: { which: EstatePrivilege; grant: boolean }) =>
       unwrap(
         api.POST('/api/actions/estate:privilege', {
@@ -91,6 +92,7 @@ function EstateRow({ row, ctx }: { row: Estate; ctx: Ctx }) {
     },
   })
   const strike = useGodAction({
+    writes: [{ lever: 'estate:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/estate:remove', {
@@ -117,6 +119,7 @@ function EstateRow({ row, ctx }: { row: Estate; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Strike the estate'
@@ -203,6 +206,7 @@ function EstateRow({ row, ctx }: { row: Estate; ctx: Ctx }) {
             >
               <Text truncate>{PRIVILEGE_ICONS[item]?.label ?? item}</Text>
               <Button
+                act={toggle}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -217,6 +221,7 @@ function EstateRow({ row, ctx }: { row: Estate; ctx: Ctx }) {
             title='Grant a privilege'
             action={
               <Button
+                act={toggle}
                 size='sm'
                 disabled={busy !== null || !privilege}
                 disabledReason={
@@ -276,6 +281,7 @@ function SupportRow({
   ctx: Ctx
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'movement:support_remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/movement:support_remove', {
@@ -293,6 +299,7 @@ function SupportRow({
       badges={item.held ? <Badge variant='outline'>Held</Badge> : undefined}
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Wipe the support of ${item.community.name}`}
@@ -350,6 +357,7 @@ function ShareRow({
   ctx: Ctx
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'company:share_remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/company:share_remove', {
@@ -366,6 +374,7 @@ function ShareRow({
       <div className='flex shrink-0 items-center gap-1'>
         <Muted variant='caption'>{`${item.share}%`}</Muted>
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Strike the share of ${item.holder.name}`}
@@ -382,6 +391,7 @@ function ShareRow({
 
 function MovementRow({ row, ctx }: { row: Movement; ctx: Ctx }) {
   const party = useGodAction({
+    writes: [{ lever: 'movement:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/movement:edit', {
@@ -394,6 +404,7 @@ function MovementRow({ row, ctx }: { row: Movement; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'movement:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/movement:remove', {
@@ -416,6 +427,7 @@ function MovementRow({ row, ctx }: { row: Movement; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Strike the movement'
@@ -474,6 +486,7 @@ function MovementRow({ row, ctx }: { row: Movement; ctx: Ctx }) {
           </Paged>
           <div className='flex justify-end'>
             <Button
+              act={party}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -499,6 +512,7 @@ function MovementRow({ row, ctx }: { row: Movement; ctx: Ctx }) {
 function CompanyRow({ row, ctx }: { row: Company; ctx: Ctx }) {
   const [holder, setHolder] = useState<number | null>(null)
   const share = useGodAction({
+    writes: [{ lever: 'company:share' }],
     run: (holderId: number) =>
       unwrap(
         api.POST('/api/actions/company:share', {
@@ -516,6 +530,7 @@ function CompanyRow({ row, ctx }: { row: Company; ctx: Ctx }) {
     },
   })
   const strike = useGodAction({
+    writes: [{ lever: 'company:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/company:remove', {
@@ -553,6 +568,7 @@ function CompanyRow({ row, ctx }: { row: Company; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Strike the charter'
@@ -613,6 +629,7 @@ function CompanyRow({ row, ctx }: { row: Company; ctx: Ctx }) {
             title='Give a share'
             action={
               <Button
+                act={share}
                 size='sm'
                 disabled={busy !== null || holder === null}
                 disabledReason={
@@ -641,6 +658,7 @@ function CompanyRow({ row, ctx }: { row: Company; ctx: Ctx }) {
 
 function OrderRow({ row, ctx }: { row: HolyOrder; ctx: Ctx }) {
   const strike = useGodAction({
+    writes: [{ lever: 'holy_order:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/holy_order:remove', {
@@ -672,6 +690,7 @@ function OrderRow({ row, ctx }: { row: HolyOrder; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Strike the vows'
@@ -721,6 +740,7 @@ function OrderRow({ row, ctx }: { row: HolyOrder; ctx: Ctx }) {
 function GuildCard({ guild, ctx }: { guild: Guild; ctx: Ctx }) {
   const [technique, setTechnique] = useState('')
   const keep = useGodAction({
+    writes: [{ lever: 'guild:secret' }],
     run: ({ which, keepIt }: { which: Technique; keepIt: boolean }) =>
       unwrap(
         api.POST('/api/actions/guild:secret', {
@@ -766,6 +786,7 @@ function GuildCard({ guild, ctx }: { guild: Guild; ctx: Ctx }) {
             >
               <Text truncate>{TECHNIQUE_WORDS[item]}</Text>
               <Button
+                act={keep}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -782,6 +803,7 @@ function GuildCard({ guild, ctx }: { guild: Guild; ctx: Ctx }) {
         title='Keep a craft secret'
         action={
           <Button
+            act={keep}
             size='sm'
             disabled={busy !== null || !technique}
             disabledReason={
@@ -820,6 +842,7 @@ function RealmCard({ ctx }: { ctx: Ctx }) {
   const [cause, setCause] = useState('')
   const [home, setHome] = useState<number | null>(null)
   const gather = useGodAction({
+    writes: [{ lever: 'estate:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/estate:found', {
@@ -832,6 +855,7 @@ function RealmCard({ ctx }: { ctx: Ctx }) {
     },
   })
   const raise = useGodAction({
+    writes: [{ lever: 'movement:found' }],
     run: (homeId: number) =>
       unwrap(
         api.POST('/api/actions/movement:found', {
@@ -880,6 +904,7 @@ function RealmCard({ ctx }: { ctx: Ctx }) {
         title='Gather an estate'
         action={
           <Button
+            act={gather}
             size='sm'
             disabled={busy !== null || !social}
             disabledReason={busy ?? (social ? undefined : 'Choose a class.')}
@@ -902,6 +927,7 @@ function RealmCard({ ctx }: { ctx: Ctx }) {
         title='Raise a movement'
         action={
           <Button
+            act={raise}
             size='sm'
             disabled={busy !== null || !cause || home === null}
             disabledReason={

@@ -153,6 +153,7 @@ function ContractCard({
         tone={loyalty < LOYALTY_LOW ? 'destructive' : 'success'}
       />
       <Adjust
+        acts={[actions.save, actions.release, actions.remove]}
         title='The contract'
         note='Its soldiers, pay, seasons and temper, where it fights and whether it holds.'
       >
@@ -269,6 +270,7 @@ export function MercenaryContracts({
           </ul>
         )}
         <Adjust
+          acts={[create]}
           title='Hire a company'
           note='Name the company, how many swords and the pay each season.'
           label='Hire a company'
@@ -304,6 +306,7 @@ export function MercenaryContracts({
             />
           </FieldGrid>
           <Button
+            act={create}
             size='sm'
             className='self-start'
             disabled={busy !== null}
@@ -387,6 +390,7 @@ function PrisonerCard({
         tone='verdigris'
       />
       <Adjust
+        acts={[actions.save, actions.release, actions.remove]}
         title='The prisoner'
         note='Their fate, their loyalty, any ransom paid and any marriage made in captivity.'
       >
@@ -448,6 +452,7 @@ export function NamedPrisoners({
   const prisoners = useRecords('captive', captorId)
   const [mortal, setMortal] = useState<number | null>(null)
   const take = useGodAction({
+    writes: [{ lever: 'captive:take' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/captive:take', {
@@ -492,6 +497,7 @@ export function NamedPrisoners({
           </ul>
         )}
         <Adjust
+          acts={[take]}
           title='Take a captive'
           note='Seize a living mortal and hold them here.'
           label='Take a captive'
@@ -507,6 +513,7 @@ export function NamedPrisoners({
             />
           </FieldGrid>
           <Button
+            act={take}
             size='sm'
             className='self-start'
             disabled={busy !== null || mortal === null}

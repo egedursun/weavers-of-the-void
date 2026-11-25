@@ -20,6 +20,7 @@ import {
   temperamentValues,
   tissueMaterialValues,
 } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -75,12 +76,14 @@ function Counter({
   min,
   blocked,
   onSave,
+  act,
 }: {
   label: string
   value: number
   min: number
   blocked: string | null
   onSave: (next: number) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState(String(value))
   const parsed = Number(draft)
@@ -103,6 +106,7 @@ function Counter({
         />
       </div>
       <Button
+        act={act}
         size='sm'
         variant='outline'
         disabled={(blocked ?? problem) !== null}
@@ -161,6 +165,7 @@ export function AnatomyCard({
             now.
           </Muted>
           <Button
+            act={reroll}
             size='sm'
             variant='outline'
             className='self-start'
@@ -250,6 +255,7 @@ export function AnatomyCard({
             <div className='grid min-w-0 grid-cols-1 gap-3 @md/wild:grid-cols-2 @3xl/wild:grid-cols-4'>
               {(['limbs', 'heads', 'wings', 'tails'] as const).map((key) => (
                 <Counter
+                  act={edit}
                   key={`${key}-${row[key]}`}
                   label={key[0].toUpperCase() + key.slice(1)}
                   value={row[key]}
@@ -261,6 +267,7 @@ export function AnatomyCard({
             </div>
             <div className='grid min-w-0 grid-cols-1 gap-3 @md/wild:grid-cols-2 @3xl/wild:grid-cols-3'>
               <MindPicker
+                act={edit}
                 label='Skin'
                 value={row.skin}
                 table={tableOf(tissueMaterialValues, TISSUE)}
@@ -268,6 +275,7 @@ export function AnatomyCard({
                 onPick={(value) => set('skin', value)}
               />
               <MindPicker
+                act={edit}
                 label='Bones'
                 value={row.bone}
                 table={tableOf(tissueMaterialValues, TISSUE)}
@@ -275,6 +283,7 @@ export function AnatomyCard({
                 onPick={(value) => set('bone', value)}
               />
               <MindPicker
+                act={edit}
                 label='Lives in'
                 value={row.habitat}
                 table={tableOf(habitatValues, HABITAT)}
@@ -282,6 +291,7 @@ export function AnatomyCard({
                 onPick={(value) => set('habitat', value)}
               />
               <MindPicker
+                act={edit}
                 label='Temperament'
                 value={row.temperament}
                 table={tableOf(temperamentValues, TEMPERAMENT_KIND)}
@@ -289,6 +299,7 @@ export function AnatomyCard({
                 onPick={(value) => set('temperament', value)}
               />
               <MindPicker
+                act={edit}
                 label='Bite'
                 value={row.bite ?? NONE}
                 table={tableOf(BITES, BITE, 'An ordinary bite')}
@@ -296,6 +307,7 @@ export function AnatomyCard({
                 onPick={(value) => set('bite', value)}
               />
               <MindPicker
+                act={edit}
                 label='Hoards'
                 value={row.hoards ?? NONE}
                 table={{
@@ -311,6 +323,7 @@ export function AnatomyCard({
                 onPick={(value) => set('hoards', value)}
               />
               <MindPicker
+                act={edit}
                 label='Shuns'
                 value={row.hates ?? NONE}
                 table={tableOf(aversionValues, AVERSION, 'Nothing')}
@@ -318,6 +331,7 @@ export function AnatomyCard({
                 onPick={(value) => set('hates', value)}
               />
               <MindPicker
+                act={edit}
                 label='Wakes to'
                 value={row.awakening ?? NONE}
                 table={tableOf(
@@ -331,6 +345,7 @@ export function AnatomyCard({
             </div>
             <div className='flex min-w-0 flex-wrap gap-2'>
               <Button
+                act={reroll}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -342,6 +357,7 @@ export function AnatomyCard({
               </Button>
               {row.locked.length > 0 && (
                 <Button
+                  act={edit}
                   size='sm'
                   variant='ghost'
                   disabled={busy !== null}

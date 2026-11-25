@@ -128,6 +128,7 @@ export function StarLifeSection({ star }: { star: StarRecord }) {
               ]}
             />
             <RecordEditor
+              act={edit}
               title='Shape the life of the star'
               note='Values you set are held. Moving it to another galaxy places it anew there.'
               fields={[
@@ -324,6 +325,7 @@ export function WorldPlacementSection({ world }: { world: WorldRecord }) {
           </div>
         </div>
         <RecordEditor
+          act={edit}
           title='Shape the life of the world'
           note={
             bound ??

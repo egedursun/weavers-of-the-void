@@ -217,6 +217,7 @@ function HolyDayRow({
     day.season_position === null ? ALL_YEAR : String(day.season_position)
   )
   const save = useGodAction({
+    writes: [{ lever: 'calendar:holy_day' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:holy_day', {
@@ -232,6 +233,7 @@ function HolyDayRow({
     success: 'The holy day was rewritten',
   })
   const remove = useGodAction({
+    writes: [{ lever: 'calendar:holy_day_remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:holy_day_remove', {
@@ -281,6 +283,7 @@ function HolyDayRow({
         </FieldTile>
         <SeasonPicker seasons={seasons} value={season} onChange={setSeason} />
         <Button
+          act={save}
           variant='outline'
           disabled={saveReason !== null}
           disabledReason={saveReason ?? undefined}
@@ -290,6 +293,7 @@ function HolyDayRow({
           Save
         </Button>
         <Button
+          act={remove}
           variant='ghost'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -346,6 +350,7 @@ function NewHolyDay({
   const [year, setYear] = useState(NONE)
   const [fast, setFast] = useState(true)
   const add = useGodAction({
+    writes: [{ lever: 'calendar:holy_day' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:holy_day', {
@@ -401,6 +406,7 @@ function NewHolyDay({
       </FieldTile>
       <SwitchField label='Found its fast' checked={fast} onChange={setFast} />
       <Button
+        act={add}
         disabled={reason !== null}
         disabledReason={reason ?? undefined}
         onClick={() => add.mutate()}
@@ -421,6 +427,7 @@ function AnchorField({
 }) {
   const [anchor, setAnchor] = useState(String(calendar.anchor_year))
   const save = useGodAction({
+    writes: [{ lever: 'calendar:anchor' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/calendar:anchor', {
@@ -447,6 +454,7 @@ function AnchorField({
         onChange={setAnchor}
       />
       <Button
+        act={save}
         variant='outline'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}
@@ -526,6 +534,7 @@ function SeasonRow({
   blocked: string | null
 }) {
   const remove = useGodAction({
+    writes: [{ lever: 'seasons:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:remove', {
@@ -535,6 +544,7 @@ function SeasonRow({
     success: 'The season is gone from the year',
   })
   const release = useGodAction({
+    writes: [{ lever: 'seasons:release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:release', {
@@ -554,6 +564,7 @@ function SeasonRow({
       </Text>
       {season.edited ? (
         <Button
+          act={release}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -569,6 +580,7 @@ function SeasonRow({
         </Badge>
       )}
       <Button
+        act={remove}
         size='sm'
         variant='ghost'
         disabled={removeReason !== null}
@@ -610,6 +622,7 @@ function NewSeason({
   const [name, setName] = useState('')
   const [values, setValues] = useState(NEW_SEASON)
   const add = useGodAction({
+    writes: [{ lever: 'seasons:add' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:add', {
@@ -663,6 +676,7 @@ function NewSeason({
         ))}
       </div>
       <Button
+        act={add}
         className='self-start'
         disabled={addReason !== null}
         disabledReason={addReason ?? undefined}
@@ -687,6 +701,7 @@ function MoonsAndTides({
   const [moons, setMoons] = useState(String(data.moon_count ?? 0))
   const [tides, setTides] = useState(String(data.tidal_strength ?? 0))
   const save = useGodAction({
+    writes: [{ lever: 'seasons:moons' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:moons', {
@@ -700,6 +715,7 @@ function MoonsAndTides({
     success: 'The moons and tides are set and held',
   })
   const release = useGodAction({
+    writes: [{ lever: 'seasons:calendar_release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:calendar_release', {
@@ -726,6 +742,7 @@ function MoonsAndTides({
           onChange={setTides}
         />
         <Button
+          act={save}
           variant='outline'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}
@@ -736,6 +753,7 @@ function MoonsAndTides({
         </Button>
       </div>
       <Held
+        act={release}
         keys={view.calendar_locked}
         label={fieldLabel}
         busy={busy}
@@ -755,6 +773,7 @@ function NotableRow({
   const [name, setName] = useState(year.name)
   const [magnitude, setMagnitude] = useState(String(year.magnitude))
   const save = useGodAction({
+    writes: [{ lever: 'year:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/year:edit', {
@@ -768,6 +787,7 @@ function NotableRow({
     success: 'The year is remembered anew',
   })
   const remove = useGodAction({
+    writes: [{ lever: 'year:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/year:delete', {
@@ -813,6 +833,7 @@ function NotableRow({
         onChange={setMagnitude}
       />
       <Button
+        act={save}
         variant='outline'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}
@@ -822,6 +843,7 @@ function NotableRow({
         Save
       </Button>
       <Button
+        act={remove}
         variant='ghost'
         disabled={busy !== null}
         disabledReason={busy ?? undefined}
@@ -873,6 +895,11 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
         <HolyDays data={data} view={view} blocked={blocked} />
       </div>
       <AdjustPanel
+        writes={[
+          { lever: 'seasons:add' },
+          { lever: 'seasons:release' },
+          { lever: 'seasons:remove' },
+        ]}
         title='Add, remove and hold seasons'
         note='A season shaped by hand is held when the year is redrawn from a new tilt. Adding a season takes its share from the others in proportion; removing one gives it back.'
         label='Seasons and moons'
@@ -892,6 +919,11 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
         <NewSeason data={data} blocked={blocked} />
       </AdjustPanel>
       <AdjustPanel
+        writes={[
+          { lever: 'seasons:onset' },
+          { lever: 'seasons:onset_clear' },
+          { lever: 'seasons:onset_release' },
+        ]}
         title='Early, late and failed seasons'
         note='Each year the engine draws whether a season comes early, on time, late or fails; a failed season does not bring its water. Set one and it is held.'
         label='Season onsets'
@@ -899,6 +931,10 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
         <SeasonOnsets data={data} blocked={blocked} />
       </AdjustPanel>
       <AdjustPanel
+        writes={[
+          { lever: 'seasons:calendar_release' },
+          { lever: 'seasons:moons' },
+        ]}
         title='Moons and tides'
         note='Moons and tides set here are held until released.'
         label='Moons and tides'
@@ -911,6 +947,7 @@ export function SeasonCalendarPanel({ data }: { data: WorldSeasons }) {
         />
       </AdjustPanel>
       <AdjustPanel
+        writes={[{ lever: 'year:delete' }, { lever: 'year:edit' }]}
         title='Rewrite remembered years'
         note='Rename a year, change how strongly it is remembered, or strike it from memory; holy days that kept it lose their year.'
         label='Remembered years'

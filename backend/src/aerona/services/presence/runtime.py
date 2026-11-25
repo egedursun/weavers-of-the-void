@@ -11,6 +11,7 @@ from aerona.agents.ports import LanguageModel
 from aerona.agents.turns.session import STEP_LIMIT_REASONS
 from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.constants.team import PRESENCE_QUEUED_TEXT
 from aerona.constants.units import PERCENT
 from aerona.core.errors import BusyError, ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.record_context import acting
@@ -29,8 +30,10 @@ from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.presence import PresenceEventKind, PresenceExchangeStatus, PresenceGuise, PresenceRecord, PresenceStatus
+from aerona.domain.enums.team import QueuedActSource
 from aerona.engine.mind.memories import remember
 from aerona.epoch.concurrency import WORLD_GROUP
+from aerona.events.audience import addressed_to, private_audience
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JOB_LABEL_KEY, JobContext
 from aerona.llm.client import retry_wait_seconds
@@ -45,8 +48,9 @@ from aerona.services.container import Services
 from aerona.services.divine_will.language import player_language, strays_from
 from aerona.services.presence.context import closing_context, guise_note, system_context, user_context
 from aerona.services.presence.speakers import Speaker, require_speaker
-from aerona.services.presence.tools import SpeakerTools, speaker_tools
+from aerona.services.presence.tools import Deferrer, SpeakerTools, speaker_tools
 from aerona.services.presence.trace import ExchangeTrace, ExchangeWatch
+from aerona.services.team.queue import QueueDraft, enqueue
 from aerona.tools.framework.runtime import LOGGER
 from aerona.tools.toolkit import Toolkits
 
@@ -118,6 +122,18 @@ def actor_of(speaker: Speaker) -> ActorKind:
     return ActorKind.MORTAL if speaker.entity_type is not None else ActorKind.FOREIGN_GOD
 
 
+def deferrer(services: Services, speaker: Speaker, session_id: int) -> Deferrer:
+    async def defer(name: str, arguments: dict[str, Any]) -> str:
+        title = f"{speaker.name}: {name.replace('_', ' ')}"
+        await enqueue(
+            services,
+            QueueDraft(QueuedActSource.PRESENCE, name, title, arguments, speaker_node_id=speaker.node_id, presence_session_id=session_id),
+        )
+        return PRESENCE_QUEUED_TEXT
+
+    return defer
+
+
 @dataclass(frozen=True)
 class Prepared:
     exchange: PresenceExchangeRow
@@ -147,8 +163,8 @@ class PresenceRuntime:
     def model(self) -> LanguageModel:
         return self.services.application.model
 
-    def publish(self, kind: EventKind, payload: dict[str, Any]) -> None:
-        self.services.bus.publish(kind, payload)
+    def publish(self, kind: EventKind, payload: dict[str, Any], audience: int | None = None) -> None:
+        self.services.bus.publish(kind, payload, audience=audience)
 
     def trace(self, exchange_id: int) -> ExchangeTrace:
         return ExchangeTrace(self.services.database, exchange_id)
@@ -183,7 +199,7 @@ class PresenceRuntime:
             )
             session.add(holder)
             await session.flush()
-        self.publish(EventKind.PRESENCE_SESSION_CHANGED, session_payload(holder, kept=True))
+        self.publish(EventKind.PRESENCE_SESSION_CHANGED, session_payload(holder, kept=True), private_audience(holder.author_account_id, holder.shared))
         return holder
 
     async def close(self, session_id: int) -> tuple[PresenceSessionRow, bool]:
@@ -202,7 +218,7 @@ class PresenceRuntime:
             holder.closed_at = holder.closed_at or now()
             if not kept:
                 await session.delete(holder)
-        self.publish(EventKind.PRESENCE_SESSION_CHANGED, session_payload(holder, kept=kept))
+        self.publish(EventKind.PRESENCE_SESSION_CHANGED, session_payload(holder, kept=kept), private_audience(holder.author_account_id, holder.shared))
         return holder, kept
 
     async def unsettled(self, session: AsyncSession, session_id: int) -> list[PresenceExchangeRow]:
@@ -254,12 +270,16 @@ class PresenceRuntime:
             return await self.drive(exchange_id)
 
         params = {EXCHANGE_KEY: exchange_id, SESSION_KEY: exchange.session_id, JOB_LABEL_KEY: LABEL}
-        try:
-            await self.services.jobs.submit(JobKind.PRESENCE, handler, params, exclusive_group=exchange_group(exchange.session_id))
-        except BusyError:
-            await self.finish(exchange_id, PresenceExchangeStatus.FAILED, error=BUSY_TEXT)
-            raise
-        self.publish(EventKind.PRESENCE_EXCHANGE_STARTED, exchange_payload(exchange, node_id))
+        async with self.services.database.read() as session:
+            holder = await session.get(PresenceSessionRow, exchange.session_id)
+        audience = private_audience(holder.author_account_id, holder.shared) if holder is not None else None
+        with addressed_to(audience):
+            try:
+                await self.services.jobs.submit(JobKind.PRESENCE, handler, params, exclusive_group=exchange_group(exchange.session_id), as_person=True)
+            except BusyError:
+                await self.finish(exchange_id, PresenceExchangeStatus.FAILED, error=BUSY_TEXT)
+                raise
+            self.publish(EventKind.PRESENCE_EXCHANGE_STARTED, exchange_payload(exchange, node_id))
 
     async def drive(self, exchange_id: int) -> dict[str, Any]:
         try:
@@ -329,7 +349,16 @@ class PresenceRuntime:
         world_busy = self.services.jobs.busy_group(WORLD_GROUP) is not None
         found = self.services.agents.toolkits
         toolkits = found if isinstance(found, Toolkits) else None
-        tools = await speaker_tools(self.services.database, toolkits, rules, speaker, record=holder.record, epoch=exchange.epoch, world_busy=world_busy)
+        tools = await speaker_tools(
+            self.services.database,
+            toolkits,
+            rules,
+            speaker,
+            record=holder.record,
+            epoch=exchange.epoch,
+            world_busy=world_busy,
+            defer=deferrer(self.services, speaker, holder.id),
+        )
         async with self.services.database.read() as session:
             speaker = await require_speaker(session, rules, holder.node_id)
             context = await system_context(session, rules, speaker, holder, tools)

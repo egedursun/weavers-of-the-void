@@ -82,6 +82,7 @@ function FeelingTile({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={setting}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -92,6 +93,7 @@ function FeelingTile({
           {feeling.held ? 'Keep held' : 'Set and hold'}
         </Button>
         <Button
+          act={setting}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -220,6 +222,7 @@ function MoodForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -273,6 +276,7 @@ function SparkForge({
       columns={2}
       action={
         <Button
+          act={sparking}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -447,6 +451,7 @@ function MobCard({
           onPick={(value) => setBy(value as keyof typeof MOB_ENDS)}
         />
         <Button
+          act={dispersing}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -493,6 +498,7 @@ function MobForge({
       columns={2}
       action={
         <Button
+          act={raising}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -657,6 +663,7 @@ function MovementForge({
       columns={3}
       action={
         <Button
+          act={founding}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

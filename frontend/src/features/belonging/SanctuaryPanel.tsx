@@ -284,6 +284,7 @@ export function SanctuaryPanel({
               onClick={reading.run}
             />
             <Button
+              act={sheltering}
               size='sm'
               disabled={shelterBusy !== null}
               disabledReason={shelterBusy ?? undefined}
@@ -341,6 +342,7 @@ export function SanctuaryPanel({
         columns={2}
         action={
           <Button
+            act={lawing}
             size='sm'
             disabled={lawBusy !== null}
             disabledReason={lawBusy ?? undefined}

@@ -141,6 +141,7 @@ function Power({
       <div className='flex min-w-0 flex-wrap gap-2'>
         {shownDomains.visible.map((item) => (
           <StepButton
+            act={linking}
             key={item}
             icon={X}
             label={`Draws on ${words(item)}`}
@@ -153,6 +154,7 @@ function Power({
       </div>
       <ShowMore state={shownDomains} />
       <RecordEditor
+        act={editing}
         title='Shape this power'
         note={HOLD}
         fields={POWER_FIELDS}
@@ -169,6 +171,7 @@ function Power({
         columns={2}
         action={
           <StepButton
+            act={using}
             icon={POWER_ICON}
             label='Wield it'
             variant='default'
@@ -193,6 +196,7 @@ function Power({
       </ForgeCard>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={linking}
           icon={CirclePlus}
           label='Draw on that domain'
           busy={why(
@@ -205,6 +209,7 @@ function Power({
           onClick={() => linking.mutate([...domains, domain])}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Revoke it'
           busy={why(blocked, removing.isPending)}
@@ -292,6 +297,7 @@ export function DivinePowersSection({
               columns={3}
               action={
                 <StepButton
+                  act={granting}
                   icon={CirclePlus}
                   label='Grant it'
                   variant='default'

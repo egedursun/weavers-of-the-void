@@ -29,3 +29,11 @@ export function dropQueryClient(universeId: string): void {
   universeClients.get(universeId)?.clear()
   universeClients.delete(universeId)
 }
+
+export function dropEveryQueryClient(): void {
+  libraryQueryClient.removeQueries({
+    predicate: (query) => query.getObserversCount() === 0,
+  })
+  void libraryQueryClient.resetQueries()
+  for (const id of [...universeClients.keys()]) dropQueryClient(id)
+}

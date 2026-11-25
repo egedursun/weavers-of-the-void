@@ -151,6 +151,7 @@ export function StratumEditor({
     tenets_any: tenets as Criteria['tenets_any'],
   }
   const save = useGodAction({
+    writes: [{ lever: 'afterlife:stratum' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/afterlife:stratum', {
@@ -172,6 +173,7 @@ export function StratumEditor({
       ),
   })
   const close = useGodAction<boolean>({
+    writes: [{ lever: 'afterlife:stratum' }],
     run: (closed) =>
       unwrap(
         api.POST('/api/actions/afterlife:stratum', {
@@ -188,6 +190,7 @@ export function StratumEditor({
       ),
   })
   const unmake = useGodAction({
+    writes: [{ lever: 'afterlife:stratum' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/afterlife:stratum', {
@@ -210,6 +213,7 @@ export function StratumEditor({
   )
   return (
     <AdjustPanel
+      acts={[save, close, unmake]}
       trigger='Shape the stratum'
       title='Who this stratum takes'
       note='Strata are tried in order of priority, lowest first; a soul goes to the first whose every rule it meets. A closed stratum takes no one.'
@@ -325,6 +329,7 @@ export function StratumEditor({
         </div>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -349,6 +354,7 @@ export function StratumEditor({
             </Button>
           )}
           <Button
+            act={close}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -359,6 +365,7 @@ export function StratumEditor({
             {stratum.closed ? 'Open its gates' : 'Close its gates'}
           </Button>
           <Button
+            act={unmake}
             size='sm'
             variant='ghost'
             disabled={busy !== null}

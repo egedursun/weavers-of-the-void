@@ -127,6 +127,7 @@ export function ItemControls({
     <>
       <AdjustBlock title='Give it into new hands' icon={HandCoins}>
         <PickAndRun
+          act={transfer}
           types={HOLDERS}
           placeholder='Choose who receives it…'
           label='Give it'
@@ -146,6 +147,7 @@ export function ItemControls({
                   {entry.note || `age ${entry.epoch}`}
                 </Text>
                 <Button
+                  act={removeDeed}
                   size='icon'
                   variant='ghost'
                   aria-label='Strike this deed'
@@ -178,6 +180,7 @@ export function ItemControls({
           </div>
         </div>
         <Button
+          act={addDeed}
           size='sm'
           variant='outline'
           className='self-start'
@@ -206,6 +209,7 @@ export function ItemControls({
                   </Text>
                   <Badge variant='outline'>{`${page.fidelity}% faithful`}</Badge>
                   <Button
+                    act={content}
                     size='icon'
                     variant='ghost'
                     aria-label='Scrape it out'
@@ -242,6 +246,7 @@ export function ItemControls({
               onChange={(event) => setFidelity(event.target.value)}
             />
             <Button
+              act={content}
               size='sm'
               variant='outline'
               disabled={busy !== null || knowledge === null}

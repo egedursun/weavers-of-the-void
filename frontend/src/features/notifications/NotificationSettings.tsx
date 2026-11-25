@@ -107,6 +107,7 @@ export function NotificationSettings({ list }: NotificationSettingsProps) {
         </Muted>
       )}
       <Button
+        act={save}
         variant='outline'
         className='self-start'
         disabled={!changed || save.isPending}

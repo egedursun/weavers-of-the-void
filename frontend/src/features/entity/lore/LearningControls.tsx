@@ -119,6 +119,7 @@ export function LearningShaping({
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={edit}
             size='sm'
             disabled={busy !== null || branch === ''}
             disabledReason={
@@ -131,6 +132,7 @@ export function LearningShaping({
           </Button>
           {current && current.locked.length > 0 && (
             <Button
+              act={edit}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -160,6 +162,7 @@ export function LearningShaping({
         <div className='flex min-w-0 flex-wrap gap-2'>
           {(kinds.data?.kinds ?? []).map((kind) => (
             <Button
+              act={custom}
               key={kind.id}
               size='sm'
               variant={held.has(kind.id) ? 'default' : 'outline'}

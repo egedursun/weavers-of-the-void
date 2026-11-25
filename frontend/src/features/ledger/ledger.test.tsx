@@ -29,6 +29,7 @@ type Page = {
   rows?: string[]
   summary?: string | null
   conflicts?: string[]
+  author?: string
 }
 
 function view(page: Page) {
@@ -47,6 +48,7 @@ function view(page: Page) {
       applied: [],
       conflicts: page.conflicts ?? [],
       created_at: '2026-01-01T12:00:00Z',
+      author: page.author ? { account_id: 9, name: page.author } : null,
     },
     label: page.label ?? 'Blessed a son',
     change_count: page.changes ?? 2,
@@ -159,6 +161,25 @@ describe('action ledger list', () => {
     await expect
       .element(screen.getByText(/Pages of the last 40 epochs are kept/))
       .toBeInTheDocument()
+  })
+
+  it('names the person behind an act of the Creator and never calls it yours', async () => {
+    const { screen } = await renderScreen(
+      <ActionLedger />,
+      ledgerRoutes([
+        { id: 9, label: 'Renamed a region', author: 'Sorrel Vane' },
+      ])
+    )
+    const epochThree = screen.getByRole('region', { name: 'Epoch 3' })
+    await expect
+      .element(epochThree.getByText(/Sorrel Vane/))
+      .toBeInTheDocument()
+    await expect
+      .element(epochThree.getByText("The Creator's hand"))
+      .toBeInTheDocument()
+    await expect
+      .element(epochThree.getByText('You', { exact: true }))
+      .not.toBeInTheDocument()
   })
 
   it('filters by epoch and explains an empty filter', async () => {

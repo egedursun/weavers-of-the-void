@@ -8,8 +8,9 @@ from typing import Any
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.core.errors import ConflictError, ForbiddenError, NotFoundError, ValidationFailedError
 from aerona.core.grammar import several, spoken
+from aerona.db.authorship import account_id, may_see, owns, visible
 from aerona.db.session import Database
 from aerona.db.tables.divine_will import (
     DivineWillArtifactNodeRow,
@@ -19,9 +20,11 @@ from aerona.db.tables.divine_will import (
 )
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.divine_will import ArtifactKind, ExportFormat, PlanStatus
+from aerona.events.audience import private_audience
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.services.divine_will.exports import export_file
+from aerona.services.divine_will.ownership import ownership_of
 from aerona.tools.divine_will.library_ports import (
     ArtifactDiff,
     ArtifactDraft,
@@ -42,6 +45,7 @@ Ranker = Callable[[str], Awaitable[list[int]]]
 FUSION_K = 60
 TITLE_WEIGHT = 5
 SETTLED_PLANS = frozenset({PlanStatus.DONE, PlanStatus.ABANDONED, PlanStatus.FAILED})
+NOT_YOURS = "Only its author can change this writing."
 
 
 @dataclass(frozen=True)
@@ -128,8 +132,15 @@ def unified(before: str, after: str, a: int, b: int) -> tuple[str, int, int]:
 
 async def require_artifact(session: AsyncSession, artifact_id: int) -> DivineWillArtifactRow:
     row = await session.get(DivineWillArtifactRow, artifact_id)
-    if row is None:
+    if row is None or not may_see(row.author_account_id, row.shared):
         raise NotFoundError(f"No artifact {artifact_id}.")
+    return row
+
+
+async def owned_artifact(session: AsyncSession, artifact_id: int) -> DivineWillArtifactRow:
+    row = await require_artifact(session, artifact_id)
+    if not owns(row.author_account_id):
+        raise ForbiddenError(NOT_YOURS)
     return row
 
 
@@ -232,6 +243,7 @@ def summarised(row: DivineWillArtifactRow, characters: int, subjects: list[Subje
         plan_id=plan_id,
         created_at=row.created_at,
         updated_at=row.updated_at,
+        owner=ownership_of(row.author_account_id, row.author_name, row.shared),
     )
 
 
@@ -277,7 +289,9 @@ class ArtifactLibrary:
 
     def changed(self, view: ArtifactView | None, artifact_id: int, *, cycle_id: int | None = None) -> None:
         payload = {"artifact_id": artifact_id, "version": view.artifact.current_version if view else 0, "cycle_id": cycle_id, "deleted": view is None}
-        self.bus.publish(EventKind.DIVINE_WILL_ARTIFACT_CHANGED, payload)
+        owner = view.artifact.owner if view is not None else None
+        audience = private_audience(owner.author_account_id, owner.shared) if owner is not None else account_id()
+        self.bus.publish(EventKind.DIVINE_WILL_ARTIFACT_CHANGED, payload, audience=audience)
 
     async def create(self, draft: ArtifactDraft) -> ArtifactView:
         async with self.database.write() as session:
@@ -300,7 +314,7 @@ class ArtifactLibrary:
         if not edits:
             raise ValidationFailedError("Name at least one edit.")
         async with self.database.write() as session:
-            row = await require_artifact(session, artifact_id)
+            row = await owned_artifact(session, artifact_id)
             if row.kind is ArtifactKind.PLAN:
                 raise ConflictError("A plan's artifact follows its plan; revise the plan's steps instead.")
             body = (await require_version(session, row.id, row.current_version)).body
@@ -320,7 +334,7 @@ class ArtifactLibrary:
 
     async def patch(self, artifact_id: int, patch: ArtifactPatch) -> ArtifactView:
         async with self.database.write() as session:
-            row = await require_artifact(session, artifact_id)
+            row = await owned_artifact(session, artifact_id)
             mirrored = (await plans_of(session, [row.id])).get(row.id) is not None
             if patch.kind is not None and patch.kind is not row.kind and (mirrored or patch.kind is ArtifactKind.PLAN):
                 raise ConflictError("Only a plan keeps an artifact of the plan kind, and a plan's artifact keeps that kind.")
@@ -334,6 +348,8 @@ class ArtifactLibrary:
                 row.kind = patch.kind
             if patch.node_ids is not None:
                 await set_subjects(session, row.id, patch.node_ids)
+            if patch.shared is not None:
+                row.shared = patch.shared
             row.updated_at = datetime.now(UTC)
             await session.flush()
             view = await view_of(session, row)
@@ -342,7 +358,7 @@ class ArtifactLibrary:
 
     async def delete(self, artifact_id: int) -> None:
         async with self.database.write() as session:
-            row = await require_artifact(session, artifact_id)
+            row = await owned_artifact(session, artifact_id)
             plan = await session.scalar(select(DivineWillPlanRow).where(DivineWillPlanRow.artifact_id == row.id).order_by(DivineWillPlanRow.id).limit(1))
             if plan is not None and plan.status not in SETTLED_PLANS:
                 raise ConflictError(f"This artifact holds plan {plan.id}, which is still {spoken(plan.status)}; finish or abandon the plan first.")
@@ -368,7 +384,12 @@ class ArtifactLibrary:
         columns: list[Any] = [DivineWillArtifactRow, func.length(DivineWillArtifactVersionRow.body)]
         if with_bodies:
             columns.append(DivineWillArtifactVersionRow.body)
-        statement = select(*columns).join(DivineWillArtifactVersionRow, current).order_by(DivineWillArtifactRow.id)
+        statement = (
+            select(*columns)
+            .join(DivineWillArtifactVersionRow, current)
+            .where(visible(DivineWillArtifactRow.author_account_id, DivineWillArtifactRow.shared))
+            .order_by(DivineWillArtifactRow.id)
+        )
         for column, value in (
             (DivineWillArtifactRow.kind, query.kind),
             (DivineWillArtifactRow.status, query.status),

@@ -492,6 +492,7 @@ function SupplyForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={founding}
             size='sm'
             disabled={depotBusy !== null}
             disabledReason={depotBusy ?? undefined}
@@ -501,6 +502,7 @@ function SupplyForge({
             Stock the depot
           </Button>
           <Button
+            act={adding}
             size='sm'
             variant='secondary'
             disabled={trainBusy !== null}
@@ -606,6 +608,7 @@ function OperationForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

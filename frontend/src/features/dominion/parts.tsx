@@ -10,6 +10,7 @@ import {
   Unlink,
   UserCheck,
 } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -47,6 +48,7 @@ export function NodePicker({
   blocked,
   kinds = [],
   types,
+  act,
 }: {
   label: string
   value: number | null
@@ -54,6 +56,7 @@ export function NodePicker({
   blocked: string | null
   kinds?: readonly string[]
   types?: readonly string[]
+  act?: ActProp
 }) {
   const id = useId()
   const names = useNames()
@@ -83,6 +86,7 @@ export function NodePicker({
   return (
     <FieldTile id={id} label={label}>
       <RecordCombobox
+        act={act}
         id={id}
         options={options}
         value={value === null ? null : String(value)}
@@ -143,6 +147,7 @@ export function ClaimCard({
       caption={`${claim.ruling ? 'Rules this land' : 'Contends here'} · weighed in epoch ${claim.epoch}`}
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -190,6 +195,7 @@ export function ClaimCard({
           onChange={setStrength}
         />
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -204,6 +210,7 @@ export function ClaimCard({
         <div className='flex min-w-0 items-center justify-between gap-2'>
           <Muted variant='caption'>Held against the engine</Muted>
           <Switch
+            act={set}
             aria-label='Hold this dominion'
             checked={held}
             disabled={busy !== null}
@@ -251,6 +258,7 @@ export function ThroneCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -284,6 +292,7 @@ export function ThroneCard({
           kinds={GOD_KINDS}
         />
         <Button
+          act={edit}
           size='sm'
           disabled={busy !== null || holder === null}
           disabledReason={
@@ -298,6 +307,7 @@ export function ThroneCard({
           Seat this god
         </Button>
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || throne.holder === null}
@@ -316,6 +326,7 @@ export function ThroneCard({
         </Button>
       </div>
       <RecordEditor
+        act={edit}
         title='Reshape this throne'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -378,6 +389,7 @@ export function SiteCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -419,6 +431,7 @@ export function SiteCard({
           types={['mortal', 'settlement', 'people', 'polity']}
         />
         <Button
+          act={reveal}
           size='sm'
           disabled={busy !== null || found}
           disabledReason={
@@ -438,6 +451,7 @@ export function SiteCard({
           types={['settlement', 'people', 'polity', 'cult', 'mortal']}
         />
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || holder === null}
@@ -465,6 +479,7 @@ export function SiteCard({
           kinds={['world']}
         />
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || world === null || site.kind !== 'gateway'}
@@ -486,6 +501,7 @@ export function SiteCard({
         </Button>
       </div>
       <RecordEditor
+        act={edit}
         title='Reshape this site'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -570,6 +586,7 @@ function DeedRow({
       </div>
       <div className='grid min-w-0 grid-cols-2 items-end gap-2 sm:grid-cols-4'>
         <Button
+          act={teach}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -580,6 +597,7 @@ function DeedRow({
           {LESSONS.reward.label}
         </Button>
         <Button
+          act={teach}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -598,6 +616,7 @@ function DeedRow({
           onChange={setDraft}
         />
         <Button
+          act={weigh}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -645,6 +664,7 @@ export function CreatureCard({
       caption={`Creature of ${creature.god?.name ?? 'a god'} since epoch ${creature.since_epoch} · ${plural(creature.deeds, 'deed', 'deeds')}`}
       aside={
         <Button
+          act={release}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -706,6 +726,7 @@ export function CreatureCard({
         </PagedList>
       )}
       <RecordEditor
+        act={edit}
         title='Reshape this creature'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -767,6 +788,7 @@ export function MiracleCard({
       caption={`Epoch ${miracle.epoch} · ${plural(miracle.witnesses, 'witness', 'witnesses')} · belief ${miracle.belief}`}
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -814,6 +836,7 @@ export function MiracleCard({
           kinds={GOD_KINDS}
         />
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || credit === null}
@@ -830,6 +853,7 @@ export function MiracleCard({
         </Button>
       </div>
       <RecordEditor
+        act={edit}
         title='Reshape this miracle'
         note='Values you set are held against the engine until you release them.'
         fields={[

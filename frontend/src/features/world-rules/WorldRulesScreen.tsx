@@ -33,6 +33,7 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { Muted, Stat, Text } from '@/components/typography'
+import { toastDone } from '@/features/team/outcome'
 import { HarshnessDial } from './HarshnessDial'
 import { GroupHeader, RuleLine } from './RuleRowView'
 import { Spacer } from './Spacer'
@@ -185,8 +186,8 @@ function RulesEditor({ rules }: RulesEditorProps) {
       if (rule) changes.set(rule, Number(text))
     }
     save.mutate(changes, {
-      onSuccess: () => {
-        toast.success(`${plural(drafts.size, 'rule', 'rules')} updated`)
+      onSuccess: (result) => {
+        toastDone(result, `${plural(drafts.size, 'rule', 'rules')} updated`)
         setDrafts(new Map())
         setServerErrors(new Map())
         setGeneralError(null)
@@ -287,6 +288,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
         </Muted>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={resetAll}
             variant='outline'
             disabled={changedCount === 0 || busy}
             disabledReason={
@@ -298,6 +300,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
             Reset all
           </Button>
           <Button
+            act={save}
             onClick={onSave}
             disabled={drafts.size === 0 || busy}
             disabledReason={
@@ -391,6 +394,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
                   <div key={item.key} data-index={item.index} ref={measure}>
                     {row.type === 'group' ? (
                       <GroupHeader
+                        act={resetGroup}
                         row={row}
                         busy={busy}
                         onToggle={toggleGroup}
@@ -400,8 +404,8 @@ function RulesEditor({ rules }: RulesEditorProps) {
                               (rule) => rule.group === name && isChanged(rule)
                             ),
                             {
-                              onSuccess: () =>
-                                toast.success(`${name} reset to defaults`),
+                              onSuccess: (result) =>
+                                toastDone(result, `${name} reset to defaults`),
                               onError: fail,
                             }
                           )
@@ -409,6 +413,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
                       />
                     ) : (
                       <RuleLine
+                        act={resetRule}
                         rule={row.rule}
                         path={row.path}
                         draft={drafts.get(row.path)}
@@ -420,9 +425,9 @@ function RulesEditor({ rules }: RulesEditorProps) {
                         onDraft={onDraft}
                         onReset={(rule) =>
                           resetRule.mutate(rule, {
-                            onSuccess: () => {
+                            onSuccess: (result) => {
                               onDraft(rulePath(rule), null)
-                              toast.success('Rule reset to its default')
+                              toastDone(result, 'Rule reset to its default')
                             },
                             onError: fail,
                           })
@@ -438,6 +443,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
         </div>
       </div>
       <ConfirmDialog
+        act={resetAll}
         open={confirmAll}
         onOpenChange={setConfirmAll}
         title='Reset every rule?'
@@ -447,10 +453,10 @@ function RulesEditor({ rules }: RulesEditorProps) {
         isLoading={resetAll.isPending}
         handleConfirm={() =>
           resetAll.mutate(undefined, {
-            onSuccess: () => {
+            onSuccess: (result) => {
               setConfirmAll(false)
               setDrafts(new Map())
-              toast.success('All rules reset to their defaults')
+              toastDone(result, 'All rules reset to their defaults')
             },
             onError: (error) => {
               setConfirmAll(false)

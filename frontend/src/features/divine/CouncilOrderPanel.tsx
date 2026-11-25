@@ -146,6 +146,7 @@ export function VetoButton({
           : null)
   return (
     <Button
+      act={vetoing}
       size='sm'
       variant='outline'
       disabled={reason !== null}
@@ -184,6 +185,7 @@ function Seat({ row, blocked }: { row: SeatView; blocked: string | null }) {
     >
       <Ref node={row.god} empty='no god named' />
       <RecordEditor
+        act={editing}
         title='Set the seat'
         note={HOLD}
         fields={SEAT_FIELDS}
@@ -193,6 +195,7 @@ function Seat({ row, blocked }: { row: SeatView; blocked: string | null }) {
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Take the seat away'
         busy={why(blocked, removing.isPending)}
@@ -234,6 +237,7 @@ function Violation({
     >
       <Ref node={row.violator} empty='no god named' />
       <RecordEditor
+        act={editing}
         title='Set the breach'
         note={HOLD}
         fields={VIOLATION_FIELDS}
@@ -243,6 +247,7 @@ function Violation({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike the breach'
         busy={why(blocked, removing.isPending)}
@@ -279,6 +284,7 @@ function SeatForge({
       columns={2}
       action={
         <StepButton
+          act={seating}
           icon={CirclePlus}
           label='Seat it'
           variant='default'
@@ -358,6 +364,7 @@ function ViolationForge({
       columns={godId === null ? 3 : 2}
       action={
         <StepButton
+          act={charging}
           icon={Gavel}
           label='Charge the breach'
           busy={why(blocked ?? missing, charging.isPending)}
@@ -475,6 +482,7 @@ export function CouncilOrderPanel({
               }
             >
               <RecordEditor
+                act={editing}
                 title='Set the procedure'
                 note={HOLD}
                 fields={PROCEDURE_FIELDS}
@@ -486,12 +494,14 @@ export function CouncilOrderPanel({
                 }
               />
               <StepButton
+                act={resetting}
                 icon={RotateCcw}
                 label='Return to the rules of the world'
                 busy={why(blocked, resetting.isPending)}
                 onClick={() => resetting.mutate()}
               />
               <SwitchField
+                act={editing}
                 label='The Creator may veto'
                 checked={query.data.procedure.creator_veto}
                 disabled={why(blocked, editing.isPending) !== null}

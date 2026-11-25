@@ -150,6 +150,7 @@ function TechniqueTile({
   blocked: string | null
 }) {
   const set = useGodAction<{ held: boolean; secret: boolean }>({
+    writes: [{ lever: 'research:technique' }],
     run: ({ held, secret }) =>
       unwrap(
         api.POST('/api/actions/research:technique', {
@@ -221,6 +222,7 @@ function TechniqueTile({
             </Badge>
             <label className='flex items-center gap-1.5'>
               <Switch
+                act={set}
                 checked={row.secret}
                 disabled={busy !== null}
                 aria-label='Keep it secret'
@@ -231,6 +233,7 @@ function TechniqueTile({
               </Muted>
             </label>
             <Button
+              act={set}
               size='sm'
               variant='ghost'
               className='ml-auto'
@@ -258,6 +261,7 @@ function TechniqueTile({
               </Badge>
             )}
             <Button
+              act={set}
               size='sm'
               variant={open ? 'default' : 'outline'}
               className='ml-auto'
@@ -342,6 +346,7 @@ function LearningControls({
 }) {
   const [branch, setBranch] = useState('')
   const set = useGodAction<{ branch: string; level: number }>({
+    writes: [{ lever: 'research:level' }],
     run: ({ branch: chosen, level }) =>
       unwrap(
         api.POST('/api/actions/research:level', {
@@ -362,6 +367,7 @@ function LearningControls({
   )
   return (
     <AdjustPanel
+      acts={[set]}
       surface='LearningAdjust'
       title='Shape their learning'
       note='Open a new branch or set any level. Techniques are taught and forgotten on their own cards above. Every change goes into the ledger and can be undone.'
@@ -379,6 +385,7 @@ function LearningControls({
             />
           </div>
           <Button
+            act={set}
             size='sm'
             variant='outline'
             disabled={busy !== null || branch === ''}
@@ -403,6 +410,7 @@ function LearningControls({
                 const spec = branchOf(row.branch)
                 return (
                   <RowEditor
+                    act={set}
                     key={`${row.branch}-${row.level}`}
                     label={`${spec.label} level`}
                     icon={spec.icon}

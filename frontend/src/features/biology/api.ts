@@ -42,6 +42,7 @@ export function useBiologyAction<Name extends BiologyAction, T>(
   success?: string
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
   })

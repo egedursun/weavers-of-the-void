@@ -297,6 +297,7 @@ export function DivinationPanel({
         columns={2}
         action={
           <Button
+            act={founding}
             size='sm'
             disabled={foundBusy !== null}
             disabledReason={foundBusy ?? undefined}
@@ -365,6 +366,7 @@ export function DivinationPanel({
         columns={3}
         action={
           <Button
+            act={reading}
             size='sm'
             disabled={readBusy !== null}
             disabledReason={readBusy ?? undefined}
@@ -556,6 +558,7 @@ export function ForesightPanel({
         columns={3}
         action={
           <Button
+            act={granting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -788,6 +791,7 @@ export function ForecastPanel({
         columns={2}
         action={
           <Button
+            act={building}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -928,6 +932,7 @@ export function FeedingPanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

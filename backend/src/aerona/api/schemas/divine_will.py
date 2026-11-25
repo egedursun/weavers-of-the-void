@@ -5,6 +5,7 @@ from typing import Any
 from pydantic import Field, computed_field
 
 from aerona.api.schemas.common import ApiModel, RequestModel
+from aerona.api.schemas.team import AuthorView
 from aerona.domain.enums.divine_will import (
     AttachmentKind,
     AttachmentStatus,
@@ -117,6 +118,9 @@ class WillSessionSummary(ApiModel):
     closed_epoch: int | None
     closed_at: datetime | None
     cycle_count: int
+    author: AuthorView | None
+    shared: bool
+    mine: bool
 
 
 class WillSessionView(ApiModel):

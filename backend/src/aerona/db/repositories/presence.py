@@ -5,6 +5,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.authorship import mine, visible
 from aerona.db.tables.presence import PresenceEventRow, PresenceExchangeRow, PresenceSessionRow
 from aerona.domain.enums.presence import PresenceEventKind, PresenceExchangeStatus, PresenceRecord, PresenceStatus
 
@@ -15,7 +16,7 @@ FINISHED_EXCHANGES = frozenset({PresenceExchangeStatus.DONE, PresenceExchangeSta
 async def open_session_of(session: AsyncSession, node_id: int) -> PresenceSessionRow | None:
     return await session.scalar(
         select(PresenceSessionRow)
-        .where(PresenceSessionRow.node_id == node_id, PresenceSessionRow.status == PresenceStatus.OPEN)
+        .where(PresenceSessionRow.node_id == node_id, PresenceSessionRow.status == PresenceStatus.OPEN, mine(PresenceSessionRow.author_account_id))
         .order_by(PresenceSessionRow.id.desc())
         .limit(1)
     )
@@ -26,7 +27,7 @@ async def open_sessions(session: AsyncSession, node_ids: Sequence[int]) -> dict[
         return {}
     rows = await session.execute(
         select(PresenceSessionRow.node_id, PresenceSessionRow.id)
-        .where(PresenceSessionRow.node_id.in_(node_ids), PresenceSessionRow.status == PresenceStatus.OPEN)
+        .where(PresenceSessionRow.node_id.in_(node_ids), PresenceSessionRow.status == PresenceStatus.OPEN, mine(PresenceSessionRow.author_account_id))
         .order_by(PresenceSessionRow.id)
     )
     return {node_id: session_id for node_id, session_id in rows}
@@ -39,6 +40,7 @@ async def kept_sessions(session: AsyncSession, node_id: int) -> list[PresenceSes
             PresenceSessionRow.node_id == node_id,
             PresenceSessionRow.record == PresenceRecord.ON_RECORD,
             PresenceSessionRow.status == PresenceStatus.CLOSED,
+            visible(PresenceSessionRow.author_account_id, PresenceSessionRow.shared),
         )
         .order_by(PresenceSessionRow.id.desc())
     )

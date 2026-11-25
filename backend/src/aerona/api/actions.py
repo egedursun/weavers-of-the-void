@@ -4,17 +4,25 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Annotated, Any, cast
 
-from fastapi import APIRouter, Body, Depends, Path, Response, status
+from fastapi import APIRouter, Body, Depends, Path, Query, Response, status
 from pydantic import BaseModel, ConfigDict, create_model
 
-from aerona.api.dependencies import get_services, world_rules
+from aerona.api.access import LEVER_ENDPOINTS
+from aerona.api.dependencies import get_services
 from aerona.api.schemas.actions import ActionResponse
+from aerona.api.views.team import proposal_view, queued_view
+from aerona.constants.team import PROPOSED_TEXT, QUEUED_TEXT, REASON_COLUMN_MAX_LENGTH
+from aerona.core.act_note import ActNote, noting
+from aerona.core.errors import ValidationFailedError
+from aerona.services.accounts.guard import ensure_lever_allowed
 from aerona.services.container import Services
 from aerona.services.player.catalog import ActionSpec, action
 from aerona.services.player.scope import ActionOutcome
+from aerona.services.team.gate import Admitted, admit
 
 NON_WORD = re.compile(r"[^a-zA-Z0-9]+")
 JOB_ID_KEY = "job_id"
+REASON_TOO_LONG = "A reason can be at most {limit} characters."
 
 
 @dataclass(frozen=True)
@@ -55,17 +63,24 @@ def to_response(outcome: ActionOutcome) -> ActionResponse:
     return ActionResponse(**outcome.model_dump(), job_id=str(job_id) if job_id is not None else None)
 
 
-async def run_action(services: Services, spec: ActionSpec, payload: dict[str, Any]) -> ActionOutcome:
-    command = spec.input_model.model_validate(payload)
-    if spec.sync is not None:
-        async with services.database.write() as session:
-            rules = await world_rules(services, session)
-            return await spec.sync(services.player.scope(session, rules), command)
-    if spec.job is None:
-        raise LookupError(spec.id)
-    async with services.database.read() as session:
-        rules = await world_rules(services, session)
-    return await spec.job(services.player, rules, command)
+def waiting_response(spec: ActionSpec, admitted: Admitted) -> ActionResponse:
+    if admitted.queued is not None:
+        return ActionResponse(action=spec.id, message=QUEUED_TEXT, queued=queued_view(admitted.queued))
+    if admitted.proposal is not None:
+        return ActionResponse(action=spec.id, message=PROPOSED_TEXT, proposal=proposal_view(admitted.proposal))
+    raise LookupError(spec.id)
+
+
+async def run_action(services: Services, spec: ActionSpec, payload: dict[str, Any]) -> Admitted:
+    ensure_lever_allowed(spec.id, spec.input_model.model_validate(payload))
+    return await admit(services, spec, payload)
+
+
+def act_note(services: Services, reason: str | None, expected_revision: int | None) -> ActNote:
+    text = reason.strip() if reason else None
+    if text and len(text) > services.settings.team_reason_max_length:
+        raise ValidationFailedError(REASON_TOO_LONG.format(limit=services.settings.team_reason_max_length))
+    return ActNote(reason=text or None, expected_revision=expected_revision)
 
 
 def build_endpoint(
@@ -78,13 +93,20 @@ def build_endpoint(
         payload.update({target: kwargs[source] for source, target in path_fields.items()})
         payload.update(fixed)
         response: Response = kwargs["response"]
+        with noting(act_note(services, kwargs.get("reason"), kwargs.get("expected_revision"))):
+            admitted = await run_action(services, spec, payload)
+        if admitted.outcome is None:
+            response.status_code = status.HTTP_202_ACCEPTED
+            return waiting_response(spec, admitted)
         if spec.job is not None:
             response.status_code = status.HTTP_202_ACCEPTED
-        return to_response(await run_action(services, spec, payload))
+        return to_response(admitted.outcome)
 
     parameters = [
         inspect.Parameter("services", inspect.Parameter.KEYWORD_ONLY, annotation=Annotated[Services, Depends(get_services)]),
         inspect.Parameter("response", inspect.Parameter.KEYWORD_ONLY, annotation=Response),
+        inspect.Parameter("reason", inspect.Parameter.KEYWORD_ONLY, annotation=Annotated[str | None, Query(max_length=REASON_COLUMN_MAX_LENGTH)], default=None),
+        inspect.Parameter("expected_revision", inspect.Parameter.KEYWORD_ONLY, annotation=Annotated[int | None, Query(ge=0)], default=None),
     ]
     for source in path_fields:
         parameters.append(inspect.Parameter(source, inspect.Parameter.KEYWORD_ONLY, annotation=Annotated[int, Path(ge=1)]))
@@ -92,6 +114,7 @@ def build_endpoint(
         default = Body(default_factory=model) if optional_body(model) else Body()
         parameters.append(inspect.Parameter("body", inspect.Parameter.KEYWORD_ONLY, annotation=Annotated[model, default]))
     cast(Any, endpoint).__signature__ = inspect.Signature(parameters, return_annotation=ActionResponse)
+    LEVER_ENDPOINTS[endpoint] = spec.id
     return endpoint
 
 

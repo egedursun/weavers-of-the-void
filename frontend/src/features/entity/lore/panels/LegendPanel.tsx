@@ -212,6 +212,7 @@ export function LegendPanel({
               placeholder='Choose a work…'
             />
             <Button
+              act={edit}
               size='sm'
               disabled={busy !== null || work === null}
               disabledReason={
@@ -226,6 +227,7 @@ export function LegendPanel({
             </Button>
             {card.fixed_in && (
               <Button
+                act={edit}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}

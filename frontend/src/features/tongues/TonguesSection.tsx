@@ -119,6 +119,7 @@ function ProfileCard({
       }
     >
       <RecordEditor
+        act={edit}
         title='Reshape the tongue'
         note='How a tongue is made decides who can hear it and whether it can be written; its counting base shapes how its speakers reckon; a revived tongue names the dead tongue it came back from.'
         fields={[
@@ -185,6 +186,7 @@ function GrammarCard({
       }
       aside={
         <Button
+          act={reset}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -210,6 +212,7 @@ function GrammarCard({
             )}
           </div>
           <RecordEditor
+            act={edit}
             title='Reshape the grammar'
             note='Distant grammars make letters and treaties misread and art forms lose more in translation.'
             fields={[
@@ -339,6 +342,7 @@ function ChangeCard({
       caption={`${kind.label} · ${ENVIRONMENTS[change.environment].label.toLowerCase()} · epoch ${change.epoch}`}
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -352,6 +356,7 @@ function ChangeCard({
     >
       <Chip icon={CAUSES[change.cause].icon}>{CAUSES[change.cause].label}</Chip>
       <RecordEditor
+        act={edit}
         title='Reshape the change'
         note='Every word of the tongue is derived again from its proto-form when a change moves.'
         fields={[
@@ -415,6 +420,7 @@ function ChangeForm({
       columns={2}
       action={
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -519,6 +525,7 @@ function ScriptCard({
           aside={
             <div className='flex shrink-0 flex-wrap items-center gap-1'>
               <Button
+                act={assign}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -529,6 +536,7 @@ function ScriptCard({
                 Leave unwritten
               </Button>
               <Button
+                act={remove}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -563,6 +571,7 @@ function ScriptCard({
             ]}
           />
           <RecordEditor
+            act={edit}
             title='Reshape the script'
             note='Every tongue written in this script follows its system.'
             fields={[
@@ -617,6 +626,7 @@ function ScriptCard({
           onPick={setChosen}
         />
         <Button
+          act={assign}
           size='sm'
           variant='outline'
           disabled={busy !== null || chosen === ''}
@@ -637,6 +647,7 @@ function ScriptCard({
         columns={2}
         action={
           <Button
+            act={create}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -703,6 +714,7 @@ function DecipherCard({
           caption={`Begun in epoch ${work.started_epoch}, last worked in epoch ${work.updated_epoch}`}
           aside={
             <Button
+              act={remove}
               size='sm'
               variant='ghost'
               disabled={busy !== null}
@@ -731,6 +743,7 @@ function DecipherCard({
             ]}
           />
           <RecordEditor
+            act={edit}
             title='Reshape the decipherment'
             note='A finished decipherment makes the script readable to all.'
             fields={[
@@ -785,6 +798,7 @@ function DecipherCard({
           types={['mortal']}
         />
         <Button
+          act={start}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -831,6 +845,7 @@ function PolicyCard({
       caption={`${spec.label} under ${policy.holder?.name ?? 'no one'} since epoch ${policy.since_epoch}`}
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -845,6 +860,7 @@ function PolicyCard({
       <Meter label='Strength' value={policy.strength} tone='default' />
       <Facts items={[['Held by', <Ref key='holder' node={policy.holder} />]]} />
       <RecordEditor
+        act={edit}
         title='Reshape the policy'
         note='Suppression costs the speakers cohesion and raises unrest; an official or revived tongue spreads.'
         fields={[
@@ -904,6 +920,7 @@ function PolicyForm({
       columns={2}
       action={
         <Button
+          act={place}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -976,6 +993,7 @@ function ShiftCard({
       caption={`${spec.label} in epoch ${shift.epoch}`}
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -999,6 +1017,7 @@ function ShiftCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape the record'
         note='The record of a shift is history; the word itself is edited in the dictionary.'
         fields={[
@@ -1037,6 +1056,7 @@ function VeilForm({
         blocked={busy}
       />
       <Button
+        act={veil}
         size='sm'
         variant='outline'
         disabled={busy !== null || named === null}
@@ -1101,6 +1121,7 @@ function DivineCard({
           caption={`Spoken since epoch ${tongue.since_epoch}`}
           aside={
             <Button
+              act={remove}
               size='sm'
               variant='ghost'
               disabled={busy !== null}
@@ -1113,6 +1134,7 @@ function DivineCard({
           }
         >
           <RecordEditor
+            act={edit}
             title='Reshape the tongue'
             note='Rites cast in the god’s name grow stronger in a mouth that knows its tongue.'
             fields={[
@@ -1141,6 +1163,7 @@ function DivineCard({
           types={['language']}
         />
         <Button
+          act={choose}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -1162,6 +1185,7 @@ function DivineCard({
           types={['mortal']}
         />
         <Button
+          act={teach}
           size='sm'
           disabled={busy !== null || mortal === null || tongue === null}
           disabledReason={
@@ -1206,6 +1230,7 @@ function PidginForm({
         types={COMMUNITY_TYPES}
       />
       <Button
+        act={make}
         size='sm'
         variant='outline'
         disabled={busy !== null || second === null}

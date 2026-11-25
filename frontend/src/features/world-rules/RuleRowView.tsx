@@ -4,6 +4,7 @@ import {
   RotateCcw,
   TriangleAlert,
 } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +41,8 @@ export function GroupHeader({
   onToggle,
   onResetGroup,
   busy,
-}: GroupHeaderProps) {
+  act,
+}: GroupHeaderProps & { act?: ActProp }) {
   const Icon = row.open ? ChevronDown : ChevronRight
   return (
     <div className='flex min-w-0 items-center gap-2 border-b pt-4 pb-2'>
@@ -50,6 +52,7 @@ export function GroupHeader({
         size='sm'
       />
       <Button
+        act={act}
         variant='ghost'
         size='sm'
         aria-expanded={row.open}
@@ -70,6 +73,7 @@ export function GroupHeader({
             {`${row.changed} changed`}
           </Badge>
           <Button
+            act={act}
             variant='ghost'
             size='sm'
             disabled={busy}
@@ -115,7 +119,8 @@ export function RuleLine({
   busy,
   onDraft,
   onReset,
-}: RuleLineProps) {
+  act,
+}: RuleLineProps & { act?: ActProp }) {
   const changed = isChanged(rule)
   const pending = draft !== undefined
   const shown = draft ?? String(rule.value)
@@ -159,6 +164,7 @@ export function RuleLine({
       <div className='flex min-w-0 flex-wrap items-center gap-2 px-2 md:col-span-2'>
         {isSwitch(rule) ? (
           <Switch
+            act={act}
             id={controlId}
             checked={shown === '1'}
             disabled={busy}
@@ -169,6 +175,7 @@ export function RuleLine({
           />
         ) : (
           <Input
+            act={act}
             id={controlId}
             type='number'
             inputMode={rule.integer ? 'numeric' : 'decimal'}
@@ -208,12 +215,18 @@ export function RuleLine({
       </div>
       <div className='flex min-w-0 items-center justify-end gap-1 px-2'>
         {pending && (
-          <Button variant='ghost' size='sm' onClick={() => onDraft(path, null)}>
+          <Button
+            act={act}
+            variant='ghost'
+            size='sm'
+            onClick={() => onDraft(path, null)}
+          >
             Discard
           </Button>
         )}
         {changed && (
           <Button
+            act={act}
             variant='ghost'
             size='sm'
             disabled={busy}

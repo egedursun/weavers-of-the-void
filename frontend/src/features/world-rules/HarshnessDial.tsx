@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { type KpiTone, Medallion } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { toastDone } from '@/features/team/outcome'
 import { type Rule, rulePath, useRules, useSaveRules } from './api'
 
 const PROFILE_PATH = 'harshness.profile'
@@ -68,8 +69,9 @@ export function HarshnessDial() {
   const choose = (value: number) => {
     if (value === profile.value) return
     save.mutate(new Map([[profile, value]]), {
-      onSuccess: () =>
-        toast.success(
+      onSuccess: (result) =>
+        toastDone(
+          result,
           `The world is now ${PROFILES[value]?.label.toLowerCase()}.`
         ),
       onError: (error) => toast.error(error.message),
@@ -99,6 +101,7 @@ export function HarshnessDial() {
           const chosen = item.value === profile.value
           return (
             <Button
+              act={save}
               key={item.key}
               type='button'
               role='radio'

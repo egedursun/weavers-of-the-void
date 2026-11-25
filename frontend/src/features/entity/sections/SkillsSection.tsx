@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Hourglass, Pencil, Plus, Shapes, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -110,10 +111,12 @@ function SkillRow({
   skill,
   blocked,
   onForget,
+  act,
 }: {
   skill: MindSkill
   blocked: string | null
   onForget: () => void
+  act?: ActProp
 }) {
   const variants = useVariants()
   const kinds = (variants.data ?? [])
@@ -176,6 +179,7 @@ function SkillRow({
           />
         )}
         <Button
+          act={act}
           size='icon-sm'
           variant='ghost'
           aria-label={`Forget ${skill.label}`}
@@ -234,6 +238,7 @@ function SkillControls({ mind }: { mind: Mind }) {
       })
     )
   const teach = useGodAction({
+    writes: [{ lever: 'mind:skill' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mind:skill', {
@@ -297,6 +302,7 @@ function SkillControls({ mind }: { mind: Mind }) {
         </FieldTile>
         <div className='flex justify-end'>
           <Button
+            act={teach}
             size='sm'
             disabled={busy !== null || picked === '' || invalid}
             disabledReason={
@@ -328,6 +334,7 @@ export function SkillsSection({ nodeId }: { nodeId: number }) {
   const { reason } = useGodGate()
   const query = useMind(nodeId)
   const forget = useGodAction({
+    writes: [{ lever: 'mind:skill_remove' }],
     run: (skill: SkillKind) =>
       unwrap(
         api.POST('/api/actions/mind:skill_remove', {
@@ -371,6 +378,7 @@ export function SkillsSection({ nodeId }: { nodeId: number }) {
                     <Paged items={rows}>
                       {(skill) => (
                         <SkillRow
+                          act={forget}
                           key={skill.skill}
                           skill={skill}
                           blocked={blocked}

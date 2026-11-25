@@ -158,6 +158,7 @@ export function ChronicleAudit({
 }) {
   const { reason } = useGodGate()
   const run = useGodAction({
+    writes: [{ lever: 'chronicle:audit' }],
     run: () =>
       unwrap(api.POST('/api/actions/chronicle:audit', { body: { epoch } })),
     success: 'The chronicle is being audited again',
@@ -209,6 +210,7 @@ export function ChronicleAudit({
           </CollapsibleTrigger>
         )}
         <ActionButton
+          act={run}
           label='Audit again'
           icon={ScanSearch}
           size='sm'

@@ -171,6 +171,7 @@ function IndentureForge({
       columns={4}
       action={
         <Button
+          act={binding}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -315,6 +316,7 @@ function MarketForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -428,6 +430,7 @@ function FreeForge({
       columns={2}
       action={
         <Button
+          act={freeing}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

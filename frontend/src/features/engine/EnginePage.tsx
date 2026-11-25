@@ -31,6 +31,7 @@ import { Muted, Text } from '@/components/typography'
 import { READ_ONLY_REASON } from '@/features/entity/actions/gate'
 import { useWorldState } from '@/features/overview/api'
 import { DeepTimePanel } from '@/features/prehistory/DeepTimePanel'
+import { toastDone } from '@/features/team/outcome'
 import { TransformTimelinePanel } from '@/features/transform/TransformTimelinePanel'
 import { IntegrityFindings } from './IntegrityFindings'
 import { IntegrityPanel } from './IntegrityPanel'
@@ -98,7 +99,7 @@ export function EnginePage() {
 
   const execute = (phase: EnginePhase) => {
     run.mutate(phase.name, {
-      onSuccess: (result) => toast.success(result.message),
+      onSuccess: (result) => toastDone(result, result.message),
       onError: (error) => toast.error(error.message),
       onSettled: () => setPending(null),
     })
@@ -108,8 +109,9 @@ export function EnginePage() {
     toggle.mutate(
       { rule: phase.rule_key, on },
       {
-        onSuccess: () =>
-          toast.success(
+        onSuccess: (result) =>
+          toastDone(
+            result,
             `${phaseLabel(phase.name)} ${on ? 'will run' : 'is switched off'}.`
           ),
         onError: (error) => toast.error(error.message),
@@ -259,6 +261,7 @@ export function EnginePage() {
                 >
                   {(phase) => (
                     <PhaseRow
+                      act={[toggle, run]}
                       key={phase.name}
                       phase={phase}
                       order={order.get(phase.name) ?? 0}
@@ -288,6 +291,7 @@ export function EnginePage() {
       <TransformTimelinePanel readOnlyReason={readOnlyReason} />
       <SeedPanel />
       <ConfirmDialog
+        act={run}
         open={pending !== null}
         onOpenChange={(open) => !open && setPending(null)}
         title={

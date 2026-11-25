@@ -151,6 +151,7 @@ export function ActingMechanics({
   const [field, setField] = useState('')
   const [value, setValue] = useState('')
   const run = useGodAction({
+    writes: [{ lever: 'lever:run' }],
     run: (mechanic: string) =>
       unwrap(
         api.POST('/api/actions/lever:run', {
@@ -159,6 +160,7 @@ export function ActingMechanics({
       ),
   })
   const hold = useGodAction({
+    writes: [{ lever: 'lever:suppress' }],
     run: (mechanic: string) =>
       unwrap(
         api.POST('/api/actions/lever:suppress', {
@@ -168,6 +170,7 @@ export function ActingMechanics({
     success: 'The mechanic is held back here',
   })
   const free = useGodAction({
+    writes: [{ lever: 'lever:unsuppress' }],
     run: (mechanic: string) =>
       unwrap(
         api.POST('/api/actions/lever:unsuppress', {
@@ -177,6 +180,7 @@ export function ActingMechanics({
     success: 'The mechanic acts here again',
   })
   const set = useGodAction({
+    writes: [{ lever: 'lever:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/lever:set', {
@@ -186,6 +190,7 @@ export function ActingMechanics({
     success: () => `${humanize(field)} set`,
   })
   const pin = useGodAction({
+    writes: [{ lever: 'lever:pin' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/lever:pin', {
@@ -253,6 +258,7 @@ export function ActingMechanics({
               )}
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <Button
+                  act={run}
                   size='sm'
                   variant='outline'
                   disabled={busy !== undefined}
@@ -263,6 +269,7 @@ export function ActingMechanics({
                   Run on this record now
                 </Button>
                 <Button
+                  act={[free, hold]}
                   size='sm'
                   variant='outline'
                   disabled={busy !== undefined}
@@ -278,6 +285,7 @@ export function ActingMechanics({
                 </Button>
                 {own.length > 0 && (
                   <Button
+                    act={set}
                     size='sm'
                     variant='ghost'
                     onClick={() => {
@@ -312,6 +320,7 @@ export function ActingMechanics({
                     onChange={(event) => setValue(event.target.value)}
                   />
                   <Button
+                    act={set}
                     size='sm'
                     disabled={busy !== undefined || value === ''}
                     disabledReason={
@@ -323,6 +332,7 @@ export function ActingMechanics({
                     Set
                   </Button>
                   <Button
+                    act={pin}
                     size='sm'
                     variant='outline'
                     disabled={busy !== undefined}
@@ -356,6 +366,7 @@ export function IncidentEntry({
   const [writing, setWriting] = useState(false)
   const [note, setNote] = useState(incident.note ?? '')
   const annotate = useGodAction({
+    writes: [{ lever: 'incident:annotate' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident:annotate', {
@@ -426,6 +437,7 @@ export function IncidentEntry({
               onChange={(event) => setNote(event.target.value)}
             />
             <Button
+              act={annotate}
               size='sm'
               disabled={busy !== undefined}
               disabledReason={busy}
@@ -439,6 +451,7 @@ export function IncidentEntry({
           </div>
         ) : (
           <Button
+            act={annotate}
             size='sm'
             variant='ghost'
             className='self-start'

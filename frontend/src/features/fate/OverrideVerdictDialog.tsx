@@ -30,6 +30,7 @@ export function OverrideVerdictDialog({
   const { reason } = useGodGate()
   const [rationale, setRationale] = useState('')
   const action = useGodAction({
+    writes: [{ lever: 'fate:override_verdict' }],
     run: overrideVerdict,
     invalidate: [fateKeys.controls],
     onDone: () => {
@@ -46,6 +47,7 @@ export function OverrideVerdictDialog({
       : ''
   return (
     <ConfirmDialog
+      act={action}
       open={target !== null}
       onOpenChange={(open) => {
         if (!open) {

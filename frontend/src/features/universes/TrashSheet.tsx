@@ -95,6 +95,7 @@ function TrashRow({
       </div>
       <div className='grid min-w-0 grid-cols-2 gap-2'>
         <Button
+          act={restore}
           type='button'
           size='sm'
           disabled={restore.isPending}
@@ -266,6 +267,7 @@ export function TrashSheet({
         </div>
         <SheetFooter>
           <Button
+            act={empty}
             type='button'
             variant='destructive'
             disabled={total === 0 || busy}
@@ -280,6 +282,7 @@ export function TrashSheet({
         </SheetFooter>
       </SheetContent>
       <ConfirmDialog
+        act={[empty, purge]}
         open={purging !== null}
         onOpenChange={(next) => {
           if (!next && !busy) setPurging(null)

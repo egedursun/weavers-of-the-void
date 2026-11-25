@@ -86,6 +86,7 @@ export function CelestialReadingsSection({
                   aside={
                     <div className='flex min-w-0 flex-wrap gap-1'>
                       <Button
+                        act={set}
                         size='sm'
                         variant='ghost'
                         disabled={busy !== null}
@@ -102,6 +103,7 @@ export function CelestialReadingsSection({
                         {row.visible ? 'Hide it from them' : 'Let them see it'}
                       </Button>
                       <Button
+                        act={set}
                         size='sm'
                         variant='ghost'
                         disabled={busy !== null}
@@ -131,6 +133,7 @@ export function CelestialReadingsSection({
           columns={2}
           action={
             <Button
+              act={set}
               size='sm'
               disabled={busy !== null || missing !== null}
               disabledReason={busy ?? missing ?? undefined}

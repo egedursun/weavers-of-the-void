@@ -29,6 +29,7 @@ from tests.library.shelf import (
     tree_of,
     uploaded,
 )
+from tests.library_support import sign_in_owner
 
 ATTACHMENT_KEY = "divine-will/0123456789abcdef/notes.md"
 
@@ -170,6 +171,7 @@ async def test_an_oversized_upload_is_refused_before_anything_is_written(tmp_pat
         LifespanManager(app, startup_timeout=120, shutdown_timeout=120) as manager,
         AsyncClient(transport=ASGITransport(app=manager.app), base_url="http://localhost") as http,
     ):
+        await sign_in_owner(app, http)
         response = await http.post("/api/library/imports", files={"file": ("big.aerona", b"x" * (3 * 1024 * 1024))}, headers=LOCAL_ORIGIN)
         assert response.status_code == 413
         process = settings.process

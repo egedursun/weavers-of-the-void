@@ -26,6 +26,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -111,10 +112,12 @@ function TargetChips({
   value,
   blocked,
   onToggle,
+  act,
 }: {
   value: DiseaseTarget[]
   blocked: string | null
   onToggle: (target: DiseaseTarget) => void
+  act?: ActProp
 }) {
   return (
     <div className='flex min-w-0 flex-wrap gap-1.5'>
@@ -124,6 +127,7 @@ function TargetChips({
         const last = on && value.length === 1
         return (
           <Button
+            act={act}
             key={target}
             size='sm'
             variant={on ? 'default' : 'outline'}
@@ -364,6 +368,7 @@ export function ShapeControls({
 }) {
   const options = useWorldOptions(view.entity_id)
   const edit = useGodAction({
+    writes: [{ lever: 'disease:edit' }],
     run: (body: {
       values?: Record<string, ProfileValue>
       release?: string[]
@@ -400,6 +405,7 @@ export function ShapeControls({
           held={view.locked.includes('target_functions')}
         >
           <TargetChips
+            act={edit}
             value={view.target_functions}
             blocked={busy}
             onToggle={toggle}
@@ -413,6 +419,7 @@ export function ShapeControls({
           held={view.locked.includes('host_species_id')}
         >
           <RecordCombobox
+            act={edit}
             options={options.species}
             value={
               view.host_species_id !== null
@@ -444,6 +451,7 @@ export function ShapeControls({
             <Muted variant='caption'>No event names it yet.</Muted>
           )}
           <IconPicker
+            act={edit}
             label='Rose in'
             value={
               view.origin_incident_id !== null
@@ -464,6 +472,7 @@ export function ShapeControls({
         </EditorTile>
       </EditorGroup>
       <HeldStrip
+        act={edit}
         keys={view.locked}
         labelOf={fieldLabel}
         blocked={busy}
@@ -488,6 +497,7 @@ export function OutbreakControls({
   const item = view.outbreaks.find((row) => String(row.id) === chosen) ?? null
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const edit = useGodAction({
+    writes: [{ lever: 'outbreak:edit' }],
     run: (body: {
       values?: Record<string, number | string | boolean>
       release?: string[]
@@ -556,6 +566,7 @@ export function OutbreakControls({
                 }
               />
               <Button
+                act={edit}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null || bad}
@@ -579,6 +590,7 @@ export function OutbreakControls({
         held={item.locked.includes('status')}
       >
         <IconPicker
+          act={edit}
           label='State'
           value={item.status}
           table={STATUS_SPEC}
@@ -596,6 +608,7 @@ export function OutbreakControls({
         held={item.locked.includes('quarantined')}
         control={
           <Switch
+            act={edit}
             checked={item.quarantined}
             disabled={busy !== null}
             aria-label='Seal the outbreak'
@@ -607,6 +620,7 @@ export function OutbreakControls({
       />
       <div className='col-span-full min-w-0'>
         <HeldStrip
+          act={edit}
           keys={item.locked}
           labelOf={fieldLabel}
           blocked={busy}
@@ -636,6 +650,7 @@ export function EndemicControls({
   const [load, setLoad] = useState(current?.load ?? 20)
   const [hold, setHold] = useState(current?.locked ?? true)
   const set = useGodAction({
+    writes: [{ lever: 'endemic:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/endemic:set', {
@@ -649,6 +664,7 @@ export function EndemicControls({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'endemic:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/endemic:remove', {
@@ -702,6 +718,7 @@ export function EndemicControls({
           className='items-center'
         >
           <Switch
+            permission='lock_canon'
             id={`endemic-hold-${view.entity_id}`}
             checked={hold}
             disabled={busy !== null}
@@ -710,6 +727,7 @@ export function EndemicControls({
         </FieldTile>
         <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
           <Button
+            act={set}
             className='self-start'
             size='sm'
             variant='outline'
@@ -721,6 +739,7 @@ export function EndemicControls({
             {current ? 'Set its load' : 'Make it endemic here'}
           </Button>
           <Button
+            act={remove}
             className='self-start'
             size='sm'
             variant='outline'
@@ -792,6 +811,7 @@ export function RouteControls({
   const [share, setShare] = useState(current?.share ?? 20)
   const [hold, setHold] = useState(current?.held ?? true)
   const set = useGodAction({
+    writes: [{ lever: 'disease_route:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/disease_route:set', {
@@ -805,6 +825,7 @@ export function RouteControls({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'disease_route:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/disease_route:remove', {
@@ -857,6 +878,7 @@ export function RouteControls({
           className='items-center'
         >
           <Switch
+            permission='lock_canon'
             id={`route-hold-${view.entity_id}`}
             checked={hold}
             disabled={busy !== null}
@@ -865,6 +887,7 @@ export function RouteControls({
         </FieldTile>
         <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
           <Button
+            act={set}
             className='self-start'
             size='sm'
             variant='outline'
@@ -876,6 +899,7 @@ export function RouteControls({
             {current ? 'Set its share' : 'Open this route'}
           </Button>
           <Button
+            act={remove}
             className='self-start'
             size='sm'
             variant='outline'
@@ -951,6 +975,7 @@ export function ImmunityControls({
   const [pct, setPct] = useState(PERCENT)
   const [hold, setHold] = useState(true)
   const act = useGodAction({
+    writes: [{ lever: 'disease:immunity' }],
     run: (forget: boolean) =>
       unwrap(
         api.POST('/api/actions/disease:immunity', {
@@ -1008,6 +1033,7 @@ export function ImmunityControls({
         className='items-center'
       >
         <Switch
+          permission='lock_canon'
           id={`immunity-hold-${view.entity_id}`}
           checked={hold}
           disabled={busy !== null}
@@ -1016,6 +1042,7 @@ export function ImmunityControls({
       </FieldTile>
       <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
         <Button
+          act={act}
           className='self-start'
           size='sm'
           variant='outline'
@@ -1027,6 +1054,7 @@ export function ImmunityControls({
           Set their resistance
         </Button>
         <Button
+          act={act}
           className='self-start'
           size='sm'
           variant='outline'
@@ -1100,6 +1128,7 @@ export function ForgeDisease({
   )
   const [severity, setSeverity] = useState(60)
   const forge = useGodAction({
+    writes: [{ lever: 'disease:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/disease:create', {
@@ -1267,6 +1296,7 @@ export function ForgeDisease({
             label='Hold the design against the world'
           >
             <Switch
+              permission='lock_canon'
               id={`forge-hold-${anchorId}`}
               checked={hold}
               disabled={busy !== null}
@@ -1275,6 +1305,7 @@ export function ForgeDisease({
           </FieldTile>
         </div>
         <Button
+          act={forge}
           size='sm'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}

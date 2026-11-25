@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 import {
   keepPreviousData,
   useInfiniteQuery,
-  useMutation,
   useQuery,
 } from '@tanstack/react-query'
 import { type EventSourceLike } from '@/realtime/eventStream'
 import { api } from '@/api/client'
 import { errorFromResponse, unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { dropQueryClient, libraryQueryClient } from '@/api/queryClients'
 import { UNIVERSE_HEADER, UNIVERSE_PARAM } from '@/api/universeStore'
 import { apiUrl, typedPath } from '@/api/url'
@@ -450,6 +450,12 @@ export function useUniverseImageModel(universeId: string) {
 export function usePaintCover() {
   return useMutation(
     {
+      writes: [
+        {
+          method: 'POST',
+          path: '/api/library/universes/{universe_id}/cover/paint',
+        },
+      ],
       mutationFn: async ({ id, prompt }: { id: string; prompt: string }) => {
         const painted = await unwrap(
           api.POST('/api/library/universes/{universe_id}/cover/paint', {

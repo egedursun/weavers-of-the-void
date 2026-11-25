@@ -3361,6 +3361,27 @@ On an NVIDIA host, `make docker-up-gpu` also starts the `image-worker` container
 
 `make docker-down` stops everything. Volumes are kept.
 
+### Accounts and teams
+
+Everyone signs in. The first start opens a **setup** screen that creates the server owner; every universe already on the shelf moves into the owner's personal workspace and every earlier act is attributed to the owner. The app sends no e-mail: an administrator creates an account (username, e-mail, display name) and copies the **temporary password** it shows once; at the first sign-in the person sets their own password before anything else.
+
+- **Workspaces.** Every account has a personal workspace; anyone can start a team workspace. Each workspace has its own Library of Universes, members and trash.
+- **Roles.** A member's role in the workspace (Administrator, Editor, Viewer) is their role in every universe of it, present and future; a new member is a Viewer unless the person adding them picks another role. Editors change the world (ages, rules, canon locks and undo included); Viewers read everything, download the book and the Codex and ask the Divine Will questions. Per-universe overrides and the per-universe permission table exist for the rare case.
+- **Working together.** Everyone sees who else is in a universe and which entry they have open. An edit saved over a field another person changed since the screen opened shows both values and lets the person keep theirs or apply their own. Acts made while an age runs wait in a queue and apply, in order and in their authors' names, when it ends. An administrator can turn on canon approval, which sends an Editor's change to locked canon to review. Every act records who made it and an optional reason; the ledger filters by person, any act can be undone (naming who undid it), and the book and the Codex list the people behind the universe under "Hands of the Creator". Divine Will, Presence and Foresight sessions are private to their author unless shared.
+- **Sessions** live in an `HttpOnly` cookie; set `AERONA_COOKIE_SECURE=true` behind HTTPS. Five wrong passwords lock an account for fifteen minutes.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `AERONA_COOKIE_SECURE` | false | Send the session cookie only over HTTPS. |
+| `AERONA_ACCOUNTS_LOCKOUT_ATTEMPTS` | 5 | Wrong passwords in a row before an account locks. |
+| `AERONA_ACCOUNTS_LOCKOUT_MINUTES` | 15 | How long a locked account waits. |
+| `AERONA_ACCOUNTS_PASSWORD_MIN_LENGTH` | 10 | The shortest password accepted. |
+| `AERONA_ACCOUNTS_SESSION_IDLE_DAYS` | 14 | A session unused this long ends. |
+| `AERONA_ACCOUNTS_SESSION_MAX_DAYS` | 60 | No session lasts longer. |
+| `AERONA_TEAM_PRESENCE_TTL_SECONDS` | 90 | How long a silent screen still counts as present. |
+| `AERONA_TEAM_REASON_MAX_LENGTH` | 500 | The longest reason a person may give for an act. |
+| `AERONA_TEAM_REASON_MAX_LENGTH` | 500 | The longest "why" an act may carry. |
+
 ### The library in the volume
 
 The `aerona-data` volume holds the whole Library of Universes:

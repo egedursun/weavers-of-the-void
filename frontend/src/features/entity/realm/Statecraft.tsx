@@ -309,6 +309,7 @@ export function LawProtection({
   blocked: string | null
 }) {
   const protect = useGodAction({
+    writes: [{ lever: 'law:protect' }],
     run: (change: { key: string; on: boolean }) =>
       unwrap(
         api.POST('/api/actions/law:protect', {
@@ -343,6 +344,7 @@ export function LawProtection({
               <Muted>{spec.hint}</Muted>
             </div>
             <Switch
+              act={protect}
               checked={held}
               disabled={busy !== null}
               aria-label={spec.label}
@@ -366,6 +368,7 @@ function OfficeEditor({
   const [powers, setPowers] = useState<string[]>(office.powers)
   const [holder, setHolder] = useState<number | null>(office.holder_id)
   const save = useGodAction({
+    writes: [{ lever: 'office:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/office:edit', {
@@ -381,6 +384,7 @@ function OfficeEditor({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'office:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/office:edit', {
@@ -389,6 +393,7 @@ function OfficeEditor({
       ),
   })
   const abolish = useGodAction({
+    writes: [{ lever: 'office:abolish' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/office:abolish', {
@@ -436,6 +441,7 @@ function OfficeEditor({
         )}
       </div>
       <AdjustPanel
+        acts={[save, release, abolish]}
         trigger='Shape'
         title='Shape this office'
         note='Name it, give or take its powers, seat a holder, or abolish the seat.'
@@ -481,6 +487,7 @@ function OfficeEditor({
         />
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? 'Choose every field first'}
@@ -491,6 +498,7 @@ function OfficeEditor({
           </Button>
           {office.locked.length > 0 && (
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -503,6 +511,7 @@ function OfficeEditor({
           )}
           {office.kind !== 'ruler' && (
             <Button
+              act={abolish}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -530,6 +539,7 @@ function CreateOffice({
   const [title, setTitle] = useState('')
   const [holder, setHolder] = useState<number | null>(null)
   const create = useGodAction({
+    writes: [{ lever: 'office:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/office:create', {
@@ -548,6 +558,7 @@ function CreateOffice({
   )
   return (
     <AdjustPanel
+      acts={[create]}
       trigger='Create an office'
       title='Create an office'
       note='A new seat of power: its kind gives its first powers; you may rename it.'
@@ -575,6 +586,7 @@ function CreateOffice({
         blocked={busy}
       />
       <Button
+        act={create}
         size='sm'
         className='self-start'
         disabled={busy !== null}
@@ -594,6 +606,7 @@ function Purse({ realm, blocked }: { realm: Realm; blocked: string | null }) {
   const [interest, setInterest] = useState('10')
   const [epochs, setEpochs] = useState('5')
   const lend = useGodAction({
+    writes: [{ lever: 'polity:loan' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/polity:loan', {
@@ -608,6 +621,7 @@ function Purse({ realm, blocked }: { realm: Realm; blocked: string | null }) {
       ),
   })
   const forgive = useGodAction({
+    writes: [{ lever: 'loan:edit' }],
     run: (loanId: number) =>
       unwrap(
         api.POST('/api/actions/loan:edit', {
@@ -668,6 +682,7 @@ function Purse({ realm, blocked }: { realm: Realm; blocked: string | null }) {
               </Badge>
               {loan.status === 'open' && (
                 <Button
+                  act={forgive}
                   size='sm'
                   variant='outline'
                   className='ml-auto'
@@ -684,6 +699,7 @@ function Purse({ realm, blocked }: { realm: Realm; blocked: string | null }) {
         </Paged>
       </ul>
       <AdjustPanel
+        acts={[lend]}
         trigger='Borrow'
         title='Have a lender lend to the crown'
         note='The treasury fills now; the debt and its interest fall due later.'
@@ -723,6 +739,7 @@ function Purse({ realm, blocked }: { realm: Realm; blocked: string | null }) {
           />
         </div>
         <Button
+          act={lend}
           size='sm'
           className='self-start'
           disabled={busy !== null || lender === null}
@@ -743,6 +760,7 @@ function Repute({ realm, blocked }: { realm: Realm; blocked: string | null }) {
   const [infamy, setInfamy] = useState(repute?.infamy ?? 0)
   const ruler = realm.ruler
   const save = useGodAction({
+    writes: [{ lever: 'mortal:repute' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mortal:repute', {
@@ -751,6 +769,7 @@ function Repute({ realm, blocked }: { realm: Realm; blocked: string | null }) {
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'mortal:repute' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mortal:repute', {
@@ -784,6 +803,7 @@ function Repute({ realm, blocked }: { realm: Realm; blocked: string | null }) {
         />
       </div>
       <AdjustPanel
+        acts={[save, release]}
         trigger='Judge the ruler'
         title='Set the ruler’s honour and infamy'
         note='Held values stay as you set them until you release them.'
@@ -815,6 +835,7 @@ function Repute({ realm, blocked }: { realm: Realm; blocked: string | null }) {
           onChange={setInfamy}
         />
         <Button
+          act={save}
           size='sm'
           className='self-start'
           disabled={busy !== null}
@@ -834,6 +855,7 @@ function Vassals({ realm, blocked }: { realm: Realm; blocked: string | null }) {
   const [tribute, setTribute] = useState('10')
   const [levy, setLevy] = useState('10')
   const create = useGodAction({
+    writes: [{ lever: 'vassal:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/vassal:create', {
@@ -847,6 +869,7 @@ function Vassals({ realm, blocked }: { realm: Realm; blocked: string | null }) {
       ),
   })
   const edit = useGodAction({
+    writes: [{ lever: 'vassal:edit' }],
     run: (change: { id: number; key: string; value: number | null }) =>
       unwrap(
         api.POST('/api/actions/vassal:edit', {
@@ -915,6 +938,7 @@ function Vassals({ realm, blocked }: { realm: Realm; blocked: string | null }) {
                 />
               </div>
               <AdjustPanel
+                acts={[edit]}
                 trigger='Set terms'
                 title='Set the terms of fealty'
                 note='Each value you set is held until released.'
@@ -923,6 +947,7 @@ function Vassals({ realm, blocked }: { realm: Realm; blocked: string | null }) {
                   (key) => (
                     <div key={key} className='flex min-w-0 items-end gap-2'>
                       <RangeField
+                        act={edit}
                         label={plain({}, key.replace('_pct', ''))}
                         icon={
                           key === 'loyalty'
@@ -943,6 +968,7 @@ function Vassals({ realm, blocked }: { realm: Realm; blocked: string | null }) {
                       />
                       {term.locked.includes(key) && (
                         <Button
+                          act={edit}
                           size='sm'
                           variant='outline'
                           disabled={busy !== null}
@@ -964,6 +990,7 @@ function Vassals({ realm, blocked }: { realm: Realm; blocked: string | null }) {
         </Paged>
       </ul>
       <AdjustPanel
+        acts={[create]}
         trigger='Take a vassal'
         title='Make a realm our vassal'
         note='A vassalage treaty is sealed; tribute and levies follow it each age.'
@@ -996,6 +1023,7 @@ function Vassals({ realm, blocked }: { realm: Realm; blocked: string | null }) {
           />
         </div>
         <Button
+          act={create}
           size='sm'
           className='self-start'
           disabled={busy !== null || vassal === null}
@@ -1053,6 +1081,7 @@ export function FoundRealm({ blocked }: { blocked: string | null }) {
   const [name, setName] = useState('')
   const [government, setGovernment] = useState('monarchy')
   const found = useGodAction({
+    writes: [{ lever: 'polity:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/polity:found', {
@@ -1090,6 +1119,7 @@ export function FoundRealm({ blocked }: { blocked: string | null }) {
         onPick={setGovernment}
       />
       <Button
+        act={found}
         size='sm'
         className='self-start'
         disabled={busy !== null || core === null}
@@ -1112,6 +1142,7 @@ function SplitRealm({
 }) {
   const [picked, setPicked] = useState<number[]>([])
   const split = useGodAction({
+    writes: [{ lever: 'polity:split' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/polity:split', {
@@ -1149,6 +1180,7 @@ function SplitRealm({
         </Paged>
       </div>
       <Button
+        act={split}
         size='sm'
         className='self-start'
         disabled={busy !== null || picked.length === 0}
@@ -1171,6 +1203,7 @@ function MergeRealms({
 }) {
   const [into, setInto] = useState<number | null>(null)
   const merge = useGodAction({
+    writes: [{ lever: 'polity:merge' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/polity:merge', {
@@ -1179,6 +1212,7 @@ function MergeRealms({
       ),
   })
   const dissolve = useGodAction({
+    writes: [{ lever: 'polity:dissolve' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/polity:dissolve', {
@@ -1199,6 +1233,7 @@ function MergeRealms({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={merge}
           size='sm'
           disabled={busy !== null || into === null}
           disabledReason={busy ?? 'Choose every field first'}
@@ -1208,6 +1243,7 @@ function MergeRealms({
           Merge the realms
         </Button>
         <Button
+          act={dissolve}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -1261,6 +1297,7 @@ export function Statecraft({
         hint='Break lands away, join realms, or found a new one'
       >
         <AdjustPanel
+          writes={[{ lever: 'polity:dissolve' }, { lever: 'polity:merge' }]}
           trigger='Split lands off'
           title='Split lands off the realm'
           note='The chosen lands stand alone; they keep their rulers.'
@@ -1268,6 +1305,7 @@ export function Statecraft({
           <SplitRealm realm={realm} blocked={blocked} />
         </AdjustPanel>
         <AdjustPanel
+          writes={[{ lever: 'polity:found' }]}
           trigger='Merge or dissolve'
           title='Merge into another realm or dissolve'
           note='Merging binds the heartland under the other realm’s lord.'
@@ -1275,6 +1313,7 @@ export function Statecraft({
           <MergeRealms realm={realm} blocked={blocked} />
         </AdjustPanel>
         <AdjustPanel
+          writes={[{ lever: 'house:found' }]}
           trigger='Found a realm'
           title='Found a new realm'
           note='The heartland breaks from any lord and becomes the seat of a new realm.'
@@ -1282,6 +1321,7 @@ export function Statecraft({
           <FoundRealm blocked={blocked} />
         </AdjustPanel>
         <AdjustPanel
+          writes={[{ lever: 'treaty:sign' }]}
           trigger='Found a house'
           title='Found a noble house'
           note='The founder heads a new house; their kin gather to it.'
@@ -1289,6 +1329,7 @@ export function Statecraft({
           <FoundHouse blocked={blocked} />
         </AdjustPanel>
         <AdjustPanel
+          writes={[{ lever: 'treaty:sign' }]}
           trigger='Seal a treaty'
           title='Seal a treaty'
           note='Choose its kind, parties and clauses; it binds from this age.'

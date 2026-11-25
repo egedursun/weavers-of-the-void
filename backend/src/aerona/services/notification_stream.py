@@ -3,6 +3,7 @@ import logging
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from aerona.core.account_scope import detached
 from aerona.core.grammar import fill
 from aerona.db.session import Database
 from aerona.events.bus import Event, EventBus
@@ -79,7 +80,7 @@ class NotificationStream:
             work.close()
             return
         try:
-            task = asyncio.get_running_loop().create_task(work)
+            task = detached(work)
         except RuntimeError:
             work.close()
             return

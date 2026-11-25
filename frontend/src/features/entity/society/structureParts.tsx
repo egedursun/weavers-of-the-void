@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -137,6 +138,7 @@ export function StructureCard({
   const kind = KIND_SPEC[view.kind]
   const state = STATE_SPEC[view.construction_state]
   const finish = useGodAction({
+    writes: [{ lever: 'structure:finish' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure:finish', {
@@ -145,6 +147,7 @@ export function StructureCard({
       ),
   })
   const fund = useGodAction({
+    writes: [{ lever: 'structure:fund' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure:fund', {
@@ -153,6 +156,7 @@ export function StructureCard({
       ),
   })
   const repair = useGodAction({
+    writes: [{ lever: 'structure:repair' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure:repair', {
@@ -161,6 +165,7 @@ export function StructureCard({
       ),
   })
   const damage = useGodAction({
+    writes: [{ lever: 'structure:damage' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure:damage', {
@@ -232,6 +237,7 @@ export function StructureCard({
           </div>
           <div className='mt-auto grid min-w-0 grid-cols-2 gap-1.5'>
             <Button
+              act={fund}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -242,6 +248,7 @@ export function StructureCard({
               {`Fund ${FUND_STEP}`}
             </Button>
             <Button
+              act={finish}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -273,6 +280,7 @@ export function StructureCard({
           />
           <div className='mt-auto grid min-w-0 grid-cols-2 gap-1.5'>
             <Button
+              act={repair}
               size='sm'
               variant='outline'
               disabled={busy !== null || view.condition >= view.durability}
@@ -283,6 +291,7 @@ export function StructureCard({
               Repair
             </Button>
             <Button
+              act={damage}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -383,6 +392,7 @@ export function AmountForm({
   pending,
   max,
   onSubmit,
+  act,
 }: {
   label: string
   icon: LucideIcon
@@ -390,6 +400,7 @@ export function AmountForm({
   pending: boolean
   max: number
   onSubmit: (value: number) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState('')
   const value = Number(draft)
@@ -419,6 +430,7 @@ export function AmountForm({
         onChange={(event) => setDraft(event.target.value)}
       />
       <Button
+        act={act}
         type='submit'
         size='sm'
         variant='outline'

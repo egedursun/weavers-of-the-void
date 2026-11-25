@@ -89,6 +89,7 @@ function DispatchRow({
   side: 'sent' | 'received' | 'intercepted'
 }) {
   const edit = useGodAction({
+    writes: [{ lever: 'dispatch:edit' }],
     run: (state: DispatchState) =>
       unwrap(
         api.POST('/api/actions/dispatch:edit', {
@@ -97,6 +98,7 @@ function DispatchRow({
       ),
   })
   const flag = useGodAction({
+    writes: [{ lever: 'dispatch:edit' }],
     run: (patch: { forged?: boolean; misread?: boolean }) =>
       unwrap(
         api.POST('/api/actions/dispatch:edit', {
@@ -105,6 +107,7 @@ function DispatchRow({
       ),
   })
   const freeze = useGodAction({
+    writes: [{ lever: 'dispatch:hold' }],
     run: (hold: boolean) =>
       unwrap(
         api.POST('/api/actions/dispatch:hold', {
@@ -113,6 +116,7 @@ function DispatchRow({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'dispatch:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/dispatch:delete', {
@@ -164,6 +168,7 @@ function DispatchRow({
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Unmake the message'
@@ -178,6 +183,7 @@ function DispatchRow({
       editor={
         <div className='flex min-w-0 flex-col gap-3'>
           <MindPicker
+            act={edit}
             label='Where it stands'
             value={row.state ?? 'under_way'}
             table={table(ctx.view.states)}
@@ -214,6 +220,7 @@ function DispatchRow({
           />
           <div className='flex min-w-0 flex-wrap justify-end gap-2'>
             <Button
+              act={flag}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -223,6 +230,7 @@ function DispatchRow({
               {row.forged ? 'Make it genuine' : 'Make it a forgery'}
             </Button>
             <Button
+              act={flag}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -232,6 +240,7 @@ function DispatchRow({
               {row.misread ? 'Let it be read rightly' : 'Make it misread'}
             </Button>
             <Button
+              act={freeze}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -253,6 +262,7 @@ function LettersCard({ ctx }: { ctx: Ctx }) {
   const [content, setContent] = useState('')
   const [medium, setMedium] = useState('letter')
   const send = useGodAction({
+    writes: [{ lever: 'dispatch:send' }],
     run: (recipientId: number) =>
       unwrap(
         api.POST('/api/actions/dispatch:send', {
@@ -331,6 +341,7 @@ function LettersCard({ ctx }: { ctx: Ctx }) {
         title='Send a message in its name'
         action={
           <Button
+            act={send}
             size='sm'
             disabled={busy !== null || recipient === null || !content}
             disabledReason={
@@ -384,6 +395,7 @@ function OpinionRow({
   holding: boolean
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'opinion:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/opinion:delete', {
@@ -423,6 +435,7 @@ function OpinionRow({
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Wipe the opinion'
@@ -483,6 +496,7 @@ function OpinionCard({ ctx }: { ctx: Ctx }) {
   const [subject, setSubject] = useState<number | null>(null)
   const [kind, setKind] = useState('ruler')
   const set = useGodAction({
+    writes: [{ lever: 'opinion:set' }],
     run: (subjectId: number) =>
       unwrap(
         api.POST('/api/actions/opinion:set', {
@@ -546,6 +560,7 @@ function OpinionCard({ ctx }: { ctx: Ctx }) {
         title='Plant an opinion here'
         action={
           <Button
+            act={set}
             size='sm'
             disabled={busy !== null || subject === null}
             disabledReason={
@@ -588,6 +603,7 @@ function CipherRowView({
   own: boolean
 }) {
   const mend = useGodAction({
+    writes: [{ lever: 'cipher:mend' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cipher:mend', {
@@ -596,6 +612,7 @@ function CipherRowView({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'cipher:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cipher:delete', {
@@ -630,6 +647,7 @@ function CipherRowView({
           <>
             {row.broken_by.length > 0 && (
               <Button
+                act={mend}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -640,6 +658,7 @@ function CipherRowView({
               </Button>
             )}
             <Button
+              act={strike}
               size='icon-sm'
               variant='ghost'
               aria-label='Strike the cipher'
@@ -694,6 +713,7 @@ function CiphersCard({ ctx }: { ctx: Ctx }) {
   const view = ctx.view
   const [breaker, setBreaker] = useState<number | null>(null)
   const give = useGodAction({
+    writes: [{ lever: 'cipher:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cipher:set', {
@@ -702,6 +722,7 @@ function CiphersCard({ ctx }: { ctx: Ctx }) {
       ),
   })
   const crack = useGodAction({
+    writes: [{ lever: 'cipher:break' }],
     run: (breakerId: number) =>
       unwrap(
         api.POST('/api/actions/cipher:break', {
@@ -727,6 +748,7 @@ function CiphersCard({ ctx }: { ctx: Ctx }) {
           <Muted variant='caption'>Writes in plain words.</Muted>
           <div className='flex justify-end'>
             <Button
+              act={give}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -743,6 +765,7 @@ function CiphersCard({ ctx }: { ctx: Ctx }) {
           title='Let someone read it'
           action={
             <Button
+              act={crack}
               size='sm'
               disabled={busy !== null || breaker === null}
               disabledReason={
@@ -789,6 +812,7 @@ function CiphersCard({ ctx }: { ctx: Ctx }) {
 
 function SignalRow({ row, ctx }: { row: Signal; ctx: Ctx }) {
   const edit = useGodAction({
+    writes: [{ lever: 'signal:edit' }],
     run: (state: SignalState) =>
       unwrap(
         api.POST('/api/actions/signal:edit', {
@@ -797,6 +821,7 @@ function SignalRow({ row, ctx }: { row: Signal; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'signal:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/signal:delete', { body: { link_id: row.id } })
@@ -822,6 +847,7 @@ function SignalRow({ row, ctx }: { row: Signal; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Tear down the link'
@@ -835,6 +861,7 @@ function SignalRow({ row, ctx }: { row: Signal; ctx: Ctx }) {
       editLabel='the link'
       editor={
         <MindPicker
+          act={edit}
           label='State'
           value={row.state}
           table={table(ctx.view.signal_states)}
@@ -852,6 +879,7 @@ function SignalsCard({ ctx }: { ctx: Ctx }) {
   const [start, setStart] = useState<number | null>(null)
   const [end, setEnd] = useState<number | null>(null)
   const build = useGodAction({
+    writes: [{ lever: 'signal:build' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/signal:build', {
@@ -887,6 +915,7 @@ function SignalsCard({ ctx }: { ctx: Ctx }) {
         title='Raise a link'
         action={
           <Button
+            act={build}
             size='sm'
             disabled={busy !== null || start === null || end === null}
             disabledReason={

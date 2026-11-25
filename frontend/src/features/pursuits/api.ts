@@ -88,6 +88,7 @@ export function usePursuitsAction<Name extends PursuitsAction, T>(
   success?: string
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
   })

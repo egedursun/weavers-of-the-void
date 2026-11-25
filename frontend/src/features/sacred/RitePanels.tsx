@@ -248,6 +248,7 @@ export function RitesPanel({
         columns={4}
         action={
           <Button
+            act={teaching}
             size='sm'
             disabled={teachBusy !== null}
             disabledReason={teachBusy ?? undefined}
@@ -306,6 +307,7 @@ export function RitesPanel({
         columns={3}
         action={
           <Button
+            act={giving}
             size='sm'
             disabled={giveBusy !== null}
             disabledReason={giveBusy ?? undefined}
@@ -448,6 +450,7 @@ function AfterlifeCard({
           kinds={GOD_KINDS}
         />
         <StepButton
+          act={aligning}
           icon={Sparkles}
           label='Make the afterlife match'
           busy={alignBusy}
@@ -504,6 +507,7 @@ export function AfterlifePanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -654,6 +658,7 @@ export function FaithClimatePanel({
         columns={2}
         action={
           <Button
+            act={weighing}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

@@ -41,6 +41,7 @@ export function SonBirthChild({
     (job) => job.kind === 'summon' && paramEquals(job, 'son_id', son.id)
   )
   const birth = useGodAction({
+    writes: [{ lever: 'son:birth_child' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/son:birth_child', {
@@ -93,6 +94,7 @@ export function SonBirthChild({
       </FormRow>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <ActionButton
+          act={birth}
           label='Bear a child'
           icon={Baby}
           variant='default'

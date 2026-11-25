@@ -16,6 +16,8 @@ from aerona.api.schemas.divine_will_library import (
     DivineWillPlan,
     DivineWillPlanSteps,
 )
+from aerona.api.schemas.team import SharedUpdate
+from aerona.core.errors import ForbiddenError
 from aerona.domain.enums.divine_will import ExportFormat
 from aerona.services.divine_will.library import DivineWillLibrary, library_for
 from aerona.services.divine_will.plans import PlanDesk
@@ -24,6 +26,7 @@ from aerona.tools.divine_will.library_ports import ArtifactPatch, LibraryQuery, 
 router = APIRouter(prefix="/divine-will", tags=["divine-will"])
 
 ASCII_NAME = "artifact"
+NOT_YOURS = "Only its author can change or run this plan."
 
 
 def library(services: ServicesDep) -> DivineWillLibrary:
@@ -77,7 +80,7 @@ async def diff_artifact(found: LibraryDep, artifact_id: int = Path(ge=1), a: int
 
 @router.patch("/artifacts/{artifact_id}", response_model=DivineWillArtifact)
 async def patch_artifact(found: LibraryDep, body: DivineWillArtifactPatch, artifact_id: int = Path(ge=1)) -> DivineWillArtifact:
-    patch = ArtifactPatch(title=body.title, status=body.status, tags=body.tags, kind=body.kind, node_ids=body.node_ids)
+    patch = ArtifactPatch(title=body.title, status=body.status, tags=body.tags, kind=body.kind, node_ids=body.node_ids, shared=body.shared)
     return DivineWillArtifact.model_validate(await found.artifacts.patch(artifact_id, patch))
 
 
@@ -110,6 +113,23 @@ def plans(found: LibraryDep) -> PlanDesk:
 PlansDep = Annotated[PlanDesk, Depends(plans)]
 
 
+async def own_plan(desk: PlanDesk, plan_id: int) -> None:
+    view = await desk.read(plan_id)
+    if not view.owner.mine:
+        raise ForbiddenError(NOT_YOURS)
+
+
+@router.patch("/plans/{plan_id}", response_model=DivineWillPlan)
+async def share_plan(desk: PlansDep, body: SharedUpdate, plan_id: int = Path(ge=1)) -> DivineWillPlan:
+    await own_plan(desk, plan_id)
+    return plan_of(await desk.share(plan_id, body.shared))
+
+
+@router.patch("/forecasts/{forecast_id}", response_model=DivineWillForecast)
+async def share_forecast(found: LibraryDep, body: SharedUpdate, forecast_id: int = Path(ge=1)) -> DivineWillForecast:
+    return DivineWillForecast.model_validate(await found.foresight.share(forecast_id, body.shared))
+
+
 @router.get("/plans/{plan_id}", response_model=DivineWillPlan)
 async def read_plan(desk: PlansDep, plan_id: int = Path(ge=1)) -> DivineWillPlan:
     return plan_of(await desk.read(plan_id))
@@ -118,41 +138,49 @@ async def read_plan(desk: PlansDep, plan_id: int = Path(ge=1)) -> DivineWillPlan
 @router.put("/plans/{plan_id}/steps", response_model=DivineWillPlan)
 async def revise_plan(desk: PlansDep, body: DivineWillPlanSteps, plan_id: int = Path(ge=1)) -> DivineWillPlan:
     steps = [StepDraft.model_validate(step.model_dump()) for step in body.steps]
+    await own_plan(desk, plan_id)
     return plan_of(await desk.revise(plan_id, steps, title=body.title))
 
 
 @router.post("/plans/{plan_id}/approve", response_model=DivineWillPlan)
 async def approve_plan(desk: PlansDep, plan_id: int = Path(ge=1)) -> DivineWillPlan:
+    await own_plan(desk, plan_id)
     return plan_of(await desk.approve(plan_id))
 
 
 @router.post("/plans/{plan_id}/execute", response_model=DivineWillPlan, status_code=status.HTTP_202_ACCEPTED)
 async def execute_plan(desk: PlansDep, plan_id: int = Path(ge=1)) -> DivineWillPlan:
+    await own_plan(desk, plan_id)
     return plan_of(await desk.execute(plan_id))
 
 
 @router.post("/plans/{plan_id}/pause", response_model=DivineWillPlan)
 async def pause_plan(desk: PlansDep, plan_id: int = Path(ge=1)) -> DivineWillPlan:
+    await own_plan(desk, plan_id)
     return plan_of(await desk.pause(plan_id))
 
 
 @router.post("/plans/{plan_id}/resume", response_model=DivineWillPlan, status_code=status.HTTP_202_ACCEPTED)
 async def resume_plan(desk: PlansDep, plan_id: int = Path(ge=1)) -> DivineWillPlan:
+    await own_plan(desk, plan_id)
     return plan_of(await desk.resume(plan_id))
 
 
 @router.post("/plans/{plan_id}/abandon", response_model=DivineWillPlan)
 async def abandon_plan(desk: PlansDep, plan_id: int = Path(ge=1)) -> DivineWillPlan:
+    await own_plan(desk, plan_id)
     return plan_of(await desk.abandon(plan_id))
 
 
 @router.post("/plans/{plan_id}/steps/{ordinal}/skip", response_model=DivineWillPlan)
 async def skip_step(desk: PlansDep, plan_id: int = Path(ge=1), ordinal: int = Path(ge=1)) -> DivineWillPlan:
+    await own_plan(desk, plan_id)
     return plan_of(await desk.skip(plan_id, ordinal))
 
 
 @router.post("/plans/{plan_id}/steps/{ordinal}/undo", response_model=DivineWillPlan)
 async def undo_step(desk: PlansDep, plan_id: int = Path(ge=1), ordinal: int = Path(ge=1)) -> DivineWillPlan:
+    await own_plan(desk, plan_id)
     return plan_of(await desk.undo(plan_id, ordinal))
 
 

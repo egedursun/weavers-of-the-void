@@ -6,6 +6,7 @@ from collections import Counter
 from collections.abc import AsyncIterator
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from functools import partial
 from pathlib import Path
 
 from aerona.constants.api import MEGABYTE
@@ -21,9 +22,11 @@ from aerona.constants.library_packages import (
     UPLOAD_NAME_MAX_LENGTH,
 )
 from aerona.constants.media import MediaBackend
+from aerona.core.account_scope import current_account
 from aerona.core.errors import BusyError, ConflictError, NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.domain.enums.accounts import UniverseRole
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.library import LibraryEventKind, UniverseStatus
 from aerona.domain.enums.library_jobs import LibraryJobKind, LibraryJobStage, LibraryJobStatus, LibraryStreamKind
@@ -31,6 +34,7 @@ from aerona.domain.enums.meta import ImageMime
 from aerona.media.factory import create_media_store
 from aerona.media.keys import is_original_key, original_key
 from aerona.media.store import list_keys, read_all
+from aerona.services.accounts.service import AccountService
 from aerona.services.images.records import EXTENSIONS, detect_mime
 from aerona.services.library.catalogue import LibraryEventRecord, UniverseEdit, UniverseRecord
 from aerona.services.library.feed import LibraryFeed
@@ -39,7 +43,7 @@ from aerona.services.library.jobs import LibraryJob, LibraryJobs, remove_quietly
 from aerona.services.library.package import CheckedPackage, check_package
 from aerona.services.library.runtime import UniverseRuntime
 from aerona.services.library.transfer import export_universe, media_of, place_package, threadsafe
-from aerona.services.library.trash import TrashEntry, bring_back, find_entry, move_to_trash, trash_entries
+from aerona.services.library.trash import NO_SUCH_ENTRY, TrashEntry, bring_back, find_entry, move_to_trash, trash_entries
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +72,9 @@ def mime_of(data: bytes) -> ImageMime | None:
 
 
 class LibraryService:
-    def __init__(self, hub: UniverseHub) -> None:
+    def __init__(self, hub: UniverseHub, accounts: AccountService | None = None) -> None:
         self.hub = hub
+        self.accounts = accounts
         self.catalogue = hub.catalogue
         self.settings = hub.settings
         self.process = hub.settings.process
@@ -143,8 +148,9 @@ class LibraryService:
         library = [job.kind.value for job in self.jobs.of_universe(universe_id) if job.active]
         return sorted({*kinds, *library})
 
-    async def tag_counts(self) -> list[tuple[str, int]]:
-        counted: Counter[str] = Counter(tag for record in await self.catalogue.every() for tag in record.tags)
+    async def tag_counts(self, visible: frozenset[str] | None = None) -> list[tuple[str, int]]:
+        records = [record for record in await self.catalogue.every() if visible is None or record.id in visible]
+        counted: Counter[str] = Counter(tag for record in records for tag in record.tags)
         return sorted(counted.items(), key=lambda item: (item[0].casefold(), item[0]))
 
     async def recent_events(self, universe_id: str) -> list[LibraryEventRecord]:
@@ -205,7 +211,19 @@ class LibraryService:
         await self.catalogue.remove(universe_id)
         if self.hub.is_open(universe_id):
             await self.hub.close(universe_id, force=True)
-        entry_id = await asyncio.to_thread(move_to_trash, self.hub.paths_of(universe_id), self.process.trash, record, datetime.now(UTC))
+        account = current_account()
+        hidden = (
+            tuple(override.account_id for override in await self.accounts.store.overrides_of_universe(universe_id) if override.role is UniverseRole.NONE)
+            if self.accounts
+            else ()
+        )
+        entry_id = await asyncio.to_thread(
+            partial(move_to_trash, deleted_by=account.id if account is not None else None, hidden_from=hidden),
+            self.hub.paths_of(universe_id),
+            self.process.trash,
+            record,
+            datetime.now(UTC),
+        )
         await self.catalogue.log(LibraryEventKind.DELETED, universe_id, record.name, entry_id)
         self.feed.publish(LibraryStreamKind.REMOVED, universe_id=universe_id)
         self.feed.publish(LibraryStreamKind.TRASH, universe_id=universe_id)
@@ -214,25 +232,40 @@ class LibraryService:
     def purge_at(self, entry: TrashEntry) -> datetime:
         return entry.deleted_at + timedelta(seconds=self.settings.library_trash_days * SECONDS_PER_DAY)
 
-    async def trash(self, offset: int = 0, limit: int = LIBRARY_PAGE_DEFAULT) -> tuple[list[TrashEntry], int, int]:
+    async def trash_of(self, workspace_id: int | None) -> list[TrashEntry]:
         found = await asyncio.to_thread(trash_entries, self.process.trash)
+        account = current_account()
+        return [
+            entry
+            for entry in found
+            if (workspace_id is None or entry.workspace_id == workspace_id) and (account is None or account.id not in entry.hidden_from)
+        ]
+
+    async def entry_of(self, entry_id: str, workspace_id: int | None) -> TrashEntry:
+        entry = await asyncio.to_thread(find_entry, self.process.trash, entry_id)
+        if workspace_id is not None and entry.workspace_id != workspace_id:
+            raise NotFoundError(NO_SUCH_ENTRY)
+        return entry
+
+    async def trash(self, offset: int = 0, limit: int = LIBRARY_PAGE_DEFAULT, workspace_id: int | None = None) -> tuple[list[TrashEntry], int, int]:
+        found = await self.trash_of(workspace_id)
         start = max(0, offset)
         return found[start : start + max(1, limit)], len(found), sum(entry.size_bytes for entry in found)
 
-    async def empty_trash(self) -> int:
-        found = await asyncio.to_thread(trash_entries, self.process.trash)
+    async def empty_trash(self, workspace_id: int | None = None) -> int:
+        found = await self.trash_of(workspace_id)
         for entry in found:
-            await self.purge(entry.entry_id)
+            await self.purge(entry.entry_id, workspace_id)
         return len(found)
 
-    async def recover(self, entry_id: str) -> UniverseRecord:
-        entry = await asyncio.to_thread(find_entry, self.process.trash, entry_id)
+    async def recover(self, entry_id: str, workspace_id: int | None = None) -> UniverseRecord:
+        entry = await self.entry_of(entry_id, workspace_id)
         manifest = entry.manifest
         if await self.catalogue.get(manifest.id) is not None or self.hub.paths_of(manifest.id).root.exists():
             manifest = replace(manifest, id=await self.hub.fresh_id())
         manifest = replace(manifest, name=await self.catalogue.free_name(manifest.name))
         await asyncio.to_thread(bring_back, entry, self.hub.paths_of(manifest.id), manifest)
-        await self.catalogue.restore_row(manifest)
+        await self.catalogue.restore_row(manifest, entry.workspace_id)
         if entry.pinned or entry.cover_path:
             await self.catalogue.edit(manifest.id, UniverseEdit(pinned=entry.pinned, cover_path=entry.cover_path))
         record = await self.catalogue.require(manifest.id)
@@ -241,8 +274,8 @@ class LibraryService:
         self.feed.publish(LibraryStreamKind.TRASH, universe_id=record.id)
         return self.changed(refreshed)
 
-    async def purge(self, entry_id: str) -> None:
-        entry = await asyncio.to_thread(find_entry, self.process.trash, entry_id)
+    async def purge(self, entry_id: str, workspace_id: int | None = None) -> None:
+        entry = await self.entry_of(entry_id, workspace_id)
         await self._purge_media(entry)
         await asyncio.to_thread(shutil.rmtree, entry.folder, True)
         await self.catalogue.log(LibraryEventKind.PURGED, entry.manifest.id, entry.manifest.name, entry.entry_id)

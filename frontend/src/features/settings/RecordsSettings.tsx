@@ -85,6 +85,7 @@ function BookPdfCard() {
       )}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={print}
           variant={data?.ready && !data.stale ? 'outline' : 'default'}
           disabled={running || status.isPending}
           disabledReason={

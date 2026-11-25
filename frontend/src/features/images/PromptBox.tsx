@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { CopyButton } from '@/components/domain'
@@ -18,7 +19,8 @@ export function PromptBox({
   onSave,
   saving = false,
   readOnlyReason = null,
-}: PromptBoxProps) {
+  act,
+}: PromptBoxProps & { act?: ActProp }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(prompt ?? '')
   const blocked = readOnlyReason ?? (saving ? 'Saving.' : null)
@@ -29,6 +31,7 @@ export function PromptBox({
         <div className='flex items-center gap-2'>
           <CopyButton text={prompt ?? ''} label='Copy the prompt' />
           <Button
+            act={act}
             variant='ghost'
             size='sm'
             disabled={blocked !== null}
@@ -61,6 +64,7 @@ export function PromptBox({
           />
           <div className='flex justify-end gap-2'>
             <Button
+              act={act}
               type='submit'
               disabled={blocked !== null}
               disabledReason={blocked ?? undefined}

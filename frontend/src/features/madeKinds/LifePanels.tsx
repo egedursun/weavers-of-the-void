@@ -70,6 +70,7 @@ export function KitchenPanel({
         columns={2}
         action={
           <Button
+            act={cook}
             size='sm'
             disabled={(busy ?? (dish ? null : 'Pick a dish')) !== null}
             disabledReason={busy ?? (dish ? undefined : 'Pick a dish')}
@@ -174,6 +175,7 @@ export function LeaningsPanel({
           : ''}
       </Muted>
       <ListEditor
+        act={set}
         field={{
           key: 'drawn_to',
           label: 'Drawn to',
@@ -196,6 +198,7 @@ export function LeaningsPanel({
             onChange={setStrength}
           />
           <Button
+            act={set}
             size='sm'
             disabled={(busy ?? numberProblem(strength, 0, SPAN)) !== null}
             disabledReason={
@@ -206,6 +209,7 @@ export function LeaningsPanel({
             Hold the strength
           </Button>
           <Button
+            act={release}
             size='sm'
             variant='outline'
             disabled={

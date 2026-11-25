@@ -48,6 +48,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
   const dangerId = useId()
   const gate = useCosmicGate()
   const seal = useCosmicAction({
+    writes: [{ lever: 'cosmic:seal_gate' }],
     run: () =>
       unwrap(
         api.POST('/api/cosmic/seal-gate', { body: { route_id: route.id } })
@@ -55,6 +56,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
     success: 'Route sealed',
   })
   const sever = useCosmicAction({
+    writes: [{ lever: 'route' }],
     run: (duration: number | undefined) =>
       unwrap(
         api.POST('/api/routes/{route_id}/sever', {
@@ -65,6 +67,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
     success: 'Route severed',
   })
   const reopen = useCosmicAction({
+    writes: [{ lever: 'route' }],
     run: () =>
       unwrap(
         api.POST('/api/routes/{route_id}/restore', {
@@ -74,6 +77,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
     success: 'Route opened again',
   })
   const reveal = useCosmicAction({
+    writes: [{ lever: 'route' }],
     run: () =>
       unwrap(
         api.POST('/api/routes/{route_id}/reveal', {
@@ -83,6 +87,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
     success: 'Hidden route revealed',
   })
   const setRouteDanger = useCosmicAction({
+    writes: [{ lever: 'route:danger' }],
     run: (value: number) =>
       unwrap(
         api.POST('/api/actions/route:danger', {
@@ -101,6 +106,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
     <div className='flex min-w-0 flex-wrap items-center gap-2'>
       {state.open && (
         <CosmicActionButton
+          act={seal}
           actionId='cosmic:seal_gate'
           label='Seal'
           icon={Lock}
@@ -140,6 +146,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
               </Muted>
             </FieldTile>
             <CosmicActionButton
+              act={sever}
               actionId='route'
               label='Sever the route'
               variant='destructive'
@@ -165,6 +172,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
       )}
       {!state.open && RESTORABLE_ROUTE_STATES.has(state.key) && (
         <CosmicActionButton
+          act={reopen}
           actionId='route'
           label='Open it again'
           icon={Link2}
@@ -176,6 +184,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
       )}
       {!route.known && (
         <CosmicActionButton
+          act={reveal}
           actionId='route'
           label='Reveal'
           icon={Eye}
@@ -187,7 +196,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
       )}
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant='ghost' size='sm'>
+          <Button act={setRouteDanger} variant='ghost' size='sm'>
             <ShieldAlert />
             Danger
           </Button>
@@ -205,6 +214,7 @@ export function RouteActions({ route, index, rules }: RouteActionsProps) {
             />
           </FieldTile>
           <CosmicActionButton
+            act={setRouteDanger}
             actionId='route:danger'
             label='Set danger'
             size='sm'
@@ -234,6 +244,7 @@ function TeachRoute({
     ...index.communitiesOf(route.world_b_id),
   ]
   const teach = useCosmicAction({
+    writes: [{ lever: 'route:teach' }],
     run: (communityId: number) =>
       unwrap(
         api.POST('/api/actions/route:teach', {
@@ -246,7 +257,7 @@ function TeachRoute({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='ghost' size='sm'>
+        <Button act={teach} variant='ghost' size='sm'>
           Teach the road
         </Button>
       </PopoverTrigger>
@@ -267,6 +278,7 @@ function TeachRoute({
           </SelectContent>
         </Select>
         <CosmicActionButton
+          act={teach}
           actionId='route:teach'
           label='Teach'
           size='sm'

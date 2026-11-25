@@ -268,6 +268,7 @@ function RankCard({ row, blocked }: { row: Rank; blocked: string | null }) {
           onPick={setJob}
         />
         <Button
+          act={working}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -439,6 +440,7 @@ export function PurityPanel({
               onClick={cleansing.run}
             />
             <Button
+              act={marking}
               size='sm'
               disabled={markBusy !== null}
               disabledReason={markBusy ?? undefined}
@@ -466,6 +468,7 @@ export function PurityPanel({
         columns={2}
         action={
           <Button
+            act={sourcing}
             size='sm'
             disabled={sourceBusy !== null}
             disabledReason={sourceBusy ?? undefined}
@@ -501,6 +504,7 @@ export function PurityPanel({
         columns={2}
         action={
           <Button
+            act={purifying}
             size='sm'
             disabled={methodBusy !== null}
             disabledReason={methodBusy ?? undefined}
@@ -536,6 +540,7 @@ export function PurityPanel({
         columns={2}
         action={
           <Button
+            act={ranking}
             size='sm'
             disabled={rankBusy !== null}
             disabledReason={rankBusy ?? undefined}

@@ -39,6 +39,7 @@ const STEP_STATUS: Record<string, string> = {
 function SensedBirths() {
   const { data } = useSensedWorlds()
   const request = useCosmicAction({
+    writes: [{ lever: 'sensed_world:request' }],
     run: (intuitionId: number) =>
       unwrap(
         api.POST('/api/actions/sensed_world:request', {
@@ -47,6 +48,7 @@ function SensedBirths() {
       ),
   })
   const hold = useCosmicAction({
+    writes: [{ lever: 'sensed_world:hold' }],
     run: ({ stepId, value }: { stepId: number; value: boolean }) =>
       unwrap(
         api.POST('/api/actions/sensed_world:hold', {
@@ -55,6 +57,7 @@ function SensedBirths() {
       ),
   })
   const retry = useCosmicAction({
+    writes: [{ lever: 'sensed_world:retry' }],
     run: (stepId: number) =>
       unwrap(
         api.POST('/api/actions/sensed_world:retry', {
@@ -63,6 +66,7 @@ function SensedBirths() {
       ),
   })
   const cancel = useCosmicAction({
+    writes: [{ lever: 'sensed_world:cancel' }],
     run: (stepId: number) =>
       unwrap(
         api.POST('/api/actions/sensed_world:cancel', {
@@ -113,6 +117,7 @@ function SensedBirths() {
               )}
               {(step.status === 'pending' || step.status === 'held') && (
                 <CosmicActionButton
+                  act={hold}
                   actionId='sensed_world:hold'
                   label={step.status === 'held' ? 'Release' : 'Hold'}
                   icon={step.status === 'held' ? Play : Pause}
@@ -129,6 +134,7 @@ function SensedBirths() {
               )}
               {step.status === 'failed' && (
                 <CosmicActionButton
+                  act={retry}
                   actionId='sensed_world:retry'
                   label='Try again'
                   icon={RotateCcw}
@@ -140,6 +146,7 @@ function SensedBirths() {
               )}
               {step.status !== 'running' && (
                 <CosmicActionButton
+                  act={cancel}
                   actionId='sensed_world:cancel'
                   label='Call off'
                   icon={X}
@@ -169,6 +176,7 @@ function SensedBirths() {
                 {` · epoch ${item.epoch}`}
               </Text>
               <CosmicActionButton
+                act={request}
                 actionId='sensed_world:request'
                 label='Bring it to birth'
                 icon={Sparkles}
@@ -195,6 +203,7 @@ type HorizonSectionProps = {
 export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
   const { data, isLoading, error } = useDiscoverySummary()
   const round = useCosmicAction({
+    writes: [{ lever: 'discovery_round' }],
     run: () =>
       unwrap(
         api.POST('/api/worlds/{world_id}/discovery-round', {
@@ -204,6 +213,7 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
     success: 'Exploration round finished',
   })
   const discard = useCosmicAction({
+    writes: [{ lever: 'intuition:discard' }],
     run: (intuitionId: number) =>
       unwrap(
         api.POST('/api/actions/intuition:discard', {
@@ -212,6 +222,7 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
       ),
   })
   const discardAll = useCosmicAction({
+    writes: [{ lever: 'intuition:discard_all' }],
     run: () => unwrap(api.POST('/api/actions/intuition:discard_all')),
   })
   const world = index.world(worldId)
@@ -336,6 +347,7 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
                 )}
                 {item.status === 'pending' && (
                   <CosmicActionButton
+                    act={discard}
                     actionId='intuition:discard'
                     label='Let it go'
                     icon={Wind}
@@ -356,6 +368,7 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
       </Muted>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <CosmicActionButton
+          act={round}
           actionId='discovery_round'
           label='Exploration round'
           icon={Compass}
@@ -374,6 +387,7 @@ export function HorizonSection({ worldId, index, rules }: HorizonSectionProps) {
       {waiting > 0 && (
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <CosmicActionButton
+            act={discardAll}
             actionId='intuition:discard_all'
             label='Let every intuition go'
             icon={CloudFog}

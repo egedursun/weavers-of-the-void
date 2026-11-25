@@ -12,6 +12,7 @@ import {
 import { PagedList, Section } from '@/components/domain'
 import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, SectionTitle, Text } from '@/components/typography'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import { CosmicActionButton } from './CosmicActionButton'
 import { StarDisc } from './Glyphs'
 import { StarEditForm } from './StarEditForm'
@@ -29,10 +30,12 @@ type StarCardProps = {
 }
 
 export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
+  const formGate = { blockedReason: useWriteRefusal([{ lever: 'star:edit' }]) }
   const entryStack = useEntryStack()
   const planets = index.planetsOf(star.id)
   const orbiting = index.worlds.filter((item) => item.world.star_id === star.id)
   const rekindle = useCosmicAction({
+    writes: [{ lever: 'cosmic:rekindle_star' }],
     run: () =>
       unwrap(
         api.POST('/api/cosmic/rekindle-star', { body: { star_id: star.id } })
@@ -40,6 +43,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
     success: 'The dead star burns again',
   })
   const extinguish = useCosmicAction({
+    writes: [{ lever: 'cosmic:extinguish_star' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cosmic:extinguish_star', {
@@ -48,6 +52,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
       ),
   })
   const remove = useCosmicAction({
+    writes: [{ lever: 'star:delete' }],
     run: () =>
       unwrap(
         api.DELETE('/api/stars/{star_id}', {
@@ -77,6 +82,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
         <div className='flex min-w-0 flex-col gap-2'>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <CosmicActionButton
+              act={rekindle}
               actionId='cosmic:rekindle_star'
               label='Re-ignite'
               icon={Flame}
@@ -95,6 +101,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
         <div className='flex min-w-0 flex-col gap-2'>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <CosmicActionButton
+              act={extinguish}
               actionId='cosmic:extinguish_star'
               label='Extinguish'
               icon={MoonStar}
@@ -149,7 +156,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
       </Section>
       <Collapsible className='flex min-w-0 flex-col gap-4 rounded-md border surface-framed border-gild/70 bg-card p-4'>
         <CollapsibleTrigger asChild>
-          <Button variant='ghost' className='justify-start'>
+          <Button act={formGate} variant='ghost' className='justify-start'>
             Edit the star
           </Button>
         </CollapsibleTrigger>
@@ -161,6 +168,7 @@ export function StarCard({ star, index, rules, onSelectWorld }: StarCardProps) {
         <div className='flex min-w-0 flex-col gap-2'>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <CosmicActionButton
+              act={remove}
               actionId='star:delete'
               label='Remove from the sky'
               icon={Trash2}

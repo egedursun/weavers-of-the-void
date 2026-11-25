@@ -21,11 +21,13 @@ type MapTimeSliderProps = {
 export function SnapshotButton() {
   const { reason } = useGodGate()
   const snapshot = useGodAction({
+    writes: [{ lever: 'map:snapshot' }],
     run: () => unwrap(api.POST('/api/actions/map:snapshot')),
     success: 'The maps of this epoch were recorded',
   })
   return (
     <ActionButton
+      act={snapshot}
       label='Record this epoch'
       icon={Camera}
       size='sm'

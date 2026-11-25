@@ -246,6 +246,7 @@ export function SeasonsPanel({
         columns={2}
         action={
           <Button
+            act={stirring}
             size='sm'
             disabled={stirBusy !== null}
             disabledReason={stirBusy ?? undefined}
@@ -275,6 +276,7 @@ export function SeasonsPanel({
         columns={2}
         action={
           <Button
+            act={swinging}
             size='sm'
             disabled={swingBusy !== null}
             disabledReason={swingBusy ?? undefined}

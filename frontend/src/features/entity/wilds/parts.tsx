@@ -10,6 +10,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { domesticationStageValues } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
+import { type Permission } from '@/api/teamGate'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,6 +35,7 @@ import {
   Paged,
 } from '@/components/domain'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { type AdjustGate, useAdjustGate } from '@/features/team/writeGate'
 import { MindPicker } from '../mind/parts'
 import { type Named, STAGE, named } from './labels'
 
@@ -290,11 +293,13 @@ export function Held({
   label,
   busy,
   onRelease,
+  act,
 }: {
   keys: readonly string[]
   label: (key: string) => string
   busy: string | null
   onRelease: () => void
+  act?: ActProp
 }) {
   if (keys.length === 0) return null
   return (
@@ -306,6 +311,7 @@ export function Held({
         </Badge>
       ))}
       <Button
+        act={act}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -320,6 +326,8 @@ export function Held({
 }
 
 export function AdjustPanel({
+  acts,
+  writes,
   title,
   note,
   label = 'Adjust',
@@ -331,7 +339,8 @@ export function AdjustPanel({
   label?: string
   head?: ReactNode
   children: ReactNode
-}) {
+} & AdjustGate) {
+  const gate = useAdjustGate(acts, writes)
   return (
     <Collapsible className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-3'>
@@ -340,7 +349,12 @@ export function AdjustPanel({
           <Muted variant='caption'>{note}</Muted>
         </div>
         <CollapsibleTrigger asChild>
-          <Button variant='outline' size='sm' className='group shrink-0'>
+          <Button
+            act={gate}
+            variant='outline'
+            size='sm'
+            className='group shrink-0'
+          >
             <SlidersHorizontal />
             {label}
             <ChevronDown className='transition-transform group-aria-expanded:rotate-180' />
@@ -392,17 +406,23 @@ export function SwitchField({
   checked,
   disabled,
   onChange,
+  act,
+  permission,
 }: {
   label: string
   checked: boolean
   disabled?: boolean
   onChange: (value: boolean) => void
+  act?: ActProp
+  permission?: Permission
 }) {
   const id = useId()
   return (
     <FieldTile id={id} label={label}>
       <div className='flex h-control-md min-w-0 items-center gap-2'>
         <Switch
+          act={act}
+          permission={permission}
           id={id}
           checked={checked}
           disabled={disabled}
@@ -449,6 +469,7 @@ export function ShareEditor({
   busy,
   addLabel,
   onSave,
+  act,
 }: {
   table: Record<string, Named>
   value: Record<string, number | string>
@@ -457,6 +478,7 @@ export function ShareEditor({
   busy: string | null
   addLabel: string
   onSave: (next: Record<string, number>) => void
+  act?: ActProp
 }) {
   const [rows, setRows] = useState<Array<[string, string]>>(() =>
     Object.entries(value).map(([key, share]) => [key, String(share)])
@@ -508,6 +530,7 @@ export function ShareEditor({
                   }
                 />
                 <Button
+                  act={act}
                   size='icon-sm'
                   variant='ghost'
                   aria-label={`Remove ${spec.label}`}
@@ -551,6 +574,7 @@ export function ShareEditor({
           Add
         </Button>
         <Button
+          act={act}
           size='sm'
           className='ml-auto'
           disabled={busy !== null}

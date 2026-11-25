@@ -265,6 +265,7 @@ export function MissingContentPanel() {
       tone='success'
       actions={
         <ActionButton
+          act={run}
           label='Complete now'
           icon={Sparkles}
           size='sm'

@@ -1,6 +1,7 @@
 BOOKKEEPING_TABLES = frozenset(
     {
         "applied_fixups",
+        "bond_reviews",
         "epoch_stats",
         "name_registry",
         "notifications",

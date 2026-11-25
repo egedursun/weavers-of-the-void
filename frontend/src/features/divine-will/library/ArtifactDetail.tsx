@@ -38,6 +38,7 @@ import {
   Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { ShareToggle } from '@/features/team/share'
 import { NodeRef } from '../NodeRef'
 import { PlanCard } from '../PlanCard'
 import {
@@ -398,6 +399,13 @@ export function ArtifactDetail({
           </div>
         </div>
       </div>
+      <ShareToggle
+        kind='writing'
+        id={artifact.id}
+        shared={artifact.owner.shared}
+        mine={artifact.owner.mine}
+        author={artifact.owner.author_name}
+      />
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
           size='sm'
@@ -420,6 +428,7 @@ export function ArtifactDetail({
           Edit details
         </Button>
         <Button
+          act={remove}
           variant='ghost'
           size='sm'
           disabled={block !== null || remove.isPending}
@@ -482,6 +491,7 @@ export function ArtifactDetail({
         onOpenChange={setEditing}
       />
       <ConfirmDialog
+        act={remove}
         open={deleting}
         onOpenChange={setDeleting}
         title='Delete this writing?'

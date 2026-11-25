@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from aerona.constants.library_packages import LIBRARY_JOB_ID_BYTES, LIBRARY_JOB_KEEP_SECONDS, LIBRARY_PROGRESS_STEP
+from aerona.core.account_scope import current_account, current_workspace, detached
 from aerona.core.errors import NotFoundError
 from aerona.domain.enums.library_jobs import LibraryJobKind, LibraryJobStage, LibraryJobStatus, LibraryStreamKind
 from aerona.services.library.feed import LibraryFeed
@@ -42,6 +43,8 @@ class LibraryJob:
     finished: float | None = None
     task: asyncio.Task[Any] | None = None
     shown: float = 0.0
+    started_by: int | None = None
+    workspace_id: int | None = None
 
     @property
     def progress(self) -> float:
@@ -90,13 +93,22 @@ class LibraryJobs:
         return None
 
     def begin(self, kind: LibraryJobKind, stage: LibraryJobStage, universe_id: str | None, universe_name: str) -> LibraryJob:
-        job = LibraryJob(id=secrets.token_hex(LIBRARY_JOB_ID_BYTES), kind=kind, stage=stage, universe_id=universe_id, universe_name=universe_name)
+        account = current_account()
+        job = LibraryJob(
+            id=secrets.token_hex(LIBRARY_JOB_ID_BYTES),
+            kind=kind,
+            stage=stage,
+            universe_id=universe_id,
+            universe_name=universe_name,
+            started_by=account.id if account is not None else None,
+            workspace_id=current_workspace(),
+        )
         self._jobs[job.id] = job
         self.announce(job)
         return job
 
     def run(self, job: LibraryJob, work: Coroutine[Any, Any, None]) -> None:
-        job.task = asyncio.get_running_loop().create_task(work)
+        job.task = detached(work)
 
     def announce(self, job: LibraryJob) -> None:
         job.updated_at = datetime.now(UTC)

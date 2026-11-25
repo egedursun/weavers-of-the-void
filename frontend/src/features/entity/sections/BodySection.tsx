@@ -25,6 +25,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -185,16 +186,23 @@ function Picker({
   table,
   blocked,
   onPick,
+  act,
 }: {
   label: string
   value: string
   table: Record<string, string>
   blocked: string | null
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   return (
     <FieldTile label={label}>
-      <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+      <Select
+        act={act}
+        value={value}
+        onValueChange={onPick}
+        disabled={blocked !== null}
+      >
         <SelectTrigger aria-label={label}>
           <SelectValue />
         </SelectTrigger>
@@ -408,6 +416,7 @@ function DigitButton({
   blocked: string | null
 }) {
   const toggle = useGodAction({
+    writes: [{ lever: 'body:digit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/body:digit', {
@@ -419,6 +428,7 @@ function DigitButton({
   const name = digit.name.replace(/^./, (first) => first.toUpperCase())
   return (
     <Button
+      act={toggle}
       size='sm'
       variant={digit.lost ? 'ghost' : 'outline'}
       aria-label={
@@ -547,6 +557,7 @@ function Armour({ body }: { body: Body }) {
 function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
   const variants = useVariants()
   const end = useGodAction({
+    writes: [{ lever: 'body:condition_end' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/body:condition_end', {
@@ -556,6 +567,7 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
     success: 'The condition is lifted',
   })
   const weigh = useGodAction({
+    writes: [{ lever: 'body:condition_edit' }],
     run: (change: { id: number; severity: number }) =>
       unwrap(
         api.POST('/api/actions/body:condition_edit', {
@@ -649,6 +661,7 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
                 {row.ended_epoch === null && (
                   <div className='flex shrink-0 items-center gap-1'>
                     <Button
+                      act={weigh}
                       size='icon'
                       variant='ghost'
                       aria-label='Lighten it'
@@ -661,6 +674,7 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
                       <Minus />
                     </Button>
                     <Button
+                      act={weigh}
                       size='icon'
                       variant='ghost'
                       aria-label='Deepen it'
@@ -715,6 +729,7 @@ function Conditions({ body, blocked }: { body: Body; blocked: string | null }) {
                 )}
                 {row.ended_epoch === null && (
                   <Button
+                    act={end}
                     size='sm'
                     variant='outline'
                     disabled={reason !== null}
@@ -761,6 +776,7 @@ function ProsthesisRework({
   )
   const worldMaterials = useWorldMaterialChoices(worldId)
   const rework = useGodAction({
+    writes: [{ lever: 'body:prosthesis_edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/body:prosthesis_edit', {
@@ -813,6 +829,7 @@ function ProsthesisRework({
       </div>
       <div className='flex justify-end'>
         <Button
+          act={rework}
           size='sm'
           variant='outline'
           disabled={reason !== null}
@@ -840,6 +857,7 @@ function WoundItem({
 }) {
   const open = OPEN_STATES.has(row.state)
   const heal = useGodAction({
+    writes: [{ lever: 'body:heal' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/body:heal', {
@@ -849,6 +867,7 @@ function WoundItem({
     success: open ? 'The wound is healed' : 'What was lost is restored',
   })
   const unfit = useGodAction({
+    writes: [{ lever: 'body:prosthesis_remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/body:prosthesis_remove', {
@@ -858,6 +877,7 @@ function WoundItem({
     success: 'The prosthesis is taken away',
   })
   const visibility = useGodAction({
+    writes: [{ lever: 'body:injury' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/body:injury', {
@@ -867,6 +887,7 @@ function WoundItem({
     success: row.visible ? 'The mark is hidden' : 'The mark shows again',
   })
   const treat = useGodAction({
+    writes: [{ lever: 'body:treat' }],
     run: (step: TreatmentStep) =>
       unwrap(
         api.POST('/api/actions/body:treat', {
@@ -994,6 +1015,7 @@ function WoundItem({
                 const look = named(TREATMENTS, step)
                 return (
                   <Button
+                    act={treat}
                     key={step}
                     size='sm'
                     variant='ghost'
@@ -1059,6 +1081,7 @@ function WoundItem({
           <div className='flex min-w-0 flex-wrap gap-2'>
             {(open || row.function_loss > 0) && (
               <Button
+                act={heal}
                 size='sm'
                 variant='outline'
                 disabled={reason !== null}
@@ -1070,6 +1093,7 @@ function WoundItem({
               </Button>
             )}
             <Button
+              act={visibility}
               size='sm'
               variant='ghost'
               disabled={reason !== null}
@@ -1127,6 +1151,7 @@ function WoundItem({
             />
             {row.prosthesis && (
               <Button
+                act={unfit}
                 size='sm'
                 variant='ghost'
                 disabled={reason !== null}
@@ -1284,6 +1309,7 @@ function StrikeForm({ body, blocked }: { body: Body; blocked: string | null }) {
   const [severity, setSeverity] = useState('3')
   const [lethal, setLethal] = useState(false)
   const strike = useGodAction({
+    writes: [{ lever: 'body:maim' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/body:maim', {
@@ -1352,6 +1378,7 @@ function StrikeForm({ body, blocked }: { body: Body; blocked: string | null }) {
           <Text as='span'>The blow may kill</Text>
         </label>
         <Button
+          act={strike}
           size='sm'
           disabled={reason !== null || !part}
           disabledReason={reason ?? undefined}
@@ -1379,6 +1406,7 @@ function ConditionForm({
   const [cause, setCause] = useState('')
   const [made, setMade] = useState('')
   const give = useGodAction({
+    writes: [{ lever: 'body:condition' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/body:condition', {
@@ -1446,6 +1474,7 @@ function ConditionForm({
       </div>
       <div className='flex justify-end'>
         <Button
+          act={give}
           size='sm'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}
@@ -1481,6 +1510,7 @@ function ProsthesisForm({
   const [quality, setQuality] = useState(DEFAULT_QUALITY)
   const worldMaterials = useWorldMaterialChoices(body.world_id ?? null)
   const fit = useGodAction({
+    writes: [{ lever: 'body:prosthesis' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/body:prosthesis', {
@@ -1540,6 +1570,7 @@ function ProsthesisForm({
       </div>
       <div className='flex justify-end'>
         <Button
+          act={fit}
           size='sm'
           disabled={reason !== null || !injury}
           disabledReason={reason ?? undefined}
@@ -1563,6 +1594,7 @@ function BodyControls({ body }: { body: Body }) {
       })
     )
   const release = useGodAction({
+    writes: [{ lever: 'body:unlock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/body:unlock', {
@@ -1573,6 +1605,7 @@ function BodyControls({ body }: { body: Body }) {
       `${bodyValueLabel(field)} follows the body again`,
   })
   const plan = useGodAction({
+    writes: [{ lever: 'body:plan' }],
     run: (value: string) =>
       unwrap(
         api.POST('/api/actions/body:plan', {
@@ -1586,6 +1619,7 @@ function BodyControls({ body }: { body: Body }) {
     success: 'The body is reshaped',
   })
   const frame = useGodAction({
+    writes: [{ lever: 'body:frame' }],
     run: (change: { height?: string; build?: string }) =>
       unwrap(
         api.POST('/api/actions/body:frame', {
@@ -1599,6 +1633,7 @@ function BodyControls({ body }: { body: Body }) {
     success: 'The frame is changed',
   })
   const heal = useGodAction({
+    writes: [{ lever: 'body:heal' }],
     run: (lasting: boolean) =>
       unwrap(
         api.POST('/api/actions/body:heal', {
@@ -1607,6 +1642,7 @@ function BodyControls({ body }: { body: Body }) {
       ),
   })
   const holdWounds = useGodAction({
+    writes: [{ lever: 'body:injury_hold' }],
     run: (held: boolean) =>
       unwrap(
         api.POST('/api/actions/body:injury_hold', {
@@ -1615,6 +1651,7 @@ function BodyControls({ body }: { body: Body }) {
       ),
   })
   const wake = useGodAction({
+    writes: [{ lever: 'body:consciousness' }],
     run: (value: string) =>
       unwrap(
         api.POST('/api/actions/body:consciousness', {
@@ -1627,6 +1664,7 @@ function BodyControls({ body }: { body: Body }) {
       ),
   })
   const lead = useGodAction({
+    writes: [{ lever: 'body:handedness' }],
     run: (value: string) =>
       unwrap(
         api.POST('/api/actions/body:handedness', {
@@ -1661,6 +1699,7 @@ function BodyControls({ body }: { body: Body }) {
         </div>
         <label className='flex shrink-0 items-center gap-2'>
           <Switch
+            permission='lock_canon'
             checked={hold}
             onCheckedChange={setHold}
             aria-label='Hold what I set'
@@ -1670,6 +1709,7 @@ function BodyControls({ body }: { body: Body }) {
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={holdWounds}
           size='sm'
           variant={woundsHeld ? 'outline' : 'ghost'}
           disabled={busy !== null || holdWounds.isPending}
@@ -1687,6 +1727,7 @@ function BodyControls({ body }: { body: Body }) {
           <Lock aria-hidden='true' className='size-icon-xs text-primary' />
           {body.locked.map((key) => (
             <Button
+              act={release}
               key={key}
               size='sm'
               variant='outline'
@@ -1702,6 +1743,7 @@ function BodyControls({ body }: { body: Body }) {
       )}
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/body:grid-cols-2 @3xl/body:grid-cols-3'>
         <Picker
+          act={plan}
           label='Body plan'
           value={body.plan}
           table={labels(PLANS)}
@@ -1709,6 +1751,7 @@ function BodyControls({ body }: { body: Body }) {
           onPick={(value) => plan.mutate(value)}
         />
         <Picker
+          act={frame}
           label='Height'
           value={body.height_class}
           table={HEIGHTS}
@@ -1716,6 +1759,7 @@ function BodyControls({ body }: { body: Body }) {
           onPick={(value) => frame.mutate({ height: value })}
         />
         <Picker
+          act={frame}
           label='Build'
           value={body.build}
           table={BUILDS}
@@ -1723,6 +1767,7 @@ function BodyControls({ body }: { body: Body }) {
           onPick={(value) => frame.mutate({ build: value })}
         />
         <Picker
+          act={lead}
           label='Leading hand'
           value={body.handedness}
           table={{ right: 'Right hand', left: 'Left hand', both: 'Both alike' }}
@@ -1730,6 +1775,7 @@ function BodyControls({ body }: { body: Body }) {
           onPick={(value) => lead.mutate(value)}
         />
         <Picker
+          act={wake}
           label='Consciousness'
           value={body.consciousness}
           table={labels(CONSCIOUSNESS)}
@@ -1739,6 +1785,7 @@ function BodyControls({ body }: { body: Body }) {
         <div className='flex min-w-0 flex-col justify-end gap-2 @3xl/body:col-span-2'>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={heal}
               size='sm'
               variant='outline'
               disabled={busy !== null || !wounded}
@@ -1749,6 +1796,7 @@ function BodyControls({ body }: { body: Body }) {
               Heal the open wounds
             </Button>
             <Button
+              act={heal}
               size='sm'
               variant='outline'
               disabled={busy !== null || !harmed}

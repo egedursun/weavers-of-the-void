@@ -157,6 +157,7 @@ export function BiasPanel({
               onClick={reading.run}
             />
             <Button
+              act={setting}
               size='sm'
               disabled={setBusy !== null}
               disabledReason={setBusy ?? undefined}

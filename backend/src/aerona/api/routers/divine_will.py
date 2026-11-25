@@ -22,20 +22,35 @@ from aerona.api.schemas.divine_will import (
     WillSessionSummary,
     WillSessionView,
 )
+from aerona.api.schemas.team import SharedUpdate
+from aerona.api.views.team import author_view
 from aerona.constants.llm import HAIKU_MODEL_ID
-from aerona.core.errors import NotFoundError
+from aerona.core.errors import ForbiddenError, NotFoundError
+from aerona.db.authorship import may_see, owns, visible
 from aerona.db.repositories.divine_will import active_session, memory_boundary
 from aerona.db.tables.divine_will import DivineWillAttachmentRow, DivineWillConfirmationRow, DivineWillCycleRow, DivineWillSessionRow
+from aerona.domain.enums.accounts import Permission
+from aerona.domain.enums.divine_will import DivineWillMode
 from aerona.prompts.data.divine_will import MODE_TEXTS
+from aerona.services.accounts.guard import ensure_allowed
 from aerona.services.container import Services
 from aerona.services.divine_will.context import events_by_cycle
 from aerona.services.divine_will.runtime import DivineWillRuntime
 from aerona.tools.divine_will.registry import mode_tools, mode_toolsets
 
+MODE_PERMISSIONS: dict[DivineWillMode, Permission] = {
+    DivineWillMode.COMMAND: Permission.EDIT_WORLD,
+    DivineWillMode.PLAN: Permission.EDIT_WORLD,
+    DivineWillMode.FORESIGHT: Permission.ALTERNATIVE_HISTORIES,
+    DivineWillMode.ASK_LORE: Permission.DIVINE_WILL_READ,
+    DivineWillMode.CREATIVE_WORK: Permission.DIVINE_WILL_READ,
+    DivineWillMode.MECHANICS_GUIDE: Permission.DIVINE_WILL_READ,
+}
 router = APIRouter(prefix="/divine-will", tags=["divine_will"])
 
 CYCLE_PAGE = 20
 CYCLE_PAGE_MAX = 500
+NOT_YOURS = "Only its author can change or continue it."
 NO_SESSION = "No such session of the Divine Will."
 NO_CYCLE = "No such exchange with the Divine Will."
 
@@ -78,7 +93,25 @@ async def summary_of(session: AsyncSession, row: DivineWillSessionRow) -> WillSe
         closed_epoch=row.closed_epoch,
         closed_at=row.closed_at,
         cycle_count=int(count or 0),
+        author=author_view(row.author_account_id, row.author_name),
+        shared=row.shared,
+        mine=owns(row.author_account_id),
     )
+
+
+async def seen_session(session: AsyncSession, session_id: int) -> DivineWillSessionRow:
+    row = await session.get(DivineWillSessionRow, session_id)
+    if row is None or not may_see(row.author_account_id, row.shared):
+        raise NotFoundError(NO_SESSION)
+    return row
+
+
+async def owned_cycle(services: Services, cycle_id: int) -> None:
+    async with reader(services) as session:
+        cycle = await session.get(DivineWillCycleRow, cycle_id)
+        holder = await session.get(DivineWillSessionRow, cycle.session_id) if cycle is not None else None
+    if holder is None or not owns(holder.author_account_id):
+        raise ForbiddenError(NOT_YOURS)
 
 
 async def capabilities_view(services: Services) -> WillCapabilitiesView:
@@ -135,7 +168,11 @@ async def read_active_session(
 @router.get("/sessions", response_model=WillSessionList)
 async def read_closed_sessions(services: ServicesDep) -> WillSessionList:
     async with reader(services) as session:
-        rows = await session.scalars(select(DivineWillSessionRow).where(DivineWillSessionRow.closed_at.is_not(None)).order_by(DivineWillSessionRow.id.desc()))
+        rows = await session.scalars(
+            select(DivineWillSessionRow)
+            .where(DivineWillSessionRow.closed_at.is_not(None), visible(DivineWillSessionRow.author_account_id, DivineWillSessionRow.shared))
+            .order_by(DivineWillSessionRow.id.desc())
+        )
         return WillSessionList(sessions=[await summary_of(session, row) for row in rows])
 
 
@@ -143,9 +180,7 @@ async def read_closed_sessions(services: ServicesDep) -> WillSessionList:
 async def read_session(services: ServicesDep, session_id: int = Path(ge=1)) -> WillSessionView:
     async with reader(services) as session:
         rules = await world_rules(services, session)
-        row = await session.get(DivineWillSessionRow, session_id)
-        if row is None:
-            raise NotFoundError(NO_SESSION)
+        row = await seen_session(session, session_id)
         cycles = list(await session.scalars(select(DivineWillCycleRow).where(DivineWillCycleRow.session_id == row.id).order_by(DivineWillCycleRow.ordinal)))
         boundary = await memory_boundary(session, row.id, rules.divine_will.remembered_cycles) if row.closed_at is None else len(cycles) + 1
         return WillSessionView(session=await summary_of(session, row), cycles=await cycle_views(session, cycles), memory_boundary=boundary, has_earlier=False)
@@ -153,6 +188,7 @@ async def read_session(services: ServicesDep, session_id: int = Path(ge=1)) -> W
 
 @router.post("/cycles", response_model=WillCycleAccepted, status_code=status.HTTP_202_ACCEPTED)
 async def start_cycle(services: ServicesDep, body: WillCycleRequest) -> WillCycleAccepted:
+    ensure_allowed(MODE_PERMISSIONS[body.mode])
     cycle = await DivineWillRuntime(services).submit(body.text, body.mode, body.attachment_ids)
     return WillCycleAccepted(cycle_id=cycle.id, session_id=cycle.session_id, ordinal=cycle.ordinal)
 
@@ -160,7 +196,8 @@ async def start_cycle(services: ServicesDep, body: WillCycleRequest) -> WillCycl
 async def one_cycle(services: Services, cycle_id: int) -> WillCycleView:
     async with reader(services) as session:
         row = await session.get(DivineWillCycleRow, cycle_id)
-        if row is None:
+        holder = await session.get(DivineWillSessionRow, row.session_id) if row is not None else None
+        if row is None or holder is None or not may_see(holder.author_account_id, holder.shared):
             raise NotFoundError(NO_CYCLE)
         return (await cycle_views(session, [row]))[0]
 
@@ -172,14 +209,30 @@ async def read_cycle(services: ServicesDep, cycle_id: int = Path(ge=1)) -> WillC
 
 @router.post("/cycles/{cycle_id}/cancel", response_model=WillCycleView)
 async def cancel_cycle(services: ServicesDep, cycle_id: int = Path(ge=1)) -> WillCycleView:
+    await owned_cycle(services, cycle_id)
     await DivineWillRuntime(services).cancel(cycle_id)
     return await one_cycle(services, cycle_id)
 
 
 @router.post("/confirmations/{confirmation_id}", response_model=WillConfirmationView)
 async def decide_confirmation(services: ServicesDep, body: WillDecisionRequest, confirmation_id: int = Path(ge=1)) -> WillConfirmationView:
+    async with reader(services) as session:
+        waiting = await session.get(DivineWillConfirmationRow, confirmation_id)
+    if waiting is not None:
+        await owned_cycle(services, waiting.cycle_id)
     row = await DivineWillRuntime(services).decide(confirmation_id, body.decision.value)
     return WillConfirmationView.model_validate(row)
+
+
+@router.patch("/sessions/{session_id}", response_model=WillSessionSummary)
+async def share_session(services: ServicesDep, body: SharedUpdate, session_id: int = Path(ge=1)) -> WillSessionSummary:
+    async with services.database.write() as session:
+        row = await seen_session(session, session_id)
+        if not owns(row.author_account_id):
+            raise ForbiddenError(NOT_YOURS)
+        row.shared = body.shared
+        await session.flush()
+        return await summary_of(session, row)
 
 
 @router.post("/session/reset", response_model=WillActiveView)

@@ -96,6 +96,7 @@ export function ResetSessionButton({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
+              act={reset}
               variant='ghost'
               size='icon-sm'
               aria-label='Begin a new session'
@@ -118,6 +119,7 @@ export function ResetSessionButton({
         </Button>
       )}
       <ConfirmDialog
+        act={reset}
         open={open}
         onOpenChange={setOpen}
         title='Begin a new session?'

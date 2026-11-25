@@ -37,6 +37,7 @@ export function DiscoveryBanner() {
         {`Discovery mode: ${guest?.name ?? 'a guest world'} is open read-only${details ? ` (${details})` : ''}. Your own world waits aside.`}
       </Text>
       <Button
+        act={end}
         size='sm'
         disabled={end.isPending}
         disabledReason='Returning'

@@ -35,10 +35,12 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
   const drainGain = detail.drain_gain
   const killCost = detail.kill_cost
   const drain = useGodAction({
+    writes: [{ lever: 'drain:foreign_god' }],
     run: () => unwrap(api.POST('/api/foreign-gods/{god_id}/drain', path)),
     success: 'Power drained',
   })
   const kill = useGodAction({
+    writes: [{ lever: 'kill:foreign_god' }],
     run: () =>
       unwrap(
         api.POST('/api/foreign-gods/{god_id}/kill', {
@@ -49,12 +51,14 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
     success: `${god.name} died`,
   })
   const wake = useGodAction({
+    writes: [{ lever: 'foreign_god:wake' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/foreign_god:wake', { body: { god_id: godId } })
       ),
   })
   const raise = useGodAction({
+    writes: [{ lever: 'foreign_god:raise_land' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/foreign_god:raise_land', {
@@ -63,6 +67,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'foreign_god:strike' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/foreign_god:strike', {
@@ -71,6 +76,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
       ),
   })
   const raid = useGodAction({
+    writes: [{ lever: 'foreign_god:raid_temple' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/foreign_god:raid_temple', {
@@ -106,6 +112,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <ActionButton
+          act={drain}
           label='Drain power'
           icon={Droplet}
           variant='destructive'
@@ -123,6 +130,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
         />
         {(god.status === 'asleep' || god.status === 'defeated') && (
           <ActionButton
+            act={wake}
             label='Wake'
             icon={AlarmClock}
             blocked={reason()}
@@ -135,6 +143,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
           />
         )}
         <ActionButton
+          act={raise}
           label='Raise new land'
           icon={Mountain}
           blocked={reason()}
@@ -169,6 +178,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
         </div>
         <div>
           <ActionButton
+            act={kill}
             label='Kill'
             icon={Skull}
             variant='destructive'
@@ -203,6 +213,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
               onChange={(value) => setTarget(value)}
             />
             <ActionButton
+              act={strike}
               label='Strike'
               icon={Flame}
               variant='destructive'
@@ -228,6 +239,7 @@ export function ForeignGodPowerPanel({ detail }: { detail: ForeignGodDetail }) {
               onChange={(value) => setTemple(value)}
             />
             <ActionButton
+              act={raid}
               label='Raid'
               icon={Swords}
               variant='destructive'

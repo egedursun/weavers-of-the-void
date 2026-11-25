@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, ForeignKey, Index, String
+from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH, LEDGER_SUMMARY_MAX_LENGTH, NAME_MAX_LENGTH
+from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
+from aerona.db.authorship import HandAuthored
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import enum_type
 from aerona.db.types import PydanticJSON, UtcDateTime
@@ -13,7 +15,7 @@ from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.node import ActorKind
 
 
-class LedgerEntryRow(CreatedAtMixin, Base):
+class LedgerEntryRow(HandAuthored, CreatedAtMixin, Base):
     __tablename__ = "ledger_entries"
     __table_args__ = (Index("ix_ledger_entries_epoch", "epoch", "id"), Index("ix_ledger_entries_actor", "actor_node_id", "epoch"))
 
@@ -29,6 +31,9 @@ class LedgerEntryRow(CreatedAtMixin, Base):
     undone_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
     applied: Mapped[list[str]] = mapped_column(PydanticJSON(list[str]), default=list)
     conflicts: Mapped[list[str]] = mapped_column(PydanticJSON(list[str]), default=list)
+    reason: Mapped[str | None] = mapped_column(Text)
+    undone_by_account_id: Mapped[int | None]
+    undone_by_name: Mapped[str | None] = mapped_column(String(AUTHOR_NAME_MAX_LENGTH))
 
 
 class LedgerChangeRow(Base):

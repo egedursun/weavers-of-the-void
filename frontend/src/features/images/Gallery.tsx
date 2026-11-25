@@ -29,8 +29,16 @@ export function Gallery({
   readOnlyReason = null,
 }: GalleryProps) {
   const [doomed, setDoomed] = useState<ImageRecord | null>(null)
-  const remove = useImageAction(deleteImage, 'Image deleted')
-  const cover = useImageAction(setCover, 'Cover set')
+  const remove = useImageAction(
+    [{ method: 'DELETE', path: '/api/images/{image_id}' }],
+    deleteImage,
+    'Image deleted'
+  )
+  const cover = useImageAction(
+    [{ method: 'PUT', path: '/api/images/{image_id}/cover' }],
+    setCover,
+    'Cover set'
+  )
   const busy = remove.isPending || cover.isPending
   const blocked = readOnlyReason ?? (busy ? 'Working on it.' : null)
   if (images.length === 0) return null
@@ -82,6 +90,7 @@ export function Gallery({
                 <div className='absolute right-2 bottom-2 flex gap-1 transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover:opacity-100 pointer-fine:focus-within:opacity-100'>
                   {!image.is_cover && (
                     <Button
+                      act={cover}
                       variant='secondary'
                       size='icon-sm'
                       aria-label='Make this the cover'
@@ -94,6 +103,7 @@ export function Gallery({
                     </Button>
                   )}
                   <Button
+                    act={remove}
                     variant='secondary'
                     size='icon-sm'
                     className='hover:bg-destructive hover:text-destructive-foreground'
@@ -112,6 +122,7 @@ export function Gallery({
         </Paged>
       </ul>
       <ConfirmDialog
+        act={remove}
         open={doomed !== null}
         onOpenChange={(open) => !open && setDoomed(null)}
         title='Delete this image?'

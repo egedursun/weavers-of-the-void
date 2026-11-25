@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState, LoadingBlock, Paged, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { AuthorMark } from '@/features/team/AuthorMark'
 import { SessionBadges } from './AudiencePanel'
 import { ExchangeList } from './AudienceTranscript'
 import { DeadSeal } from './DeadSeal'
@@ -168,6 +169,9 @@ export function PastAudiences({ view }: { view: SpeakerView }) {
                     <Badge size='sm' variant='outline'>
                       {plural(item.exchange_count, 'exchange')}
                     </Badge>
+                    {!item.mine && (
+                      <AuthorMark name={item.author?.name} verb='Shared by' />
+                    )}
                   </Button>
                 </li>
               )

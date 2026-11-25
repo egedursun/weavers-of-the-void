@@ -20,7 +20,9 @@ export function isReadOnly(): boolean {
 export const readOnlyGuard: Middleware = {
   onRequest({ request }) {
     if (!readOnly || READ_METHODS.has(request.method)) return undefined
-    if (ALLOWED_PATHS.has(new URL(request.url, window.location.origin).pathname))
+    if (
+      ALLOWED_PATHS.has(new URL(request.url, window.location.origin).pathname)
+    )
       return undefined
     return new Response(JSON.stringify({ detail: READ_ONLY_MESSAGE }), {
       status: READ_ONLY_STATUS,

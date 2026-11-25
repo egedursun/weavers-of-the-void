@@ -98,6 +98,7 @@ export function StorytellerPalette({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <StepButton
+              act={weighing}
               icon={Scale}
               label='Weigh it'
               variant='default'
@@ -105,6 +106,7 @@ export function StorytellerPalette({
               onClick={() => weighing.mutate()}
             />
             <StepButton
+              act={releasing}
               icon={Unlock}
               label='Release the palette'
               busy={why(

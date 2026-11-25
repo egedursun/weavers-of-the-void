@@ -96,6 +96,7 @@ function GrammarCard({
       caption={`Difficulty ${grammar.difficulty}`}
       aside={
         <Button
+          act={reset}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -150,6 +151,7 @@ function GrammarCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape the grammar'
         note='Technique, form, range, duration and target set the difficulty, the price and the backlash of the rite. A rite that lasts until a condition needs the condition, and the act or epoch that ends it.'
         fields={[
@@ -240,6 +242,7 @@ function LabTextCard({
       caption={`Written in epoch ${text.epoch}`}
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -259,6 +262,7 @@ function LabTextCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape the lab text'
         note='A truer text is learned more often by the mages who read it.'
         fields={[
@@ -316,6 +320,7 @@ function WriteTextForm({
       columns={2}
       action={
         <Button
+          act={write}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -369,6 +374,7 @@ function VisChips({
             <Chip icon={form.icon}>{`${form.label} ${row.amount}`}</Chip>
             {row.locked.length > 0 && <Badge variant='outline'>Held</Badge>}
             <Button
+              act={remove}
               size='icon-sm'
               variant='ghost'
               aria-label={`Take away the ${form.label.toLowerCase()} vis`}
@@ -428,6 +434,7 @@ function VisForm({
         onChange={setAmount}
       />
       <Button
+        act={set}
         size='sm'
         disabled={busy !== null || missing !== null}
         disabledReason={busy ?? missing ?? undefined}
@@ -473,6 +480,7 @@ function WarpingCard({
       }
       aside={
         <Button
+          act={undo}
           size='sm'
           variant='ghost'
           disabled={busy !== null || warping === null}
@@ -490,6 +498,7 @@ function WarpingCard({
         <Meter label='Warping' value={warping.value} tone='verdigris' />
       )}
       <RecordEditor
+        act={edit}
         title='Set the warping'
         note='Past its marks, warping touches, then marks, then unmoors the mortal and slows its ageing.'
         fields={[
@@ -542,6 +551,7 @@ function LongevityCard({
         columns={2}
         action={
           <Button
+            act={begin}
             size='sm'
             disabled={busy !== null || form === ''}
             disabledReason={
@@ -572,6 +582,7 @@ function LongevityCard({
       caption={`Since epoch ${longevity.since_epoch} · ${longevity.years_gained} borrowed years`}
       aside={
         <Button
+          act={end}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -593,6 +604,7 @@ function LongevityCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape the longevity'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -674,6 +686,7 @@ function ChargeCard({
         )}
       </div>
       <RecordEditor
+        act={edit}
         title='Set the charges'
         note='An item used with no charge left cracks.'
         fields={[
@@ -731,6 +744,7 @@ function UpkeepCard({
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>
           <Button
+            act={free}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -741,6 +755,7 @@ function UpkeepCard({
             Free it
           </Button>
           <Button
+            act={dispel}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -772,6 +787,7 @@ function UpkeepCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape the upkeep'
         note='A law whose upkeep goes unpaid weakens; an enchantment lapses.'
         fields={[
@@ -870,6 +886,7 @@ function EnchantForm({
       columns={3}
       action={
         <Button
+          act={lay}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

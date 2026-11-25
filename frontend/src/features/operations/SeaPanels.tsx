@@ -442,6 +442,7 @@ function ShipForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={sailing}
             size='sm'
             disabled={sailBusy !== null}
             disabledReason={sailBusy ?? undefined}
@@ -451,6 +452,7 @@ function ShipForge({
             Set the sailing
           </Button>
           <Button
+            act={manning}
             size='sm'
             variant='secondary'
             disabled={crewBusy !== null}
@@ -705,6 +707,7 @@ export function AdmiraltyPanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

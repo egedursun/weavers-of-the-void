@@ -123,6 +123,7 @@ export function WorldDivinityPanel({ worldId }: { worldId: number }) {
                         variant='secondary'
                       >{`${row.pct}%`}</Badge>
                       <Button
+                        act={clear}
                         size='sm'
                         variant='ghost'
                         disabled={busy !== null}
@@ -175,6 +176,7 @@ export function WorldDivinityPanel({ worldId }: { worldId: number }) {
                 />
               </div>
               <Button
+                act={set}
                 disabled={busy !== null || problem !== null}
                 disabledReason={busy ?? problem ?? undefined}
                 onClick={() => set.mutate({ domain, hook, pct: Number(pct) })}
@@ -210,6 +212,7 @@ export function WorldDivinityPanel({ worldId }: { worldId: number }) {
               </Muted>
             )}
             <SwitchField
+              act={attend}
               label='Watched by the Creator'
               checked={view.data.attention?.watched ?? false}
               disabled={busy !== null}

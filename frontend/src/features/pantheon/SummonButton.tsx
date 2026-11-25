@@ -22,6 +22,7 @@ export function SummonButton({
   const { reason } = useGodGate()
   const running = useRunningJob((job) => job.kind === 'summon')
   const summon = useGodAction({
+    writes: [{ lever: 'summon_son' }],
     run: () =>
       unwrap(
         api.POST('/api/sons/summon', {
@@ -40,6 +41,7 @@ export function SummonButton({
           size={size}
         />
         <ActionButton
+          act={summon}
           label='Summon a son'
           icon={Crown}
           variant={variant}

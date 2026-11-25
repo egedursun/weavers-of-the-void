@@ -91,6 +91,7 @@ import { Label, Muted, Text } from '@/components/typography'
 import { useNames } from '@/features/entity/api/queries'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import {
   RECORD_LEVERS,
   type RecordFamily,
@@ -563,6 +564,7 @@ function RowEditor({
   const [hold, setHold] = useState(false)
   const levers = useContext(LeversContext)(table.table)
   const save = useGodAction({
+    writes: [{ lever: levers.create }, { lever: levers.edit }],
     run: () =>
       row !== null
         ? postAction(levers.edit, {
@@ -654,6 +656,7 @@ function RowEditor({
         {row !== null && fields.length > 0 && (
           <label className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <Switch
+              permission='lock_canon'
               checked={hold}
               onCheckedChange={setHold}
               aria-label='Hold what I set'
@@ -674,6 +677,7 @@ function RowEditor({
             Cancel
           </Button>
           <Button
+            act={save}
             size='sm'
             disabled={reason !== null}
             disabledReason={reason ?? undefined}
@@ -702,6 +706,7 @@ function RowActions({
   const [confirming, setConfirming] = useState(false)
   const levers = useContext(LeversContext)(table.table)
   const remove = useGodAction({
+    writes: [{ lever: levers.remove }],
     run: () =>
       postAction(levers.remove, {
         table: table.table,
@@ -710,6 +715,7 @@ function RowActions({
   })
   const step = levers.step
   const stepping = useGodAction({
+    writes: step ? [{ lever: step.action }] : [],
     run: () =>
       step
         ? postAction(step.action, {
@@ -724,6 +730,7 @@ function RowActions({
     <div className='flex items-center justify-end gap-1'>
       {step && (
         <Button
+          act={stepping}
           size='icon-sm'
           variant='ghost'
           aria-label={step.label}
@@ -745,6 +752,7 @@ function RowActions({
         <Pencil />
       </Button>
       <Button
+        act={remove}
         size='icon-sm'
         variant='ghost'
         aria-label='Unmake this row'
@@ -755,6 +763,7 @@ function RowActions({
         <Trash2 />
       </Button>
       <ConfirmDialog
+        act={remove}
         open={confirming}
         onOpenChange={setConfirming}
         title='Unmake this row?'
@@ -887,6 +896,13 @@ function RecordSheet({
   const look = lookOf(table.table)
   const columns = visibleColumns(table, nodeId)
   const [editing, setEditing] = useState<RowView | 'new' | null>(null)
+  const sheetLevers = useContext(LeversContext)(table.table)
+  const sheetGate = {
+    blockedReason: useWriteRefusal([
+      { lever: sheetLevers.create },
+      { lever: sheetLevers.edit },
+    ]),
+  }
   const page = useShowMore(table.rows, ROWS_SHOWN)
   return (
     <Sheet open onOpenChange={(open) => !open && onClose()}>
@@ -907,6 +923,7 @@ function RecordSheet({
         </SheetHeader>
         <div className='flex min-w-0 justify-end px-4'>
           <Button
+            act={sheetGate}
             size='sm'
             disabled={blocked !== null}
             disabledReason={blocked ?? undefined}
@@ -1000,6 +1017,10 @@ function MakeRecord({
   const [picked, setPicked] = useState('')
   const [open, setOpen] = useState(false)
   const table = tables.find((item) => item.table === picked)
+  const makeLevers = useContext(LeversContext)(table?.table ?? '')
+  const makeGate = {
+    blockedReason: useWriteRefusal([{ lever: makeLevers.create }]),
+  }
   return (
     <div className='flex min-w-0 flex-wrap items-end gap-3 rounded-md p-3 sealed-well'>
       <Medallion icon={Plus} tone='gold' size='sm' />
@@ -1031,6 +1052,7 @@ function MakeRecord({
         </Select>
       </div>
       <Button
+        act={makeGate}
         size='sm'
         disabled={blocked !== null || !table}
         disabledReason={

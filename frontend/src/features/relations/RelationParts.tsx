@@ -119,6 +119,7 @@ function PartRow({
       caption={`reckoned in epoch ${part.updated_epoch}${part.locked.includes('value') ? ', held' : ''}`}
     >
       <RecordEditor
+        act={editing}
         title='Set this part'
         note={HOLD}
         fields={PART_FIELDS}
@@ -128,6 +129,7 @@ function PartRow({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike it'
         busy={why(blocked, removing.isPending)}
@@ -194,6 +196,7 @@ export function RelationParts({
         columns={2}
         action={
           <StepButton
+            act={setting}
             icon={CirclePlus}
             label='Set it'
             busy={why(blocked, setting.isPending)}

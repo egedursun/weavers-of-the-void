@@ -1,9 +1,11 @@
 import { afterEach } from 'vitest'
+import { viewerExit } from '@/api/viewerExit'
 import { installNestingGuard, takeNestingViolations } from './domNesting'
 import { installNetworkGuard, takeNetworkViolations } from './networkGuard'
 
 installNetworkGuard()
 installNestingGuard()
+viewerExit.reload = () => undefined
 
 afterEach(() => {
   const violations = takeNetworkViolations()

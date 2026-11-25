@@ -377,6 +377,7 @@ function StressForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -438,6 +439,7 @@ function ReadingForge({
       columns={3}
       action={
         <Button
+          act={writing}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -500,6 +502,7 @@ function ChallengeForge({
       columns={2}
       action={
         <Button
+          act={striking}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

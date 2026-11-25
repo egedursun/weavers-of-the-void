@@ -300,6 +300,7 @@ function Additions({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={addSection}
             size='sm'
             disabled={(busy ?? (section ? null : 'Pick a section')) !== null}
             disabledReason={busy ?? (section ? undefined : 'Pick a section')}
@@ -309,6 +310,7 @@ function Additions({
             Add the section
           </Button>
           <Button
+            act={addMount}
             size='sm'
             disabled={(busy ?? (mount ? null : 'Pick a mount')) !== null}
             disabledReason={busy ?? (mount ? undefined : 'Pick a mount')}
@@ -318,6 +320,7 @@ function Additions({
             Add the mount
           </Button>
           <Button
+            act={addTechnique}
             size='sm'
             disabled={
               (busy ?? (technique ? null : 'Pick a technique')) !== null

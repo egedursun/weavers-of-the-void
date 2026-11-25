@@ -17,6 +17,7 @@ from aerona.services.container import Services
 from aerona.services.epoch_wiring import build_orchestrator, build_player
 from aerona.services.integrity.data_repairs import checkpoint
 from aerona.services.rules import RulesService
+from aerona.services.team.queue import bind_team
 from aerona.settings import Settings
 
 EPOCH_BUSY = "an epoch is running"
@@ -38,7 +39,11 @@ async def open_services(settings: Settings, model: LanguageModel | None, *, slot
     orchestrator = build_orchestrator(application, database, bus, jobs, rules, slots=slots)
     await orchestrator.recover()
     player = build_player(application, database, bus, jobs, player_creative_ports(application.agents))
-    return Services(settings=settings, database=database, bus=bus, jobs=jobs, rules=rules, application=application, orchestrator=orchestrator, player=player)
+    services = Services(
+        settings=settings, database=database, bus=bus, jobs=jobs, rules=rules, application=application, orchestrator=orchestrator, player=player
+    )
+    bind_team(services)
+    return services
 
 
 async def close_services(services: Services) -> None:

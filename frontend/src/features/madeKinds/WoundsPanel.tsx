@@ -166,6 +166,7 @@ export function WoundsPanel({
             />
           </FieldTile>
           <Button
+            act={strike}
             size='sm'
             variant='destructive'
             disabled={(busy ?? badForce) !== null}

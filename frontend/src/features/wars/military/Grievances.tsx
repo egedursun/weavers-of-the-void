@@ -121,6 +121,7 @@ function CauseCard({
         tone={justification >= 50 ? 'success' : 'warning'}
       />
       <Adjust
+        acts={[actions.save, actions.release, actions.remove]}
         title='Reshape the grievance'
         note='Its kind, target, how just it has grown and when it lapses; held values stay as set.'
       >
@@ -187,6 +188,7 @@ function NewCause({
         : undefined)
   return (
     <Adjust
+      acts={[create]}
       title='Grant a grievance'
       note='A casus belli this side holds against another; it grows more just each epoch until it is pressed in a war or lapses.'
       label='Grant a casus belli'
@@ -210,6 +212,7 @@ function NewCause({
         />
       </FieldGrid>
       <Button
+        act={create}
         size='sm'
         className='self-start'
         disabled={why !== undefined}
@@ -325,6 +328,7 @@ function LineEditor({
         tone='info'
       />
       <Adjust
+        acts={[actions.save, actions.release, actions.remove]}
         title='Direct the workshops'
         note='What its workshops make for the war, how practised they are at it and whether civilian goods are given up for it.'
       >
@@ -400,6 +404,7 @@ export function WarProduction({
               description='Its workshops make what peace needs; at war they turn to arms on their own.'
             />
             <Adjust
+              acts={[create]}
               title='Turn the workshops to war'
               note='Choose the war good; civilian goods are made less while the line runs.'
               label='Open a war line'
@@ -415,6 +420,7 @@ export function WarProduction({
                 />
               </FieldGrid>
               <Button
+                act={create}
                 size='sm'
                 className='self-start'
                 disabled={busy !== null}

@@ -26,6 +26,7 @@ export function IncitementCard({
   const [son, setSon] = useState(instigator ? String(instigator.id) : NO_SON)
   const [hold, setHold] = useState(true)
   const save = useGodAction({
+    writes: [{ lever: 'war:incite' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:incite', {
@@ -80,6 +81,7 @@ export function IncitementCard({
         )}
       </div>
       <Adjust
+        acts={[save]}
         label='Who set it off'
         title='Lay the war at a god’s feet'
         note='Name the god who incited this war, or clear the blame. Held, the war keeps it and its next fronts inherit it.'
@@ -94,6 +96,7 @@ export function IncitementCard({
           />
           <label className='flex min-w-0 items-center gap-2 self-end rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
             <Switch
+              permission='lock_canon'
               checked={hold}
               onCheckedChange={setHold}
               aria-label='Hold the blame'
@@ -103,6 +106,7 @@ export function IncitementCard({
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

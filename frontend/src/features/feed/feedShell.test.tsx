@@ -3,6 +3,7 @@ import { failure } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
+import { storedItem, viewerKey } from '@/lib/universeStorage'
 import { ActivityStrip } from '@/features/epoch/ActivityStrip'
 import { EpochProgress } from '@/features/epoch/EpochProgress'
 import { StopEpochButton } from '@/features/epoch/StopEpochButton'
@@ -125,7 +126,9 @@ describe('live feed dock', () => {
     await expect.element(dock).toBeVisible()
     await screen.getByRole('button', { name: 'Hide the live feed' }).click()
     await expect.element(dock).not.toBeInTheDocument()
-    expect(localStorage.getItem(FEED_PREFERENCES_KEY)).toContain('"open":false')
+    expect(storedItem(viewerKey(FEED_PREFERENCES_KEY))).toContain(
+      '"open":false'
+    )
     const toggle = screen.getByRole('button', {
       name: 'Live feed',
       exact: true,
@@ -135,7 +138,7 @@ describe('live feed dock', () => {
     await expect
       .element(screen.getByRole('complementary', { name: 'Live feed dock' }))
       .toBeVisible()
-    expect(localStorage.getItem(FEED_PREFERENCES_KEY)).toContain('"open":true')
+    expect(storedItem(viewerKey(FEED_PREFERENCES_KEY))).toContain('"open":true')
   })
 
   it('stays closed by default on narrow screens and opens as a sheet', async () => {
@@ -284,7 +287,7 @@ describe('feed sounds', () => {
     await expect.element(war).toHaveAttribute('aria-checked', 'true')
     await war.click()
     expect(useFeedPreferences.getState().muted).toContain('war')
-    expect(localStorage.getItem(FEED_PREFERENCES_KEY)).toContain(
+    expect(storedItem(viewerKey(FEED_PREFERENCES_KEY))).toContain(
       '"muted":["war"]'
     )
     await screen.getByRole('button', { name: 'Listen to Wars' }).click()

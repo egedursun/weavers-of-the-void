@@ -66,6 +66,7 @@ export function RevelationDialog({
   const cost = rule('costs.revelation')
   const { reason } = useGodGate()
   const reveal = useGodAction({
+    writes: [{ lever: 'revelation' }],
     run: () =>
       unwrap(
         api.POST('/api/revelations', {
@@ -90,7 +91,7 @@ export function RevelationDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={triggerVariant} size={triggerSize}>
+        <Button act={reveal} variant={triggerVariant} size={triggerSize}>
           <Sparkles />
           {triggerLabel}
         </Button>
@@ -179,6 +180,7 @@ export function RevelationDialog({
         </div>
         <DialogFooter>
           <ActionButton
+            act={reveal}
             label='Reveal'
             icon={Sparkles}
             variant='default'

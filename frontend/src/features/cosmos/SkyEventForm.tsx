@@ -53,6 +53,7 @@ export function SkyEventForm({ index, rules, worldId }: SkyEventFormProps) {
   const route = routeChoice || String(openRoutes[0]?.id ?? '')
   const parsedEpochs = epochs.trim() === '' ? undefined : Number(epochs)
   const order = useCosmicAction({
+    writes: [{ lever: 'cosmic:sky_event' }],
     run: () => {
       const body: SkyBody = { kind }
       if (storm) {
@@ -195,6 +196,7 @@ export function SkyEventForm({ index, rules, worldId }: SkyEventFormProps) {
       )}
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={order}
           actionId='cosmic:sky_event'
           label='Command the sky'
           icon={CloudLightning}

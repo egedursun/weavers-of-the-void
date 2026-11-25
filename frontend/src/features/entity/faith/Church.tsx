@@ -76,6 +76,7 @@ function OfficeRow({
 }) {
   const [holder, setHolder] = useState<number | null>(office.holder?.id ?? null)
   const act = useGodAction<Record<string, unknown>>({
+    writes: [{ lever: 'cult:office' }],
     run: (change) =>
       unwrap(
         api.POST('/api/actions/cult:office', {
@@ -118,6 +119,7 @@ function OfficeRow({
         >{`since ${office.since_epoch}`}</Muted>
       </div>
       <AdjustPanel
+        acts={[act]}
         trigger='Appoint'
         title={`The office of ${spec.label.toLowerCase()}`}
         note='An appointment is held: the faith will not replace the holder until you let it.'
@@ -134,6 +136,7 @@ function OfficeRow({
             />
           </div>
           <Button
+            act={act}
             size='sm'
             disabled={busy !== null || holder === null}
             disabledReason={busy ?? 'Choose the holder first.'}
@@ -146,6 +149,7 @@ function OfficeRow({
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           {office.locked ? (
             <Button
+              act={act}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -157,6 +161,7 @@ function OfficeRow({
             </Button>
           ) : (
             <Button
+              act={act}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -168,6 +173,7 @@ function OfficeRow({
             </Button>
           )}
           <Button
+            act={act}
             size='sm'
             variant='outline'
             disabled={busy !== null || !office.holder}
@@ -178,6 +184,7 @@ function OfficeRow({
             Leave it vacant
           </Button>
           <Button
+            act={act}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -206,6 +213,7 @@ export function ClergyOffices({
   )
   const [kind, setKind] = useState<string>(missing[0] ?? 'priest')
   const found = useGodAction({
+    writes: [{ lever: 'cult:office' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:office', {
@@ -249,6 +257,7 @@ export function ClergyOffices({
         </ul>
         {missing.length > 0 && (
           <AdjustPanel
+            acts={[found]}
             trigger='Found an office'
             title='Found a new office'
             note='The faith fills a new office from its best-taught clergy.'
@@ -264,6 +273,7 @@ export function ClergyOffices({
             />
             <div>
               <Button
+                act={found}
                 size='sm'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}
@@ -291,6 +301,7 @@ export function HoldingLevers({
   const [target, setTarget] = useState<number | null>(null)
   const [kind, setKind] = useState<string>('land')
   const act = useGodAction<boolean>({
+    writes: [{ lever: 'cult:holding' }],
     run: (remove) =>
       unwrap(
         api.POST('/api/actions/cult:holding', {
@@ -306,6 +317,7 @@ export function HoldingLevers({
   const busy = busyOf(blocked, act.isPending)
   return (
     <AdjustPanel
+      acts={[act]}
       trigger='Grant or take a holding'
       title='The faith’s holdings'
       note='Lands are the tithe base; temples, relics, holy places and monasteries carry their own works.'
@@ -329,6 +341,7 @@ export function HoldingLevers({
           />
         </div>
         <Button
+          act={act}
           size='sm'
           disabled={busy !== null || target === null}
           disabledReason={busy ?? 'Choose the holding first.'}
@@ -338,6 +351,7 @@ export function HoldingLevers({
           Grant it
         </Button>
         <Button
+          act={act}
           size='sm'
           variant='outline'
           disabled={busy !== null || target === null}
@@ -364,6 +378,7 @@ export function RelicShrine({
   const [pilgrims, setPilgrims] = useState(String(relic.pilgrims))
   const [shrine, setShrine] = useState<number | null>(relic.shrine?.id ?? null)
   const save = useGodAction({
+    writes: [{ lever: 'relic:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/relic:edit', {
@@ -380,6 +395,7 @@ export function RelicShrine({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'relic:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/relic:edit', {
@@ -388,6 +404,7 @@ export function RelicShrine({
       ),
   })
   const strip = useGodAction({
+    writes: [{ lever: 'relic:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/relic:remove', { body: { item_id: itemId } })
@@ -450,6 +467,7 @@ export function RelicShrine({
         icon={Sparkles}
       />
       <AdjustPanel
+        acts={[save, release, strip]}
         trigger='Tend the relic'
         title='Tend the relic'
         note='Set how holy it is, how many walk to it and where its shrine stands. What you set is held.'
@@ -485,6 +503,7 @@ export function RelicShrine({
         </div>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -495,6 +514,7 @@ export function RelicShrine({
           </Button>
           {relic.locked.length > 0 && (
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -506,6 +526,7 @@ export function RelicShrine({
             </Button>
           )}
           <Button
+            act={strip}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -532,6 +553,7 @@ export function HeresyLevers({
   const [distance, setDistance] = useState(heresy.distance)
   const [tolerated, setTolerated] = useState(heresy.tolerated)
   const save = useGodAction({
+    writes: [{ lever: 'cult:edit_heresy' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:edit_heresy', {
@@ -547,6 +569,7 @@ export function HeresyLevers({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'cult:edit_heresy' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:edit_heresy', {
@@ -555,6 +578,7 @@ export function HeresyLevers({
       ),
   })
   const forgive = useGodAction({
+    writes: [{ lever: 'cult:undeclare_heresy' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:undeclare_heresy', {
@@ -570,6 +594,7 @@ export function HeresyLevers({
   )
   return (
     <AdjustPanel
+      acts={[save, release, forgive]}
       trigger='Shape the heresy'
       title='How far it strayed'
       note='Set its distance from the mother church and whether it is suffered. Forgiving it unnames it.'
@@ -596,6 +621,7 @@ export function HeresyLevers({
       </label>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -606,6 +632,7 @@ export function HeresyLevers({
         </Button>
         {heresy.locked.length > 0 && (
           <Button
+            act={release}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -617,6 +644,7 @@ export function HeresyLevers({
           </Button>
         )}
         <Button
+          act={forgive}
           size='sm'
           variant='ghost'
           disabled={busy !== null}

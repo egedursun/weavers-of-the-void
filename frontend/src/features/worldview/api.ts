@@ -36,6 +36,7 @@ export function useWorldViewAction<Name extends WorldViewAction, T>(
   success?: string
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
   })

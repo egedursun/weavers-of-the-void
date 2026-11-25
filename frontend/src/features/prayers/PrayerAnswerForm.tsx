@@ -26,6 +26,7 @@ export function PrayerAnswerForm({ messageId, mortal }: PrayerAnswerFormProps) {
   const max = Math.max(0, Math.min(cap ?? available, available))
   const gift = essence === '' ? 0 : Number(essence)
   const answer = useGodAction({
+    writes: [{ lever: 'answer_prayer' }],
     run: () =>
       unwrap(
         api.POST('/api/prayers/{message_id}/answer', {
@@ -93,6 +94,7 @@ export function PrayerAnswerForm({ messageId, mortal }: PrayerAnswerFormProps) {
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-3'>
         <ActionButton
+          act={answer}
           label={mortal ? 'Answer with a dream' : 'Answer'}
           icon={mortal ? Moon : HandHeart}
           variant='default'

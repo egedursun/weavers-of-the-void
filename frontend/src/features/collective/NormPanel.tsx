@@ -116,6 +116,7 @@ function CustomForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -293,6 +294,7 @@ function BiasForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -461,6 +463,7 @@ function RoleCard({
           </ToggleGroup>
         </FieldTile>
         <Button
+          act={classing}
           size='sm'
           variant='outline'
           disabled={classBusy !== null}
@@ -515,6 +518,7 @@ function RoleForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

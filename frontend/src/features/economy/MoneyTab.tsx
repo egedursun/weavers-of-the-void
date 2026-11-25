@@ -21,6 +21,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -158,6 +159,7 @@ function CurrencyCard({
     ? null
     : `${MONEY_FORM[form as MoneyForm].label} is not made of metal.`
   const edit = useGodAction({
+    writes: [{ lever: 'currency:edit' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -180,6 +182,7 @@ function CurrencyCard({
       ),
   })
   const debase = useGodAction({
+    writes: [{ lever: 'currency:debase' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -189,6 +192,7 @@ function CurrencyCard({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'currency:release' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -198,6 +202,7 @@ function CurrencyCard({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'currency:delete' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -294,11 +299,13 @@ function CurrencyCard({
       <div className='mt-auto flex min-w-0 flex-col gap-3'>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <ReleaseButton
+            act={release}
             held={currency.held}
             busy={busy}
             onRelease={() => release.mutate(undefined)}
           />
           <ConfirmButton
+            act={remove}
             icon={Trash2}
             label='Melt it down'
             title={`Melt down ${currency.name}?`}
@@ -309,6 +316,7 @@ function CurrencyCard({
           />
         </div>
         <AdjustPanel
+          acts={[edit, debase]}
           label='Adjust the coin'
           title={`Strike ${currency.name} anew`}
           note='Rename it, strike it in another metal, set its purity and trust from 0 to 100 and how many coins are abroad, or debase it at a stroke.'
@@ -381,6 +389,7 @@ function CurrencyCard({
           </div>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={edit}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -390,6 +399,7 @@ function CurrencyCard({
               Set the coin
             </Button>
             <Button
+              act={debase}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -427,6 +437,7 @@ export function CoinForge({
     ? null
     : `${MONEY_FORM[form as MoneyForm].label} is not made of metal.`
   const strike = useGodAction({
+    writes: [{ lever: 'currency:create' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -532,6 +543,7 @@ export function CoinForge({
         />
       </div>
       <Button
+        act={strike}
         size='sm'
         className='self-start'
         disabled={busy !== null}
@@ -614,6 +626,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
   const [state, setState] = useState<string>(loan.status)
   const [hold, setHold] = useState(loan.held)
   const forgive = useGodAction({
+    writes: [{ lever: 'loan:forgive' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -621,6 +634,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
       ),
   })
   const edit = useGodAction({
+    writes: [{ lever: 'loan:edit' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -638,6 +652,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'loan:release' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -645,6 +660,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'loan:delete' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -733,6 +749,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
         <div className='flex min-w-0 flex-wrap gap-2'>
           {loan.status === 'open' && (
             <Button
+              act={forgive}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -744,11 +761,13 @@ export function LoanCard({ loan }: { loan: Loan }) {
             </Button>
           )}
           <ReleaseButton
+            act={release}
             held={loan.held}
             busy={busy}
             onRelease={() => release.mutate(undefined)}
           />
           <ConfirmButton
+            act={remove}
             icon={Trash2}
             label='Strike it out'
             title='Strike this loan from the ledgers?'
@@ -759,6 +778,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
           />
         </div>
         <AdjustPanel
+          acts={[edit]}
           label='Adjust the loan'
           title={`The loan to ${loan.borrower_name}`}
           note='Rewrite what was lent, its interest, when it falls due, how much is repaid and where it stands.'
@@ -803,6 +823,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
             />
           </div>
           <Button
+            act={edit}
             size='sm'
             className='self-start'
             disabled={busy !== null}
@@ -828,6 +849,7 @@ export function LoanForge({ onDone }: { onDone?: () => void }) {
   const [coin, setCoin] = useState<string>(NONE)
   const [purpose, setPurpose] = useState<string>('trade')
   const grant = useGodAction({
+    writes: [{ lever: 'loan:grant' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -929,6 +951,7 @@ export function LoanForge({ onDone }: { onDone?: () => void }) {
         />
       </div>
       <Button
+        act={grant}
         size='sm'
         className='self-start'
         disabled={busy !== null}
@@ -946,10 +969,12 @@ function DebtCard({
   debt,
   busy,
   onWriteOff,
+  act,
 }: {
   debt: Debt
   busy: string | null
   onWriteOff: () => void
+  act?: ActProp
 }) {
   const remedy = debt.remedy ? DEBT_REMEDY[debt.remedy] : null
   const what = debt.currency_name ?? plainWords(debt.what)
@@ -985,6 +1010,7 @@ function DebtCard({
         </div>
       </div>
       <Button
+        act={act}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -1001,6 +1027,7 @@ function DebtLawCard({ law }: { law: DebtLaw }) {
   const [remedy, setRemedy] = useState<string>(law.remedy)
   const [jubilee, setJubilee] = useState(String(law.jubilee_epochs))
   const edit = useGodAction({
+    writes: [{ lever: 'law:edit' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -1013,6 +1040,7 @@ function DebtLawCard({ law }: { law: DebtLaw }) {
       ),
   })
   const repeal = useGodAction({
+    writes: [{ lever: 'law:repeal' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -1070,6 +1098,7 @@ function DebtLawCard({ law }: { law: DebtLaw }) {
       <div className='mt-auto flex min-w-0 flex-col gap-3'>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <ConfirmButton
+            act={repeal}
             icon={Gavel}
             label='Repeal'
             title={`Repeal ${law.name}?`}
@@ -1080,6 +1109,7 @@ function DebtLawCard({ law }: { law: DebtLaw }) {
           />
         </div>
         <AdjustPanel
+          acts={[edit]}
           label='Adjust the law'
           title={`Rewrite ${law.name}`}
           note='Choose what befalls those who default and, under a jubilee, how many epochs pass before debts are wiped.'
@@ -1104,6 +1134,7 @@ function DebtLawCard({ law }: { law: DebtLaw }) {
             {DEBT_REMEDY[remedy as DebtRemedy].note}
           </Muted>
           <Button
+            act={edit}
             size='sm'
             className='self-start'
             disabled={busy !== null}
@@ -1124,6 +1155,7 @@ function DebtLawForge({ onDone }: { onDone?: () => void }) {
   const [remedy, setRemedy] = useState<string>('jubilee')
   const [jubilee, setJubilee] = useState(DEFAULT_JUBILEE)
   const enact = useGodAction({
+    writes: [{ lever: 'law:enact' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -1173,6 +1205,7 @@ function DebtLawForge({ onDone }: { onDone?: () => void }) {
       </div>
       <Muted variant='caption'>{DEBT_REMEDY[remedy as DebtRemedy].note}</Muted>
       <Button
+        act={enact}
         size='sm'
         className='self-start'
         disabled={busy !== null}
@@ -1230,6 +1263,7 @@ export function DebtLaws() {
 export function DebtsLedger() {
   const view = useDebtsLedger()
   const writeOff = useGodAction({
+    writes: [{ lever: 'market:write_off' }],
     invalidate: ECONOMY_REFRESH,
     run: (bond: number) =>
       unwrap(
@@ -1298,6 +1332,7 @@ export function DebtsLedger() {
           >
             {(debt) => (
               <DebtCard
+                act={writeOff}
                 debt={debt}
                 busy={busy}
                 onWriteOff={() => writeOff.mutate(debt.bond_id)}

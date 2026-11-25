@@ -11,6 +11,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.image_styles import styled_prompt
+from aerona.core.account_scope import detached
 from aerona.core.activity import ActivityLog, collecting
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
@@ -217,7 +218,7 @@ class ImageQueue:
     def _ensure_worker(self) -> None:
         if self._worker is None or self._worker.done():
             self._idle.clear()
-            self._worker = asyncio.create_task(self._run())
+            self._worker = detached(self._run())
 
     async def _run(self) -> None:
         try:
@@ -363,7 +364,7 @@ class ImageQueue:
                 " after the epoch" if auto else ""
             )
             tracked = await self._jobs.begin_external(JobKind.IMAGE, {JOB_LABEL_KEY: label, "total": len(targets), "auto": auto})
-        self._bulk_task = asyncio.create_task(self._bulk([target.node_id for target in targets], tracked))
+        self._bulk_task = detached(self._bulk([target.node_id for target in targets], tracked))
         return self.bulk
 
     def stop_bulk(self) -> BulkRun:

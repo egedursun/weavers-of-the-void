@@ -62,7 +62,9 @@ async def notifications(services: ServicesDep, query: Annotated[NotificationQuer
         counts=page.counts,
         settings=page.settings,
         categories=page.categories,
-        items=[NotificationRecord.model_validate(row).model_copy(update={"entity_ids": links.get(row.id, [])}) for row in page.items],
+        items=[
+            NotificationRecord.model_validate(row).model_copy(update={"entity_ids": links.get(row.id, []), "is_read": page.read(row)}) for row in page.items
+        ],
     )
 
 

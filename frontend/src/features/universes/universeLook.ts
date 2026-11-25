@@ -1,6 +1,8 @@
 import {
   Archive,
   ArchiveRestore,
+  ArrowRightLeft,
+  BookLock,
   BookOpen,
   BookPlus,
   CalendarClock,
@@ -11,13 +13,21 @@ import {
   FileUp,
   HardDrive,
   Hourglass,
+  KeyRound,
   Landmark,
   type LucideIcon,
   NotebookPen,
   PenLine,
+  ShieldCheck,
   SortAsc,
   Trash2,
   Undo2,
+  UserCog,
+  UserMinus,
+  UserPlus,
+  UserRoundCheck,
+  UserRoundX,
+  Users,
 } from 'lucide-react'
 import { fnv1a } from '@/lib/hash'
 import { type KpiTone } from '@/components/domain'
@@ -89,6 +99,52 @@ export const EVENT_LOOK: Record<LibraryEventKind, Look> = {
   deleted: { label: 'Moved to the trash', icon: Trash2, tone: 'danger' },
   recovered: { label: 'Recovered', icon: Undo2, tone: 'success' },
   purged: { label: 'Purged', icon: Eraser, tone: 'danger' },
+  moved: {
+    label: 'Moved to another workspace',
+    icon: ArrowRightLeft,
+    tone: 'info',
+  },
+  account_created: { label: 'Account made', icon: UserPlus, tone: 'success' },
+  password_reset: { label: 'Password reset', icon: KeyRound, tone: 'warning' },
+  account_deactivated: {
+    label: 'Account deactivated',
+    icon: UserRoundX,
+    tone: 'muted',
+  },
+  account_reactivated: {
+    label: 'Account reactivated',
+    icon: UserRoundCheck,
+    tone: 'success',
+  },
+  account_deleted: {
+    label: 'Account deleted',
+    icon: UserMinus,
+    tone: 'danger',
+  },
+  workspace_created: { label: 'Workspace founded', icon: Users, tone: 'gold' },
+  workspace_renamed: {
+    label: 'Workspace renamed',
+    icon: PenLine,
+    tone: 'muted',
+  },
+  workspace_deleted: {
+    label: 'Workspace deleted',
+    icon: Trash2,
+    tone: 'danger',
+  },
+  member_added: { label: 'Member added', icon: UserPlus, tone: 'success' },
+  member_role_changed: {
+    label: 'Member role changed',
+    icon: UserCog,
+    tone: 'info',
+  },
+  member_removed: { label: 'Member removed', icon: UserMinus, tone: 'muted' },
+  access_changed: { label: 'Access changed', icon: ShieldCheck, tone: 'info' },
+  canon_approval_changed: {
+    label: 'Canon approval changed',
+    icon: BookLock,
+    tone: 'gold',
+  },
 }
 
 export const JOB_STATUS_LABEL: Record<LibraryJobStatus, string> = {

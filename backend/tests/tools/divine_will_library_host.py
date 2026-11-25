@@ -59,6 +59,8 @@ class QueuedJobs(JobManager):
         params: dict[str, Any] | None = None,
         exclusive_group: str | None = None,
         dedupe_key: str | None = None,
+        *,
+        as_person: bool = False,
     ) -> str:
         self.queued.append(QueuedJob(kind, handler, dict(params or {})))
         return f"queued-{len(self.queued)}"

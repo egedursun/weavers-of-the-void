@@ -89,7 +89,7 @@ export const ACTOR: Record<
   ActorKind,
   { label: string; icon: LucideIcon; tone: KpiTone }
 > = {
-  creator: { label: 'You', icon: Sun, tone: 'gold' },
+  creator: { label: "The Creator's hand", icon: Sun, tone: 'gold' },
   son: { label: 'Sons', icon: Crown, tone: 'verdigris' },
   mortal: { label: 'Mortals', icon: Users, tone: 'info' },
   foreign_god: { label: 'Foreign gods', icon: Ghost, tone: 'danger' },

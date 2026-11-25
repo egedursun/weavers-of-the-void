@@ -27,6 +27,7 @@ export function EntityImages({
   const gate = useLoreGate()
   const writing = useRunningJob('content', 'entity_id', entity.id)
   const savePrompt = useLoreMutation({
+    writes: [{ lever: 'record:edit' }],
     run: (prompt: string | null) =>
       unwrap(
         api.PATCH('/api/entities/{entity_id}', {
@@ -37,6 +38,9 @@ export function EntityImages({
     success: 'Image prompt saved',
   })
   const writePrompt = useLoreMutation({
+    writes: [
+      { method: 'POST', path: '/api/entities/{entity_id}/image-prompt' },
+    ],
     run: () =>
       unwrap(
         api.POST('/api/entities/{entity_id}/image-prompt', {
@@ -80,6 +84,7 @@ export function EntityImages({
         disabledReason={readOnlyReason}
       />
       <PromptBox
+        act={savePrompt}
         key={entity.image_prompt ?? ''}
         prompt={entity.image_prompt}
         onSave={(prompt) => savePrompt.mutate(prompt)}
@@ -87,6 +92,7 @@ export function EntityImages({
         readOnlyReason={readOnlyReason}
       />
       <Button
+        act={writePrompt}
         variant='outline'
         className='self-start'
         disabled={writeReason !== null}

@@ -64,11 +64,13 @@ export function RecordGallery({
       ? (imageGen.reason ?? 'Image generation is not available.')
       : null)
   const generate = useGodAction({
+    writes: [{ method: 'POST', path: '/api/image-gen' }],
     run: () =>
       unwrap(api.POST('/api/image-gen', { body: { node_id: nodeId } })),
     success: 'The image is queued',
   })
   const upload = useGodAction({
+    writes: [{ method: 'POST', path: '/api/images' }],
     run: (file: File) =>
       unwrap(
         api.POST('/api/images', {
@@ -111,6 +113,7 @@ export function RecordGallery({
       />
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <ActionButton
+          act={generate}
           label='Generate image'
           icon={Wand2}
           blocked={generateBlocked}
@@ -121,6 +124,7 @@ export function RecordGallery({
           Upload an image
         </FieldLabel>
         <Input
+          act={upload}
           id={uploadId}
           type='file'
           accept='image/png,image/jpeg,image/webp'
@@ -148,6 +152,7 @@ export function RecordGallery({
           </FieldTile>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <ActionButton
+              act={savePrompt}
               label='Save prompt'
               blocked={
                 reason() ??

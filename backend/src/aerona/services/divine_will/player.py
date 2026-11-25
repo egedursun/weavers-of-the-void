@@ -1,35 +1,31 @@
-import json
 import re
-from collections import Counter
 from collections.abc import Mapping
-from dataclasses import dataclass
 from typing import Any
 
 from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.team import PROPOSED_TEXT, QUEUED_TEXT
+from aerona.core.act_note import current_note
 from aerona.core.errors import AeronaError
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.divine_will import ConfirmationReason
-from aerona.domain.enums.entity import EntityStatus
-from aerona.domain.enums.meta import LedgerOperation
-from aerona.domain.enums.war import WarStatus
+from aerona.domain.enums.team import QueuedActSource
 from aerona.engine.primitives.manual import silent
-from aerona.epoch.concurrency import WORLD_GROUP
 from aerona.rules.registry import Rules
 from aerona.services.container import Services
+from aerona.services.divine_will.reading import Reading, summarise
 from aerona.services.player.catalog import ActionSpec, action
 from aerona.services.player.scope import ActionOutcome, PlayerScope
+from aerona.services.team.execute import world_busy
+from aerona.services.team.gate import admit
+from aerona.services.team.queue import QueueDraft, enqueue
 
-BUSY_TEXT = "The world is busy with an epoch; acts wait until the epoch has finished."
-DISSOLVED = "dissolved"
-END_WORDS = frozenset({EntityStatus.DEAD.value, EntityStatus.DESTROYED.value, WarStatus.ENDED.value, DISSOLVED})
-STATUS_FIELD = "status"
-NODE_TABLE = "nodes"
-WORLD_END_TABLE = "world_ends"
+UNDO_ACTION = "ledger:undo"
+UNDO_TITLE = "Undo ledger entry {entry_id}"
 DECLARED_ESSENCE = re.compile(r"(\d+)\s+essence")
 JOB_ID_KEY = "job_id"
 
@@ -52,32 +48,6 @@ def declared_essence(cost: str) -> int:
     return max((int(found) for found in DECLARED_ESSENCE.findall(cost)), default=0)
 
 
-def change_value(number: float | None, text: str | None, node: int | None) -> Any:
-    if node is not None:
-        return node
-    if number is not None:
-        return int(number) if float(number).is_integer() else number
-    return text
-
-
-def whole_row_name(text: str | None) -> tuple[str, str]:
-    if not text:
-        return "", ""
-    try:
-        values = json.loads(text)
-    except ValueError:
-        return "", ""
-    if not isinstance(values, dict):
-        return "", ""
-    return str(values.get("name") or ""), str(values.get("kind") or "")
-
-
-@dataclass(frozen=True)
-class Reading:
-    changes: list[StateChangeRow]
-    names: dict[int, str]
-
-
 def outcome_fields(outcome: ActionOutcome) -> dict[str, Any]:
     job_id = outcome.values.get(JOB_ID_KEY)
     return {
@@ -89,46 +59,6 @@ def outcome_fields(outcome: ActionOutcome) -> dict[str, Any]:
         "ledger_entry_id": outcome.ledger_entry_id,
         "job_id": str(job_id) if job_id is not None else "",
         "values": {key: value for key, value in outcome.values.items() if key != JOB_ID_KEY},
-    }
-
-
-def change_line(row: StateChangeRow, names: Mapping[int, str]) -> dict[str, Any]:
-    return {
-        "table": row.table_name,
-        "operation": row.operation.value,
-        "key": row.row_key,
-        "node_id": row.node_id,
-        "node_name": names.get(row.node_id, "") if row.node_id is not None else "",
-        "field": row.field or "",
-        "before": change_value(row.before_number, row.before_text, row.before_node_id),
-        "after": change_value(row.after_number, row.after_text, row.after_node_id),
-    }
-
-
-def summarise(reading: Reading) -> dict[str, Any]:
-    names = reading.names
-    deleted_nodes: list[dict[str, Any]] = []
-    deleted_records: list[dict[str, Any]] = []
-    ended: list[dict[str, Any]] = []
-    counts: Counter[tuple[str, str]] = Counter()
-    for row in reading.changes:
-        counts[(row.operation.value, row.table_name)] += 1
-        if row.operation is LedgerOperation.DELETE and row.table_name == NODE_TABLE:
-            name, kind = whole_row_name(row.before_text)
-            deleted_nodes.append({"node_id": row.node_id, "name": name or names.get(row.node_id or 0, ""), "kind": kind})
-        elif row.operation is LedgerOperation.DELETE:
-            deleted_records.append(change_line(row, names))
-        elif (row.operation is LedgerOperation.INSERT and row.table_name == WORLD_END_TABLE) or (
-            row.operation is LedgerOperation.UPDATE and row.field == STATUS_FIELD and (row.after_text or "") in END_WORDS
-        ):
-            ended.append(change_line(row, names))
-    tallies = [{"operation": operation, "table": table, "count": count} for (operation, table), count in sorted(counts.items())]
-    return {
-        "deleted_nodes": deleted_nodes,
-        "deleted_records": deleted_records,
-        "ended": ended,
-        "tallies": tallies,
-        "changes": [change_line(row, names) for row in reading.changes],
     }
 
 
@@ -147,7 +77,7 @@ class CatalogPlayer:
         self.services = services
 
     def epoch_running(self) -> bool:
-        return self.services.jobs.busy_group(WORLD_GROUP) is not None
+        return world_busy(self.services)
 
     async def rules(self, session: AsyncSession) -> Rules:
         cosmos = await CosmosRepository(session).get()
@@ -171,18 +101,15 @@ class CatalogPlayer:
             command = spec.input_model.model_validate(dict(payload))
         except (AeronaError, ValidationError) as error:
             return refusal(error)
-        if self.epoch_running():
-            return refusal(AeronaError(BUSY_TEXT), busy=True)
         rules = await self.current_rules()
         threshold = rules.divine_will.costly_essence
-        if spec.sync is None:
+        if spec.sync is None or self.epoch_running():
             declared = declared_essence(spec.cost(rules))
             costly = declared >= threshold
             return {
                 **self.head(spec, rules),
                 "essence": declared,
                 "essence_gained": 0,
-                "message": "",
                 "deleted_nodes": [],
                 "deleted_records": [],
                 "ended": [],
@@ -191,6 +118,8 @@ class CatalogPlayer:
                 "destructive": False,
                 "costly": costly,
                 "reason": verdict(False, costly),
+                "busy": self.epoch_running(),
+                "message": QUEUED_TEXT if self.epoch_running() else "",
             }
         try:
             return await self.rehearse(spec, command)
@@ -241,14 +170,19 @@ class CatalogPlayer:
             command = spec.input_model.model_validate(dict(payload))
         except (AeronaError, ValidationError) as error:
             return refusal(error)
-        if self.epoch_running():
-            return refusal(AeronaError(BUSY_TEXT), busy=True)
         try:
             self.services.application.discovery.ensure_writable()
-            outcome, rules = await self.run(spec, command)
+            rules = await self.current_rules()
+            admitted = await admit(self.services, spec, command.model_dump(mode="json", exclude_unset=True), QueuedActSource.DIVINE_WILL)
         except (AeronaError, ValidationError) as error:
             return refusal(error)
-        return {**self.head(spec, rules), **outcome_fields(outcome)}
+        if admitted.queued is not None:
+            return {**self.head(spec, rules), "queued": True, "queued_act_id": admitted.queued.id, "message": QUEUED_TEXT}
+        if admitted.proposal is not None:
+            return {**self.head(spec, rules), "proposed": True, "proposal_id": admitted.proposal.id, "message": PROPOSED_TEXT}
+        if admitted.outcome is None:
+            return refusal(AeronaError(spec.id))
+        return {**self.head(spec, rules), **outcome_fields(admitted.outcome)}
 
     async def run(self, spec: ActionSpec, command: Any) -> tuple[ActionOutcome, Rules]:
         if spec.sync is not None:
@@ -262,6 +196,12 @@ class CatalogPlayer:
 
     async def undo(self, ledger_entry_id: int) -> dict[str, Any]:
         running = self.epoch_running()
+        if running:
+            draft = QueueDraft(
+                QueuedActSource.UNDO, UNDO_ACTION, UNDO_TITLE.format(entry_id=ledger_entry_id), {"entry_id": ledger_entry_id}, current_note().reason
+            )
+            queued = await enqueue(self.services, draft)
+            return {"ok": True, "busy": False, "error": "", "queued": True, "queued_act_id": queued.id, "message": QUEUED_TEXT}
         try:
             self.services.application.discovery.ensure_writable()
             async with self.services.database.write() as session:

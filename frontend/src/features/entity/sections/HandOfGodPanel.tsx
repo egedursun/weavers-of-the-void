@@ -68,6 +68,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
   const item = actions.data?.find((action) => action.id === 'intervene')
   const dreamItem = actions.data?.find((action) => action.id === 'dream')
   const intervene = useLoreMutation({
+    writes: [{ lever: 'intervene' }],
     run: (input: InterveneBody) =>
       unwrap(
         api.POST('/api/entities/{entity_id}/intervene', {
@@ -79,6 +80,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
     onDone: () => setKnowledge(null),
   })
   const send = useLoreMutation({
+    writes: [{ lever: 'dream' }],
     run: () =>
       unwrap(
         api.POST('/api/entities/{entity_id}/dream', {
@@ -149,6 +151,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
               const reason = reasonFor('miracle') ?? miracleBlock(ctx, miracle)
               return (
                 <Button
+                  act={intervene}
                   key={miracle}
                   variant='outline'
                   disabled={reason !== null}
@@ -175,6 +178,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
                 const reason = reasonFor('disaster')
                 return (
                   <Button
+                    act={intervene}
                     key={disaster}
                     variant='destructive'
                     disabled={reason !== null}
@@ -199,6 +203,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
           const reason = reasonFor('curse') ?? curseBlock(ctx)
           return (
             <Button
+              act={intervene}
               variant='destructive'
               disabled={reason !== null}
               disabledReason={reason ?? undefined}
@@ -236,6 +241,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
                       (knowledge === null ? 'Choose knowledge first.' : null)
                     return (
                       <Button
+                        act={intervene}
                         variant='outline'
                         disabled={reason !== null}
                         disabledReason={reason ?? undefined}
@@ -260,6 +266,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
         columns={2}
         action={
           <StepButton
+            act={intervene}
             icon={Wand2}
             label='Act'
             variant='default'
@@ -310,6 +317,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
             onChange={(event) => setDream(event.target.value)}
           />
           <Button
+            act={send}
             className='self-start'
             disabled={dreamReason !== null}
             disabledReason={dreamReason ?? undefined}
@@ -321,6 +329,7 @@ export function HandOfGodPanel({ ctx }: { ctx: EntityContext }) {
         </div>
       )}
       <ConfirmDialog
+        act={intervene}
         open={pending !== null}
         onOpenChange={(open) => !open && setPending(null)}
         title={

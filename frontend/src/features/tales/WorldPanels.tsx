@@ -257,6 +257,7 @@ export function FormationPanel({
         columns={2}
         action={
           <Button
+            act={reading}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -556,6 +557,7 @@ function SpellSteps({
       columns={2}
       action={
         <Button
+          act={creating}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -759,6 +761,7 @@ export function SeasonsPanel({
         columns={2}
         action={
           <Button
+            act={forecasting}
             size='sm'
             disabled={forecastBusy !== null}
             disabledReason={forecastBusy ?? undefined}
@@ -997,6 +1000,7 @@ export function TransformationPanel({
         columns={4}
         action={
           <Button
+            act={aiming}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

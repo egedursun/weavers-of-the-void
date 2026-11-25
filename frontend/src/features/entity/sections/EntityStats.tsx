@@ -56,6 +56,7 @@ function StatEditor({
   const [draft, setDraft] = useState(value === null ? '' : String(value))
   const percent = !COUNT_STATS.has(stat)
   const mutation = useLoreMutation({
+    writes: [{ lever: 'entity:stat' }],
     run: (next: number) =>
       unwrap(
         api.PUT('/api/entities/{entity_id}/stat', {
@@ -97,6 +98,7 @@ function StatEditor({
         />
       </FieldTile>
       <Button
+        act={mutation}
         type='submit'
         variant='outline'
         size='icon'

@@ -45,6 +45,7 @@ function HoldControls({
 }) {
   const { reason } = useGodGate()
   const lock = useGodAction({
+    writes: [{ lever: 'mind:lock' }, { lever: 'mind:unlock' }],
     run: (input: { field: string; locked: boolean }) =>
       unwrap(
         api.POST(
@@ -63,6 +64,7 @@ function HoldControls({
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={lock}
           size='sm'
           variant={view.bonds_held ? 'outline' : 'ghost'}
           disabled={busy !== null}
@@ -75,6 +77,7 @@ function HoldControls({
           {view.bonds_held ? 'Release bonds' : 'Hold bonds'}
         </Button>
         <Button
+          act={lock}
           size='sm'
           variant={view.passions_held ? 'outline' : 'ghost'}
           disabled={busy !== null}

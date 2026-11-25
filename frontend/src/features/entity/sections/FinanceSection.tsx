@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowDownRight, ArrowUpRight, Eraser, Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -81,13 +82,16 @@ function RemoveButton({
   label,
   busy,
   onClick,
+  act,
 }: {
   label: string
   busy: string | null
   onClick: () => void
+  act?: ActProp
 }) {
   return (
     <Button
+      act={act}
       size='icon-sm'
       variant='ghost'
       aria-label={label}
@@ -103,6 +107,7 @@ function RemoveButton({
 function CreditCard({ view, blocked, hold }: Props) {
   const credit = view.credit
   const open = useGodAction({
+    writes: [{ lever: 'credit:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/credit:set', {
@@ -111,6 +116,7 @@ function CreditCard({ view, blocked, hold }: Props) {
       ),
   })
   const wipe = useGodAction({
+    writes: [{ lever: 'credit:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/credit:remove', {
@@ -119,6 +125,7 @@ function CreditCard({ view, blocked, hold }: Props) {
       ),
   })
   const state = useGodAction({
+    writes: [{ lever: 'credit:set' }],
     run: (value: CreditState) =>
       unwrap(
         api.POST('/api/actions/credit:set', {
@@ -126,7 +133,23 @@ function CreditCard({ view, blocked, hold }: Props) {
         })
       ),
   })
-  const busy = why(blocked, open.isPending, wipe.isPending, state.isPending)
+  const rescue = useGodAction({
+    writes: [{ lever: 'credit:set' }],
+    run: (rescuer: number) =>
+      unwrap(
+        api.POST('/api/actions/credit:set', {
+          body: { subject_id: view.node_id, rescuer_node_id: rescuer, hold },
+        })
+      ),
+    success: 'Rescuer set',
+  })
+  const busy = why(
+    blocked,
+    open.isPending,
+    wipe.isPending,
+    state.isPending,
+    rescue.isPending
+  )
   return (
     <MindCard
       title='Credit'
@@ -137,6 +160,7 @@ function CreditCard({ view, blocked, hold }: Props) {
         <>
           <Muted variant='caption'>No lender has judged this one yet.</Muted>
           <Button
+            act={open}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -198,24 +222,17 @@ function CreditCard({ view, blocked, hold }: Props) {
             editor={
               <>
                 <NodePicker
+                  act={rescue}
                   label='Rescuer'
                   value={credit.rescuer?.id ?? null}
-                  onChange={(value) =>
-                    value !== null &&
-                    void unwrap(
-                      api.POST('/api/actions/credit:set', {
-                        body: {
-                          subject_id: view.node_id,
-                          rescuer_node_id: value,
-                          hold,
-                        },
-                      })
-                    )
-                  }
+                  onChange={(value) => {
+                    if (value !== null) rescue.mutate(value)
+                  }}
                   blocked={busy}
                   types={['polity', 'faction']}
                 />
                 <MindPicker
+                  act={state}
                   label='Standing with lenders'
                   value={credit.state}
                   table={table(view.credit_states)}
@@ -289,6 +306,7 @@ function CreditCard({ view, blocked, hold }: Props) {
             }
           />
           <Button
+            act={wipe}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -315,6 +333,7 @@ function PolicyRow({
 }) {
   const spec = named(POLICIES, row.kind)
   const lift = useGodAction({
+    writes: [{ lever: 'trade_policy:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/trade_policy:remove', {
@@ -339,6 +358,7 @@ function PolicyRow({
       }
       actions={
         <RemoveButton
+          act={lift}
           label='Lift the policy'
           busy={busy}
           onClick={() => lift.mutate()}
@@ -391,6 +411,7 @@ function PoliciesCard({ view, blocked, hold }: Props) {
   const [partner, setPartner] = useState<number | null>(null)
   const issuer = view.realm?.id ?? view.node_id
   const lay = useGodAction({
+    writes: [{ lever: 'trade_policy:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/trade_policy:set', {
@@ -432,6 +453,7 @@ function PoliciesCard({ view, blocked, hold }: Props) {
         title={`Lay a policy for ${view.realm?.name ?? view.name}`}
         action={
           <Button
+            act={lay}
             size='sm'
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}
@@ -478,6 +500,7 @@ function HoardRow({
   hold: boolean
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'speculation:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/speculation:remove', {
@@ -486,6 +509,7 @@ function HoardRow({
       ),
   })
   const status = useGodAction({
+    writes: [{ lever: 'speculation:edit' }],
     run: (value: SpeculationStatus) =>
       unwrap(
         api.POST('/api/actions/speculation:edit', {
@@ -515,6 +539,7 @@ function HoardRow({
       }
       actions={
         <RemoveButton
+          act={strike}
           label='Strike the hoard'
           busy={busy}
           onClick={() => strike.mutate()}
@@ -524,6 +549,7 @@ function HoardRow({
       editor={
         <>
           <MindPicker
+            act={status}
             label='Status'
             value={row.status}
             table={STATUSES}
@@ -566,6 +592,7 @@ function HoardsCard({ view, blocked, hold }: Props) {
   const [good, setGood] = useState<string>('grain')
   const [place, setPlace] = useState<number | null>(null)
   const open = useGodAction({
+    writes: [{ lever: 'speculation:open' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/speculation:open', {
@@ -600,6 +627,7 @@ function HoardsCard({ view, blocked, hold }: Props) {
         title='Take goods off a market into a hoard held by this one'
         action={
           <Button
+            act={open}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -639,6 +667,7 @@ function IndicatorRow({
   blocked: string | null
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'indicator:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/indicator:remove', {
@@ -661,6 +690,7 @@ function IndicatorRow({
       }
       actions={
         <RemoveButton
+          act={strike}
           label='Strike the record'
           busy={busy}
           onClick={() => strike.mutate()}

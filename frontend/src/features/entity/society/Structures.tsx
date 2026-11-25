@@ -28,6 +28,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -158,16 +159,19 @@ function SonSelect({
   value,
   onChange,
   blocked,
+  act,
 }: {
   value: number | null
   onChange: (value: number | null) => void
   blocked: string | null
+  act?: ActProp
 }) {
   const sons = useSons()
   const id = useId()
   return (
     <FieldTile id={id} label='Dedicated to'>
       <Select
+        act={act}
         value={value === null ? NONE : String(value)}
         onValueChange={(next) => onChange(next === NONE ? null : Number(next))}
         disabled={blocked !== null}
@@ -213,6 +217,7 @@ function CommissionPanel({
   const [funds, setFunds] = useState('0')
   const option = options.find((item) => item.kind === kind)
   const commission = useGodAction({
+    writes: [{ lever: 'structure:commission' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure:commission', {
@@ -334,6 +339,7 @@ function CommissionPanel({
       )}
       <div className='flex min-w-0 justify-end'>
         <Button
+          act={commission}
           disabled={reason !== null}
           disabledReason={reason ?? undefined}
           onClick={() => commission.mutate(undefined)}
@@ -360,6 +366,7 @@ function DesignCard({
 }) {
   const kind = KIND_SPEC[design.base_kind]
   const edit = useGodAction({
+    writes: [{ lever: 'structure_design:edit' }],
     run: ({
       values,
       release,
@@ -374,6 +381,7 @@ function DesignCard({
       ),
   })
   const retire = useGodAction({
+    writes: [{ lever: 'structure_design:retire' }],
     run: (retired: boolean) =>
       unwrap(
         api.POST('/api/actions/structure_design:retire', {
@@ -413,12 +421,14 @@ function DesignCard({
         ))}
       </div>
       <AdjustPanel
+        acts={[edit]}
         title='Redraw the design'
         note='Every number is held as you set it until you release it.'
       >
         <EditorGroup title='Proportions' icon={Ruler}>
           {DESIGN_PCT.map((item) => (
             <NumberEditor
+              act={edit}
               key={`${item.key}-${design[item.key]}`}
               id={id}
               field={{
@@ -441,6 +451,7 @@ function DesignCard({
         </EditorGroup>
         <EditorGroup title='Its nature' icon={Compass}>
           <ChoiceEditor
+            act={edit}
             label={DESIGN_FIELD.staff_class}
             value={design.staff_class ?? 'priest'}
             table={CLASS_SPEC}
@@ -452,6 +463,7 @@ function DesignCard({
             }
           />
           <ChoiceEditor
+            act={edit}
             label={DESIGN_FIELD.staff_scale}
             value={design.staff_scale ?? 'some'}
             table={STAFF_SCALE_SPEC}
@@ -463,6 +475,7 @@ function DesignCard({
             }
           />
           <ChoiceEditor
+            act={edit}
             label={DESIGN_FIELD.scale}
             value={design.scale ?? 'major'}
             table={SCALE_SPEC}
@@ -474,6 +487,7 @@ function DesignCard({
             }
           />
           <ChoiceEditor
+            act={edit}
             label={DESIGN_FIELD.min_tier}
             value={design.min_tier ?? 'hamlet'}
             table={SIZE_SPEC}
@@ -485,6 +499,7 @@ function DesignCard({
             }
           />
           <FlagEditor
+            act={edit}
             label={DESIGN_FIELD.ley}
             hint='Draws strength from ley lines'
             icon={Sparkles}
@@ -498,6 +513,7 @@ function DesignCard({
           />
         </EditorGroup>
         <HeldStrip
+          act={edit}
           keys={design.locked}
           labelOf={(key) => DESIGN_FIELD[key] ?? key}
           blocked={busy}
@@ -506,6 +522,7 @@ function DesignCard({
       </AdjustPanel>
       <div className='flex min-w-0 justify-end'>
         <Button
+          act={retire}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -532,6 +549,7 @@ function DesignsPanel({
   const [name, setName] = useState('')
   const [base, setBase] = useState<StructureKind>('temple')
   const create = useGodAction({
+    writes: [{ lever: 'structure_design:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure_design:create', {
@@ -582,6 +600,7 @@ function DesignsPanel({
             onPick={(next) => setBase(next as StructureKind)}
           />
           <Button
+            act={create}
             disabled={reason !== null}
             disabledReason={reason ?? undefined}
             onClick={() => {
@@ -798,6 +817,7 @@ function StructureAdjust({
 }) {
   const id = useId()
   const edit = useGodAction({
+    writes: [{ lever: 'structure:edit' }],
     run: ({
       values,
       release,
@@ -816,6 +836,7 @@ function StructureAdjust({
         : 'Held as you set it',
   })
   const staff = useGodAction({
+    writes: [{ lever: 'structure:staff' }],
     run: ({ allocated, hold }: { allocated: number | null; hold: boolean }) =>
       unwrap(
         api.POST('/api/actions/structure:staff', {
@@ -824,6 +845,7 @@ function StructureAdjust({
       ),
   })
   const abandon = useGodAction({
+    writes: [{ lever: 'structure:abandon' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure:abandon', {
@@ -832,6 +854,7 @@ function StructureAdjust({
       ),
   })
   const fund = useGodAction({
+    writes: [{ lever: 'structure:fund' }],
     run: (amount: number) =>
       unwrap(
         api.POST('/api/actions/structure:fund', {
@@ -840,6 +863,7 @@ function StructureAdjust({
       ),
   })
   const damage = useGodAction({
+    writes: [{ lever: 'structure:damage' }],
     run: (amount: number) =>
       unwrap(
         api.POST('/api/actions/structure:damage', {
@@ -878,11 +902,13 @@ function StructureAdjust({
   ]
   return (
     <AdjustPanel
+      acts={[edit, staff, fund, abandon, damage]}
       title='Adjust this work'
       note='Every value you set is held against the world until you release it.'
     >
       <EditorGroup title='Its nature' icon={Compass}>
         <ChoiceEditor
+          act={edit}
           label={structureField('kind')}
           value={view.kind}
           table={KIND_SPEC}
@@ -892,6 +918,7 @@ function StructureAdjust({
           onPick={(value) => set('kind', value)}
         />
         <ChoiceEditor
+          act={edit}
           label={structureField('construction_state')}
           value={view.construction_state}
           table={STATE_SPEC}
@@ -901,6 +928,7 @@ function StructureAdjust({
           onPick={(value) => set('construction_state', value)}
         />
         <ChoiceEditor
+          act={edit}
           label={structureField('material')}
           value={view.material ?? 'stone'}
           table={MATERIAL_TABLE}
@@ -910,6 +938,7 @@ function StructureAdjust({
           onPick={(value) => set('material', value)}
         />
         <ChoiceEditor
+          act={edit}
           label={structureField('builder_kind')}
           value={view.builder_kind ?? 'community'}
           table={BUILDER_SPEC}
@@ -919,6 +948,7 @@ function StructureAdjust({
           onPick={(value) => set('builder_kind', value)}
         />
         <FlagEditor
+          act={edit}
           label={structureField('on_ley_line')}
           hint={
             view.attuned
@@ -933,6 +963,7 @@ function StructureAdjust({
           onToggle={(value) => set('on_ley_line', value)}
         />
         <FlagEditor
+          act={edit}
           label={structureField('anchor')}
           hint='Binds its dedicated god to the world'
           icon={Anchor}
@@ -949,6 +980,7 @@ function StructureAdjust({
           ...STATS.map((item) => ({ ...item, min: 0, max: PERCENT })),
         ].map((item) => (
           <NumberEditor
+            act={edit}
             key={`${item.key}-${current[item.key]}`}
             id={id}
             field={{
@@ -969,6 +1001,7 @@ function StructureAdjust({
       <EditorGroup title='Style' icon={PenTool}>
         {STYLE_NUMBERS.map((item) => (
           <NumberEditor
+            act={edit}
             key={`${item.key}-${view[item.key] ?? STYLE_MIDDLE}`}
             id={id}
             field={{
@@ -990,6 +1023,7 @@ function StructureAdjust({
         <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <FieldLabel>Architect</FieldLabel>
           <EntityPicker
+            act={edit}
             types={['mortal']}
             value={view.architect_id}
             onChange={(value) => set('architect_entity_id', value)}
@@ -998,6 +1032,7 @@ function StructureAdjust({
         </div>
         <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <SonSelect
+            act={edit}
             value={view.dedicated_son_id}
             onChange={(value) => set('dedicated_son_id', value)}
             blocked={busy}
@@ -1006,6 +1041,7 @@ function StructureAdjust({
         <div className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <FieldLabel>Serves</FieldLabel>
           <EntityPicker
+            act={edit}
             types={['settlement', 'people']}
             value={view.host_id}
             onChange={(value) => set('host_entity_id', value)}
@@ -1015,6 +1051,7 @@ function StructureAdjust({
         <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
           <FieldLabel>Staff at their posts</FieldLabel>
           <AmountForm
+            act={staff}
             label='Post staff'
             icon={Users}
             blocked={busy}
@@ -1028,6 +1065,7 @@ function StructureAdjust({
         <EditorGroup title='The building site' icon={HardHat} pairs>
           {(['cost', 'work', 'funds'] as const).map((key) => (
             <NumberEditor
+              act={edit}
               key={`${key}-${view.construction?.[key === 'work' ? 'work' : key]}`}
               id={id}
               field={{
@@ -1051,6 +1089,7 @@ function StructureAdjust({
           <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <FieldLabel>Give coin to the builders</FieldLabel>
             <AmountForm
+              act={fund}
               label='Fund'
               icon={Coins}
               blocked={busy}
@@ -1059,6 +1098,7 @@ function StructureAdjust({
               onSubmit={(value) => fund.mutate(value)}
             />
             <Button
+              act={abandon}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -1076,6 +1116,7 @@ function StructureAdjust({
           <div className='flex min-w-0 flex-col gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'>
             <FieldLabel>Strike it</FieldLabel>
             <AmountForm
+              act={damage}
               label='Damage'
               icon={Flame}
               blocked={busy}
@@ -1087,6 +1128,7 @@ function StructureAdjust({
         </EditorGroup>
       )}
       <HeldStrip
+        act={[staff, edit]}
         keys={held}
         labelOf={structureField}
         blocked={busy}

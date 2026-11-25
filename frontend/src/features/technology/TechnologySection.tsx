@@ -47,6 +47,7 @@ function FamilyRow({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={release}
           icon={row.held ? Unlock : Lock}
           label={row.held ? 'Release' : 'Not held'}
           busy={why(
@@ -56,6 +57,7 @@ function FamilyRow({
           onClick={() => release.mutate()}
         />
         <StepButton
+          act={strike}
           icon={Trash2}
           label='Strike its own level'
           busy={why(
@@ -133,6 +135,7 @@ export function TechnologySection({
               columns={2}
               action={
                 <StepButton
+                  act={setting}
                   icon={Lock}
                   label='Set and hold'
                   variant='default'

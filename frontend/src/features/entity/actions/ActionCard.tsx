@@ -90,6 +90,7 @@ export function ActionCard({ spec, item, ctx, data }: ActionCardProps) {
     (field) => !skip.has(field.key) && field.kind !== 'unsupported'
   )
   const mutation = useLoreMutation({
+    writes: [{ lever: item.id }],
     run: (body: Record<string, FieldValue>) =>
       sendAction(spec.route, ctx.entity.id, spec.self, body),
     onDone: () => setValues(initial),
@@ -127,6 +128,7 @@ export function ActionCard({ spec, item, ctx, data }: ActionCardProps) {
     >
       <CollapsibleTrigger asChild>
         <Button
+          act={mutation}
           variant='ghost'
           className='w-full justify-start'
           aria-label={`${item.title}${item.cost !== 'Free' ? `, costs ${item.cost}` : ''}`}
@@ -172,6 +174,7 @@ export function ActionCard({ spec, item, ctx, data }: ActionCardProps) {
         )}
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={mutation}
             variant={spec.destructive ? 'destructive' : 'default'}
             disabled={blocked !== null}
             disabledReason={blocked ?? undefined}
@@ -186,6 +189,7 @@ export function ActionCard({ spec, item, ctx, data }: ActionCardProps) {
       </CollapsibleContent>
       {spec.confirm && (
         <ConfirmDialog
+          act={mutation}
           open={confirming}
           onOpenChange={setConfirming}
           title={`${item.title}?`}

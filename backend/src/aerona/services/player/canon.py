@@ -14,6 +14,7 @@ from aerona.constants.schema import (
 )
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, several, spoken
+from aerona.db.authorship import account_id, account_name
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import normalize_name
@@ -611,4 +612,6 @@ async def set_private_note(scope: PlayerScope, command: PrivateNote) -> Effect:
     if len(text) > PRIVATE_NOTE_MAX_LENGTH:
         raise ValidationFailedError(f"A personal note is at most {several(PRIVATE_NOTE_MAX_LENGTH, 'character', 'characters')}.")
     record.private_note = text or None
+    record.note_author_account_id = account_id() if text else None
+    record.note_author_name = account_name() if text else None
     return Effect(f"The personal note on {record.name} was {'saved' if text else 'cleared'}.", record.id)

@@ -308,6 +308,7 @@ export function ConfirmationCard({
       {pending ? (
         <div className='flex min-w-0 flex-wrap items-center justify-end gap-2'>
           <Button
+            act={decide}
             variant='outline'
             size='sm'
             disabled={block !== null}
@@ -318,6 +319,7 @@ export function ConfirmationCard({
             Decline
           </Button>
           <Button
+            act={decide}
             size='sm'
             disabled={block !== null}
             disabledReason={block ?? undefined}

@@ -1,9 +1,13 @@
+from datetime import datetime
+
 from sqlalchemy import Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH
+from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
 from aerona.db.base import Base
 from aerona.db.columns import enum_type
+from aerona.db.types import UtcDateTime
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import ModifierOp
 from aerona.domain.enums.node import ActorKind
@@ -40,6 +44,9 @@ class StateChangeRow(Base):
     phase: Mapped[str | None] = mapped_column(String(KEY_MAX_LENGTH))
     incident_id: Mapped[int | None] = mapped_column(ForeignKey("incidents.id", ondelete="SET NULL"))
     step_id: Mapped[int | None] = mapped_column(ForeignKey("incident_steps.id", ondelete="SET NULL"))
+    author_account_id: Mapped[int | None]
+    author_name: Mapped[str | None] = mapped_column(String(AUTHOR_NAME_MAX_LENGTH))
+    changed_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
 
 
 class StateChangeTermRow(Base):

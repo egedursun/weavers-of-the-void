@@ -126,6 +126,7 @@ function Covenant({
       caption={`since epoch ${row.since_epoch}${row.until_epoch !== null ? `, until epoch ${row.until_epoch}` : ', with no end set'}; ${row.breaches} breach${row.breaches === 1 ? '' : 'es'}; sealed by a sign of ${wordOf(creatorSignKindValues, row.seal_sign).toLowerCase()}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the covenant'
         note={HOLD}
         fields={COVENANT_FIELDS}
@@ -135,6 +136,7 @@ function Covenant({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike it'
         busy={why(blocked, removing.isPending)}
@@ -225,6 +227,7 @@ function PeopleBonds({
             caption={`Weighed anew in epoch ${row.updated_epoch}`}
           >
             <RecordEditor
+              act={standing}
               title='Set their view of the Creator'
               note={HOLD}
               fields={STANDING_FIELDS}
@@ -262,6 +265,7 @@ function PeopleBonds({
         }
       >
         <RecordEditor
+          act={depicting}
           title='Set their image of the Creator'
           note={HOLD}
           fields={DEPICTION_FIELDS}
@@ -285,6 +289,7 @@ function PeopleBonds({
         columns={3}
         action={
           <StepButton
+            act={offering}
             icon={CirclePlus}
             label='Offer it'
             variant='default'
@@ -360,6 +365,7 @@ function Chosen({
       caption={`since epoch ${view.chosen.since_epoch}; the chosen gain renown and draw envy`}
     >
       <RecordEditor
+        act={editing}
         title='Set the favour'
         note={HOLD}
         fields={CHOSEN_FIELDS}
@@ -369,6 +375,7 @@ function Chosen({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={releasing}
         icon={Trash2}
         label='Release it'
         busy={why(blocked, releasing.isPending)}
@@ -384,6 +391,7 @@ function Chosen({
       columns={2}
       action={
         <StepButton
+          act={choosing}
           icon={Crown}
           label='Choose it'
           variant='default'

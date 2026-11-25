@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { useMutation } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
+import { AuthorMark } from '@/features/team/AuthorMark'
+import { useTeamContext } from '@/features/team/teamContext'
 import { loreKeys } from '../api/keys'
 import { deleteEntityNote, useLoreMutation } from '../api/mutations'
 import { useEntityNote } from '../api/queries'
@@ -26,12 +29,21 @@ const STATUS_TEXT: Record<Status, string> = {
 export function EntityNote({
   entityId,
   note,
+  author,
+  authorId,
   readOnlyReason,
 }: {
   entityId: number
   note: string | null
+  author?: string | null
+  authorId?: number | null
   readOnlyReason: string | null
 }) {
+  const me = useTeamContext()?.me ?? null
+  const writer =
+    authorId !== null && authorId !== undefined && authorId === me
+      ? 'you'
+      : author
   const queryClient = useQueryClient()
   const stored = useEntityNote(entityId, note !== null && note !== '')
   const current = stored.data?.text ?? note ?? ''
@@ -41,6 +53,7 @@ export function EntityNote({
   const saved = useRef(current)
   const timer = useRef<number | null>(null)
   const save = useMutation({
+    writes: [{ lever: 'record:note' }],
     mutationFn: (value: string) =>
       unwrap(
         api.PUT('/api/entities/{entity_id}/note', {
@@ -63,6 +76,7 @@ export function EntityNote({
     },
   })
   const remove = useLoreMutation({
+    writes: [{ lever: 'record:note' }],
     run: () => deleteEntityNote(entityId),
     success: 'Note deleted',
     onDone: () => {
@@ -88,6 +102,7 @@ export function EntityNote({
       title='My notes'
       actions={
         <Button
+          act={remove}
           variant='outline'
           size='sm'
           disabled={readOnlyReason !== null || (text === '' && current === '')}
@@ -100,6 +115,7 @@ export function EntityNote({
       }
     >
       <Textarea
+        act={save}
         aria-label='My notes'
         maxLength={NOTE_MAX_LENGTH}
         value={text}
@@ -117,10 +133,17 @@ export function EntityNote({
         }}
         onBlur={() => flush(text)}
       />
-      <Muted variant='caption' aria-live='polite'>
-        {readOnlyReason ?? STATUS_TEXT[status]}
-      </Muted>
+      <div className='flex min-w-0 flex-wrap items-center gap-2'>
+        <Muted variant='caption' aria-live='polite'>
+          {readOnlyReason ?? STATUS_TEXT[status]}
+        </Muted>
+        <AuthorMark
+          name={stored.data?.author_name ?? writer}
+          verb='Last written by'
+        />
+      </div>
       <ConfirmDialog
+        act={remove}
         open={confirming}
         onOpenChange={setConfirming}
         title='Delete this note?'

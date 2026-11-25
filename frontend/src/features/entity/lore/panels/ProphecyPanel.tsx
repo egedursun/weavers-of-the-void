@@ -55,6 +55,7 @@ export function ProphecyPanel({
   blocked: string | null
 }) {
   const settle = useGodAction<boolean>({
+    writes: [{ lever: 'prophecy:resolve' }],
     run: (fulfilled) =>
       unwrap(
         api.POST('/api/actions/prophecy:resolve', {
@@ -196,6 +197,7 @@ export function ProphecyPanel({
             <Muted>Settle it now instead of waiting for its deadline.</Muted>
             <div className='flex min-w-0 flex-wrap gap-2'>
               <Button
+                act={settle}
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}
                 onClick={() => settle.mutate(true)}
@@ -204,6 +206,7 @@ export function ProphecyPanel({
                 Let it come true
               </Button>
               <Button
+                act={settle}
                 variant='outline'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}

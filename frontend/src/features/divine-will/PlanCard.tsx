@@ -32,6 +32,7 @@ import {
   Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { ShareToggle } from '@/features/team/share'
 import { PlanStepEditor } from './PlanStepEditor'
 import { type PlanVerb, usePlan, usePlanCommand, useStepCommand } from './api'
 import { IMPACT_LOOK, PLAN_STATUS_LOOK, STEP_STATUS_LOOK } from './planLook'
@@ -150,6 +151,7 @@ function StepRow({
         )}
         {(step.status === 'pending' || step.status === 'failed') && (
           <Button
+            act={command}
             variant='ghost'
             size='sm'
             disabled={skipBlock !== null}
@@ -162,6 +164,7 @@ function StepRow({
         )}
         {step.status === 'done' && (
           <Button
+            act={command}
             variant='outline'
             size='sm'
             disabled={undoBlock !== null}
@@ -264,6 +267,13 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           {look.label}
         </Badge>
       </div>
+      <ShareToggle
+        kind='plan'
+        id={plan.id}
+        shared={plan.owner.shared}
+        mine={plan.owner.mine}
+        author={plan.owner.author_name}
+      />
       <div className='grid min-w-0 grid-cols-1 gap-2 @md/will:grid-cols-3'>
         <MiniStat
           icon={StepForward}
@@ -353,6 +363,7 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           <span aria-hidden='true' className='flex-1' />
           {!ended && (
             <Button
+              act={command}
               variant='ghost'
               size='sm'
               disabled={block !== null || plan.status === 'running'}
@@ -365,6 +376,7 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           )}
           {editable && (
             <Button
+              act={command}
               variant='outline'
               size='sm'
               disabled={block !== null}
@@ -377,6 +389,7 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           )}
           {plan.status === 'draft' && (
             <Button
+              act={command}
               size='sm'
               disabled={block !== null || total === 0}
               disabledReason={block ?? 'Add a step before approving.'}
@@ -388,6 +401,7 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           )}
           {plan.status === 'approved' && (
             <Button
+              act={command}
               size='sm'
               disabled={block !== null}
               disabledReason={block ?? undefined}
@@ -399,6 +413,7 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           )}
           {plan.status === 'running' && (
             <Button
+              act={command}
               variant='outline'
               size='sm'
               disabled={block !== null}
@@ -411,6 +426,7 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           )}
           {plan.status === 'failed' && (
             <Button
+              act={command}
               size='sm'
               disabled={block !== null}
               disabledReason={block ?? undefined}
@@ -422,6 +438,7 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           )}
           {plan.status === 'paused' && (
             <Button
+              act={command}
               size='sm'
               disabled={block !== null}
               disabledReason={block ?? undefined}
@@ -453,6 +470,7 @@ function PlanBody({ plan }: { plan: WillPlan }) {
           .join(' · ')}
       </Muted>
       <ConfirmDialog
+        act={command}
         open={abandoning}
         onOpenChange={setAbandoning}
         title='Abandon this plan?'

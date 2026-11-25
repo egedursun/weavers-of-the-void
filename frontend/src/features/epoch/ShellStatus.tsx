@@ -9,7 +9,12 @@ import { LiveFeedSheet } from '@/features/feed/LiveFeedSheet'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { OnboardingTracker } from '@/features/onboarding/OnboardingTracker'
 import { useWorldState } from '@/features/overview/api'
+import { ConflictDialog } from '@/features/team/ConflictDialog'
+import { PresenceBeacon, PresentFaces } from '@/features/team/Presence'
+import { QueueTray } from '@/features/team/Queue'
+import { TeamViewOpener } from '@/features/team/TeamViewOpener'
 import { UniverseSwitcher } from '@/features/universes/UniverseSwitcher'
+import { WorkspaceSwitcher } from '@/features/workspaces/WorkspaceSwitcher'
 import { WorldHeader } from '@/features/world-header/WorldHeader'
 import { ActivityStrip } from './ActivityStrip'
 import { JobsMenu } from './JobsMenu'
@@ -22,6 +27,9 @@ function ShellWorldSwitcher({ compact = false }: { compact?: boolean }) {
 export function ShellContext() {
   return (
     <>
+      <span className='hidden min-w-0 @6xl/topbar:inline-flex'>
+        <WorkspaceSwitcher compact />
+      </span>
       <span className='hidden min-w-0 @4xl/topbar:inline-flex'>
         <UniverseSwitcher />
       </span>
@@ -31,7 +39,7 @@ export function ShellContext() {
       <span className='hidden min-w-0 @5xl/topbar:inline-flex'>
         <ShellWorldSwitcher />
       </span>
-      <span className='inline-flex @5xl/topbar:hidden'>
+      <span className='hidden sm:inline-flex @5xl/topbar:hidden'>
         <ShellWorldSwitcher compact />
       </span>
     </>
@@ -41,8 +49,12 @@ export function ShellContext() {
 export function ShellActions() {
   return (
     <>
-      <JobsMenu />
-      <LiveFeedSheet />
+      <PresentFaces />
+      <QueueTray />
+      <span className='hidden items-center gap-0.5 sm:inline-flex'>
+        <JobsMenu />
+        <LiveFeedSheet />
+      </span>
       <NotificationBell />
     </>
   )
@@ -62,7 +74,13 @@ export function ShellNavBadges({ children }: { children: ReactNode }) {
 }
 
 export function ShellSidebarTools() {
-  return <ShellWorldSwitcher />
+  return (
+    <>
+      <ShellWorldSwitcher />
+      <JobsMenu />
+      <LiveFeedSheet />
+    </>
+  )
 }
 
 export function ShellBanner() {
@@ -81,6 +99,9 @@ export function ShellServices() {
       <FeedCollector />
       <ChangeFeed />
       <OnboardingTracker />
+      <PresenceBeacon />
+      <TeamViewOpener />
+      <ConflictDialog />
     </>
   )
 }

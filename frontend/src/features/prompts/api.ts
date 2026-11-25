@@ -1,12 +1,12 @@
 import {
   keepPreviousData,
-  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 
 export type ContextBlockInfo = components['schemas']['ContextBlockInfo']
@@ -139,6 +139,13 @@ export type MotifChange = {
 export function useSetMotifOverride() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [
+      {
+        method: 'POST',
+        path: '/api/prompt-context/tired-motifs/overrides/clear',
+      },
+      { method: 'PUT', path: '/api/prompt-context/tired-motifs/overrides' },
+    ],
     mutationFn: (change: MotifChange) =>
       change.mode === null
         ? unwrap(

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
 import { greatFieldValues } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -76,13 +77,16 @@ function Remove({
   label,
   busy,
   onRemove,
+  act,
 }: {
   label: string
   busy: string | null
   onRemove: () => void
+  act?: ActProp
 }) {
   return (
     <Button
+      act={act}
       size='sm'
       variant='ghost'
       className='ml-auto'
@@ -140,6 +144,7 @@ function FieldMeter({
           : `${plural(points, 'point', 'points')} gathered`}
       </Muted>
       <RowEditor
+        act={[edit, create]}
         label='Points'
         value={points}
         blocked={busy}
@@ -239,6 +244,7 @@ function GreatPeopleCard({
                     </div>
                     <Muted variant='caption'>{`Their deed: ${row.deed}.`}</Muted>
                     <Remove
+                      act={remove}
                       label='Strike from the roll'
                       busy={busy}
                       onRemove={() =>
@@ -275,6 +281,7 @@ function GreatPeopleCard({
             />
           </div>
           <Button
+            act={raise}
             size='sm'
             className='self-start'
             disabled={busy !== null || mortal === null || field === ''}
@@ -362,6 +369,7 @@ function IncidentsCard({
                       aria-label='Severity'
                     />
                     <Remove
+                      act={remove}
                       label='Strike from the record'
                       busy={busy}
                       onRemove={() =>
@@ -390,6 +398,7 @@ function IncidentsCard({
               />
             </div>
             <Button
+              act={strike}
               size='sm'
               variant='destructive'
               disabled={busy !== null || kind === ''}
@@ -455,6 +464,7 @@ function StudiesCard({
                   />
                   <RowEditors>
                     <RowEditor
+                      act={edit}
                       label='Progress'
                       value={row.progress}
                       max={PERCENT}
@@ -473,6 +483,7 @@ function StudiesCard({
                     />
                   </RowEditors>
                   <Remove
+                    act={remove}
                     label='Stop the study'
                     busy={busy}
                     onRemove={() =>
@@ -581,6 +592,7 @@ function BlueprintsCard({
                       </PagedList>
                     )}
                     <RowEditor
+                      act={edit}
                       label='Quality'
                       value={row.quality}
                       max={PERCENT}
@@ -595,6 +607,7 @@ function BlueprintsCard({
                       }
                     />
                     <Remove
+                      act={remove}
                       label='Burn the design'
                       busy={busy}
                       onRemove={() =>
@@ -640,6 +653,7 @@ function BlueprintsCard({
             </FieldTile>
           </div>
           <Button
+            act={grant}
             size='sm'
             className='self-start'
             disabled={busy !== null || problem !== null}

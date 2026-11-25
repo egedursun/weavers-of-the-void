@@ -38,6 +38,7 @@ class PresenceSystemContext(LoreRulesContext):
     on_record: bool
     may_act: bool = False
     acting_paused: bool = False
+    acts_deferred: bool = False
     action_points: int = 0
     read_tools: list[str] = Field(default_factory=list)
     dead: bool = False

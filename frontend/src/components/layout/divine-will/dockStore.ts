@@ -1,5 +1,10 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
+import {
+  type ViewerStorageKey,
+  followViewer,
+  viewerPersisted,
+} from '@/lib/universeStorage'
 
 export const WILL_VIEWS = ['chat', 'writings', 'sessions'] as const
 
@@ -10,7 +15,7 @@ export const PANEL_MAX_REM = 78
 export const PANEL_DEFAULT_REM = 42
 export const PANEL_STEP_REM = 2
 
-export const WILL_DOCK_KEY = 'aerona.divine-will'
+export const WILL_DOCK_KEY: ViewerStorageKey = 'aerona.divine-will'
 const WIDER_PANEL_VERSION = 1
 const WIDER_PANEL_SCALE = 1.5
 
@@ -53,11 +58,12 @@ export const useWillDock = create<DockState>()(
       setView: (view) => set({ view }),
     }),
     {
-      name: WILL_DOCK_KEY,
-      storage: createJSONStorage(() => localStorage),
+      ...viewerPersisted<Partial<DockState>>(WILL_DOCK_KEY),
       partialize: (state) => ({ width: state.width, view: state.view }),
       version: WIDER_PANEL_VERSION,
       migrate: (stored) => widened(stored),
     }
   )
 )
+
+followViewer(useWillDock)

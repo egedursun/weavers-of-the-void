@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import {
   Command,
@@ -40,7 +41,8 @@ export function EntityPicker({
   worldId,
   worldName,
   includeDead = false,
-}: EntityPickerProps) {
+  act,
+}: EntityPickerProps & { act?: ActProp }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const { data, isLoading } = useNames()
@@ -92,6 +94,7 @@ export function EntityPicker({
             <CommandGroup>
               {filtered.map((entry) => (
                 <CommandItem
+                  act={act}
                   key={entry.id}
                   value={String(entry.id)}
                   onSelect={() => {

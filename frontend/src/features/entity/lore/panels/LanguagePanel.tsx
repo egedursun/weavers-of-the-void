@@ -60,6 +60,7 @@ export function LanguagePanel({
     share: number
     kind: string
   }>({
+    writes: [{ lever: 'language:speakers' }],
     run: ({ community: target, share, kind }) =>
       unwrap(
         api.POST('/api/actions/language:speakers', {
@@ -73,6 +74,7 @@ export function LanguagePanel({
       ),
   })
   const kin = useGodAction<{ other: number; value: number }>({
+    writes: [{ lever: 'language:intelligibility' }],
     run: ({ other, value }) =>
       unwrap(
         api.POST('/api/actions/language:intelligibility', {
@@ -81,6 +83,7 @@ export function LanguagePanel({
       ),
   })
   const releaseSpeakers = useGodAction<{ community: number; kind: string }>({
+    writes: [{ lever: 'language:release_speakers' }],
     run: ({ community: target, kind }) =>
       unwrap(
         api.POST('/api/actions/language:release_speakers', {
@@ -93,6 +96,7 @@ export function LanguagePanel({
       ),
   })
   const releaseKin = useGodAction<{ other: number }>({
+    writes: [{ lever: 'language:release_understanding' }],
     run: ({ other }) =>
       unwrap(
         api.POST('/api/actions/language:release_understanding', {
@@ -323,6 +327,7 @@ export function LanguagePanel({
               <Paged items={card.speakers}>
                 {(row) => (
                   <RowEditor
+                    act={speakers}
                     key={`${row.community?.id}.${row.kind}`}
                     label={`${row.community?.name ?? 'Unknown'} share`}
                     icon={lookup(SPEAKER_KINDS, row.kind).icon}
@@ -340,6 +345,7 @@ export function LanguagePanel({
                     <HeldBadge held={row.held} />
                     {row.held && (
                       <Button
+                        act={releaseSpeakers}
                         size='icon'
                         variant='ghost'
                         aria-label={`Let the share in ${row.community?.name ?? 'it'} move again`}
@@ -368,6 +374,7 @@ export function LanguagePanel({
               placeholder='Teach it to…'
             />
             <Button
+              act={speakers}
               size='sm'
               variant='outline'
               disabled={busy !== null || community === null}
@@ -400,6 +407,7 @@ export function LanguagePanel({
               <Paged items={card.kin}>
                 {(row) => (
                   <RowEditor
+                    act={kin}
                     key={row.language?.id}
                     label={`${row.language?.name ?? 'Unknown'} understanding`}
                     icon={Languages}
@@ -413,6 +421,7 @@ export function LanguagePanel({
                     <HeldBadge held={row.held} />
                     {row.held && (
                       <Button
+                        act={releaseKin}
                         size='icon'
                         variant='ghost'
                         aria-label={`Let the world measure ${row.language?.name ?? 'it'} again`}

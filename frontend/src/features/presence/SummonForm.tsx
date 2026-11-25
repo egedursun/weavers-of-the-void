@@ -211,7 +211,7 @@ export function SummonForm({
 }) {
   const [guise, setGuise] = useState<PresenceGuise>('creator')
   const [record, setRecord] = useState<PresenceRecord>('on_record')
-  const open = useOpenSession()
+  const open = useOpenSession(record)
   const reason = isReadOnly()
     ? READ_ONLY_MESSAGE
     : !modelEnabled
@@ -252,6 +252,7 @@ export function SummonForm({
           {`${GUISE_LOOK[guise].heard} ${RECORD_LOOK[record].line}`}
         </Muted>
         <Button
+          act={open}
           size='lg'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}

@@ -86,6 +86,7 @@ export function CustomGoalForm({ data }: { data: GoalsOverview }) {
       : null
   )
   const start = useGodAction({
+    writes: [{ lever: 'scenario:custom' }],
     run: () =>
       unwrap(
         api.POST('/api/scenarios/custom', {
@@ -264,6 +265,7 @@ export function CustomGoalForm({ data }: { data: GoalsOverview }) {
       />
       <div className='flex min-w-0 flex-wrap items-center justify-end gap-2'>
         <ActionButton
+          act={start}
           label='Set the goal'
           icon={WandSparkles}
           variant='default'

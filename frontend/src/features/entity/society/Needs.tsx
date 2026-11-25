@@ -189,6 +189,7 @@ function HoldNeed({
   const [commodity, setCommodity] = useState<string>('medicine')
   const [pct, setPct] = useState('100')
   const run = useGodAction({
+    writes: [{ lever: 'needs:hold' }],
     run: (held: number | null) =>
       unwrap(
         api.POST('/api/actions/needs:hold', {
@@ -202,6 +203,7 @@ function HoldNeed({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'needs:hold' }],
     run: (key: string) => {
       const [held, kind] = key.split(SEPARATOR)
       return unwrap(
@@ -230,6 +232,7 @@ function HoldNeed({
     <EditorGroup title='Who goes short' icon={ShoppingBasket} pairs>
       <div className='col-span-full'>
         <HeldStrip
+          act={release}
           keys={heldKeys}
           labelOf={(key) => {
             const [held, kind] = key.split(SEPARATOR)
@@ -269,6 +272,7 @@ function HoldNeed({
       </FieldTile>
       <div className='flex min-w-0 items-end'>
         <Button
+          act={run}
           size='sm'
           className='w-full'
           disabled={busy !== null || invalid}
@@ -293,6 +297,7 @@ function HoldShortfall({
   const [effect, setEffect] = useState<string>('thirst')
   const [pct, setPct] = useState('0')
   const send = useGodAction({
+    writes: [{ lever: 'shortfall:set' }],
     run: ({ want, held }: { want: string; held: number | null }) =>
       unwrap(
         api.POST('/api/actions/shortfall:set', {
@@ -314,6 +319,7 @@ function HoldShortfall({
     <EditorGroup title='What they go without' icon={TriangleAlert} pairs>
       <div className='col-span-full'>
         <HeldStrip
+          act={send}
           keys={heldKeys}
           labelOf={(key) => EFFECT_SPEC[key as ShortfallEffect].label}
           blocked={busy}
@@ -345,6 +351,7 @@ function HoldShortfall({
       </FieldTile>
       <div className='col-span-full flex min-w-0 items-end'>
         <Button
+          act={send}
           size='sm'
           className='w-full'
           disabled={busy !== null || invalid}
@@ -372,6 +379,7 @@ function StandingControls({
   )
   const row = view.classes.find((item) => item.social_class === socialClass)
   const edit = useGodAction({
+    writes: [{ lever: 'class:standing' }],
     run: ({ key, value }: { key: string; value: number }) =>
       unwrap(
         api.POST('/api/actions/class:standing', {
@@ -386,6 +394,7 @@ function StandingControls({
     success: (_result, change) => `${standingLabel(change.key)} held`,
   })
   const release = useGodAction({
+    writes: [{ lever: 'class:standing' }],
     run: (keys: string[]) =>
       unwrap(
         api.POST('/api/actions/class:standing', {
@@ -425,6 +434,7 @@ function StandingControls({
           onPick={setSocialClass}
         />
         <HeldStrip
+          act={release}
           keys={row.locked.filter((key) => key !== 'wealth')}
           labelOf={standingLabel}
           blocked={busy}
@@ -433,6 +443,7 @@ function StandingControls({
       </div>
       {fields.map((field) => (
         <NumberEditor
+          act={edit}
           key={`${socialClass}-${field.key}-${field.value}`}
           id={`standing-${view.entity_id}-${socialClass}`}
           field={{
@@ -620,6 +631,11 @@ export function NeedsSection({
             </div>
           </Panel>
           <AdjustPanel
+            writes={[
+              { lever: 'class:standing' },
+              { lever: 'needs:hold' },
+              { lever: 'shortfall:set' },
+            ]}
             title='Feed or starve them'
             note='Hold how much of a good a class receives, or how fed, provided and pampered it is. What you hold is kept against the stores until you release it; every change can be undone from the ledger.'
           >
@@ -690,6 +706,7 @@ function WealthControls({
   blocked: string | null
 }) {
   const edit = useGodAction({
+    writes: [{ lever: 'class:standing' }],
     run: ({
       socialClass,
       wealth,
@@ -710,6 +727,7 @@ function WealthControls({
     success: 'Wealth held',
   })
   const release = useGodAction({
+    writes: [{ lever: 'class:standing' }],
     run: (socialClass: SocialClass) =>
       unwrap(
         api.POST('/api/actions/class:standing', {
@@ -732,6 +750,7 @@ function WealthControls({
     <EditorGroup title='Wealth of each class' icon={Coins}>
       <div className='col-span-full'>
         <HeldStrip
+          act={release}
           keys={held}
           labelOf={(key) => `${CLASS_SPEC[key as SocialClass].label} wealth`}
           blocked={busy}
@@ -743,6 +762,7 @@ function WealthControls({
       <Paged items={present}>
         {(row) => (
           <NumberEditor
+            act={edit}
             key={`${row.social_class}-${row.wealth}`}
             id={`wealth-${view.entity_id}`}
             field={{
@@ -885,6 +905,7 @@ export function ClassWealthSection({
           </div>
         </div>
         <AdjustPanel
+          writes={[{ lever: 'class:standing' }]}
           title='Enrich or impoverish'
           note='Set and hold the wealth of a class. The richest are served first when goods run short, so wealth decides who goes hungry; every change can be undone from the ledger.'
         >

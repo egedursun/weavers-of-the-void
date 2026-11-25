@@ -1,11 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Languages } from 'lucide-react'
 import { toast } from 'sonner'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components, partOfSpeechValues } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
+import {
+  type ViewerStorageKey,
+  storeItem,
+  storedItem,
+  viewerKey,
+} from '@/lib/universeStorage'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { KeyValueList, Paged, Section } from '@/components/domain'
@@ -18,13 +25,13 @@ import { useWorldState } from '@/features/entity/api/queries'
 type Translation = components['schemas']['TranslationOutput']
 
 const TEXT_MAX = 2000
-const AVERAGE_KEY = 'aerona.translation.average-ms'
+const AVERAGE_KEY: ViewerStorageKey = 'aerona.translation.average-ms'
 const MS_PER_SECOND = 1000
 const drafts = new Map<number, string>()
 
 function readAverage(): number | null {
   try {
-    const value = Number(window.localStorage.getItem(AVERAGE_KEY))
+    const value = Number(storedItem(viewerKey(AVERAGE_KEY)))
     return Number.isFinite(value) && value > 0 ? value : null
   } catch {
     return null
@@ -34,8 +41,8 @@ function readAverage(): number | null {
 function writeAverage(duration: number) {
   try {
     const previous = readAverage()
-    window.localStorage.setItem(
-      AVERAGE_KEY,
+    storeItem(
+      viewerKey(AVERAGE_KEY),
       String(previous ? Math.round((previous + duration) / 2) : duration)
     )
   } catch {
@@ -74,6 +81,9 @@ export function TranslationBox({
   const [result, setResult] = useState<Translation | null>(null)
   const startedAt = useRef<number | null>(null)
   const translate = useMutation({
+    writes: [
+      { method: 'POST', path: '/api/languages/{language_id}/translate' },
+    ],
     mutationFn: () =>
       unwrap(
         api.POST('/api/languages/{language_id}/translate', {
@@ -115,6 +125,7 @@ export function TranslationBox({
         }}
       >
         <Textarea
+          act={translate}
           aria-label={`Text to translate into ${languageName}`}
           maxLength={TEXT_MAX}
           placeholder='A sentence to translate'
@@ -132,6 +143,7 @@ export function TranslationBox({
         />
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={translate}
             type='submit'
             disabled={reason !== null}
             disabledReason={reason ?? undefined}

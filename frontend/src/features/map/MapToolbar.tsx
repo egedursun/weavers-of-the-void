@@ -55,6 +55,7 @@ import {
   MountainSnow,
   ShieldHalf,
 } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -174,12 +175,14 @@ type MapToolbarProps = {
   onLegend: (open: boolean) => void
   noteMode: boolean
   onNoteMode: (on: boolean) => void
+  noteAct?: ActProp
   past: boolean
   findable: readonly { id: number; name: string }[]
   onFind: (id: number) => void
   onZoom: (kind: 'in' | 'out' | 'fit') => void
   onRegenerate: () => void
   regenerating: boolean
+  act?: ActProp
   mobile: boolean
 }
 
@@ -398,6 +401,7 @@ export function MapToolbar(props: MapToolbarProps) {
           <TooltipTrigger asChild>
             <span className='inline-flex'>
               <Toggle
+                act={props.noteAct}
                 size='sm'
                 variant='outline'
                 pressed={noteMode}
@@ -433,6 +437,7 @@ export function MapToolbar(props: MapToolbarProps) {
         <Button
           size='sm'
           variant='outline'
+          act={props.act}
           onClick={props.onRegenerate}
           disabled={props.regenerating || past}
           disabledReason={

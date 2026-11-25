@@ -70,6 +70,7 @@ function EditGoalDialog({
     (own ? outOfRange(held, 0, holdMax, 'hold') : null) ??
     (timed ? outOfRange(deadline, 1, deadlineMax, 'deadline') : null)
   const edit = useGodAction({
+    writes: [{ lever: 'scenario:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/scenarios/{scenario_id}/edit', {
@@ -98,7 +99,7 @@ function EditGoalDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button size='sm' variant='ghost'>
+        <Button act={edit} size='sm' variant='ghost'>
           <Pencil />
           Edit
         </Button>
@@ -152,6 +153,7 @@ function EditGoalDialog({
         </div>
         <DialogFooter>
           <ActionButton
+            act={edit}
             label='Reshape the goal'
             icon={Pencil}
             variant='default'
@@ -196,6 +198,7 @@ function RunningGoal({
   const { reason } = useGodGate()
   const failed = item.progress.failed
   const hold = useGodAction({
+    writes: [{ lever: 'scenario:hold' }],
     run: () =>
       unwrap(
         api.POST('/api/scenarios/{scenario_id}/hold', {
@@ -205,6 +208,7 @@ function RunningGoal({
       ),
   })
   const abandon = useGodAction({
+    writes: [{ lever: 'scenario:abandon' }],
     run: () =>
       unwrap(
         api.POST('/api/scenarios/{scenario_id}/abandon', {
@@ -290,6 +294,7 @@ function RunningGoal({
         </Label>
         <div className='flex min-w-0 flex-wrap items-center gap-1'>
           <ActionButton
+            act={hold}
             label={item.held ? 'Release' : 'Hold'}
             icon={item.held ? Play : Pause}
             size='sm'
@@ -300,6 +305,7 @@ function RunningGoal({
           />
           <EditGoalDialog item={item} targetMax={targetMax} />
           <ActionButton
+            act={abandon}
             label='Abandon'
             size='sm'
             variant='ghost'

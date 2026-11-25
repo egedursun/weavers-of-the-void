@@ -225,6 +225,7 @@ function SoulBinder({
       columns={2}
       action={
         <Button
+          act={binding}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -286,6 +287,7 @@ function BuildForge({
       columns={4}
       action={
         <Button
+          act={building}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -506,6 +508,7 @@ function OrderForge({
       columns={4}
       action={
         <Button
+          act={writing}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -736,6 +739,7 @@ export function OrdersPanel({
         columns={2}
         action={
           <Button
+            act={writing}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

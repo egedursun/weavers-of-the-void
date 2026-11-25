@@ -1,6 +1,7 @@
 {% extends "layout.html.j2" %}
 {% from "macros.html.j2" import link, facts, stats, chips, thumb, entity_depth, god_depth, personality, epic, picture, entity_article, son_article, god_article, chronicle_lines, chapter_head, typed, records %}
 {% from "divine_will.html.j2" import will_record, will_writings %}
+{% from "team.html.j2" import team_record %}
 {% block title %}{{ book.cosmos.name }}{% endblock %}
 {% block body %}
 {% set world_count = book.stars | sum(attribute="worlds", start=[]) | length %}
@@ -77,6 +78,7 @@
 {% if book.creator_beliefs %}<h3 class="bm2">Through the peoples' eyes</h3>{% for belief in book.creator_beliefs %}<div class="quote"><span class="label">{{ book.names.get(belief.people_entity_id, "?") }} call {{ book.creator.name }} “{{ belief.local_name or book.creator.name }}”</span>{{ belief.account }}{% if belief.misconception %}<cite>Misconception: {{ belief.misconception }}</cite>{% endif %}</div>{% endfor %}{% endif %}
 {% if book.creator_hand %}<h3 class="bm2" id="creator-hand">The Creator's hand</h3>{% for hand in book.creator_hand %}<h5>Epoch {{ hand.epoch }}</h5><ul class="timeline">{% for deed in hand.deeds %}<li>{{ deed.text | keys }}{% if deed.undone %} <span class="meta">(undone)</span>{% endif %}{% if deed.unledgered %} <span class="meta">(of its own accord)</span>{% endif %}</li>{% endfor %}</ul>{% endfor %}{% endif %}
 {{ will_record(book.divine_will, book.ledger_changes) }}
+{{ team_record(book.team) }}
 </section>
 {% endif %}
 
@@ -278,7 +280,7 @@
 {% if book.ledger %}
 <section class="chapter" id="ledger">
 {{ chapter_head("ledger", numeral("ledger"), "Fate's Ledger", "Every hand laid upon the world") }}
-<ul class="timeline">{% for entry in book.ledger %}<li><span class="when">Epoch {{ entry.epoch }}</span>{{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} <span class="meta">undone</span>{% endif %}{% if entry.input_summary %} <span class="meta small">— {{ entry.input_summary | plain }}</span>{% endif %}{% set changes = book.ledger_changes.get(entry.id, []) %}{% if changes %}<ul class="changes">{% for change in changes %}<li><b>{{ change.verb }}</b> {{ change.target }}{% if change.details %}<span class="meta small"> — {{ change.details | join(" · ") }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>
+<ul class="timeline">{% for entry in book.ledger %}<li><span class="when">Epoch {{ entry.epoch }}</span>{{ entry.actor_name }}{% if entry.author_name %} <span class="meta small">by {{ entry.author_name }}</span>{% endif %} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} <span class="meta">undone{% if entry.undone_by_name %} by {{ entry.undone_by_name }}{% endif %}</span>{% endif %}{% if entry.input_summary %} <span class="meta small">— {{ entry.input_summary | plain }}</span>{% endif %}{% if entry.reason %}<br><span class="small">Why: {{ entry.reason | plain }}</span>{% endif %}{% set changes = book.ledger_changes.get(entry.id, []) %}{% if changes %}<ul class="changes">{% for change in changes %}<li><b>{{ change.verb }}</b> {{ change.target }}{% if change.details %}<span class="meta small"> — {{ change.details | join(" · ") }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>
 </section>
 {% endif %}
 

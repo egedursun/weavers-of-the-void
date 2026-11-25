@@ -85,6 +85,7 @@ function lines(text: string): string[] {
 
 function useEdit(godId: number, name: string) {
   return useGodAction({
+    writes: [{ lever: 'foreign_god:edit' }],
     run: (body: ForeignEditBody) => editForeignGod(godId, body),
     success: `${name} was edited`,
   })
@@ -352,6 +353,7 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
             </FormRow>
             <div>
               <ActionButton
+                act={save}
                 label='Save'
                 variant='default'
                 blocked={reason() ?? (name.trim() ? null : 'A name is needed.')}
@@ -553,6 +555,7 @@ export function ForeignGodEditForm({ detail }: { detail: ForeignGodDetail }) {
             </FieldTile>
             <div>
               <ActionButton
+                act={save}
                 label='Save'
                 variant='default'
                 blocked={reason()}

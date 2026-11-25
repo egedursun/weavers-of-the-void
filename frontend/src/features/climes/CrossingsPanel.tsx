@@ -261,6 +261,7 @@ function CultureCard({
         columns={2}
         action={
           <Button
+            act={valuing}
             size='sm'
             disabled={valueBusy !== null}
             disabledReason={valueBusy ?? undefined}
@@ -436,6 +437,7 @@ export function CrossingsPanel({
                 onClick={reading.run}
               />
               <Button
+                act={opening}
                 size='sm'
                 disabled={windowBusy !== null}
                 disabledReason={windowBusy ?? undefined}
@@ -492,6 +494,7 @@ export function CrossingsPanel({
           columns={3}
           action={
             <Button
+              act={founding}
               size='sm'
               disabled={foundBusy !== null}
               disabledReason={foundBusy ?? undefined}
@@ -532,6 +535,7 @@ export function CrossingsPanel({
           columns={2}
           action={
             <Button
+              act={joining}
               size='sm'
               disabled={joinBusy !== null}
               disabledReason={joinBusy ?? undefined}

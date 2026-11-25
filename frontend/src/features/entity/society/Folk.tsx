@@ -23,6 +23,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -509,6 +510,7 @@ function MultiEditor({
   held,
   blocked,
   onSet,
+  act,
 }: {
   label: string
   hint: string
@@ -518,6 +520,7 @@ function MultiEditor({
   held: boolean
   blocked: string | null
   onSet: (values: string[]) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState<string[]>(values)
   const same =
@@ -544,6 +547,7 @@ function MultiEditor({
           onChange={setDraft}
         />
         <Button
+          act={act}
           variant='outline'
           size='icon'
           aria-label={`Set ${label}`}
@@ -569,6 +573,7 @@ function RecordEditor({
   held,
   blocked,
   onSet,
+  act,
 }: {
   label: string
   hint: string
@@ -578,6 +583,7 @@ function RecordEditor({
   held: boolean
   blocked: string | null
   onSet: (value: number | null) => void
+  act?: ActProp
 }) {
   return (
     <EditorTile
@@ -588,6 +594,7 @@ function RecordEditor({
       held={held}
     >
       <RecordCombobox
+        act={act}
         aria-label={label}
         options={options}
         value={value === null ? null : String(value)}
@@ -616,6 +623,7 @@ export function FolkControls({
   const traditions = useRecordOptions('tradition')
   const diseases = useRecordOptions('disease')
   const edit = useGodAction({
+    writes: [{ lever: 'people:edit' }],
     run: ({ key, value }: { key: string; value: Value }) =>
       unwrap(
         api.POST('/api/actions/people:edit', {
@@ -625,6 +633,7 @@ export function FolkControls({
     success: (_result, change) => `${folkLabel(change.key)} held`,
   })
   const release = useGodAction({
+    writes: [{ lever: 'people:edit' }],
     run: (keys: string[]) =>
       unwrap(
         api.POST('/api/actions/people:edit', {
@@ -638,6 +647,7 @@ export function FolkControls({
   const held = (key: string) => locked.includes(key)
   const editor = (field: NumberField) => (
     <NumberEditor
+      act={edit}
       key={`${field.key}-${field.value}`}
       id={`people-${peopleId}`}
       field={field}
@@ -652,10 +662,12 @@ export function FolkControls({
   )
   return (
     <AdjustPanel
+      acts={[release, edit]}
       title='Shape these folk'
       note='Set their body, diet, climate, customs, tongues, rites and battle record. What you set is held against the drift of the world until you release it; every change can be undone from the ledger.'
     >
       <HeldStrip
+        act={release}
         keys={locked}
         labelOf={folkLabel}
         blocked={busy}
@@ -679,6 +691,7 @@ export function FolkControls({
       {biology && (
         <EditorGroup title='Body and nature' icon={Dna}>
           <ChoiceEditor
+            act={edit}
             label='Body'
             hint='Their form, which sets mounts, fleets, work and battle ground'
             value={biology.body_plan}
@@ -688,6 +701,7 @@ export function FolkControls({
             onPick={set('body_plan')}
           />
           <ChoiceEditor
+            act={edit}
             label='Size'
             hint='Bigger folk eat and crowd more, and hit harder'
             value={biology.size_class}
@@ -697,6 +711,7 @@ export function FolkControls({
             onPick={set('size_class')}
           />
           <ChoiceEditor
+            act={edit}
             label='Diet'
             hint='What the land must give them to eat'
             value={biology.diet}
@@ -706,6 +721,7 @@ export function FolkControls({
             onPick={set('diet')}
           />
           <ChoiceEditor
+            act={edit}
             label='Home climate'
             hint='Lands far from it sicken their armies and repel their migrants'
             value={biology.acclimatised}
@@ -715,6 +731,7 @@ export function FolkControls({
             onPick={set('acclimatised')}
           />
           <ChoiceEditor
+            act={edit}
             label='Staple'
             hint='The food they live on'
             value={biology.staple}
@@ -724,6 +741,7 @@ export function FolkControls({
             onPick={set('staple')}
           />
           <ChoiceEditor
+            act={edit}
             label='Body chemistry'
             hint='The chemistry of their body; worlds of another chemistry suit them poorly'
             value={biology.biochemistry}
@@ -733,6 +751,7 @@ export function FolkControls({
             onPick={set('biochemistry')}
           />
           <ChoiceEditor
+            act={edit}
             label='Breath'
             hint='The air they need; a world without it cannot hold them unaided'
             value={biology.air}
@@ -742,6 +761,7 @@ export function FolkControls({
             onPick={set('air')}
           />
           <MultiEditor
+            act={edit}
             key={`traits-${biology.traits.join()}`}
             label='Natural gifts'
             hint='Each changes battle, work or sickness'
@@ -753,6 +773,7 @@ export function FolkControls({
             onSet={(values) => set('traits')(values as NaturalTrait[])}
           />
           <MultiEditor
+            act={edit}
             key={`immune-${biology.immunities.map((item) => item.id).join()}`}
             label='Immunities'
             hint='Diseases that kill few of them'
@@ -812,6 +833,7 @@ export function FolkControls({
             })
           )}
           <MultiEditor
+            act={edit}
             key={`motifs-${culture.motif_sources.join()}`}
             label='Motifs drawn from'
             hint='What their art, emblems and pictures of the Creator take their figures from'
@@ -827,6 +849,7 @@ export function FolkControls({
       {culture && (
         <EditorGroup title='Customs' icon={Palette} pairs>
           <ChoiceEditor
+            act={edit}
             label='Way of war'
             hint='How their levies fight'
             value={culture.martial_style}
@@ -836,6 +859,7 @@ export function FolkControls({
             onPick={set('martial_style')}
           />
           <ChoiceEditor
+            act={edit}
             label='Inheritance'
             hint='Who comes to rule and who takes the estate'
             value={culture.inheritance}
@@ -845,6 +869,7 @@ export function FolkControls({
             onPick={set('inheritance')}
           />
           <ChoiceEditor
+            act={edit}
             label='Funeral rite'
             hint='How they meet death: ghosts, ancestors, sickness'
             value={culture.funeral_rite}
@@ -854,6 +879,7 @@ export function FolkControls({
             onPick={set('funeral_rite')}
           />
           <ChoiceEditor
+            act={edit}
             label='Treatment of the dead'
             hint='What is done with the remains, within what the funeral rite allows'
             value={culture.remains_treatment}
@@ -863,6 +889,7 @@ export function FolkControls({
             onPick={set('remains_treatment')}
           />
           <FlagEditor
+            act={edit}
             label='Slavery lawful'
             hint='They may hold others in bondage'
             icon={Link}
@@ -873,6 +900,7 @@ export function FolkControls({
             onToggle={set('slavery_lawful')}
           />
           <MultiEditor
+            act={edit}
             key={`staples-${culture.staples.join()}`}
             label='Staples'
             hint='The foods of their table'
@@ -888,6 +916,7 @@ export function FolkControls({
       {culture && (
         <EditorGroup title='Tongues and rites' icon={LANGUAGE_ICON} pairs>
           <RecordEditor
+            act={edit}
             label='Tongue of prayer'
             hint='The tongue their priests keep'
             icon={LANGUAGE_ICON}
@@ -898,6 +927,7 @@ export function FolkControls({
             onSet={set('liturgical_language_id')}
           />
           <RecordEditor
+            act={edit}
             label='Tongue of trade'
             hint='Shared with partners, it widens roads and carries knowledge'
             icon={TRADE_ICON}
@@ -908,6 +938,7 @@ export function FolkControls({
             onSet={set('trade_language_id')}
           />
           <RecordEditor
+            act={edit}
             label='Funeral tradition'
             hint='The tradition that keeps their rite'
             icon={FUNERAL_SPEC[culture.funeral_rite].icon}
@@ -926,6 +957,7 @@ export function FolkControls({
             { key: 'martial_losses', label: 'Defeats', value: current?.losses },
           ].map((item) => (
             <NumberEditor
+              act={edit}
               key={`${item.key}-${item.value ?? 0}`}
               id={`people-${peopleId}`}
               field={{
@@ -978,6 +1010,7 @@ export function FoundPeoplePanel({
   const regions = useRecordOptions('region')
   const kinds = useRecordOptions('species')
   const found = useGodAction({
+    writes: [{ lever: 'people:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/people:found', {
@@ -1069,7 +1102,11 @@ export function FoundPeoplePanel({
           </Muted>
         </div>
         <CollapsibleTrigger asChild>
-          <Button size='sm' variant={open ? 'secondary' : 'outline'}>
+          <Button
+            act={found}
+            size='sm'
+            variant={open ? 'secondary' : 'outline'}
+          >
             <FOUND_ICON />
             {open ? 'Close' : 'Found a people'}
             <ChevronDown
@@ -1137,6 +1174,7 @@ export function FoundPeoplePanel({
         </div>
         <div className='flex min-w-0 justify-end'>
           <Button
+            act={found}
             disabled={problem !== null}
             disabledReason={problem ?? undefined}
             onClick={() => found.mutate()}

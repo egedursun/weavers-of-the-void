@@ -130,6 +130,7 @@ export function SkyWorship({ nodeId }: { nodeId: number }) {
                 caption={ENTITY_TYPE_WORDS[row.entity_type]}
                 aside={
                   <Button
+                    act={change}
                     size='sm'
                     variant='ghost'
                     disabled={busy !== null}
@@ -167,6 +168,7 @@ export function SkyWorship({ nodeId }: { nodeId: number }) {
           }
           action={
             <Button
+              act={change}
               size='sm'
               disabled={busy !== null || missing !== null}
               disabledReason={busy ?? missing ?? undefined}

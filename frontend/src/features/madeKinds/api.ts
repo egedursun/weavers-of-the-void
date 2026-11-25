@@ -65,6 +65,7 @@ export function useLever<Name extends ActionName, Vars = void>(
   success: string
 ) {
   return useGodAction({
+    writes: [{ lever: name }],
     run: (vars: Vars) => postAction(name, body(vars)),
     success,
   })

@@ -408,10 +408,18 @@
   .ornate-nameplate > [data-domain='medallion'] {
     display: none;
   }
+  .ornate-frame > .ornate-nameplate > [data-typography] {
+    -webkit-line-clamp: 2;
+    text-align: center;
+    text-wrap: balance;
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+  }
 }
 
 .ornate-nameplate > [data-typography] {
   letter-spacing: 0.04em;
+  -webkit-line-clamp: 1;
 }
 
 .ornate-nameplate-wing {
@@ -560,6 +568,18 @@
 
 .gilded-control:active::after {
   filter: brightness(0.94);
+}
+
+.gilded-control:disabled,
+.gilded-control[aria-disabled='true'] {
+  filter: grayscale(0.75) brightness(0.85);
+}
+
+.gilded-control:disabled::before,
+.gilded-control:disabled::after,
+.gilded-control[aria-disabled='true']::before,
+.gilded-control[aria-disabled='true']::after {
+  filter: none;
 }
 
 .gilded-control:focus-visible {

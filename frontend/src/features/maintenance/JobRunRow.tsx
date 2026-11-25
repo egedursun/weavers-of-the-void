@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 import { type LucideIcon } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Medallion } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
@@ -49,7 +50,8 @@ export function JobRunRow({
   confirm,
   onRun,
   onDismiss,
-}: JobRunRowProps) {
+  act,
+}: JobRunRowProps & { act?: ActProp }) {
   return (
     <li
       data-job-row={id}
@@ -77,6 +79,7 @@ export function JobRunRow({
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           {control}
           <ActionButton
+            act={act}
             label={label}
             icon={icon}
             size='sm'

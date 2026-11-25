@@ -247,6 +247,7 @@ function ChangeCard({
       onRemove={action.onRemove}
       extra={
         <Button
+          act={advancing}
           size='sm'
           variant='outline'
           disabled={advanceBusy !== null}
@@ -414,6 +415,7 @@ export function OrderPanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={setBusy !== null}
             disabledReason={setBusy ?? undefined}
@@ -459,6 +461,7 @@ export function OrderPanel({
         columns={2}
         action={
           <Button
+            act={proclaiming}
             size='sm'
             disabled={changeBusy !== null}
             disabledReason={changeBusy ?? undefined}
@@ -503,6 +506,7 @@ export function OrderPanel({
         columns={2}
         action={
           <Button
+            act={naming}
             size='sm'
             disabled={nameBusy !== null}
             disabledReason={nameBusy ?? undefined}

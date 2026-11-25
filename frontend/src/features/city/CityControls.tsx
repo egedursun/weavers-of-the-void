@@ -54,6 +54,7 @@ export function DistrictPanel({
 }) {
   const [kind, setKind] = useState<string>(district.kind)
   const edit = useGodAction({
+    writes: [{ lever: 'district:edit' }],
     run: (body: { level?: number; kind?: CityDistrict['kind'] }) =>
       postAction('district:edit', {
         district_id: district.id,
@@ -68,6 +69,7 @@ export function DistrictPanel({
     district.caste ? String(district.caste.id) : ''
   )
   const homes = useGodAction({
+    writes: [{ lever: 'district_urban:edit' }],
     run: (body: {
       values: { housing?: string; purity_rank_id?: number }
       release: string[]
@@ -76,6 +78,7 @@ export function DistrictPanel({
     success: 'The district is set so',
   })
   const raze = useGodAction({
+    writes: [{ lever: 'district:raze' }],
     run: () => postAction('district:raze', { district_id: district.id }),
     success: 'The district is razed',
   })
@@ -127,6 +130,7 @@ export function DistrictPanel({
       ))}
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
         <Button
+          act={edit}
           size='sm'
           disabled={busy !== null || district.level >= MAX_LEVEL}
           disabledReason={
@@ -141,6 +145,7 @@ export function DistrictPanel({
           Raise a level
         </Button>
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || district.level <= 1}
@@ -166,6 +171,7 @@ export function DistrictPanel({
           {moving ? 'Pick a hex in the scene' : 'Move to another hex'}
         </Button>
         <Button
+          act={homes}
           size='sm'
           variant='outline'
           disabled={busy !== null || district.locked.length === 0}
@@ -183,6 +189,7 @@ export function DistrictPanel({
           Release to the engine
         </Button>
         <Button
+          act={raze}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -202,6 +209,7 @@ export function DistrictPanel({
           onPick={setKind}
         />
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || kind === district.kind}
@@ -222,6 +230,7 @@ export function DistrictPanel({
           onPick={setHousing}
         />
         <Button
+          act={homes}
           size='sm'
           variant='outline'
           disabled={busy !== null || housing === district.housing}
@@ -249,6 +258,7 @@ export function DistrictPanel({
           onPick={setCaste}
         />
         <Button
+          act={homes}
           size='sm'
           variant='outline'
           disabled={
@@ -296,16 +306,19 @@ export function BuildingPanel({
   )
   const [harm, setHarm] = useState('20')
   const finish = useGodAction({
+    writes: [{ lever: 'structure:finish' }],
     run: () =>
       postAction('structure:finish', { structure_id: building.node.id }),
     success: 'The work is finished',
   })
   const repair = useGodAction({
+    writes: [{ lever: 'structure:repair' }],
     run: () =>
       postAction('structure:repair', { structure_id: building.node.id }),
     success: 'The work is repaired',
   })
   const damage = useGodAction({
+    writes: [{ lever: 'structure:damage' }],
     run: () =>
       postAction('structure:damage', {
         structure_id: building.node.id,
@@ -315,6 +328,7 @@ export function BuildingPanel({
     success: 'The work is struck',
   })
   const raze = useGodAction({
+    writes: [{ lever: 'structure:raze' }],
     run: () =>
       postAction('structure:raze', {
         structure_id: building.node.id,
@@ -323,6 +337,7 @@ export function BuildingPanel({
     success: 'The work is razed',
   })
   const place = useGodAction({
+    writes: [{ lever: 'structure:place' }],
     run: () =>
       postAction('structure:place', {
         structure_id: building.node.id,
@@ -379,6 +394,7 @@ export function BuildingPanel({
       )}
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
         <Button
+          act={finish}
           size='sm'
           disabled={busy !== null || !unfinished}
           disabledReason={
@@ -390,6 +406,7 @@ export function BuildingPanel({
           Finish now
         </Button>
         <Button
+          act={repair}
           size='sm'
           variant='outline'
           disabled={busy !== null || whole}
@@ -408,6 +425,7 @@ export function BuildingPanel({
           onChange={setHarm}
         />
         <Button
+          act={damage}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -418,6 +436,7 @@ export function BuildingPanel({
           Strike it
         </Button>
         <Button
+          act={raze}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -445,6 +464,7 @@ export function BuildingPanel({
           onPick={setTarget}
         />
         <Button
+          act={place}
           size='sm'
           variant='outline'
           disabled={
@@ -477,6 +497,7 @@ export function BuildForge({
   const [kind, setKind] = useState('school')
   const [level, setLevel] = useState('1')
   const found = useGodAction({
+    writes: [{ lever: 'district:build' }],
     run: () =>
       postAction('district:build', {
         settlement_id: scene.town.id,
@@ -486,6 +507,7 @@ export function BuildForge({
     success: 'The district is raised',
   })
   const commission = useGodAction({
+    writes: [{ lever: 'structure:commission' }],
     run: () =>
       postAction('structure:commission', {
         site_id: scene.town.id,
@@ -506,6 +528,7 @@ export function BuildForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={found}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -515,6 +538,7 @@ export function BuildForge({
             Raise the district
           </Button>
           <Button
+            act={commission}
             size='sm'
             variant='outline'
             disabled={busy !== null}

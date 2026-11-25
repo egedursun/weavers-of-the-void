@@ -62,6 +62,7 @@ export function EntityHero({
   const multiWorld = worlds.length > 1
   const dead = entity.status === 'dead' || entity.status === 'destroyed'
   const favorite = useLoreMutation({
+    writes: [{ lever: 'record:favorite' }],
     run: (next: boolean) =>
       unwrap(
         api.PUT('/api/entities/{entity_id}/favorite', {
@@ -128,6 +129,7 @@ export function EntityHero({
           <Muted>{entity.title ?? entity.subtype ?? typeLabel}</Muted>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Button
+              act={favorite}
               variant={shownFavorite ? 'secondary' : 'outline'}
               size='sm'
               aria-pressed={shownFavorite}

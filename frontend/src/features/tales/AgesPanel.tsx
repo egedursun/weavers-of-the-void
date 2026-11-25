@@ -285,6 +285,7 @@ export function AgesPanel({
               onClick={turning.run}
             />
             <Button
+              act={setting}
               size='sm'
               disabled={cycleBusy !== null}
               disabledReason={cycleBusy ?? undefined}
@@ -313,6 +314,7 @@ export function AgesPanel({
         columns={2}
         action={
           <Button
+            act={echoing}
             size='sm'
             disabled={echoBusy !== null}
             disabledReason={echoBusy ?? undefined}

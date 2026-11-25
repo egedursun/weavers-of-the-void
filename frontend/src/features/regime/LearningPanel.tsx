@@ -184,6 +184,7 @@ function ExamForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -357,6 +358,7 @@ function CredentialForge({
       columns={4}
       action={
         <Button
+          act={granting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -485,6 +487,7 @@ function FreedomForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -703,6 +706,7 @@ function SchoolForge({
         columns={3}
         action={
           <Button
+            act={founding}
             size='sm'
             disabled={foundBusy !== null}
             disabledReason={foundBusy ?? undefined}
@@ -742,6 +746,7 @@ function SchoolForge({
         columns={2}
         action={
           <Button
+            act={admitting}
             size='sm'
             disabled={admitBusy !== null}
             disabledReason={admitBusy ?? undefined}

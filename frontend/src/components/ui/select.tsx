@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as SelectPrimitive from '@radix-ui/react-select'
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import {
   type ControlSize,
@@ -10,12 +11,18 @@ import {
   controlText,
 } from './control-size'
 import { fieldSurface } from './input'
+import { Refusal } from './refusal'
 
-type SelectState = { open: boolean; value: string | undefined }
+type SelectState = {
+  open: boolean
+  value: string | undefined
+  refusal: string | null
+}
 
 const SelectStateContext = React.createContext<SelectState>({
   open: true,
   value: undefined,
+  refusal: null,
 })
 
 function Select({
@@ -23,11 +30,17 @@ function Select({
   defaultOpen,
   onOpenChange,
   value,
+  act,
+  disabled,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root>) {
+}: React.ComponentProps<typeof SelectPrimitive.Root> & { act?: ActProp }) {
   const [ownOpen, setOwnOpen] = React.useState(defaultOpen ?? false)
   const isOpen = open ?? ownOpen
-  const state = React.useMemo(() => ({ open: isOpen, value }), [isOpen, value])
+  const refusal = refusalOf(act)
+  const state = React.useMemo(
+    () => ({ open: isOpen, value, refusal }),
+    [isOpen, value, refusal]
+  )
   return (
     <SelectStateContext.Provider value={state}>
       <SelectPrimitive.Root
@@ -38,6 +51,7 @@ function Select({
           onOpenChange?.(next)
         }}
         value={value}
+        disabled={disabled || refusal !== null}
         {...props}
       />
     </SelectStateContext.Provider>
@@ -71,29 +85,32 @@ function SelectTrigger({
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: ControlSize
 }) {
+  const { refusal } = React.useContext(SelectStateContext)
   return (
-    <SelectPrimitive.Trigger
-      data-slot='select-trigger'
-      data-control-size={size}
-      className={cn(
-        'flex w-fit max-w-full min-w-0 items-center justify-between gap-2 py-0 font-normal whitespace-nowrap',
-        fieldSurface,
-        controlHeight[size],
-        controlFieldPadding[size],
-        controlIcon[size],
-        controlText,
-        'hover:bg-field-hover data-placeholder:text-muted-foreground',
-        '*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2',
-        '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([data-domain=sigil])]:text-muted-foreground',
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon />
-      </SelectPrimitive.Icon>
-    </SelectPrimitive.Trigger>
+    <Refusal reason={refusal}>
+      <SelectPrimitive.Trigger
+        data-slot='select-trigger'
+        data-control-size={size}
+        className={cn(
+          'flex w-fit max-w-full min-w-0 items-center justify-between gap-2 py-0 font-normal whitespace-nowrap',
+          fieldSurface,
+          controlHeight[size],
+          controlFieldPadding[size],
+          controlIcon[size],
+          controlText,
+          'hover:bg-field-hover data-placeholder:text-muted-foreground',
+          '*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2',
+          '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([data-domain=sigil])]:text-muted-foreground',
+          className
+        )}
+        {...props}
+      >
+        {children}
+        <SelectPrimitive.Icon asChild>
+          <ChevronDownIcon />
+        </SelectPrimitive.Icon>
+      </SelectPrimitive.Trigger>
+    </Refusal>
   )
 }
 

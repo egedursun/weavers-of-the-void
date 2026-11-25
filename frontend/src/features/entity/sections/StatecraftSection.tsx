@@ -102,6 +102,7 @@ function RegardRow({
   threshold: number
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'regard:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/regard:remove', {
@@ -133,6 +134,7 @@ function RegardRow({
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Wipe what ${row.holder.name} feels toward ${row.subject.name}`}
@@ -209,6 +211,7 @@ function AddRegard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
   const [threat, setThreat] = useState('0')
   const [trust, setTrust] = useState('50')
   const set = useGodAction({
+    writes: [{ lever: 'regard:set' }],
     run: (otherId: number) =>
       unwrap(
         api.POST('/api/actions/regard:set', {
@@ -232,6 +235,7 @@ function AddRegard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
       title='Set how another realm regards this one'
       action={
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null || other === null}
           disabledReason={
@@ -353,6 +357,7 @@ function BackerRow({
   ctx: Ctx
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'backer:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/backer:remove', {
@@ -376,6 +381,7 @@ function BackerRow({
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Withdraw ${item.backer.name}`}
@@ -431,6 +437,7 @@ function CrisisEditor({ row, ctx }: { row: Crisis; ctx: Ctx }) {
   const [side, setSide] = useState('')
   const [promised, setPromised] = useState('0')
   const edit = useGodAction({
+    writes: [{ lever: 'crisis:edit' }],
     run: (subjectId: number) =>
       unwrap(
         api.POST('/api/actions/crisis:edit', {
@@ -439,6 +446,7 @@ function CrisisEditor({ row, ctx }: { row: Crisis; ctx: Ctx }) {
       ),
   })
   const back = useGodAction({
+    writes: [{ lever: 'backer:set' }],
     run: (backerId: number) =>
       unwrap(
         api.POST('/api/actions/backer:set', {
@@ -504,6 +512,7 @@ function CrisisEditor({ row, ctx }: { row: Crisis; ctx: Ctx }) {
           blocked={busy}
         />
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || subject === null}
@@ -534,6 +543,7 @@ function CrisisEditor({ row, ctx }: { row: Crisis; ctx: Ctx }) {
         title='Bring in a backer'
         action={
           <Button
+            act={back}
             size='sm'
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}
@@ -575,6 +585,7 @@ function CrisisRow({ row, ctx }: { row: Crisis; ctx: Ctx }) {
   const held = row.locked.length > 0
   const [ending, setEnding] = useState('')
   const hold = useGodAction({
+    writes: [{ lever: 'crisis:hold' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/crisis:hold', {
@@ -583,6 +594,7 @@ function CrisisRow({ row, ctx }: { row: Crisis; ctx: Ctx }) {
       ),
   })
   const resolve = useGodAction({
+    writes: [{ lever: 'crisis:resolve' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/crisis:resolve', {
@@ -592,6 +604,7 @@ function CrisisRow({ row, ctx }: { row: Crisis; ctx: Ctx }) {
     success: () => 'The crisis is over',
   })
   const strike = useGodAction({
+    writes: [{ lever: 'crisis:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/crisis:delete', { body: { crisis_id: row.id } })
@@ -643,6 +656,7 @@ function CrisisRow({ row, ctx }: { row: Crisis; ctx: Ctx }) {
       actions={
         <>
           <Button
+            act={hold}
             size='icon-sm'
             variant='ghost'
             aria-label={held ? 'Let the crisis run' : 'Freeze the crisis'}
@@ -653,6 +667,7 @@ function CrisisRow({ row, ctx }: { row: Crisis; ctx: Ctx }) {
             {held ? <Unlock /> : <Lock />}
           </Button>
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label='Strike the crisis'
@@ -684,6 +699,7 @@ function CrisisRow({ row, ctx }: { row: Crisis; ctx: Ctx }) {
           onPick={setEnding}
         />
         <Button
+          act={resolve}
           size='sm'
           disabled={busy !== null || cannot !== null}
           disabledReason={busy ?? cannot ?? undefined}
@@ -702,6 +718,7 @@ function OpenCrisis({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
   const [subject, setSubject] = useState<number | null>(null)
   const [amount, setAmount] = useState('0')
   const open = useGodAction({
+    writes: [{ lever: 'crisis:open' }],
     run: (targetId: number) =>
       unwrap(
         api.POST('/api/actions/crisis:open', {
@@ -733,6 +750,7 @@ function OpenCrisis({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
       title='Make a demand of another realm'
       action={
         <Button
+          act={open}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -778,6 +796,7 @@ function OpenCrisis({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
 
 function SphereRow({ row, ctx }: { row: Sphere; ctx: Ctx }) {
   const strike = useGodAction({
+    writes: [{ lever: 'sphere:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/sphere:remove', {
@@ -801,6 +820,7 @@ function SphereRow({ row, ctx }: { row: Sphere; ctx: Ctx }) {
       badges={row.locked ? <Badge variant='outline'>Held</Badge> : undefined}
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Free ${row.client.name} from the sphere`}
@@ -860,6 +880,7 @@ function AddSphere({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
   const [client, setClient] = useState<number | null>(null)
   const [strength, setStrength] = useState('30')
   const add = useGodAction({
+    writes: [{ lever: 'sphere:set' }],
     run: (clientId: number) =>
       unwrap(
         api.POST('/api/actions/sphere:set', {
@@ -882,6 +903,7 @@ function AddSphere({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
       title='Draw a realm into this sphere'
       action={
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null || client === null}
           disabledReason={
@@ -924,6 +946,7 @@ function SubjectRow({
 }) {
   const [kind, setKind] = useState<string>(row.kind)
   const edit = useGodAction({
+    writes: [{ lever: 'vassal:edit' }],
     run: (body: Record<string, unknown>) =>
       unwrap(
         api.POST('/api/actions/vassal:edit', {
@@ -1024,6 +1047,7 @@ function SubjectRow({
               onPick={setKind}
             />
             <Button
+              act={edit}
               size='sm'
               variant='outline'
               disabled={busy !== null || kind === row.kind}
@@ -1045,6 +1069,7 @@ function SubjectRow({
           >
             {([key, label, on]) => (
               <Button
+                act={edit}
                 key={key}
                 size='sm'
                 variant={on ? 'secondary' : 'outline'}

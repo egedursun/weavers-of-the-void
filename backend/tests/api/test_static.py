@@ -5,6 +5,7 @@ from httpx import ASGITransport, AsyncClient
 
 from aerona.main import create_app
 from aerona.settings import Settings
+from tests.library_support import sign_in_owner
 
 INDEX = "<!doctype html><title>Aerona</title>"
 STARTUP_SECONDS = 120
@@ -21,6 +22,7 @@ async def test_built_frontend_is_served_with_spa_fallback(tmp_path: Path) -> Non
         LifespanManager(app, startup_timeout=STARTUP_SECONDS, shutdown_timeout=STARTUP_SECONDS) as manager,
         AsyncClient(transport=ASGITransport(app=manager.app), base_url="http://localhost") as http,
     ):
+        await sign_in_owner(app, http)
         assert (await http.get("/")).text == INDEX
         assert (await http.get("/pantheon/sons")).text == INDEX
         assert (await http.get("/assets/app.js")).status_code == 200

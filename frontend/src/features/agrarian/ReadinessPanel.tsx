@@ -354,6 +354,7 @@ function ReadinessForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={building}
             size='sm'
             disabled={buildBusy !== null}
             disabledReason={buildBusy ?? undefined}
@@ -363,6 +364,7 @@ function ReadinessForge({
             Raise the work
           </Button>
           <Button
+            act={sending}
             size='sm'
             variant='secondary'
             disabled={sendBusy !== null}
@@ -373,6 +375,7 @@ function ReadinessForge({
             Send aid
           </Button>
           <Button
+            act={rebuilding}
             size='sm'
             variant='secondary'
             disabled={rebuildBusy !== null}

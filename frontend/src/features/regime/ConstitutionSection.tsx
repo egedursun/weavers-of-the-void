@@ -116,6 +116,7 @@ function CreedChanges({ blocked }: { blocked: string | null }) {
         columns={2}
         action={
           <StepButton
+            act={splitting}
             icon={GitBranch}
             label='Split it'
             busy={why(blocked ?? noSplit, splitting.isPending)}
@@ -160,6 +161,7 @@ function CreedChanges({ blocked }: { blocked: string | null }) {
         columns={2}
         action={
           <StepButton
+            act={merging}
             icon={GitMerge}
             label='Merge them'
             busy={why(blocked ?? noMerge, merging.isPending)}
@@ -263,6 +265,7 @@ export function ConstitutionSection({
           >
             <Ref node={row.ideology} empty='written for no creed' />
             <RecordEditor
+              act={editing}
               title='Set the constitution'
               note={HOLD}
               fields={FIELDS}
@@ -274,6 +277,7 @@ export function ConstitutionSection({
               }
             />
             <StepButton
+              act={tearing}
               icon={Trash2}
               label='Tear it up'
               busy={why(blocked, tearing.isPending)}
@@ -293,6 +297,7 @@ export function ConstitutionSection({
           columns={2}
           action={
             <StepButton
+              act={writing}
               icon={FileText}
               label='Write it'
               busy={why(blocked ?? notRealm, writing.isPending)}

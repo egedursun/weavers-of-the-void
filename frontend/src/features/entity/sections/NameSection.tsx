@@ -12,6 +12,7 @@ import {
 import { type ActionBody, postAction } from '@/api/actions'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,6 +37,7 @@ function useRow<
   Name extends 'record_row:edit' | 'record_row:create' | 'record_row:delete',
 >(name: Name) {
   return useGodAction<ActionBody<Name>>({
+    writes: [{ lever: name }],
     run: (body) => postAction(name, body),
   })
 }
@@ -45,11 +47,13 @@ function TextEditor({
   value,
   blocked,
   onSave,
+  act,
 }: {
   label: string
   value: string
   blocked: string | null
   onSave: (next: string) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState(value)
   const problem =
@@ -74,6 +78,7 @@ function TextEditor({
         />
       </FieldTile>
       <Button
+        act={act}
         type='submit'
         size='sm'
         variant='outline'
@@ -175,6 +180,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
           {card.meaning ? (
             <div className='flex min-w-0 flex-col gap-2'>
               <TextEditor
+                act={edit}
                 key={`gloss-${card.meaning.gloss}`}
                 label='Its meaning'
                 value={card.meaning.gloss}
@@ -189,6 +195,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
                 }
               />
               <Button
+                act={remove}
                 size='sm'
                 variant='ghost'
                 className='self-start'
@@ -207,6 +214,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
             </div>
           ) : (
             <TextEditor
+              act={create}
               label='Give its name a meaning'
               value=''
               blocked={blocked}
@@ -247,6 +255,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
                         </EntityLink>
                       </Muted>
                       <Button
+                        act={remove}
                         size='icon-sm'
                         variant='ghost'
                         aria-label={`Forget the name in ${row.language.name}`}
@@ -288,6 +297,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
               </FieldTile>
             </div>
             <Button
+              act={create}
               size='sm'
               variant='outline'
               className='self-start'
@@ -340,6 +350,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
                   </Muted>
                 </div>
                 <TextEditor
+                  act={edit}
                   key={`epithet-${card.epithet.epithet}`}
                   label='The epithet'
                   value={card.epithet.epithet}
@@ -354,6 +365,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
                   }
                 />
                 <Button
+                  act={remove}
                   size='sm'
                   variant='ghost'
                   className='self-start'
@@ -372,6 +384,7 @@ export function NameSection({ nodeId }: { nodeId: number }) {
               </div>
             ) : (
               <TextEditor
+                act={create}
                 label='Give it an epithet'
                 value=''
                 blocked={blocked}

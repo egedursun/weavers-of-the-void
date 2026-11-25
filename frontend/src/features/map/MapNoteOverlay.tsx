@@ -1,6 +1,7 @@
 import { type KeyboardEvent, useEffect, useId, useState } from 'react'
 import { format } from 'date-fns'
 import { MapPin, Trash2, X } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -56,7 +57,8 @@ export function MapNoteOverlay({
   onSave,
   onDelete,
   onClose,
-}: MapNoteOverlayProps) {
+  act,
+}: MapNoteOverlayProps & { act?: ActProp }) {
   const fieldId = useId()
   const [text, setText] = useState('')
   const [color, setColor] = useState<NoteColor>('gold')
@@ -106,7 +108,7 @@ export function MapNoteOverlay({
         <Text as='span' weight='semibold' truncate className='flex-1'>
           {popup.kind === 'new'
             ? 'New note'
-            : `Your note · ${format(new Date(popup.note.created_at), 'yyyy-MM-dd')}`}
+            : `${popup.note.author_name ? `${popup.note.author_name}’s note` : 'A note'} · ${format(new Date(popup.note.created_at), 'yyyy-MM-dd')}`}
         </Text>
         <Button
           size='icon-sm'
@@ -170,6 +172,7 @@ export function MapNoteOverlay({
             </Text>
           </div>
           <Button
+            act={act}
             size='sm'
             variant='destructive'
             onClick={() => setConfirming(true)}
@@ -178,6 +181,7 @@ export function MapNoteOverlay({
             Delete
           </Button>
           <ConfirmDialog
+            act={act}
             open={confirming}
             onOpenChange={setConfirming}
             title='Delete this note?'

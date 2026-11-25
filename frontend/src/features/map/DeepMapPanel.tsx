@@ -62,6 +62,7 @@ function PassageRow({ view, passage }: { view: MapView; passage: Passage }) {
   const kind = PASSAGE_KIND[passage.kind]
   const state = PASSAGE_STATE[passage.state]
   const send = useGodAction<'deep_passage:hold' | 'deep_passage:delete'>({
+    writes: [{ lever: 'deep_passage:hold' }, { lever: 'deep_passage:delete' }],
     run: (action) =>
       unwrap(
         api.POST(`/api/actions/${action}`, {
@@ -108,6 +109,7 @@ function PassageRow({ view, passage }: { view: MapView; passage: Passage }) {
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={send}
           size='sm'
           variant='outline'
           disabled={blocked !== null}
@@ -118,6 +120,7 @@ function PassageRow({ view, passage }: { view: MapView; passage: Passage }) {
           Hold
         </Button>
         <Button
+          act={send}
           size='sm'
           variant='outline'
           disabled={blocked !== null}
@@ -178,6 +181,7 @@ function OpenPassage({ view, level }: { view: MapView; level: DeepLevel }) {
   ]
   const byKey = new Map(ends.map((end) => [end.key, end]))
   const open = useGodAction<void>({
+    writes: [{ lever: 'deep_passage:create' }],
     run: () => {
       const one = byKey.get(first)
       const two = byKey.get(second)
@@ -241,6 +245,7 @@ function OpenPassage({ view, level }: { view: MapView; level: DeepLevel }) {
         </FieldTile>
       </div>
       <Button
+        act={open}
         size='sm'
         className='self-start'
         disabled={blocked !== null}

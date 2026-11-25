@@ -28,6 +28,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -281,10 +282,12 @@ function TollEditor({
   toll,
   busy,
   onSet,
+  act,
 }: {
   toll: Toll
   busy: string | null
   onSet: (rate: number | null) => void
+  act?: ActProp
 }) {
   const [rate, setRate] = useState(String(toll.rate_pct))
   return (
@@ -308,6 +311,7 @@ function TollEditor({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={act}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -318,6 +322,7 @@ function TollEditor({
         </Button>
         {toll.set_by_player && (
           <Button
+            act={act}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -401,6 +406,7 @@ export function TradeRouteSection({
   const { reason } = useGodGate()
   const view = useTradeRoute(routeId)
   const open = useGodAction({
+    writes: [{ lever: 'trade_route:open' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/trade_route:open', {
@@ -409,6 +415,7 @@ export function TradeRouteSection({
       ),
   })
   const close = useGodAction({
+    writes: [{ lever: 'trade_route:close' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/trade_route:close', {
@@ -417,6 +424,7 @@ export function TradeRouteSection({
       ),
   })
   const toll = useGodAction({
+    writes: [{ lever: 'trade_route:toll' }],
     run: ({ region, rate }: { region: number; rate: number | null }) =>
       unwrap(
         api.POST('/api/actions/trade_route:toll', {
@@ -538,6 +546,7 @@ export function TradeRouteSection({
             )}
           </div>
           <AdjustPanel
+            acts={[open, close, toll]}
             label='Adjust the route'
             title='Command the route'
             note='Close it or open it, set and hold any value the world reads (way of travel, master, blockade, every danger, the worst season, capacity), raise or forbid tolls, or strike it from the world. Every change goes into the ledger.'
@@ -550,6 +559,7 @@ export function TradeRouteSection({
             <div className='flex min-w-0 flex-wrap gap-2'>
               {route.status === 'closed' || route.status === 'decayed' ? (
                 <Button
+                  act={open}
                   size='sm'
                   disabled={busy !== null}
                   disabledReason={busy ?? undefined}
@@ -560,6 +570,7 @@ export function TradeRouteSection({
                 </Button>
               ) : (
                 <Button
+                  act={close}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null}
@@ -576,6 +587,7 @@ export function TradeRouteSection({
                 <Paged items={route.tolls}>
                   {(item) => (
                     <TollEditor
+                      act={toll}
                       key={`${item.region_id}-${item.rate_pct}`}
                       toll={item}
                       busy={busy}

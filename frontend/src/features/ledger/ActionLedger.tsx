@@ -41,14 +41,19 @@ import {
 } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { Label, Muted, Text } from '@/components/typography'
+import { AccountAvatar } from '@/features/accounts/AccountAvatar'
 import { NodeLink } from '@/features/feed/NodeLink'
 import { type NodeIndex, useNodeIndex } from '@/features/feed/nodes'
 import { useWorldState } from '@/features/overview/api'
+import { announceWaiting } from '@/features/team/outcome'
+import { personTone } from '@/features/team/teamLook'
 import { useRuleValue } from '@/features/world-rules/api'
+import { LedgerFilters } from './LedgerFilters'
 import {
   type LedgerEntryView,
   type LedgerQuery,
   type UndoResult,
+  isUndone,
   useEnumCatalogue,
   useLedger,
   useUndo,
@@ -64,6 +69,16 @@ import {
 import { undoMessage } from './undoToast'
 
 const EVERY_SON = 'every-son'
+const EVERY_PAGE: LedgerQuery = {
+  epoch: null,
+  actorKind: null,
+  actorId: null,
+  limit: null,
+  authorId: null,
+  actionKind: null,
+  since: null,
+  until: null,
+}
 const PAGE_MAX_RULE = 'server.ledger_page_max'
 const PAGE_SIZE_RULE = 'server.ledger_page_size'
 const RETENTION_RULE = 'ledger.keep_epochs'
@@ -97,7 +112,7 @@ function LedgerEntry({
   onUndone,
 }: EntryProps) {
   const { entry } = view
-  const undo = useUndo()
+  const undo = useUndo(entry.author?.account_id)
   const [confirming, setConfirming] = useState(false)
   const dependents = view.dependents.length
   const conflicts = result?.conflicts ?? entry.conflicts
@@ -143,12 +158,11 @@ function LedgerEntry({
           {entry.undone ? (
             <Badge size='sm' variant='secondary'>
               <Undo2 />
-              {entry.undone_at
-                ? `Undone ${formatDateTime(entry.undone_at)}`
-                : 'Undone'}
+              {`Undone${entry.undone_by ? ` by ${entry.undone_by.name}` : ''}${entry.undone_at ? ` ${formatDateTime(entry.undone_at)}` : ''}`}
             </Badge>
           ) : (
             <Button
+              act={undo}
               variant='outline'
               size='sm'
               disabled={blocked !== null || undo.isPending}
@@ -165,12 +179,27 @@ function LedgerEntry({
             <MentionText text={entry.input_summary} />
           </Muted>
         )}
+        {entry.reason && (
+          <Text variant='caption' className='italic'>
+            {`“${entry.reason}”`}
+          </Text>
+        )}
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           <Badge size='sm' variant='outline'>{`#${entry.id}`}</Badge>
           <Badge size='sm' variant='outline'>
             <actor.icon />
             {actor.label}
           </Badge>
+          {entry.author && (
+            <Badge size='sm' variant='secondary'>
+              <AccountAvatar
+                name={entry.author.name}
+                tone={personTone(entry.author.name)}
+                size='xs'
+              />
+              {`By ${entry.author.name}`}
+            </Badge>
+          )}
           <Badge size='sm' variant='outline'>
             <Clock />
             {dateTime.format(new Date(entry.created_at))}
@@ -225,6 +254,7 @@ function LedgerEntry({
         )}
       </div>
       <ConfirmDialog
+        act={undo}
         open={confirming}
         onOpenChange={setConfirming}
         title={`Undo page #${entry.id}?`}
@@ -240,6 +270,10 @@ function LedgerEntry({
           undo.mutate(entry.id, {
             onSuccess: (undone) => {
               setConfirming(false)
+              if (!isUndone(undone)) {
+                announceWaiting({ queued: undone })
+                return
+              }
               onUndone(undone)
               toast.success(
                 undoMessage(
@@ -265,12 +299,7 @@ export function ActionLedger() {
   const pageMax = useRuleValue(PAGE_MAX_RULE)
   const defaultPageSize = useRuleValue(PAGE_SIZE_RULE)
   const retention = useRuleValue(RETENTION_RULE)
-  const [query, setQuery] = useState<LedgerQuery>({
-    epoch: null,
-    actorKind: null,
-    actorId: null,
-    limit: null,
-  })
+  const [query, setQuery] = useState<LedgerQuery>(EVERY_PAGE)
   const [search, setSearch] = useState('')
   const [results, setResults] = useState<Map<number, UndoResult>>(new Map())
   const ledger = useLedger(query)
@@ -303,7 +332,13 @@ export function ActionLedger() {
   const current = ledger.data?.current_epoch
   const thisEpoch = epochs.find((item) => item.epoch === current)?.entries ?? 0
   const filtered =
-    query.epoch !== null || query.actorKind !== null || needle !== ''
+    query.epoch !== null ||
+    query.actorKind !== null ||
+    query.authorId !== null ||
+    query.actionKind !== null ||
+    query.since !== null ||
+    query.until !== null ||
+    needle !== ''
   const patch = (next: Partial<LedgerQuery>) =>
     setQuery((value) => ({ ...value, ...next, limit: null }))
   const chooseActor = (kind: ActorKind | null) =>
@@ -455,6 +490,7 @@ export function ActionLedger() {
             </Select>
           )}
         </div>
+        <LedgerFilters query={query} onChange={patch} />
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           <Button
             size='sm'
@@ -478,7 +514,7 @@ export function ActionLedger() {
               >
                 <actor.icon />
                 {kind === 'creator' && state.data?.creator
-                  ? `You (${state.data.creator.name})`
+                  ? `The Creator (${state.data.creator.name})`
                   : actor.label}
               </Button>
             )
@@ -489,7 +525,7 @@ export function ActionLedger() {
               variant='ghost'
               onClick={() => {
                 setSearch('')
-                patch({ epoch: null, actorKind: null, actorId: null })
+                setQuery(EVERY_PAGE)
               }}
             >
               <X />

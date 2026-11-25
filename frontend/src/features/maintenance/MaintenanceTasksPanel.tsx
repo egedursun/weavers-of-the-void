@@ -85,6 +85,7 @@ export function MaintenanceTasksPanel() {
           <Paged items={tasks.data} as='li' noun={['task', 'tasks']}>
             {(task) => (
               <JobRunRow
+                act={run}
                 key={task.task}
                 id={task.task}
                 title={task.title}

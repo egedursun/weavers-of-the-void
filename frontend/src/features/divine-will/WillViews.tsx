@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState, LoadingBlock, Medallion, Paged } from '@/components/domain'
 import { DivineCrest } from '@/components/layout/divine-will/DivineCrest'
 import { Label, Muted, Text } from '@/components/typography'
+import { ShareToggle } from '@/features/team/share'
 import { Composer } from './Composer'
 import { IndexNotice } from './IndexNotice'
 import { CycleList } from './Transcript'
@@ -28,7 +29,12 @@ import {
 import { ArtifactBrowser } from './library/ArtifactBrowser'
 import { ArtifactDetail } from './library/ArtifactDetail'
 import { MODE_LOOK, MODE_ORDER } from './modes'
-import { type WillActive, type WillCycle, type WillSessionView } from './types'
+import {
+  type WillActive,
+  type WillCycle,
+  type WillSessionSummary,
+  type WillSessionView,
+} from './types'
 import { useWill } from './willStore'
 
 const NEAR_BOTTOM_PX = 96
@@ -286,6 +292,77 @@ function PastTranscript({ view }: { view: WillSessionView }) {
   )
 }
 
+type SessionItem = WillSessionSummary
+
+function SessionGroup({
+  title,
+  items,
+  empty,
+  onOpen,
+}: {
+  title: string
+  items: SessionItem[]
+  empty: string
+  onOpen: (id: number) => void
+}) {
+  return (
+    <div className='flex min-w-0 flex-col gap-2'>
+      <Label variant='overline'>{title}</Label>
+      {items.length === 0 ? (
+        <Muted variant='caption'>{empty}</Muted>
+      ) : (
+        <ul className='flex min-w-0 flex-col gap-2'>
+          <Paged
+            items={items}
+            initial={SESSIONS_SHOWN}
+            as='li'
+            noun={['session', 'sessions']}
+          >
+            {(item) => (
+              <li key={item.id} className='flex min-w-0 flex-col gap-1.5'>
+                <Button
+                  variant='outline'
+                  size='tile'
+                  onClick={() => onOpen(item.id)}
+                >
+                  <History />
+                  <span className='flex min-w-0 flex-1 flex-col'>
+                    <Text as='span' weight='semibold' truncate>
+                      {item.title ||
+                        `Session of epoch ${String(item.opened_epoch)}`}
+                    </Text>
+                    <Muted as='span' variant='caption' truncate={2}>
+                      {[
+                        `Epoch ${String(item.opened_epoch)} to ${String(item.closed_epoch ?? item.opened_epoch)}`,
+                        formatDateTime(item.opened_at),
+                        item.closed_at
+                          ? `closed ${formatDateTime(item.closed_at)}`
+                          : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </Muted>
+                  </span>
+                  <Badge size='sm' variant='outline'>
+                    {plural(item.cycle_count, 'exchange')}
+                  </Badge>
+                </Button>
+                <ShareToggle
+                  kind='session'
+                  id={item.id}
+                  shared={item.shared}
+                  mine={item.mine}
+                  author={item.author?.name}
+                />
+              </li>
+            )}
+          </Paged>
+        </ul>
+      )}
+    </div>
+  )
+}
+
 export function PastSessionsView() {
   const sessions = useWillSessions()
   const [open, setOpen] = useState<number | null>(null)
@@ -321,47 +398,18 @@ export function PastSessionsView() {
         />
       ) : (
         <>
-          <Label variant='overline'>Closed sessions</Label>
-          <ul className='flex min-w-0 flex-col gap-2'>
-            <Paged
-              items={sessions.data.sessions}
-              initial={SESSIONS_SHOWN}
-              as='li'
-              noun={['session', 'sessions']}
-            >
-              {(item) => (
-                <li key={item.id}>
-                  <Button
-                    variant='outline'
-                    size='tile'
-                    onClick={() => setOpen(item.id)}
-                  >
-                    <History />
-                    <span className='flex min-w-0 flex-1 flex-col'>
-                      <Text as='span' weight='semibold' truncate>
-                        {item.title ||
-                          `Session of epoch ${String(item.opened_epoch)}`}
-                      </Text>
-                      <Muted as='span' variant='caption' truncate={2}>
-                        {[
-                          `Epoch ${String(item.opened_epoch)} to ${String(item.closed_epoch ?? item.opened_epoch)}`,
-                          formatDateTime(item.opened_at),
-                          item.closed_at
-                            ? `closed ${formatDateTime(item.closed_at)}`
-                            : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </Muted>
-                    </span>
-                    <Badge size='sm' variant='outline'>
-                      {plural(item.cycle_count, 'exchange')}
-                    </Badge>
-                  </Button>
-                </li>
-              )}
-            </Paged>
-          </ul>
+          <SessionGroup
+            title='Your sessions'
+            items={sessions.data.sessions.filter((item) => item.mine)}
+            empty='When you begin a new session, the one you close is kept here with every exchange.'
+            onOpen={setOpen}
+          />
+          <SessionGroup
+            title='Shared with the team'
+            items={sessions.data.sessions.filter((item) => !item.mine)}
+            empty='Sessions others share with the team show here, to read.'
+            onOpen={setOpen}
+          />
         </>
       )}
     </div>

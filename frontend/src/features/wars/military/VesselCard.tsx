@@ -122,6 +122,7 @@ function Berth({
     typeof value(key) === 'number' ? (value(key) as number) : null
   return (
     <Adjust
+      acts={[actions.save, actions.release, actions.remove]}
       title='Crew, berth and wear'
       note='Every value of the ship: its wear, its crew and their craft, its cargo, fame and voyages, who captains it, where it berths and sails.'
       label='Crew and berth'
@@ -265,6 +266,7 @@ export function VesselCard({
   const vessel = query.data
   const invalidate = [depthKeys.vessel(vesselId) as unknown as unknown[]]
   const refit = useGodAction({
+    writes: [{ lever: 'vessel:refit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/vessel:refit', {
@@ -278,6 +280,7 @@ export function VesselCard({
   })
   const [foe, setFoe] = useState<number | null>(null)
   const engage = useGodAction({
+    writes: [{ lever: 'engagement:force' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/engagement:force', {
@@ -288,6 +291,7 @@ export function VesselCard({
     onDone: () => setFoe(null),
   })
   const repair = useGodAction({
+    writes: [{ lever: 'vessel:repair' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/vessel:repair', {
@@ -305,6 +309,7 @@ export function VesselCard({
           description='This vessel is a gate, mount or bridge; it keeps no hull, crew or sea log.'
         />
         <Adjust
+          acts={[refit]}
           title='Fit it out as a ship'
           note='Give it a hull; the shipwrights make it seaworthy and mount the weapons of its type.'
           label='Fit out as a ship'
@@ -320,6 +325,7 @@ export function VesselCard({
             />
           </FieldGrid>
           <Button
+            act={refit}
             size='sm'
             className='self-start'
             disabled={busyOf(blocked, refit.isPending) !== null}
@@ -445,6 +451,7 @@ export function VesselCard({
       </div>
       <div className='flex min-w-0 flex-col gap-2'>
         <Button
+          act={repair}
           size='sm'
           variant='outline'
           className='self-start'
@@ -462,6 +469,7 @@ export function VesselCard({
         </Button>
         <Berth vessel={vessel} vesselId={vesselId} blocked={blocked} />
         <Adjust
+          acts={[engage]}
           title='Force an engagement'
           note='Set this vessel on another in their own domain; every round, hit and loss is written into its history.'
           label='Force an engagement'
@@ -477,6 +485,7 @@ export function VesselCard({
             />
           </FieldGrid>
           <Button
+            act={engage}
             size='sm'
             className='self-start'
             disabled={engageReason !== null}
@@ -488,6 +497,7 @@ export function VesselCard({
           </Button>
         </Adjust>
         <Adjust
+          acts={[refit]}
           title='Refit'
           note='Rebuild the ship to another hull; its weapons follow the type of that frame, edited on the vehicle type.'
           label='Refit'
@@ -503,6 +513,7 @@ export function VesselCard({
             />
           </FieldGrid>
           <Button
+            act={refit}
             size='sm'
             className='self-start'
             disabled={busy !== null}
@@ -535,6 +546,7 @@ export function LayDownVessel({
   const [name, setName] = useState('')
   const [hull, setHull] = useState('boat')
   const create = useGodAction({
+    writes: [{ lever: 'vessel:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/vessel:create', {
@@ -550,6 +562,7 @@ export function LayDownVessel({
   const spec = frames.data?.find((item) => item.frame === hull)
   return (
     <Adjust
+      acts={[create]}
       title='Lay down a vessel'
       note='Choose a hull; the shipwrights build it to its type and mount its weapons.'
       label='Lay down a vessel'
@@ -596,6 +609,7 @@ export function LayDownVessel({
         </div>
       )}
       <Button
+        act={create}
         size='sm'
         className='self-start'
         disabled={busyOf(blocked, create.isPending) !== null || !name.trim()}

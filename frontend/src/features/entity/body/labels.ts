@@ -368,7 +368,7 @@ export const CAUSES: Record<components['schemas']['HarmCause'], string> = {
   escape: 'An escape',
   sacrifice: 'Sacrifice',
   age: 'Age',
-  player: 'Your hand',
+  player: "The Creator's hand",
   exposure: 'Exposure',
   ritual: 'A rite',
   bombardment: 'Bombardment',

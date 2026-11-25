@@ -1,5 +1,6 @@
 import { type ReactNode, useId, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp, type LucideIcon } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -55,6 +56,7 @@ export function MindPicker({
   blocked,
   placeholder,
   onPick,
+  act,
 }: {
   label: string
   value: string
@@ -62,11 +64,17 @@ export function MindPicker({
   blocked: string | null
   placeholder?: string
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   const id = useId()
   return (
     <FieldTile id={id} label={label}>
-      <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+      <Select
+        act={act}
+        value={value}
+        onValueChange={onPick}
+        disabled={blocked !== null}
+      >
         <SelectTrigger id={id} aria-label={label} className='w-full'>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
@@ -88,12 +96,14 @@ export function ControlPanel({
   hold,
   onHold,
   children,
+  act,
 }: {
   title: string
   note: string
   hold?: boolean
   onHold?: (value: boolean) => void
   children: ReactNode
+  act?: ActProp
 }) {
   return (
     <div className='flex min-w-0 flex-col gap-4 rounded-md p-3 sealed-well'>
@@ -105,6 +115,8 @@ export function ControlPanel({
         {onHold && (
           <label className='flex shrink-0 items-center gap-2'>
             <Switch
+              permission='lock_canon'
+              act={act}
               checked={hold ?? false}
               onCheckedChange={onHold}
               aria-label='Hold what I set'
@@ -138,12 +150,14 @@ export function NodePicker({
   value,
   onChange,
   blocked,
+  act,
 }: {
   label: string
   types: string[]
   value: number | null
   onChange: (value: number | null) => void
   blocked: string | null
+  act?: ActProp
 }) {
   const id = useId()
   const names = useNames()
@@ -167,6 +181,7 @@ export function NodePicker({
   return (
     <FieldTile id={id} label={label}>
       <RecordCombobox
+        act={act}
         id={id}
         options={options}
         value={value === null ? null : String(value)}

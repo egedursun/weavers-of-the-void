@@ -73,6 +73,7 @@ export function LifeClassSection({ worldId }: { worldId: number }) {
                   const spec = ENVIRONMENTS[key]
                   return (
                     <Button
+                      act={edit}
                       key={key}
                       size='sm'
                       variant={places.has(key) ? 'default' : 'outline'}
@@ -97,6 +98,7 @@ export function LifeClassSection({ worldId }: { worldId: number }) {
               </div>
             </div>
             <RecordEditor
+              act={edit}
               title='Complexity'
               note='Life grows one step more complex now and then on a temperate, healthy world; set it here to hasten or undo that.'
               fields={[

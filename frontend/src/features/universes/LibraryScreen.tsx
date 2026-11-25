@@ -73,12 +73,14 @@ function useDebounced(value: string): string {
 
 function HallHeader({
   tools,
+  workspace,
   onCreate,
   onImport,
   onTrash,
   trashCount,
 }: {
   tools: ReactNode
+  workspace: ReactNode
   onCreate: () => void
   onImport: () => void
   onTrash: () => void
@@ -86,11 +88,14 @@ function HallHeader({
 }) {
   return (
     <header className='relative flex w-full max-w-7xl min-w-0 flex-col items-center gap-4 text-center'>
-      {tools && (
-        <div className='flex w-full min-w-0 justify-end'>
-          <span className='flex items-center rounded-md border surface-framed border-gild/70 bg-card p-0.5'>
-            {tools}
-          </span>
+      {(tools || workspace) && (
+        <div className='flex w-full min-w-0 flex-wrap items-center justify-between gap-2'>
+          <span className='flex min-w-0 items-center'>{workspace}</span>
+          {tools && (
+            <span className='flex items-center gap-0.5 rounded-md border surface-framed border-gild/70 bg-card p-0.5'>
+              {tools}
+            </span>
+          )}
         </div>
       )}
       <div className='relative flex items-center justify-center'>
@@ -146,9 +151,11 @@ function HallHeader({
 export function LibraryScreen({
   createSource,
   tools = null,
+  workspace = null,
 }: {
   createSource?: (url: string) => EventSourceLike
   tools?: ReactNode
+  workspace?: ReactNode
 }) {
   const pulse = useLibraryStream(createSource)
   const [filters, setFilters] = useState<UniverseFilters>(NO_UNIVERSE_FILTERS)
@@ -191,6 +198,7 @@ export function LibraryScreen({
       />
       <HallHeader
         tools={tools}
+        workspace={workspace}
         onCreate={() => setCreating(true)}
         onImport={() => setImporting(true)}
         onTrash={() => setTrashOpen(true)}

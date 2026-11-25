@@ -17,6 +17,7 @@ import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { Text } from '@/components/typography'
 import { EpochStarChip } from '@/features/cosmos/EpochStarChip'
 import { useRangeMap } from '@/features/entity/wilds/api'
+import { toastDone } from '@/features/team/outcome'
 import { DeepMapPanel } from './DeepMapPanel'
 import { DepthLadder } from './DepthLadder'
 import {
@@ -563,13 +564,14 @@ function MapScreen({
   const onRegenerate = () =>
     regenerate.mutate(view.world.id, {
       onSuccess: (result) =>
-        toast.success(result.message || 'The map was redrawn.'),
+        toastDone(result, result.message || 'The map was redrawn.'),
       onError: (error) => toast.error(error.message),
     })
 
   return (
     <div className='flex min-h-0 min-w-0 flex-1 flex-col gap-4'>
       <MapToolbar
+        act={regenerate}
         mode={mode}
         onMode={setMode}
         depth={depth}
@@ -585,6 +587,7 @@ function MapScreen({
         legendOpen={legendOpen}
         onLegend={setLegendOpen}
         noteMode={activeNoteMode}
+        noteAct={addNote}
         onNoteMode={(on) => {
           setPopup(null)
           setNoteMode(on)
@@ -619,6 +622,7 @@ function MapScreen({
         >
           <SceneCorners />
           <MapCanvas
+            act={moveMarker}
             view={view}
             tokens={tokens}
             palette={palette}
@@ -694,6 +698,7 @@ function MapScreen({
           )}
           {popup && viewport && (
             <MapNoteOverlay
+              act={[addNote, removeNote]}
               key={
                 popup.kind === 'read'
                   ? `read-${popup.note.id}`

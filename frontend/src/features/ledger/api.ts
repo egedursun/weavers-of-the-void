@@ -1,27 +1,36 @@
 import {
   type QueryClient,
-  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
+import { type Permission } from '@/api/teamGate'
+import { useTeamContext } from '@/features/team/teamContext'
 
 export type LedgerPage = components['schemas']['LedgerPage']
 export type LedgerEntryView = components['schemas']['LedgerEntryView']
 export type UndoResult = components['schemas']['UndoResult']
+export type UndoOutcome = UndoResult | components['schemas']['QueuedActView']
 export type EntityNoteRecord = components['schemas']['EntityNoteRecord']
 export type ActorKind = components['schemas']['ActorKind']
 export type EntitySummary = components['schemas']['EntitySummary']
 export type FavoriteCard = components['schemas']['FavoriteCard']
+
+export type ActionKind = components['schemas']['ActionKind']
 
 export type LedgerQuery = {
   epoch: number | null
   actorKind: ActorKind | null
   actorId: number | null
   limit: number | null
+  authorId: number | null
+  actionKind: ActionKind | null
+  since: string | null
+  until: string | null
 }
 
 export const ledgerKeys = {
@@ -44,6 +53,10 @@ export function useLedger(query: LedgerQuery) {
               actor_kind: query.actorKind ?? undefined,
               actor_id: query.actorId ?? undefined,
               limit: query.limit ?? undefined,
+              author_account_id: query.authorId ?? undefined,
+              action_kind: query.actionKind ?? undefined,
+              since: query.since ?? undefined,
+              until: query.until ?? undefined,
             },
           },
         })
@@ -57,7 +70,7 @@ export function refreshAfterUndo(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.world.all })
 }
 
-export function undoEntry(entryId: number): Promise<UndoResult> {
+export function undoEntry(entryId: number): Promise<UndoOutcome> {
   return unwrap(
     api.POST('/api/ledger/{entry_id}/undo', {
       params: { path: { entry_id: entryId } },
@@ -65,9 +78,25 @@ export function undoEntry(entryId: number): Promise<UndoResult> {
   )
 }
 
-export function useUndo() {
+export function isUndone(outcome: UndoOutcome): outcome is UndoResult {
+  return 'entry_id' in outcome
+}
+
+export function undoPermission(
+  authorId: number | null | undefined,
+  me: number | null
+): Permission {
+  return authorId !== null && authorId !== undefined && authorId === me
+    ? 'undo_own'
+    : 'undo_any'
+}
+
+export function useUndo(authorId: number | null | undefined) {
   const queryClient = useQueryClient()
+  const me = useTeamContext()?.me ?? null
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/ledger/{entry_id}/undo' }],
+    permission: undoPermission(authorId, me),
     mutationFn: undoEntry,
     onSuccess: () => refreshAfterUndo(queryClient),
   })

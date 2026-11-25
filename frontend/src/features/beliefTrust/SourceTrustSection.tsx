@@ -72,6 +72,7 @@ function Trust({
       caption={`${row.right} right and ${row.wrong} wrong so far; weighed in epoch ${row.updated_epoch}`}
     >
       <RecordEditor
+        act={editing}
         title='Set this trust'
         note={HOLD}
         fields={TRUST_FIELDS}
@@ -81,6 +82,7 @@ function Trust({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Start afresh'
         busy={why(blocked, removing.isPending)}
@@ -165,6 +167,7 @@ export function SourceTrustSection({
               columns={2}
               action={
                 <StepButton
+                  act={setting}
                   icon={CirclePlus}
                   label='Set it'
                   variant='default'

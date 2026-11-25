@@ -68,6 +68,7 @@ export function SoulSeal({
     soul.sealed ? soul.seal_strength : PERCENT
   )
   const act = useGodAction<boolean>({
+    writes: [{ lever: 'soul:seal' }],
     run: (sealed) =>
       unwrap(
         api.POST('/api/actions/soul:seal', {
@@ -108,6 +109,7 @@ export function SoulSeal({
         />
       )}
       <AdjustPanel
+        acts={[act]}
         trigger={soul.sealed ? 'Tend the seal' : 'Seal the soul'}
         title='The seal on the soul'
         note='A seal stops every gate of rebirth. A counter-rite must be stronger than the seal to break it.'
@@ -125,6 +127,7 @@ export function SoulSeal({
         />
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={act}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -135,6 +138,7 @@ export function SoulSeal({
           </Button>
           {soul.sealed && (
             <Button
+              act={act}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -163,6 +167,7 @@ export function PossessionCard({
   const [host, setHost] = useState<number | null>(null)
   const [stress, setStress] = useState(held?.stress ?? 0)
   const possess = useGodAction({
+    writes: [{ lever: 'soul:possess' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:possess', {
@@ -171,6 +176,7 @@ export function PossessionCard({
       ),
   })
   const edit = useGodAction<boolean>({
+    writes: [{ lever: 'soul:possession' }],
     run: (hold) =>
       unwrap(
         api.POST('/api/actions/soul:possession', {
@@ -189,6 +195,7 @@ export function PossessionCard({
       ),
   })
   const exorcise = useGodAction({
+    writes: [{ lever: 'soul:exorcise' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:exorcise', {
@@ -256,6 +263,7 @@ export function PossessionCard({
               </div>
             )}
             <AdjustPanel
+              acts={[edit, exorcise]}
               trigger='Adjust the possession'
               title='The grip on the host'
               note='Set the stress it lays on its host, or drive it out at once.'
@@ -273,6 +281,7 @@ export function PossessionCard({
               />
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <Button
+                  act={edit}
                   size='sm'
                   disabled={busy !== null}
                   disabledReason={busy ?? undefined}
@@ -283,6 +292,7 @@ export function PossessionCard({
                 </Button>
                 {held.locked.length > 0 && (
                   <Button
+                    act={edit}
                     size='sm'
                     variant='outline'
                     disabled={busy !== null}
@@ -294,6 +304,7 @@ export function PossessionCard({
                   </Button>
                 )}
                 <Button
+                  act={exorcise}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null}
@@ -308,6 +319,7 @@ export function PossessionCard({
           </>
         ) : (
           <AdjustPanel
+            acts={[possess]}
             trigger='Set it upon a host'
             title='Possess the living'
             note='The spirit lays its imprint over the host’s values until it is driven out.'
@@ -324,6 +336,7 @@ export function PossessionCard({
                 />
               </div>
               <Button
+                act={possess}
                 size='sm'
                 disabled={busy !== null || host === null}
                 disabledReason={busy ?? 'Choose the host first.'}
@@ -368,6 +381,7 @@ export function SoulLedger({
     soul.patron_son_id === null ? NO_GOD : String(soul.patron_son_id)
   )
   const save = useGodAction({
+    writes: [{ lever: 'soul:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:edit', {
@@ -397,6 +411,7 @@ export function SoulLedger({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'soul:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:edit', {
@@ -405,6 +420,7 @@ export function SoulLedger({
       ),
   })
   const reread = useGodAction({
+    writes: [{ lever: 'soul:reread_deeds' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:reread_deeds', { body: { spirit_id: id } })
@@ -424,6 +440,7 @@ export function SoulLedger({
     )
   return (
     <AdjustPanel
+      acts={[save, release, reread]}
       trigger='Rewrite the soul'
       title='Rewrite what the soul carries'
       note='Its deeds decide its judgement, its imprint is what it lays over a host or carries into a new life. What you write is held until you release it.'
@@ -537,6 +554,7 @@ export function SoulLedger({
         )}
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -547,6 +565,7 @@ export function SoulLedger({
           </Button>
           {soul.locked.length > 0 && (
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -558,6 +577,7 @@ export function SoulLedger({
             </Button>
           )}
           <Button
+            act={reread}
             size='sm'
             variant='outline'
             disabled={busy !== null || !soul.origin}
@@ -583,6 +603,7 @@ export function RaiseSoul({
   const [mortal, setMortal] = useState<number | null>(null)
   const [alignment, setAlignment] = useState<string>('neutral')
   const raise = useGodAction({
+    writes: [{ lever: 'soul:raise' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:raise', {
@@ -597,6 +618,7 @@ export function RaiseSoul({
   const busy = busyOf(blocked, raise.isPending)
   return (
     <AdjustPanel
+      acts={[raise]}
       trigger='Call up a soul'
       title='Call up the soul of the dead'
       note='A dead mortal’s soul walks again here, carrying its deeds, values and traits.'
@@ -620,6 +642,7 @@ export function RaiseSoul({
           />
         </div>
         <Button
+          act={raise}
           size='sm'
           disabled={busy !== null || mortal === null}
           disabledReason={busy ?? 'Choose the dead first.'}

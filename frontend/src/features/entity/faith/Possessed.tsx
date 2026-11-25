@@ -32,6 +32,7 @@ export function PossessedSection({
   const [spirit, setSpirit] = useState<number | null>(null)
   const [stress, setStress] = useState(held?.stress ?? 0)
   const possess = useGodAction({
+    writes: [{ lever: 'soul:possess' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:possess', {
@@ -40,6 +41,7 @@ export function PossessedSection({
       ),
   })
   const edit = useGodAction<boolean>({
+    writes: [{ lever: 'soul:possession' }],
     run: (hold) =>
       unwrap(
         api.POST('/api/actions/soul:possession', {
@@ -54,6 +56,7 @@ export function PossessedSection({
       ),
   })
   const exorcise = useGodAction({
+    writes: [{ lever: 'soul:exorcise' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:exorcise', { body: { host_id: hostId } })
@@ -103,6 +106,7 @@ export function PossessedSection({
             tone='destructive'
           />
           <AdjustPanel
+            acts={[edit, exorcise]}
             trigger='Adjust the possession'
             title='The grip on this body'
             note='Set the stress the spirit lays on it, or drive the spirit out at once.'
@@ -120,6 +124,7 @@ export function PossessedSection({
             />
             <div className='flex min-w-0 flex-wrap items-center gap-2'>
               <Button
+                act={edit}
                 size='sm'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}
@@ -130,6 +135,7 @@ export function PossessedSection({
               </Button>
               {held.locked.length > 0 && (
                 <Button
+                  act={edit}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null}
@@ -141,6 +147,7 @@ export function PossessedSection({
                 </Button>
               )}
               <Button
+                act={exorcise}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -155,6 +162,7 @@ export function PossessedSection({
         </div>
       ) : (
         <AdjustPanel
+          acts={[possess]}
           trigger='Set a spirit upon it'
           title='Possess this body'
           note='The spirit lays its imprint over this body’s values until it is driven out.'
@@ -170,6 +178,7 @@ export function PossessedSection({
               />
             </div>
             <Button
+              act={possess}
               size='sm'
               disabled={busy !== null || spirit === null}
               disabledReason={

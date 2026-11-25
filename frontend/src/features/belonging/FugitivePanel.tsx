@@ -138,6 +138,7 @@ export function FugitivePanel({
         columns={2}
         action={
           <Button
+            act={fleeing}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

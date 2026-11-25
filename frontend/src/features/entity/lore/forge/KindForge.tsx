@@ -9,6 +9,7 @@ import { EmptyState, Paged, FieldTile } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import { AdjustBlock, ChoicePicker, NamedChip, ShiftChips } from '../LoreFields'
 import { busyOf, lookup } from '../model'
 import { kindKeys, useCustomKinds } from './kindApi'
@@ -110,6 +111,7 @@ function KindEditor({
   const [base, setBase] = useState(kind?.base ?? '')
   const [params, setParams] = useState<KindParams>(paramsOf(kind?.params))
   const save = useGodAction({
+    writes: [{ lever: 'kind:create' }, { lever: 'kind:edit' }],
     run: () =>
       kind
         ? unwrap(
@@ -171,6 +173,7 @@ function KindEditor({
         ))}
       </div>
       <Button
+        act={save}
         size='sm'
         className='self-start'
         disabled={busy !== null}
@@ -185,12 +188,16 @@ function KindEditor({
 }
 
 export function KindForge({ catalog }: { catalog: Catalog }) {
+  const formGate = {
+    blockedReason: useWriteRefusal([{ lever: 'kind:create' }]),
+  }
   const spec = KIND_CATALOG[catalog]
   const kinds = useCustomKinds(catalog)
   const { reason } = useGodGate()
   const blocked = reason()
   const [editing, setEditing] = useState<number | 'new' | null>(null)
   const remove = useGodAction<number>({
+    writes: [{ lever: 'kind:delete' }],
     run: (kindId) =>
       unwrap(
         api.POST('/api/actions/kind:delete', { body: { kind_id: kindId } })
@@ -237,6 +244,7 @@ export function KindForge({ catalog }: { catalog: Catalog }) {
                     <Pencil />
                   </Button>
                   <Button
+                    act={remove}
                     size='icon'
                     variant='ghost'
                     aria-label={`Unmake ${row.name}`}
@@ -268,6 +276,7 @@ export function KindForge({ catalog }: { catalog: Catalog }) {
           />
         ) : (
           <Button
+            act={formGate}
             size='sm'
             variant='outline'
             className='self-start'

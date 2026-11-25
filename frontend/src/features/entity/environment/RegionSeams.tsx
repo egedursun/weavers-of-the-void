@@ -38,6 +38,7 @@ export function SeamForge({
   const [richness, setRichness] = useState(String(DEFAULT_RICHNESS))
   const [hold, setHold] = useState(true)
   const seam = useGodAction({
+    writes: [{ lever: 'environment:mineral' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/environment:mineral', {
@@ -87,12 +88,14 @@ export function SeamForge({
         />
       </div>
       <SwitchField
+        permission='lock_canon'
         label='Hold against mining'
         checked={hold}
         disabled={busy !== null}
         onChange={setHold}
       />
       <Button
+        act={seam}
         size='sm'
         disabled={busy !== null || choice === ''}
         disabledReason={
@@ -118,6 +121,7 @@ export function BiomeMix({
   const [biome, setBiome] = useState('')
   const [share, setShare] = useState('0')
   const set = useGodAction({
+    writes: [{ lever: 'environment:biome' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/environment:biome', {
@@ -174,6 +178,7 @@ export function BiomeMix({
           />
         </div>
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null || biome === ''}
           disabledReason={

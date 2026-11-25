@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from aerona.constants.limits import EVENT_REPLAY_BUFFER_SIZE, EVENT_SUBSCRIBER_QUEUE_SIZE
+from aerona.events.audience import audience_for, reaches
 from aerona.events.kinds import EPOCH_TRACKING_KINDS, TRANSIENT_KINDS, EventKind
 
 
@@ -15,6 +16,7 @@ class Event:
     kind: EventKind
     payload: dict[str, Any]
     at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    audience: int | None = None
 
     def as_json(self) -> dict[str, Any]:
         return {"id": self.id, "kind": self.kind.value, "payload": self.payload, "at": self.at.isoformat()}
@@ -64,13 +66,13 @@ class EventBus:
     def last_id(self) -> int:
         return self._sequence
 
-    def publish(self, kind: EventKind, payload: dict[str, Any] | None = None) -> Event:
+    def publish(self, kind: EventKind, payload: dict[str, Any] | None = None, *, audience: int | None = None) -> Event:
         self._sequence += 1
         body = dict(payload or {})
         if body.get("epoch") is None and self._epoch is not None:
             body["epoch"] = self._epoch
         self.observe_epoch(kind, body)
-        published = Event(id=self._sequence, kind=kind, payload=body)
+        published = Event(id=self._sequence, kind=kind, payload=body, audience=audience_for(kind, audience))
         if kind not in TRANSIENT_KINDS:
             self._history.append(published)
         for queue in self._subscribers:
@@ -81,21 +83,21 @@ class EventBus:
             listener(published)
         return published
 
-    def replay_after(self, last_event_id: int) -> list[Event]:
-        return [item for item in self._history if item.id > last_event_id]
+    def replay_after(self, last_event_id: int, account_id: int | None = None) -> list[Event]:
+        return [item for item in self._history if item.id > last_event_id and reaches(item.audience, account_id)]
 
-    async def subscribe(self, last_event_id: int | None = None) -> AsyncIterator[Event]:
+    async def subscribe(self, last_event_id: int | None = None, account_id: int | None = None) -> AsyncIterator[Event]:
         queue: asyncio.Queue[Event] = asyncio.Queue(maxsize=EVENT_SUBSCRIBER_QUEUE_SIZE)
         self._subscribers.add(queue)
         try:
             delivered = last_event_id or 0
             if last_event_id is not None:
-                for missed in self.replay_after(last_event_id):
+                for missed in self.replay_after(last_event_id, account_id):
                     delivered = missed.id
                     yield missed
             while True:
                 item = await queue.get()
-                if item.id > delivered:
+                if item.id > delivered and reaches(item.audience, account_id):
                     delivered = item.id
                     yield item
         finally:

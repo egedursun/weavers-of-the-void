@@ -381,6 +381,7 @@ export function MishapPanel({
         columns={2}
         action={
           <Button
+            act={sending}
             size='sm'
             disabled={sendBusy !== null}
             disabledReason={sendBusy ?? undefined}
@@ -422,6 +423,7 @@ export function MishapPanel({
         columns={2}
         action={
           <Button
+            act={believing}
             size='sm'
             disabled={beliefBusy !== null}
             disabledReason={beliefBusy ?? undefined}
@@ -486,6 +488,7 @@ export function MishapPanel({
         columns={2}
         action={
           <Button
+            act={charming}
             size='sm'
             disabled={charmBusy !== null}
             disabledReason={charmBusy ?? undefined}

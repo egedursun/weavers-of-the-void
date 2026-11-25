@@ -758,7 +758,7 @@ const LEDGER: Schemas['LedgerPage'] = {
   epochs: [],
   entries: [
     {
-      entry: { id: 900, epoch: 11, actor_kind: 'son', actor_node_id: 7, actor_name: 'Thalassir', tool: 'create_structure', action_kind: 'create_entity', input_summary: 'A lighthouse temple above Oskar', undone: false, undone_at: null, applied: [], conflicts: [], created_at: NOW },
+      entry: { id: 900, epoch: 11, actor_kind: 'son', actor_node_id: 7, actor_name: 'Thalassir', tool: 'create_structure', action_kind: 'create_entity', input_summary: 'A lighthouse temple above Oskar', undone: false, undone_at: null, applied: [], conflicts: [], created_at: NOW, reason: null, author: null, undone_by: null },
       label: 'Raised a structure',
       change_count: 3,
       rows: [],

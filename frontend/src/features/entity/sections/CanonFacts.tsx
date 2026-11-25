@@ -89,6 +89,7 @@ export function CanonFacts({ ctx, readOnlyReason }: CanonFactsProps) {
   const [objectText, setObjectText] = useState('')
   const [removing, setRemoving] = useState<FactView | null>(null)
   const add = useLoreMutation({
+    writes: [{ lever: 'fact:add' }],
     run: () =>
       unwrap(
         api.POST('/api/facts', {
@@ -108,6 +109,7 @@ export function CanonFacts({ ctx, readOnlyReason }: CanonFactsProps) {
     },
   })
   const remove = useLoreMutation({
+    writes: [{ lever: 'fact:remove' }],
     run: (factId: number) =>
       unwrap(
         api.DELETE('/api/facts/{fact_id}', {
@@ -159,7 +161,7 @@ export function CanonFacts({ ctx, readOnlyReason }: CanonFactsProps) {
       )}
       <Collapsible className='flex min-w-0 flex-col gap-3'>
         <CollapsibleTrigger asChild>
-          <Button variant='outline' className='self-start'>
+          <Button act={add} variant='outline' className='self-start'>
             <Plus />
             Add fact
           </Button>
@@ -215,6 +217,7 @@ export function CanonFacts({ ctx, readOnlyReason }: CanonFactsProps) {
             )}
           </FormRow>
           <Button
+            act={add}
             className='self-start'
             disabled={addReason !== null}
             disabledReason={addReason ?? undefined}
@@ -226,6 +229,7 @@ export function CanonFacts({ ctx, readOnlyReason }: CanonFactsProps) {
         </CollapsibleContent>
       </Collapsible>
       <ConfirmDialog
+        act={remove}
         open={removing !== null}
         onOpenChange={(open) => !open && setRemoving(null)}
         title='Retire this fact?'

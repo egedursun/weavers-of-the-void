@@ -136,6 +136,7 @@ export function MeansSection({
           </Tabs>
         )}
         <StepButton
+          act={running}
           icon={MEANS_ICON}
           label='Read the means of craft now'
           busy={why(blocked, running.isPending)}

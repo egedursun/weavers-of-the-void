@@ -58,6 +58,7 @@ import { MindPicker, NodePicker } from '@/features/entity/mind/parts'
 import { useWorldState } from '@/features/pantheon/api'
 import { useGodGate, useRuleLookup } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { type WriteTarget } from '@/features/team/writeGate'
 import {
   ABILITIES,
   LAND,
@@ -235,6 +236,7 @@ function MeasureField({
 
 function ShapeDialog({
   run: send,
+  writes,
   icon: Icon,
   trigger,
   title,
@@ -246,6 +248,7 @@ function ShapeDialog({
   children,
 }: {
   run: () => Promise<unknown>
+  writes: readonly WriteTarget[]
   icon: LucideIcon
   trigger: string
   title: string
@@ -259,6 +262,7 @@ function ShapeDialog({
   const [open, setOpen] = useState(false)
   const { reason } = useGodGate()
   const run = useGodAction({
+    writes,
     run: send,
     onDone: () => {
       setOpen(false)
@@ -270,7 +274,7 @@ function ShapeDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant='outline' size='sm'>
+        <Button act={run} variant='outline' size='sm'>
           <Icon />
           {trigger}
         </Button>
@@ -293,6 +297,7 @@ function ShapeDialog({
             {gate ?? missing ?? summary}
           </Muted>
           <Button
+            act={run}
             disabled={held !== null || missing !== null}
             disabledReason={held ?? missing ?? undefined}
             onClick={() => run.mutate(undefined)}
@@ -383,6 +388,7 @@ export function ShapeMortalDialog() {
   const roles = valueTable(mortalRoleValues)
   return (
     <ShapeDialog
+      writes={[{ lever: 'mortal:shape' }]}
       icon={UserPlus}
       trigger='Shape a mortal'
       title='Shape a mortal'
@@ -520,6 +526,7 @@ export function ShapeSonDialog() {
   }
   return (
     <ShapeDialog
+      writes={[{ lever: 'summon_son' }]}
       gate={reason({ cost, world: true, llm: true })}
       icon={Crown}
       trigger='Summon a son as you shape them'
@@ -697,6 +704,7 @@ export function RaiseRegionDialog() {
   const land = useMeasures(LAND)
   return (
     <ShapeDialog
+      writes={[{ lever: 'region:shape' }]}
       icon={Mountain}
       trigger='Raise a region'
       title='Raise a region'
@@ -781,6 +789,7 @@ export function FoundSettlementDialog() {
   const settlers = useMeasures([SETTLERS])
   return (
     <ShapeDialog
+      writes={[{ lever: 'people:village' }]}
       icon={Landmark}
       trigger='Found a settlement'
       title='Found a settlement'
@@ -892,6 +901,7 @@ export function ShapeRecordDialog({ kind }: { kind: RecordKind }) {
         : null
   return (
     <ShapeDialog
+      writes={[{ lever: 'record:shape' }]}
       icon={spec.icon}
       trigger={spec.trigger}
       title={spec.trigger}
@@ -1007,6 +1017,7 @@ export function SummonOuterBeingDialog() {
   const choice = useWorldChoice(true)
   return (
     <ShapeDialog
+      writes={[{ lever: 'horror:outer_being' }]}
       icon={Skull}
       trigger='Summon an outer being'
       title='Summon an outer being'

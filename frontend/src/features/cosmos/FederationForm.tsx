@@ -31,6 +31,7 @@ export function FederationForm({ index }: { index: CosmosIndex }) {
         : [...current, id]
     )
   const found = useCosmicAction({
+    writes: [{ lever: 'federation' }],
     run: () =>
       unwrap(
         api.POST('/api/federations', {
@@ -102,6 +103,7 @@ export function FederationForm({ index }: { index: CosmosIndex }) {
       </FormRow>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={found}
           actionId='federation'
           label='Found the federation'
           icon={Handshake}

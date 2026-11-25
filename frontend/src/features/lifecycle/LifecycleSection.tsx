@@ -187,6 +187,7 @@ export function LifecycleSection({
               </Chip>
             )}
             <RecordEditor
+              act={editing}
               title='Set its life'
               note='Every value you set is held against the engine and against the sons until you release it.'
               fields={FIELDS}
@@ -199,18 +200,21 @@ export function LifecycleSection({
             />
             <div className='flex min-w-0 flex-wrap gap-2'>
               <StepButton
+                act={resetting}
                 icon={RotateCcw}
                 label='Read its life again from the world'
                 busy={why(blocked, resetting.isPending)}
                 onClick={() => resetting.mutate()}
               />
               <StepButton
+                act={destroying}
                 icon={Skull}
                 label={`Destroy for good (${data?.destroy_cost ?? 0} essence)`}
                 busy={why(destroyBlocked, destroying.isPending)}
                 onClick={() => destroying.mutate()}
               />
               <StepButton
+                act={running}
                 icon={LIFE_ICON}
                 label='Read every life now'
                 busy={why(readOnlyReason, running.isPending)}

@@ -133,6 +133,7 @@ function ImagePrompts({ state }: { state: WorldState }) {
       </ul>
       <div className='flex-1' />
       <Button
+        act={write}
         variant='outline'
         className='w-full'
         disabled={
@@ -217,6 +218,7 @@ function CheatEssence({ state }: { state: WorldState }) {
                   className='w-36'
                 />
                 <Button
+                  act={cheat}
                   disabled={invalid || blocked !== null}
                   disabledReason={
                     blocked ?? 'Enter a whole number within the limit'
@@ -236,6 +238,7 @@ function CheatEssence({ state }: { state: WorldState }) {
         {QUICK_AMOUNTS.filter((count) => cap === null || count <= cap).map(
           (count) => (
             <Button
+              act={cheat}
               key={count}
               size='sm'
               variant='outline'

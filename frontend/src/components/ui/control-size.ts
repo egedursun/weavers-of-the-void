@@ -8,6 +8,12 @@ export const controlHeight: Record<ControlSize, string> = {
   lg: 'h-control-lg',
 }
 
+export const controlMinHeight: Record<ControlSize, string> = {
+  sm: 'min-h-control-sm',
+  default: 'min-h-control-md',
+  lg: 'min-h-control-lg',
+}
+
 export const controlSquare: Record<ControlSize, string> = {
   sm: 'size-control-sm',
   default: 'size-control-md',

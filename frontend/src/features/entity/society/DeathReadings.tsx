@@ -38,6 +38,10 @@ function ReadingRow({
 }) {
   const [hold, setHold] = useState(row?.held ?? true)
   const set = useGodAction({
+    writes: [
+      { lever: 'death_reading:create' },
+      { lever: 'death_reading:edit' },
+    ],
     run: (reading: Reading) =>
       unwrap(
         row
@@ -51,6 +55,7 @@ function ReadingRow({
     success: 'Their reading of that death is set',
   })
   const reset = useGodAction({
+    writes: [{ lever: 'death_reading:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/death_reading:delete', {
@@ -81,6 +86,7 @@ function ReadingRow({
         </div>
       </div>
       <IconPicker
+        act={set}
         label={`How they read ${death.label.toLowerCase()}`}
         value={row?.reading ?? ''}
         table={READING_TABLE}
@@ -93,6 +99,7 @@ function ReadingRow({
         className='items-center'
       >
         <Switch
+          permission='lock_canon'
           id={`reading-hold-${peopleId}-${cause}`}
           checked={hold}
           disabled={busy !== null}
@@ -102,6 +109,7 @@ function ReadingRow({
         {hold ? <Lock aria-hidden='true' /> : <Unlock aria-hidden='true' />}
       </FieldTile>
       <Button
+        act={reset}
         size='sm'
         variant='outline'
         disabled={busy !== null || !row}

@@ -1,4 +1,10 @@
 import { useCallback, useState } from 'react'
+import {
+  type ViewerStorageKey,
+  storeItem,
+  storedItem,
+  viewerKey,
+} from '@/lib/universeStorage'
 
 export type CosmosViewMode = '3d' | '2d'
 export type CosmosQuality = 'low' | 'medium' | 'high'
@@ -15,26 +21,18 @@ export const QUALITY_LABEL: Record<CosmosQuality, string> = {
   high: 'High',
 }
 
-const VIEW_KEY = 'aerona.cosmos.view'
-const QUALITY_KEY = 'aerona.cosmos.quality'
+const VIEW_KEY: ViewerStorageKey = 'aerona.cosmos.view'
+const QUALITY_KEY: ViewerStorageKey = 'aerona.cosmos.quality'
 const DEFAULT_VIEW: CosmosViewMode = '3d'
 const DEFAULT_QUALITY: CosmosQuality = 'medium'
 const SOFTWARE_QUALITY: CosmosQuality = 'low'
 
-function read(key: string): string | null {
-  try {
-    return window.localStorage.getItem(key)
-  } catch {
-    return null
-  }
+function read(key: ViewerStorageKey): string | null {
+  return storedItem(viewerKey(key))
 }
 
-function write(key: string, value: string): void {
-  try {
-    window.localStorage.setItem(key, value)
-  } catch {
-    return
-  }
+function write(key: ViewerStorageKey, value: string): void {
+  storeItem(viewerKey(key), value)
 }
 
 const SOFTWARE_RENDERER = /swiftshader|llvmpipe|softpipe|software|basic render/i

@@ -13,6 +13,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -174,11 +175,13 @@ function CausePicker({
   value,
   onChange,
   exclude,
+  act,
 }: {
   incidents: Incident[]
   value: number | null
   onChange: (value: number | null) => void
   exclude?: number
+  act?: ActProp
 }) {
   const options = useMemo(
     () =>
@@ -195,6 +198,7 @@ function CausePicker({
   return (
     <FieldTile id={id} label='Caused by'>
       <RecordCombobox
+        act={act}
         id={id}
         options={options}
         value={value === null ? null : String(value)}
@@ -232,6 +236,7 @@ export function IncidentForge({
     { node_id: nodeId, role: 'subject', name: 'This record' },
   ])
   const create = useGodAction({
+    writes: [{ lever: 'incident:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident:create', {
@@ -356,6 +361,7 @@ export function IncidentForge({
         blocked={busy ?? null}
       />
       <Button
+        act={create}
         className='self-start'
         disabled={reason !== undefined}
         disabledReason={reason}
@@ -385,6 +391,7 @@ export function IncidentControls({
   )
   const [confirming, setConfirming] = useState(false)
   const edit = useGodAction({
+    writes: [{ lever: 'incident:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident:edit', {
@@ -402,6 +409,7 @@ export function IncidentControls({
     onDone: () => setMode(null),
   })
   const roles = useGodAction({
+    writes: [{ lever: 'incident:roles' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident:roles', {
@@ -418,6 +426,10 @@ export function IncidentControls({
     onDone: () => setMode(null),
   })
   const link = useGodAction({
+    writes: [
+      { lever: 'incident:link_cause' },
+      { lever: 'incident:unlink_cause' },
+    ],
     run: (cause: number | null) =>
       cause === null
         ? unwrap(
@@ -432,6 +444,7 @@ export function IncidentControls({
           ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'incident:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident:delete', {
@@ -467,6 +480,7 @@ export function IncidentControls({
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-1'>
         <Button
+          act={edit}
           size='sm'
           variant='ghost'
           disabled={busy !== undefined}
@@ -477,6 +491,7 @@ export function IncidentControls({
           Rewrite
         </Button>
         <Button
+          act={roles}
           size='sm'
           variant='ghost'
           disabled={busy !== undefined}
@@ -487,6 +502,7 @@ export function IncidentControls({
           Roles
         </Button>
         <Button
+          act={link}
           size='sm'
           variant='ghost'
           disabled={busy !== undefined}
@@ -498,6 +514,7 @@ export function IncidentControls({
         </Button>
         {incident.cause_incident_id !== null ? (
           <Button
+            act={link}
             size='sm'
             variant='ghost'
             disabled={busy !== undefined}
@@ -509,6 +526,7 @@ export function IncidentControls({
           </Button>
         ) : null}
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== undefined}
@@ -522,6 +540,7 @@ export function IncidentControls({
       {mode === 'cause' && (
         <div className='flex min-w-0 flex-col gap-2 rounded-md p-2 sealed-well'>
           <CausePicker
+            act={link}
             incidents={incidents}
             value={incident.cause_incident_id}
             exclude={incident.id}
@@ -553,6 +572,7 @@ export function IncidentControls({
             onChange={setMagnitude}
           />
           <Button
+            act={edit}
             size='sm'
             className='self-start'
             disabled={busy !== undefined}
@@ -571,6 +591,7 @@ export function IncidentControls({
             blocked={busy ?? null}
           />
           <Button
+            act={roles}
             size='sm'
             className='self-start'
             disabled={busy !== undefined}
@@ -582,6 +603,7 @@ export function IncidentControls({
         </div>
       )}
       <ConfirmDialog
+        act={remove}
         open={confirming}
         onOpenChange={setConfirming}
         title='Strike this incident from history?'

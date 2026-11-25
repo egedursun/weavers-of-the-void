@@ -356,6 +356,7 @@ export function TheoryPanel({
               <Paged items={card.adherents}>
                 {(row) => (
                   <RowEditor
+                    act={adhere}
                     key={row.holder.id}
                     label={row.holder.name}
                     icon={Users}
@@ -373,6 +374,7 @@ export function TheoryPanel({
                   >
                     <label className='flex h-control-md shrink-0 items-center gap-1.5'>
                       <Switch
+                        act={adhere}
                         checked={row.orthodox}
                         disabled={busy !== null}
                         aria-label='Ruling account'
@@ -403,6 +405,7 @@ export function TheoryPanel({
               placeholder='Win over…'
             />
             <Button
+              act={adhere}
               size='sm'
               variant='outline'
               disabled={busy !== null || holder === null}
@@ -436,6 +439,7 @@ export function TheoryPanel({
               onPick={setKind}
             />
             <Button
+              act={anomaly}
               size='sm'
               variant='outline'
               className='self-start'
@@ -458,6 +462,7 @@ export function TheoryPanel({
               placeholder='Choose a people'
             />
             <Button
+              act={reveal}
               size='sm'
               className='self-start'
               disabled={busy !== null || hearer === null}

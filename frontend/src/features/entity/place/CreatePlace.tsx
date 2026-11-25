@@ -38,6 +38,7 @@ export function CreatePlace({ regionId }: { regionId: number }) {
       <div className='@container/place flex min-w-0 flex-col gap-3'>
         <Tile spec={spec} caption={spec.hint} />
         <AdjustPanel
+          acts={[create]}
           title='A new place'
           note='Every new place is written into the ledger and can be undone.'
           label='Create'
@@ -100,6 +101,7 @@ export function CreatePlace({ regionId }: { regionId: number }) {
           </Muted>
           <div>
             <Button
+              act={create}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}

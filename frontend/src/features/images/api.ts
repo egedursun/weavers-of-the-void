@@ -1,6 +1,5 @@
 import {
   keepPreviousData,
-  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
@@ -8,8 +7,10 @@ import { toast } from 'sonner'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { fetchHealth } from '@/api/system'
+import { type WriteTarget } from '@/features/team/writeGate'
 
 export type ImageRecord = components['schemas']['ImageRecord']
 export type ImageListView = components['schemas']['ImageListView']
@@ -146,11 +147,13 @@ export function writeMissingPrompts() {
 }
 
 export function useImageAction<T>(
+  writes: readonly WriteTarget[],
   run: (imageId: number) => Promise<T>,
   message: string
 ) {
   const queryClient = useQueryClient()
   return useMutation({
+    writes,
     mutationFn: run,
     onSuccess: () => {
       toast.success(message)

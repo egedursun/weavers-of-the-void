@@ -176,6 +176,7 @@ function StackEditor({
   const [formation, setFormation] = useState<string>(stack.formation)
   const [moraleState, setMoraleState] = useState<string>(stack.morale_state)
   const release = useGodAction({
+    writes: [{ lever: 'army:edit_stack' }],
     run: (key: string) =>
       unwrap(
         api.POST('/api/actions/army:edit_stack', {
@@ -184,6 +185,7 @@ function StackEditor({
       ),
   })
   const save = useGodAction({
+    writes: [{ lever: 'army:edit_stack' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/army:edit_stack', {
@@ -210,6 +212,7 @@ function StackEditor({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'army:remove_stack' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/army:remove_stack', {
@@ -225,6 +228,7 @@ function StackEditor({
   )
   return (
     <Adjust
+      acts={[release, save, remove]}
       title={`Shape the ${stack.label.toLowerCase()}`}
       note='Set numbers, morale, order and gear. Every value you set is held against battles and marches until you release it.'
     >
@@ -293,6 +297,7 @@ function StackEditor({
           >
             {(key) => (
               <Button
+                act={release}
                 key={key}
                 size='sm'
                 variant='outline'
@@ -313,6 +318,7 @@ function StackEditor({
       )}
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -322,6 +328,7 @@ function StackEditor({
           Save the stack
         </Button>
         <Button
+          act={remove}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -513,6 +520,7 @@ function AddStack({
   const [kind, setKind] = useState<string>('line_infantry')
   const [count, setCount] = useState('100')
   const add = useGodAction({
+    writes: [{ lever: 'army:add_stack' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/army:add_stack', {
@@ -564,6 +572,7 @@ function AddStack({
       </FieldGrid>
       <div>
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -598,6 +607,7 @@ function ArmyOrders({
       ) as Record<ProfileNumber, string>
   )
   const save = useGodAction({
+    writes: [{ lever: 'army:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/army:edit', {
@@ -623,6 +633,7 @@ function ArmyOrders({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'army:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/army:edit', {
@@ -633,6 +644,7 @@ function ArmyOrders({
   const busy = busyOf(blocked, save.isPending, release.isPending)
   return (
     <Adjust
+      acts={[save, release]}
       label='Command the army'
       title='Orders and stores'
       note='Orders you give are held: the army keeps them until you let it decide again. Every change goes into the ledger.'
@@ -684,6 +696,7 @@ function ArmyOrders({
         </FieldGrid>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -694,6 +707,7 @@ function ArmyOrders({
           </Button>
           {army.locked.length > 0 && (
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}

@@ -45,6 +45,7 @@ export function RelationEditor({
   const [value, setValue] = useState('0')
   const { reason } = useGodGate()
   const set = useGodAction({
+    writes: [{ lever: 'son:relation' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/son:relation', {
@@ -97,6 +98,7 @@ export function RelationEditor({
             onChange={(event) => setValue(event.target.value)}
           />
           <ActionButton
+            act={set}
             label='Set'
             blocked={
               reason() ??
@@ -137,6 +139,7 @@ export function AddressSibling({
   const [text, setText] = useState('')
   const { reason } = useGodGate()
   const speak = useGodAction({
+    writes: [{ lever: 'son:address_sibling' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/son:address_sibling', {
@@ -200,6 +203,7 @@ export function AddressSibling({
           />
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <ActionButton
+              act={speak}
               label='Speak'
               icon={MessageSquare}
               blocked={

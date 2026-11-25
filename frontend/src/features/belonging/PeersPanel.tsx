@@ -252,6 +252,7 @@ export function PeersPanel({
         columns={2}
         action={
           <Button
+            act={gathering}
             size='sm'
             disabled={gatherBusy !== null}
             disabledReason={gatherBusy ?? undefined}
@@ -287,6 +288,7 @@ export function PeersPanel({
         columns={2}
         action={
           <Button
+            act={joining}
             size='sm'
             disabled={joinBusy !== null}
             disabledReason={joinBusy ?? undefined}

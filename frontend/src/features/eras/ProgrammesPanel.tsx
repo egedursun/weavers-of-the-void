@@ -181,6 +181,7 @@ export function ProgrammesPanel({
         columns={2}
         action={
           <Button
+            act={beginning}
             size='sm'
             disabled={beginBusy !== null}
             disabledReason={beginBusy ?? undefined}

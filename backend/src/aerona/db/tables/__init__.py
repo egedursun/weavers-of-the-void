@@ -772,6 +772,7 @@ from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyPro
 from aerona.db.tables.storyteller import StorytellerRow, TensionRecordRow
 from aerona.db.tables.storyteller_depth import RegionalTensionRow, SubsystemTensionRow
 from aerona.db.tables.structures import ConstructionRow, StructureDesignRow, StructureProfileRow, StructureStaffRow
+from aerona.db.tables.team import CanonProposalRow, NotificationPreferenceRow, NotificationReadRow, QueuedActRow
 from aerona.db.tables.technology import TechnologyProfileRow
 from aerona.db.tables.tellings import IncidentNameRow, RumourDistortionRow
 from aerona.db.tables.thin_sections import ConstitutionRow, JourneyEncounterRow, RelationComponentRow
@@ -876,6 +877,7 @@ __all__ = [
     "CampRow",
     "CampaignFrontRow",
     "CanonFactRow",
+    "CanonProposalRow",
     "CanonWorkRow",
     "CaptiveCohortRow",
     "CaptiveRestraintRow",
@@ -1397,6 +1399,8 @@ __all__ = [
     "NodeRow",
     "NormChangeRow",
     "NotableYearRow",
+    "NotificationPreferenceRow",
+    "NotificationReadRow",
     "NotificationRow",
     "NoveltyStockRow",
     "NumberSystemRow",
@@ -1515,6 +1519,7 @@ __all__ = [
     "PurityRow",
     "PuttingOutRow",
     "QuarantineRow",
+    "QueuedActRow",
     "QuirkRow",
     "RacketRow",
     "RankKindRow",

@@ -57,8 +57,8 @@ def test_a_mention_is_rewritten_in_place_and_read_back(tmp_path: Path) -> None:
     assert "badge/version-0.2.0--beta.1-d4af37?style" in readme.read_text(encoding="utf-8")
     assert badge.read() == "0.2.0-beta.1"
     notes = tmp_path / "notes.md"
-    notes.write_text("  * Sürüm 0.1.0, çekirdek ürünü.\n", encoding="utf-8")
+    notes.write_text("  * S\u00fcr\u00fcm 0.1.0, the edition.\n", encoding="utf-8")
     told = version.Mention(notes, version.MENTIONS[1].pattern)
     told.write("1.0.0")
-    assert re.search(r"Sürüm 1\.0\.0, ", notes.read_text(encoding="utf-8"))
+    assert re.search("S\u00fcr\u00fcm 1\\.0\\.0, ", notes.read_text(encoding="utf-8"))
     assert told.read() == "1.0.0"

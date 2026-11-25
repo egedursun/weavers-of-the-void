@@ -78,6 +78,7 @@ function VariantRow({
   const [learning, setLearning] = useState(String(variant.learning_pct))
   const spec = FAMILIES[variant.family]
   const save = useGodAction({
+    writes: [{ lever: 'variant:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/variant:edit', {
@@ -92,6 +93,7 @@ function VariantRow({
     invalidate: [VARIANTS_KEY],
   })
   const unmake = useGodAction({
+    writes: [{ lever: 'variant:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/variant:delete', {
@@ -101,6 +103,7 @@ function VariantRow({
     invalidate: [VARIANTS_KEY],
   })
   const release = useGodAction({
+    writes: [{ lever: 'variant:release' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/variant:release', {
@@ -147,6 +150,7 @@ function VariantRow({
       )}
       {variant.held.map((field) => (
         <Button
+          act={release}
           key={field}
           size='sm'
           variant='outline'
@@ -160,6 +164,7 @@ function VariantRow({
         </Button>
       ))}
       <Button
+        act={save}
         size='sm'
         variant='outline'
         disabled={reason !== null}
@@ -169,6 +174,7 @@ function VariantRow({
         Keep
       </Button>
       <Button
+        act={unmake}
         size='icon'
         variant='ghost'
         aria-label={`Unmake ${variant.name}`}
@@ -190,6 +196,7 @@ export function VariantForge() {
   const [name, setName] = useState('')
   const [strength, setStrength] = useState('120')
   const create = useGodAction({
+    writes: [{ lever: 'variant:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/variant:create', {
@@ -271,6 +278,7 @@ export function VariantForge() {
       </div>
       <div className='flex justify-end'>
         <Button
+          act={create}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

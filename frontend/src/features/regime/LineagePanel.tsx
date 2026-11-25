@@ -120,6 +120,7 @@ function SegmentForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -308,6 +309,7 @@ function BreedingForge({
       columns={4}
       action={
         <Button
+          act={creating}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

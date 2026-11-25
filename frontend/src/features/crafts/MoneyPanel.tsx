@@ -386,6 +386,7 @@ export function MoneyPanel({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={insuring}
               size='sm'
               variant='outline'
               disabled={insurerBusy !== null}
@@ -396,6 +397,7 @@ export function MoneyPanel({
               Make it an insurer
             </Button>
             <Button
+              act={writing}
               size='sm'
               disabled={policyBusy !== null}
               disabledReason={policyBusy ?? undefined}
@@ -431,6 +433,7 @@ export function MoneyPanel({
         columns={2}
         action={
           <Button
+            act={holding}
             size='sm'
             disabled={rightBusy !== null}
             disabledReason={rightBusy ?? undefined}

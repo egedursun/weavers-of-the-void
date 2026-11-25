@@ -12,6 +12,7 @@ from aerona.constants.schema import (
     NAME_MAX_LENGTH,
     TITLE_MAX_LENGTH,
 )
+from aerona.db.authorship import HandAuthored
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, enum_type
 from aerona.db.types import PydanticJSON
@@ -36,7 +37,7 @@ def lexeme_key(word: str) -> str:
     return " ".join(word.casefold().split())
 
 
-class ChronicleRow(CreatedAtMixin, Base):
+class ChronicleRow(HandAuthored, CreatedAtMixin, Base):
     __tablename__ = "chronicle"
     __table_args__ = (
         at_least("epoch", 1),

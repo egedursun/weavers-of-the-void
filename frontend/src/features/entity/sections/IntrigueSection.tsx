@@ -121,6 +121,7 @@ function SecretRow({
   own: boolean
 }) {
   const reveal = useGodAction({
+    writes: [{ lever: 'secret:expose' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/secret:expose', {
@@ -129,6 +130,7 @@ function SecretRow({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'secret:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/secret:delete', {
@@ -137,6 +139,7 @@ function SecretRow({
       ),
   })
   const freeze = useGodAction({
+    writes: [{ lever: 'secret:hold' }],
     run: (hold: boolean) =>
       unwrap(
         api.POST('/api/actions/secret:hold', {
@@ -191,6 +194,7 @@ function SecretRow({
         <>
           {!out && (
             <Button
+              act={reveal}
               size='icon-sm'
               variant='ghost'
               aria-label={`Expose ${secret.label.toLowerCase()}`}
@@ -202,6 +206,7 @@ function SecretRow({
             </Button>
           )}
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label={`Strike ${secret.label.toLowerCase()}`}
@@ -252,6 +257,7 @@ function SecretRow({
           </Muted>
           <div className='flex justify-end'>
             <Button
+              act={freeze}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -271,6 +277,7 @@ function SecretsCard({ ctx }: { ctx: Ctx }) {
   const view = ctx.view
   const [kind, setKind] = useState('')
   const keep = useGodAction({
+    writes: [{ lever: 'secret:keep' }],
     run: (value: IntrigueSecret) =>
       unwrap(
         api.POST('/api/actions/secret:keep', {
@@ -322,6 +329,7 @@ function SecretsCard({ ctx }: { ctx: Ctx }) {
         title='Give it a secret'
         action={
           <Button
+            act={keep}
             size='sm'
             disabled={busy !== null || !kind}
             disabledReason={busy ?? (kind ? undefined : 'Choose a kind first.')}
@@ -347,6 +355,7 @@ function SecretsCard({ ctx }: { ctx: Ctx }) {
 function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
   const [demand, setDemand] = useState('')
   const use = useGodAction({
+    writes: [{ lever: 'hook:use' }],
     run: (value: HookDemand) =>
       unwrap(
         api.POST('/api/actions/hook:use', {
@@ -355,6 +364,7 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
       ),
   })
   const edit = useGodAction({
+    writes: [{ lever: 'hook:edit' }],
     run: (value: HookStrength) =>
       unwrap(
         api.POST('/api/actions/hook:edit', {
@@ -368,12 +378,14 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'hook:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/hook:delete', { body: { hook_id: hook.id } })
       ),
   })
   const recall = useGodAction({
+    writes: [{ lever: 'hook:edit' }],
     run: (value: HookDemand | null) =>
       unwrap(
         api.POST('/api/actions/hook:edit', {
@@ -410,6 +422,7 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
       badges={<Held held={hook.held} />}
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Break the hook'
@@ -424,6 +437,7 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
       editor={
         <div className='flex min-w-0 flex-col gap-3'>
           <MindPicker
+            act={edit}
             label='Strength'
             value={hook.strength}
             table={STRENGTHS}
@@ -432,6 +446,7 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
           />
           <div className='grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2'>
             <MindPicker
+              act={recall}
               label='Last demand'
               value={hook.last_demand ?? ''}
               table={demands}
@@ -439,6 +454,7 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
               onPick={(value) => recall.mutate(value as HookDemand)}
             />
             <Button
+              act={recall}
               size='sm'
               variant='outline'
               disabled={busy !== null || !hook.last_demand}
@@ -455,6 +471,7 @@ function HookRow({ hook, ctx, held }: { hook: Hook; ctx: Ctx; held: boolean }) {
               title='Press it'
               action={
                 <Button
+                  act={use}
                   size='sm'
                   disabled={busy !== null || !demand}
                   disabledReason={
@@ -487,6 +504,7 @@ function HooksCard({ ctx }: { ctx: Ctx }) {
   const [strength, setStrength] = useState('weak')
   const [source, setSource] = useState('secret')
   const grant = useGodAction({
+    writes: [{ lever: 'hook:grant' }],
     run: (targetId: number) =>
       unwrap(
         api.POST('/api/actions/hook:grant', {
@@ -533,6 +551,7 @@ function HooksCard({ ctx }: { ctx: Ctx }) {
         title='Give it a hook'
         action={
           <Button
+            act={grant}
             size='sm'
             disabled={busy !== null || target === null}
             disabledReason={
@@ -581,6 +600,7 @@ function FavourRow({
   owed: boolean
 }) {
   const call = useGodAction({
+    writes: [{ lever: 'favour:call' }],
     run: (honour: boolean) =>
       unwrap(
         api.POST('/api/actions/favour:call', {
@@ -589,6 +609,7 @@ function FavourRow({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'favour:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/favour:delete', {
@@ -615,6 +636,7 @@ function FavourRow({
           {!called && (
             <>
               <Button
+                act={call}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -624,6 +646,7 @@ function FavourRow({
                 Honour
               </Button>
               <Button
+                act={call}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -635,6 +658,7 @@ function FavourRow({
             </>
           )}
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label='Forgive the favour'
@@ -687,6 +711,7 @@ function FavoursCard({ ctx }: { ctx: Ctx }) {
   const [creditor, setCreditor] = useState<number | null>(null)
   const [origin, setOrigin] = useState('gift')
   const owe = useGodAction({
+    writes: [{ lever: 'favour:owe' }],
     run: (creditorId: number) =>
       unwrap(
         api.POST('/api/actions/favour:owe', {
@@ -748,6 +773,7 @@ function FavoursCard({ ctx }: { ctx: Ctx }) {
         title='Put it in someone’s debt'
         action={
           <Button
+            act={owe}
             size='sm'
             disabled={busy !== null || creditor === null}
             disabledReason={
@@ -786,6 +812,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
   const [name, setName] = useState('')
   const [reason, setReason] = useState('exile')
   const assume = useGodAction({
+    writes: [{ lever: 'identity:assume' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/identity:assume', {
@@ -802,6 +829,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
     },
   })
   const rename = useGodAction({
+    writes: [{ lever: 'identity:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/identity:edit', {
@@ -818,6 +846,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
     },
   })
   const unmask = useGodAction({
+    writes: [{ lever: 'identity:unmask' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/identity:unmask', {
@@ -826,6 +855,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'identity:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/identity:delete', {
@@ -893,6 +923,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
             }
             actions={
               <Button
+                act={strike}
                 size='icon-sm'
                 variant='ghost'
                 aria-label='Strike the false name'
@@ -950,6 +981,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
             action={
               <div className='flex flex-wrap justify-end gap-2'>
                 <Button
+                  act={rename}
                   size='sm'
                   disabled={busy !== null || !name.trim()}
                   disabledReason={
@@ -961,6 +993,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
                 </Button>
                 {identity.exposed_epoch === null && (
                   <Button
+                    act={unmask}
                     size='sm'
                     variant='outline'
                     disabled={busy !== null}
@@ -983,6 +1016,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
             title='Give them a false name'
             action={
               <Button
+                act={assume}
                 size='sm'
                 disabled={busy !== null || !name.trim()}
                 disabledReason={
@@ -1012,6 +1046,7 @@ function IdentityCard({ ctx }: { ctx: Ctx }) {
 
 function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
   const phase = useGodAction({
+    writes: [{ lever: 'scheme:edit' }],
     run: (value: SchemePhase) =>
       unwrap(
         api.POST('/api/actions/scheme:edit', {
@@ -1020,6 +1055,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
       ),
   })
   const crew = useGodAction({
+    writes: [{ lever: 'scheme:edit' }],
     run: (body: { agents?: number[]; discovered_by?: number[] }) =>
       unwrap(
         api.POST('/api/actions/scheme:edit', {
@@ -1028,6 +1064,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
       ),
   })
   const freeze = useGodAction({
+    writes: [{ lever: 'scheme:hold' }],
     run: (hold: boolean) =>
       unwrap(
         api.POST('/api/actions/scheme:hold', {
@@ -1036,6 +1073,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'scheme:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/scheme:delete', {
@@ -1080,6 +1118,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
       badges={<Held held={frozen} />}
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Erase the ${scheme.label.toLowerCase()}`}
@@ -1094,6 +1133,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
       editor={
         <div className='flex min-w-0 flex-col gap-3'>
           <MindPicker
+            act={phase}
             label='Phase'
             value={scheme.phase}
             table={table(ctx.view.scheme_phases)}
@@ -1134,6 +1174,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
             }
           />
           <NodeListEditor
+            act={crew}
             label='Agents'
             types={['mortal']}
             nodes={scheme.agents}
@@ -1141,6 +1182,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
             onChange={(ids) => crew.mutate({ agents: ids })}
           />
           <NodeListEditor
+            act={crew}
             label='Discovered by'
             types={['mortal', 'settlement', 'polity', 'people', 'faction']}
             nodes={scheme.discovered_by}
@@ -1149,6 +1191,7 @@ function SchemeRow({ scheme, ctx }: { scheme: Scheme; ctx: Ctx }) {
           />
           <div className='flex justify-end'>
             <Button
+              act={freeze}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -1178,6 +1221,7 @@ function SchemesCard({ ctx }: { ctx: Ctx }) {
   const [kind, setKind] = useState('')
   const [target, setTarget] = useState<number | null>(null)
   const begin = useGodAction({
+    writes: [{ lever: 'scheme:begin' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/scheme:begin', {
@@ -1228,6 +1272,7 @@ function SchemesCard({ ctx }: { ctx: Ctx }) {
           title='Set it plotting'
           action={
             <Button
+              act={begin}
               size='sm'
               disabled={busy !== null || !kind}
               disabledReason={
@@ -1268,6 +1313,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
   const [name, setName] = useState('')
   const [learner, setLearner] = useState<number | null>(null)
   const set = useGodAction({
+    writes: [{ lever: 'true_name:set' }],
     run: (value: string | null) =>
       unwrap(
         api.POST('/api/actions/true_name:set', {
@@ -1280,6 +1326,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
     },
   })
   const teach = useGodAction({
+    writes: [{ lever: 'true_name:teach' }],
     run: ({ id, forget }: { id: number; forget: boolean }) =>
       unwrap(
         api.POST('/api/actions/true_name:teach', {
@@ -1292,6 +1339,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
     },
   })
   const strike = useGodAction({
+    writes: [{ lever: 'true_name:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/true_name:delete', {
@@ -1321,6 +1369,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
             badges={<Held held={known.held.length > 0} />}
             actions={
               <Button
+                act={strike}
                 size='icon-sm'
                 variant='ghost'
                 aria-label='Strike the true name'
@@ -1347,6 +1396,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
                 </Text>
                 {node.id !== view.node_id && (
                   <Button
+                    act={teach}
                     size='sm'
                     variant='ghost'
                     disabled={busy !== null}
@@ -1363,6 +1413,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
             title='Reveal it'
             action={
               <Button
+                act={teach}
                 size='sm'
                 disabled={busy !== null || learner === null}
                 disabledReason={
@@ -1395,6 +1446,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
         action={
           <div className='flex flex-wrap justify-end gap-2'>
             <Button
+              act={set}
               size='sm'
               disabled={busy !== null || !name.trim()}
               disabledReason={
@@ -1407,6 +1459,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
             </Button>
             {known && (
               <Button
+                act={set}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -1456,6 +1509,7 @@ function TrueNameCard({ ctx }: { ctx: Ctx }) {
 
 function BeliefRow({ belief, ctx }: { belief: Belief; ctx: Ctx }) {
   const strike = useGodAction({
+    writes: [{ lever: 'belief:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/belief:delete', {
@@ -1487,6 +1541,7 @@ function BeliefRow({ belief, ctx }: { belief: Belief; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Wipe the belief'
@@ -1551,6 +1606,7 @@ function BeliefsCard({ ctx }: { ctx: Ctx }) {
   const [source, setSource] = useState('observation')
   const [value, setValue] = useState(50)
   const set = useGodAction({
+    writes: [{ lever: 'belief:set' }],
     run: (subjectId: number) =>
       unwrap(
         api.POST('/api/actions/belief:set', {
@@ -1592,6 +1648,7 @@ function BeliefsCard({ ctx }: { ctx: Ctx }) {
         title='Put a belief in its mind'
         action={
           <Button
+            act={set}
             size='sm'
             disabled={busy !== null || subject === null || !attribute}
             disabledReason={

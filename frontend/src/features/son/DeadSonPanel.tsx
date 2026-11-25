@@ -27,6 +27,7 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
   const deathCause = rite.data?.death_cause ?? son.death_cause
   const corpse = rite.data?.corpse ?? null
   const resurrect = useGodAction({
+    writes: [{ lever: 'resurrect:son' }],
     run: () =>
       unwrap(
         api.POST('/api/sons/{son_id}/resurrect', {
@@ -136,6 +137,7 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
       <SiblingSchemes son={son} />
       <div>
         <ActionButton
+          act={resurrect}
           label='Resurrect by your own hand'
           icon={Sunrise}
           variant='default'

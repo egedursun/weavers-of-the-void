@@ -113,6 +113,7 @@ function HoldButton({
   const table =
     action === 'deep_cell:hold' ? 'region_underground' : 'deep_passages'
   const hold = useGodAction({
+    writes: [{ lever: action }],
     run: () =>
       unwrap(
         api.POST(`/api/actions/${action}`, {
@@ -126,6 +127,7 @@ function HoldButton({
     (held ? `This ${noun} is already held` : hold.isPending ? 'Working…' : null)
   return (
     <Button
+      act={hold}
       size='sm'
       variant='outline'
       className='self-start'

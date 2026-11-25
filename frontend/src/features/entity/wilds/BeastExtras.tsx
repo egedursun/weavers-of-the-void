@@ -214,6 +214,7 @@ export function TreasureControls({ id, card, blocked }: Blocked) {
             placeholder='Choose an item…'
           />
           <Button
+            act={move}
             size='sm'
             variant='outline'
             className='self-start'
@@ -255,6 +256,7 @@ export function TreasureControls({ id, card, blocked }: Blocked) {
             placeholder='Who takes it…'
           />
           <Button
+            act={move}
             size='sm'
             variant='outline'
             className='self-start'
@@ -311,6 +313,7 @@ export function SlayControl({
           />
         </div>
         <Button
+          act={slay}
           size='sm'
           variant='destructive'
           disabled={busy !== null}

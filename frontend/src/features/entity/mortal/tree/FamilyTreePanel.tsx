@@ -173,6 +173,13 @@ function PersonDetail({
   const [bind, setBind] = useState<BindKind>('parent_of')
   const [other, setOther] = useState<number | null>(null)
   const action = useGodAction({
+    writes: [
+      { lever: 'kin:bond' },
+      { lever: 'kin:delete_marriage' },
+      { lever: 'kin:end_marriage' },
+      { lever: 'kin:marry' },
+      { lever: 'kin:unbond' },
+    ],
     run: ({ path, body }: { path: string; body: Record<string, unknown> }) => {
       const post = api.POST as unknown as (
         route: string,
@@ -324,6 +331,7 @@ function PersonDetail({
                       </Muted>
                       {union.end_epoch === null && (
                         <Button
+                          act={action}
                           size='sm'
                           variant='outline'
                           disabled={busy !== null}
@@ -342,6 +350,7 @@ function PersonDetail({
                         </Button>
                       )}
                       <Button
+                        act={action}
                         size='icon-sm'
                         variant='ghost'
                         aria-label='Strike this marriage from the record'
@@ -391,6 +400,7 @@ function PersonDetail({
                           : `since epoch ${tie.epoch}`}
                       </Muted>
                       <Button
+                        act={action}
                         size='icon-sm'
                         variant='ghost'
                         aria-label='Undo this bond'
@@ -434,6 +444,7 @@ function PersonDetail({
             />
             <div className='flex justify-end'>
               <Button
+                act={action}
                 size='sm'
                 disabled={
                   busy !== null || other === null || other === person.id

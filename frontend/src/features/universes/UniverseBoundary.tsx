@@ -13,6 +13,7 @@ import {
   useUniverseId,
   wasRefused,
 } from '@/api/universeStore'
+import { TeamProvider } from '@/features/team/TeamProvider'
 import { EnteringUniverse } from './EnteringUniverse'
 
 const REFUSAL_TOAST = 'universe-refused'
@@ -55,7 +56,7 @@ export function UniverseBoundary({
   return (
     <QueryClientProvider key={target} client={queryClientFor(target)}>
       <RealtimeProvider createSource={createSource}>
-        {children}
+        <TeamProvider>{children}</TeamProvider>
       </RealtimeProvider>
     </QueryClientProvider>
   )

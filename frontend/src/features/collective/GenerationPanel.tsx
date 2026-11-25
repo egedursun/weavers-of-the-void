@@ -144,6 +144,7 @@ function GenerationCard({
           onChange={setShift}
         />
         <Button
+          act={shaping}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -189,6 +190,7 @@ function GenerationForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -320,6 +322,7 @@ function DiasporaForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -560,6 +563,7 @@ function CommunityForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={transition}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -569,6 +573,7 @@ function CommunityForge({
             Set fertility
           </Button>
           <Button
+            act={ratio}
             size='sm'
             variant='outline'
             disabled={busy !== null}

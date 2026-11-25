@@ -2,6 +2,7 @@ import { serverEvent } from '@/test-utils/fixtures'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
+import { storedItem, viewerKey } from '@/lib/universeStorage'
 import { FeedCollector } from './FeedCollector'
 import { FeedSoundControls } from './FeedSoundControls'
 import { LiveFeedPanel } from './LiveFeedPanel'
@@ -307,7 +308,7 @@ describe('feed sound controls', () => {
     await toggle.click()
     await expect.element(toggle).toHaveAttribute('aria-pressed', 'true')
     expect(useFeedPreferences.getState().sounds).toBe(true)
-    expect(localStorage.getItem(FEED_PREFERENCES_KEY)).toContain(
+    expect(storedItem(viewerKey(FEED_PREFERENCES_KEY))).toContain(
       '"sounds":true'
     )
   })
@@ -319,7 +320,7 @@ describe('feed sound controls', () => {
     expect(useFeedPreferences.getState().ambient).toBe(true)
     await userEvent.click(toggle)
     expect(useFeedPreferences.getState().ambient).toBe(false)
-    expect(localStorage.getItem(FEED_PREFERENCES_KEY)).toContain(
+    expect(storedItem(viewerKey(FEED_PREFERENCES_KEY))).toContain(
       '"ambient":false'
     )
   })

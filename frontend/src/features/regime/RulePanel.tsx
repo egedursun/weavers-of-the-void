@@ -382,6 +382,7 @@ function RegimeForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -451,6 +452,7 @@ function EnrolForge({
       columns={2}
       action={
         <Button
+          act={enrolling}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

@@ -32,3 +32,34 @@ class ReadOnlyError(AeronaError):
 
 class UniverseRequiredError(ConflictError):
     pass
+
+
+class SignedOutError(AeronaError):
+    status_code = 401
+
+
+class PasswordChangeRequiredError(AeronaError):
+    status_code = 403
+
+
+class SetupRequiredError(ConflictError):
+    pass
+
+
+class ForbiddenError(AeronaError):
+    status_code = 403
+
+    def __init__(self, message: str, *, permission: str | None = None, role: str | None = None) -> None:
+        super().__init__(message)
+        self.permission = permission
+        self.role = role
+
+
+class LockedError(AeronaError):
+    status_code = 429
+
+
+class EditConflictError(ConflictError):
+    def __init__(self, message: str, changes: list[dict[str, object]]) -> None:
+        super().__init__(message)
+        self.changes = changes

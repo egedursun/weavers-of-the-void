@@ -46,6 +46,7 @@ function WorkRow({ job }: { job: LibraryJob }) {
               </a>
             </Button>
             <Button
+              act={stop}
               type='button'
               size='sm'
               variant='ghost'
@@ -82,6 +83,7 @@ function WorkRow({ job }: { job: LibraryJob }) {
           )}
         {settled && !(job.kind === 'export' && job.status === 'done') && (
           <Button
+            act={stop}
             type='button'
             size='sm'
             variant='ghost'
@@ -95,6 +97,7 @@ function WorkRow({ job }: { job: LibraryJob }) {
         )}
         {!settled && (
           <Button
+            act={stop}
             type='button'
             size='sm'
             variant='ghost'

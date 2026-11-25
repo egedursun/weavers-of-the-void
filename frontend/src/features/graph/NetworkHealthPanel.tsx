@@ -190,6 +190,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
       )}
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={repair}
           size='sm'
           variant='outline'
           disabled={repair.isPending}
@@ -206,6 +207,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
         </Button>
         {running ? (
           <Button
+            act={stop}
             size='sm'
             variant='destructive'
             disabled={stop.isPending}
@@ -224,6 +226,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
         ) : (
           <>
             <Button
+              act={fate}
               size='sm'
               disabled={fate.isPending}
               disabledReason='Fate is looking at the network…'
@@ -233,6 +236,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
               Let Fate propose links
             </Button>
             <Button
+              act={fate}
               size='sm'
               variant='outline'
               disabled={fate.isPending}
@@ -290,6 +294,7 @@ export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
         </ul>
       </div>
       <ConfirmDialog
+        act={fate}
         open={confirmFull}
         onOpenChange={setConfirmFull}
         title='Repair the whole network?'

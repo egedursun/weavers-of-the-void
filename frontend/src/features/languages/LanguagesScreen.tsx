@@ -150,6 +150,7 @@ export function LanguagesScreen() {
               </Select>
             )}
             <Button
+              act={epochWords}
               variant='outline'
               size='sm'
               disabled={readOnlyReason !== null || epochWords.isPending}

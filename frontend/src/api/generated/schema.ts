@@ -31,6 +31,406 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/auth/state': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['auth_state_api_auth_state_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/setup': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['setup_api_auth_setup_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/sign-in': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['sign_in_api_auth_sign_in_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/sign-out': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['sign_out_api_auth_sign_out_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['change_password_api_auth_password_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/profile': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations['update_profile_api_auth_profile_patch']
+    trace?: never
+  }
+  '/api/auth/sessions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['sessions_api_auth_sessions_get']
+    put?: never
+    post?: never
+    delete: operations['end_other_sessions_api_auth_sessions_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/sessions/{session_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['end_session_api_auth_sessions__session_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/accounts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_accounts_api_accounts_get']
+    put?: never
+    post: operations['create_account_api_accounts_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/accounts/{account_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['delete_account_api_accounts__account_id__delete']
+    options?: never
+    head?: never
+    patch: operations['edit_account_api_accounts__account_id__patch']
+    trace?: never
+  }
+  '/api/accounts/{account_id}/reset-password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['reset_password_api_accounts__account_id__reset_password_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/accounts/{account_id}/ownership': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['transfer_ownership_api_accounts__account_id__ownership_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_workspaces_api_workspaces_get']
+    put?: never
+    post: operations['create_workspace_api_workspaces_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['delete_workspace_api_workspaces__workspace_id__delete']
+    options?: never
+    head?: never
+    patch: operations['rename_workspace_api_workspaces__workspace_id__patch']
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/leave': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['leave_workspace_api_workspaces__workspace_id__leave_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/members': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_members_api_workspaces__workspace_id__members_get']
+    put?: never
+    post: operations['add_member_api_workspaces__workspace_id__members_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/candidates': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['find_candidates_api_workspaces__workspace_id__candidates_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/members/{account_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['remove_member_api_workspaces__workspace_id__members__account_id__delete']
+    options?: never
+    head?: never
+    patch: operations['change_member_api_workspaces__workspace_id__members__account_id__patch']
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/members/{account_id}/reset-password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['reset_member_password_api_workspaces__workspace_id__members__account_id__reset_password_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/members/{account_id}/deactivate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['deactivate_member_api_workspaces__workspace_id__members__account_id__deactivate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/members/{account_id}/reactivate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['reactivate_member_api_workspaces__workspace_id__members__account_id__reactivate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/universes/{universe_id}/access': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['universe_access_api_workspaces__workspace_id__universes__universe_id__access_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/universes/{universe_id}/access/overrides/{account_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['put_override_api_workspaces__workspace_id__universes__universe_id__access_overrides__account_id__put']
+    post?: never
+    delete: operations['clear_override_api_workspaces__workspace_id__universes__universe_id__access_overrides__account_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/universes/{universe_id}/access/permissions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['put_permissions_api_workspaces__workspace_id__universes__universe_id__access_permissions_put']
+    post?: never
+    delete: operations['reset_permissions_api_workspaces__workspace_id__universes__universe_id__access_permissions_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/universes/{universe_id}/access/canon-approval': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['put_canon_approval_api_workspaces__workspace_id__universes__universe_id__access_canon_approval_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/library/universes': {
     parameters: {
       query?: never
@@ -121,6 +521,22 @@ export interface paths {
     get?: never
     put?: never
     post: operations['archive_universe_api_library_universes__universe_id__archive_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/move': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['move_universe_api_library_universes__universe_id__move_post']
     delete?: never
     options?: never
     head?: never
@@ -8252,7 +8668,7 @@ export interface paths {
     delete?: never
     options?: never
     head?: never
-    patch?: never
+    patch: operations['share_session_api_divine_will_sessions__session_id__patch']
     trace?: never
   }
   '/api/divine-will/cycles': {
@@ -8524,7 +8940,23 @@ export interface paths {
     delete?: never
     options?: never
     head?: never
-    patch?: never
+    patch: operations['share_plan_api_divine_will_plans__plan_id__patch']
+    trace?: never
+  }
+  '/api/divine-will/forecasts/{forecast_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_forecast_api_divine_will_forecasts__forecast_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations['share_forecast_api_divine_will_forecasts__forecast_id__patch']
     trace?: never
   }
   '/api/divine-will/plans/{plan_id}/steps': {
@@ -8655,22 +9087,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/api/divine-will/forecasts/{forecast_id}': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations['read_forecast_api_divine_will_forecasts__forecast_id__get']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/api/divine-will/forecasts/{forecast_id}/cancel': {
     parameters: {
       query?: never
@@ -8748,7 +9164,7 @@ export interface paths {
     delete?: never
     options?: never
     head?: never
-    patch?: never
+    patch: operations['share_session_api_presence_sessions__session_id__patch']
     trace?: never
   }
   '/api/presence/sessions/{session_id}/exchanges': {
@@ -8809,6 +9225,166 @@ export interface paths {
     get?: never
     put?: never
     post: operations['close_session_api_presence_sessions__session_id__close_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_team_api_team_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/presence': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['mark_presence_api_presence_post']
+    delete: operations['leave_presence_api_presence_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team/revisions/{node_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_revision_api_team_revisions__node_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team/queue': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_queue_api_team_queue_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team/queue/{act_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['cancel_queued_api_team_queue__act_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team/queue/{act_id}/retry': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['retry_queued_api_team_queue__act_id__retry_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team/proposals': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_proposals_api_team_proposals_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team/proposals/{proposal_id}/approve': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['approve_proposal_api_team_proposals__proposal_id__approve_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team/proposals/{proposal_id}/reject': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['reject_proposal_api_team_proposals__proposal_id__reject_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/team/proposals/{proposal_id}/withdraw': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['withdraw_proposal_api_team_proposals__proposal_id__withdraw_post']
     delete?: never
     options?: never
     head?: never
@@ -49753,6 +50329,12 @@ export interface components {
       updated_epoch: number
       locked: string[]
     }
+    AccountCreate: {
+      username: string
+      email: string
+      display_name: string
+      server_role: components['schemas']['ServerRole']
+    }
     AccountDeleteInput: {
       account_id: number
     }
@@ -49790,6 +50372,24 @@ export interface components {
       | 'performance'
       | 'mind_state'
       | 'marks'
+    AccountPatch: {
+      status?: components['schemas']['AccountStatus'] | null
+      server_role?: components['schemas']['ServerRole'] | null
+    }
+    AccountProfileView: {
+      id: number
+      username: string
+      email: string
+      display_name: string
+      status: components['schemas']['AccountStatus']
+      server_role: components['schemas']['ServerRole']
+      avatar_tone: components['schemas']['AvatarTone']
+      must_change_password: boolean
+      created_at: string
+      last_sign_in_at: string | null
+      password_changed_at: string | null
+      locked_until: string | null
+    }
     AccountReviseInput: {
       account_id: number
       ousted_ids?: number[]
@@ -49817,6 +50417,7 @@ export interface components {
       node: components['schemas']['NodeRef']
       stance: components['schemas']['AccountStance']
     }
+    AccountStatus: 'active' | 'deactivated'
     AccountView: {
       id: number
       holder: components['schemas']['NodeRef']
@@ -50055,6 +50656,8 @@ export interface components {
       confirmation: string | null
       rows: string[]
       path: string
+      permission: components['schemas']['Permission']
+      hold_fields: string[]
       method: string
       input_schema: {
         [key: string]: unknown
@@ -50352,6 +50955,8 @@ export interface components {
         [key: string]: number | string | boolean | null
       }
       job_id?: string | null
+      queued?: components['schemas']['QueuedActView'] | null
+      proposal?: components['schemas']['CanonProposalView'] | null
     }
     ActorKind:
       | 'creator'
@@ -52002,7 +52607,17 @@ export interface components {
       reason: string | null
       augments: components['schemas']['AugmentView'][]
     }
+    AuthState: {
+      setup_required: boolean
+      account: components['schemas']['AccountProfileView'] | null
+      must_change_password: boolean
+      password_min_length: number
+    }
     Authenticity: 'genuine' | 'altered' | 'forged' | 'generated' | 'unknown'
+    AuthorView: {
+      account_id: number | null
+      name: string
+    }
     AuthoredKindCreateInput: {
       concept: components['schemas']['KindConcept']
       name: string
@@ -52072,6 +52687,8 @@ export interface components {
       god_id: number
       place_id: number
     }
+    AvatarTone:
+      'gold' | 'verdigris' | 'info' | 'success' | 'warning' | 'danger' | 'muted'
     AvatarWithdrawInput: {
       avatar_id: number
     }
@@ -53845,7 +54462,46 @@ export interface components {
       | 'landing'
       | 'holding'
       | 'withdrawn'
+    CandidateView: {
+      id: number
+      username: string
+      display_name: string
+      avatar_tone: components['schemas']['AvatarTone']
+    }
+    CanonApprovalPut: {
+      on: boolean
+    }
     CanonPath: 'renown' | 'institution' | 'copying' | 'teaching' | 'movement'
+    CanonProposalView: {
+      id: number
+      action_id: string
+      title: string
+      payload: {
+        [key: string]: unknown
+      }
+      reason: string | null
+      preview: {
+        [key: string]: unknown
+      }
+      touches: components['schemas']['CanonTouch'][]
+      held_node_ids: number[]
+      author: components['schemas']['AuthorView'] | null
+      proposed_epoch: number
+      proposed_at: string
+      status: components['schemas']['ProposalStatus']
+      decided_by: components['schemas']['AuthorView'] | null
+      decided_at: string | null
+      note: string
+      result: string
+      ledger_entry_id: number | null
+    }
+    CanonTouch:
+      | 'held_thing'
+      | 'canon_status'
+      | 'canon_fact'
+      | 'hold_changed'
+      | 'lock_changed'
+      | 'locked_field'
     CanonVerdict: 'canon' | 'rejected'
     CanonWorkCreateInput: {
       people_id: number
@@ -54964,6 +55620,8 @@ export interface components {
       text: string
       created_at: string
       entity_ids?: number[]
+      author_account_id?: number | null
+      author_name?: string | null
     }
     ChronicleOutcomeClaim: {
       ref: string
@@ -56422,6 +57080,16 @@ export interface components {
     ConfirmationDecision: 'approve' | 'decline'
     ConfirmationReason: 'destructive' | 'costly' | 'both'
     ConfirmationStatus: 'pending' | 'approved' | 'declined' | 'expired'
+    ConflictChangeView: {
+      table: string
+      node_id: number | null
+      field: string | null
+      before: number | string | null
+      after: number | string | null
+      by: string | null
+      by_account_id: number | null
+      at: string | null
+    }
     Consciousness: 'awake' | 'nauseous' | 'dizzy' | 'unconscious'
     ConservationMovementCreateInput: {
       table: string
@@ -60786,6 +61454,7 @@ export interface components {
       tags?: string[] | null
       kind?: components['schemas']['ArtifactKind'] | null
       node_ids?: number[] | null
+      shared?: boolean | null
     }
     DivineWillArtifactPayload: {
       epoch?: number | null
@@ -60812,6 +61481,7 @@ export interface components {
       plan_id: number | null
       created_at: string
       updated_at: string
+      owner: components['schemas']['DivineWillOwnership']
     }
     DivineWillArtifactVersion: {
       artifact_id: number
@@ -60928,6 +61598,7 @@ export interface components {
       started_at: string | null
       finished_at: string | null
       created_at: string
+      owner: components['schemas']['DivineWillOwnership']
     }
     DivineWillForecastLine: {
       epoch: number
@@ -61008,6 +61679,12 @@ export interface components {
       | 'creative_work'
       | 'mechanics_guide'
       | 'foresight'
+    DivineWillOwnership: {
+      author_account_id: number | null
+      author_name: string | null
+      shared: boolean
+      mine: boolean
+    }
     DivineWillPlan: {
       id: number
       title: string
@@ -61020,6 +61697,7 @@ export interface components {
       steps: components['schemas']['DivineWillPlanStep'][]
       job_id: string
       waiting_step: number | null
+      owner: components['schemas']['DivineWillOwnership']
     }
     DivineWillPlanChangedEvent: {
       id: number
@@ -61822,6 +62500,16 @@ export interface components {
       species_id?: number | null
     }
     EdgeKind: 'modifier' | 'rule_switch' | 'flow' | 'trigger'
+    EditConflictChange: {
+      table: string
+      node_id: number | null
+      field: string | null
+      before: number | string | null
+      after: number | string | null
+      by: string | null
+      by_account_id: number | null
+      at: string | null
+    }
     EffectDraft: {
       target: components['schemas']['EffectTarget']
       key: string
@@ -62400,6 +63088,8 @@ export interface components {
       entity_type: components['schemas']['EntityType']
       world_id: number
       text: string
+      author_account_id: number | null
+      author_name: string | null
     }
     EntityOrigin: 'son' | 'creator' | 'engine' | 'mortal' | 'cosmos'
     EntityRecord: {
@@ -62474,6 +63164,8 @@ export interface components {
       depth: components['schemas']['EntityDepth'] | null
       archive_override: components['schemas']['ArchiveOverride'] | null
       private_note: string | null
+      note_author_account_id?: number | null
+      note_author_name?: string | null
       map_x: number | null
       map_y: number | null
       image_prompt: string | null
@@ -63112,6 +63804,11 @@ export interface components {
       | 'unavailable'
       | 'internal'
       | 'universe_required'
+      | 'signed_out'
+      | 'password_change_required'
+      | 'setup_required'
+      | 'locked'
+      | 'edit_conflict'
     ErrorPayload: {
       epoch?: number | null
       text: string
@@ -63126,6 +63823,9 @@ export interface components {
       rule_key?: string | null
       rule_value?: number | null
       correlation_id?: string | null
+      permission?: string | null
+      role?: string | null
+      changes?: components['schemas']['EditConflictChange'][] | null
     }
     EscalationStep: 'censure' | 'sanction' | 'exclusion' | 'duel' | 'divine_war'
     EssencePourInput: {
@@ -63293,6 +63993,9 @@ export interface components {
       incident_id: number | null
       step_id: number | null
       terms?: components['schemas']['EventTermRecord'][]
+      author_account_id?: number | null
+      author_name?: string | null
+      changed_at?: string | null
     }
     EventCreateInput: {
       kind: components['schemas']['EngineKind']
@@ -63408,6 +64111,9 @@ export interface components {
       | 'presence.session_changed'
       | 'presence.exchange_started'
       | 'presence.exchange_finished'
+      | 'team.presence'
+      | 'team.queue_changed'
+      | 'team.proposal_changed'
     EventLinkRecord: {
       id: number
       kind: string
@@ -69930,6 +70636,10 @@ export interface components {
     IrregularSeasonForecastInput: {
       long_season_id: number
     }
+    IssuedPassword: {
+      account: components['schemas']['AccountProfileView']
+      temporary_password: string
+    }
     IssuedSecurityCreateInput: {
       table: string
       values: {
@@ -72326,6 +73036,9 @@ export interface components {
       applied: string[]
       conflicts: string[]
       created_at: string
+      reason: string | null
+      author: components['schemas']['AuthorView'] | null
+      undone_by: components['schemas']['AuthorView'] | null
     }
     LedgerEntryView: {
       entry: components['schemas']['LedgerEntry']
@@ -72698,6 +73411,20 @@ export interface components {
       | 'deleted'
       | 'recovered'
       | 'purged'
+      | 'moved'
+      | 'account_created'
+      | 'password_reset'
+      | 'account_deactivated'
+      | 'account_reactivated'
+      | 'account_deleted'
+      | 'workspace_created'
+      | 'workspace_renamed'
+      | 'workspace_deleted'
+      | 'member_added'
+      | 'member_role_changed'
+      | 'member_removed'
+      | 'access_changed'
+      | 'canon_approval_changed'
     LibraryEventPage: {
       items: components['schemas']['LibraryEventView'][]
       total: number
@@ -72711,6 +73438,7 @@ export interface components {
       universe_id: string
       universe_name: string
       detail: string
+      account_name: string
     }
     LibraryJobKind: 'export' | 'import'
     LibraryJobStage:
@@ -74076,6 +74804,8 @@ export interface components {
       text: string
       color: string | null
       created_at: string
+      author_account_id: number | null
+      author_name: string | null
     }
     MapOccupation: {
       occupier_id: number
@@ -74927,6 +75657,17 @@ export interface components {
       node_id: number
       role: components['schemas']['CollectionRole']
     }
+    MemberAdd: {
+      role: components['schemas']['WorkspaceRole']
+      account_id?: number | null
+      username?: string | null
+      email?: string | null
+      display_name?: string | null
+    }
+    MemberAdded: {
+      member: components['schemas']['WorkspaceMemberView']
+      temporary_password: string | null
+    }
     MemberOutputView: {
       community_id: number
       name: string
@@ -74946,6 +75687,9 @@ export interface components {
       | 'worship'
       | 'assembly'
       | 'education'
+    MemberRole: {
+      role: components['schemas']['WorkspaceRole']
+    }
     MemberView: {
       id: number
       name: string
@@ -77809,6 +78553,12 @@ export interface components {
       kind: components['schemas']['NodeKind']
       name: string
     }
+    NodeRevisionView: {
+      node_id: number
+      revision: number
+      changed_by: string | null
+      changed_at: string | null
+    }
     NodeTonguesView: {
       node: components['schemas']['NodeRef']
       language: components['schemas']['TongueMechanicsView'] | null
@@ -79205,6 +79955,9 @@ export interface components {
       declared_epoch: number
       locked: string[]
     }
+    OverridePut: {
+      role: components['schemas']['UniverseRole']
+    }
     OwnKindsView: {
       vehicle_types: components['schemas']['KindRef'][]
       unit_types: components['schemas']['KindRef'][]
@@ -79572,6 +80325,10 @@ export interface components {
       invoked_epoch: number | null
       invocable: boolean
       held: boolean
+    }
+    PasswordChange: {
+      current: string
+      new: string
     }
     PatchCreatorBody: {
       title?: string | null
@@ -80039,6 +80796,44 @@ export interface components {
       amount: number
       level: number
       owned: boolean
+    }
+    Permission:
+      | 'view'
+      | 'edit_world'
+      | 'start_ages'
+      | 'change_rules'
+      | 'lock_canon'
+      | 'alternative_histories'
+      | 'undo_own'
+      | 'undo_any'
+      | 'generate_images'
+      | 'export'
+      | 'download_books'
+      | 'divine_will_read'
+      | 'presence_on_record'
+      | 'manage_shelf'
+    PermissionRow: {
+      permission: components['schemas']['Permission']
+      label: string
+      meaning: string
+      editor_default: boolean
+      viewer_default: boolean
+      editor: boolean
+      viewer: boolean
+    }
+    PermissionsPut: {
+      editor?: {
+        [key: string]: boolean
+      }
+      viewer?: {
+        [key: string]: boolean
+      }
+    }
+    PersonAccess: {
+      account: components['schemas']['AccountProfileView']
+      workspace_role: components['schemas']['WorkspaceRole']
+      role: components['schemas']['UniverseRole']
+      overridden: boolean
     }
     Personality: {
       appearance: string
@@ -82015,6 +82810,9 @@ export interface components {
       opened_at: string
       closed_at: string | null
       exchange_count: number
+      author: components['schemas']['AuthorView'] | null
+      shared: boolean
+      mine: boolean
     }
     PresenceSessionView: {
       session: components['schemas']['PresenceSessionSummary']
@@ -82071,6 +82869,19 @@ export interface components {
       remembered_exchanges: number
     }
     PresenceStatus: 'open' | 'closed'
+    PresenceUpdate: {
+      screen: string
+      node_id?: number | null
+      editing: boolean
+    }
+    PresentView: {
+      account_id: number
+      name: string
+      screen: string
+      node_id: number | null
+      editing: boolean
+      seen_seconds_ago: number
+    }
     Preservation:
       'rock' | 'amber' | 'ice' | 'bog' | 'tar' | 'ash' | 'dry' | 'cave'
     PreservationMethod:
@@ -82354,6 +83165,11 @@ export interface components {
       nullable: boolean
       held: boolean
       pinned: boolean
+    }
+    ProfilePatch: {
+      display_name?: string | null
+      email?: string | null
+      avatar_tone?: components['schemas']['AvatarTone'] | null
     }
     ProfileReleaseInput: {
       node_id: number
@@ -82654,6 +83470,9 @@ export interface components {
       law_id?: number | null
       basis: components['schemas']['LegitimacyBasis']
     }
+    ProposalDecision: {
+      note: string
+    }
     ProposalDeleteInput: {
       proposal_id: number
     }
@@ -82677,11 +83496,16 @@ export interface components {
       proposal_id: number
       hold: boolean
     }
+    ProposalPage: {
+      items: components['schemas']['CanonProposalView'][]
+      total: number
+    }
     ProposalPassInput: {
       proposal_id: number
     }
     ProposalStance: 'support' | 'oppose' | 'obstruct'
     ProposalState: 'debating' | 'passed' | 'failed' | 'withdrawn'
+    ProposalStatus: 'pending' | 'approved' | 'rejected' | 'withdrawn'
     Propulsion:
       | 'crew'
       | 'draft_animals'
@@ -83201,6 +84025,10 @@ export interface components {
       id: number
       name: string
     }
+    QueuePage: {
+      items: components['schemas']['QueuedActView'][]
+      total: number
+    }
     QueueStatus: {
       available: boolean
       reason: string | null
@@ -83211,6 +84039,31 @@ export interface components {
       height: number
       steps: number
       log: components['schemas']['LogLine'][]
+    }
+    QueuedActSource: 'lever' | 'undo' | 'rules' | 'divine_will' | 'presence'
+    QueuedActStatus: 'queued' | 'applied' | 'proposed' | 'failed' | 'cancelled'
+    QueuedActView: {
+      id: number
+      source: components['schemas']['QueuedActSource']
+      action_id: string
+      title: string
+      payload: {
+        [key: string]: unknown
+      }
+      reason: string | null
+      author: components['schemas']['AuthorView'] | null
+      queued_epoch: number
+      queued_at: string
+      status: components['schemas']['QueuedActStatus']
+      result: string
+      applied_at: string | null
+      ledger_entry_id: number | null
+      cancelled_by: components['schemas']['AuthorView'] | null
+      plan_id: number | null
+      plan_ordinal: number | null
+      presence_session_id: number | null
+      conflict: components['schemas']['ConflictChangeView'][]
+      proposal_id: number | null
     }
     QueuedImage: {
       node_id: number
@@ -87304,6 +88157,7 @@ export interface components {
       penalty: components['schemas']['PunishmentKind']
       epoch: number
     }
+    ServerRole: 'owner' | 'admin' | 'member'
     ServiceShare: {
       service: components['schemas']['UrbanService']
       coverage: number
@@ -87365,6 +88219,18 @@ export interface components {
       former_god?: components['schemas']['NodeRef'] | null
       since_epoch: number
       locked: string[]
+    }
+    SessionView: {
+      id: number
+      created_at: string
+      last_used_at: string
+      expires_at: string
+      user_agent: string
+      address: string
+      current: boolean
+    }
+    SessionsEnded: {
+      ended: number
     }
     SettleMode:
       | 'ground'
@@ -87534,6 +88400,12 @@ export interface components {
       | 'incident_arc'
       | 'portent'
       | 'inheritance'
+    SetupRequest: {
+      username: string
+      email: string
+      display_name: string
+      password: string
+    }
     SetupView: {
       id: number
       kind: components['schemas']['SetupKind']
@@ -87580,6 +88452,9 @@ export interface components {
       holder: components['schemas']['NodeRef']
       share: number
       held: boolean
+    }
+    SharedUpdate: {
+      shared: boolean
     }
     ShieldShape:
       | 'heater'
@@ -87852,6 +88727,10 @@ export interface components {
       | 'mutilation'
       | 'trade'
       | 'noise'
+    SignInRequest: {
+      login: string
+      password: string
+    }
     SignInfluence: 'real' | 'believed'
     SignLanguageCreateInput: {
       community_id: number
@@ -92381,6 +93260,37 @@ export interface components {
       since_epoch: number
       locked: string[]
     }
+    TeamPresenceEvent: {
+      id: number
+      kind: 'team.presence'
+      payload: components['schemas']['EventPayload']
+      at: string
+    }
+    TeamProposalChangedEvent: {
+      id: number
+      kind: 'team.proposal_changed'
+      payload: components['schemas']['EventPayload']
+      at: string
+    }
+    TeamQueueChangedEvent: {
+      id: number
+      kind: 'team.queue_changed'
+      payload: components['schemas']['EventPayload']
+      at: string
+    }
+    TeamView: {
+      role: components['schemas']['UniverseRole'] | null
+      permissions: components['schemas']['Permission'][]
+      canon_approval: boolean
+      present: components['schemas']['PresentView'][]
+      queued: number
+      proposals: number
+      revision: number
+      world_busy: boolean
+      me: components['schemas']['AuthorView'] | null
+      heartbeat_seconds: number
+      presence_ttl_seconds: number
+    }
     TechFamily:
       | 'agriculture'
       | 'materials'
@@ -95282,6 +96192,14 @@ export interface components {
       techniques: components['schemas']['Technique'][]
       locked: string[]
     }
+    UniverseAccessView: {
+      universe_id: string
+      universe_name: string
+      workspace_id: number
+      canon_approval: boolean
+      people: components['schemas']['PersonAccess'][]
+      permissions: components['schemas']['PermissionRow'][]
+    }
     UniverseCreate: {
       name: string
       notes: string
@@ -95312,6 +96230,11 @@ export interface components {
       media_prefix: string
       is_open: boolean
       running_jobs: string[]
+      workspace_id: number | null
+      canon_approval: boolean
+      legacy_author_name: string
+      role: components['schemas']['UniverseRole']
+      permissions: components['schemas']['Permission'][]
       events: components['schemas']['LibraryEventView'][]
     }
     UniverseDuplicate: {
@@ -95329,6 +96252,9 @@ export interface components {
       limit: number
       facets: components['schemas']['UniverseFacets']
     }
+    UniverseMove: {
+      workspace_id: number
+    }
     UniverseOrigin: 'created' | 'imported' | 'duplicated' | 'adopted'
     UniverseOriginFacet: {
       value: components['schemas']['UniverseOrigin']
@@ -95342,6 +96268,7 @@ export interface components {
       pinned?: boolean | null
       status?: components['schemas']['UniverseStatus'] | null
     }
+    UniverseRole: 'admin' | 'editor' | 'viewer' | 'none'
     UniverseSort: 'opened' | 'created' | 'name' | 'epoch' | 'size'
     UniverseStatus: 'active' | 'archived'
     UniverseStatusFacet: {
@@ -95376,6 +96303,11 @@ export interface components {
       media_prefix: string
       is_open: boolean
       running_jobs: string[]
+      workspace_id: number | null
+      canon_approval: boolean
+      legacy_author_name: string
+      role: components['schemas']['UniverseRole']
+      permissions: components['schemas']['Permission'][]
     }
     UpkeepView: {
       law: components['schemas']['NodeRef'] | null
@@ -96895,6 +97827,9 @@ export interface components {
       closed_epoch: number | null
       closed_at: string | null
       cycle_count: number
+      author: components['schemas']['AuthorView'] | null
+      shared: boolean
+      mine: boolean
     }
     WillSessionView: {
       session: components['schemas']['WillSessionSummary']
@@ -97371,6 +98306,26 @@ export interface components {
       structure_id: number | null
       held: boolean
       design_id?: number | null
+    }
+    WorkspaceKind: 'personal' | 'team'
+    WorkspaceMemberView: {
+      account: components['schemas']['AccountProfileView']
+      role: components['schemas']['WorkspaceRole']
+      added_at: string
+      universe_count: number
+    }
+    WorkspaceName: {
+      name: string
+    }
+    WorkspaceRole: 'admin' | 'editor' | 'viewer'
+    WorkspaceView: {
+      id: number
+      name: string
+      kind: components['schemas']['WorkspaceKind']
+      role: components['schemas']['WorkspaceRole']
+      member_count: number
+      universe_count: number
+      created_at: string
     }
     WorldAge: 'young' | 'mature' | 'old' | 'dying'
     WorldAttentionView: {
@@ -98329,6 +99284,1035 @@ export interface operations {
       }
     }
   }
+  auth_state_api_auth_state_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AuthState']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  setup_api_auth_setup_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetupRequest']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AuthState']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  sign_in_api_auth_sign_in_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignInRequest']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AuthState']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  sign_out_api_auth_sign_out_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  change_password_api_auth_password_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PasswordChange']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AuthState']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  update_profile_api_auth_profile_patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProfilePatch']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AccountProfileView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  sessions_api_auth_sessions_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SessionView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  end_other_sessions_api_auth_sessions_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SessionsEnded']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  end_session_api_auth_sessions__session_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        session_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_accounts_api_accounts_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AccountProfileView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  create_account_api_accounts_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AccountCreate']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssuedPassword']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  delete_account_api_accounts__account_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  edit_account_api_accounts__account_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AccountPatch']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AccountProfileView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  reset_password_api_accounts__account_id__reset_password_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssuedPassword']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  transfer_ownership_api_accounts__account_id__ownership_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AccountProfileView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_workspaces_api_workspaces_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorkspaceView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  create_workspace_api_workspaces_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorkspaceName']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorkspaceView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  delete_workspace_api_workspaces__workspace_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  rename_workspace_api_workspaces__workspace_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WorkspaceName']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorkspaceView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  leave_workspace_api_workspaces__workspace_id__leave_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_members_api_workspaces__workspace_id__members_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorkspaceMemberView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  add_member_api_workspaces__workspace_id__members_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MemberAdd']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MemberAdded']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  find_candidates_api_workspaces__workspace_id__candidates_get: {
+    parameters: {
+      query: {
+        q: string
+      }
+      header?: never
+      path: {
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CandidateView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  remove_member_api_workspaces__workspace_id__members__account_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  change_member_api_workspaces__workspace_id__members__account_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MemberRole']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorkspaceMemberView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  reset_member_password_api_workspaces__workspace_id__members__account_id__reset_password_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['IssuedPassword']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  deactivate_member_api_workspaces__workspace_id__members__account_id__deactivate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorkspaceMemberView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  reactivate_member_api_workspaces__workspace_id__members__account_id__reactivate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WorkspaceMemberView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  universe_access_api_workspaces__workspace_id__universes__universe_id__access_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseAccessView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  put_override_api_workspaces__workspace_id__universes__universe_id__access_overrides__account_id__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+        workspace_id: number
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OverridePut']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseAccessView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  clear_override_api_workspaces__workspace_id__universes__universe_id__access_overrides__account_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+        workspace_id: number
+        account_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseAccessView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  put_permissions_api_workspaces__workspace_id__universes__universe_id__access_permissions_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PermissionsPut']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseAccessView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  reset_permissions_api_workspaces__workspace_id__universes__universe_id__access_permissions_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseAccessView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  put_canon_approval_api_workspaces__workspace_id__universes__universe_id__access_canon_approval_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CanonApprovalPut']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseAccessView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   list_universes_api_library_universes_get: {
     parameters: {
       query?: {
@@ -98588,6 +100572,39 @@ export interface operations {
       cookie?: never
     }
     requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  move_universe_api_library_universes__universe_id__move_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UniverseMove']
+      }
+    }
     responses: {
       200: {
         headers: {
@@ -99385,6 +101402,14 @@ export interface operations {
     }
     requestBody?: never
     responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['QueuedActView']
+        }
+      }
       204: {
         headers: {
           [name: string]: unknown
@@ -99422,6 +101447,14 @@ export interface operations {
           'application/json': components['schemas']['RuleResponse'][]
         }
       }
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['QueuedActView']
+        }
+      }
       default: {
         headers: {
           [name: string]: unknown
@@ -99456,6 +101489,14 @@ export interface operations {
           'application/json': components['schemas']['RuleResponse']
         }
       }
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['QueuedActView']
+        }
+      }
       default: {
         headers: {
           [name: string]: unknown
@@ -99484,6 +101525,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['RuleResponse']
+        }
+      }
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['QueuedActView']
         }
       }
       default: {
@@ -99615,6 +101664,9 @@ export interface operations {
             | components['schemas']['PresenceSessionChangedEvent']
             | components['schemas']['PresenceExchangeStartedEvent']
             | components['schemas']['PresenceExchangeFinishedEvent']
+            | components['schemas']['TeamPresenceEvent']
+            | components['schemas']['TeamQueueChangedEvent']
+            | components['schemas']['TeamProposalChangedEvent']
           )[]
         }
       }
@@ -100099,7 +102151,10 @@ export interface operations {
   }
   patch_creator_api_creator_patch: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100157,7 +102212,10 @@ export interface operations {
   }
   put_creator_note_api_creator_note_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100188,7 +102246,10 @@ export interface operations {
   }
   put_creator_mood_api_creator_mood_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100219,7 +102280,10 @@ export interface operations {
   }
   put_creator_passions_api_creator_passions_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100250,7 +102314,10 @@ export interface operations {
   }
   post_creator_portrait_api_creator_portrait_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100277,7 +102344,10 @@ export interface operations {
   }
   post_creator_epic_api_creator_epic_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100304,7 +102374,10 @@ export interface operations {
   }
   post_creator_deepen_api_creator_deepen_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100331,7 +102404,10 @@ export interface operations {
   }
   post_sons_son_id_reputation_nudge_api_sons__son_id__reputation_nudge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100364,7 +102440,10 @@ export interface operations {
   }
   post_revelations_api_revelations_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100508,7 +102587,10 @@ export interface operations {
   }
   patch_sons_son_id_api_sons__son_id__patch: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100599,7 +102681,10 @@ export interface operations {
   }
   post_sons_summon_api_sons_summon_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100630,7 +102715,10 @@ export interface operations {
   }
   post_sons_distribute_api_sons_distribute_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -100657,7 +102745,10 @@ export interface operations {
   }
   put_sons_son_id_order_api_sons__son_id__order_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100690,7 +102781,10 @@ export interface operations {
   }
   post_sons_son_id_bless_api_sons__son_id__bless_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100723,7 +102817,10 @@ export interface operations {
   }
   post_sons_son_id_punish_api_sons__son_id__punish_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100756,7 +102853,10 @@ export interface operations {
   }
   post_sons_son_id_star_api_sons__son_id__star_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100785,7 +102885,10 @@ export interface operations {
   }
   post_sons_son_id_ascend_api_sons__son_id__ascend_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100814,7 +102917,10 @@ export interface operations {
   }
   post_sons_son_id_epic_api_sons__son_id__epic_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100843,7 +102949,10 @@ export interface operations {
   }
   post_sons_son_id_resurrect_api_sons__son_id__resurrect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100872,7 +102981,10 @@ export interface operations {
   }
   post_sons_son_id_kill_api_sons__son_id__kill_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100905,7 +103017,10 @@ export interface operations {
   }
   post_sons_son_id_devour_api_sons__son_id__devour_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100938,7 +103053,10 @@ export interface operations {
   }
   post_sons_son_id_drain_api_sons__son_id__drain_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -100967,7 +103085,10 @@ export interface operations {
   }
   post_sons_son_id_absolute_command_api_sons__son_id__absolute_command_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101000,7 +103121,10 @@ export interface operations {
   }
   post_sons_son_id_demote_api_sons__son_id__demote_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101029,7 +103153,10 @@ export interface operations {
   }
   post_sons_son_id_strip_power_api_sons__son_id__strip_power_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101062,7 +103189,10 @@ export interface operations {
   }
   post_sons_son_id_rebellion_api_sons__son_id__rebellion_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101095,7 +103225,10 @@ export interface operations {
   }
   post_sons_son_id_scheme_api_sons__son_id__scheme_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101128,7 +103261,10 @@ export interface operations {
   }
   post_sons_son_id_hinder_return_api_sons__son_id__hinder_return_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101161,7 +103297,10 @@ export interface operations {
   }
   put_sons_son_id_world_api_sons__son_id__world_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101194,7 +103333,10 @@ export interface operations {
   }
   delete_sons_son_id_protection_api_sons__son_id__protection_delete: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101223,7 +103365,10 @@ export interface operations {
   }
   post_sons_son_id_reset_counters_api_sons__son_id__reset_counters_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101252,7 +103397,10 @@ export interface operations {
   }
   put_sons_son_id_image_prompt_api_sons__son_id__image_prompt_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         son_id: number
@@ -101403,7 +103551,10 @@ export interface operations {
   }
   patch_entities_entity_id_api_entities__entity_id__patch: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101621,7 +103772,10 @@ export interface operations {
   }
   put_entities_entity_id_canon_api_entities__entity_id__canon_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101654,7 +103808,10 @@ export interface operations {
   }
   post_entities_entity_id_intervene_api_entities__entity_id__intervene_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101687,7 +103844,10 @@ export interface operations {
   }
   put_entities_entity_id_knowledge_api_entities__entity_id__knowledge_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101720,7 +103880,10 @@ export interface operations {
   }
   post_entities_entity_id_dream_api_entities__entity_id__dream_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101753,7 +103916,10 @@ export interface operations {
   }
   put_entities_entity_id_favorite_api_entities__entity_id__favorite_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101815,7 +103981,10 @@ export interface operations {
   }
   put_entities_entity_id_note_api_entities__entity_id__note_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101848,7 +104017,10 @@ export interface operations {
   }
   delete_entities_entity_id_note_api_entities__entity_id__note_delete: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101877,7 +104049,10 @@ export interface operations {
   }
   post_entities_entity_id_merge_api_entities__entity_id__merge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101910,7 +104085,10 @@ export interface operations {
   }
   put_entities_entity_id_stat_api_entities__entity_id__stat_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101943,7 +104121,10 @@ export interface operations {
   }
   patch_entities_entity_id_tags_api_entities__entity_id__tags_patch: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -101976,7 +104157,10 @@ export interface operations {
   }
   put_entities_entity_id_location_api_entities__entity_id__location_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102009,7 +104193,10 @@ export interface operations {
   }
   put_entities_entity_id_patron_api_entities__entity_id__patron_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102042,7 +104229,10 @@ export interface operations {
   }
   post_entities_entity_id_decree_api_entities__entity_id__decree_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102075,7 +104265,10 @@ export interface operations {
   }
   put_entities_entity_id_agent_api_entities__entity_id__agent_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102108,7 +104301,10 @@ export interface operations {
   }
   post_entities_entity_id_explore_api_entities__entity_id__explore_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102141,7 +104337,10 @@ export interface operations {
   }
   post_entities_entity_id_seek_route_api_entities__entity_id__seek_route_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102170,7 +104369,10 @@ export interface operations {
   }
   post_entities_entity_id_expedition_api_entities__entity_id__expedition_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102203,7 +104405,10 @@ export interface operations {
   }
   post_entities_entity_id_exile_api_entities__entity_id__exile_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102236,7 +104441,10 @@ export interface operations {
   }
   post_entities_entity_id_pardon_api_entities__entity_id__pardon_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102265,7 +104473,10 @@ export interface operations {
   }
   post_entities_entity_id_rite_api_entities__entity_id__rite_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102298,7 +104509,10 @@ export interface operations {
   }
   post_entities_entity_id_take_life_api_entities__entity_id__take_life_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102331,7 +104545,10 @@ export interface operations {
   }
   post_entities_entity_id_drain_api_entities__entity_id__drain_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102364,7 +104581,10 @@ export interface operations {
   }
   post_entities_entity_id_harvest_api_entities__entity_id__harvest_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102393,7 +104613,10 @@ export interface operations {
   }
   post_entities_entity_id_resurrect_api_entities__entity_id__resurrect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102422,7 +104645,10 @@ export interface operations {
   }
   post_entities_entity_id_deify_api_entities__entity_id__deify_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102451,7 +104677,10 @@ export interface operations {
   }
   post_entities_entity_id_prophet_api_entities__entity_id__prophet_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102480,7 +104709,10 @@ export interface operations {
   }
   post_entities_entity_id_manifest_api_entities__entity_id__manifest_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102513,7 +104745,10 @@ export interface operations {
   }
   post_entities_entity_id_bloodline_curse_api_entities__entity_id__bloodline_curse_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102546,7 +104781,10 @@ export interface operations {
   }
   post_entities_entity_id_convert_api_entities__entity_id__convert_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102575,7 +104813,10 @@ export interface operations {
   }
   post_entities_entity_id_wrath_api_entities__entity_id__wrath_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -102608,7 +104849,10 @@ export interface operations {
   }
   post_links_api_links_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -102639,7 +104883,10 @@ export interface operations {
   }
   delete_links_bond_id_api_links__bond_id__delete: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         bond_id: number
@@ -102668,7 +104915,10 @@ export interface operations {
   }
   post_facts_api_facts_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -102699,7 +104949,10 @@ export interface operations {
   }
   delete_facts_fact_id_api_facts__fact_id__delete: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         fact_id: number
@@ -102728,7 +104981,10 @@ export interface operations {
   }
   put_beliefs_api_beliefs_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -103166,7 +105422,10 @@ export interface operations {
   }
   put_entities_entity_id_relations_other_id_api_entities__entity_id__relations__other_id__put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -103200,7 +105459,10 @@ export interface operations {
   }
   post_entities_entity_id_relations_other_id_feud_api_entities__entity_id__relations__other_id__feud_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -103230,7 +105492,10 @@ export interface operations {
   }
   delete_entities_entity_id_relations_other_id_feud_api_entities__entity_id__relations__other_id__feud_delete: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         entity_id: number
@@ -103602,7 +105867,10 @@ export interface operations {
   }
   post_foreign_gods_api_foreign_gods_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -103665,7 +105933,10 @@ export interface operations {
   }
   patch_foreign_gods_god_id_api_foreign_gods__god_id__patch: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         god_id: number
@@ -103698,7 +105969,10 @@ export interface operations {
   }
   post_foreign_gods_god_id_deepen_api_foreign_gods__god_id__deepen_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         god_id: number
@@ -103727,7 +106001,10 @@ export interface operations {
   }
   post_foreign_gods_god_id_drain_api_foreign_gods__god_id__drain_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         god_id: number
@@ -103756,7 +106033,10 @@ export interface operations {
   }
   post_foreign_gods_god_id_kill_api_foreign_gods__god_id__kill_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         god_id: number
@@ -103986,7 +106266,10 @@ export interface operations {
   }
   post_worlds_api_worlds_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104017,7 +106300,10 @@ export interface operations {
   }
   patch_worlds_world_id_api_worlds__world_id__patch: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         world_id: number
@@ -104050,7 +106336,10 @@ export interface operations {
   }
   put_worlds_world_id_orbit_api_worlds__world_id__orbit_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         world_id: number
@@ -104083,7 +106372,10 @@ export interface operations {
   }
   post_worlds_world_id_wrath_api_worlds__world_id__wrath_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         world_id: number
@@ -104116,7 +106408,10 @@ export interface operations {
   }
   post_worlds_world_id_discovery_round_api_worlds__world_id__discovery_round_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         world_id: number
@@ -104145,7 +106440,10 @@ export interface operations {
   }
   delete_stars_star_id_api_stars__star_id__delete: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         star_id: number
@@ -104174,7 +106472,10 @@ export interface operations {
   }
   patch_stars_star_id_api_stars__star_id__patch: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         star_id: number
@@ -104207,7 +106508,10 @@ export interface operations {
   }
   post_routes_api_routes_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104238,7 +106542,10 @@ export interface operations {
   }
   post_routes_route_id_sever_api_routes__route_id__sever_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         route_id: number
@@ -104271,7 +106578,10 @@ export interface operations {
   }
   post_routes_route_id_restore_api_routes__route_id__restore_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         route_id: number
@@ -104304,7 +106614,10 @@ export interface operations {
   }
   post_routes_route_id_reveal_api_routes__route_id__reveal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         route_id: number
@@ -104337,7 +106650,10 @@ export interface operations {
   }
   post_voyages_journey_id_recall_api_voyages__journey_id__recall_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         journey_id: number
@@ -104366,7 +106682,10 @@ export interface operations {
   }
   put_climate_api_climate_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104397,7 +106716,10 @@ export interface operations {
   }
   put_cosmic_resource_api_cosmic_resource_put: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104428,7 +106750,10 @@ export interface operations {
   }
   post_cosmic_resource_deposits_api_cosmic_resource_deposits_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104459,7 +106784,10 @@ export interface operations {
   }
   post_cosmic_hang_star_api_cosmic_hang_star_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104490,7 +106818,10 @@ export interface operations {
   }
   post_cosmic_seal_gate_api_cosmic_seal_gate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104521,7 +106852,10 @@ export interface operations {
   }
   post_cosmic_cleanse_leak_api_cosmic_cleanse_leak_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104552,7 +106886,10 @@ export interface operations {
   }
   post_cosmic_forget_world_api_cosmic_forget_world_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104583,7 +106920,10 @@ export interface operations {
   }
   post_cosmic_sky_event_api_cosmic_sky_event_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104614,7 +106954,10 @@ export interface operations {
   }
   post_cosmic_rekindle_star_api_cosmic_rekindle_star_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104645,7 +106988,10 @@ export interface operations {
   }
   post_cosmic_soul_bind_api_cosmic_soul_bind_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -104676,7 +107022,10 @@ export interface operations {
   }
   post_cosmic_legendary_quest_api_cosmic_legendary_quest_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -105059,7 +107408,10 @@ export interface operations {
   }
   post_map_notes_api_map_notes_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -105123,7 +107475,10 @@ export interface operations {
   }
   delete_map_notes_note_id_api_map_notes__note_id__delete: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         note_id: number
@@ -105328,7 +107683,10 @@ export interface operations {
   }
   post_threads_api_threads_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -105359,7 +107717,10 @@ export interface operations {
   }
   post_threads_thread_id_close_api_threads__thread_id__close_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         thread_id: number
@@ -105613,7 +107974,10 @@ export interface operations {
   }
   post_prayers_message_id_answer_api_prayers__message_id__answer_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         message_id: number
@@ -106053,7 +108417,10 @@ export interface operations {
   }
   post_languages_language_id_words_api_languages__language_id__words_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         language_id: number
@@ -106772,6 +109139,10 @@ export interface operations {
         actor_kind?: components['schemas']['ActorKind'] | null
         actor_id?: number | null
         limit?: number | null
+        author_account_id?: number | null
+        action_kind?: components['schemas']['ActionKind'] | null
+        since?: string | null
+        until?: string | null
       }
       header?: never
       path?: never
@@ -106799,7 +109170,9 @@ export interface operations {
   }
   undo_api_ledger__entry_id__undo_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+      }
       header?: never
       path: {
         entry_id: number
@@ -106814,6 +109187,14 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['UndoResult']
+        }
+      }
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['QueuedActView']
         }
       }
       default: {
@@ -106917,7 +109298,10 @@ export interface operations {
   }
   post_scenarios_api_scenarios_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -106948,7 +109332,10 @@ export interface operations {
   }
   post_scenarios_custom_api_scenarios_custom_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -106979,7 +109366,10 @@ export interface operations {
   }
   post_scenarios_scenario_id_edit_api_scenarios__scenario_id__edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         scenario_id: number
@@ -107012,7 +109402,10 @@ export interface operations {
   }
   post_scenarios_scenario_id_hold_api_scenarios__scenario_id__hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         scenario_id: number
@@ -107045,7 +109438,10 @@ export interface operations {
   }
   post_scenarios_scenario_id_abandon_api_scenarios__scenario_id__abandon_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         scenario_id: number
@@ -107074,7 +109470,10 @@ export interface operations {
   }
   post_scenarios_scenario_id_delete_api_scenarios__scenario_id__delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path: {
         scenario_id: number
@@ -107130,7 +109529,10 @@ export interface operations {
   }
   patch_settings_api_settings_patch: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -107161,7 +109563,10 @@ export interface operations {
   }
   post_peoples_awaken_api_peoples_awaken_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -107192,7 +109597,10 @@ export interface operations {
   }
   post_federations_api_federations_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -107223,7 +109631,10 @@ export interface operations {
   }
   post_cheats_essence_api_cheats_essence_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -114584,6 +116995,39 @@ export interface operations {
       }
     }
   }
+  share_session_api_divine_will_sessions__session_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        session_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SharedUpdate']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['WillSessionSummary']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   start_cycle_api_divine_will_cycles_post: {
     parameters: {
       query?: never
@@ -115154,6 +117598,101 @@ export interface operations {
       }
     }
   }
+  share_plan_api_divine_will_plans__plan_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        plan_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SharedUpdate']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillPlan']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_forecast_api_divine_will_forecasts__forecast_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        forecast_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillForecast']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  share_forecast_api_divine_will_forecasts__forecast_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        forecast_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SharedUpdate']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DivineWillForecast']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   revise_plan_api_divine_will_plans__plan_id__steps_put: {
     parameters: {
       query?: never
@@ -115392,35 +117931,6 @@ export interface operations {
       }
     }
   }
-  read_forecast_api_divine_will_forecasts__forecast_id__get: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        forecast_id: number
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['DivineWillForecast']
-        }
-      }
-      default: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['ErrorResponse']
-        }
-      }
-    }
-  }
   cancel_forecast_api_divine_will_forecasts__forecast_id__cancel_post: {
     parameters: {
       query?: never
@@ -115572,6 +118082,39 @@ export interface operations {
       }
     }
   }
+  share_session_api_presence_sessions__session_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        session_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SharedUpdate']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresenceSessionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   start_exchange_api_presence_sessions__session_id__exchanges_post: {
     parameters: {
       query?: never
@@ -115692,6 +118235,335 @@ export interface operations {
       }
     }
   }
+  read_team_api_team_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TeamView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  mark_presence_api_presence_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PresenceUpdate']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresentView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  leave_presence_api_presence_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PresentView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_revision_api_team_revisions__node_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        node_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['NodeRevisionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_queue_api_team_queue_get: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['QueuedActStatus'] | null
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['QueuePage']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cancel_queued_api_team_queue__act_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        act_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['QueuedActView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  retry_queued_api_team_queue__act_id__retry_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        act_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['QueuedActView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_proposals_api_team_proposals_get: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['ProposalStatus'] | null
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProposalPage']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  approve_proposal_api_team_proposals__proposal_id__approve_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        proposal_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProposalDecision']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CanonProposalView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  reject_proposal_api_team_proposals__proposal_id__reject_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        proposal_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProposalDecision']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CanonProposalView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  withdraw_proposal_api_team_proposals__proposal_id__withdraw_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        proposal_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CanonProposalView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   list_actions_api_actions_get: {
     parameters: {
       query?: never
@@ -115721,7 +118593,10 @@ export interface operations {
   }
   action_storyteller_points_set_api_actions_storyteller_points_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -115752,7 +118627,10 @@ export interface operations {
   }
   action_regional_tension_set_api_actions_regional_tension_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -115783,7 +118661,10 @@ export interface operations {
   }
   action_regional_tension_edit_api_actions_regional_tension_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -115814,7 +118695,10 @@ export interface operations {
   }
   action_regional_tension_delete_api_actions_regional_tension_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -115845,7 +118729,10 @@ export interface operations {
   }
   action_subsystem_tension_edit_api_actions_subsystem_tension_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -115876,7 +118763,10 @@ export interface operations {
   }
   action_subsystem_tension_delete_api_actions_subsystem_tension_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -115907,7 +118797,10 @@ export interface operations {
   }
   action_source_trust_set_api_actions_source_trust_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -115938,7 +118831,10 @@ export interface operations {
   }
   action_source_trust_edit_api_actions_source_trust_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -115969,7 +118865,10 @@ export interface operations {
   }
   action_source_trust_delete_api_actions_source_trust_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116000,7 +118899,10 @@ export interface operations {
   }
   action_rift_control_set_api_actions_rift_control_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116031,7 +118933,10 @@ export interface operations {
   }
   action_rift_control_edit_api_actions_rift_control_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116062,7 +118967,10 @@ export interface operations {
   }
   action_rift_control_delete_api_actions_rift_control_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116093,7 +119001,10 @@ export interface operations {
   }
   action_council_procedure_edit_api_actions_council_procedure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116124,7 +119035,10 @@ export interface operations {
   }
   action_council_procedure_reset_api_actions_council_procedure_reset_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116151,7 +119065,10 @@ export interface operations {
   }
   action_divine_seat_set_api_actions_divine_seat_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116182,7 +119099,10 @@ export interface operations {
   }
   action_divine_seat_edit_api_actions_divine_seat_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116213,7 +119133,10 @@ export interface operations {
   }
   action_divine_seat_delete_api_actions_divine_seat_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116244,7 +119167,10 @@ export interface operations {
   }
   action_council_violation_create_api_actions_council_violation_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116275,7 +119201,10 @@ export interface operations {
   }
   action_council_violation_edit_api_actions_council_violation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116306,7 +119235,10 @@ export interface operations {
   }
   action_council_violation_delete_api_actions_council_violation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116337,7 +119269,10 @@ export interface operations {
   }
   action_council_record_create_api_actions_council_record_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116368,7 +119303,10 @@ export interface operations {
   }
   action_council_record_edit_api_actions_council_record_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116399,7 +119337,10 @@ export interface operations {
   }
   action_council_record_delete_api_actions_council_record_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116430,7 +119371,10 @@ export interface operations {
   }
   action_council_veto_api_actions_council_veto_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116461,7 +119405,10 @@ export interface operations {
   }
   action_relation_component_set_api_actions_relation_component_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116492,7 +119439,10 @@ export interface operations {
   }
   action_relation_component_edit_api_actions_relation_component_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116523,7 +119473,10 @@ export interface operations {
   }
   action_relation_component_delete_api_actions_relation_component_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116554,7 +119507,10 @@ export interface operations {
   }
   action_constitution_write_api_actions_constitution_write_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116585,7 +119541,10 @@ export interface operations {
   }
   action_constitution_edit_api_actions_constitution_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116616,7 +119575,10 @@ export interface operations {
   }
   action_constitution_delete_api_actions_constitution_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116647,7 +119609,10 @@ export interface operations {
   }
   action_journey_encounter_create_api_actions_journey_encounter_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116678,7 +119643,10 @@ export interface operations {
   }
   action_journey_encounter_edit_api_actions_journey_encounter_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116709,7 +119677,10 @@ export interface operations {
   }
   action_journey_encounter_delete_api_actions_journey_encounter_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116740,7 +119711,10 @@ export interface operations {
   }
   action_ideology_split_api_actions_ideology_split_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116771,7 +119745,10 @@ export interface operations {
   }
   action_ideology_merge_api_actions_ideology_merge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116802,7 +119779,10 @@ export interface operations {
   }
   action_authored_kind_create_api_actions_authored_kind_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116833,7 +119813,10 @@ export interface operations {
   }
   action_authored_kind_edit_api_actions_authored_kind_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116864,7 +119847,10 @@ export interface operations {
   }
   action_authored_kind_hold_api_actions_authored_kind_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116895,7 +119881,10 @@ export interface operations {
   }
   action_authored_kind_spread_api_actions_authored_kind_spread_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116926,7 +119915,10 @@ export interface operations {
   }
   action_authored_kind_retire_api_actions_authored_kind_retire_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116957,7 +119949,10 @@ export interface operations {
   }
   action_authored_kind_delete_api_actions_authored_kind_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -116988,7 +119983,10 @@ export interface operations {
   }
   action_pantheon_edit_api_actions_pantheon_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117019,7 +120017,10 @@ export interface operations {
   }
   action_pantheon_tie_set_api_actions_pantheon_tie_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117050,7 +120051,10 @@ export interface operations {
   }
   action_pantheon_tie_edit_api_actions_pantheon_tie_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117081,7 +120085,10 @@ export interface operations {
   }
   action_pantheon_tie_delete_api_actions_pantheon_tie_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117112,7 +120119,10 @@ export interface operations {
   }
   action_syncretism_create_api_actions_syncretism_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117143,7 +120153,10 @@ export interface operations {
   }
   action_syncretism_edit_api_actions_syncretism_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117174,7 +120187,10 @@ export interface operations {
   }
   action_syncretism_delete_api_actions_syncretism_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117205,7 +120221,10 @@ export interface operations {
   }
   action_horror_event_edit_api_actions_horror_event_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117236,7 +120255,10 @@ export interface operations {
   }
   action_horror_event_delete_api_actions_horror_event_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117267,7 +120289,10 @@ export interface operations {
   }
   action_legendary_quest_edit_api_actions_legendary_quest_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117298,7 +120323,10 @@ export interface operations {
   }
   action_hero_quest_edit_api_actions_hero_quest_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117329,7 +120357,10 @@ export interface operations {
   }
   action_creature_attack_create_api_actions_creature_attack_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117360,7 +120391,10 @@ export interface operations {
   }
   action_creature_attack_edit_api_actions_creature_attack_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117391,7 +120425,10 @@ export interface operations {
   }
   action_creature_attack_delete_api_actions_creature_attack_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117422,7 +120459,10 @@ export interface operations {
   }
   action_storyteller_palette_api_actions_storyteller_palette_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117453,7 +120493,10 @@ export interface operations {
   }
   action_dimension_aspect_create_api_actions_dimension_aspect_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117484,7 +120527,10 @@ export interface operations {
   }
   action_dimension_aspect_edit_api_actions_dimension_aspect_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117515,7 +120561,10 @@ export interface operations {
   }
   action_dimension_aspect_delete_api_actions_dimension_aspect_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117546,7 +120595,10 @@ export interface operations {
   }
   action_law_grammar_set_api_actions_law_grammar_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117577,7 +120629,10 @@ export interface operations {
   }
   action_law_exception_create_api_actions_law_exception_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117608,7 +120663,10 @@ export interface operations {
   }
   action_law_exception_edit_api_actions_law_exception_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117639,7 +120697,10 @@ export interface operations {
   }
   action_law_exception_delete_api_actions_law_exception_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117670,7 +120731,10 @@ export interface operations {
   }
   action_law_theory_create_api_actions_law_theory_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117701,7 +120765,10 @@ export interface operations {
   }
   action_law_theory_edit_api_actions_law_theory_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117732,7 +120799,10 @@ export interface operations {
   }
   action_law_theory_delete_api_actions_law_theory_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117763,7 +120833,10 @@ export interface operations {
   }
   action_outer_plan_set_api_actions_outer_plan_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117794,7 +120867,10 @@ export interface operations {
   }
   action_outer_plan_edit_api_actions_outer_plan_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117825,7 +120901,10 @@ export interface operations {
   }
   action_outer_plan_delete_api_actions_outer_plan_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117856,7 +120935,10 @@ export interface operations {
   }
   action_outer_herald_bind_api_actions_outer_herald_bind_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117887,7 +120969,10 @@ export interface operations {
   }
   action_outer_herald_edit_api_actions_outer_herald_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117918,7 +121003,10 @@ export interface operations {
   }
   action_outer_herald_release_api_actions_outer_herald_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117949,7 +121037,10 @@ export interface operations {
   }
   action_outer_incursion_open_api_actions_outer_incursion_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -117980,7 +121071,10 @@ export interface operations {
   }
   action_outer_incursion_edit_api_actions_outer_incursion_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118011,7 +121105,10 @@ export interface operations {
   }
   action_outer_incursion_end_api_actions_outer_incursion_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118042,7 +121139,10 @@ export interface operations {
   }
   action_outer_pact_strike_api_actions_outer_pact_strike_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118073,7 +121173,10 @@ export interface operations {
   }
   action_outer_pact_edit_api_actions_outer_pact_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118104,7 +121207,10 @@ export interface operations {
   }
   action_outer_pact_void_api_actions_outer_pact_void_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118135,7 +121241,10 @@ export interface operations {
   }
   action_outer_relation_set_api_actions_outer_relation_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118166,7 +121275,10 @@ export interface operations {
   }
   action_outer_relation_edit_api_actions_outer_relation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118197,7 +121309,10 @@ export interface operations {
   }
   action_outer_relation_delete_api_actions_outer_relation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118228,7 +121343,10 @@ export interface operations {
   }
   action_outer_seal_set_api_actions_outer_seal_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118259,7 +121377,10 @@ export interface operations {
   }
   action_outer_seal_edit_api_actions_outer_seal_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118290,7 +121411,10 @@ export interface operations {
   }
   action_outer_seal_break_api_actions_outer_seal_break_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118321,7 +121445,10 @@ export interface operations {
   }
   action_outer_destroy_api_actions_outer_destroy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118352,7 +121479,10 @@ export interface operations {
   }
   action_creator_standing_edit_api_actions_creator_standing_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118383,7 +121513,10 @@ export interface operations {
   }
   action_covenant_offer_api_actions_covenant_offer_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118414,7 +121547,10 @@ export interface operations {
   }
   action_covenant_edit_api_actions_covenant_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118445,7 +121581,10 @@ export interface operations {
   }
   action_covenant_delete_api_actions_covenant_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118476,7 +121615,10 @@ export interface operations {
   }
   action_chosen_choose_api_actions_chosen_choose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118507,7 +121649,10 @@ export interface operations {
   }
   action_chosen_edit_api_actions_chosen_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118538,7 +121683,10 @@ export interface operations {
   }
   action_chosen_release_api_actions_chosen_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118569,7 +121717,10 @@ export interface operations {
   }
   action_depiction_edit_api_actions_depiction_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118600,7 +121751,10 @@ export interface operations {
   }
   action_divine_power_create_api_actions_divine_power_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118631,7 +121785,10 @@ export interface operations {
   }
   action_divine_power_edit_api_actions_divine_power_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118662,7 +121819,10 @@ export interface operations {
   }
   action_divine_power_delete_api_actions_divine_power_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118693,7 +121853,10 @@ export interface operations {
   }
   action_divine_power_domains_api_actions_divine_power_domains_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118724,7 +121887,10 @@ export interface operations {
   }
   action_divine_power_use_api_actions_divine_power_use_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118755,7 +121921,10 @@ export interface operations {
   }
   action_technology_set_api_actions_technology_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118786,7 +121955,10 @@ export interface operations {
   }
   action_technology_release_api_actions_technology_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118817,7 +121989,10 @@ export interface operations {
   }
   action_technology_delete_api_actions_technology_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118848,7 +122023,10 @@ export interface operations {
   }
   action_fortune_edit_api_actions_fortune_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118879,7 +122057,10 @@ export interface operations {
   }
   action_fortune_source_create_api_actions_fortune_source_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118910,7 +122091,10 @@ export interface operations {
   }
   action_fortune_source_edit_api_actions_fortune_source_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118941,7 +122125,10 @@ export interface operations {
   }
   action_fortune_source_delete_api_actions_fortune_source_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -118972,7 +122159,10 @@ export interface operations {
   }
   action_fortune_law_set_api_actions_fortune_law_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119003,7 +122193,10 @@ export interface operations {
   }
   action_mishap_trigger_api_actions_mishap_trigger_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119034,7 +122227,10 @@ export interface operations {
   }
   action_living_create_api_actions_living_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119065,7 +122261,10 @@ export interface operations {
   }
   action_living_edit_api_actions_living_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119096,7 +122295,10 @@ export interface operations {
   }
   action_living_delete_api_actions_living_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119127,7 +122329,10 @@ export interface operations {
   }
   action_living_end_api_actions_living_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119158,7 +122363,10 @@ export interface operations {
   }
   action_line_create_api_actions_line_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119189,7 +122397,10 @@ export interface operations {
   }
   action_line_edit_api_actions_line_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119220,7 +122431,10 @@ export interface operations {
   }
   action_line_delete_api_actions_line_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119251,7 +122465,10 @@ export interface operations {
   }
   action_line_escape_api_actions_line_escape_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119282,7 +122499,10 @@ export interface operations {
   }
   action_line_contain_api_actions_line_contain_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119313,7 +122533,10 @@ export interface operations {
   }
   action_line_part_create_api_actions_line_part_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119344,7 +122567,10 @@ export interface operations {
   }
   action_line_part_edit_api_actions_line_part_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119375,7 +122601,10 @@ export interface operations {
   }
   action_line_part_delete_api_actions_line_part_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119406,7 +122635,10 @@ export interface operations {
   }
   action_bank_create_api_actions_bank_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119437,7 +122669,10 @@ export interface operations {
   }
   action_bank_edit_api_actions_bank_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119468,7 +122703,10 @@ export interface operations {
   }
   action_bank_delete_api_actions_bank_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119499,7 +122737,10 @@ export interface operations {
   }
   action_sample_create_api_actions_sample_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119530,7 +122771,10 @@ export interface operations {
   }
   action_sample_edit_api_actions_sample_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119561,7 +122805,10 @@ export interface operations {
   }
   action_sample_delete_api_actions_sample_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119592,7 +122839,10 @@ export interface operations {
   }
   action_sample_raise_api_actions_sample_raise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119623,7 +122873,10 @@ export interface operations {
   }
   action_clone_create_api_actions_clone_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119654,7 +122907,10 @@ export interface operations {
   }
   action_symbiont_host_api_actions_symbiont_host_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119685,7 +122941,10 @@ export interface operations {
   }
   action_symbiont_edit_api_actions_symbiont_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119716,7 +122975,10 @@ export interface operations {
   }
   action_symbiont_remove_api_actions_symbiont_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119747,7 +123009,10 @@ export interface operations {
   }
   action_source_create_api_actions_source_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119778,7 +123043,10 @@ export interface operations {
   }
   action_source_edit_api_actions_source_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119809,7 +123077,10 @@ export interface operations {
   }
   action_source_delete_api_actions_source_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119840,7 +123111,10 @@ export interface operations {
   }
   action_source_part_create_api_actions_source_part_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119871,7 +123145,10 @@ export interface operations {
   }
   action_source_part_edit_api_actions_source_part_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119902,7 +123179,10 @@ export interface operations {
   }
   action_source_part_delete_api_actions_source_part_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119933,7 +123213,10 @@ export interface operations {
   }
   action_magic_system_create_api_actions_magic_system_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119964,7 +123247,10 @@ export interface operations {
   }
   action_magic_system_edit_api_actions_magic_system_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -119995,7 +123281,10 @@ export interface operations {
   }
   action_magic_system_delete_api_actions_magic_system_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120026,7 +123315,10 @@ export interface operations {
   }
   action_system_part_create_api_actions_system_part_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120057,7 +123349,10 @@ export interface operations {
   }
   action_system_part_edit_api_actions_system_part_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120088,7 +123383,10 @@ export interface operations {
   }
   action_system_part_delete_api_actions_system_part_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120119,7 +123417,10 @@ export interface operations {
   }
   action_power_create_api_actions_power_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120150,7 +123451,10 @@ export interface operations {
   }
   action_power_edit_api_actions_power_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120181,7 +123485,10 @@ export interface operations {
   }
   action_power_delete_api_actions_power_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120212,7 +123519,10 @@ export interface operations {
   }
   action_power_awaken_api_actions_power_awaken_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120243,7 +123553,10 @@ export interface operations {
   }
   action_power_suppress_api_actions_power_suppress_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120274,7 +123587,10 @@ export interface operations {
   }
   action_power_grant_api_actions_power_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120305,7 +123621,10 @@ export interface operations {
   }
   action_power_revoke_api_actions_power_revoke_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120336,7 +123655,10 @@ export interface operations {
   }
   action_power_part_create_api_actions_power_part_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120367,7 +123689,10 @@ export interface operations {
   }
   action_power_part_edit_api_actions_power_part_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120398,7 +123723,10 @@ export interface operations {
   }
   action_power_part_delete_api_actions_power_part_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120429,7 +123757,10 @@ export interface operations {
   }
   action_truth_create_api_actions_truth_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120460,7 +123791,10 @@ export interface operations {
   }
   action_truth_edit_api_actions_truth_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120491,7 +123825,10 @@ export interface operations {
   }
   action_truth_delete_api_actions_truth_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120522,7 +123859,10 @@ export interface operations {
   }
   action_truth_reveal_api_actions_truth_reveal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120553,7 +123893,10 @@ export interface operations {
   }
   action_truth_hide_api_actions_truth_hide_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120584,7 +123927,10 @@ export interface operations {
   }
   action_breach_trigger_api_actions_breach_trigger_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120615,7 +123961,10 @@ export interface operations {
   }
   action_stress_set_api_actions_stress_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120646,7 +123995,10 @@ export interface operations {
   }
   action_stress_edit_api_actions_stress_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120677,7 +124029,10 @@ export interface operations {
   }
   action_stress_delete_api_actions_stress_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120708,7 +124063,10 @@ export interface operations {
   }
   action_stress_reading_set_api_actions_stress_reading_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120739,7 +124097,10 @@ export interface operations {
   }
   action_stress_reading_edit_api_actions_stress_reading_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120770,7 +124131,10 @@ export interface operations {
   }
   action_stress_reading_delete_api_actions_stress_reading_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120801,7 +124165,10 @@ export interface operations {
   }
   action_asabiyya_set_api_actions_asabiyya_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120832,7 +124199,10 @@ export interface operations {
   }
   action_asabiyya_edit_api_actions_asabiyya_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120863,7 +124233,10 @@ export interface operations {
   }
   action_asabiyya_delete_api_actions_asabiyya_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120894,7 +124267,10 @@ export interface operations {
   }
   action_challenge_strike_api_actions_challenge_strike_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120925,7 +124301,10 @@ export interface operations {
   }
   action_challenge_edit_api_actions_challenge_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120956,7 +124335,10 @@ export interface operations {
   }
   action_challenge_delete_api_actions_challenge_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -120987,7 +124369,10 @@ export interface operations {
   }
   action_plan_create_api_actions_plan_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121018,7 +124403,10 @@ export interface operations {
   }
   action_plan_edit_api_actions_plan_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121049,7 +124437,10 @@ export interface operations {
   }
   action_plan_advance_api_actions_plan_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121080,7 +124471,10 @@ export interface operations {
   }
   action_plan_expose_api_actions_plan_expose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121111,7 +124505,10 @@ export interface operations {
   }
   action_plan_delete_api_actions_plan_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121142,7 +124539,10 @@ export interface operations {
   }
   action_gift_give_api_actions_gift_give_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121173,7 +124573,10 @@ export interface operations {
   }
   action_gift_return_api_actions_gift_return_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121204,7 +124607,10 @@ export interface operations {
   }
   action_gift_refuse_api_actions_gift_refuse_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121235,7 +124641,10 @@ export interface operations {
   }
   action_gift_release_api_actions_gift_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121266,7 +124675,10 @@ export interface operations {
   }
   action_gift_edit_api_actions_gift_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121297,7 +124709,10 @@ export interface operations {
   }
   action_gift_delete_api_actions_gift_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121328,7 +124743,10 @@ export interface operations {
   }
   action_circuit_create_api_actions_circuit_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121359,7 +124777,10 @@ export interface operations {
   }
   action_circuit_edit_api_actions_circuit_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121390,7 +124811,10 @@ export interface operations {
   }
   action_circuit_route_api_actions_circuit_route_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121421,7 +124845,10 @@ export interface operations {
   }
   action_circuit_pass_api_actions_circuit_pass_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121452,7 +124879,10 @@ export interface operations {
   }
   action_circuit_delete_api_actions_circuit_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121483,7 +124913,10 @@ export interface operations {
   }
   action_debt_set_api_actions_debt_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121514,7 +124947,10 @@ export interface operations {
   }
   action_debt_edit_api_actions_debt_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121545,7 +124981,10 @@ export interface operations {
   }
   action_debt_delete_api_actions_debt_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121576,7 +125015,10 @@ export interface operations {
   }
   action_kinship_set_api_actions_kinship_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121607,7 +125049,10 @@ export interface operations {
   }
   action_kinship_edit_api_actions_kinship_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121638,7 +125083,10 @@ export interface operations {
   }
   action_kinship_delete_api_actions_kinship_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121669,7 +125117,10 @@ export interface operations {
   }
   action_union_set_api_actions_union_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121700,7 +125151,10 @@ export interface operations {
   }
   action_union_edit_api_actions_union_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121731,7 +125185,10 @@ export interface operations {
   }
   action_union_delete_api_actions_union_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121762,7 +125219,10 @@ export interface operations {
   }
   action_alliance_set_api_actions_alliance_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121793,7 +125253,10 @@ export interface operations {
   }
   action_alliance_edit_api_actions_alliance_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121824,7 +125287,10 @@ export interface operations {
   }
   action_alliance_delete_api_actions_alliance_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121855,7 +125321,10 @@ export interface operations {
   }
   action_reproduction_set_api_actions_reproduction_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121886,7 +125355,10 @@ export interface operations {
   }
   action_reproduction_edit_api_actions_reproduction_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121917,7 +125389,10 @@ export interface operations {
   }
   action_reproduction_delete_api_actions_reproduction_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121948,7 +125423,10 @@ export interface operations {
   }
   action_caste_set_api_actions_caste_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -121979,7 +125457,10 @@ export interface operations {
   }
   action_caste_edit_api_actions_caste_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122010,7 +125491,10 @@ export interface operations {
   }
   action_caste_delete_api_actions_caste_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122041,7 +125525,10 @@ export interface operations {
   }
   action_camp_set_api_actions_camp_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122072,7 +125559,10 @@ export interface operations {
   }
   action_camp_edit_api_actions_camp_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122103,7 +125593,10 @@ export interface operations {
   }
   action_camp_route_api_actions_camp_route_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122134,7 +125627,10 @@ export interface operations {
   }
   action_camp_move_api_actions_camp_move_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122165,7 +125661,10 @@ export interface operations {
   }
   action_camp_delete_api_actions_camp_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122196,7 +125695,10 @@ export interface operations {
   }
   action_confederation_create_api_actions_confederation_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122227,7 +125729,10 @@ export interface operations {
   }
   action_confederation_edit_api_actions_confederation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122258,7 +125763,10 @@ export interface operations {
   }
   action_confederation_members_api_actions_confederation_members_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122289,7 +125797,10 @@ export interface operations {
   }
   action_confederation_dissolve_api_actions_confederation_dissolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122320,7 +125831,10 @@ export interface operations {
   }
   action_confederation_delete_api_actions_confederation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122351,7 +125865,10 @@ export interface operations {
   }
   action_legacy_set_api_actions_legacy_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122382,7 +125899,10 @@ export interface operations {
   }
   action_legacy_edit_api_actions_legacy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122413,7 +125933,10 @@ export interface operations {
   }
   action_legacy_delete_api_actions_legacy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122444,7 +125967,10 @@ export interface operations {
   }
   action_indenture_create_api_actions_indenture_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122475,7 +126001,10 @@ export interface operations {
   }
   action_indenture_edit_api_actions_indenture_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122506,7 +126035,10 @@ export interface operations {
   }
   action_indenture_release_api_actions_indenture_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122537,7 +126069,10 @@ export interface operations {
   }
   action_indenture_delete_api_actions_indenture_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122568,7 +126103,10 @@ export interface operations {
   }
   action_slave_market_set_api_actions_slave_market_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122599,7 +126137,10 @@ export interface operations {
   }
   action_slave_market_edit_api_actions_slave_market_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122630,7 +126171,10 @@ export interface operations {
   }
   action_slave_market_delete_api_actions_slave_market_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122661,7 +126205,10 @@ export interface operations {
   }
   action_manumission_free_api_actions_manumission_free_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122692,7 +126239,10 @@ export interface operations {
   }
   action_manumission_edit_api_actions_manumission_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122723,7 +126273,10 @@ export interface operations {
   }
   action_manumission_delete_api_actions_manumission_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122754,7 +126307,10 @@ export interface operations {
   }
   action_regime_set_api_actions_regime_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122785,7 +126341,10 @@ export interface operations {
   }
   action_regime_edit_api_actions_regime_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122816,7 +126375,10 @@ export interface operations {
   }
   action_regime_delete_api_actions_regime_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122847,7 +126409,10 @@ export interface operations {
   }
   action_coalition_enrol_api_actions_coalition_enrol_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122878,7 +126443,10 @@ export interface operations {
   }
   action_coalition_edit_api_actions_coalition_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122909,7 +126477,10 @@ export interface operations {
   }
   action_coalition_purge_api_actions_coalition_purge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122940,7 +126511,10 @@ export interface operations {
   }
   action_coalition_delete_api_actions_coalition_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -122971,7 +126545,10 @@ export interface operations {
   }
   action_patronage_bind_api_actions_patronage_bind_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123002,7 +126579,10 @@ export interface operations {
   }
   action_patronage_edit_api_actions_patronage_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123033,7 +126613,10 @@ export interface operations {
   }
   action_patronage_delete_api_actions_patronage_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123064,7 +126647,10 @@ export interface operations {
   }
   action_venal_office_sell_api_actions_venal_office_sell_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123095,7 +126681,10 @@ export interface operations {
   }
   action_venal_office_sinecure_api_actions_venal_office_sinecure_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123126,7 +126715,10 @@ export interface operations {
   }
   action_venal_office_edit_api_actions_venal_office_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123157,7 +126749,10 @@ export interface operations {
   }
   action_venal_office_delete_api_actions_venal_office_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123188,7 +126783,10 @@ export interface operations {
   }
   action_power_base_measure_api_actions_power_base_measure_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123219,7 +126817,10 @@ export interface operations {
   }
   action_power_base_set_api_actions_power_base_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123250,7 +126851,10 @@ export interface operations {
   }
   action_power_base_edit_api_actions_power_base_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123281,7 +126885,10 @@ export interface operations {
   }
   action_power_base_delete_api_actions_power_base_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123312,7 +126919,10 @@ export interface operations {
   }
   action_kin_segment_set_api_actions_kin_segment_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123343,7 +126953,10 @@ export interface operations {
   }
   action_kin_segment_edit_api_actions_kin_segment_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123374,7 +126987,10 @@ export interface operations {
   }
   action_kin_segment_delete_api_actions_kin_segment_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123405,7 +127021,10 @@ export interface operations {
   }
   action_breeding_create_api_actions_breeding_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123436,7 +127055,10 @@ export interface operations {
   }
   action_breeding_edit_api_actions_breeding_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123467,7 +127089,10 @@ export interface operations {
   }
   action_breeding_delete_api_actions_breeding_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123498,7 +127123,10 @@ export interface operations {
   }
   action_examination_set_api_actions_examination_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123529,7 +127157,10 @@ export interface operations {
   }
   action_examination_sit_api_actions_examination_sit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123560,7 +127191,10 @@ export interface operations {
   }
   action_examination_edit_api_actions_examination_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123591,7 +127225,10 @@ export interface operations {
   }
   action_examination_delete_api_actions_examination_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123622,7 +127259,10 @@ export interface operations {
   }
   action_exam_sitting_edit_api_actions_exam_sitting_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123653,7 +127293,10 @@ export interface operations {
   }
   action_exam_sitting_delete_api_actions_exam_sitting_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123684,7 +127327,10 @@ export interface operations {
   }
   action_credential_grant_api_actions_credential_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123715,7 +127361,10 @@ export interface operations {
   }
   action_credential_edit_api_actions_credential_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123746,7 +127395,10 @@ export interface operations {
   }
   action_credential_delete_api_actions_credential_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123777,7 +127429,10 @@ export interface operations {
   }
   action_academic_freedom_set_api_actions_academic_freedom_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123808,7 +127463,10 @@ export interface operations {
   }
   action_academic_freedom_edit_api_actions_academic_freedom_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123839,7 +127497,10 @@ export interface operations {
   }
   action_academic_freedom_delete_api_actions_academic_freedom_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123870,7 +127531,10 @@ export interface operations {
   }
   action_school_found_api_actions_school_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123901,7 +127565,10 @@ export interface operations {
   }
   action_school_edit_api_actions_school_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123932,7 +127599,10 @@ export interface operations {
   }
   action_school_delete_api_actions_school_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123963,7 +127633,10 @@ export interface operations {
   }
   action_disciple_admit_api_actions_disciple_admit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -123994,7 +127667,10 @@ export interface operations {
   }
   action_disciple_edit_api_actions_disciple_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124025,7 +127701,10 @@ export interface operations {
   }
   action_disciple_delete_api_actions_disciple_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124056,7 +127735,10 @@ export interface operations {
   }
   action_land_ring_set_api_actions_land_ring_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124087,7 +127769,10 @@ export interface operations {
   }
   action_land_ring_edit_api_actions_land_ring_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124118,7 +127803,10 @@ export interface operations {
   }
   action_land_ring_delete_api_actions_land_ring_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124149,7 +127837,10 @@ export interface operations {
   }
   action_central_place_set_api_actions_central_place_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124180,7 +127871,10 @@ export interface operations {
   }
   action_central_place_edit_api_actions_central_place_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124211,7 +127905,10 @@ export interface operations {
   }
   action_central_place_delete_api_actions_central_place_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124242,7 +127939,10 @@ export interface operations {
   }
   action_soil_nutrient_set_api_actions_soil_nutrient_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124273,7 +127973,10 @@ export interface operations {
   }
   action_soil_nutrient_edit_api_actions_soil_nutrient_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124304,7 +128007,10 @@ export interface operations {
   }
   action_soil_nutrient_delete_api_actions_soil_nutrient_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124335,7 +128041,10 @@ export interface operations {
   }
   action_intensification_set_api_actions_intensification_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124366,7 +128075,10 @@ export interface operations {
   }
   action_intensification_edit_api_actions_intensification_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124397,7 +128109,10 @@ export interface operations {
   }
   action_intensification_delete_api_actions_intensification_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124428,7 +128143,10 @@ export interface operations {
   }
   action_perennial_plant_api_actions_perennial_plant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124459,7 +128177,10 @@ export interface operations {
   }
   action_perennial_edit_api_actions_perennial_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124490,7 +128211,10 @@ export interface operations {
   }
   action_perennial_fell_api_actions_perennial_fell_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124521,7 +128245,10 @@ export interface operations {
   }
   action_perennial_delete_api_actions_perennial_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124552,7 +128279,10 @@ export interface operations {
   }
   action_commons_create_api_actions_commons_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124583,7 +128313,10 @@ export interface operations {
   }
   action_commons_edit_api_actions_commons_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124614,7 +128347,10 @@ export interface operations {
   }
   action_commons_enclose_api_actions_commons_enclose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124645,7 +128381,10 @@ export interface operations {
   }
   action_commons_delete_api_actions_commons_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124676,7 +128415,10 @@ export interface operations {
   }
   action_game_reserve_declare_api_actions_game_reserve_declare_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124707,7 +128449,10 @@ export interface operations {
   }
   action_game_reserve_edit_api_actions_game_reserve_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124738,7 +128483,10 @@ export interface operations {
   }
   action_game_reserve_delete_api_actions_game_reserve_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124769,7 +128517,10 @@ export interface operations {
   }
   action_famine_lore_set_api_actions_famine_lore_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124800,7 +128551,10 @@ export interface operations {
   }
   action_famine_lore_edit_api_actions_famine_lore_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124831,7 +128585,10 @@ export interface operations {
   }
   action_famine_lore_delete_api_actions_famine_lore_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124862,7 +128619,10 @@ export interface operations {
   }
   action_preparedness_build_api_actions_preparedness_build_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124893,7 +128653,10 @@ export interface operations {
   }
   action_preparedness_edit_api_actions_preparedness_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124924,7 +128687,10 @@ export interface operations {
   }
   action_preparedness_delete_api_actions_preparedness_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124955,7 +128721,10 @@ export interface operations {
   }
   action_relief_send_api_actions_relief_send_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -124986,7 +128755,10 @@ export interface operations {
   }
   action_relief_edit_api_actions_relief_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125017,7 +128789,10 @@ export interface operations {
   }
   action_relief_delete_api_actions_relief_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125048,7 +128823,10 @@ export interface operations {
   }
   action_reconstruction_begin_api_actions_reconstruction_begin_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125079,7 +128857,10 @@ export interface operations {
   }
   action_reconstruction_edit_api_actions_reconstruction_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125110,7 +128891,10 @@ export interface operations {
   }
   action_reconstruction_finish_api_actions_reconstruction_finish_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125141,7 +128925,10 @@ export interface operations {
   }
   action_reconstruction_delete_api_actions_reconstruction_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125172,7 +128959,10 @@ export interface operations {
   }
   action_keystone_designate_api_actions_keystone_designate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125203,7 +128993,10 @@ export interface operations {
   }
   action_keystone_edit_api_actions_keystone_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125234,7 +129027,10 @@ export interface operations {
   }
   action_keystone_delete_api_actions_keystone_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125265,7 +129061,10 @@ export interface operations {
   }
   action_brand_found_api_actions_brand_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125296,7 +129095,10 @@ export interface operations {
   }
   action_brand_edit_api_actions_brand_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125327,7 +129129,10 @@ export interface operations {
   }
   action_brand_delete_api_actions_brand_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125358,7 +129163,10 @@ export interface operations {
   }
   action_echelon_create_api_actions_echelon_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125389,7 +129197,10 @@ export interface operations {
   }
   action_echelon_edit_api_actions_echelon_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125420,7 +129231,10 @@ export interface operations {
   }
   action_echelon_assign_api_actions_echelon_assign_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125451,7 +129265,10 @@ export interface operations {
   }
   action_echelon_delete_api_actions_echelon_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125482,7 +129299,10 @@ export interface operations {
   }
   action_depot_create_api_actions_depot_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125513,7 +129333,10 @@ export interface operations {
   }
   action_depot_edit_api_actions_depot_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125544,7 +129367,10 @@ export interface operations {
   }
   action_depot_delete_api_actions_depot_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125575,7 +129401,10 @@ export interface operations {
   }
   action_transport_create_api_actions_transport_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125606,7 +129435,10 @@ export interface operations {
   }
   action_transport_edit_api_actions_transport_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125637,7 +129469,10 @@ export interface operations {
   }
   action_transport_delete_api_actions_transport_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125668,7 +129503,10 @@ export interface operations {
   }
   action_supply_flow_edit_api_actions_supply_flow_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125699,7 +129537,10 @@ export interface operations {
   }
   action_supply_flow_delete_api_actions_supply_flow_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125730,7 +129571,10 @@ export interface operations {
   }
   action_army_operation_set_api_actions_army_operation_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125761,7 +129605,10 @@ export interface operations {
   }
   action_army_operation_edit_api_actions_army_operation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125792,7 +129639,10 @@ export interface operations {
   }
   action_army_operation_delete_api_actions_army_operation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125823,7 +129673,10 @@ export interface operations {
   }
   action_theatre_set_api_actions_theatre_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125854,7 +129707,10 @@ export interface operations {
   }
   action_theatre_edit_api_actions_theatre_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125885,7 +129741,10 @@ export interface operations {
   }
   action_theatre_delete_api_actions_theatre_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125916,7 +129775,10 @@ export interface operations {
   }
   action_ship_state_set_api_actions_ship_state_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125947,7 +129809,10 @@ export interface operations {
   }
   action_ship_state_edit_api_actions_ship_state_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -125978,7 +129843,10 @@ export interface operations {
   }
   action_ship_state_delete_api_actions_ship_state_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126009,7 +129877,10 @@ export interface operations {
   }
   action_ship_crew_set_api_actions_ship_crew_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126040,7 +129911,10 @@ export interface operations {
   }
   action_ship_crew_edit_api_actions_ship_crew_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126071,7 +129945,10 @@ export interface operations {
   }
   action_ship_crew_delete_api_actions_ship_crew_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126102,7 +129979,10 @@ export interface operations {
   }
   action_admiralty_set_api_actions_admiralty_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126133,7 +130013,10 @@ export interface operations {
   }
   action_admiralty_edit_api_actions_admiralty_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126164,7 +130047,10 @@ export interface operations {
   }
   action_admiralty_delete_api_actions_admiralty_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126195,7 +130081,10 @@ export interface operations {
   }
   action_expedition_create_api_actions_expedition_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126226,7 +130115,10 @@ export interface operations {
   }
   action_expedition_edit_api_actions_expedition_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126257,7 +130149,10 @@ export interface operations {
   }
   action_expedition_advance_api_actions_expedition_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126288,7 +130183,10 @@ export interface operations {
   }
   action_expedition_recall_api_actions_expedition_recall_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126319,7 +130217,10 @@ export interface operations {
   }
   action_expedition_delete_api_actions_expedition_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126350,7 +130251,10 @@ export interface operations {
   }
   action_expedition_member_create_api_actions_expedition_member_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126381,7 +130285,10 @@ export interface operations {
   }
   action_expedition_member_edit_api_actions_expedition_member_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126412,7 +130319,10 @@ export interface operations {
   }
   action_expedition_member_delete_api_actions_expedition_member_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126443,7 +130353,10 @@ export interface operations {
   }
   action_expedition_log_edit_api_actions_expedition_log_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126474,7 +130387,10 @@ export interface operations {
   }
   action_expedition_log_delete_api_actions_expedition_log_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126505,7 +130421,10 @@ export interface operations {
   }
   action_quirk_create_api_actions_quirk_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126536,7 +130455,10 @@ export interface operations {
   }
   action_quirk_edit_api_actions_quirk_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126567,7 +130489,10 @@ export interface operations {
   }
   action_quirk_delete_api_actions_quirk_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126598,7 +130523,10 @@ export interface operations {
   }
   action_genius_locus_create_api_actions_genius_locus_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126629,7 +130557,10 @@ export interface operations {
   }
   action_genius_locus_edit_api_actions_genius_locus_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126660,7 +130591,10 @@ export interface operations {
   }
   action_genius_locus_delete_api_actions_genius_locus_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126691,7 +130625,10 @@ export interface operations {
   }
   action_spirit_office_set_api_actions_spirit_office_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126722,7 +130659,10 @@ export interface operations {
   }
   action_spirit_office_edit_api_actions_spirit_office_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126753,7 +130693,10 @@ export interface operations {
   }
   action_spirit_office_delete_api_actions_spirit_office_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126784,7 +130727,10 @@ export interface operations {
   }
   action_petition_create_api_actions_petition_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126815,7 +130761,10 @@ export interface operations {
   }
   action_petition_judge_api_actions_petition_judge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126846,7 +130795,10 @@ export interface operations {
   }
   action_petition_edit_api_actions_petition_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126877,7 +130829,10 @@ export interface operations {
   }
   action_petition_delete_api_actions_petition_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126908,7 +130863,10 @@ export interface operations {
   }
   action_mystic_create_api_actions_mystic_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126939,7 +130897,10 @@ export interface operations {
   }
   action_mystic_edit_api_actions_mystic_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -126970,7 +130931,10 @@ export interface operations {
   }
   action_mystic_delete_api_actions_mystic_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127001,7 +130965,10 @@ export interface operations {
   }
   action_vision_create_api_actions_vision_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127032,7 +130999,10 @@ export interface operations {
   }
   action_vision_edit_api_actions_vision_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127063,7 +131033,10 @@ export interface operations {
   }
   action_vision_delete_api_actions_vision_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127094,7 +131067,10 @@ export interface operations {
   }
   action_millenarian_create_api_actions_millenarian_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127125,7 +131101,10 @@ export interface operations {
   }
   action_millenarian_edit_api_actions_millenarian_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127156,7 +131135,10 @@ export interface operations {
   }
   action_millenarian_delete_api_actions_millenarian_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127187,7 +131169,10 @@ export interface operations {
   }
   action_theodicy_create_api_actions_theodicy_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127218,7 +131203,10 @@ export interface operations {
   }
   action_theodicy_answer_api_actions_theodicy_answer_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127249,7 +131237,10 @@ export interface operations {
   }
   action_theodicy_edit_api_actions_theodicy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127280,7 +131271,10 @@ export interface operations {
   }
   action_theodicy_delete_api_actions_theodicy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127311,7 +131305,10 @@ export interface operations {
   }
   action_doctrine_sacrament_set_api_actions_doctrine_sacrament_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127342,7 +131339,10 @@ export interface operations {
   }
   action_doctrine_sacrament_edit_api_actions_doctrine_sacrament_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127373,7 +131373,10 @@ export interface operations {
   }
   action_doctrine_sacrament_delete_api_actions_doctrine_sacrament_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127404,7 +131407,10 @@ export interface operations {
   }
   action_sacrament_create_api_actions_sacrament_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127435,7 +131441,10 @@ export interface operations {
   }
   action_sacrament_edit_api_actions_sacrament_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127466,7 +131475,10 @@ export interface operations {
   }
   action_sacrament_delete_api_actions_sacrament_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127497,7 +131509,10 @@ export interface operations {
   }
   action_doctrine_afterlife_set_api_actions_doctrine_afterlife_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127528,7 +131543,10 @@ export interface operations {
   }
   action_doctrine_afterlife_align_api_actions_doctrine_afterlife_align_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127559,7 +131577,10 @@ export interface operations {
   }
   action_doctrine_afterlife_edit_api_actions_doctrine_afterlife_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127590,7 +131611,10 @@ export interface operations {
   }
   action_doctrine_afterlife_delete_api_actions_doctrine_afterlife_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127621,7 +131645,10 @@ export interface operations {
   }
   action_faith_climate_set_api_actions_faith_climate_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127652,7 +131679,10 @@ export interface operations {
   }
   action_faith_climate_edit_api_actions_faith_climate_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127683,7 +131713,10 @@ export interface operations {
   }
   action_faith_climate_delete_api_actions_faith_climate_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127714,7 +131747,10 @@ export interface operations {
   }
   action_divination_system_create_api_actions_divination_system_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127745,7 +131781,10 @@ export interface operations {
   }
   action_divination_system_read_api_actions_divination_system_read_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127776,7 +131815,10 @@ export interface operations {
   }
   action_divination_system_edit_api_actions_divination_system_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127807,7 +131849,10 @@ export interface operations {
   }
   action_divination_system_delete_api_actions_divination_system_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127838,7 +131883,10 @@ export interface operations {
   }
   action_divination_create_api_actions_divination_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127869,7 +131917,10 @@ export interface operations {
   }
   action_divination_edit_api_actions_divination_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127900,7 +131951,10 @@ export interface operations {
   }
   action_divination_delete_api_actions_divination_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127931,7 +131985,10 @@ export interface operations {
   }
   action_foresight_create_api_actions_foresight_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127962,7 +132019,10 @@ export interface operations {
   }
   action_foresight_edit_api_actions_foresight_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -127993,7 +132053,10 @@ export interface operations {
   }
   action_foresight_delete_api_actions_foresight_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128024,7 +132087,10 @@ export interface operations {
   }
   action_forecast_model_create_api_actions_forecast_model_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128055,7 +132121,10 @@ export interface operations {
   }
   action_forecast_model_edit_api_actions_forecast_model_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128086,7 +132155,10 @@ export interface operations {
   }
   action_forecast_model_delete_api_actions_forecast_model_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128117,7 +132189,10 @@ export interface operations {
   }
   action_god_feeding_set_api_actions_god_feeding_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128148,7 +132223,10 @@ export interface operations {
   }
   action_god_feeding_edit_api_actions_god_feeding_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128179,7 +132257,10 @@ export interface operations {
   }
   action_god_feeding_delete_api_actions_god_feeding_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128210,7 +132291,10 @@ export interface operations {
   }
   action_art_price_set_api_actions_art_price_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128241,7 +132325,10 @@ export interface operations {
   }
   action_art_price_edit_api_actions_art_price_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128272,7 +132359,10 @@ export interface operations {
   }
   action_art_price_delete_api_actions_art_price_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128303,7 +132393,10 @@ export interface operations {
   }
   action_art_sale_create_api_actions_art_sale_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128334,7 +132427,10 @@ export interface operations {
   }
   action_art_sale_edit_api_actions_art_sale_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128365,7 +132461,10 @@ export interface operations {
   }
   action_art_sale_delete_api_actions_art_sale_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128396,7 +132495,10 @@ export interface operations {
   }
   action_collector_create_api_actions_collector_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128427,7 +132529,10 @@ export interface operations {
   }
   action_collector_edit_api_actions_collector_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128458,7 +132563,10 @@ export interface operations {
   }
   action_collector_delete_api_actions_collector_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128489,7 +132597,10 @@ export interface operations {
   }
   action_forgery_create_api_actions_forgery_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128520,7 +132631,10 @@ export interface operations {
   }
   action_forgery_expose_api_actions_forgery_expose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128551,7 +132665,10 @@ export interface operations {
   }
   action_forgery_edit_api_actions_forgery_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128582,7 +132699,10 @@ export interface operations {
   }
   action_forgery_delete_api_actions_forgery_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128613,7 +132733,10 @@ export interface operations {
   }
   action_canon_work_create_api_actions_canon_work_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128644,7 +132767,10 @@ export interface operations {
   }
   action_canon_work_edit_api_actions_canon_work_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128675,7 +132801,10 @@ export interface operations {
   }
   action_canon_work_delete_api_actions_canon_work_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128706,7 +132835,10 @@ export interface operations {
   }
   action_art_movement_create_api_actions_art_movement_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128737,7 +132869,10 @@ export interface operations {
   }
   action_art_movement_edit_api_actions_art_movement_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128768,7 +132903,10 @@ export interface operations {
   }
   action_art_movement_manifesto_api_actions_art_movement_manifesto_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128799,7 +132937,10 @@ export interface operations {
   }
   action_art_movement_delete_api_actions_art_movement_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128830,7 +132971,10 @@ export interface operations {
   }
   action_club_create_api_actions_club_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128861,7 +133005,10 @@ export interface operations {
   }
   action_club_edit_api_actions_club_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128892,7 +133039,10 @@ export interface operations {
   }
   action_club_delete_api_actions_club_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128923,7 +133073,10 @@ export interface operations {
   }
   action_league_create_api_actions_league_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128954,7 +133107,10 @@ export interface operations {
   }
   action_league_edit_api_actions_league_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -128985,7 +133141,10 @@ export interface operations {
   }
   action_league_delete_api_actions_league_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129016,7 +133175,10 @@ export interface operations {
   }
   action_match_create_api_actions_match_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129047,7 +133209,10 @@ export interface operations {
   }
   action_match_edit_api_actions_match_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129078,7 +133243,10 @@ export interface operations {
   }
   action_match_delete_api_actions_match_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129109,7 +133277,10 @@ export interface operations {
   }
   action_bet_create_api_actions_bet_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129140,7 +133311,10 @@ export interface operations {
   }
   action_bet_edit_api_actions_bet_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129171,7 +133345,10 @@ export interface operations {
   }
   action_bet_delete_api_actions_bet_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129202,7 +133379,10 @@ export interface operations {
   }
   action_construct_create_api_actions_construct_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129233,7 +133413,10 @@ export interface operations {
   }
   action_construct_ensoul_api_actions_construct_ensoul_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129264,7 +133447,10 @@ export interface operations {
   }
   action_construct_unmake_api_actions_construct_unmake_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129295,7 +133481,10 @@ export interface operations {
   }
   action_construct_edit_api_actions_construct_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129326,7 +133515,10 @@ export interface operations {
   }
   action_mind_make_api_actions_mind_make_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129357,7 +133549,10 @@ export interface operations {
   }
   action_mind_copy_api_actions_mind_copy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129388,7 +133583,10 @@ export interface operations {
   }
   action_mind_save_api_actions_mind_save_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129419,7 +133617,10 @@ export interface operations {
   }
   action_mind_restore_api_actions_mind_restore_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129450,7 +133651,10 @@ export interface operations {
   }
   action_mind_transfer_api_actions_mind_transfer_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129481,7 +133685,10 @@ export interface operations {
   }
   action_mind_merge_api_actions_mind_merge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129512,7 +133719,10 @@ export interface operations {
   }
   action_mind_divide_api_actions_mind_divide_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129543,7 +133753,10 @@ export interface operations {
   }
   action_mind_soul_api_actions_mind_soul_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129574,7 +133787,10 @@ export interface operations {
   }
   action_mind_reset_api_actions_mind_reset_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129605,7 +133821,10 @@ export interface operations {
   }
   action_network_found_api_actions_network_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129636,7 +133855,10 @@ export interface operations {
   }
   action_network_join_api_actions_network_join_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129667,7 +133889,10 @@ export interface operations {
   }
   action_network_link_api_actions_network_link_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129698,7 +133923,10 @@ export interface operations {
   }
   action_network_cut_api_actions_network_cut_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129729,7 +133957,10 @@ export interface operations {
   }
   action_augment_install_api_actions_augment_install_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129760,7 +133991,10 @@ export interface operations {
   }
   action_augment_remove_api_actions_augment_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129791,7 +134025,10 @@ export interface operations {
   }
   action_augment_effect_api_actions_augment_effect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129822,7 +134059,10 @@ export interface operations {
   }
   action_augment_edit_effect_api_actions_augment_edit_effect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129853,7 +134093,10 @@ export interface operations {
   }
   action_augment_drop_effect_api_actions_augment_drop_effect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129884,7 +134127,10 @@ export interface operations {
   }
   action_realm_make_api_actions_realm_make_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129915,7 +134161,10 @@ export interface operations {
   }
   action_intrusion_make_api_actions_intrusion_make_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129946,7 +134195,10 @@ export interface operations {
   }
   action_data_store_open_api_actions_data_store_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -129977,7 +134229,10 @@ export interface operations {
   }
   action_data_store_put_api_actions_data_store_put_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130008,7 +134263,10 @@ export interface operations {
   }
   action_data_store_take_api_actions_data_store_take_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130039,7 +134297,10 @@ export interface operations {
   }
   action_record_authenticity_api_actions_record_authenticity_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130070,7 +134331,10 @@ export interface operations {
   }
   action_company_hold_api_actions_company_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130101,7 +134365,10 @@ export interface operations {
   }
   action_replicator_found_api_actions_replicator_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130132,7 +134399,10 @@ export interface operations {
   }
   action_replicator_stop_api_actions_replicator_stop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130163,7 +134433,10 @@ export interface operations {
   }
   action_replicator_seed_api_actions_replicator_seed_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130194,7 +134467,10 @@ export interface operations {
   }
   action_replicator_lift_api_actions_replicator_lift_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130225,7 +134501,10 @@ export interface operations {
   }
   action_pattern_grant_api_actions_pattern_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130256,7 +134535,10 @@ export interface operations {
   }
   action_relic_mark_api_actions_relic_mark_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130287,7 +134569,10 @@ export interface operations {
   }
   action_salvage_open_api_actions_salvage_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130318,7 +134603,10 @@ export interface operations {
   }
   action_construct_delete_api_actions_construct_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130349,7 +134637,10 @@ export interface operations {
   }
   action_instruction_set_create_api_actions_instruction_set_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130380,7 +134671,10 @@ export interface operations {
   }
   action_instruction_set_resolve_api_actions_instruction_set_resolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130411,7 +134705,10 @@ export interface operations {
   }
   action_instruction_set_edit_api_actions_instruction_set_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130442,7 +134739,10 @@ export interface operations {
   }
   action_instruction_set_delete_api_actions_instruction_set_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130473,7 +134773,10 @@ export interface operations {
   }
   action_instruction_order_create_api_actions_instruction_order_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130504,7 +134807,10 @@ export interface operations {
   }
   action_instruction_order_edit_api_actions_instruction_order_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130535,7 +134841,10 @@ export interface operations {
   }
   action_instruction_order_delete_api_actions_instruction_order_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130566,7 +134875,10 @@ export interface operations {
   }
   action_remade_create_api_actions_remade_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130597,7 +134909,10 @@ export interface operations {
   }
   action_remade_edit_api_actions_remade_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130628,7 +134943,10 @@ export interface operations {
   }
   action_remade_delete_api_actions_remade_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130659,7 +134977,10 @@ export interface operations {
   }
   action_monster_contract_create_api_actions_monster_contract_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130690,7 +135011,10 @@ export interface operations {
   }
   action_monster_contract_assign_api_actions_monster_contract_assign_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130721,7 +135045,10 @@ export interface operations {
   }
   action_monster_contract_edit_api_actions_monster_contract_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130752,7 +135079,10 @@ export interface operations {
   }
   action_monster_contract_delete_api_actions_monster_contract_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130783,7 +135113,10 @@ export interface operations {
   }
   action_birth_sign_create_api_actions_birth_sign_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130814,7 +135147,10 @@ export interface operations {
   }
   action_birth_sign_edit_api_actions_birth_sign_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130845,7 +135181,10 @@ export interface operations {
   }
   action_birth_sign_delete_api_actions_birth_sign_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130876,7 +135215,10 @@ export interface operations {
   }
   action_formation_read_api_actions_formation_read_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130907,7 +135249,10 @@ export interface operations {
   }
   action_formation_reshape_api_actions_formation_reshape_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130938,7 +135283,10 @@ export interface operations {
   }
   action_formation_edit_api_actions_formation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -130969,7 +135317,10 @@ export interface operations {
   }
   action_formation_delete_api_actions_formation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131000,7 +135351,10 @@ export interface operations {
   }
   action_irregular_season_create_api_actions_irregular_season_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131031,7 +135385,10 @@ export interface operations {
   }
   action_irregular_season_forecast_api_actions_irregular_season_forecast_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131062,7 +135419,10 @@ export interface operations {
   }
   action_irregular_season_edit_api_actions_irregular_season_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131093,7 +135453,10 @@ export interface operations {
   }
   action_irregular_season_delete_api_actions_irregular_season_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131124,7 +135487,10 @@ export interface operations {
   }
   action_winter_forecast_set_api_actions_winter_forecast_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131155,7 +135521,10 @@ export interface operations {
   }
   action_winter_forecast_edit_api_actions_winter_forecast_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131186,7 +135555,10 @@ export interface operations {
   }
   action_winter_forecast_delete_api_actions_winter_forecast_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131217,7 +135589,10 @@ export interface operations {
   }
   action_eco_transformation_set_api_actions_eco_transformation_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131248,7 +135623,10 @@ export interface operations {
   }
   action_eco_transformation_edit_api_actions_eco_transformation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131279,7 +135657,10 @@ export interface operations {
   }
   action_eco_transformation_delete_api_actions_eco_transformation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131310,7 +135691,10 @@ export interface operations {
   }
   action_age_cycle_api_actions_age_cycle_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131341,7 +135725,10 @@ export interface operations {
   }
   action_age_turn_api_actions_age_turn_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131368,7 +135755,10 @@ export interface operations {
   }
   action_age_edit_api_actions_age_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131399,7 +135789,10 @@ export interface operations {
   }
   action_age_delete_api_actions_age_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131430,7 +135823,10 @@ export interface operations {
   }
   action_age_echo_create_api_actions_age_echo_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131461,7 +135857,10 @@ export interface operations {
   }
   action_age_echo_edit_api_actions_age_echo_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131492,7 +135891,10 @@ export interface operations {
   }
   action_age_echo_delete_api_actions_age_echo_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131523,7 +135925,10 @@ export interface operations {
   }
   action_arc_create_api_actions_arc_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131554,7 +135959,10 @@ export interface operations {
   }
   action_arc_press_api_actions_arc_press_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131585,7 +135993,10 @@ export interface operations {
   }
   action_arc_edit_api_actions_arc_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131616,7 +136027,10 @@ export interface operations {
   }
   action_arc_delete_api_actions_arc_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131647,7 +136061,10 @@ export interface operations {
   }
   action_arc_figure_create_api_actions_arc_figure_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131678,7 +136095,10 @@ export interface operations {
   }
   action_arc_figure_edit_api_actions_arc_figure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131709,7 +136129,10 @@ export interface operations {
   }
   action_arc_figure_delete_api_actions_arc_figure_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131740,7 +136163,10 @@ export interface operations {
   }
   action_arc_beat_create_api_actions_arc_beat_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131771,7 +136197,10 @@ export interface operations {
   }
   action_arc_beat_edit_api_actions_arc_beat_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131802,7 +136231,10 @@ export interface operations {
   }
   action_arc_beat_delete_api_actions_arc_beat_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131833,7 +136265,10 @@ export interface operations {
   }
   action_setup_create_api_actions_setup_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131864,7 +136299,10 @@ export interface operations {
   }
   action_setup_edit_api_actions_setup_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131895,7 +136333,10 @@ export interface operations {
   }
   action_setup_delete_api_actions_setup_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131926,7 +136367,10 @@ export interface operations {
   }
   action_diet_set_api_actions_diet_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131957,7 +136401,10 @@ export interface operations {
   }
   action_diet_edit_api_actions_diet_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -131988,7 +136435,10 @@ export interface operations {
   }
   action_diet_delete_api_actions_diet_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132019,7 +136469,10 @@ export interface operations {
   }
   action_nutrient_need_set_api_actions_nutrient_need_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132050,7 +136503,10 @@ export interface operations {
   }
   action_nutrient_need_edit_api_actions_nutrient_need_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132081,7 +136537,10 @@ export interface operations {
   }
   action_nutrient_need_delete_api_actions_nutrient_need_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132112,7 +136571,10 @@ export interface operations {
   }
   action_nutrition_score_set_api_actions_nutrition_score_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132143,7 +136605,10 @@ export interface operations {
   }
   action_nutrition_score_edit_api_actions_nutrition_score_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132174,7 +136639,10 @@ export interface operations {
   }
   action_nutrition_score_delete_api_actions_nutrition_score_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132205,7 +136673,10 @@ export interface operations {
   }
   action_nutrition_feed_api_actions_nutrition_feed_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132232,7 +136703,10 @@ export interface operations {
   }
   action_bias_weight_set_api_actions_bias_weight_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132263,7 +136737,10 @@ export interface operations {
   }
   action_bias_weight_edit_api_actions_bias_weight_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132294,7 +136771,10 @@ export interface operations {
   }
   action_bias_weight_delete_api_actions_bias_weight_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132325,7 +136805,10 @@ export interface operations {
   }
   action_bias_read_api_actions_bias_read_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132356,7 +136839,10 @@ export interface operations {
   }
   action_purity_set_api_actions_purity_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132387,7 +136873,10 @@ export interface operations {
   }
   action_purity_edit_api_actions_purity_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132418,7 +136907,10 @@ export interface operations {
   }
   action_purity_delete_api_actions_purity_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132449,7 +136941,10 @@ export interface operations {
   }
   action_purity_cleanse_api_actions_purity_cleanse_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132480,7 +136975,10 @@ export interface operations {
   }
   action_impurity_source_set_api_actions_impurity_source_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132511,7 +137009,10 @@ export interface operations {
   }
   action_impurity_source_edit_api_actions_impurity_source_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132542,7 +137043,10 @@ export interface operations {
   }
   action_impurity_source_delete_api_actions_impurity_source_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132573,7 +137077,10 @@ export interface operations {
   }
   action_purification_set_api_actions_purification_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132604,7 +137111,10 @@ export interface operations {
   }
   action_purification_edit_api_actions_purification_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132635,7 +137145,10 @@ export interface operations {
   }
   action_purification_delete_api_actions_purification_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132666,7 +137179,10 @@ export interface operations {
   }
   action_purity_rank_create_api_actions_purity_rank_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132697,7 +137213,10 @@ export interface operations {
   }
   action_purity_rank_edit_api_actions_purity_rank_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132728,7 +137247,10 @@ export interface operations {
   }
   action_purity_rank_delete_api_actions_purity_rank_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132759,7 +137281,10 @@ export interface operations {
   }
   action_purity_rank_profession_api_actions_purity_rank_profession_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132790,7 +137315,10 @@ export interface operations {
   }
   action_mishap_create_api_actions_mishap_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132821,7 +137349,10 @@ export interface operations {
   }
   action_mishap_edit_api_actions_mishap_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132852,7 +137383,10 @@ export interface operations {
   }
   action_mishap_delete_api_actions_mishap_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132883,7 +137417,10 @@ export interface operations {
   }
   action_luck_belief_create_api_actions_luck_belief_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132914,7 +137451,10 @@ export interface operations {
   }
   action_luck_belief_edit_api_actions_luck_belief_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132945,7 +137485,10 @@ export interface operations {
   }
   action_luck_belief_delete_api_actions_luck_belief_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -132976,7 +137519,10 @@ export interface operations {
   }
   action_charm_set_api_actions_charm_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133007,7 +137553,10 @@ export interface operations {
   }
   action_charm_edit_api_actions_charm_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133038,7 +137587,10 @@ export interface operations {
   }
   action_charm_delete_api_actions_charm_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133069,7 +137621,10 @@ export interface operations {
   }
   action_accusation_create_api_actions_accusation_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133100,7 +137655,10 @@ export interface operations {
   }
   action_accusation_edit_api_actions_accusation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133131,7 +137689,10 @@ export interface operations {
   }
   action_accusation_delete_api_actions_accusation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133162,7 +137723,10 @@ export interface operations {
   }
   action_witch_hunt_create_api_actions_witch_hunt_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133193,7 +137757,10 @@ export interface operations {
   }
   action_witch_hunt_edit_api_actions_witch_hunt_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133224,7 +137791,10 @@ export interface operations {
   }
   action_witch_hunt_delete_api_actions_witch_hunt_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133255,7 +137825,10 @@ export interface operations {
   }
   action_held_identity_set_api_actions_held_identity_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133286,7 +137859,10 @@ export interface operations {
   }
   action_held_identity_edit_api_actions_held_identity_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133317,7 +137893,10 @@ export interface operations {
   }
   action_held_identity_delete_api_actions_held_identity_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133348,7 +137927,10 @@ export interface operations {
   }
   action_peer_group_create_api_actions_peer_group_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133379,7 +137961,10 @@ export interface operations {
   }
   action_peer_group_edit_api_actions_peer_group_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133410,7 +137995,10 @@ export interface operations {
   }
   action_peer_group_delete_api_actions_peer_group_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133441,7 +138029,10 @@ export interface operations {
   }
   action_peer_member_set_api_actions_peer_member_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133472,7 +138063,10 @@ export interface operations {
   }
   action_peer_member_edit_api_actions_peer_member_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133503,7 +138097,10 @@ export interface operations {
   }
   action_peer_member_delete_api_actions_peer_member_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133534,7 +138131,10 @@ export interface operations {
   }
   action_fugitive_create_api_actions_fugitive_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133565,7 +138165,10 @@ export interface operations {
   }
   action_fugitive_edit_api_actions_fugitive_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133596,7 +138199,10 @@ export interface operations {
   }
   action_fugitive_delete_api_actions_fugitive_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133627,7 +138233,10 @@ export interface operations {
   }
   action_sanctuary_create_api_actions_sanctuary_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133658,7 +138267,10 @@ export interface operations {
   }
   action_sanctuary_edit_api_actions_sanctuary_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133689,7 +138301,10 @@ export interface operations {
   }
   action_sanctuary_delete_api_actions_sanctuary_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133720,7 +138335,10 @@ export interface operations {
   }
   action_sanctuary_law_set_api_actions_sanctuary_law_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133751,7 +138369,10 @@ export interface operations {
   }
   action_sanctuary_law_edit_api_actions_sanctuary_law_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133782,7 +138403,10 @@ export interface operations {
   }
   action_sanctuary_law_delete_api_actions_sanctuary_law_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133813,7 +138437,10 @@ export interface operations {
   }
   action_satire_create_api_actions_satire_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133844,7 +138471,10 @@ export interface operations {
   }
   action_satire_edit_api_actions_satire_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133875,7 +138505,10 @@ export interface operations {
   }
   action_satire_delete_api_actions_satire_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133906,7 +138539,10 @@ export interface operations {
   }
   action_belonging_run_api_actions_belonging_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133933,7 +138569,10 @@ export interface operations {
   }
   action_sanctuary_run_api_actions_sanctuary_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133960,7 +138599,10 @@ export interface operations {
   }
   action_satire_run_api_actions_satire_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -133987,7 +138629,10 @@ export interface operations {
   }
   action_soil_microbiota_set_api_actions_soil_microbiota_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134018,7 +138663,10 @@ export interface operations {
   }
   action_soil_microbiota_edit_api_actions_soil_microbiota_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134049,7 +138697,10 @@ export interface operations {
   }
   action_soil_microbiota_delete_api_actions_soil_microbiota_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134080,7 +138731,10 @@ export interface operations {
   }
   action_ferment_culture_create_api_actions_ferment_culture_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134111,7 +138765,10 @@ export interface operations {
   }
   action_ferment_culture_edit_api_actions_ferment_culture_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134142,7 +138799,10 @@ export interface operations {
   }
   action_ferment_culture_delete_api_actions_ferment_culture_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134173,7 +138833,10 @@ export interface operations {
   }
   action_species_relation_create_api_actions_species_relation_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134204,7 +138867,10 @@ export interface operations {
   }
   action_species_relation_edit_api_actions_species_relation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134235,7 +138901,10 @@ export interface operations {
   }
   action_species_relation_delete_api_actions_species_relation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134266,7 +138935,10 @@ export interface operations {
   }
   action_sense_set_api_actions_sense_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134297,7 +138969,10 @@ export interface operations {
   }
   action_sense_edit_api_actions_sense_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134328,7 +139003,10 @@ export interface operations {
   }
   action_sense_delete_api_actions_sense_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134359,7 +139037,10 @@ export interface operations {
   }
   action_nature_run_api_actions_nature_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134386,7 +139067,10 @@ export interface operations {
   }
   action_writing_custom_set_api_actions_writing_custom_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134417,7 +139101,10 @@ export interface operations {
   }
   action_writing_custom_edit_api_actions_writing_custom_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134448,7 +139135,10 @@ export interface operations {
   }
   action_writing_custom_delete_api_actions_writing_custom_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134479,7 +139169,10 @@ export interface operations {
   }
   action_written_work_set_api_actions_written_work_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134510,7 +139203,10 @@ export interface operations {
   }
   action_written_work_edit_api_actions_written_work_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134541,7 +139237,10 @@ export interface operations {
   }
   action_written_work_delete_api_actions_written_work_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134572,7 +139271,10 @@ export interface operations {
   }
   action_security_set_api_actions_security_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134603,7 +139305,10 @@ export interface operations {
   }
   action_security_edit_api_actions_security_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134634,7 +139339,10 @@ export interface operations {
   }
   action_security_delete_api_actions_security_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134665,7 +139373,10 @@ export interface operations {
   }
   action_water_lift_set_api_actions_water_lift_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134696,7 +139407,10 @@ export interface operations {
   }
   action_water_lift_edit_api_actions_water_lift_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134727,7 +139441,10 @@ export interface operations {
   }
   action_water_lift_delete_api_actions_water_lift_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134758,7 +139475,10 @@ export interface operations {
   }
   action_navigation_kit_set_api_actions_navigation_kit_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134789,7 +139509,10 @@ export interface operations {
   }
   action_navigation_kit_edit_api_actions_navigation_kit_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134820,7 +139543,10 @@ export interface operations {
   }
   action_navigation_kit_delete_api_actions_navigation_kit_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134851,7 +139577,10 @@ export interface operations {
   }
   action_container_stock_set_api_actions_container_stock_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134882,7 +139611,10 @@ export interface operations {
   }
   action_container_stock_edit_api_actions_container_stock_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134913,7 +139645,10 @@ export interface operations {
   }
   action_container_stock_delete_api_actions_container_stock_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134944,7 +139679,10 @@ export interface operations {
   }
   action_means_run_api_actions_means_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -134971,7 +139709,10 @@ export interface operations {
   }
   action_saving_set_api_actions_saving_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135002,7 +139743,10 @@ export interface operations {
   }
   action_saving_edit_api_actions_saving_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135033,7 +139777,10 @@ export interface operations {
   }
   action_saving_delete_api_actions_saving_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135064,7 +139811,10 @@ export interface operations {
   }
   action_hoard_create_api_actions_hoard_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135095,7 +139845,10 @@ export interface operations {
   }
   action_hoard_edit_api_actions_hoard_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135126,7 +139879,10 @@ export interface operations {
   }
   action_hoard_delete_api_actions_hoard_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135157,7 +139913,10 @@ export interface operations {
   }
   action_exchange_rate_create_api_actions_exchange_rate_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135188,7 +139947,10 @@ export interface operations {
   }
   action_exchange_rate_edit_api_actions_exchange_rate_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135219,7 +139981,10 @@ export interface operations {
   }
   action_exchange_rate_delete_api_actions_exchange_rate_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135250,7 +140015,10 @@ export interface operations {
   }
   action_bill_of_exchange_create_api_actions_bill_of_exchange_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135281,7 +140049,10 @@ export interface operations {
   }
   action_bill_of_exchange_edit_api_actions_bill_of_exchange_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135312,7 +140083,10 @@ export interface operations {
   }
   action_bill_of_exchange_delete_api_actions_bill_of_exchange_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135343,7 +140117,10 @@ export interface operations {
   }
   action_economic_order_create_api_actions_economic_order_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135374,7 +140151,10 @@ export interface operations {
   }
   action_economic_order_edit_api_actions_economic_order_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135405,7 +140185,10 @@ export interface operations {
   }
   action_economic_order_delete_api_actions_economic_order_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135436,7 +140219,10 @@ export interface operations {
   }
   action_economic_order_kind_create_api_actions_economic_order_kind_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135467,7 +140253,10 @@ export interface operations {
   }
   action_economic_order_kind_edit_api_actions_economic_order_kind_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135498,7 +140287,10 @@ export interface operations {
   }
   action_economic_order_kind_delete_api_actions_economic_order_kind_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135529,7 +140321,10 @@ export interface operations {
   }
   action_order_transition_create_api_actions_order_transition_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135560,7 +140355,10 @@ export interface operations {
   }
   action_order_transition_edit_api_actions_order_transition_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135591,7 +140389,10 @@ export interface operations {
   }
   action_order_transition_delete_api_actions_order_transition_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135622,7 +140423,10 @@ export interface operations {
   }
   action_order_transition_advance_api_actions_order_transition_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135653,7 +140457,10 @@ export interface operations {
   }
   action_putting_out_create_api_actions_putting_out_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135684,7 +140491,10 @@ export interface operations {
   }
   action_putting_out_edit_api_actions_putting_out_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135715,7 +140525,10 @@ export interface operations {
   }
   action_putting_out_delete_api_actions_putting_out_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135746,7 +140559,10 @@ export interface operations {
   }
   action_chain_holding_set_api_actions_chain_holding_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135777,7 +140593,10 @@ export interface operations {
   }
   action_chain_holding_edit_api_actions_chain_holding_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135808,7 +140627,10 @@ export interface operations {
   }
   action_chain_holding_delete_api_actions_chain_holding_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135839,7 +140661,10 @@ export interface operations {
   }
   action_tourist_flow_create_api_actions_tourist_flow_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135870,7 +140695,10 @@ export interface operations {
   }
   action_tourist_flow_edit_api_actions_tourist_flow_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135901,7 +140729,10 @@ export interface operations {
   }
   action_tourist_flow_delete_api_actions_tourist_flow_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135932,7 +140763,10 @@ export interface operations {
   }
   action_orders_run_api_actions_orders_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135959,7 +140793,10 @@ export interface operations {
   }
   action_named_unit_create_api_actions_named_unit_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -135990,7 +140827,10 @@ export interface operations {
   }
   action_named_unit_edit_api_actions_named_unit_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136021,7 +140861,10 @@ export interface operations {
   }
   action_named_unit_delete_api_actions_named_unit_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136052,7 +140895,10 @@ export interface operations {
   }
   action_unit_honour_create_api_actions_unit_honour_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136083,7 +140929,10 @@ export interface operations {
   }
   action_unit_honour_edit_api_actions_unit_honour_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136114,7 +140963,10 @@ export interface operations {
   }
   action_unit_honour_delete_api_actions_unit_honour_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136145,7 +140997,10 @@ export interface operations {
   }
   action_veteran_grant_create_api_actions_veteran_grant_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136176,7 +141031,10 @@ export interface operations {
   }
   action_veteran_grant_edit_api_actions_veteran_grant_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136207,7 +141065,10 @@ export interface operations {
   }
   action_veteran_grant_delete_api_actions_veteran_grant_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136238,7 +141099,10 @@ export interface operations {
   }
   action_honours_run_api_actions_honours_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136265,7 +141129,10 @@ export interface operations {
   }
   action_world_view_edit_api_actions_world_view_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136296,7 +141163,10 @@ export interface operations {
   }
   action_world_view_reset_api_actions_world_view_reset_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136327,7 +141197,10 @@ export interface operations {
   }
   action_world_views_run_api_actions_world_views_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136354,7 +141227,10 @@ export interface operations {
   }
   action_biology_edit_api_actions_biology_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136385,7 +141261,10 @@ export interface operations {
   }
   action_biology_variant_add_api_actions_biology_variant_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136416,7 +141295,10 @@ export interface operations {
   }
   action_biology_variant_remove_api_actions_biology_variant_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136447,7 +141329,10 @@ export interface operations {
   }
   action_biology_reset_api_actions_biology_reset_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136478,7 +141363,10 @@ export interface operations {
   }
   action_biology_variants_run_api_actions_biology_variants_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136505,7 +141393,10 @@ export interface operations {
   }
   action_lifecycle_edit_api_actions_lifecycle_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136536,7 +141427,10 @@ export interface operations {
   }
   action_lifecycle_reset_api_actions_lifecycle_reset_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136567,7 +141461,10 @@ export interface operations {
   }
   action_lifecycle_destroy_api_actions_lifecycle_destroy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136598,7 +141495,10 @@ export interface operations {
   }
   action_lifecycles_run_api_actions_lifecycles_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136625,7 +141525,10 @@ export interface operations {
   }
   action_world_end_declare_api_actions_world_end_declare_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136656,7 +141559,10 @@ export interface operations {
   }
   action_world_end_edit_api_actions_world_end_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136687,7 +141593,10 @@ export interface operations {
   }
   action_world_end_remove_api_actions_world_end_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136718,7 +141627,10 @@ export interface operations {
   }
   action_prehistory_configure_api_actions_prehistory_configure_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136749,7 +141661,10 @@ export interface operations {
   }
   action_prehistory_run_api_actions_prehistory_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136780,7 +141695,10 @@ export interface operations {
   }
   action_prehistory_seed_api_actions_prehistory_seed_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136811,7 +141729,10 @@ export interface operations {
   }
   action_prehistory_abort_api_actions_prehistory_abort_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136842,7 +141763,10 @@ export interface operations {
   }
   action_prehistory_edit_api_actions_prehistory_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136873,7 +141797,10 @@ export interface operations {
   }
   action_prehistory_remove_api_actions_prehistory_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136904,7 +141831,10 @@ export interface operations {
   }
   action_prehistory_event_edit_api_actions_prehistory_event_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136935,7 +141865,10 @@ export interface operations {
   }
   action_prehistory_event_remove_api_actions_prehistory_event_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136966,7 +141899,10 @@ export interface operations {
   }
   action_deep_time_run_api_actions_deep_time_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -136997,7 +141933,10 @@ export interface operations {
   }
   action_deep_time_stop_api_actions_deep_time_stop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137028,7 +141967,10 @@ export interface operations {
   }
   action_deep_time_edit_api_actions_deep_time_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137059,7 +142001,10 @@ export interface operations {
   }
   action_deep_time_remove_api_actions_deep_time_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137090,7 +142035,10 @@ export interface operations {
   }
   action_deep_time_event_edit_api_actions_deep_time_event_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137121,7 +142069,10 @@ export interface operations {
   }
   action_deep_time_event_remove_api_actions_deep_time_event_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137152,7 +142103,10 @@ export interface operations {
   }
   action_transform_force_api_actions_transform_force_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137183,7 +142137,10 @@ export interface operations {
   }
   action_transform_block_api_actions_transform_block_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137214,7 +142171,10 @@ export interface operations {
   }
   action_transform_release_api_actions_transform_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137245,7 +142205,10 @@ export interface operations {
   }
   action_transform_revert_api_actions_transform_revert_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137276,7 +142239,10 @@ export interface operations {
   }
   action_transformation_edit_api_actions_transformation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137307,7 +142273,10 @@ export interface operations {
   }
   action_transformation_delete_api_actions_transformation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137338,7 +142307,10 @@ export interface operations {
   }
   action_transform_prospect_edit_api_actions_transform_prospect_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137369,7 +142341,10 @@ export interface operations {
   }
   action_transform_prospect_delete_api_actions_transform_prospect_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137400,7 +142375,10 @@ export interface operations {
   }
   action_star_modifier_create_api_actions_star_modifier_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137431,7 +142409,10 @@ export interface operations {
   }
   action_star_modifier_edit_api_actions_star_modifier_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137462,7 +142443,10 @@ export interface operations {
   }
   action_star_modifier_delete_api_actions_star_modifier_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137493,7 +142477,10 @@ export interface operations {
   }
   action_rite_component_set_api_actions_rite_component_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137524,7 +142511,10 @@ export interface operations {
   }
   action_restraint_set_api_actions_restraint_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137555,7 +142545,10 @@ export interface operations {
   }
   action_sociolect_create_api_actions_sociolect_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137586,7 +142579,10 @@ export interface operations {
   }
   action_sociolect_merge_api_actions_sociolect_merge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137617,7 +142613,10 @@ export interface operations {
   }
   action_sign_language_create_api_actions_sign_language_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137648,7 +142647,10 @@ export interface operations {
   }
   action_carrion_keep_api_actions_carrion_keep_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137679,7 +142681,10 @@ export interface operations {
   }
   action_carrion_clear_api_actions_carrion_clear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137710,7 +142715,10 @@ export interface operations {
   }
   action_teaching_grant_api_actions_teaching_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137741,7 +142749,10 @@ export interface operations {
   }
   action_teaching_block_api_actions_teaching_block_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137772,7 +142783,10 @@ export interface operations {
   }
   action_beast_lore_grant_api_actions_beast_lore_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137803,7 +142817,10 @@ export interface operations {
   }
   action_beast_lore_reveal_api_actions_beast_lore_reveal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137834,7 +142851,10 @@ export interface operations {
   }
   action_field_agreement_force_api_actions_field_agreement_force_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137865,7 +142885,10 @@ export interface operations {
   }
   action_field_agreement_void_api_actions_field_agreement_void_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137896,7 +142919,10 @@ export interface operations {
   }
   action_deep_seal_seal_api_actions_deep_seal_seal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137927,7 +142953,10 @@ export interface operations {
   }
   action_deep_seal_unseal_api_actions_deep_seal_unseal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137958,7 +142987,10 @@ export interface operations {
   }
   action_novelty_set_api_actions_novelty_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -137989,7 +143021,10 @@ export interface operations {
   }
   action_novelty_delete_api_actions_novelty_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138020,7 +143055,10 @@ export interface operations {
   }
   action_sociolect_edit_api_actions_sociolect_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138051,7 +143089,10 @@ export interface operations {
   }
   action_sociolect_delete_api_actions_sociolect_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138082,7 +143123,10 @@ export interface operations {
   }
   action_sign_origin_edit_api_actions_sign_origin_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138113,7 +143157,10 @@ export interface operations {
   }
   action_sign_origin_delete_api_actions_sign_origin_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138144,7 +143191,10 @@ export interface operations {
   }
   action_carrion_edit_api_actions_carrion_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138175,7 +143225,10 @@ export interface operations {
   }
   action_teaching_edit_api_actions_teaching_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138206,7 +143259,10 @@ export interface operations {
   }
   action_teaching_delete_api_actions_teaching_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138237,7 +143293,10 @@ export interface operations {
   }
   action_field_agreement_edit_api_actions_field_agreement_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138268,7 +143327,10 @@ export interface operations {
   }
   action_field_agreement_delete_api_actions_field_agreement_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138299,7 +143361,10 @@ export interface operations {
   }
   action_deep_seal_edit_api_actions_deep_seal_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138330,7 +143395,10 @@ export interface operations {
   }
   action_deep_seal_delete_api_actions_deep_seal_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138361,7 +143429,10 @@ export interface operations {
   }
   action_fossil_bed_create_api_actions_fossil_bed_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138392,7 +143463,10 @@ export interface operations {
   }
   action_fossil_bed_edit_api_actions_fossil_bed_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138423,7 +143497,10 @@ export interface operations {
   }
   action_fossil_bed_delete_api_actions_fossil_bed_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138454,7 +143531,10 @@ export interface operations {
   }
   action_fossil_bed_reveal_api_actions_fossil_bed_reveal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138485,7 +143565,10 @@ export interface operations {
   }
   action_fossils_run_api_actions_fossils_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138512,7 +143595,10 @@ export interface operations {
   }
   action_museum_found_api_actions_museum_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138543,7 +143629,10 @@ export interface operations {
   }
   action_museum_edit_api_actions_museum_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138574,7 +143663,10 @@ export interface operations {
   }
   action_museum_delete_api_actions_museum_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138605,7 +143697,10 @@ export interface operations {
   }
   action_museum_piece_add_api_actions_museum_piece_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138636,7 +143731,10 @@ export interface operations {
   }
   action_museum_piece_edit_api_actions_museum_piece_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138667,7 +143765,10 @@ export interface operations {
   }
   action_museum_piece_remove_api_actions_museum_piece_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138698,7 +143799,10 @@ export interface operations {
   }
   action_museum_piece_restitute_api_actions_museum_piece_restitute_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138729,7 +143833,10 @@ export interface operations {
   }
   action_museums_run_api_actions_museums_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138756,7 +143863,10 @@ export interface operations {
   }
   action_garden_found_api_actions_garden_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138787,7 +143897,10 @@ export interface operations {
   }
   action_garden_edit_api_actions_garden_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138818,7 +143931,10 @@ export interface operations {
   }
   action_garden_delete_api_actions_garden_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138849,7 +143965,10 @@ export interface operations {
   }
   action_garden_plant_api_actions_garden_plant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138880,7 +143999,10 @@ export interface operations {
   }
   action_garden_uproot_api_actions_garden_uproot_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138911,7 +144033,10 @@ export interface operations {
   }
   action_gardens_run_api_actions_gardens_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138938,7 +144063,10 @@ export interface operations {
   }
   action_tech_programme_create_api_actions_tech_programme_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -138969,7 +144097,10 @@ export interface operations {
   }
   action_tech_programme_edit_api_actions_tech_programme_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139000,7 +144131,10 @@ export interface operations {
   }
   action_tech_programme_delete_api_actions_tech_programme_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139031,7 +144165,10 @@ export interface operations {
   }
   action_eras_run_api_actions_eras_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139058,7 +144195,10 @@ export interface operations {
   }
   action_region_wind_set_api_actions_region_wind_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139089,7 +144229,10 @@ export interface operations {
   }
   action_region_wind_edit_api_actions_region_wind_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139120,7 +144263,10 @@ export interface operations {
   }
   action_region_wind_delete_api_actions_region_wind_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139151,7 +144297,10 @@ export interface operations {
   }
   action_monsoon_season_set_api_actions_monsoon_season_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139182,7 +144331,10 @@ export interface operations {
   }
   action_monsoon_season_edit_api_actions_monsoon_season_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139213,7 +144365,10 @@ export interface operations {
   }
   action_monsoon_season_delete_api_actions_monsoon_season_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139244,7 +144399,10 @@ export interface operations {
   }
   action_climate_oscillation_set_api_actions_climate_oscillation_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139275,7 +144433,10 @@ export interface operations {
   }
   action_climate_oscillation_edit_api_actions_climate_oscillation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139306,7 +144467,10 @@ export interface operations {
   }
   action_climate_oscillation_delete_api_actions_climate_oscillation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139337,7 +144501,10 @@ export interface operations {
   }
   action_launch_window_set_api_actions_launch_window_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139368,7 +144535,10 @@ export interface operations {
   }
   action_launch_window_edit_api_actions_launch_window_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139399,7 +144569,10 @@ export interface operations {
   }
   action_launch_window_delete_api_actions_launch_window_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139430,7 +144603,10 @@ export interface operations {
   }
   action_cosmopolitan_culture_create_api_actions_cosmopolitan_culture_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139461,7 +144637,10 @@ export interface operations {
   }
   action_cosmopolitan_culture_edit_api_actions_cosmopolitan_culture_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139492,7 +144671,10 @@ export interface operations {
   }
   action_cosmopolitan_culture_delete_api_actions_cosmopolitan_culture_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139523,7 +144705,10 @@ export interface operations {
   }
   action_cosmopolitan_member_set_api_actions_cosmopolitan_member_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139554,7 +144739,10 @@ export interface operations {
   }
   action_cosmopolitan_member_edit_api_actions_cosmopolitan_member_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139585,7 +144773,10 @@ export interface operations {
   }
   action_cosmopolitan_member_delete_api_actions_cosmopolitan_member_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139616,7 +144807,10 @@ export interface operations {
   }
   action_cosmopolitan_culture_value_api_actions_cosmopolitan_culture_value_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139647,7 +144841,10 @@ export interface operations {
   }
   action_climes_run_api_actions_climes_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139674,7 +144871,10 @@ export interface operations {
   }
   action_crossings_run_api_actions_crossings_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139701,7 +144901,10 @@ export interface operations {
   }
   action_catch_ground_set_api_actions_catch_ground_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139732,7 +144935,10 @@ export interface operations {
   }
   action_catch_ground_edit_api_actions_catch_ground_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139763,7 +144969,10 @@ export interface operations {
   }
   action_catch_ground_delete_api_actions_catch_ground_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139794,7 +145003,10 @@ export interface operations {
   }
   action_chemical_works_set_api_actions_chemical_works_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139825,7 +145037,10 @@ export interface operations {
   }
   action_chemical_works_edit_api_actions_chemical_works_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139856,7 +145071,10 @@ export interface operations {
   }
   action_chemical_works_delete_api_actions_chemical_works_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139887,7 +145105,10 @@ export interface operations {
   }
   action_insurer_set_api_actions_insurer_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139918,7 +145139,10 @@ export interface operations {
   }
   action_insurer_edit_api_actions_insurer_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139949,7 +145173,10 @@ export interface operations {
   }
   action_insurer_delete_api_actions_insurer_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -139980,7 +145207,10 @@ export interface operations {
   }
   action_insurance_policy_create_api_actions_insurance_policy_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140011,7 +145241,10 @@ export interface operations {
   }
   action_insurance_policy_edit_api_actions_insurance_policy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140042,7 +145275,10 @@ export interface operations {
   }
   action_insurance_policy_delete_api_actions_insurance_policy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140073,7 +145309,10 @@ export interface operations {
   }
   action_incorporeal_right_create_api_actions_incorporeal_right_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140104,7 +145343,10 @@ export interface operations {
   }
   action_incorporeal_right_edit_api_actions_incorporeal_right_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140135,7 +145377,10 @@ export interface operations {
   }
   action_incorporeal_right_delete_api_actions_incorporeal_right_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140166,7 +145411,10 @@ export interface operations {
   }
   action_assistive_aid_set_api_actions_assistive_aid_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140197,7 +145445,10 @@ export interface operations {
   }
   action_assistive_aid_edit_api_actions_assistive_aid_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140228,7 +145479,10 @@ export interface operations {
   }
   action_assistive_aid_delete_api_actions_assistive_aid_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140259,7 +145513,10 @@ export interface operations {
   }
   action_public_clock_set_api_actions_public_clock_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140290,7 +145547,10 @@ export interface operations {
   }
   action_public_clock_edit_api_actions_public_clock_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140321,7 +145581,10 @@ export interface operations {
   }
   action_public_clock_delete_api_actions_public_clock_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140352,7 +145615,10 @@ export interface operations {
   }
   action_number_system_set_api_actions_number_system_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140383,7 +145649,10 @@ export interface operations {
   }
   action_number_system_edit_api_actions_number_system_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140414,7 +145683,10 @@ export interface operations {
   }
   action_number_system_delete_api_actions_number_system_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140445,7 +145717,10 @@ export interface operations {
   }
   action_number_system_read_api_actions_number_system_read_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140476,7 +145751,10 @@ export interface operations {
   }
   action_material_affinity_set_api_actions_material_affinity_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140507,7 +145785,10 @@ export interface operations {
   }
   action_material_affinity_edit_api_actions_material_affinity_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140538,7 +145819,10 @@ export interface operations {
   }
   action_material_affinity_delete_api_actions_material_affinity_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140569,7 +145853,10 @@ export interface operations {
   }
   action_sympathetic_link_create_api_actions_sympathetic_link_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140600,7 +145887,10 @@ export interface operations {
   }
   action_sympathetic_link_edit_api_actions_sympathetic_link_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140631,7 +145921,10 @@ export interface operations {
   }
   action_sympathetic_link_delete_api_actions_sympathetic_link_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140662,7 +145955,10 @@ export interface operations {
   }
   action_emotion_spirit_create_api_actions_emotion_spirit_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140693,7 +145989,10 @@ export interface operations {
   }
   action_emotion_spirit_edit_api_actions_emotion_spirit_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140724,7 +146023,10 @@ export interface operations {
   }
   action_emotion_spirit_delete_api_actions_emotion_spirit_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140755,7 +146057,10 @@ export interface operations {
   }
   action_trades_run_api_actions_trades_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140782,7 +146087,10 @@ export interface operations {
   }
   action_learning_aids_run_api_actions_learning_aids_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140809,7 +146117,10 @@ export interface operations {
   }
   action_sympathies_run_api_actions_sympathies_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140836,7 +146147,10 @@ export interface operations {
   }
   action_revival_create_api_actions_revival_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140867,7 +146181,10 @@ export interface operations {
   }
   action_revival_edit_api_actions_revival_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140898,7 +146215,10 @@ export interface operations {
   }
   action_revival_delete_api_actions_revival_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140929,7 +146249,10 @@ export interface operations {
   }
   action_intoxicant_custom_set_api_actions_intoxicant_custom_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140960,7 +146283,10 @@ export interface operations {
   }
   action_intoxicant_custom_edit_api_actions_intoxicant_custom_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -140991,7 +146317,10 @@ export interface operations {
   }
   action_intoxicant_custom_delete_api_actions_intoxicant_custom_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141022,7 +146351,10 @@ export interface operations {
   }
   action_grade_duty_set_api_actions_grade_duty_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141053,7 +146385,10 @@ export interface operations {
   }
   action_grade_duty_edit_api_actions_grade_duty_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141084,7 +146419,10 @@ export interface operations {
   }
   action_grade_duty_delete_api_actions_grade_duty_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141115,7 +146453,10 @@ export interface operations {
   }
   action_mark_custom_set_api_actions_mark_custom_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141146,7 +146487,10 @@ export interface operations {
   }
   action_mark_custom_edit_api_actions_mark_custom_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141177,7 +146521,10 @@ export interface operations {
   }
   action_mark_custom_delete_api_actions_mark_custom_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141208,7 +146555,10 @@ export interface operations {
   }
   action_body_mark_create_api_actions_body_mark_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141239,7 +146589,10 @@ export interface operations {
   }
   action_body_mark_edit_api_actions_body_mark_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141270,7 +146623,10 @@ export interface operations {
   }
   action_body_mark_delete_api_actions_body_mark_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141301,7 +146657,10 @@ export interface operations {
   }
   action_time_budget_set_api_actions_time_budget_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141332,7 +146691,10 @@ export interface operations {
   }
   action_time_budget_edit_api_actions_time_budget_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141363,7 +146725,10 @@ export interface operations {
   }
   action_time_budget_delete_api_actions_time_budget_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141394,7 +146759,10 @@ export interface operations {
   }
   action_care_custom_create_api_actions_care_custom_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141425,7 +146793,10 @@ export interface operations {
   }
   action_care_custom_edit_api_actions_care_custom_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141456,7 +146827,10 @@ export interface operations {
   }
   action_care_custom_delete_api_actions_care_custom_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141487,7 +146861,10 @@ export interface operations {
   }
   action_housework_create_api_actions_housework_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141518,7 +146895,10 @@ export interface operations {
   }
   action_housework_edit_api_actions_housework_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141549,7 +146929,10 @@ export interface operations {
   }
   action_housework_delete_api_actions_housework_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141580,7 +146963,10 @@ export interface operations {
   }
   action_domestic_service_create_api_actions_domestic_service_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141611,7 +146997,10 @@ export interface operations {
   }
   action_domestic_service_edit_api_actions_domestic_service_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141642,7 +147031,10 @@ export interface operations {
   }
   action_domestic_service_delete_api_actions_domestic_service_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141673,7 +147065,10 @@ export interface operations {
   }
   action_leisure_pursuit_create_api_actions_leisure_pursuit_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141704,7 +147099,10 @@ export interface operations {
   }
   action_leisure_pursuit_edit_api_actions_leisure_pursuit_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141735,7 +147133,10 @@ export interface operations {
   }
   action_leisure_pursuit_delete_api_actions_leisure_pursuit_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141766,7 +147167,10 @@ export interface operations {
   }
   action_space_norm_create_api_actions_space_norm_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141797,7 +147201,10 @@ export interface operations {
   }
   action_space_norm_edit_api_actions_space_norm_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141828,7 +147235,10 @@ export interface operations {
   }
   action_space_norm_delete_api_actions_space_norm_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141859,7 +147269,10 @@ export interface operations {
   }
   action_kin_role_duty_create_api_actions_kin_role_duty_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141890,7 +147303,10 @@ export interface operations {
   }
   action_kin_role_duty_edit_api_actions_kin_role_duty_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141921,7 +147337,10 @@ export interface operations {
   }
   action_kin_role_duty_delete_api_actions_kin_role_duty_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141952,7 +147371,10 @@ export interface operations {
   }
   action_kin_group_create_api_actions_kin_group_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -141983,7 +147405,10 @@ export interface operations {
   }
   action_kin_group_edit_api_actions_kin_group_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142014,7 +147439,10 @@ export interface operations {
   }
   action_kin_group_delete_api_actions_kin_group_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142045,7 +147473,10 @@ export interface operations {
   }
   action_kin_group_member_create_api_actions_kin_group_member_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142076,7 +147507,10 @@ export interface operations {
   }
   action_kin_group_member_edit_api_actions_kin_group_member_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142107,7 +147541,10 @@ export interface operations {
   }
   action_kin_group_member_delete_api_actions_kin_group_member_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142138,7 +147575,10 @@ export interface operations {
   }
   action_infant_care_create_api_actions_infant_care_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142169,7 +147609,10 @@ export interface operations {
   }
   action_infant_care_edit_api_actions_infant_care_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142200,7 +147643,10 @@ export interface operations {
   }
   action_infant_care_delete_api_actions_infant_care_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142231,7 +147677,10 @@ export interface operations {
   }
   action_child_standing_create_api_actions_child_standing_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142262,7 +147711,10 @@ export interface operations {
   }
   action_child_standing_edit_api_actions_child_standing_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142293,7 +147745,10 @@ export interface operations {
   }
   action_child_standing_delete_api_actions_child_standing_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142324,7 +147779,10 @@ export interface operations {
   }
   action_socialization_create_api_actions_socialization_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142355,7 +147813,10 @@ export interface operations {
   }
   action_socialization_edit_api_actions_socialization_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142386,7 +147847,10 @@ export interface operations {
   }
   action_socialization_delete_api_actions_socialization_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142417,7 +147881,10 @@ export interface operations {
   }
   action_pedagogy_create_api_actions_pedagogy_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142448,7 +147915,10 @@ export interface operations {
   }
   action_pedagogy_edit_api_actions_pedagogy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142479,7 +147949,10 @@ export interface operations {
   }
   action_pedagogy_delete_api_actions_pedagogy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142510,7 +147983,10 @@ export interface operations {
   }
   action_intimacy_norm_create_api_actions_intimacy_norm_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142541,7 +148017,10 @@ export interface operations {
   }
   action_intimacy_norm_edit_api_actions_intimacy_norm_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142572,7 +148051,10 @@ export interface operations {
   }
   action_intimacy_norm_delete_api_actions_intimacy_norm_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142603,7 +148085,10 @@ export interface operations {
   }
   action_restraint_custom_create_api_actions_restraint_custom_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142634,7 +148119,10 @@ export interface operations {
   }
   action_restraint_custom_edit_api_actions_restraint_custom_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142665,7 +148153,10 @@ export interface operations {
   }
   action_restraint_custom_delete_api_actions_restraint_custom_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142696,7 +148187,10 @@ export interface operations {
   }
   action_reproductive_course_create_api_actions_reproductive_course_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142727,7 +148221,10 @@ export interface operations {
   }
   action_reproductive_course_edit_api_actions_reproductive_course_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142758,7 +148255,10 @@ export interface operations {
   }
   action_reproductive_course_delete_api_actions_reproductive_course_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142789,7 +148289,10 @@ export interface operations {
   }
   action_legitimacy_rule_create_api_actions_legitimacy_rule_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142820,7 +148323,10 @@ export interface operations {
   }
   action_legitimacy_rule_edit_api_actions_legitimacy_rule_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142851,7 +148357,10 @@ export interface operations {
   }
   action_legitimacy_rule_delete_api_actions_legitimacy_rule_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142882,7 +148391,10 @@ export interface operations {
   }
   action_child_recognition_create_api_actions_child_recognition_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142913,7 +148425,10 @@ export interface operations {
   }
   action_child_recognition_edit_api_actions_child_recognition_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142944,7 +148459,10 @@ export interface operations {
   }
   action_child_recognition_delete_api_actions_child_recognition_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -142975,7 +148493,10 @@ export interface operations {
   }
   action_youth_standing_create_api_actions_youth_standing_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143006,7 +148527,10 @@ export interface operations {
   }
   action_youth_standing_edit_api_actions_youth_standing_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143037,7 +148561,10 @@ export interface operations {
   }
   action_youth_standing_delete_api_actions_youth_standing_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143068,7 +148595,10 @@ export interface operations {
   }
   action_youth_group_create_api_actions_youth_group_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143099,7 +148629,10 @@ export interface operations {
   }
   action_youth_group_edit_api_actions_youth_group_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143130,7 +148663,10 @@ export interface operations {
   }
   action_youth_group_delete_api_actions_youth_group_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143161,7 +148697,10 @@ export interface operations {
   }
   action_youth_group_member_create_api_actions_youth_group_member_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143192,7 +148731,10 @@ export interface operations {
   }
   action_youth_group_member_edit_api_actions_youth_group_member_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143223,7 +148765,10 @@ export interface operations {
   }
   action_youth_group_member_delete_api_actions_youth_group_member_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143254,7 +148799,10 @@ export interface operations {
   }
   action_population_policy_create_api_actions_population_policy_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143285,7 +148833,10 @@ export interface operations {
   }
   action_population_policy_edit_api_actions_population_policy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143316,7 +148867,10 @@ export interface operations {
   }
   action_population_policy_delete_api_actions_population_policy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143347,7 +148901,10 @@ export interface operations {
   }
   action_population_instrument_create_api_actions_population_instrument_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143378,7 +148935,10 @@ export interface operations {
   }
   action_population_instrument_edit_api_actions_population_instrument_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143409,7 +148969,10 @@ export interface operations {
   }
   action_population_instrument_delete_api_actions_population_instrument_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143440,7 +149003,10 @@ export interface operations {
   }
   action_shop_create_api_actions_shop_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143471,7 +149037,10 @@ export interface operations {
   }
   action_shop_edit_api_actions_shop_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143502,7 +149071,10 @@ export interface operations {
   }
   action_shop_delete_api_actions_shop_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143533,7 +149105,10 @@ export interface operations {
   }
   action_shop_good_create_api_actions_shop_good_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143564,7 +149139,10 @@ export interface operations {
   }
   action_shop_good_edit_api_actions_shop_good_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143595,7 +149173,10 @@ export interface operations {
   }
   action_shop_good_delete_api_actions_shop_good_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143626,7 +149207,10 @@ export interface operations {
   }
   action_supply_tier_create_api_actions_supply_tier_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143657,7 +149241,10 @@ export interface operations {
   }
   action_supply_tier_edit_api_actions_supply_tier_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143688,7 +149275,10 @@ export interface operations {
   }
   action_supply_tier_delete_api_actions_supply_tier_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143719,7 +149309,10 @@ export interface operations {
   }
   action_promotion_create_api_actions_promotion_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143750,7 +149343,10 @@ export interface operations {
   }
   action_promotion_edit_api_actions_promotion_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143781,7 +149377,10 @@ export interface operations {
   }
   action_promotion_delete_api_actions_promotion_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143812,7 +149411,10 @@ export interface operations {
   }
   action_lease_create_api_actions_lease_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143843,7 +149445,10 @@ export interface operations {
   }
   action_lease_edit_api_actions_lease_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143874,7 +149479,10 @@ export interface operations {
   }
   action_lease_delete_api_actions_lease_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143905,7 +149513,10 @@ export interface operations {
   }
   action_public_works_create_api_actions_public_works_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143936,7 +149547,10 @@ export interface operations {
   }
   action_public_works_edit_api_actions_public_works_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143967,7 +149581,10 @@ export interface operations {
   }
   action_public_works_delete_api_actions_public_works_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -143998,7 +149615,10 @@ export interface operations {
   }
   action_public_works_advance_api_actions_public_works_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144029,7 +149649,10 @@ export interface operations {
   }
   action_public_work_stage_create_api_actions_public_work_stage_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144060,7 +149683,10 @@ export interface operations {
   }
   action_public_work_stage_edit_api_actions_public_work_stage_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144091,7 +149717,10 @@ export interface operations {
   }
   action_public_work_stage_delete_api_actions_public_work_stage_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144122,7 +149751,10 @@ export interface operations {
   }
   action_state_enterprise_create_api_actions_state_enterprise_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144153,7 +149785,10 @@ export interface operations {
   }
   action_state_enterprise_edit_api_actions_state_enterprise_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144184,7 +149819,10 @@ export interface operations {
   }
   action_state_enterprise_delete_api_actions_state_enterprise_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144215,7 +149853,10 @@ export interface operations {
   }
   action_record_medium_create_api_actions_record_medium_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144246,7 +149887,10 @@ export interface operations {
   }
   action_record_medium_edit_api_actions_record_medium_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144277,7 +149921,10 @@ export interface operations {
   }
   action_record_medium_delete_api_actions_record_medium_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144308,7 +149955,10 @@ export interface operations {
   }
   action_org_governance_create_api_actions_org_governance_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144339,7 +149989,10 @@ export interface operations {
   }
   action_org_governance_edit_api_actions_org_governance_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144370,7 +150023,10 @@ export interface operations {
   }
   action_org_governance_delete_api_actions_org_governance_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144401,7 +150057,10 @@ export interface operations {
   }
   action_org_seat_create_api_actions_org_seat_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144432,7 +150091,10 @@ export interface operations {
   }
   action_org_seat_edit_api_actions_org_seat_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144463,7 +150125,10 @@ export interface operations {
   }
   action_org_seat_delete_api_actions_org_seat_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144494,7 +150159,10 @@ export interface operations {
   }
   action_org_clique_create_api_actions_org_clique_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144525,7 +150193,10 @@ export interface operations {
   }
   action_org_clique_edit_api_actions_org_clique_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144556,7 +150227,10 @@ export interface operations {
   }
   action_org_clique_delete_api_actions_org_clique_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144587,7 +150261,10 @@ export interface operations {
   }
   action_org_merger_create_api_actions_org_merger_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144618,7 +150295,10 @@ export interface operations {
   }
   action_org_merger_edit_api_actions_org_merger_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144649,7 +150329,10 @@ export interface operations {
   }
   action_org_merger_delete_api_actions_org_merger_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144680,7 +150363,10 @@ export interface operations {
   }
   action_org_research_create_api_actions_org_research_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144711,7 +150397,10 @@ export interface operations {
   }
   action_org_research_edit_api_actions_org_research_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144742,7 +150431,10 @@ export interface operations {
   }
   action_org_research_delete_api_actions_org_research_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144773,7 +150465,10 @@ export interface operations {
   }
   action_insolvency_case_create_api_actions_insolvency_case_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144804,7 +150499,10 @@ export interface operations {
   }
   action_insolvency_case_edit_api_actions_insolvency_case_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144835,7 +150533,10 @@ export interface operations {
   }
   action_insolvency_case_delete_api_actions_insolvency_case_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144866,7 +150567,10 @@ export interface operations {
   }
   action_org_merger_advance_api_actions_org_merger_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144897,7 +150601,10 @@ export interface operations {
   }
   action_market_structure_create_api_actions_market_structure_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144928,7 +150635,10 @@ export interface operations {
   }
   action_market_structure_edit_api_actions_market_structure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144959,7 +150669,10 @@ export interface operations {
   }
   action_market_structure_delete_api_actions_market_structure_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -144990,7 +150703,10 @@ export interface operations {
   }
   action_cartel_create_api_actions_cartel_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145021,7 +150737,10 @@ export interface operations {
   }
   action_cartel_edit_api_actions_cartel_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145052,7 +150771,10 @@ export interface operations {
   }
   action_cartel_delete_api_actions_cartel_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145083,7 +150805,10 @@ export interface operations {
   }
   action_price_war_create_api_actions_price_war_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145114,7 +150839,10 @@ export interface operations {
   }
   action_price_war_edit_api_actions_price_war_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145145,7 +150873,10 @@ export interface operations {
   }
   action_price_war_delete_api_actions_price_war_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145176,7 +150907,10 @@ export interface operations {
   }
   action_worker_body_create_api_actions_worker_body_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145207,7 +150941,10 @@ export interface operations {
   }
   action_worker_body_edit_api_actions_worker_body_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145238,7 +150975,10 @@ export interface operations {
   }
   action_worker_body_delete_api_actions_worker_body_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145269,7 +151009,10 @@ export interface operations {
   }
   action_labour_contract_create_api_actions_labour_contract_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145300,7 +151043,10 @@ export interface operations {
   }
   action_labour_contract_edit_api_actions_labour_contract_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145331,7 +151077,10 @@ export interface operations {
   }
   action_labour_contract_delete_api_actions_labour_contract_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145362,7 +151111,10 @@ export interface operations {
   }
   action_labour_dispute_create_api_actions_labour_dispute_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145393,7 +151145,10 @@ export interface operations {
   }
   action_labour_dispute_edit_api_actions_labour_dispute_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145424,7 +151179,10 @@ export interface operations {
   }
   action_labour_dispute_delete_api_actions_labour_dispute_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145455,7 +151213,10 @@ export interface operations {
   }
   action_labour_dispute_end_api_actions_labour_dispute_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145486,7 +151247,10 @@ export interface operations {
   }
   action_monetary_authority_create_api_actions_monetary_authority_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145517,7 +151281,10 @@ export interface operations {
   }
   action_monetary_authority_edit_api_actions_monetary_authority_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145548,7 +151315,10 @@ export interface operations {
   }
   action_monetary_authority_delete_api_actions_monetary_authority_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145579,7 +151349,10 @@ export interface operations {
   }
   action_stock_exchange_create_api_actions_stock_exchange_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145610,7 +151383,10 @@ export interface operations {
   }
   action_stock_exchange_edit_api_actions_stock_exchange_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145641,7 +151417,10 @@ export interface operations {
   }
   action_stock_exchange_delete_api_actions_stock_exchange_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145672,7 +151451,10 @@ export interface operations {
   }
   action_issued_security_create_api_actions_issued_security_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145703,7 +151485,10 @@ export interface operations {
   }
   action_issued_security_edit_api_actions_issued_security_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145734,7 +151519,10 @@ export interface operations {
   }
   action_issued_security_delete_api_actions_issued_security_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145765,7 +151553,10 @@ export interface operations {
   }
   action_security_holding_create_api_actions_security_holding_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145796,7 +151587,10 @@ export interface operations {
   }
   action_security_holding_edit_api_actions_security_holding_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145827,7 +151621,10 @@ export interface operations {
   }
   action_security_holding_delete_api_actions_security_holding_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145858,7 +151655,10 @@ export interface operations {
   }
   action_security_price_create_api_actions_security_price_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145889,7 +151689,10 @@ export interface operations {
   }
   action_security_price_delete_api_actions_security_price_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145920,7 +151723,10 @@ export interface operations {
   }
   action_security_price_edit_api_actions_security_price_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145951,7 +151757,10 @@ export interface operations {
   }
   action_polity_league_create_api_actions_polity_league_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -145982,7 +151791,10 @@ export interface operations {
   }
   action_polity_league_edit_api_actions_polity_league_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146013,7 +151825,10 @@ export interface operations {
   }
   action_polity_league_delete_api_actions_polity_league_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146044,7 +151859,10 @@ export interface operations {
   }
   action_league_member_create_api_actions_league_member_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146075,7 +151893,10 @@ export interface operations {
   }
   action_league_member_edit_api_actions_league_member_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146106,7 +151927,10 @@ export interface operations {
   }
   action_league_member_delete_api_actions_league_member_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146137,7 +151961,10 @@ export interface operations {
   }
   action_league_decision_create_api_actions_league_decision_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146168,7 +151995,10 @@ export interface operations {
   }
   action_league_decision_edit_api_actions_league_decision_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146199,7 +152029,10 @@ export interface operations {
   }
   action_league_decision_delete_api_actions_league_decision_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146230,7 +152063,10 @@ export interface operations {
   }
   action_league_found_api_actions_league_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146261,7 +152097,10 @@ export interface operations {
   }
   action_league_dissolve_api_actions_league_dissolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146292,7 +152131,10 @@ export interface operations {
   }
   action_departure_create_api_actions_departure_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146323,7 +152165,10 @@ export interface operations {
   }
   action_departure_edit_api_actions_departure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146354,7 +152199,10 @@ export interface operations {
   }
   action_departure_delete_api_actions_departure_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146385,7 +152233,10 @@ export interface operations {
   }
   action_referendum_create_api_actions_referendum_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146416,7 +152267,10 @@ export interface operations {
   }
   action_referendum_edit_api_actions_referendum_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146447,7 +152301,10 @@ export interface operations {
   }
   action_referendum_delete_api_actions_referendum_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146478,7 +152335,10 @@ export interface operations {
   }
   action_referendum_decide_api_actions_referendum_decide_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146509,7 +152369,10 @@ export interface operations {
   }
   action_reckoning_create_api_actions_reckoning_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146540,7 +152403,10 @@ export interface operations {
   }
   action_reckoning_edit_api_actions_reckoning_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146571,7 +152437,10 @@ export interface operations {
   }
   action_reckoning_delete_api_actions_reckoning_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146602,7 +152471,10 @@ export interface operations {
   }
   action_reckoning_measure_create_api_actions_reckoning_measure_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146633,7 +152505,10 @@ export interface operations {
   }
   action_reckoning_measure_edit_api_actions_reckoning_measure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146664,7 +152539,10 @@ export interface operations {
   }
   action_reckoning_measure_delete_api_actions_reckoning_measure_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146695,7 +152573,10 @@ export interface operations {
   }
   action_reckoning_case_create_api_actions_reckoning_case_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146726,7 +152607,10 @@ export interface operations {
   }
   action_reckoning_case_edit_api_actions_reckoning_case_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146757,7 +152641,10 @@ export interface operations {
   }
   action_reckoning_case_delete_api_actions_reckoning_case_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146788,7 +152675,10 @@ export interface operations {
   }
   action_leader_cult_create_api_actions_leader_cult_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146819,7 +152709,10 @@ export interface operations {
   }
   action_leader_cult_edit_api_actions_leader_cult_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146850,7 +152743,10 @@ export interface operations {
   }
   action_leader_cult_delete_api_actions_leader_cult_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146881,7 +152777,10 @@ export interface operations {
   }
   action_restoration_create_api_actions_restoration_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146912,7 +152811,10 @@ export interface operations {
   }
   action_restoration_edit_api_actions_restoration_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146943,7 +152845,10 @@ export interface operations {
   }
   action_restoration_delete_api_actions_restoration_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -146974,7 +152879,10 @@ export interface operations {
   }
   action_restoration_advance_api_actions_restoration_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147005,7 +152913,10 @@ export interface operations {
   }
   action_occupation_regime_create_api_actions_occupation_regime_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147036,7 +152947,10 @@ export interface operations {
   }
   action_occupation_regime_edit_api_actions_occupation_regime_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147067,7 +152981,10 @@ export interface operations {
   }
   action_occupation_regime_delete_api_actions_occupation_regime_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147098,7 +153015,10 @@ export interface operations {
   }
   action_collaboration_create_api_actions_collaboration_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147129,7 +153049,10 @@ export interface operations {
   }
   action_collaboration_edit_api_actions_collaboration_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147160,7 +153083,10 @@ export interface operations {
   }
   action_collaboration_delete_api_actions_collaboration_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147191,7 +153117,10 @@ export interface operations {
   }
   action_occupation_measure_create_api_actions_occupation_measure_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147222,7 +153151,10 @@ export interface operations {
   }
   action_occupation_measure_edit_api_actions_occupation_measure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147253,7 +153185,10 @@ export interface operations {
   }
   action_occupation_measure_delete_api_actions_occupation_measure_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147284,7 +153219,10 @@ export interface operations {
   }
   action_mass_weapon_create_api_actions_mass_weapon_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147315,7 +153253,10 @@ export interface operations {
   }
   action_mass_weapon_edit_api_actions_mass_weapon_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147346,7 +153287,10 @@ export interface operations {
   }
   action_mass_weapon_delete_api_actions_mass_weapon_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147377,7 +153321,10 @@ export interface operations {
   }
   action_deterrence_posture_create_api_actions_deterrence_posture_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147408,7 +153355,10 @@ export interface operations {
   }
   action_deterrence_posture_edit_api_actions_deterrence_posture_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147439,7 +153389,10 @@ export interface operations {
   }
   action_deterrence_posture_delete_api_actions_deterrence_posture_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147470,7 +153423,10 @@ export interface operations {
   }
   action_war_remnant_create_api_actions_war_remnant_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147501,7 +153457,10 @@ export interface operations {
   }
   action_war_remnant_edit_api_actions_war_remnant_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147532,7 +153491,10 @@ export interface operations {
   }
   action_war_remnant_delete_api_actions_war_remnant_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147563,7 +153525,10 @@ export interface operations {
   }
   action_interworld_campaign_create_api_actions_interworld_campaign_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147594,7 +153559,10 @@ export interface operations {
   }
   action_interworld_campaign_edit_api_actions_interworld_campaign_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147625,7 +153593,10 @@ export interface operations {
   }
   action_interworld_campaign_delete_api_actions_interworld_campaign_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147656,7 +153627,10 @@ export interface operations {
   }
   action_orbital_control_create_api_actions_orbital_control_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147687,7 +153661,10 @@ export interface operations {
   }
   action_orbital_control_edit_api_actions_orbital_control_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147718,7 +153695,10 @@ export interface operations {
   }
   action_orbital_control_delete_api_actions_orbital_control_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147749,7 +153729,10 @@ export interface operations {
   }
   action_interworld_migration_create_api_actions_interworld_migration_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147780,7 +153763,10 @@ export interface operations {
   }
   action_interworld_migration_edit_api_actions_interworld_migration_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147811,7 +153797,10 @@ export interface operations {
   }
   action_interworld_migration_delete_api_actions_interworld_migration_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147842,7 +153831,10 @@ export interface operations {
   }
   action_land_use_rule_create_api_actions_land_use_rule_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147873,7 +153865,10 @@ export interface operations {
   }
   action_land_use_rule_edit_api_actions_land_use_rule_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147904,7 +153899,10 @@ export interface operations {
   }
   action_land_use_rule_delete_api_actions_land_use_rule_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147935,7 +153933,10 @@ export interface operations {
   }
   action_municipal_service_create_api_actions_municipal_service_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147966,7 +153967,10 @@ export interface operations {
   }
   action_municipal_service_edit_api_actions_municipal_service_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -147997,7 +154001,10 @@ export interface operations {
   }
   action_municipal_service_delete_api_actions_municipal_service_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148028,7 +154035,10 @@ export interface operations {
   }
   action_conurbation_create_api_actions_conurbation_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148059,7 +154069,10 @@ export interface operations {
   }
   action_conurbation_edit_api_actions_conurbation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148090,7 +154103,10 @@ export interface operations {
   }
   action_conurbation_delete_api_actions_conurbation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148121,7 +154137,10 @@ export interface operations {
   }
   action_conurbation_split_api_actions_conurbation_split_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148152,7 +154171,10 @@ export interface operations {
   }
   action_protected_area_create_api_actions_protected_area_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148183,7 +154205,10 @@ export interface operations {
   }
   action_protected_area_edit_api_actions_protected_area_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148214,7 +154239,10 @@ export interface operations {
   }
   action_protected_area_delete_api_actions_protected_area_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148245,7 +154273,10 @@ export interface operations {
   }
   action_species_protection_create_api_actions_species_protection_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148276,7 +154307,10 @@ export interface operations {
   }
   action_species_protection_edit_api_actions_species_protection_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148307,7 +154341,10 @@ export interface operations {
   }
   action_species_protection_delete_api_actions_species_protection_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148338,7 +154375,10 @@ export interface operations {
   }
   action_conservation_movement_create_api_actions_conservation_movement_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148369,7 +154409,10 @@ export interface operations {
   }
   action_conservation_movement_edit_api_actions_conservation_movement_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148400,7 +154443,10 @@ export interface operations {
   }
   action_conservation_movement_delete_api_actions_conservation_movement_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148431,7 +154477,10 @@ export interface operations {
   }
   action_kin_dynamic_create_api_actions_kin_dynamic_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148462,7 +154511,10 @@ export interface operations {
   }
   action_kin_dynamic_edit_api_actions_kin_dynamic_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148493,7 +154545,10 @@ export interface operations {
   }
   action_kin_dynamic_delete_api_actions_kin_dynamic_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148524,7 +154579,10 @@ export interface operations {
   }
   action_kin_favour_create_api_actions_kin_favour_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148555,7 +154613,10 @@ export interface operations {
   }
   action_kin_favour_edit_api_actions_kin_favour_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148586,7 +154647,10 @@ export interface operations {
   }
   action_kin_favour_delete_api_actions_kin_favour_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148617,7 +154681,10 @@ export interface operations {
   }
   action_kin_rivalry_create_api_actions_kin_rivalry_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148648,7 +154715,10 @@ export interface operations {
   }
   action_kin_rivalry_edit_api_actions_kin_rivalry_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148679,7 +154749,10 @@ export interface operations {
   }
   action_kin_rivalry_delete_api_actions_kin_rivalry_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148710,7 +154783,10 @@ export interface operations {
   }
   action_kin_disowning_create_api_actions_kin_disowning_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148741,7 +154817,10 @@ export interface operations {
   }
   action_kin_disowning_edit_api_actions_kin_disowning_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148772,7 +154851,10 @@ export interface operations {
   }
   action_kin_disowning_delete_api_actions_kin_disowning_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148803,7 +154885,10 @@ export interface operations {
   }
   action_kin_blend_create_api_actions_kin_blend_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148834,7 +154919,10 @@ export interface operations {
   }
   action_kin_blend_edit_api_actions_kin_blend_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148865,7 +154953,10 @@ export interface operations {
   }
   action_kin_blend_delete_api_actions_kin_blend_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148896,7 +154987,10 @@ export interface operations {
   }
   action_elder_sway_create_api_actions_elder_sway_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148927,7 +155021,10 @@ export interface operations {
   }
   action_elder_sway_edit_api_actions_elder_sway_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148958,7 +155055,10 @@ export interface operations {
   }
   action_elder_sway_delete_api_actions_elder_sway_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -148989,7 +155089,10 @@ export interface operations {
   }
   action_feeling_spread_create_api_actions_feeling_spread_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149020,7 +155123,10 @@ export interface operations {
   }
   action_feeling_spread_edit_api_actions_feeling_spread_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149051,7 +155157,10 @@ export interface operations {
   }
   action_feeling_spread_delete_api_actions_feeling_spread_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149082,7 +155191,10 @@ export interface operations {
   }
   action_interpretation_create_api_actions_interpretation_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149113,7 +155225,10 @@ export interface operations {
   }
   action_interpretation_edit_api_actions_interpretation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149144,7 +155259,10 @@ export interface operations {
   }
   action_interpretation_delete_api_actions_interpretation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149175,7 +155293,10 @@ export interface operations {
   }
   action_grave_good_create_api_actions_grave_good_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149206,7 +155327,10 @@ export interface operations {
   }
   action_grave_good_edit_api_actions_grave_good_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149237,7 +155361,10 @@ export interface operations {
   }
   action_grave_good_delete_api_actions_grave_good_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149268,7 +155395,10 @@ export interface operations {
   }
   action_agentless_condition_create_api_actions_agentless_condition_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149299,7 +155429,10 @@ export interface operations {
   }
   action_agentless_condition_edit_api_actions_agentless_condition_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149330,7 +155463,10 @@ export interface operations {
   }
   action_agentless_condition_delete_api_actions_agentless_condition_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149361,7 +155497,10 @@ export interface operations {
   }
   action_fertility_means_create_api_actions_fertility_means_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149392,7 +155531,10 @@ export interface operations {
   }
   action_fertility_means_edit_api_actions_fertility_means_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149423,7 +155565,10 @@ export interface operations {
   }
   action_fertility_means_delete_api_actions_fertility_means_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149454,7 +155599,10 @@ export interface operations {
   }
   action_fertility_use_create_api_actions_fertility_use_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149485,7 +155633,10 @@ export interface operations {
   }
   action_fertility_use_edit_api_actions_fertility_use_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149516,7 +155667,10 @@ export interface operations {
   }
   action_fertility_use_delete_api_actions_fertility_use_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149547,7 +155701,10 @@ export interface operations {
   }
   action_honour_kind_create_api_actions_honour_kind_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149578,7 +155735,10 @@ export interface operations {
   }
   action_honour_kind_edit_api_actions_honour_kind_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149609,7 +155769,10 @@ export interface operations {
   }
   action_honour_kind_delete_api_actions_honour_kind_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149640,7 +155803,10 @@ export interface operations {
   }
   action_honour_held_create_api_actions_honour_held_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149671,7 +155837,10 @@ export interface operations {
   }
   action_honour_held_edit_api_actions_honour_held_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149702,7 +155871,10 @@ export interface operations {
   }
   action_honour_held_delete_api_actions_honour_held_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149733,7 +155905,10 @@ export interface operations {
   }
   action_sea_wave_create_api_actions_sea_wave_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149764,7 +155939,10 @@ export interface operations {
   }
   action_sea_wave_edit_api_actions_sea_wave_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149795,7 +155973,10 @@ export interface operations {
   }
   action_sea_wave_delete_api_actions_sea_wave_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149826,7 +156007,10 @@ export interface operations {
   }
   action_sea_wave_coast_create_api_actions_sea_wave_coast_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149857,7 +156041,10 @@ export interface operations {
   }
   action_sea_wave_coast_edit_api_actions_sea_wave_coast_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149888,7 +156075,10 @@ export interface operations {
   }
   action_sea_wave_coast_delete_api_actions_sea_wave_coast_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149919,7 +156109,10 @@ export interface operations {
   }
   action_wave_warning_create_api_actions_wave_warning_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149950,7 +156143,10 @@ export interface operations {
   }
   action_wave_warning_edit_api_actions_wave_warning_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -149981,7 +156177,10 @@ export interface operations {
   }
   action_wave_warning_delete_api_actions_wave_warning_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150012,7 +156211,10 @@ export interface operations {
   }
   action_creature_group_create_api_actions_creature_group_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150043,7 +156245,10 @@ export interface operations {
   }
   action_creature_group_edit_api_actions_creature_group_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150074,7 +156279,10 @@ export interface operations {
   }
   action_creature_group_delete_api_actions_creature_group_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150105,7 +156313,10 @@ export interface operations {
   }
   action_divine_conception_create_api_actions_divine_conception_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150136,7 +156347,10 @@ export interface operations {
   }
   action_divine_conception_edit_api_actions_divine_conception_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150167,7 +156381,10 @@ export interface operations {
   }
   action_divine_conception_delete_api_actions_divine_conception_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150198,7 +156415,10 @@ export interface operations {
   }
   action_god_reading_create_api_actions_god_reading_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150229,7 +156449,10 @@ export interface operations {
   }
   action_god_reading_edit_api_actions_god_reading_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150260,7 +156483,10 @@ export interface operations {
   }
   action_god_reading_delete_api_actions_god_reading_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150291,7 +156517,10 @@ export interface operations {
   }
   action_media_outlet_create_api_actions_media_outlet_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150322,7 +156551,10 @@ export interface operations {
   }
   action_media_outlet_edit_api_actions_media_outlet_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150353,7 +156585,10 @@ export interface operations {
   }
   action_media_outlet_delete_api_actions_media_outlet_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150384,7 +156619,10 @@ export interface operations {
   }
   action_media_item_create_api_actions_media_item_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150415,7 +156653,10 @@ export interface operations {
   }
   action_media_item_edit_api_actions_media_item_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150446,7 +156687,10 @@ export interface operations {
   }
   action_media_item_delete_api_actions_media_item_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150477,7 +156721,10 @@ export interface operations {
   }
   action_humour_style_create_api_actions_humour_style_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150508,7 +156755,10 @@ export interface operations {
   }
   action_humour_style_edit_api_actions_humour_style_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150539,7 +156789,10 @@ export interface operations {
   }
   action_humour_style_delete_api_actions_humour_style_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150570,7 +156823,10 @@ export interface operations {
   }
   action_speech_create_api_actions_speech_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150601,7 +156857,10 @@ export interface operations {
   }
   action_speech_edit_api_actions_speech_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150632,7 +156891,10 @@ export interface operations {
   }
   action_speech_delete_api_actions_speech_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150663,7 +156925,10 @@ export interface operations {
   }
   action_folk_knowledge_create_api_actions_folk_knowledge_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150694,7 +156959,10 @@ export interface operations {
   }
   action_folk_knowledge_edit_api_actions_folk_knowledge_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150725,7 +156993,10 @@ export interface operations {
   }
   action_folk_knowledge_delete_api_actions_folk_knowledge_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150756,7 +157027,10 @@ export interface operations {
   }
   action_folk_class_create_api_actions_folk_class_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150787,7 +157061,10 @@ export interface operations {
   }
   action_folk_class_edit_api_actions_folk_class_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150818,7 +157095,10 @@ export interface operations {
   }
   action_folk_class_delete_api_actions_folk_class_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150849,7 +157129,10 @@ export interface operations {
   }
   action_endowment_create_api_actions_endowment_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150880,7 +157163,10 @@ export interface operations {
   }
   action_endowment_edit_api_actions_endowment_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150911,7 +157197,10 @@ export interface operations {
   }
   action_endowment_delete_api_actions_endowment_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150942,7 +157231,10 @@ export interface operations {
   }
   action_death_work_create_api_actions_death_work_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -150973,7 +157265,10 @@ export interface operations {
   }
   action_death_work_edit_api_actions_death_work_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151004,7 +157299,10 @@ export interface operations {
   }
   action_death_work_delete_api_actions_death_work_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151035,7 +157333,10 @@ export interface operations {
   }
   action_facet_practice_create_api_actions_facet_practice_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151066,7 +157367,10 @@ export interface operations {
   }
   action_facet_practice_edit_api_actions_facet_practice_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151097,7 +157401,10 @@ export interface operations {
   }
   action_facet_practice_delete_api_actions_facet_practice_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151128,7 +157435,10 @@ export interface operations {
   }
   action_world_field_create_api_actions_world_field_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151159,7 +157469,10 @@ export interface operations {
   }
   action_world_field_edit_api_actions_world_field_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151190,7 +157503,10 @@ export interface operations {
   }
   action_world_field_delete_api_actions_world_field_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151221,7 +157537,10 @@ export interface operations {
   }
   action_star_activity_create_api_actions_star_activity_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151252,7 +157571,10 @@ export interface operations {
   }
   action_star_activity_edit_api_actions_star_activity_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151283,7 +157605,10 @@ export interface operations {
   }
   action_star_activity_delete_api_actions_star_activity_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151314,7 +157639,10 @@ export interface operations {
   }
   action_space_weather_event_create_api_actions_space_weather_event_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151345,7 +157673,10 @@ export interface operations {
   }
   action_space_weather_event_edit_api_actions_space_weather_event_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151376,7 +157707,10 @@ export interface operations {
   }
   action_space_weather_event_delete_api_actions_space_weather_event_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151407,7 +157741,10 @@ export interface operations {
   }
   action_region_cryosphere_create_api_actions_region_cryosphere_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151438,7 +157775,10 @@ export interface operations {
   }
   action_region_cryosphere_edit_api_actions_region_cryosphere_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151469,7 +157809,10 @@ export interface operations {
   }
   action_region_cryosphere_delete_api_actions_region_cryosphere_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151500,7 +157843,10 @@ export interface operations {
   }
   action_sediment_flow_create_api_actions_sediment_flow_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151531,7 +157877,10 @@ export interface operations {
   }
   action_sediment_flow_edit_api_actions_sediment_flow_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151562,7 +157911,10 @@ export interface operations {
   }
   action_sediment_flow_delete_api_actions_sediment_flow_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151593,7 +157945,10 @@ export interface operations {
   }
   action_coast_create_api_actions_coast_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151624,7 +157979,10 @@ export interface operations {
   }
   action_coast_edit_api_actions_coast_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151655,7 +158013,10 @@ export interface operations {
   }
   action_coast_delete_api_actions_coast_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151686,7 +158047,10 @@ export interface operations {
   }
   action_local_climate_create_api_actions_local_climate_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151717,7 +158081,10 @@ export interface operations {
   }
   action_local_climate_edit_api_actions_local_climate_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151748,7 +158115,10 @@ export interface operations {
   }
   action_local_climate_delete_api_actions_local_climate_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151779,7 +158149,10 @@ export interface operations {
   }
   action_disease_agent_create_api_actions_disease_agent_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151810,7 +158183,10 @@ export interface operations {
   }
   action_disease_agent_edit_api_actions_disease_agent_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151841,7 +158217,10 @@ export interface operations {
   }
   action_disease_agent_delete_api_actions_disease_agent_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151872,7 +158251,10 @@ export interface operations {
   }
   action_deep_cell_create_api_actions_deep_cell_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151903,7 +158285,10 @@ export interface operations {
   }
   action_deep_cell_edit_api_actions_deep_cell_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151934,7 +158319,10 @@ export interface operations {
   }
   action_deep_cell_hold_api_actions_deep_cell_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151965,7 +158353,10 @@ export interface operations {
   }
   action_deep_cell_delete_api_actions_deep_cell_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -151996,7 +158387,10 @@ export interface operations {
   }
   action_deep_passage_create_api_actions_deep_passage_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152027,7 +158421,10 @@ export interface operations {
   }
   action_deep_passage_edit_api_actions_deep_passage_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152058,7 +158455,10 @@ export interface operations {
   }
   action_deep_passage_hold_api_actions_deep_passage_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152089,7 +158489,10 @@ export interface operations {
   }
   action_deep_passage_delete_api_actions_deep_passage_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152120,7 +158523,10 @@ export interface operations {
   }
   action_deep_knowledge_set_api_actions_deep_knowledge_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152151,7 +158557,10 @@ export interface operations {
   }
   action_deep_knowledge_delete_api_actions_deep_knowledge_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152182,7 +158591,10 @@ export interface operations {
   }
   action_body_system_create_api_actions_body_system_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152213,7 +158625,10 @@ export interface operations {
   }
   action_body_system_edit_api_actions_body_system_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152244,7 +158659,10 @@ export interface operations {
   }
   action_body_system_delete_api_actions_body_system_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152275,7 +158693,10 @@ export interface operations {
   }
   action_sensitivity_create_api_actions_sensitivity_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152306,7 +158727,10 @@ export interface operations {
   }
   action_sensitivity_edit_api_actions_sensitivity_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152337,7 +158761,10 @@ export interface operations {
   }
   action_sensitivity_delete_api_actions_sensitivity_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152368,7 +158795,10 @@ export interface operations {
   }
   action_plant_anatomy_create_api_actions_plant_anatomy_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152399,7 +158829,10 @@ export interface operations {
   }
   action_plant_anatomy_edit_api_actions_plant_anatomy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152430,7 +158863,10 @@ export interface operations {
   }
   action_plant_anatomy_delete_api_actions_plant_anatomy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152461,7 +158897,10 @@ export interface operations {
   }
   action_plant_part_create_api_actions_plant_part_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152492,7 +158931,10 @@ export interface operations {
   }
   action_plant_part_edit_api_actions_plant_part_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152523,7 +158965,10 @@ export interface operations {
   }
   action_plant_part_delete_api_actions_plant_part_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152554,7 +158999,10 @@ export interface operations {
   }
   action_observation_method_create_api_actions_observation_method_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152585,7 +159033,10 @@ export interface operations {
   }
   action_observation_method_edit_api_actions_observation_method_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152616,7 +159067,10 @@ export interface operations {
   }
   action_observation_method_delete_api_actions_observation_method_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152647,7 +159101,10 @@ export interface operations {
   }
   action_weather_work_create_api_actions_weather_work_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152678,7 +159135,10 @@ export interface operations {
   }
   action_weather_work_edit_api_actions_weather_work_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152709,7 +159169,10 @@ export interface operations {
   }
   action_weather_work_delete_api_actions_weather_work_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152740,7 +159203,10 @@ export interface operations {
   }
   action_profession_of_value_create_api_actions_profession_of_value_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152771,7 +159237,10 @@ export interface operations {
   }
   action_profession_of_value_edit_api_actions_profession_of_value_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152802,7 +159271,10 @@ export interface operations {
   }
   action_profession_of_value_delete_api_actions_profession_of_value_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152833,7 +159305,10 @@ export interface operations {
   }
   action_naming_custom_set_api_actions_naming_custom_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152864,7 +159339,10 @@ export interface operations {
   }
   action_naming_custom_edit_api_actions_naming_custom_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152895,7 +159373,10 @@ export interface operations {
   }
   action_naming_custom_delete_api_actions_naming_custom_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152926,7 +159407,10 @@ export interface operations {
   }
   action_name_form_set_api_actions_name_form_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152957,7 +159441,10 @@ export interface operations {
   }
   action_name_form_edit_api_actions_name_form_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -152988,7 +159475,10 @@ export interface operations {
   }
   action_name_form_delete_api_actions_name_form_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153019,7 +159509,10 @@ export interface operations {
   }
   action_age_set_create_api_actions_age_set_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153050,7 +159543,10 @@ export interface operations {
   }
   action_age_set_edit_api_actions_age_set_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153081,7 +159577,10 @@ export interface operations {
   }
   action_age_set_delete_api_actions_age_set_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153112,7 +159611,10 @@ export interface operations {
   }
   action_age_set_member_set_api_actions_age_set_member_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153143,7 +159645,10 @@ export interface operations {
   }
   action_age_set_member_edit_api_actions_age_set_member_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153174,7 +159679,10 @@ export interface operations {
   }
   action_age_set_member_delete_api_actions_age_set_member_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153205,7 +159713,10 @@ export interface operations {
   }
   action_tavern_set_api_actions_tavern_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153236,7 +159747,10 @@ export interface operations {
   }
   action_tavern_edit_api_actions_tavern_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153267,7 +159781,10 @@ export interface operations {
   }
   action_tavern_delete_api_actions_tavern_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153298,7 +159815,10 @@ export interface operations {
   }
   action_welfare_house_set_api_actions_welfare_house_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153329,7 +159849,10 @@ export interface operations {
   }
   action_welfare_house_edit_api_actions_welfare_house_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153360,7 +159883,10 @@ export interface operations {
   }
   action_welfare_house_delete_api_actions_welfare_house_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153391,7 +159917,10 @@ export interface operations {
   }
   action_commute_set_api_actions_commute_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153422,7 +159951,10 @@ export interface operations {
   }
   action_commute_edit_api_actions_commute_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153453,7 +159985,10 @@ export interface operations {
   }
   action_commute_delete_api_actions_commute_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153484,7 +160019,10 @@ export interface operations {
   }
   action_cooperative_set_api_actions_cooperative_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153515,7 +160053,10 @@ export interface operations {
   }
   action_cooperative_edit_api_actions_cooperative_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153546,7 +160087,10 @@ export interface operations {
   }
   action_cooperative_delete_api_actions_cooperative_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153577,7 +160121,10 @@ export interface operations {
   }
   action_evidence_create_api_actions_evidence_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153608,7 +160155,10 @@ export interface operations {
   }
   action_evidence_edit_api_actions_evidence_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153639,7 +160189,10 @@ export interface operations {
   }
   action_evidence_delete_api_actions_evidence_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153670,7 +160223,10 @@ export interface operations {
   }
   action_membership_category_set_api_actions_membership_category_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153701,7 +160257,10 @@ export interface operations {
   }
   action_membership_category_edit_api_actions_membership_category_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153732,7 +160291,10 @@ export interface operations {
   }
   action_membership_category_delete_api_actions_membership_category_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153763,7 +160325,10 @@ export interface operations {
   }
   action_membership_set_api_actions_membership_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153794,7 +160359,10 @@ export interface operations {
   }
   action_membership_edit_api_actions_membership_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153825,7 +160393,10 @@ export interface operations {
   }
   action_membership_delete_api_actions_membership_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153856,7 +160427,10 @@ export interface operations {
   }
   action_border_control_set_api_actions_border_control_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153887,7 +160461,10 @@ export interface operations {
   }
   action_border_control_edit_api_actions_border_control_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153918,7 +160495,10 @@ export interface operations {
   }
   action_border_control_delete_api_actions_border_control_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153949,7 +160529,10 @@ export interface operations {
   }
   action_poor_relief_set_api_actions_poor_relief_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -153980,7 +160563,10 @@ export interface operations {
   }
   action_poor_relief_edit_api_actions_poor_relief_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154011,7 +160597,10 @@ export interface operations {
   }
   action_poor_relief_delete_api_actions_poor_relief_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154042,7 +160631,10 @@ export interface operations {
   }
   action_measure_standard_set_api_actions_measure_standard_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154073,7 +160665,10 @@ export interface operations {
   }
   action_measure_standard_edit_api_actions_measure_standard_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154104,7 +160699,10 @@ export interface operations {
   }
   action_measure_standard_delete_api_actions_measure_standard_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154135,7 +160733,10 @@ export interface operations {
   }
   action_membership_category_right_api_actions_membership_category_right_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154166,7 +160767,10 @@ export interface operations {
   }
   action_town_life_run_api_actions_town_life_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154193,7 +160797,10 @@ export interface operations {
   }
   action_civics_run_api_actions_civics_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154220,7 +160827,10 @@ export interface operations {
   }
   action_age_set_run_api_actions_age_set_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154247,7 +160857,10 @@ export interface operations {
   }
   action_trade_route_found_api_actions_trade_route_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154278,7 +160891,10 @@ export interface operations {
   }
   action_trade_route_edit_api_actions_trade_route_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154309,7 +160925,10 @@ export interface operations {
   }
   action_trade_route_delete_api_actions_trade_route_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154340,7 +160959,10 @@ export interface operations {
   }
   action_trade_route_toll_stop_api_actions_trade_route_toll_stop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154371,7 +160993,10 @@ export interface operations {
   }
   action_trade_route_toll_remove_api_actions_trade_route_toll_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154402,7 +161027,10 @@ export interface operations {
   }
   action_resource_pact_api_actions_resource_pact_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154433,7 +161061,10 @@ export interface operations {
   }
   action_resource_pact_terms_api_actions_resource_pact_terms_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154464,7 +161095,10 @@ export interface operations {
   }
   action_resource_pact_end_api_actions_resource_pact_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154495,7 +161129,10 @@ export interface operations {
   }
   action_structure_commission_api_actions_structure_commission_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154526,7 +161163,10 @@ export interface operations {
   }
   action_structure_fund_api_actions_structure_fund_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154557,7 +161197,10 @@ export interface operations {
   }
   action_structure_finish_api_actions_structure_finish_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154588,7 +161231,10 @@ export interface operations {
   }
   action_structure_abandon_api_actions_structure_abandon_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154619,7 +161265,10 @@ export interface operations {
   }
   action_structure_staff_api_actions_structure_staff_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154650,7 +161299,10 @@ export interface operations {
   }
   action_structure_damage_api_actions_structure_damage_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154681,7 +161333,10 @@ export interface operations {
   }
   action_structure_repair_api_actions_structure_repair_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154712,7 +161367,10 @@ export interface operations {
   }
   action_structure_edit_api_actions_structure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154743,7 +161401,10 @@ export interface operations {
   }
   action_structure_design_create_api_actions_structure_design_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154774,7 +161435,10 @@ export interface operations {
   }
   action_structure_design_edit_api_actions_structure_design_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154805,7 +161469,10 @@ export interface operations {
   }
   action_structure_design_retire_api_actions_structure_design_retire_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154836,7 +161503,10 @@ export interface operations {
   }
   action_war_incite_api_actions_war_incite_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154867,7 +161537,10 @@ export interface operations {
   }
   action_world_date_golden_age_api_actions_world_date_golden_age_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154898,7 +161571,10 @@ export interface operations {
   }
   action_structure_dedicate_api_actions_structure_dedicate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154929,7 +161605,10 @@ export interface operations {
   }
   action_structure_undedicate_api_actions_structure_undedicate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154960,7 +161639,10 @@ export interface operations {
   }
   action_son_anchor_api_actions_son_anchor_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -154991,7 +161673,10 @@ export interface operations {
   }
   action_son_clear_anchor_api_actions_son_clear_anchor_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155022,7 +161707,10 @@ export interface operations {
   }
   action_foundation_hold_api_actions_foundation_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155053,7 +161741,10 @@ export interface operations {
   }
   action_species_edit_api_actions_species_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155084,7 +161775,10 @@ export interface operations {
   }
   action_species_range_api_actions_species_range_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155115,7 +161809,10 @@ export interface operations {
   }
   action_species_move_range_api_actions_species_move_range_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155146,7 +161843,10 @@ export interface operations {
   }
   action_species_drop_range_api_actions_species_drop_range_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155177,7 +161877,10 @@ export interface operations {
   }
   action_species_yield_api_actions_species_yield_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155208,7 +161911,10 @@ export interface operations {
   }
   action_species_use_api_actions_species_use_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155239,7 +161945,10 @@ export interface operations {
   }
   action_species_host_api_actions_species_host_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155270,7 +161979,10 @@ export interface operations {
   }
   action_species_sacred_api_actions_species_sacred_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155301,7 +162013,10 @@ export interface operations {
   }
   action_species_domesticate_api_actions_species_domesticate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155332,7 +162047,10 @@ export interface operations {
   }
   action_herd_edit_api_actions_herd_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155363,7 +162081,10 @@ export interface operations {
   }
   action_beast_edit_api_actions_beast_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155394,7 +162115,10 @@ export interface operations {
   }
   action_beast_rouse_api_actions_beast_rouse_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155425,7 +162149,10 @@ export interface operations {
   }
   action_beast_bind_api_actions_beast_bind_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155456,7 +162183,10 @@ export interface operations {
   }
   action_beast_lair_api_actions_beast_lair_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155487,7 +162217,10 @@ export interface operations {
   }
   action_beast_spawn_api_actions_beast_spawn_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155518,7 +162251,10 @@ export interface operations {
   }
   action_species_create_api_actions_species_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155549,7 +162285,10 @@ export interface operations {
   }
   action_species_prey_api_actions_species_prey_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155580,7 +162319,10 @@ export interface operations {
   }
   action_species_custom_use_api_actions_species_custom_use_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155611,7 +162353,10 @@ export interface operations {
   }
   action_use_kind_create_api_actions_use_kind_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155642,7 +162387,10 @@ export interface operations {
   }
   action_use_kind_edit_api_actions_use_kind_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155673,7 +162421,10 @@ export interface operations {
   }
   action_use_kind_drop_api_actions_use_kind_drop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155704,7 +162455,10 @@ export interface operations {
   }
   action_herd_drop_api_actions_herd_drop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155735,7 +162489,10 @@ export interface operations {
   }
   action_people_totem_api_actions_people_totem_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155766,7 +162523,10 @@ export interface operations {
   }
   action_beast_create_api_actions_beast_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155797,7 +162557,10 @@ export interface operations {
   }
   action_beast_slay_api_actions_beast_slay_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155828,7 +162591,10 @@ export interface operations {
   }
   action_beast_treasure_api_actions_beast_treasure_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155859,7 +162625,10 @@ export interface operations {
   }
   action_anatomy_edit_api_actions_anatomy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155890,7 +162659,10 @@ export interface operations {
   }
   action_anatomy_reroll_api_actions_anatomy_reroll_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155921,7 +162693,10 @@ export interface operations {
   }
   action_pet_set_api_actions_pet_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155952,7 +162727,10 @@ export interface operations {
   }
   action_pet_give_api_actions_pet_give_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -155983,7 +162761,10 @@ export interface operations {
   }
   action_plant_edit_api_actions_plant_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156014,7 +162795,10 @@ export interface operations {
   }
   action_crop_set_api_actions_crop_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156045,7 +162829,10 @@ export interface operations {
   }
   action_crop_drop_api_actions_crop_drop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156076,7 +162863,10 @@ export interface operations {
   }
   action_crop_pest_set_api_actions_crop_pest_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156107,7 +162897,10 @@ export interface operations {
   }
   action_world_life_api_actions_world_life_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156138,7 +162931,10 @@ export interface operations {
   }
   action_lore_edit_api_actions_lore_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156169,7 +162965,10 @@ export interface operations {
   }
   action_language_intelligibility_api_actions_language_intelligibility_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156200,7 +162999,10 @@ export interface operations {
   }
   action_language_speakers_api_actions_language_speakers_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156231,7 +163033,10 @@ export interface operations {
   }
   action_language_register_api_actions_language_register_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156262,7 +163067,10 @@ export interface operations {
   }
   action_language_release_understanding_api_actions_language_release_understanding_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156293,7 +163101,10 @@ export interface operations {
   }
   action_language_release_speakers_api_actions_language_release_speakers_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156324,7 +163135,10 @@ export interface operations {
   }
   action_research_level_api_actions_research_level_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156355,7 +163169,10 @@ export interface operations {
   }
   action_research_technique_api_actions_research_technique_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156386,7 +163203,10 @@ export interface operations {
   }
   action_research_focus_api_actions_research_focus_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156417,7 +163237,10 @@ export interface operations {
   }
   action_research_institution_api_actions_research_institution_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156448,7 +163271,10 @@ export interface operations {
   }
   action_research_boost_api_actions_research_boost_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156479,7 +163305,10 @@ export interface operations {
   }
   action_research_boost_edit_api_actions_research_boost_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156510,7 +163339,10 @@ export interface operations {
   }
   action_research_boost_remove_api_actions_research_boost_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156541,7 +163373,10 @@ export interface operations {
   }
   action_discovery_raise_great_api_actions_discovery_raise_great_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156572,7 +163407,10 @@ export interface operations {
   }
   action_discovery_era_api_actions_discovery_era_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156603,7 +163441,10 @@ export interface operations {
   }
   action_discovery_world_era_api_actions_discovery_world_era_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156634,7 +163475,10 @@ export interface operations {
   }
   action_discovery_incident_api_actions_discovery_incident_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156665,7 +163509,10 @@ export interface operations {
   }
   action_discovery_design_api_actions_discovery_design_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156696,7 +163543,10 @@ export interface operations {
   }
   action_discovery_ban_api_actions_discovery_ban_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156727,7 +163577,10 @@ export interface operations {
   }
   action_theory_adherent_api_actions_theory_adherent_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156758,7 +163611,10 @@ export interface operations {
   }
   action_theory_anomaly_api_actions_theory_anomaly_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156789,7 +163645,10 @@ export interface operations {
   }
   action_theory_reveal_api_actions_theory_reveal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156820,7 +163679,10 @@ export interface operations {
   }
   action_art_form_practitioner_api_actions_art_form_practitioner_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156851,7 +163713,10 @@ export interface operations {
   }
   action_research_holder_api_actions_research_holder_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156882,7 +163747,10 @@ export interface operations {
   }
   action_research_custom_technique_api_actions_research_custom_technique_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156913,7 +163781,10 @@ export interface operations {
   }
   action_creed_tenet_api_actions_creed_tenet_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156944,7 +163815,10 @@ export interface operations {
   }
   action_creed_adherent_api_actions_creed_adherent_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -156975,7 +163849,10 @@ export interface operations {
   }
   action_creed_found_api_actions_creed_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157006,7 +163883,10 @@ export interface operations {
   }
   action_creed_custom_tenet_api_actions_creed_custom_tenet_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157037,7 +163917,10 @@ export interface operations {
   }
   action_creed_suppress_api_actions_creed_suppress_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157068,7 +163951,10 @@ export interface operations {
   }
   action_rite_devise_api_actions_rite_devise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157099,7 +163985,10 @@ export interface operations {
   }
   action_rite_effect_api_actions_rite_effect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157130,7 +164019,10 @@ export interface operations {
   }
   action_rite_cast_api_actions_rite_cast_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157161,7 +164053,10 @@ export interface operations {
   }
   action_rite_teach_api_actions_rite_teach_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157192,7 +164087,10 @@ export interface operations {
   }
   action_rite_forbid_api_actions_rite_forbid_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157223,7 +164121,10 @@ export interface operations {
   }
   action_rite_dispel_api_actions_rite_dispel_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157254,7 +164155,10 @@ export interface operations {
   }
   action_rite_requirements_api_actions_rite_requirements_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157285,7 +164189,10 @@ export interface operations {
   }
   action_prophecy_resolve_api_actions_prophecy_resolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157316,7 +164223,10 @@ export interface operations {
   }
   action_item_enchant_api_actions_item_enchant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157347,7 +164257,10 @@ export interface operations {
   }
   action_tradition_participation_api_actions_tradition_participation_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157378,7 +164291,10 @@ export interface operations {
   }
   action_tradition_release_participation_api_actions_tradition_release_participation_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157409,7 +164325,10 @@ export interface operations {
   }
   action_tradition_effect_api_actions_tradition_effect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157440,7 +164359,10 @@ export interface operations {
   }
   action_tradition_reseed_api_actions_tradition_reseed_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157471,7 +164393,10 @@ export interface operations {
   }
   action_lore_create_api_actions_lore_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157502,7 +164427,10 @@ export interface operations {
   }
   action_kind_create_api_actions_kind_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157533,7 +164461,10 @@ export interface operations {
   }
   action_kind_edit_api_actions_kind_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157564,7 +164495,10 @@ export interface operations {
   }
   action_kind_delete_api_actions_kind_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157595,7 +164529,10 @@ export interface operations {
   }
   action_rumour_plant_api_actions_rumour_plant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157626,7 +164563,10 @@ export interface operations {
   }
   action_rumour_edit_api_actions_rumour_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157657,7 +164597,10 @@ export interface operations {
   }
   action_rumour_suppress_api_actions_rumour_suppress_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157688,7 +164631,10 @@ export interface operations {
   }
   action_item_transfer_api_actions_item_transfer_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157719,7 +164665,10 @@ export interface operations {
   }
   action_item_deed_api_actions_item_deed_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157750,7 +164699,10 @@ export interface operations {
   }
   action_item_deed_remove_api_actions_item_deed_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157781,7 +164733,10 @@ export interface operations {
   }
   action_item_content_api_actions_item_content_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157812,7 +164767,10 @@ export interface operations {
   }
   action_art_commission_api_actions_art_commission_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157843,7 +164801,10 @@ export interface operations {
   }
   action_art_canonise_api_actions_art_canonise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157874,7 +164835,10 @@ export interface operations {
   }
   action_son_turn_rank_api_actions_son_turn_rank_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157905,7 +164869,10 @@ export interface operations {
   }
   action_son_birth_child_api_actions_son_birth_child_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157936,7 +164903,10 @@ export interface operations {
   }
   action_son_address_sibling_api_actions_son_address_sibling_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157967,7 +164937,10 @@ export interface operations {
   }
   action_son_power_api_actions_son_power_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -157998,7 +164971,10 @@ export interface operations {
   }
   action_chronicle_edit_api_actions_chronicle_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158029,7 +165005,10 @@ export interface operations {
   }
   action_belief_rename_api_actions_belief_rename_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158060,7 +165039,10 @@ export interface operations {
   }
   action_name_accept_api_actions_name_accept_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158091,7 +165073,10 @@ export interface operations {
   }
   action_thread_advance_api_actions_thread_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158122,7 +165107,10 @@ export interface operations {
   }
   action_epoch_edit_api_actions_epoch_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158153,7 +165141,10 @@ export interface operations {
   }
   action_belief_forget_api_actions_belief_forget_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158184,7 +165175,10 @@ export interface operations {
   }
   action_cosmic_extinguish_star_api_actions_cosmic_extinguish_star_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158215,7 +165209,10 @@ export interface operations {
   }
   action_star_depth_api_actions_star_depth_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158246,7 +165243,10 @@ export interface operations {
   }
   action_world_depth_api_actions_world_depth_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158277,7 +165277,10 @@ export interface operations {
   }
   action_scale_depth_api_actions_scale_depth_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158308,7 +165311,10 @@ export interface operations {
   }
   action_settlement_shelter_api_actions_settlement_shelter_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158339,7 +165345,10 @@ export interface operations {
   }
   action_settlement_abandon_api_actions_settlement_abandon_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158370,7 +165379,10 @@ export interface operations {
   }
   action_settlement_resettle_api_actions_settlement_resettle_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158401,7 +165413,10 @@ export interface operations {
   }
   action_mortal_child_api_actions_mortal_child_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158432,7 +165447,10 @@ export interface operations {
   }
   action_settlement_capital_api_actions_settlement_capital_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158463,7 +165481,10 @@ export interface operations {
   }
   action_mortal_act_api_actions_mortal_act_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158494,7 +165515,10 @@ export interface operations {
   }
   action_community_notable_api_actions_community_notable_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158525,7 +165549,10 @@ export interface operations {
   }
   action_community_crown_api_actions_community_crown_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158556,7 +165583,10 @@ export interface operations {
   }
   action_people_village_api_actions_people_village_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158587,7 +165617,10 @@ export interface operations {
   }
   action_settlement_ethnogenesis_api_actions_settlement_ethnogenesis_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158618,7 +165651,10 @@ export interface operations {
   }
   action_species_awaken_api_actions_species_awaken_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158649,7 +165685,10 @@ export interface operations {
   }
   action_ruler_heir_api_actions_ruler_heir_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158680,7 +165719,10 @@ export interface operations {
   }
   action_spirit_rest_api_actions_spirit_rest_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158711,7 +165753,10 @@ export interface operations {
   }
   action_record_retire_api_actions_record_retire_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158742,7 +165787,10 @@ export interface operations {
   }
   action_society_shares_api_actions_society_shares_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158773,7 +165821,10 @@ export interface operations {
   }
   action_society_satisfaction_api_actions_society_satisfaction_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158804,7 +165855,10 @@ export interface operations {
   }
   action_society_stores_api_actions_society_stores_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158835,7 +165889,10 @@ export interface operations {
   }
   action_society_famine_api_actions_society_famine_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158866,7 +165923,10 @@ export interface operations {
   }
   action_society_plenty_api_actions_society_plenty_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158897,7 +165957,10 @@ export interface operations {
   }
   action_society_forge_api_actions_society_forge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158928,7 +165991,10 @@ export interface operations {
   }
   action_society_uprising_api_actions_society_uprising_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158959,7 +166025,10 @@ export interface operations {
   }
   action_resource_commodity_api_actions_resource_commodity_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -158990,7 +166059,10 @@ export interface operations {
   }
   action_community_mint_api_actions_community_mint_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159021,7 +166093,10 @@ export interface operations {
   }
   action_community_work_api_actions_community_work_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159052,7 +166127,10 @@ export interface operations {
   }
   action_community_exodus_api_actions_community_exodus_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159083,7 +166161,10 @@ export interface operations {
   }
   action_community_contact_api_actions_community_contact_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159114,7 +166195,10 @@ export interface operations {
   }
   action_world_golden_age_api_actions_world_golden_age_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159145,7 +166229,10 @@ export interface operations {
   }
   action_world_end_golden_age_api_actions_world_end_golden_age_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159176,7 +166263,10 @@ export interface operations {
   }
   action_civilization_tier_api_actions_civilization_tier_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159207,7 +166297,10 @@ export interface operations {
   }
   action_civilization_independence_api_actions_civilization_independence_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159238,7 +166331,10 @@ export interface operations {
   }
   action_civilization_reclaim_api_actions_civilization_reclaim_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159269,7 +166365,10 @@ export interface operations {
   }
   action_world_previous_creation_api_actions_world_previous_creation_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159300,7 +166399,10 @@ export interface operations {
   }
   action_civilization_loan_api_actions_civilization_loan_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159331,7 +166433,10 @@ export interface operations {
   }
   action_civilization_forgive_debt_api_actions_civilization_forgive_debt_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159362,7 +166467,10 @@ export interface operations {
   }
   action_civilization_enforce_debt_api_actions_civilization_enforce_debt_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159393,7 +166501,10 @@ export interface operations {
   }
   action_civilization_barter_api_actions_civilization_barter_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159424,7 +166535,10 @@ export interface operations {
   }
   action_civilization_adoption_api_actions_civilization_adoption_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159455,7 +166569,10 @@ export interface operations {
   }
   action_civilization_treaty_api_actions_civilization_treaty_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159486,7 +166603,10 @@ export interface operations {
   }
   action_hero_raise_api_actions_hero_raise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159517,7 +166637,10 @@ export interface operations {
   }
   action_mortal_shape_api_actions_mortal_shape_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159548,7 +166671,10 @@ export interface operations {
   }
   action_region_shape_api_actions_region_shape_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159579,7 +166705,10 @@ export interface operations {
   }
   action_record_shape_api_actions_record_shape_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159610,7 +166739,10 @@ export interface operations {
   }
   action_hero_quest_api_actions_hero_quest_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159641,7 +166773,10 @@ export interface operations {
   }
   action_hero_resolve_api_actions_hero_resolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159672,7 +166807,10 @@ export interface operations {
   }
   action_hero_recall_api_actions_hero_recall_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159703,7 +166841,10 @@ export interface operations {
   }
   action_hero_apprentice_api_actions_hero_apprentice_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159734,7 +166875,10 @@ export interface operations {
   }
   action_hero_hunt_api_actions_hero_hunt_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159765,7 +166909,10 @@ export interface operations {
   }
   action_faction_found_api_actions_faction_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159796,7 +166943,10 @@ export interface operations {
   }
   action_faction_edit_api_actions_faction_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159827,7 +166977,10 @@ export interface operations {
   }
   action_faction_goal_api_actions_faction_goal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159858,7 +167011,10 @@ export interface operations {
   }
   action_faction_member_api_actions_faction_member_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159889,7 +167045,10 @@ export interface operations {
   }
   action_faction_fund_api_actions_faction_fund_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159920,7 +167079,10 @@ export interface operations {
   }
   action_faction_outlaw_api_actions_faction_outlaw_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159951,7 +167113,10 @@ export interface operations {
   }
   action_faction_charter_api_actions_faction_charter_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -159982,7 +167147,10 @@ export interface operations {
   }
   action_faction_contract_api_actions_faction_contract_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160013,7 +167181,10 @@ export interface operations {
   }
   action_faction_dissolve_api_actions_faction_dissolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160044,7 +167215,10 @@ export interface operations {
   }
   action_war_battle_api_actions_war_battle_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160075,7 +167249,10 @@ export interface operations {
   }
   action_war_open_api_actions_war_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160106,7 +167283,10 @@ export interface operations {
   }
   action_war_army_api_actions_war_army_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160137,7 +167317,10 @@ export interface operations {
   }
   action_army_disband_api_actions_army_disband_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160168,7 +167351,10 @@ export interface operations {
   }
   action_army_bless_api_actions_army_bless_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160199,7 +167385,10 @@ export interface operations {
   }
   action_war_duel_api_actions_war_duel_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160230,7 +167419,10 @@ export interface operations {
   }
   action_war_victory_api_actions_war_victory_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160261,7 +167453,10 @@ export interface operations {
   }
   action_war_end_api_actions_war_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160292,7 +167487,10 @@ export interface operations {
   }
   action_community_rise_up_api_actions_community_rise_up_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160323,7 +167521,10 @@ export interface operations {
   }
   action_faction_spy_api_actions_faction_spy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160354,7 +167555,10 @@ export interface operations {
   }
   action_captive_free_api_actions_captive_free_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160385,7 +167589,10 @@ export interface operations {
   }
   action_captive_ransom_api_actions_captive_ransom_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160416,7 +167623,10 @@ export interface operations {
   }
   action_tribute_impose_api_actions_tribute_impose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160447,7 +167657,10 @@ export interface operations {
   }
   action_tribute_forgive_api_actions_tribute_forgive_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160478,7 +167691,10 @@ export interface operations {
   }
   action_alliance_betray_api_actions_alliance_betray_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160509,7 +167725,10 @@ export interface operations {
   }
   action_alliance_marriage_api_actions_alliance_marriage_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160540,7 +167759,10 @@ export interface operations {
   }
   action_species_feed_api_actions_species_feed_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160571,7 +167793,10 @@ export interface operations {
   }
   action_species_mutate_api_actions_species_mutate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160602,7 +167827,10 @@ export interface operations {
   }
   action_people_split_api_actions_people_split_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160633,7 +167861,10 @@ export interface operations {
   }
   action_species_merge_api_actions_species_merge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160664,7 +167895,10 @@ export interface operations {
   }
   action_species_trail_api_actions_species_trail_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160695,7 +167929,10 @@ export interface operations {
   }
   action_species_cull_api_actions_species_cull_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160726,7 +167963,10 @@ export interface operations {
   }
   action_species_spare_prey_api_actions_species_spare_prey_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160757,7 +167997,10 @@ export interface operations {
   }
   action_species_introduce_api_actions_species_introduce_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160788,7 +168031,10 @@ export interface operations {
   }
   action_species_seed_api_actions_species_seed_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160819,7 +168065,10 @@ export interface operations {
   }
   action_soul_descend_api_actions_soul_descend_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160850,7 +168099,10 @@ export interface operations {
   }
   action_soul_harvest_api_actions_soul_harvest_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160881,7 +168133,10 @@ export interface operations {
   }
   action_world_planet_stirs_api_actions_world_planet_stirs_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160912,7 +168167,10 @@ export interface operations {
   }
   action_archive_raise_api_actions_archive_raise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160939,7 +168197,10 @@ export interface operations {
   }
   action_archive_read_api_actions_archive_read_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -160970,7 +168231,10 @@ export interface operations {
   }
   action_plague_cosmic_api_actions_plague_cosmic_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161001,7 +168265,10 @@ export interface operations {
   }
   action_soul_mirror_api_actions_soul_mirror_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161032,7 +168299,10 @@ export interface operations {
   }
   action_mortal_immortal_api_actions_mortal_immortal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161063,7 +168333,10 @@ export interface operations {
   }
   action_quest_abandon_api_actions_quest_abandon_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161094,7 +168367,10 @@ export interface operations {
   }
   action_sky_time_echo_api_actions_sky_time_echo_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161125,7 +168401,10 @@ export interface operations {
   }
   action_horror_event_api_actions_horror_event_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161156,7 +168435,10 @@ export interface operations {
   }
   action_horror_outer_being_api_actions_horror_outer_being_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161187,7 +168469,10 @@ export interface operations {
   }
   action_horror_cult_api_actions_horror_cult_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161218,7 +168503,10 @@ export interface operations {
   }
   action_horror_suppress_cult_api_actions_horror_suppress_cult_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161249,7 +168537,10 @@ export interface operations {
   }
   action_son_sanity_api_actions_son_sanity_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161280,7 +168571,10 @@ export interface operations {
   }
   action_doom_apocalypse_api_actions_doom_apocalypse_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161311,7 +168605,10 @@ export interface operations {
   }
   action_doom_clock_api_actions_doom_clock_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161342,7 +168639,10 @@ export interface operations {
   }
   action_son_duel_api_actions_son_duel_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161373,7 +168673,10 @@ export interface operations {
   }
   action_son_god_war_api_actions_son_god_war_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161404,7 +168707,10 @@ export interface operations {
   }
   action_foreign_god_raid_temple_api_actions_foreign_god_raid_temple_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161435,7 +168741,10 @@ export interface operations {
   }
   action_foreign_god_wake_api_actions_foreign_god_wake_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161466,7 +168775,10 @@ export interface operations {
   }
   action_son_relation_api_actions_son_relation_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161497,7 +168809,10 @@ export interface operations {
   }
   action_son_outer_bargain_api_actions_son_outer_bargain_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161528,7 +168843,10 @@ export interface operations {
   }
   action_legend_forget_api_actions_legend_forget_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161559,7 +168877,10 @@ export interface operations {
   }
   action_legend_revive_api_actions_legend_revive_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161590,7 +168911,10 @@ export interface operations {
   }
   action_legend_from_event_api_actions_legend_from_event_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161621,7 +168945,10 @@ export interface operations {
   }
   action_legend_manifest_api_actions_legend_manifest_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161652,7 +168979,10 @@ export interface operations {
   }
   action_prophecy_fulfil_api_actions_prophecy_fulfil_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161683,7 +169013,10 @@ export interface operations {
   }
   action_prophecy_forget_api_actions_prophecy_forget_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161714,7 +169047,10 @@ export interface operations {
   }
   action_world_map_api_actions_world_map_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161745,7 +169081,10 @@ export interface operations {
   }
   action_map_snapshot_api_actions_map_snapshot_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161772,7 +169111,10 @@ export interface operations {
   }
   action_world_epoch_star_api_actions_world_epoch_star_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161803,7 +169145,10 @@ export interface operations {
   }
   action_route_teach_api_actions_route_teach_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161834,7 +169179,10 @@ export interface operations {
   }
   action_foreign_god_raise_land_api_actions_foreign_god_raise_land_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161865,7 +169213,10 @@ export interface operations {
   }
   action_deposit_owner_api_actions_deposit_owner_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161896,7 +169247,10 @@ export interface operations {
   }
   action_market_found_api_actions_market_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161927,7 +169281,10 @@ export interface operations {
   }
   action_pirates_spawn_api_actions_pirates_spawn_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161958,7 +169315,10 @@ export interface operations {
   }
   action_market_disband_api_actions_market_disband_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -161989,7 +169349,10 @@ export interface operations {
   }
   action_route_danger_api_actions_route_danger_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162020,7 +169383,10 @@ export interface operations {
   }
   action_economy_resources_api_actions_economy_resources_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162047,7 +169413,10 @@ export interface operations {
   }
   action_economy_cosmic_api_actions_economy_cosmic_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162074,7 +169443,10 @@ export interface operations {
   }
   action_addiction_cure_api_actions_addiction_cure_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162105,7 +169477,10 @@ export interface operations {
   }
   action_addiction_set_api_actions_addiction_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162136,7 +169511,10 @@ export interface operations {
   }
   action_addiction_immunity_api_actions_addiction_immunity_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162167,7 +169545,10 @@ export interface operations {
   }
   action_essence_pour_api_actions_essence_pour_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162198,7 +169579,10 @@ export interface operations {
   }
   action_creator_sign_api_actions_creator_sign_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162229,7 +169613,10 @@ export interface operations {
   }
   action_mortal_protect_api_actions_mortal_protect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162260,7 +169647,10 @@ export interface operations {
   }
   action_foreign_god_strike_api_actions_foreign_god_strike_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162291,7 +169681,10 @@ export interface operations {
   }
   action_reputation_drift_api_actions_reputation_drift_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162322,7 +169715,10 @@ export interface operations {
   }
   action_goals_evaluate_api_actions_goals_evaluate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162349,7 +169745,10 @@ export interface operations {
   }
   action_faith_first_api_actions_faith_first_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162380,7 +169779,10 @@ export interface operations {
   }
   action_language_edit_api_actions_language_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162411,7 +169813,10 @@ export interface operations {
   }
   action_language_signature_api_actions_language_signature_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162442,7 +169847,10 @@ export interface operations {
   }
   action_language_epoch_words_api_actions_language_epoch_words_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162473,7 +169881,10 @@ export interface operations {
   }
   action_intuition_discard_api_actions_intuition_discard_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162504,7 +169915,10 @@ export interface operations {
   }
   action_sensed_world_request_api_actions_sensed_world_request_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162535,7 +169949,10 @@ export interface operations {
   }
   action_sensed_world_hold_api_actions_sensed_world_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162566,7 +169983,10 @@ export interface operations {
   }
   action_sensed_world_retry_api_actions_sensed_world_retry_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162597,7 +170017,10 @@ export interface operations {
   }
   action_sensed_world_cancel_api_actions_sensed_world_cancel_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162628,7 +170051,10 @@ export interface operations {
   }
   action_intuition_discard_all_api_actions_intuition_discard_all_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162655,7 +170081,10 @@ export interface operations {
   }
   action_knowledge_level_api_actions_knowledge_level_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162686,7 +170115,10 @@ export interface operations {
   }
   action_knowledge_run_api_actions_knowledge_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162713,7 +170145,10 @@ export interface operations {
   }
   action_mechanics_weigh_api_actions_mechanics_weigh_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162740,7 +170175,10 @@ export interface operations {
   }
   action_market_write_off_api_actions_market_write_off_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162771,7 +170209,10 @@ export interface operations {
   }
   action_market_run_api_actions_market_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162798,7 +170239,10 @@ export interface operations {
   }
   action_faith_syncretize_api_actions_faith_syncretize_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162829,7 +170273,10 @@ export interface operations {
   }
   action_faith_unsyncretize_api_actions_faith_unsyncretize_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162860,7 +170307,10 @@ export interface operations {
   }
   action_faith_native_run_api_actions_faith_native_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162887,7 +170337,10 @@ export interface operations {
   }
   action_language_creole_api_actions_language_creole_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162918,7 +170371,10 @@ export interface operations {
   }
   action_language_contact_run_api_actions_language_contact_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162945,7 +170401,10 @@ export interface operations {
   }
   action_records_living_stats_api_actions_records_living_stats_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -162972,7 +170431,10 @@ export interface operations {
   }
   action_engine_run_phase_api_actions_engine_run_phase_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163003,7 +170465,10 @@ export interface operations {
   }
   action_fate_retry_api_actions_fate_retry_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163030,7 +170495,10 @@ export interface operations {
   }
   action_fate_rejudge_debt_api_actions_fate_rejudge_debt_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163057,7 +170525,10 @@ export interface operations {
   }
   action_fate_rejudge_limbo_api_actions_fate_rejudge_limbo_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163084,7 +170555,10 @@ export interface operations {
   }
   action_fate_override_verdict_api_actions_fate_override_verdict_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163115,7 +170589,10 @@ export interface operations {
   }
   action_creation_reward_api_actions_creation_reward_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163146,7 +170623,10 @@ export interface operations {
   }
   action_chronicle_audit_api_actions_chronicle_audit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163177,7 +170657,10 @@ export interface operations {
   }
   action_voices_retry_api_actions_voices_retry_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163204,7 +170687,10 @@ export interface operations {
   }
   action_voices_edit_view_api_actions_voices_edit_view_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163235,7 +170721,10 @@ export interface operations {
   }
   action_voices_delete_view_api_actions_voices_delete_view_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163266,7 +170755,10 @@ export interface operations {
   }
   action_births_retry_api_actions_births_retry_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163293,7 +170785,10 @@ export interface operations {
   }
   action_community_collapse_api_actions_community_collapse_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163324,7 +170819,10 @@ export interface operations {
   }
   action_structure_raze_api_actions_structure_raze_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163355,7 +170853,10 @@ export interface operations {
   }
   action_mortal_fate_api_actions_mortal_fate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163386,7 +170887,10 @@ export interface operations {
   }
   action_memorial_order_api_actions_memorial_order_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163417,7 +170921,10 @@ export interface operations {
   }
   action_world_revive_api_actions_world_revive_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163448,7 +170955,10 @@ export interface operations {
   }
   action_world_guardian_api_actions_world_guardian_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163479,7 +170989,10 @@ export interface operations {
   }
   action_species_abundance_api_actions_species_abundance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163510,7 +171023,10 @@ export interface operations {
   }
   action_region_seed_place_api_actions_region_seed_place_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163541,7 +171057,10 @@ export interface operations {
   }
   action_pilgrimage_declare_api_actions_pilgrimage_declare_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163572,7 +171091,10 @@ export interface operations {
   }
   action_record_end_api_actions_record_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163603,7 +171125,10 @@ export interface operations {
   }
   action_cult_merge_api_actions_cult_merge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163634,7 +171159,10 @@ export interface operations {
   }
   action_cult_schism_api_actions_cult_schism_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163665,7 +171193,10 @@ export interface operations {
   }
   action_people_unite_api_actions_people_unite_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163696,7 +171227,10 @@ export interface operations {
   }
   action_place_swallow_api_actions_place_swallow_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163727,7 +171261,10 @@ export interface operations {
   }
   action_lever_pin_api_actions_lever_pin_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163758,7 +171295,10 @@ export interface operations {
   }
   action_lever_unpin_api_actions_lever_unpin_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163789,7 +171329,10 @@ export interface operations {
   }
   action_lever_suppress_api_actions_lever_suppress_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163820,7 +171363,10 @@ export interface operations {
   }
   action_lever_unsuppress_api_actions_lever_unsuppress_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163851,7 +171397,10 @@ export interface operations {
   }
   action_lever_run_api_actions_lever_run_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163882,7 +171431,10 @@ export interface operations {
   }
   action_lever_set_api_actions_lever_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163913,7 +171465,10 @@ export interface operations {
   }
   action_modifier_add_api_actions_modifier_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163944,7 +171499,10 @@ export interface operations {
   }
   action_modifier_remove_api_actions_modifier_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -163975,7 +171533,10 @@ export interface operations {
   }
   action_incident_annotate_api_actions_incident_annotate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164006,7 +171567,10 @@ export interface operations {
   }
   action_modifier_create_api_actions_modifier_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164037,7 +171601,10 @@ export interface operations {
   }
   action_modifier_edit_api_actions_modifier_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164068,7 +171635,10 @@ export interface operations {
   }
   action_modifier_hold_api_actions_modifier_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164099,7 +171669,10 @@ export interface operations {
   }
   action_modifier_release_api_actions_modifier_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164130,7 +171703,10 @@ export interface operations {
   }
   action_incident_create_api_actions_incident_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164161,7 +171737,10 @@ export interface operations {
   }
   action_incident_edit_api_actions_incident_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164192,7 +171771,10 @@ export interface operations {
   }
   action_incident_roles_api_actions_incident_roles_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164223,7 +171805,10 @@ export interface operations {
   }
   action_incident_link_cause_api_actions_incident_link_cause_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164254,7 +171839,10 @@ export interface operations {
   }
   action_incident_unlink_cause_api_actions_incident_unlink_cause_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164285,7 +171873,10 @@ export interface operations {
   }
   action_incident_delete_api_actions_incident_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164316,7 +171907,10 @@ export interface operations {
   }
   action_incident_hold_api_actions_incident_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164347,7 +171941,10 @@ export interface operations {
   }
   action_incident_fact_create_api_actions_incident_fact_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164378,7 +171975,10 @@ export interface operations {
   }
   action_incident_fact_edit_api_actions_incident_fact_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164409,7 +172009,10 @@ export interface operations {
   }
   action_incident_fact_delete_api_actions_incident_fact_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164440,7 +172043,10 @@ export interface operations {
   }
   action_incident_step_create_api_actions_incident_step_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164471,7 +172077,10 @@ export interface operations {
   }
   action_incident_step_edit_api_actions_incident_step_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164502,7 +172111,10 @@ export interface operations {
   }
   action_incident_step_delete_api_actions_incident_step_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164533,7 +172145,10 @@ export interface operations {
   }
   action_incident_witness_create_api_actions_incident_witness_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164564,7 +172179,10 @@ export interface operations {
   }
   action_incident_witness_edit_api_actions_incident_witness_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164595,7 +172213,10 @@ export interface operations {
   }
   action_incident_witness_delete_api_actions_incident_witness_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164626,7 +172247,10 @@ export interface operations {
   }
   action_rumour_distortion_create_api_actions_rumour_distortion_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164657,7 +172281,10 @@ export interface operations {
   }
   action_rumour_distortion_edit_api_actions_rumour_distortion_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164688,7 +172315,10 @@ export interface operations {
   }
   action_rumour_distortion_delete_api_actions_rumour_distortion_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164719,7 +172349,10 @@ export interface operations {
   }
   action_incident_name_set_api_actions_incident_name_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164750,7 +172383,10 @@ export interface operations {
   }
   action_incident_name_delete_api_actions_incident_name_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164781,7 +172417,10 @@ export interface operations {
   }
   action_state_change_revert_api_actions_state_change_revert_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164812,7 +172451,10 @@ export interface operations {
   }
   action_state_change_delete_api_actions_state_change_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164843,7 +172485,10 @@ export interface operations {
   }
   action_profile_set_api_actions_profile_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164874,7 +172519,10 @@ export interface operations {
   }
   action_profile_release_api_actions_profile_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164905,7 +172553,10 @@ export interface operations {
   }
   action_ley_sever_api_actions_ley_sever_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164936,7 +172587,10 @@ export interface operations {
   }
   action_ley_restore_api_actions_ley_restore_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164967,7 +172621,10 @@ export interface operations {
   }
   action_ley_forge_api_actions_ley_forge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -164998,7 +172655,10 @@ export interface operations {
   }
   action_ley_unforge_api_actions_ley_unforge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165029,7 +172689,10 @@ export interface operations {
   }
   action_weather_force_api_actions_weather_force_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165060,7 +172723,10 @@ export interface operations {
   }
   action_weather_release_api_actions_weather_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165091,7 +172757,10 @@ export interface operations {
   }
   action_year_force_notable_api_actions_year_force_notable_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165122,7 +172791,10 @@ export interface operations {
   }
   action_environment_set_api_actions_environment_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165153,7 +172825,10 @@ export interface operations {
   }
   action_environment_unlock_api_actions_environment_unlock_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165184,7 +172859,10 @@ export interface operations {
   }
   action_environment_scar_api_actions_environment_scar_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165215,7 +172893,10 @@ export interface operations {
   }
   action_environment_mineral_api_actions_environment_mineral_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165246,7 +172927,10 @@ export interface operations {
   }
   action_environment_place_api_actions_environment_place_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165277,7 +172961,10 @@ export interface operations {
   }
   action_seasons_reorder_api_actions_seasons_reorder_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165308,7 +172995,10 @@ export interface operations {
   }
   action_seasons_edit_api_actions_seasons_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165339,7 +173029,10 @@ export interface operations {
   }
   action_seasons_calendar_api_actions_seasons_calendar_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165370,7 +173063,10 @@ export interface operations {
   }
   action_calendar_adopt_api_actions_calendar_adopt_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165401,7 +173097,10 @@ export interface operations {
   }
   action_calendar_drop_api_actions_calendar_drop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165432,7 +173131,10 @@ export interface operations {
   }
   action_calendar_rename_api_actions_calendar_rename_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165463,7 +173165,10 @@ export interface operations {
   }
   action_place_create_api_actions_place_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165494,7 +173199,10 @@ export interface operations {
   }
   action_place_edit_api_actions_place_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165525,7 +173233,10 @@ export interface operations {
   }
   action_place_release_api_actions_place_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165556,7 +173267,10 @@ export interface operations {
   }
   action_place_secret_api_actions_place_secret_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165587,7 +173301,10 @@ export interface operations {
   }
   action_place_secret_edit_api_actions_place_secret_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165618,7 +173335,10 @@ export interface operations {
   }
   action_place_reveal_api_actions_place_reveal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165649,7 +173369,10 @@ export interface operations {
   }
   action_place_secret_delete_api_actions_place_secret_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165680,7 +173403,10 @@ export interface operations {
   }
   action_pilgrimage_clear_api_actions_pilgrimage_clear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165711,7 +173437,10 @@ export interface operations {
   }
   action_event_create_api_actions_event_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165742,7 +173471,10 @@ export interface operations {
   }
   action_event_edit_api_actions_event_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165773,7 +173505,10 @@ export interface operations {
   }
   action_event_phase_api_actions_event_phase_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165804,7 +173539,10 @@ export interface operations {
   }
   action_event_release_api_actions_event_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165835,7 +173573,10 @@ export interface operations {
   }
   action_event_footprint_api_actions_event_footprint_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165866,7 +173607,10 @@ export interface operations {
   }
   action_event_casualties_api_actions_event_casualties_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165897,7 +173641,10 @@ export interface operations {
   }
   action_event_end_api_actions_event_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165928,7 +173675,10 @@ export interface operations {
   }
   action_land_stir_api_actions_land_stir_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165959,7 +173709,10 @@ export interface operations {
   }
   action_land_river_api_actions_land_river_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -165990,7 +173743,10 @@ export interface operations {
   }
   action_land_shape_api_actions_land_shape_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166021,7 +173777,10 @@ export interface operations {
   }
   action_land_release_api_actions_land_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166052,7 +173811,10 @@ export interface operations {
   }
   action_seasons_add_api_actions_seasons_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166083,7 +173845,10 @@ export interface operations {
   }
   action_seasons_remove_api_actions_seasons_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166114,7 +173879,10 @@ export interface operations {
   }
   action_seasons_release_api_actions_seasons_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166145,7 +173913,10 @@ export interface operations {
   }
   action_seasons_onset_api_actions_seasons_onset_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166176,7 +173947,10 @@ export interface operations {
   }
   action_seasons_onset_release_api_actions_seasons_onset_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166207,7 +173981,10 @@ export interface operations {
   }
   action_seasons_onset_clear_api_actions_seasons_onset_clear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166238,7 +174015,10 @@ export interface operations {
   }
   action_seasons_moons_api_actions_seasons_moons_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166269,7 +174049,10 @@ export interface operations {
   }
   action_seasons_calendar_release_api_actions_seasons_calendar_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166300,7 +174083,10 @@ export interface operations {
   }
   action_weather_edit_api_actions_weather_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166331,7 +174117,10 @@ export interface operations {
   }
   action_year_edit_api_actions_year_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166362,7 +174151,10 @@ export interface operations {
   }
   action_year_delete_api_actions_year_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166393,7 +174185,10 @@ export interface operations {
   }
   action_calendar_holy_day_api_actions_calendar_holy_day_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166424,7 +174219,10 @@ export interface operations {
   }
   action_calendar_holy_day_remove_api_actions_calendar_holy_day_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166455,7 +174253,10 @@ export interface operations {
   }
   action_calendar_anchor_api_actions_calendar_anchor_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166486,7 +174287,10 @@ export interface operations {
   }
   action_ley_strength_api_actions_ley_strength_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166517,7 +174321,10 @@ export interface operations {
   }
   action_ley_dissolve_api_actions_ley_dissolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166548,7 +174355,10 @@ export interface operations {
   }
   action_ley_work_api_actions_ley_work_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166579,7 +174389,10 @@ export interface operations {
   }
   action_environment_biome_api_actions_environment_biome_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166610,7 +174423,10 @@ export interface operations {
   }
   action_region_danger_create_api_actions_region_danger_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166641,7 +174457,10 @@ export interface operations {
   }
   action_region_danger_edit_api_actions_region_danger_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166672,7 +174491,10 @@ export interface operations {
   }
   action_region_danger_release_api_actions_region_danger_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166703,7 +174525,10 @@ export interface operations {
   }
   action_region_danger_delete_api_actions_region_danger_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166734,7 +174559,10 @@ export interface operations {
   }
   action_region_sanctify_api_actions_region_sanctify_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166765,7 +174593,10 @@ export interface operations {
   }
   action_region_memory_add_api_actions_region_memory_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166796,7 +174627,10 @@ export interface operations {
   }
   action_region_memory_edit_api_actions_region_memory_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166827,7 +174661,10 @@ export interface operations {
   }
   action_region_memory_delete_api_actions_region_memory_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166858,7 +174695,10 @@ export interface operations {
   }
   action_region_knowledge_set_api_actions_region_knowledge_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166889,7 +174729,10 @@ export interface operations {
   }
   action_region_knowledge_release_api_actions_region_knowledge_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166920,7 +174763,10 @@ export interface operations {
   }
   action_region_river_redirect_api_actions_region_river_redirect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166951,7 +174797,10 @@ export interface operations {
   }
   action_material_edit_api_actions_material_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -166982,7 +174831,10 @@ export interface operations {
   }
   action_stock_grant_api_actions_stock_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167013,7 +174865,10 @@ export interface operations {
   }
   action_resource_set_api_actions_resource_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167044,7 +174899,10 @@ export interface operations {
   }
   action_resource_owner_api_actions_resource_owner_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167075,7 +174933,10 @@ export interface operations {
   }
   action_resource_reveal_api_actions_resource_reveal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167106,7 +174967,10 @@ export interface operations {
   }
   action_workshop_set_api_actions_workshop_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167137,7 +175001,10 @@ export interface operations {
   }
   action_trade_route_open_api_actions_trade_route_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167168,7 +175035,10 @@ export interface operations {
   }
   action_trade_route_close_api_actions_trade_route_close_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167199,7 +175069,10 @@ export interface operations {
   }
   action_trade_route_toll_api_actions_trade_route_toll_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167230,7 +175103,10 @@ export interface operations {
   }
   action_currency_edit_api_actions_currency_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167261,7 +175137,10 @@ export interface operations {
   }
   action_currency_debase_api_actions_currency_debase_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167292,7 +175171,10 @@ export interface operations {
   }
   action_currency_use_api_actions_currency_use_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167323,7 +175205,10 @@ export interface operations {
   }
   action_loan_forgive_api_actions_loan_forgive_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167354,7 +175239,10 @@ export interface operations {
   }
   action_hoard_inject_api_actions_hoard_inject_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167385,7 +175273,10 @@ export interface operations {
   }
   action_method_set_api_actions_method_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167416,7 +175307,10 @@ export interface operations {
   }
   action_method_remove_api_actions_method_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167447,7 +175341,10 @@ export interface operations {
   }
   action_industry_set_api_actions_industry_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167478,7 +175375,10 @@ export interface operations {
   }
   action_industry_remove_api_actions_industry_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167509,7 +175409,10 @@ export interface operations {
   }
   action_pollution_set_api_actions_pollution_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167540,7 +175443,10 @@ export interface operations {
   }
   action_pollution_purify_api_actions_pollution_purify_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167571,7 +175477,10 @@ export interface operations {
   }
   action_pollution_remove_api_actions_pollution_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167602,7 +175511,10 @@ export interface operations {
   }
   action_workshop_owner_api_actions_workshop_owner_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167633,7 +175545,10 @@ export interface operations {
   }
   action_trade_policy_set_api_actions_trade_policy_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167664,7 +175579,10 @@ export interface operations {
   }
   action_trade_policy_remove_api_actions_trade_policy_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167695,7 +175613,10 @@ export interface operations {
   }
   action_credit_set_api_actions_credit_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167726,7 +175647,10 @@ export interface operations {
   }
   action_credit_remove_api_actions_credit_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167757,7 +175681,10 @@ export interface operations {
   }
   action_speculation_open_api_actions_speculation_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167788,7 +175715,10 @@ export interface operations {
   }
   action_speculation_edit_api_actions_speculation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167819,7 +175749,10 @@ export interface operations {
   }
   action_speculation_remove_api_actions_speculation_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167850,7 +175783,10 @@ export interface operations {
   }
   action_indicator_edit_api_actions_indicator_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167881,7 +175817,10 @@ export interface operations {
   }
   action_indicator_remove_api_actions_indicator_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167912,7 +175851,10 @@ export interface operations {
   }
   action_genome_found_api_actions_genome_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167943,7 +175885,10 @@ export interface operations {
   }
   action_genome_gene_api_actions_genome_gene_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -167974,7 +175919,10 @@ export interface operations {
   }
   action_genome_edit_api_actions_genome_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168005,7 +175953,10 @@ export interface operations {
   }
   action_genome_redraw_api_actions_genome_redraw_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168036,7 +175987,10 @@ export interface operations {
   }
   action_genome_remove_api_actions_genome_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168067,7 +176021,10 @@ export interface operations {
   }
   action_allele_pool_found_api_actions_allele_pool_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168098,7 +176055,10 @@ export interface operations {
   }
   action_allele_pool_frequency_api_actions_allele_pool_frequency_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168129,7 +176089,10 @@ export interface operations {
   }
   action_allele_pool_stance_api_actions_allele_pool_stance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168160,7 +176123,10 @@ export interface operations {
   }
   action_allele_pool_share_api_actions_allele_pool_share_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168191,7 +176157,10 @@ export interface operations {
   }
   action_allele_pool_remove_api_actions_allele_pool_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168222,7 +176191,10 @@ export interface operations {
   }
   action_resemblance_set_api_actions_resemblance_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168253,7 +176225,10 @@ export interface operations {
   }
   action_resemblance_remove_api_actions_resemblance_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168284,7 +176259,10 @@ export interface operations {
   }
   action_household_found_api_actions_household_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168315,7 +176293,10 @@ export interface operations {
   }
   action_household_edit_api_actions_household_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168346,7 +176327,10 @@ export interface operations {
   }
   action_household_debt_api_actions_household_debt_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168377,7 +176361,10 @@ export interface operations {
   }
   action_household_hold_api_actions_household_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168408,7 +176395,10 @@ export interface operations {
   }
   action_household_remove_api_actions_household_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168439,7 +176429,10 @@ export interface operations {
   }
   action_household_member_api_actions_household_member_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168470,7 +176463,10 @@ export interface operations {
   }
   action_household_release_api_actions_household_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168501,7 +176497,10 @@ export interface operations {
   }
   action_dwelling_set_api_actions_dwelling_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168532,7 +176531,10 @@ export interface operations {
   }
   action_dwelling_remove_api_actions_dwelling_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168563,7 +176565,10 @@ export interface operations {
   }
   action_furnishing_add_api_actions_furnishing_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168594,7 +176599,10 @@ export interface operations {
   }
   action_furnishing_remove_api_actions_furnishing_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168625,7 +176633,10 @@ export interface operations {
   }
   action_household_aggregate_edit_api_actions_household_aggregate_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168656,7 +176667,10 @@ export interface operations {
   }
   action_household_aggregate_remove_api_actions_household_aggregate_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168687,7 +176701,10 @@ export interface operations {
   }
   action_secret_keep_api_actions_secret_keep_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168718,7 +176735,10 @@ export interface operations {
   }
   action_secret_edit_api_actions_secret_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168749,7 +176769,10 @@ export interface operations {
   }
   action_secret_hold_api_actions_secret_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168780,7 +176803,10 @@ export interface operations {
   }
   action_secret_expose_api_actions_secret_expose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168811,7 +176837,10 @@ export interface operations {
   }
   action_secret_delete_api_actions_secret_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168842,7 +176871,10 @@ export interface operations {
   }
   action_hook_grant_api_actions_hook_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168873,7 +176905,10 @@ export interface operations {
   }
   action_hook_edit_api_actions_hook_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168904,7 +176939,10 @@ export interface operations {
   }
   action_hook_use_api_actions_hook_use_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168935,7 +176973,10 @@ export interface operations {
   }
   action_hook_delete_api_actions_hook_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168966,7 +177007,10 @@ export interface operations {
   }
   action_favour_owe_api_actions_favour_owe_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -168997,7 +177041,10 @@ export interface operations {
   }
   action_favour_edit_api_actions_favour_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169028,7 +177075,10 @@ export interface operations {
   }
   action_favour_call_api_actions_favour_call_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169059,7 +177109,10 @@ export interface operations {
   }
   action_favour_delete_api_actions_favour_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169090,7 +177143,10 @@ export interface operations {
   }
   action_gathering_convene_api_actions_gathering_convene_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169121,7 +177177,10 @@ export interface operations {
   }
   action_gathering_hold_api_actions_gathering_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169152,7 +177211,10 @@ export interface operations {
   }
   action_gathering_edit_api_actions_gathering_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169183,7 +177245,10 @@ export interface operations {
   }
   action_gathering_delete_api_actions_gathering_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169214,7 +177279,10 @@ export interface operations {
   }
   action_gathering_guest_set_api_actions_gathering_guest_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169245,7 +177313,10 @@ export interface operations {
   }
   action_gathering_guest_remove_api_actions_gathering_guest_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169276,7 +177347,10 @@ export interface operations {
   }
   action_collection_create_api_actions_collection_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169307,7 +177381,10 @@ export interface operations {
   }
   action_collection_edit_api_actions_collection_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169338,7 +177415,10 @@ export interface operations {
   }
   action_collection_delete_api_actions_collection_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169369,7 +177449,10 @@ export interface operations {
   }
   action_collection_member_set_api_actions_collection_member_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169400,7 +177483,10 @@ export interface operations {
   }
   action_collection_member_remove_api_actions_collection_member_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169431,7 +177517,10 @@ export interface operations {
   }
   action_collection_place_api_actions_collection_place_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169462,7 +177551,10 @@ export interface operations {
   }
   action_storyteller_set_api_actions_storyteller_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169493,7 +177585,10 @@ export interface operations {
   }
   action_site_room_create_api_actions_site_room_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169524,7 +177619,10 @@ export interface operations {
   }
   action_site_room_edit_api_actions_site_room_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169555,7 +177653,10 @@ export interface operations {
   }
   action_site_room_delete_api_actions_site_room_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169586,7 +177687,10 @@ export interface operations {
   }
   action_room_content_add_api_actions_room_content_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169617,7 +177721,10 @@ export interface operations {
   }
   action_room_content_remove_api_actions_room_content_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169648,7 +177755,10 @@ export interface operations {
   }
   action_site_delve_api_actions_site_delve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169679,7 +177789,10 @@ export interface operations {
   }
   action_site_holder_set_api_actions_site_holder_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169710,7 +177823,10 @@ export interface operations {
   }
   action_site_holder_delete_api_actions_site_holder_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169741,7 +177857,10 @@ export interface operations {
   }
   action_excavation_begin_api_actions_excavation_begin_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169772,7 +177891,10 @@ export interface operations {
   }
   action_excavation_edit_api_actions_excavation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169803,7 +177925,10 @@ export interface operations {
   }
   action_excavation_advance_api_actions_excavation_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169834,7 +177959,10 @@ export interface operations {
   }
   action_excavation_delete_api_actions_excavation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169865,7 +177993,10 @@ export interface operations {
   }
   action_excavation_stage_edit_api_actions_excavation_stage_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169896,7 +178027,10 @@ export interface operations {
   }
   action_battlefield_feature_create_api_actions_battlefield_feature_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169927,7 +178061,10 @@ export interface operations {
   }
   action_battlefield_feature_edit_api_actions_battlefield_feature_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169958,7 +178095,10 @@ export interface operations {
   }
   action_battlefield_feature_delete_api_actions_battlefield_feature_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -169989,7 +178129,10 @@ export interface operations {
   }
   action_dominion_set_api_actions_dominion_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170020,7 +178163,10 @@ export interface operations {
   }
   action_rite_grammar_edit_api_actions_rite_grammar_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170051,7 +178197,10 @@ export interface operations {
   }
   action_rite_grammar_delete_api_actions_rite_grammar_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170082,7 +178231,10 @@ export interface operations {
   }
   action_lab_text_write_api_actions_lab_text_write_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170113,7 +178265,10 @@ export interface operations {
   }
   action_lab_text_edit_api_actions_lab_text_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170144,7 +178299,10 @@ export interface operations {
   }
   action_lab_text_delete_api_actions_lab_text_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170175,7 +178333,10 @@ export interface operations {
   }
   action_vis_set_api_actions_vis_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170206,7 +178367,10 @@ export interface operations {
   }
   action_vis_delete_api_actions_vis_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170237,7 +178401,10 @@ export interface operations {
   }
   action_warping_edit_api_actions_warping_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170268,7 +178435,10 @@ export interface operations {
   }
   action_warping_delete_api_actions_warping_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170299,7 +178469,10 @@ export interface operations {
   }
   action_longevity_begin_api_actions_longevity_begin_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170330,7 +178503,10 @@ export interface operations {
   }
   action_longevity_edit_api_actions_longevity_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170361,7 +178537,10 @@ export interface operations {
   }
   action_longevity_end_api_actions_longevity_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170392,7 +178571,10 @@ export interface operations {
   }
   action_enchantment_lay_api_actions_enchantment_lay_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170423,7 +178605,10 @@ export interface operations {
   }
   action_law_upkeep_edit_api_actions_law_upkeep_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170454,7 +178639,10 @@ export interface operations {
   }
   action_law_upkeep_delete_api_actions_law_upkeep_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170485,7 +178673,10 @@ export interface operations {
   }
   action_enchantment_dispel_api_actions_enchantment_dispel_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170516,7 +178707,10 @@ export interface operations {
   }
   action_item_charge_edit_api_actions_item_charge_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170547,7 +178741,10 @@ export interface operations {
   }
   action_heroquest_party_api_actions_heroquest_party_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170578,7 +178775,10 @@ export interface operations {
   }
   action_heroquest_begin_api_actions_heroquest_begin_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170609,7 +178809,10 @@ export interface operations {
   }
   action_heroquest_edit_api_actions_heroquest_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170640,7 +178843,10 @@ export interface operations {
   }
   action_heroquest_advance_api_actions_heroquest_advance_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170671,7 +178877,10 @@ export interface operations {
   }
   action_heroquest_delete_api_actions_heroquest_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170702,7 +178911,10 @@ export interface operations {
   }
   action_mantling_edit_api_actions_mantling_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170733,7 +178945,10 @@ export interface operations {
   }
   action_mantling_delete_api_actions_mantling_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170764,7 +178979,10 @@ export interface operations {
   }
   action_servitor_make_api_actions_servitor_make_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170795,7 +179013,10 @@ export interface operations {
   }
   action_servitor_edit_api_actions_servitor_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170826,7 +179047,10 @@ export interface operations {
   }
   action_servitor_release_api_actions_servitor_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170857,7 +179081,10 @@ export interface operations {
   }
   action_geas_lay_api_actions_geas_lay_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170888,7 +179115,10 @@ export interface operations {
   }
   action_geas_edit_api_actions_geas_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170919,7 +179149,10 @@ export interface operations {
   }
   action_geas_break_api_actions_geas_break_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170950,7 +179183,10 @@ export interface operations {
   }
   action_geas_delete_api_actions_geas_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -170981,7 +179217,10 @@ export interface operations {
   }
   action_cosmic_office_appoint_api_actions_cosmic_office_appoint_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171012,7 +179251,10 @@ export interface operations {
   }
   action_cosmic_office_edit_api_actions_cosmic_office_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171043,7 +179285,10 @@ export interface operations {
   }
   action_cosmic_office_vacate_api_actions_cosmic_office_vacate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171074,7 +179319,10 @@ export interface operations {
   }
   action_sound_change_add_api_actions_sound_change_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171105,7 +179353,10 @@ export interface operations {
   }
   action_sound_change_edit_api_actions_sound_change_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171136,7 +179387,10 @@ export interface operations {
   }
   action_sound_change_delete_api_actions_sound_change_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171167,7 +179421,10 @@ export interface operations {
   }
   action_grammar_edit_api_actions_grammar_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171198,7 +179455,10 @@ export interface operations {
   }
   action_grammar_reset_api_actions_grammar_reset_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171229,7 +179489,10 @@ export interface operations {
   }
   action_tongue_edit_api_actions_tongue_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171260,7 +179523,10 @@ export interface operations {
   }
   action_word_register_api_actions_word_register_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171291,7 +179557,10 @@ export interface operations {
   }
   action_word_veil_api_actions_word_veil_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171322,7 +179591,10 @@ export interface operations {
   }
   action_meaning_shift_edit_api_actions_meaning_shift_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171353,7 +179625,10 @@ export interface operations {
   }
   action_meaning_shift_delete_api_actions_meaning_shift_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171384,7 +179659,10 @@ export interface operations {
   }
   action_script_create_api_actions_script_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171415,7 +179693,10 @@ export interface operations {
   }
   action_script_edit_api_actions_script_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171446,7 +179727,10 @@ export interface operations {
   }
   action_script_delete_api_actions_script_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171477,7 +179761,10 @@ export interface operations {
   }
   action_script_assign_api_actions_script_assign_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171508,7 +179795,10 @@ export interface operations {
   }
   action_decipherment_start_api_actions_decipherment_start_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171539,7 +179829,10 @@ export interface operations {
   }
   action_decipherment_edit_api_actions_decipherment_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171570,7 +179863,10 @@ export interface operations {
   }
   action_decipherment_delete_api_actions_decipherment_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171601,7 +179897,10 @@ export interface operations {
   }
   action_language_policy_set_api_actions_language_policy_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171632,7 +179931,10 @@ export interface operations {
   }
   action_language_policy_edit_api_actions_language_policy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171663,7 +179965,10 @@ export interface operations {
   }
   action_language_policy_delete_api_actions_language_policy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171694,7 +179999,10 @@ export interface operations {
   }
   action_divine_tongue_set_api_actions_divine_tongue_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171725,7 +180033,10 @@ export interface operations {
   }
   action_divine_tongue_edit_api_actions_divine_tongue_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171756,7 +180067,10 @@ export interface operations {
   }
   action_divine_tongue_delete_api_actions_divine_tongue_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171787,7 +180101,10 @@ export interface operations {
   }
   action_divine_tongue_teach_api_actions_divine_tongue_teach_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171818,7 +180135,10 @@ export interface operations {
   }
   action_species_trait_set_api_actions_species_trait_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171849,7 +180169,10 @@ export interface operations {
   }
   action_species_trait_edit_api_actions_species_trait_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171880,7 +180203,10 @@ export interface operations {
   }
   action_species_trait_delete_api_actions_species_trait_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171911,7 +180237,10 @@ export interface operations {
   }
   action_lineage_mark_api_actions_lineage_mark_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171942,7 +180271,10 @@ export interface operations {
   }
   action_lineage_edit_api_actions_lineage_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -171973,7 +180305,10 @@ export interface operations {
   }
   action_lineage_delete_api_actions_lineage_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172004,7 +180339,10 @@ export interface operations {
   }
   action_species_ecology_edit_api_actions_species_ecology_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172035,7 +180373,10 @@ export interface operations {
   }
   action_ecosystem_service_set_api_actions_ecosystem_service_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172066,7 +180407,10 @@ export interface operations {
   }
   action_ecosystem_service_edit_api_actions_ecosystem_service_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172097,7 +180441,10 @@ export interface operations {
   }
   action_ecosystem_service_delete_api_actions_ecosystem_service_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172128,7 +180475,10 @@ export interface operations {
   }
   action_herd_release_api_actions_herd_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172159,7 +180509,10 @@ export interface operations {
   }
   action_carrier_add_api_actions_carrier_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172190,7 +180543,10 @@ export interface operations {
   }
   action_carrier_edit_api_actions_carrier_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172221,7 +180577,10 @@ export interface operations {
   }
   action_carrier_delete_api_actions_carrier_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172252,7 +180611,10 @@ export interface operations {
   }
   action_plague_response_set_api_actions_plague_response_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172283,7 +180645,10 @@ export interface operations {
   }
   action_plague_response_edit_api_actions_plague_response_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172314,7 +180679,10 @@ export interface operations {
   }
   action_plague_response_delete_api_actions_plague_response_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172345,7 +180713,10 @@ export interface operations {
   }
   action_cure_research_start_api_actions_cure_research_start_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172376,7 +180747,10 @@ export interface operations {
   }
   action_cure_research_edit_api_actions_cure_research_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172407,7 +180781,10 @@ export interface operations {
   }
   action_cure_research_delete_api_actions_cure_research_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172438,7 +180815,10 @@ export interface operations {
   }
   action_world_cycle_edit_api_actions_world_cycle_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172469,7 +180849,10 @@ export interface operations {
   }
   action_world_cycle_reset_api_actions_world_cycle_reset_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172500,7 +180883,10 @@ export interface operations {
   }
   action_land_reshape_api_actions_land_reshape_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172531,7 +180917,10 @@ export interface operations {
   }
   action_district_urban_edit_api_actions_district_urban_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172562,7 +180951,10 @@ export interface operations {
   }
   action_town_urban_edit_api_actions_town_urban_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172593,7 +180985,10 @@ export interface operations {
   }
   action_structure_place_api_actions_structure_place_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172624,7 +181019,10 @@ export interface operations {
   }
   action_slums_clear_api_actions_slums_clear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172655,7 +181053,10 @@ export interface operations {
   }
   action_district_service_set_api_actions_district_service_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172686,7 +181087,10 @@ export interface operations {
   }
   action_district_service_edit_api_actions_district_service_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172717,7 +181121,10 @@ export interface operations {
   }
   action_district_service_delete_api_actions_district_service_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172748,7 +181155,10 @@ export interface operations {
   }
   action_turf_set_api_actions_turf_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172779,7 +181189,10 @@ export interface operations {
   }
   action_turf_edit_api_actions_turf_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172810,7 +181223,10 @@ export interface operations {
   }
   action_turf_delete_api_actions_turf_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172841,7 +181257,10 @@ export interface operations {
   }
   action_racket_set_api_actions_racket_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172872,7 +181291,10 @@ export interface operations {
   }
   action_racket_edit_api_actions_racket_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172903,7 +181325,10 @@ export interface operations {
   }
   action_racket_delete_api_actions_racket_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172934,7 +181359,10 @@ export interface operations {
   }
   action_payroll_add_api_actions_payroll_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172965,7 +181393,10 @@ export interface operations {
   }
   action_payroll_edit_api_actions_payroll_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -172996,7 +181427,10 @@ export interface operations {
   }
   action_payroll_delete_api_actions_payroll_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173027,7 +181461,10 @@ export interface operations {
   }
   action_crime_stance_set_api_actions_crime_stance_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173058,7 +181495,10 @@ export interface operations {
   }
   action_crime_stance_edit_api_actions_crime_stance_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173089,7 +181529,10 @@ export interface operations {
   }
   action_crime_stance_delete_api_actions_crime_stance_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173120,7 +181563,10 @@ export interface operations {
   }
   action_order_law_set_api_actions_order_law_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173151,7 +181597,10 @@ export interface operations {
   }
   action_order_law_edit_api_actions_order_law_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173182,7 +181631,10 @@ export interface operations {
   }
   action_order_law_delete_api_actions_order_law_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173213,7 +181665,10 @@ export interface operations {
   }
   action_tribunal_convene_api_actions_tribunal_convene_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173244,7 +181699,10 @@ export interface operations {
   }
   action_tribunal_strike_api_actions_tribunal_strike_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173275,7 +181733,10 @@ export interface operations {
   }
   action_trading_post_open_api_actions_trading_post_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173306,7 +181767,10 @@ export interface operations {
   }
   action_trading_post_edit_api_actions_trading_post_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173337,7 +181801,10 @@ export interface operations {
   }
   action_trading_post_close_api_actions_trading_post_close_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173368,7 +181835,10 @@ export interface operations {
   }
   action_convoy_send_api_actions_convoy_send_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173399,7 +181869,10 @@ export interface operations {
   }
   action_convoy_edit_api_actions_convoy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173430,7 +181903,10 @@ export interface operations {
   }
   action_convoy_delete_api_actions_convoy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173461,7 +181937,10 @@ export interface operations {
   }
   action_fleet_set_api_actions_fleet_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173492,7 +181971,10 @@ export interface operations {
   }
   action_fleet_edit_api_actions_fleet_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173523,7 +182005,10 @@ export interface operations {
   }
   action_fleet_delete_api_actions_fleet_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173554,7 +182039,10 @@ export interface operations {
   }
   action_market_play_set_api_actions_market_play_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173585,7 +182073,10 @@ export interface operations {
   }
   action_market_play_edit_api_actions_market_play_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173616,7 +182107,10 @@ export interface operations {
   }
   action_market_play_delete_api_actions_market_play_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173647,7 +182141,10 @@ export interface operations {
   }
   action_crowd_mood_set_api_actions_crowd_mood_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173678,7 +182175,10 @@ export interface operations {
   }
   action_crowd_mood_edit_api_actions_crowd_mood_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173709,7 +182209,10 @@ export interface operations {
   }
   action_crowd_feeling_set_api_actions_crowd_feeling_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173740,7 +182243,10 @@ export interface operations {
   }
   action_crowd_mood_delete_api_actions_crowd_mood_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173771,7 +182277,10 @@ export interface operations {
   }
   action_cascade_spark_api_actions_cascade_spark_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173802,7 +182311,10 @@ export interface operations {
   }
   action_cascade_delete_api_actions_cascade_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173833,7 +182345,10 @@ export interface operations {
   }
   action_mob_raise_api_actions_mob_raise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173864,7 +182379,10 @@ export interface operations {
   }
   action_mob_edit_api_actions_mob_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173895,7 +182413,10 @@ export interface operations {
   }
   action_mob_disperse_api_actions_mob_disperse_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173926,7 +182447,10 @@ export interface operations {
   }
   action_mob_delete_api_actions_mob_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173957,7 +182481,10 @@ export interface operations {
   }
   action_popular_movement_found_api_actions_popular_movement_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -173988,7 +182515,10 @@ export interface operations {
   }
   action_popular_movement_edit_api_actions_popular_movement_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174019,7 +182549,10 @@ export interface operations {
   }
   action_popular_movement_delete_api_actions_popular_movement_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174050,7 +182583,10 @@ export interface operations {
   }
   action_account_write_api_actions_account_write_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174081,7 +182617,10 @@ export interface operations {
   }
   action_account_edit_api_actions_account_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174112,7 +182651,10 @@ export interface operations {
   }
   action_account_revise_api_actions_account_revise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174143,7 +182685,10 @@ export interface operations {
   }
   action_account_expose_api_actions_account_expose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174174,7 +182719,10 @@ export interface operations {
   }
   action_account_delete_api_actions_account_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174205,7 +182753,10 @@ export interface operations {
   }
   action_account_stance_set_api_actions_account_stance_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174236,7 +182787,10 @@ export interface operations {
   }
   action_account_stance_delete_api_actions_account_stance_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174267,7 +182821,10 @@ export interface operations {
   }
   action_memory_strike_set_api_actions_memory_strike_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174298,7 +182855,10 @@ export interface operations {
   }
   action_memory_strike_edit_api_actions_memory_strike_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174329,7 +182889,10 @@ export interface operations {
   }
   action_memory_strike_delete_api_actions_memory_strike_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174360,7 +182923,10 @@ export interface operations {
   }
   action_founding_myth_set_api_actions_founding_myth_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174391,7 +182957,10 @@ export interface operations {
   }
   action_founding_myth_edit_api_actions_founding_myth_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174422,7 +182991,10 @@ export interface operations {
   }
   action_founding_myth_debunk_api_actions_founding_myth_debunk_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174453,7 +183025,10 @@ export interface operations {
   }
   action_founding_myth_delete_api_actions_founding_myth_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174484,7 +183059,10 @@ export interface operations {
   }
   action_commemoration_set_api_actions_commemoration_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174515,7 +183093,10 @@ export interface operations {
   }
   action_commemoration_edit_api_actions_commemoration_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174546,7 +183127,10 @@ export interface operations {
   }
   action_commemoration_relive_api_actions_commemoration_relive_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174577,7 +183161,10 @@ export interface operations {
   }
   action_commemoration_delete_api_actions_commemoration_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174608,7 +183195,10 @@ export interface operations {
   }
   action_lost_land_set_api_actions_lost_land_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174639,7 +183229,10 @@ export interface operations {
   }
   action_lost_land_edit_api_actions_lost_land_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174670,7 +183263,10 @@ export interface operations {
   }
   action_lost_land_delete_api_actions_lost_land_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174701,7 +183297,10 @@ export interface operations {
   }
   action_storylet_open_api_actions_storylet_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174732,7 +183331,10 @@ export interface operations {
   }
   action_storylet_edit_api_actions_storylet_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174763,7 +183365,10 @@ export interface operations {
   }
   action_storylet_choose_api_actions_storylet_choose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174794,7 +183399,10 @@ export interface operations {
   }
   action_storylet_delete_api_actions_storylet_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174825,7 +183433,10 @@ export interface operations {
   }
   action_social_norm_set_api_actions_social_norm_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174856,7 +183467,10 @@ export interface operations {
   }
   action_social_norm_edit_api_actions_social_norm_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174887,7 +183501,10 @@ export interface operations {
   }
   action_social_norm_delete_api_actions_social_norm_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174918,7 +183535,10 @@ export interface operations {
   }
   action_norm_change_delete_api_actions_norm_change_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174949,7 +183569,10 @@ export interface operations {
   }
   action_learning_bias_set_api_actions_learning_bias_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -174980,7 +183603,10 @@ export interface operations {
   }
   action_learning_bias_edit_api_actions_learning_bias_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175011,7 +183637,10 @@ export interface operations {
   }
   action_learning_bias_delete_api_actions_learning_bias_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175042,7 +183671,10 @@ export interface operations {
   }
   action_learning_event_delete_api_actions_learning_event_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175073,7 +183705,10 @@ export interface operations {
   }
   action_generation_set_api_actions_generation_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175104,7 +183739,10 @@ export interface operations {
   }
   action_generation_shape_api_actions_generation_shape_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175135,7 +183773,10 @@ export interface operations {
   }
   action_generation_edit_api_actions_generation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175166,7 +183807,10 @@ export interface operations {
   }
   action_generation_delete_api_actions_generation_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175197,7 +183841,10 @@ export interface operations {
   }
   action_diaspora_set_api_actions_diaspora_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175228,7 +183875,10 @@ export interface operations {
   }
   action_diaspora_edit_api_actions_diaspora_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175259,7 +183909,10 @@ export interface operations {
   }
   action_diaspora_delete_api_actions_diaspora_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175290,7 +183943,10 @@ export interface operations {
   }
   action_transition_set_api_actions_transition_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175321,7 +183977,10 @@ export interface operations {
   }
   action_transition_edit_api_actions_transition_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175352,7 +184011,10 @@ export interface operations {
   }
   action_transition_delete_api_actions_transition_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175383,7 +184045,10 @@ export interface operations {
   }
   action_sex_ratio_set_api_actions_sex_ratio_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175414,7 +184079,10 @@ export interface operations {
   }
   action_sex_ratio_edit_api_actions_sex_ratio_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175445,7 +184113,10 @@ export interface operations {
   }
   action_sex_ratio_delete_api_actions_sex_ratio_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175476,7 +184147,10 @@ export interface operations {
   }
   action_role_norm_set_api_actions_role_norm_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175507,7 +184181,10 @@ export interface operations {
   }
   action_role_norm_edit_api_actions_role_norm_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175538,7 +184215,10 @@ export interface operations {
   }
   action_role_norm_delete_api_actions_role_norm_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175569,7 +184249,10 @@ export interface operations {
   }
   action_dating_system_set_api_actions_dating_system_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175600,7 +184283,10 @@ export interface operations {
   }
   action_dating_system_edit_api_actions_dating_system_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175631,7 +184317,10 @@ export interface operations {
   }
   action_dating_system_delete_api_actions_dating_system_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175662,7 +184351,10 @@ export interface operations {
   }
   action_arms_set_api_actions_arms_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175693,7 +184385,10 @@ export interface operations {
   }
   action_arms_edit_api_actions_arms_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175724,7 +184419,10 @@ export interface operations {
   }
   action_arms_quarter_api_actions_arms_quarter_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175755,7 +184453,10 @@ export interface operations {
   }
   action_arms_difference_api_actions_arms_difference_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175786,7 +184487,10 @@ export interface operations {
   }
   action_arms_delete_api_actions_arms_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175817,7 +184521,10 @@ export interface operations {
   }
   action_design_draw_api_actions_design_draw_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175848,7 +184555,10 @@ export interface operations {
   }
   action_design_edit_api_actions_design_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175879,7 +184589,10 @@ export interface operations {
   }
   action_design_refit_api_actions_design_refit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175910,7 +184623,10 @@ export interface operations {
   }
   action_design_delete_api_actions_design_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175941,7 +184657,10 @@ export interface operations {
   }
   action_design_component_set_api_actions_design_component_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -175972,7 +184691,10 @@ export interface operations {
   }
   action_design_component_delete_api_actions_design_component_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176003,7 +184725,10 @@ export interface operations {
   }
   action_design_fit_api_actions_design_fit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176034,7 +184759,10 @@ export interface operations {
   }
   action_component_wear_set_api_actions_component_wear_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176065,7 +184793,10 @@ export interface operations {
   }
   action_component_wear_edit_api_actions_component_wear_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176096,7 +184827,10 @@ export interface operations {
   }
   action_component_wear_delete_api_actions_component_wear_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176127,7 +184861,10 @@ export interface operations {
   }
   action_legal_system_set_api_actions_legal_system_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176158,7 +184895,10 @@ export interface operations {
   }
   action_legal_system_edit_api_actions_legal_system_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176189,7 +184929,10 @@ export interface operations {
   }
   action_legal_system_delete_api_actions_legal_system_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176220,7 +184963,10 @@ export interface operations {
   }
   action_precedent_add_api_actions_precedent_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176251,7 +184997,10 @@ export interface operations {
   }
   action_precedent_edit_api_actions_precedent_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176282,7 +185031,10 @@ export interface operations {
   }
   action_precedent_delete_api_actions_precedent_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176313,7 +185065,10 @@ export interface operations {
   }
   action_appeal_file_api_actions_appeal_file_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176344,7 +185099,10 @@ export interface operations {
   }
   action_appeal_edit_api_actions_appeal_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176375,7 +185133,10 @@ export interface operations {
   }
   action_appeal_hear_api_actions_appeal_hear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176406,7 +185167,10 @@ export interface operations {
   }
   action_appeal_delete_api_actions_appeal_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176437,7 +185201,10 @@ export interface operations {
   }
   action_oracle_answer_api_actions_oracle_answer_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176468,7 +185235,10 @@ export interface operations {
   }
   action_registry_add_api_actions_registry_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176499,7 +185269,10 @@ export interface operations {
   }
   action_registry_edit_api_actions_registry_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176530,7 +185303,10 @@ export interface operations {
   }
   action_registry_delete_api_actions_registry_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176561,7 +185337,10 @@ export interface operations {
   }
   action_jurisdiction_set_api_actions_jurisdiction_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176592,7 +185371,10 @@ export interface operations {
   }
   action_jurisdiction_edit_api_actions_jurisdiction_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176623,7 +185405,10 @@ export interface operations {
   }
   action_jurisdiction_delete_api_actions_jurisdiction_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176654,7 +185439,10 @@ export interface operations {
   }
   action_pardon_grant_api_actions_pardon_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176685,7 +185473,10 @@ export interface operations {
   }
   action_amnesty_declare_api_actions_amnesty_declare_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176716,7 +185507,10 @@ export interface operations {
   }
   action_pardon_delete_api_actions_pardon_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176747,7 +185541,10 @@ export interface operations {
   }
   action_outlaw_declare_api_actions_outlaw_declare_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176778,7 +185575,10 @@ export interface operations {
   }
   action_outlaw_edit_api_actions_outlaw_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176809,7 +185609,10 @@ export interface operations {
   }
   action_outlaw_delete_api_actions_outlaw_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176840,7 +185643,10 @@ export interface operations {
   }
   action_prison_set_api_actions_prison_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176871,7 +185677,10 @@ export interface operations {
   }
   action_prison_edit_api_actions_prison_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176902,7 +185711,10 @@ export interface operations {
   }
   action_prison_delete_api_actions_prison_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176933,7 +185745,10 @@ export interface operations {
   }
   action_prisoner_jail_api_actions_prisoner_jail_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176964,7 +185779,10 @@ export interface operations {
   }
   action_prisoner_edit_api_actions_prisoner_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -176995,7 +185813,10 @@ export interface operations {
   }
   action_prisoner_free_api_actions_prisoner_free_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177026,7 +185847,10 @@ export interface operations {
   }
   action_spy_cell_add_api_actions_spy_cell_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177057,7 +185881,10 @@ export interface operations {
   }
   action_spy_cell_edit_api_actions_spy_cell_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177088,7 +185915,10 @@ export interface operations {
   }
   action_spy_cell_delete_api_actions_spy_cell_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177119,7 +185949,10 @@ export interface operations {
   }
   action_mole_hunt_order_api_actions_mole_hunt_order_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177150,7 +185983,10 @@ export interface operations {
   }
   action_mole_hunt_delete_api_actions_mole_hunt_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177181,7 +186017,10 @@ export interface operations {
   }
   action_defection_make_api_actions_defection_make_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177212,7 +186051,10 @@ export interface operations {
   }
   action_defection_edit_api_actions_defection_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177243,7 +186085,10 @@ export interface operations {
   }
   action_defection_delete_api_actions_defection_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177274,7 +186119,10 @@ export interface operations {
   }
   action_killing_add_api_actions_killing_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177305,7 +186153,10 @@ export interface operations {
   }
   action_killing_edit_api_actions_killing_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177336,7 +186187,10 @@ export interface operations {
   }
   action_killing_delete_api_actions_killing_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177367,7 +186221,10 @@ export interface operations {
   }
   action_pidgin_make_api_actions_pidgin_make_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177398,7 +186255,10 @@ export interface operations {
   }
   action_dominion_delete_api_actions_dominion_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177429,7 +186289,10 @@ export interface operations {
   }
   action_god_scale_set_api_actions_god_scale_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177460,7 +186323,10 @@ export interface operations {
   }
   action_god_scale_delete_api_actions_god_scale_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177491,7 +186357,10 @@ export interface operations {
   }
   action_god_design_edit_api_actions_god_design_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177522,7 +186391,10 @@ export interface operations {
   }
   action_god_design_delete_api_actions_god_design_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177553,7 +186425,10 @@ export interface operations {
   }
   action_god_image_edit_api_actions_god_image_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177584,7 +186459,10 @@ export interface operations {
   }
   action_god_image_delete_api_actions_god_image_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177615,7 +186493,10 @@ export interface operations {
   }
   action_miracle_record_edit_api_actions_miracle_record_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177646,7 +186527,10 @@ export interface operations {
   }
   action_miracle_record_delete_api_actions_miracle_record_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177677,7 +186561,10 @@ export interface operations {
   }
   action_magic_site_create_api_actions_magic_site_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177708,7 +186595,10 @@ export interface operations {
   }
   action_magic_site_edit_api_actions_magic_site_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177739,7 +186629,10 @@ export interface operations {
   }
   action_magic_site_reveal_api_actions_magic_site_reveal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177770,7 +186663,10 @@ export interface operations {
   }
   action_magic_site_delete_api_actions_magic_site_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177801,7 +186697,10 @@ export interface operations {
   }
   action_throne_create_api_actions_throne_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177832,7 +186731,10 @@ export interface operations {
   }
   action_throne_edit_api_actions_throne_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177863,7 +186765,10 @@ export interface operations {
   }
   action_throne_delete_api_actions_throne_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177894,7 +186799,10 @@ export interface operations {
   }
   action_divine_creature_raise_api_actions_divine_creature_raise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177925,7 +186833,10 @@ export interface operations {
   }
   action_divine_creature_edit_api_actions_divine_creature_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177956,7 +186867,10 @@ export interface operations {
   }
   action_divine_creature_teach_api_actions_divine_creature_teach_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -177987,7 +186901,10 @@ export interface operations {
   }
   action_divine_creature_weight_api_actions_divine_creature_weight_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178018,7 +186935,10 @@ export interface operations {
   }
   action_divine_creature_release_api_actions_divine_creature_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178049,7 +186969,10 @@ export interface operations {
   }
   action_identity_assume_api_actions_identity_assume_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178080,7 +187003,10 @@ export interface operations {
   }
   action_identity_edit_api_actions_identity_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178111,7 +187037,10 @@ export interface operations {
   }
   action_identity_unmask_api_actions_identity_unmask_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178142,7 +187071,10 @@ export interface operations {
   }
   action_identity_delete_api_actions_identity_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178173,7 +187105,10 @@ export interface operations {
   }
   action_scheme_begin_api_actions_scheme_begin_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178204,7 +187139,10 @@ export interface operations {
   }
   action_scheme_edit_api_actions_scheme_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178235,7 +187173,10 @@ export interface operations {
   }
   action_scheme_hold_api_actions_scheme_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178266,7 +187207,10 @@ export interface operations {
   }
   action_scheme_delete_api_actions_scheme_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178297,7 +187241,10 @@ export interface operations {
   }
   action_true_name_set_api_actions_true_name_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178328,7 +187275,10 @@ export interface operations {
   }
   action_true_name_teach_api_actions_true_name_teach_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178359,7 +187309,10 @@ export interface operations {
   }
   action_true_name_delete_api_actions_true_name_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178390,7 +187343,10 @@ export interface operations {
   }
   action_belief_set_api_actions_belief_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178421,7 +187377,10 @@ export interface operations {
   }
   action_belief_delete_api_actions_belief_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178452,7 +187411,10 @@ export interface operations {
   }
   action_dispatch_send_api_actions_dispatch_send_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178483,7 +187445,10 @@ export interface operations {
   }
   action_dispatch_edit_api_actions_dispatch_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178514,7 +187479,10 @@ export interface operations {
   }
   action_dispatch_hold_api_actions_dispatch_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178545,7 +187513,10 @@ export interface operations {
   }
   action_dispatch_delete_api_actions_dispatch_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178576,7 +187547,10 @@ export interface operations {
   }
   action_opinion_set_api_actions_opinion_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178607,7 +187581,10 @@ export interface operations {
   }
   action_opinion_delete_api_actions_opinion_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178638,7 +187615,10 @@ export interface operations {
   }
   action_cipher_set_api_actions_cipher_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178669,7 +187649,10 @@ export interface operations {
   }
   action_cipher_break_api_actions_cipher_break_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178700,7 +187683,10 @@ export interface operations {
   }
   action_cipher_mend_api_actions_cipher_mend_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178731,7 +187717,10 @@ export interface operations {
   }
   action_cipher_delete_api_actions_cipher_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178762,7 +187751,10 @@ export interface operations {
   }
   action_signal_build_api_actions_signal_build_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178793,7 +187785,10 @@ export interface operations {
   }
   action_signal_edit_api_actions_signal_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178824,7 +187819,10 @@ export interface operations {
   }
   action_signal_delete_api_actions_signal_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178855,7 +187853,10 @@ export interface operations {
   }
   action_title_create_api_actions_title_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178886,7 +187887,10 @@ export interface operations {
   }
   action_title_edit_api_actions_title_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178917,7 +187921,10 @@ export interface operations {
   }
   action_title_hold_api_actions_title_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178948,7 +187955,10 @@ export interface operations {
   }
   action_title_grant_api_actions_title_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -178979,7 +187989,10 @@ export interface operations {
   }
   action_title_destroy_api_actions_title_destroy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179010,7 +188023,10 @@ export interface operations {
   }
   action_title_restore_api_actions_title_restore_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179041,7 +188057,10 @@ export interface operations {
   }
   action_title_remove_api_actions_title_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179072,7 +188091,10 @@ export interface operations {
   }
   action_de_jure_set_api_actions_de_jure_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179103,7 +188125,10 @@ export interface operations {
   }
   action_de_jure_remove_api_actions_de_jure_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179134,7 +188159,10 @@ export interface operations {
   }
   action_estate_found_api_actions_estate_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179165,7 +188193,10 @@ export interface operations {
   }
   action_estate_edit_api_actions_estate_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179196,7 +188227,10 @@ export interface operations {
   }
   action_estate_privilege_api_actions_estate_privilege_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179227,7 +188261,10 @@ export interface operations {
   }
   action_estate_remove_api_actions_estate_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179258,7 +188295,10 @@ export interface operations {
   }
   action_movement_found_api_actions_movement_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179289,7 +188329,10 @@ export interface operations {
   }
   action_movement_edit_api_actions_movement_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179320,7 +188363,10 @@ export interface operations {
   }
   action_movement_support_api_actions_movement_support_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179351,7 +188397,10 @@ export interface operations {
   }
   action_movement_support_remove_api_actions_movement_support_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179382,7 +188431,10 @@ export interface operations {
   }
   action_movement_remove_api_actions_movement_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179413,7 +188465,10 @@ export interface operations {
   }
   action_company_edit_api_actions_company_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179444,7 +188499,10 @@ export interface operations {
   }
   action_company_share_api_actions_company_share_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179475,7 +188533,10 @@ export interface operations {
   }
   action_company_share_remove_api_actions_company_share_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179506,7 +188567,10 @@ export interface operations {
   }
   action_company_remove_api_actions_company_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179537,7 +188601,10 @@ export interface operations {
   }
   action_holy_order_edit_api_actions_holy_order_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179568,7 +188635,10 @@ export interface operations {
   }
   action_holy_order_remove_api_actions_holy_order_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179599,7 +188669,10 @@ export interface operations {
   }
   action_guild_secret_api_actions_guild_secret_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179630,7 +188703,10 @@ export interface operations {
   }
   action_proposal_create_api_actions_proposal_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179661,7 +188737,10 @@ export interface operations {
   }
   action_proposal_edit_api_actions_proposal_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179692,7 +188771,10 @@ export interface operations {
   }
   action_proposal_hold_api_actions_proposal_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179723,7 +188805,10 @@ export interface operations {
   }
   action_proposal_pass_api_actions_proposal_pass_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179754,7 +188839,10 @@ export interface operations {
   }
   action_proposal_delete_api_actions_proposal_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179785,7 +188873,10 @@ export interface operations {
   }
   action_stance_set_api_actions_stance_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179816,7 +188907,10 @@ export interface operations {
   }
   action_stance_remove_api_actions_stance_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179847,7 +188941,10 @@ export interface operations {
   }
   action_case_open_api_actions_case_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179878,7 +188975,10 @@ export interface operations {
   }
   action_case_edit_api_actions_case_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179909,7 +189009,10 @@ export interface operations {
   }
   action_case_hold_api_actions_case_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179940,7 +189043,10 @@ export interface operations {
   }
   action_case_try_api_actions_case_try_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -179971,7 +189077,10 @@ export interface operations {
   }
   action_case_delete_api_actions_case_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180002,7 +189111,10 @@ export interface operations {
   }
   action_witness_set_api_actions_witness_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180033,7 +189145,10 @@ export interface operations {
   }
   action_witness_remove_api_actions_witness_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180064,7 +189179,10 @@ export interface operations {
   }
   action_regard_set_api_actions_regard_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180095,7 +189213,10 @@ export interface operations {
   }
   action_regard_remove_api_actions_regard_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180126,7 +189247,10 @@ export interface operations {
   }
   action_diplomacy_edit_api_actions_diplomacy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180157,7 +189281,10 @@ export interface operations {
   }
   action_crisis_open_api_actions_crisis_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180188,7 +189315,10 @@ export interface operations {
   }
   action_crisis_edit_api_actions_crisis_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180219,7 +189349,10 @@ export interface operations {
   }
   action_crisis_hold_api_actions_crisis_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180250,7 +189383,10 @@ export interface operations {
   }
   action_crisis_resolve_api_actions_crisis_resolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180281,7 +189417,10 @@ export interface operations {
   }
   action_crisis_delete_api_actions_crisis_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180312,7 +189451,10 @@ export interface operations {
   }
   action_backer_set_api_actions_backer_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180343,7 +189485,10 @@ export interface operations {
   }
   action_backer_remove_api_actions_backer_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180374,7 +189519,10 @@ export interface operations {
   }
   action_sphere_set_api_actions_sphere_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180405,7 +189553,10 @@ export interface operations {
   }
   action_sphere_remove_api_actions_sphere_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180436,7 +189587,10 @@ export interface operations {
   }
   action_council_task_api_actions_council_task_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180467,7 +189621,10 @@ export interface operations {
   }
   action_election_call_api_actions_election_call_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180498,7 +189655,10 @@ export interface operations {
   }
   action_election_delete_api_actions_election_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180529,7 +189689,10 @@ export interface operations {
   }
   action_seat_set_api_actions_seat_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180560,7 +189723,10 @@ export interface operations {
   }
   action_seat_remove_api_actions_seat_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180591,7 +189757,10 @@ export interface operations {
   }
   action_corruption_set_api_actions_corruption_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180622,7 +189791,10 @@ export interface operations {
   }
   action_tax_set_api_actions_tax_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180653,7 +189825,10 @@ export interface operations {
   }
   action_tax_remove_api_actions_tax_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180684,7 +189859,10 @@ export interface operations {
   }
   action_mandate_issue_api_actions_mandate_issue_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180715,7 +189893,10 @@ export interface operations {
   }
   action_mandate_edit_api_actions_mandate_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180746,7 +189927,10 @@ export interface operations {
   }
   action_mandate_delete_api_actions_mandate_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180777,7 +189961,10 @@ export interface operations {
   }
   action_will_set_api_actions_will_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180808,7 +189995,10 @@ export interface operations {
   }
   action_will_remove_api_actions_will_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180839,7 +190029,10 @@ export interface operations {
   }
   action_demand_set_api_actions_demand_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180870,7 +190063,10 @@ export interface operations {
   }
   action_demand_remove_api_actions_demand_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180901,7 +190097,10 @@ export interface operations {
   }
   action_approval_set_api_actions_approval_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180932,7 +190131,10 @@ export interface operations {
   }
   action_approval_remove_api_actions_approval_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180963,7 +190165,10 @@ export interface operations {
   }
   action_resolution_propose_api_actions_resolution_propose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -180994,7 +190199,10 @@ export interface operations {
   }
   action_resolution_edit_api_actions_resolution_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181025,7 +190233,10 @@ export interface operations {
   }
   action_resolution_hold_api_actions_resolution_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181056,7 +190267,10 @@ export interface operations {
   }
   action_resolution_delete_api_actions_resolution_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181087,7 +190301,10 @@ export interface operations {
   }
   action_vote_set_api_actions_vote_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181118,7 +190335,10 @@ export interface operations {
   }
   action_vote_remove_api_actions_vote_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181149,7 +190369,10 @@ export interface operations {
   }
   action_court_edit_api_actions_court_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181180,7 +190403,10 @@ export interface operations {
   }
   action_position_set_api_actions_position_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181211,7 +190437,10 @@ export interface operations {
   }
   action_position_remove_api_actions_position_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181242,7 +190471,10 @@ export interface operations {
   }
   action_site_profit_edit_api_actions_site_profit_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181273,7 +190505,10 @@ export interface operations {
   }
   action_site_profit_remove_api_actions_site_profit_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181304,7 +190539,10 @@ export interface operations {
   }
   action_material_create_api_actions_material_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181335,7 +190573,10 @@ export interface operations {
   }
   action_material_delete_api_actions_material_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181366,7 +190607,10 @@ export interface operations {
   }
   action_material_hold_api_actions_material_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181397,7 +190641,10 @@ export interface operations {
   }
   action_material_release_api_actions_material_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181428,7 +190675,10 @@ export interface operations {
   }
   action_node_material_set_api_actions_node_material_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181459,7 +190709,10 @@ export interface operations {
   }
   action_node_material_release_api_actions_node_material_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181490,7 +190743,10 @@ export interface operations {
   }
   action_node_material_clear_api_actions_node_material_clear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181521,7 +190777,10 @@ export interface operations {
   }
   action_stock_set_api_actions_stock_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181552,7 +190811,10 @@ export interface operations {
   }
   action_stock_release_api_actions_stock_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181583,7 +190845,10 @@ export interface operations {
   }
   action_workshop_edit_api_actions_workshop_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181614,7 +190879,10 @@ export interface operations {
   }
   action_workshop_release_api_actions_workshop_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181645,7 +190913,10 @@ export interface operations {
   }
   action_workshop_design_create_api_actions_workshop_design_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181676,7 +190947,10 @@ export interface operations {
   }
   action_workshop_design_edit_api_actions_workshop_design_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181707,7 +190981,10 @@ export interface operations {
   }
   action_workshop_design_release_api_actions_workshop_design_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181738,7 +191015,10 @@ export interface operations {
   }
   action_workshop_design_delete_api_actions_workshop_design_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181769,7 +191049,10 @@ export interface operations {
   }
   action_resource_create_api_actions_resource_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181800,7 +191083,10 @@ export interface operations {
   }
   action_resource_edit_api_actions_resource_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181831,7 +191117,10 @@ export interface operations {
   }
   action_resource_mechanic_api_actions_resource_mechanic_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181862,7 +191151,10 @@ export interface operations {
   }
   action_resource_release_api_actions_resource_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181893,7 +191185,10 @@ export interface operations {
   }
   action_resource_delete_api_actions_resource_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181924,7 +191219,10 @@ export interface operations {
   }
   action_resource_workers_api_actions_resource_workers_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181955,7 +191253,10 @@ export interface operations {
   }
   action_market_hold_price_api_actions_market_hold_price_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -181986,7 +191287,10 @@ export interface operations {
   }
   action_market_release_price_api_actions_market_release_price_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182017,7 +191321,10 @@ export interface operations {
   }
   action_currency_create_api_actions_currency_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182048,7 +191355,10 @@ export interface operations {
   }
   action_currency_release_api_actions_currency_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182079,7 +191389,10 @@ export interface operations {
   }
   action_currency_delete_api_actions_currency_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182110,7 +191423,10 @@ export interface operations {
   }
   action_loan_grant_api_actions_loan_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182141,7 +191457,10 @@ export interface operations {
   }
   action_loan_edit_api_actions_loan_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182172,7 +191491,10 @@ export interface operations {
   }
   action_loan_release_api_actions_loan_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182203,7 +191525,10 @@ export interface operations {
   }
   action_loan_delete_api_actions_loan_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182234,7 +191559,10 @@ export interface operations {
   }
   action_people_edit_api_actions_people_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182265,7 +191593,10 @@ export interface operations {
   }
   action_people_found_api_actions_people_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182296,7 +191627,10 @@ export interface operations {
   }
   action_cohort_move_api_actions_cohort_move_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182327,7 +191661,10 @@ export interface operations {
   }
   action_needs_hold_api_actions_needs_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182358,7 +191695,10 @@ export interface operations {
   }
   action_class_standing_api_actions_class_standing_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182389,7 +191729,10 @@ export interface operations {
   }
   action_labour_set_api_actions_labour_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182420,7 +191763,10 @@ export interface operations {
   }
   action_shortfall_set_api_actions_shortfall_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182451,7 +191797,10 @@ export interface operations {
   }
   action_labour_corvee_api_actions_labour_corvee_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182482,7 +191831,10 @@ export interface operations {
   }
   action_loyalty_edit_api_actions_loyalty_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182513,7 +191865,10 @@ export interface operations {
   }
   action_drift_impose_api_actions_drift_impose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182544,7 +191899,10 @@ export interface operations {
   }
   action_drift_edit_api_actions_drift_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182575,7 +191933,10 @@ export interface operations {
   }
   action_drift_cancel_api_actions_drift_cancel_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182606,7 +191967,10 @@ export interface operations {
   }
   action_mobility_ennoble_api_actions_mobility_ennoble_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182637,7 +192001,10 @@ export interface operations {
   }
   action_mobility_ruin_api_actions_mobility_ruin_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182668,7 +192035,10 @@ export interface operations {
   }
   action_mobility_move_api_actions_mobility_move_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182699,7 +192069,10 @@ export interface operations {
   }
   action_mobility_enslave_api_actions_mobility_enslave_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182730,7 +192103,10 @@ export interface operations {
   }
   action_mobility_manumit_api_actions_mobility_manumit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182761,7 +192137,10 @@ export interface operations {
   }
   action_disease_loose_api_actions_disease_loose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182792,7 +192171,10 @@ export interface operations {
   }
   action_disease_edit_api_actions_disease_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182823,7 +192205,10 @@ export interface operations {
   }
   action_disease_cure_api_actions_disease_cure_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182854,7 +192239,10 @@ export interface operations {
   }
   action_disease_quarantine_api_actions_disease_quarantine_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182885,7 +192273,10 @@ export interface operations {
   }
   action_disease_immunity_api_actions_disease_immunity_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182916,7 +192307,10 @@ export interface operations {
   }
   action_outbreak_end_api_actions_outbreak_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182947,7 +192341,10 @@ export interface operations {
   }
   action_disease_create_api_actions_disease_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -182978,7 +192375,10 @@ export interface operations {
   }
   action_outbreak_edit_api_actions_outbreak_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183009,7 +192409,10 @@ export interface operations {
   }
   action_endemic_set_api_actions_endemic_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183040,7 +192443,10 @@ export interface operations {
   }
   action_endemic_remove_api_actions_endemic_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183071,7 +192477,10 @@ export interface operations {
   }
   action_disease_route_set_api_actions_disease_route_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183102,7 +192511,10 @@ export interface operations {
   }
   action_disease_route_remove_api_actions_disease_route_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183133,7 +192545,10 @@ export interface operations {
   }
   action_cohort_set_api_actions_cohort_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183164,7 +192579,10 @@ export interface operations {
   }
   action_mortal_dormancy_api_actions_mortal_dormancy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183195,7 +192613,10 @@ export interface operations {
   }
   action_settlement_edit_api_actions_settlement_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183226,7 +192647,10 @@ export interface operations {
   }
   action_district_build_api_actions_district_build_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183257,7 +192681,10 @@ export interface operations {
   }
   action_district_edit_api_actions_district_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183288,7 +192715,10 @@ export interface operations {
   }
   action_district_move_api_actions_district_move_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183319,7 +192749,10 @@ export interface operations {
   }
   action_district_raze_api_actions_district_raze_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183350,7 +192783,10 @@ export interface operations {
   }
   action_settlement_tax_api_actions_settlement_tax_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183381,7 +192817,10 @@ export interface operations {
   }
   action_settlement_free_city_api_actions_settlement_free_city_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183412,7 +192851,10 @@ export interface operations {
   }
   action_settlement_charter_api_actions_settlement_charter_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183443,7 +192885,10 @@ export interface operations {
   }
   action_settlement_foreigners_api_actions_settlement_foreigners_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183474,7 +192919,10 @@ export interface operations {
   }
   action_district_design_api_actions_district_design_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183505,7 +192953,10 @@ export interface operations {
   }
   action_district_design_edit_api_actions_district_design_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183536,7 +192987,10 @@ export interface operations {
   }
   action_district_design_delete_api_actions_district_design_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183567,7 +193021,10 @@ export interface operations {
   }
   action_polity_edit_api_actions_polity_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183598,7 +193055,10 @@ export interface operations {
   }
   action_polity_appoint_api_actions_polity_appoint_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183629,7 +193089,10 @@ export interface operations {
   }
   action_polity_depose_api_actions_polity_depose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183660,7 +193123,10 @@ export interface operations {
   }
   action_polity_split_api_actions_polity_split_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183691,7 +193157,10 @@ export interface operations {
   }
   action_polity_merge_api_actions_polity_merge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183722,7 +193191,10 @@ export interface operations {
   }
   action_polity_independence_api_actions_polity_independence_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183753,7 +193225,10 @@ export interface operations {
   }
   action_polity_found_api_actions_polity_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183784,7 +193259,10 @@ export interface operations {
   }
   action_polity_dissolve_api_actions_polity_dissolve_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183815,7 +193293,10 @@ export interface operations {
   }
   action_polity_member_api_actions_polity_member_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183846,7 +193327,10 @@ export interface operations {
   }
   action_polity_territory_api_actions_polity_territory_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183877,7 +193361,10 @@ export interface operations {
   }
   action_office_create_api_actions_office_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183908,7 +193395,10 @@ export interface operations {
   }
   action_office_edit_api_actions_office_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183939,7 +193429,10 @@ export interface operations {
   }
   action_office_abolish_api_actions_office_abolish_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -183970,7 +193463,10 @@ export interface operations {
   }
   action_claim_edit_api_actions_claim_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184001,7 +193497,10 @@ export interface operations {
   }
   action_claim_revoke_api_actions_claim_revoke_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184032,7 +193531,10 @@ export interface operations {
   }
   action_mortal_repute_api_actions_mortal_repute_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184063,7 +193565,10 @@ export interface operations {
   }
   action_polity_loan_api_actions_polity_loan_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184094,7 +193599,10 @@ export interface operations {
   }
   action_law_enact_api_actions_law_enact_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184125,7 +193633,10 @@ export interface operations {
   }
   action_law_repeal_api_actions_law_repeal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184156,7 +193667,10 @@ export interface operations {
   }
   action_law_edit_api_actions_law_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184187,7 +193701,10 @@ export interface operations {
   }
   action_law_protect_api_actions_law_protect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184218,7 +193735,10 @@ export interface operations {
   }
   action_house_found_api_actions_house_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184249,7 +193769,10 @@ export interface operations {
   }
   action_house_merge_api_actions_house_merge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184280,7 +193803,10 @@ export interface operations {
   }
   action_house_extinguish_api_actions_house_extinguish_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184311,7 +193837,10 @@ export interface operations {
   }
   action_house_edit_api_actions_house_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184342,7 +193871,10 @@ export interface operations {
   }
   action_house_member_api_actions_house_member_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184373,7 +193905,10 @@ export interface operations {
   }
   action_house_heirloom_api_actions_house_heirloom_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184404,7 +193939,10 @@ export interface operations {
   }
   action_claim_grant_api_actions_claim_grant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184435,7 +193973,10 @@ export interface operations {
   }
   action_treaty_sign_api_actions_treaty_sign_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184466,7 +194007,10 @@ export interface operations {
   }
   action_treaty_break_api_actions_treaty_break_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184497,7 +194041,10 @@ export interface operations {
   }
   action_treaty_edit_api_actions_treaty_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184528,7 +194075,10 @@ export interface operations {
   }
   action_treaty_clause_add_api_actions_treaty_clause_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184559,7 +194109,10 @@ export interface operations {
   }
   action_treaty_clause_edit_api_actions_treaty_clause_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184590,7 +194143,10 @@ export interface operations {
   }
   action_treaty_clause_remove_api_actions_treaty_clause_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184621,7 +194177,10 @@ export interface operations {
   }
   action_treaty_party_add_api_actions_treaty_party_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184652,7 +194211,10 @@ export interface operations {
   }
   action_treaty_party_remove_api_actions_treaty_party_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184683,7 +194245,10 @@ export interface operations {
   }
   action_vassal_create_api_actions_vassal_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184714,7 +194279,10 @@ export interface operations {
   }
   action_vassal_edit_api_actions_vassal_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184745,7 +194313,10 @@ export interface operations {
   }
   action_oath_swear_api_actions_oath_swear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184776,7 +194347,10 @@ export interface operations {
   }
   action_oath_break_api_actions_oath_break_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184807,7 +194381,10 @@ export interface operations {
   }
   action_oath_edit_api_actions_oath_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184838,7 +194415,10 @@ export interface operations {
   }
   action_oath_release_api_actions_oath_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184869,7 +194449,10 @@ export interface operations {
   }
   action_army_edit_api_actions_army_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184900,7 +194483,10 @@ export interface operations {
   }
   action_army_command_api_actions_army_command_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184931,7 +194517,10 @@ export interface operations {
   }
   action_army_edit_stack_api_actions_army_edit_stack_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184962,7 +194551,10 @@ export interface operations {
   }
   action_army_add_stack_api_actions_army_add_stack_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -184993,7 +194585,10 @@ export interface operations {
   }
   action_army_remove_stack_api_actions_army_remove_stack_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185024,7 +194619,10 @@ export interface operations {
   }
   action_siege_edit_api_actions_siege_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185055,7 +194653,10 @@ export interface operations {
   }
   action_war_aim_api_actions_war_aim_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185086,7 +194687,10 @@ export interface operations {
   }
   action_war_drop_aim_api_actions_war_drop_aim_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185117,7 +194721,10 @@ export interface operations {
   }
   action_war_impose_peace_api_actions_war_impose_peace_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185148,7 +194755,10 @@ export interface operations {
   }
   action_war_call_allies_api_actions_war_call_allies_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185179,7 +194789,10 @@ export interface operations {
   }
   action_war_weariness_api_actions_war_weariness_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185210,7 +194823,10 @@ export interface operations {
   }
   action_war_edit_side_api_actions_war_edit_side_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185241,7 +194857,10 @@ export interface operations {
   }
   action_war_separate_peace_api_actions_war_separate_peace_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185272,7 +194891,10 @@ export interface operations {
   }
   action_occupation_edit_api_actions_occupation_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185303,7 +194925,10 @@ export interface operations {
   }
   action_captives_settle_api_actions_captives_settle_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185334,7 +194959,10 @@ export interface operations {
   }
   action_commander_trait_api_actions_commander_trait_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185365,7 +194993,10 @@ export interface operations {
   }
   action_spy_edit_network_api_actions_spy_edit_network_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185396,7 +195027,10 @@ export interface operations {
   }
   action_military_create_api_actions_military_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185427,7 +195061,10 @@ export interface operations {
   }
   action_military_edit_api_actions_military_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185458,7 +195095,10 @@ export interface operations {
   }
   action_military_release_api_actions_military_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185489,7 +195129,10 @@ export interface operations {
   }
   action_military_delete_api_actions_military_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185520,7 +195163,10 @@ export interface operations {
   }
   action_army_raise_api_actions_army_raise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185551,7 +195197,10 @@ export interface operations {
   }
   action_army_assign_api_actions_army_assign_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185582,7 +195231,10 @@ export interface operations {
   }
   action_war_battle_at_api_actions_war_battle_at_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185613,7 +195265,10 @@ export interface operations {
   }
   action_siege_start_api_actions_siege_start_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185644,7 +195299,10 @@ export interface operations {
   }
   action_war_declare_api_actions_war_declare_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185675,7 +195333,10 @@ export interface operations {
   }
   action_war_peace_api_actions_war_peace_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185706,7 +195367,10 @@ export interface operations {
   }
   action_vessel_create_api_actions_vessel_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185737,7 +195401,10 @@ export interface operations {
   }
   action_vessel_refit_api_actions_vessel_refit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185768,7 +195435,10 @@ export interface operations {
   }
   action_vessel_repair_api_actions_vessel_repair_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185799,7 +195469,10 @@ export interface operations {
   }
   action_engagement_force_api_actions_engagement_force_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185830,7 +195503,10 @@ export interface operations {
   }
   action_captive_take_api_actions_captive_take_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185861,7 +195537,10 @@ export interface operations {
   }
   action_war_ordeal_api_actions_war_ordeal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185892,7 +195571,10 @@ export interface operations {
   }
   action_cult_doctrine_api_actions_cult_doctrine_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185923,7 +195605,10 @@ export interface operations {
   }
   action_cult_reset_doctrine_api_actions_cult_reset_doctrine_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185954,7 +195639,10 @@ export interface operations {
   }
   action_cult_tenet_api_actions_cult_tenet_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -185985,7 +195673,10 @@ export interface operations {
   }
   action_cult_office_api_actions_cult_office_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186016,7 +195707,10 @@ export interface operations {
   }
   action_cult_holding_api_actions_cult_holding_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186047,7 +195741,10 @@ export interface operations {
   }
   action_cult_heresy_api_actions_cult_heresy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186078,7 +195775,10 @@ export interface operations {
   }
   action_cult_judge_heresy_api_actions_cult_judge_heresy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186109,7 +195809,10 @@ export interface operations {
   }
   action_cult_edit_heresy_api_actions_cult_edit_heresy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186140,7 +195843,10 @@ export interface operations {
   }
   action_cult_undeclare_heresy_api_actions_cult_undeclare_heresy_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186171,7 +195877,10 @@ export interface operations {
   }
   action_cult_canonise_api_actions_cult_canonise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186202,7 +195911,10 @@ export interface operations {
   }
   action_relic_edit_api_actions_relic_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186233,7 +195945,10 @@ export interface operations {
   }
   action_relic_remove_api_actions_relic_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186264,7 +195979,10 @@ export interface operations {
   }
   action_soul_raise_api_actions_soul_raise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186295,7 +196013,10 @@ export interface operations {
   }
   action_soul_judge_api_actions_soul_judge_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186326,7 +196047,10 @@ export interface operations {
   }
   action_soul_release_api_actions_soul_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186357,7 +196081,10 @@ export interface operations {
   }
   action_soul_bind_api_actions_soul_bind_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186388,7 +196115,10 @@ export interface operations {
   }
   action_soul_seal_api_actions_soul_seal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186419,7 +196149,10 @@ export interface operations {
   }
   action_soul_reincarnate_api_actions_soul_reincarnate_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186450,7 +196183,10 @@ export interface operations {
   }
   action_soul_edit_api_actions_soul_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186481,7 +196217,10 @@ export interface operations {
   }
   action_soul_reread_deeds_api_actions_soul_reread_deeds_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186512,7 +196251,10 @@ export interface operations {
   }
   action_soul_possess_api_actions_soul_possess_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186543,7 +196285,10 @@ export interface operations {
   }
   action_soul_possession_api_actions_soul_possession_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186574,7 +196319,10 @@ export interface operations {
   }
   action_soul_exorcise_api_actions_soul_exorcise_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186605,7 +196353,10 @@ export interface operations {
   }
   action_afterlife_stratum_api_actions_afterlife_stratum_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186636,7 +196387,10 @@ export interface operations {
   }
   action_body_heal_api_actions_body_heal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186667,7 +196421,10 @@ export interface operations {
   }
   action_body_maim_api_actions_body_maim_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186698,7 +196455,10 @@ export interface operations {
   }
   action_body_injury_api_actions_body_injury_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186729,7 +196489,10 @@ export interface operations {
   }
   action_body_prosthesis_api_actions_body_prosthesis_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186760,7 +196523,10 @@ export interface operations {
   }
   action_body_prosthesis_remove_api_actions_body_prosthesis_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186791,7 +196557,10 @@ export interface operations {
   }
   action_body_condition_api_actions_body_condition_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186822,7 +196591,10 @@ export interface operations {
   }
   action_body_condition_end_api_actions_body_condition_end_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186853,7 +196625,10 @@ export interface operations {
   }
   action_body_plan_api_actions_body_plan_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186884,7 +196659,10 @@ export interface operations {
   }
   action_body_frame_api_actions_body_frame_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186915,7 +196693,10 @@ export interface operations {
   }
   action_body_set_api_actions_body_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186946,7 +196727,10 @@ export interface operations {
   }
   action_body_unlock_api_actions_body_unlock_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -186977,7 +196761,10 @@ export interface operations {
   }
   action_body_customs_api_actions_body_customs_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187008,7 +196795,10 @@ export interface operations {
   }
   action_body_customs_unlock_api_actions_body_customs_unlock_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187039,7 +196829,10 @@ export interface operations {
   }
   action_body_cohort_api_actions_body_cohort_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187070,7 +196863,10 @@ export interface operations {
   }
   action_mind_values_api_actions_mind_values_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187101,7 +196897,10 @@ export interface operations {
   }
   action_mind_lock_api_actions_mind_lock_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187132,7 +196931,10 @@ export interface operations {
   }
   action_mind_unlock_api_actions_mind_unlock_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187163,7 +196965,10 @@ export interface operations {
   }
   action_mind_trait_api_actions_mind_trait_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187194,7 +196999,10 @@ export interface operations {
   }
   action_mind_trait_remove_api_actions_mind_trait_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187225,7 +197033,10 @@ export interface operations {
   }
   action_mind_skill_api_actions_mind_skill_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187256,7 +197067,10 @@ export interface operations {
   }
   action_mind_skill_remove_api_actions_mind_skill_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187287,7 +197101,10 @@ export interface operations {
   }
   action_mind_role_api_actions_mind_role_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187318,7 +197135,10 @@ export interface operations {
   }
   action_mind_memory_api_actions_mind_memory_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187349,7 +197169,10 @@ export interface operations {
   }
   action_mind_memory_edit_api_actions_mind_memory_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187380,7 +197203,10 @@ export interface operations {
   }
   action_mind_memory_remove_api_actions_mind_memory_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187411,7 +197237,10 @@ export interface operations {
   }
   action_mind_need_api_actions_mind_need_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187442,7 +197271,10 @@ export interface operations {
   }
   action_mind_pressure_api_actions_mind_pressure_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187473,7 +197305,10 @@ export interface operations {
   }
   action_mind_attributes_api_actions_mind_attributes_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187504,7 +197339,10 @@ export interface operations {
   }
   action_mind_facets_api_actions_mind_facets_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187535,7 +197373,10 @@ export interface operations {
   }
   action_mind_idea_api_actions_mind_idea_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187566,7 +197407,10 @@ export interface operations {
   }
   action_mind_idea_edit_api_actions_mind_idea_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187597,7 +197441,10 @@ export interface operations {
   }
   action_mind_idea_remove_api_actions_mind_idea_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187628,7 +197475,10 @@ export interface operations {
   }
   action_thought_send_api_actions_thought_send_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187659,7 +197509,10 @@ export interface operations {
   }
   action_thought_edit_api_actions_thought_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187690,7 +197543,10 @@ export interface operations {
   }
   action_thought_remove_api_actions_thought_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187721,7 +197577,10 @@ export interface operations {
   }
   action_thought_mood_api_actions_thought_mood_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187752,7 +197611,10 @@ export interface operations {
   }
   action_death_reading_create_api_actions_death_reading_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187783,7 +197645,10 @@ export interface operations {
   }
   action_death_reading_edit_api_actions_death_reading_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187814,7 +197679,10 @@ export interface operations {
   }
   action_death_reading_delete_api_actions_death_reading_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187845,7 +197713,10 @@ export interface operations {
   }
   action_grief_start_api_actions_grief_start_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187876,7 +197747,10 @@ export interface operations {
   }
   action_grief_edit_api_actions_grief_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187907,7 +197781,10 @@ export interface operations {
   }
   action_grief_remove_api_actions_grief_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187938,7 +197815,10 @@ export interface operations {
   }
   action_dream_send_api_actions_dream_send_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -187969,7 +197849,10 @@ export interface operations {
   }
   action_dream_edit_api_actions_dream_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188000,7 +197883,10 @@ export interface operations {
   }
   action_dream_remove_api_actions_dream_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188031,7 +197917,10 @@ export interface operations {
   }
   action_preference_set_api_actions_preference_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188062,7 +197951,10 @@ export interface operations {
   }
   action_preference_remove_api_actions_preference_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188093,7 +197985,10 @@ export interface operations {
   }
   action_ethics_set_api_actions_ethics_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188124,7 +198019,10 @@ export interface operations {
   }
   action_ethics_honour_api_actions_ethics_honour_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188155,7 +198053,10 @@ export interface operations {
   }
   action_aspiration_dream_api_actions_aspiration_dream_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188186,7 +198087,10 @@ export interface operations {
   }
   action_aspiration_dream_remove_api_actions_aspiration_dream_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188217,7 +198121,10 @@ export interface operations {
   }
   action_aspiration_want_api_actions_aspiration_want_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188248,7 +198155,10 @@ export interface operations {
   }
   action_aspiration_want_edit_api_actions_aspiration_want_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188279,7 +198189,10 @@ export interface operations {
   }
   action_aspiration_want_remove_api_actions_aspiration_want_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188310,7 +198223,10 @@ export interface operations {
   }
   action_aspiration_fear_api_actions_aspiration_fear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188341,7 +198257,10 @@ export interface operations {
   }
   action_aspiration_fear_remove_api_actions_aspiration_fear_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188372,7 +198291,10 @@ export interface operations {
   }
   action_aspiration_focus_api_actions_aspiration_focus_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188403,7 +198325,10 @@ export interface operations {
   }
   action_aspiration_perk_api_actions_aspiration_perk_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188434,7 +198359,10 @@ export interface operations {
   }
   action_aspiration_perk_remove_api_actions_aspiration_perk_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188465,7 +198393,10 @@ export interface operations {
   }
   action_aspiration_inspire_api_actions_aspiration_inspire_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188496,7 +198427,10 @@ export interface operations {
   }
   action_aspiration_inspiration_edit_api_actions_aspiration_inspiration_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188527,7 +198461,10 @@ export interface operations {
   }
   action_aspiration_inspiration_remove_api_actions_aspiration_inspiration_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188558,7 +198495,10 @@ export interface operations {
   }
   action_tie_set_api_actions_tie_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188589,7 +198529,10 @@ export interface operations {
   }
   action_tie_remove_api_actions_tie_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188620,7 +198563,10 @@ export interface operations {
   }
   action_circle_found_api_actions_circle_found_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188651,7 +198597,10 @@ export interface operations {
   }
   action_circle_edit_api_actions_circle_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188682,7 +198631,10 @@ export interface operations {
   }
   action_circle_member_api_actions_circle_member_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188713,7 +198665,10 @@ export interface operations {
   }
   action_circle_disband_api_actions_circle_disband_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188744,7 +198699,10 @@ export interface operations {
   }
   action_passion_set_api_actions_passion_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188775,7 +198733,10 @@ export interface operations {
   }
   action_passion_invoke_api_actions_passion_invoke_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188806,7 +198767,10 @@ export interface operations {
   }
   action_passion_remove_api_actions_passion_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188837,7 +198801,10 @@ export interface operations {
   }
   action_rank_set_api_actions_rank_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188868,7 +198835,10 @@ export interface operations {
   }
   action_rank_remove_api_actions_rank_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188899,7 +198869,10 @@ export interface operations {
   }
   action_persuasion_attempt_api_actions_persuasion_attempt_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188930,7 +198903,10 @@ export interface operations {
   }
   action_persuasion_remove_api_actions_persuasion_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188961,7 +198937,10 @@ export interface operations {
   }
   action_contest_hold_api_actions_contest_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -188992,7 +198971,10 @@ export interface operations {
   }
   action_contest_edit_api_actions_contest_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189023,7 +199005,10 @@ export interface operations {
   }
   action_contest_remove_api_actions_contest_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189054,7 +199039,10 @@ export interface operations {
   }
   action_renown_set_api_actions_renown_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189085,7 +199073,10 @@ export interface operations {
   }
   action_renown_remove_api_actions_renown_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189116,7 +199107,10 @@ export interface operations {
   }
   action_standing_set_api_actions_standing_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189147,7 +199141,10 @@ export interface operations {
   }
   action_standing_remove_api_actions_standing_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189178,7 +199175,10 @@ export interface operations {
   }
   action_deed_record_api_actions_deed_record_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189209,7 +199209,10 @@ export interface operations {
   }
   action_deed_edit_api_actions_deed_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189240,7 +199243,10 @@ export interface operations {
   }
   action_deed_remove_api_actions_deed_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189271,7 +199277,10 @@ export interface operations {
   }
   action_deed_claim_set_api_actions_deed_claim_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189302,7 +199311,10 @@ export interface operations {
   }
   action_deed_claim_expose_api_actions_deed_claim_expose_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189333,7 +199345,10 @@ export interface operations {
   }
   action_deed_claim_remove_api_actions_deed_claim_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189364,7 +199379,10 @@ export interface operations {
   }
   action_lore_trade_make_api_actions_lore_trade_make_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189395,7 +199413,10 @@ export interface operations {
   }
   action_lore_trade_remove_api_actions_lore_trade_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189426,7 +199447,10 @@ export interface operations {
   }
   action_aspiration_conviction_api_actions_aspiration_conviction_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189457,7 +199481,10 @@ export interface operations {
   }
   action_variant_create_api_actions_variant_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189488,7 +199515,10 @@ export interface operations {
   }
   action_variant_edit_api_actions_variant_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189519,7 +199549,10 @@ export interface operations {
   }
   action_variant_release_api_actions_variant_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189550,7 +199583,10 @@ export interface operations {
   }
   action_variant_delete_api_actions_variant_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189581,7 +199617,10 @@ export interface operations {
   }
   action_variant_assign_api_actions_variant_assign_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189612,7 +199651,10 @@ export interface operations {
   }
   action_mind_skill_edit_api_actions_mind_skill_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189643,7 +199685,10 @@ export interface operations {
   }
   action_body_condition_edit_api_actions_body_condition_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189674,7 +199719,10 @@ export interface operations {
   }
   action_body_prosthesis_edit_api_actions_body_prosthesis_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189705,7 +199753,10 @@ export interface operations {
   }
   action_body_injury_hold_api_actions_body_injury_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189736,7 +199787,10 @@ export interface operations {
   }
   action_body_treat_api_actions_body_treat_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189767,7 +199821,10 @@ export interface operations {
   }
   action_body_consciousness_api_actions_body_consciousness_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189798,7 +199855,10 @@ export interface operations {
   }
   action_body_digit_api_actions_body_digit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189829,7 +199889,10 @@ export interface operations {
   }
   action_body_handedness_api_actions_body_handedness_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189860,7 +199923,10 @@ export interface operations {
   }
   action_affliction_give_api_actions_affliction_give_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189891,7 +199957,10 @@ export interface operations {
   }
   action_affliction_edit_api_actions_affliction_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189922,7 +199991,10 @@ export interface operations {
   }
   action_affliction_hold_api_actions_affliction_hold_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189953,7 +200025,10 @@ export interface operations {
   }
   action_affliction_cure_api_actions_affliction_cure_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -189984,7 +200059,10 @@ export interface operations {
   }
   action_affliction_delete_api_actions_affliction_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190015,7 +200093,10 @@ export interface operations {
   }
   action_record_row_create_api_actions_record_row_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190046,7 +200127,10 @@ export interface operations {
   }
   action_record_row_edit_api_actions_record_row_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190077,7 +200161,10 @@ export interface operations {
   }
   action_record_row_delete_api_actions_record_row_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190108,7 +200195,10 @@ export interface operations {
   }
   action_mortal_set_api_actions_mortal_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190139,7 +200229,10 @@ export interface operations {
   }
   action_mortal_release_api_actions_mortal_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190170,7 +200263,10 @@ export interface operations {
   }
   action_mortal_sex_api_actions_mortal_sex_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190201,7 +200297,10 @@ export interface operations {
   }
   action_kin_betroth_api_actions_kin_betroth_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190232,7 +200331,10 @@ export interface operations {
   }
   action_kin_marry_api_actions_kin_marry_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190263,7 +200365,10 @@ export interface operations {
   }
   action_kin_end_marriage_api_actions_kin_end_marriage_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190294,7 +200399,10 @@ export interface operations {
   }
   action_kin_edit_marriage_api_actions_kin_edit_marriage_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190325,7 +200433,10 @@ export interface operations {
   }
   action_kin_delete_marriage_api_actions_kin_delete_marriage_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190356,7 +200467,10 @@ export interface operations {
   }
   action_kin_bond_api_actions_kin_bond_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190387,7 +200501,10 @@ export interface operations {
   }
   action_kin_unbond_api_actions_kin_unbond_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190418,7 +200535,10 @@ export interface operations {
   }
   action_mortal_equip_api_actions_mortal_equip_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190449,7 +200569,10 @@ export interface operations {
   }
   action_mortal_equip_release_api_actions_mortal_equip_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190480,7 +200603,10 @@ export interface operations {
   }
   action_mortal_sentence_api_actions_mortal_sentence_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190511,7 +200637,10 @@ export interface operations {
   }
   action_mortal_pardon_api_actions_mortal_pardon_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190542,7 +200671,10 @@ export interface operations {
   }
   action_domain_hook_set_api_actions_domain_hook_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190573,7 +200705,10 @@ export interface operations {
   }
   action_domain_hook_clear_api_actions_domain_hook_clear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190604,7 +200739,10 @@ export interface operations {
   }
   action_god_goal_set_api_actions_god_goal_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190635,7 +200773,10 @@ export interface operations {
   }
   action_god_goal_edit_api_actions_god_goal_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190666,7 +200807,10 @@ export interface operations {
   }
   action_god_goal_drop_api_actions_god_goal_drop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190697,7 +200841,10 @@ export interface operations {
   }
   action_divine_standing_set_api_actions_divine_standing_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190728,7 +200875,10 @@ export interface operations {
   }
   action_divine_standing_clear_api_actions_divine_standing_clear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190759,7 +200909,10 @@ export interface operations {
   }
   action_divine_wound_inflict_api_actions_divine_wound_inflict_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190790,7 +200943,10 @@ export interface operations {
   }
   action_divine_wound_edit_api_actions_divine_wound_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190821,7 +200977,10 @@ export interface operations {
   }
   action_divine_wound_remove_api_actions_divine_wound_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190852,7 +201011,10 @@ export interface operations {
   }
   action_avatar_manifest_api_actions_avatar_manifest_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190883,7 +201045,10 @@ export interface operations {
   }
   action_avatar_edit_api_actions_avatar_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190914,7 +201079,10 @@ export interface operations {
   }
   action_avatar_withdraw_api_actions_avatar_withdraw_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190945,7 +201113,10 @@ export interface operations {
   }
   action_taboo_set_api_actions_taboo_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -190976,7 +201147,10 @@ export interface operations {
   }
   action_taboo_remove_api_actions_taboo_remove_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191007,7 +201181,10 @@ export interface operations {
   }
   action_attention_set_api_actions_attention_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191038,7 +201215,10 @@ export interface operations {
   }
   action_attention_clear_api_actions_attention_clear_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191069,7 +201249,10 @@ export interface operations {
   }
   action_divine_pact_seal_api_actions_divine_pact_seal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191100,7 +201283,10 @@ export interface operations {
   }
   action_ruling_decree_api_actions_ruling_decree_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191131,7 +201317,10 @@ export interface operations {
   }
   action_ruling_edit_api_actions_ruling_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191162,7 +201351,10 @@ export interface operations {
   }
   action_ruling_revoke_api_actions_ruling_revoke_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191193,7 +201385,10 @@ export interface operations {
   }
   action_law_profile_edit_api_actions_law_profile_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191224,7 +201419,10 @@ export interface operations {
   }
   action_outer_profile_edit_api_actions_outer_profile_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191255,7 +201453,10 @@ export interface operations {
   }
   action_breach_open_api_actions_breach_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191286,7 +201487,10 @@ export interface operations {
   }
   action_breach_edit_api_actions_breach_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191317,7 +201521,10 @@ export interface operations {
   }
   action_breach_close_api_actions_breach_close_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191348,7 +201555,10 @@ export interface operations {
   }
   action_dimension_create_api_actions_dimension_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191379,7 +201589,10 @@ export interface operations {
   }
   action_dimension_edit_api_actions_dimension_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191410,7 +201623,10 @@ export interface operations {
   }
   action_dimension_delete_api_actions_dimension_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191441,7 +201657,10 @@ export interface operations {
   }
   action_dimension_bind_law_api_actions_dimension_bind_law_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191472,7 +201691,10 @@ export interface operations {
   }
   action_dimension_release_law_api_actions_dimension_release_law_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191503,7 +201725,10 @@ export interface operations {
   }
   action_heavens_worship_api_actions_heavens_worship_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191534,7 +201759,10 @@ export interface operations {
   }
   action_cluster_create_api_actions_cluster_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191565,7 +201793,10 @@ export interface operations {
   }
   action_cluster_edit_api_actions_cluster_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191596,7 +201827,10 @@ export interface operations {
   }
   action_cluster_delete_api_actions_cluster_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191627,7 +201861,10 @@ export interface operations {
   }
   action_galaxy_create_api_actions_galaxy_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191658,7 +201895,10 @@ export interface operations {
   }
   action_galaxy_edit_api_actions_galaxy_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191689,7 +201929,10 @@ export interface operations {
   }
   action_galaxy_delete_api_actions_galaxy_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191720,7 +201963,10 @@ export interface operations {
   }
   action_galactic_structure_create_api_actions_galactic_structure_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191751,7 +201997,10 @@ export interface operations {
   }
   action_galactic_structure_edit_api_actions_galactic_structure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191782,7 +202031,10 @@ export interface operations {
   }
   action_galactic_structure_delete_api_actions_galactic_structure_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191813,7 +202065,10 @@ export interface operations {
   }
   action_galactic_event_trigger_api_actions_galactic_event_trigger_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191844,7 +202099,10 @@ export interface operations {
   }
   action_galactic_event_edit_api_actions_galactic_event_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191875,7 +202133,10 @@ export interface operations {
   }
   action_galactic_event_delete_api_actions_galactic_event_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191906,7 +202167,10 @@ export interface operations {
   }
   action_dimensional_event_trigger_api_actions_dimensional_event_trigger_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191937,7 +202201,10 @@ export interface operations {
   }
   action_dimensional_event_edit_api_actions_dimensional_event_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191968,7 +202235,10 @@ export interface operations {
   }
   action_dimensional_event_delete_api_actions_dimensional_event_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -191999,7 +202269,10 @@ export interface operations {
   }
   action_rift_open_api_actions_rift_open_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192030,7 +202303,10 @@ export interface operations {
   }
   action_rift_edit_api_actions_rift_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192061,7 +202337,10 @@ export interface operations {
   }
   action_rift_seal_api_actions_rift_seal_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192092,7 +202371,10 @@ export interface operations {
   }
   action_rift_delete_api_actions_rift_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192123,7 +202405,10 @@ export interface operations {
   }
   action_cosmic_being_call_api_actions_cosmic_being_call_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192154,7 +202439,10 @@ export interface operations {
   }
   action_cosmic_being_edit_api_actions_cosmic_being_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192185,7 +202473,10 @@ export interface operations {
   }
   action_cosmic_being_bind_api_actions_cosmic_being_bind_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192216,7 +202507,10 @@ export interface operations {
   }
   action_cosmic_being_banish_api_actions_cosmic_being_banish_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192247,7 +202541,10 @@ export interface operations {
   }
   action_phenomenon_create_api_actions_phenomenon_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192278,7 +202575,10 @@ export interface operations {
   }
   action_phenomenon_edit_api_actions_phenomenon_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192309,7 +202609,10 @@ export interface operations {
   }
   action_phenomenon_footprint_api_actions_phenomenon_footprint_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192340,7 +202643,10 @@ export interface operations {
   }
   action_phenomenon_contain_api_actions_phenomenon_contain_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192371,7 +202677,10 @@ export interface operations {
   }
   action_star_life_edit_api_actions_star_life_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192402,7 +202711,10 @@ export interface operations {
   }
   action_world_life_edit_api_actions_world_life_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192433,7 +202745,10 @@ export interface operations {
   }
   action_route_flow_edit_api_actions_route_flow_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192464,7 +202779,10 @@ export interface operations {
   }
   action_journey_load_api_actions_journey_load_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192495,7 +202813,10 @@ export interface operations {
   }
   action_journey_release_api_actions_journey_release_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192526,7 +202847,10 @@ export interface operations {
   }
   action_celestial_reading_set_api_actions_celestial_reading_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192557,7 +202881,10 @@ export interface operations {
   }
   action_apocalypse_variant_api_actions_apocalypse_variant_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192588,7 +202915,10 @@ export interface operations {
   }
   action_region_climate_turn_api_actions_region_climate_turn_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192619,7 +202949,10 @@ export interface operations {
   }
   action_star_physics_edit_api_actions_star_physics_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192650,7 +202983,10 @@ export interface operations {
   }
   action_star_system_create_api_actions_star_system_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192681,7 +203017,10 @@ export interface operations {
   }
   action_star_system_edit_api_actions_star_system_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192712,7 +203051,10 @@ export interface operations {
   }
   action_star_system_delete_api_actions_star_system_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192743,7 +203085,10 @@ export interface operations {
   }
   action_star_system_move_api_actions_star_system_move_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192774,7 +203119,10 @@ export interface operations {
   }
   action_world_physics_edit_api_actions_world_physics_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192805,7 +203153,10 @@ export interface operations {
   }
   action_life_class_edit_api_actions_life_class_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192836,7 +203187,10 @@ export interface operations {
   }
   action_cosmic_feature_create_api_actions_cosmic_feature_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192867,7 +203221,10 @@ export interface operations {
   }
   action_cosmic_feature_edit_api_actions_cosmic_feature_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192898,7 +203255,10 @@ export interface operations {
   }
   action_cosmic_feature_delete_api_actions_cosmic_feature_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192929,7 +203289,10 @@ export interface operations {
   }
   action_impact_call_api_actions_impact_call_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192960,7 +203323,10 @@ export interface operations {
   }
   action_impact_deflect_api_actions_impact_deflect_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -192991,7 +203357,10 @@ export interface operations {
   }
   action_impact_edit_api_actions_impact_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193022,7 +203391,10 @@ export interface operations {
   }
   action_impact_delete_api_actions_impact_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193053,7 +203425,10 @@ export interface operations {
   }
   action_terraform_start_api_actions_terraform_start_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193084,7 +203459,10 @@ export interface operations {
   }
   action_terraform_edit_api_actions_terraform_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193115,7 +203493,10 @@ export interface operations {
   }
   action_terraform_stop_api_actions_terraform_stop_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193146,7 +203527,10 @@ export interface operations {
   }
   action_survey_set_api_actions_survey_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193177,7 +203561,10 @@ export interface operations {
   }
   action_survey_forget_api_actions_survey_forget_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193208,7 +203595,10 @@ export interface operations {
   }
   action_mortal_attraction_api_actions_mortal_attraction_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193239,7 +203629,10 @@ export interface operations {
   }
   action_design_section_set_api_actions_design_section_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193270,7 +203663,10 @@ export interface operations {
   }
   action_design_section_delete_api_actions_design_section_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193301,7 +203697,10 @@ export interface operations {
   }
   action_design_mount_add_api_actions_design_mount_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193332,7 +203731,10 @@ export interface operations {
   }
   action_design_mount_edit_api_actions_design_mount_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193363,7 +203765,10 @@ export interface operations {
   }
   action_design_mount_delete_api_actions_design_mount_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193394,7 +203799,10 @@ export interface operations {
   }
   action_design_technique_add_api_actions_design_technique_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193425,7 +203833,10 @@ export interface operations {
   }
   action_design_technique_delete_api_actions_design_technique_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193456,7 +203867,10 @@ export interface operations {
   }
   action_vehicle_group_create_api_actions_vehicle_group_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193487,7 +203901,10 @@ export interface operations {
   }
   action_vehicle_group_edit_api_actions_vehicle_group_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193518,7 +203935,10 @@ export interface operations {
   }
   action_vehicle_group_move_api_actions_vehicle_group_move_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193549,7 +203969,10 @@ export interface operations {
   }
   action_vehicle_group_repair_api_actions_vehicle_group_repair_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193580,7 +204003,10 @@ export interface operations {
   }
   action_vehicle_group_delete_api_actions_vehicle_group_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193611,7 +204037,10 @@ export interface operations {
   }
   action_vehicle_group_section_set_api_actions_vehicle_group_section_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193642,7 +204071,10 @@ export interface operations {
   }
   action_vehicle_group_section_delete_api_actions_vehicle_group_section_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193673,7 +204105,10 @@ export interface operations {
   }
   action_vessel_section_set_api_actions_vessel_section_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193704,7 +204139,10 @@ export interface operations {
   }
   action_vessel_section_delete_api_actions_vessel_section_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193735,7 +204173,10 @@ export interface operations {
   }
   action_equipment_model_create_api_actions_equipment_model_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193766,7 +204207,10 @@ export interface operations {
   }
   action_equipment_model_edit_api_actions_equipment_model_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193797,7 +204241,10 @@ export interface operations {
   }
   action_equipment_model_delete_api_actions_equipment_model_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193828,7 +204275,10 @@ export interface operations {
   }
   action_equipment_store_set_api_actions_equipment_store_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193859,7 +204309,10 @@ export interface operations {
   }
   action_equipment_store_delete_api_actions_equipment_store_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193890,7 +204343,10 @@ export interface operations {
   }
   action_army_equipment_set_api_actions_army_equipment_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193921,7 +204377,10 @@ export interface operations {
   }
   action_army_equipment_delete_api_actions_army_equipment_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193952,7 +204411,10 @@ export interface operations {
   }
   action_unit_type_create_api_actions_unit_type_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -193983,7 +204445,10 @@ export interface operations {
   }
   action_unit_type_edit_api_actions_unit_type_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194014,7 +204479,10 @@ export interface operations {
   }
   action_unit_type_delete_api_actions_unit_type_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194045,7 +204513,10 @@ export interface operations {
   }
   action_unit_loadout_set_api_actions_unit_loadout_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194076,7 +204547,10 @@ export interface operations {
   }
   action_unit_loadout_delete_api_actions_unit_loadout_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194107,7 +204581,10 @@ export interface operations {
   }
   action_unit_technique_add_api_actions_unit_technique_add_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194138,7 +204615,10 @@ export interface operations {
   }
   action_unit_technique_delete_api_actions_unit_technique_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194169,7 +204649,10 @@ export interface operations {
   }
   action_structure_section_edit_api_actions_structure_section_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194200,7 +204683,10 @@ export interface operations {
   }
   action_structure_section_repair_api_actions_structure_section_repair_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194231,7 +204717,10 @@ export interface operations {
   }
   action_structure_section_strike_api_actions_structure_section_strike_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194262,7 +204751,10 @@ export interface operations {
   }
   action_cosmic_wound_strike_api_actions_cosmic_wound_strike_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194293,7 +204785,10 @@ export interface operations {
   }
   action_structure_section_delete_api_actions_structure_section_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194324,7 +204819,10 @@ export interface operations {
   }
   action_structure_design_section_set_api_actions_structure_design_section_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194355,7 +204853,10 @@ export interface operations {
   }
   action_structure_design_section_delete_api_actions_structure_design_section_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194386,7 +204887,10 @@ export interface operations {
   }
   action_megastructure_edit_api_actions_megastructure_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194417,7 +204921,10 @@ export interface operations {
   }
   action_megastructure_delete_api_actions_megastructure_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194448,7 +204955,10 @@ export interface operations {
   }
   action_dish_create_api_actions_dish_create_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194479,7 +204989,10 @@ export interface operations {
   }
   action_dish_edit_api_actions_dish_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194510,7 +205023,10 @@ export interface operations {
   }
   action_dish_delete_api_actions_dish_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194541,7 +205057,10 @@ export interface operations {
   }
   action_dish_ingredient_set_api_actions_dish_ingredient_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194572,7 +205091,10 @@ export interface operations {
   }
   action_dish_ingredient_delete_api_actions_dish_ingredient_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194603,7 +205125,10 @@ export interface operations {
   }
   action_dish_step_set_api_actions_dish_step_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194634,7 +205159,10 @@ export interface operations {
   }
   action_dish_step_edit_api_actions_dish_step_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194665,7 +205193,10 @@ export interface operations {
   }
   action_dish_step_delete_api_actions_dish_step_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194696,7 +205227,10 @@ export interface operations {
   }
   action_community_dish_set_api_actions_community_dish_set_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194727,7 +205261,10 @@ export interface operations {
   }
   action_community_dish_edit_api_actions_community_dish_edit_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194758,7 +205295,10 @@ export interface operations {
   }
   action_community_dish_delete_api_actions_community_dish_delete_post: {
     parameters: {
-      query?: never
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
       header?: never
       path?: never
       cookie?: never
@@ -194840,6 +205380,9 @@ export const accountStanceValues: ReadonlyArray<
   'mock',
   'warn',
 ]
+export const accountStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AccountStatus']
+> = ['active', 'deactivated']
 export const accusationOutcomeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['AccusationOutcome']
 > = [
@@ -195753,6 +206296,9 @@ export const augmentSlotValues: ReadonlyArray<
 export const authenticityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Authenticity']
 > = ['genuine', 'altered', 'forged', 'generated', 'unknown']
+export const avatarToneValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['AvatarTone']
+> = ['gold', 'verdigris', 'info', 'success', 'warning', 'danger', 'muted']
 export const aversionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Aversion']
 > = [
@@ -196355,6 +206901,16 @@ export const campaignStageValues: ReadonlyArray<
 export const canonPathValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CanonPath']
 > = ['renown', 'institution', 'copying', 'teaching', 'movement']
+export const canonTouchValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['CanonTouch']
+> = [
+  'held_thing',
+  'canon_status',
+  'canon_fact',
+  'hold_changed',
+  'lock_changed',
+  'locked_field',
+]
 export const canonVerdictValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CanonVerdict']
 > = ['canon', 'rejected']
@@ -199361,6 +209917,11 @@ export const errorCodeValues: ReadonlyArray<
   'unavailable',
   'internal',
   'universe_required',
+  'signed_out',
+  'password_change_required',
+  'setup_required',
+  'locked',
+  'edit_conflict',
 ]
 export const escalationStepValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EscalationStep']
@@ -199464,6 +210025,9 @@ export const eventKindValues: ReadonlyArray<
   'presence.session_changed',
   'presence.exchange_started',
   'presence.exchange_finished',
+  'team.presence',
+  'team.queue_changed',
+  'team.proposal_changed',
 ]
 export const eventPhaseValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EventPhase']
@@ -202306,6 +212870,20 @@ export const libraryEventKindValues: ReadonlyArray<
   'deleted',
   'recovered',
   'purged',
+  'moved',
+  'account_created',
+  'password_reset',
+  'account_deactivated',
+  'account_reactivated',
+  'account_deleted',
+  'workspace_created',
+  'workspace_renamed',
+  'workspace_deleted',
+  'member_added',
+  'member_role_changed',
+  'member_removed',
+  'access_changed',
+  'canon_approval_changed',
 ]
 export const libraryJobKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LibraryJobKind']
@@ -204780,6 +215358,24 @@ export const perkKindValues: ReadonlyArray<
   'charming',
   'joyful_spirit',
 ]
+export const permissionValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['Permission']
+> = [
+  'view',
+  'edit_world',
+  'start_ages',
+  'change_rules',
+  'lock_canon',
+  'alternative_histories',
+  'undo_own',
+  'undo_any',
+  'generate_images',
+  'export',
+  'download_books',
+  'divine_will_read',
+  'presence_on_record',
+  'manage_shelf',
+]
 export const persuasionAimValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PersuasionAim']
 > = [
@@ -205635,6 +216231,9 @@ export const proposalStanceValues: ReadonlyArray<
 export const proposalStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ProposalState']
 > = ['debating', 'passed', 'failed', 'withdrawn']
+export const proposalStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ProposalStatus']
+> = ['pending', 'approved', 'rejected', 'withdrawn']
 export const propulsionValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['Propulsion']
 > = [
@@ -205799,6 +216398,12 @@ export const questTrialValues: ReadonlyArray<
   'mercy',
   'sacrifice',
 ]
+export const queuedActSourceValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['QueuedActSource']
+> = ['lever', 'undo', 'rules', 'divine_will', 'presence']
+export const queuedActStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['QueuedActStatus']
+> = ['queued', 'applied', 'proposed', 'failed', 'cancelled']
 export const quirkKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['QuirkKind']
 > = [
@@ -206809,6 +217414,9 @@ export const senseShiftValues: ReadonlyArray<
   'associated',
   'reversed',
 ]
+export const serverRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ServerRole']
+> = ['owner', 'admin', 'member']
 export const servitorOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ServitorOrigin']
 > = ['made', 'raised', 'summoned', 'defected', 'born', 'bargained', 'ascended']
@@ -208813,6 +219421,15 @@ export const taxKindValues: ReadonlyArray<
 export const teachingStateValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TeachingState']
 > = ['taught', 'blocked', 'sold']
+export const teamPresenceEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TeamPresenceEvent']['kind']
+> = ['team.presence']
+export const teamProposalChangedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TeamProposalChangedEvent']['kind']
+> = ['team.proposal_changed']
+export const teamQueueChangedEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['TeamQueueChangedEvent']['kind']
+> = ['team.queue_changed']
 export const techFamilyValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['TechFamily']
 > = [
@@ -210153,6 +220770,9 @@ export const unitTypeStatsKindValues: ReadonlyArray<
 export const universeOriginValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UniverseOrigin']
 > = ['created', 'imported', 'duplicated', 'adopted']
+export const universeRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['UniverseRole']
+> = ['admin', 'editor', 'viewer', 'none']
 export const universeSortValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UniverseSort']
 > = ['opened', 'created', 'name', 'epoch', 'size']
@@ -210761,6 +221381,12 @@ export const workshopKindValues: ReadonlyArray<
   'printing_house',
   'ropewalk',
 ]
+export const workspaceKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WorkspaceKind']
+> = ['personal', 'team']
+export const workspaceRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['WorkspaceRole']
+> = ['admin', 'editor', 'viewer']
 export const worldAgeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['WorldAge']
 > = ['young', 'mature', 'old', 'dying']

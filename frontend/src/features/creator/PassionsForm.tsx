@@ -34,6 +34,7 @@ export function PassionsForm({
   const limit = rule('reputation.max_passions')
   const { reason } = useGodGate()
   const declare = useGodAction({
+    writes: [{ lever: 'creator:passions' }],
     run: (body: { passions: CreatorPassion[]; automatic: boolean }) =>
       unwrap(api.PUT('/api/creator/passions', { body })),
     success: (_result, body) =>
@@ -79,7 +80,12 @@ export function PassionsForm({
       </div>
       <Collapsible className='flex min-w-0 flex-col gap-3'>
         <CollapsibleTrigger asChild>
-          <Button variant='ghost' size='sm' className='self-start'>
+          <Button
+            act={declare}
+            variant='ghost'
+            size='sm'
+            className='self-start'
+          >
             <Flame />
             Choose your passions yourself
           </Button>
@@ -120,6 +126,7 @@ export function PassionsForm({
           )}
           <div className='flex min-w-0 flex-wrap gap-2'>
             <ActionButton
+              act={declare}
               label='Declare my passions'
               variant='default'
               blocked={
@@ -136,6 +143,7 @@ export function PassionsForm({
               }
             />
             <ActionButton
+              act={declare}
               label='Read automatically'
               blocked={
                 reason() ?? (reputation.automatic ? 'Already automatic.' : null)

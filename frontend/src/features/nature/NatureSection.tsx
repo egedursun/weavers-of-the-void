@@ -126,6 +126,7 @@ export function NatureSection({
         )}
         <div className='flex min-w-0 flex-wrap gap-2'>
           <StepButton
+            act={running}
             icon={Leaf}
             label='Read living nature now'
             busy={why(blocked, running.isPending)}

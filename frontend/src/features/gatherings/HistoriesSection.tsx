@@ -99,6 +99,7 @@ export function SetDownHistory({
       }
       action={
         <Button
+          act={create}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

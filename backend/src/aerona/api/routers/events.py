@@ -12,6 +12,7 @@ from aerona.api.dependencies import ServicesDep
 from aerona.api.schemas.events import SERVER_EVENT
 from aerona.constants.http import EVENTS_PATH
 from aerona.constants.timeouts import SSE_PING_SECONDS
+from aerona.core.account_scope import current_account
 from aerona.events.bus import Event
 from aerona.events.kinds import EventKind
 from aerona.services.live_log import world_key_of
@@ -39,6 +40,8 @@ async def stream_events(
     after: int | None = Query(default=None, ge=0),
 ) -> EventSourceResponse:
     resume_from = last_event_id if last_event_id is not None else after
+    account = current_account()
+    listener = account.id if account is not None else None
 
     async def generate() -> AsyncIterator[dict[str, str]]:
         jobs = services.jobs
@@ -56,7 +59,7 @@ async def stream_events(
             "at": datetime.now(UTC).isoformat(),
         }
         yield {"event": EventKind.STREAM_HELLO.value, "data": json.dumps(hello)}
-        async for item in services.bus.subscribe(resume_from):
+        async for item in services.bus.subscribe(resume_from, listener):
             yield {"id": str(item.id), "event": item.kind.value, "data": json.dumps(item.as_json())}
 
     return EventSourceResponse(generate(), ping=SSE_PING_SECONDS)
@@ -67,5 +70,6 @@ async def activity_log(services: ServicesDep, after: int | None = Query(default=
     bus = services.bus
     history = services.rules.current.server.live_feed_history
     start = after if after is not None else max(0, bus.last_id - history)
-    events = [typed(item) for item in bus.replay_after(start)[-history:]]
+    account = current_account()
+    events = [typed(item) for item in bus.replay_after(start, account.id if account is not None else None)[-history:]]
     return [item for item in events if item is not None]

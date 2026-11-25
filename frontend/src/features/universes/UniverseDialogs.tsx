@@ -41,6 +41,7 @@ import { Label, Muted, Text } from '@/components/typography'
 import { type ActDialogProps, ActHeader } from './ActHeader'
 import { CoverDialog } from './CoverDialog'
 import { ExportDialog } from './ExportDialog'
+import { MoveUniverseDialog } from './MoveUniverseDialog'
 import { UniverseCover } from './UniverseCrest'
 import {
   useDeleteUniverse,
@@ -129,6 +130,7 @@ function NotesDialog({ universe, onClose }: ActDialogProps) {
           Cancel
         </Button>
         <Button
+          act={edit}
           type='button'
           disabled={edit.isPending}
           disabledReason='The notes are being saved.'
@@ -197,6 +199,7 @@ function DuplicateDialog({ universe, onClose }: ActDialogProps) {
           Cancel
         </Button>
         <Button
+          act={duplicate}
           type='button'
           disabled={problem !== null || duplicate.isPending}
           disabledReason={problem ?? 'The copy is being made.'}
@@ -292,6 +295,11 @@ function DetailsDialog({ universe, onClose }: ActDialogProps) {
           <Muted variant='caption'>
             <OriginLine universe={facts} />
           </Muted>
+          {facts.legacy_author_name && (
+            <Muted variant='caption'>
+              {`Acts from before the team are attributed to ${facts.legacy_author_name}.`}
+            </Muted>
+          )}
           {working && <Muted variant='caption'>{working}</Muted>}
         </div>
       </div>
@@ -471,6 +479,7 @@ export function DeleteUniverseDialog({
   const busy = universe ? busyReason(universe) : null
   return (
     <ConfirmDialog
+      act={remove}
       open={universe !== null}
       onOpenChange={(open) => {
         if (!open && !remove.isPending) onClose()
@@ -520,6 +529,7 @@ const ACT_DIALOG: Record<
   cover: CoverDialog,
   duplicate: DuplicateDialog,
   export: ExportDialog,
+  move: MoveUniverseDialog,
   details: DetailsDialog,
 }
 

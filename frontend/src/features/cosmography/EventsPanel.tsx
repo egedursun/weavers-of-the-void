@@ -54,6 +54,7 @@ function GalacticEventRow({
         <div className='flex shrink-0 items-center gap-1'>
           <Chip>{event.active ? 'Under way' : `Epoch ${event.epoch}`}</Chip>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -67,6 +68,7 @@ function GalacticEventRow({
       }
     >
       <RecordEditor
+        act={edit}
         title='Reshape this event'
         note='Its strength and how long it lasts.'
         fields={[
@@ -133,6 +135,7 @@ function DimensionalEventRow({
         <div className='flex shrink-0 items-center gap-1'>
           <Chip>{event.active ? 'Under way' : `Epoch ${event.epoch}`}</Chip>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -146,6 +149,7 @@ function DimensionalEventRow({
       }
     >
       <RecordEditor
+        act={edit}
         title='Reshape this event'
         note='Its strength and how long it lasts.'
         fields={[
@@ -216,6 +220,7 @@ function TriggerForm({
         columns={3}
         action={
           <Button
+            act={galactic}
             size='sm'
             disabled={busy !== null || galaxy === '' || galacticKind === ''}
             disabledReason={
@@ -265,6 +270,7 @@ function TriggerForm({
         columns={3}
         action={
           <Button
+            act={planar}
             size='sm'
             disabled={busy !== null || dimension === '' || planarKind === ''}
             disabledReason={

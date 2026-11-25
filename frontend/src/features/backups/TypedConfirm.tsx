@@ -1,4 +1,5 @@
 import { type ReactNode, useId, useState } from 'react'
+import { type ActProp } from '@/api/mutation'
 import { Input } from '@/components/ui/input'
 import { ConfirmDialog, FieldTile } from '@/components/domain'
 
@@ -22,12 +23,14 @@ export function TypedConfirm({
   confirmText,
   loading,
   onConfirm,
-}: TypedConfirmProps) {
+  act,
+}: TypedConfirmProps & { act?: ActProp }) {
   const [typed, setTyped] = useState('')
   const id = useId()
   const matches = typed.trim() === word
   return (
     <ConfirmDialog
+      act={act}
       open={open}
       onOpenChange={(next) => {
         if (!next) setTyped('')

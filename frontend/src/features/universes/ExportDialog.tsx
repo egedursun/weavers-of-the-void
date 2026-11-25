@@ -79,6 +79,7 @@ export function ExportDialog({ universe, onClose }: ActDialogProps) {
       <DialogFooter>
         {current && !settled ? (
           <Button
+            act={stop}
             type='button'
             variant='ghost'
             className='text-destructive'
@@ -91,6 +92,7 @@ export function ExportDialog({ universe, onClose }: ActDialogProps) {
           </Button>
         ) : ready ? (
           <Button
+            act={stop}
             type='button'
             variant='ghost'
             className='text-destructive'
@@ -114,6 +116,7 @@ export function ExportDialog({ universe, onClose }: ActDialogProps) {
           </Button>
         ) : (
           <Button
+            act={start}
             type='button'
             disabled={start.isPending || running}
             disabledReason='The universe is being packed.'

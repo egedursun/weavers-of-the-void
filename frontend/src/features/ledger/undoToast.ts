@@ -1,7 +1,9 @@
 import { type QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { gateReason } from '@/api/teamGate'
 import { plural } from '@/lib/units'
-import { refreshAfterUndo, undoEntry } from './api'
+import { announceWaiting } from '@/features/team/outcome'
+import { isUndone, refreshAfterUndo, undoEntry } from './api'
 
 export const UNDO_TOAST_MS = 7000
 
@@ -25,14 +27,21 @@ export function toastWithUndo(
     action: {
       label: 'Undo',
       onClick: () => {
+        const refusal = gateReason('undo_own')
+        if (refusal !== null) {
+          toast.error(refusal)
+          return
+        }
         undoEntry(entryId)
           .then((result) => {
-            toast.success(
-              undoMessage(
-                result.applied?.length ?? 0,
-                result.conflicts?.length ?? 0
+            if (isUndone(result))
+              toast.success(
+                undoMessage(
+                  result.applied?.length ?? 0,
+                  result.conflicts?.length ?? 0
+                )
               )
-            )
+            else announceWaiting({ queued: result })
             refreshAfterUndo(queryClient)
           })
           .catch((error: unknown) =>

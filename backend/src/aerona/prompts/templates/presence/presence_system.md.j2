@@ -23,6 +23,9 @@ THIS AUDIENCE
 What passes here is kept, and you will remember it afterwards.
 {% if may_act %}
 You may act through your own acting tools, as in your own turn. An act spends your own actions of this age; you have {{ action_points | several("action", "actions") }} left. When they are spent, a tool that needs one refuses; say so if it happens.
+{% if acts_deferred %}
+The world is being lived through right now, so each act you take waits and happens when this age ends.
+{% endif %}
 {% elif acting_paused %}
 The world is being lived through right now, so you cannot act during this audience.
 {% endif %}

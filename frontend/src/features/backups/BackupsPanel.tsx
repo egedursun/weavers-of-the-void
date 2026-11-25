@@ -131,6 +131,7 @@ export function BackupsPanel({ readOnly }: BackupsPanelProps) {
       tone='verdigris'
       actions={
         <Button
+          act={take}
           variant='outline'
           size='sm'
           disabled={take.isPending || readOnly}
@@ -202,6 +203,7 @@ export function BackupsPanel({ readOnly }: BackupsPanelProps) {
       )}
       <SecondaryTargetForm readOnly={readOnly} />
       <TypedConfirm
+        act={restore}
         open={target !== null}
         onOpenChange={(open) => !open && setTarget(null)}
         title='Restore this backup?'

@@ -57,6 +57,7 @@ export function ArtControls({
           harder and is copied more.
         </Muted>
         <Button
+          act={canonise}
           size='sm'
           variant={card.canon ? 'outline' : 'default'}
           className='self-start'
@@ -95,6 +96,7 @@ export function ArtControls({
           onPick={setMedium}
         />
         <Button
+          act={commission}
           size='sm'
           variant='outline'
           className='self-start'

@@ -319,6 +319,7 @@ export function ArtFormPanel({
               const Icon = spec.icon
               return (
                 <Button
+                  act={edit}
                   key={key}
                   size='sm'
                   variant={chosen ? 'default' : 'outline'}
@@ -354,6 +355,7 @@ export function ArtFormPanel({
               <Paged items={card.practitioners}>
                 {(row) => (
                   <RowEditor
+                    act={practise}
                     key={row.holder.id}
                     label={row.holder.name}
                     icon={Users}
@@ -369,6 +371,7 @@ export function ArtFormPanel({
                     }
                   >
                     <Button
+                      act={practise}
                       type='button'
                       size='icon'
                       variant='ghost'
@@ -398,6 +401,7 @@ export function ArtFormPanel({
               placeholder='Spread it to…'
             />
             <Button
+              act={practise}
               size='sm'
               variant='outline'
               disabled={busy !== null || holder === null}

@@ -83,6 +83,7 @@ export function SendVoyageForm({
       parsedPercent < 1 ||
       (maxPercent !== undefined && parsedPercent > maxPercent))
   const send = useCosmicAction({
+    writes: [{ lever: 'expedition' }],
     run: () =>
       unwrap(
         api.POST('/api/entities/{entity_id}/expedition', {
@@ -210,6 +211,7 @@ export function SendVoyageForm({
       </FormRow>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <CosmicActionButton
+          act={send}
           actionId='expedition'
           label='Set out'
           icon={Send}

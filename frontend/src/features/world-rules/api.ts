@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { RULES_STALE_TIME_MS } from '@/constants/ui'
 
@@ -40,6 +41,7 @@ function useRefreshRules() {
 export function useResetRule() {
   const refresh = useRefreshRules()
   return useMutation({
+    writes: [{ method: 'DELETE', path: '/api/rules/{namespace}/{key}' }],
     mutationFn: (rule: Rule) =>
       unwrap(
         api.DELETE('/api/rules/{namespace}/{key}', {
@@ -53,6 +55,7 @@ export function useResetRule() {
 export function useResetGroup() {
   const refresh = useRefreshRules()
   return useMutation({
+    writes: [{ method: 'PATCH', path: '/api/rules' }],
     mutationFn: (rules: Rule[]) =>
       unwrap(
         api.PATCH('/api/rules', {
@@ -71,6 +74,7 @@ export function useResetGroup() {
 export function useResetAllRules() {
   const refresh = useRefreshRules()
   return useMutation({
+    writes: [{ method: 'DELETE', path: '/api/rules' }],
     mutationFn: () => unwrap(api.DELETE('/api/rules')),
     onSettled: refresh,
   })
@@ -79,19 +83,22 @@ export function useResetAllRules() {
 export function useSaveRules() {
   const refresh = useRefreshRules()
   return useMutation({
+    writes: [
+      { method: 'PATCH', path: '/api/rules' },
+      { method: 'PUT', path: '/api/rules/{namespace}/{key}' },
+    ],
     mutationFn: async (changes: Map<Rule, number>) => {
       const entries = [...changes]
       if (entries.length === 1) {
         const [[rule, value]] = entries
-        await unwrap(
+        return unwrap(
           api.PUT('/api/rules/{namespace}/{key}', {
             params: { path: { namespace: rule.namespace, key: rule.key } },
             body: { value },
           })
         )
-        return
       }
-      await unwrap(
+      return unwrap(
         api.PATCH('/api/rules', {
           body: {
             reset_all: false,

@@ -1,5 +1,10 @@
 import { useCallback, useState } from 'react'
-import { type UniversePrefixedKey, universeKey } from '@/lib/universeStorage'
+import {
+  storedItem,
+  storeItem,
+  type UniversePrefixedKey,
+  universeKey,
+} from '@/lib/universeStorage'
 
 function readStored<T>(
   key: UniversePrefixedKey,
@@ -7,7 +12,7 @@ function readStored<T>(
   valid: (value: unknown) => boolean
 ): T {
   try {
-    const raw = window.localStorage.getItem(universeKey(key))
+    const raw = storedItem(universeKey(key))
     if (raw === null) return fallback
     const parsed: unknown = JSON.parse(raw)
     return valid(parsed) ? (parsed as T) : fallback
@@ -18,7 +23,7 @@ function readStored<T>(
 
 function writeStored(key: UniversePrefixedKey, value: unknown): void {
   try {
-    window.localStorage.setItem(universeKey(key), JSON.stringify(value))
+    storeItem(universeKey(key), JSON.stringify(value))
   } catch {
     return
   }

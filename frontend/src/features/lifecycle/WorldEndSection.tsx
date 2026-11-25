@@ -224,6 +224,7 @@ export function WorldEndSection({
               columns={3}
               action={
                 <Button
+                  act={declaring}
                   size='sm'
                   variant='destructive'
                   disabled={why(declareBlocked, declaring.isPending) !== null}
@@ -282,6 +283,7 @@ export function WorldEndSection({
               />
             </ForgeCard>
             <RecordEditor
+              act={editing}
               title='Set the record of its end'
               note='This changes only the record; what the end did to the world stays done.'
               fields={FIELDS}
@@ -296,6 +298,7 @@ export function WorldEndSection({
               }
             />
             <StepButton
+              act={removing}
               icon={Trash2}
               label='Strike out the record of its end'
               busy={why(

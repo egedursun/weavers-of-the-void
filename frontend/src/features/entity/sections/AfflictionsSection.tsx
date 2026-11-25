@@ -159,6 +159,7 @@ function AfflictionCard({
   const source = linkKind(row.source_link)
   const cured = row.cured_epoch !== null
   const move = useGodAction({
+    writes: [{ lever: 'affliction:edit' }],
     run: (stage: number) =>
       unwrap(
         api.POST('/api/actions/affliction:edit', {
@@ -168,6 +169,7 @@ function AfflictionCard({
     success: 'The affliction moves to another stage',
   })
   const hold = useGodAction({
+    writes: [{ lever: 'affliction:hold' }],
     run: (held: boolean) =>
       unwrap(
         api.POST('/api/actions/affliction:hold', {
@@ -274,6 +276,7 @@ function AfflictionCard({
         {!cured && (
           <>
             <Button
+              act={move}
               size='sm'
               variant='ghost'
               disabled={reason !== null || row.stage <= 0}
@@ -284,6 +287,7 @@ function AfflictionCard({
               Ease a stage
             </Button>
             <Button
+              act={move}
               size='sm'
               variant='ghost'
               disabled={reason !== null || row.stage >= row.stage_count}
@@ -294,6 +298,7 @@ function AfflictionCard({
               Deepen a stage
             </Button>
             <Button
+              act={hold}
               size='sm'
               variant={row.held ? 'outline' : 'ghost'}
               disabled={reason !== null}
@@ -573,6 +578,7 @@ function GiveForm({
       ? transmission
       : (chosen?.transmissions[0] ?? '')
   const give = useGodAction({
+    writes: [{ lever: 'affliction:give' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/affliction:give', {
@@ -638,6 +644,7 @@ function GiveForm({
       {chosen && <PackagePreview spec={chosen} />}
       <div className='flex justify-end'>
         <Button
+          act={give}
           size='sm'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}

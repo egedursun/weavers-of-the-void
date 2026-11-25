@@ -40,6 +40,7 @@ export function FateJobRow({ job, controls }: FateJobRowProps) {
       : null)
   return (
     <JobRunRow
+      act={action}
       id={job.action}
       title={job.title}
       description={job.description}

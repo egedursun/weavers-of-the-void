@@ -18,7 +18,7 @@ from aerona.services.library.service import LibraryService
 from aerona.settings import Settings
 from tests.imaging.fake_worker import WORKER_URL, FakeWorker
 from tests.library.shelf import LOCAL_ORIGIN, png
-from tests.library_support import sole_universe
+from tests.library_support import sign_in_owner, sole_universe
 
 BASE_URL = "http://localhost"
 
@@ -46,6 +46,7 @@ async def shelf(settings: Settings) -> AsyncIterator[Shelf]:
         LifespanManager(app, startup_timeout=120, shutdown_timeout=120) as manager,
         AsyncClient(transport=ASGITransport(app=manager.app), base_url=BASE_URL) as http,
     ):
+        await sign_in_owner(app, http)
         yield Shelf(http, app)
 
 

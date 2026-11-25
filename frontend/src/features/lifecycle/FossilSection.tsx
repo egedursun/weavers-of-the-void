@@ -111,6 +111,7 @@ function Bed({ bed, blocked }: { bed: FossilBedView; blocked: string | null }) {
         )}
       </div>
       <RecordEditor
+        act={editing}
         title='Set this bed'
         note='Values you set are held against the engine until you release them.'
         fields={FIELDS}
@@ -121,6 +122,7 @@ function Bed({ bed, blocked }: { bed: FossilBedView; blocked: string | null }) {
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={revealing}
           icon={Eye}
           label='Bring it to light now'
           busy={why(
@@ -130,6 +132,7 @@ function Bed({ bed, blocked }: { bed: FossilBedView; blocked: string | null }) {
           onClick={() => revealing.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Remove this bed'
           busy={why(blocked, removing.isPending)}
@@ -262,6 +265,7 @@ export function FossilSection({
               columns={2}
               action={
                 <Button
+                  act={placing}
                   size='sm'
                   disabled={why(placeBlocked, placing.isPending) !== null}
                   disabledReason={
@@ -292,6 +296,7 @@ export function FossilSection({
               />
             </ForgeCard>
             <StepButton
+              act={running}
               icon={FOSSIL_ICON}
               label='Read every fossil bed now'
               busy={why(readOnlyReason, running.isPending)}

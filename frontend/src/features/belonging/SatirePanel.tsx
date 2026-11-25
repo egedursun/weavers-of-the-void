@@ -216,6 +216,7 @@ export function SatirePanel({
               onClick={reading.run}
             />
             <Button
+              act={telling}
               size='sm'
               disabled={tellBusy !== null}
               disabledReason={tellBusy ?? undefined}

@@ -23,6 +23,7 @@ import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Muted, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import { useNames } from '../api/queries'
 import {
   type Mind,
@@ -83,6 +84,7 @@ function MemoryEditor({
   const [size, setSize] = useState(String(memory.magnitude))
   const [decay, setDecay] = useState(String(memory.decay_pct))
   const edit = useGodAction({
+    writes: [{ lever: 'mind:memory_edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mind:memory_edit', {
@@ -95,6 +97,7 @@ function MemoryEditor({
       ),
   })
   const forget = useGodAction({
+    writes: [{ lever: 'mind:memory_remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mind:memory_remove', {
@@ -136,6 +139,7 @@ function MemoryEditor({
         />
       </FieldTile>
       <Button
+        act={edit}
         size='sm'
         variant='outline'
         disabled={busy !== null || invalid}
@@ -146,6 +150,7 @@ function MemoryEditor({
         Change
       </Button>
       <Button
+        act={forget}
         size='sm'
         variant='ghost'
         disabled={busy !== null}
@@ -168,6 +173,12 @@ function MemoryItem({
   last: boolean
   blocked: string | null
 }) {
+  const formGate = {
+    blockedReason: useWriteRefusal([
+      { lever: 'mind:memory_edit' },
+      { lever: 'mind:memory_remove' },
+    ]),
+  }
   const spec = named(MEMORY_ICONS, memory.kind)
   const [open, setOpen] = useState(false)
   return (
@@ -211,6 +222,7 @@ function MemoryItem({
           )}
           {memory.note && <Muted variant='caption'>{memory.note}</Muted>}
           <Button
+            act={formGate}
             size='sm'
             variant='ghost'
             onClick={() => setOpen(!open)}
@@ -335,6 +347,7 @@ function PlantMemory({ mind }: { mind: Mind }) {
     [names.data, mind.node_id]
   )
   const plant = useGodAction({
+    writes: [{ lever: 'mind:memory' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mind:memory', {
@@ -414,6 +427,7 @@ function PlantMemory({ mind }: { mind: Mind }) {
       </FieldTile>
       <div className='flex justify-end @md/mind:col-span-2 @3xl/mind:col-span-4'>
         <Button
+          act={plant}
           size='sm'
           disabled={
             busy !== null ||

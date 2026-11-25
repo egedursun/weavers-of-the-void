@@ -341,6 +341,7 @@ function Trait({
       }
     >
       <RecordEditor
+        act={editing}
         title='Set this trait'
         note={HOLD}
         fields={TRAIT_FIELDS}
@@ -350,6 +351,7 @@ function Trait({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={dropping}
         icon={Trash2}
         label='Breed it out'
         busy={why(blocked, dropping.isPending)}
@@ -391,6 +393,7 @@ function Source({
     >
       <Ref node={row.organism} />
       <RecordEditor
+        act={editing}
         title='Set this source'
         note={HOLD}
         fields={SOURCE_FIELDS}
@@ -400,6 +403,7 @@ function Source({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={dropping}
         icon={Trash2}
         label={`Take ${row.organism.name} from the line`}
         busy={why(blocked, dropping.isPending)}
@@ -521,6 +525,7 @@ function Line({
         columns={2}
         action={
           <StepButton
+            act={adding}
             icon={CirclePlus}
             label='Add the trait'
             busy={why(blocked, adding.isPending)}
@@ -551,6 +556,7 @@ function Line({
         columns={2}
         action={
           <StepButton
+            act={sourcing}
             icon={CirclePlus}
             label='Add the organism'
             busy={why(blocked ?? noOrganism, sourcing.isPending)}
@@ -566,6 +572,7 @@ function Line({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this line'
         note={HOLD}
         fields={LINE_FIELDS}
@@ -576,18 +583,21 @@ function Line({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={loosing}
           icon={Bird}
           label='Let it loose'
           busy={why(blocked ?? noSpecies, loosing.isPending)}
           onClick={() => loosing.mutate()}
         />
         <StepButton
+          act={containing}
           icon={Undo2}
           label='Hunt it down and hold it in'
           busy={why(blocked ?? notLoose, containing.isPending)}
           onClick={() => containing.mutate()}
         />
         <StepButton
+          act={deleting}
           icon={Trash2}
           label='Unmake the line'
           busy={why(blocked, deleting.isPending)}
@@ -635,6 +645,7 @@ function Symbiont({
         <Ref node={row.mind} empty='carries no mind of its own' />
       </div>
       <RecordEditor
+        act={editing}
         title='Set what lives within'
         note={HOLD}
         fields={symbiontFields(view)}
@@ -644,6 +655,7 @@ function Symbiont({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Take it out'
         busy={why(blocked, removing.isPending)}
@@ -692,6 +704,7 @@ function Sample({
     >
       <Ref node={row.organism} />
       <RecordEditor
+        act={editing}
         title='Set this sample'
         note={HOLD}
         fields={SAMPLE_FIELDS}
@@ -702,12 +715,14 @@ function Sample({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={raising}
           icon={Sprout}
           label='Raise a line from it'
           busy={why(blocked, raising.isPending)}
           onClick={() => raising.mutate()}
         />
         <StepButton
+          act={dropping}
           icon={Trash2}
           label='Take it out of the bank'
           busy={why(blocked, dropping.isPending)}
@@ -779,6 +794,7 @@ function Bank({
         columns={2}
         action={
           <StepButton
+            act={sampling}
             icon={CirclePlus}
             label='Keep the sample'
             busy={why(blocked ?? noOrganism, sampling.isPending)}
@@ -794,6 +810,7 @@ function Bank({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this bank'
         note={HOLD}
         fields={BANK_FIELDS}
@@ -803,6 +820,7 @@ function Bank({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={closing}
         icon={Trash2}
         label='Close the bank'
         busy={why(blocked, closing.isPending)}
@@ -868,6 +886,7 @@ function Profile({
         columns={3}
         action={
           <StepButton
+            act={giving}
             icon={HeartPulse}
             label='Give it life'
             variant='default'
@@ -930,6 +949,7 @@ function Profile({
         <Ref node={life.designed_by} empty='designed by no one named' />
       </div>
       <RecordEditor
+        act={editing}
         title='Set its life'
         note={HOLD}
         fields={lifeFields(view)}
@@ -940,12 +960,14 @@ function Profile({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={ending}
           icon={Skull}
           label='End its life'
           busy={why(blocked ?? dead, ending.isPending)}
           onClick={() => ending.mutate()}
         />
         <StepButton
+          act={unmaking}
           icon={Trash2}
           label='Make it no longer a living thing'
           busy={why(blocked, unmaking.isPending)}
@@ -1092,6 +1114,7 @@ export function LivingSection({
               columns={3}
               action={
                 <StepButton
+                  act={making}
                   icon={CirclePlus}
                   label='Make the line'
                   variant='default'
@@ -1140,6 +1163,7 @@ export function LivingSection({
               columns={3}
               action={
                 <StepButton
+                  act={hosting}
                   icon={CirclePlus}
                   label='Let it live within'
                   busy={why(blocked, hosting.isPending)}
@@ -1188,6 +1212,7 @@ export function LivingSection({
               columns={2}
               action={
                 <StepButton
+                  act={banking}
                   icon={CirclePlus}
                   label='Found the bank'
                   busy={why(blocked ?? kept, banking.isPending)}
@@ -1217,6 +1242,7 @@ export function LivingSection({
               </ul>
               <ShowMore state={kin} />
               <StepButton
+                act={cloning}
                 icon={Copy}
                 label='Grow a clone of this body'
                 busy={why(blocked ?? notMortal, cloning.isPending)}
@@ -1233,6 +1259,7 @@ export function LivingSection({
                 caption={`changing a line of descent: ${STANCES[query.data.stances.germline_stance].label.toLowerCase()}; clones: ${STANCES[query.data.stances.clone_stance].label.toLowerCase()}`}
               >
                 <RecordEditor
+                  act={stances}
                   title='Set the faith’s stances on living craft'
                   note={HOLD}
                   fields={STANCE_FIELDS}

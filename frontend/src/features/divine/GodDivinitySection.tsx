@@ -252,6 +252,7 @@ function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
           </div>
         </div>
         <Button
+          act={drop}
           size='sm'
           variant='ghost'
           disabled={pending !== null}
@@ -271,12 +272,14 @@ function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
       />
       <Muted variant='caption'>{`${GOAL_SOURCES[goal.source]}, since epoch ${goal.since_epoch}${goal.closed_epoch ? `, closed in epoch ${goal.closed_epoch}` : ''}`}</Muted>
       <Held
+        act={edit}
         keys={goal.locked}
         label={heldLabel}
         busy={pending}
         onRelease={() => edit.mutate({ values: {}, release: goal.locked })}
       />
       <AdjustPanel
+        acts={[edit]}
         title='Reshape this aim'
         note='Progress or a state you set is held: the world will not move it until you let it decide again.'
       >
@@ -298,6 +301,7 @@ function GoalRow({ goal, busy }: { goal: GoalView; busy: string | null }) {
           />
         </div>
         <Button
+          act={edit}
           size='sm'
           disabled={pending !== null || nothing !== null}
           disabledReason={pending ?? nothing ?? undefined}
@@ -424,6 +428,7 @@ function GoalsCard({ view, busy }: { view: GodDivinity; busy: string | null }) {
           />
         </div>
         <Button
+          act={set}
           disabled={pending !== null || problem !== null}
           disabledReason={pending ?? problem ?? undefined}
           onClick={() => set.mutate()}
@@ -471,6 +476,7 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
           <Muted variant='caption'>{`From ${WOUND_CAUSES[wound.cause]}${wound.cause_node ? `, ${wound.cause_node.name}` : ''}, epoch ${wound.epoch}`}</Muted>
         </div>
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={pending !== null}
@@ -494,12 +500,14 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
         </Badge>
       )}
       <Held
+        act={edit}
         keys={wound.locked}
         label={heldLabel}
         busy={pending}
         onRelease={() => edit.mutate({ values: {}, release: wound.locked })}
       />
       <AdjustPanel
+        acts={[edit]}
         title='Reshape this wound'
         note='Healing or severity you set is held until you let the world decide again.'
       >
@@ -537,6 +545,7 @@ function WoundRow({ wound, busy }: { wound: WoundView; busy: string | null }) {
           />
         </div>
         <Button
+          act={edit}
           size='sm'
           disabled={pending !== null || nothing !== null}
           disabledReason={pending ?? nothing ?? undefined}
@@ -659,6 +668,7 @@ function WoundsCard({
           />
         </div>
         <Button
+          act={inflict}
           variant='destructive'
           disabled={pending !== null || problem !== null}
           disabledReason={pending ?? problem ?? undefined}
@@ -741,6 +751,7 @@ function AvatarsCard({
                   <Muted variant='caption'>{`Walking since epoch ${row.since_epoch}; ${plural(row.deeds, 'deed', 'deeds')}${row.locked.includes('deeds') ? ' (held)' : ''}`}</Muted>
                 </div>
                 <Button
+                  act={edit}
                   size='sm'
                   variant='outline'
                   disabled={pending !== null}
@@ -761,6 +772,7 @@ function AvatarsCard({
                     : 'Hold its deeds'}
                 </Button>
                 <Button
+                  act={withdraw}
                   size='sm'
                   variant='ghost'
                   disabled={pending !== null}
@@ -783,6 +795,7 @@ function AvatarsCard({
           placeholder='The people, place or land it walks among'
         />
         <Button
+          act={manifest}
           disabled={pending !== null || problem !== null}
           disabledReason={pending ?? problem ?? undefined}
           onClick={() => place !== null && manifest.mutate(place)}
@@ -832,6 +845,7 @@ function StandingCard({
         />
       )}
       <StandingList
+        act={[save, clear]}
         rows={view.standing}
         focus='god'
         busy={pending}
@@ -841,6 +855,7 @@ function StandingCard({
         onClear={(row) => clear.mutate(row.community.id)}
       />
       <RegardForm
+        act={save}
         busy={pending}
         onSave={(community, values) =>
           save.mutate({ community, values, release: [] })
@@ -910,6 +925,7 @@ function PactCard({ view, busy }: { view: GodDivinity; busy: string | null }) {
           onChange={setEpochs}
         />
         <Button
+          act={seal}
           size='sm'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}

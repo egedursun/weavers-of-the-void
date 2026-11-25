@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Check, SlidersHorizontal } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -55,12 +56,14 @@ function FieldEditor({
   blocked,
   pending,
   onSet,
+  act,
 }: {
   id: string
   field: AdjustField
   blocked: string | null
   pending: boolean
   onSet: (value: number) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState(String(field.value))
   const parsed = draft.trim() === '' ? null : Number(draft)
@@ -91,6 +94,7 @@ function FieldEditor({
         />
       </FieldTile>
       <Button
+        act={act}
         type='submit'
         variant='outline'
         size='icon'
@@ -131,6 +135,7 @@ export function AdjustStats({
             <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
               {group.fields.map((field) => (
                 <FieldEditor
+                  act={save}
                   key={`${field.key}-${field.value}`}
                   id={id}
                   field={field}

@@ -85,6 +85,7 @@ function CancelButton({ job }: { job: Job }) {
   const cancel = useCancelJob()
   return (
     <Button
+      act={cancel}
       variant='ghost'
       size='icon-sm'
       aria-label='Cancel this job'

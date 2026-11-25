@@ -15,6 +15,7 @@ type AppShellProps = {
   entryPages: EntryPages
   topBarContext?: ReactNode
   topBarActions?: ReactNode
+  topBarAccount?: ReactNode
   banner?: ReactNode
   overlays?: ReactNode
   aside?: ReactNode
@@ -35,6 +36,7 @@ export function AppShell({
   entryPages,
   topBarContext,
   topBarActions,
+  topBarAccount,
   banner,
   overlays,
   aside,
@@ -52,7 +54,11 @@ export function AppShell({
             <AppSidebar footer={sidebarFooter} />
           </NavBadges>
           <SidebarInset className='min-w-0'>
-            <TopBar context={topBarContext} actions={topBarActions} />
+            <TopBar
+              context={topBarContext}
+              actions={topBarActions}
+              account={topBarAccount}
+            />
             {banner}
             <Main>
               <Outlet />

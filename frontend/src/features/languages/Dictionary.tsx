@@ -329,6 +329,7 @@ function WordRegister({ word }: { word: Lexeme }) {
   )
   return (
     <MindPicker
+      act={move}
       label='Register'
       value={word.word_register}
       table={table(REGISTERS)}

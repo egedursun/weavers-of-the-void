@@ -110,6 +110,7 @@ function PartyEditor({
             <li className='flex items-center gap-1'>
               <Chip icon={UserCheck}>{item.name}</Chip>
               <Button
+                act={party}
                 size='icon-sm'
                 variant='ghost'
                 aria-label={`Send ${item.name} home`}
@@ -132,6 +133,7 @@ function PartyEditor({
           types={['mortal']}
         />
         <Button
+          act={party}
           size='sm'
           variant='outline'
           disabled={busy !== null || refused !== null}
@@ -183,6 +185,7 @@ function QuestCard({
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>
           <Button
+            act={advance}
             size='sm'
             variant='outline'
             disabled={busy !== null || !questing}
@@ -195,6 +198,7 @@ function QuestCard({
             Next step
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -266,6 +270,7 @@ function QuestCard({
       />
       <PartyEditor quest={quest} blocked={blocked} />
       <RecordEditor
+        act={edit}
         title='Reshape the heroquest'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -377,6 +382,7 @@ function QuestForm({
       }
       action={
         <Button
+          act={begin}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -460,6 +466,7 @@ function MantlingCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null || row === null}
@@ -486,6 +493,7 @@ function MantlingCard({
         </>
       )}
       <RecordEditor
+        act={edit}
         title='Set the path'
         note='Block a mantling, or pin its progress; Fate still has to approve an ascension.'
         fields={[
@@ -560,6 +568,7 @@ function ServitorCard({
       caption={`${role.label} of ${servitor.god?.name ?? 'a god'} · ${ORIGINS[servitor.origin].label.toLowerCase()} · since epoch ${servitor.since_epoch}`}
       aside={
         <Button
+          act={release}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -596,6 +605,7 @@ function ServitorCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape the servitor'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -678,6 +688,7 @@ function ServitorForm({
       columns={3}
       action={
         <Button
+          act={make}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -747,6 +758,7 @@ function GeasCard({
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>
           <Button
+            act={breakIt}
             size='sm'
             variant='outline'
             disabled={busy !== null || !kept}
@@ -757,6 +769,7 @@ function GeasCard({
             Break it
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -791,6 +804,7 @@ function GeasCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape the geas'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -893,6 +907,7 @@ function GeasForm({
       columns={3}
       action={
         <Button
+          act={lay}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

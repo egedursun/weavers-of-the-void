@@ -40,6 +40,7 @@ export function DedicationSection({
   const [son, setSon] = useState('')
   const [hold, setHold] = useState(true)
   const dedicate = useGodAction({
+    writes: [{ lever: 'structure:dedicate' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure:dedicate', {
@@ -48,6 +49,7 @@ export function DedicationSection({
       ),
   })
   const lift = useGodAction({
+    writes: [{ lever: 'structure:undedicate' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/structure:undedicate', {
@@ -119,6 +121,7 @@ export function DedicationSection({
             </div>
           </div>
           <Adjust
+            acts={[dedicate, lift]}
             label='Dedicate'
             title='Dedication'
             note='Raise it for another god or lift the dedication. Lifting it also frees its god from it as an anchor.'
@@ -134,6 +137,7 @@ export function DedicationSection({
               </div>
               <label className='flex min-w-0 items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
                 <Switch
+                  permission='lock_canon'
                   checked={hold}
                   onCheckedChange={setHold}
                   aria-label='Hold the dedication'
@@ -143,6 +147,7 @@ export function DedicationSection({
             </div>
             <div className='flex min-w-0 flex-wrap gap-2'>
               <Button
+                act={dedicate}
                 size='sm'
                 disabled={busy !== null || son === ''}
                 disabledReason={
@@ -154,6 +159,7 @@ export function DedicationSection({
                 Dedicate
               </Button>
               <Button
+                act={lift}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null || data.son === null}

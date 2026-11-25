@@ -82,6 +82,7 @@ function TargetEditor({
           />
         </div>
         <Button
+          act={save}
           type='submit'
           variant='outline'
           disabled={reason !== null}
@@ -92,6 +93,7 @@ function TargetEditor({
         </Button>
         {target.directory && (
           <Button
+            act={save}
             variant='ghost'
             disabled={readOnly || save.isPending}
             disabledReason={readOnly ? 'A guest world is read-only' : 'Saving'}

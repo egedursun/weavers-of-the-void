@@ -81,6 +81,7 @@ export function ModifierCard({
   const [epochs, setEpochs] = useState('')
   const [group, setGroup] = useState(modifier.stacking_group ?? '')
   const edit = useGodAction({
+    writes: [{ lever: 'modifier:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/modifier:edit', {
@@ -100,6 +101,7 @@ export function ModifierCard({
     onDone: () => setEditing(false),
   })
   const hold = useGodAction({
+    writes: [{ lever: 'modifier:hold' }, { lever: 'modifier:release' }],
     run: (held: boolean) =>
       unwrap(
         api.POST(
@@ -109,6 +111,7 @@ export function ModifierCard({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'modifier:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/modifier:remove', {
@@ -164,6 +167,7 @@ export function ModifierCard({
         )}
         <div className='ml-auto flex shrink-0 items-center gap-1'>
           <Button
+            act={edit}
             size='sm'
             variant='ghost'
             disabled={busy !== undefined}
@@ -174,6 +178,7 @@ export function ModifierCard({
             Edit
           </Button>
           <Button
+            act={hold}
             size='sm'
             variant='ghost'
             disabled={busy !== undefined}
@@ -184,6 +189,7 @@ export function ModifierCard({
             {modifier.held ? 'Release' : 'Hold'}
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== undefined}
@@ -220,6 +226,7 @@ export function ModifierCard({
             />
           </FieldTile>
           <Button
+            act={edit}
             size='sm'
             className='self-start'
             disabled={busy !== undefined || magnitude === ''}
@@ -253,6 +260,7 @@ export function ModifierForge({
   const [group, setGroup] = useState('')
   const [origin, setOrigin] = useState<number | null>(null)
   const forge = useGodAction({
+    writes: [{ lever: 'modifier:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/modifier:create', {
@@ -381,6 +389,7 @@ export function ModifierForge({
         placeholder='No source record'
       />
       <Button
+        act={forge}
         className='self-start'
         disabled={(busy ?? missing) !== null && (busy ?? missing) !== undefined}
         disabledReason={busy ?? missing ?? undefined}

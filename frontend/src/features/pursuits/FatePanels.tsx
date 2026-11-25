@@ -250,6 +250,7 @@ export function ContractPanel({
         columns={3}
         action={
           <Button
+            act={posting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

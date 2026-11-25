@@ -39,6 +39,7 @@ export function AddWordsForm({
   const gate = useLoreGate()
   const words = wordsOf(rows)
   const add = useLoreMutation({
+    writes: [{ lever: 'language:words' }],
     run: () =>
       unwrap(
         api.POST('/api/languages/{language_id}/words', {
@@ -145,6 +146,7 @@ export function AddWordsForm({
           Another word
         </Button>
         <Button
+          act={add}
           disabled={blocked !== null}
           disabledReason={blocked ?? undefined}
           aria-busy={add.isPending || undefined}

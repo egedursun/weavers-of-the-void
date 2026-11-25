@@ -128,6 +128,7 @@ function AddPart({
       columns={2}
       action={
         <Button
+          act={add}
           size='sm'
           disabled={(busy ?? (section ? null : 'Pick a section')) !== null}
           disabledReason={busy ?? (section ? undefined : 'Pick a section')}

@@ -88,6 +88,7 @@ export function useMadeAction<Name extends ActionName, T>(
   success?: string
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
   })
@@ -97,6 +98,7 @@ export type RowKey = Record<string, number | string>
 
 export function useProfileEdit(nodeId: number, table: string) {
   return useGodAction<{ values: EditValues; release: string[] }>({
+    writes: [{ lever: 'profile:release' }, { lever: 'profile:set' }],
     run: async ({ values, release }) => {
       const sets = Object.entries(values).map(
         ([column, value]) =>
@@ -125,6 +127,7 @@ export function useProfileEdit(nodeId: number, table: string) {
 
 export function useRowEdit(table: string, key: RowKey) {
   return useGodAction<{ values: EditValues; release: string[] }>({
+    writes: [{ lever: 'record_row:edit' }],
     run: ({ values, release }) =>
       postAction('record_row:edit', {
         table,
@@ -139,6 +142,7 @@ export function useRowEdit(table: string, key: RowKey) {
 
 export function useRowDelete(table: string, key: RowKey) {
   return useGodAction<void>({
+    writes: [{ lever: 'record_row:delete' }],
     run: () => postAction('record_row:delete', { table, key }),
     success: 'The row is struck out',
   })

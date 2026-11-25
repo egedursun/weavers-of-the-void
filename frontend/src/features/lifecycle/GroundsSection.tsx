@@ -160,6 +160,7 @@ function Collection({
                     </Muted>
                   )}
                   <ChoiceField
+                    act={retyping}
                     label='Kind of piece'
                     value={piece.kind}
                     table={PIECE_KINDS}
@@ -172,6 +173,7 @@ function Collection({
                     }
                   />
                   <NodePicker
+                    act={retyping}
                     label='Realm whose regalia it is'
                     value={piece.polity?.id ?? null}
                     onChange={(next) =>
@@ -190,6 +192,7 @@ function Collection({
                     types={['polity']}
                   />
                   <StepButton
+                    act={returning}
                     icon={Undo2}
                     label='Give it back'
                     busy={why(
@@ -202,6 +205,7 @@ function Collection({
                     onClick={() => returning.mutate(piece.id)}
                   />
                   <StepButton
+                    act={taking}
                     icon={X}
                     label='Take it out'
                     busy={why(blocked, taking.isPending)}
@@ -224,6 +228,7 @@ function Collection({
         columns={2}
         action={
           <Button
+            act={adding}
             size='sm'
             disabled={why(addBlocked, adding.isPending) !== null}
             disabledReason={why(addBlocked, adding.isPending) ?? undefined}
@@ -250,6 +255,7 @@ function Collection({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this collection'
         note='Values you set are held against the engine until you release them.'
         fields={HOARD_FIELDS}
@@ -259,6 +265,7 @@ function Collection({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Disperse this collection'
         busy={why(blocked, removing.isPending)}
@@ -321,6 +328,7 @@ function Garden({
               >
                 <Ref node={species} empty='an unnamed kind' />
                 <StepButton
+                  act={uprooting}
                   icon={X}
                   label={`Take ${species.name} out`}
                   busy={why(blocked, uprooting.isPending)}
@@ -342,6 +350,7 @@ function Garden({
         columns={2}
         action={
           <Button
+            act={planting}
             size='sm'
             disabled={why(plantBlocked, planting.isPending) !== null}
             disabledReason={why(plantBlocked, planting.isPending) ?? undefined}
@@ -361,6 +370,7 @@ function Garden({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this garden'
         note='Values you set are held against the engine until you release them.'
         fields={GARDEN_FIELDS}
@@ -370,6 +380,7 @@ function Garden({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Remove this garden'
         busy={why(blocked, removing.isPending)}
@@ -495,6 +506,7 @@ export function GroundsSection({
               columns={2}
               action={
                 <Button
+                  act={founding}
                   size='sm'
                   disabled={why(blocked, founding.isPending) !== null}
                   disabledReason={why(blocked, founding.isPending) ?? undefined}
@@ -547,6 +559,7 @@ export function GroundsSection({
               columns={2}
               action={
                 <Button
+                  act={layingOut}
                   size='sm'
                   disabled={why(blocked, layingOut.isPending) !== null}
                   disabledReason={
@@ -571,12 +584,14 @@ export function GroundsSection({
             </ForgeCard>
             <div className='flex min-w-0 flex-wrap gap-2'>
               <StepButton
+                act={runningHoards}
                 icon={GROUNDS_ICON}
                 label='Read every collection now'
                 busy={why(readOnlyReason, runningHoards.isPending)}
                 onClick={() => runningHoards.mutate()}
               />
               <StepButton
+                act={runningGardens}
                 icon={Sprout}
                 label='Read every garden now'
                 busy={why(readOnlyReason, runningGardens.isPending)}

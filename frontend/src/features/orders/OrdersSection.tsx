@@ -129,6 +129,7 @@ export function OrdersSection({
           </Tabs>
         )}
         <StepButton
+          act={running}
           icon={ORDERS_ICON}
           label='Read economic life now'
           busy={why(blocked, running.isPending)}

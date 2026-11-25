@@ -151,6 +151,7 @@ function DesignCard({ design }: { design: Design }) {
   const [values, setValues] = useState(valuesOf(design))
   const [hold, setHold] = useState(design.held)
   const edit = useGodAction({
+    writes: [{ lever: 'workshop_design:edit' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -166,6 +167,7 @@ function DesignCard({ design }: { design: Design }) {
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'workshop_design:release' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -175,6 +177,7 @@ function DesignCard({ design }: { design: Design }) {
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'workshop_design:delete' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -245,11 +248,13 @@ function DesignCard({ design }: { design: Design }) {
       <div className='mt-auto flex min-w-0 flex-col gap-3'>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <ReleaseButton
+            act={release}
             held={design.held}
             busy={busy}
             onRelease={() => release.mutate(undefined)}
           />
           <ConfirmButton
+            act={remove}
             icon={Trash2}
             label='Tear up'
             title={`Tear up the design for ${design.name}?`}
@@ -260,6 +265,7 @@ function DesignCard({ design }: { design: Design }) {
           />
         </div>
         <AdjustPanel
+          acts={[edit]}
           label='Adjust the design'
           title={`Redraw ${design.name}`}
           note='100 is a plain workshop on each share; the quality bonus is added to all it makes.'
@@ -286,6 +292,7 @@ function DesignCard({ design }: { design: Design }) {
             onChange={setDescription}
           />
           <Button
+            act={edit}
             size='sm'
             className='self-start'
             disabled={busy !== null}
@@ -313,6 +320,7 @@ export function DesignForge({
   const [description, setDescription] = useState('')
   const [values, setValues] = useState(valuesOf(null))
   const create = useGodAction({
+    writes: [{ lever: 'workshop_design:create' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -371,6 +379,7 @@ export function DesignForge({
         onChange={setDescription}
       />
       <Button
+        act={create}
         size='sm'
         className='self-start'
         disabled={busy !== null}

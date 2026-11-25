@@ -38,6 +38,7 @@ export function CosmicResourceForm({
   const [description, setDescription] = useState(resource?.description ?? '')
   const [sideEffect, setSideEffect] = useState(resource?.side_effect ?? '')
   const define = useCosmicAction({
+    writes: [{ lever: 'cosmos:resource' }],
     run: () =>
       unwrap(
         api.PUT('/api/cosmic-resource', {
@@ -99,6 +100,7 @@ export function CosmicResourceForm({
       </FormRow>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={define}
           actionId='cosmos:resource'
           label={resource ? 'Update' : 'Define'}
           icon={Gem}
@@ -136,6 +138,7 @@ function DepositForm({
     worldChoice || String(worldId ?? index.worlds[0]?.world.id ?? '')
   const places = index.placesOf(Number(world))
   const open = useCosmicAction({
+    writes: [{ lever: 'cosmos:deposit' }],
     run: () =>
       unwrap(
         api.POST('/api/cosmic-resource/deposits', {
@@ -195,6 +198,7 @@ function DepositForm({
       </FormRow>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={open}
           actionId='cosmos:deposit'
           label='Open the deposit'
           icon={Pickaxe}

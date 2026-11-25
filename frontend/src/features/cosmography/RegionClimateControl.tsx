@@ -92,6 +92,7 @@ export function RegionClimateControl({
           const Icon = TURN_ICONS[key]
           return (
             <Button
+              act={turn}
               key={key}
               size='sm'
               variant='outline'

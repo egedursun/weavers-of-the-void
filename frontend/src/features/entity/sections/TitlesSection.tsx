@@ -98,6 +98,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
   const [holder, setHolder] = useState<number | null>(null)
   const [emblem, setEmblem] = useState('')
   const rank = useGodAction({
+    writes: [{ lever: 'title:edit' }],
     run: (value: TitleTier) =>
       unwrap(
         api.POST('/api/actions/title:edit', {
@@ -111,6 +112,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
       ),
   })
   const pass = useGodAction({
+    writes: [{ lever: 'title:grant' }],
     run: ({ to, usurped }: { to: number | null; usurped: boolean }) =>
       unwrap(
         api.POST('/api/actions/title:grant', {
@@ -123,6 +125,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
     },
   })
   const arms = useGodAction({
+    writes: [{ lever: 'title:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/title:edit', {
@@ -140,6 +143,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
     },
   })
   const fate = useGodAction({
+    writes: [{ lever: 'title:destroy' }, { lever: 'title:restore' }],
     run: (destroyed: boolean) =>
       destroyed
         ? unwrap(
@@ -157,6 +161,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
           ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'title:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/title:edit', {
@@ -165,6 +170,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
       ),
   })
   const freeze = useGodAction({
+    writes: [{ lever: 'title:hold' }],
     run: (hold: boolean) =>
       unwrap(
         api.POST('/api/actions/title:hold', {
@@ -173,10 +179,12 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'title:remove' }],
     run: () =>
       unwrap(api.POST('/api/actions/title:remove', { body: { title_id: id } })),
   })
   const crown = useGodAction({
+    writes: [{ lever: 'title:edit' }],
     run: (regalia: number[]) =>
       unwrap(
         api.POST('/api/actions/title:edit', {
@@ -283,6 +291,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
         }
         actions={
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label='Strike the title'
@@ -297,6 +306,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
         editor={
           <div className='flex min-w-0 flex-col gap-3'>
             <MindPicker
+              act={rank}
               label='Rank'
               value={detail.rank}
               table={table(ctx.view.ranks)}
@@ -334,6 +344,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
               }
             />
             <NodeListEditor
+              act={crown}
               label='Regalia'
               types={['item']}
               nodes={detail.regalia}
@@ -343,6 +354,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
             <div className='flex min-w-0 flex-wrap justify-end gap-2'>
               {detail.liege && (
                 <Button
+                  act={release}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null}
@@ -353,6 +365,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
                 </Button>
               )}
               <Button
+                act={fate}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -362,6 +375,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
                 {destroyed ? 'Restore it' : 'Destroy it'}
               </Button>
               <Button
+                act={freeze}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -379,6 +393,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
         action={
           <div className='flex flex-wrap justify-end gap-2'>
             <Button
+              act={pass}
               size='sm'
               disabled={busy !== null || holder === null}
               disabledReason={
@@ -389,6 +404,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
               Grant
             </Button>
             <Button
+              act={pass}
               size='sm'
               variant='outline'
               disabled={busy !== null || holder === null}
@@ -400,6 +416,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
               Usurp
             </Button>
             <Button
+              act={pass}
               size='sm'
               variant='ghost'
               disabled={busy !== null || !detail.holder}
@@ -425,6 +442,7 @@ function DetailCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
         title='Blazon new arms'
         action={
           <Button
+            act={arms}
             size='sm'
             disabled={busy !== null || !emblem.trim()}
             disabledReason={
@@ -466,6 +484,7 @@ function LandsCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
   const id = ctx.view.node_id
   const [land, setLand] = useState<number | null>(null)
   const add = useGodAction({
+    writes: [{ lever: 'de_jure:set' }],
     run: (memberId: number) =>
       unwrap(
         api.POST('/api/actions/de_jure:set', {
@@ -478,6 +497,7 @@ function LandsCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
     },
   })
   const drop = useGodAction({
+    writes: [{ lever: 'de_jure:remove' }],
     run: (memberId: number) =>
       unwrap(
         api.POST('/api/actions/de_jure:remove', {
@@ -505,6 +525,7 @@ function LandsCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
                 <Ref node={node} />
               </Text>
               <Button
+                act={drop}
                 size='icon-sm'
                 variant='ghost'
                 aria-label={`Strike ${node.name} from the title`}
@@ -532,6 +553,7 @@ function LandsCard({ detail, ctx }: { detail: TitleDetail; ctx: Ctx }) {
         title='Claim a land by right'
         action={
           <Button
+            act={add}
             size='sm'
             disabled={busy !== null || land === null}
             disabledReason={
@@ -587,6 +609,7 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
   const [name, setName] = useState('')
   const [rank, setRank] = useState('county')
   const make = useGodAction({
+    writes: [{ lever: 'title:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/title:create', {
@@ -675,6 +698,7 @@ function HoldingsCard({ ctx }: { ctx: Ctx }) {
         title='Create a title for it'
         action={
           <Button
+            act={make}
             size='sm'
             disabled={busy !== null || !name.trim()}
             disabledReason={

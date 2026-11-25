@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import JSON, DateTime, ForeignKey, Index, LargeBinary, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
+from aerona.db.authorship import OwnedByAccount
 from aerona.db.base import Base
 from aerona.db.columns import at_least, enum_type
 from aerona.domain.enums.divine_will import (
@@ -29,7 +30,7 @@ def created() -> Mapped[datetime]:
     return mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
-class DivineWillSessionRow(Base):
+class DivineWillSessionRow(OwnedByAccount, Base):
     __tablename__ = "divine_will_sessions"
     __table_args__ = (at_least("opened_epoch", 0),)
 
@@ -150,7 +151,7 @@ class DivineWillChunkRow(Base):
     updated_epoch: Mapped[int] = mapped_column(default=0)
 
 
-class DivineWillArtifactRow(Base):
+class DivineWillArtifactRow(OwnedByAccount, Base):
     __tablename__ = "divine_will_artifacts"
     __table_args__ = (at_least("current_version", 1),)
 
@@ -187,7 +188,7 @@ class DivineWillArtifactNodeRow(Base):
     node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True, index=True)
 
 
-class DivineWillPlanRow(Base):
+class DivineWillPlanRow(OwnedByAccount, Base):
     __tablename__ = "divine_will_plans"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -219,7 +220,7 @@ class DivineWillPlanStepRow(Base):
     error: Mapped[str] = mapped_column(Text, default="")
 
 
-class DivineWillForecastRow(Base):
+class DivineWillForecastRow(OwnedByAccount, Base):
     __tablename__ = "divine_will_forecasts"
     __table_args__ = (at_least("epochs", 1), at_least("eta_seconds", 0))
 

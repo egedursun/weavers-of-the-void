@@ -103,6 +103,7 @@ export function PeaceTreaty({
     ),
   }
   const make = useGodAction({
+    writes: [{ lever: 'war:peace' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:peace', {
@@ -182,6 +183,7 @@ export function PeaceTreaty({
         </ul>
       )}
       <Adjust
+        acts={[make]}
         title='Peace builder'
         note='Pick who won and the clauses the treaty will carry; the aims each side achieved add their own terms.'
         label='Build a peace'
@@ -246,6 +248,7 @@ export function PeaceTreaty({
           </FieldGrid>
         )}
         <Button
+          act={make}
           size='sm'
           className='self-start'
           disabled={busyOf(blocked, make.isPending) !== null}

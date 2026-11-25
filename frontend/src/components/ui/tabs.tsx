@@ -3,7 +3,7 @@ import * as TabsPrimitive from '@radix-ui/react-tabs'
 import { cn } from '@/lib/utils'
 import {
   type ControlSize,
-  controlHeight,
+  controlMinHeight,
   controlIcon,
   controlText,
 } from './control-size'
@@ -34,8 +34,8 @@ function TabsList({
         data-slot='tabs-list'
         data-control-size={size}
         className={cn(
-          'no-scrollbar inline-flex w-fit max-w-full items-center justify-start gap-0.5 overflow-x-auto rounded-md plate-track p-0.5 text-muted-foreground',
-          controlHeight[size],
+          'inline-flex w-fit max-w-full flex-wrap items-stretch justify-start gap-0.5 rounded-md plate-track p-0.5 text-muted-foreground',
+          controlMinHeight[size],
           controlText,
           className
         )}
@@ -70,7 +70,7 @@ function TabsTrigger({
       }}
       data-slot='tabs-trigger'
       className={cn(
-        'inline-flex h-full flex-1 shrink-0 basis-auto items-center justify-center gap-1.5 rounded-md border border-transparent px-3 font-medium whitespace-nowrap text-foreground/80 transition-[color,background-color,box-shadow] outline-none',
+        'inline-flex flex-1 shrink-0 basis-auto items-center justify-center gap-1.5 rounded-md border border-transparent px-3 font-medium whitespace-nowrap text-foreground/80 transition-[color,background-color,box-shadow] outline-none',
         'hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50',
         'data-[state=active]:plate-active',
         '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-gild/85',

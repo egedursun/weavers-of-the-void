@@ -78,6 +78,7 @@ export function HouseholdFormCard({
 }) {
   const [form, setForm] = useState<string>(household.form)
   const setting = useGodAction({
+    writes: [{ lever: 'household:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/household:edit', {
@@ -100,6 +101,7 @@ export function HouseholdFormCard({
       columns={2}
       action={
         <StepButton
+          act={setting}
           icon={named.icon}
           label='Set the form'
           busy={why(blocked, setting.isPending)}
@@ -134,6 +136,7 @@ export function DwellingTenureCard({
   const [light, setLight] = useState<string>(dwelling.light ?? 'heat')
   const [crowding, setCrowding] = useState(String(dwelling.crowding))
   const setting = useGodAction({
+    writes: [{ lever: 'dwelling:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/dwelling:set', {
@@ -160,6 +163,7 @@ export function DwellingTenureCard({
       columns={2}
       action={
         <StepButton
+          act={setting}
           icon={Home}
           label='Set the home'
           busy={why(blocked, setting.isPending)}

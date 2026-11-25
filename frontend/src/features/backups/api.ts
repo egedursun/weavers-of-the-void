@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { apiUrl } from '@/api/url'
 
@@ -52,6 +53,7 @@ export function useSecondaryTarget() {
 export function useSetSecondaryTarget() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'PUT', path: '/api/backups/secondary' }],
     mutationFn: (directory: string | null) =>
       unwrap(api.PUT('/api/backups/secondary', { body: { directory } })),
     onSuccess: (target) =>
@@ -62,6 +64,7 @@ export function useSetSecondaryTarget() {
 export function useTakeBackup() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/backups' }],
     mutationFn: () => unwrap(api.POST('/api/backups')),
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: queryKeys.backups.all }),
@@ -71,6 +74,7 @@ export function useTakeBackup() {
 export function useRestoreBackup() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/backups/restore' }],
     mutationFn: ({ file, confirm }: { file: string; confirm: string }) =>
       unwrap(api.POST('/api/backups/restore', { body: { file, confirm } })),
     onSuccess: () => void queryClient.invalidateQueries(),
@@ -80,6 +84,7 @@ export function useRestoreBackup() {
 export function useImportWorld() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/world/import' }],
     mutationFn: ({
       file,
       mode,
@@ -111,6 +116,7 @@ export function useDiscovery() {
 export function useEndDiscovery() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/discovery/end' }],
     mutationFn: () => unwrap(api.POST('/api/discovery/end')),
     onSuccess: () => void queryClient.invalidateQueries(),
   })

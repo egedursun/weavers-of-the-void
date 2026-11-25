@@ -14,8 +14,9 @@ from typing import Any
 from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import func, select
 
-from aerona.core.errors import AeronaError, BusyError, ConflictError, NotFoundError, ValidationFailedError
+from aerona.core.errors import AeronaError, BusyError, ConflictError, ForbiddenError, NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
+from aerona.db.authorship import may_see, owns
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.session import Database
 from aerona.db.tables.changes import StateChangeRow
@@ -24,6 +25,7 @@ from aerona.db.tables.epochs import EpochEnginePhaseRow
 from aerona.domain.enums.divine_will import ForecastStatus
 from aerona.domain.enums.job import JobKind
 from aerona.epoch.concurrency import WORLD_GROUP
+from aerona.events.audience import private_audience
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
@@ -31,6 +33,7 @@ from aerona.jobs.manager import JobManager
 from aerona.rules.registry import Rules
 from aerona.rules.snapshot import catalog, coerce, constraint_violations, with_value
 from aerona.services.divine_will.forecast_report import database_at, scenario, world_state
+from aerona.services.divine_will.ownership import ownership_of
 from aerona.services.divine_will.rule_steps import RULE_ACTIONS, RuleStepInput, is_rule_step, rule_problem
 from aerona.services.player.catalog import ACTIONS_BY_ID, run_ledgered
 from aerona.services.player.scope import PlayerScope
@@ -53,6 +56,7 @@ OPEN_FORECASTS = frozenset({ForecastStatus.QUEUED, ForecastStatus.RUNNING})
 REPORT = TypeAdapter(ForecastReport)
 INTERVENTIONS = TypeAdapter(list[Intervention])
 STOPPED_MIDWAY = "The forecast stopped when the server stopped; run it again."
+NOT_YOURS = "Only its author can stop this forecast."
 
 
 @dataclass
@@ -139,6 +143,7 @@ def forecast_view(row: DivineWillForecastRow) -> ForecastView:
         started_at=row.started_at,
         finished_at=row.finished_at,
         created_at=row.created_at,
+        owner=ownership_of(row.author_account_id, row.author_name, row.shared),
     )
 
 
@@ -171,6 +176,7 @@ class Foresight:
                 "eta_seconds": view.eta_seconds,
                 "progress": round(share, 4),
             },
+            audience=private_audience(view.owner.author_account_id, view.owner.shared),
         )
 
     async def estimate(self, epochs: int, rules: Rules) -> ForecastEstimate:
@@ -218,6 +224,7 @@ class Foresight:
                 lambda context: self.work(forecast_id, chosen, rules, context),
                 {FORECAST_ID_KEY: forecast_id},
                 exclusive_group=FORECAST_GROUP,
+                as_person=True,
             )
         except AeronaError as error:
             await self.finish(forecast_id, ForecastStatus.FAILED, error=error.message)
@@ -232,7 +239,7 @@ class Foresight:
 
     async def row(self, session: Any, forecast_id: int) -> DivineWillForecastRow:
         found: DivineWillForecastRow | None = await session.get(DivineWillForecastRow, forecast_id)
-        if found is None:
+        if found is None or not may_see(found.author_account_id, found.shared):
             raise NotFoundError(f"No forecast {forecast_id}.")
         return found
 
@@ -248,9 +255,20 @@ class Foresight:
             return await self.finish(forecast_id, ForecastStatus.FAILED, error=STOPPED_MIDWAY)
         return view
 
+    async def share(self, forecast_id: int, shared: bool) -> ForecastView:
+        async with self.database.write() as session:
+            row = await self.row(session, forecast_id)
+            if not owns(row.author_account_id):
+                raise ForbiddenError(NOT_YOURS)
+            row.shared = shared
+            await session.flush()
+            return forecast_view(row)
+
     async def cancel(self, forecast_id: int) -> ForecastView:
         async with self.database.read() as session:
             row = await self.row(session, forecast_id)
+            if not owns(row.author_account_id):
+                raise ForbiddenError(NOT_YOURS)
             if row.status not in OPEN_FORECASTS:
                 raise ConflictError(f"Forecast {forecast_id} has already ended.")
             job_id, running = row.job_id, self.active(row)

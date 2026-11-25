@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 
 export type ActionItem = components['schemas']['ActionCatalogueItem']
@@ -67,9 +68,10 @@ function callAction(
   )
 }
 
-export function useRunAction() {
+export function useRunAction(lever: string) {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ lever }],
     mutationFn: ({
       method,
       url,

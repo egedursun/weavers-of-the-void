@@ -266,6 +266,7 @@ export function TradesPanel({
                 onClick={working.run}
               />
               <Button
+                act={reading}
                 size='sm'
                 disabled={groundBusy !== null}
                 disabledReason={groundBusy ?? undefined}
@@ -346,6 +347,7 @@ export function TradesPanel({
           columns={2}
           action={
             <Button
+              act={founding}
               size='sm'
               disabled={worksBusy !== null}
               disabledReason={worksBusy ?? undefined}

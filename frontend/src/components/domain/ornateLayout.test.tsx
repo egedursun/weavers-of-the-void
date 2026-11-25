@@ -135,6 +135,28 @@ describe('ornate frames own their ornaments', () => {
     }
   })
 
+  it('shows a section title of a few words in full on a phone', async () => {
+    await page.viewport(390, 900)
+    const screen = await render(
+      <div className='w-full px-4'>
+        <Panel title='Who reaches Probe World' />
+      </div>
+    )
+    await settled()
+    const heading = document.querySelector(
+      '.ornate-nameplate > [data-typography]'
+    )
+    expect(heading).not.toBeNull()
+    expect(heading?.scrollHeight ?? 0).toBeLessThanOrEqual(
+      (heading?.clientHeight ?? 0) + 1
+    )
+    expect(heading?.scrollWidth ?? 0).toBeLessThanOrEqual(
+      (heading?.clientWidth ?? 0) + 1
+    )
+    expect(audit().escaping).toEqual([])
+    await screen.unmount()
+  })
+
   it('lines up the panels of one row in a panel grid', async () => {
     await page.viewport(1280, 900)
     await render(

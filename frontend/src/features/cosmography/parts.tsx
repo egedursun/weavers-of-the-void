@@ -1,5 +1,6 @@
 import { type ReactNode, useId, useMemo, useState } from 'react'
 import { type LucideIcon, Save } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -121,6 +122,7 @@ export function RecordEditor({
   saveLabel = 'Hold these values',
   onSave,
   onRelease,
+  act,
 }: {
   title: string
   note: string
@@ -130,6 +132,7 @@ export function RecordEditor({
   saveLabel?: string
   onSave: (values: Values) => void
   onRelease: (keys: string[]) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState<Record<string, string>>({})
   const changed = Object.fromEntries(
@@ -144,6 +147,7 @@ export function RecordEditor({
   return (
     <div className='flex min-w-0 flex-col gap-2'>
       <Held
+        act={act}
         keys={locked}
         label={(key) =>
           fields.find((field) => field.key === key)?.label ?? heldLabel(key)
@@ -151,7 +155,7 @@ export function RecordEditor({
         busy={busy}
         onRelease={() => onRelease([...locked])}
       />
-      <AdjustPanel title={title} note={note}>
+      <AdjustPanel acts={[{ blockedReason: busy }]} title={title} note={note}>
         <div className='@container/fields min-w-0'>
           <div className='grid min-w-0 grid-cols-1 gap-2 @sm/fields:grid-cols-2'>
             {fields.map((field) =>
@@ -203,6 +207,7 @@ export function RecordEditor({
           </div>
         </div>
         <Button
+          act={act}
           size='sm'
           disabled={busy !== null || nothing !== null}
           disabledReason={busy ?? nothing ?? undefined}
@@ -382,17 +387,20 @@ export function RecordPick({
   value,
   onChange,
   worldId,
+  act,
 }: {
   label: string
   types: readonly string[]
   value: number | null
   onChange: (id: number | null) => void
   worldId?: number
+  act?: ActProp
 }) {
   return (
     <div className='flex min-w-0 flex-col gap-1'>
       <Label>{label}</Label>
       <EntityPicker
+        act={act}
         types={types}
         value={value}
         onChange={onChange}

@@ -27,6 +27,9 @@ const PAST = {
   closed_epoch: 2,
   closed_at: '2026-11-02T10:00:00Z',
   cycle_count: 1,
+  author: { account_id: 1, name: 'Ana' },
+  shared: false,
+  mine: true,
 }
 
 function routes(cycles = [DONE]) {
@@ -200,8 +203,6 @@ describe('Divine Will panel', () => {
       screen.getByRole('separator', { name: 'Beyond memory' }).elements()
     ).toHaveLength(0)
     await screen.getByRole('button', { name: 'Every past session' }).click()
-    await expect
-      .element(screen.getByText('Closed sessions'))
-      .toBeInTheDocument()
+    await expect.element(screen.getByText('Your sessions')).toBeInTheDocument()
   })
 })

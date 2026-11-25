@@ -47,6 +47,7 @@ import {
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { wordOf } from '@/features/entity/affairs/labels'
+import { ShareToggle } from '@/features/team/share'
 import { NodeRef } from './NodeRef'
 import { useCancelForecast, useForecast } from './api'
 import { FORECAST_STATUS_LOOK } from './planLook'
@@ -506,6 +507,13 @@ function ForecastBody({ forecast }: { forecast: WillForecast }) {
           {look.label}
         </Badge>
       </div>
+      <ShareToggle
+        kind='forecast'
+        id={forecast.id}
+        shared={forecast.owner.shared}
+        mine={forecast.owner.mine}
+        author={forecast.owner.author_name}
+      />
       {forecast.interventions.length > 0 ? (
         <ul className='flex min-w-0 flex-col gap-1'>
           <Paged
@@ -556,6 +564,7 @@ function ForecastBody({ forecast }: { forecast: WillForecast }) {
           />
           <div className='flex justify-end'>
             <Button
+              act={cancel}
               variant='outline'
               size='sm'
               disabled={block !== null}

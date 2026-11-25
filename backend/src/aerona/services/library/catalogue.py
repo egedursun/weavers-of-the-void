@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
-from sqlalchemy import Select, delete, func, select, text
+from sqlalchemy import Select, and_, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from aerona.constants.library import (
@@ -19,11 +19,13 @@ from aerona.constants.library import (
     UNIVERSE_TAG_MAX_LENGTH,
     UNIVERSE_TAGS_MAX,
 )
+from aerona.core.account_scope import current_account, current_workspace
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.inline_sqlite import inline_engine
 from aerona.db.library.migrations import upgrade_library
-from aerona.db.library.tables import LibraryEventRow, UniverseRow
+from aerona.db.library.tables import LibraryEventRow, UniverseOverrideRow, UniverseRow, WorkspaceMemberRow
 from aerona.db.record_context import UNCAPTURED
+from aerona.domain.enums.accounts import UniverseRole, WorkspaceRole
 from aerona.domain.enums.library import LibraryEventKind, UniverseOrigin, UniverseSort, UniverseStatus
 from aerona.paths import ProcessPaths
 from aerona.services.library.manifest import UniverseManifest, write_manifest
@@ -65,6 +67,10 @@ class UniverseRecord:
     origin_note: str
     tags: tuple[str, ...]
     media_prefix: str
+    workspace_id: int | None = None
+    legacy_author_account_id: int | None = None
+    legacy_author_name: str = ""
+    canon_approval: bool = False
 
     @classmethod
     def of(cls, row: UniverseRow) -> "UniverseRecord":
@@ -90,6 +96,10 @@ class UniverseRecord:
             origin_note=row.origin_note,
             tags=tuple(row.tags or ()),
             media_prefix=row.media_prefix,
+            workspace_id=row.workspace_id,
+            legacy_author_account_id=row.legacy_author_account_id,
+            legacy_author_name=row.legacy_author_name,
+            canon_approval=row.canon_approval,
         )
 
     def manifest(self) -> UniverseManifest:
@@ -118,6 +128,12 @@ class LibraryEventRecord:
     universe_id: str
     universe_name: str
     detail: str
+    account_id: int | None = None
+    account_name: str = ""
+
+    @classmethod
+    def of(cls, row: LibraryEventRow) -> "LibraryEventRecord":
+        return cls(row.id, row.at, row.kind, row.universe_id, row.universe_name, row.detail, row.account_id, row.account_name)
 
 
 @dataclass(frozen=True)
@@ -142,6 +158,7 @@ class NewUniverse:
     summary: str = ""
     origin_note: str = ""
     tags: tuple[str, ...] = ()
+    workspace_id: int | None = None
 
 
 @dataclass(frozen=True)
@@ -164,6 +181,8 @@ class UniverseQuery:
     sort: UniverseSort = UniverseSort.OPENED
     offset: int = 0
     limit: int = LIBRARY_PAGE_DEFAULT
+    workspace_id: int | None = None
+    visible: frozenset[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -200,7 +219,21 @@ def numbered(name: str, number: int) -> str:
     return f"{name[: UNIVERSE_NAME_MAX_LENGTH - len(suffix)]}{suffix}"
 
 
+def scoped(statement: Select[UniverseRow], query: UniverseQuery) -> Select[UniverseRow]:
+    if query.workspace_id is not None:
+        statement = statement.where(UniverseRow.workspace_id == query.workspace_id)
+    if query.visible is not None:
+        statement = statement.where(UniverseRow.id.in_(sorted(query.visible)))
+    return statement
+
+
+def acting_event() -> dict[str, object]:
+    account = current_account()
+    return {"account_id": account.id, "account_name": account.name} if account is not None else {}
+
+
 def filtered(statement: Select[UniverseRow], query: UniverseQuery) -> Select[UniverseRow]:
+    statement = scoped(statement, query)
     if query.status is not None:
         statement = statement.where(UniverseRow.status == query.status)
     if query.origin is not None:
@@ -249,6 +282,16 @@ class Catalogue:
         async with self._writing, self._read() as session, session.begin():
             yield session
 
+    @asynccontextmanager
+    async def read_session(self) -> AsyncIterator[AsyncSession]:
+        async with self._read() as session:
+            yield session
+
+    @asynccontextmanager
+    async def write_session(self) -> AsyncIterator[AsyncSession]:
+        async with self._write() as session:
+            yield session
+
     async def healthy(self) -> bool:
         try:
             async with self._read() as session:
@@ -276,7 +319,7 @@ class Catalogue:
         limit = max(1, min(query.limit, LIBRARY_PAGE_MAX))
         async with self._read() as session:
             rows = list(await session.scalars(filtered(select(UniverseRow), query).order_by(*SORT_ORDER[query.sort], UniverseRow.id)))
-            every = list(await session.scalars(select(UniverseRow).order_by(UniverseRow.id)))
+            every = list(await session.scalars(scoped(select(UniverseRow), query).order_by(UniverseRow.id)))
         chosen = [row for row in rows if query.tag is None or query.tag.casefold() in {tag.casefold() for tag in row.tags or ()}]
         tags = sorted({tag for row in every for tag in row.tags or ()}, key=str.casefold)
         origins = {origin: sum(1 for row in every if row.origin is origin) for origin in UniverseOrigin}
@@ -314,15 +357,28 @@ class Catalogue:
             origin_note=new.origin_note,
             tags=clean_tags(new.tags),
             media_prefix=new.media_prefix,
+            workspace_id=new.workspace_id if new.workspace_id is not None else current_workspace(),
         )
         async with self._write() as session:
             session.add(row)
             await session.flush()
+            await self._seat_maker(session, row)
             record = UniverseRecord.of(row)
         await self._mirror(record)
         return record
 
-    async def restore_row(self, manifest: UniverseManifest) -> UniverseRecord:
+    async def _seat_maker(self, session: AsyncSession, row: UniverseRow) -> None:
+        account = current_account()
+        if account is None or row.workspace_id is None:
+            return
+        role = await session.scalar(
+            select(WorkspaceMemberRow.role).where(WorkspaceMemberRow.workspace_id == row.workspace_id, WorkspaceMemberRow.account_id == account.id)
+        )
+        if role is WorkspaceRole.ADMIN:
+            return
+        session.add(UniverseOverrideRow(universe_id=row.id, account_id=account.id, role=UniverseRole.ADMIN, set_by=account.id, set_at=datetime.now(UTC)))
+
+    async def restore_row(self, manifest: UniverseManifest, workspace_id: int | None = None) -> UniverseRecord:
         now = datetime.now(UTC)
         row = UniverseRow(
             id=manifest.id,
@@ -341,10 +397,12 @@ class Catalogue:
             media_prefix=manifest.media_prefix,
             epoch=manifest.epoch,
             year=manifest.year,
+            workspace_id=workspace_id if workspace_id is not None else current_workspace(),
         )
         async with self._write() as session:
             session.add(row)
             await session.flush()
+            await self._seat_maker(session, row)
             return UniverseRecord.of(row)
 
     async def edit(self, universe_id: str, change: UniverseEdit) -> UniverseRecord:
@@ -374,6 +432,8 @@ class Catalogue:
                     universe_name=row.name,
                     detail=former if renamed else "",
                     at=row.updated_at,
+                    workspace_id=row.workspace_id,
+                    **acting_event(),
                 )
             )
             record = UniverseRecord.of(row)
@@ -388,7 +448,9 @@ class Catalogue:
             row.status = status
             row.updated_at = datetime.now(UTC)
             kind = LibraryEventKind.ARCHIVED if status is UniverseStatus.ARCHIVED else LibraryEventKind.RESTORED
-            session.add(LibraryEventRow(kind=kind, universe_id=row.id, universe_name=row.name, at=row.updated_at))
+            session.add(
+                LibraryEventRow(kind=kind, universe_id=row.id, universe_name=row.name, at=row.updated_at, workspace_id=row.workspace_id, **acting_event())
+            )
             return UniverseRecord.of(row)
 
     async def mark_opened(self, universe_id: str) -> UniverseRecord:
@@ -397,7 +459,11 @@ class Catalogue:
             if row is None:
                 raise NotFoundError(NO_SUCH_UNIVERSE)
             row.opened_at = datetime.now(UTC)
-            session.add(LibraryEventRow(kind=LibraryEventKind.OPENED, universe_id=row.id, universe_name=row.name, at=row.opened_at))
+            session.add(
+                LibraryEventRow(
+                    kind=LibraryEventKind.OPENED, universe_id=row.id, universe_name=row.name, at=row.opened_at, workspace_id=row.workspace_id, **acting_event()
+                )
+            )
             return UniverseRecord.of(row)
 
     async def store_facts(self, universe_id: str, facts: UniverseFacts) -> UniverseRecord | None:
@@ -422,22 +488,56 @@ class Catalogue:
         async with self._write() as session:
             await session.execute(delete(UniverseRow).where(UniverseRow.id == universe_id))
 
-    async def log(self, kind: LibraryEventKind, universe_id: str, universe_name: str, detail: str = "") -> LibraryEventRecord:
+    async def ids_in(self, workspace_id: int | None) -> list[str]:
+        if workspace_id is None:
+            return []
+        async with self._read() as session:
+            return list(await session.scalars(select(UniverseRow.id).where(UniverseRow.workspace_id == workspace_id).order_by(UniverseRow.id)))
+
+    async def log(
+        self, kind: LibraryEventKind, universe_id: str, universe_name: str, detail: str = "", *, workspace_id: int | None = None
+    ) -> LibraryEventRecord:
         async with self._write() as session:
-            row = LibraryEventRow(kind=kind, universe_id=universe_id, universe_name=universe_name, detail=detail, at=datetime.now(UTC))
+            if workspace_id is None and universe_id:
+                workspace_id = await session.scalar(select(UniverseRow.workspace_id).where(UniverseRow.id == universe_id))
+            if workspace_id is None:
+                workspace_id = current_workspace()
+            row = LibraryEventRow(
+                kind=kind,
+                universe_id=universe_id,
+                universe_name=universe_name,
+                detail=detail,
+                at=datetime.now(UTC),
+                workspace_id=workspace_id,
+                **acting_event(),
+            )
             session.add(row)
             await session.flush()
-            return LibraryEventRecord(row.id, row.at, row.kind, row.universe_id, row.universe_name, row.detail)
+            return LibraryEventRecord.of(row)
 
-    async def events(self, *, offset: int = 0, limit: int = LIBRARY_PAGE_DEFAULT, universe_id: str | None = None) -> tuple[list[LibraryEventRecord], int]:
+    async def events(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = LIBRARY_PAGE_DEFAULT,
+        universe_id: str | None = None,
+        visible: frozenset[str] | None = None,
+        workspace_id: int | None = None,
+        hidden: frozenset[str] = frozenset(),
+    ) -> tuple[list[LibraryEventRecord], int]:
         statement = select(LibraryEventRow)
         counted = select(func.count()).select_from(LibraryEventRow)
+        if visible is not None:
+            mine = and_(LibraryEventRow.workspace_id == workspace_id, LibraryEventRow.universe_id.not_in(sorted(hidden)))
+            seen = or_(LibraryEventRow.universe_id.in_(sorted(visible)), mine)
+            statement = statement.where(seen)
+            counted = counted.where(seen)
         if universe_id is not None:
             statement = statement.where(LibraryEventRow.universe_id == universe_id)
             counted = counted.where(LibraryEventRow.universe_id == universe_id)
         async with self._read() as session:
             rows = await session.scalars(statement.order_by(LibraryEventRow.id.desc()).offset(max(0, offset)).limit(max(1, min(limit, LIBRARY_PAGE_MAX))))
-            found = [LibraryEventRecord(row.id, row.at, row.kind, row.universe_id, row.universe_name, row.detail) for row in rows]
+            found = [LibraryEventRecord.of(row) for row in rows]
             total = int(await session.scalar(counted) or 0)
         return found, total
 

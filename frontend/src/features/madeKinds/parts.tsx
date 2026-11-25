@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react'
 import { type LucideIcon, Save } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Medallion } from '@/components/domain'
@@ -44,6 +45,7 @@ export function ListEditor({
   held,
   blocked,
   onSet,
+  act,
 }: {
   field: ListField
   options: Record<string, string>
@@ -51,6 +53,7 @@ export function ListEditor({
   held: boolean
   blocked: string | null
   onSet: (next: string[]) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState<string[] | null>(null)
   const chosen = draft ?? [...value]
@@ -65,7 +68,11 @@ export function ListEditor({
         : [...chosen, key]
     )
   return (
-    <AdjustPanel title={field.label} note={field.note}>
+    <AdjustPanel
+      acts={[{ blockedReason: blocked }]}
+      title={field.label}
+      note={field.note}
+    >
       <div
         role='group'
         aria-label={field.label}
@@ -92,6 +99,7 @@ export function ListEditor({
           </Badge>
         )}
         <Button
+          act={act}
           size='sm'
           disabled={blocked !== null || same}
           disabledReason={

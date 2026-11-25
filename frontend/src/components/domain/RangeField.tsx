@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import { type LucideIcon } from 'lucide-react'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Label as FieldLabel } from '@/components/ui/label'
 import { Muted, Stat, Text } from '@/components/typography'
@@ -30,7 +31,9 @@ export function RangeField({
   highLabel,
   onChange,
   disabledReason = null,
-}: RangeFieldProps) {
+  act,
+}: RangeFieldProps & { act?: ActProp }) {
+  const refusal = refusalOf(act)
   const id = useId()
   const reasonId = useId()
   const disabled = disabledReason !== null
@@ -79,7 +82,8 @@ export function RangeField({
         max={max}
         step={1}
         value={safe}
-        disabled={disabled}
+        disabled={disabled || refusal !== null}
+        aria-description={refusal ?? undefined}
         aria-describedby={disabled ? reasonId : undefined}
         onChange={(event) => onChange(Number(event.target.value))}
         style={{

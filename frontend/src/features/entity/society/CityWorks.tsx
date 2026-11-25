@@ -39,6 +39,7 @@ import {
 } from '@/components/domain'
 import { Muted, Stat, Text } from '@/components/typography'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import {
   DESIGN_FIELDS,
   DESIGN_LIMIT,
@@ -412,6 +413,7 @@ export function DesignEditor({
 }) {
   const draft = useDesignDraft(design, plan, blocked)
   const create = useGodAction({
+    writes: [{ lever: 'district:design' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/district:design', {
@@ -431,6 +433,7 @@ export function DesignEditor({
     onDone: () => onClose?.(),
   })
   const save = useGodAction({
+    writes: [{ lever: 'district:design_edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/district:design_edit', {
@@ -463,6 +466,7 @@ export function DesignEditor({
           </Button>
         )}
         <Button
+          act={[create, save]}
           size='sm'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}
@@ -487,11 +491,15 @@ function DesignCard({
   plan: Plan
   blocked: string | null
 }) {
+  const formGate = {
+    blockedReason: useWriteRefusal([{ lever: 'district:design_edit' }]),
+  }
   const [editing, setEditing] = useState(false)
   const spec = DISTRICT_SPEC[design.base_kind]
   const changed = overrides(design)
   const built = plan.districts.filter((item) => item.design_id === design.id)
   const remove = useGodAction({
+    writes: [{ lever: 'district:design_delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/district:design_delete', {
@@ -551,6 +559,7 @@ function DesignCard({
       ) : (
         <div className='flex min-w-0 justify-end gap-1.5'>
           <Button
+            act={formGate}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -561,6 +570,7 @@ function DesignCard({
             Rework
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='outline'
             disabled={busy !== null}

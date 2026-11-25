@@ -90,6 +90,7 @@ export function BeingCard({
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>
           <Button
+            act={bind}
             size='sm'
             variant='outline'
             disabled={busy !== null || bound}
@@ -100,6 +101,7 @@ export function BeingCard({
             Bind
           </Button>
           <Button
+            act={banish}
             size='sm'
             variant='ghost'
             disabled={busy !== null || banished}
@@ -194,6 +196,7 @@ export function BeingCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape this being'
         note='Might, phase, aim, scale and home you set are held until you release them.'
         fields={[
@@ -257,6 +260,7 @@ function CallForm({
       }
       action={
         <Button
+          act={call}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

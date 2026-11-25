@@ -51,6 +51,7 @@ export function LegendaryQuestForm({
   const aims = target === '' ? [] : LEGENDARY_AIMS[target]
   const chosenAim = aim !== '' && aims.includes(aim) ? aim : aims.at(0)
   const proclaim = useCosmicAction({
+    writes: [{ lever: 'cosmic:legendary_quest' }],
     run: () =>
       unwrap(
         api.POST('/api/cosmic/legendary-quest', {
@@ -120,6 +121,7 @@ export function LegendaryQuestForm({
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={proclaim}
           actionId='cosmic:legendary_quest'
           label='Proclaim'
           icon={Swords}

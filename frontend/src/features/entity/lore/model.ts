@@ -810,6 +810,7 @@ export function busyOf(
 
 export function useLoreEdit(entityId: number) {
   return useGodAction<{ values: Record<string, unknown>; release?: string[] }>({
+    writes: [{ lever: 'lore:edit' }],
     run: ({ values, release }) =>
       unwrap(
         api.POST('/api/actions/lore:edit', {

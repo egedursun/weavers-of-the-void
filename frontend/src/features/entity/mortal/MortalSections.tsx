@@ -89,6 +89,22 @@ function table(source: Record<string, { label: string }>) {
 
 function useMortalAction(mortalId: number) {
   return useGodAction({
+    writes: [
+      { lever: 'kin:betroth' },
+      { lever: 'kin:bond' },
+      { lever: 'kin:delete_marriage' },
+      { lever: 'kin:edit_marriage' },
+      { lever: 'kin:end_marriage' },
+      { lever: 'kin:marry' },
+      { lever: 'kin:unbond' },
+      { lever: 'mortal:equip' },
+      { lever: 'mortal:equip_release' },
+      { lever: 'mortal:pardon' },
+      { lever: 'mortal:release' },
+      { lever: 'mortal:sentence' },
+      { lever: 'mortal:set' },
+      { lever: 'mortal:sex' },
+    ],
     run: ({ path, body }: { path: string; body: Record<string, unknown> }) =>
       postAction(path, body),
     invalidate: [profileKey(mortalId), familyKey(mortalId)],
@@ -317,6 +333,7 @@ function LifeControls({
     send('/api/actions/mortal:set', { field: key, value, hold })
   return (
     <AdjustPanel
+      acts={[action]}
       title='Shape this life'
       note='Set health, stress, standing and loyalty; choose a stage, a sex or a path; sentence or pardon. A held value stops following their life until you release it. Every change goes into the ledger and can be undone.'
       hold={hold}
@@ -324,6 +341,7 @@ function LifeControls({
     >
       <div className='grid min-w-0 grid-cols-1 gap-3 @md/life:grid-cols-2 @2xl/life:grid-cols-4'>
         <MindPicker
+          act={action}
           label='Life stage'
           value={profile.life_stage}
           table={table(STAGES)}
@@ -337,6 +355,7 @@ function LifeControls({
           }
         />
         <MindPicker
+          act={action}
           label='Sex'
           value={profile.sex}
           table={table(SEXES)}
@@ -346,6 +365,7 @@ function LifeControls({
           }
         />
         <MindPicker
+          act={action}
           label='Profession'
           value={profile.profession ?? ''}
           table={table(PROFESSIONS)}
@@ -360,6 +380,7 @@ function LifeControls({
           }
         />
         <MindPicker
+          act={action}
           label='Path in life'
           value={profile.career ?? ''}
           table={table(CAREERS)}
@@ -386,6 +407,7 @@ function LifeControls({
           >
             {(field) => (
               <Button
+                act={action}
                 key={field}
                 size='sm'
                 variant='outline'
@@ -434,6 +456,7 @@ function LifeControls({
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={action}
             size='sm'
             variant='destructive'
             disabled={busy !== null || crime === '' || punishment === ''}
@@ -449,6 +472,7 @@ function LifeControls({
             Sentence
           </Button>
           <Button
+            act={action}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -527,6 +551,7 @@ function KinControls({
     void action.mutateAsync({ path, body })
   return (
     <AdjustPanel
+      acts={[action]}
       title='Bind and part'
       note='Promise, wed or bind this mortal to another; end or strike out a marriage. A forced marriage leaves both bitter. Every change can be undone from the ledger.'
     >
@@ -570,6 +595,7 @@ function KinControls({
       </label>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={action}
           size='sm'
           variant='outline'
           disabled={need !== null}
@@ -585,6 +611,7 @@ function KinControls({
           Betroth
         </Button>
         <Button
+          act={action}
           size='sm'
           disabled={need !== null}
           disabledReason={need ?? undefined}
@@ -602,6 +629,7 @@ function KinControls({
           Wed
         </Button>
         <Button
+          act={action}
           size='sm'
           variant='outline'
           disabled={need !== null}
@@ -662,6 +690,7 @@ function KinControls({
                 />
                 {(['divorce', 'annulment'] as const).map((cause) => (
                   <Button
+                    act={action}
                     key={cause}
                     size='sm'
                     variant='outline'
@@ -678,6 +707,7 @@ function KinControls({
                   </Button>
                 ))}
                 <Button
+                  act={action}
                   size='sm'
                   variant='ghost'
                   disabled={busy !== null}
@@ -793,6 +823,7 @@ export function KinSection({
                           <RefLink node={link.other} />
                         </span>
                         <Button
+                          act={action}
                           size='icon'
                           variant='ghost'
                           aria-label='Undo this bond'
@@ -886,6 +917,7 @@ export function EquipmentSection({
             </Paged>
           </ul>
           <AdjustPanel
+            acts={[action]}
             title='Arm and outfit'
             note='Put an item, a beast or a tamed kind in a slot, or empty it. A held slot keeps your choice until you release it.'
             hold={hold}
@@ -909,6 +941,7 @@ export function EquipmentSection({
             </div>
             <div className='flex min-w-0 flex-wrap gap-2'>
               <Button
+                act={action}
                 size='sm'
                 disabled={busy !== null || item === null}
                 disabledReason={busy ?? 'Choose something to carry.'}
@@ -924,6 +957,7 @@ export function EquipmentSection({
                 Equip
               </Button>
               <Button
+                act={action}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -943,6 +977,7 @@ export function EquipmentSection({
                 (entry) => entry.slot === slot && entry.held
               ) && (
                 <Button
+                  act={action}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null}
@@ -994,6 +1029,7 @@ export function StressCard({ mortalId }: { mortalId: number }) {
       )}
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={action}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -1010,6 +1046,7 @@ export function StressCard({ mortalId }: { mortalId: number }) {
         </Button>
         {held ? (
           <Button
+            act={action}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -1023,6 +1060,7 @@ export function StressCard({ mortalId }: { mortalId: number }) {
           </Button>
         ) : (
           <Button
+            act={action}
             size='sm'
             variant='ghost'
             disabled={busy !== null}

@@ -39,6 +39,7 @@ function KeeperRow({
   const { reason } = useGodGate()
   const [picked, setPicked] = useState<number | null>(null)
   const edit = useGodAction<{ values: EditValues; release: string[] }>({
+    writes: [{ lever: 'record_row:edit' }],
     run: ({ values, release }) =>
       postAction('record_row:edit', {
         table: 'record_keepers',
@@ -118,6 +119,7 @@ function KeeperRow({
           />
         </div>
         <Button
+          act={edit}
           size='sm'
           disabled={blocked !== null || picked === null || edit.isPending}
           disabledReason={
@@ -130,6 +132,7 @@ function KeeperRow({
           Set and hold
         </Button>
         <Button
+          act={edit}
           variant='outline'
           size='sm'
           disabled={blocked !== null || !held || edit.isPending}

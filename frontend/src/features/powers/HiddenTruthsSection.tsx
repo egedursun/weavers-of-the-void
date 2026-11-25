@@ -179,6 +179,7 @@ function Row({
   return (
     <RecordRow icon={icon} tone={tone} title={title} caption={caption}>
       <RecordEditor
+        act={editing}
         title='Set it'
         note='Values you set are held against the engine.'
         fields={fields}
@@ -188,6 +189,7 @@ function Row({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={struck}
         icon={Trash2}
         label='Strike it'
         busy={why(blocked, struck.isPending)}
@@ -377,6 +379,7 @@ function Truth({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <StepButton
+              act={keeping}
               icon={Shield}
               label='Make them a keeper'
               busy={why(
@@ -386,6 +389,7 @@ function Truth({
               onClick={() => keeping.mutate()}
             />
             <StepButton
+              act={seeking}
               icon={Search}
               label='Make them a seeker'
               busy={why(
@@ -426,6 +430,7 @@ function Truth({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <StepButton
+              act={revealing}
               icon={Eye}
               label='Reveal it to them'
               busy={why(
@@ -435,6 +440,7 @@ function Truth({
               onClick={() => revealing.mutate()}
             />
             <StepButton
+              act={breaching}
               icon={Zap}
               label='Let it show itself'
               busy={why(
@@ -444,6 +450,7 @@ function Truth({
               onClick={() => breaching.mutate()}
             />
             <StepButton
+              act={hiding}
               icon={EyeOff}
               label='Hide it again'
               busy={why(blocked, hiding.isPending)}
@@ -467,6 +474,7 @@ function Truth({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this truth'
         note='Values you set are held against the engine until you release them.'
         fields={truthFields(methods)}
@@ -476,6 +484,7 @@ function Truth({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={deleting}
         icon={Trash2}
         label='Let it go unkept'
         busy={why(blocked, deleting.isPending)}
@@ -636,6 +645,7 @@ export function HiddenTruthsSection({
               columns={3}
               action={
                 <StepButton
+                  act={creating}
                   icon={EyeOff}
                   label='Hide it'
                   variant='default'

@@ -55,6 +55,7 @@ export function ForgeLey({
   const [other, setOther] = useState('')
   const [strength, setStrength] = useState(String(DEFAULT_STRENGTH))
   const forge = useGodAction({
+    writes: [{ lever: 'ley:forge' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/ley:forge', {
@@ -68,6 +69,7 @@ export function ForgeLey({
     success: 'The ley line is forged',
   })
   const unforge = useGodAction({
+    writes: [{ lever: 'ley:unforge' }],
     run: (lineId: number) =>
       unwrap(
         api.POST('/api/actions/ley:unforge', { body: { line_id: lineId } })
@@ -95,6 +97,7 @@ export function ForgeLey({
             Held by your hand
           </Badge>
           <Button
+            act={unforge}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -136,6 +139,7 @@ export function ForgeLey({
           </FormRow>
         </div>
         <Button
+          act={forge}
           size='sm'
           disabled={busy !== null || other === ''}
           disabledReason={
@@ -168,6 +172,7 @@ export function HoldWeather({
   const [epochs, setEpochs] = useState('1')
   const [season, setSeason] = useState(ALL_SEASONS)
   const hold = useGodAction({
+    writes: [{ lever: 'weather:force' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/weather:force', {
@@ -182,6 +187,7 @@ export function HoldWeather({
     success: 'The weather is held',
   })
   const release = useGodAction({
+    writes: [{ lever: 'weather:release' }],
     run: (forcedId: number) =>
       unwrap(
         api.POST('/api/actions/weather:release', {
@@ -221,6 +227,7 @@ export function HoldWeather({
               </Muted>
             </div>
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -267,6 +274,7 @@ export function HoldWeather({
           </FormRow>
         </div>
         <Button
+          act={hold}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -293,6 +301,7 @@ export function NotableYears({
   const [name, setName] = useState('')
   const [weather, setWeather] = useState<string>('storm')
   const write = useGodAction({
+    writes: [{ lever: 'year:force_notable' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/year:force_notable', {
@@ -394,6 +403,7 @@ export function NotableYears({
           </FormRow>
         </div>
         <Button
+          act={write}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

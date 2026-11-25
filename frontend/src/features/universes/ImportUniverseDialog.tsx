@@ -551,6 +551,7 @@ export function ImportUniverseDialog({
             </Button>
           ) : (
             <Button
+              act={confirm}
               type='button'
               disabled={blocker !== null}
               disabledReason={blocker ?? undefined}

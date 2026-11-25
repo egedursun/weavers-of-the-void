@@ -31,6 +31,22 @@ class ErrorCode(StrEnum):
     UNAVAILABLE = "unavailable"
     INTERNAL = "internal"
     UNIVERSE_REQUIRED = "universe_required"
+    SIGNED_OUT = "signed_out"
+    PASSWORD_CHANGE_REQUIRED = "password_change_required"
+    SETUP_REQUIRED = "setup_required"
+    LOCKED = "locked"
+    EDIT_CONFLICT = "edit_conflict"
+
+
+class EditConflictChange(ApiModel):
+    table: str
+    node_id: int | None
+    field: str | None
+    before: float | int | str | None
+    after: float | int | str | None
+    by: str | None
+    by_account_id: int | None
+    at: datetime | None
 
 
 class ErrorResponse(ApiModel):
@@ -39,6 +55,9 @@ class ErrorResponse(ApiModel):
     rule_key: str | None = None
     rule_value: float | None = None
     correlation_id: str | None = None
+    permission: str | None = None
+    role: str | None = None
+    changes: list[EditConflictChange] | None = None
 
 
 class JobAccepted(ApiModel):

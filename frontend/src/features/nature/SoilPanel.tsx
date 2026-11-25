@@ -244,6 +244,7 @@ export function SoilPanel({
         columns={2}
         action={
           <Button
+            act={seeding}
             size='sm'
             disabled={seedBusy !== null}
             disabledReason={seedBusy ?? undefined}
@@ -271,6 +272,7 @@ export function SoilPanel({
         columns={2}
         action={
           <Button
+            act={keeping}
             size='sm'
             disabled={keepBusy !== null}
             disabledReason={keepBusy ?? undefined}

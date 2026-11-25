@@ -194,6 +194,7 @@ function DistrictTile({
       : undefined
   const material = MATERIAL_SPEC[district.material]
   const raze = useGodAction({
+    writes: [{ lever: 'district:raze' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/district:raze', {
@@ -202,6 +203,7 @@ function DistrictTile({
       ),
   })
   const edit = useGodAction({
+    writes: [{ lever: 'district:edit' }],
     run: (change: {
       level?: number
       condition?: number
@@ -288,6 +290,7 @@ function DistrictTile({
           </PagedList>
           <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
             <Button
+              act={edit}
               size='sm'
               variant='ghost'
               disabled={busy !== null}
@@ -301,6 +304,7 @@ function DistrictTile({
         </div>
       )}
       <ChoiceSelect
+        act={edit}
         label='Built of the substance'
         value={String(district.world_material_id ?? 0)}
         table={stuffs}
@@ -320,6 +324,7 @@ function DistrictTile({
       />
       <div className='mt-auto grid min-w-0 grid-cols-3 gap-1.5'>
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || district.level >= DISTRICT_MAX_LEVEL}
@@ -332,6 +337,7 @@ function DistrictTile({
           Enlarge
         </Button>
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || district.condition >= PERCENT}
@@ -342,6 +348,7 @@ function DistrictTile({
           Repair
         </Button>
         <Button
+          act={raze}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -590,6 +597,7 @@ function PlanControls({
   const locked = [...plan.locked, ...plan.infrastructure.locked]
   const stuffs = useStuffs(plan.world_id)
   const edit = useGodAction({
+    writes: [{ lever: 'settlement:edit' }],
     run: ({ key, value }: Change) =>
       unwrap(
         api.POST('/api/actions/settlement:edit', {
@@ -603,6 +611,7 @@ function PlanControls({
     success: (_result, change) => `${fieldLabel(change.key)} set`,
   })
   const release = useGodAction({
+    writes: [{ lever: 'settlement:edit' }],
     run: (keys: string[]) =>
       unwrap(
         api.POST('/api/actions/settlement:edit', {
@@ -612,6 +621,7 @@ function PlanControls({
     success: 'The city follows the world again',
   })
   const setRate = useGodAction({
+    writes: [{ lever: 'settlement:tax' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/settlement:tax', {
@@ -620,6 +630,7 @@ function PlanControls({
       ),
   })
   const build = useGodAction({
+    writes: [{ lever: 'district:build' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/district:build', {
@@ -633,6 +644,7 @@ function PlanControls({
       ),
   })
   const free = useGodAction({
+    writes: [{ lever: 'settlement:free_city' }],
     run: (value: boolean) =>
       unwrap(
         api.POST('/api/actions/settlement:free_city', {
@@ -641,6 +653,7 @@ function PlanControls({
       ),
   })
   const rework = useGodAction({
+    writes: [{ lever: 'district:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/district:edit', {
@@ -660,6 +673,7 @@ function PlanControls({
     success: 'The district was reworked',
   })
   const foreign = useGodAction({
+    writes: [{ lever: 'settlement:foreigners' }],
     run: (shares: Record<string, number>) =>
       unwrap(
         api.POST('/api/actions/settlement:foreigners', {
@@ -669,6 +683,7 @@ function PlanControls({
     success: 'The foreign quarters were counted anew',
   })
   const charter = useGodAction({
+    writes: [{ lever: 'settlement:charter' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/settlement:charter', {
@@ -728,6 +743,7 @@ function PlanControls({
     }
     return (
       <NumberEditor
+        act={edit}
         key={`${field.key}-${field.value}`}
         id={`settlement-${plan.entity_id}`}
         field={field}
@@ -741,10 +757,12 @@ function PlanControls({
   const full = plan.districts.length >= plan.district_slots
   return (
     <AdjustPanel
+      acts={[release, setRate, free, edit, charter, build, rework, foreign]}
       title='Govern the city'
       note='Tax, build, free or charter it, and set any value. What you set is held against the world until you release it; every change goes into the ledger and can be undone.'
     >
       <HeldStrip
+        act={release}
         keys={locked}
         labelOf={fieldLabel}
         blocked={busy}
@@ -765,6 +783,7 @@ function PlanControls({
             onChange={setTax}
           />
           <Button
+            act={setRate}
             size='sm'
             variant='outline'
             className='self-end'
@@ -779,6 +798,7 @@ function PlanControls({
       </EditorGroup>
       <EditorGroup title='Decrees' icon={ScrollText} pairs>
         <FlagEditor
+          act={free}
           label='Free city'
           hint='Rules itself, owing no overlord'
           icon={Shield}
@@ -789,6 +809,7 @@ function PlanControls({
           onToggle={(value) => free.mutate(value)}
         />
         <FlagEditor
+          act={edit}
           label='Rationing'
           hint='Food is doled out; hunger eases, mood sours'
           icon={Utensils}
@@ -799,6 +820,7 @@ function PlanControls({
           onToggle={(value) => edit.mutate({ key: 'rationing', value })}
         />
         <FlagEditor
+          act={edit}
           label='Sewers'
           hint='Carry filth away; sanitation rises'
           icon={Droplets}
@@ -820,6 +842,7 @@ function PlanControls({
           held={false}
           control={
             <Button
+              act={charter}
               size='sm'
               variant='outline'
               disabled={busy !== null || plan.charter_id !== null}
@@ -868,6 +891,7 @@ function PlanControls({
               : `${plan.district_slots - plan.districts.length} open plots`}
           </Muted>
           <Button
+            act={build}
             className='self-start'
             size='sm'
             disabled={busy !== null}
@@ -914,6 +938,7 @@ function PlanControls({
               kind.
             </Muted>
             <Button
+              act={rework}
               className='self-start'
               size='sm'
               disabled={busy !== null || retype === '' || target === ''}
@@ -928,6 +953,7 @@ function PlanControls({
       )}
       <EditorGroup title='Garrison and foreigners' icon={Users}>
         <ChoiceEditor
+          act={edit}
           label='Garrison'
           hint='The standing army that watches the walls'
           value={String(plan.garrison_id ?? NO_GARRISON)}
@@ -941,6 +967,7 @@ function PlanControls({
         <Paged items={plan.foreigners}>
           {(item) => (
             <NumberEditor
+              act={foreign}
               key={`foreign-${item.people_id}-${item.share}`}
               id={`settlement-${plan.entity_id}-foreign`}
               field={{
@@ -986,6 +1013,7 @@ function PlanControls({
       </EditorGroup>
       <EditorGroup title='The city' icon={Landmark}>
         <ChoiceEditor
+          act={edit}
           label='Size'
           hint='How large the city counts as'
           value={plan.size_tier}
@@ -995,6 +1023,7 @@ function PlanControls({
           onPick={(value) => edit.mutate({ key: 'size_tier', value })}
         />
         <ChoiceEditor
+          act={edit}
           label='Way of settling'
           hint='How the city sits on its ground; it sets how hard the city is to take and how much weather it bears'
           value={plan.settle_mode}
@@ -1004,6 +1033,7 @@ function PlanControls({
           onPick={(value) => edit.mutate({ key: 'settle_mode', value })}
         />
         <ChoiceEditor
+          act={edit}
           label='Water'
           hint='Where its water comes from'
           value={plan.infrastructure.water}
@@ -1013,6 +1043,7 @@ function PlanControls({
           onPick={(value) => edit.mutate({ key: 'water', value })}
         />
         <ChoiceEditor
+          act={edit}
           label='Walls of'
           hint='What its walls are built of'
           value={plan.infrastructure.walls_material}
@@ -1022,6 +1053,7 @@ function PlanControls({
           onPick={(value) => edit.mutate({ key: 'walls_material', value })}
         />
         <ChoiceEditor
+          act={edit}
           label='Walls of the substance'
           hint={
             Object.keys(stuffs).length > 1

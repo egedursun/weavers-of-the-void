@@ -119,6 +119,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='exile'
             label='Exile'
             icon={Plane}
@@ -164,6 +165,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='pardon'
             label='Pardon'
             icon={Scale}
@@ -203,6 +205,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='cosmic:soul_bind'
             label='Bind the soul'
             icon={Ghost}
@@ -240,6 +243,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='market:found'
             label='Found a wandering market'
             icon={Store}
@@ -258,6 +262,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='pirates:spawn'
             label='Loose route raiders'
             icon={Anchor}
@@ -293,6 +298,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='market:disband'
             label='Disband'
             icon={Unplug}
@@ -332,6 +338,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='deposit:owner'
             label={owner === null ? 'Make it nobody’s' : 'Give it'}
             pending={order.isPending}
@@ -374,6 +381,7 @@ export function CosmicOrdersForm({ index, rules, worldId }: OrdersProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='world:epoch_star'
             label='Set the star'
             icon={Star}

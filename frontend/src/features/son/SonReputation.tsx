@@ -33,12 +33,14 @@ export function SonReputation({
   const keep = rule('reputation.manual_push_keep_pct')
   const path = { params: { path: { son_id: son.id } } }
   const nudge = useGodAction({
+    writes: [{ lever: 'creator:reputation' }],
     run: (body: Nudge) =>
       unwrap(
         api.POST('/api/sons/{son_id}/reputation-nudge', { ...path, body })
       ),
   })
   const drift = useGodAction({
+    writes: [{ lever: 'reputation:drift' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/reputation:drift', { body: { son_id: son.id } })
@@ -79,6 +81,7 @@ export function SonReputation({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <ActionButton
+          act={nudge}
           label='Win their heart'
           icon={Heart}
           blocked={
@@ -92,6 +95,7 @@ export function SonReputation({
           }
         />
         <ActionButton
+          act={nudge}
           label='Spread fear'
           icon={Skull}
           blocked={
@@ -105,6 +109,7 @@ export function SonReputation({
           }
         />
         <ActionButton
+          act={nudge}
           label='Remind them of you'
           icon={Eye}
           blocked={
@@ -118,6 +123,7 @@ export function SonReputation({
           }
         />
         <ActionButton
+          act={drift}
           label='Recompute now'
           icon={RefreshCw}
           variant='ghost'

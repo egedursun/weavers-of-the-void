@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, Link2, Plus, Scissors } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { debtStatusValues } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,7 @@ import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { Label, Muted, Text } from '@/components/typography'
 import { entryKindOf } from '@/features/chronicle/linkTargets'
 import { wordOf } from '@/features/entity/affairs/labels'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import { type EntityContext } from '../actions/context'
 import { humanize } from '../actions/schema'
 import { useLoreMutation } from '../api/mutations'
@@ -73,10 +75,12 @@ function BondChip({
   bond,
   blocked,
   onBreak,
+  act,
 }: {
   bond: BondView
   blocked: string | null
   onBreak: () => void
+  act: ActProp
 }) {
   const past = bond.state === 'past'
   return (
@@ -101,6 +105,7 @@ function BondChip({
       </div>
       {bond.kind !== 'inside' && !bond.derived && (
         <Button
+          act={act}
           variant='ghost'
           size='icon-sm'
           aria-label='Break this bond'
@@ -171,6 +176,7 @@ function CreateBondForm({ ctx, readOnlyReason }: EntityBondsProps) {
     [names.data, ctx.entity.id]
   )
   const create = useLoreMutation({
+    writes: [{ lever: 'bond:add' }],
     run: () =>
       unwrap(
         api.POST('/api/links', {
@@ -258,6 +264,7 @@ function CreateBondForm({ ctx, readOnlyReason }: EntityBondsProps) {
         )}
       </FormRow>
       <Button
+        act={create}
         className='self-start'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}
@@ -271,11 +278,13 @@ function CreateBondForm({ ctx, readOnlyReason }: EntityBondsProps) {
 }
 
 export function EntityBonds({ ctx, readOnlyReason }: EntityBondsProps) {
+  const formGate = { blockedReason: useWriteRefusal([{ lever: 'bond:add' }]) }
   const [offset, setOffset] = useState(0)
   const [breaking, setBreaking] = useState<BondView | null>(null)
   const catalogue = useCatalogue()
   const page = useEntityBonds(ctx.entity.id, offset, BOND_PAGE_SIZE)
   const remove = useLoreMutation({
+    writes: [{ lever: 'bond:remove' }],
     run: (bondId: number) =>
       unwrap(
         api.DELETE('/api/links/{bond_id}', {
@@ -369,6 +378,7 @@ export function EntityBonds({ ctx, readOnlyReason }: EntityBondsProps) {
                 <BondChip
                   bond={bond}
                   blocked={blocked}
+                  act={remove}
                   onBreak={() => setBreaking(bond)}
                 />
               )}
@@ -386,7 +396,7 @@ export function EntityBonds({ ctx, readOnlyReason }: EntityBondsProps) {
       />
       <Collapsible className='flex min-w-0 flex-col gap-3'>
         <CollapsibleTrigger asChild>
-          <Button variant='outline' className='self-start'>
+          <Button act={formGate} variant='outline' className='self-start'>
             <Plus />
             Create a bond
           </Button>
@@ -396,6 +406,7 @@ export function EntityBonds({ ctx, readOnlyReason }: EntityBondsProps) {
         </CollapsibleContent>
       </Collapsible>
       <ConfirmDialog
+        act={remove}
         open={breaking !== null}
         onOpenChange={(open) => !open && setBreaking(null)}
         title='Break this bond?'

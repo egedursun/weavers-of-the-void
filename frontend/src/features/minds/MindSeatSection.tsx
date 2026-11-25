@@ -292,6 +292,7 @@ function SeatPart({
       caption={`${part.share_pct}% of the mind${part.vital ? ', vital' : ''}`}
     >
       <RecordEditor
+        act={editing}
         title='Set this share of the mind'
         note='Values you set are held against the engine until you release them.'
         fields={SEAT_FIELDS}
@@ -301,6 +302,7 @@ function SeatPart({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Take this share away'
         busy={why(blocked, removing.isPending)}
@@ -337,6 +339,7 @@ function SavedState({
         <Ref node={state.owner} empty='no owner' />
       </div>
       <RecordEditor
+        act={editing}
         title='Set this saved state'
         note='Values you set are held against the engine until you release them.'
         fields={STATE_FIELDS}
@@ -347,12 +350,14 @@ function SavedState({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={restoring}
           icon={RotateCcw}
           label='Restore from it'
           busy={why(blocked, restoring.isPending)}
           onClick={() => restoring.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Destroy this state'
           busy={why(blocked, removing.isPending)}
@@ -382,6 +387,7 @@ function RemoteBody({
       caption={`Since epoch ${body.since_epoch}, feedback ${body.feedback_pct}%`}
     >
       <RecordEditor
+        act={editing}
         title='Set this remote link'
         note='Values you set are held against the engine until you release them.'
         fields={REMOTE_FIELDS}
@@ -391,6 +397,7 @@ function RemoteBody({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Cut the link'
         busy={why(blocked ?? gone, removing.isPending)}
@@ -502,6 +509,7 @@ function Shaping({
         columns={4}
         action={
           <StepButton
+            act={making}
             icon={MIND_ICON}
             label='Make the mind'
             variant='default'
@@ -554,18 +562,21 @@ function Shaping({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <StepButton
+              act={copying}
               icon={Copy}
               label='Copy it'
               busy={why(blocked ?? noMind, copying.isPending)}
               onClick={() => copying.mutate()}
             />
             <StepButton
+              act={moving}
               icon={MoveRight}
               label='Move it'
               busy={why(blocked ?? noMind, moving.isPending)}
               onClick={() => moving.mutate()}
             />
             <StepButton
+              act={dividing}
               icon={Split}
               label='Divide it'
               busy={why(blocked ?? noMind, dividing.isPending)}
@@ -597,12 +608,14 @@ function Shaping({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <StepButton
+              act={saving}
               icon={Save}
               label='Save its state'
               busy={why(blocked ?? noMind, saving.isPending)}
               onClick={() => saving.mutate()}
             />
             <StepButton
+              act={merging}
               icon={Merge}
               label='Merge the other into it'
               busy={why(blocked ?? noMind ?? noOther, merging.isPending)}
@@ -633,18 +646,21 @@ function Shaping({
       </ForgeCard>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={granting}
           icon={Flame}
           label={`Grant a soul (a son pays ${view.soul_grant_cost} essence)`}
           busy={why(blocked ?? noMind ?? soulless, granting.isPending)}
           onClick={() => granting.mutate()}
         />
         <StepButton
+          act={withholding}
           icon={FlameKindling}
           label='Withhold its soul'
           busy={why(blocked ?? noMind, withholding.isPending)}
           onClick={() => withholding.mutate()}
         />
         <StepButton
+          act={resetting}
           icon={RotateCcw}
           label='Set it back to what its kind is born with'
           busy={why(blocked, resetting.isPending)}
@@ -790,6 +806,7 @@ function ArchiveAndLaw({
           aside={<Ref node={view.archive.holder} empty='no keeper' />}
         >
           <RecordEditor
+            act={archiveEdit}
             title='Set this archive'
             note='Values you set are held against the engine until you release them.'
             fields={ARCHIVE_FIELDS}
@@ -803,6 +820,7 @@ function ArchiveAndLaw({
         </RecordRow>
       )}
       <RecordEditor
+        act={lawEdit}
         title={
           view.law
             ? `Law of minds on ${view.law.world.name}: ${MADE_MINDS_LAWS[view.law.made_minds].label.toLowerCase()}, ${MADE_MIND_SOULS[view.law.made_mind_souls].label.toLowerCase()}, ${SOUL_CONTINUITIES[view.law.soul_continuity].label.toLowerCase()}`
@@ -933,6 +951,7 @@ export function MindSeatSection({
               <Ref node={query.data.made_by} empty='no maker' />
             </div>
             <RecordEditor
+              act={editing}
               title='Set this mind'
               note='Values you set are held against the engine until you release them.'
               fields={profileFields(query.data)}

@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '@/constants/api'
 import { type paths } from './generated/schema'
 import { UNIVERSE_PARAM, currentUniverse } from './universeStore'
+import { WORKSPACE_PARAM, currentWorkspace } from './workspaceStore'
 
 export type ApiPath = `/api/${string}`
 
@@ -26,6 +27,9 @@ export function apiUrl(
   const universe = currentUniverse()
   if (universe !== null && !isLibraryApi(path) && !query.has(UNIVERSE_PARAM))
     query.set(UNIVERSE_PARAM, universe)
+  const workspace = currentWorkspace()
+  if (workspace !== null && isLibraryApi(path) && !query.has(WORKSPACE_PARAM))
+    query.set(WORKSPACE_PARAM, workspace)
   const search = query.toString()
   return `${API_BASE_URL}${path}${search ? `?${search}` : ''}`
 }

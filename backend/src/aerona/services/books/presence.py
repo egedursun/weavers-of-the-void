@@ -140,6 +140,8 @@ async def audiences_by_speaker(session: AsyncSession, names: dict[int, str]) -> 
     for row in kept:
         shaped = [exchange(item, events[item.id]) for item in exchanges[row.id]]
         facts = filled(
+            ("Summoned by", row.author_name),
+            ("Shared with the team", row.shared),
             ("Heard as", GUISE_LABELS[row.guise]),
             ("Record", RECORD_LABELS[row.record]),
             ("Opened in epoch", row.opened_epoch),

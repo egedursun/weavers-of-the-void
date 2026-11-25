@@ -1,8 +1,9 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { errorText, useLoreMutation } from '@/features/entity/api/mutations'
 
@@ -26,6 +27,7 @@ export const SAMPLE_PREVIEW_COUNT = 9
 
 export function useEditLanguage() {
   return useLoreMutation({
+    writes: [{ lever: 'language:edit' }],
     run: (body: LanguageEdit) =>
       unwrap(api.POST('/api/actions/language:edit', { body })),
   })
@@ -33,6 +35,7 @@ export function useEditLanguage() {
 
 export function useRedrawSignature() {
   return useLoreMutation({
+    writes: [{ lever: 'language:signature' }],
     run: (languageId: number) =>
       unwrap(
         api.POST('/api/actions/language:signature', {
@@ -44,6 +47,7 @@ export function useRedrawSignature() {
 
 export function useEpochWords() {
   return useLoreMutation({
+    writes: [{ lever: 'language:epoch_words' }],
     run: (epoch: number | null) =>
       unwrap(
         api.POST('/api/actions/language:epoch_words', { body: { epoch } })
@@ -53,6 +57,9 @@ export function useEpochWords() {
 
 export function useSampleNames(languageId: number) {
   return useMutation({
+    writes: [
+      { method: 'POST', path: '/api/languages/{language_id}/sample-names' },
+    ],
     onError: (error) => toast.error(errorText(error)),
     mutationFn: (salt: string) =>
       unwrap(

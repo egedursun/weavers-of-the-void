@@ -251,6 +251,7 @@ export function SavingPanel({
         columns={2}
         action={
           <Button
+            act={saving}
             size='sm'
             disabled={saveBusy !== null}
             disabledReason={saveBusy ?? undefined}
@@ -303,6 +304,7 @@ export function SavingPanel({
         columns={2}
         action={
           <Button
+            act={burying}
             size='sm'
             disabled={buryBusy !== null}
             disabledReason={buryBusy ?? undefined}
@@ -557,6 +559,7 @@ export function ExchangePanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={rateBusy !== null}
             disabledReason={rateBusy ?? undefined}
@@ -617,6 +620,7 @@ export function ExchangePanel({
         columns={2}
         action={
           <Button
+            act={drawing}
             size='sm'
             disabled={billBusy !== null}
             disabledReason={billBusy ?? undefined}
@@ -855,6 +859,7 @@ export function TradePanel({
         columns={2}
         action={
           <Button
+            act={putting}
             size='sm'
             disabled={putBusy !== null}
             disabledReason={putBusy ?? undefined}
@@ -921,6 +926,7 @@ export function TradePanel({
         columns={2}
         action={
           <Button
+            act={buying}
             size='sm'
             disabled={buyBusy !== null}
             disabledReason={buyBusy ?? undefined}
@@ -1081,6 +1087,7 @@ export function TravelPanel({
         columns={2}
         action={
           <Button
+            act={sending}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

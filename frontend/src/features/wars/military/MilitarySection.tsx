@@ -35,6 +35,7 @@ import {
 import { Label, Muted, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import { ArmyOrders } from './ArmyDepth'
 import { ArmyPanel } from './ArmyPanel'
 import { NetworkAgents } from './Intrigue'
@@ -97,6 +98,7 @@ function NetworkCard({
   )
   const [cover, setCover] = useState<string>(network.cover)
   const save = useGodAction({
+    writes: [{ lever: 'spy:edit_network' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/spy:edit_network', {
@@ -117,6 +119,7 @@ function NetworkCard({
       ),
   })
   const roll = useGodAction({
+    writes: [{ lever: 'spy:edit_network' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/spy:edit_network', {
@@ -197,6 +200,7 @@ function NetworkCard({
       </div>
       <div className='mt-auto flex min-w-0 flex-col'>
         <Adjust
+          acts={[save, roll]}
           title='Shape the network'
           note='Agents, depth, exposure and gathered intelligence, and the cover they hide behind.'
         >
@@ -224,6 +228,7 @@ function NetworkCard({
           </div>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={save}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -233,6 +238,7 @@ function NetworkCard({
               Save
             </Button>
             <Button
+              act={roll}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -268,6 +274,7 @@ function TraitToggle({
   blocked: string | null
 }) {
   const toggle = useGodAction<boolean>({
+    writes: [{ lever: 'commander:trait' }],
     run: (next) =>
       unwrap(
         api.POST('/api/actions/commander:trait', {
@@ -278,6 +285,7 @@ function TraitToggle({
   const busy = busyOf(blocked, toggle.isPending)
   return (
     <ToggleField
+      act={toggle}
       item={named(TRAIT, trait)}
       checked={held}
       disabled={busy !== null}
@@ -295,6 +303,9 @@ function CommanderTraits({
   traits: CommanderTrait[]
   blocked: string | null
 }) {
+  const formGate = {
+    blockedReason: useWriteRefusal([{ lever: 'commander:trait' }]),
+  }
   return (
     <Panel
       title='Battle traits'
@@ -324,6 +335,7 @@ function CommanderTraits({
           </PagedList>
         )}
         <Adjust
+          acts={[formGate]}
           title='Grant or take battle traits'
           note='Each trait changes how this mortal fights when leading an army.'
         >

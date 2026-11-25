@@ -162,6 +162,7 @@ function UnitCard({ row, blocked }: { row: Unit; blocked: string | null }) {
         columns={2}
         action={
           <Button
+            act={bestowing}
             size='sm'
             disabled={bestowBusy !== null}
             disabledReason={bestowBusy ?? undefined}
@@ -254,6 +255,7 @@ function UnitsPanel({ data, blocked }: { data: View; blocked: string | null }) {
         columns={2}
         action={
           <Button
+            act={naming}
             size='sm'
             disabled={nameBusy !== null}
             disabledReason={nameBusy ?? undefined}
@@ -431,6 +433,7 @@ function VeteransPanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={policyBusy !== null}
             disabledReason={policyBusy ?? undefined}
@@ -458,6 +461,7 @@ function VeteransPanel({
         columns={2}
         action={
           <Button
+            act={granting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -586,6 +590,7 @@ export function HonoursSection({
           </Tabs>
         )}
         <StepButton
+          act={running}
           icon={HONOURS_ICON}
           label='Read standards and veterans now'
           busy={why(blocked, running.isPending)}

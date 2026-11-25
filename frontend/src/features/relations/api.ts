@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 
 export type RelationEntry = components['schemas']['RelationEntry']
@@ -50,6 +51,7 @@ function useRefresh() {
 export function useSetRelation(entityId: number) {
   const refresh = useRefresh()
   return useMutation({
+    writes: [{ lever: 'relation:set' }],
     mutationFn: (change: { otherId: number; value: number }) =>
       unwrap(
         api.PUT('/api/entities/{entity_id}/relations/{other_id}', {
@@ -64,6 +66,7 @@ export function useSetRelation(entityId: number) {
 export function useStartFeud(entityId: number) {
   const refresh = useRefresh()
   return useMutation({
+    writes: [{ lever: 'feud:start' }],
     mutationFn: (otherId: number) =>
       unwrap(
         api.POST('/api/entities/{entity_id}/relations/{other_id}/feud', {
@@ -77,6 +80,7 @@ export function useStartFeud(entityId: number) {
 export function useEndFeud(entityId: number) {
   const refresh = useRefresh()
   return useMutation({
+    writes: [{ lever: 'feud:end' }],
     mutationFn: (otherId: number) =>
       unwrap(
         api.DELETE('/api/entities/{entity_id}/relations/{other_id}/feud', {

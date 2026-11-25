@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo } from 'react'
 import { type LucideIcon, Trash2 } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import { PagedList } from '@/components/domain'
 import { type KpiTone } from '@/components/domain/KpiTile'
@@ -26,6 +27,7 @@ export function Held({
   onRemove,
   children,
   extra,
+  act,
 }: {
   icon: LucideIcon
   tone: KpiTone
@@ -41,6 +43,7 @@ export function Held({
   onRemove: () => void
   children?: ReactNode
   extra?: ReactNode
+  act?: ActProp
 }) {
   return (
     <RecordRow
@@ -50,6 +53,7 @@ export function Held({
       caption={caption}
       aside={
         <Button
+          act={act}
           size='sm'
           variant='ghost'
           disabled={blocked !== null}
@@ -65,6 +69,7 @@ export function Held({
       {children}
       {onEdit && fields.length > 0 && (
         <RecordEditor
+          act={act}
           title={editTitle}
           note={note}
           fields={fields}

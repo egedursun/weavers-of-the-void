@@ -40,6 +40,7 @@ type Believed = { sonId: number | null; godId: number | null }
 function RenameBelief({ view, god }: { view: FolkView; god: Believed }) {
   const { reason } = useGodGate()
   const rename = useGodAction({
+    writes: [{ lever: 'belief:rename' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/belief:rename', {
@@ -53,6 +54,7 @@ function RenameBelief({ view, god }: { view: FolkView; god: Believed }) {
   })
   return (
     <ActionButton
+      act={rename}
       label='Derive the name anew'
       icon={RefreshCw}
       variant='ghost'
@@ -67,6 +69,7 @@ function RenameBelief({ view, god }: { view: FolkView; god: Believed }) {
 function ForgetBelief({ view, god }: { view: FolkView; god: Believed }) {
   const { reason } = useGodGate()
   const forget = useGodAction({
+    writes: [{ lever: 'belief:forget' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/belief:forget', {
@@ -81,6 +84,7 @@ function ForgetBelief({ view, god }: { view: FolkView; god: Believed }) {
   })
   return (
     <ActionButton
+      act={forget}
       label='Make them forget'
       icon={Eraser}
       variant='ghost'
@@ -147,6 +151,7 @@ export function BeliefSection({
   const peoples = usePeoples(open)
   const { reason } = useGodGate()
   const save = useGodAction({
+    writes: [{ lever: 'belief:edit' }],
     run: () =>
       unwrap(
         api.PUT('/api/beliefs', {
@@ -202,7 +207,7 @@ export function BeliefSection({
         className='flex min-w-0 flex-col gap-3'
       >
         <CollapsibleTrigger asChild>
-          <Button variant='ghost' size='sm' className='self-start'>
+          <Button act={save} variant='ghost' size='sm' className='self-start'>
             <PenLine />
             Add or change a people's account
           </Button>
@@ -264,6 +269,7 @@ export function BeliefSection({
               </FormRow>
               <div>
                 <ActionButton
+                  act={save}
                   label='Write into canon'
                   variant='default'
                   blocked={

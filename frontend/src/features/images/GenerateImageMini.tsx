@@ -24,6 +24,7 @@ export function GenerateImageMini({ nodeId, name }: GenerateImageMiniProps) {
             : null
   return (
     <Button
+      act={generate}
       variant='ghost'
       size='icon-sm'
       aria-label={`Generate an image of ${name}`}

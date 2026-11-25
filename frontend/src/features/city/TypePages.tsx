@@ -74,6 +74,7 @@ function CommissionForge({
   const [town, setTown] = useState<string | null>(null)
   const [level, setLevel] = useState('1')
   const commission = useGodAction({
+    writes: [{ lever: 'structure:commission' }],
     run: () =>
       postAction('structure:commission', {
         site_id: Number(town),
@@ -95,6 +96,7 @@ function CommissionForge({
       columns={2}
       action={
         <Button
+          act={commission}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import Field
 
 from aerona.api.schemas.common import ApiModel
@@ -119,6 +121,9 @@ class EventChangeRecord(ApiModel):
     incident_id: int | None
     step_id: int | None
     terms: list[EventTermRecord] = Field(default_factory=list)
+    author_account_id: int | None = None
+    author_name: str | None = None
+    changed_at: datetime | None = None
 
 
 class EventRumourDistortionRecord(ApiModel):

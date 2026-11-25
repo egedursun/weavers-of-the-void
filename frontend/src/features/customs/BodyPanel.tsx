@@ -292,6 +292,7 @@ export function BodyPanel({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={marking}
               size='sm'
               variant='outline'
               disabled={markBusy !== null}
@@ -302,6 +303,7 @@ export function BodyPanel({
               Mark it
             </Button>
             <Button
+              act={naming}
               size='sm'
               disabled={nameBusy !== null}
               disabledReason={nameBusy ?? undefined}
@@ -353,6 +355,7 @@ export function BodyPanel({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={leaving}
               size='sm'
               variant='outline'
               disabled={setBusy !== null || data.age_set_id === null}
@@ -367,6 +370,7 @@ export function BodyPanel({
               Take it out
             </Button>
             <Button
+              act={editing}
               size='sm'
               variant='outline'
               disabled={setBusy !== null || data.age_set_id === null}
@@ -381,6 +385,7 @@ export function BodyPanel({
               Move it
             </Button>
             <Button
+              act={joining}
               size='sm'
               disabled={setBusy !== null || data.age_set_id !== null}
               disabledReason={
@@ -416,6 +421,7 @@ export function BodyPanel({
         columns={2}
         action={
           <Button
+            act={belonging}
             size='sm'
             disabled={memberBusy !== null}
             disabledReason={memberBusy ?? undefined}

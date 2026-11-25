@@ -165,6 +165,7 @@ function CreateEvent({
     [names.data, worldId]
   )
   const create = useGodAction({
+    writes: [{ lever: 'event:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/event:create', {
@@ -283,6 +284,7 @@ function CreateEvent({
             Hold it in this phase
           </Text>
           <Switch
+            permission='lock_canon'
             checked={hold}
             disabled={busy !== null}
             onCheckedChange={setHold}
@@ -290,6 +292,7 @@ function CreateEvent({
           />
         </div>
         <Button
+          act={create}
           size='sm'
           className='mt-auto'
           disabled={busy !== null}
@@ -364,6 +367,7 @@ export function EventsHereSection({
             </>
           )}
           <AdjustPanel
+            writes={[{ lever: 'event:create' }]}
             title='Make something happen'
             note='Set down an event of any kind here: a festival, a coronation, a fire, a famine or an eruption. Its effects follow at once and it moves through its phases with the world. Undoable from the ledger.'
           >

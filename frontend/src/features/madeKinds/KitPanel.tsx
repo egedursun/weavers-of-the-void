@@ -45,6 +45,7 @@ function StoreCard({
   const slot = SLOT[row.slot]
   return (
     <Held
+      act={set}
       icon={slot.icon}
       tone={slot.tone}
       title={`${row.count} × ${row.model_name}`}
@@ -96,6 +97,7 @@ function CarriedCard({
   const slot = SLOT[row.slot]
   return (
     <Held
+      act={set}
       icon={slot.icon}
       tone={row.condition < 40 ? 'danger' : slot.tone}
       title={`${row.count} × ${row.model_name}`}
@@ -206,6 +208,7 @@ function StackKit({
             onChange={setCount}
           />
           <Button
+            act={add}
             size='sm'
             disabled={
               (busy ??
@@ -279,6 +282,7 @@ export function KitPanel({
         columns={2}
         action={
           <Button
+            act={add}
             size='sm'
             disabled={
               (busy ??

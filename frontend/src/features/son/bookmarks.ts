@@ -1,10 +1,10 @@
-import { universeKey } from '@/lib/universeStorage'
+import { storedItem, storeItem, universeKey } from '@/lib/universeStorage'
 
 const BOOKMARK_KEY = 'aerona.bookmarks'
 
 function read(): string[] {
   try {
-    const raw = localStorage.getItem(universeKey(BOOKMARK_KEY))
+    const raw = storedItem(universeKey(BOOKMARK_KEY))
     const parsed: unknown = raw ? JSON.parse(raw) : []
     return Array.isArray(parsed)
       ? parsed.filter((item) => typeof item === 'string')
@@ -25,7 +25,7 @@ export function toggleBookmark(kind: string, id: number): boolean {
     ? current.filter((item) => item !== key)
     : [...current, key]
   try {
-    localStorage.setItem(universeKey(BOOKMARK_KEY), JSON.stringify(next))
+    storeItem(universeKey(BOOKMARK_KEY), JSON.stringify(next))
   } catch {
     return current.includes(key)
   }

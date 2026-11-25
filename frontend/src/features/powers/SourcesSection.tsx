@@ -261,6 +261,7 @@ function Part({
   return (
     <RecordRow icon={SOURCES_ICON} tone='info' title={title} caption={caption}>
       <RecordEditor
+        act={editing}
         title={`Set this ${PARTS[kind].label}`}
         note='Values you set are held against the engine.'
         fields={PARTS[kind].fields}
@@ -270,6 +271,7 @@ function Part({
         onRelease={() => editing.mutate({ values: {}, release: [] })}
       />
       <StepButton
+        act={dropping}
         icon={Trash2}
         label={`Take the ${PARTS[kind].label} away`}
         busy={why(blocked, dropping.isPending)}
@@ -440,6 +442,7 @@ function Source({
         columns={3}
         action={
           <StepButton
+            act={adding}
             icon={CirclePlus}
             label='Add the part'
             busy={why(blocked ?? lonely, adding.isPending)}
@@ -490,6 +493,7 @@ function Source({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this source'
         note='Values you set are held against the engine until you release them.'
         fields={SOURCE_FIELDS}
@@ -499,6 +503,7 @@ function Source({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={deleting}
         icon={Trash2}
         label='Unmake the source'
         busy={why(blocked ?? builtIn, deleting.isPending)}
@@ -525,6 +530,7 @@ function Density({
       caption={`renews ${row.renewal_pct}% each epoch${row.last_drawn_epoch !== null ? `, last drawn on in epoch ${row.last_drawn_epoch}` : ''}${row.depleted ? ', run thin' : ''}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the density here'
         note='Values you set are held against the engine.'
         fields={DENSITY_FIELDS}
@@ -534,6 +540,7 @@ function Density({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={struck}
         icon={Trash2}
         label='Strike this density'
         busy={why(blocked, struck.isPending)}
@@ -563,6 +570,7 @@ function Held({
   return (
     <RecordRow icon={SOURCES_ICON} tone='info' title={title} caption={caption}>
       <RecordEditor
+        act={editing}
         title='Set it'
         note='Values you set are held against the engine.'
         fields={fields}
@@ -572,6 +580,7 @@ function Held({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={struck}
         icon={Trash2}
         label='Strike it'
         busy={why(blocked, struck.isPending)}
@@ -757,6 +766,7 @@ export function SourcesSection({
                 caption='Its stance moves how its people hold the gifted'
               >
                 <RecordEditor
+                  act={doctrine}
                   title='Set the faith’s stance on powers'
                   note='Values you set are held against the engine.'
                   fields={DOCTRINE_FIELDS}
@@ -777,6 +787,7 @@ export function SourcesSection({
               columns={3}
               action={
                 <StepButton
+                  act={creating}
                   icon={CirclePlus}
                   label='Bring it forth'
                   variant='default'
@@ -835,6 +846,7 @@ export function SourcesSection({
               columns={2}
               action={
                 <StepButton
+                  act={knowing}
                   icon={CirclePlus}
                   label='Teach it'
                   busy={why(

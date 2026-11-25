@@ -9,6 +9,7 @@ import { Muted } from '@/components/typography'
 import { useCancelExchange, useSendExchange } from './api'
 import { NO_MODEL } from './looks'
 import { usePresence } from './presenceStore'
+import { type PresenceRecord } from './types'
 
 const NO_DRAFT = ''
 
@@ -18,7 +19,9 @@ export function PresenceComposer({
   name,
   runningId,
   modelEnabled,
+  record,
 }: {
+  record: PresenceRecord
   sessionId: number
   nodeId: number
   name: string
@@ -27,7 +30,7 @@ export function PresenceComposer({
 }) {
   const draft = usePresence((state) => state.drafts[nodeId] ?? NO_DRAFT)
   const setDraft = usePresence((state) => state.setDraft)
-  const send = useSendExchange(sessionId)
+  const send = useSendExchange(sessionId, record)
   const cancel = useCancelExchange()
   const field = useRef<HTMLTextAreaElement>(null)
   const hintId = useId()
@@ -91,6 +94,7 @@ export function PresenceComposer({
         <span aria-hidden='true' className='flex-1 sm:hidden' />
         {running ? (
           <Button
+            act={cancel}
             type='button'
             variant='destructive'
             size='sm'
@@ -107,6 +111,7 @@ export function PresenceComposer({
           </Button>
         ) : (
           <Button
+            act={send}
             type='button'
             size='sm'
             disabled={blocked !== null}

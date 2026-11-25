@@ -142,6 +142,7 @@ export function WritingPanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={setBusy !== null}
             disabledReason={setBusy ?? undefined}
@@ -169,6 +170,7 @@ export function WritingPanel({
         columns={2}
         action={
           <Button
+            act={recording}
             size='sm'
             disabled={recordBusy !== null}
             disabledReason={recordBusy ?? undefined}
@@ -309,6 +311,7 @@ export function VaultsPanel({
         columns={2}
         action={
           <Button
+            act={securing}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -468,6 +471,7 @@ export function WaterPanel({
         columns={2}
         action={
           <Button
+            act={raising}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -606,6 +610,7 @@ export function PilotsPanel({
         columns={2}
         action={
           <Button
+            act={taking}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -741,6 +746,7 @@ export function ContainersPanel({
         columns={2}
         action={
           <Button
+            act={stocking}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -916,6 +922,7 @@ export function BuildingPanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

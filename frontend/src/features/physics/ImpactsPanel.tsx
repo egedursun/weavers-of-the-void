@@ -125,6 +125,7 @@ export function ImpactsPanel({
                 <div className='flex shrink-0 flex-wrap gap-1'>
                   {row.outcome === 'pending' && (
                     <Button
+                      act={deflect}
                       size='sm'
                       variant='outline'
                       disabled={busy !== null}
@@ -136,6 +137,7 @@ export function ImpactsPanel({
                     </Button>
                   )}
                   <Button
+                    act={remove}
                     size='sm'
                     variant='ghost'
                     aria-label='Strike it from the record'
@@ -166,6 +168,7 @@ export function ImpactsPanel({
               {row.text !== '' && <Muted variant='caption'>{row.text}</Muted>}
               {row.world && (
                 <RecordPick
+                  act={edit}
                   label='Where it falls'
                   types={['region']}
                   worldId={row.world.id}
@@ -180,6 +183,7 @@ export function ImpactsPanel({
                 />
               )}
               <RecordEditor
+                act={edit}
                 title='Size, time and winter'
                 note='A held value is kept against the engine.'
                 fields={[
@@ -249,6 +253,7 @@ export function ImpactsPanel({
         }
         action={
           <Button
+            act={call}
             size='sm'
             variant='destructive'
             disabled={busy !== null || target === null}

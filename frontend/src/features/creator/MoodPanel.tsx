@@ -113,13 +113,14 @@ export function MoodSetForm({ values }: { values: MoodValues }) {
   const [draft, setDraft] = useState<MoodValues>(values)
   const { reason } = useGodGate()
   const action = useGodAction({
+    writes: [{ lever: 'creator:mood' }],
     run: (body: MoodValues) => unwrap(api.PUT('/api/creator/mood', { body })),
     success: "The Creator's mood changed",
   })
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='ghost' size='sm' className='self-start'>
+        <Button act={action} variant='ghost' size='sm' className='self-start'>
           <SlidersHorizontal />
           Set the mood yourself
         </Button>
@@ -150,6 +151,7 @@ export function MoodSetForm({ values }: { values: MoodValues }) {
         </Muted>
         <div>
           <ActionButton
+            act={action}
             label='Set the mood'
             variant='default'
             blocked={reason()}

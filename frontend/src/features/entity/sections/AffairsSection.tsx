@@ -94,6 +94,7 @@ function TaskRow({ row, ctx }: { row: CouncilTaskView; ctx: Ctx }) {
   const [task, setTask] = useState<string>(row.task ?? '')
   const [target, setTarget] = useState<number | null>(row.target?.id ?? null)
   const set = useGodAction({
+    writes: [{ lever: 'council:task' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/council:task', {
@@ -179,6 +180,7 @@ function TaskRow({ row, ctx }: { row: CouncilTaskView; ctx: Ctx }) {
             />
           </div>
           <Button
+            act={set}
             size='sm'
             disabled={busy !== null || !task}
             disabledReason={busy ?? (!task ? 'Choose a task.' : undefined)}
@@ -201,6 +203,7 @@ function TaskRow({ row, ctx }: { row: CouncilTaskView; ctx: Ctx }) {
 
 function ElectionRow({ row, ctx }: { row: Election; ctx: Ctx }) {
   const strike = useGodAction({
+    writes: [{ lever: 'election:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/election:delete', {
@@ -222,6 +225,7 @@ function ElectionRow({ row, ctx }: { row: Election; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Strike the election'
@@ -255,6 +259,7 @@ function ElectionRow({ row, ctx }: { row: Election; ctx: Ctx }) {
 function SeatRow({ row, ctx }: { row: Seat; ctx: Ctx }) {
   const realmId = ctx.view.realm?.id ?? 0
   const strike = useGodAction({
+    writes: [{ lever: 'seat:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seat:remove', {
@@ -272,6 +277,7 @@ function SeatRow({ row, ctx }: { row: Seat; ctx: Ctx }) {
       badges={row.locked ? <Badge variant='outline'>Held</Badge> : undefined}
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Empty the seats of ${row.holder.name}`}
@@ -331,6 +337,7 @@ function AddSeat({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
   const [holder, setHolder] = useState<number | null>(null)
   const [seats, setSeats] = useState('1')
   const add = useGodAction({
+    writes: [{ lever: 'seat:set' }],
     run: (holderId: number) =>
       unwrap(
         api.POST('/api/actions/seat:set', {
@@ -354,6 +361,7 @@ function AddSeat({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
       title='Seat a voice in the council'
       action={
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null || holder === null}
           disabledReason={
@@ -387,6 +395,7 @@ function AddSeat({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
 
 function ElectionsCard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
   const call = useGodAction({
+    writes: [{ lever: 'election:call' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/election:call', { body: { polity_id: realmId } })
@@ -401,6 +410,7 @@ function ElectionsCard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
       hint='Realms that decide by assembly or crown by election go to the polls. The franchise decides which classes vote; estates draw their class, parties those who back their cause, and factions buy votes. Seats weigh on every law, and the winner’s leader becomes chancellor.'
     >
       <Button
+        act={call}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -442,6 +452,7 @@ function ElectionsCard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
 function TaxRow({ row, ctx, cap }: { row: Tax; ctx: Ctx; cap: number }) {
   const realmId = ctx.view.realm?.id ?? 0
   const farm = useGodAction({
+    writes: [{ lever: 'tax:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/tax:set', {
@@ -455,6 +466,7 @@ function TaxRow({ row, ctx, cap }: { row: Tax; ctx: Ctx; cap: number }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'tax:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/tax:remove', {
@@ -478,6 +490,7 @@ function TaxRow({ row, ctx, cap }: { row: Tax; ctx: Ctx; cap: number }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Return the ${look.label.toLowerCase()} to custom`}
@@ -529,6 +542,7 @@ function TaxRow({ row, ctx, cap }: { row: Tax; ctx: Ctx; cap: number }) {
             }
           />
           <Button
+            act={farm}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -611,6 +625,7 @@ function TreasuryCard({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
 function MandateRow({ row, ctx }: { row: Mandate; ctx: Ctx }) {
   const [state, setState] = useState<string>(row.state)
   const edit = useGodAction({
+    writes: [{ lever: 'mandate:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mandate:edit', {
@@ -623,6 +638,7 @@ function MandateRow({ row, ctx }: { row: Mandate; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'mandate:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mandate:delete', {
@@ -656,6 +672,7 @@ function MandateRow({ row, ctx }: { row: Mandate; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Withdraw the mandate'
@@ -710,6 +727,7 @@ function MandateRow({ row, ctx }: { row: Mandate; ctx: Ctx }) {
               onPick={setState}
             />
             <Button
+              act={edit}
               size='sm'
               variant='outline'
               disabled={busy !== null || state === row.state}
@@ -735,6 +753,7 @@ function IssueMandate({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
   const [district, setDistrict] = useState('')
   const [amount, setAmount] = useState('0')
   const issue = useGodAction({
+    writes: [{ lever: 'mandate:issue' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/mandate:issue', {
@@ -766,6 +785,7 @@ function IssueMandate({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
       title='Issue a mandate'
       action={
         <Button
+          act={issue}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -818,6 +838,7 @@ function IssueMandate({ ctx, realmId }: { ctx: Ctx; realmId: number }) {
 
 function DemandRow({ row, ctx }: { row: Demand; ctx: Ctx }) {
   const toggle = useGodAction({
+    writes: [{ lever: 'demand:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/demand:set', {
@@ -831,6 +852,7 @@ function DemandRow({ row, ctx }: { row: Demand; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'demand:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/demand:remove', {
@@ -850,6 +872,7 @@ function DemandRow({ row, ctx }: { row: Demand; ctx: Ctx }) {
       actions={
         <>
           <Button
+            act={toggle}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -859,6 +882,7 @@ function DemandRow({ row, ctx }: { row: Demand; ctx: Ctx }) {
             {row.met ? 'Mark unmet' : 'Grant it'}
           </Button>
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label='Forget the demand'
@@ -877,6 +901,7 @@ function DemandRow({ row, ctx }: { row: Demand; ctx: Ctx }) {
 function AddDemand({ ctx, nobleId }: { ctx: Ctx; nobleId: number }) {
   const [want, setWant] = useState('')
   const add = useGodAction({
+    writes: [{ lever: 'demand:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/demand:set', {
@@ -899,6 +924,7 @@ function AddDemand({ ctx, nobleId }: { ctx: Ctx; nobleId: number }) {
       title='Give this mortal a demand'
       action={
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null || !want}
           disabledReason={busy ?? (!want ? 'Choose a demand.' : undefined)}
@@ -923,6 +949,7 @@ function AddDemand({ ctx, nobleId }: { ctx: Ctx; nobleId: number }) {
 function ApprovalRow({ row, ctx }: { row: Approval; ctx: Ctx }) {
   const realmId = ctx.view.realm?.id ?? 0
   const strike = useGodAction({
+    writes: [{ lever: 'approval:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/approval:remove', {
@@ -947,6 +974,7 @@ function ApprovalRow({ row, ctx }: { row: Approval; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Weigh this approval anew'

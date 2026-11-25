@@ -16,6 +16,7 @@ import {
   Section,
 } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { ShareToggle } from '@/features/team/share'
 import { ExchangeList } from './AudienceTranscript'
 import { BeginAnewButton } from './BeginAnewButton'
 import { DeadSeal } from './DeadSeal'
@@ -76,6 +77,13 @@ export function SessionBadges({
         <RecordIcon />
         {record.label}
       </Badge>
+      <ShareToggle
+        kind='presence'
+        id={session.id}
+        shared={session.shared}
+        mine={session.mine}
+        author={session.author?.name}
+      />
     </>
   )
 }
@@ -253,6 +261,7 @@ export function AudiencePanel({
         )}
       </div>
       <PresenceComposer
+        record={session.record}
         sessionId={session.id}
         nodeId={speaker.node_id}
         name={speaker.name}

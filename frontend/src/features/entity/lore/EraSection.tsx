@@ -210,6 +210,7 @@ export function EraSection({
                         className='flex-1'
                       >{`Since epoch ${item.since_epoch}`}</Muted>
                       <Button
+                        act={ban}
                         size='sm'
                         variant='ghost'
                         disabled={busy !== null}
@@ -228,6 +229,7 @@ export function EraSection({
             )}
           </div>
           <AdjustPanel
+            acts={[set, ban]}
             surface='EraAdjust'
             title='Shape its era'
             note='Set the score or the age, hold them against the engine, or ban a work.'
@@ -235,6 +237,7 @@ export function EraSection({
             <AdjustBlock title='Score and age' icon={Scale}>
               <label className='flex items-center gap-1.5'>
                 <Switch
+                  permission='lock_canon'
                   checked={hold}
                   aria-label='Hold what you set'
                   onCheckedChange={setHold}
@@ -245,6 +248,7 @@ export function EraSection({
               </label>
               <RowEditors>
                 <RowEditor
+                  act={set}
                   label='Era score'
                   value={view.data.score}
                   min={-1000}
@@ -253,6 +257,7 @@ export function EraSection({
                   onSave={(score) => set.mutate({ score, hold })}
                 />
                 <ChoicePicker
+                  act={set}
                   label='Age'
                   value={view.data.age}
                   table={AGE_LOOK}
@@ -267,6 +272,7 @@ export function EraSection({
                     {`Held: ${view.data.locked.join(', ')}`}
                   </Badge>
                   <Button
+                    act={set}
                     size='sm'
                     variant='outline'
                     disabled={busy !== null}
@@ -287,6 +293,7 @@ export function EraSection({
                 placeholder='Choose a book, creed or work'
               />
               <Button
+                act={ban}
                 size='sm'
                 variant='outline'
                 className='self-start'
@@ -372,6 +379,7 @@ export function WorldEraSection({
             </div>
           </div>
           <RowEditor
+            act={set}
             label='Era'
             value={view.data.era}
             min={1}
@@ -381,6 +389,7 @@ export function WorldEraSection({
           >
             {view.data.locked.length > 0 && (
               <Button
+                act={set}
                 type='button'
                 size='sm'
                 variant='outline'

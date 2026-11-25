@@ -87,6 +87,7 @@ function ReadToggle({ items }: { items: NotificationRecord[] }) {
   const label = unread ? 'Mark read' : 'Mark unread'
   return (
     <Button
+      act={mark}
       variant='ghost'
       size='icon-sm'
       aria-label={label}
@@ -422,6 +423,7 @@ export function NotificationsScreen() {
           </div>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Button
+              act={mark}
               variant='outline'
               size='sm'
               onClick={() => setCategory('error')}
@@ -441,6 +443,7 @@ export function NotificationsScreen() {
               </Button>
             )}
             <Button
+              act={mark}
               variant='ghost'
               size='sm'
               disabled={errors.unread === 0 || mark.isPending}
@@ -564,6 +567,7 @@ export function NotificationsScreen() {
                 </FieldTile>
               </div>
               <Button
+                act={mark}
                 variant='outline'
                 size='sm'
                 disabled={unreadHere === 0 || mark.isPending}

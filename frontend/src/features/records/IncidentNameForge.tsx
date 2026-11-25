@@ -23,6 +23,7 @@ export function IncidentNameForge({
   const { reason } = useGodGate()
   const invalidate = [recordKeys.all]
   const give = useGodAction({
+    writes: [{ lever: 'incident_name:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_name:set', {
@@ -32,6 +33,7 @@ export function IncidentNameForge({
     invalidate,
   })
   const strike = useGodAction({
+    writes: [{ lever: 'incident_name:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/incident_name:delete', {
@@ -62,6 +64,7 @@ export function IncidentNameForge({
           />
         </FieldTile>
         <Button
+          act={give}
           size='sm'
           disabled={busy !== null || empty !== null}
           disabledReason={busy ?? empty ?? undefined}
@@ -71,6 +74,7 @@ export function IncidentNameForge({
           {name ? 'Rename and hold' : 'Name it'}
         </Button>
         <Button
+          act={strike}
           size='sm'
           variant='outline'
           disabled={busy !== null || name === null}

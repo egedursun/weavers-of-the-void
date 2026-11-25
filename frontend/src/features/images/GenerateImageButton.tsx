@@ -34,6 +34,7 @@ export function GenerateImageButton({
     <div data-domain='generate-image' className='flex min-w-0 flex-col gap-2'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={generate}
           variant='outline'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}

@@ -9,6 +9,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.tool_inputs import ERROR_EXCERPT
+from aerona.core.account_scope import detached
 from aerona.core.errors import AeronaError
 from aerona.core.grammar import spoken
 from aerona.db.ledger_capture import RowChange
@@ -177,7 +178,7 @@ class ToolRuntime[CallT: ToolCall]:
                 return await self._guarded(self._read(spec, parsed))
             outcome = await self._guarded(self._write(spec, parsed))
         if isinstance(outcome, PendingLongJob):
-            task = asyncio.create_task(self._complete_long_job(outcome))
+            task = detached(self._complete_long_job(outcome))
             self._jobs.append(task)
             return await asyncio.shield(task)
         return outcome

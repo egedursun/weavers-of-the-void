@@ -28,7 +28,7 @@ from aerona.main import create_app
 from aerona.rules.registry import Rules
 from aerona.settings import Settings
 from tests.engine.integration import factories
-from tests.library_support import sole_universe, universe_headers
+from tests.library_support import sign_in_owner, sole_universe, universe_headers
 from tests.services.player import every_lever
 
 STARTUP_SECONDS = 120
@@ -151,6 +151,7 @@ async def client(settings: Settings) -> AsyncIterator[AsyncClient]:
         transport = ASGITransport(app=manager.app)
         headers = universe_headers(await sole_universe(app))
         async with AsyncClient(transport=transport, base_url="http://test", headers=headers) as http:
+            await sign_in_owner(app, http)
             yield http
 
 

@@ -127,6 +127,7 @@ export function SensesPanel({
         columns={2}
         action={
           <Button
+            act={giving}
             size='sm'
             disabled={giveBusy !== null}
             disabledReason={giveBusy ?? undefined}

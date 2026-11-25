@@ -116,6 +116,7 @@ function TraitCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -130,6 +131,7 @@ function TraitCard({
       <Meter label='Mean' value={trait.mean} tone='success' />
       <Chip>{`Spread ${trait.variance}`}</Chip>
       <RecordEditor
+        act={edit}
         title='Set the trait'
         note='A held trait no longer moves under selection.'
         fields={[
@@ -188,6 +190,7 @@ function TraitForm({
       columns={4}
       action={
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -265,6 +268,7 @@ function MarkCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -277,6 +281,7 @@ function MarkCard({
       }
     >
       <RecordEditor
+        act={edit}
         title='Reshape the mark'
         note='Every young of the line, its breeds and the beasts born of it carry the mark.'
         fields={[
@@ -334,6 +339,7 @@ function MarkForm({
       columns={3}
       action={
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -407,6 +413,7 @@ function SpeciesCard({
         ]}
       />
       <RecordEditor
+        act={edit}
         title='Reshape its place'
         note='A keystone serves every land its stock lives in; a feral kind steps back toward the wild.'
         fields={[
@@ -467,6 +474,7 @@ function ServiceCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -480,6 +488,7 @@ function ServiceCard({
     >
       <Meter label='Strength' value={service.strength} tone='success' />
       <RecordEditor
+        act={edit}
         title='Set the service'
         note='A held service keeps its strength whatever the species do.'
         fields={[
@@ -534,6 +543,7 @@ function ServiceForm({
       columns={3}
       action={
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -600,6 +610,7 @@ function HerdCard({
       }
       aside={
         <Button
+          act={release}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -683,6 +694,7 @@ function LandCard({
       </div>
       <ShowMore state={path} />
       <RecordEditor
+        act={[set, unlock]}
         title='Set the stage'
         note='A held stage does not grow, burn or get cleared.'
         fields={[
@@ -749,6 +761,7 @@ function ShapeForm({
       columns={3}
       action={
         <Button
+          act={shape}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -827,6 +840,7 @@ function PathogenCard({
       />
       <Meter label='Resistance' value={pathogen.resistance} tone='warning' />
       <RecordEditor
+        act={edit}
         title='Reshape the sickness'
         note='Resistance blunts cures, hospitals and treatment.'
         fields={[
@@ -908,6 +922,7 @@ function CarrierCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -926,6 +941,7 @@ function CarrierCard({
         <Chip>{`${plural(carrier.seeded, 'outbreak', 'outbreaks')} seeded`}</Chip>
       </div>
       <RecordEditor
+        act={edit}
         title='Reshape the carrier'
         note='A found carrier spreads the sickness no further.'
         fields={[
@@ -983,6 +999,7 @@ function CarrierForm({
       columns={2}
       action={
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -1050,6 +1067,7 @@ function ResponseCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -1063,6 +1081,7 @@ function ResponseCard({
     >
       <Meter label='Strength' value={response.strength} tone='success' />
       <RecordEditor
+        act={edit}
         title='Reshape the answer'
         note='A held answer does not lapse.'
         fields={[
@@ -1126,6 +1145,7 @@ function ResponseForm({
       columns={3}
       action={
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -1204,6 +1224,7 @@ function ResearchCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -1223,6 +1244,7 @@ function ResearchCard({
       />
       <Chip>{`${plural(research.specimens, 'specimen', 'specimens')} studied`}</Chip>
       <RecordEditor
+        act={edit}
         title='Reshape the search'
         note='At the threshold the cure is found and belongs to the institution’s community.'
         fields={[
@@ -1278,6 +1300,7 @@ function ResearchForm({
       columns={2}
       action={
         <Button
+          act={start}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -1352,6 +1375,7 @@ function CycleCard({
       }
       aside={
         <Button
+          act={reset}
           size='sm'
           variant='ghost'
           disabled={busy !== null || !turned}
@@ -1385,6 +1409,7 @@ function CycleCard({
         </div>
       ))}
       <RecordEditor
+        act={edit}
         title='Set the cycles'
         note='Each cycle above balance moves the world values it feeds: carbon warms every land, free liquid swells rain and seas, nutrients enrich the soil.'
         fields={cycles.map((row) => ({

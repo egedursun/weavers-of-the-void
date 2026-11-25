@@ -26,7 +26,10 @@ export function useNatureRow<
   )
   const removing = useNatureAction(remove, (_: void) => keys as never, 'Done')
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }
@@ -43,7 +46,7 @@ export function useProfileEdit<E extends NatureAction, K extends object>(
     'Set so'
   )
   return {
-    busy: why(blocked, editing.isPending),
+    busy: editing.blockedReason ?? why(blocked, editing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
   }
 }

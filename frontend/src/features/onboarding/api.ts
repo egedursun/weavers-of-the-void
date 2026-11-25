@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 
 export type WizardOptions = components['schemas']['WizardOptions']
@@ -47,6 +48,7 @@ export function useWizardOptions() {
 export function useStartGenesis() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/genesis' }],
     mutationFn: (body: GenesisRequest) =>
       unwrap(api.POST('/api/genesis', { body })),
     onSuccess: () => {

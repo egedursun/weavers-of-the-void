@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
-import { universeKey } from '@/lib/universeStorage'
+import { storedItem, storeItem, universeKey } from '@/lib/universeStorage'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
@@ -35,9 +35,7 @@ import { opportunitiesOf, withoutServerPhrased } from './opportunities'
 
 function hiddenEpoch(): number {
   try {
-    return Number(
-      localStorage.getItem(universeKey(OPPORTUNITIES_HIDDEN_KEY)) ?? 0
-    )
+    return Number(storedItem(universeKey(OPPORTUNITIES_HIDDEN_KEY)) ?? 0)
   } catch {
     return 0
   }
@@ -45,7 +43,7 @@ function hiddenEpoch(): number {
 
 function storeHidden(epoch: number) {
   try {
-    localStorage.setItem(universeKey(OPPORTUNITIES_HIDDEN_KEY), String(epoch))
+    storeItem(universeKey(OPPORTUNITIES_HIDDEN_KEY), String(epoch))
   } catch {
     return
   }

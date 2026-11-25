@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lock, Package, Percent, Scale } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -54,10 +55,12 @@ function PremiumRow({
   row,
   busy,
   onRelease,
+  act,
 }: {
   row: Premium
   busy: string | null
   onRelease: () => void
+  act?: ActProp
 }) {
   const spec = COMMODITY[row.commodity]
   const tone = premiumTone(row.premium_pct)
@@ -94,7 +97,7 @@ function PremiumRow({
           {`Supply held at ${formatInteger(row.held_supply)}`}
         </Badge>
       )}
-      <ReleaseButton held={held} busy={busy} onRelease={onRelease} />
+      <ReleaseButton act={act} held={held} busy={busy} onRelease={onRelease} />
     </li>
   )
 }
@@ -111,6 +114,7 @@ export function PriceHolds({
   const [price, setPrice] = useState('')
   const [supply, setSupply] = useState('')
   const hold = useGodAction({
+    writes: [{ lever: 'market:hold_price' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -125,6 +129,7 @@ export function PriceHolds({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'market:release_price' }],
     invalidate: ECONOMY_REFRESH,
     run: (kind: CommodityKind) =>
       unwrap(
@@ -171,6 +176,7 @@ export function PriceHolds({
           <Paged items={rows} as='li'>
             {(row) => (
               <PremiumRow
+                act={release}
                 key={row.commodity}
                 row={row}
                 busy={busy}
@@ -181,6 +187,7 @@ export function PriceHolds({
         </ul>
       )}
       <AdjustPanel
+        acts={[hold]}
         label='Hold a price'
         title='Hold a price or a supply'
         note='Leave a field empty to let it move freely; leave both empty to release the good.'
@@ -206,6 +213,7 @@ export function PriceHolds({
             onChange={setSupply}
           />
           <Button
+            act={hold}
             size='sm'
             className='justify-self-start'
             disabled={busy !== null}

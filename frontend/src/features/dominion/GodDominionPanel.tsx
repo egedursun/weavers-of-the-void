@@ -103,6 +103,7 @@ function ScaleRow({
         </Text>
         <div className='flex shrink-0 items-center gap-1'>
           <Button
+            act={set}
             size='icon-sm'
             variant='outline'
             aria-label={`Lean ${spec.label.toLowerCase()} toward ${spec.opposite.label.toLowerCase()}`}
@@ -116,6 +117,7 @@ function ScaleRow({
             <Minus />
           </Button>
           <Button
+            act={set}
             size='icon-sm'
             variant='outline'
             aria-label={`Lean ${spec.opposite.label.toLowerCase()} toward ${spec.label.toLowerCase()}`}
@@ -129,6 +131,7 @@ function ScaleRow({
             <Plus />
           </Button>
           <Button
+            act={reset}
             size='icon-sm'
             variant='ghost'
             aria-label={`Return ${spec.label.toLowerCase()} to the middle`}
@@ -181,6 +184,7 @@ function ClaimForm({
       columns={2}
       action={
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -252,6 +256,7 @@ function DesignCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null || design === null}
@@ -305,6 +310,7 @@ function DesignCard({
         </>
       )}
       <RecordEditor
+        act={edit}
         title='Reshape the design'
         note='What the design spends is weighed by fate each epoch; values you set are held.'
         fields={[
@@ -383,6 +389,7 @@ function ImageCard({
       }
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null || image === null}
@@ -451,6 +458,7 @@ function ImageCard({
         </>
       )}
       <RecordEditor
+        act={edit}
         title='Reshape the image'
         note='Set what the peoples believe and how the god meets it; values you set are held.'
         fields={[
@@ -538,6 +546,7 @@ function RaiseForm({
       columns={3}
       action={
         <Button
+          act={raise}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

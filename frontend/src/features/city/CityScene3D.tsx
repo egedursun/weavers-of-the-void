@@ -1,5 +1,6 @@
 import { type ReactNode, Suspense, useMemo, useState } from 'react'
 import { Html } from '@react-three/drei'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Text } from '@/components/typography'
 import { tokenHex } from '@/features/cosmography/visual/palette'
@@ -153,7 +154,9 @@ export default function CityScene3D({
   fallback,
   shown = null,
   labels = true,
+  act,
 }: {
+  act?: ActProp
   scene: CityScene
   selected: CityPick
   moving: number | null
@@ -315,7 +318,7 @@ export default function CityScene3D({
             y: -0.06,
           }))}
           onPick={
-            moving !== null
+            moving !== null && refusalOf(act) === null
               ? (item) =>
                   onPick({ kind: 'cell', q: item.cell[0], r: item.cell[1] })
               : undefined
@@ -383,7 +386,7 @@ export default function CityScene3D({
                     : 1
               }
               onPick={(item) =>
-                moving !== null
+                moving !== null && refusalOf(act) === null
                   ? onPick({ kind: 'cell', q: item.cell[0], r: item.cell[1] })
                   : pickDistrict(district.id)
               }

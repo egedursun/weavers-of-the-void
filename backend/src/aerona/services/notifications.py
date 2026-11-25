@@ -1,13 +1,15 @@
 import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import case, delete, func, select, update
+from sqlalchemy import ColumnElement, case, delete, exists, func, or_, select, true, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.chronicle import NOTIFICATION_CATEGORIES, chronicle_notification
+from aerona.core.account_scope import current_account
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.notifications import NotificationDraft, NotificationRepository, effective_settings, fitted_texts, raw_title
@@ -16,6 +18,7 @@ from aerona.db.tables.job import JobRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.meta import NotificationRow
 from aerona.db.tables.node import NodeRow
+from aerona.db.tables.team import NotificationPreferenceRow, NotificationReadRow
 from aerona.domain.enums.chronicle import ChronicleKind, FeedCategory, NotificationCategory
 from aerona.domain.enums.node import NodeKind
 from aerona.events.bus import EventBus
@@ -113,6 +116,10 @@ class NotificationPage:
     settings: dict[NotificationCategory, bool]
     categories: list[CategoryInfo]
     items: list[NotificationRow] = field(default_factory=list)
+    read_ids: frozenset[int] = frozenset()
+
+    def read(self, row: NotificationRow) -> bool:
+        return row.id in self.read_ids if current_account() is not None else row.is_read
 
 
 def classify_error(message: str) -> ErrorClass:
@@ -277,6 +284,54 @@ class Notifier:
         return await self.notify(session, rules, request)
 
 
+def addressed() -> ColumnElement[bool]:
+    account = current_account()
+    if account is None:
+        return true()
+    return or_(NotificationRow.recipient_account_id.is_(None), NotificationRow.recipient_account_id == account.id)
+
+
+def unread() -> ColumnElement[bool]:
+    account = current_account()
+    if account is None:
+        return NotificationRow.is_read.is_(False)
+    seen = select(NotificationReadRow.notification_id).where(
+        NotificationReadRow.notification_id == NotificationRow.id, NotificationReadRow.account_id == account.id
+    )
+    return ~exists(seen)
+
+
+async def read_among(session: AsyncSession, ids: list[int]) -> frozenset[int]:
+    account = current_account()
+    if account is None or not ids:
+        return frozenset()
+    found = await session.scalars(
+        select(NotificationReadRow.notification_id).where(NotificationReadRow.account_id == account.id, NotificationReadRow.notification_id.in_(ids))
+    )
+    return frozenset(int(item) for item in found)
+
+
+async def mark_read_for(session: AsyncSession, account_id: int, *, ids: Iterable[int], every: bool, category: NotificationCategory | None, unread: bool) -> int:
+    statement = select(NotificationRow.id).where(addressed())
+    if every:
+        if category is not None:
+            statement = statement.where(NotificationRow.category == category)
+    else:
+        chosen = list(ids)
+        if not chosen:
+            return 0
+        statement = statement.where(NotificationRow.id.in_(chosen))
+    targets = [int(found) for found in await session.scalars(statement.order_by(NotificationRow.id))]
+    if not targets:
+        return 0
+    await session.execute(delete(NotificationReadRow).where(NotificationReadRow.account_id == account_id, NotificationReadRow.notification_id.in_(targets)))
+    if not unread:
+        moment = datetime.now(UTC)
+        session.add_all(NotificationReadRow(notification_id=target, account_id=account_id, read_at=moment) for target in targets)
+    await session.flush()
+    return len(targets)
+
+
 async def list_notifications(
     session: AsyncSession,
     *,
@@ -286,19 +341,21 @@ async def list_notifications(
     before_id: int | None = None,
     exclude: Iterable[NotificationCategory] = (),
 ) -> NotificationPage:
-    statement = select(NotificationRow)
-    excluded = list(exclude)
+    mine = await own_preferences(session)
+    statement = select(NotificationRow).where(addressed())
+    excluded = [*exclude, *(found for found, enabled in mine.items() if not enabled)]
     if excluded and category is None:
         statement = statement.where(NotificationRow.category.not_in(excluded))
     if unread_only:
-        statement = statement.where(NotificationRow.is_read.is_(False))
+        statement = statement.where(unread())
     if category is not None:
         statement = statement.where(NotificationRow.category == category)
     if before_id is not None:
         statement = statement.where(NotificationRow.id < before_id)
     items = list(await session.scalars(statement.order_by(NotificationRow.id.desc()).limit(limit)))
     grouped = await session.execute(
-        select(NotificationRow.category, func.count(), func.sum(case((NotificationRow.is_read.is_(False), 1), else_=0)))
+        select(NotificationRow.category, func.count(), func.sum(case((unread(), 1), else_=0)))
+        .where(addressed())
         .group_by(NotificationRow.category)
         .order_by(NotificationRow.category)
     )
@@ -307,14 +364,15 @@ async def list_notifications(
     return NotificationPage(
         unread=sum(count.unread for count in counts),
         counts=counts,
-        settings=effective_settings(cosmos.notification_prefs if cosmos else None),
+        settings={**effective_settings(cosmos.notification_prefs if cosmos else None), **mine},
         categories=[CategoryInfo(spec.category, spec.label, spec.severity, spec.enabled_by_default) for spec in NOTIFICATION_CATEGORIES.values()],
         items=items,
+        read_ids=await read_among(session, [row.id for row in items]),
     )
 
 
 async def unread_count(session: AsyncSession) -> int:
-    return int(await session.scalar(select(func.count()).select_from(NotificationRow).where(NotificationRow.is_read.is_(False))) or 0)
+    return int(await session.scalar(select(func.count()).select_from(NotificationRow).where(addressed(), unread())) or 0)
 
 
 async def mark_read(
@@ -325,6 +383,9 @@ async def mark_read(
     category: NotificationCategory | None = None,
     unread: bool = False,
 ) -> int:
+    account = current_account()
+    if account is not None:
+        return await mark_read_for(session, account.id, ids=ids, every=every, category=category, unread=unread)
     statement = update(NotificationRow).values(is_read=not unread)
     if every:
         if category is not None:
@@ -338,8 +399,25 @@ async def mark_read(
     return int(getattr(result, "rowcount", 0) or 0)
 
 
+async def own_preferences(session: AsyncSession) -> dict[NotificationCategory, bool]:
+    account = current_account()
+    if account is None:
+        return {}
+    rows = await session.scalars(
+        select(NotificationPreferenceRow).where(NotificationPreferenceRow.account_id == account.id).order_by(NotificationPreferenceRow.category)
+    )
+    return {row.category: row.enabled for row in rows}
+
+
 async def update_settings(session: AsyncSession, changes: dict[NotificationCategory, bool]) -> dict[NotificationCategory, bool]:
+    account = current_account()
     cosmos = await CosmosRepository(session).require_cosmos()
+    if account is not None:
+        for category, value in changes.items():
+            if category in NOTIFICATION_CATEGORIES:
+                await session.merge(NotificationPreferenceRow(account_id=account.id, category=category, enabled=bool(value)))
+        await session.flush()
+        return {**effective_settings(cosmos.notification_prefs), **await own_preferences(session)}
     merged = dict(cosmos.notification_prefs or {})
     merged.update({category: bool(value) for category, value in changes.items() if category in NOTIFICATION_CATEGORIES})
     cosmos.notification_prefs = merged

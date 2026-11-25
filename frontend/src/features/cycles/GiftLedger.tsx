@@ -225,6 +225,7 @@ function GiftForge({
       columns={4}
       action={
         <Button
+          act={giving}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -372,6 +373,7 @@ function DebtForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -481,6 +483,7 @@ export function CircuitCard({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={routing}
           icon={Route}
           label='Lay these stops'
           busy={why(
@@ -534,6 +537,7 @@ export function CircuitForge({
       columns={2}
       action={
         <Button
+          act={creating}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

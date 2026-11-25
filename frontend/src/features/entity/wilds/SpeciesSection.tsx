@@ -44,6 +44,7 @@ import {
   socialityValues,
   animalRoleValues,
 } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -885,6 +886,7 @@ function NatureControls({ id, card, blocked }: Blocked) {
         <div className='grid min-w-0 grid-cols-1 gap-3 @md/wild:grid-cols-2 @3xl/wild:grid-cols-3'>
           {choices.map((item) => (
             <MindPicker
+              act={save}
               key={item.key}
               label={fieldLabel(item.key)}
               value={String(card[item.key])}
@@ -895,6 +897,7 @@ function NatureControls({ id, card, blocked }: Blocked) {
           ))}
           {(['nocturnal', 'migratory'] as const).map((key) => (
             <SwitchField
+              act={save}
               key={key}
               label={fieldLabel(key)}
               checked={card[key]}
@@ -943,6 +946,7 @@ function RangeEditor({
     values: EditValues
     release?: string[]
   }>({
+    writes: [{ lever: 'species:range' }],
     run: ({ values, release }) =>
       unwrap(
         api.POST('/api/actions/species:range', {
@@ -956,6 +960,7 @@ function RangeEditor({
       ),
   })
   const drop = useGodAction({
+    writes: [{ lever: 'species:drop_range' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/species:drop_range', {
@@ -986,6 +991,7 @@ function RangeEditor({
           <Name item={row.region} fallback='A lost land' />
         </div>
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null || Object.keys(changed).length === 0}
           disabledReason={
@@ -999,6 +1005,7 @@ function RangeEditor({
         </Button>
         {row.locked.length > 0 && (
           <Button
+            act={set}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -1010,6 +1017,7 @@ function RangeEditor({
           </Button>
         )}
         <Button
+          act={drop}
           size='sm'
           variant='ghost'
           aria-label={`Drive it out of ${row.region?.name ?? 'this land'}`}
@@ -1063,6 +1071,7 @@ function LandControls({ id, card, blocked }: Blocked) {
   const [target, setTarget] = useState<number | null>(null)
   const save = useSpeciesEdit(id)
   const seed = useGodAction<number>({
+    writes: [{ lever: 'species:range' }],
     run: (where) =>
       unwrap(
         api.POST('/api/actions/species:range', {
@@ -1075,6 +1084,7 @@ function LandControls({ id, card, blocked }: Blocked) {
       ),
   })
   const move = useGodAction<{ from: number; to: number }>({
+    writes: [{ lever: 'species:move_range' }],
     run: ({ from, to }) =>
       unwrap(
         api.POST('/api/actions/species:move_range', {
@@ -1088,6 +1098,7 @@ function LandControls({ id, card, blocked }: Blocked) {
     <div className='flex min-w-0 flex-col gap-3'>
       <Group title='Lands it loves' icon={Leaf}>
         <ShareEditor
+          act={save}
           key={JSON.stringify(card.habitat)}
           table={TERRAINS}
           value={card.habitat}
@@ -1122,6 +1133,7 @@ function LandControls({ id, card, blocked }: Blocked) {
               placeholder='Choose a land…'
             />
             <Button
+              act={seed}
               size='sm'
               variant='outline'
               className='self-start'
@@ -1145,6 +1157,7 @@ function LandControls({ id, card, blocked }: Blocked) {
                 placeholder='Choose where it goes…'
               />
               <Button
+                act={move}
                 size='sm'
                 variant='outline'
                 className='self-start'
@@ -1195,6 +1208,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
     part?: ProductPart | null
     good?: number | null
   }>({
+    writes: [{ lever: 'species:yield' }],
     run: ({
       product: name,
       commodity: kind,
@@ -1220,6 +1234,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
       ),
   })
   const use = useGodAction<{ use: string; held: boolean }>({
+    writes: [{ lever: 'species:use' }],
     run: ({ use: kind, held }) =>
       unwrap(
         api.POST('/api/actions/species:use', {
@@ -1244,6 +1259,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
                       {spec.label}
                     </Text>
                     <Switch
+                      act={use}
                       checked={card.uses.includes(key)}
                       disabled={busy !== null}
                       aria-label={spec.label}
@@ -1261,6 +1277,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
           <Paged items={card.yields} as='li'>
             {(row) => (
               <YieldRow
+                act={set}
                 key={`${row.product}-${row.rate}`}
                 row={row}
                 busy={busy}
@@ -1329,6 +1346,7 @@ function YieldControls({ id, card, blocked }: Blocked) {
           />
         </div>
         <Button
+          act={set}
           size='sm'
           variant='outline'
           className='self-start'
@@ -1373,11 +1391,13 @@ function YieldRow({
   busy,
   goods: goodKinds,
   onSet,
+  act,
 }: {
   row: SpeciesCard['yields'][number]
   busy: string | null
   goods: Record<string, Named>
   onSet: (rate: number, part?: ProductPart | null, good?: number | null) => void
+  act?: ActProp
 }) {
   const [rate, setRate] = useState(String(row.rate))
   const goods = row.commodity ? COMMODITY[row.commodity] : null
@@ -1403,6 +1423,7 @@ function YieldRow({
       </div>
       <div className='grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
         <ChoiceSelect
+          act={act}
           label={`${label} part`}
           value={row.part ?? ''}
           table={PART_CHOICES}
@@ -1411,6 +1432,7 @@ function YieldRow({
           onPick={(value) => onSet(row.rate, value as ProductPart)}
         />
         <ChoiceSelect
+          act={act}
           label={`${label} good`}
           value={String(row.good_kind_id ?? '')}
           table={goodKinds}
@@ -1437,6 +1459,7 @@ function YieldRow({
         per head
       </Muted>
       <Button
+        act={act}
         size='icon-sm'
         variant='ghost'
         aria-label={`Set ${label}`}
@@ -1447,6 +1470,7 @@ function YieldRow({
         <Check />
       </Button>
       <Button
+        act={act}
         size='icon-sm'
         variant='ghost'
         aria-label={`Remove ${label}`}
@@ -1465,6 +1489,7 @@ function TamingControls({ id, card, blocked }: Blocked) {
   const [son, setSon] = useState<number | null>(null)
   const sons = useSons()
   const tame = useGodAction({
+    writes: [{ lever: 'species:domesticate' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/species:domesticate', {
@@ -1473,6 +1498,7 @@ function TamingControls({ id, card, blocked }: Blocked) {
       ),
   })
   const holy = useGodAction<number | null>({
+    writes: [{ lever: 'species:sacred' }],
     run: (who) =>
       unwrap(
         api.POST('/api/actions/species:sacred', {
@@ -1481,6 +1507,7 @@ function TamingControls({ id, card, blocked }: Blocked) {
       ),
   })
   const spawn = useGodAction({
+    writes: [{ lever: 'beast:spawn' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/beast:spawn', { body: { species_id: id } })
@@ -1504,6 +1531,7 @@ function TamingControls({ id, card, blocked }: Blocked) {
           placeholder='Choose the herders…'
         />
         <Button
+          act={tame}
           size='sm'
           variant='outline'
           className='self-start'
@@ -1533,6 +1561,7 @@ function TamingControls({ id, card, blocked }: Blocked) {
         />
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={holy}
             size='sm'
             variant='outline'
             disabled={busy !== null || son === null}
@@ -1544,6 +1573,7 @@ function TamingControls({ id, card, blocked }: Blocked) {
           </Button>
           {card.sacred_to && (
             <Button
+              act={holy}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -1561,6 +1591,7 @@ function TamingControls({ id, card, blocked }: Blocked) {
           hoard.
         </Muted>
         <Button
+          act={spawn}
           size='sm'
           variant='outline'
           className='self-start'
@@ -1581,6 +1612,7 @@ function SpeciesControls({ id, card, blocked }: Blocked) {
   const busy = busyOf(blocked, save.isPending)
   return (
     <AdjustPanel
+      acts={[save]}
       title='Shape this kind'
       note='Set its body, temper, lands, yields and taming. Whatever you set is held until you let the world decide again; every change goes into the ledger.'
       head={

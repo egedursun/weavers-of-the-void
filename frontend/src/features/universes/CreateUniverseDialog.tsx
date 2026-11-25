@@ -163,6 +163,7 @@ export function CreateUniverseDialog({
             Cancel
           </Button>
           <Button
+            act={create}
             type='submit'
             form={FORM_ID}
             disabled={working}

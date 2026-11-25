@@ -171,6 +171,7 @@ function Numerology({
               </Text>
               <Chip icon={named.icon}>{named.label}</Chip>
               <Button
+                act={read}
                 size='icon-sm'
                 variant='ghost'
                 className='ms-auto'
@@ -204,6 +205,7 @@ function Numerology({
           onPick={(next) => setReading(next as Reading)}
         />
         <Button
+          act={read}
           size='sm'
           disabled={busy !== null || outside !== null}
           disabledReason={busy ?? outside ?? undefined}
@@ -391,6 +393,7 @@ export function LearningPanel({
                 onClick={reading.run}
               />
               <Button
+                act={giving}
                 size='sm'
                 variant='outline'
                 disabled={aidBusy !== null}
@@ -401,6 +404,7 @@ export function LearningPanel({
                 Give the aid
               </Button>
               <Button
+                act={timing}
                 size='sm'
                 disabled={clockBusy !== null}
                 disabledReason={clockBusy ?? undefined}
@@ -471,6 +475,7 @@ export function LearningPanel({
           columns={2}
           action={
             <Button
+              act={counting}
               size='sm'
               disabled={countBusy !== null}
               disabledReason={countBusy ?? undefined}

@@ -86,6 +86,7 @@ function PromptBox({ prompt }: { prompt: string | null }) {
   const [draft, setDraft] = useState(prompt ?? '')
   const { reason } = useGodGate()
   const save = useGodAction({
+    writes: [{ lever: 'creator:edit' }],
     run: () =>
       unwrap(api.PATCH('/api/creator', { body: { image_prompt: draft } })),
     success: 'Portrait prompt saved',
@@ -101,6 +102,7 @@ function PromptBox({ prompt }: { prompt: string | null }) {
       </FieldTile>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <ActionButton
+          act={save}
           label='Save prompt'
           blocked={
             reason() ?? (draft === (prompt ?? '') ? 'Nothing changed.' : null)

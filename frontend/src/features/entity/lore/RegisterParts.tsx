@@ -23,6 +23,7 @@ function useRegister() {
     language: number | null
     hold: boolean
   }>({
+    writes: [{ lever: 'language:register' }],
     run: ({ holder, kind, language, hold }) =>
       unwrap(
         api.POST('/api/actions/language:register', {
@@ -109,6 +110,7 @@ export function RegisterEditor({
                   <Text as='span'>{row.holder?.name ?? 'Unknown'}</Text>
                   {row.held ? (
                     <Button
+                      act={register}
                       size='sm'
                       variant='outline'
                       disabled={busy !== null}
@@ -127,6 +129,7 @@ export function RegisterEditor({
                     </Button>
                   ) : (
                     <Button
+                      act={register}
                       size='sm'
                       variant='outline'
                       disabled={busy !== null}
@@ -145,6 +148,7 @@ export function RegisterEditor({
                     </Button>
                   )}
                   <Button
+                    act={register}
                     size='icon'
                     variant='ghost'
                     aria-label={`Clear the ${spec.label} register of ${row.holder?.name ?? 'it'}`}
@@ -182,6 +186,7 @@ export function RegisterEditor({
           onPick={(next) => setKind(next as RegisterKind)}
         />
         <Button
+          act={register}
           size='sm'
           disabled={busy !== null || holder === null}
           disabledReason={

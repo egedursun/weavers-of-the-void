@@ -50,6 +50,7 @@ import {
 import { Label, Muted, SectionTitle, Stat, Text } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { type AdjustGate, useAdjustGate } from '@/features/team/writeGate'
 import { ControlPanel, MindPicker } from '../mind/parts'
 import { HoardControl } from './HoardControl'
 import {
@@ -202,6 +203,8 @@ export function PartHeader({
 }
 
 export function AdjustPanel({
+  acts,
+  writes,
   label,
   title,
   note,
@@ -215,11 +218,12 @@ export function AdjustPanel({
   hold?: boolean
   onHold?: (value: boolean) => void
   children: ReactNode
-}) {
+} & AdjustGate) {
+  const gate = useAdjustGate(acts, writes)
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='outline' size='sm' className='self-start'>
+        <Button act={gate} variant='outline' size='sm' className='self-start'>
           <SlidersHorizontal />
           {label}
         </Button>
@@ -423,6 +427,7 @@ function LotEditor({
   const [quality, setQuality] = useState(String(lot.quality))
   const [hold, setHold] = useState(lot.held)
   const set = useGodAction({
+    writes: [{ lever: 'stock:set' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -442,6 +447,7 @@ function LotEditor({
   const blocked = busy ?? (set.isPending ? WORKING : null)
   return (
     <AdjustPanel
+      acts={[set]}
       label='Set exactly'
       title={`Set the ${lot.label.toLowerCase()}`}
       note='Set how much lies in store and its quality. Held, the stores keep exactly this.'
@@ -464,6 +470,7 @@ function LotEditor({
         />
       </div>
       <Button
+        act={set}
         size='sm'
         className='self-start'
         disabled={blocked !== null}
@@ -490,6 +497,7 @@ function GoodTile({
   const family = GOODS_FAMILY[spec.family]
   const tier = qualityTier(lot.quality)
   const release = useGodAction({
+    writes: [{ lever: 'stock:release' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -522,6 +530,7 @@ function GoodTile({
         aria-label={`${lot.label} quality`}
       />
       <ReleaseButton
+        act={release}
         held={lot.held}
         busy={blocked}
         onRelease={() => release.mutate(undefined)}
@@ -550,6 +559,7 @@ function StoreControls({
   const [amount, setAmount] = useState('100')
   const [quality, setQuality] = useState('50')
   const grant = useGodAction({
+    writes: [{ lever: 'stock:grant' }],
     run: (sign: number) =>
       unwrap(
         api.POST('/api/actions/stock:grant', {
@@ -569,6 +579,7 @@ function StoreControls({
   const blocked = busy ?? (grant.isPending ? WORKING : null)
   return (
     <AdjustPanel
+      acts={[grant]}
       label='Adjust the stores'
       title='Add or take goods'
       note='Fill the stores with a good of the quality you choose, or take some away. Goods above the room of the granaries and warehouses spoil at the next epoch.'
@@ -600,6 +611,7 @@ function StoreControls({
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={grant}
           size='sm'
           disabled={blocked !== null}
           disabledReason={blocked ?? undefined}
@@ -609,6 +621,7 @@ function StoreControls({
           Add to the stores
         </Button>
         <Button
+          act={grant}
           size='sm'
           variant='outline'
           disabled={blocked !== null}
@@ -871,6 +884,7 @@ function WorkshopEditor({
   )
   const [hold, setHold] = useState(row.held)
   const edit = useGodAction({
+    writes: [{ lever: 'workshop:edit' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -904,6 +918,7 @@ function WorkshopEditor({
   }
   return (
     <AdjustPanel
+      acts={[edit]}
       label='Adjust'
       title={`The ${spec.label.toLowerCase()}`}
       note='Set its ships, how long it has stood idle, the building it works from and the design it follows. Held, the people keep it as you set it.'
@@ -941,6 +956,7 @@ function WorkshopEditor({
         onChange={setStructure}
       />
       <Button
+        act={edit}
         size='sm'
         className='self-start'
         disabled={blocked !== null}
@@ -971,6 +987,7 @@ function WorkshopCard({
   const idle = row.idle_epochs > 0
   const design = designs.find((item) => item.id === row.design_id)
   const release = useGodAction({
+    writes: [{ lever: 'workshop:release' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -1037,6 +1054,7 @@ function WorkshopCard({
       </div>
       <div className='mt-auto flex min-w-0 flex-col gap-2'>
         <ReleaseButton
+          act={release}
           held={row.held}
           busy={blocked}
           onRelease={() => release.mutate(undefined)}
@@ -1067,6 +1085,7 @@ function WorkshopControls({
     String(levels.get('forge' as WorkshopKind) ?? 1)
   )
   const build = useGodAction({
+    writes: [{ lever: 'workshop:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/workshop:set', {
@@ -1082,6 +1101,7 @@ function WorkshopControls({
   const present = levels.get(kind as WorkshopKind) ?? 0
   return (
     <AdjustPanel
+      acts={[build]}
       label='Adjust the workshops'
       title='Build, raise or pull down a workshop'
       note='Choose a workshop and the level it should stand at. Level 0 pulls it down; the highest level grows with the community’s people; granaries and warehouses add room to the stores.'
@@ -1105,6 +1125,7 @@ function WorkshopControls({
           onChange={setLevel}
         />
         <Button
+          act={build}
           size='sm'
           className='justify-self-start'
           disabled={blocked !== null}
@@ -1277,6 +1298,7 @@ function CoinChoice({
   const { reason } = useGodGate()
   const currencies = useCurrencies()
   const use = useGodAction({
+    writes: [{ lever: 'currency:use' }],
     run: (value: string) =>
       unwrap(
         api.POST('/api/actions/currency:use', {
@@ -1334,6 +1356,7 @@ function CoinChoice({
       />
       <div className='max-w-sm min-w-0'>
         <MindPicker
+          act={use}
           label='Coin it counts in'
           value={value}
           table={table}

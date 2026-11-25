@@ -204,7 +204,7 @@ export const CAUSE_SPEC: Record<RiverShiftCause, Spec> = {
   flood: { label: 'A great flood', icon: CloudRain, tone: 'info' },
   quake: { label: 'An earthquake', icon: Activity, tone: 'warning' },
   divine: { label: 'A god', icon: Sun, tone: 'gold' },
-  player: { label: 'Your hand', icon: Sparkles, tone: 'gold' },
+  player: { label: "The Creator's hand", icon: Sparkles, tone: 'gold' },
   silting: { label: 'Its bed silted up', icon: Waves, tone: 'muted' },
   works: { label: 'The works of a people', icon: Hammer, tone: 'warning' },
   eruption: { label: 'An eruption', icon: Flame, tone: 'danger' },

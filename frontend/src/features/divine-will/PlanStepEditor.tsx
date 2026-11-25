@@ -397,6 +397,7 @@ export function PlanStepEditor({
           Cancel
         </Button>
         <Button
+          act={save}
           size='sm'
           disabled={block !== null}
           disabledReason={block ?? undefined}

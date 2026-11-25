@@ -193,6 +193,7 @@ export function LanguageShaper({
         </FormRow>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={edit}
             type='submit'
             disabled={reason !== null}
             disabledReason={reason ?? undefined}
@@ -201,6 +202,7 @@ export function LanguageShaper({
             Save the tongue
           </Button>
           <Button
+            act={redraw}
             type='button'
             variant='outline'
             disabled={readOnlyReason !== null || redraw.isPending}
@@ -216,6 +218,7 @@ export function LanguageShaper({
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Label variant='overline'>Hear it speak</Label>
           <Button
+            act={preview}
             type='button'
             variant='outline'
             size='sm'

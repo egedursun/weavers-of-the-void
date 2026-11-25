@@ -32,6 +32,7 @@ function TurnRankRow({ son, cover, position, places }: TurnRankRowProps) {
   const [place, setPlace] = useState(String(son.turn_rank ?? position))
   const { reason } = useGodGate()
   const rank = useGodAction({
+    writes: [{ lever: 'son:turn_rank' }],
     run: (value: number | null) =>
       unwrap(
         api.POST('/api/actions/son:turn_rank', {
@@ -83,6 +84,7 @@ function TurnRankRow({ son, cover, position, places }: TurnRankRowProps) {
       />
       {pinned ? (
         <ActionButton
+          act={rank}
           label='Release'
           icon={PinOff}
           size='sm'
@@ -93,6 +95,7 @@ function TurnRankRow({ son, cover, position, places }: TurnRankRowProps) {
         />
       ) : (
         <ActionButton
+          act={rank}
           label='Pin'
           icon={Pin}
           size='sm'

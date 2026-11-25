@@ -8,7 +8,7 @@ import {
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
-import { universeKey } from '@/lib/universeStorage'
+import { storedItem, universeKey, viewerKey } from '@/lib/universeStorage'
 import actions from '../../../e2e/fixtures/actions.json'
 import cosmosFixture from '../../../e2e/fixtures/cosmos.json'
 import { CosmosLegend } from './CosmosLegend'
@@ -736,9 +736,9 @@ describe('cosmos chrome', () => {
     const { screen } = await renderApp(<Settings />)
     await screen.getByRole('combobox', { name: '3D quality' }).click()
     await screen.getByRole('option', { name: 'High' }).click()
-    expect(localStorage.getItem('aerona.cosmos.quality')).toBe('high')
+    expect(storedItem(viewerKey('aerona.cosmos.quality'))).toBe('high')
     await screen.getByRole('radio', { name: '2D view' }).click()
-    expect(localStorage.getItem('aerona.cosmos.view')).toBe('2d')
+    expect(storedItem(viewerKey('aerona.cosmos.view'))).toBe('2d')
     await expect
       .element(screen.getByRole('combobox', { name: '3D quality' }))
       .not.toBeInTheDocument()

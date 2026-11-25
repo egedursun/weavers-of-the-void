@@ -101,6 +101,7 @@ export function usePhysicsAction<Name extends PhysicsAction, T>(
   also: readonly QueryKey[] = []
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
     invalidate: [physicsKeys.all, cosmographyKeys.view, ...also],

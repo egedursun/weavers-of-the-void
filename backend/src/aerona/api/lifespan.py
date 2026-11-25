@@ -11,10 +11,12 @@ from aerona.agents.ports import LanguageModel
 from aerona.constants.api import LOCK_FILENAME
 from aerona.core.errors import ConflictError
 from aerona.core.logging import configure_logging
+from aerona.services.accounts.service import AccountService
 from aerona.services.library.adoption import prepare_library
 from aerona.services.library.catalogue import Catalogue
 from aerona.services.library.hub import UniverseHub
 from aerona.services.library.service import LibraryService
+from aerona.services.team.grants import grant_hook
 from aerona.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -68,10 +70,14 @@ def lifespan_for(settings: Settings, model: LanguageModel | None = None) -> Call
         try:
             catalogue = Catalogue(settings.process)
             await prepare_library(catalogue)
+            accounts = AccountService(catalogue, settings)
+            await accounts.start()
             hub = UniverseHub(settings, catalogue, model)
-            library = LibraryService(hub)
+            hub.opened_hooks.append(grant_hook(hub, accounts))
+            library = LibraryService(hub, accounts)
             app.state.hub = hub
             app.state.library = library
+            app.state.accounts = accounts
             await hub.start()
             await library.start()
             try:

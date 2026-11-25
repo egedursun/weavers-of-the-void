@@ -298,6 +298,7 @@ export function DietPanel({
               onClick={feeding.run}
             />
             <Button
+              act={setting}
               size='sm'
               variant='outline'
               disabled={dietBusy !== null}
@@ -308,6 +309,7 @@ export function DietPanel({
               Give it a diet
             </Button>
             <Button
+              act={scoring}
               size='sm'
               disabled={scoreBusy !== null}
               disabledReason={scoreBusy ?? undefined}
@@ -338,6 +340,7 @@ export function DietPanel({
         columns={2}
         action={
           <Button
+            act={needing}
             size='sm'
             disabled={needBusy !== null}
             disabledReason={needBusy ?? undefined}

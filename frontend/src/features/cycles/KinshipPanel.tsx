@@ -200,6 +200,7 @@ function KinshipForge({
       columns={4}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={ready !== null}
           disabledReason={ready ?? undefined}
@@ -462,6 +463,7 @@ function UnionForge({
       columns={4}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -657,6 +659,7 @@ function AllianceForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -817,6 +820,7 @@ function ReproductionForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -906,6 +910,7 @@ function CasteForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -1012,6 +1017,7 @@ function LegacyForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

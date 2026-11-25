@@ -447,6 +447,7 @@ function MoveCohort({
   const [condition, setCondition] = useState<string>(KEEP)
   const [from, setFrom] = useState<string>(ANY)
   const move = useGodAction({
+    writes: [{ lever: 'cohort:move' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cohort:move', {
@@ -532,6 +533,7 @@ function MoveCohort({
         />
         <div className='flex min-w-0 items-end'>
           <Button
+            act={move}
             size='sm'
             className='w-full'
             disabled={
@@ -742,6 +744,7 @@ export function DemographySection({
             <DormancyPanel view={data} blocked={blocked} />
           </div>
           <AdjustPanel
+            writes={[{ lever: 'cohort:move' }, { lever: 'cohort:set' }]}
             title='Shape the people'
             note='Move people between classes and conditions, heal the sick, set any cohort to an exact headcount, or forge a sickness to loose on them. Every change goes into the ledger and can be undone.'
           >

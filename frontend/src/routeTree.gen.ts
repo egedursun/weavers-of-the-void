@@ -11,7 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
+import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as GenesisRouteImport } from './routes/genesis'
+import { Route as WorkspaceRouteImport } from './routes/workspace'
 import { Route as AppAtlasRouteImport } from './routes/_app/atlas'
 import { Route as AppCardsRouteImport } from './routes/_app/cards'
 import { Route as AppChronicleRouteImport } from './routes/_app/chronicle'
@@ -37,6 +39,7 @@ import { Route as AppPantheonRouteImport } from './routes/_app/pantheon'
 import { Route as AppPrayersRouteImport } from './routes/_app/prayers'
 import { Route as AppPresenceRouteImport } from './routes/_app/presence'
 import { Route as AppSettingsRouteRouteImport } from './routes/_app/settings/route'
+import { Route as AppTeamRouteImport } from './routes/_app/team'
 import { Route as AppUsageRouteImport } from './routes/_app/usage'
 import { Route as AppWarsRouteImport } from './routes/_app/wars'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index'
@@ -60,9 +63,19 @@ const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountsRoute = AccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GenesisRoute = GenesisRouteImport.update({
   id: '/genesis',
   path: '/genesis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorkspaceRoute = WorkspaceRouteImport.update({
+  id: '/workspace',
+  path: '/workspace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppAtlasRoute = AppAtlasRouteImport.update({
@@ -190,6 +203,11 @@ const AppSettingsRouteRoute = AppSettingsRouteRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppTeamRoute = AppTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppUsageRoute = AppUsageRouteImport.update({
   id: '/usage',
   path: '/usage',
@@ -258,7 +276,9 @@ const AppSettingsWorldRulesRoute = AppSettingsWorldRulesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRoute
   '/genesis': typeof GenesisRoute
+  '/workspace': typeof WorkspaceRoute
   '/settings': typeof AppSettingsRouteRouteWithChildren
   '/atlas': typeof AppAtlasRoute
   '/cards': typeof AppCardsRoute
@@ -284,6 +304,7 @@ export interface FileRoutesByFullPath {
   '/pantheon': typeof AppPantheonRoute
   '/prayers': typeof AppPrayersRoute
   '/presence': typeof AppPresenceRoute
+  '/team': typeof AppTeamRoute
   '/usage': typeof AppUsageRoute
   '/wars': typeof AppWarsRoute
   '/settings/appearance': typeof AppSettingsAppearanceRoute
@@ -300,7 +321,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/accounts': typeof AccountsRoute
   '/genesis': typeof GenesisRoute
+  '/workspace': typeof WorkspaceRoute
   '/atlas': typeof AppAtlasRoute
   '/cards': typeof AppCardsRoute
   '/chronicle': typeof AppChronicleRoute
@@ -325,6 +348,7 @@ export interface FileRoutesByTo {
   '/pantheon': typeof AppPantheonRoute
   '/prayers': typeof AppPrayersRoute
   '/presence': typeof AppPresenceRoute
+  '/team': typeof AppTeamRoute
   '/usage': typeof AppUsageRoute
   '/wars': typeof AppWarsRoute
   '/settings/appearance': typeof AppSettingsAppearanceRoute
@@ -343,7 +367,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteRouteWithChildren
+  '/accounts': typeof AccountsRoute
   '/genesis': typeof GenesisRoute
+  '/workspace': typeof WorkspaceRoute
   '/_app/settings': typeof AppSettingsRouteRouteWithChildren
   '/_app/atlas': typeof AppAtlasRoute
   '/_app/cards': typeof AppCardsRoute
@@ -369,6 +395,7 @@ export interface FileRoutesById {
   '/_app/pantheon': typeof AppPantheonRoute
   '/_app/prayers': typeof AppPrayersRoute
   '/_app/presence': typeof AppPresenceRoute
+  '/_app/team': typeof AppTeamRoute
   '/_app/usage': typeof AppUsageRoute
   '/_app/wars': typeof AppWarsRoute
   '/_app/settings/appearance': typeof AppSettingsAppearanceRoute
@@ -387,7 +414,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accounts'
     | '/genesis'
+    | '/workspace'
     | '/settings'
     | '/atlas'
     | '/cards'
@@ -413,6 +442,7 @@ export interface FileRouteTypes {
     | '/pantheon'
     | '/prayers'
     | '/presence'
+    | '/team'
     | '/usage'
     | '/wars'
     | '/settings/appearance'
@@ -429,7 +459,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accounts'
     | '/genesis'
+    | '/workspace'
     | '/atlas'
     | '/cards'
     | '/chronicle'
@@ -454,6 +486,7 @@ export interface FileRouteTypes {
     | '/pantheon'
     | '/prayers'
     | '/presence'
+    | '/team'
     | '/usage'
     | '/wars'
     | '/settings/appearance'
@@ -471,7 +504,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_app'
+    | '/accounts'
     | '/genesis'
+    | '/workspace'
     | '/_app/settings'
     | '/_app/atlas'
     | '/_app/cards'
@@ -497,6 +532,7 @@ export interface FileRouteTypes {
     | '/_app/pantheon'
     | '/_app/prayers'
     | '/_app/presence'
+    | '/_app/team'
     | '/_app/usage'
     | '/_app/wars'
     | '/_app/settings/appearance'
@@ -515,7 +551,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
+  AccountsRoute: typeof AccountsRoute
   GenesisRoute: typeof GenesisRoute
+  WorkspaceRoute: typeof WorkspaceRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -534,11 +572,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/accounts': {
+      id: '/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AccountsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/genesis': {
       id: '/genesis'
       path: '/genesis'
       fullPath: '/genesis'
       preLoaderRoute: typeof GenesisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/workspace': {
+      id: '/workspace'
+      path: '/workspace'
+      fullPath: '/workspace'
+      preLoaderRoute: typeof WorkspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/atlas': {
@@ -716,6 +768,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/team': {
+      id: '/_app/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/usage': {
       id: '/_app/usage'
       path: '/usage'
@@ -867,6 +926,7 @@ interface AppRouteRouteChildren {
   AppPantheonRoute: typeof AppPantheonRoute
   AppPrayersRoute: typeof AppPrayersRoute
   AppPresenceRoute: typeof AppPresenceRoute
+  AppTeamRoute: typeof AppTeamRoute
   AppUsageRoute: typeof AppUsageRoute
   AppWarsRoute: typeof AppWarsRoute
 }
@@ -897,6 +957,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppPantheonRoute: AppPantheonRoute,
   AppPrayersRoute: AppPrayersRoute,
   AppPresenceRoute: AppPresenceRoute,
+  AppTeamRoute: AppTeamRoute,
   AppUsageRoute: AppUsageRoute,
   AppWarsRoute: AppWarsRoute,
 }
@@ -908,7 +969,9 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
+  AccountsRoute: AccountsRoute,
   GenesisRoute: GenesisRoute,
+  WorkspaceRoute: WorkspaceRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

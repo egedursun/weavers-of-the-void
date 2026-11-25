@@ -111,6 +111,7 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
   const [strength, setStrength] = useState(String(danger.strength))
   const [targets, setTargets] = useState<string[]>(danger.targets)
   const edit = useGodAction({
+    writes: [{ lever: 'region:danger_edit' }],
     run: (body: { strength?: number; hold?: boolean; targets?: Harm[] }) =>
       unwrap(
         api.POST('/api/actions/region:danger_edit', {
@@ -120,6 +121,7 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
     success: 'The danger is reshaped',
   })
   const release = useGodAction({
+    writes: [{ lever: 'region:danger_release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/region:danger_release', {
@@ -129,6 +131,7 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
     success: 'The danger follows the land again',
   })
   const remove = useGodAction({
+    writes: [{ lever: 'region:danger_delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/region:danger_delete', {
@@ -172,6 +175,7 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
         />
       </div>
       <Button
+        act={edit}
         size='sm'
         disabled={blocked !== null}
         disabledReason={blocked ?? undefined}
@@ -188,6 +192,7 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
       </Button>
       {danger.held ? (
         <Button
+          act={release}
           size='sm'
           variant='outline'
           disabled={blocked !== null}
@@ -199,6 +204,7 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
         </Button>
       ) : (
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={blocked !== null}
@@ -210,6 +216,7 @@ function DangerRow({ danger, busy }: { danger: Danger; busy: string | null }) {
         </Button>
       )}
       <Button
+        act={remove}
         size='sm'
         variant='outline'
         disabled={blocked !== null}
@@ -234,6 +241,7 @@ function CreateDanger({
   const [strength, setStrength] = useState(String(DEFAULT_STRENGTH))
   const [hold, setHold] = useState(true)
   const create = useGodAction({
+    writes: [{ lever: 'region:danger_create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/region:danger_create', {
@@ -271,12 +279,14 @@ function CreateDanger({
         />
       </div>
       <SwitchField
+        permission='lock_canon'
         label='Hold it'
         checked={hold}
         disabled={blocked !== null}
         onChange={setHold}
       />
       <Button
+        act={create}
         size='sm'
         disabled={blocked !== null || source === ''}
         disabledReason={
@@ -348,6 +358,12 @@ function DangerCard({ regionId, view }: { regionId: number; view: Terrain }) {
           ))}
         </div>
         <AdjustPanel
+          writes={[
+            { lever: 'region:danger_create' },
+            { lever: 'region:danger_delete' },
+            { lever: 'region:danger_edit' },
+            { lever: 'region:danger_release' },
+          ]}
           title='Shape the dangers'
           note='Loose a danger of any kind, set its strength, hold it against the land or drive it out. A danger the land still breeds returns unless you hold it at nothing.'
         >
@@ -367,6 +383,7 @@ function MemoryRow({ memory, busy }: { memory: Memory; busy: string | null }) {
   const [magnitude, setMagnitude] = useState(String(memory.magnitude))
   const [kind, setKind] = useState<string>(memory.kind)
   const edit = useGodAction({
+    writes: [{ lever: 'region:memory_edit' }],
     run: (hold: boolean) =>
       unwrap(
         api.POST('/api/actions/region:memory_edit', {
@@ -381,6 +398,7 @@ function MemoryRow({ memory, busy }: { memory: Memory; busy: string | null }) {
     success: 'The memory is reshaped',
   })
   const remove = useGodAction({
+    writes: [{ lever: 'region:memory_delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/region:memory_delete', {
@@ -415,6 +433,7 @@ function MemoryRow({ memory, busy }: { memory: Memory; busy: string | null }) {
         />
       </div>
       <Button
+        act={edit}
         size='sm'
         disabled={blocked !== null}
         disabledReason={blocked ?? undefined}
@@ -425,6 +444,7 @@ function MemoryRow({ memory, busy }: { memory: Memory; busy: string | null }) {
       </Button>
       {memory.held && (
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={blocked !== null}
@@ -436,6 +456,7 @@ function MemoryRow({ memory, busy }: { memory: Memory; busy: string | null }) {
         </Button>
       )}
       <Button
+        act={remove}
         size='sm'
         variant='outline'
         disabled={blocked !== null}
@@ -463,6 +484,7 @@ function SanctityControls({
   const [magnitude, setMagnitude] = useState(String(DEFAULT_MAGNITUDE))
   const [title, setTitle] = useState('')
   const sanctify = useGodAction({
+    writes: [{ lever: 'region:sanctify' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/region:sanctify', {
@@ -476,6 +498,7 @@ function SanctityControls({
     success: 'The land is sanctified',
   })
   const release = useGodAction({
+    writes: [{ lever: 'environment:unlock' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/environment:unlock', {
@@ -488,6 +511,7 @@ function SanctityControls({
     success: 'Sacredness follows the land again',
   })
   const remember = useGodAction({
+    writes: [{ lever: 'region:memory_add' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/region:memory_add', {
@@ -510,6 +534,7 @@ function SanctityControls({
       : null)
   return (
     <AdjustPanel
+      acts={[sanctify, release, remember]}
       title='Hallow, remember and forget'
       note='Sanctify the land or release its holiness to what stands on it; write an event into its memory, reshape or erase one. Held memories never fade.'
     >
@@ -525,6 +550,7 @@ function SanctityControls({
           />
         </div>
         <Button
+          act={sanctify}
           size='sm'
           disabled={blocked !== null}
           disabledReason={blocked ?? undefined}
@@ -535,6 +561,7 @@ function SanctityControls({
         </Button>
         {view.sacredness_held && (
           <Button
+            act={release}
             size='sm'
             variant='outline'
             disabled={blocked !== null}
@@ -582,6 +609,7 @@ function SanctityControls({
           />
         </div>
         <Button
+          act={remember}
           size='sm'
           disabled={blocked !== null || kind === '' || title.trim() === ''}
           disabledReason={
@@ -683,6 +711,7 @@ function KnowledgeRow({
   busy: string | null
 }) {
   const release = useGodAction({
+    writes: [{ lever: 'region:knowledge_release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/region:knowledge_release', {
@@ -734,6 +763,7 @@ function KnowledgeRow({
       </Badge>
       {row.held && (
         <Button
+          act={release}
           size='sm'
           variant='outline'
           disabled={blocked !== null}
@@ -759,6 +789,7 @@ function KnowledgeCard({
   const [realm, setRealm] = useState('')
   const [level, setLevel] = useState(String(DEFAULT_LEVEL))
   const chart = useGodAction({
+    writes: [{ lever: 'region:knowledge_set' }],
     run: (value: number) =>
       unwrap(
         api.POST('/api/actions/region:knowledge_set', {
@@ -800,6 +831,7 @@ function KnowledgeCard({
           </Paged>
         )}
         <AdjustPanel
+          acts={[chart]}
           title='Reveal or hide this land'
           note='Draw this region onto a realm’s maps or tear it out. What you set is held until you release it.'
         >
@@ -828,6 +860,7 @@ function KnowledgeCard({
               />
             </div>
             <Button
+              act={chart}
               size='sm'
               disabled={blocked !== null || realm === ''}
               disabledReason={
@@ -844,6 +877,7 @@ function KnowledgeCard({
               Reveal
             </Button>
             <Button
+              act={chart}
               size='sm'
               variant='outline'
               disabled={blocked !== null || realm === ''}
@@ -914,6 +948,7 @@ function RiverCard({ regionId, view }: { regionId: number; view: Terrain }) {
   const busy = useBusy()
   const [target, setTarget] = useState('')
   const redirect = useGodAction({
+    writes: [{ lever: 'region:river_redirect' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/region:river_redirect', {
@@ -946,6 +981,7 @@ function RiverCard({ regionId, view }: { regionId: number; view: Terrain }) {
         }
       >
         <AdjustPanel
+          acts={[redirect]}
           title='Turn the river'
           note='Send this land’s river into a neighbouring region. The old valley dries to a stream or a dry bed and its places may lose their water; the new one gains it.'
         >
@@ -966,6 +1002,7 @@ function RiverCard({ regionId, view }: { regionId: number; view: Terrain }) {
               />
             </div>
             <Button
+              act={redirect}
               size='sm'
               disabled={
                 blocked !== null ||

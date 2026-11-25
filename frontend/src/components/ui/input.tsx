@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import {
   type ControlSize,
@@ -12,6 +13,7 @@ const fieldSurface =
 
 type InputProps = Omit<React.ComponentProps<'input'>, 'size'> & {
   size?: ControlSize
+  act?: ActProp
   leadingIcon?: React.ComponentType<{
     className?: string
     'aria-hidden'?: boolean
@@ -35,8 +37,11 @@ function Input({
   type,
   size = 'default',
   leadingIcon: LeadingIcon,
+  act,
+  readOnly,
   ...props
 }: InputProps) {
+  const refusal = refusalOf(act)
   if (LeadingIcon)
     return (
       <div
@@ -53,6 +58,8 @@ function Input({
         <Input
           type={type}
           size={size}
+          act={act}
+          readOnly={readOnly}
           className={LEADING_PADDING[size]}
           {...props}
         />
@@ -61,6 +68,9 @@ function Input({
   return (
     <input
       type={type}
+      readOnly={readOnly || refusal !== null}
+      aria-description={refusal ?? undefined}
+      title={refusal ?? props.title}
       data-slot='input'
       data-control-size={size}
       className={cn(

@@ -138,6 +138,7 @@ function CampCard({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={routing}
           icon={Route}
           label='Follow these pastures'
           busy={why(
@@ -187,6 +188,7 @@ function CampForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -291,6 +293,7 @@ export function ConfederationCard({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={joining}
           icon={Users}
           label='Gather these camps'
           busy={why(
@@ -346,6 +349,7 @@ function ConfederationForge({
       columns={3}
       action={
         <Button
+          act={creating}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

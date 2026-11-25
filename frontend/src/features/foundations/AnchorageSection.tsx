@@ -68,6 +68,7 @@ function AnchorControls({
   )
   const [hold, setHold] = useState(true)
   const anchor = useGodAction({
+    writes: [{ lever: 'son:anchor' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/son:anchor', {
@@ -76,6 +77,7 @@ function AnchorControls({
       ),
   })
   const clear = useGodAction({
+    writes: [{ lever: 'son:clear_anchor' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/son:clear_anchor', {
@@ -87,6 +89,7 @@ function AnchorControls({
     blocked ?? (anchor.isPending || clear.isPending ? 'Working…' : null)
   return (
     <Adjust
+      acts={[anchor, clear]}
       label='Move the anchor'
       title={`${name}'s anchor`}
       note='An anchor can be one of their own creations or a structure mortals dedicated to them. Held, the god cannot move it themselves.'
@@ -104,6 +107,7 @@ function AnchorControls({
         </div>
         <label className='flex min-w-0 items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
           <Switch
+            permission='lock_canon'
             checked={hold}
             onCheckedChange={setHold}
             aria-label='Hold the anchor'
@@ -113,6 +117,7 @@ function AnchorControls({
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={anchor}
           size='sm'
           disabled={busy !== null || choice === null}
           disabledReason={busy ?? (choice === null ? 'Choose one' : undefined)}
@@ -122,6 +127,7 @@ function AnchorControls({
           Anchor here
         </Button>
         <Button
+          act={clear}
           size='sm'
           variant='outline'
           disabled={busy !== null || view.anchor === null}

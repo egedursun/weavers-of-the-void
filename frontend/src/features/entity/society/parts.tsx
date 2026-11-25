@@ -7,6 +7,7 @@ import {
   Unlock,
   type LucideIcon,
 } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,6 +33,7 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
+import { type AdjustGate, useAdjustGate } from '@/features/team/writeGate'
 import { type Spec } from './labels'
 import { PIP_TONE, WORKING } from './tones'
 
@@ -81,6 +83,8 @@ export function Panel({
 }
 
 export function AdjustPanel({
+  acts,
+  writes,
   title,
   note,
   children,
@@ -88,7 +92,8 @@ export function AdjustPanel({
   title: string
   note: string
   children: ReactNode
-}) {
+} & AdjustGate) {
+  const gate = useAdjustGate(acts, writes)
   const [open, setOpen] = useState(false)
   return (
     <Collapsible
@@ -103,7 +108,7 @@ export function AdjustPanel({
           <Muted variant='caption'>{note}</Muted>
         </div>
         <CollapsibleTrigger asChild>
-          <Button size='sm' variant={open ? 'secondary' : 'outline'}>
+          <Button act={gate} size='sm' variant={open ? 'secondary' : 'outline'}>
             <SlidersHorizontal />
             {open ? 'Close the controls' : 'Adjust'}
             <ChevronDown
@@ -222,6 +227,7 @@ export function NumberEditor({
   blocked,
   pending,
   onSet,
+  act,
 }: {
   id: string
   field: NumberField
@@ -229,6 +235,7 @@ export function NumberEditor({
   blocked: string | null
   pending: boolean
   onSet: (value: number) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState(String(field.value))
   const parsed = draft.trim() === '' ? null : Number(draft)
@@ -262,6 +269,7 @@ export function NumberEditor({
             onChange={(event) => setDraft(event.target.value)}
           />
           <Button
+            act={act}
             type='submit'
             variant='outline'
             size='icon'
@@ -285,6 +293,7 @@ export function ChoiceEditor({
   blocked,
   hint,
   onPick,
+  act,
 }: {
   label: string
   value: string
@@ -293,6 +302,7 @@ export function ChoiceEditor({
   blocked: string | null
   hint: string
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   const current = table[value]
   return (
@@ -303,7 +313,12 @@ export function ChoiceEditor({
       hint={hint}
       held={held}
     >
-      <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+      <Select
+        act={act}
+        value={value}
+        onValueChange={onPick}
+        disabled={blocked !== null}
+      >
         <SelectTrigger aria-label={label} className='w-full'>
           <SelectValue />
         </SelectTrigger>
@@ -329,17 +344,24 @@ export function IconPicker({
   table,
   blocked,
   onPick,
+  act,
 }: {
   label: string
   value: string
   table: Record<string, Spec>
   blocked: string | null
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   const id = useId()
   return (
     <FieldTile id={id} label={label}>
-      <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+      <Select
+        act={act}
+        value={value}
+        onValueChange={onPick}
+        disabled={blocked !== null}
+      >
         <SelectTrigger id={id} aria-label={label} className='w-full'>
           <SelectValue />
         </SelectTrigger>
@@ -368,6 +390,7 @@ export function FlagEditor({
   held,
   blocked,
   onToggle,
+  act,
 }: {
   label: string
   hint: string
@@ -377,6 +400,7 @@ export function FlagEditor({
   held: boolean
   blocked: string | null
   onToggle: (value: boolean) => void
+  act?: ActProp
 }) {
   return (
     <EditorTile
@@ -387,6 +411,7 @@ export function FlagEditor({
       held={held}
       control={
         <Switch
+          act={act}
           checked={checked}
           disabled={blocked !== null}
           onCheckedChange={onToggle}
@@ -402,11 +427,13 @@ export function HeldStrip({
   labelOf,
   blocked,
   onRelease,
+  act,
 }: {
   keys: string[]
   labelOf: (key: string) => string
   blocked: string | null
   onRelease: (keys: string[]) => void
+  act?: ActProp
 }) {
   if (keys.length === 0)
     return (
@@ -439,6 +466,7 @@ export function HeldStrip({
         >
           {(key) => (
             <Button
+              act={act}
               key={key}
               size='sm'
               variant='outline'
@@ -454,6 +482,7 @@ export function HeldStrip({
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           {keys.length > 1 && (
             <Button
+              act={act}
               size='sm'
               variant='secondary'
               disabled={blocked !== null}

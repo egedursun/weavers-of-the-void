@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { type LucideIcon, Plus, X } from 'lucide-react'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FieldTile, PagedList } from '@/components/domain'
@@ -17,15 +18,18 @@ export function StepButton({
   busy,
   onClick,
   variant = 'outline',
+  act,
 }: {
   icon: LucideIcon
   label: string
   busy: string | null
   onClick: () => void
   variant?: 'outline' | 'default' | 'ghost'
+  act?: ActProp
 }) {
   return (
     <Button
+      act={act}
       size='sm'
       variant={variant}
       disabled={busy !== null}

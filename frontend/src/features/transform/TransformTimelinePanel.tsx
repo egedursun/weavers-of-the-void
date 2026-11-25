@@ -72,6 +72,7 @@ function Happened({
         />
       </div>
       <StepButton
+        act={reverting}
         icon={Undo2}
         label='Undo it'
         busy={why(
@@ -117,6 +118,7 @@ function Coming({
     >
       <Ref node={subject} empty='a thing no longer kept' />
       <StepButton
+        act={blocking}
         icon={row.stance === 'blocked' ? ShieldCheck : Ban}
         label={row.stance === 'blocked' ? 'Let it come' : 'Block it'}
         busy={why(blocked, blocking.isPending)}

@@ -1,13 +1,13 @@
 import {
   keepPreviousData,
   useInfiniteQuery,
-  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 
 export type NotificationList = components['schemas']['NotificationList']
@@ -108,6 +108,7 @@ function useRefresh() {
 export function useMarkRead() {
   const refresh = useRefresh()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/notifications/read' }],
     mutationFn: (body: MarkReadRequest) =>
       unwrap(api.POST('/api/notifications/read', { body })),
     onSuccess: refresh,
@@ -117,6 +118,7 @@ export function useMarkRead() {
 export function useAddNote() {
   const refresh = useRefresh()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/notifications' }],
     mutationFn: (body: { title: string; body: string | null }) =>
       unwrap(api.POST('/api/notifications', { body })),
     onSuccess: refresh,
@@ -126,6 +128,7 @@ export function useAddNote() {
 export function useSaveNotificationSettings() {
   const refresh = useRefresh()
   return useMutation({
+    writes: [{ method: 'PUT', path: '/api/notifications/settings' }],
     mutationFn: (body: Partial<Record<NotificationCategory, boolean>>) =>
       unwrap(api.PUT('/api/notifications/settings', { body })),
     onSuccess: refresh,

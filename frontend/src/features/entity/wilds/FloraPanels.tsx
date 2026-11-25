@@ -19,6 +19,7 @@ import {
   speciesClassValues,
   type components,
 } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -316,11 +317,13 @@ function ShareSetter({
   value,
   blocked,
   onSave,
+  act,
 }: {
   label: string
   value: number
   blocked: string | null
   onSave: (next: number) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState(String(value))
   const parsed = share(draft)
@@ -343,6 +346,7 @@ function ShareSetter({
         />
       </div>
       <Button
+        act={act}
         size='sm'
         variant='outline'
         disabled={(blocked ?? problem) !== null}
@@ -362,6 +366,7 @@ function NumberSetter({
   max,
   blocked,
   onSave,
+  act,
 }: {
   label: string
   value: number
@@ -369,6 +374,7 @@ function NumberSetter({
   max: number
   blocked: string | null
   onSave: (next: number) => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState(String(value))
   const parsed = Number(draft)
@@ -392,6 +398,7 @@ function NumberSetter({
         />
       </div>
       <Button
+        act={act}
         size='sm'
         variant='outline'
         disabled={(blocked ?? problem) !== null}
@@ -408,10 +415,12 @@ function SowForm({
   blocked,
   pick,
   onSow,
+  act,
 }: {
   blocked: string | null
   pick: 'region' | 'plant'
   onSow: (target: number, share: number) => void
+  act?: ActProp
 }) {
   const [target, setTarget] = useState<number | null>(null)
   const [draft, setDraft] = useState('20')
@@ -442,6 +451,7 @@ function SowForm({
         onChange={setDraft}
       />
       <Button
+        act={act}
         size='sm'
         variant='outline'
         disabled={reason !== null}
@@ -486,6 +496,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
       <Group title='Kind of life' icon={Sprout}>
         <div className='grid min-w-0 grid-cols-1 gap-3 @md/wild:grid-cols-2'>
           <MindPicker
+            act={save}
             label={fieldLabel('species_class')}
             value={card.species_class}
             table={tableOf(speciesClassValues, SPECIES_CLASS)}
@@ -495,6 +506,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
             }
           />
           <MindPicker
+            act={save}
             label={fieldLabel('biochemistry')}
             value={card.biochemistry}
             table={tableOf(biochemistryValues, BIOCHEMISTRY)}
@@ -518,6 +530,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                   set it out now and shape it.
                 </Muted>
                 <Button
+                  act={plantEdit}
                   size='sm'
                   variant='outline'
                   className='self-start'
@@ -532,6 +545,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
             ) : (
               <div className='grid min-w-0 grid-cols-1 gap-3 @md/wild:grid-cols-2'>
                 <MindPicker
+                  act={plantEdit}
                   label={fieldLabel('growth_cycle')}
                   value={plant.growth_cycle}
                   table={tableOf(growthCycleValues, GROWTH_CYCLE)}
@@ -541,6 +555,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                   }
                 />
                 <MindPicker
+                  act={plantEdit}
                   label={fieldLabel('cultivation')}
                   value={plant.cultivation}
                   table={tableOf(cultivationValues, CULTIVATION)}
@@ -550,6 +565,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                   }
                 />
                 <NumberSetter
+                  act={plantEdit}
                   key={`seasons-${plant.growing_seasons}`}
                   label={fieldLabel('growing_seasons')}
                   value={plant.growing_seasons}
@@ -561,6 +577,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                   }
                 />
                 <NumberSetter
+                  act={plantEdit}
                   key={`soil-${plant.soil_need}`}
                   label={fieldLabel('soil_need')}
                   value={plant.soil_need}
@@ -588,6 +605,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                   />
                 </div>
                 <Button
+                  act={plantEdit}
                   size='sm'
                   variant='outline'
                   disabled={(busy ?? parentProblem) !== null}
@@ -602,6 +620,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                 </Button>
                 {plant.cultivar_of && (
                   <Button
+                    act={plantEdit}
                     size='sm'
                     variant='ghost'
                     disabled={busy !== null}
@@ -618,6 +637,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
             )}
             {plant && plant.locked.length > 0 && (
               <Button
+                act={plantEdit}
                 size='sm'
                 variant='ghost'
                 className='self-start'
@@ -649,6 +669,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                             <Name item={row.region} />
                           </div>
                           <Button
+                            act={clear}
                             size='icon-sm'
                             variant='ghost'
                             aria-label={`Clear it from the fields of ${row.region.name}`}
@@ -663,6 +684,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                           </Button>
                         </div>
                         <ShareSetter
+                          act={sow}
                           key={`${row.region.id}-${row.share}`}
                           label='Share of the fields'
                           value={row.share}
@@ -683,6 +705,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
               </div>
             )}
             <SowForm
+              act={sow}
               blocked={busy}
               pick='region'
               onSow={(region, next) =>
@@ -707,6 +730,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                     <Bug aria-hidden='true' />
                     {item.name}
                     <Button
+                      act={pest}
                       size='icon-sm'
                       variant='ghost'
                       aria-label={`${item.name} no longer feeds on it`}
@@ -734,6 +758,7 @@ export function FloraControls({ id, card, blocked }: Blocked) {
                 placeholder='A pest that feeds on it…'
               />
               <Button
+                act={pest}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null || pestId === null}
@@ -825,6 +850,7 @@ function CropRow({
           </div>
         </div>
         <Button
+          act={clear}
           size='icon-sm'
           variant='ghost'
           aria-label={`Clear ${plant.name} from these fields`}
@@ -865,6 +891,7 @@ function CropRow({
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
         <div className='min-w-0 flex-1'>
           <ShareSetter
+            act={sow}
             key={`${plant.id}-${row.share}`}
             label='Hold its share at'
             value={row.share}
@@ -876,6 +903,7 @@ function CropRow({
         </div>
         {held && (
           <Button
+            act={sow}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -979,6 +1007,7 @@ export function RegionCropsSection({
             </Muted>
           ) : (
             <SowForm
+              act={sow}
               blocked={busy}
               pick='plant'
               onSow={(plant, next) =>
@@ -1073,6 +1102,7 @@ export function WorldLifeSection({ worldId }: { worldId: number }) {
                 </div>
                 {!row.anywhere && (
                   <Button
+                    act={toggle}
                     size='sm'
                     variant={row.borne ? 'outline' : 'default'}
                     aria-pressed={row.borne}

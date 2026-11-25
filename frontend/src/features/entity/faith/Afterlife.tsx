@@ -149,6 +149,7 @@ function SoulLevers({
   const [veneration, setVeneration] = useState(soul.veneration)
   const [alignment, setAlignment] = useState<string>(soul.alignment)
   const judge = useGodAction({
+    writes: [{ lever: 'soul:judge' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:judge', {
@@ -157,12 +158,14 @@ function SoulLevers({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'soul:release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:release', { body: { spirit_id: id } })
       ),
   })
   const bind = useGodAction({
+    writes: [{ lever: 'soul:bind' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:bind', {
@@ -175,6 +178,7 @@ function SoulLevers({
       ),
   })
   const loose = useGodAction({
+    writes: [{ lever: 'soul:bind' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:bind', {
@@ -183,6 +187,7 @@ function SoulLevers({
       ),
   })
   const reborn = useGodAction({
+    writes: [{ lever: 'soul:reincarnate' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:reincarnate', {
@@ -191,6 +196,7 @@ function SoulLevers({
       ),
   })
   const edit = useGodAction({
+    writes: [{ lever: 'soul:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/soul:edit', {
@@ -222,6 +228,7 @@ function SoulLevers({
   )
   return (
     <AdjustPanel
+      acts={[edit, release, judge, bind, loose, reborn]}
       trigger='Adjust the soul'
       title='Hold this soul in your hand'
       note='Judge it, bind it, send it back into the world, or change how it is remembered. Every change goes into the ledger.'
@@ -261,6 +268,7 @@ function SoulLevers({
           </div>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Button
+              act={edit}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -270,6 +278,7 @@ function SoulLevers({
               Save the soul
             </Button>
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -307,6 +316,7 @@ function SoulLevers({
             </div>
             <div>
               <Button
+                act={judge}
                 size='sm'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}
@@ -337,6 +347,7 @@ function SoulLevers({
               />
             </div>
             <Button
+              act={bind}
               size='sm'
               variant='outline'
               disabled={busy !== null || target === null}
@@ -348,6 +359,7 @@ function SoulLevers({
             </Button>
             {soul.binding !== 'none' && (
               <Button
+                act={loose}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -373,6 +385,7 @@ function SoulLevers({
               />
             </div>
             <Button
+              act={reborn}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -815,6 +828,7 @@ function StratumAxes({
   blocked: string | null
 }) {
   const reshape = useGodAction<EditValues>({
+    writes: [{ lever: 'afterlife:stratum' }],
     run: (values) =>
       unwrap(
         api.POST('/api/actions/afterlife:stratum', {
@@ -832,6 +846,7 @@ function StratumAxes({
   })
   return (
     <RecordEditor
+      act={reshape}
       title='Shape what this realm is'
       note='Its axes set who it takes, how long souls stay, what they do and whether the living can reach them; its name comes from the faith.'
       fields={AXIS_FIELDS}
@@ -856,6 +871,7 @@ export function AfterlifeSection({
   const [kind, setKind] = useState<string>('reward')
   const [name, setName] = useState('')
   const add = useGodAction({
+    writes: [{ lever: 'afterlife:stratum' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/afterlife:stratum', {
@@ -948,6 +964,7 @@ export function AfterlifeSection({
         )}
         <div className='flex min-w-0 flex-col items-start gap-2'>
           <AdjustPanel
+            acts={[add]}
             trigger='Make a stratum'
             title='Make a new stratum'
             note='Raise a stratum of any kind, with your own name; shape who it takes once it stands.'
@@ -969,6 +986,7 @@ export function AfterlifeSection({
             </FieldTile>
             <div>
               <Button
+                act={add}
                 size='sm'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}

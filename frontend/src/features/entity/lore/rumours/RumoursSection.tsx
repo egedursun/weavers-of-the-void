@@ -86,6 +86,7 @@ function RumourCard({
   const [elsewhere, setElsewhere] = useState<number | null>(null)
   const invalidate = [rumourKeys.board(communityId)]
   const edit = useGodAction<{ fidelity: number | null; release: boolean }>({
+    writes: [{ lever: 'rumour:edit' }],
     run: ({ fidelity, release }) =>
       unwrap(
         api.POST('/api/actions/rumour:edit', {
@@ -95,6 +96,7 @@ function RumourCard({
     invalidate,
   })
   const silence = useGodAction<boolean>({
+    writes: [{ lever: 'rumour:suppress' }],
     run: (everywhere) =>
       unwrap(
         api.POST('/api/actions/rumour:suppress', {
@@ -104,6 +106,7 @@ function RumourCard({
     invalidate,
   })
   const pass = useGodAction({
+    writes: [{ lever: 'rumour:plant' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/rumour:plant', {
@@ -189,6 +192,7 @@ function RumourCard({
         )}
       </div>
       <AdjustPanel
+        acts={[edit, pass, silence]}
         surface='RumourAdjust'
         title='Shape this rumour'
         note='Set how true it runs and hold it there, let it fade again, carry it to another people, or silence it.'
@@ -208,6 +212,7 @@ function RumourCard({
                 />
               </FieldTile>
               <Button
+                act={edit}
                 size='sm'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}
@@ -223,6 +228,7 @@ function RumourCard({
               </Button>
               {held && (
                 <Button
+                  act={edit}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null}
@@ -243,6 +249,7 @@ function RumourCard({
               placeholder='Choose who should hear it…'
             />
             <Button
+              act={pass}
               size='sm'
               variant='outline'
               className='self-start'
@@ -259,6 +266,7 @@ function RumourCard({
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={silence}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -269,6 +277,7 @@ function RumourCard({
             Silence it here
           </Button>
           <Button
+            act={silence}
             size='sm'
             variant='destructive'
             disabled={busy !== null}
@@ -296,6 +305,7 @@ function PlantRumour({
   const [truth, setTruth] = useState(String(DEFAULT_TRUTH))
   const [atrocity, setAtrocity] = useState(false)
   const plant = useGodAction({
+    writes: [{ lever: 'rumour:plant' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/rumour:plant', {
@@ -319,6 +329,7 @@ function PlantRumour({
   )
   return (
     <AdjustPanel
+      acts={[plant]}
       surface='PlantRumour'
       title='Whisper a rumour'
       note='Plant a tale of your own among these people. It spreads like any other word, garbling as it goes; a tale of atrocity turns hearts against the one it names.'
@@ -360,6 +371,7 @@ function PlantRumour({
         <Text as='span'>A tale of atrocity</Text>
       </label>
       <Button
+        act={plant}
         size='sm'
         className='self-start'
         disabled={busy !== null}

@@ -469,6 +469,7 @@ function RowEditor({
   return (
     <>
       <RecordEditor
+        act={editing}
         title={title}
         note={HELD}
         fields={fields}
@@ -478,6 +479,7 @@ function RowEditor({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike it from the record'
         busy={why(blocked, removing.isPending)}
@@ -504,6 +506,7 @@ function ProfileEditor({
   const editing = useProfileEdit(nodeId, tableName)
   return (
     <RecordEditor
+      act={editing}
       title={title}
       note={HELD}
       fields={fields}
@@ -570,6 +573,7 @@ function Intrusions({ view, blocked }: { view: View } & Blocked) {
         columns={3}
         action={
           <StepButton
+            act={making}
             icon={Bug}
             label='Break in'
             busy={why(
@@ -653,6 +657,7 @@ function Store({ store, blocked }: { store: DataStoreView } & Blocked) {
         columns={2}
         action={
           <StepButton
+            act={putting}
             icon={Plus}
             label='Put it in'
             busy={why(blocked, putting.isPending)}
@@ -703,6 +708,7 @@ function StoreContent({
       caption={`Kept since epoch ${item.epoch}${item.reference !== null ? `, with a reference attached` : ''}`}
       aside={
         <StepButton
+          act={taking}
           icon={Trash2}
           label='Take it out'
           busy={why(blocked, taking.isPending)}
@@ -741,6 +747,7 @@ function Stores({ view, blocked }: { view: View } & Blocked) {
         columns={2}
         action={
           <StepButton
+            act={opening}
             icon={Database}
             label='Open it'
             busy={why(blocked, opening.isPending)}
@@ -791,6 +798,7 @@ function RecordMark({
           onPick={setAuthenticity}
         />
         <StepButton
+          act={marking}
           icon={BadgeCheck}
           label='Mark it so'
           busy={why(blocked, marking.isPending)}
@@ -929,6 +937,7 @@ function Company({ view, blocked }: { view: View } & Blocked) {
         columns={2}
         action={
           <StepButton
+            act={holdingIt}
             icon={Plus}
             label='Give it'
             busy={why(
@@ -1003,6 +1012,7 @@ function Line({ line, blocked }: { line: ReplicatorLineView } & Blocked) {
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <StepButton
+              act={seeding}
               icon={Sprout}
               label='Seed it'
               busy={why(
@@ -1012,6 +1022,7 @@ function Line({ line, blocked }: { line: ReplicatorLineView } & Blocked) {
               onClick={() => seeding.mutate()}
             />
             <StepButton
+              act={stopping}
               icon={OctagonX}
               label='Stop it everywhere'
               busy={why(
@@ -1063,6 +1074,7 @@ function Presence({
       caption={`Mass ${presence.mass}, growth ${presence.growth}%`}
     >
       <RecordEditor
+        act={editing}
         title='Set this presence'
         note={HELD}
         fields={PRESENCE_MASS_FIELDS}
@@ -1072,6 +1084,7 @@ function Presence({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={lifting}
         icon={Trash2}
         label='Clear it from here'
         busy={why(blocked, lifting.isPending)}
@@ -1126,6 +1139,7 @@ function Replicators({ view, blocked }: { view: View } & Blocked) {
         columns={3}
         action={
           <StepButton
+            act={founding}
             icon={Boxes}
             label='Start it'
             busy={why(
@@ -1301,6 +1315,7 @@ function Abundance({ view, blocked }: { view: View } & Blocked) {
         columns={3}
         action={
           <StepButton
+            act={granting}
             icon={FileKey}
             label='Grant it'
             busy={why(blocked, granting.isPending)}
@@ -1417,6 +1432,7 @@ function Relics({ view, blocked }: { view: View } & Blocked) {
         columns={2}
         action={
           <StepButton
+            act={marking}
             icon={Flame}
             label='Make it a relic'
             busy={why(blocked, marking.isPending)}
@@ -1447,6 +1463,7 @@ function Relics({ view, blocked }: { view: View } & Blocked) {
         columns={2}
         action={
           <StepButton
+            act={opening}
             icon={Pickaxe}
             label='Open it'
             busy={why(blocked, opening.isPending)}
@@ -1530,6 +1547,7 @@ function Realms({ view, blocked }: { view: View } & Blocked) {
         columns={3}
         action={
           <StepButton
+            act={making}
             icon={MIND_SEATS.realm.icon}
             label='Make it'
             busy={why(

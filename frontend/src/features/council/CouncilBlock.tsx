@@ -52,6 +52,7 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
   )
   const awake = attending.length
   const convene = useGodAction({
+    writes: [{ method: 'POST', path: '/api/councils' }],
     run: () =>
       unwrap(api.POST('/api/councils', { body: { topic: topic.trim() } })),
     success: 'The council is convening; the debate is in the live feed',
@@ -169,6 +170,7 @@ export function CouncilBlock({ showAll = false }: { showAll?: boolean }) {
             onChange={(event) => setTopic(event.target.value)}
           />
           <ActionButton
+            act={convene}
             label='Convene the council'
             icon={UsersRound}
             variant='default'

@@ -9,6 +9,7 @@ from aerona.services.application import ApplicationServices
 from aerona.services.genesis_wizard import GenesisWizard
 from aerona.services.player.runtime import PlayerRuntime
 from aerona.services.rules import RulesService
+from aerona.services.team.state import TeamState
 from aerona.settings import Settings
 
 
@@ -23,6 +24,7 @@ class Services:
     orchestrator: EpochOrchestrator
     player: PlayerRuntime
     stop_requests: set[str] = field(default_factory=set)
+    team: TeamState = field(default_factory=TeamState)
 
     @property
     def agents(self) -> AgentRuntime:

@@ -61,6 +61,7 @@ function ColumnRow({
     column.value === null ? '' : String(column.value)
   )
   const set = useGodAction({
+    writes: [{ lever: 'profile:set' }],
     run: (value: Scalar) =>
       unwrap(
         api.POST('/api/actions/profile:set', {
@@ -77,6 +78,7 @@ function ColumnRow({
     invalidate: [profilesKey(nodeId)],
   })
   const release = useGodAction({
+    writes: [{ lever: 'profile:release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/profile:release', {
@@ -95,6 +97,7 @@ function ColumnRow({
   const control =
     column.kind === 'flag' ? (
       <Switch
+        act={set}
         checked={column.value === true}
         aria-label={humanize(column.name)}
         disabled={busy !== undefined}
@@ -102,6 +105,7 @@ function ColumnRow({
       />
     ) : column.kind === 'choice' ? (
       <Select
+        act={set}
         value={column.value === null ? NONE : String(column.value)}
         disabled={busy !== undefined}
         onValueChange={(value) => set.mutate(value === NONE ? null : value)}
@@ -129,6 +133,7 @@ function ColumnRow({
           onChange={(event) => setDraft(event.target.value)}
         />
         <Button
+          act={set}
           size='sm'
           variant='outline'
           aria-label={`Set ${humanize(column.name)}`}
@@ -159,6 +164,7 @@ function ColumnRow({
       {control}
       {kept ? (
         <Button
+          act={release}
           size='sm'
           variant='ghost'
           disabled={busy !== undefined}
@@ -170,6 +176,7 @@ function ColumnRow({
         </Button>
       ) : (
         <Button
+          act={set}
           size='sm'
           variant='ghost'
           disabled={busy !== undefined}
@@ -208,6 +215,7 @@ function TableCard({
         </div>
       </div>
       <AdjustPanel
+        writes={[{ lever: 'profile:release' }, { lever: 'profile:set' }]}
         title={`Set ${humanize(table.table).toLowerCase()}`}
         note='Every change is held so the engine keeps it; release a value to let the world move it again.'
         trigger='Adjust values'

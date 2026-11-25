@@ -28,6 +28,7 @@ export function EpochEditForm({
   const [draftNarrative, setDraftNarrative] = useState(narrative ?? '')
   const { reason } = useGodGate()
   const save = useGodAction({
+    writes: [{ lever: 'epoch:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/epoch:edit', {
@@ -46,7 +47,7 @@ export function EpochEditForm({
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='ghost' size='sm' className='self-start'>
+        <Button act={save} variant='ghost' size='sm' className='self-start'>
           <PenLine />
           Edit this epoch
         </Button>
@@ -72,6 +73,7 @@ export function EpochEditForm({
         </FormRow>
         <div>
           <ActionButton
+            act={save}
             label='Save'
             variant='default'
             blocked={reason() ?? (unchanged ? 'Nothing changed.' : null)}

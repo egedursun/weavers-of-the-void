@@ -72,6 +72,7 @@ export function RitePanel({
   const [caster, setCaster] = useState<number | null>(card.inventor?.id ?? null)
   const [target, setTarget] = useState<number | null>(null)
   const shape = useGodAction<{ effect: string; magnitude: number }>({
+    writes: [{ lever: 'rite:effect' }],
     run: ({ effect: chosen, magnitude }) =>
       unwrap(
         api.POST('/api/actions/rite:effect', {
@@ -80,6 +81,7 @@ export function RitePanel({
       ),
   })
   const cast = useGodAction({
+    writes: [{ lever: 'rite:cast' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/rite:cast', {
@@ -238,6 +240,7 @@ export function RitePanel({
               />
             </div>
             <Button
+              act={cast}
               disabled={busy !== null || caster === null}
               disabledReason={
                 busy ?? (caster === null ? 'Choose a caster' : undefined)
@@ -339,6 +342,7 @@ export function RitePanel({
                   const spec = lookup(EFFECTS, row.effect)
                   return (
                     <RowEditor
+                      act={shape}
                       key={row.effect}
                       label={`${spec.label} magnitude`}
                       icon={spec.icon}
@@ -349,6 +353,7 @@ export function RitePanel({
                       }
                     >
                       <Button
+                        act={shape}
                         size='icon'
                         variant='ghost'
                         aria-label={`Remove ${spec.label}`}
@@ -382,6 +387,7 @@ export function RitePanel({
               />
             </div>
             <Button
+              act={shape}
               size='sm'
               variant='outline'
               disabled={busy !== null || effect === ''}

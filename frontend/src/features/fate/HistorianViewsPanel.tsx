@@ -54,11 +54,13 @@ function ViewRow({
   const { reason } = useGodGate()
   const [draft, setDraft] = useState<string | null>(null)
   const edit = useGodAction({
+    writes: [{ lever: 'voices:edit_view' }],
     run: editHistorianView,
     invalidate: [fateKeys.controls],
     onDone: () => setDraft(null),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'voices:delete_view' }],
     run: deleteHistorianView,
     invalidate: [fateKeys.controls],
   })
@@ -97,6 +99,7 @@ function ViewRow({
             </Button>
           )}
           <ActionButton
+            act={strike}
             label='Strike'
             icon={Trash2}
             size='sm'
@@ -126,6 +129,7 @@ function ViewRow({
           </FieldTile>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <ActionButton
+              act={edit}
               label='Save the account'
               size='sm'
               cost={cost ?? undefined}

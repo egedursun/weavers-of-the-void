@@ -169,6 +169,7 @@ function CategoryCard({
           onPick={setRight}
         />
         <Button
+          act={granting}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -473,6 +474,7 @@ export function CivicsPanel({
         columns={2}
         action={
           <Button
+            act={laying}
             size='sm'
             disabled={evidenceBusy !== null}
             disabledReason={evidenceBusy ?? undefined}
@@ -515,6 +517,7 @@ export function CivicsPanel({
               onClick={running.run}
             />
             <Button
+              act={keeping}
               size='sm'
               variant='outline'
               disabled={why(gate, keeping.isPending) !== null}
@@ -525,6 +528,7 @@ export function CivicsPanel({
               Category
             </Button>
             <Button
+              act={guarding}
               size='sm'
               variant='outline'
               disabled={
@@ -551,6 +555,7 @@ export function CivicsPanel({
               Border
             </Button>
             <Button
+              act={relieving}
               size='sm'
               variant='outline'
               disabled={
@@ -577,6 +582,7 @@ export function CivicsPanel({
               Relief
             </Button>
             <Button
+              act={measuring}
               size='sm'
               disabled={
                 why(

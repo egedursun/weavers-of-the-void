@@ -14,6 +14,7 @@ export function SonRebellion({ sonId, name }: { sonId: number; name: string }) {
   const [manifesto, setManifesto] = useState('')
   const { reason } = useGodGate()
   const force = useGodAction({
+    writes: [{ lever: 'rebellion:force' }],
     run: () =>
       unwrap(
         api.POST('/api/sons/{son_id}/rebellion', {
@@ -45,6 +46,7 @@ export function SonRebellion({ sonId, name }: { sonId: number; name: string }) {
       </FormRow>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <ActionButton
+          act={force}
           label='Force the rebellion'
           icon={Flame}
           variant='destructive'

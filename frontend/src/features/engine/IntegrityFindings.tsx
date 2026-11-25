@@ -85,6 +85,7 @@ function Row({
         </Muted>
       </div>
       <Button
+        act={resolving}
         variant='outline'
         size='sm'
         disabled={resolving.isPending || readOnlyReason !== null}

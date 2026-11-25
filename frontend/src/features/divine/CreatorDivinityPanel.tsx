@@ -102,6 +102,7 @@ function TaboosCard({
                   </div>
                   {row.last_breaker && <NodeName item={row.last_breaker} />}
                   <Button
+                    act={remove}
                     size='sm'
                     variant='ghost'
                     disabled={pending !== null}
@@ -142,6 +143,7 @@ function TaboosCard({
           />
         </div>
         <Button
+          act={set}
           disabled={pending !== null || problem !== null}
           disabledReason={pending ?? problem ?? undefined}
           onClick={() => set.mutate({ act, severity: Number(severity) })}
@@ -217,6 +219,7 @@ function AttentionCard({
                   tone={row.far ? 'muted' : 'default'}
                 />
                 <Held
+                  act={set}
                   keys={row.locked}
                   label={heldLabel}
                   busy={pending}
@@ -230,6 +233,7 @@ function AttentionCard({
                 />
                 <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
                   <SwitchField
+                    act={set}
                     label='Watched'
                     checked={row.watched}
                     disabled={pending !== null}
@@ -253,6 +257,7 @@ function AttentionCard({
                   />
                   <div className='flex min-w-0 items-end gap-2'>
                     <Button
+                      act={set}
                       size='sm'
                       disabled={
                         pending !== null || (draft[row.world.id] ?? '') === ''
@@ -275,6 +280,7 @@ function AttentionCard({
                       Hold
                     </Button>
                     <Button
+                      act={clear}
                       size='sm'
                       variant='ghost'
                       disabled={pending !== null}
@@ -334,6 +340,7 @@ function CreatorStandingCard({
         />
       )}
       <StandingList
+        act={[save, clear]}
         rows={view.standing}
         focus='god'
         busy={pending}
@@ -343,6 +350,7 @@ function CreatorStandingCard({
         onClear={(row) => clear.mutate(row.community.id)}
       />
       <RegardForm
+        act={save}
         busy={pending}
         onSave={(community, values) =>
           save.mutate({ community, values, release: [] })

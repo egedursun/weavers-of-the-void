@@ -1,14 +1,18 @@
 from types import ModuleType
 
 from fastapi import APIRouter, Depends
+from fastapi.routing import APIRoute
 
+from aerona.api.access import undeclared
 from aerona.api.dependencies import guard_writes
 from aerona.api.routers import (
+    accounts,
     actions,
     affairs,
     afflictions,
     agrarian,
     arcana,
+    auth,
     backups,
     belonging,
     biology,
@@ -134,6 +138,7 @@ from aerona.api.routers import (
     statecraft,
     structures,
     tales,
+    team,
     technology,
     thin_b,
     thin_sections,
@@ -145,6 +150,7 @@ from aerona.api.routers import (
     usage,
     wars,
     wilds,
+    workspaces,
     world_ends,
     world_views,
 )
@@ -153,10 +159,14 @@ from aerona.api.security import BodyLimit
 from aerona.constants.api import ERROR_DESCRIPTION, IMAGE_UPLOAD_MAX_BYTES, MEGABYTE, MULTIPART_OVERHEAD_BYTES, PACKAGE_UPLOAD_MAX_BYTES
 from aerona.constants.http import API_PREFIX, LIBRARY_PATH
 from aerona.core.errors import NotFoundError
+from aerona.services.accounts.permissions import lever_permission
 from aerona.settings import Settings
 
 ROUTERS: tuple[ModuleType, ...] = (
     health,
+    auth,
+    accounts,
+    workspaces,
     library,
     jobs,
     rules,
@@ -298,6 +308,7 @@ ROUTERS: tuple[ModuleType, ...] = (
     divine_will_attachments,
     divine_will_library,
     presence,
+    team,
     actions,
 )
 IMAGE_UPLOAD_SUFFIX = "/images"
@@ -306,6 +317,7 @@ ATTACHMENT_UPLOAD_SUFFIX = "/divine-will/attachments"
 LIBRARY_IMPORT_SUFFIX = "/library/imports"
 LIBRARY_COVER_SUFFIX = "/cover"
 UNKNOWN_ENDPOINT = "Unknown endpoint."
+UNDECLARED_ROUTES = "Routes without an access declaration: {routes}"
 
 
 def body_limits(configured: Settings) -> tuple[BodyLimit, ...]:
@@ -330,4 +342,17 @@ def build_api_router() -> APIRouter:
     async def unknown(path: str) -> None:
         raise NotFoundError(UNKNOWN_ENDPOINT)
 
+    missing = undeclared(routes_of(api), lever_permission)
+    if missing:
+        raise RuntimeError(UNDECLARED_ROUTES.format(routes=", ".join(missing)))
     return api
+
+
+def routes_of(api: APIRouter) -> list[APIRoute]:
+    found = [route for module in ROUTERS for route in module.router.routes if isinstance(route, APIRoute)]
+    found.extend(route for route in api.routes if isinstance(route, APIRoute))
+    return found
+
+
+def api_routes() -> list[APIRoute]:
+    return routes_of(build_api_router())

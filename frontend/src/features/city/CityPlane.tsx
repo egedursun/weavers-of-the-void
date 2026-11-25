@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { postAction } from '@/api/actions'
+import { refusalOf } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { OrnateFrame, SceneCorners } from '@/components/ui/ornate'
@@ -138,6 +139,7 @@ function CityBody({
   }
   const [tab, setTab] = useState('districts')
   const move = useGodAction({
+    writes: [{ lever: 'district:move' }],
     run: (cell: { q: number; r: number }) =>
       postAction('district:move', {
         district_id: moving ?? 0,
@@ -172,7 +174,7 @@ function CityBody({
     <CityPlan2D
       scene={scene}
       selected={selected}
-      onPick={pick}
+      onPick={setSelected}
       fill
       labels={labels}
     />
@@ -202,9 +204,10 @@ function CityBody({
               fallback={<Skeleton className='h-full w-full rounded-none' />}
             >
               <CityScene3D
+                act={move}
                 scene={scene}
                 selected={selected}
-                moving={moving}
+                moving={refusalOf(move) === null ? moving : null}
                 onPick={pick}
                 fallback={plan}
                 shown={shown}
@@ -239,7 +242,7 @@ function CityBody({
                   key={district.id}
                   district={district}
                   castes={scene.castes}
-                  blocked={why(blocked, move.isPending)}
+                  blocked={move.blockedReason ?? why(blocked, move.isPending)}
                   moving={moving === district.id}
                   onMove={() =>
                     setMoving(moving === district.id ? null : district.id)

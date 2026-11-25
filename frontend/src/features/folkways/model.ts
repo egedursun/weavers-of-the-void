@@ -24,7 +24,10 @@ export function useFolkwaysRow<
   )
   const removing = useFolkwaysAction(remove, (_: void) => keys as never, 'Done')
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }
@@ -37,7 +40,10 @@ export function useFolkwaysStep<A extends FolkwaysAction, K extends object>(
   success: string
 ) {
   const running = useFolkwaysAction(action, (_: void) => keys as never, success)
-  return { busy: why(blocked, running.isPending), run: () => running.mutate() }
+  return {
+    busy: running.blockedReason ?? why(blocked, running.isPending),
+    run: () => running.mutate(),
+  }
 }
 
 export function withNone(record: Record<string, string>, none: string) {

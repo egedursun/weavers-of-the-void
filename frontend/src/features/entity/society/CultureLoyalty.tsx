@@ -88,6 +88,7 @@ function ImpositionRow({
   blocked: string | null
 }) {
   const edit = useGodAction({
+    writes: [{ lever: 'drift:edit' }],
     run: (amount: number) =>
       unwrap(
         api.POST('/api/actions/drift:edit', {
@@ -96,6 +97,7 @@ function ImpositionRow({
       ),
   })
   const cancel = useGodAction({
+    writes: [{ lever: 'drift:cancel' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/drift:cancel', {
@@ -118,6 +120,7 @@ function ImpositionRow({
         </Muted>
       </div>
       <Button
+        act={edit}
         size='sm'
         variant='outline'
         disabled={busy !== null || row.amount <= -SWING}
@@ -127,6 +130,7 @@ function ImpositionRow({
         −1
       </Button>
       <Button
+        act={edit}
         size='sm'
         variant='outline'
         disabled={busy !== null || row.amount >= SWING}
@@ -136,6 +140,7 @@ function ImpositionRow({
         +1
       </Button>
       <Button
+        act={cancel}
         size='sm'
         variant='ghost'
         aria-label='Lift this pressure'
@@ -161,6 +166,7 @@ function ImposeDrift({
   const [amount, setAmount] = useState('5')
   const [epochs, setEpochs] = useState('3')
   const impose = useGodAction({
+    writes: [{ lever: 'drift:impose' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/drift:impose', {
@@ -227,6 +233,7 @@ function ImposeDrift({
       </FieldTile>
       <div className='col-span-full flex min-w-0 justify-end'>
         <Button
+          act={impose}
           size='sm'
           disabled={busy !== null || invalid}
           disabledReason={
@@ -357,6 +364,11 @@ export function CultureDriftSection({
           </>
         )}
         <AdjustPanel
+          writes={[
+            { lever: 'drift:cancel' },
+            { lever: 'drift:edit' },
+            { lever: 'drift:impose' },
+          ]}
           title='Shape their values'
           note='Press an experience on them, a famine, a defeat, a creed, that pushes one value each epoch for as long as you say. Change or lift it at any time; every change can be undone from the ledger.'
         >
@@ -386,6 +398,7 @@ function LoyaltyCard({
   blocked: string | null
 }) {
   const edit = useGodAction({
+    writes: [{ lever: 'loyalty:edit' }],
     run: ({ key, value }: { key: string; value: number }) =>
       unwrap(
         api.POST('/api/actions/loyalty:edit', {
@@ -400,6 +413,7 @@ function LoyaltyCard({
     success: (_result, change) => `${standingLabel(change.key)} held`,
   })
   const release = useGodAction({
+    writes: [{ lever: 'loyalty:edit' }],
     run: (keys: string[]) =>
       unwrap(
         api.POST('/api/actions/loyalty:edit', {
@@ -498,10 +512,12 @@ function LoyaltyCard({
         </div>
       </Panel>
       <AdjustPanel
+        acts={[release, edit]}
         title='Bind or loosen them'
         note='Set and hold their grievances, benefits or loyalty itself. Low loyalty drives them toward autonomy and secession; every change can be undone from the ledger.'
       >
         <HeldStrip
+          act={release}
           keys={row.locked}
           labelOf={standingLabel}
           blocked={busy}
@@ -510,6 +526,7 @@ function LoyaltyCard({
         <EditorGroup title='The terms' icon={Scale}>
           {(['grievances', 'benefits', 'loyalty'] as const).map((key) => (
             <NumberEditor
+              act={edit}
               key={`${key}-${row[key]}`}
               id={`loyalty-${row.polity_id}-${view.entity_id}`}
               field={{
@@ -587,6 +604,7 @@ function MobilityControls({
   const [count, setCount] = useState('50')
   const [socialClass, setSocialClass] = useState<string>('farmer')
   const move = useGodAction({
+    writes: [{ lever: 'mobility:enslave' }, { lever: 'mobility:manumit' }],
     run: (kind: 'enslave' | 'manumit') =>
       kind === 'enslave'
         ? unwrap(
@@ -609,6 +627,7 @@ function MobilityControls({
           ),
   })
   const person = useGodAction({
+    writes: [{ lever: 'mobility:ennoble' }, { lever: 'mobility:ruin' }],
     run: (kind: 'ennoble' | 'ruin' | 'bind') =>
       kind === 'ennoble'
         ? unwrap(
@@ -623,6 +642,7 @@ function MobilityControls({
           ),
   })
   const shift = useGodAction({
+    writes: [{ lever: 'mobility:move' }],
     run: (event: 'enriched' | 'ordained' | 'outcast') =>
       unwrap(
         api.POST('/api/actions/mobility:move', {
@@ -637,6 +657,7 @@ function MobilityControls({
     return (
       <EditorGroup title='Raise or ruin them' icon={Crown} pairs>
         <Button
+          act={person}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -646,6 +667,7 @@ function MobilityControls({
           Raise among the nobles
         </Button>
         <Button
+          act={person}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -656,6 +678,7 @@ function MobilityControls({
           Ruin them
         </Button>
         <Button
+          act={person}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -666,6 +689,7 @@ function MobilityControls({
           Sell them into bondage
         </Button>
         <Button
+          act={shift}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -676,6 +700,7 @@ function MobilityControls({
           Raise them by wealth
         </Button>
         <Button
+          act={shift}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -686,6 +711,7 @@ function MobilityControls({
           Ordain them
         </Button>
         <Button
+          act={shift}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -722,6 +748,7 @@ function MobilityControls({
         />
       </FieldTile>
       <Button
+        act={move}
         size='sm'
         variant='outline'
         disabled={busy !== null || invalid}
@@ -732,6 +759,7 @@ function MobilityControls({
         Put them in chains
       </Button>
       <Button
+        act={move}
         size='sm'
         disabled={busy !== null || invalid}
         disabledReason={busy ?? 'Give a whole number of people.'}
@@ -829,6 +857,13 @@ export function MobilitySection({
           </Timeline>
         )}
         <AdjustPanel
+          writes={[
+            { lever: 'mobility:ennoble' },
+            { lever: 'mobility:enslave' },
+            { lever: 'mobility:manumit' },
+            { lever: 'mobility:move' },
+            { lever: 'mobility:ruin' },
+          ]}
           title={mortal ? 'Their fortune' : 'Bondage and freedom'}
           note='Every rise and fall is written in the chronicle and remembered; every change can be undone from the ledger.'
         >

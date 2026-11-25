@@ -16,6 +16,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { damageTypeValues } from '@/api/generated/schema'
+import { formatDateTime } from '@/lib/format'
 import {
   EmptyState,
   EntityLink,
@@ -36,6 +37,7 @@ import { Chip, Facts, RecordRow } from '@/features/cosmography/parts'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { named } from '@/features/entity/environment/labels'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { AuthorMark } from '@/features/team/AuthorMark'
 import { IncidentNameForge } from './IncidentNameForge'
 import {
   type EventAccount,
@@ -123,6 +125,7 @@ function FactRows({
   blocked: string | null
 }) {
   const strike = useGodAction<number>({
+    writes: [{ lever: 'incident_fact:delete' }],
     run: (factId) =>
       unwrap(
         api.POST('/api/actions/incident_fact:delete', {
@@ -173,6 +176,7 @@ function FactRows({
               <div className='flex min-w-0 flex-wrap gap-2'>
                 <FactEditor fact={fact} blocked={busy} />
                 <StruckButton
+                  act={strike}
                   label='Strike'
                   title={`Strike the fact ${spokenKey(fact.key).toLowerCase()}?`}
                   description='The fact is removed from the account of this happening.'
@@ -285,6 +289,7 @@ function StepBranch({
   depth: number
 }) {
   const strike = useGodAction<number>({
+    writes: [{ lever: 'incident_step:delete' }],
     run: (stepId) =>
       unwrap(
         api.POST('/api/actions/incident_step:delete', {
@@ -320,6 +325,7 @@ function StepBranch({
               )}
               <StepEditor step={step} blocked={blocked} />
               <StruckButton
+                act={strike}
                 label='Strike the step'
                 title='Strike this step?'
                 description='The step is removed from how the happening unfolded; steps inside it move up a level.'
@@ -413,8 +419,9 @@ export function ChangeList({
                 <ArrowRight aria-hidden='true' className='size-icon-xs' />
                 <ChangeSide change={change} side='after' />
                 <Muted as='span' variant='caption'>
-                  {`· ${momentText(change.moment)}${change.actor_name ? ` · by ${change.actor_name}` : ''}`}
+                  {`· ${momentText(change.moment)}${change.actor_name ? ` · by ${change.actor_name}` : ''}${change.changed_at ? ` · ${formatDateTime(change.changed_at)}` : ''}`}
                 </Muted>
+                <AuthorMark name={change.author_name} verb='Done by' />
               </span>
             }
             aside={<ChangeControls change={change} blocked={blocked} />}

@@ -1,6 +1,7 @@
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -145,6 +146,9 @@ class AccountChange:
     incident_id: int | None
     step_id: int | None
     terms: tuple[AccountTerm, ...]
+    author_account_id: int | None = None
+    author_name: str | None = None
+    changed_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -397,6 +401,9 @@ async def change_records(session: AsyncSession, names: Names, rows: Sequence[Sta
             phase=row.phase,
             incident_id=row.incident_id,
             step_id=row.step_id,
+            author_account_id=row.author_account_id,
+            author_name=row.author_name,
+            changed_at=row.changed_at,
             terms=tuple(
                 AccountTerm(
                     position=term.position,

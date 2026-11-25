@@ -48,6 +48,7 @@ export function CreatorHandPanel({
   const forgotten = world.discovery === 'forgotten'
   const [disaster, setDisaster] = useState<Disaster>('earthquake')
   const cleanse = useCosmicAction({
+    writes: [{ lever: 'cosmic:cleanse_leak' }],
     run: () =>
       unwrap(
         api.POST('/api/cosmic/cleanse-leak', { body: { world_id: worldId } })
@@ -55,6 +56,7 @@ export function CreatorHandPanel({
     success: 'Leakage cleansed',
   })
   const forget = useCosmicAction({
+    writes: [{ lever: 'cosmic:forget_world' }],
     run: () =>
       unwrap(
         api.POST('/api/cosmic/forget-world', { body: { world_id: worldId } })
@@ -62,6 +64,7 @@ export function CreatorHandPanel({
     success: `${world.name} was buried in oblivion`,
   })
   const remember = useCosmicAction({
+    writes: [{ lever: 'world:edit' }],
     run: () =>
       unwrap(
         api.PATCH('/api/worlds/{world_id}', {
@@ -72,6 +75,7 @@ export function CreatorHandPanel({
     success: `${world.name} is remembered again`,
   })
   const wrath = useCosmicAction({
+    writes: [{ lever: 'wrath:world' }],
     run: () =>
       unwrap(
         api.POST('/api/worlds/{world_id}/wrath', {
@@ -82,6 +86,18 @@ export function CreatorHandPanel({
     success: `${world.name} tasted wrath`,
   })
   const order = useCosmicAction({
+    writes: [
+      { lever: 'awaken_peoples' },
+      { lever: 'horror:outer_being' },
+      { lever: 'species:seed' },
+      { lever: 'world:end_golden_age' },
+      { lever: 'world:golden_age' },
+      { lever: 'world:guardian' },
+      { lever: 'world:map' },
+      { lever: 'world:planet_stirs' },
+      { lever: 'world:previous_creation' },
+      { lever: 'world:revive' },
+    ],
     run: (call: () => Promise<ActionResponse>) => call(),
   })
   const target = { body: { world_id: worldId } }
@@ -94,6 +110,7 @@ export function CreatorHandPanel({
     <Section title="Creator's hand · cosmic actions" level={3} surface='card'>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={cleanse}
           actionId='cosmic:cleanse_leak'
           label='Cleanse leakage'
           icon={Waves}
@@ -103,6 +120,7 @@ export function CreatorHandPanel({
         />
         {!isHome && !forgotten && (
           <CosmicActionButton
+            act={forget}
             actionId='cosmic:forget_world'
             label='Bury in oblivion'
             icon={CloudFog}
@@ -120,6 +138,7 @@ export function CreatorHandPanel({
         )}
         {forgotten && (
           <CosmicActionButton
+            act={remember}
             actionId='world:edit'
             label='Remember this world'
             icon={Eye}
@@ -161,6 +180,7 @@ export function CreatorHandPanel({
                 </SelectContent>
               </Select>
               <CosmicActionButton
+                act={wrath}
                 actionId='wrath:world'
                 label='Bring down on the whole world'
                 icon={Flame}
@@ -182,6 +202,7 @@ export function CreatorHandPanel({
         <Label>World orders</Label>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='awaken_peoples'
             label='Awaken peoples'
             icon={Users}
@@ -203,6 +224,7 @@ export function CreatorHandPanel({
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='world:golden_age'
             label='Proclaim a golden age'
             icon={Sun}
@@ -215,6 +237,7 @@ export function CreatorHandPanel({
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='world:end_golden_age'
             label='End the golden age'
             icon={SunDim}
@@ -227,6 +250,7 @@ export function CreatorHandPanel({
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='world:map'
             label='Redraw its map'
             icon={MapIcon}
@@ -239,6 +263,7 @@ export function CreatorHandPanel({
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='world:previous_creation'
             label='Reveal a previous creation'
             icon={Sparkles}
@@ -252,6 +277,7 @@ export function CreatorHandPanel({
           />
           {world.world_type === 'living' && (
             <CosmicActionButton
+              act={order}
               actionId='world:planet_stirs'
               label='Make the planet stir'
               icon={Sprout}
@@ -265,6 +291,7 @@ export function CreatorHandPanel({
             />
           )}
           <CosmicActionButton
+            act={order}
             actionId='horror:outer_being'
             label='Summon an outer being'
             icon={Skull}
@@ -284,6 +311,7 @@ export function CreatorHandPanel({
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='species:seed'
             label='Seed native life'
             icon={Sprout}
@@ -300,6 +328,7 @@ export function CreatorHandPanel({
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='species:seed'
             label='Raise a native people'
             icon={Users}
@@ -316,6 +345,7 @@ export function CreatorHandPanel({
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='world:revive'
             label='Revive this world'
             icon={RotateCcw}
@@ -348,6 +378,7 @@ export function CreatorHandPanel({
               </SelectContent>
             </Select>
             <CosmicActionButton
+              act={order}
               actionId='world:guardian'
               label='Appoint as guardian'
               icon={ShieldCheck}

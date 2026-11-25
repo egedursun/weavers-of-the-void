@@ -7,6 +7,7 @@ import { Label, Text } from '@/components/typography'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { type ChronicleLine } from '@/features/entity/api/types'
 import { NodeAvatar } from '@/features/images/NodeAvatar'
+import { AuthorMark } from '@/features/team/AuthorMark'
 import { ChronicleLineMenu } from './ChronicleLineMenu'
 import { kindTone } from './chronicleKinds'
 import { useLinkTargets } from './linkTargets'
@@ -70,6 +71,7 @@ export function ChronicleEntry({
             {kindLabel ?? wordOf(chronicleKindValues, line.kind)}
           </Label>
           {when && <Label>{when}</Label>}
+          <AuthorMark name={line.author_name} />
         </div>
         <Text>
           <MentionText text={line.text} targets={targets} selfId={selfId} />

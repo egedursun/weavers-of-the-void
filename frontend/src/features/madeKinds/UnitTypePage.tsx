@@ -111,6 +111,7 @@ function LoadoutRow({
           onChange={setCount}
         />
         <Button
+          act={set}
           size='sm'
           variant='outline'
           disabled={(busy ?? problem) !== null}
@@ -206,6 +207,7 @@ function Additions({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={addPiece}
             size='sm'
             disabled={(busy ?? (model ? null : 'Pick a model')) !== null}
             disabledReason={busy ?? (model ? undefined : 'Pick a model')}
@@ -215,6 +217,7 @@ function Additions({
             Add to the loadout
           </Button>
           <Button
+            act={addTechnique}
             size='sm'
             disabled={
               (busy ?? (technique ? null : 'Pick a technique')) !== null

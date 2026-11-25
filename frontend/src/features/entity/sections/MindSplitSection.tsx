@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Check, Lock, RotateCcw, Sprout, Undo2, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -269,6 +270,7 @@ function IdeaCard({
   onSource,
   onStrain,
   onRemove,
+  act,
 }: {
   idea: MindIdea
   blocked: string | null
@@ -276,6 +278,7 @@ function IdeaCard({
   onSource: (source: IdeaSource) => void
   onStrain: (strain: MindIdea['strain']) => void
   onRemove: () => void
+  act?: ActProp
 }) {
   const spec = named(IDEA_ICONS, idea.idea)
   const state = named(IDEA_STATES, idea.state)
@@ -315,6 +318,7 @@ function IdeaCard({
         <Muted variant='caption'>{`${idea.progress}%`}</Muted>
       </div>
       <MindPicker
+        act={act}
         label='Where it came from'
         value={idea.source}
         table={labelTable(IDEA_SOURCES)}
@@ -322,6 +326,7 @@ function IdeaCard({
         onPick={(value) => onSource(value as IdeaSource)}
       />
       <MindPicker
+        act={act}
         label='How it strains the mind while it turns'
         value={idea.strain}
         table={labelTable(STRAINS)}
@@ -337,6 +342,7 @@ function IdeaCard({
         {idea.state === 'incubating' && (
           <>
             <Button
+              act={act}
               size='sm'
               variant='outline'
               disabled={blocked !== null}
@@ -347,6 +353,7 @@ function IdeaCard({
               Settle it now
             </Button>
             <Button
+              act={act}
               size='sm'
               variant='ghost'
               disabled={blocked !== null}
@@ -360,6 +367,7 @@ function IdeaCard({
         )}
         {idea.state === 'rejected' && (
           <Button
+            act={act}
             size='sm'
             variant='outline'
             disabled={blocked !== null}
@@ -371,6 +379,7 @@ function IdeaCard({
           </Button>
         )}
         <Button
+          act={act}
           size='icon-sm'
           variant='ghost'
           aria-label={`Take away ${idea.label}`}
@@ -389,6 +398,7 @@ function Ideas({ view }: { view: MindSplit }) {
   const { reason } = useGodGate()
   const [picked, setPicked] = useState('')
   const settle = useGodAction({
+    writes: [{ lever: 'mind:idea_edit' }],
     run: ({ id, state }: { id: number; state: IdeaState }) =>
       unwrap(
         api.POST('/api/actions/mind:idea_edit', {
@@ -397,6 +407,7 @@ function Ideas({ view }: { view: MindSplit }) {
       ),
   })
   const source = useGodAction({
+    writes: [{ lever: 'mind:idea_edit' }],
     run: ({ id, kind }: { id: number; kind: IdeaSource }) =>
       unwrap(
         api.POST('/api/actions/mind:idea_edit', {
@@ -405,6 +416,7 @@ function Ideas({ view }: { view: MindSplit }) {
       ),
   })
   const strain = useGodAction({
+    writes: [{ lever: 'mind:idea_edit' }],
     run: ({ id, kind }: { id: number; kind: MindIdea['strain'] }) =>
       unwrap(
         api.POST('/api/actions/mind:idea_edit', {
@@ -413,12 +425,14 @@ function Ideas({ view }: { view: MindSplit }) {
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'mind:idea_remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/mind:idea_remove', { body: { idea_id: id } })
       ),
   })
   const plant = useGodAction({
+    writes: [{ lever: 'mind:idea' }],
     run: (idea: IdeaKind) =>
       unwrap(
         api.POST('/api/actions/mind:idea', {
@@ -469,6 +483,7 @@ function Ideas({ view }: { view: MindSplit }) {
           <Paged items={view.ideas} initial={4} noun={['idea', 'ideas']}>
             {(idea) => (
               <IdeaCard
+                act={[settle, source, strain, remove]}
                 key={idea.id}
                 idea={idea}
                 blocked={blocked}
@@ -486,6 +501,7 @@ function Ideas({ view }: { view: MindSplit }) {
           title='Plant an idea'
           action={
             <Button
+              act={plant}
               size='sm'
               disabled={blocked !== null || picked === ''}
               disabledReason={blocked ?? 'Choose an idea first.'}
@@ -590,6 +606,7 @@ function SplitControls({ view }: { view: MindSplit }) {
     )
   }
   const lock = useGodAction({
+    writes: [{ lever: 'mind:lock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/mind:lock', {
@@ -598,6 +615,7 @@ function SplitControls({ view }: { view: MindSplit }) {
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'mind:unlock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/mind:unlock', {
@@ -631,6 +649,7 @@ function SplitControls({ view }: { view: MindSplit }) {
           {(field) =>
             held.has(field) ? (
               <Button
+                act={release}
                 key={field}
                 size='sm'
                 variant='outline'
@@ -643,6 +662,7 @@ function SplitControls({ view }: { view: MindSplit }) {
               </Button>
             ) : (
               <Button
+                act={lock}
                 key={field}
                 size='sm'
                 variant='ghost'

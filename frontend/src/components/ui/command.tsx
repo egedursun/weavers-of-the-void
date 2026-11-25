@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Command as CommandPrimitive } from 'cmdk'
 import { SearchIcon } from 'lucide-react'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import {
   Dialog,
@@ -143,10 +144,16 @@ function CommandSeparator({
 
 function CommandItem({
   className,
+  act,
+  disabled,
   ...props
-}: React.ComponentProps<typeof CommandPrimitive.Item>) {
+}: React.ComponentProps<typeof CommandPrimitive.Item> & { act?: ActProp }) {
+  const refusal = refusalOf(act)
   return (
     <CommandPrimitive.Item
+      disabled={disabled || refusal !== null}
+      aria-description={refusal ?? undefined}
+      title={refusal ?? undefined}
       data-slot='command-item'
       className={cn(
         'relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-control outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([data-domain=sigil])]:size-icon-md [&_svg:not([data-domain=sigil])]:text-muted-foreground',

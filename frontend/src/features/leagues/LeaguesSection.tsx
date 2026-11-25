@@ -125,6 +125,7 @@ function LeagueControls({ nodeId }: { nodeId: number }) {
       action={
         <div className='flex flex-wrap gap-2'>
           <StepButton
+            act={founding}
             icon={LEAGUE_ICON}
             label='Found it'
             variant='default'
@@ -132,6 +133,7 @@ function LeagueControls({ nodeId }: { nodeId: number }) {
             onClick={() => founding.mutate()}
           />
           <StepButton
+            act={dissolving}
             icon={Trash2}
             label='Dissolve this league'
             busy={why(notLeague, dissolving.isPending)}

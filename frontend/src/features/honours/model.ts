@@ -24,7 +24,10 @@ export function useHonoursRow<E extends HonoursAction, D extends HonoursAction>(
     'Done'
   )
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }

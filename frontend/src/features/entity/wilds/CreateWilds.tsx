@@ -310,7 +310,7 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant='outline' size='sm'>
+        <Button act={create} variant='outline' size='sm'>
           <Dna />
           Create a kind
         </Button>
@@ -481,6 +481,7 @@ export function CreateSpeciesDialog({ regionId }: { regionId?: number }) {
         </div>
         <DialogFooter>
           <Button
+            act={create}
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}
             onClick={() => region !== null && create.mutate(region)}
@@ -540,7 +541,7 @@ export function CreateBeastDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant='outline' size='sm'>
+        <Button act={create} variant='outline' size='sm'>
           <Footprints />
           Call forth a beast
         </Button>
@@ -634,6 +635,7 @@ export function CreateBeastDialog({
         </div>
         <DialogFooter>
           <Button
+            act={create}
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}
             onClick={() => create.mutate()}

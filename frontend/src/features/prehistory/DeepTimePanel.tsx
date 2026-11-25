@@ -73,6 +73,7 @@ function Happening({
       aside={<Chip icon={Gauge}>Magnitude {happening.magnitude}</Chip>}
     >
       <RecordEditor
+        act={editing}
         title='Set this happening'
         note='Values you set are held against the engine until you release them.'
         fields={HAPPENING_FIELDS}
@@ -82,6 +83,7 @@ function Happening({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike it out of the digest'
         busy={why(blocked, removing.isPending)}
@@ -156,6 +158,7 @@ function Run({
       </ul>
       <ShowMore state={page} />
       <RecordEditor
+        act={editing}
         title='Set this fast-forward'
         note='Values you set are held against the engine until you release them.'
         fields={RUN_FIELDS}
@@ -166,6 +169,7 @@ function Run({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={stopping}
           icon={CircleStop}
           label='Stop it'
           busy={why(
@@ -175,6 +179,7 @@ function Run({
           onClick={() => stopping.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Strike out its record'
           busy={why(
@@ -253,6 +258,7 @@ export function DeepTimePanel({
               columns={2}
               action={
                 <Button
+                  act={running}
                   size='sm'
                   disabled={why(runBlocked, running.isPending) !== null}
                   disabledReason={

@@ -304,6 +304,8 @@ function EntityBody({ detail }: { detail: EntityDetail }) {
           key={entity.id}
           entityId={entity.id}
           note={entity.private_note}
+          author={entity.note_author_name}
+          authorId={entity.note_author_account_id}
           readOnlyReason={readOnly}
         />
         <EntityImages

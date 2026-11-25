@@ -133,6 +133,7 @@ function Exception({
       caption='The law does not touch them'
     >
       <RecordEditor
+        act={editing}
         title='Set the exception'
         note={HOLD}
         fields={EXCEPTION_FIELDS}
@@ -142,6 +143,7 @@ function Exception({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Remove it'
         busy={why(blocked, removing.isPending)}
@@ -181,6 +183,7 @@ function Theory({
       caption={`Off from the truth by ${row.gap} of 100; confidence ${row.confidence}; lived under it ${row.adapted_epochs} epoch${row.adapted_epochs === 1 ? '' : 's'}; weighed in epoch ${row.updated_epoch}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the theory'
         note={HOLD}
         fields={THEORY_FIELDS}
@@ -190,6 +193,7 @@ function Theory({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Forget it'
         busy={why(blocked, removing.isPending)}
@@ -226,6 +230,7 @@ function Held({
       caption='What you write is held until you let the world decide again'
     >
       <StepButton
+        act={releasing}
         icon={PenLine}
         label='Let the world decide'
         busy={why(blocked ?? none, releasing.isPending)}
@@ -282,6 +287,7 @@ function Writing({
       columns={3}
       action={
         <StepButton
+          act={writing}
           icon={PenLine}
           label='Write it'
           variant='default'
@@ -390,6 +396,7 @@ function Forges({ lawId, blocked }: { lawId: number; blocked: string | null }) {
         columns={2}
         action={
           <StepButton
+            act={sparing}
             icon={CirclePlus}
             label='Spare them'
             variant='default'
@@ -430,6 +437,7 @@ function Forges({ lawId, blocked }: { lawId: number; blocked: string | null }) {
         columns={3}
         action={
           <StepButton
+            act={teaching}
             icon={THEORY_ICON}
             label='Give it'
             variant='default'

@@ -16,6 +16,7 @@ from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
 from aerona.jobs.manager import JobManager
 from aerona.rules.registry import Rules
+from aerona.services.accounts.guard import ensure_lever_allowed
 from aerona.services.player.guards import charge
 from aerona.services.player.ports import CreativePorts
 from aerona.services.player.scope import ActionOutcome, Effect, PlayerScope, perform
@@ -73,6 +74,7 @@ async def refund_essence(runtime: PlayerRuntime, amount: int) -> None:
 
 
 async def submit_costed(runtime: PlayerRuntime, rules: Rules, job: CostedJob, command: BaseModel, work: JobWork) -> ActionOutcome:
+    ensure_lever_allowed(job.action, command)
     if runtime.jobs.busy_group(job.lock) is not None:
         raise BusyError(f"Busy: another {job.lock.replace('_', ' ')} is still in progress.")
     charged = await _charge(runtime, rules, job, command)
@@ -100,6 +102,7 @@ class FreeJob:
 
 
 async def submit_free(runtime: PlayerRuntime, job: FreeJob, command: BaseModel, work: JobWork) -> ActionOutcome:
+    ensure_lever_allowed(job.action, command)
     if runtime.jobs.busy_group(job.lock) is not None:
         raise BusyError(f"Busy: {job.lock.replace('_', ' ')} is already being written.")
     job_id = await runtime.jobs.submit(job.job_kind, work, command.model_dump(mode="json"), exclusive_group=job.lock)

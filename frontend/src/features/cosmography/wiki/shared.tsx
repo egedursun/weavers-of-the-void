@@ -177,6 +177,7 @@ export function DangerZone<
           The ledger keeps the act, so it can be undone.
         </Muted>
         <Button
+          act={remove}
           variant='destructive'
           size='sm'
           disabled={remove.isPending}
@@ -188,6 +189,7 @@ export function DangerZone<
         </Button>
       </div>
       <ConfirmDialog
+        act={remove}
         open={open}
         onOpenChange={setOpen}
         title={`Unmake ${name}?`}

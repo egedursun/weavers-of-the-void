@@ -11,9 +11,10 @@ import { useCollapseOnScroll } from './useCollapseOnScroll'
 type TopBarProps = {
   context?: ReactNode
   actions?: ReactNode
+  account?: ReactNode
 }
 
-export function TopBar({ context, actions }: TopBarProps) {
+export function TopBar({ context, actions, account }: TopBarProps) {
   const collapsed = useCollapseOnScroll()
   return (
     <header
@@ -55,6 +56,7 @@ export function TopBar({ context, actions }: TopBarProps) {
             <ThemeSwitch />
           </span>
         </div>
+        {account}
       </div>
     </header>
   )

@@ -39,6 +39,7 @@ export function IgniteStarForm({
   const [description, setDescription] = useState('')
   const [sky, setSky] = useState(VOID)
   const ignite = useCosmicAction({
+    writes: [{ lever: 'cosmic:hang_star' }],
     run: () =>
       unwrap(
         api.POST('/api/cosmic/hang-star', {
@@ -126,6 +127,7 @@ export function IgniteStarForm({
       </FormRow>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={ignite}
           actionId='cosmic:hang_star'
           label='Ignite'
           icon={Sparkle}

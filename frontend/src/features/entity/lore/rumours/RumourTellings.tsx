@@ -316,6 +316,7 @@ function DistortionRow({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<Draft>(() => draftOf(item))
   const edit = useGodAction({
+    writes: [{ lever: 'rumour_distortion:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/rumour_distortion:edit', {
@@ -329,6 +330,7 @@ function DistortionRow({
     invalidate: [...invalidate],
   })
   const strike = useGodAction({
+    writes: [{ lever: 'rumour_distortion:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/rumour_distortion:delete', {
@@ -361,6 +363,7 @@ function DistortionRow({
           </Badge>
         )}
         <Button
+          act={edit}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -371,6 +374,7 @@ function DistortionRow({
           {editing ? 'Close' : 'Rewrite'}
         </Button>
         <Button
+          act={strike}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -385,6 +389,7 @@ function DistortionRow({
         <div className='flex min-w-0 flex-col gap-2'>
           <DraftFields draft={draft} setDraft={setDraft} blocked={busy} />
           <Button
+            act={edit}
             size='sm'
             className='self-start'
             disabled={busy !== null || lacking !== null}
@@ -413,6 +418,7 @@ export function RumourTellings({
 }) {
   const [draft, setDraft] = useState<Draft>(EMPTY)
   const add = useGodAction({
+    writes: [{ lever: 'rumour_distortion:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/rumour_distortion:create', {
@@ -450,6 +456,7 @@ export function RumourTellings({
       <AdjustBlock title='Change how it is told' icon={Plus}>
         <DraftFields draft={draft} setDraft={setDraft} blocked={busy} />
         <Button
+          act={add}
           size='sm'
           variant='outline'
           className='self-start'

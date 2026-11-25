@@ -64,6 +64,7 @@ function OfficeCard({
       }
       aside={
         <Button
+          act={vacate}
           size='sm'
           variant='ghost'
           disabled={busy !== null || office.holder === null}
@@ -103,6 +104,7 @@ function OfficeCard({
           kinds={GOD_KINDS}
         />
         <Button
+          act={appoint}
           size='sm'
           disabled={busy !== null || holder === null}
           disabledReason={
@@ -115,6 +117,7 @@ function OfficeCard({
         </Button>
       </div>
       <RecordEditor
+        act={edit}
         title='Reshape the office'
         note='Neglect weakens the rites of the office and brings its world effects; duty keeps them at bay.'
         fields={[

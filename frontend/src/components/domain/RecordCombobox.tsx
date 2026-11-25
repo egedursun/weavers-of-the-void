@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -54,7 +55,8 @@ export function RecordCombobox({
   size = 'default',
   clearable = false,
   'aria-label': ariaLabel,
-}: RecordComboboxProps) {
+  act,
+}: RecordComboboxProps & { act?: ActProp }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const selected = useMemo(
@@ -117,6 +119,7 @@ export function RecordCombobox({
             <CommandGroup>
               {clearable && selected && (
                 <CommandItem
+                  act={act}
                   value='__clear__'
                   onSelect={() => {
                     onChange(null, null)
@@ -130,6 +133,7 @@ export function RecordCombobox({
               )}
               {shown.map((option) => (
                 <CommandItem
+                  act={act}
                   key={option.value}
                   value={option.value}
                   onSelect={() => {

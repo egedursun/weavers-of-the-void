@@ -102,6 +102,7 @@ function Tie({
     >
       <Ref node={row.other} empty='no god named' />
       <RecordEditor
+        act={editing}
         title='Set the tie'
         note={HOLD}
         fields={TIE_FIELDS}
@@ -111,6 +112,7 @@ function Tie({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Undo the tie'
         busy={why(blocked, removing.isPending)}
@@ -150,6 +152,7 @@ function Joined({
       caption={`since epoch ${row.since_epoch}; ${row.dominant ? `${row.dominant.name} dominates and draws the other's faith` : 'neither dominates'}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the joined worship'
         note={HOLD}
         fields={SYNCRETISM_FIELDS}
@@ -159,6 +162,7 @@ function Joined({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Hold them apart'
         busy={why(blocked, removing.isPending)}
@@ -205,6 +209,7 @@ function Structure({
     >
       <Ref node={row.head} empty='no head named' />
       <RecordEditor
+        act={editing}
         title='Set the pantheon'
         note={HOLD}
         fields={PANTHEON_FIELDS}
@@ -270,6 +275,7 @@ function Forges({
         columns={2}
         action={
           <StepButton
+            act={tying}
             icon={CirclePlus}
             label='Tie them'
             variant='default'
@@ -301,6 +307,7 @@ function Forges({
         columns={3}
         action={
           <StepButton
+            act={joining}
             icon={SYNCRETISM_ICON}
             label='Join them'
             variant='default'

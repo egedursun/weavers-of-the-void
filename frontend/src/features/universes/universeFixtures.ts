@@ -1,4 +1,4 @@
-import { type components } from '@/api/generated/schema'
+import { type components, permissionValues } from '@/api/generated/schema'
 import { type LibraryJob, type UniverseSummary } from './types'
 
 export const FIRST_ID = 'aaaaaaaaaaaa'
@@ -31,6 +31,11 @@ export function universeSummary(
     media_prefix: 'universes/aaaaaaaaaaaa/',
     is_open: false,
     running_jobs: [],
+    workspace_id: 7,
+    canon_approval: false,
+    legacy_author_name: '',
+    role: 'admin',
+    permissions: [...permissionValues],
     ...overrides,
   }
 }

@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { Lock, Unlock, type LucideIcon } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,15 +33,18 @@ export function ReleaseButton({
   busy,
   label = 'Release',
   onRelease,
+  act,
 }: {
   held: boolean
   busy: string | null
   label?: string
   onRelease: () => void
+  act?: ActProp
 }) {
   if (!held) return null
   return (
     <Button
+      act={act}
       size='sm'
       variant='outline'
       disabled={busy !== null}
@@ -61,6 +65,7 @@ export function ConfirmButton({
   confirm,
   busy,
   onConfirm,
+  act,
 }: {
   icon: LucideIcon
   label: string
@@ -69,11 +74,13 @@ export function ConfirmButton({
   confirm: string
   busy: string | null
   onConfirm: () => void
+  act?: ActProp
 }) {
   const [open, setOpen] = useState(false)
   return (
     <>
       <Button
+        act={act}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -84,6 +91,7 @@ export function ConfirmButton({
         {label}
       </Button>
       <ConfirmDialog
+        act={act}
         open={open}
         onOpenChange={setOpen}
         title={title}
@@ -106,6 +114,7 @@ export function ChoiceSelect({
   blocked,
   placeholder,
   onPick,
+  act,
 }: {
   label: string
   value: string
@@ -113,11 +122,17 @@ export function ChoiceSelect({
   blocked: string | null
   placeholder?: string
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   const id = useId()
   return (
     <FieldTile id={id} label={label}>
-      <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+      <Select
+        act={act}
+        value={value}
+        onValueChange={onPick}
+        disabled={blocked !== null}
+      >
         <SelectTrigger id={id} aria-label={label} className='w-full'>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

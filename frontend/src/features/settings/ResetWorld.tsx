@@ -44,6 +44,7 @@ export function ResetWorld({ hasWorld, readOnly }: ResetWorldProps) {
           </Button>
         </div>
         <TypedConfirm
+          act={reset}
           open={open}
           onOpenChange={setOpen}
           title='Reset the whole world?'

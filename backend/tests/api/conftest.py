@@ -13,7 +13,7 @@ from aerona.main import create_app
 from aerona.services.container import Services
 from aerona.settings import Settings
 from tests.agents.world import AgentWorld, seed_agent_world
-from tests.library_support import opened_services, sole_universe, universe_headers
+from tests.library_support import opened_services, sign_in_owner, sole_universe, universe_headers
 from tests.polling import until
 
 STARTUP_SECONDS = 120
@@ -52,6 +52,7 @@ async def open_api(settings: Settings, *, model: LanguageModel | None = None, se
         universe = await sole_universe(app)
         services = await opened_services(app, universe)
         async with AsyncClient(transport=transport, base_url=LOCAL_BASE_URL, headers=universe_headers(universe)) as http:
+            await sign_in_owner(app, http)
             api = ApiWorld(http=http, services=services, app=manager.app, universe_id=universe)
             await api.settle()
             if seeded:

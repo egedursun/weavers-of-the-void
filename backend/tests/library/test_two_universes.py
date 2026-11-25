@@ -21,7 +21,7 @@ from aerona.services.container import Services
 from aerona.services.library.hub import UniverseHub
 from aerona.settings import Settings
 from tests.agents.world import seed_agent_world
-from tests.library_support import hub_of, sole_universe, universe_headers
+from tests.library_support import hub_of, sign_in_owner, sole_universe, universe_headers
 
 STARTUP_SECONDS = 120
 NOTE = "a note kept in the first universe"
@@ -57,6 +57,7 @@ async def shelf(settings: Settings) -> AsyncIterator[Shelf]:
         async with opened.services.database.write() as session:
             await seed_agent_world(session, opened.services.rules.current)
         async with AsyncClient(transport=ASGITransport(app=manager.app), base_url="http://localhost") as http:
+            await sign_in_owner(app, http)
             yield Shelf(http=http, hub=hub, first=first, second=second)
 
 

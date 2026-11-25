@@ -3,6 +3,7 @@ import { Award, EyeOff, Plus, Trash2, VolumeX, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { skillKindValues } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -95,13 +96,16 @@ function RemoveButton({
   label,
   busy,
   onClick,
+  act,
 }: {
   label: string
   busy: string | null
   onClick: () => void
+  act?: ActProp
 }) {
   return (
     <Button
+      act={act}
       size='icon-sm'
       variant='ghost'
       aria-label={label}
@@ -154,6 +158,7 @@ function ReputationRow({
 }) {
   const spec = named(AXES, row.axis)
   const remove = useGodAction({
+    writes: [{ lever: 'renown:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/renown:remove', {
@@ -180,6 +185,7 @@ function ReputationRow({
       badges={row.held ? <Badge variant='secondary'>Held</Badge> : undefined}
       actions={
         <RemoveButton
+          act={remove}
           label='Forget this reputation'
           busy={busy}
           onClick={() => remove.mutate()}
@@ -240,6 +246,7 @@ function ReputationsCard({
   const [axis, setAxis] = useState<string>('heroism')
   const rows = viewer ? view.views : view.reputations
   const add = useGodAction({
+    writes: [{ lever: 'renown:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/renown:set', {
@@ -290,6 +297,7 @@ function ReputationsCard({
         title='Spread the word'
         action={
           <Button
+            act={add}
             size='sm'
             disabled={busy !== null || other === null}
             disabledReason={
@@ -324,6 +332,7 @@ function ReputationsCard({
 function StandingCard({ view, blocked, hold }: Props) {
   const standing = view.standing
   const begin = useGodAction({
+    writes: [{ lever: 'standing:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/standing:set', {
@@ -332,6 +341,7 @@ function StandingCard({ view, blocked, hold }: Props) {
       ),
   })
   const silence = useGodAction({
+    writes: [{ lever: 'standing:set' }],
     run: (until: number) =>
       unwrap(
         api.POST('/api/actions/standing:set', {
@@ -340,6 +350,7 @@ function StandingCard({ view, blocked, hold }: Props) {
       ),
   })
   const wipe = useGodAction({
+    writes: [{ lever: 'standing:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/standing:remove', {
@@ -367,6 +378,7 @@ function StandingCard({ view, blocked, hold }: Props) {
           description='It grows each epoch while they rule. You can give it now.'
           action={
             <Button
+              act={begin}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -419,6 +431,7 @@ function StandingCard({ view, blocked, hold }: Props) {
             )}
             <div className='ml-auto flex shrink-0 flex-wrap items-center gap-2'>
               <Button
+                act={silence}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null || silenced}
@@ -432,6 +445,7 @@ function StandingCard({ view, blocked, hold }: Props) {
                 Silence dissent
               </Button>
               <Button
+                act={wipe}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -477,12 +491,14 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
   const [status, setStatus] = useState<string>('standing')
   const spec = named(AXES, deed.axis)
   const strike = useGodAction({
+    writes: [{ lever: 'deed:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/deed:remove', { body: { deed_id: deed.id } })
       ),
   })
   const token = useGodAction({
+    writes: [{ lever: 'deed:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/deed:edit', {
@@ -491,18 +507,21 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
       ),
   })
   const expose = useGodAction({
+    writes: [{ lever: 'deed_claim:expose' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/deed_claim:expose', { body: { claim_id: id } })
       ),
   })
   const drop = useGodAction({
+    writes: [{ lever: 'deed_claim:remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/deed_claim:remove', { body: { claim_id: id } })
       ),
   })
   const claim = useGodAction({
+    writes: [{ lever: 'deed_claim:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/deed_claim:set', {
@@ -536,6 +555,7 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
       actions={
         <>
           <Button
+            act={token}
             size='icon-sm'
             variant={deed.token ? 'secondary' : 'ghost'}
             aria-label={
@@ -548,6 +568,7 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
             <Award />
           </Button>
           <RemoveButton
+            act={strike}
             label='Strike the deed from memory'
             busy={busy}
             onClick={() => strike.mutate()}
@@ -560,6 +581,7 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
           <FormBar
             action={
               <Button
+                act={claim}
                 size='sm'
                 disabled={busy !== null || claimant === null}
                 disabledReason={
@@ -646,6 +668,7 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
             <Muted variant='caption'>{`${item.status_label} · credited ${item.credited}`}</Muted>
             {item.kind === 'false' && item.status === 'standing' && (
               <Button
+                act={expose}
                 size='icon-sm'
                 variant='ghost'
                 aria-label='Expose the false claim'
@@ -657,6 +680,7 @@ function DeedRow({ deed, view, blocked, hold }: { deed: DeedRecord } & Props) {
               </Button>
             )}
             <RemoveButton
+              act={drop}
               label='Withdraw the claim'
               busy={busy}
               onClick={() => drop.mutate(item.id)}
@@ -672,6 +696,7 @@ function DeedsCard({ view, blocked, hold }: Props) {
   const [axis, setAxis] = useState<string>('heroism')
   const [place, setPlace] = useState<number | null>(null)
   const record = useGodAction({
+    writes: [{ lever: 'deed:record' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/deed:record', {
@@ -712,6 +737,7 @@ function DeedsCard({ view, blocked, hold }: Props) {
         title='Set down a deed'
         action={
           <Button
+            act={record}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -747,6 +773,7 @@ function LoreCard({ view, blocked }: Props) {
   const [key, setKey] = useState('')
   const [subject, setSubject] = useState<number | null>(null)
   const sell = useGodAction({
+    writes: [{ lever: 'lore_trade:make' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/lore_trade:make', {
@@ -761,6 +788,7 @@ function LoreCard({ view, blocked }: Props) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'lore_trade:remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/lore_trade:remove', { body: { trade_id: id } })
@@ -796,6 +824,7 @@ function LoreCard({ view, blocked }: Props) {
               }
               actions={
                 <RemoveButton
+                  act={strike}
                   label='Strike the trade from the record'
                   busy={busy}
                   onClick={() => strike.mutate(item.id)}
@@ -809,6 +838,7 @@ function LoreCard({ view, blocked }: Props) {
         title='Pass on a piece of lore'
         action={
           <Button
+            act={sell}
             size='sm'
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}

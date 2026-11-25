@@ -34,6 +34,7 @@ export function AwakenPeoplesControl() {
   const batches = batchCap ? Math.ceil(amount / batchCap) : 1
   const cost = perBatch !== undefined ? perBatch * batches : undefined
   const awaken = useGodAction({
+    writes: [{ lever: 'awaken_peoples' }],
     run: () =>
       unwrap(
         api.POST('/api/peoples/awaken', {
@@ -62,6 +63,7 @@ export function AwakenPeoplesControl() {
           label='World for the new peoples'
         />
         <ActionButton
+          act={awaken}
           label='Awaken peoples'
           icon={Users}
           cost={cost}

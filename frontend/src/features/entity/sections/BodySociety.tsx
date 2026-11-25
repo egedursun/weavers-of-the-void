@@ -95,6 +95,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
     retry: false,
   })
   const set = useGodAction({
+    writes: [{ lever: 'body:customs' }],
     run: ({ field, value }: { field: string; value: string | boolean }) =>
       unwrap(
         api.POST('/api/actions/body:customs', {
@@ -105,6 +106,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
       `${LABELS[change.field] ?? change.field} set`,
   })
   const release = useGodAction({
+    writes: [{ lever: 'body:customs_unlock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/body:customs_unlock', {
@@ -175,6 +177,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
               </div>
               <label className='flex shrink-0 items-center gap-2'>
                 <Switch
+                  permission='lock_canon'
                   checked={hold}
                   onCheckedChange={setHold}
                   aria-label='Hold what I set'
@@ -190,6 +193,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
                 />
                 {customs.locked.map((key) => (
                   <Button
+                    act={release}
                     key={key}
                     size='sm'
                     variant='outline'
@@ -204,6 +208,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
               </div>
             )}
             <ChoiceTiles<Reading>
+              act={set}
               label='Reading of scars'
               value={customs.reading}
               columns={2}
@@ -224,6 +229,7 @@ export function PeopleBodyCustoms({ peopleId }: { peopleId: number }) {
                   className='flex min-w-0 items-start gap-3 rounded-md border surface-framed border-gild/70 bg-card p-3'
                 >
                   <Switch
+                    act={set}
                     checked={customs[law.key]}
                     disabled={busy !== null}
                     onCheckedChange={(value) =>

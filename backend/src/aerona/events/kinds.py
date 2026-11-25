@@ -75,6 +75,9 @@ class EventKind(StrEnum):
     PRESENCE_SESSION_CHANGED = "presence.session_changed"
     PRESENCE_EXCHANGE_STARTED = "presence.exchange_started"
     PRESENCE_EXCHANGE_FINISHED = "presence.exchange_finished"
+    TEAM_PRESENCE = "team.presence"
+    TEAM_QUEUE_CHANGED = "team.queue_changed"
+    TEAM_PROPOSAL_CHANGED = "team.proposal_changed"
 
 
 TRANSIENT_KINDS = frozenset(
@@ -83,6 +86,7 @@ TRANSIENT_KINDS = frozenset(
         EventKind.AGENT_TOOL_PREPARING,
         EventKind.AGENT_TOOL_WRITING,
         EventKind.AGENT_WRITING,
+        EventKind.TEAM_PRESENCE,
     }
 )
 

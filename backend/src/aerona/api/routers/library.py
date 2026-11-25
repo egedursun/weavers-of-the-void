@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, File, Path, Query, Request, Response, Up
 from fastapi.responses import FileResponse, StreamingResponse
 from sse_starlette.sse import EventSourceResponse
 
+from aerona.api.schemas.accounts import UniverseMove
 from aerona.api.schemas.common import Done
 from aerona.api.schemas.library import (
     CoverFromMedia,
@@ -41,9 +42,14 @@ from aerona.constants.library_packages import LIBRARY_JOB_ID_PATTERN, TRASH_ENTR
 from aerona.constants.maintenance import PACKAGE_READ_BYTES
 from aerona.constants.media import MEDIA_CHUNK_BYTES
 from aerona.constants.timeouts import SSE_PING_SECONDS
-from aerona.domain.enums.library import UniverseOrigin, UniverseSort, UniverseStatus
+from aerona.core.account_scope import current_account, current_workspace
+from aerona.core.errors import NotFoundError
+from aerona.domain.enums.accounts import Permission, UniverseRole, WorkspaceRole
+from aerona.domain.enums.library import LibraryEventKind, UniverseOrigin, UniverseSort, UniverseStatus
 from aerona.domain.enums.library_jobs import LibraryJobKind, LibraryStreamKind
 from aerona.domain.enums.meta import ImageMime
+from aerona.services.accounts.access import UniverseAccess
+from aerona.services.accounts.service import refuse, refuse_workspace, workspace_allows
 from aerona.services.library.catalogue import LibraryEventRecord, UniverseEdit, UniverseQuery, UniverseRecord
 from aerona.services.library.feed import LibraryNotice
 from aerona.services.library.jobs import LibraryJob
@@ -70,8 +76,42 @@ def get_library(request: Request) -> LibraryService:
 LibraryDep = Annotated[LibraryService, Depends(get_library)]
 
 
-def universe_view(library: LibraryService, record: UniverseRecord) -> UniverseView:
+async def viewer_access(library: LibraryService, record: UniverseRecord) -> UniverseAccess | None:
+    account = current_account()
+    if account is None or library.accounts is None:
+        return None
+    return await library.accounts.universe_access(account.id, record)
+
+
+async def visible_here(library: LibraryService) -> frozenset[str] | None:
+    account, workspace_id = current_account(), current_workspace()
+    if account is None or library.accounts is None:
+        return None
+    if workspace_id is None:
+        return frozenset()
+    return await library.accounts.visible(account.id, workspace_id)
+
+
+async def hidden_here(library: LibraryService, visible: frozenset[str] | None) -> frozenset[str]:
+    account = current_account()
+    if visible is None or account is None or library.accounts is None:
+        return frozenset()
+    unseen = set(await library.catalogue.ids_in(current_workspace())) - visible
+    return frozenset(unseen | await library.accounts.store.hidden_from(account.id))
+
+
+def seen(universe_id: str | None, visible: frozenset[str] | None) -> bool:
+    return universe_id is None or visible is None or universe_id in visible
+
+
+async def universe_view(library: LibraryService, record: UniverseRecord) -> UniverseView:
+    access = await viewer_access(library, record)
     return UniverseView(
+        workspace_id=record.workspace_id,
+        canon_approval=record.canon_approval,
+        legacy_author_name=record.legacy_author_name,
+        role=access.role if access is not None else UniverseRole.NONE,
+        permissions=sorted(access.permissions) if access is not None else [],
         id=record.id,
         name=record.name,
         summary=record.summary,
@@ -99,7 +139,15 @@ def universe_view(library: LibraryService, record: UniverseRecord) -> UniverseVi
 
 
 def event_view(event: LibraryEventRecord) -> LibraryEventView:
-    return LibraryEventView(id=event.id, at=event.at, kind=event.kind, universe_id=event.universe_id, universe_name=event.universe_name, detail=event.detail)
+    return LibraryEventView(
+        id=event.id,
+        at=event.at,
+        kind=event.kind,
+        universe_id=event.universe_id,
+        universe_name=event.universe_name,
+        detail=event.detail,
+        account_name=event.account_name,
+    )
 
 
 def job_view(job: LibraryJob) -> LibraryJobView:
@@ -147,19 +195,24 @@ async def list_universes(
     limit: Annotated[int, Query(ge=1, le=LIBRARY_PAGE_MAX)] = LIBRARY_PAGE_DEFAULT,
 ) -> UniverseList:
     chosen = status_filter if status_filter is not None else (None if include_archived else UniverseStatus.ACTIVE)
-    page = await library.catalogue.page(UniverseQuery(text=q, status=chosen, origin=origin, tag=tag or None, sort=sort, offset=offset, limit=limit))
+    visible = await visible_here(library)
+    page = await library.catalogue.page(
+        UniverseQuery(
+            text=q, status=chosen, origin=origin, tag=tag or None, sort=sort, offset=offset, limit=limit, workspace_id=current_workspace(), visible=visible
+        )
+    )
     facets = UniverseFacets(
-        tags=[UniverseTagFacet(value=found, count=count) for found, count in await library.tag_counts()],
+        tags=[UniverseTagFacet(value=found, count=count) for found, count in await library.tag_counts(visible)],
         origins=[UniverseOriginFacet(value=found, count=count) for found, count in page.origins.items()],
         statuses=[UniverseStatusFacet(value=found, count=count) for found, count in page.statuses.items()],
     )
-    return UniverseList(items=[universe_view(library, record) for record in page.universes], total=page.total, offset=offset, limit=limit, facets=facets)
+    return UniverseList(items=[await universe_view(library, record) for record in page.universes], total=page.total, offset=offset, limit=limit, facets=facets)
 
 
 @router.post("/universes", response_model=UniverseView, status_code=status.HTTP_201_CREATED)
 async def create_universe(body: UniverseCreate, library: LibraryDep) -> UniverseView:
     record = await library.create(body.name, body.notes, tuple(body.tags), body.summary)
-    return universe_view(library, record)
+    return await universe_view(library, record)
 
 
 @router.get("/universes/{universe_id}", response_model=UniverseDetail)
@@ -167,7 +220,7 @@ async def read_universe(universe_id: UniverseId, library: LibraryDep) -> Univers
     record = await library.catalogue.require(universe_id)
     events = await library.recent_events(universe_id)
     return UniverseDetail(
-        **universe_view(library, record).model_dump(),
+        **(await universe_view(library, record)).model_dump(),
         events=[event_view(event) for event in events],
     )
 
@@ -175,32 +228,46 @@ async def read_universe(universe_id: UniverseId, library: LibraryDep) -> Univers
 @router.patch("/universes/{universe_id}", response_model=UniverseView)
 async def edit_universe(universe_id: UniverseId, body: UniversePatch, library: LibraryDep) -> UniverseView:
     change = UniverseEdit(name=body.name, notes=body.notes, summary=body.summary, tags=tuple(body.tags) if body.tags is not None else None, pinned=body.pinned)
-    return universe_view(library, await library.edit(universe_id, change, body.status))
+    return await universe_view(library, await library.edit(universe_id, change, body.status))
 
 
 @router.post("/universes/{universe_id}/open", response_model=UniverseView)
 async def open_universe(universe_id: UniverseId, library: LibraryDep) -> UniverseView:
-    return universe_view(library, await library.open(universe_id))
+    return await universe_view(library, await library.open(universe_id))
 
 
 @router.post("/universes/{universe_id}/close", response_model=UniverseView)
 async def close_universe(universe_id: UniverseId, library: LibraryDep) -> UniverseView:
-    return universe_view(library, await library.close(universe_id))
+    return await universe_view(library, await library.close(universe_id))
 
 
 @router.post("/universes/{universe_id}/duplicate", response_model=UniverseView, status_code=status.HTTP_201_CREATED)
 async def duplicate_universe(universe_id: UniverseId, body: UniverseDuplicate, library: LibraryDep) -> UniverseView:
-    return universe_view(library, await library.duplicate(universe_id, body.name))
+    return await universe_view(library, await library.duplicate(universe_id, body.name))
 
 
 @router.post("/universes/{universe_id}/archive", response_model=UniverseView)
 async def archive_universe(universe_id: UniverseId, library: LibraryDep) -> UniverseView:
-    return universe_view(library, await library.archive(universe_id))
+    return await universe_view(library, await library.archive(universe_id))
+
+
+@router.post("/universes/{universe_id}/move", response_model=UniverseView)
+async def move_universe(universe_id: UniverseId, body: UniverseMove, library: LibraryDep) -> UniverseView:
+    account = current_account()
+    if account is None or library.accounts is None:
+        raise NotFoundError(NO_SUCH_JOB)
+    role = await library.accounts.role_in(body.workspace_id, account.id)
+    if not workspace_allows(role, WorkspaceRole.ADMIN):
+        raise refuse_workspace(role)
+    record = await library.catalogue.require(universe_id)
+    await library.accounts.move_universe(record, body.workspace_id)
+    await library.catalogue.log(LibraryEventKind.MOVED, record.id, record.name)
+    return await universe_view(library, await library.catalogue.require(universe_id))
 
 
 @router.post("/universes/{universe_id}/restore", response_model=UniverseView)
 async def restore_universe(universe_id: UniverseId, library: LibraryDep) -> UniverseView:
-    return universe_view(library, await library.restore(universe_id))
+    return await universe_view(library, await library.restore(universe_id))
 
 
 @router.delete("/universes/{universe_id}", response_model=TrashEntryView)
@@ -212,7 +279,7 @@ async def delete_universe(universe_id: UniverseId, library: LibraryDep) -> Trash
 async def list_trash(
     library: LibraryDep, offset: int = Query(default=0, ge=0), limit: int = Query(default=LIBRARY_PAGE_DEFAULT, ge=1, le=LIBRARY_PAGE_MAX)
 ) -> TrashPageView:
-    entries, total, held = await library.trash(offset, limit)
+    entries, total, held = await library.trash(offset, limit, current_workspace())
     return TrashPageView(
         items=[trash_view(library, entry) for entry in entries],
         total=total,
@@ -225,17 +292,18 @@ async def list_trash(
 
 @router.delete("/trash", response_model=TrashEmptied)
 async def empty_trash(library: LibraryDep) -> TrashEmptied:
-    return TrashEmptied(purged=await library.empty_trash())
+    return TrashEmptied(purged=await library.empty_trash(current_workspace()))
 
 
 @router.post("/trash/{entry_id}/restore", response_model=UniverseView)
 async def recover_universe(entry_id: EntryId, library: LibraryDep) -> UniverseView:
-    return universe_view(library, await library.recover(entry_id))
+    await restorable(library, entry_id)
+    return await universe_view(library, await library.recover(entry_id, current_workspace()))
 
 
 @router.delete("/trash/{entry_id}", response_model=Done)
 async def purge_universe(entry_id: EntryId, library: LibraryDep) -> Done:
-    await library.purge(entry_id)
+    await library.purge(entry_id, current_workspace())
     return Done()
 
 
@@ -244,9 +312,54 @@ async def export_universe(universe_id: UniverseId, library: LibraryDep) -> Libra
     return job_view(await library.export(universe_id))
 
 
+NO_SUCH_JOB = "No such work in hand."
+
+
+async def visible_job(library: LibraryService, job_id: str, kind: LibraryJobKind) -> LibraryJob:
+    job = library.jobs.get(job_id, kind)
+    if not seen(job.universe_id, await visible_here(library)):
+        raise NotFoundError(NO_SUCH_JOB)
+    return job
+
+
+async def owned_export(library: LibraryService, job_id: str) -> LibraryJob:
+    job = await visible_job(library, job_id, LibraryJobKind.EXPORT)
+    account = current_account()
+    if account is None or library.accounts is None or job.started_by == account.id or job.universe_id is None:
+        return job
+    record = await library.catalogue.get(job.universe_id)
+    if record is None:
+        raise NotFoundError(NO_SUCH_JOB)
+    access = await library.accounts.universe_access(account.id, record)
+    if not access.allows(Permission.EXPORT):
+        raise refuse(Permission.EXPORT, access, record.name)
+    return job
+
+
+async def owned_import(library: LibraryService, job_id: str) -> LibraryJob:
+    job = library.jobs.get(job_id, LibraryJobKind.IMPORT)
+    account, workspace_id = current_account(), current_workspace()
+    if account is None or library.accounts is None or job.started_by == account.id:
+        return job
+    role = await library.accounts.role_in(job.workspace_id, account.id) if job.workspace_id is not None else None
+    if job.workspace_id != workspace_id or not workspace_allows(role, WorkspaceRole.ADMIN):
+        raise NotFoundError(NO_SUCH_JOB)
+    return job
+
+
+async def restorable(library: LibraryService, entry_id: str) -> None:
+    account, workspace_id = current_account(), current_workspace()
+    if account is None or library.accounts is None or workspace_id is None:
+        return
+    entry = await library.entry_of(entry_id, workspace_id)
+    role = await library.accounts.role_in(workspace_id, account.id)
+    if entry.deleted_by != account.id and not workspace_allows(role, WorkspaceRole.ADMIN):
+        raise refuse_workspace(role)
+
+
 @router.get("/exports/{job_id}", response_model=LibraryJobView)
 async def read_export(job_id: JobId, library: LibraryDep) -> LibraryJobView:
-    return job_view(library.jobs.get(job_id, LibraryJobKind.EXPORT))
+    return job_view(await visible_job(library, job_id, LibraryJobKind.EXPORT))
 
 
 async def file_chunks(path: FilePath) -> AsyncIterator[bytes]:
@@ -257,6 +370,7 @@ async def file_chunks(path: FilePath) -> AsyncIterator[bytes]:
 
 @router.get("/exports/{job_id}/file", response_class=StreamingResponse, responses={200: {"content": {PACKAGE_MEDIA_TYPE: {}}}})
 async def download_export(job_id: JobId, library: LibraryDep) -> StreamingResponse:
+    await owned_export(library, job_id)
     job = library.export_file(job_id)
     assert job.file is not None
     headers = {"content-disposition": f"attachment; filename*=UTF-8''{quote(job.file_name)}", "content-length": str(job.size_bytes)}
@@ -265,6 +379,7 @@ async def download_export(job_id: JobId, library: LibraryDep) -> StreamingRespon
 
 @router.delete("/exports/{job_id}", response_model=LibraryJobView)
 async def discard_export(job_id: JobId, library: LibraryDep) -> LibraryJobView:
+    await owned_export(library, job_id)
     return job_view(await library.cancel(job_id, LibraryJobKind.EXPORT))
 
 
@@ -279,33 +394,50 @@ async def import_universe(library: LibraryDep, file: Annotated[UploadFile, File(
 
 @router.get("/imports/{job_id}", response_model=LibraryJobView)
 async def read_import(job_id: JobId, library: LibraryDep) -> LibraryJobView:
-    return job_view(library.jobs.get(job_id, LibraryJobKind.IMPORT))
+    return job_view(await owned_import(library, job_id))
 
 
 @router.post("/imports/{job_id}/confirm", response_model=LibraryJobView, status_code=status.HTTP_202_ACCEPTED)
 async def confirm_import(job_id: JobId, body: ImportConfirm, library: LibraryDep) -> LibraryJobView:
+    await owned_import(library, job_id)
     return job_view(await library.confirm(job_id, body.name))
 
 
 @router.delete("/imports/{job_id}", response_model=LibraryJobView)
 async def cancel_import(job_id: JobId, library: LibraryDep) -> LibraryJobView:
+    await owned_import(library, job_id)
     return job_view(await library.cancel(job_id, LibraryJobKind.IMPORT))
+
+
+async def job_shown(library: LibraryService, job: LibraryJob) -> bool:
+    account, workspace_id = current_account(), current_workspace()
+    if account is None or library.accounts is None:
+        return True
+    if job.workspace_id is not None and job.workspace_id != workspace_id:
+        return False
+    if job.started_by == account.id:
+        return True
+    if job.universe_id is None:
+        role = await library.accounts.role_in(workspace_id, account.id) if workspace_id is not None else None
+        return workspace_allows(role, WorkspaceRole.ADMIN)
+    record = await library.catalogue.get(job.universe_id)
+    return record is not None and record.workspace_id == workspace_id and (await library.accounts.universe_access(account.id, record)).admin
 
 
 @router.get("/jobs", response_model=list[LibraryJobView])
 async def list_jobs(library: LibraryDep) -> list[LibraryJobView]:
-    return [job_view(job) for job in library.jobs.every()]
+    return [job_view(job) for job in library.jobs.every() if await job_shown(library, job)]
 
 
 @router.put("/universes/{universe_id}/cover", response_model=UniverseView, operation_id="upload_library_cover")
 async def upload_cover(universe_id: UniverseId, library: LibraryDep, file: Annotated[UploadFile, File()]) -> UniverseView:
     data = await file.read(IMAGE_UPLOAD_MAX_BYTES + 1)
-    return universe_view(library, await library.set_cover(universe_id, data))
+    return await universe_view(library, await library.set_cover(universe_id, data))
 
 
 @router.put("/universes/{universe_id}/cover/from-media", response_model=UniverseView)
 async def cover_from_media(universe_id: UniverseId, body: CoverFromMedia, library: LibraryDep) -> UniverseView:
-    return universe_view(library, await library.cover_from_media(universe_id, body.file_name))
+    return await universe_view(library, await library.cover_from_media(universe_id, body.file_name))
 
 
 @router.get("/universes/{universe_id}/cover/paint", response_model=CoverPaintPrompt)
@@ -320,7 +452,7 @@ async def paint_cover(universe_id: UniverseId, body: CoverPaint, library: Librar
 
 @router.delete("/universes/{universe_id}/cover", response_model=UniverseView)
 async def clear_cover(universe_id: UniverseId, library: LibraryDep) -> UniverseView:
-    return universe_view(library, await library.clear_cover(universe_id))
+    return await universe_view(library, await library.clear_cover(universe_id))
 
 
 @router.get("/universes/{universe_id}/cover", response_class=FileResponse, responses={200: {"content": {mime.value: {} for mime in ImageMime}}})
@@ -336,7 +468,11 @@ async def library_events(
     limit: int = Query(default=LIBRARY_PAGE_DEFAULT, ge=1, le=LIBRARY_PAGE_MAX),
     universe_id: str | None = Query(default=None, pattern=UNIVERSE_ID_PATTERN),
 ) -> LibraryEventPage:
-    events, total = await library.catalogue.events(offset=offset, limit=limit, universe_id=universe_id)
+    visible = await visible_here(library)
+    hidden = await hidden_here(library, visible)
+    events, total = await library.catalogue.events(
+        offset=offset, limit=limit, universe_id=universe_id, visible=visible, workspace_id=current_workspace(), hidden=hidden
+    )
     return LibraryEventPage(items=[event_view(event) for event in events], total=total, offset=offset, limit=limit)
 
 
@@ -348,7 +484,7 @@ async def stream_event(library: LibraryService, notice: LibraryNotice) -> Librar
         kind=notice.kind,
         at=notice.at,
         universe_id=notice.universe_id,
-        universe=universe_view(library, record) if record is not None else None,
+        universe=await universe_view(library, record) if record is not None else None,
         job=job_view(job) if job is not None else None,
     )
 
@@ -359,6 +495,11 @@ async def library_stream(library: LibraryDep) -> EventSourceResponse:
         hello = LibraryStreamEvent(id=library.feed.last_id, kind=LibraryStreamKind.HELLO, at=datetime.now(UTC), universe_id=None, universe=None, job=None)
         yield {"event": LibraryStreamKind.HELLO.value, "data": hello.model_dump_json()}
         async for notice in library.feed.subscribe():
+            if not seen(notice.universe_id, await visible_here(library)):
+                continue
+            noticed = library.jobs.find(notice.job_id)
+            if noticed is not None and not await job_shown(library, noticed):
+                continue
             event = await stream_event(library, notice)
             yield {"id": str(notice.id), "event": notice.kind.value, "data": event.model_dump_json()}
 

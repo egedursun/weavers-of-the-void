@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   ImageOff,
   ImagePlus,
@@ -9,6 +9,7 @@ import {
   Square,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { formatDateTime, formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
@@ -26,6 +27,7 @@ import {
 import { Muted, Text } from '@/components/typography'
 import { useJob } from '@/features/entity/api/mutations'
 import { useNames, useWorldState } from '@/features/entity/api/queries'
+import { type WriteTarget } from '@/features/team/writeGate'
 import { ImageGenFeedLines } from './ImageGenFeedLines'
 import {
   type QueueStatus,
@@ -43,11 +45,13 @@ const READ_ONLY = 'A guest world is open read-only.'
 const NO_LLM = 'The language model is not connected; this needs it.'
 
 function useImageMutation<T>(
+  writes: readonly WriteTarget[],
   run: () => Promise<T>,
   onDone: (result: T) => void
 ) {
   const queryClient = useQueryClient()
   return useMutation({
+    writes,
     mutationFn: run,
     onSuccess: (result) => {
       onDone(result)
@@ -91,16 +95,24 @@ export function BulkImageGenPanel() {
   const [confirming, setConfirming] = useState(false)
   const [promptJob, setPromptJob] = useState<string | null>(null)
   const job = useJob(promptJob)
-  const start = useImageMutation(startBulk, () =>
-    toast.success('Bulk generation started')
+  const start = useImageMutation(
+    [{ method: 'POST', path: '/api/image-gen/batch/start' }],
+    startBulk,
+    () => toast.success('Bulk generation started')
   )
-  const stop = useImageMutation(stopBulk, () =>
-    toast.success('Bulk generation stops after the current image')
+  const stop = useImageMutation(
+    [{ method: 'POST', path: '/api/image-gen/batch/stop' }],
+    stopBulk,
+    () => toast.success('Bulk generation stops after the current image')
   )
-  const prompts = useImageMutation(writeMissingPrompts, (accepted) => {
-    setPromptJob(accepted.job_id)
-    toast.success('Writing image prompts')
-  })
+  const prompts = useImageMutation(
+    [{ method: 'POST', path: '/api/entities/prompts/write-missing' }],
+    writeMissingPrompts,
+    (accepted) => {
+      setPromptJob(accepted.job_id)
+      toast.success('Writing image prompts')
+    }
+  )
   return (
     <Section
       title='Image generation'
@@ -244,6 +256,7 @@ export function BulkImageGenPanel() {
               )}
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <Button
+                  act={start}
                   disabled={startReason !== null}
                   disabledReason={startReason ?? undefined}
                   onClick={() => setConfirming(true)}
@@ -252,6 +265,7 @@ export function BulkImageGenPanel() {
                   {`Generate ${formatInteger(missing)} missing images`}
                 </Button>
                 <Button
+                  act={stop}
                   variant='outline'
                   disabled={
                     !bulk.running || bulk.stop_requested || stop.isPending
@@ -267,6 +281,7 @@ export function BulkImageGenPanel() {
                   Stop
                 </Button>
                 <Button
+                  act={prompts}
                   variant='outline'
                   disabled={promptReason !== null}
                   disabledReason={promptReason ?? undefined}
@@ -281,6 +296,7 @@ export function BulkImageGenPanel() {
               )}
               <ImageGenFeedLines log={queue.log} />
               <ConfirmDialog
+                act={start}
                 open={confirming}
                 onOpenChange={setConfirming}
                 title={`Generate ${plural(missing, 'image', 'images')}?`}

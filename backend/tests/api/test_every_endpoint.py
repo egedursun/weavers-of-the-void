@@ -13,7 +13,7 @@ from aerona.constants.paths import DATABASE_FILENAME
 from aerona.main import create_app
 from aerona.prompts import PromptId
 from aerona.settings import Settings
-from tests.library_support import opened_services, sole_universe, universe_headers
+from tests.library_support import opened_services, sign_in_owner, sole_universe, universe_headers
 from tests.services.player.every_lever import kind_of, pick
 
 PARAM = re.compile(r"\{(\w+)(?::path)?\}")
@@ -70,6 +70,7 @@ async def served(lever_template: Path, tmp_path: Path) -> AsyncIterator[tuple[As
         universe = await sole_universe(app)
         services = await opened_services(app, universe)
         async with AsyncClient(transport=ASGITransport(app=manager.app), base_url="http://localhost", headers=universe_headers(universe)) as http:
+            await sign_in_owner(app, http)
             yield http, services
 
 

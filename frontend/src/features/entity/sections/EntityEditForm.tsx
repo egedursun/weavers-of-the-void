@@ -27,6 +27,7 @@ export function EntityEditForm({
   const [underworld, setUnderworld] = useState(entity.is_underworld)
   const region = entity.entity_type === 'region'
   const save = useLoreMutation({
+    writes: [{ lever: 'record:edit' }],
     run: () =>
       unwrap(
         api.PATCH('/api/entities/{entity_id}', {
@@ -139,6 +140,7 @@ export function EntityEditForm({
         )}
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={save}
             type='submit'
             disabled={reason !== null}
             disabledReason={reason ?? undefined}

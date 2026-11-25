@@ -87,12 +87,24 @@ class ArtifactDraft:
 
 
 @dataclass(frozen=True)
+class Ownership:
+    author_account_id: int | None = None
+    author_name: str | None = None
+    shared: bool = False
+    mine: bool = True
+
+
+NO_OWNER = Ownership()
+
+
+@dataclass(frozen=True)
 class ArtifactPatch:
     title: str | None = None
     status: ArtifactStatus | None = None
     tags: Sequence[str] | None = None
     kind: ArtifactKind | None = None
     node_ids: Sequence[int] | None = None
+    shared: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -134,6 +146,7 @@ class ArtifactSummary:
     plan_id: int | None
     created_at: datetime
     updated_at: datetime
+    owner: Ownership = NO_OWNER
 
 
 @dataclass(frozen=True)
@@ -220,6 +233,7 @@ class PlanView:
     steps: list[PlanStepView]
     job_id: str = ""
     waiting_step: int | None = None
+    owner: Ownership = NO_OWNER
 
 
 @dataclass(frozen=True)
@@ -310,6 +324,7 @@ class ForecastView:
     started_at: datetime | None
     finished_at: datetime | None
     created_at: datetime
+    owner: Ownership = NO_OWNER
 
 
 class ArtifactsPort(Protocol):

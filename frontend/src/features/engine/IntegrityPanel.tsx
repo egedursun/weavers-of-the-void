@@ -52,6 +52,7 @@ export function IntegrityPanel({ readOnlyReason }: IntegrityPanelProps) {
                   <Muted variant='caption'>{task.description}</Muted>
                 </div>
                 <Button
+                  act={run}
                   variant='outline'
                   size='sm'
                   disabled={run.isPending || readOnlyReason !== null}
@@ -69,6 +70,7 @@ export function IntegrityPanel({ readOnlyReason }: IntegrityPanelProps) {
         </ul>
       )}
       <ConfirmDialog
+        act={run}
         open={pending !== null}
         onOpenChange={(open) => !open && setPending(null)}
         title={pending ? `Run ${pending.title.toLowerCase()}?` : ''}

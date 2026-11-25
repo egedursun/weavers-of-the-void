@@ -378,6 +378,7 @@ export function ArmsCard({
           types={['house', 'polity']}
         />
         <Button
+          act={quartering}
           size='sm'
           variant='outline'
           disabled={
@@ -479,6 +480,7 @@ export function ArmsForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={granting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -498,6 +500,7 @@ export function ArmsForge({
             Cast the dice
           </Button>
           <Button
+            act={differencing}
             size='sm'
             variant='outline'
             disabled={

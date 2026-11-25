@@ -152,6 +152,7 @@ function DatingForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -290,6 +291,7 @@ function WearControl({
           onChange={setWear}
         />
         <Button
+          act={[setting, editing]}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -404,6 +406,7 @@ function PartRow({
         />
         <div className='flex min-w-0 flex-wrap items-end gap-2'>
           <Button
+            act={setting}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -590,6 +593,7 @@ function DesignCard({
       </PagedList>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={refitting}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -600,6 +604,7 @@ function DesignCard({
           Draw a new mark
         </Button>
         <Button
+          act={fitting}
           size='sm'
           variant='outline'
           disabled={(unfit ?? busy) !== null}
@@ -643,6 +648,7 @@ function DesignForge({
       columns={3}
       action={
         <Button
+          act={drawing}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

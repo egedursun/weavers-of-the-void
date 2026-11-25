@@ -339,6 +339,7 @@ export function CreateGalaxyStudio({
       }
       action={
         <CosmicActionButton
+          act={create}
           actionId='galaxy:create'
           label='Set it turning'
           icon={Orbit}
@@ -468,6 +469,7 @@ export function CreateClusterStudio({
       }
       action={
         <CosmicActionButton
+          act={create}
           actionId='cluster:create'
           label='Gather it'
           icon={Workflow}
@@ -603,6 +605,7 @@ export function CreateDimensionStudio({
       }
       action={
         <CosmicActionButton
+          act={create}
           actionId='dimension:create'
           label='Bring it into being'
           icon={Layers}

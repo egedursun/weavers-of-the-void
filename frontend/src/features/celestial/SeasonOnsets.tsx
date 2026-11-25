@@ -3,6 +3,7 @@ import { Lock, Plus, Trash2, Unlock } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components, seasonOnsetValues } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,15 +36,18 @@ function OnsetPicker({
   value,
   onChange,
   label,
+  act,
 }: {
   value: OnsetKind
   onChange: (value: OnsetKind) => void
   label: string
+  act?: ActProp
 }) {
   const id = useId()
   return (
     <FieldTile id={id} label={label}>
       <Select
+        act={act}
         value={value}
         onValueChange={(next) => onChange(next as OnsetKind)}
       >
@@ -74,6 +78,7 @@ function OnsetRow({
   const shown = SEASON_ONSET[onset.onset]
   const Icon = shown.icon
   const set = useGodAction({
+    writes: [{ lever: 'seasons:onset' }],
     run: (value: OnsetKind) =>
       unwrap(
         api.POST('/api/actions/seasons:onset', {
@@ -88,6 +93,7 @@ function OnsetRow({
     success: 'The season keeps the onset you set',
   })
   const release = useGodAction({
+    writes: [{ lever: 'seasons:onset_release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:onset_release', {
@@ -97,6 +103,7 @@ function OnsetRow({
     success: 'The onset is no longer held',
   })
   const clear = useGodAction({
+    writes: [{ lever: 'seasons:onset_clear' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:onset_clear', {
@@ -137,6 +144,7 @@ function OnsetRow({
         )}
       </div>
       <OnsetPicker
+        act={set}
         value={onset.onset}
         label='Onset that year'
         onChange={(value) => {
@@ -144,6 +152,7 @@ function OnsetRow({
         }}
       />
       <Button
+        act={release}
         size='sm'
         variant='outline'
         disabled={releaseReason !== null}
@@ -154,6 +163,7 @@ function OnsetRow({
         Release
       </Button>
       <Button
+        act={clear}
         size='sm'
         variant='ghost'
         disabled={busy !== null}
@@ -181,6 +191,7 @@ function NewOnset({
   )
   const [onset, setOnset] = useState<OnsetKind>('failed')
   const add = useGodAction({
+    writes: [{ lever: 'seasons:onset' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/seasons:onset', {
@@ -226,6 +237,7 @@ function NewOnset({
         <OnsetPicker value={onset} label='Onset' onChange={setOnset} />
       </div>
       <Button
+        act={add}
         className='self-start'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}

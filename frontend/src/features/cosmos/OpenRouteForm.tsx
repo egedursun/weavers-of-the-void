@@ -50,6 +50,7 @@ export function OpenRouteForm({ index, rules, worldId }: OpenRouteFormProps) {
       worlds.find((item) => String(item.world.id) !== first)?.world.id ?? ''
     )
   const open = useCosmicAction({
+    writes: [{ lever: 'route:open' }],
     run: () =>
       unwrap(
         api.POST('/api/routes', {
@@ -111,6 +112,7 @@ export function OpenRouteForm({ index, rules, worldId }: OpenRouteFormProps) {
       </FormRow>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={open}
           actionId='route:open'
           label='Open the route'
           icon={RouteIcon}

@@ -612,6 +612,7 @@ export function FolkPanel({
         columns={2}
         action={
           <Button
+            act={dutying}
             size='sm'
             disabled={busy(dutying.isPending) !== null}
             disabledReason={busy(dutying.isPending) ?? undefined}
@@ -647,6 +648,7 @@ export function FolkPanel({
         columns={2}
         action={
           <Button
+            act={reviving}
             size='sm'
             disabled={busy(reviving.isPending) !== null}
             disabledReason={busy(reviving.isPending) ?? undefined}
@@ -683,6 +685,7 @@ export function FolkPanel({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={drinking}
               size='sm'
               variant='outline'
               disabled={busy(drinking.isPending) !== null}
@@ -693,6 +696,7 @@ export function FolkPanel({
               Intoxicant
             </Button>
             <Button
+              act={marking}
               size='sm'
               variant='outline'
               disabled={busy(marking.isPending) !== null}
@@ -703,6 +707,7 @@ export function FolkPanel({
               Mark
             </Button>
             <Button
+              act={budgeting}
               size='sm'
               variant='outline'
               disabled={busy(budgeting.isPending) !== null}
@@ -713,6 +718,7 @@ export function FolkPanel({
               Year
             </Button>
             <Button
+              act={naming}
               size='sm'
               disabled={
                 busy(
@@ -798,6 +804,7 @@ export function FolkPanel({
               onClick={running.run}
             />
             <Button
+              act={opening}
               size='sm'
               disabled={
                 busy(

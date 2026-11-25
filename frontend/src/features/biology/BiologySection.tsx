@@ -9,6 +9,7 @@ import {
   Unlink,
   Unlock,
 } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import {
   EmptyState,
@@ -178,11 +179,13 @@ function VariantPicker({
   blocked,
   busy,
   onToggle,
+  act,
 }: {
   data: BiologyNodeView
   blocked: string | null
   busy: boolean
   onToggle: (variant: BiologyVariant, present: boolean) => void
+  act?: ActProp
 }) {
   const reason = why(blocked, busy)
   return (
@@ -197,6 +200,7 @@ function VariantPicker({
         const present = data.variants.includes(variant)
         return (
           <Button
+            act={act}
             key={variant}
             size='sm'
             variant={present ? 'default' : 'outline'}
@@ -218,10 +222,12 @@ function PartnerPicker({
   data,
   blocked,
   onSet,
+  act,
 }: {
   data: BiologyNodeView
   blocked: string | null
   onSet: (partner: number | null) => void
+  act?: ActProp
 }) {
   const [partner, setPartner] = useState<number | null>(
     data.partner?.id ?? null
@@ -240,12 +246,14 @@ function PartnerPicker({
         blocked={reason}
       />
       <StepButton
+        act={act}
         icon={Link2}
         label='Bind it to this kind'
         busy={reason ?? (partner === null ? 'Pick the kind first' : null)}
         onClick={() => onSet(partner)}
       />
       <StepButton
+        act={act}
         icon={Unlink}
         label='Free it of its partner'
         busy={reason ?? (data.partner === null ? 'It has no partner' : null)}
@@ -359,6 +367,7 @@ export function BiologySection({
               />
             )}
             <VariantPicker
+              act={[adding, removing]}
               data={query.data}
               blocked={blocked}
               busy={adding.isPending || removing.isPending}
@@ -367,6 +376,7 @@ export function BiologySection({
               }
             />
             <PartnerPicker
+              act={editing}
               data={query.data}
               blocked={why(blocked, editing.isPending)}
               onSet={(partner) =>
@@ -379,6 +389,7 @@ export function BiologySection({
             <Effects data={query.data} />
             <Leanings data={query.data} />
             <RecordEditor
+              act={editing}
               title='Set what this biology does'
               note='Every value you set is held against the engine and against the sons until you release it; the variants above still decide every value you leave free.'
               fields={FIELDS}
@@ -391,6 +402,7 @@ export function BiologySection({
             />
             <div className='flex min-w-0 flex-wrap gap-2'>
               <StepButton
+                act={editing}
                 icon={Unlock}
                 label='Let the sons reshape its variants'
                 busy={why(
@@ -405,12 +417,14 @@ export function BiologySection({
                 }
               />
               <StepButton
+                act={resetting}
                 icon={RotateCcw}
                 label='Return it to what its body shows'
                 busy={why(blocked, resetting.isPending)}
                 onClick={() => resetting.mutate()}
               />
               <StepButton
+                act={running}
                 icon={BIOLOGY_ICON}
                 label='Read every biology now'
                 busy={why(readOnlyReason, running.isPending)}

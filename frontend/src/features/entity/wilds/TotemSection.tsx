@@ -66,6 +66,7 @@ export function TotemSection({
               </div>
             </div>
             <Button
+              act={set}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -96,6 +97,7 @@ export function TotemSection({
             />
           </div>
           <Button
+            act={set}
             size='sm'
             disabled={busy !== null || species === null}
             disabledReason={

@@ -83,6 +83,7 @@ export function DimensionLaws({
                     <Chip>By its kind</Chip>
                   ) : (
                     <Button
+                      act={release}
                       size='sm'
                       variant='ghost'
                       disabled={busy !== null}
@@ -111,6 +112,7 @@ export function DimensionLaws({
           meta={<Chip icon={Scale}>{`${laws.length} in force`}</Chip>}
           action={
             <Button
+              act={bind}
               size='sm'
               disabled={busy !== null || missing !== null}
               disabledReason={busy ?? missing ?? undefined}

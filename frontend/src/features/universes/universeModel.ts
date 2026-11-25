@@ -9,7 +9,7 @@ export const TAGS_MAX = 24
 const RECENT_SHOWN = 4
 
 export type UniverseAct =
-  'notes' | 'cover' | 'duplicate' | 'export' | 'delete' | 'details'
+  'notes' | 'cover' | 'duplicate' | 'export' | 'move' | 'delete' | 'details'
 
 const RUNNING_REASON: Record<string, string> = {
   epoch: 'An epoch is running in this universe. Wait for it to end first.',

@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import JSON, DateTime, ForeignKey, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
+from aerona.db.authorship import OwnedByAccount
 from aerona.db.base import Base
 from aerona.db.columns import at_least, enum_type
 from aerona.domain.enums.presence import PresenceEventKind, PresenceExchangeStatus, PresenceGuise, PresenceRecord, PresenceStatus
@@ -13,7 +14,7 @@ def created() -> Mapped[datetime]:
     return mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
-class PresenceSessionRow(Base):
+class PresenceSessionRow(OwnedByAccount, Base):
     __tablename__ = "presence_sessions"
     __table_args__ = (at_least("opened_epoch", 0),)
 

@@ -18,6 +18,7 @@ export function ForeignGodDepth({ god }: { god: ForeignGodRecord }) {
   const { reason } = useGodGate()
   const running = useRunningJob((job) => paramEquals(job, 'god_id', god.id))
   const deepen = useGodAction({
+    writes: [{ lever: 'foreign_god:deepen' }],
     run: () =>
       unwrap(
         api.POST('/api/foreign-gods/{god_id}/deepen', {
@@ -34,6 +35,7 @@ export function ForeignGodDepth({ god }: { god: ForeignGodRecord }) {
       level={3}
       actions={
         <ActionButton
+          act={deepen}
           label={god.depth ? 'Deepen again' : 'Deepen'}
           icon={Layers}
           blocked={

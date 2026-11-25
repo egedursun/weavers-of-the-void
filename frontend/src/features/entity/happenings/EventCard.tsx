@@ -225,6 +225,7 @@ function FootprintPanel({
     [names.data, view.world_id]
   )
   const reach = useGodAction({
+    writes: [{ lever: 'event:footprint' }],
     run: ({ id, present }: { id: number; present: boolean }) =>
       unwrap(
         api.POST('/api/actions/event:footprint', {
@@ -258,6 +259,7 @@ function FootprintPanel({
                 {`Since age ${item.joined_epoch}`}
               </Muted>
               <Button
+                act={reach}
                 size='icon'
                 variant='ghost'
                 aria-label={`Remove ${item.region}`}
@@ -285,6 +287,7 @@ function FootprintPanel({
           />
         </div>
         <Button
+          act={reach}
           size='sm'
           variant='outline'
           disabled={busy !== null || region === null}
@@ -311,6 +314,7 @@ function PhaseControls({
   blocked: string | null
 }) {
   const move = useGodAction({
+    writes: [{ lever: 'event:phase' }],
     run: ({ phase, hold }: { phase: EventPhase; hold: boolean }) =>
       unwrap(
         api.POST('/api/actions/event:phase', {
@@ -319,6 +323,7 @@ function PhaseControls({
       ),
   })
   const end = useGodAction({
+    writes: [{ lever: 'event:end' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/event:end', {
@@ -342,6 +347,7 @@ function PhaseControls({
           >
             <div className='mt-auto flex min-w-0 flex-wrap gap-1.5'>
               <Button
+                act={move}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null || here}
@@ -352,6 +358,7 @@ function PhaseControls({
                 Move here
               </Button>
               <Button
+                act={move}
                 size='sm'
                 variant='secondary'
                 disabled={busy !== null}
@@ -372,6 +379,7 @@ function PhaseControls({
         hint='Close the event now, in this age'
       >
         <Button
+          act={end}
           size='sm'
           variant='outline'
           className='mt-auto'
@@ -397,6 +405,7 @@ function RecordControls({
   blocked: string | null
 }) {
   const edit = useGodAction({
+    writes: [{ lever: 'event:edit' }],
     run: (values: Record<string, number | string | null>) =>
       unwrap(
         api.POST('/api/actions/event:edit', {
@@ -445,6 +454,7 @@ function RecordControls({
     <EditorGroup title='Its record' icon={CalendarRange}>
       {numbers.map((field) => (
         <NumberEditor
+          act={edit}
           key={`${field.key}-${field.value}`}
           id={`event-${view.entity_id}`}
           field={field}
@@ -463,6 +473,7 @@ function RecordControls({
             className='flex min-w-0 flex-col gap-1.5 rounded-md border surface-framed border-gild/70 bg-card p-3'
           >
             <IconPicker
+              act={edit}
               label={fieldLabel(key)}
               value={current ? String(current.position) : NO_SEASON}
               table={seasons}
@@ -511,6 +522,7 @@ function CasualtyControls({
     [names.data, view.world_id]
   )
   const toll = useGodAction({
+    writes: [{ lever: 'event:casualties' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/event:casualties', {
@@ -592,6 +604,7 @@ function CasualtyControls({
             />
           </FieldTile>
           <Button
+            act={toll}
             size='sm'
             variant='outline'
             disabled={reason !== null}
@@ -618,6 +631,7 @@ export function EventSection({
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
   const release = useGodAction({
+    writes: [{ lever: 'event:release' }],
     run: (fields: string[]) =>
       Promise.all(
         fields.map((field) =>
@@ -760,10 +774,12 @@ export function EventSection({
             <FootprintPanel view={data} blocked={blocked} />
           </div>
           <AdjustPanel
+            acts={[release]}
             title='Shape the event'
             note='Move or hold its phase, end it, change its years and seasons, its reach and its toll. Every change goes into the ledger and can be undone.'
           >
             <HeldStrip
+              act={release}
               keys={data.locked}
               labelOf={fieldLabel}
               blocked={blocked ?? (release.isPending ? WORKING : null)}

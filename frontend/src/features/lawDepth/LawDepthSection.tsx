@@ -174,7 +174,10 @@ function useRow<E extends LawAction, D extends LawAction, K extends object>(
   )
   const removing = useLawAction(remove, (_: void) => keys as never, 'Done')
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }
@@ -187,7 +190,7 @@ function useRemove<D extends LawAction, K extends object>(
 ) {
   const removing = useLawAction(remove, (_: void) => keys as never, 'Done')
   return {
-    busy: why(blocked, removing.isPending),
+    busy: removing.blockedReason ?? why(blocked, removing.isPending),
     onRemove: () => removing.mutate(),
   }
 }
@@ -296,6 +299,7 @@ function SystemForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -404,6 +408,7 @@ function PrecedentForge({
       columns={4}
       action={
         <Button
+          act={adding}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -502,6 +507,7 @@ function AppealCard({
       onRemove={action.onRemove}
       extra={
         <Button
+          act={hearing}
           size='sm'
           variant='outline'
           disabled={busy !== null || decided}
@@ -542,6 +548,7 @@ function AppealForge({ blocked }: { blocked: string | null }) {
       columns={3}
       action={
         <Button
+          act={filing}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -614,6 +621,7 @@ function OracleCard({
       }
       aside={
         <Button
+          act={answering}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -719,6 +727,7 @@ function RegistryForge({
       columns={4}
       action={
         <Button
+          act={adding}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -847,6 +856,7 @@ function ClaimForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -964,6 +974,7 @@ function MercyForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={pardon}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -973,6 +984,7 @@ function MercyForge({
             Pardon
           </Button>
           <Button
+            act={amnesty}
             size='sm'
             variant='outline'
             disabled={amnestyBusy !== null}
@@ -1087,6 +1099,7 @@ function OutlawForge({
       columns={3}
       action={
         <Button
+          act={declaring}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -1284,6 +1297,7 @@ function PrisonForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={jailing}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -1293,6 +1307,7 @@ function PrisonForge({
             Imprison
           </Button>
           <Button
+            act={conditions}
             size='sm'
             variant='outline'
             disabled={setBusy !== null}
@@ -1339,6 +1354,7 @@ function AgentCard({
   blocked: string | null
 }) {
   const editing = useGodAction({
+    writes: [{ lever: 'military:edit' }, { lever: 'military:release' }],
     run: (vars: Edit) =>
       vars.release.length > 0
         ? postAction('military:release', {
@@ -1365,6 +1381,7 @@ function AgentCard({
     >
       <Meter label='Loyalty' value={row.loyalty} tone='success' />
       <RecordEditor
+        act={editing}
         title='Set the agent'
         note='Loyalty follows the motive of recruitment; an agent of little loyalty may cross to the other side.'
         fields={[
@@ -1479,6 +1496,7 @@ function CellForge({
       columns={4}
       action={
         <Button
+          act={adding}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -1719,6 +1737,7 @@ function ShadowForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={hunting}
             size='sm'
             disabled={huntBusy !== null}
             disabledReason={huntBusy ?? undefined}
@@ -1728,6 +1747,7 @@ function ShadowForge({
             Hunt for moles
           </Button>
           <Button
+            act={defecting}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -1738,6 +1758,7 @@ function ShadowForge({
             Defect to that side
           </Button>
           <Button
+            act={killing}
             size='sm'
             variant='outline'
             disabled={busy !== null}

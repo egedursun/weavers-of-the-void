@@ -13,6 +13,7 @@ import { chronicleKindIcon } from '@/components/domain/chronicleKindIcons'
 import { OlderLinesButton } from '@/features/chronicle/OlderLinesButton'
 import { type OlderLines } from '@/features/chronicle/api'
 import { useLinkTargets } from '@/features/chronicle/linkTargets'
+import { AuthorMark } from '@/features/team/AuthorMark'
 import { type ChronicleLine } from './api'
 
 const LINES_SHOWN = 8
@@ -21,9 +22,12 @@ const LINES_STEP = 12
 function LineText({ line }: { line: ChronicleLine }) {
   const targets = useLinkTargets(line.entity_ids ?? [])
   return (
-    <ExpandableText lines={4}>
-      <MentionText text={line.text} targets={targets} />
-    </ExpandableText>
+    <>
+      <ExpandableText lines={4}>
+        <MentionText text={line.text} targets={targets} />
+      </ExpandableText>
+      <AuthorMark name={line.author_name} />
+    </>
   )
 }
 

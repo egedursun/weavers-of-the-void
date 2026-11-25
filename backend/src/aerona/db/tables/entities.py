@@ -4,6 +4,7 @@ from sqlalchemy import CheckConstraint, Float, ForeignKey, Index, String, Text, 
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH, PRIVATE_NOTE_MAX_LENGTH, SUBTYPE_MAX_LENGTH, TITLE_MAX_LENGTH
+from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
 from aerona.db.base import Base, CreatedAtMixin
 from aerona.db.columns import at_least, enum_type, max_length, nullable_between
 from aerona.db.tables.node import NodeRow
@@ -92,6 +93,8 @@ class EntityRow(NodeRow):
     archive_override: Mapped[ArchiveOverride | None] = mapped_column(enum_type(ArchiveOverride, "archive_override"))
     favorite: Mapped[bool] = mapped_column(default=False)
     private_note: Mapped[str | None] = mapped_column(Text)
+    note_author_account_id: Mapped[int | None]
+    note_author_name: Mapped[str | None] = mapped_column(String(AUTHOR_NAME_MAX_LENGTH))
     map_x: Mapped[float | None] = mapped_column(Float)
     map_y: Mapped[float | None] = mapped_column(Float)
     image_prompt: Mapped[str | None] = mapped_column(Text)

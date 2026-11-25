@@ -19,7 +19,10 @@ export function useMeansRow<
   )
   const removing = useMeansAction(remove, (_: void) => keys as never, 'Done')
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }

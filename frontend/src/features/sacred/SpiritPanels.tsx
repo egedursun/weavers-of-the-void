@@ -229,6 +229,7 @@ function SpiritForge({
       columns={3}
       action={
         <Button
+          act={raising}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -621,6 +622,7 @@ function OfficeForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -723,6 +725,7 @@ function PetitionForge({
       columns={3}
       action={
         <Button
+          act={filing}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

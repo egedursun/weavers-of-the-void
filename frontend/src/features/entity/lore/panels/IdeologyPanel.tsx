@@ -60,6 +60,7 @@ export function IdeologyPanel({
   const [tenet, setTenet] = useState('')
   const [community, setCommunity] = useState<number | null>(null)
   const teach = useGodAction<{ tenet: string; held: boolean }>({
+    writes: [{ lever: 'creed:tenet' }],
     run: ({ tenet: chosen, held }) =>
       unwrap(
         api.POST('/api/actions/creed:tenet', {
@@ -72,6 +73,7 @@ export function IdeologyPanel({
     strength: number
     state: boolean
   }>({
+    writes: [{ lever: 'creed:adherent' }],
     run: ({ community: target, strength, state }) =>
       unwrap(
         api.POST('/api/actions/creed:adherent', {
@@ -226,6 +228,7 @@ export function IdeologyPanel({
                       {spec.label}
                     </Text>
                     <Button
+                      act={teach}
                       size='icon-sm'
                       variant='ghost'
                       aria-label={`Cast off ${spec.label}`}
@@ -256,6 +259,7 @@ export function IdeologyPanel({
               />
             </div>
             <Button
+              act={teach}
               size='sm'
               variant='outline'
               disabled={busy !== null || tenet === ''}
@@ -297,6 +301,7 @@ export function IdeologyPanel({
               <Paged items={card.adherents}>
                 {(row) => (
                   <RowEditor
+                    act={adhere}
                     key={row.community?.id}
                     label={row.community?.name ?? 'Unknown'}
                     icon={Users}
@@ -313,6 +318,7 @@ export function IdeologyPanel({
                   >
                     <label className='flex h-control-md shrink-0 items-center gap-1.5'>
                       <Switch
+                        act={adhere}
                         checked={row.state}
                         disabled={busy !== null}
                         aria-label='State creed'
@@ -342,6 +348,7 @@ export function IdeologyPanel({
               placeholder='Win over…'
             />
             <Button
+              act={adhere}
               size='sm'
               variant='outline'
               disabled={busy !== null || community === null}

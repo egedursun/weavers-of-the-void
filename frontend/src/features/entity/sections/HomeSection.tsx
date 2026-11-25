@@ -81,6 +81,7 @@ function MemberRow({
   ctx: Ctx
 }) {
   const role = useGodAction({
+    writes: [{ lever: 'household:member' }],
     run: (value: HouseholdRole) =>
       unwrap(
         api.POST('/api/actions/household:member', {
@@ -94,6 +95,7 @@ function MemberRow({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'household:release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/household:release', {
@@ -120,6 +122,7 @@ function MemberRow({
       badges={member.held ? <Badge variant='outline'>Held</Badge> : undefined}
       actions={
         <Button
+          act={release}
           size='icon-sm'
           variant='ghost'
           aria-label={`Take ${member.mortal.name} out of the household`}
@@ -133,6 +136,7 @@ function MemberRow({
       editLabel={`role of ${member.mortal.name}`}
       editor={
         <MindPicker
+          act={role}
           label='Role in the household'
           value={member.role}
           table={table(ctx.view.roles)}
@@ -155,6 +159,7 @@ function DwellingCard({
 }) {
   const [item, setItem] = useState<number | null>(null)
   const kind = useGodAction({
+    writes: [{ lever: 'dwelling:set' }],
     run: (value: number | null) =>
       unwrap(
         api.POST('/api/actions/dwelling:set', {
@@ -168,6 +173,7 @@ function DwellingCard({
       ),
   })
   const furnish = useGodAction({
+    writes: [{ lever: 'furnishing:add' }],
     run: (itemId: number) =>
       unwrap(
         api.POST('/api/actions/furnishing:add', {
@@ -180,6 +186,7 @@ function DwellingCard({
     },
   })
   const unfurnish = useGodAction({
+    writes: [{ lever: 'furnishing:remove' }],
     run: (itemId: number) =>
       unwrap(
         api.POST('/api/actions/furnishing:remove', {
@@ -188,6 +195,7 @@ function DwellingCard({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'dwelling:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/dwelling:remove', {
@@ -215,6 +223,7 @@ function DwellingCard({
             This household has no roof of its own.
           </Muted>
           <Button
+            act={kind}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -246,6 +255,7 @@ function DwellingCard({
             editor={
               <div className='flex min-w-0 flex-col gap-4'>
                 <MindPicker
+                  act={kind}
                   label='Kind of home'
                   value={String(dwelling.dwelling_kind_id ?? '')}
                   table={dwellingTable(ctx.view.dwellings)}
@@ -343,6 +353,7 @@ function DwellingCard({
                 meta={`Placed in epoch ${entry.placed_epoch}`}
                 actions={
                   <Button
+                    act={unfurnish}
                     size='icon-sm'
                     variant='ghost'
                     aria-label={`Take ${entry.item.name} out of the home`}
@@ -360,6 +371,7 @@ function DwellingCard({
             title='Furnish the home'
             action={
               <Button
+                act={furnish}
                 size='sm'
                 disabled={busy !== null || item === null}
                 disabledReason={
@@ -382,6 +394,7 @@ function DwellingCard({
           </AddBar>
           <div className='flex justify-end'>
             <Button
+              act={strike}
               size='sm'
               variant='ghost'
               disabled={busy !== null}
@@ -401,6 +414,7 @@ function DwellingCard({
 function DebtsCard({ household, ctx }: { household: Household; ctx: Ctx }) {
   const [lender, setLender] = useState('')
   const owe = useGodAction({
+    writes: [{ lever: 'household:debt' }],
     run: ({ lenderId, amount }: { lenderId: number; amount: number }) =>
       unwrap(
         api.POST('/api/actions/household:debt', {
@@ -428,6 +442,7 @@ function DebtsCard({ household, ctx }: { household: Household; ctx: Ctx }) {
             meta={`${debt.amount}, paid down with interest each epoch`}
             actions={
               <Button
+                act={owe}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -479,6 +494,7 @@ function DebtsCard({ household, ctx }: { household: Household; ctx: Ctx }) {
           title='Put the household in debt'
           action={
             <Button
+              act={owe}
               size='sm'
               disabled={busy !== null || !lender}
               disabledReason={
@@ -508,6 +524,7 @@ function DebtsCard({ household, ctx }: { household: Household; ctx: Ctx }) {
 
 function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
   const dissolve = useGodAction({
+    writes: [{ lever: 'household:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/household:remove', {
@@ -516,6 +533,7 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
       ),
   })
   const decisions = useGodAction({
+    writes: [{ lever: 'household:hold' }],
     run: (hold: boolean) =>
       unwrap(
         api.POST('/api/actions/household:hold', {
@@ -684,6 +702,7 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
       </Paged>
       <div className='flex min-w-0 flex-wrap justify-end gap-2'>
         <Button
+          act={decisions}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -693,6 +712,7 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
           {choosing ? 'Hold its choices' : 'Let it choose again'}
         </Button>
         <Button
+          act={dissolve}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -714,6 +734,7 @@ function HouseholdCard({ household, ctx }: { household: Household; ctx: Ctx }) {
 
 function AggregateRow({ row, ctx }: { row: Aggregate; ctx: Ctx }) {
   const strike = useGodAction({
+    writes: [{ lever: 'household_aggregate:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/household_aggregate:remove', {
@@ -737,6 +758,7 @@ function AggregateRow({ row, ctx }: { row: Aggregate; ctx: Ctx }) {
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Strike the ${row.social_class_label.toLowerCase()} households`}
@@ -860,6 +882,7 @@ function CommunityCards({ ctx }: { ctx: Ctx }) {
 
 function NoHousehold({ ctx }: { ctx: Ctx }) {
   const found = useGodAction({
+    writes: [{ lever: 'household:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/household:found', {
@@ -876,6 +899,7 @@ function NoHousehold({ ctx }: { ctx: Ctx }) {
     >
       <Text>Not yet part of any household.</Text>
       <Button
+        act={found}
         size='sm'
         disabled={busy !== null}
         disabledReason={busy ?? undefined}

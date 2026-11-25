@@ -90,6 +90,7 @@ function GameForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={making}
             size='sm'
             variant='outline'
             disabled={makeBusy !== null}
@@ -100,6 +101,7 @@ function GameForge({
             Make the game
           </Button>
           <Button
+            act={following}
             size='sm'
             disabled={followBusy !== null}
             disabledReason={followBusy ?? undefined}

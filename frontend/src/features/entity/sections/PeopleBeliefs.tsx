@@ -37,6 +37,7 @@ function BeliefForm({
   const [narrative, setNarrative] = useState('')
   const [misconception, setMisconception] = useState('')
   const save = useLoreMutation({
+    writes: [{ lever: 'belief:edit' }],
     run: () =>
       unwrap(
         api.PUT('/api/beliefs', {
@@ -111,6 +112,7 @@ function BeliefForm({
         )}
       </FormRow>
       <Button
+        act={save}
         className='self-start'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}

@@ -101,6 +101,7 @@ function KindForge({
       columns={2}
       action={
         <StepButton
+          act={making}
           icon={CirclePlus}
           label='Make the kind'
           variant='default'

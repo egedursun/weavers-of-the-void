@@ -877,7 +877,7 @@ export const FLOW: Record<string, Named> = {
     tone: 'warning',
   },
   decay: { label: 'Rotted and rusted', icon: Bug, tone: 'warning' },
-  player: { label: 'Your hand', icon: Sparkles, tone: 'gold' },
+  player: { label: "The Creator's hand", icon: Sparkles, tone: 'gold' },
   tool: { label: 'Worn out as tools', icon: Wrench, tone: 'muted' },
   offering: { label: 'Offered to gods', icon: Gift, tone: 'gold' },
 }

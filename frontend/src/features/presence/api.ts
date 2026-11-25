@@ -2,13 +2,14 @@ import {
   type QueryClient,
   keepPreviousData,
   useInfiniteQuery,
-  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { ApiError, unwrap } from '@/api/errors'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
+import { PRESENCE_RECORD_PERMISSION } from '@/features/team/permissions'
 import {
   type PresenceGuise,
   type PresenceRecord,
@@ -112,9 +113,11 @@ export type OpenRequest = {
   record: PresenceRecord
 }
 
-export function useOpenSession() {
+export function useOpenSession(record: PresenceRecord) {
   const client = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/presence/sessions' }],
+    permission: PRESENCE_RECORD_PERMISSION[record],
     mutationFn: (body: OpenRequest) =>
       unwrap(api.POST('/api/presence/sessions', { body })),
     onSuccess: (view) => {
@@ -124,9 +127,13 @@ export function useOpenSession() {
   })
 }
 
-export function useSendExchange(sessionId: number) {
+export function useSendExchange(sessionId: number, record: PresenceRecord) {
   const client = useQueryClient()
   return useMutation({
+    permission: PRESENCE_RECORD_PERMISSION[record],
+    writes: [
+      { method: 'POST', path: '/api/presence/sessions/{session_id}/exchanges' },
+    ],
     mutationFn: (text: string) =>
       unwrap(
         api.POST('/api/presence/sessions/{session_id}/exchanges', {
@@ -144,6 +151,9 @@ export function useSendExchange(sessionId: number) {
 export function useCancelExchange() {
   const client = useQueryClient()
   return useMutation({
+    writes: [
+      { method: 'POST', path: '/api/presence/exchanges/{exchange_id}/cancel' },
+    ],
     mutationFn: (exchangeId: number) =>
       unwrap(
         api.POST('/api/presence/exchanges/{exchange_id}/cancel', {
@@ -160,6 +170,9 @@ export function useCancelExchange() {
 export function useCloseSession() {
   const client = useQueryClient()
   return useMutation({
+    writes: [
+      { method: 'POST', path: '/api/presence/sessions/{session_id}/close' },
+    ],
     mutationFn: (sessionId: number) =>
       unwrap(
         api.POST('/api/presence/sessions/{session_id}/close', {

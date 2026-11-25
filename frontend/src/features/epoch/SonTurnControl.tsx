@@ -97,6 +97,7 @@ export function SonTurnControl({ state }: SonTurnControlProps) {
           </ul>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Button
+              act={turn}
               disabled={reason !== null || !selected || turn.isPending}
               disabledReason={
                 reason ??

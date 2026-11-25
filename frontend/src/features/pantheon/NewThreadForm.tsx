@@ -22,6 +22,7 @@ export function NewThreadForm() {
   const [related, setRelated] = useState<NameEntry[]>([])
   const { reason } = useGodGate()
   const open = useGodAction({
+    writes: [{ lever: 'thread:open' }],
     run: () =>
       unwrap(
         api.POST('/api/threads', {
@@ -41,7 +42,7 @@ export function NewThreadForm() {
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='outline' className='self-start'>
+        <Button act={open} variant='outline' className='self-start'>
           <Plus />
           Open a new story
         </Button>
@@ -101,6 +102,7 @@ export function NewThreadForm() {
         </Muted>
         <div>
           <ActionButton
+            act={open}
             label='Open the story'
             variant='default'
             blocked={

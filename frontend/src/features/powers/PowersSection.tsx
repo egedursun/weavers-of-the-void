@@ -230,6 +230,7 @@ function Restriction({
     >
       <Ref node={row.ref} empty='names no place, time or foe' />
       <RecordEditor
+        act={editing}
         title='Set this restriction'
         note='Values you set are held against the engine.'
         fields={RESTRICTION_FIELDS}
@@ -239,6 +240,7 @@ function Restriction({
         onRelease={() => editing.mutate({ values: {}, release: [] })}
       />
       <StepButton
+        act={dropping}
         icon={Trash2}
         label='Lift this restriction'
         busy={why(blocked, dropping.isPending)}
@@ -265,6 +267,7 @@ function Trigger({
     <li className='flex min-w-0 flex-wrap items-center gap-2'>
       <Chip icon={named.icon}>{named.label}</Chip>
       <StepButton
+        act={dropping}
         icon={Trash2}
         label={`Remove the trigger ${named.label.toLowerCase()}`}
         busy={why(blocked, dropping.isPending)}
@@ -292,6 +295,7 @@ function Span({
     >
       <Ref node={row.target} empty='on its user' />
       <RecordEditor
+        act={editing}
         title='Set this lasting effect'
         note='Values you set are held against the engine.'
         fields={SPAN_FIELDS}
@@ -301,6 +305,7 @@ function Span({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={struck}
         icon={Trash2}
         label='End it now'
         busy={why(blocked, struck.isPending)}
@@ -426,6 +431,7 @@ function Power({
         columns={2}
         action={
           <StepButton
+            act={restricting}
             icon={CirclePlus}
             label='Add the restriction'
             busy={why(blocked, restricting.isPending)}
@@ -456,6 +462,7 @@ function Power({
         columns={2}
         action={
           <StepButton
+            act={triggering}
             icon={CirclePlus}
             label='Add the trigger'
             busy={why(blocked, triggering.isPending)}
@@ -472,6 +479,7 @@ function Power({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this power'
         note='Values you set are held against the engine until you release them.'
         fields={powerFields(view)}
@@ -482,6 +490,7 @@ function Power({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={waking}
           icon={Zap}
           label='Wake it'
           busy={why(
@@ -492,6 +501,7 @@ function Power({
           onClick={() => waking.mutate()}
         />
         <StepButton
+          act={stilling}
           icon={Moon}
           label='Still it'
           busy={why(
@@ -501,12 +511,14 @@ function Power({
           onClick={() => stilling.mutate()}
         />
         <StepButton
+          act={revoking}
           icon={Undo2}
           label='Take it back for its god'
           busy={why(blocked ?? ungiven, revoking.isPending)}
           onClick={() => revoking.mutate()}
         />
         <StepButton
+          act={deleting}
           icon={Trash2}
           label='Unmake it'
           busy={why(blocked, deleting.isPending)}
@@ -534,6 +546,7 @@ function Registry({
       caption={`since epoch ${row.registered_epoch}${row.licensed ? ', licensed' : ''}${row.conscripted ? ', called to serve in war' : ''}`}
     >
       <RecordEditor
+        act={editing}
         title='Set this entry'
         note='Values you set are held against the engine.'
         fields={REGISTRY_FIELDS}
@@ -543,6 +556,7 @@ function Registry({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={struck}
         icon={Trash2}
         label='Strike it from the registry'
         busy={why(blocked, struck.isPending)}
@@ -712,6 +726,7 @@ export function PowersSection({
                 caption={`${query.data.attitude.gifted_share}% hold a power, ${query.data.attitude.registered_share}% of them on a registry, weighed in epoch ${query.data.attitude.updated_epoch}`}
               >
                 <RecordEditor
+                  act={attitude}
                   title='Set how they hold the gifted'
                   note='Values you set are held against the engine.'
                   fields={ATTITUDE_FIELDS}
@@ -732,6 +747,7 @@ export function PowersSection({
                 caption='How a power of this house passes to its children'
               >
                 <RecordEditor
+                  act={bloodline}
                   title='Set how the line passes its powers'
                   note='Values you set are held against the engine.'
                   fields={BLOODLINE_FIELDS}
@@ -753,6 +769,7 @@ export function PowersSection({
               action={
                 <div className='flex min-w-0 flex-wrap gap-2'>
                   <StepButton
+                    act={creating}
                     icon={CirclePlus}
                     label='Give the power'
                     variant='default'
@@ -760,6 +777,7 @@ export function PowersSection({
                     onClick={() => creating.mutate()}
                   />
                   <StepButton
+                    act={granting}
                     icon={Gift}
                     label='Have the god grant it'
                     busy={why(blocked ?? noGod, granting.isPending)}

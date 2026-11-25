@@ -109,6 +109,7 @@ function GuestRow({
         {guest.harmed && <Chip variant='destructive'>Harmed</Chip>}
         {guest.locked && <Badge variant='outline'>Held</Badge>}
         <Button
+          act={remove}
           size='icon-sm'
           variant='ghost'
           aria-label={`Strike ${guest.node?.name ?? 'this guest'} from the list`}
@@ -121,6 +122,7 @@ function GuestRow({
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
         <MindPicker
+          act={set}
           label='Role'
           value={guest.role}
           table={table(GUEST_ROLES)}
@@ -130,6 +132,7 @@ function GuestRow({
           }
         />
         <MindPicker
+          act={set}
           label='Why they come'
           value={guest.reason}
           table={table(ATTENDANCE_REASONS)}
@@ -139,6 +142,7 @@ function GuestRow({
           }
         />
         <MindPicker
+          act={set}
           label='Came'
           value={guest.attended === null ? '' : String(guest.attended)}
           table={ATTENDED}
@@ -153,6 +157,7 @@ function GuestRow({
           A held guest is never struck or changed by the engine.
         </Muted>
         <Switch
+          act={set}
           aria-label={`Hold ${guest.node?.name ?? 'this guest'} on the list`}
           checked={guest.locked}
           disabled={busy !== null}
@@ -207,6 +212,7 @@ function AddGuest({
         onPick={(value) => setRole(value as GuestView['role'])}
       />
       <Button
+        act={add}
         size='sm'
         disabled={busy !== null || missing !== null}
         disabledReason={busy ?? missing ?? undefined}
@@ -301,6 +307,7 @@ function GatheringCard({
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>
           <Button
+            act={hold}
             size='sm'
             variant='outline'
             disabled={busy !== null || !planned}
@@ -314,6 +321,7 @@ function GatheringCard({
             Hold now
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -388,6 +396,7 @@ function GatheringCard({
       </div>
       <MovePlace edit={edit.mutate} blocked={busy} />
       <RecordEditor
+        act={edit}
         title='Reshape this gathering'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -505,6 +514,7 @@ function ConveneForm({
             </FieldTile>
           </div>
           <Button
+            act={convene}
             size='sm'
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}

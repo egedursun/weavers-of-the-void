@@ -147,6 +147,7 @@ export function PetsSection({
                       </div>
                       {row.pet && (
                         <Button
+                          act={free}
                           size='sm'
                           variant='ghost'
                           disabled={busy !== null}
@@ -197,6 +198,7 @@ export function PetsSection({
                   />
                 )}
                 <Button
+                  act={give}
                   size='sm'
                   variant='outline'
                   className='self-start'
@@ -217,6 +219,7 @@ export function PetsSection({
                   placeholder='Choose a beast…'
                 />
                 <Button
+                  act={keep}
                   size='sm'
                   variant='outline'
                   className='self-start'

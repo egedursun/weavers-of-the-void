@@ -2,16 +2,17 @@ import {
   type QueryClient,
   keepPreviousData,
   useInfiniteQuery,
-  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { errorFromResponse, unwrap } from '@/api/errors'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { READ_ONLY_MESSAGE, isReadOnly } from '@/api/readOnly'
 import { UNIVERSE_HEADER, currentUniverse } from '@/api/universeStore'
 import { apiUrl } from '@/api/url'
+import { WILL_MODE_PERMISSION } from '@/features/team/permissions'
 import {
   type ArtifactFormat,
   type ArtifactKind,
@@ -161,9 +162,11 @@ export type CycleRequest = {
   attachment_ids: number[]
 }
 
-export function useSendCycle() {
+export function useSendCycle(mode: DivineWillMode) {
   const client = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/divine-will/cycles' }],
+    permission: WILL_MODE_PERMISSION[mode],
     mutationFn: (body: CycleRequest) =>
       unwrap(api.POST('/api/divine-will/cycles', { body })),
     onSuccess: () =>
@@ -174,6 +177,9 @@ export function useSendCycle() {
 export function useCancelCycle() {
   const client = useQueryClient()
   return useMutation({
+    writes: [
+      { method: 'POST', path: '/api/divine-will/cycles/{cycle_id}/cancel' },
+    ],
     mutationFn: (cycleId: number) =>
       unwrap(
         api.POST('/api/divine-will/cycles/{cycle_id}/cancel', {
@@ -187,6 +193,12 @@ export function useCancelCycle() {
 export function useDecideConfirmation() {
   const client = useQueryClient()
   return useMutation({
+    writes: [
+      {
+        method: 'POST',
+        path: '/api/divine-will/confirmations/{confirmation_id}',
+      },
+    ],
     mutationFn: ({
       id,
       decision,
@@ -210,6 +222,7 @@ export function useDecideConfirmation() {
 export function useResetSession() {
   const client = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/divine-will/session/reset' }],
     mutationFn: () => unwrap(api.POST('/api/divine-will/session/reset')),
     onSuccess: () => refreshWill(client),
   })
@@ -354,6 +367,9 @@ export function useArtifactDiff(
 export function usePatchArtifact(id: number) {
   const client = useQueryClient()
   return useMutation({
+    writes: [
+      { method: 'PATCH', path: '/api/divine-will/artifacts/{artifact_id}' },
+    ],
     mutationFn: (body: WillArtifactPatch) =>
       unwrap(
         api.PATCH('/api/divine-will/artifacts/{artifact_id}', {
@@ -371,6 +387,9 @@ export function usePatchArtifact(id: number) {
 export function useDeleteArtifact() {
   const client = useQueryClient()
   return useMutation({
+    writes: [
+      { method: 'DELETE', path: '/api/divine-will/artifacts/{artifact_id}' },
+    ],
     mutationFn: (id: number) =>
       unwrap(
         api.DELETE('/api/divine-will/artifacts/{artifact_id}', {
@@ -423,6 +442,7 @@ export type StepVerb = 'skip' | 'undo'
 export function useSavePlanSteps(id: number) {
   const refresh = useRefreshPlan(id)
   return useMutation({
+    writes: [{ method: 'PUT', path: '/api/divine-will/plans/{plan_id}/steps' }],
     mutationFn: ({
       steps,
       title,
@@ -459,6 +479,13 @@ function planCommand(id: number, verb: PlanVerb) {
 export function usePlanCommand(id: number) {
   const refresh = useRefreshPlan(id)
   return useMutation({
+    writes: [
+      { method: 'POST', path: '/api/divine-will/plans/{plan_id}/abandon' },
+      { method: 'POST', path: '/api/divine-will/plans/{plan_id}/approve' },
+      { method: 'POST', path: '/api/divine-will/plans/{plan_id}/execute' },
+      { method: 'POST', path: '/api/divine-will/plans/{plan_id}/pause' },
+      { method: 'POST', path: '/api/divine-will/plans/{plan_id}/resume' },
+    ],
     mutationFn: (verb: PlanVerb) => unwrap(planCommand(id, verb)),
     onSuccess: refresh,
   })
@@ -467,6 +494,16 @@ export function usePlanCommand(id: number) {
 export function useStepCommand(id: number) {
   const refresh = useRefreshPlan(id)
   return useMutation({
+    writes: [
+      {
+        method: 'POST',
+        path: '/api/divine-will/plans/{plan_id}/steps/{ordinal}/skip',
+      },
+      {
+        method: 'POST',
+        path: '/api/divine-will/plans/{plan_id}/steps/{ordinal}/undo',
+      },
+    ],
     mutationFn: ({ ordinal, verb }: { ordinal: number; verb: StepVerb }) => {
       const params = { params: { path: { plan_id: id, ordinal } } }
       return unwrap(
@@ -500,6 +537,12 @@ export function useForecast(id: number) {
 export function useCancelForecast(id: number) {
   const client = useQueryClient()
   return useMutation({
+    writes: [
+      {
+        method: 'POST',
+        path: '/api/divine-will/forecasts/{forecast_id}/cancel',
+      },
+    ],
     mutationFn: () =>
       unwrap(
         api.POST('/api/divine-will/forecasts/{forecast_id}/cancel', {

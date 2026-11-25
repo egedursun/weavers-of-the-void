@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Minus, Plus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -44,11 +45,13 @@ function TasteChip({
   blocked,
   onSet,
   onRemove,
+  act,
 }: {
   item: Preference
   blocked: string | null
   onSet: (strength: number) => void
   onRemove: () => void
+  act?: ActProp
 }) {
   const loved = item.strength > 0
   return (
@@ -67,6 +70,7 @@ function TasteChip({
       )}
       {item.held && <Muted variant='caption'>held</Muted>}
       <Button
+        act={act}
         size='icon-sm'
         variant='ghost'
         aria-label={`Like ${item.target_label} less`}
@@ -77,6 +81,7 @@ function TasteChip({
         <Minus />
       </Button>
       <Button
+        act={act}
         size='icon-sm'
         variant='ghost'
         aria-label={`Like ${item.target_label} more`}
@@ -87,6 +92,7 @@ function TasteChip({
         <Plus />
       </Button>
       <Button
+        act={act}
         size='icon-sm'
         variant='ghost'
         aria-label={`Forget the feeling for ${item.target_label}`}
@@ -106,12 +112,14 @@ function KindCard({
   blocked,
   onSet,
   onRemove,
+  act,
 }: {
   kind: string
   items: Preference[]
   blocked: string | null
   onSet: (item: Preference, strength: number) => void
   onRemove: (item: Preference) => void
+  act?: ActProp
 }) {
   const spec = named(PREFERENCE_KINDS, kind)
   return (
@@ -130,6 +138,7 @@ function KindCard({
       >
         {(item) => (
           <TasteChip
+            act={act}
             key={item.id}
             item={item}
             blocked={blocked}
@@ -150,6 +159,7 @@ function TasteControls({ view }: { view: CultureMind }) {
   const [strength, setStrength] = useState<string>('80')
   const spec = view.preference_kinds.find((item) => item.kind === kind)
   const set = useGodAction({
+    writes: [{ lever: 'preference:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/preference:set', {
@@ -212,6 +222,7 @@ function TasteControls({ view }: { view: CultureMind }) {
           onPick={setStrength}
         />
         <Button
+          act={set}
           className='self-end'
           size='sm'
           disabled={busy !== null || target === null}
@@ -231,6 +242,7 @@ export function TastesSection({ nodeId }: { nodeId: number }) {
   const query = useCultureMind(nodeId)
   const view = query.data
   const set = useGodAction({
+    writes: [{ lever: 'preference:set' }],
     run: ({ item, strength }: { item: Preference; strength: number }) =>
       unwrap(
         api.POST('/api/actions/preference:set', {
@@ -245,6 +257,7 @@ export function TastesSection({ nodeId }: { nodeId: number }) {
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'preference:remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/preference:remove', {
@@ -331,6 +344,7 @@ export function TastesSection({ nodeId }: { nodeId: number }) {
               <Paged items={groups} initial={6} noun={['kind', 'kinds']}>
                 {(group) => (
                   <KindCard
+                    act={[set, remove]}
                     key={group.kind}
                     kind={group.kind}
                     items={group.items}

@@ -339,6 +339,7 @@ function StackRow({
         onPick={setTarget}
       />
       <Button
+        act={assigning}
         size='sm'
         variant='secondary'
         disabled={busy !== null}
@@ -406,6 +407,7 @@ function EchelonForge({
       columns={3}
       action={
         <Button
+          act={forming}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -677,6 +679,7 @@ export function TheatresPanel({
         columns={2}
         action={
           <Button
+            act={setting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

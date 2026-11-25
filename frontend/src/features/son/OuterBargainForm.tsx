@@ -54,6 +54,7 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
   const sonId = fixedSonId ?? chosen
   const son = living.find((item) => item.id === sonId)
   const order = useGodAction({
+    writes: [{ lever: 'son:outer_bargain' }],
     run: (mode: Mode) =>
       unwrap(
         api.POST('/api/actions/son:outer_bargain', {
@@ -206,6 +207,7 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
       </FormRow>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <ActionButton
+          act={order}
           label='Force the bargain'
           icon={Eye}
           variant='destructive'
@@ -225,6 +227,7 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
         />
         {forbidden ? (
           <ActionButton
+            act={order}
             label='Allow bargaining'
             icon={ShieldOff}
             blocked={reason() ?? noSon}
@@ -233,6 +236,7 @@ export function OuterBargainForm({ sons, fixedSonId }: OuterBargainFormProps) {
           />
         ) : (
           <ActionButton
+            act={order}
             label='Forbid bargaining'
             icon={Ban}
             blocked={reason() ?? noSon}

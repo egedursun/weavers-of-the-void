@@ -36,6 +36,7 @@ export function DangerZone({
   const entity = ctx.entity
   const rejected = entity.status === 'rejected'
   const canon = useLoreMutation({
+    writes: [{ lever: 'canon:set' }],
     run: (status: 'canon' | 'rejected') =>
       unwrap(
         api.PUT('/api/entities/{entity_id}/canon', {
@@ -46,6 +47,7 @@ export function DangerZone({
     success: 'Canon updated',
   })
   const merge = useLoreMutation({
+    writes: [{ lever: 'record:merge' }],
     run: (otherId: number) =>
       unwrap(
         api.POST('/api/entities/{entity_id}/merge', {
@@ -76,7 +78,11 @@ export function DangerZone({
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3 rounded-md border surface-framed border-destructive/40 bg-card p-4'>
       <CollapsibleTrigger asChild>
-        <Button variant='ghost' className='self-start text-destructive'>
+        <Button
+          act={[canon, merge]}
+          variant='ghost'
+          className='self-start text-destructive'
+        >
           <ShieldAlert />
           Dangerous operations
         </Button>
@@ -89,6 +95,7 @@ export function DangerZone({
               canon.
             </Text>
             <Button
+              act={canon}
               variant='outline'
               className='self-start'
               disabled={blocked !== null}
@@ -105,6 +112,7 @@ export function DangerZone({
               Strike it from canon: it is hidden as if Fate had rejected it.
             </Text>
             <Button
+              act={canon}
               variant='destructive'
               className='self-start'
               disabled={blocked !== null}
@@ -136,6 +144,7 @@ export function DangerZone({
             )}
           </FormRow>
           <Button
+            act={merge}
             variant='destructive'
             className='self-start'
             disabled={blocked !== null || other === null}
@@ -151,6 +160,7 @@ export function DangerZone({
         </div>
       </CollapsibleContent>
       <ConfirmDialog
+        act={canon}
         open={confirmCanon}
         onOpenChange={setConfirmCanon}
         title={`Delete ${entity.name} from canon?`}
@@ -164,6 +174,7 @@ export function DangerZone({
         }}
       />
       <ConfirmDialog
+        act={merge}
         open={merging}
         onOpenChange={setMerging}
         title={`Merge ${otherName} into ${entity.name}?`}

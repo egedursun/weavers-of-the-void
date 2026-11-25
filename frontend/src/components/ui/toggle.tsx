@@ -1,8 +1,10 @@
 import * as React from 'react'
 import * as TogglePrimitive from '@radix-ui/react-toggle'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { controlHeight, controlIcon } from './control-size'
+import { Refusal } from './refusal'
 
 const toggleVariants = cva(
   [
@@ -38,16 +40,22 @@ function Toggle({
   className,
   variant,
   size,
+  act,
+  disabled,
   ...props
 }: React.ComponentProps<typeof TogglePrimitive.Root> &
-  VariantProps<typeof toggleVariants>) {
+  VariantProps<typeof toggleVariants> & { act?: ActProp }) {
+  const refusal = refusalOf(act)
   return (
-    <TogglePrimitive.Root
-      data-slot='toggle'
-      data-control-size={size ?? 'default'}
-      className={cn(toggleVariants({ variant, size, className }))}
-      {...props}
-    />
+    <Refusal reason={refusal}>
+      <TogglePrimitive.Root
+        disabled={disabled || refusal !== null}
+        data-slot='toggle'
+        data-control-size={size ?? 'default'}
+        className={cn(toggleVariants({ variant, size, className }))}
+        {...props}
+      />
+    </Refusal>
   )
 }
 

@@ -366,6 +366,7 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
             ]}
           />
           <RecordEditor
+            act={edit}
             title='Form and account'
             note='Its name, kind and account.'
             fields={[
@@ -389,6 +390,7 @@ export function ClusterView({ clusterId }: { clusterId: number }) {
             onRelease={(release) => edit.mutate({ values: {}, release })}
           />
           <RecordEditor
+            act={edit}
             title='Medium and place'
             note='Heat of the gas between its galaxies, its drift, its size and where it lies.'
             fields={[

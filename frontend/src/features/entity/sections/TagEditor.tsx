@@ -3,6 +3,7 @@ import { Tags } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -64,6 +65,7 @@ function ToggleGrid({
   disabled,
   labelOf,
   onToggle,
+  act,
 }: {
   label: string
   options: string[]
@@ -71,6 +73,7 @@ function ToggleGrid({
   disabled: boolean
   labelOf: (key: string) => string
   onToggle: (key: string, on: boolean) => void
+  act?: ActProp
 }) {
   if (options.length === 0) return null
   return (
@@ -86,6 +89,7 @@ function ToggleGrid({
       >
         {(key) => (
           <Toggle
+            act={act}
             key={key}
             variant='outline'
             size='sm'
@@ -119,6 +123,7 @@ export function TagEditor({
   const mechanics = useMemo(() => enumOf(schema, 'ResourceMechanic'), [schema])
   const laws = useMemo(() => enumOf(schema, 'NaturalLaw'), [schema])
   const change = useLoreMutation({
+    writes: [{ lever: 'entity:tags' }],
     run: (body: TagChange) =>
       unwrap(
         api.PATCH('/api/entities/{entity_id}/tags', {
@@ -140,13 +145,14 @@ export function TagEditor({
     <Section id='section-tags' title='Marks and traits' level={3}>
       <Collapsible className='flex min-w-0 flex-col gap-4'>
         <CollapsibleTrigger asChild>
-          <Button variant='outline' className='self-start'>
+          <Button act={change} variant='outline' className='self-start'>
             <Tags />
             Change marks
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className='flex min-w-0 flex-col gap-4'>
           <ToggleGrid
+            act={change}
             label='Marks'
             options={flags}
             active={(key) => ctx.flags.has(key)}
@@ -158,6 +164,7 @@ export function TagEditor({
           />
           {ctx.type === 'species' && (
             <ToggleGrid
+              act={change}
               label='Species traits'
               options={traits}
               active={(key) => ctx.detail.traits.includes(key as never)}
@@ -172,6 +179,7 @@ export function TagEditor({
           )}
           {ctx.type === 'resource' && (
             <ToggleGrid
+              act={change}
               label='How the resource behaves'
               options={mechanics}
               active={hasMechanic}
@@ -188,6 +196,7 @@ export function TagEditor({
             <FormRow label='How the law works'>
               {(id) => (
                 <Select
+                  act={change}
                   value={currentLaw}
                   disabled={disabled}
                   onValueChange={(value) => change.mutate({ law: value })}

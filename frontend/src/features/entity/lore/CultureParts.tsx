@@ -27,6 +27,7 @@ export function OptionalChoice({
   const edit = useLoreEdit(entityId)
   return (
     <ChoicePicker
+      act={edit}
       label={label}
       value={value ?? NONE}
       table={withNone(table, noneLabel)}
@@ -61,6 +62,7 @@ export function CustomKindChoice({
   )
   return (
     <ChoicePicker
+      act={edit}
       label='A kind of your own'
       value={value ? String(value) : NONE}
       table={withNone(table, 'Only the base kind')}

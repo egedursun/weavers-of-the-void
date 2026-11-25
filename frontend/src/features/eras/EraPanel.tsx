@@ -109,6 +109,7 @@ export function EraPanel({
       />
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <StepButton
+          act={running}
           icon={Gauge}
           label='Read every era now'
           busy={why(blocked, running.isPending)}

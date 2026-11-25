@@ -20,6 +20,7 @@ export function DistributionControl() {
   const mode = state.data?.world?.son_distribution
   const protection = rule('god_hand.assignment_protection_epochs')
   const setMode = useGodAction({
+    writes: [{ lever: 'settings' }],
     run: (value: Distribution) =>
       unwrap(
         api.PATCH('/api/settings', {
@@ -33,6 +34,7 @@ export function DistributionControl() {
     invalidate: [godKeys.settings],
   })
   const distribute = useGodAction({
+    writes: [{ lever: 'son:distribute' }],
     run: () => unwrap(api.POST('/api/sons/distribute')),
     success: 'Sons were sent to the godless worlds',
   })
@@ -50,6 +52,7 @@ export function DistributionControl() {
         {(id) => (
           <>
             <ToggleGroup
+              act={setMode}
               id={id}
               type='single'
               variant='outline'
@@ -62,6 +65,7 @@ export function DistributionControl() {
               <ToggleGroupItem value='manual'>By hand</ToggleGroupItem>
             </ToggleGroup>
             <ActionButton
+              act={distribute}
               label='Distribute now'
               icon={Shuffle}
               blocked={reason()}

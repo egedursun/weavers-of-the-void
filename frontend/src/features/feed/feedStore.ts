@@ -1,5 +1,10 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
+import {
+  type ViewerStorageKey,
+  followViewer,
+  viewerPersisted,
+} from '@/lib/universeStorage'
 import {
   type FeedActorFilter,
   type FeedCategory,
@@ -65,7 +70,7 @@ type FeedPreferences = {
   toggleMuted: (category: FeedCategory) => void
 }
 
-export const FEED_PREFERENCES_KEY = 'aerona.feed'
+export const FEED_PREFERENCES_KEY: ViewerStorageKey = 'aerona.feed'
 
 export const useFeedPreferences = create<FeedPreferences>()(
   persist(
@@ -85,8 +90,9 @@ export const useFeedPreferences = create<FeedPreferences>()(
         })),
     }),
     {
-      name: FEED_PREFERENCES_KEY,
-      storage: createJSONStorage(() => localStorage),
+      ...viewerPersisted<FeedPreferences>(FEED_PREFERENCES_KEY),
     }
   )
 )
+
+followViewer(useFeedPreferences)

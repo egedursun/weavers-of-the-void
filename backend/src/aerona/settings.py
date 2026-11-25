@@ -4,6 +4,15 @@ from pathlib import Path
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from aerona.constants.accounts import (
+    DEFAULT_LOCKOUT_ATTEMPTS,
+    DEFAULT_LOCKOUT_MINUTES,
+    DEFAULT_PASSWORD_MIN_LENGTH,
+    DEFAULT_PRESENCE_TTL_SECONDS,
+    DEFAULT_REASON_MAX_LENGTH,
+    DEFAULT_SESSION_IDLE_DAYS,
+    DEFAULT_SESSION_MAX_DAYS,
+)
 from aerona.constants.library import (
     DEFAULT_IDLE_MINUTES,
     DEFAULT_IMPORT_MAX_MB,
@@ -47,6 +56,14 @@ class Settings(BaseSettings):
     library_import_max_mb: int = Field(default=DEFAULT_IMPORT_MAX_MB, ge=1)
     library_trash_days: int = Field(default=DEFAULT_TRASH_DAYS, ge=0)
     library_root: Path | None = None
+    cookie_secure: bool = False
+    accounts_lockout_attempts: int = Field(default=DEFAULT_LOCKOUT_ATTEMPTS, ge=1)
+    accounts_lockout_minutes: float = Field(default=DEFAULT_LOCKOUT_MINUTES, gt=0)
+    accounts_password_min_length: int = Field(default=DEFAULT_PASSWORD_MIN_LENGTH, ge=8)
+    accounts_session_idle_days: float = Field(default=DEFAULT_SESSION_IDLE_DAYS, gt=0)
+    accounts_session_max_days: float = Field(default=DEFAULT_SESSION_MAX_DAYS, gt=0)
+    team_presence_ttl_seconds: float = Field(default=DEFAULT_PRESENCE_TTL_SECONDS, gt=0)
+    team_reason_max_length: int = Field(default=DEFAULT_REASON_MAX_LENGTH, ge=1)
     universe_id: str = ""
 
     @property

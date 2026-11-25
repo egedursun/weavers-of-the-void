@@ -1,0 +1,47 @@
+{% macro team_record(record) -%}
+{% if record.shown %}
+### The Hands of the Creator
+
+*The people who shaped this universe as the hand of its Creator, and what each of them did.*
+
+{% for hand in record.hands %}
+#### {{ hand.name }}{% if hand.former %} (former member){% endif %}
+
+*{{ hand.tally }}{% if hand.epochs %} · {{ hand.epochs }}{% endif %}*
+
+{% if hand.most %}
+| Kind of act | Times |
+|---|---|
+{% for label, count in hand.most %}
+| {{ label }} | {{ count }} |
+{% endfor %}
+
+{% endif %}
+{% for act in hand.acts %}
+- **Epoch {{ act.epoch }}.** {{ act.label }}{% if act.undone %} *(undone{% if act.undone_by %} by {{ act.undone_by }}{% endif %})*{% endif %}{% if act.summary %} — {{ act.summary | plain }}{% endif %}{% if act.reason %}
+  - Why: {{ act.reason | plain }}{% endif %}
+
+{% endfor %}
+{% endfor %}
+{% if record.queue %}
+#### Acts that waited for an age to end
+
+| Act | By | Epoch | What became of it | Why | Result |
+|---|---|---|---|---|---|
+{% for line in record.queue %}
+| {{ line.title }} | {{ line.author }} | {{ line.epoch }} | {{ line.status }} | {{ line.reason or "—" }} | {{ line.result or "—" }} |
+{% endfor %}
+
+{% endif %}
+{% if record.proposals %}
+#### Proposals to locked canon
+
+| Act | Proposed by | Epoch | Decision | Decided by | Why | Note |
+|---|---|---|---|---|---|---|
+{% for line in record.proposals %}
+| {{ line.title }} | {{ line.author }} | {{ line.epoch }} | {{ line.status }} | {{ line.decided_by or "—" }} | {{ line.reason or "—" }} | {{ line.note or "—" }} |
+{% endfor %}
+
+{% endif %}
+{% endif %}
+{%- endmacro %}

@@ -17,6 +17,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { refusalIn, useTeamGate } from '@/api/teamGate'
 import { useSearch } from '@/context/searchContext'
 import { type Theme, useTheme } from '@/context/themeContext'
 import {
@@ -71,6 +72,7 @@ function report(promise: Promise<unknown>, message: string) {
 }
 
 export function CommandPalette() {
+  const team = useTeamGate()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { setTheme } = useTheme()
@@ -180,6 +182,7 @@ export function CommandPalette() {
           )}
           <CommandGroup heading='Run the world'>
             <CommandItem
+              act={complete}
               value='Complete the epoch resume'
               onSelect={() =>
                 run(() => report(complete.mutateAsync(), 'The epoch begins'))
@@ -191,6 +194,7 @@ export function CommandPalette() {
               </span>
             </CommandItem>
             <CommandItem
+              act={stop}
               value='Stop the epoch at a safe point'
               onSelect={() =>
                 run(() =>
@@ -214,6 +218,7 @@ export function CommandPalette() {
               </span>
             </CommandItem>
             <CommandItem
+              act={backup}
               value='Take a backup now'
               onSelect={() =>
                 run(() => report(backup.mutateAsync(), 'Backup taken'))
@@ -223,6 +228,7 @@ export function CommandPalette() {
               <span className='min-w-0 flex-1 truncate'>Take a backup now</span>
             </CommandItem>
             <CommandItem
+              act={markRead}
               value='Mark all notifications read'
               onSelect={() =>
                 run(() =>
@@ -244,6 +250,7 @@ export function CommandPalette() {
               {(actions.data ?? []).map((item) => (
                 <CommandItem
                   key={item.id}
+                  act={{ blockedReason: refusalIn(team, item.permission) }}
                   value={`action ${item.title} ${item.id} ${item.group}`}
                   onSelect={() => run(() => setAction(item))}
                 >

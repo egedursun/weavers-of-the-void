@@ -29,6 +29,13 @@ class DivineWillSubject(ApiModel):
     kind: NodeKind
 
 
+class DivineWillOwnership(ApiModel):
+    author_account_id: int | None
+    author_name: str | None
+    shared: bool
+    mine: bool
+
+
 class DivineWillArtifactSummary(ApiModel):
     id: int
     title: str
@@ -45,6 +52,7 @@ class DivineWillArtifactSummary(ApiModel):
     plan_id: int | None
     created_at: datetime
     updated_at: datetime
+    owner: DivineWillOwnership
 
 
 class DivineWillArtifactVersionSummary(ApiModel):
@@ -109,6 +117,7 @@ class DivineWillArtifactPatch(RequestModel):
     tags: list[str] | None = None
     kind: ArtifactKind | None = None
     node_ids: list[int] | None = None
+    shared: bool | None = None
 
 
 class DivineWillPlanStep(ApiModel):
@@ -139,6 +148,7 @@ class DivineWillPlan(ApiModel):
     steps: list[DivineWillPlanStep]
     job_id: str
     waiting_step: int | None
+    owner: DivineWillOwnership
 
 
 class DivineWillPlanStepInput(RequestModel):
@@ -231,3 +241,4 @@ class DivineWillForecast(ApiModel):
     started_at: datetime | None
     finished_at: datetime | None
     created_at: datetime
+    owner: DivineWillOwnership

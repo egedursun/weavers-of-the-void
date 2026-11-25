@@ -169,6 +169,7 @@ function IngredientRow({
         onPick={setGood}
       />
       <Button
+        act={set}
         size='sm'
         variant='outline'
         disabled={(busy ?? problem) !== null}
@@ -260,6 +261,7 @@ function StepAdd({ row, blocked }: { row: Dish; blocked: string | null }) {
       columns={2}
       action={
         <Button
+          act={add}
           size='sm'
           disabled={problem !== null}
           disabledReason={problem ?? undefined}
@@ -366,6 +368,7 @@ function Additions({ row, blocked }: { row: Dish; blocked: string | null }) {
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={addFood}
             size='sm'
             disabled={(busy ?? (food ? null : 'Pick a food')) !== null}
             disabledReason={busy ?? (food ? undefined : 'Pick a food')}
@@ -375,6 +378,7 @@ function Additions({ row, blocked }: { row: Dish; blocked: string | null }) {
             Add the food
           </Button>
           <Button
+            act={cook}
             size='sm'
             disabled={(busy ?? (town ? null : 'Pick a community')) !== null}
             disabledReason={busy ?? (town ? undefined : 'Pick a community')}

@@ -69,6 +69,7 @@ function GoalStartDialog({
       : null
   )
   const start = useGodAction({
+    writes: [{ lever: 'scenario:start' }],
     run: () =>
       unwrap(
         api.POST('/api/scenarios', {
@@ -92,7 +93,7 @@ function GoalStartDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button size='sm' variant={running ? 'outline' : 'default'}>
+        <Button act={start} size='sm' variant={running ? 'outline' : 'default'}>
           <Play />
           {running ? 'Running' : 'Set this goal'}
         </Button>
@@ -126,6 +127,7 @@ function GoalStartDialog({
         </div>
         <DialogFooter>
           <ActionButton
+            act={start}
             label='Begin the goal'
             icon={Play}
             variant='default'

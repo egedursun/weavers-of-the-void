@@ -2,12 +2,14 @@ import asyncio
 import logging
 import uuid
 from collections.abc import Awaitable, Callable
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any, cast
 
 from sqlalchemy import CursorResult, select, update
 
 from aerona.constants.timeouts import JOB_SHUTDOWN_GRACE_SECONDS
+from aerona.core.account_scope import detached
 from aerona.core.activity import ActivityLog, collecting
 from aerona.core.errors import BusyError, NotFoundError
 from aerona.db.session import Database
@@ -23,6 +25,14 @@ JobHandler = Callable[[JobContext], Awaitable[dict[str, Any] | None]]
 Capacity = Callable[[], int]
 
 logger = logging.getLogger(__name__)
+ReleaseHook = Callable[[str], Awaitable[None]]
+RUNNING_GROUP: ContextVar[str | None] = ContextVar("running_group", default=None)
+
+
+def running_group() -> str | None:
+    return RUNNING_GROUP.get()
+
+
 UNTRACKED_KINDS = frozenset({JobKind.EPOCH, JobKind.SIMULATION, JobKind.BACKUP, JobKind.IMPORT})
 ITEMS_KEY = "items"
 
@@ -38,9 +48,29 @@ class JobManager:
         self._capacity = capacity
         self._running = 0
         self._slot_freed = asyncio.Condition()
+        self._release_hooks: list[ReleaseHook] = []
+        self._release_tasks: set[asyncio.Task[None]] = set()
+        self._closing = False
 
     def bind_capacity(self, capacity: Capacity) -> None:
         self._capacity = capacity
+
+    def on_group_released(self, hook: ReleaseHook) -> None:
+        self._release_hooks.append(hook)
+
+    def _released(self, group: str) -> None:
+        if self._closing:
+            return
+        for hook in self._release_hooks:
+            task = detached(self._run_hook(hook, group))
+            self._release_tasks.add(task)
+            task.add_done_callback(self._release_tasks.discard)
+
+    async def _run_hook(self, hook: ReleaseHook, group: str) -> None:
+        try:
+            await hook(group)
+        except Exception:
+            logger.exception("release hook for %s failed", group)
 
     @property
     def queued_count(self) -> int:
@@ -89,6 +119,8 @@ class JobManager:
         params: dict[str, Any] | None = None,
         exclusive_group: str | None = None,
         dedupe_key: str | None = None,
+        *,
+        as_person: bool = False,
     ) -> str:
         if exclusive_group and exclusive_group in self._groups:
             raise BusyError(f"Another {exclusive_group} job is already running.")
@@ -105,7 +137,8 @@ class JobManager:
         context = JobContext(job_id=job_id, kind=kind, params=job_params, bus=self._bus)
         self._contexts[job_id] = context
         self._bus.publish(EventKind.JOB_QUEUED, {"job_id": job_id, "kind": kind.value})
-        self._tasks[job_id] = asyncio.create_task(self._run(context, handler, exclusive_group, dedupe_key))
+        run = self._run(context, handler, exclusive_group, dedupe_key)
+        self._tasks[job_id] = asyncio.create_task(run) if as_person else detached(run)
         return job_id
 
     async def cancel(self, job_id: str) -> None:
@@ -115,7 +148,8 @@ class JobManager:
         task.cancel()
 
     async def shutdown(self) -> None:
-        for task in self._tasks.values():
+        self._closing = True
+        for task in [*self._tasks.values(), *self._release_tasks]:
             task.cancel()
         if self._tasks:
             await asyncio.wait(list(self._tasks.values()), timeout=JOB_SHUTDOWN_GRACE_SECONDS)
@@ -213,11 +247,15 @@ class JobManager:
             acquired = True
             await self._set(job_id, status=JobStatus.RUNNING, started_at=datetime.now(UTC))
             self._bus.publish(EventKind.JOB_STARTED, base)
-            if context.kind in UNTRACKED_KINDS:
-                result = await handler(context)
-            else:
-                with collecting(log):
+            group_token = RUNNING_GROUP.set(exclusive_group)
+            try:
+                if context.kind in UNTRACKED_KINDS:
                     result = await handler(context)
+                else:
+                    with collecting(log):
+                        result = await handler(context)
+            finally:
+                RUNNING_GROUP.reset(group_token)
             stored = await self._with_items(log, result)
             finished = datetime.now(UTC)
             await self._set(job_id, status=JobStatus.SUCCEEDED, progress=1.0, result=stored, stage=context.stage, finished_at=finished)
@@ -241,5 +279,6 @@ class JobManager:
             self._contexts.pop(job_id, None)
             if exclusive_group and self._groups.get(exclusive_group) == job_id:
                 self._groups.pop(exclusive_group, None)
+                self._released(exclusive_group)
             if dedupe_key is not None and self._keys.get(dedupe_key) == job_id:
                 self._keys.pop(dedupe_key, None)

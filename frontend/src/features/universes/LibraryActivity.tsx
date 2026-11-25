@@ -61,7 +61,9 @@ export function LibraryActivity() {
                   </Muted>
                 )}
                 <Muted as='span' variant='caption'>
-                  {formatDateTime(event.at)}
+                  {event.account_name
+                    ? `${formatDateTime(event.at)} · by ${event.account_name}`
+                    : formatDateTime(event.at)}
                 </Muted>
               </div>
             </li>

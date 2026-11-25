@@ -125,6 +125,7 @@ export function RiftControl({
       {control ? (
         <>
           <RecordEditor
+            act={editing}
             title='Set the hold on this rift'
             note={HOLD}
             fields={CONTROL_FIELDS}
@@ -134,6 +135,7 @@ export function RiftControl({
             onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
           />
           <StepButton
+            act={removing}
             icon={Trash2}
             label='Free it from its holder'
             busy={why(blocked, removing.isPending)}
@@ -149,6 +151,7 @@ export function RiftControl({
           columns={3}
           action={
             <StepButton
+              act={setting}
               icon={Hammer}
               label='Hold it'
               variant='default'

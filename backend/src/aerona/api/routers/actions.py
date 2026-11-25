@@ -5,6 +5,8 @@ from aerona.api.dependencies import ServicesDep
 from aerona.api.routers import chronicle, cosmos, creator, entities, foreign_gods, goals, languages, map, notes, player, prayers, relations, settings, sons
 from aerona.api.schemas.actions import ActionCatalogueItem
 from aerona.constants.http import API_PREFIX
+from aerona.services.accounts.lever_holds import LEVER_HOLD_FIELDS
+from aerona.services.accounts.permissions import lever_permission
 from aerona.services.player.catalog import ACTIONS, describe
 
 router = APIRouter(tags=["actions"])
@@ -45,7 +47,13 @@ def action_method(action_id: str) -> str:
 @router.get(ACTIONS_PATH, response_model=list[ActionCatalogueItem])
 async def list_actions(services: ServicesDep) -> list[ActionCatalogueItem]:
     return [
-        ActionCatalogueItem(**descriptor.model_dump(), path=action_path(descriptor.id), method=action_method(descriptor.id))
+        ActionCatalogueItem(
+            **descriptor.model_dump(),
+            path=action_path(descriptor.id),
+            method=action_method(descriptor.id),
+            permission=lever_permission(descriptor.id),
+            hold_fields=list(LEVER_HOLD_FIELDS.get(descriptor.id, ())),
+        )
         for descriptor in describe(services.rules.current)
     ]
 

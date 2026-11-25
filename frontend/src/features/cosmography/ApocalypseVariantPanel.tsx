@@ -71,6 +71,7 @@ export function ApocalypseVariantPanel({
             />
           </div>
           <Button
+            act={set}
             size='sm'
             disabled={busy !== null || choice === ''}
             disabledReason={
@@ -82,6 +83,7 @@ export function ApocalypseVariantPanel({
             Fix this end
           </Button>
           <Button
+            act={set}
             size='sm'
             variant='outline'
             disabled={busy !== null || current === null}

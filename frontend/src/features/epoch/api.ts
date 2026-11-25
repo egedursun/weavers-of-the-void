@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { cancelJob, fetchJobs } from '@/api/system'
 
@@ -31,6 +32,7 @@ function useInvalidateRun() {
 export function useCompleteEpoch() {
   const invalidate = useInvalidateRun()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/epochs/current/complete' }],
     mutationFn: () => unwrap(api.POST('/api/epochs/current/complete')),
     onSuccess: invalidate,
   })
@@ -39,6 +41,7 @@ export function useCompleteEpoch() {
 export function useStopEpoch() {
   const invalidate = useInvalidateRun()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/epochs/current/stop' }],
     mutationFn: () => unwrap(api.POST('/api/epochs/current/stop')),
     onSuccess: invalidate,
   })
@@ -47,6 +50,7 @@ export function useStopEpoch() {
 export function useSonTurn() {
   const invalidate = useInvalidateRun()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/sons/{son_id}/act' }],
     mutationFn: (sonId: number) =>
       unwrap(
         api.POST('/api/sons/{son_id}/act', {
@@ -78,6 +82,7 @@ export function useRunningJobs(): Job[] {
 export function useCancelJob() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/jobs/{job_id}/cancel' }],
     mutationFn: cancelJob,
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all }),

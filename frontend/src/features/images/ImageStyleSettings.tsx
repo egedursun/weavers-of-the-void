@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Brush, Palette, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
@@ -31,6 +32,7 @@ export function ImageStyleSettings() {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [confirming, setConfirming] = useState(false)
   const restyle = useMutation({
+    writes: [{ method: 'POST', path: '/api/image-gen/batch/restyle' }],
     mutationFn: restyleBulk,
     onSuccess: () => {
       toast.success('Repainting started')
@@ -98,6 +100,7 @@ export function ImageStyleSettings() {
       id='image-style'
       actions={
         <Button
+          act={patch}
           onClick={save}
           disabled={saveReason !== null || patch.isPending}
           disabledReason={saveReason ?? 'Saving.'}
@@ -142,6 +145,7 @@ export function ImageStyleSettings() {
             stay in each gallery; uploaded images are never touched.
           </Muted>
           <Button
+            act={restyle}
             variant='outline'
             className='self-start'
             disabled={restyleReason !== null || restyle.isPending}
@@ -153,6 +157,7 @@ export function ImageStyleSettings() {
           </Button>
         </div>
         <ConfirmDialog
+          act={restyle}
           open={confirming}
           onOpenChange={setConfirming}
           title={`Repaint ${plural(offStyle, 'image', 'images')}?`}

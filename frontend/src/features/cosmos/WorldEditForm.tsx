@@ -198,6 +198,7 @@ export function WorldEditForm({
   const invalid = problem(draft, cap)
   const [redrawDue, setRedrawDue] = useState(false)
   const edit = useCosmicAction({
+    writes: [{ lever: 'world:edit' }],
     run: (sent: EditBody) =>
       unwrap(
         api.PATCH('/api/worlds/{world_id}', {
@@ -212,6 +213,7 @@ export function WorldEditForm({
     },
   })
   const redraw = useCosmicAction({
+    writes: [{ lever: 'world:map' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/world:map', { body: { world_id: world.id } })
@@ -220,6 +222,7 @@ export function WorldEditForm({
     onDone: () => setRedrawDue(false),
   })
   const move = useCosmicAction({
+    writes: [{ lever: 'world:orbit' }],
     run: () => {
       const [kind, id] = orbit.split(':')
       return unwrap(
@@ -526,6 +529,7 @@ export function WorldEditForm({
       </FormRow>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <CosmicActionButton
+          act={edit}
           actionId='world:edit'
           label='Reshape the world'
           icon={Save}
@@ -543,6 +547,7 @@ export function WorldEditForm({
       {redrawDue && (
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <CosmicActionButton
+            act={redraw}
             actionId='world:map'
             label='Redraw the map now'
             icon={RefreshCw}
@@ -599,6 +604,7 @@ export function WorldEditForm({
               </SelectContent>
             </Select>
             <CosmicActionButton
+              act={move}
               actionId='world:orbit'
               label='Move'
               icon={OrbitIcon}

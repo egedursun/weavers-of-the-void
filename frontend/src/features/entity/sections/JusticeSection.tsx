@@ -154,6 +154,7 @@ function StanceRow({
   ctx: Ctx
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'stance:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/stance:remove', {
@@ -177,6 +178,7 @@ function StanceRow({
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Silence ${item.voice.name} on this proposal`}
@@ -230,6 +232,7 @@ function AddStance({ proposal, ctx }: { proposal: Proposal; ctx: Ctx }) {
   const [stance, setStance] = useState('')
   const [weight, setWeight] = useState('30')
   const add = useGodAction({
+    writes: [{ lever: 'stance:set' }],
     run: (voiceId: number) =>
       unwrap(
         api.POST('/api/actions/stance:set', {
@@ -260,6 +263,7 @@ function AddStance({ proposal, ctx }: { proposal: Proposal; ctx: Ctx }) {
       title='Give a voice a stance'
       action={
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -303,6 +307,7 @@ function ProposalEditor({ row, ctx }: { row: Proposal; ctx: Ctx }) {
     row.champion?.id ?? null
   )
   const edit = useGodAction({
+    writes: [{ lever: 'proposal:edit' }],
     run: (body: Record<string, unknown>) =>
       unwrap(
         api.POST('/api/actions/proposal:edit', {
@@ -379,6 +384,7 @@ function ProposalEditor({ row, ctx }: { row: Proposal; ctx: Ctx }) {
       />
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={edit}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -397,6 +403,7 @@ function ProposalEditor({ row, ctx }: { row: Proposal; ctx: Ctx }) {
           onPick={setState}
         />
         <Button
+          act={edit}
           size='sm'
           variant='outline'
           disabled={busy !== null || state === row.state}
@@ -416,6 +423,7 @@ function ProposalEditor({ row, ctx }: { row: Proposal; ctx: Ctx }) {
         />
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={edit}
             size='sm'
             variant='outline'
             disabled={busy !== null || champion === null}
@@ -427,6 +435,7 @@ function ProposalEditor({ row, ctx }: { row: Proposal; ctx: Ctx }) {
             Name the champion
           </Button>
           <Button
+            act={edit}
             size='sm'
             variant='ghost'
             disabled={busy !== null || !row.champion}
@@ -462,6 +471,7 @@ function ProposalEditor({ row, ctx }: { row: Proposal; ctx: Ctx }) {
 function ProposalRow({ row, ctx }: { row: Proposal; ctx: Ctx }) {
   const held = row.locked.length > 0
   const carry = useGodAction({
+    writes: [{ lever: 'proposal:pass' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/proposal:pass', {
@@ -471,6 +481,7 @@ function ProposalRow({ row, ctx }: { row: Proposal; ctx: Ctx }) {
     success: () => 'Carried into law',
   })
   const hold = useGodAction({
+    writes: [{ lever: 'proposal:hold' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/proposal:hold', {
@@ -479,6 +490,7 @@ function ProposalRow({ row, ctx }: { row: Proposal; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'proposal:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/proposal:delete', {
@@ -522,6 +534,7 @@ function ProposalRow({ row, ctx }: { row: Proposal; ctx: Ctx }) {
       actions={
         <>
           <Button
+            act={hold}
             size='icon-sm'
             variant='ghost'
             aria-label={
@@ -536,6 +549,7 @@ function ProposalRow({ row, ctx }: { row: Proposal; ctx: Ctx }) {
             {held ? <Unlock /> : <Lock />}
           </Button>
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label='Strike the proposal'
@@ -578,6 +592,7 @@ function ProposalRow({ row, ctx }: { row: Proposal; ctx: Ctx }) {
             : `Resolved in epoch ${row.resolved_epoch ?? row.proposed_epoch}.`}
         </Muted>
         <Button
+          act={carry}
           size='sm'
           disabled={busy !== null || !debating}
           disabledReason={
@@ -607,6 +622,7 @@ function WitnessRow({
 }) {
   const [testimony, setTestimony] = useState<string>(item.testimony)
   const set = useGodAction({
+    writes: [{ lever: 'witness:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/witness:set', {
@@ -621,6 +637,7 @@ function WitnessRow({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'witness:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/witness:remove', {
@@ -639,6 +656,7 @@ function WitnessRow({
       badges={item.locked ? <Badge variant='outline'>Held</Badge> : undefined}
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label={`Strike the testimony of ${item.witness.name}`}
@@ -692,6 +710,7 @@ function WitnessRow({
               onPick={setTestimony}
             />
             <Button
+              act={set}
               size='sm'
               variant='outline'
               disabled={busy !== null || testimony === item.testimony}
@@ -717,6 +736,7 @@ function AddWitness({ crimeCase, ctx }: { crimeCase: CrimeCase; ctx: Ctx }) {
   const [testimony, setTestimony] = useState('')
   const [reliability, setReliability] = useState('60')
   const add = useGodAction({
+    writes: [{ lever: 'witness:set' }],
     run: (witnessId: number) =>
       unwrap(
         api.POST('/api/actions/witness:set', {
@@ -747,6 +767,7 @@ function AddWitness({ crimeCase, ctx }: { crimeCase: CrimeCase; ctx: Ctx }) {
       title='Call a witness'
       action={
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -791,6 +812,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
   const [role, setRole] = useState('')
   const [person, setPerson] = useState<number | null>(null)
   const edit = useGodAction({
+    writes: [{ lever: 'case:edit' }],
     run: (body: Record<string, unknown>) =>
       unwrap(
         api.POST('/api/actions/case:edit', {
@@ -884,6 +906,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
       </div>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={edit}
           size='sm'
           disabled={busy !== null || !changed}
           disabledReason={
@@ -905,6 +928,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           Set the course
         </Button>
         <Button
+          act={edit}
           size='sm'
           variant='ghost'
           disabled={busy !== null || !row.culprit}
@@ -916,6 +940,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           Name no culprit
         </Button>
         <Button
+          act={edit}
           size='sm'
           variant='ghost'
           disabled={busy !== null || !row.advocate}
@@ -932,6 +957,7 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
         title='Name who plays a part'
         action={
           <Button
+            act={edit}
             size='sm'
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}
@@ -983,11 +1009,13 @@ function CaseEditor({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
 function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
   const held = row.locked.length > 0
   const tryNow = useGodAction({
+    writes: [{ lever: 'case:try' }],
     run: () =>
       unwrap(api.POST('/api/actions/case:try', { body: { case_id: row.id } })),
     success: () => 'The court has spoken',
   })
   const hold = useGodAction({
+    writes: [{ lever: 'case:hold' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/case:hold', {
@@ -996,6 +1024,7 @@ function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'case:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/case:delete', { body: { case_id: row.id } })
@@ -1057,6 +1086,7 @@ function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
       actions={
         <>
           <Button
+            act={hold}
             size='icon-sm'
             variant='ghost'
             aria-label={held ? 'Let the case run' : 'Hold the case'}
@@ -1067,6 +1097,7 @@ function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
             {held ? <Unlock /> : <Lock />}
           </Button>
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label='Strike the case'
@@ -1100,6 +1131,7 @@ function CaseRow({ row, ctx }: { row: CrimeCase; ctx: Ctx }) {
           {`; ${plural(row.witnesses.length, 'witness', 'witnesses')}`}
         </Muted>
         <Button
+          act={tryNow}
           size='sm'
           disabled={busy !== null || cannotTry !== null}
           disabledReason={busy ?? cannotTry ?? undefined}
@@ -1119,6 +1151,7 @@ function ProposeCard({ ctx }: { ctx: Ctx }) {
   const [champion, setChampion] = useState<number | null>(null)
   const [basis, setBasis] = useState('council')
   const bring = useGodAction({
+    writes: [{ lever: 'proposal:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/proposal:create', {
@@ -1146,6 +1179,7 @@ function ProposeCard({ ctx }: { ctx: Ctx }) {
       title='Bring a law before the realm'
       action={
         <Button
+          act={bring}
           size='sm'
           disabled={busy !== null || !kind}
           disabledReason={busy ?? (!kind ? 'Choose a kind of law.' : undefined)}
@@ -1205,6 +1239,7 @@ function ChargeCard({ ctx }: { ctx: Ctx }) {
   const [trial, setTrial] = useState('judge')
   const [evidence, setEvidence] = useState('50')
   const charge = useGodAction({
+    writes: [{ lever: 'case:open' }],
     run: ({ accusedId, cityId }: { accusedId: number; cityId: number }) =>
       unwrap(
         api.POST('/api/actions/case:open', {
@@ -1236,6 +1271,7 @@ function ChargeCard({ ctx }: { ctx: Ctx }) {
       title='Bring a charge'
       action={
         <Button
+          act={charge}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

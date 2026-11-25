@@ -264,6 +264,7 @@ function MemberForge({
         onPick={(value) => setRole(value as keyof typeof ROLES)}
       />
       <Button
+        act={adding}
         size='sm'
         variant='secondary'
         disabled={busy !== null}
@@ -576,6 +577,7 @@ function ExpeditionForge({
       columns={4}
       action={
         <Button
+          act={sending}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -765,6 +767,7 @@ export function QuirksPanel({
         columns={2}
         action={
           <Button
+            act={giving}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

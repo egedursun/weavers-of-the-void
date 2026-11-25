@@ -14,6 +14,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Button } from '@/components/ui/button'
 import { MiniStat, StatBar, Paged } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
@@ -50,16 +51,19 @@ function ActionButton({
   busy,
   missing,
   onClick,
+  act,
 }: {
   label: string
   icon: typeof Flag
   busy: string | null
   missing?: string
   onClick: () => void
+  act?: ActProp
 }) {
   const reason = busy ?? missing
   return (
     <Button
+      act={act}
       size='sm'
       className='self-start'
       disabled={reason !== undefined && reason !== null}
@@ -112,6 +116,7 @@ export function WarLedger({
         />
       </div>
       <Adjust
+        acts={[actions.save, actions.release, actions.remove]}
         title='Set the war'
         note='Change its cause, score or violence; held values stay until released.'
       >
@@ -197,6 +202,7 @@ function SiegeDepthCard({
         ))}
       </div>
       <Adjust
+        acts={[actions.save, actions.release, actions.remove]}
         title='Siege works and fate'
         note='Choose the walls, the works and what the victors do when the gates fall.'
       >
@@ -299,6 +305,7 @@ export function WarOrders({
   const [army, setArmy] = useState<number | null>(null)
   const [settlement, setSettlement] = useState<number | null>(null)
   const battle = useGodAction({
+    writes: [{ lever: 'war:battle_at' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:battle_at', {
@@ -308,6 +315,7 @@ export function WarOrders({
     invalidate: [['wars']],
   })
   const siege = useGodAction({
+    writes: [{ lever: 'siege:start' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/siege:start', {
@@ -329,6 +337,7 @@ export function WarOrders({
     >
       <div className='flex min-w-0 flex-col gap-2'>
         <Adjust
+          acts={[battle]}
           title='Force a battle'
           note='Fight now, where the armies meet, or in a land you choose.'
           label='Force a battle'
@@ -344,6 +353,7 @@ export function WarOrders({
             />
           </FieldGrid>
           <ActionButton
+            act={battle}
             label={region ? 'Fight there' : 'Fight where they meet'}
             icon={MapPin}
             busy={busyOf(blocked, battle.isPending)}
@@ -351,6 +361,7 @@ export function WarOrders({
           />
         </Adjust>
         <Adjust
+          acts={[siege]}
           title='Lay siege'
           note='Set an army of one side against a settlement of the other.'
           label='Lay siege'
@@ -374,6 +385,7 @@ export function WarOrders({
             />
           </FieldGrid>
           <ActionButton
+            act={siege}
             label='Begin the siege'
             icon={Castle}
             busy={busyOf(blocked, siege.isPending)}
@@ -423,6 +435,7 @@ export function AimParams({
   }
   return (
     <Adjust
+      acts={[actions.save, actions.release, actions.remove]}
       title='What winning means'
       note='Set the terms this aim will demand at the peace.'
       label='Terms'
@@ -477,6 +490,7 @@ export function RaiseArmy({
   const [commander, setCommander] = useState<number | null>(null)
   const [name, setName] = useState('')
   const raise = useGodAction({
+    writes: [{ lever: 'army:raise' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/army:raise', {
@@ -492,6 +506,7 @@ export function RaiseArmy({
   })
   return (
     <Adjust
+      acts={[raise]}
       title='Raise an army'
       note='Levy soldiers from this community, in war or in peace; warriors and nobles answer first.'
       label='Raise an army'
@@ -521,6 +536,7 @@ export function RaiseArmy({
         />
       </FieldGrid>
       <ActionButton
+        act={raise}
         label='Raise'
         icon={Users}
         busy={busyOf(blocked, raise.isPending)}
@@ -542,6 +558,7 @@ export function DeclareWar({
   const [aims, setAims] = useState<Record<string, boolean>>({})
   const [reason, setReason] = useState('')
   const declare = useGodAction({
+    writes: [{ lever: 'war:declare' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:declare', {
@@ -560,6 +577,7 @@ export function DeclareWar({
   })
   return (
     <Adjust
+      acts={[declare]}
       title='Declare a war'
       note='Name the foe, the cause and the aims; each aim fills in its own terms.'
       label='Declare a war'
@@ -603,6 +621,7 @@ export function DeclareWar({
         ))}
       </FieldGrid>
       <ActionButton
+        act={declare}
         label='Declare'
         icon={Swords}
         busy={busyOf(blocked, declare.isPending)}

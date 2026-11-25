@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { apiUrl } from '@/api/url'
 
@@ -28,6 +29,7 @@ export function useBookPdf() {
 export function usePrintBook() {
   const queryClient = useQueryClient()
   return useMutation({
+    writes: [{ method: 'POST', path: '/api/book/pdf' }],
     mutationFn: () => unwrap(api.POST('/api/book/pdf')),
     onSuccess: () =>
       void queryClient.invalidateQueries({ queryKey: bookKeys.pdf }),

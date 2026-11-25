@@ -33,6 +33,7 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
   const query = useSonTools(sonId)
   const { reason } = useGodGate()
   const reset = useGodAction({
+    writes: [{ lever: 'son:reset_counters' }],
     run: () =>
       unwrap(
         api.POST('/api/sons/{son_id}/reset-counters', {
@@ -82,6 +83,7 @@ export function SonTools({ sonId, name }: { sonId: number; name: string }) {
               )}
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <ActionButton
+                  act={reset}
                   label='Reset their counters'
                   icon={RotateCcw}
                   blocked={

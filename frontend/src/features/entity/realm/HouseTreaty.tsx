@@ -29,6 +29,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -237,6 +238,7 @@ export function HouseSection({
   const [polity, setPolity] = useState<number | null>(null)
   const [strength, setStrength] = useState(CLAIM_STRENGTH)
   const grant = useGodAction({
+    writes: [{ lever: 'claim:grant' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/claim:grant', {
@@ -251,6 +253,7 @@ export function HouseSection({
       ),
   })
   const extinguish = useGodAction({
+    writes: [{ lever: 'house:extinguish' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/house:extinguish', {
@@ -501,6 +504,7 @@ export function HouseSection({
             </div>
           )}
           <AdjustPanel
+            acts={[grant, extinguish]}
             trigger='Adjust the house'
             title='Shape the line'
             note='Grant a mortal a god-given claim on a realm, or end the house for good. Every change goes into the ledger.'
@@ -536,6 +540,7 @@ export function HouseSection({
             />
             <div className='flex min-w-0 flex-wrap items-center gap-2'>
               <Button
+                act={grant}
                 size='sm'
                 disabled={busy !== null || claimant === null || polity === null}
                 disabledReason={busy ?? 'Choose the claimant and the realm'}
@@ -545,6 +550,7 @@ export function HouseSection({
                 Grant a divine claim
               </Button>
               <Button
+                act={extinguish}
                 size='sm'
                 variant='destructive'
                 disabled={busy !== null}
@@ -594,6 +600,7 @@ export function TreatySection({
   const [until, setUntil] = useState('')
   const [status, setStatus] = useState<string>('in_force')
   const edit = useGodAction({
+    writes: [{ lever: 'treaty:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/treaty:edit', {
@@ -606,6 +613,7 @@ export function TreatySection({
       ),
   })
   const breakIt = useGodAction({
+    writes: [{ lever: 'treaty:break' }],
     run: (breaker: number) =>
       unwrap(
         api.POST('/api/actions/treaty:break', {
@@ -715,6 +723,7 @@ export function TreatySection({
                     </div>
                     {treaty.status === 'in_force' && (
                       <Button
+                        act={breakIt}
                         size='sm'
                         variant='ghost'
                         disabled={busy !== null}
@@ -868,6 +877,7 @@ export function TreatySection({
             </Panel>
           )}
           <AdjustPanel
+            acts={[edit]}
             trigger='Adjust the terms'
             title='Set the terms'
             note='Change how long it holds and where it stands. Every change goes into the ledger.'
@@ -892,6 +902,7 @@ export function TreatySection({
                 />
               </div>
               <Button
+                act={edit}
                 size='sm'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}
@@ -912,10 +923,12 @@ function OathCard({
   oath,
   blocked,
   onBreak,
+  act,
 }: {
   oath: Oath
   blocked: string | null
   onBreak: () => void
+  act?: ActProp
 }) {
   const kind = named(OATHS, oath.kind)
   return (
@@ -1026,6 +1039,7 @@ function OathCard({
                 confirm={`${oath.swearer} will be released from the oath with honour intact.`}
               />
               <Button
+                act={act}
                 size='sm'
                 variant='ghost'
                 disabled={blocked !== null}
@@ -1056,6 +1070,7 @@ export function OathsSection({
   const [kind, setKind] = useState<string>('fealty')
   const [recipient, setRecipient] = useState<number | null>(null)
   const swear = useGodAction({
+    writes: [{ lever: 'oath:swear' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/oath:swear', {
@@ -1068,6 +1083,7 @@ export function OathsSection({
       ),
   })
   const breakIt = useGodAction({
+    writes: [{ lever: 'oath:break' }],
     run: (oathId: number) =>
       unwrap(
         api.POST('/api/actions/oath:break', { body: { oath_id: oathId } })
@@ -1119,6 +1135,7 @@ export function OathsSection({
                 <Paged items={oaths} as='li'>
                   {(oath) => (
                     <OathCard
+                      act={breakIt}
                       key={oath.id}
                       oath={oath}
                       blocked={busy}
@@ -1131,6 +1148,7 @@ export function OathsSection({
           )
         )}
         <AdjustPanel
+          acts={[swear]}
           trigger='Swear an oath'
           title='Swear a new oath'
           note='Bind this mortal by an oath, to someone or to no one. A broken oath costs honour, and more if a god heard it.'
@@ -1154,6 +1172,7 @@ export function OathsSection({
               />
             </div>
             <Button
+              act={swear}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}

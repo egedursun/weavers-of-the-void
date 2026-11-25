@@ -63,7 +63,10 @@ export function useKindRow<
     'Done'
   )
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }
@@ -80,7 +83,10 @@ export function useKindStep<A extends ActionName, K extends object>(
     (_: void) => keys as unknown as ActionBody<A>,
     success
   )
-  return { busy: why(blocked, running.isPending), run: () => running.mutate() }
+  return {
+    busy: running.blockedReason ?? why(blocked, running.isPending),
+    run: () => running.mutate(),
+  }
 }
 
 export function worst(

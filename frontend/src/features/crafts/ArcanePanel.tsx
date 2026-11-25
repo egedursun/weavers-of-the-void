@@ -335,6 +335,7 @@ export function ArcanePanel({
               onClick={reading.run}
             />
             <Button
+              act={laying}
               size='sm'
               variant='outline'
               disabled={affinityBusy !== null}
@@ -345,6 +346,7 @@ export function ArcanePanel({
               Lay the affinity
             </Button>
             <Button
+              act={linking}
               size='sm'
               variant='outline'
               disabled={linkBusy !== null}
@@ -355,6 +357,7 @@ export function ArcanePanel({
               Make the link
             </Button>
             <Button
+              act={waking}
               size='sm'
               disabled={spiritBusy !== null}
               disabledReason={spiritBusy ?? undefined}

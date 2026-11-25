@@ -101,6 +101,7 @@ export function BondList({
   const { bondKind } = useLabels()
   const { reason } = useGodGate()
   const remove = useGodAction({
+    writes: [{ lever: 'bond:remove' }],
     run: (bondId: number) =>
       unwrap(
         api.DELETE('/api/links/{bond_id}', {
@@ -158,6 +159,7 @@ export function BondList({
                   )}
                   {editable && bond.state === 'active' && (
                     <ActionButton
+                      act={remove}
                       label='Break'
                       icon={Unlink}
                       size='sm'
@@ -192,6 +194,7 @@ export function CreateBondForm({ sourceId }: { sourceId: number }) {
   const [description, setDescription] = useState('')
   const { reason } = useGodGate()
   const create = useGodAction({
+    writes: [{ lever: 'bond:add' }],
     run: () =>
       unwrap(
         api.POST('/api/links', {
@@ -212,7 +215,7 @@ export function CreateBondForm({ sourceId }: { sourceId: number }) {
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='ghost' size='sm' className='self-start'>
+        <Button act={create} variant='ghost' size='sm' className='self-start'>
           <Link2 />
           Create a bond
         </Button>
@@ -260,6 +263,7 @@ export function CreateBondForm({ sourceId }: { sourceId: number }) {
         </FormRow>
         <div>
           <ActionButton
+            act={create}
             label='Create bond'
             variant='default'
             blocked={

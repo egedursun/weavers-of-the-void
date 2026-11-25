@@ -34,6 +34,7 @@ import { ActionJob } from '@/features/pantheon/ActionJob'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
 import { humanize } from '@/features/pantheon/labels'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import { type CelestialDepth } from './api'
 
 export type CelestialKind =
@@ -92,6 +93,11 @@ function DepthEditForm({
   const [draft, setDraft] = useState(() => draftOf(depth))
   const { reason } = useGodGate()
   const save = useGodAction({
+    writes: [
+      { lever: 'scale:depth' },
+      { lever: 'star:depth' },
+      { lever: 'world:depth' },
+    ],
     run: () => {
       const body = {
         history: draft.history,
@@ -174,6 +180,7 @@ function DepthEditForm({
       </FormRow>
       <div>
         <ActionButton
+          act={save}
           label='Save the lore'
           variant='default'
           blocked={reason()}
@@ -196,9 +203,21 @@ export function CelestialDepthSection({
   name: string
   depth: CelestialDepth | null
 }) {
+  const formGate = {
+    blockedReason: useWriteRefusal([
+      { lever: 'scale:depth' },
+      { lever: 'star:depth' },
+      { lever: 'world:depth' },
+    ]),
+  }
   const { reason } = useGodGate()
   const [truthShown, setTruthShown] = useState(false)
   const deepen = useGodAction({
+    writes: [
+      { method: 'POST', path: '/api/cosmography/nodes/{node_id}/deepen' },
+      { method: 'POST', path: '/api/stars/{star_id}/deepen' },
+      { method: 'POST', path: '/api/worlds/{world_id}/deepen' },
+    ],
     run: () => {
       if (kind === 'world')
         return unwrap(
@@ -240,6 +259,7 @@ export function CelestialDepthSection({
       }
       actions={
         <ActionButton
+          act={deepen}
           label={written ? 'Deepen again' : 'Deepen'}
           icon={Wand}
           blocked={reason({ llm: true })}
@@ -389,7 +409,12 @@ export function CelestialDepthSection({
       )}
       <Collapsible className='flex min-w-0 flex-col gap-3'>
         <CollapsibleTrigger asChild>
-          <Button variant='ghost' size='sm' className='self-start'>
+          <Button
+            act={formGate}
+            variant='ghost'
+            size='sm'
+            className='self-start'
+          >
             <PenLine />
             Write the lore yourself
           </Button>

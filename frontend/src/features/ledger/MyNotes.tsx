@@ -44,6 +44,7 @@ import {
 import { useRemoveMapNote } from '@/features/map/api'
 import { useAddNote, useNotifications } from '@/features/notifications/api'
 import { useWorldState } from '@/features/overview/api'
+import { AuthorMark } from '@/features/team/AuthorMark'
 import { ledgerKeys, type EntityNoteRecord, useNotes } from './api'
 
 const NOTES_SHOWN = 50
@@ -151,6 +152,7 @@ function SelfNoteForm() {
         onChange={(event) => setBody(event.target.value)}
       />
       <Button
+        act={add}
         type='submit'
         size='sm'
         className='self-end'
@@ -227,6 +229,7 @@ function RecordNotes() {
   const worlds = useWorldNames()
   const [pending, setPending] = useState<EntityNoteRecord | null>(null)
   const remove = useLoreMutation({
+    writes: [{ lever: 'record:note' }],
     run: (note: EntityNoteRecord) => deleteEntityNote(note.entity_id),
     success: 'Note deleted',
     invalidate: [ledgerKeys.notes],
@@ -277,10 +280,12 @@ function RecordNotes() {
                       <Globe2 />
                       {worlds.get(note.world_id) ?? `World #${note.world_id}`}
                     </Badge>
+                    <AuthorMark name={note.author_name} />
                   </>
                 }
                 action={
                   <Button
+                    act={remove}
                     variant='ghost'
                     size='icon-sm'
                     aria-label={`Delete the note on ${note.entity_name}`}
@@ -295,6 +300,7 @@ function RecordNotes() {
         </ul>
       )}
       <ConfirmDialog
+        act={remove}
         open={pending !== null}
         onOpenChange={(open) => !open && setPending(null)}
         title={`Delete the note on ${pending?.entity_name ?? 'this record'}?`}
@@ -359,6 +365,7 @@ function MapNotes() {
                       <Clock />
                       {dateTime.format(new Date(note.created_at))}
                     </Badge>
+                    <AuthorMark name={note.author_name} />
                     <Button variant='link' size='sm' asChild>
                       <Link to='/map'>
                         <ExternalLink />
@@ -369,6 +376,7 @@ function MapNotes() {
                 }
                 action={
                   <Button
+                    act={remove}
                     variant='ghost'
                     size='icon-sm'
                     aria-label='Delete this map note'
@@ -383,6 +391,7 @@ function MapNotes() {
         </ul>
       )}
       <ConfirmDialog
+        act={remove}
         open={pending !== null}
         onOpenChange={(open) => !open && setPending(null)}
         title='Delete this map note?'

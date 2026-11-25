@@ -146,6 +146,7 @@ function FeudCard({
       </div>
       <div className='mt-auto'>
         <Adjust
+          acts={[actions.save, actions.release, actions.remove]}
           title='Stoke or quench the feud'
           note='Set how hot it burns, the grievance, the generations it has lasted and whether it still holds.'
         >
@@ -242,6 +243,7 @@ function StartFeud({
   const busy = busyOf(blocked, create.isPending)
   return (
     <Adjust
+      acts={[create]}
       title='Swear a feud'
       note='Two houses or peoples take up a blood grudge; it burns until mediated, avenged or forgotten.'
       label='Swear a feud'
@@ -272,6 +274,7 @@ function StartFeud({
         />
       </FieldGrid>
       <Button
+        act={create}
         size='sm'
         className='self-start'
         disabled={busy !== null || other === null}

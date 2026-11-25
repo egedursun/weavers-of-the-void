@@ -118,7 +118,11 @@ export function GalleryGrid({
   readOnlyReason?: string | null
 }) {
   const [doomed, setDoomed] = useState<ImageListView | null>(null)
-  const remove = useImageAction(deleteImage, 'Image deleted')
+  const remove = useImageAction(
+    [{ method: 'DELETE', path: '/api/images/{image_id}' }],
+    deleteImage,
+    'Image deleted'
+  )
   const blocked = readOnlyReason ?? (remove.isPending ? 'Working on it.' : null)
   return (
     <>
@@ -146,6 +150,7 @@ export function GalleryGrid({
         ))}
       </ul>
       <ConfirmDialog
+        act={remove}
         open={doomed !== null}
         onOpenChange={(open) => !open && setDoomed(null)}
         title={`Delete this image of ${doomed?.target_name ?? 'the record'}?`}

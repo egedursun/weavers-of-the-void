@@ -90,6 +90,7 @@ export function VoyageCard({ journey, index }: VoyageCardProps) {
   const traveller =
     index.entityName(journey.traveller_entity_id) ?? 'Travellers'
   const recall = useCosmicAction({
+    writes: [{ lever: 'journey:recall' }],
     run: () =>
       unwrap(
         api.POST('/api/voyages/{journey_id}/recall', {
@@ -189,6 +190,7 @@ export function VoyageCard({ journey, index }: VoyageCardProps) {
           <div className='flex shrink-0 items-center gap-1'>
             <JourneyLoadEditor journey={journey} />
             <CosmicActionButton
+              act={recall}
               actionId='journey:recall'
               label='Recall'
               icon={Undo2}

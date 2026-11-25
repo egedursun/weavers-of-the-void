@@ -19,7 +19,15 @@ mount_all(router, ALIASES)
 
 
 def note_record(row: EntityRow) -> EntityNoteRecord:
-    return EntityNoteRecord(entity_id=row.id, entity_name=row.name, entity_type=row.entity_type, world_id=row.world_id, text=row.private_note or "")
+    return EntityNoteRecord(
+        entity_id=row.id,
+        entity_name=row.name,
+        entity_type=row.entity_type,
+        world_id=row.world_id,
+        text=row.private_note or "",
+        author_account_id=row.note_author_account_id,
+        author_name=row.note_author_name,
+    )
 
 
 @router.get("/notes", response_model=NotesView)

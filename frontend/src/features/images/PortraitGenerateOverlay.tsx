@@ -73,6 +73,7 @@ export function PortraitGenerateOverlay({
       </a>
     )
   const reason =
+    generate.blockedReason ??
     readOnlyReason ??
     (state.phase === 'disabled' ? state.reason : null) ??
     (state.phase === 'queued' ? `Queued; ${state.ahead} ahead.` : null)
@@ -85,7 +86,12 @@ export function PortraitGenerateOverlay({
       <a
         role='button'
         tabIndex={0}
-        aria-disabled={reason !== null || working || undefined}
+        aria-disabled={
+          generate.blockedReason !== null ||
+          reason !== null ||
+          working ||
+          undefined
+        }
         aria-label={reason ?? `Generate an image of ${name}`}
         title={reason ?? `Generate an image of ${name}`}
         className={FRAME}

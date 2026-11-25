@@ -19,6 +19,12 @@ import {
 } from 'lucide-react'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
+import {
+  type ViewerStorageKey,
+  storeItem,
+  storedItem,
+  viewerKey,
+} from '@/lib/universeStorage'
 import { cn } from '@/lib/utils'
 import { RARITIES, RARITY_LABEL, type Rarity } from '@/constants/rarity'
 import { Badge } from '@/components/ui/badge'
@@ -68,27 +74,19 @@ const ITEM = navItem('cards')
 const SEARCH_DELAY_MS = 250
 const SKELETONS = 6
 const ANY = '__any__'
-const VIEW_KEY = 'aerona.cards.view'
-const GUIDE_KEY = 'aerona.cards.guide'
+const VIEW_KEY: ViewerStorageKey = 'aerona.cards.view'
+const GUIDE_KEY: ViewerStorageKey = 'aerona.cards.guide'
 
 type CardView = 'binder' | 'deck'
 
 const VIEWS: readonly CardView[] = ['binder', 'deck']
 
-function stored(key: string): string | null {
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    return null
-  }
+function stored(key: ViewerStorageKey): string | null {
+  return storedItem(viewerKey(key))
 }
 
-function keep(key: string, value: string) {
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    return
-  }
+function keep(key: ViewerStorageKey, value: string): void {
+  storeItem(viewerKey(key), value)
 }
 
 function useDelayed(value: string): string {

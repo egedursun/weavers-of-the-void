@@ -61,6 +61,7 @@ function SlotEditor({
   const [choice, setChoice] = useState(current)
   const [hold, setHold] = useState(held || current === '')
   const set = useGodAction({
+    writes: [{ lever: 'node_material:set' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -75,6 +76,7 @@ function SlotEditor({
     (choice === '' ? 'Choose a material first.' : null)
   return (
     <AdjustPanel
+      acts={[set]}
       label={`Set the ${spec.label.toLowerCase()}`}
       title={`${spec.label}: ${spec.note.toLowerCase()}`}
       note='Pick any material of the world or a substance only this world knows. Held, the makers keep to it.'
@@ -89,6 +91,7 @@ function SlotEditor({
         onPick={setChoice}
       />
       <Button
+        act={set}
         size='sm'
         className='self-start'
         disabled={blocked !== null}
@@ -114,6 +117,7 @@ function SlotCard({
   readOnlyReason?: string | null
 }) {
   const release = useGodAction({
+    writes: [{ lever: 'node_material:release' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -123,6 +127,7 @@ function SlotCard({
       ),
   })
   const clear = useGodAction({
+    writes: [{ lever: 'node_material:clear' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -199,11 +204,13 @@ function SlotCard({
       <div className='mt-auto flex min-w-0 flex-col gap-3'>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <ReleaseButton
+            act={release}
             held={slot.held}
             busy={busy}
             onRelease={() => release.mutate(undefined)}
           />
           <Button
+            act={clear}
             size='sm'
             variant='outline'
             disabled={busy !== null}

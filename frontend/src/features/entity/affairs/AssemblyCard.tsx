@@ -60,6 +60,7 @@ function VoteRow({
   ctx: Ctx
 }) {
   const flip = useGodAction({
+    writes: [{ lever: 'vote:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/vote:set', {
@@ -74,6 +75,7 @@ function VoteRow({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'vote:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/vote:remove', {
@@ -92,6 +94,7 @@ function VoteRow({
       actions={
         <>
           <Button
+            act={flip}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -101,6 +104,7 @@ function VoteRow({
             {item.aye ? 'Vote against' : 'Vote for'}
           </Button>
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label={`Strike the vote of ${item.member.name}`}
@@ -120,6 +124,7 @@ function ResolutionRow({ row, ctx }: { row: Resolution; ctx: Ctx }) {
   const held = row.locked.length > 0
   const [state, setState] = useState<string>(row.state)
   const edit = useGodAction({
+    writes: [{ lever: 'resolution:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resolution:edit', {
@@ -132,6 +137,7 @@ function ResolutionRow({ row, ctx }: { row: Resolution; ctx: Ctx }) {
       ),
   })
   const hold = useGodAction({
+    writes: [{ lever: 'resolution:hold' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resolution:hold', {
@@ -140,6 +146,7 @@ function ResolutionRow({ row, ctx }: { row: Resolution; ctx: Ctx }) {
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'resolution:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resolution:delete', {
@@ -186,6 +193,7 @@ function ResolutionRow({ row, ctx }: { row: Resolution; ctx: Ctx }) {
       actions={
         <>
           <Button
+            act={hold}
             size='icon-sm'
             variant='ghost'
             aria-label={held ? 'Let the resolution run' : 'Hold the resolution'}
@@ -196,6 +204,7 @@ function ResolutionRow({ row, ctx }: { row: Resolution; ctx: Ctx }) {
             {held ? <Unlock /> : <Lock />}
           </Button>
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label='Strike the resolution'
@@ -258,6 +267,7 @@ function ResolutionRow({ row, ctx }: { row: Resolution; ctx: Ctx }) {
               onPick={setState}
             />
             <Button
+              act={edit}
               size='sm'
               variant='outline'
               disabled={busy !== null || state === row.state}
@@ -305,6 +315,7 @@ function ProposeResolution({ ctx }: { ctx: Ctx }) {
   const [kind, setKind] = useState('')
   const [target, setTarget] = useState<number | null>(null)
   const propose = useGodAction({
+    writes: [{ lever: 'resolution:propose' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resolution:propose', {
@@ -333,6 +344,7 @@ function ProposeResolution({ ctx }: { ctx: Ctx }) {
       title='Bring a resolution to the vote'
       action={
         <Button
+          act={propose}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

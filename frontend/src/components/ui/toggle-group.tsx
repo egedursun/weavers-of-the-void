@@ -1,7 +1,9 @@
 import * as React from 'react'
 import * as ToggleGroupPrimitive from '@radix-ui/react-toggle-group'
 import { type VariantProps } from 'class-variance-authority'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { cn } from '@/lib/utils'
+import { Refusal } from './refusal'
 import { toggleVariants } from './toggle'
 
 const ToggleGroupContext = React.createContext<
@@ -16,24 +18,30 @@ function ToggleGroup({
   variant,
   size,
   children,
+  act,
+  disabled,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Root> &
-  VariantProps<typeof toggleVariants>) {
+  VariantProps<typeof toggleVariants> & { act?: ActProp }) {
+  const refusal = refusalOf(act)
   return (
-    <ToggleGroupPrimitive.Root
-      data-slot='toggle-group'
-      data-variant={variant ?? 'default'}
-      data-size={size ?? 'default'}
-      className={cn(
-        'group/toggle-group flex w-fit max-w-full flex-wrap items-center gap-1 rounded-md',
-        className
-      )}
-      {...props}
-    >
-      <ToggleGroupContext value={{ variant, size }}>
-        {children}
-      </ToggleGroupContext>
-    </ToggleGroupPrimitive.Root>
+    <Refusal reason={refusal}>
+      <ToggleGroupPrimitive.Root
+        disabled={disabled || refusal !== null}
+        data-slot='toggle-group'
+        data-variant={variant ?? 'default'}
+        data-size={size ?? 'default'}
+        className={cn(
+          'group/toggle-group flex w-fit max-w-full flex-wrap items-center gap-1 rounded-md',
+          className
+        )}
+        {...props}
+      >
+        <ToggleGroupContext value={{ variant, size }}>
+          {children}
+        </ToggleGroupContext>
+      </ToggleGroupPrimitive.Root>
+    </Refusal>
   )
 }
 

@@ -194,6 +194,8 @@ class EntityRecord(EntitySummary):
     depth: EntityDepth | None
     archive_override: ArchiveOverride | None
     private_note: str | None
+    note_author_account_id: int | None = None
+    note_author_name: str | None = None
     map_x: float | None
     map_y: float | None
     image_prompt: str | None
@@ -451,6 +453,8 @@ class ChronicleLineRecord(ApiModel):
     text: str
     created_at: datetime
     entity_ids: list[int] = Field(default_factory=list)
+    author_account_id: int | None = None
+    author_name: str | None = None
 
 
 class ThreadRecord(ApiModel):
@@ -544,6 +548,8 @@ class MapNoteRecord(ApiModel):
     text: str
     color: str | None
     created_at: datetime
+    author_account_id: int | None
+    author_name: str | None
 
 
 class ActionRecord(ApiModel):
@@ -570,6 +576,8 @@ class EntityNoteRecord(ApiModel):
     entity_type: EntityType
     world_id: int
     text: str
+    author_account_id: int | None
+    author_name: str | None
 
 
 class NotesView(ApiModel):

@@ -4,6 +4,7 @@ from typing import Any
 from pydantic import Field
 
 from aerona.api.schemas.common import ApiModel, RequestModel
+from aerona.api.schemas.team import AuthorView
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.foreign_god import ForeignGodStatus
 from aerona.domain.enums.mortal import DeathCause
@@ -79,6 +80,9 @@ class PresenceSessionSummary(ApiModel):
     opened_at: datetime
     closed_at: datetime | None
     exchange_count: int
+    author: AuthorView | None
+    shared: bool
+    mine: bool
 
 
 class PresenceSpeakerView(ApiModel):

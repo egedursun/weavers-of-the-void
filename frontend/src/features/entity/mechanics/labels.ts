@@ -28,7 +28,7 @@ import {
 import { type Named } from '../environment/labels'
 
 export const MODIFIER_SOURCE: Record<string, Named> = {
-  player: { label: 'Your hand', icon: Hand, tone: 'gold' },
+  player: { label: "The Creator's hand", icon: Hand, tone: 'gold' },
   injury: { label: 'Wounds', icon: HeartPulse, tone: 'danger' },
   condition: { label: 'Condition', icon: Activity, tone: 'warning' },
   trait: { label: 'Temperament', icon: Brain, tone: 'info' },

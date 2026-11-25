@@ -54,6 +54,7 @@ export function WillCard({
   const [heir, setHeir] = useState<number | null>(null)
   const [forged, setForged] = useState(will?.forged ?? false)
   const write = useGodAction({
+    writes: [{ lever: 'will:set' }],
     run: ({ heirs, hand }: { heirs: Line[]; hand: boolean }) =>
       unwrap(
         api.POST('/api/actions/will:set', {
@@ -68,6 +69,7 @@ export function WillCard({
       ),
   })
   const tear = useGodAction({
+    writes: [{ lever: 'will:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/will:remove', {
@@ -146,6 +148,7 @@ export function WillCard({
                   meta={`${row.share} of every hundred parts of what they own`}
                   actions={
                     <Button
+                      act={write}
                       size='sm'
                       variant='ghost'
                       disabled={busy !== null || current.length < 2}
@@ -225,6 +228,7 @@ export function WillCard({
         className='items-center'
       >
         <Switch
+          act={write}
           id={`will-forged-${testatorId}`}
           checked={forged}
           disabled={busy !== null || current.length === 0}
@@ -239,6 +243,7 @@ export function WillCard({
         title='Name an heir'
         action={
           <Button
+            act={write}
             size='sm'
             disabled={addReason !== null}
             disabledReason={addReason ?? undefined}
@@ -279,6 +284,7 @@ export function WillCard({
         />
       </AddBar>
       <Button
+        act={tear}
         className='self-start'
         size='sm'
         variant='outline'

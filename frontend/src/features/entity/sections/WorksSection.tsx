@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eraser, RotateCcw, ShieldAlert, Sparkles, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -135,11 +136,13 @@ function OptionRow({
   current,
   busy,
   onPick,
+  act,
 }: {
   option: WorksOption
   current: boolean
   busy: string | null
   onPick: (method: MethodKind) => void
+  act?: ActProp
 }) {
   return (
     <div className='flex min-w-0 flex-col gap-2 px-3 py-2'>
@@ -151,6 +154,7 @@ function OptionRow({
           <Badge>In use</Badge>
         ) : (
           <Button
+            act={act}
             size='sm'
             variant={option.blocked ? 'outline' : 'default'}
             disabled={busy !== null}
@@ -201,6 +205,7 @@ function MethodRow({
     ),
   }
   const pick = useGodAction({
+    writes: [{ lever: 'method:set' }],
     run: ({ method, kind }: { method: MethodKind; kind: number | null }) =>
       unwrap(
         api.POST('/api/actions/method:set', {
@@ -214,6 +219,7 @@ function MethodRow({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'method:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/method:remove', {
@@ -242,6 +248,7 @@ function MethodRow({
       actions={
         row.chosen ? (
           <Button
+            act={release}
             size='icon-sm'
             variant='ghost'
             aria-label='Let the place choose again'
@@ -258,6 +265,7 @@ function MethodRow({
         <div className='flex min-w-0 flex-col divide-y rounded-md border surface-sheen border-gild/60 bg-card'>
           {row.options.map((option) => (
             <OptionRow
+              act={pick}
               key={option.method}
               option={option}
               current={option.method === row.method}
@@ -269,6 +277,7 @@ function MethodRow({
           ))}
           <div className='p-3'>
             <ChoiceSelect
+              act={pick}
               label='Worked in the way of'
               value={String(row.method_kind_id ?? 0)}
               table={authored}
@@ -323,6 +332,7 @@ function energyTone(row: WorksEnergy): 'success' | 'warning' | 'destructive' {
 
 function PowerCard({ view, blocked, hold }: Props) {
   const wipe = useGodAction({
+    writes: [{ lever: 'industry:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/industry:remove', {
@@ -383,6 +393,7 @@ function PowerCard({ view, blocked, hold }: Props) {
       />
       {view.stores !== null && (
         <Button
+          act={wipe}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -641,6 +652,7 @@ function LandRow({
 }) {
   const id = row.region?.id ?? 0
   const purify = useGodAction({
+    writes: [{ lever: 'pollution:purify' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/pollution:purify', {
@@ -649,6 +661,7 @@ function LandRow({
       ),
   })
   const wipe = useGodAction({
+    writes: [{ lever: 'pollution:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/pollution:remove', { body: { region_id: id } })
@@ -690,6 +703,7 @@ function LandRow({
       actions={
         <>
           <Button
+            act={purify}
             size='icon-sm'
             variant='ghost'
             aria-label='Cleanse the land'
@@ -702,6 +716,7 @@ function LandRow({
             <Sparkles />
           </Button>
           <Button
+            act={wipe}
             size='icon-sm'
             variant='ghost'
             aria-label='Wipe the record of its pollution'
@@ -813,6 +828,7 @@ function SiteRow({
 }) {
   const [owner, setOwner] = useState<number | null>(site.owner?.id ?? null)
   const give = useGodAction({
+    writes: [{ lever: 'workshop:owner' }],
     run: (to: number | null) =>
       unwrap(
         api.POST('/api/actions/workshop:owner', {
@@ -867,6 +883,7 @@ function SiteRow({
       actions={
         site.kind && site.owner ? (
           <Button
+            act={give}
             size='icon-sm'
             variant='ghost'
             aria-label='Take the workshop from its owner'
@@ -884,6 +901,7 @@ function SiteRow({
           <FormBar
             action={
               <Button
+                act={give}
                 size='sm'
                 disabled={busy !== null || owner === null}
                 disabledReason={
@@ -981,6 +999,7 @@ function LedgerRow({
   blocked: string | null
 }) {
   const strike = useGodAction({
+    writes: [{ lever: 'site_profit:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/site_profit:remove', {
@@ -1005,6 +1024,7 @@ function LedgerRow({
       }
       actions={
         <Button
+          act={strike}
           size='icon-sm'
           variant='ghost'
           aria-label='Strike the entry'

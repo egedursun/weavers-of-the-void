@@ -19,6 +19,7 @@ export function SonEpic({ son }: { son: SonRecord }) {
     (job) => job.kind === 'content' && paramEquals(job, 'son_id', son.id)
   )
   const write = useGodAction({
+    writes: [{ lever: 'son:epic' }],
     run: () =>
       unwrap(
         api.POST('/api/sons/{son_id}/epic', {
@@ -35,6 +36,7 @@ export function SonEpic({ son }: { son: SonRecord }) {
       level={3}
       actions={
         <ActionButton
+          act={write}
           label={son.epic ? 'Rewrite epic' : 'Write epic'}
           icon={Feather}
           blocked={

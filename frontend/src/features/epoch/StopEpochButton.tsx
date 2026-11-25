@@ -33,11 +33,17 @@ export function StopEpochButton({ size = 'default' }: StopEpochButtonProps) {
     )
   return (
     <>
-      <Button size={size} variant='destructive' onClick={() => setOpen(true)}>
+      <Button
+        act={stop}
+        size={size}
+        variant='destructive'
+        onClick={() => setOpen(true)}
+      >
         <Square />
         Stop
       </Button>
       <ConfirmDialog
+        act={stop}
         open={open}
         onOpenChange={setOpen}
         title='Stop the epoch?'

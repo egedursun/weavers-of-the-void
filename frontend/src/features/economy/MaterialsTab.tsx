@@ -245,6 +245,7 @@ function MaterialCard({
     world_material_id: material.world_material_id,
   }
   const edit = useGodAction({
+    writes: [{ lever: 'material:edit' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -271,16 +272,19 @@ function MaterialCard({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'material:release' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(api.POST('/api/actions/material:release', { body: target })),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'material:delete' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(api.POST('/api/actions/material:delete', { body: target })),
   })
   const keep = useGodAction({
+    writes: [{ lever: 'material:hold' }],
     invalidate: ECONOMY_REFRESH,
     run: () => unwrap(api.POST('/api/actions/material:hold', { body: target })),
   })
@@ -387,12 +391,14 @@ function MaterialCard({
               </EntityLink>
             )}
           <ReleaseButton
+            act={release}
             held={material.held}
             busy={busy}
             onRelease={() => release.mutate(undefined)}
           />
           {!material.held && (
             <Button
+              act={keep}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -405,6 +411,7 @@ function MaterialCard({
           )}
           {!substance && material.edited && (
             <Button
+              act={remove}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -417,6 +424,7 @@ function MaterialCard({
           )}
           {substance && (
             <ConfirmButton
+              act={remove}
               icon={Trash2}
               label='Unmake this substance'
               title={`Unmake ${material.label}?`}
@@ -428,6 +436,7 @@ function MaterialCard({
           )}
         </div>
         <AdjustPanel
+          acts={[edit]}
           label='Adjust the material'
           title={`The physics of ${material.label.toLowerCase()}`}
           note='Every value runs from 0 to 100 and is this world’s law for the material.'
@@ -492,6 +501,7 @@ function MaterialCard({
             onChange={setDescription}
           />
           <Button
+            act={edit}
             size='sm'
             className='self-start'
             disabled={busy !== null}
@@ -526,6 +536,7 @@ export function MaterialForge({
   const [description, setDescription] = useState('')
   const [vein, setVein] = useState<string | null>(null)
   const forge = useGodAction({
+    writes: [{ lever: 'material:create' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -640,6 +651,7 @@ export function MaterialForge({
         onChange={setDescription}
       />
       <Button
+        act={forge}
         size='sm'
         className='self-start'
         disabled={busy !== null}
@@ -671,6 +683,7 @@ export function DepositForge({
   const [craft, setCraft] = useState<string>(NONE)
   const [level, setLevel] = useState('0')
   const create = useGodAction({
+    writes: [{ lever: 'resource:create' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -783,6 +796,7 @@ export function DepositForge({
         onChange={setRevealed}
       />
       <Button
+        act={create}
         size='sm'
         className='self-start'
         disabled={busy !== null}

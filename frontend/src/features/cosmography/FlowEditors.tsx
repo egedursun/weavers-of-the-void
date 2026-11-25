@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { type EditValues } from '@/api/actions'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import {
@@ -84,7 +85,7 @@ export function RouteFlowEditor({ route }: { route: RouteRecord }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='ghost' size='sm'>
+        <Button act={edit} variant='ghost' size='sm'>
           <Gauge />
           Flow
         </Button>
@@ -119,6 +120,7 @@ export function RouteFlowEditor({ route }: { route: RouteRecord }) {
               : 'Always open while its state allows.'}
           </Muted>
           <RecordEditor
+            act={edit}
             title='Set the flow'
             note='Values you set are held. A window of 0 keeps the route open every epoch.'
             fields={[
@@ -165,6 +167,7 @@ export function RouteFlowEditor({ route }: { route: RouteRecord }) {
               onChange={setKeeper}
             />
             <Button
+              act={edit}
               size='sm'
               disabled={
                 busy !== null ||
@@ -195,9 +198,11 @@ export function RouteFlowEditor({ route }: { route: RouteRecord }) {
 function CargoForm({
   busy,
   onAdd,
+  act,
 }: {
   busy: string | null
   onAdd: (line: Cargo) => void
+  act?: ActProp
 }) {
   const [commodity, setCommodity] = useState('')
   const [material, setMaterial] = useState('')
@@ -227,6 +232,7 @@ function CargoForm({
         onChange={setAmount}
       />
       <Button
+        act={act}
         size='sm'
         disabled={busy !== null || missing !== null}
         disabledReason={busy ?? missing ?? undefined}
@@ -249,9 +255,11 @@ function CargoForm({
 function PassengerForm({
   busy,
   onAdd,
+  act,
 }: {
   busy: string | null
   onAdd: (line: Passenger) => void
+  act?: ActProp
 }) {
   const [social, setSocial] = useState('')
   const [count, setCount] = useState('10')
@@ -292,6 +300,7 @@ function PassengerForm({
         <Text as='span'>Sick</Text>
       </label>
       <Button
+        act={act}
         size='sm'
         disabled={busy !== null || missing !== null}
         disabledReason={busy ?? missing ?? undefined}
@@ -316,10 +325,12 @@ function JourneyCounts({
   journey,
   busy,
   onSave,
+  act,
 }: {
   journey: JourneyRecord
   busy: string | null
   onSave: (load: Load) => void
+  act?: ActProp
 }) {
   const [supplies, setSupplies] = useState(String(journey.supplies ?? 100))
   const [births, setBirths] = useState(String(journey.births ?? 0))
@@ -366,6 +377,7 @@ function JourneyCounts({
         />
       </div>
       <Button
+        act={act}
         size='sm'
         className='self-start'
         disabled={busy !== null || invalid !== null}
@@ -414,7 +426,7 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant='ghost' size='sm'>
+        <Button act={[load, release]} variant='ghost' size='sm'>
           <Boxes />
           Load
         </Button>
@@ -445,6 +457,7 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
               onChange={setEscorts}
             />
             <Button
+              act={load}
               size='sm'
               disabled={busy !== null || sizeInvalid !== null}
               disabledReason={busy ?? sizeInvalid ?? undefined}
@@ -456,6 +469,7 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
             </Button>
           </div>
           <JourneyCounts
+            act={load}
             journey={journey}
             busy={busy}
             onSave={(vars) => load.mutate(vars)}
@@ -478,6 +492,7 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
                 {(line, at) => (
                   <li key={`${line.commodity}-${line.material ?? ''}-${at}`}>
                     <Button
+                      act={load}
                       size='sm'
                       variant='outline'
                       disabled={busy !== null}
@@ -497,6 +512,7 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
               </PagedList>
             )}
             <CargoForm
+              act={load}
               busy={busy}
               onAdd={(line) => load.mutate({ cargo: [...cargo, line] })}
             />
@@ -517,6 +533,7 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
                 {(line, at) => (
                   <li key={`${line.social_class}-${at}`}>
                     <Button
+                      act={load}
                       size='sm'
                       variant='outline'
                       disabled={busy !== null}
@@ -538,6 +555,7 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
               </PagedList>
             )}
             <PassengerForm
+              act={load}
               busy={busy}
               onAdd={(line) =>
                 load.mutate({ passengers: [...passengers, line] })
@@ -546,6 +564,7 @@ export function JourneyLoadEditor({ journey }: { journey: JourneyRecord }) {
           </div>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null || locked.length === 0}

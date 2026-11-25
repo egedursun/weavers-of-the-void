@@ -136,6 +136,7 @@ function Happening({
         {happening.mirrored && <Chip icon={source.icon}>Mirrored</Chip>}
       </div>
       <RecordEditor
+        act={editing}
         title='Set this happening'
         note='Values you set are held against the engine until you release them.'
         fields={HAPPENING_FIELDS}
@@ -145,6 +146,7 @@ function Happening({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike it out of the past'
         busy={why(blocked, removing.isPending)}
@@ -235,6 +237,7 @@ function Controls({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={configuring}
               size='sm'
               disabled={why(planBlocked, configuring.isPending) !== null}
               disabledReason={
@@ -246,6 +249,7 @@ function Controls({
               Plan it
             </Button>
             <Button
+              act={seeding}
               size='sm'
               variant='secondary'
               disabled={why(seedBlocked, seeding.isPending) !== null}
@@ -275,18 +279,21 @@ function Controls({
       </ForgeCard>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={running}
           icon={Play}
           label='Run the planned past'
           busy={why(runBlocked, running.isPending)}
           onClick={() => running.mutate()}
         />
         <StepButton
+          act={aborting}
           icon={CircleStop}
           label='Stop the run'
           busy={why(abortBlocked, aborting.isPending)}
           onClick={() => aborting.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Strike out the record'
           busy={why(removeBlocked, removing.isPending)}
@@ -461,6 +468,7 @@ export function PrehistorySection({
               />
             )}
             <RecordEditor
+              act={editing}
               title='Set the record of this prehistory'
               note={
                 query.data.state

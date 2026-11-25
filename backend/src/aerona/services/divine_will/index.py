@@ -14,11 +14,13 @@ import numpy as np
 from numpy.typing import NDArray
 from sqlalchemy import delete, insert, select, update
 
+from aerona.core.account_scope import current_account, detached
 from aerona.core.grammar import several
+from aerona.db.authorship import visible
 from aerona.db.record_context import UNCAPTURED
 from aerona.db.repositories.divine_will import active_session
 from aerona.db.session import Database
-from aerona.db.tables.divine_will import DivineWillAttachmentRow, DivineWillChunkRow, DivineWillCycleRow
+from aerona.db.tables.divine_will import DivineWillArtifactRow, DivineWillAttachmentRow, DivineWillChunkRow, DivineWillCycleRow, DivineWillSessionRow
 from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.divine_will import AttachmentStatus, ChunkSource, IndexStatus
 from aerona.domain.enums.job import JobKind
@@ -127,6 +129,12 @@ class Lexical:
         except sqlite3.OperationalError:
             return []
         return [int(row[0]) for row in rows]
+
+
+@dataclass(frozen=True)
+class Hidden:
+    artifacts: frozenset[str]
+    cycles: frozenset[int]
 
 
 @dataclass(frozen=True)
@@ -342,7 +350,7 @@ class LoreIndex:
         self._loop.call_soon_threadsafe(self._wanted.set)
 
     def schedule_attachments(self) -> None:
-        task = asyncio.get_running_loop().create_task(self._attachments_now())
+        task = detached(self._attachments_now())
         self._tasks.add(task)
         task.add_done_callback(self._tasks.discard)
 
@@ -702,7 +710,11 @@ class LoreIndex:
         await self._ensure_layers()
         embedder = self._embedder if self._background else await self.ready_embedder()
         layers = (self._world or empty_layer(), self._attached or empty_layer())
-        allowed = [self._allowed(layers[WORLD_LAYER], sources, None), self._allowed(layers[ATTACHMENT_LAYER], sources, attachments)]
+        hidden = await self._hidden()
+        allowed = [
+            self._allowed(layers[WORLD_LAYER], sources, None) & self._visible(layers[WORLD_LAYER], hidden),
+            self._allowed(layers[ATTACHMENT_LAYER], sources, attachments) & self._visible(layers[ATTACHMENT_LAYER], hidden),
+        ]
         text = query.strip()
         rankings: list[list[Key]] = [
             [(number, position) for position in layer.lexical.ranked(text) if allowed[number][position]] for number, layer in enumerate(layers)
@@ -736,6 +748,35 @@ class LoreIndex:
         if not semantic:
             return WORDS_ONLY.format(reason=self._note or NO_DIRECTORY) if self._embedder is None else ""
         return PARTLY.format(embedded=embedded, passages=several(passages, "passage", "passages")) if embedded < passages else ""
+
+    async def _hidden(self) -> Hidden:
+        if current_account() is None:
+            return Hidden(frozenset(), frozenset())
+        async with self._database.read() as session:
+            artifacts = await session.scalars(
+                select(DivineWillArtifactRow.id).where(~visible(DivineWillArtifactRow.author_account_id, DivineWillArtifactRow.shared))
+            )
+            cycles = await session.scalars(
+                select(DivineWillCycleRow.id)
+                .join(DivineWillSessionRow, DivineWillSessionRow.id == DivineWillCycleRow.session_id)
+                .where(~visible(DivineWillSessionRow.author_account_id, DivineWillSessionRow.shared))
+            )
+            return Hidden(frozenset(str(found) for found in artifacts), frozenset(int(found) for found in cycles))
+
+    @staticmethod
+    def _visible(layer: Layer, hidden: Hidden) -> Mask:
+        if not hidden.artifacts and not hidden.cycles:
+            return np.ones(len(layer.chunks), dtype=np.bool_)
+        return np.asarray(
+            [
+                not (
+                    (chunk.source is ChunkSource.ARTIFACT and chunk.source_id in hidden.artifacts)
+                    or (chunk.cycle_id is not None and chunk.cycle_id in hidden.cycles)
+                )
+                for chunk in layer.chunks
+            ],
+            dtype=np.bool_,
+        )
 
     @staticmethod
     def _allowed(layer: Layer, sources: frozenset[ChunkSource] | None, attachments: frozenset[int] | None) -> Mask:

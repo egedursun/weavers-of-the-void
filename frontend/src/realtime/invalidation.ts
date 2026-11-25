@@ -136,6 +136,9 @@ export const INVALIDATIONS: { [K in EventKind]: InvalidationRule<K> } = {
   ],
   'divine_will.index_progress': () => [queryKeys.divineWill.index],
   'presence.session_changed': () => [queryKeys.presence.all],
+  'team.presence': () => [queryKeys.team.view],
+  'team.queue_changed': () => [queryKeys.team.all],
+  'team.proposal_changed': () => [queryKeys.team.all],
   'presence.exchange_started': () => [queryKeys.presence.all],
   'presence.exchange_finished': () => [
     queryKeys.presence.all,

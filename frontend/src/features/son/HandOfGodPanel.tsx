@@ -121,12 +121,14 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
   )
 
   const announce = useGodAction({
+    writes: [{ lever: 'command' }],
     run: (text: string) =>
       unwrap(api.PUT('/api/sons/{son_id}/order', { ...path, body: { text } })),
     success: (_result, text) =>
       text.trim() ? 'Order announced' : 'Standing order removed',
   })
   const absolute = useGodAction({
+    writes: [{ lever: 'absolute_command' }],
     run: (text: string) =>
       unwrap(
         api.POST('/api/sons/{son_id}/absolute-command', {
@@ -137,10 +139,12 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
     success: 'Irrefusable command given',
   })
   const act = useGodAction({
+    writes: [{ method: 'POST', path: '/api/sons/{son_id}/act' }],
     run: () => unwrap(api.POST('/api/sons/{son_id}/act', path)),
     success: `${son.name} sets out`,
   })
   const bless = useGodAction({
+    writes: [{ lever: 'bless' }],
     run: (body: {
       kind: 'essence' | 'hp' | 'stat' | 'existence'
       stat?: StatKey
@@ -148,6 +152,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
     success: 'Blessed',
   })
   const punish = useGodAction({
+    writes: [{ lever: 'punish' }],
     run: (kind: 'lightning' | 'chain' | 'exile' | 'suppress' | 'pardon') =>
       unwrap(
         api.POST('/api/sons/{son_id}/punish', { ...path, body: { kind } })
@@ -156,10 +161,12 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       kind === 'pardon' ? 'Pardoned' : 'Judgment given',
   })
   const drain = useGodAction({
+    writes: [{ lever: 'drain:son' }],
     run: () => unwrap(api.POST('/api/sons/{son_id}/drain', path)),
     success: 'Essence drained',
   })
   const devour = useGodAction({
+    writes: [{ lever: 'devour:son' }],
     run: (text: string) =>
       unwrap(
         api.POST('/api/sons/{son_id}/devour', {
@@ -170,6 +177,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
     success: 'Devoured; their essence passed to you',
   })
   const kill = useGodAction({
+    writes: [{ lever: 'kill:son' }],
     run: (text: string) =>
       unwrap(
         api.POST('/api/sons/{son_id}/kill', { ...path, body: { reason: text } })
@@ -177,18 +185,22 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
     success: `${son.name} died`,
   })
   const star = useGodAction({
+    writes: [{ lever: 'son:star' }],
     run: () => unwrap(api.POST('/api/sons/{son_id}/star', path)),
     success: 'Another star shone',
   })
   const ascend = useGodAction({
+    writes: [{ lever: 'son:ascend' }],
     run: () => unwrap(api.POST('/api/sons/{son_id}/ascend', path)),
     success: 'Ascended to the next class',
   })
   const demote = useGodAction({
+    writes: [{ lever: 'demote' }],
     run: () => unwrap(api.POST('/api/sons/{son_id}/demote', path)),
     success: 'Lowered by one class',
   })
   const strip = useGodAction({
+    writes: [{ lever: 'strip_power' }],
     run: (value: number) =>
       unwrap(
         api.POST('/api/sons/{son_id}/strip-power', {
@@ -199,6 +211,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
     success: 'Power ripped out',
   })
   const sendWorld = useGodAction({
+    writes: [{ lever: 'son:world' }],
     run: (value: number) =>
       unwrap(
         api.PUT('/api/sons/{son_id}/world', {
@@ -209,10 +222,12 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
     success: `${son.name} was sent to a new world`,
   })
   const unprotect = useGodAction({
+    writes: [{ lever: 'son:protection' }],
     run: () => unwrap(api.DELETE('/api/sons/{son_id}/protection', path)),
     success: 'Automatic distribution may move them again',
   })
   const duel = useGodAction({
+    writes: [{ lever: 'son:duel' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/son:duel', {
@@ -225,6 +240,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       ),
   })
   const godWar = useGodAction({
+    writes: [{ lever: 'son:god_war' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/son:god_war', {
@@ -233,6 +249,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       ),
   })
   const setSanityAction = useGodAction({
+    writes: [{ lever: 'son:sanity' }],
     run: (value: number) =>
       unwrap(
         api.POST('/api/actions/son:sanity', { body: { son_id: sonId, value } })
@@ -308,6 +325,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
         note='An absolute command is done first on their next turn and costs a little loyalty.'
       >
         <ActionButton
+          act={announce}
           label={orderText ? 'Announce order' : 'Clear standing order'}
           icon={Megaphone}
           blocked={reason() ?? deadReason}
@@ -315,6 +333,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           onRun={() => announce.mutate(orderText)}
         />
         <ActionButton
+          act={absolute}
           label='Absolute command'
           icon={Crown}
           variant='destructive'
@@ -333,6 +352,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           onRun={() => absolute.mutate(orderText)}
         />
         <ActionButton
+          act={act}
           label='Act now'
           icon={Play}
           variant='default'
@@ -353,6 +373,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
       <Separator />
       <Row title='Bless'>
         <ActionButton
+          act={bless}
           label='Essence'
           icon={Sparkles}
           cost={essenceCost}
@@ -368,6 +389,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           onRun={() => bless.mutate({ kind: 'essence' })}
         />
         <ActionButton
+          act={bless}
           label='Fill life'
           icon={HeartPulse}
           cost={hpCost}
@@ -381,6 +403,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           onRun={() => bless.mutate({ kind: 'hp' })}
         />
         <ActionButton
+          act={bless}
           label='Remember them'
           icon={Sparkles}
           cost={essenceCost}
@@ -422,6 +445,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           </SelectContent>
         </Select>
         <ActionButton
+          act={bless}
           label='Raise'
           icon={ArrowDownCircle}
           cost={statCost}
@@ -441,6 +465,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
         note='Above a strong will, punishment lowers loyalty and grows anger; below it, they bow in fear.'
       >
         <ActionButton
+          act={punish}
           label='Lightning'
           icon={Zap}
           variant='destructive'
@@ -455,6 +480,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           onRun={() => punish.mutate('lightning')}
         />
         <ActionButton
+          act={punish}
           label='Chain this epoch'
           icon={Link2}
           variant='destructive'
@@ -475,6 +501,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
         />
         {exiledOrChained ? (
           <ActionButton
+            act={punish}
             label='Pardon'
             icon={Hand}
             blocked={reason()}
@@ -483,6 +510,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           />
         ) : (
           <ActionButton
+            act={punish}
             label='Exile'
             icon={Ban}
             variant='destructive'
@@ -503,6 +531,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
         >
           <Badge variant='destructive'>In rebellion against the Creator</Badge>
           <ActionButton
+            act={punish}
             label='Suppress the rebellion'
             icon={Shield}
             variant='destructive'
@@ -517,6 +546,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
             onRun={() => punish.mutate('suppress')}
           />
           <ActionButton
+            act={punish}
             label='Forgive'
             icon={Hand}
             blocked={reason()}
@@ -541,6 +571,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           </FieldTile>
           <Row title='Essence and death'>
             <ActionButton
+              act={drain}
               label='Drain their essence'
               icon={Droplet}
               variant='destructive'
@@ -557,6 +588,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
               onRun={() => drain.mutate()}
             />
             <ActionButton
+              act={devour}
               label='Devour'
               icon={Utensils}
               variant='destructive'
@@ -570,6 +602,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
               onRun={() => devour.mutate(reasonText.trim())}
             />
             <ActionButton
+              act={kill}
               label='Kill'
               icon={Skull}
               variant='destructive'
@@ -591,6 +624,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
         {nextStar ? (
           <>
             <ActionButton
+              act={star}
               label={`Give star ${nextStar.stars}`}
               icon={Star}
               variant='default'
@@ -617,6 +651,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
         ) : ascension ? (
           <>
             <ActionButton
+              act={ascend}
               label={`Ascend to ${RARITY_LABEL[ascension.target]}`}
               icon={Crown}
               variant='default'
@@ -652,6 +687,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           note='Demotion drops stats to the lower class cap; ripping out a power returns some essence to you.'
         >
           <ActionButton
+            act={demote}
             label={
               lowerRarity ? `Lower to ${RARITY_LABEL[lowerRarity]}` : 'Demote'
             }
@@ -685,6 +721,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
                 </SelectContent>
               </Select>
               <ActionButton
+                act={strip}
                 label='Rip out the power'
                 icon={Scissors}
                 variant='destructive'
@@ -739,6 +776,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
             </SelectContent>
           </Select>
           <ActionButton
+            act={sendWorld}
             label='Send to world'
             icon={Globe}
             blocked={
@@ -752,6 +790,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
           />
           {son.manually_assigned_epoch !== null && (
             <ActionButton
+              act={unprotect}
               label='Release to distribution'
               icon={ShieldOff}
               blocked={reason()}
@@ -796,6 +835,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
               </SelectContent>
             </Select>
             <ActionButton
+              act={duel}
               label='Duel'
               icon={Swords}
               blocked={reason() ?? (rival ? null : 'Pick a sibling.')}
@@ -824,6 +864,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
                 </SelectContent>
               </Select>
               <ActionButton
+                act={godWar}
                 label='Go to war'
                 icon={Swords}
                 variant='destructive'
@@ -852,6 +893,7 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
               onChange={(event) => setSanity(event.target.value)}
             />
             <ActionButton
+              act={setSanityAction}
               label='Set sanity'
               blocked={reason() ?? (sanity === '' ? 'Enter a value.' : null)}
               pending={setSanityAction.isPending}

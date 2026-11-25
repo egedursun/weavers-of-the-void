@@ -137,21 +137,25 @@ export function GodPanel({ doom }: { doom: number }) {
   const [signTarget, setSignTarget] = useState<string | null>(null)
   const [calling, setCalling] = useState(false)
   const pourAction = useGodAction({
+    writes: [{ lever: 'essence:pour' }],
     run: (amount: number) =>
       unwrap(api.POST('/api/actions/essence:pour', { body: { amount } })),
   })
   const clockAction = useGodAction({
+    writes: [{ lever: 'doom:clock' }],
     run: (value: number) =>
       unwrap(api.POST('/api/actions/doom:clock', { body: { value } })),
     success: 'The doom clock was set',
   })
   const apocalypse = useGodAction({
+    writes: [{ lever: 'doom:apocalypse' }],
     run: (value: boolean) =>
       unwrap(
         api.POST('/api/actions/doom:apocalypse', { body: { calling: value } })
       ),
   })
   const signAction = useGodAction({
+    writes: [{ lever: 'creator:sign' }],
     run: (variables: { kind: SignKind; target: string | null }) =>
       unwrap(
         api.POST('/api/actions/creator:sign', {
@@ -195,6 +199,7 @@ export function GodPanel({ doom }: { doom: number }) {
               onChange={(event) => setPour(event.target.value)}
             />
             <ActionButton
+              act={pourAction}
               label='Pour'
               icon={Droplets}
               cost={pourAmount > 0 ? pourAmount : undefined}
@@ -245,6 +250,7 @@ export function GodPanel({ doom }: { doom: number }) {
                 onChange={(event) => setClock(event.target.value)}
               />
               <ActionButton
+                act={clockAction}
                 label='Set'
                 blocked={reason() ?? (clock === '' ? 'Enter a value.' : null)}
                 pending={clockAction.isPending}
@@ -264,6 +270,7 @@ export function GodPanel({ doom }: { doom: number }) {
             </FieldTile>
           </div>
           <ActionButton
+            act={apocalypse}
             label='Bring the apocalypse now'
             icon={CloudLightning}
             variant='destructive'
@@ -318,6 +325,7 @@ export function GodPanel({ doom }: { doom: number }) {
             </div>
           )}
           <ActionButton
+            act={signAction}
             label='Send'
             icon={Sparkles}
             blocked={reason()}

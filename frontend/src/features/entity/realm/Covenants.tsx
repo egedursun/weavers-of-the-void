@@ -94,6 +94,7 @@ export function FoundHouse({ blocked }: { blocked: string | null }) {
   const [founder, setFounder] = useState<number | null>(null)
   const naming = useShape()
   const found = useGodAction({
+    writes: [{ lever: 'house:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/house:found', {
@@ -118,6 +119,7 @@ export function FoundHouse({ blocked }: { blocked: string | null }) {
         blocked={busy}
       />
       <Button
+        act={found}
         size='sm'
         className='self-start'
         disabled={busy !== null || founder === null}
@@ -140,6 +142,7 @@ export function MergeHouses({
 }) {
   const [into, setInto] = useState<number | null>(null)
   const merge = useGodAction({
+    writes: [{ lever: 'house:merge' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/house:merge', {
@@ -158,6 +161,7 @@ export function MergeHouses({
         blocked={busy}
       />
       <Button
+        act={merge}
         size='sm'
         className='self-start'
         disabled={busy !== null || into === null || into === house.id}
@@ -186,6 +190,7 @@ export function HouseEditor({
   const [member, setMember] = useState<number | null>(null)
   const [item, setItem] = useState<number | null>(null)
   const save = useGodAction({
+    writes: [{ lever: 'house:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/house:edit', {
@@ -204,6 +209,7 @@ export function HouseEditor({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'house:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/house:edit', {
@@ -212,6 +218,7 @@ export function HouseEditor({
       ),
   })
   const join = useGodAction({
+    writes: [{ lever: 'house:member' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/house:member', {
@@ -225,6 +232,7 @@ export function HouseEditor({
       ),
   })
   const heirloom = useGodAction({
+    writes: [{ lever: 'house:heirloom' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/house:heirloom', {
@@ -263,6 +271,7 @@ export function HouseEditor({
         </div>
       </div>
       <AdjustPanel
+        acts={[save, release, join, heirloom]}
         trigger='Shape the house'
         title='Shape the house'
         note='Every value you set is held until released.'
@@ -330,6 +339,7 @@ export function HouseEditor({
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? 'Choose every field first'}
@@ -340,6 +350,7 @@ export function HouseEditor({
           </Button>
           {house.locked.length > 0 && (
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -359,6 +370,7 @@ export function HouseEditor({
           blocked={busy}
         />
         <Button
+          act={join}
           size='sm'
           variant='outline'
           className='self-start'
@@ -377,6 +389,7 @@ export function HouseEditor({
           blocked={busy}
         />
         <Button
+          act={heirloom}
           size='sm'
           variant='outline'
           className='self-start'
@@ -389,6 +402,11 @@ export function HouseEditor({
         </Button>
       </AdjustPanel>
       <AdjustPanel
+        writes={[
+          { lever: 'house:edit' },
+          { lever: 'house:merge' },
+          { lever: 'house:found' },
+        ]}
         trigger='Merge or found'
         title='Merge this house, or found another'
         note='Merging moves every living member into the greater house.'
@@ -462,6 +480,7 @@ export function SealTreaty({
   const [clauses, setClauses] = useState<Draft[]>([])
   const naming = useShape()
   const seal = useGodAction({
+    writes: [{ lever: 'treaty:sign' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/treaty:sign', {
@@ -633,6 +652,7 @@ export function SealTreaty({
         </div>
       </div>
       <Button
+        act={seal}
         size='sm'
         className='self-start'
         disabled={busy !== null || first === null || second === null}
@@ -661,6 +681,7 @@ export function TreatyBuilder({
   const first = treaty.parties[0]?.id ?? null
   const second = treaty.parties[1]?.id ?? null
   const add = useGodAction({
+    writes: [{ lever: 'treaty:clause_add' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/treaty:clause_add', {
@@ -675,6 +696,7 @@ export function TreatyBuilder({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'treaty:clause_remove' }],
     run: (clauseId: number) =>
       unwrap(
         api.POST('/api/actions/treaty:clause_remove', {
@@ -683,6 +705,7 @@ export function TreatyBuilder({
       ),
   })
   const bind = useGodAction({
+    writes: [{ lever: 'treaty:party_add' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/treaty:party_add', {
@@ -695,6 +718,7 @@ export function TreatyBuilder({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'treaty:party_remove' }],
     run: (partyId: number) =>
       unwrap(
         api.POST('/api/actions/treaty:party_remove', {
@@ -703,6 +727,7 @@ export function TreatyBuilder({
       ),
   })
   const unhold = useGodAction({
+    writes: [{ lever: 'treaty:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/treaty:edit', {
@@ -735,6 +760,7 @@ export function TreatyBuilder({
                 truncate
               >{`${clause.obligor ?? 'someone'} → ${clause.beneficiary ?? 'someone'}`}</Muted>
               <Button
+                act={remove}
                 size='sm'
                 variant='outline'
                 className='ml-auto'
@@ -756,6 +782,7 @@ export function TreatyBuilder({
                 {item.name}
               </EntityLink>
               <Button
+                act={release}
                 size='sm'
                 variant='outline'
                 className='ml-auto'
@@ -771,6 +798,7 @@ export function TreatyBuilder({
         </Paged>
       </ul>
       <AdjustPanel
+        acts={[add]}
         trigger='Add a clause'
         title='Write a clause in'
         note='The first party owes it to the second; it runs from the next age.'
@@ -793,6 +821,7 @@ export function TreatyBuilder({
           <FrameChoice value={frame} blocked={busy} onPick={setFrame} />
         )}
         <Button
+          act={add}
           size='sm'
           className='self-start'
           disabled={busy !== null}
@@ -804,6 +833,7 @@ export function TreatyBuilder({
         </Button>
       </AdjustPanel>
       <AdjustPanel
+        acts={[bind]}
         trigger='Bind a party'
         title='Bind another party'
         note='A guarantor marches against whoever breaks the treaty.'
@@ -823,6 +853,7 @@ export function TreatyBuilder({
           onPick={setRole}
         />
         <Button
+          act={bind}
           size='sm'
           className='self-start'
           disabled={busy !== null || party === null}
@@ -835,6 +866,7 @@ export function TreatyBuilder({
       </AdjustPanel>
       {treaty.locked.length > 0 && (
         <Button
+          act={unhold}
           size='sm'
           variant='outline'
           className='self-start'

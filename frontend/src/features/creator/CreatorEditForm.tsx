@@ -37,6 +37,7 @@ export function CreatorEditForm({ creator }: { creator: CreatorRecord }) {
   const [draft, setDraft] = useState<Draft>(() => draftOf(creator))
   const { reason } = useGodGate()
   const save = useGodAction({
+    writes: [{ lever: 'creator:edit' }],
     run: (body: Draft) => unwrap(api.PATCH('/api/creator', { body })),
     success: "The Creator's likeness was updated",
   })
@@ -48,7 +49,7 @@ export function CreatorEditForm({ creator }: { creator: CreatorRecord }) {
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='outline' className='self-start'>
+        <Button act={save} variant='outline' className='self-start'>
           <PenLine />
           Edit title, appearance and temperament
         </Button>
@@ -69,6 +70,7 @@ export function CreatorEditForm({ creator }: { creator: CreatorRecord }) {
         <Muted variant='caption'>A field left empty is deleted.</Muted>
         <div>
           <ActionButton
+            act={save}
             label='Save'
             variant='default'
             blocked={reason()}

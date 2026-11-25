@@ -5,6 +5,7 @@ import {
   type LucideIcon,
   SlidersHorizontal,
 } from 'lucide-react'
+import { type ActGate, type ActProp, everyRefused } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -144,11 +145,13 @@ export function Adjust({
   title,
   note,
   label = 'Adjust',
+  acts,
   children,
 }: {
   title: string
   note: string
   label?: string
+  acts: readonly [ActGate, ...ActGate[]]
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -159,7 +162,12 @@ export function Adjust({
       className='flex min-w-0 flex-col gap-3'
     >
       <CollapsibleTrigger asChild>
-        <Button variant='outline' size='sm' className='self-start'>
+        <Button
+          act={everyRefused(acts)}
+          variant='outline'
+          size='sm'
+          className='self-start'
+        >
           <SlidersHorizontal />
           {label}
           {open ? <ChevronUp /> : <ChevronDown />}
@@ -228,6 +236,7 @@ export function ChoiceField({
   table,
   blocked,
   onPick,
+  act,
 }: {
   label: string
   icon?: LucideIcon
@@ -235,11 +244,17 @@ export function ChoiceField({
   table: Record<string, Named>
   blocked: string | null
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   const id = useId()
   return (
     <FieldTile id={id} label={label} icon={icon}>
-      <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+      <Select
+        act={act}
+        value={value}
+        onValueChange={onPick}
+        disabled={blocked !== null}
+      >
         <SelectTrigger id={id} aria-label={label} className='w-full'>
           <SelectValue />
         </SelectTrigger>
@@ -264,11 +279,13 @@ export function ToggleField({
   checked,
   disabled,
   onChange,
+  act,
 }: {
   item: Named
   checked: boolean
   disabled: boolean
   onChange: (next: boolean) => void
+  act?: ActProp
 }) {
   const Icon = item.icon
   return (
@@ -289,6 +306,7 @@ export function ToggleField({
         {item.label}
       </Text>
       <Switch
+        act={act}
         checked={checked}
         disabled={disabled}
         aria-label={item.label}

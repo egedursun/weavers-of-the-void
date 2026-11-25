@@ -2,7 +2,7 @@ import json
 from collections.abc import AsyncIterator, Iterable, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from enum import Enum, StrEnum
 from typing import Any
 
@@ -17,6 +17,8 @@ from sqlalchemy.sql.elements import ClauseElement
 
 from aerona.constants.control import BOOKKEEPING_TABLES
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH, NAME_MAX_LENGTH
+from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
+from aerona.db.authorship import hand_of
 from aerona.db.base import Base
 from aerona.db.record_context import COLUMN_STAMPS, ROW_STAMP, SCOPE, TERMS, UNCAPTURED, RecordScope, Stamp, Term, change_terms, current_scope, stamp, stamp_row
 from aerona.db.tables.agency import ActionRecordRow, AgentTurnRow, TurnCounterRow
@@ -74,6 +76,7 @@ class LedgerDraft:
     tool: str
     action_kind: ActionKind
     input_summary: str | None
+    reason: str | None = None
 
 
 def _table(name: str) -> Table:
@@ -214,6 +217,7 @@ def inserted_action_ids(changes: Iterable[RowChange]) -> list[int]:
 
 
 async def write_entry(session: AsyncSession, draft: LedgerDraft, changes: list[RowChange]) -> LedgerEntryRow:
+    hand = hand_of(draft.actor_kind)
     entry = LedgerEntryRow(
         epoch=draft.epoch,
         actor_kind=draft.actor_kind,
@@ -224,6 +228,9 @@ async def write_entry(session: AsyncSession, draft: LedgerDraft, changes: list[R
         input_summary=draft.input_summary[:LEDGER_SUMMARY_MAX_LENGTH] if draft.input_summary else None,
         applied=[],
         conflicts=[],
+        reason=draft.reason,
+        author_account_id=hand.id if hand is not None else None,
+        author_name=hand.name[:AUTHOR_NAME_MAX_LENGTH] if hand is not None else None,
     )
     session.add(entry)
     await session.flush()
@@ -336,6 +343,9 @@ CHANGE_COLUMNS = (
     "phase",
     "incident_id",
     "step_id",
+    "author_account_id",
+    "author_name",
+    "changed_at",
 )
 INSERT_CHANGES = f"INSERT INTO state_changes ({', '.join(CHANGE_COLUMNS)}) VALUES ({', '.join('?' for _ in CHANGE_COLUMNS)})"
 INSERT_NUMBERED_CHANGES = f"INSERT INTO state_changes (id, {', '.join(CHANGE_COLUMNS)}) VALUES (?, {', '.join('?' for _ in CHANGE_COLUMNS)})"
@@ -472,6 +482,7 @@ def change(
 ) -> PendingChange:
     scope, terms = found if found is not None else (current_scope(), ())
     moment = scope.moment if scope is not None else None
+    hand = hand_of(scope.actor_kind if scope is not None else None)
     kind = column.kind if column is not None else ValueKind.TEXT
     before_number, before_text, before_node = (None, before, None) if column is None else typed(kind, before)
     after_number, after_text, after_node = (None, after, None) if column is None else typed(kind, after)
@@ -497,6 +508,9 @@ def change(
         scope.phase if scope is not None else None,
         scope.incident_id if scope is not None else None,
         scope.step_id if scope is not None else None,
+        hand.id if hand is not None else None,
+        hand.name[:AUTHOR_NAME_MAX_LENGTH] if hand is not None else None,
+        datetime.now(UTC).replace(tzinfo=None).isoformat(sep=" ") if hand is not None else None,
     ]
     return PendingChange(values, terms if column is not None and kind is ValueKind.NUMBER else (), scope, owner)
 

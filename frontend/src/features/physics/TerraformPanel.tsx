@@ -110,6 +110,7 @@ export function TerraformPanel({
               }
               aside={
                 <Button
+                  act={stop}
                   size='sm'
                   variant='ghost'
                   disabled={busy !== null}
@@ -122,6 +123,7 @@ export function TerraformPanel({
               }
             >
               <RecordEditor
+                act={edit}
                 title='Pace and length'
                 note='How far the world moves each epoch and how long the work runs.'
                 fields={[
@@ -169,6 +171,7 @@ export function TerraformPanel({
         }
         action={
           <Button
+            act={start}
             size='sm'
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}

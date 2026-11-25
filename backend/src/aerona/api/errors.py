@@ -8,16 +8,22 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from aerona.api.schemas.common import ErrorCode, ErrorResponse
+from aerona.api.schemas.common import EditConflictChange, ErrorCode, ErrorResponse
 from aerona.constants.api import CORRELATION_ID_LENGTH, SCRUBBED_PATH
 from aerona.constants.http import CORRELATION_ID_HEADER
 from aerona.core.errors import (
     AeronaError,
     BusyError,
     ConflictError,
+    EditConflictError,
+    ForbiddenError,
     InsufficientResourcesError,
+    LockedError,
     NotFoundError,
+    PasswordChangeRequiredError,
     ReadOnlyError,
+    SetupRequiredError,
+    SignedOutError,
     UniverseRequiredError,
     ValidationFailedError,
 )
@@ -34,6 +40,7 @@ INVALID_REQUEST = "The request is not valid."
 LLM_FAILED = "The language model could not answer."
 STATUS_CODES: dict[int, ErrorCode] = {
     400: ErrorCode.INVALID,
+    401: ErrorCode.SIGNED_OUT,
     403: ErrorCode.FORBIDDEN,
     404: ErrorCode.NOT_FOUND,
     405: ErrorCode.INVALID,
@@ -41,8 +48,15 @@ STATUS_CODES: dict[int, ErrorCode] = {
     413: ErrorCode.TOO_LARGE,
     415: ErrorCode.INVALID,
     423: ErrorCode.READ_ONLY,
+    429: ErrorCode.LOCKED,
 }
 ERROR_CODES: tuple[tuple[type[AeronaError], ErrorCode], ...] = (
+    (SignedOutError, ErrorCode.SIGNED_OUT),
+    (PasswordChangeRequiredError, ErrorCode.PASSWORD_CHANGE_REQUIRED),
+    (SetupRequiredError, ErrorCode.SETUP_REQUIRED),
+    (ForbiddenError, ErrorCode.FORBIDDEN),
+    (EditConflictError, ErrorCode.EDIT_CONFLICT),
+    (LockedError, ErrorCode.LOCKED),
     (NotFoundError, ErrorCode.NOT_FOUND),
     (BusyError, ErrorCode.BUSY),
     (UniverseRequiredError, ErrorCode.UNIVERSE_REQUIRED),
@@ -78,6 +92,18 @@ def error_response(status: int, message: str, code: ErrorCode) -> JSONResponse:
     return JSONResponse(status_code=status, content=error_body(scrub(message), code).model_dump(mode="json", exclude_none=True))
 
 
+def forbidden_response(error: ForbiddenError) -> JSONResponse:
+    body = error_body(scrub(error.message), ErrorCode.FORBIDDEN).model_copy(update={"permission": error.permission, "role": error.role})
+    return JSONResponse(status_code=error.status_code, content=body.model_dump(mode="json", exclude_none=True))
+
+
+def conflict_response(error: EditConflictError) -> JSONResponse:
+    body = error_body(scrub(error.message), ErrorCode.EDIT_CONFLICT).model_copy(
+        update={"changes": [EditConflictChange.model_validate(change) for change in error.changes]}
+    )
+    return JSONResponse(status_code=error.status_code, content=body.model_dump(mode="json", exclude_none=True))
+
+
 def validation_message(error: RequestValidationError) -> str:
     details = list(error.errors())
     if not details:
@@ -91,6 +117,10 @@ def validation_message(error: RequestValidationError) -> str:
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AeronaError)
     async def handle_domain_error(_request: Request, error: AeronaError) -> JSONResponse:
+        if isinstance(error, ForbiddenError):
+            return forbidden_response(error)
+        if isinstance(error, EditConflictError):
+            return conflict_response(error)
         return error_response(error.status_code, error.message, code_of(error))
 
     @app.exception_handler(LlmError)

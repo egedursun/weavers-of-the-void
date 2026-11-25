@@ -30,7 +30,10 @@ export function useClimesRow<
   )
   const removing = useClimesAction(remove, (_: void) => keys as never, 'Done')
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }
@@ -42,7 +45,10 @@ export function useClimesStep<A extends ClimesAction>(
   success: string
 ) {
   const running = useClimesAction(action, (_: void) => ({}) as never, success)
-  return { busy: why(blocked, running.isPending), run: () => running.mutate() }
+  return {
+    busy: running.blockedReason ?? why(blocked, running.isPending),
+    run: () => running.mutate(),
+  }
 }
 
 export function epochsToWindow(

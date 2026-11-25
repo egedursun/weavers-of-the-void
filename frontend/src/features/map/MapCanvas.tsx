@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
 } from 'react'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { type ThemeColors } from '@/components/domain/useThemeColors'
 import { type MapView } from './api'
 import { buildDeep } from './deepLayer'
@@ -63,6 +64,7 @@ type MapCanvasProps = {
   onHover: (hit: HitTarget | null, screen: ScreenPoint) => void
   onEmptyClick: (map: ScreenPoint, screen: ScreenPoint) => void
   onMove: (hit: HitTarget, map: ScreenPoint) => void
+  act?: ActProp
   onViewport: (viewport: MapViewport) => void
 }
 
@@ -449,7 +451,11 @@ export function MapCanvas(props: MapCanvasProps) {
     )
     if (!gesture.dragging && !gesture.panning && moved < DRAG_START_PX) return
     const transform = transformRef.current ?? fitRef.current
-    if (gesture.target?.draggable && !gesture.panning) {
+    if (
+      gesture.target?.draggable &&
+      !gesture.panning &&
+      refusalOf(propsRef.current.act) === null
+    ) {
       gesture.dragging = true
       const at = toMap(transform, point.x, point.y)
       dragRef.current = { key: gesture.target.key, x: at.x, y: at.y }

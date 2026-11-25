@@ -2,6 +2,7 @@ from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
+from aerona.db.authorship import HandAuthored
 from aerona.db.base import Base, CreatedAtMixin, TimestampMixin
 from aerona.db.columns import at_least, enum_type
 from aerona.db.types import PydanticJSON
@@ -42,7 +43,7 @@ class EpochAgentRow(Base):
     world_id: Mapped[int | None] = mapped_column(ForeignKey("worlds.id", ondelete="SET NULL"))
 
 
-class ActionRecordRow(CreatedAtMixin, Base):
+class ActionRecordRow(HandAuthored, CreatedAtMixin, Base):
     __tablename__ = "action_records"
     __table_args__ = (
         Index("ix_action_records_actor_epoch", "actor_node_id", "epoch"),
@@ -60,6 +61,7 @@ class ActionRecordRow(CreatedAtMixin, Base):
     essence_spent: Mapped[int] = mapped_column(default=0)
     summary: Mapped[str | None] = mapped_column(String(LEDGER_SUMMARY_MAX_LENGTH))
     detail: Mapped[str | None] = mapped_column(Text)
+    reason: Mapped[str | None] = mapped_column(Text)
 
 
 class CreationRewardRow(Base):

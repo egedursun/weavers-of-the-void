@@ -91,6 +91,7 @@ export function ThroneForm({
       columns={3}
       action={
         <Button
+          act={create}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -189,6 +190,7 @@ export function SiteForm({
             </FieldTile>
           </div>
           <Button
+            act={create}
             size='sm'
             disabled={busy !== null || missing !== null}
             disabledReason={busy ?? missing ?? undefined}

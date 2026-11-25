@@ -126,6 +126,7 @@ export function RowAction({
   const hasForm = shown.length > 0 || held.length > 0 || paramKeys.length > 0
   const current = values ?? initial
   const mutation = useLoreMutation({
+    writes: [{ lever: id }],
     run: (body: Record<string, FieldValue | Record<string, ParamValue>>) =>
       unwrap(api.POST(path as never, { body } as never)),
     onDone: () => {
@@ -153,6 +154,7 @@ export function RowAction({
   const title = item?.title ?? label
   const trigger = (
     <Button
+      act={mutation}
       size={iconOnly ? 'icon-sm' : 'sm'}
       variant={destructive ? 'destructive' : 'outline'}
       aria-label={label}
@@ -169,6 +171,7 @@ export function RowAction({
       {trigger}
       {!hasForm ? (
         <ConfirmDialog
+          act={mutation}
           open={confirming}
           onOpenChange={setConfirming}
           title={`${title}?`}
@@ -287,6 +290,7 @@ export function RowAction({
                 <Muted variant='caption'>{`Cost: ${item.cost}`}</Muted>
               )}
               <Button
+                act={mutation}
                 variant={destructive ? 'destructive' : 'default'}
                 disabled={blocked !== null}
                 disabledReason={blocked ?? undefined}
@@ -300,6 +304,7 @@ export function RowAction({
           </DialogContent>
           {confirm && (
             <ConfirmDialog
+              act={mutation}
               open={confirming}
               onOpenChange={setConfirming}
               title={`${title}?`}

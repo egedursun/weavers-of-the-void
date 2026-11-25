@@ -367,6 +367,7 @@ export function TownPanel({
               onClick={tending.run}
             />
             <Button
+              act={tavern}
               size='sm'
               variant='outline'
               disabled={structureBusy !== null}
@@ -377,6 +378,7 @@ export function TownPanel({
               Tavern
             </Button>
             <Button
+              act={house}
               size='sm'
               disabled={structureBusy !== null}
               disabledReason={structureBusy ?? undefined}
@@ -405,6 +407,7 @@ export function TownPanel({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={way}
               size='sm'
               variant='outline'
               disabled={wayBusy !== null}
@@ -415,6 +418,7 @@ export function TownPanel({
               Way to work
             </Button>
             <Button
+              act={pool}
               size='sm'
               disabled={poolBusy !== null}
               disabledReason={poolBusy ?? undefined}

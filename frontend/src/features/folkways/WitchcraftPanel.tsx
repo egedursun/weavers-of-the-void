@@ -236,6 +236,7 @@ export function WitchcraftPanel({
         columns={2}
         action={
           <Button
+            act={accusing}
             size='sm'
             disabled={accuseBusy !== null}
             disabledReason={accuseBusy ?? undefined}
@@ -269,6 +270,7 @@ export function WitchcraftPanel({
         columns={2}
         action={
           <Button
+            act={hunting}
             size='sm'
             disabled={huntBusy !== null}
             disabledReason={huntBusy ?? undefined}

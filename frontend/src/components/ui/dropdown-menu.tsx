@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 
 function DropdownMenu({
@@ -60,13 +61,20 @@ function DropdownMenuItem({
   className,
   inset,
   variant = 'default',
+  act,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
   inset?: boolean
   variant?: 'default' | 'destructive'
+  act?: ActProp
 }) {
+  const refusal = refusalOf(act)
   return (
     <DropdownMenuPrimitive.Item
+      disabled={disabled || refusal !== null}
+      aria-description={refusal ?? undefined}
       data-slot='dropdown-menu-item'
       data-inset={inset}
       data-variant={variant}
@@ -75,7 +83,14 @@ function DropdownMenuItem({
         className
       )}
       {...props}
-    />
+    >
+      {children}
+      {refusal !== null && (
+        <span className='ms-auto min-w-0 text-caption text-muted-foreground'>
+          {refusal}
+        </span>
+      )}
+    </DropdownMenuPrimitive.Item>
   )
 }
 

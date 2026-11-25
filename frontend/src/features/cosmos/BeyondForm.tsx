@@ -36,6 +36,16 @@ type BeyondFormProps = { index: CosmosIndex; worldId: number | undefined }
 
 export function BeyondForm({ index, worldId }: BeyondFormProps) {
   const order = useCosmicAction({
+    writes: [
+      { lever: 'archive:raise' },
+      { lever: 'archive:read' },
+      { lever: 'horror:cult' },
+      { lever: 'horror:event' },
+      { lever: 'horror:suppress_cult' },
+      { lever: 'plague:cosmic' },
+      { lever: 'quest:abandon' },
+      { lever: 'sky:time_echo' },
+    ],
     run: (call: () => Promise<ActionResponse>) => call(),
   })
   const { data: state } = useCosmosState()
@@ -67,6 +77,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='archive:raise'
             label='Raise the Archive'
             icon={Archive}
@@ -76,6 +87,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='archive:read'
             label='Let them read'
             icon={BookOpenText}
@@ -110,6 +122,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='plague:cosmic'
             label='Loose the plague'
             icon={Biohazard}
@@ -165,6 +178,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='horror:event'
             label='Let it happen'
             icon={Eye}
@@ -205,6 +219,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='horror:cult'
             label='Seed the cult'
             icon={Skull}
@@ -224,6 +239,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='horror:suppress_cult'
             label='Scatter the cult'
             icon={UsersRound}
@@ -265,6 +281,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
         </OrderFields>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <CosmicActionButton
+            act={order}
             actionId='sky:time_echo'
             label='Order a time echo'
             icon={Hourglass}
@@ -283,6 +300,7 @@ export function BeyondForm({ index, worldId }: BeyondFormProps) {
             }
           />
           <CosmicActionButton
+            act={order}
             actionId='quest:abandon'
             label='Abandon the quest'
             icon={Undo2}

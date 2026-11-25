@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { ENTRY_PAGES } from '@/config/entryPages'
 import { AppShell } from '@/components/layout/AppShell'
+import { AccountMenu } from '@/features/accounts/AccountMenu'
 import { CommandPalette } from '@/features/command-palette/CommandPalette'
 import { DivineWill } from '@/features/divine-will/DivineWill'
 import {
@@ -22,6 +23,7 @@ export const Route = createFileRoute('/_app')({
         entryPages={ENTRY_PAGES}
         topBarContext={<ShellContext />}
         topBarActions={<ShellActions />}
+        topBarAccount={<AccountMenu />}
         banner={<ShellBanner />}
         aside={<ShellAside />}
         sidebarFooter={<ShellSidebarTools />}

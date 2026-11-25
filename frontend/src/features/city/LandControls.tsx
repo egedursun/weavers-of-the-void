@@ -53,6 +53,7 @@ export function ShareSetter({
 }) {
   const [value, setValue] = useState(String(shareOf(scene, field)))
   const set = useGodAction({
+    writes: [{ lever: 'environment:set' }],
     run: () =>
       postAction('environment:set', {
         region_id: scene.region.id,
@@ -74,6 +75,7 @@ export function ShareSetter({
         onChange={setValue}
       />
       <Button
+        act={set}
         size='sm'
         disabled={busy !== null || clampPct(value) === shareOf(scene, field)}
         disabledReason={
@@ -152,6 +154,7 @@ export function ResourcePanel({
   const [reserve, setReserve] = useState(String(resource.reserve))
   const [richness, setRichness] = useState(String(resource.richness))
   const set = useGodAction({
+    writes: [{ lever: 'resource:set' }],
     run: () =>
       postAction('resource:set', {
         resource_id: resource.node.id,
@@ -161,6 +164,7 @@ export function ResourcePanel({
     success: 'The deposit is set so',
   })
   const remove = useGodAction({
+    writes: [{ lever: 'resource:delete' }],
     run: () => postAction('resource:delete', { resource_id: resource.node.id }),
     success: 'The deposit is unmade',
   })
@@ -209,6 +213,7 @@ export function ResourcePanel({
           onChange={setRichness}
         />
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -218,6 +223,7 @@ export function ResourcePanel({
           Set
         </Button>
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -242,14 +248,17 @@ export function WorkPanel({
   onClose: () => void
 }) {
   const finish = useGodAction({
+    writes: [{ lever: 'structure:finish' }],
     run: () => postAction('structure:finish', { structure_id: work.node.id }),
     success: 'The work is finished',
   })
   const repair = useGodAction({
+    writes: [{ lever: 'structure:repair' }],
     run: () => postAction('structure:repair', { structure_id: work.node.id }),
     success: 'The work is repaired',
   })
   const raze = useGodAction({
+    writes: [{ lever: 'structure:raze' }],
     run: () =>
       postAction('structure:raze', { structure_id: work.node.id, reason: '' }),
     success: 'The work is razed',
@@ -284,6 +293,7 @@ export function WorkPanel({
       />
       <div className='flex min-w-0 flex-wrap items-end gap-2'>
         <Button
+          act={finish}
           size='sm'
           disabled={busy !== null || !unfinished}
           disabledReason={
@@ -295,6 +305,7 @@ export function WorkPanel({
           Finish now
         </Button>
         <Button
+          act={repair}
           size='sm'
           variant='outline'
           disabled={busy !== null || whole}
@@ -305,6 +316,7 @@ export function WorkPanel({
           Repair
         </Button>
         <Button
+          act={raze}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -365,6 +377,7 @@ export function LandForge({
   const [reserve, setReserve] = useState('1000')
   const [richness, setRichness] = useState('50')
   const lay = useGodAction({
+    writes: [{ lever: 'resource:create' }],
     run: () =>
       postAction('resource:create', {
         place_id: scene.region.id,
@@ -415,6 +428,7 @@ export function LandForge({
         columns={4}
         action={
           <Button
+            act={lay}
             size='sm'
             disabled={busy !== null || !name.trim()}
             disabledReason={

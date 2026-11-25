@@ -264,6 +264,7 @@ function AgendaCard({
   const [key, setKey] = useState('')
   const [priority, setPriority] = useState(80)
   const set = useGodAction({
+    writes: [{ lever: 'faction:goal' }],
     run: (change: {
       goalId?: number
       kind: GoalKind
@@ -324,6 +325,7 @@ function AgendaCard({
                     </Badge>
                   )}
                   <Button
+                    act={set}
                     size='sm'
                     variant='outline'
                     className='ml-auto'
@@ -349,6 +351,7 @@ function AgendaCard({
                   tone='success'
                 />
                 <RangeField
+                  act={set}
                   label='Priority'
                   icon={Flag}
                   value={goal.priority}
@@ -371,6 +374,7 @@ function AgendaCard({
         </Paged>
       </div>
       <AdjustPanel
+        acts={[set]}
         trigger='Set a goal'
         title='Give the faction a goal'
         note='Goals you set are pursued before any the faction chose itself.'
@@ -408,6 +412,7 @@ function AgendaCard({
           onChange={setPriority}
         />
         <Button
+          act={set}
           size='sm'
           className='self-start'
           disabled={busy !== null}
@@ -487,6 +492,7 @@ function Members({
 }) {
   const [mortal, setMortal] = useState<number | null>(null)
   const change = useGodAction({
+    writes: [{ lever: 'faction:member' }],
     run: (input: { mortal: number; rank?: Rank; remove?: boolean }) =>
       unwrap(
         api.POST('/api/actions/faction:member', {
@@ -529,6 +535,7 @@ function Members({
                   .filter((rank) => rank !== member.rank)
                   .map((rank) => (
                     <Button
+                      act={change}
                       key={rank}
                       size='sm'
                       variant='outline'
@@ -542,6 +549,7 @@ function Members({
                     </Button>
                   ))}
                 <Button
+                  act={change}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null}
@@ -567,6 +575,7 @@ function Members({
           blocked={busy}
         />
         <Button
+          act={change}
           size='sm'
           disabled={busy !== null || mortal === null}
           disabledReason={busy ?? 'Choose every field first'}
@@ -603,6 +612,7 @@ function Levers({
   )
   const [monopoly, setMonopoly] = useState(faction.monopoly ?? '')
   const edit = useGodAction({
+    writes: [{ lever: 'faction:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/faction:edit', {
@@ -615,6 +625,7 @@ function Levers({
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'faction:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/faction:edit', {
@@ -623,6 +634,7 @@ function Levers({
       ),
   })
   const fund = useGodAction({
+    writes: [{ lever: 'faction:fund' }],
     run: (sign: number) =>
       unwrap(
         api.POST('/api/actions/faction:fund', {
@@ -634,6 +646,7 @@ function Levers({
       ),
   })
   const outlaw = useGodAction({
+    writes: [{ lever: 'faction:outlaw' }],
     run: (on: boolean) =>
       unwrap(
         api.POST('/api/actions/faction:outlaw', {
@@ -642,6 +655,7 @@ function Levers({
       ),
   })
   const charter = useGodAction({
+    writes: [{ lever: 'faction:charter' }],
     run: (revoke: boolean) =>
       unwrap(
         api.POST('/api/actions/faction:charter', {
@@ -654,6 +668,7 @@ function Levers({
       ),
   })
   const contract = useGodAction({
+    writes: [{ lever: 'faction:contract' }],
     run: (end: boolean) =>
       unwrap(
         api.POST('/api/actions/faction:contract', {
@@ -693,6 +708,7 @@ function Levers({
           onChange={setAmount}
         />
         <Button
+          act={fund}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? 'Choose every field first'}
@@ -702,6 +718,7 @@ function Levers({
           Fund
         </Button>
         <Button
+          act={fund}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -713,6 +730,7 @@ function Levers({
         </Button>
         <FieldTile label='Outlawed'>
           <Switch
+            act={outlaw}
             checked={faction.outlawed}
             disabled={busy !== null}
             onCheckedChange={(on) => outlaw.mutate(on)}
@@ -720,6 +738,7 @@ function Levers({
         </FieldTile>
       </div>
       <AdjustPanel
+        acts={[charter, contract]}
         trigger='Charter or hire'
         title='Charter the faction or seal a condotta'
         note='A charter makes pirates privateers or grants an association its monopoly; a condotta puts a free company in a realm’s pay.'
@@ -741,6 +760,7 @@ function Levers({
         </FieldTile>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={charter}
             size='sm'
             disabled={busy !== null || realm === null}
             disabledReason={busy ?? 'Choose every field first'}
@@ -750,6 +770,7 @@ function Levers({
             Grant the charter
           </Button>
           <Button
+            act={charter}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -762,6 +783,7 @@ function Levers({
           {faction.kind === 'mercenary_company' && (
             <>
               <Button
+                act={contract}
                 size='sm'
                 disabled={busy !== null || realm === null}
                 disabledReason={busy ?? 'Choose every field first'}
@@ -771,6 +793,7 @@ function Levers({
                 Seal the condotta
               </Button>
               <Button
+                act={contract}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -785,6 +808,7 @@ function Levers({
         </div>
       </AdjustPanel>
       <AdjustPanel
+        acts={[edit, release]}
         trigger='Rewrite the faction'
         title='Rewrite what the faction is'
         note='Every value you set is held until released.'
@@ -855,6 +879,7 @@ function Levers({
         </label>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={edit}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? 'Choose every field first'}
@@ -865,6 +890,7 @@ function Levers({
           </Button>
           {faction.locked.length > 0 && (
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}

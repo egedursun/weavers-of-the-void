@@ -92,6 +92,7 @@ function SecretTile({
       <div className='flex min-w-0 flex-wrap gap-2'>
         {!known && (
           <Button
+            act={reveal}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -106,6 +107,7 @@ function SecretTile({
         )}
         {secret.sealed && (
           <Button
+            act={reveal}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -120,6 +122,7 @@ function SecretTile({
         )}
         {!known && (
           <Button
+            act={edit}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -133,6 +136,7 @@ function SecretTile({
           </Button>
         )}
         <Button
+          act={erase}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -173,6 +177,7 @@ function ReshapeSecret({ secret }: { secret: PlaceSecret }) {
         onChange={setStrength}
       />
       <Button
+        act={edit}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -208,6 +213,7 @@ function HideSecret({ placeId }: { placeId: number }) {
     value === NONE ? null : (value as T)
   return (
     <AdjustPanel
+      acts={[hide]}
       title='Hide a secret'
       note='Bury a relic, seal a spirit, hide a seam, lose a rite or open a way below. Searchers, seers and deep miners may find it.'
       label='Hide'
@@ -259,6 +265,7 @@ function HideSecret({ placeId }: { placeId: number }) {
       <Muted variant='caption'>{secretOf(kind).hint}</Muted>
       <div>
         <Button
+          act={hide}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

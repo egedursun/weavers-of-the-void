@@ -473,6 +473,8 @@ class WillReader:
         found: list[WillSession] = []
         for row in await self.session.scalars(select(DivineWillSessionRow).order_by(DivineWillSessionRow.id)):
             facts = filled(
+                ("Asked by", row.author_name),
+                ("Shared with the team", row.shared),
                 ("Opened in epoch", row.opened_epoch),
                 ("Opened", when(row.opened_at)),
                 ("Closed in epoch", row.closed_epoch),
@@ -492,6 +494,8 @@ class WillReader:
         found: list[WillPlan] = []
         for row in await self.session.scalars(select(DivineWillPlanRow).order_by(DivineWillPlanRow.id)):
             facts = filled(
+                ("Drawn by", row.author_name),
+                ("Shared with the team", row.shared),
                 ("Drawn in exchange", ordinals.get(row.cycle_id or 0)),
                 ("Written as", titles.get(row.artifact_id or 0)),
                 ("Drawn", when(row.created_at)),
@@ -525,6 +529,8 @@ class WillReader:
         found: list[WillForecast] = []
         for row in await self.session.scalars(select(DivineWillForecastRow).order_by(DivineWillForecastRow.id)):
             facts = filled(
+                ("Asked by", row.author_name),
+                ("Shared with the team", row.shared),
                 ("Asked in exchange", ordinals.get(row.cycle_id or 0)),
                 ("Epochs foreseen", row.epochs),
                 ("Expected seconds", row.eta_seconds),
@@ -552,6 +558,8 @@ class WillReader:
             kept = versions[row.id]
             current = next((item for item in kept if item.version == row.current_version), kept[-1] if kept else None)
             facts = filled(
+                ("Written by", row.author_name),
+                ("Shared with the team", row.shared),
                 ("Kind", KIND_LABELS[row.kind]),
                 ("Format", FORMAT_LABELS[row.format]),
                 ("Status", WRITING_LABELS[row.status]),

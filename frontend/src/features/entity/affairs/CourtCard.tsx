@@ -36,6 +36,7 @@ function PositionRow({
 }) {
   const [holder, setHolder] = useState<number | null>(row?.holder?.id ?? null)
   const set = useGodAction({
+    writes: [{ lever: 'position:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/position:set', {
@@ -49,6 +50,7 @@ function PositionRow({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'position:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/position:remove', {
@@ -68,6 +70,7 @@ function PositionRow({
       actions={
         row ? (
           <Button
+            act={strike}
             size='icon-sm'
             variant='ghost'
             aria-label={`Strike the ${look.label.toLowerCase()}`}
@@ -90,6 +93,7 @@ function PositionRow({
             blocked={busy}
           />
           <Button
+            act={set}
             size='sm'
             disabled={busy !== null || holder === null}
             disabledReason={

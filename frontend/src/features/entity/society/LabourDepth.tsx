@@ -141,6 +141,7 @@ function LabourControls({
   const [job, setJob] = useState<string>('farming')
   const [share, setShare] = useState(String(view.corvee?.share_pct ?? 20))
   const hold = useGodAction({
+    writes: [{ lever: 'labour:set' }],
     run: ({ target, workers }: { target: Job; workers: number | null }) =>
       unwrap(
         api.POST('/api/actions/labour:set', {
@@ -150,6 +151,7 @@ function LabourControls({
   })
   const [work, setWork] = useState<number | null>(view.corvee?.work_id ?? null)
   const corvee = useGodAction({
+    writes: [{ lever: 'labour:corvee' }],
     run: (pct: number) =>
       unwrap(
         api.POST('/api/actions/labour:corvee', {
@@ -173,6 +175,7 @@ function LabourControls({
       <EditorGroup title='Workers of a trade' icon={Network} pairs>
         <div className='col-span-full'>
           <HeldStrip
+            act={hold}
             keys={view.held_jobs}
             labelOf={(key) => JOB_SPEC[key as Job].label}
             blocked={busy}
@@ -191,6 +194,7 @@ function LabourControls({
           onPick={setJob}
         />
         <NumberEditor
+          act={hold}
           key={`${job}-${workers}`}
           id={`labour-${view.entity_id}`}
           field={{
@@ -224,6 +228,7 @@ function LabourControls({
         </FieldTile>
         <div className='flex min-w-0 items-end gap-2'>
           <Button
+            act={corvee}
             size='sm'
             className='flex-1'
             disabled={busy !== null || invalid}
@@ -235,6 +240,7 @@ function LabourControls({
           </Button>
           {view.corvee && (
             <Button
+              act={corvee}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -363,6 +369,7 @@ export function LabourDepth({
         </div>
       </Panel>
       <AdjustPanel
+        writes={[{ lever: 'labour:corvee' }, { lever: 'labour:set' }]}
         title='Set the work'
         note='Hold how many work a trade, or lay a corvee on the farmhands for great works (it raises unrest and bitterness). Holds stay until you release them; every change can be undone from the ledger.'
       >

@@ -98,6 +98,13 @@ export function willConfirmation(
   }
 }
 
+export const OWNED = {
+  author_account_id: null,
+  author_name: null,
+  shared: false,
+  mine: true,
+}
+
 export function willActive(
   cycles: WillCycle[],
   change: Partial<WillActive> = {}
@@ -111,6 +118,9 @@ export function willActive(
       closed_epoch: null,
       closed_at: null,
       cycle_count: cycles.length,
+      author: null,
+      shared: false,
+      mine: true,
     },
     cycles,
     memory_boundary: 1,
@@ -151,6 +161,7 @@ export function willStep(change: Partial<WillPlanStep> = {}): WillPlanStep {
 
 export function willPlan(change: Partial<WillPlan> = {}): WillPlan {
   return {
+    owner: OWNED,
     id: 5,
     title: 'Shape the north',
     status: 'draft',
@@ -192,6 +203,7 @@ function scenario(change: Partial<WillScenario> = {}): WillScenario {
 
 export function willForecast(change: Partial<WillForecast> = {}): WillForecast {
   return {
+    owner: OWNED,
     id: 9,
     cycle_id: 1,
     epochs: 2,
@@ -238,6 +250,7 @@ export function willArtifactSummary(
   change: Partial<WillArtifactSummary> = {}
 ): WillArtifactSummary {
   return {
+    owner: OWNED,
     id: 3,
     title: 'The First Winter',
     kind: 'story',

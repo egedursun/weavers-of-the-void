@@ -162,6 +162,7 @@ export function GenesisWizard({ llmEnabled }: GenesisWizardProps) {
           </div>
           {last ? (
             <Button
+              act={start}
               size='lg'
               disabled={createBlocked !== null}
               disabledReason={createBlocked ?? undefined}

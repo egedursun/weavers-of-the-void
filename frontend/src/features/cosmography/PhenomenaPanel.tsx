@@ -84,6 +84,7 @@ export function PhenomenonCard({
       caption={`${catalogLabel(catalog?.phenomenon_kinds, phenomenon.kind)} · from ${PHENOMENON_CAUSES[phenomenon.cause].toLowerCase()} · epoch ${phenomenon.formed_epoch}`}
       aside={
         <Button
+          act={contain}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -113,6 +114,7 @@ export function PhenomenonCard({
       <div className='flex min-w-0 flex-wrap gap-1'>
         {(phenomenon.footprints ?? []).map((print) => (
           <Button
+            act={spread}
             key={print.region_entity_id}
             size='sm'
             variant='outline'
@@ -143,6 +145,7 @@ export function PhenomenonCard({
         columns={2}
         action={
           <Button
+            act={spread}
             size='sm'
             disabled={busy !== null || region === null}
             disabledReason={
@@ -178,6 +181,7 @@ export function PhenomenonCard({
         />
       </ForgeCard>
       <RecordEditor
+        act={edit}
         title='Reshape this phenomenon'
         note='Intensity, growth and containment you set are held. Tap a region above to draw it back from there.'
         fields={[
@@ -252,6 +256,7 @@ function RaiseForm({
       meta={<Chip icon={CloudFog}>{`${data.phenomena.length} stand now`}</Chip>}
       action={
         <Button
+          act={raise}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

@@ -208,6 +208,7 @@ function Horror({
       <Ref node={row.subject} empty='no one singled out' />
       <Ref node={row.source_node} empty='no named source' />
       <RecordEditor
+        act={editing}
         title='Set the horror'
         note={HOLD}
         fields={HORROR_FIELDS}
@@ -217,6 +218,7 @@ function Horror({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Undo it'
         busy={why(blocked, removing.isPending)}
@@ -257,6 +259,7 @@ function Attack({
       caption={`reaches ${RANGES[row.range].label.toLowerCase()}; ${row.recharge ? `rests ${row.recharge} epochs between uses` : 'ready every epoch'}${row.permanent ? '; its effect lasts for good' : ''}${row.last_used_epoch !== null ? `; last used in epoch ${row.last_used_epoch}` : ''}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the attack'
         note={HOLD}
         fields={ATTACK_FIELDS}
@@ -266,6 +269,7 @@ function Attack({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Take it away'
         busy={why(blocked, removing.isPending)}
@@ -302,6 +306,7 @@ function Quest({
     >
       <Ref node={row.target} empty='no target named' />
       <RecordEditor
+        act={editing}
         title='Set the quest'
         note={HOLD}
         fields={QUEST_FIELDS}
@@ -345,6 +350,7 @@ function Aspect({ row, blocked }: { row: AspectView; blocked: string | null }) {
       caption={row.form ? 'A form of the world' : 'A matter'}
     >
       <RecordEditor
+        act={editing}
         title='Set the aspect'
         note={HOLD}
         fields={ASPECT_FIELDS}
@@ -354,6 +360,7 @@ function Aspect({ row, blocked }: { row: AspectView; blocked: string | null }) {
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Take it away'
         busy={why(blocked, removing.isPending)}
@@ -411,6 +418,7 @@ function Forges({
         columns={2}
         action={
           <StepButton
+            act={arming}
             icon={ATTACK_ICON}
             label='Arm it'
             variant='default'
@@ -456,6 +464,7 @@ function Forges({
         columns={2}
         action={
           <StepButton
+            act={shaping}
             icon={ASPECT_ICON}
             label='Shape it'
             variant='default'

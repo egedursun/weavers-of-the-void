@@ -34,6 +34,7 @@ export function HoldToggle({
   invalidate?: QueryKey[]
 }) {
   const toggle = useGodAction<boolean>({
+    writes: [{ lever: 'foundation:hold' }],
     run: (next) => holdFoundation(kind, nodeId, next),
     invalidate,
   })
@@ -65,6 +66,7 @@ export function HoldToggle({
         </Muted>
       </span>
       <Switch
+        act={toggle}
         checked={held}
         disabled={busy !== null}
         aria-label={held ? `Release ${what}` : `Hold ${what}`}

@@ -1589,6 +1589,10 @@ LEVERS: dict[str, Lever] = {
         name: after(("proposal:create", {"polity_id": Pick(REALM), "kind": "succession_rule"}), proposal_id=Newest("law_proposal"), support=40)
         for name in ("proposal:edit",)
     },
+    **{
+        name: after(("proposal:create", {"polity_id": Pick(REALM), "kind": "succession_rule"}), proposal_id=Newest("law_proposal"))
+        for name in ("proposal:hold", "proposal:delete", "stance:set")
+    },
     "rank:remove": after(
         ("rank:set", {"group_id": Pick(TOWN), "member_id": Pick(MORTAL), "group_kind": "court", "rank": 1}), group_id=Pick(TOWN), member_id=Pick(MORTAL)
     ),

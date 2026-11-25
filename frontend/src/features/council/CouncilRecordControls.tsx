@@ -28,6 +28,7 @@ export function CouncilRecordControls({
   const { reason } = useGodGate()
   const invalidate = [councilKeys.list]
   const edit = useGodAction({
+    writes: [{ lever: 'council_record:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/council_record:edit', {
@@ -37,6 +38,7 @@ export function CouncilRecordControls({
     invalidate,
   })
   const strike = useGodAction({
+    writes: [{ lever: 'council_record:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/council_record:delete', {
@@ -82,6 +84,7 @@ export function CouncilRecordControls({
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={edit}
           size='sm'
           disabled={busy !== null || empty !== null || same !== null}
           disabledReason={busy ?? empty ?? same ?? undefined}
@@ -91,6 +94,7 @@ export function CouncilRecordControls({
           Rewrite the record
         </Button>
         <Button
+          act={strike}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -102,6 +106,7 @@ export function CouncilRecordControls({
         </Button>
       </div>
       <ConfirmDialog
+        act={strike}
         open={confirming}
         onOpenChange={setConfirming}
         title='Strike this council from the record?'
@@ -122,6 +127,7 @@ export function CouncilRecordForge() {
   const [carried, setCarried] = useState(false)
   const { reason } = useGodGate()
   const make = useGodAction({
+    writes: [{ lever: 'council_record:create' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/council_record:create', {
@@ -164,6 +170,7 @@ export function CouncilRecordForge() {
           />
         </FieldTile>
         <Button
+          act={make}
           size='sm'
           disabled={busy !== null || empty !== null}
           disabledReason={busy ?? empty ?? undefined}

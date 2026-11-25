@@ -48,6 +48,7 @@ export function PlaceForeignGodForm() {
   const [imagePrompt, setImagePrompt] = useState('')
   const chosenWorld = worldId || String(worlds[0]?.id ?? '')
   const place = useGodAction({
+    writes: [{ lever: 'foreign_god:place' }],
     run: () =>
       unwrap(
         api.POST('/api/foreign-gods', {
@@ -76,7 +77,7 @@ export function PlaceForeignGodForm() {
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='outline' className='self-start'>
+        <Button act={place} variant='outline' className='self-start'>
           <Ghost />
           Place an old god
         </Button>
@@ -209,6 +210,7 @@ export function PlaceForeignGodForm() {
         </Muted>
         <div>
           <ActionButton
+            act={place}
             label='Place the god'
             variant='default'
             blocked={

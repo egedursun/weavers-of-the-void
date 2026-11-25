@@ -11,6 +11,7 @@ import {
   Repeat,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -83,15 +84,18 @@ function MotifActions({
   blocked,
   pending,
   onChange,
+  act,
 }: {
   motif: string
   mode: MotifOverrideMode | null
   blocked: string | null
   pending: boolean
   onChange: (motif: string, mode: MotifOverrideMode | null) => void
+  act?: ActProp
 }) {
   return (
     <ToggleGroup
+      act={act}
       type='single'
       variant='outline'
       size='sm'
@@ -126,11 +130,13 @@ function MotifList({
   blocked,
   pending,
   onChange,
+  act,
 }: {
   report: TiredMotifReport
   blocked: string | null
   pending: boolean
   onChange: (motif: string, mode: MotifOverrideMode | null) => void
+  act?: ActProp
 }) {
   const modes = new Map(report.overrides.map((item) => [item.motif, item.mode]))
   if (report.motifs.length === 0)
@@ -162,6 +168,7 @@ function MotifList({
               />
             </div>
             <MotifActions
+              act={act}
               motif={motif.key}
               mode={modes.get(motif.key) ?? null}
               blocked={blocked}
@@ -179,10 +186,12 @@ function AddOverride({
   blocked,
   pending,
   onAdd,
+  act,
 }: {
   blocked: string | null
   pending: boolean
   onAdd: (motif: string, mode: MotifOverrideMode) => void
+  act?: ActProp
 }) {
   const inputId = useId()
   const [motif, setMotif] = useState('')
@@ -217,6 +226,7 @@ function AddOverride({
         columns={2}
       />
       <Button
+        act={act}
         className='self-end'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}
@@ -283,6 +293,7 @@ export function TiredMotifsView() {
             tone='warning'
           >
             <MotifList
+              act={save}
               report={report.data}
               blocked={blocked}
               pending={save.isPending}
@@ -330,6 +341,7 @@ export function TiredMotifsView() {
                         </Badge>
                       </div>
                       <Button
+                        act={save}
                         variant='ghost'
                         size='sm'
                         disabled={blocked !== null || save.isPending}
@@ -345,6 +357,7 @@ export function TiredMotifsView() {
               </ul>
             )}
             <AddOverride
+              act={save}
               blocked={blocked}
               pending={save.isPending}
               onAdd={(motif, mode) => change(motif, mode)}

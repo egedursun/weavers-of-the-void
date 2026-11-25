@@ -10,7 +10,6 @@ import {
   Users,
   Wand2,
 } from 'lucide-react'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Section } from '@/components/domain'
@@ -22,6 +21,7 @@ import {
   SwitchRow,
 } from '@/components/domain/SettingsKit'
 import { Text } from '@/components/typography'
+import { toastDone } from '@/features/team/outcome'
 import { type WorldSettings, usePatchSettings } from './api'
 import { type Draft, draftOf, patchFrom } from './worldSettingsModel'
 
@@ -63,7 +63,8 @@ export function WorldSettingsForm({
       return
     }
     patch.mutate(body, {
-      onSuccess: (result) => toast.success(result.message || 'Settings saved'),
+      onSuccess: (result) =>
+        toastDone(result, result.message || 'Settings saved'),
       onError: (failure) => setError(failure.message),
     })
   }
@@ -76,6 +77,7 @@ export function WorldSettingsForm({
       icon={Settings2}
       actions={
         <Button
+          act={patch}
           onClick={save}
           disabled={readOnly || patch.isPending}
           disabledReason={readOnly ? 'A guest world is read-only' : 'Saving'}

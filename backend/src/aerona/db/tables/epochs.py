@@ -5,6 +5,8 @@ from sqlalchemy import JSON, CheckConstraint, Float, ForeignKey, Index, String, 
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.constants.schema import NAME_MAX_LENGTH, SHORT_TEXT_MAX_LENGTH
+from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
+from aerona.db.authorship import account_id, account_name
 from aerona.db.base import Base, CreatedAtMixin, TimestampMixin
 from aerona.db.columns import between, enum_type
 from aerona.db.types import PydanticJSON, UtcDateTime
@@ -25,6 +27,8 @@ class EpochRunRow(TimestampMixin, Base):
     engine_since_chronicle_id: Mapped[int | None]
     started_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
     finished_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
+    started_by_account_id: Mapped[int | None] = mapped_column(default=account_id)
+    started_by_name: Mapped[str | None] = mapped_column(String(AUTHOR_NAME_MAX_LENGTH), default=account_name)
 
 
 class EpochStepRow(TimestampMixin, Base):

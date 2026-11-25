@@ -88,6 +88,7 @@ export function RegardSection({
             />
           )}
           <StandingList
+            act={[save, clear]}
             rows={view.data.standing}
             focus='community'
             busy={busy}
@@ -120,6 +121,7 @@ export function RegardSection({
               ))}
             </div>
             <Button
+              act={save}
               disabled={busy !== null || problem !== null}
               disabledReason={busy ?? problem ?? undefined}
               onClick={() => {

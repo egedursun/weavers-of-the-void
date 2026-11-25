@@ -71,6 +71,7 @@ export function useEvolutionAction<Name extends EvolutionAction, T>(
   success?: string
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
   })

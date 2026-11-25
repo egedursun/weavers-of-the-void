@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, Flame, Plus, Star, UserMinus, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -111,13 +112,16 @@ function RemoveButton({
   label,
   busy,
   onClick,
+  act,
 }: {
   label: string
   busy: string | null
   onClick: () => void
+  act?: ActProp
 }) {
   return (
     <Button
+      act={act}
       size='icon-sm'
       variant='ghost'
       aria-label={label}
@@ -132,12 +136,14 @@ function RemoveButton({
 
 function BondRow({ bond, view, blocked, hold }: { bond: Bond } & Props) {
   const remove = useGodAction({
+    writes: [{ lever: 'tie:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/tie:remove', { body: { relation_id: bond.id } })
       ),
   })
   const secret = useGodAction({
+    writes: [{ lever: 'tie:set' }],
     run: (known: boolean) =>
       unwrap(
         api.POST('/api/actions/tie:set', {
@@ -186,6 +192,7 @@ function BondRow({ bond, view, blocked, hold }: { bond: Bond } & Props) {
         <>
           {bond.affair && (
             <Button
+              act={secret}
               size='icon-sm'
               variant='ghost'
               aria-label={
@@ -201,6 +208,7 @@ function BondRow({ bond, view, blocked, hold }: { bond: Bond } & Props) {
             </Button>
           )}
           <RemoveButton
+            act={remove}
             label={`Forget the bond with ${bond.subject.name}`}
             busy={busy}
             onClick={() => remove.mutate()}
@@ -281,6 +289,7 @@ function BondRow({ bond, view, blocked, hold }: { bond: Bond } & Props) {
 export function BondsCard({ view, blocked, hold }: Props) {
   const [subject, setSubject] = useState<number | null>(null)
   const begin = useGodAction({
+    writes: [{ lever: 'tie:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/tie:set', {
@@ -325,6 +334,7 @@ export function BondsCard({ view, blocked, hold }: Props) {
         title='Begin a bond'
         action={
           <Button
+            act={begin}
             size='sm'
             disabled={busy !== null || subject === null}
             disabledReason={
@@ -354,6 +364,7 @@ export function PassionsCard({ view, blocked, hold }: Props) {
   const [source, setSource] = useState<string>('divine')
   const [object, setObject] = useState<number | null>(null)
   const kindle = useGodAction({
+    writes: [{ lever: 'passion:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/passion:set', {
@@ -369,12 +380,14 @@ export function PassionsCard({ view, blocked, hold }: Props) {
       ),
   })
   const invoke = useGodAction({
+    writes: [{ lever: 'passion:invoke' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/passion:invoke', { body: { passion_id: id } })
       ),
   })
   const quench = useGodAction({
+    writes: [{ lever: 'passion:remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/passion:remove', { body: { passion_id: id } })
@@ -417,6 +430,7 @@ export function PassionsCard({ view, blocked, hold }: Props) {
                 actions={
                   <>
                     <Button
+                      act={invoke}
                       size='icon-sm'
                       variant='ghost'
                       aria-label={`Call on the ${item.label.toLowerCase()}`}
@@ -432,6 +446,7 @@ export function PassionsCard({ view, blocked, hold }: Props) {
                       <Flame />
                     </Button>
                     <RemoveButton
+                      act={quench}
                       label={`Quench the ${item.label.toLowerCase()}`}
                       busy={busy}
                       onClick={() => quench.mutate(item.id)}
@@ -488,6 +503,7 @@ export function PassionsCard({ view, blocked, hold }: Props) {
         title='Kindle a passion'
         action={
           <Button
+            act={kindle}
             size='sm'
             disabled={busy !== null || object === null}
             disabledReason={
@@ -536,6 +552,7 @@ function CircleRow({
   const [member, setMember] = useState<number | null>(null)
   const spec = named(CIRCLE_KINDS, circle.kind)
   const edit = useGodAction({
+    writes: [{ lever: 'circle:edit' }],
     run: (kind: CircleKind) =>
       unwrap(
         api.POST('/api/actions/circle:edit', {
@@ -544,6 +561,7 @@ function CircleRow({
       ),
   })
   const join = useGodAction({
+    writes: [{ lever: 'circle:member' }],
     run: (input: { id: number; remove: boolean }) =>
       unwrap(
         api.POST('/api/actions/circle:member', {
@@ -556,6 +574,7 @@ function CircleRow({
       ),
   })
   const disband = useGodAction({
+    writes: [{ lever: 'circle:disband' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/circle:disband', {
@@ -589,6 +608,7 @@ function CircleRow({
       }
       actions={
         <RemoveButton
+          act={disband}
           label={`Break up ${circle.circle.name}`}
           busy={busy}
           onClick={() => disband.mutate()}
@@ -600,6 +620,7 @@ function CircleRow({
           <FormBar
             action={
               <Button
+                act={join}
                 size='sm'
                 disabled={busy !== null || member === null}
                 disabledReason={
@@ -615,6 +636,7 @@ function CircleRow({
             }
           >
             <MindPicker
+              act={edit}
               label='Kind of circle'
               value={circle.kind}
               table={table(view.circle_kinds)}
@@ -664,6 +686,7 @@ function CircleRow({
                 {item.name}
               </EntityLink>
               <Button
+                act={join}
                 size='icon-sm'
                 variant='ghost'
                 aria-label={`Send ${item.name} out of the circle`}
@@ -689,6 +712,7 @@ export function CirclesCard({
 }: Props & { place: boolean }) {
   const [kind, setKind] = useState<string>('study_circle')
   const found = useGodAction({
+    writes: [{ lever: 'circle:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/circle:found', {
@@ -732,6 +756,7 @@ export function CirclesCard({
           title='Gather a circle here'
           action={
             <Button
+              act={found}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -766,6 +791,7 @@ function RankRow({
 }) {
   const spec = named(GROUP_KINDS, rank.group_kind)
   const remove = useGodAction({
+    writes: [{ lever: 'rank:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/rank:remove', {
@@ -787,6 +813,7 @@ function RankRow({
       }
       actions={
         <RemoveButton
+          act={remove}
           label={`Take ${rank.member.name}'s place away`}
           busy={busy}
           onClick={() => remove.mutate()}
@@ -878,6 +905,7 @@ export function ContestsCard({
   const [kind, setKind] = useState<string>('riddle_game')
   const [stake, setStake] = useState<string>('honour')
   const stage = useGodAction({
+    writes: [{ lever: 'contest:hold' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/contest:hold', {
@@ -892,6 +920,7 @@ export function ContestsCard({
       ),
   })
   const fame = useGodAction({
+    writes: [{ lever: 'contest:edit' }],
     run: (input: { id: number; famous: boolean }) =>
       unwrap(
         api.POST('/api/actions/contest:edit', {
@@ -900,6 +929,7 @@ export function ContestsCard({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'contest:remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/contest:remove', { body: { contest_id: id } })
@@ -939,6 +969,7 @@ export function ContestsCard({
                 actions={
                   <>
                     <Button
+                      act={fame}
                       size='icon-sm'
                       variant={item.famous ? 'secondary' : 'ghost'}
                       aria-label={
@@ -955,6 +986,7 @@ export function ContestsCard({
                       <Star />
                     </Button>
                     <RemoveButton
+                      act={strike}
                       label='Strike the contest from memory'
                       busy={busy}
                       onClick={() => strike.mutate(item.id)}
@@ -1019,6 +1051,7 @@ export function ContestsCard({
           title='Stage a contest'
           action={
             <Button
+              act={stage}
               size='sm'
               disabled={busy !== null || rival === null}
               disabledReason={
@@ -1070,6 +1103,7 @@ export function PersuasionsCard({ view, blocked }: Props) {
     Object.entries(VALUE_ICONS).map(([key, spec]) => [key, spec.label])
   )
   const argue = useGodAction({
+    writes: [{ lever: 'persuasion:attempt' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/persuasion:attempt', {
@@ -1086,6 +1120,7 @@ export function PersuasionsCard({ view, blocked }: Props) {
       ),
   })
   const forget = useGodAction({
+    writes: [{ lever: 'persuasion:remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/persuasion:remove', {
@@ -1123,6 +1158,7 @@ export function PersuasionsCard({ view, blocked }: Props) {
               }
               actions={
                 <RemoveButton
+                  act={forget}
                   label='Forget the argument'
                   busy={busy}
                   onClick={() => forget.mutate(item.id)}
@@ -1136,6 +1172,7 @@ export function PersuasionsCard({ view, blocked }: Props) {
         title='Argue'
         action={
           <Button
+            act={argue}
             size='sm'
             disabled={
               busy !== null || target === null || (besieges && town === null)

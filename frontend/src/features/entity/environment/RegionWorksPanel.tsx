@@ -82,6 +82,7 @@ function SettlementRow({
   const [bridges, setBridges] = useState(String(item.bridges))
   const [irrigation, setIrrigation] = useState(String(item.irrigation))
   const save = useGodAction({
+    writes: [{ lever: 'settlement:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/settlement:edit', {
@@ -98,6 +99,7 @@ function SettlementRow({
     success: 'The works are set and held',
   })
   const release = useGodAction({
+    writes: [{ lever: 'settlement:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/settlement:edit', {
@@ -149,6 +151,7 @@ function SettlementRow({
           onChange={setIrrigation}
         />
         <Button
+          act={save}
           variant='outline'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}
@@ -159,6 +162,7 @@ function SettlementRow({
         </Button>
       </div>
       <Held
+        act={release}
         keys={item.locked}
         label={label}
         busy={busy}
@@ -176,6 +180,7 @@ function LeyWorkRow({
   blocked: string | null
 }) {
   const tie = useGodAction<{ key: string; value: boolean }>({
+    writes: [{ lever: 'ley:work' }],
     run: ({ key, value }) =>
       unwrap(
         api.POST('/api/actions/ley:work', {
@@ -189,6 +194,7 @@ function LeyWorkRow({
     success: 'The work is tied to the ley anew',
   })
   const release = useGodAction({
+    writes: [{ lever: 'ley:work' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/ley:work', {
@@ -221,6 +227,7 @@ function LeyWorkRow({
       <div className='grid min-w-0 grid-cols-1 gap-2 @md/works:grid-cols-3'>
         {TIES.map((entry) => (
           <SwitchField
+            act={tie}
             key={entry.key}
             label={entry.label}
             checked={item[entry.key]}
@@ -230,6 +237,7 @@ function LeyWorkRow({
         ))}
       </div>
       <Held
+        act={release}
         keys={item.locked}
         label={label}
         busy={busy}
@@ -248,6 +256,7 @@ function LeyLineRow({
 }) {
   const [strength, setStrength] = useState(String(line.strength))
   const save = useGodAction({
+    writes: [{ lever: 'ley:strength' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/ley:strength', {
@@ -260,6 +269,7 @@ function LeyLineRow({
     success: 'The line flows at a new strength, held',
   })
   const dissolve = useGodAction({
+    writes: [{ lever: 'ley:dissolve' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/ley:dissolve', { body: { line_id: line.id } })
@@ -293,6 +303,7 @@ function LeyLineRow({
         onChange={setStrength}
       />
       <Button
+        act={save}
         variant='outline'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}
@@ -302,6 +313,7 @@ function LeyLineRow({
         Set and hold
       </Button>
       <Button
+        act={dissolve}
         variant='ghost'
         disabled={busy !== null}
         disabledReason={busy ?? undefined}
@@ -324,6 +336,7 @@ function ForcedRow({
   const [kind, setKind] = useState<string>(item.kind)
   const [until, setUntil] = useState(String(item.until_epoch))
   const save = useGodAction({
+    writes: [{ lever: 'weather:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/weather:edit', {
@@ -370,6 +383,7 @@ function ForcedRow({
         onChange={setUntil}
       />
       <Button
+        act={save}
         variant='outline'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}
@@ -488,6 +502,11 @@ export function RegionWorksPanel({
         </Card>
       </div>
       <AdjustPanel
+        writes={[
+          { lever: 'ley:dissolve' },
+          { lever: 'ley:strength' },
+          { lever: 'weather:edit' },
+        ]}
         title='Reshape ley lines and held weather'
         note='Set a ley line’s strength (it is then held), unmake any line, or change the kind and end of weather held over this land. Every change can be undone from the ledger.'
         label='Lines and weather'

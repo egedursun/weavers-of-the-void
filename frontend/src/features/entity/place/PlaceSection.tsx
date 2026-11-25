@@ -33,6 +33,7 @@ export function PlaceHolds({
       <Lock aria-hidden='true' className='size-icon-xs shrink-0 text-primary' />
       {shown.map((key) => (
         <Button
+          act={release}
           key={key}
           size='sm'
           variant='outline'
@@ -134,6 +135,7 @@ function ShapePlace({ profile }: { profile: PlaceProfile }) {
     })
   return (
     <AdjustPanel
+      acts={[edit, clear, declare]}
       title='Shape this place'
       note='Set its kind, sacredness and mystery; held values stay as you set them until you release them. Every change goes into the ledger.'
       head={
@@ -170,6 +172,7 @@ function ShapePlace({ profile }: { profile: PlaceProfile }) {
           onChange={setMystery}
         />
         <SwitchField
+          permission='lock_canon'
           label='Hold what I set'
           checked={hold}
           disabled={busy !== null}
@@ -178,6 +181,7 @@ function ShapePlace({ profile }: { profile: PlaceProfile }) {
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={edit}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -187,6 +191,7 @@ function ShapePlace({ profile }: { profile: PlaceProfile }) {
         </Button>
         {profile.pilgrimage_site ? (
           <Button
+            act={clear}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -197,6 +202,7 @@ function ShapePlace({ profile }: { profile: PlaceProfile }) {
           </Button>
         ) : (
           <Button
+            act={declare}
             size='sm'
             variant='outline'
             disabled={busy !== null}

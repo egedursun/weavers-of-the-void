@@ -49,7 +49,7 @@ export function Section({
             <SectionTitle
               id={headingId}
               level={level}
-              truncate
+              truncate={2}
               className='text-gilded'
             >
               {title}

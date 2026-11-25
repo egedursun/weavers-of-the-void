@@ -31,6 +31,7 @@ function CloseThread({ thread }: { thread: ThreadRecord }) {
   const [how, setHow] = useState('')
   const { reason } = useGodGate()
   const close = useGodAction({
+    writes: [{ lever: 'thread:close' }],
     run: () =>
       unwrap(
         api.POST('/api/threads/{thread_id}/close', {
@@ -45,7 +46,7 @@ function CloseThread({ thread }: { thread: ThreadRecord }) {
   return (
     <Collapsible className='flex min-w-0 flex-col gap-2'>
       <CollapsibleTrigger asChild>
-        <Button variant='ghost' size='sm' className='self-start'>
+        <Button act={close} variant='ghost' size='sm' className='self-start'>
           <CheckCircle2 />
           Close the story
         </Button>
@@ -65,6 +66,7 @@ function CloseThread({ thread }: { thread: ThreadRecord }) {
             />
           </FieldTile>
           <ActionButton
+            act={close}
             label='Close'
             blocked={reason()}
             pending={close.isPending}

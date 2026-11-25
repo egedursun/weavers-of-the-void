@@ -1,4 +1,12 @@
-import { Copy, Eye, Hammer, type LucideIcon, ShieldCheck } from 'lucide-react'
+import {
+  Copy,
+  Eye,
+  Hammer,
+  Lock,
+  type LucideIcon,
+  ShieldCheck,
+} from 'lucide-react'
+import { refusalIn, useTeamGate } from '@/api/teamGate'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +18,7 @@ import {
 } from '@/components/ui/tooltip'
 import { type KpiTone, Medallion } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { WILL_MODE_PERMISSION } from '@/features/team/permissions'
 import { useWillModes } from './api'
 import {
   MODE_LOOK,
@@ -57,6 +66,7 @@ export function ModeBar({
   disabledReason = null,
 }: ModeBarProps) {
   const modes = useWillModes()
+  const team = useTeamGate()
   const served = modes.data?.modes.find((item) => item.mode === mode)
   const look = MODE_LOOK[mode]
   const impact = IMPACT_LOOK[impactOf(look, served)]
@@ -81,12 +91,14 @@ export function ModeBar({
           const title =
             modes.data?.modes.find((entry) => entry.mode === item)?.name ??
             itemLook.label
+          const refused = refusalIn(team, WILL_MODE_PERMISSION[item])
           return (
             <Tooltip key={item}>
               <TooltipTrigger asChild>
                 <ToggleGroupItem
                   value={item}
                   aria-label={title}
+                  aria-description={refused ?? undefined}
                   data-mode={item}
                   className='w-full min-w-0 justify-start'
                 >
@@ -95,10 +107,16 @@ export function ModeBar({
                     className={cn(item === mode && TONE_TEXT[itemLook.tone])}
                   />
                   <span className='min-w-0 truncate'>{itemLook.tab}</span>
+                  {refused !== null && (
+                    <Lock
+                      aria-hidden='true'
+                      className='ms-auto size-icon-xs text-muted-foreground'
+                    />
+                  )}
                 </ToggleGroupItem>
               </TooltipTrigger>
               <TooltipContent>
-                {disabledReason ?? itemLook.caption}
+                {disabledReason ?? refused ?? itemLook.caption}
               </TooltipContent>
             </Tooltip>
           )

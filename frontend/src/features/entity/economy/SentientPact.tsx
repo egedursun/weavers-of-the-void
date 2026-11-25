@@ -173,6 +173,7 @@ function PactCard({ pact, busy }: { pact: Pact; busy: string | null }) {
   const status = STATUS[pact.status] ?? STATUS.expired
   const live = pact.status === 'in_force'
   const terms = useGodAction({
+    writes: [{ lever: 'resource:pact_terms' }],
     run: (values: Record<string, string | number>) =>
       unwrap(
         api.POST('/api/actions/resource:pact_terms', {
@@ -181,6 +182,7 @@ function PactCard({ pact, busy }: { pact: Pact; busy: string | null }) {
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'resource:pact_end' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resource:pact_end', {
@@ -261,6 +263,7 @@ function PactCard({ pact, busy }: { pact: Pact; busy: string | null }) {
       </div>
       {live && (
         <AdjustPanel
+          acts={[release, terms]}
           label='Change the terms'
           title='What the pact asks'
           note='Set what the resource is owed, in what and how often. Kept terms bring its gifts; a broken term brings its wrath.'
@@ -278,6 +281,7 @@ function PactCard({ pact, busy }: { pact: Pact; busy: string | null }) {
             submitLabel='Set the terms'
           />
           <Button
+            act={release}
             size='sm'
             variant='outline'
             className='self-start'
@@ -320,6 +324,7 @@ function StrikePact({
   const [keeper, setKeeper] = useState<string | null>(null)
   const [epochs, setEpochs] = useState('6')
   const strike = useGodAction({
+    writes: [{ lever: 'resource:pact' }],
     run: (terms: Record<string, string | number>) =>
       unwrap(
         api.POST('/api/actions/resource:pact', {
@@ -338,6 +343,7 @@ function StrikePact({
     (keeper === null ? 'Choose who keeps the pact' : null)
   return (
     <AdjustPanel
+      acts={[strike]}
       label='Strike a pact'
       title='Bind the resource and its keeper'
       note='A living resource that is owed a set tribute on a set term gives of itself while the terms are kept, and turns on its keeper when they are broken.'

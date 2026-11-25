@@ -59,6 +59,7 @@ function DreamCard({
 }) {
   const [goal, setGoal] = useState<string>(view.dream?.goal ?? 'find_love')
   const set = useGodAction({
+    writes: [{ lever: 'aspiration:dream' }],
     run: (picked: LifeGoal) =>
       unwrap(
         api.POST('/api/actions/aspiration:dream', {
@@ -73,6 +74,7 @@ function DreamCard({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'aspiration:dream_remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/aspiration:dream_remove', {
@@ -151,6 +153,7 @@ function DreamCard({
         action={
           <div className='flex items-center gap-2'>
             <Button
+              act={set}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -161,6 +164,7 @@ function DreamCard({
             </Button>
             {dream && (
               <Button
+                act={remove}
                 size='icon-sm'
                 variant='ghost'
                 aria-label='Take the dream away'
@@ -196,6 +200,7 @@ function WantsAndFears({
   const [want, setWant] = useState<string>('travel')
   const [fear, setFear] = useState<string>('war')
   const addWant = useGodAction({
+    writes: [{ lever: 'aspiration:want' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/aspiration:want', {
@@ -204,6 +209,7 @@ function WantsAndFears({
       ),
   })
   const meet = useGodAction({
+    writes: [{ lever: 'aspiration:want_edit' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/aspiration:want_edit', {
@@ -212,6 +218,7 @@ function WantsAndFears({
       ),
   })
   const dropWant = useGodAction({
+    writes: [{ lever: 'aspiration:want_remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/aspiration:want_remove', {
@@ -220,6 +227,7 @@ function WantsAndFears({
       ),
   })
   const addFear = useGodAction({
+    writes: [{ lever: 'aspiration:fear' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/aspiration:fear', {
@@ -232,6 +240,7 @@ function WantsAndFears({
       ),
   })
   const dropFear = useGodAction({
+    writes: [{ lever: 'aspiration:fear_remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/aspiration:fear_remove', {
@@ -267,6 +276,7 @@ function WantsAndFears({
                   <Badge>{`Met in epoch ${item.fulfilled_epoch}`}</Badge>
                 ) : (
                   <Button
+                    act={meet}
                     size='icon-sm'
                     variant='ghost'
                     aria-label={`Fulfil ${item.label}`}
@@ -278,6 +288,7 @@ function WantsAndFears({
                   </Button>
                 )}
                 <Button
+                  act={dropWant}
                   size='icon-sm'
                   variant='ghost'
                   aria-label={`Take away ${item.label}`}
@@ -296,6 +307,7 @@ function WantsAndFears({
           action={
             <div className='flex items-center gap-2'>
               <Button
+                act={addWant}
                 size='sm'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}
@@ -338,6 +350,7 @@ function WantsAndFears({
                 />
               </div>
               <Button
+                act={dropFear}
                 size='icon-sm'
                 variant='ghost'
                 aria-label={`Lift the fear of ${item.label}`}
@@ -355,6 +368,7 @@ function WantsAndFears({
           action={
             <div className='flex items-center gap-2'>
               <Button
+                act={addFear}
                 size='sm'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}
@@ -387,6 +401,7 @@ function FocusCard({
   blocked: string | null
 }) {
   const focus = useGodAction({
+    writes: [{ lever: 'aspiration:focus' }],
     run: (picked: FocusKind) =>
       unwrap(
         api.POST('/api/actions/aspiration:focus', {
@@ -395,6 +410,7 @@ function FocusCard({
       ),
   })
   const grant = useGodAction({
+    writes: [{ lever: 'aspiration:perk' }],
     run: (perk: PerkKind) =>
       unwrap(
         api.POST('/api/actions/aspiration:perk', {
@@ -403,6 +419,7 @@ function FocusCard({
       ),
   })
   const drop = useGodAction({
+    writes: [{ lever: 'aspiration:perk_remove' }],
     run: (perk: PerkKind) =>
       unwrap(
         api.POST('/api/actions/aspiration:perk_remove', {
@@ -425,6 +442,7 @@ function FocusCard({
         {spec && <Medallion icon={spec.icon} tone={spec.tone} />}
         <div className='min-w-0 flex-1'>
           <MindPicker
+            act={focus}
             label='Focus'
             value={view.focus ?? ''}
             table={table(view.focuses)}
@@ -450,6 +468,7 @@ function FocusCard({
               </div>
               {perk.owned ? (
                 <Button
+                  act={drop}
                   size='icon-sm'
                   variant='ghost'
                   aria-label={`Take away ${perk.label}`}
@@ -461,6 +480,7 @@ function FocusCard({
                 </Button>
               ) : (
                 <Button
+                  act={grant}
                   size='icon-sm'
                   variant='ghost'
                   aria-label={`Grant ${perk.label}`}
@@ -488,6 +508,7 @@ function InspirationCard({
 }) {
   const [kind, setKind] = useState<string>('masterwork_fever')
   const inspire = useGodAction({
+    writes: [{ lever: 'aspiration:inspire' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/aspiration:inspire', {
@@ -500,6 +521,7 @@ function InspirationCard({
       ),
   })
   const quench = useGodAction({
+    writes: [{ lever: 'aspiration:inspiration_remove' }],
     run: (id: number) =>
       unwrap(
         api.POST('/api/actions/aspiration:inspiration_remove', {
@@ -541,6 +563,7 @@ function InspirationCard({
                 </EntityLink>
               )}
               <Button
+                act={quench}
                 size='icon-sm'
                 variant='ghost'
                 aria-label={`Quench ${item.label}`}
@@ -559,6 +582,7 @@ function InspirationCard({
         action={
           <div className='flex items-center gap-2'>
             <Button
+              act={inspire}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -680,6 +704,7 @@ function AspirationControls({ view }: { view: Aspirations }) {
   const { reason } = useGodGate()
   const [hold, setHold] = useState(true)
   const lock = useGodAction({
+    writes: [{ lever: 'mind:lock' }, { lever: 'mind:unlock' }],
     run: (field: string) =>
       unwrap(
         api.POST(
@@ -698,6 +723,7 @@ function AspirationControls({ view }: { view: Aspirations }) {
     >
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={lock}
           size='sm'
           variant={view.locked ? 'outline' : 'ghost'}
           disabled={busy !== null}

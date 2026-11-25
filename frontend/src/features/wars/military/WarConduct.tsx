@@ -114,6 +114,7 @@ function SideConduct({
   const [support, setSupport] = useState(String(row.support))
   const [weariness, setWeariness] = useState(String(row.weariness))
   const save = useGodAction<boolean>({
+    writes: [{ lever: 'war:edit_side' }],
     run: (hold) =>
       unwrap(
         api.POST('/api/actions/war:edit_side', {
@@ -132,6 +133,7 @@ function SideConduct({
       ),
   })
   const leave = useGodAction({
+    writes: [{ lever: 'war:separate_peace' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:separate_peace', {
@@ -185,6 +187,7 @@ function SideConduct({
       </div>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -194,6 +197,7 @@ function SideConduct({
           Set and hold
         </Button>
         <Button
+          act={save}
           size='sm'
           variant='outline'
           disabled={busy !== null || locked.length === 0}
@@ -206,6 +210,7 @@ function SideConduct({
           Release
         </Button>
         <Button
+          act={leave}
           size='sm'
           variant='outline'
           disabled={leaveWhy !== undefined}

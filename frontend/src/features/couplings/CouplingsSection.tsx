@@ -307,6 +307,7 @@ function RiteParts({ view, blocked }: Props) {
             const present = view.rite_parts.includes(component)
             return (
               <StepButton
+                act={setting}
                 key={component}
                 icon={item.icon}
                 label={`${present ? 'Asks for' : 'Does not ask for'} ${item.label.toLowerCase()}`}
@@ -345,6 +346,7 @@ function Restraints({ view, blocked }: Props) {
             const present = view.restraints.includes(restraint)
             return (
               <StepButton
+                act={setting}
                 key={restraint}
                 icon={item.icon}
                 label={
@@ -406,6 +408,7 @@ function Sociolect({
       aside={row.secret ? <Chip icon={Lock}>Secret</Chip> : undefined}
     >
       <RecordEditor
+        act={editing}
         title='Set this way of speaking'
         note='Values you set are held against the engine until you release them.'
         fields={SOCIOLECT_FIELDS}
@@ -429,6 +432,7 @@ function Sociolect({
           onPick={setTarget}
         />
         <StepButton
+          act={merging}
           icon={Users}
           label='Merge them'
           busy={why(
@@ -441,6 +445,7 @@ function Sociolect({
           onClick={() => merging.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Strike it out'
           busy={why(blocked, removing.isPending)}
@@ -482,6 +487,7 @@ function Sign({
         <Ref node={row.community} empty='a community no longer kept' />
       </div>
       <RecordEditor
+        act={editing}
         title='Set this signed language'
         note='Values you set are held against the engine until you release them.'
         fields={SIGN_FIELDS}
@@ -491,6 +497,7 @@ function Sign({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike out its origin'
         busy={why(blocked, removing.isPending)}
@@ -579,6 +586,7 @@ function Registers({ view, blocked }: Props) {
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={creating}
               size='sm'
               disabled={why(blocked ?? notGroup, creating.isPending) !== null}
               disabledReason={
@@ -589,6 +597,7 @@ function Registers({ view, blocked }: Props) {
               Give it
             </Button>
             <Button
+              act={signing}
               size='sm'
               variant='outline'
               disabled={why(blocked ?? notGroup, signing.isPending) !== null}
@@ -703,6 +712,7 @@ function Carrion({ view, blocked }: Props) {
       </div>
       {row ? (
         <RecordEditor
+          act={editing}
           title='Set the carrion'
           note='Values you set are held against the engine until you release them.'
           fields={CARRION_FIELDS}
@@ -721,6 +731,7 @@ function Carrion({ view, blocked }: Props) {
       )}
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={keeping}
           icon={row?.kept ? Undo2 : Ban}
           label={
             row?.kept
@@ -731,6 +742,7 @@ function Carrion({ view, blocked }: Props) {
           onClick={() => keeping.mutate()}
         />
         <StepButton
+          act={clearing}
           icon={Trash2}
           label='Clear away the dead'
           busy={why(
@@ -778,6 +790,7 @@ function Teaching({
         </div>
       ) : null}
       <RecordEditor
+        act={editing}
         title='Set this teaching'
         note='Values you set are held against the engine until you release them.'
         fields={TEACHING_FIELDS}
@@ -787,6 +800,7 @@ function Teaching({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike it out'
         busy={why(blocked, removing.isPending)}
@@ -870,6 +884,7 @@ function Teachings({ view, blocked }: Props) {
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={granting}
               size='sm'
               disabled={why(blocked ?? none, granting.isPending) !== null}
               disabledReason={
@@ -880,6 +895,7 @@ function Teachings({ view, blocked }: Props) {
               Teach it
             </Button>
             <Button
+              act={blocking}
               size='sm'
               variant='outline'
               disabled={why(blocked ?? none, blocking.isPending) !== null}
@@ -995,6 +1011,7 @@ function ElderMemory({ view, blocked }: Props) {
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={granting}
               size='sm'
               disabled={
                 why(
@@ -1019,6 +1036,7 @@ function ElderMemory({ view, blocked }: Props) {
               Make it remember
             </Button>
             <Button
+              act={revealing}
               size='sm'
               variant='outline'
               disabled={
@@ -1107,6 +1125,7 @@ function Agreement({
         <Ref node={row.place} empty='the field' />
       </div>
       <RecordEditor
+        act={editing}
         title='Set this agreement'
         note='Values you set are held against the engine until you release them.'
         fields={AGREEMENT_FIELDS}
@@ -1117,6 +1136,7 @@ function Agreement({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={voiding}
           icon={Ban}
           label='Void it'
           busy={why(
@@ -1126,6 +1146,7 @@ function Agreement({
           onClick={() => voiding.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Strike it out'
           busy={why(blocked, removing.isPending)}
@@ -1206,6 +1227,7 @@ function Agreements({ view, blocked }: Props) {
         columns={2}
         action={
           <Button
+            act={forcing}
             size='sm'
             disabled={why(blocked ?? none, forcing.isPending) !== null}
             disabledReason={
@@ -1277,6 +1299,7 @@ function Seal({
         </div>
       ) : null}
       <RecordEditor
+        act={editing}
         title='Set this seal'
         note='Values you set are held against the engine until you release them.'
         fields={sealFields(view)}
@@ -1287,6 +1310,7 @@ function Seal({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={breaking}
           icon={SEAL_ICON}
           label='Break it'
           busy={why(
@@ -1297,6 +1321,7 @@ function Seal({
           onClick={() => breaking.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Strike it out'
           busy={why(blocked, removing.isPending)}
@@ -1384,6 +1409,7 @@ function Seals({ view, blocked }: Props) {
         columns={2}
         action={
           <Button
+            act={sealing}
             size='sm'
             disabled={why(blocked ?? linkMissing, sealing.isPending) !== null}
             disabledReason={
@@ -1507,6 +1533,7 @@ function Fashion({ view, blocked }: Props) {
           : 'It has not yet been taken up widely.'}
       </Muted>
       <RecordEditor
+        act={editing}
         title='Set its fashion'
         note='Values you set are held against the engine until you release them.'
         fields={NOVELTY_FIELDS}
@@ -1516,6 +1543,7 @@ function Fashion({ view, blocked }: Props) {
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Forget its fashion'
         busy={why(

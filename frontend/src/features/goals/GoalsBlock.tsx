@@ -27,6 +27,7 @@ export function GoalsBlock({
   const goals = useGoals()
   const { reason } = useGodGate()
   const evaluate = useGodAction({
+    writes: [{ lever: 'goals:evaluate' }],
     run: () => unwrap(api.POST('/api/actions/goals:evaluate')),
   })
   if (goals.isPending) return <Skeleton className='h-textarea w-full' />
@@ -48,6 +49,7 @@ export function GoalsBlock({
             </Button>
           )}
           <ActionButton
+            act={evaluate}
             label='Measure now'
             icon={Target}
             blocked={reason()}

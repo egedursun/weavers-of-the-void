@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochRunRow
 from aerona.db.tables.lore import ThreadRow
-from aerona.db.tables.meta import ImageRow, NotificationRow
+from aerona.db.tables.meta import ImageRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ThreadStatus
 from aerona.domain.enums.son import SonStatus
@@ -16,6 +16,7 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.prompts.contexts.opportunities import CreatorOpportunitiesContext, MortalOpportunity, SonOpportunity
 from aerona.rules.registry import Rules
 from aerona.services.gods.context import require
+from aerona.services.notifications import unread_count
 
 
 @dataclass(frozen=True)
@@ -73,6 +74,6 @@ async def player_hints(session: AsyncSession, rules: Rules) -> PlayerHints:
         dead_sons=tuple(son.name for son in sons if son.status is SonStatus.DEAD),
         open_threads=int(await session.scalar(select(func.count(ThreadRow.id)).where(ThreadRow.status == ThreadStatus.OPEN)) or 0),
         sons_without_image=sum(1 for son in sons if son.id not in pictured),
-        unread_notifications=int(await session.scalar(select(func.count(NotificationRow.id)).where(NotificationRow.is_read.is_(False))) or 0),
+        unread_notifications=await unread_count(session),
         epoch_in_progress=run is not None and run.started and not run.finished,
     )

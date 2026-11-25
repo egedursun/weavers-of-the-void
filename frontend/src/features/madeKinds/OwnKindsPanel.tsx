@@ -160,6 +160,7 @@ export function OwnKindsPanel({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={vehicle}
               size='sm'
               disabled={need(frame, 'a frame') !== null}
               disabledReason={need(frame, 'a frame') ?? undefined}
@@ -169,6 +170,7 @@ export function OwnKindsPanel({
               Draw the vehicle type
             </Button>
             <Button
+              act={unit}
               size='sm'
               disabled={need(role, 'a role') !== null}
               disabledReason={need(role, 'a role') ?? undefined}
@@ -178,6 +180,7 @@ export function OwnKindsPanel({
               Raise the kind of soldier
             </Button>
             <Button
+              act={model}
               size='sm'
               disabled={need(family, 'a family') !== null}
               disabledReason={need(family, 'a family') ?? undefined}
@@ -187,6 +190,7 @@ export function OwnKindsPanel({
               Make the model
             </Button>
             <Button
+              act={dish}
               size='sm'
               disabled={need(method, 'a way of cooking') !== null}
               disabledReason={need(method, 'a way of cooking') ?? undefined}
@@ -196,6 +200,7 @@ export function OwnKindsPanel({
               Cook the dish
             </Button>
             <Button
+              act={structure}
               size='sm'
               disabled={need(building, 'a kind of structure') !== null}
               disabledReason={

@@ -34,6 +34,7 @@ export function ChronicleLineMenu({ line }: { line: ChronicleLine }) {
   const { reason } = useGodGate()
   const blocked = reason()
   const amend = useGodAction({
+    writes: [{ lever: 'chronicle:edit' }],
     run: (body: { text?: string; visible?: boolean }) =>
       unwrap(
         api.POST('/api/actions/chronicle:edit', {
@@ -46,6 +47,12 @@ export function ChronicleLineMenu({ line }: { line: ChronicleLine }) {
     },
   })
   const pin = useGodAction({
+    writes: [
+      {
+        method: 'POST',
+        path: '/api/notifications/from-chronicle/{chronicle_id}',
+      },
+    ],
     run: () =>
       unwrap(
         api.POST('/api/notifications/from-chronicle/{chronicle_id}', {
@@ -61,6 +68,7 @@ export function ChronicleLineMenu({ line }: { line: ChronicleLine }) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
+            act={[amend, pin]}
             variant='ghost'
             size='icon-sm'
             aria-label={`Line actions for epoch ${line.epoch}`}
@@ -87,6 +95,7 @@ export function ChronicleLineMenu({ line }: { line: ChronicleLine }) {
             Hide from the chronicle
           </DropdownMenuItem>
           <DropdownMenuItem
+            act={pin}
             disabled={pin.isPending}
             onSelect={() => pin.mutate()}
           >
@@ -119,6 +128,7 @@ export function ChronicleLineMenu({ line }: { line: ChronicleLine }) {
               Cancel
             </Button>
             <ActionButton
+              act={amend}
               label='Save the line'
               icon={Save}
               variant='default'
@@ -136,6 +146,7 @@ export function ChronicleLineMenu({ line }: { line: ChronicleLine }) {
         </DialogContent>
       </Dialog>
       <ConfirmDialog
+        act={amend}
         open={hiding}
         onOpenChange={setHiding}
         title='Hide this line?'

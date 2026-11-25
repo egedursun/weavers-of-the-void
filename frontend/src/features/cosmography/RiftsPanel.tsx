@@ -60,6 +60,7 @@ function RiftRow({
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>
           <Button
+            act={seal}
             size='sm'
             variant='outline'
             disabled={busy !== null || !open}
@@ -72,6 +73,7 @@ function RiftRow({
             Seal
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -97,6 +99,7 @@ function RiftRow({
         </Muted>
       )}
       <RecordEditor
+        act={edit}
         title='Reshape this rift'
         note='Size and stability you set are held; a rift at no stability collapses.'
         fields={[
@@ -178,6 +181,7 @@ function OpenRiftForm({
       meta={<Chip icon={Eye}>{`${openCount} open now`}</Chip>}
       action={
         <Button
+          act={open}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}

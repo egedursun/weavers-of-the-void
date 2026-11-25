@@ -136,6 +136,7 @@ export function useCosmographyAction<Name extends CosmographyAction, T>(
   also: readonly QueryKey[] = []
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => runCosmography(name, toBody(vars)),
     success,
     invalidate: [cosmographyKeys.view, ...also],

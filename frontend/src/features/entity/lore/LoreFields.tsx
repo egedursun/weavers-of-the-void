@@ -9,6 +9,7 @@ import {
   Unlock,
   type LucideIcon,
 } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -37,6 +38,7 @@ import {
   FieldTile,
 } from '@/components/domain'
 import { Label, Muted, SectionTitle, Stat, Text } from '@/components/typography'
+import { type AdjustGate, useAdjustGate } from '@/features/team/writeGate'
 import { type LoreValue } from './api'
 import {
   type LoreNamed,
@@ -73,6 +75,7 @@ export type Editor = {
     release?: string[]
   }) => void
   isPending: boolean
+  blockedReason: string | null
 }
 
 export type DictSpec = {
@@ -412,6 +415,7 @@ export function ChoicePicker({
   blocked,
   placeholder,
   onPick,
+  act,
 }: {
   label: string
   value: string
@@ -419,11 +423,13 @@ export function ChoicePicker({
   blocked: string | null
   placeholder?: string
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   return (
     <div className='flex min-w-0 flex-col gap-1'>
       <Label>{label}</Label>
       <ChoiceSelect
+        act={act}
         label={label}
         value={value}
         table={table}
@@ -443,6 +449,7 @@ export function ChoiceSelect({
   blocked,
   placeholder,
   onPick,
+  act,
 }: {
   id?: string
   label: string
@@ -451,9 +458,15 @@ export function ChoiceSelect({
   blocked: string | null
   placeholder?: string
   onPick: (value: string) => void
+  act?: ActProp
 }) {
   return (
-    <Select value={value} onValueChange={onPick} disabled={blocked !== null}>
+    <Select
+      act={act}
+      value={value}
+      onValueChange={onPick}
+      disabled={blocked !== null}
+    >
       <SelectTrigger id={id} aria-label={label} className='w-full'>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
@@ -496,6 +509,8 @@ export function AdjustBlock({
 }
 
 export function AdjustPanel({
+  acts,
+  writes,
   surface,
   title,
   note,
@@ -507,12 +522,13 @@ export function AdjustPanel({
   note: string
   status?: ReactNode
   children: ReactNode
-}) {
+} & AdjustGate) {
+  const gate = useAdjustGate(acts, writes)
   return (
     <Collapsible data-surface={surface} className='flex min-w-0 flex-col gap-3'>
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <CollapsibleTrigger asChild>
-          <Button variant='outline'>
+          <Button act={gate} variant='outline'>
             <SlidersHorizontal />
             {title}
           </Button>
@@ -550,6 +566,7 @@ export function LoreAdjust({
   const busy = busyOf(blocked, edit.isPending)
   return (
     <AdjustPanel
+      acts={[edit]}
       surface='LoreAdjust'
       title={`Shape this ${noun}`}
       note='Every value above can be set here. A value you set is held: the world stops moving it until you let it decide again. Every change goes into the ledger and can be undone.'
@@ -582,6 +599,7 @@ export function LoreAdjust({
           </PagedList>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <Button
+              act={edit}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -746,6 +764,7 @@ export function LoreFields({
       )}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Button
+          act={edit}
           size='sm'
           disabled={busy !== null || changed.length === 0}
           disabledReason={
@@ -764,6 +783,7 @@ export function LoreFields({
         {locked.length > 0 && (
           <>
             <Button
+              act={edit}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -795,6 +815,7 @@ export function RowEditor({
   blocked,
   onSave,
   children,
+  act,
 }: {
   label: string
   icon?: LucideIcon
@@ -804,6 +825,7 @@ export function RowEditor({
   blocked: string | null
   onSave: (value: number) => void
   children?: ReactNode
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState(String(value))
   const id = useId()
@@ -844,6 +866,7 @@ export function RowEditor({
       </FieldTile>
       {children}
       <Button
+        act={act}
         type='submit'
         size='icon'
         variant='outline'
@@ -941,6 +964,7 @@ export function DictField({
                   }
                 />
                 <Button
+                  act={edit}
                   size='icon-sm'
                   variant='ghost'
                   aria-label={`Remove ${named.label}`}
@@ -997,6 +1021,7 @@ export function DictField({
           Add
         </Button>
         <Button
+          act={edit}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

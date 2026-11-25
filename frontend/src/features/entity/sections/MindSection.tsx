@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Lock, Plus, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -105,10 +106,12 @@ function TraitChip({
   trait,
   onRemove,
   blocked,
+  act,
 }: {
   trait: MindTrait
   onRemove: () => void
   blocked: string | null
+  act?: ActProp
 }) {
   const spec = named(TRAIT_ICONS, trait.trait)
   const effects = trait.effects.map(
@@ -135,6 +138,7 @@ function TraitChip({
             {`${named(TRAIT_FAMILIES, trait.family).label} · ${plain(TRAIT_SOURCES, trait.source)}${trait.heritable ? ' · passes to children' : ''}`}
           </Muted>
           <Button
+            act={act}
             size='icon-sm'
             variant='ghost'
             aria-label={`Take away ${trait.label}`}
@@ -245,6 +249,7 @@ function Temperament({
   blocked: string | null
 }) {
   const remove = useGodAction({
+    writes: [{ lever: 'mind:trait_remove' }],
     run: (trait: TraitKind) =>
       unwrap(
         api.POST('/api/actions/mind:trait_remove', {
@@ -266,6 +271,7 @@ function Temperament({
           <Paged items={mind.traits}>
             {(trait) => (
               <TraitChip
+                act={remove}
                 key={trait.trait}
                 trait={trait}
                 blocked={blocked ?? (remove.isPending ? WORKING : null)}
@@ -449,6 +455,7 @@ function MindControls({ mind }: { mind: Mind }) {
     )
   }
   const release = useGodAction({
+    writes: [{ lever: 'mind:unlock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/mind:unlock', {
@@ -457,6 +464,7 @@ function MindControls({ mind }: { mind: Mind }) {
       ),
   })
   const lock = useGodAction({
+    writes: [{ lever: 'mind:lock' }],
     run: (field: string) =>
       unwrap(
         api.POST('/api/actions/mind:lock', {
@@ -467,6 +475,7 @@ function MindControls({ mind }: { mind: Mind }) {
   const variants = useVariants()
   const [variant, setVariant] = useState('')
   const give = useGodAction({
+    writes: [{ lever: 'mind:trait' }],
     run: (picked: TraitKind) =>
       unwrap(
         api.POST('/api/actions/mind:trait', {
@@ -480,6 +489,7 @@ function MindControls({ mind }: { mind: Mind }) {
     onDone: () => setTrait(''),
   })
   const role = useGodAction({
+    writes: [{ lever: 'mind:role' }],
     run: (picked: MortalRole) =>
       unwrap(
         api.POST('/api/actions/mind:role', {
@@ -518,6 +528,7 @@ function MindControls({ mind }: { mind: Mind }) {
         {(field) =>
           held.has(field) ? (
             <Button
+              act={release}
               key={field}
               size='sm'
               variant='outline'
@@ -530,6 +541,7 @@ function MindControls({ mind }: { mind: Mind }) {
             </Button>
           ) : (
             <Button
+              act={lock}
               key={field}
               size='sm'
               variant='ghost'
@@ -560,6 +572,7 @@ function MindControls({ mind }: { mind: Mind }) {
               />
             </div>
             <Button
+              act={give}
               size='sm'
               disabled={busy !== null || trait === '' || full}
               disabledReason={
@@ -588,6 +601,7 @@ function MindControls({ mind }: { mind: Mind }) {
             )}
           {mind.career && (
             <MindPicker
+              act={role}
               label='Calling'
               value={mind.career.role ?? ''}
               table={labelTable(ROLE_ICONS)}

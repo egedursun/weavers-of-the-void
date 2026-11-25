@@ -123,6 +123,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
               )}
             </div>
             <Held
+              act={edit}
               keys={view.data.locked}
               label={heldLabel}
               busy={busy}
@@ -131,6 +132,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
               }
             />
             <AdjustPanel
+              acts={[edit]}
               title='Reshape its hunger'
               note='What you set is held until you let the world decide again.'
             >
@@ -158,6 +160,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
                 />
               </div>
               <Button
+                act={edit}
                 disabled={busy !== null || nothing !== null}
                 disabledReason={busy ?? nothing ?? undefined}
                 onClick={() => {
@@ -203,6 +206,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
                           <Muted variant='caption'>{`Open since epoch ${row.opened_epoch}`}</Muted>
                         </div>
                         <Button
+                          act={close}
                           size='sm'
                           variant='ghost'
                           disabled={busy !== null}
@@ -234,6 +238,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
                           }
                         />
                         <Button
+                          act={change}
                           size='sm'
                           disabled={
                             busy !== null || (breachDraft[row.id] ?? '') === ''
@@ -276,6 +281,7 @@ export function OuterProfileSection({ beingId }: { beingId: number }) {
                 onChange={setStrength}
               />
               <Button
+                act={open}
                 variant='destructive'
                 disabled={busy !== null}
                 disabledReason={busy ?? undefined}

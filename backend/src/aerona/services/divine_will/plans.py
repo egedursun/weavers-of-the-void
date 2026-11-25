@@ -12,22 +12,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import BusyError, ConflictError, NotFoundError, ValidationFailedError
 from aerona.core.grammar import several
+from aerona.db.authorship import may_see
 from aerona.db.session import Database
 from aerona.db.tables.divine_will import DivineWillArtifactRow, DivineWillArtifactVersionRow, DivineWillPlanRow, DivineWillPlanStepRow
 from aerona.domain.enums.divine_will import ArtifactFormat, ArtifactKind, DivineWillMode, PlanStatus, StepImpact, StepStatus
 from aerona.domain.enums.job import TERMINAL_JOB_STATUSES, JobKind, JobStatus
 from aerona.epoch.concurrency import WORLD_GROUP
+from aerona.events.audience import private_audience
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JobContext
 from aerona.jobs.manager import JobManager
 from aerona.services.divine_will.artifacts import add_version, store_artifact
+from aerona.services.divine_will.ownership import ownership_of
 from aerona.services.divine_will.rule_steps import RULE_ACTIONS, RuleSteps, is_rule_step, rule_problem, wanted
 from aerona.services.player.catalog import ACTIONS_BY_ID
+from aerona.services.team.execute import stepping
 from aerona.tools.divine_will.framework import PlayerPort
 from aerona.tools.divine_will.library_ports import ArtifactDraft, PlanStepView, PlanView, StepDraft
 
 PlayerFactory = Callable[[str], PlayerPort]
+WAITS_FOR_AGE = "Step {ordinal} waits in the queue for the age to end."
+WAITS_FOR_APPROVAL = "Step {ordinal} waits for an administrator's approval."
 FINISHED_STEPS = frozenset({StepStatus.DONE, StepStatus.SKIPPED, StepStatus.UNDONE})
 OPEN_STEPS = frozenset({StepStatus.PENDING, StepStatus.FAILED})
 SETTLED_PLANS = frozenset({PlanStatus.DONE, PlanStatus.ABANDONED})
@@ -249,14 +255,16 @@ class PlanDesk:
         return holder if holder is not None and context is not None and context.params.get(PLAN_ID_KEY) == plan_id else ""
 
     def changed(self, view: PlanView, step: int | None = None) -> None:
-        self.bus.publish(EventKind.DIVINE_WILL_PLAN_CHANGED, {"plan_id": view.id, "status": view.status.value, "cycle_id": view.cycle_id, "step": step})
+        audience = private_audience(view.owner.author_account_id, view.owner.shared)
+        payload = {"plan_id": view.id, "status": view.status.value, "cycle_id": view.cycle_id, "step": step}
+        self.bus.publish(EventKind.DIVINE_WILL_PLAN_CHANGED, payload, audience=audience)
         if view.artifact_id is not None:
-            payload = {"artifact_id": view.artifact_id, "version": 0, "cycle_id": view.cycle_id, "deleted": False}
-            self.bus.publish(EventKind.DIVINE_WILL_ARTIFACT_CHANGED, payload)
+            written = {"artifact_id": view.artifact_id, "version": 0, "cycle_id": view.cycle_id, "deleted": False}
+            self.bus.publish(EventKind.DIVINE_WILL_ARTIFACT_CHANGED, written, audience=audience)
 
     async def plan_row(self, session: AsyncSession, plan_id: int) -> DivineWillPlanRow:
         row = await session.get(DivineWillPlanRow, plan_id)
-        if row is None:
+        if row is None or not may_see(row.author_account_id, row.shared):
             raise NotFoundError(f"No plan {plan_id}.")
         return row
 
@@ -297,6 +305,7 @@ class PlanDesk:
             steps=[step_view(step) for step in steps],
             job_id=self.running_job(plan.id),
             waiting_step=waiting,
+            owner=ownership_of(plan.author_account_id, plan.author_name, plan.shared),
         )
 
     async def mirror(self, session: AsyncSession, plan: DivineWillPlanRow, summary: str) -> None:
@@ -333,6 +342,15 @@ class PlanDesk:
     async def read(self, plan_id: int) -> PlanView:
         async with self.database.read() as session:
             return await self.view(session, await self.plan_row(session, plan_id))
+
+    async def share(self, plan_id: int, shared: bool) -> PlanView:
+        async with self.database.write() as session:
+            plan = await self.plan_row(session, plan_id)
+            plan.shared = shared
+            await session.flush()
+            view = await self.view(session, plan)
+        self.changed(view)
+        return view
 
     async def revise(self, plan_id: int, steps: Sequence[StepDraft], *, title: str | None = None) -> PlanView:
         drafts = checked(steps)
@@ -401,7 +419,7 @@ class PlanDesk:
             await self.mirror(session, plan, "The plan began.")
         try:
             job_id = await self.jobs.submit(
-                JobKind.DIVINE_WILL_PLAN, lambda context: self.drive(plan_id, context), {PLAN_ID_KEY: plan_id}, exclusive_group=WORLD_GROUP
+                JobKind.DIVINE_WILL_PLAN, lambda context: self.drive(plan_id, context), {PLAN_ID_KEY: plan_id}, exclusive_group=WORLD_GROUP, as_person=True
             )
         except BaseException:
             async with self.database.write() as session:
@@ -579,9 +597,14 @@ class PlanDesk:
                 plan_id, ordinal, f"Step {ordinal} waits for a decision.", status=PlanStatus.PAUSED, step_status=StepStatus.PENDING, step_error=stop
             )
             return
-        outcome = await player.perform(step.action_id, step.input)
+        with stepping(plan_id, ordinal):
+            outcome = await player.perform(step.action_id, step.input)
         if not outcome.get("ok", False):
             await self.fail(plan_id, ordinal, str(outcome.get("error", "")))
+            return
+        if outcome.get("queued") or outcome.get("proposed"):
+            waits = WAITS_FOR_AGE if outcome.get("queued") else WAITS_FOR_APPROVAL
+            await self.settle(plan_id, ordinal, waits.format(ordinal=ordinal), status=PlanStatus.PAUSED, step_status=StepStatus.RUNNING, step_error="")
             return
         message = str(outcome.get("message", ""))
         ledger = outcome.get("ledger_entry_id")

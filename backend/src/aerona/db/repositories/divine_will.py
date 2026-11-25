@@ -4,6 +4,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.authorship import mine
 from aerona.db.tables.divine_will import DivineWillCycleRow, DivineWillEventRow, DivineWillSessionRow
 from aerona.domain.enums.divine_will import CycleEventKind, CycleStatus
 
@@ -12,7 +13,8 @@ FINISHED_CYCLES = frozenset({CycleStatus.DONE, CycleStatus.FAILED, CycleStatus.C
 
 
 async def active_session(session: AsyncSession) -> DivineWillSessionRow | None:
-    return await session.scalar(select(DivineWillSessionRow).where(DivineWillSessionRow.closed_at.is_(None)).order_by(DivineWillSessionRow.id.desc()).limit(1))
+    statement = select(DivineWillSessionRow).where(DivineWillSessionRow.closed_at.is_(None), mine(DivineWillSessionRow.author_account_id))
+    return await session.scalar(statement.order_by(DivineWillSessionRow.id.desc()).limit(1))
 
 
 async def window_cycles(session: AsyncSession, session_id: int, remembered: int, before_ordinal: int | None = None) -> list[DivineWillCycleRow]:

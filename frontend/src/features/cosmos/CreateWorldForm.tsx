@@ -68,6 +68,7 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
     starId || (index.data.stars[0] ? String(index.data.stars[0].id) : '')
   const parent = parentId || (topLevel[0] ? String(topLevel[0].world.id) : '')
   const create = useCosmicAction({
+    writes: [{ lever: 'create_world' }],
     run: () => {
       const body: CreateWorldBody = {
         world_type: worldType,
@@ -270,6 +271,7 @@ export function CreateWorldForm({ index, rules }: CreateWorldFormProps) {
       )}
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <CosmicActionButton
+          act={create}
           actionId='create_world'
           label='Create the world'
           icon={Globe2}

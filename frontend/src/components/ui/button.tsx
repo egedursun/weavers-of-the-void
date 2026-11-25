@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { type ActProp, refusalOf } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import {
   type ControlSize,
@@ -107,6 +108,7 @@ type ButtonProps = React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
     disabledReason?: string
+    act?: ActProp
   }
 
 function wrapText(children: React.ReactNode) {
@@ -126,12 +128,16 @@ function Button({
   asChild = false,
   disabled,
   disabledReason,
+  act,
   onClick,
   children,
   ...props
 }: ButtonProps) {
   const Comp = asChild ? Slot : 'button'
-  const explained = Boolean(disabled && disabledReason)
+  const refusal = refusalOf(act)
+  const reason = refusal ?? disabledReason
+  const blocked = Boolean(disabled) || refusal !== null
+  const explained = Boolean(blocked && reason)
   const shape = size ?? 'default'
   const crafted = craftedPlate(variant, shape, className, props.role)
   const button = (
@@ -148,9 +154,9 @@ function Button({
           'surface-sheen border-gild/60 bg-card hover:bg-accent',
         className
       )}
-      disabled={explained ? undefined : disabled}
+      disabled={explained ? undefined : blocked}
       aria-disabled={explained ? true : undefined}
-      aria-description={explained ? disabledReason : undefined}
+      aria-description={explained ? reason : undefined}
       onClick={
         explained
           ? (event: React.MouseEvent<HTMLButtonElement>) =>
@@ -166,7 +172,7 @@ function Button({
   return (
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent>{disabledReason}</TooltipContent>
+      <TooltipContent>{reason}</TooltipContent>
     </Tooltip>
   )
 }

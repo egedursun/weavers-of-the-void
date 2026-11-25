@@ -22,6 +22,7 @@ export function useRecordActions(
     ...extra,
   ]
   const save = useGodAction<{ values: Values; hold: boolean }>({
+    writes: [{ lever: 'military:edit' }],
     run: ({ values, hold }) =>
       unwrap(
         api.POST('/api/actions/military:edit', {
@@ -31,6 +32,7 @@ export function useRecordActions(
     invalidate,
   })
   const release = useGodAction({
+    writes: [{ lever: 'military:release' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/military:release', {
@@ -40,6 +42,7 @@ export function useRecordActions(
     invalidate,
   })
   const remove = useGodAction({
+    writes: [{ lever: 'military:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/military:delete', {
@@ -57,6 +60,7 @@ export function useRecordCreate(
   extra: unknown[][] = []
 ) {
   return useGodAction<Values>({
+    writes: [{ lever: 'military:create' }],
     run: (values) =>
       unwrap(
         api.POST('/api/actions/military:create', { body: { kind, values } })

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.agents.network_repair import network_rule_repair
 from aerona.agents.runtime import AgentRuntime
 from aerona.agents.turns.long_jobs import LongJobResult, resolve_orphaned_jobs
+from aerona.core.account_scope import detached
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.domain.enums.job import JobKind
@@ -82,7 +83,7 @@ class BackgroundPool:
             finally:
                 self.pending.discard(key)
 
-        task = asyncio.create_task(submit())
+        task = detached(submit())
         self.tasks.add(task)
         task.add_done_callback(self.tasks.discard)
         return True

@@ -146,6 +146,7 @@ function EncounterRow({
       caption={`weight ${row.weight}, ${row.loss_pct}% of travellers lost; ${row.world ? `only on ${row.world.name}` : 'on every world'}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the encounter'
         note={HOLD}
         fields={FIELDS}
@@ -155,6 +156,7 @@ function EncounterRow({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike it'
         busy={why(blocked, removing.isPending)}
@@ -235,6 +237,7 @@ export function EncountersSection({
           columns={4}
           action={
             <StepButton
+              act={creating}
               icon={CirclePlus}
               label='Add it'
               variant='default'

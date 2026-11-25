@@ -29,7 +29,10 @@ export function useRow<
     'Done'
   )
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }
@@ -46,7 +49,7 @@ export function useRemove<D extends CollectiveAction, K extends object>(
     'Done'
   )
   return {
-    busy: why(blocked, removing.isPending),
+    busy: removing.blockedReason ?? why(blocked, removing.isPending),
     onRemove: () => removing.mutate(),
   }
 }

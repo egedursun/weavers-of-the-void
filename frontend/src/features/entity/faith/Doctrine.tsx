@@ -147,6 +147,7 @@ function TenetCard({
   blocked: string | null
 }) {
   const drop = useGodAction({
+    writes: [{ lever: 'cult:tenet' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:tenet', {
@@ -157,6 +158,7 @@ function TenetCard({
   const [renaming, setRenaming] = useState(false)
   const [name, setName] = useState(tenet.name ?? '')
   const rename = useGodAction({
+    writes: [{ lever: 'cult:tenet' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:tenet', {
@@ -210,6 +212,7 @@ function TenetCard({
             />
           </FieldTile>
           <Button
+            act={rename}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -222,6 +225,7 @@ function TenetCard({
       )}
       <div className='flex min-w-0 justify-end gap-1'>
         <Button
+          act={rename}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -232,6 +236,7 @@ function TenetCard({
           Rename
         </Button>
         <Button
+          act={drop}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -262,6 +267,7 @@ function AddTenet({
   const [name, setName] = useState('')
   const spec = kinds.data?.find((item) => item.tenet === tenet)
   const add = useGodAction({
+    writes: [{ lever: 'cult:tenet' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:tenet', {
@@ -279,6 +285,7 @@ function AddTenet({
   const look = named(TENETS, tenet)
   return (
     <AdjustPanel
+      acts={[add]}
       trigger='Reveal a tenet'
       title='Reveal a new tenet'
       note='The faithful take it up at once. A tenet cannot stand beside its opposite.'
@@ -331,6 +338,7 @@ function AddTenet({
       </div>
       <div>
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -378,6 +386,7 @@ function DoctrineForm({
   )
   const [outcast, setOutcast] = useState<number | null>(null)
   const save = useGodAction({
+    writes: [{ lever: 'cult:doctrine' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:doctrine', {
@@ -405,6 +414,7 @@ function DoctrineForm({
       ),
   })
   const holdForces = useGodAction({
+    writes: [{ lever: 'cult:doctrine' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:doctrine', {
@@ -413,12 +423,14 @@ function DoctrineForm({
       ),
   })
   const reset = useGodAction({
+    writes: [{ lever: 'cult:reset_doctrine' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:reset_doctrine', { body: { cult_id: id } })
       ),
   })
   const release = useGodAction({
+    writes: [{ lever: 'cult:doctrine' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:doctrine', {
@@ -435,6 +447,7 @@ function DoctrineForm({
   )
   return (
     <AdjustPanel
+      acts={[save, release, holdForces, reset]}
       trigger='Adjust the doctrine'
       title='Shape the doctrine'
       note='Set how the faith burns, tithes and judges. What you set is held until you let the faith decide again. Every change goes into the ledger.'
@@ -622,6 +635,7 @@ function DoctrineForm({
         )}
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -632,6 +646,7 @@ function DoctrineForm({
           </Button>
           {doctrine.locked.length > 0 && (
             <Button
+              act={release}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -643,6 +658,7 @@ function DoctrineForm({
             </Button>
           )}
           <Button
+            act={holdForces}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -653,6 +669,7 @@ function DoctrineForm({
             Hold the forces on the zeal
           </Button>
           <Button
+            act={reset}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -676,6 +693,7 @@ function HeresyRow({
   blocked: string | null
 }) {
   const judge = useGodAction<boolean>({
+    writes: [{ lever: 'cult:judge_heresy' }],
     run: (suppressed) =>
       unwrap(
         api.POST('/api/actions/cult:judge_heresy', {
@@ -707,6 +725,7 @@ function HeresyRow({
       />
       <label className='flex shrink-0 items-center gap-2'>
         <Switch
+          act={judge}
           checked={heresy.suppressed}
           disabled={busy !== null}
           aria-label='Hunt the heresy'
@@ -735,6 +754,7 @@ function Heresies({
   const id = doctrine.cult?.id ?? 0
   const [parent, setParent] = useState<number | null>(null)
   const declare = useGodAction({
+    writes: [{ lever: 'cult:heresy' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:heresy', {
@@ -784,6 +804,7 @@ function Heresies({
           </ul>
         )}
         <AdjustPanel
+          acts={[declare]}
           trigger='Declare a schism'
           title='Declare this faith a heresy'
           note='Name the mother church this faith broke from.'
@@ -800,6 +821,7 @@ function Heresies({
               />
             </div>
             <Button
+              act={declare}
               size='sm'
               variant='outline'
               disabled={busy !== null || parent === null}
@@ -827,6 +849,7 @@ function Saints({
   const [saint, setSaint] = useState<number | null>(null)
   const [item, setItem] = useState<number | null>(null)
   const name = useGodAction({
+    writes: [{ lever: 'cult:canonise' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cult:canonise', {
@@ -859,6 +882,7 @@ function Saints({
           </ul>
         )}
         <AdjustPanel
+          acts={[name]}
           trigger='Canonise a saint'
           title='Raise a saint'
           note='Name a mortal a saint of this faith, with a relic for pilgrims if you wish.'
@@ -883,6 +907,7 @@ function Saints({
           </div>
           <div>
             <Button
+              act={name}
               size='sm'
               disabled={busy !== null || saint === null}
               disabledReason={busy ?? 'Choose the saint first.'}

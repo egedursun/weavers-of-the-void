@@ -43,6 +43,7 @@ export function ClimateCycleForm({
       parsed < 1 ||
       (cap !== undefined && parsed > cap))
   const command = useCosmicAction({
+    writes: [{ lever: 'climate' }],
     run: () =>
       unwrap(
         api.PUT('/api/climate', {
@@ -116,6 +117,7 @@ export function ClimateCycleForm({
       </FormRow>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={command}
           actionId='climate'
           label='Start the cycle'
           icon={ThermometerSun}

@@ -437,6 +437,7 @@ function StructureForm({
           {place ? `At ${place[0]}, ${place[1]}` : 'No place chosen yet'}
         </Chip>
         <Button
+          act={create}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -487,6 +488,7 @@ function StructureCard({
             <Crosshair />
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -501,6 +503,7 @@ function StructureCard({
     >
       <Meter label='Intensity' value={structure.intensity} tone='warning' />
       <RecordEditor
+        act={edit}
         title='Reshape it'
         note='Its kind, place, size and strength; stars inside it follow its effects.'
         fields={[
@@ -803,6 +806,7 @@ function ShapeSection({
           ]}
         />
         <RecordEditor
+          act={edit}
           title='Form and look'
           note='Its name, account and the form its stars take.'
           fields={[
@@ -824,6 +828,7 @@ function ShapeSection({
           onRelease={(release) => edit.mutate({ values: {}, release })}
         />
         <RecordEditor
+          act={edit}
           title='Life of the galaxy'
           note='How fast it bears stars, how rich and how open to other dimensions it is.'
           fields={[
@@ -861,6 +866,7 @@ function ShapeSection({
           onRelease={(release) => edit.mutate({ values: {}, release })}
         />
         <RecordEditor
+          act={edit}
           title='Place and fate'
           note='Move it to another cluster or dimension, or set it merging with another galaxy.'
           fields={[

@@ -57,6 +57,7 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
   const hinderCost = rule('death.hinder_return_cost')
   const hinderLoss = rule('death.hinder_return_devotion_loss')
   const plot = useGodAction({
+    writes: [{ lever: 'sibling:scheme' }],
     run: () =>
       unwrap(
         api.POST('/api/sons/{son_id}/scheme', {
@@ -66,6 +67,7 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
       ),
   })
   const hinder = useGodAction({
+    writes: [{ lever: 'sibling:hinder_return' }],
     run: () =>
       unwrap(
         api.POST('/api/sons/{son_id}/hinder-return', {
@@ -124,6 +126,7 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
           </FormRow>
           <div className='flex min-w-0 flex-wrap items-center gap-2'>
             <ActionButton
+              act={plot}
               label='Scheme for their return'
               icon={HandHeart}
               blocked={blocked ?? short(schemeCost)}
@@ -131,6 +134,7 @@ export function SiblingSchemes({ son }: { son: SonRecord }) {
               onRun={() => plot.mutate()}
             />
             <ActionButton
+              act={hinder}
               label='Hinder their return'
               icon={Ban}
               variant='destructive'

@@ -1,5 +1,6 @@
 {% from "divine_will.md.j2" import will_record, will_writings %}
 {% from "presence.md.j2" import audiences %}
+{% from "team.md.j2" import team_record %}
 {% macro image(file, name) -%}
 {% if file %}![{{ name | cell }}]({{ links.media(file) }})
 
@@ -410,6 +411,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 {% endfor %}
 {% endif %}
 {{ will_record(book.divine_will, book.ledger_changes) }}
+{{ team_record(book.team) }}
 {% endif %}
 ---
 
@@ -931,7 +933,8 @@ Score **{{ book.deeds.total }}** · Achievements **{{ book.deeds.earned | length
 ## Fate's Ledger
 
 {% for entry in book.ledger %}
-- **Epoch {{ entry.epoch }}.** {{ entry.actor_name }} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone)*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary | plain }}{% endif %}
+- **Epoch {{ entry.epoch }}.** {{ entry.actor_name }}{% if entry.author_name %} *(by {{ entry.author_name }})*{% endif %} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone{% if entry.undone_by_name %} by {{ entry.undone_by_name }}{% endif %})*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary | plain }}{% endif %}{% if entry.reason %}
+  - Why: {{ entry.reason | plain }}{% endif %}
 
 {% for change in book.ledger_changes.get(entry.id, []) %}
   - **{{ change.verb }}** {{ change.target }}{% if change.details %} — {{ change.details | join(" · ") }}{% endif %}

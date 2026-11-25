@@ -68,6 +68,7 @@ function Cell({
   const { reason } = useGodGate()
   const [draft, setDraft] = useState(String(value))
   const set = useGodAction({
+    writes: [{ lever: 'son:relation' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/son:relation', {
@@ -85,6 +86,7 @@ function Cell({
     <Popover onOpenChange={(open) => open && setDraft(String(value))}>
       <PopoverTrigger asChild>
         <Button
+          act={set}
           variant='ghost'
           size='sm'
           className={cn('w-full tabular-nums', toneOf(value, rule))}
@@ -107,6 +109,7 @@ function Cell({
             />
           </FieldTile>
           <ActionButton
+            act={set}
             label='Set'
             blocked={reason() ?? (draft === '' ? 'Enter a value.' : null)}
             pending={set.isPending}

@@ -7,6 +7,7 @@ export function VerifyBackupButton({ file }: { file: string }) {
   const verify = useVerifyBackup()
   return (
     <Button
+      act={verify}
       variant='outline'
       size='sm'
       disabled={verify.isPending}

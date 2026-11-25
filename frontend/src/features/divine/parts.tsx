@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Eraser, Save } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -54,12 +55,14 @@ export function StandingRow({
   busy,
   onSave,
   onClear,
+  act,
 }: {
   row: StandingView
   focus: 'god' | 'community'
   busy: string | null
   onSave: (values: Record<string, number | string>, release: string[]) => void
   onClear: () => void
+  act?: ActProp
 }) {
   const [draft, setDraft] = useState<Record<string, string>>({})
   const value = (axis: (typeof STANDING_AXES)[number]) =>
@@ -93,6 +96,7 @@ export function StandingRow({
       </div>
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
         <MindPicker
+          act={act}
           label='Seen as'
           value={row.perceived ?? ''}
           table={table(ALIGNMENTS)}
@@ -100,6 +104,7 @@ export function StandingRow({
           onPick={(picked) => onSave({ perceived: picked }, [])}
         />
         <MindPicker
+          act={act}
           label='Worshipped in'
           value={row.mode ?? ''}
           table={table(WORSHIP_MODES)}
@@ -130,12 +135,14 @@ export function StandingRow({
         })}
       </div>
       <Held
+        act={act}
         keys={row.locked}
         label={heldLabel}
         busy={busy}
         onRelease={() => onSave({}, row.locked)}
       />
       <AdjustPanel
+        acts={[{ blockedReason: busy }]}
         title='Set this regard'
         note='Values you set are held against the world until you let it decide again.'
       >
@@ -154,6 +161,7 @@ export function StandingRow({
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={act}
             size='sm'
             disabled={busy !== null || nothing !== null}
             disabledReason={busy ?? nothing ?? undefined}
@@ -166,6 +174,7 @@ export function StandingRow({
             Hold these values
           </Button>
           <Button
+            act={act}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -187,6 +196,7 @@ export function StandingList({
   busy,
   onSave,
   onClear,
+  act,
 }: {
   rows: StandingView[]
   focus: 'god' | 'community'
@@ -197,12 +207,14 @@ export function StandingList({
     release: string[]
   ) => void
   onClear: (row: StandingView) => void
+  act?: ActProp
 }) {
   return (
     <ul className='flex min-w-0 flex-col gap-2'>
       <Paged items={rows} as='li'>
         {(row) => (
           <StandingRow
+            act={act}
             key={`${row.community.id}-${row.god.id}`}
             row={row}
             focus={focus}
@@ -262,9 +274,11 @@ const COMMUNITY_TYPES = [
 export function RegardForm({
   busy,
   onSave,
+  act,
 }: {
   busy: string | null
   onSave: (community: number, values: Record<string, number>) => void
+  act?: ActProp
 }) {
   const [community, setCommunity] = useState<number | null>(null)
   const [draft, setDraft] = useState<Record<string, string>>({})
@@ -302,6 +316,7 @@ export function RegardForm({
         ))}
       </div>
       <Button
+        act={act}
         size='sm'
         disabled={busy !== null || problem !== null}
         disabledReason={busy ?? problem ?? undefined}

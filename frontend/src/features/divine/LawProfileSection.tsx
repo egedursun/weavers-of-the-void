@@ -150,6 +150,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
               variant='caption'
             >{`Last weighed in epoch ${view.data.updated_epoch}`}</Text>
             <Held
+              act={edit}
               keys={view.data.locked}
               label={heldLabel}
               busy={busy}
@@ -158,6 +159,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
               }
             />
             <AdjustPanel
+              acts={[edit]}
               title='Reshape the law'
               note='What you set is held: the world will not erode or move it until you let it decide again.'
             >
@@ -226,6 +228,7 @@ export function LawProfileSection({ lawId }: { lawId: number }) {
                 />
               </div>
               <Button
+                act={edit}
                 disabled={busy !== null || nothing !== null}
                 disabledReason={busy ?? nothing ?? undefined}
                 onClick={() => {

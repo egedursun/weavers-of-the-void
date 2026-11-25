@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Telescope, Trash2 } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { Button } from '@/components/ui/button'
 import { EmptyState, EntityLink, PagedList, Section } from '@/components/domain'
@@ -28,11 +29,13 @@ function SurveyList({
   by,
   busy,
   onForget,
+  act,
 }: {
   rows: readonly SurveyRecord[]
   by: 'observer' | 'world'
   busy: string | null
   onForget: (id: number) => void
+  act?: ActProp
 }) {
   if (rows.length === 0)
     return (
@@ -76,6 +79,7 @@ function SurveyList({
             caption={`${SURVEY_LEVELS[row.level].label} since epoch ${row.epoch}${row.locked.includes('level') ? ' · held' : ''}`}
             aside={
               <Button
+                act={act}
                 size='sm'
                 variant='ghost'
                 aria-label='Make them forget it'
@@ -113,7 +117,10 @@ function useSurveyActions(refresh: readonly (readonly unknown[])[]) {
   return {
     set,
     forget,
-    busy: set.isPending || forget.isPending ? 'Working' : null,
+    busy:
+      set.blockedReason ??
+      forget.blockedReason ??
+      (set.isPending || forget.isPending ? 'Working' : null),
   }
 }
 
@@ -140,6 +147,7 @@ export function WorldSurveySection({ worldId }: { worldId: number }) {
       {(view) => (
         <div className='flex min-w-0 flex-col gap-3'>
           <SurveyList
+            act={forget}
             rows={view.surveys}
             by='observer'
             busy={busy}
@@ -158,6 +166,7 @@ export function WorldSurveySection({ worldId }: { worldId: number }) {
             }
             action={
               <Button
+                act={set}
                 size='sm'
                 disabled={busy !== null || missing !== null}
                 disabledReason={busy ?? missing ?? undefined}
@@ -222,6 +231,7 @@ export function ObserverSurveySection({ observerId }: { observerId: number }) {
       ) : (
         <div className='flex min-w-0 flex-col gap-3'>
           <SurveyList
+            act={forget}
             rows={query.data?.surveys ?? []}
             by='world'
             busy={busy}
@@ -235,6 +245,7 @@ export function ObserverSurveySection({ observerId }: { observerId: number }) {
             columns={2}
             action={
               <Button
+                act={set}
                 size='sm'
                 disabled={busy !== null || missing !== null}
                 disabledReason={busy ?? missing ?? undefined}

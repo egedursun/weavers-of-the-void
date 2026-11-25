@@ -1,4 +1,5 @@
 import { Play } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,7 +24,8 @@ export function PhaseRow({
   readOnlyReason,
   onToggle,
   onRun,
-}: PhaseRowProps) {
+  act,
+}: PhaseRowProps & { act?: ActProp }) {
   const switchId = `phase-${phase.name}`
   return (
     <li
@@ -72,6 +74,7 @@ export function PhaseRow({
       </div>
       <div className='flex min-w-0 items-center gap-2'>
         <Switch
+          act={act}
           id={switchId}
           aria-label={`Run ${phaseLabel(phase.name)} every epoch`}
           checked={phase.enabled}
@@ -79,6 +82,7 @@ export function PhaseRow({
           onCheckedChange={(checked) => onToggle(phase, checked)}
         />
         <Button
+          act={act}
           variant='outline'
           size='icon-sm'
           aria-label={`Run ${phaseLabel(phase.name)} now`}

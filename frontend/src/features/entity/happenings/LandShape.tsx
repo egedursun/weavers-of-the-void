@@ -195,6 +195,7 @@ function Stir({ data, blocked }: { data: LandShape; blocked: string | null }) {
   const [severity, setSeverity] = useState(60)
   const [target, setTarget] = useState(LOWEST)
   const stir = useGodAction({
+    writes: [{ lever: 'land:stir' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/land:stir', {
@@ -203,6 +204,7 @@ function Stir({ data, blocked }: { data: LandShape; blocked: string | null }) {
       ),
   })
   const river = useGodAction({
+    writes: [{ lever: 'land:river' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/land:river', {
@@ -261,6 +263,7 @@ function Stir({ data, blocked }: { data: LandShape; blocked: string | null }) {
           onChange={setSeverity}
         />
         <Button
+          act={stir}
           size='sm'
           variant='destructive'
           className='mt-auto'
@@ -286,6 +289,7 @@ function Stir({ data, blocked }: { data: LandShape; blocked: string | null }) {
           onPick={setTarget}
         />
         <Button
+          act={river}
           size='sm'
           variant='outline'
           className='mt-auto'
@@ -309,6 +313,7 @@ function ShapeControls({
   blocked: string | null
 }) {
   const shape = useGodAction({
+    writes: [{ lever: 'land:shape' }],
     run: (values: {
       desertification?: number
       desertified?: boolean
@@ -322,6 +327,7 @@ function ShapeControls({
       ),
   })
   const soil = useGodAction({
+    writes: [{ lever: 'environment:set' }],
     run: (value: SoilKind) =>
       unwrap(
         api.POST('/api/actions/environment:set', {
@@ -333,6 +339,7 @@ function ShapeControls({
   return (
     <EditorGroup title='The ground itself' icon={LAND_ICON}>
       <NumberEditor
+        act={shape}
         key={`desert-${data.desertification}`}
         id={`land-${data.region_id}`}
         field={{
@@ -349,6 +356,7 @@ function ShapeControls({
         onSet={(value) => shape.mutate({ desertification: value })}
       />
       <FlagEditor
+        act={shape}
         label='Desert'
         hint='Sand, little rain, a desert landscape'
         icon={Wind}
@@ -359,6 +367,7 @@ function ShapeControls({
         onToggle={(value) => shape.mutate({ desertified: value })}
       />
       <FlagEditor
+        act={shape}
         label='Volcanic'
         hint='Builds pressure and can erupt'
         icon={MountainSnow}
@@ -369,6 +378,7 @@ function ShapeControls({
         onToggle={(value) => shape.mutate({ volcanic: value })}
       />
       <NumberEditor
+        act={shape}
         key={`pressure-${data.volcanic_pressure}`}
         id={`land-${data.region_id}`}
         field={{
@@ -386,6 +396,7 @@ function ShapeControls({
       />
       {data.soil && (
         <ChoiceEditor
+          act={soil}
           label='Soil'
           hint='Salt kills the soil; ash weathers into rich volcanic soil'
           value={data.soil}
@@ -410,6 +421,7 @@ export function LandShapeSection({
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
   const release = useGodAction({
+    writes: [{ lever: 'environment:unlock' }, { lever: 'land:release' }],
     run: (fields: string[]) =>
       Promise.all(
         fields.map((field) =>
@@ -485,10 +497,12 @@ export function LandShapeSection({
           <ShapeSummary data={data} />
           <Shifts data={data} />
           <AdjustPanel
+            acts={[release]}
             title='Reshape the land'
             note='Wake an eruption, move the river, parch or green the land, raise a volcano or change the soil, salt included. Holds keep the world from undoing it; release them to let it follow again. Undoable from the ledger.'
           >
             <HeldStrip
+              act={release}
               keys={held}
               labelOf={fieldLabel}
               blocked={blocked ?? (release.isPending ? WORKING : null)}

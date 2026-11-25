@@ -40,6 +40,7 @@ import {
   useThreads,
   useWorldState,
 } from '@/features/entity/api/queries'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import { type ThreadRecord, closeThread, openThread } from './api'
 
 const THREAD_TEXT_MAX = 600
@@ -132,6 +133,7 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
   const [text, setText] = useState('')
   const [related, setRelated] = useState<number[]>([])
   const create = useLoreMutation({
+    writes: [{ lever: 'thread:open' }],
     run: () => openThread(text.trim(), related),
     success: 'A new storyline is opened',
     onDone: () => {
@@ -209,6 +211,7 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
         )}
       </FormRow>
       <Button
+        act={create}
         className='self-start'
         disabled={reason !== null}
         disabledReason={reason ?? undefined}
@@ -222,12 +225,16 @@ function OpenThreadForm({ blocked }: { blocked: string | null }) {
 }
 
 export function ChronicleThreads() {
+  const formGate = {
+    blockedReason: useWriteRefusal([{ lever: 'thread:open' }]),
+  }
   const threads = useThreads()
   const state = useWorldState()
   const [closing, setClosing] = useState<ThreadRecord | null>(null)
   const [how, setHow] = useState('')
   const blocked = state.data?.read_only ? READ_ONLY_REASON : null
   const close = useLoreMutation({
+    writes: [{ lever: 'thread:close' }],
     run: (thread: ThreadRecord) => closeThread(thread.id, how.trim()),
     success: 'The story is closed',
     onDone: () => setHow(''),
@@ -291,7 +298,7 @@ export function ChronicleThreads() {
       )}
       <Collapsible className='flex min-w-0 flex-col gap-3'>
         <CollapsibleTrigger asChild>
-          <Button variant='outline' className='self-start'>
+          <Button act={formGate} variant='outline' className='self-start'>
             <Plus />
             Open a story
           </Button>
@@ -301,6 +308,7 @@ export function ChronicleThreads() {
         </CollapsibleContent>
       </Collapsible>
       <ConfirmDialog
+        act={close}
         open={closing !== null}
         onOpenChange={(value) => !value && setClosing(null)}
         title='Close this story?'

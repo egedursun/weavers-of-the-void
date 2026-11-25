@@ -1,3 +1,5 @@
+import itertools
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.domain.enums.bond import BondKind
@@ -95,7 +97,7 @@ async def test_a_tangled_family_is_traced_named_and_laid_out(scope: PlayerScope,
         rows.setdefault(card.y, []).append(card.x)
     for xs in rows.values():
         ordered = sorted(xs)
-        assert all(right - left >= CARD_WIDTH for left, right in zip(ordered, ordered[1:], strict=False))
+        assert all(right - left >= CARD_WIDTH for left, right in itertools.pairwise(ordered))
     for line in layout.families:
         assert all(layout.cards[child].y > layout.cards[parent].y for child in line.children for parent in line.parents)
     marriage = next(mark for mark in layout.partners if {mark.first, mark.second} == {ids["root"], ids["spouse"]})

@@ -121,6 +121,7 @@ function StanceForge({
         onPick={(value) => setStance(value as keyof typeof STANCES)}
       />
       <Button
+        act={setting}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -339,6 +340,7 @@ function AccountCard({
       <StanceForge accountId={row.id} blocked={busy} />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={revising}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -349,6 +351,7 @@ function AccountCard({
           Rewrite it for the new reign
         </Button>
         <Button
+          act={exposing}
           size='sm'
           variant='outline'
           disabled={(unrevised ?? busy) !== null}
@@ -405,6 +408,7 @@ function AccountForge({
       columns={2}
       action={
         <Button
+          act={writing}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -506,6 +510,7 @@ function StrikeForge({
       columns={2}
       action={
         <Button
+          act={striking}
           size='sm'
           variant='destructive'
           disabled={busy !== null}
@@ -603,6 +608,7 @@ function MythCard({
         icon={Star}
       />
       <Button
+        act={debunking}
         size='sm'
         variant='outline'
         disabled={(done ?? busy) !== null}
@@ -646,6 +652,7 @@ function MythForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -723,6 +730,7 @@ function KeptCard({ row, blocked }: { row: Kept; blocked: string | null }) {
         icon={Landmark}
       />
       <Button
+        act={reliving}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -767,6 +775,7 @@ function KeptForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -874,6 +883,7 @@ function LandForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

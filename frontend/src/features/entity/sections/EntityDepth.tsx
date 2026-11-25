@@ -30,6 +30,7 @@ export function EntityDepth({ entity, targets }: EntityDepthProps) {
   const gate = useLoreGate()
   const running = useRunningJob('deepen', 'entity_id', entity.id)
   const deepen = useLoreMutation({
+    writes: [{ method: 'POST', path: '/api/entities/{entity_id}/deepen' }],
     run: () =>
       unwrap(
         api.POST('/api/entities/{entity_id}/deepen', {
@@ -58,6 +59,7 @@ export function EntityDepth({ entity, targets }: EntityDepthProps) {
       }
       actions={
         <Button
+          act={deepen}
           variant='outline'
           disabled={reason !== null}
           disabledReason={reason ?? undefined}

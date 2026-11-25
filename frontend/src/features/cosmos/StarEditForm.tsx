@@ -60,6 +60,7 @@ export function StarEditForm({ star }: { star: StarRecord }) {
           ? 'Nothing has changed yet.'
           : undefined
   const edit = useCosmicAction({
+    writes: [{ lever: 'star:edit' }],
     run: () =>
       unwrap(
         api.PATCH('/api/stars/{star_id}', {
@@ -178,6 +179,7 @@ export function StarEditForm({ star }: { star: StarRecord }) {
       </FormRow>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <CosmicActionButton
+          act={edit}
           actionId='star:edit'
           label='Save the star'
           icon={Save}

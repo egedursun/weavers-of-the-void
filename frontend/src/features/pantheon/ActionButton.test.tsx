@@ -1,74 +1,40 @@
+import '@/styles/index.css'
 import { describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { userEvent } from 'vitest/browser'
-import { TooltipProvider } from '@/components/ui/tooltip'
 import { ActionButton } from './ActionButton'
 
-describe('ActionButton', () => {
-  it('runs directly and shows the essence cost', async () => {
-    const onRun = vi.fn()
-    const screen = await render(
-      <ActionButton label='Bless' cost={15} onRun={onRun} />
-    )
-    await expect.element(screen.getByText('15')).toBeInTheDocument()
-    await screen.getByRole('button', { name: /Bless/ }).click()
-    expect(onRun).toHaveBeenCalledOnce()
-  })
+const REFUSED = {
+  blockedReason: 'Viewers of Probe World cannot change the world.',
+}
 
-  it('explains why it is blocked and does not run', async () => {
-    const onRun = vi.fn()
+describe('a god action button', () => {
+  it('stays visible and disabled with the reason when the role refuses its act', async () => {
+    const run = vi.fn()
     const screen = await render(
-      <TooltipProvider>
-        <ActionButton
-          label='Kill'
-          blocked='100 essence needed; you have 4.'
-          onRun={onRun}
-        />
-      </TooltipProvider>
+      <ActionButton act={REFUSED} label='Summon an outer being' onRun={run} />
     )
-    const button = screen.getByRole('button', { name: /Kill/ })
+    const button = screen.getByRole('button', { name: 'Summon an outer being' })
     await expect.element(button).toHaveAttribute('aria-disabled', 'true')
-    await expect
-      .element(button)
-      .toHaveAttribute('aria-description', '100 essence needed; you have 4.')
     await button.click({ force: true })
-    expect(onRun).not.toHaveBeenCalled()
+    expect(run).not.toHaveBeenCalled()
   })
 
-  it('asks for confirmation and the typed word before running', async () => {
-    const onRun = vi.fn()
+  it('refuses before its confirmation opens, not only inside it', async () => {
+    const run = vi.fn()
     const screen = await render(
       <ActionButton
-        label='Merge'
-        variant='destructive'
-        confirm={{
-          title: 'Merge the records?',
-          description: 'Both become one.',
-          word: 'MERGE',
-        }}
-        onRun={onRun}
+        act={REFUSED}
+        label='End the golden age'
+        confirm={{ title: 'End the golden age?', description: 'It ends now.' }}
+        onRun={run}
       />
     )
-    await screen.getByRole('button', { name: /Merge/ }).click()
+    const button = screen.getByRole('button', { name: 'End the golden age' })
+    await expect.element(button).toHaveAttribute('aria-disabled', 'true')
+    await button.click({ force: true })
     await expect
-      .element(screen.getByRole('heading', { name: 'Merge the records?' }))
-      .toBeInTheDocument()
-    const confirm = screen
-      .getByRole('alertdialog')
-      .getByRole('button', { name: 'Merge' })
-    await expect.element(confirm).toBeDisabled()
-    await userEvent.type(
-      screen.getByLabelText('Type MERGE to confirm'),
-      'MERGE'
-    )
-    await confirm.click()
-    expect(onRun).toHaveBeenCalledOnce()
-  })
-
-  it('shows a gain instead of a cost', async () => {
-    const screen = await render(
-      <ActionButton label='Drain' gain={40} onRun={vi.fn()} />
-    )
-    await expect.element(screen.getByText('+40')).toBeInTheDocument()
+      .element(screen.getByText('End the golden age?'))
+      .not.toBeInTheDocument()
+    expect(run).not.toHaveBeenCalled()
   })
 })

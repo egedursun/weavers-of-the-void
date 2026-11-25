@@ -342,6 +342,7 @@ export function WorldPhysicsSection({ worldId }: { worldId: number }) {
             <Derived view={view} physics={view.physics} />
             {GROUPS.map((group) => (
               <RecordEditor
+                act={edit}
                 key={group.title}
                 title={group.title}
                 note={group.note}

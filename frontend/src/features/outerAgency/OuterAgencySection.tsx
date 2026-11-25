@@ -130,6 +130,7 @@ function Plan({
     >
       <Ref node={row.target} empty='no target named' />
       <RecordEditor
+        act={editing}
         title='Set the plan'
         note={HOLD}
         fields={PLAN_FIELDS}
@@ -139,6 +140,7 @@ function Plan({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Undo it'
         busy={why(blocked, removing.isPending)}
@@ -179,6 +181,7 @@ function Herald({
     >
       <Ref node={row.herald} empty='no herald named' />
       <RecordEditor
+        act={editing}
         title='Set the herald'
         note={HOLD}
         fields={HERALD_FIELDS}
@@ -188,6 +191,7 @@ function Herald({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={freeing}
         icon={Unlock}
         label='Free them'
         busy={why(blocked, freeing.isPending)}
@@ -230,6 +234,7 @@ function Incursion({
       caption={`began in epoch ${row.started_epoch}${row.ended_epoch !== null ? `, ended in epoch ${row.ended_epoch}` : row.rift_id !== null ? ', through a rift' : ', with no rift'}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the incursion'
         note={HOLD}
         fields={INCURSION_FIELDS}
@@ -239,6 +244,7 @@ function Incursion({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={ending}
         icon={Hand}
         label='Drive it back'
         busy={why(blocked ?? over, ending.isPending)}
@@ -279,6 +285,7 @@ function Pact({
     >
       <Ref node={row.holder} empty='no one named' />
       <RecordEditor
+        act={editing}
         title='Set the bargain'
         note={HOLD}
         fields={PACT_FIELDS}
@@ -288,6 +295,7 @@ function Pact({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={voiding}
         icon={Trash2}
         label='Void it'
         busy={why(blocked, voiding.isPending)}
@@ -331,6 +339,7 @@ function Relation({
     >
       <Ref node={row.other} empty='no being named' />
       <RecordEditor
+        act={editing}
         title='Set the stance'
         note={HOLD}
         fields={RELATION_FIELDS}
@@ -340,6 +349,7 @@ function Relation({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Undo it'
         busy={why(blocked, removing.isPending)}
@@ -384,6 +394,7 @@ function Seal({
       caption={`set in epoch ${row.sealed_epoch}${row.broken_epoch !== null ? `, broken in epoch ${row.broken_epoch}` : '; it weakens each epoch and breaks when the being outweighs it'}`}
     >
       <RecordEditor
+        act={editing}
         title='Set the seal'
         note={HOLD}
         fields={SEAL_FIELDS}
@@ -393,6 +404,7 @@ function Seal({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={breaking}
         icon={Unlock}
         label='Break it'
         busy={why(blocked ?? broken, breaking.isPending)}
@@ -523,6 +535,7 @@ function Forges({
         columns={3}
         action={
           <StepButton
+            act={aiming}
             icon={CirclePlus}
             label='Set its aim'
             variant='default'
@@ -560,6 +573,7 @@ function Forges({
         columns={2}
         action={
           <StepButton
+            act={binding}
             icon={HERALD_ICON}
             label='Bind them'
             variant='default'
@@ -594,6 +608,7 @@ function Forges({
         columns={2}
         action={
           <StepButton
+            act={opening}
             icon={STAGES.breach.icon}
             label='Open it'
             variant='default'
@@ -618,6 +633,7 @@ function Forges({
         columns={2}
         action={
           <StepButton
+            act={striking}
             icon={PACT_ICON}
             label='Strike it'
             variant='default'
@@ -652,6 +668,7 @@ function Forges({
         columns={2}
         action={
           <StepButton
+            act={relating}
             icon={CirclePlus}
             label='Set its stance'
             variant='default'
@@ -691,6 +708,7 @@ function Forges({
         columns={2}
         action={
           <StepButton
+            act={sealing}
             icon={SEAL_ICON}
             label='Hold it'
             variant='default'
@@ -721,6 +739,7 @@ function Forges({
         caption='The Creator ends it for good, at a great cost of essence.'
       >
         <StepButton
+          act={destroying}
           icon={FATES.destroyed.icon}
           label='Destroy it'
           busy={why(stop, destroying.isPending)}

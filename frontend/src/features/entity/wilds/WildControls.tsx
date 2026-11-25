@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { type ActionBody, type EditValues } from '@/api/actions'
 import { animalRoleValues } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -66,11 +67,13 @@ function PreyRow({
   link,
   busy,
   onSet,
+  act,
 }: {
   prey: Ref
   link: Link
   busy: string | null
   onSet: (link: Link) => void
+  act?: ActProp
 }) {
   return (
     <li className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-well border-gild/20 bg-muted/60 p-2'>
@@ -87,6 +90,7 @@ function PreyRow({
       </div>
       <div className='flex flex-wrap gap-1'>
         <Button
+          act={act}
           size='sm'
           variant={link === 'pinned' ? 'default' : 'outline'}
           disabled={busy !== null || link === 'pinned'}
@@ -97,6 +101,7 @@ function PreyRow({
           Hunt it always
         </Button>
         <Button
+          act={act}
           size='sm'
           variant={link === 'barred' ? 'destructive' : 'outline'}
           disabled={busy !== null || link === 'barred'}
@@ -107,6 +112,7 @@ function PreyRow({
           Forbid
         </Button>
         <Button
+          act={act}
           size='sm'
           variant='ghost'
           disabled={busy !== null || link === 'derived'}
@@ -156,6 +162,7 @@ export function FoodLinkControls({ id, card, blocked }: Blocked) {
             <Paged items={prey} as='li'>
               {(item) => (
                 <PreyRow
+                  act={set}
                   key={item?.id}
                   prey={item}
                   link={linkOf(card, item?.id ?? 0)}
@@ -177,6 +184,7 @@ export function FoodLinkControls({ id, card, blocked }: Blocked) {
             />
           </div>
           <Button
+            act={set}
             size='sm'
             variant='outline'
             disabled={busy !== null || fresh === null || fresh === id}
@@ -294,6 +302,7 @@ export function HostControls({ id, card, blocked }: Blocked) {
                       Immune
                     </Text>
                     <Switch
+                      act={set}
                       checked={row.immune}
                       disabled={busy !== null}
                       aria-label={`Immune to ${row.disease?.name ?? 'this sickness'}`}
@@ -304,6 +313,7 @@ export function HostControls({ id, card, blocked }: Blocked) {
                   </label>
                   {held && (
                     <Button
+                      act={set}
                       size='sm'
                       variant='outline'
                       disabled={busy !== null}
@@ -322,6 +332,7 @@ export function HostControls({ id, card, blocked }: Blocked) {
                     </Button>
                   )}
                   <Button
+                    act={set}
                     size='icon-sm'
                     variant='ghost'
                     aria-label={`No longer carries ${row.disease?.name ?? 'it'}`}
@@ -350,6 +361,7 @@ export function HostControls({ id, card, blocked }: Blocked) {
           />
         </div>
         <Button
+          act={set}
           size='sm'
           variant='outline'
           disabled={busy !== null || fresh === null}
@@ -381,6 +393,7 @@ function KindRow({
   onSave,
   onRelease,
   onDrop,
+  act,
 }: {
   kind: UseKind
   held: boolean
@@ -389,6 +402,7 @@ function KindRow({
   onSave: (values: EditValues) => void
   onRelease: () => void
   onDrop: () => void
+  act?: ActProp
 }) {
   const [output, setOutput] = useState(String(kind.output_pct))
   const [base, setBase] = useState<string>(kind.base_use)
@@ -410,6 +424,7 @@ function KindRow({
             Kept so
           </Text>
           <Switch
+            act={act}
             checked={held}
             disabled={busy !== null}
             aria-label={`Keep this kind as ${kind.name}`}
@@ -435,6 +450,7 @@ function KindRow({
         />
         <div className='flex flex-wrap gap-1'>
           <Button
+            act={act}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -451,6 +467,7 @@ function KindRow({
           </Button>
           {kind.locked.length > 0 && (
             <Button
+              act={act}
               size='sm'
               variant='ghost'
               disabled={busy !== null}
@@ -462,6 +479,7 @@ function KindRow({
             </Button>
           )}
           <Button
+            act={act}
             size='icon-sm'
             variant='ghost'
             aria-label={`Forget ${kind.name}`}
@@ -544,6 +562,7 @@ export function KeepingControls({ id, card, blocked }: Blocked) {
           <Paged items={kinds.data ?? []} as='li'>
             {(kind) => (
               <KindRow
+                act={[toggle, edit, drop]}
                 key={`${kind.id}-${kind.output_pct}-${kind.base_use}`}
                 kind={kind}
                 held={mine.has(kind.id)}
@@ -591,6 +610,7 @@ export function KeepingControls({ id, card, blocked }: Blocked) {
           onChange={setOutput}
         />
         <Button
+          act={create}
           size='sm'
           variant='outline'
           disabled={busy !== null || name.trim() === '' || base === ''}
@@ -662,6 +682,7 @@ export function HerdDrop({
   const busy = busyOf(blocked, drop.isPending)
   return (
     <Button
+      act={drop}
       size='icon-sm'
       variant='ghost'
       aria-label={`Scatter the herd of ${name}`}

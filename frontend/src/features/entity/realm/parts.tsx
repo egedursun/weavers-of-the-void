@@ -1,5 +1,6 @@
 import { type ReactNode, useId, useMemo, useState } from 'react'
 import { Plus, SlidersHorizontal, X, type LucideIcon } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +23,7 @@ import {
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Stat, Text } from '@/components/typography'
+import { type AdjustGate, useAdjustGate } from '@/features/team/writeGate'
 import { useNames } from '../api/queries'
 import { ControlPanel, FormBar, NodePicker } from '../mind/parts'
 import { type Named, badgeVariant, plain } from './labels'
@@ -126,6 +128,8 @@ export function Tag({ spec, text }: { spec: Named; text?: string }) {
 }
 
 export function AdjustPanel({
+  acts,
+  writes,
   title,
   note,
   trigger = 'Adjust',
@@ -139,17 +143,24 @@ export function AdjustPanel({
   hold?: boolean
   onHold?: (value: boolean) => void
   children: ReactNode
-}) {
+} & AdjustGate) {
+  const gate = useAdjustGate(acts, writes)
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='outline' size='sm' className='self-start'>
+        <Button act={gate} variant='outline' size='sm' className='self-start'>
           <SlidersHorizontal />
           {trigger}
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent className='flex min-w-0 flex-col'>
-        <ControlPanel title={title} note={note} hold={hold} onHold={onHold}>
+        <ControlPanel
+          act={gate}
+          title={title}
+          note={note}
+          hold={hold}
+          onHold={onHold}
+        >
           {children}
         </ControlPanel>
       </CollapsibleContent>
@@ -415,12 +426,14 @@ export function NodeListEditor({
   nodes,
   blocked,
   onChange,
+  act,
 }: {
   label: string
   types: string[]
   nodes: { id: number; kind: string; name: string }[]
   blocked: string | null
   onChange: (ids: number[]) => void
+  act?: ActProp
 }) {
   const [adding, setAdding] = useState<number | null>(null)
   const ids = nodes.map((node) => node.id)
@@ -443,6 +456,7 @@ export function NodeListEditor({
             <Badge key={node.id} variant='outline'>
               <RefLink node={node} />
               <Button
+                act={act}
                 size='icon-sm'
                 variant='ghost'
                 aria-label={`Remove ${node.name}`}
@@ -459,6 +473,7 @@ export function NodeListEditor({
       <FormBar
         action={
           <Button
+            act={act}
             size='sm'
             variant='outline'
             disabled={blocked !== null || adding === null || listed}

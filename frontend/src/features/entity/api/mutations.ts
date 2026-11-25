@@ -2,21 +2,23 @@ import { useState } from 'react'
 import {
   type QueryClient,
   type QueryKey,
-  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
+import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { fetchJob, fetchJobs } from '@/api/system'
 import { TERMINAL_JOB_STATUSES, isJobStatus } from '@/constants/jobs'
+import { undoLedgerEntry } from '@/features/pantheon/godAction'
+import { announceWaiting } from '@/features/team/outcome'
+import { type WriteTarget } from '@/features/team/writeGate'
 import { type ActionResponse } from './types'
 
 export const ACTIVE_JOB_LIMIT = 50
 const UNDO_LABEL = 'Undo'
-const UNDONE_MESSAGE = 'Undone'
 const DONE_MESSAGE = 'Done'
 
 export function errorText(error: unknown): string {
@@ -27,23 +29,6 @@ export function refreshWorld(queryClient: QueryClient, extra: QueryKey[] = []) {
   void queryClient.invalidateQueries({ queryKey: queryKeys.world.all })
   void queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all })
   for (const queryKey of extra) void queryClient.invalidateQueries({ queryKey })
-}
-
-export async function undoLedgerEntry(
-  queryClient: QueryClient,
-  entryId: number
-): Promise<void> {
-  try {
-    await unwrap(
-      api.POST('/api/ledger/{entry_id}/undo', {
-        params: { path: { entry_id: entryId } },
-      })
-    )
-    toast.success(UNDONE_MESSAGE)
-    refreshWorld(queryClient)
-  } catch (error) {
-    toast.error(errorText(error))
-  }
 }
 
 export function deleteEntityNote(entityId: number): Promise<ActionResponse> {
@@ -62,6 +47,7 @@ function responseOf(result: unknown): Partial<ActionResponse> {
 
 type LoreMutationOptions<TVariables, TResult> = {
   run: (variables: TVariables) => Promise<TResult>
+  writes?: readonly WriteTarget[]
   success?: string | ((result: TResult, variables: TVariables) => string)
   invalidate?: QueryKey[]
   quiet?: boolean
@@ -74,10 +60,11 @@ export function useLoreMutation<TVariables = void, TResult = ActionResponse>(
   const queryClient = useQueryClient()
   const [jobId, setJobId] = useState<string | null>(null)
   const mutation = useMutation({
+    writes: options.writes,
     mutationFn: options.run,
     onSuccess: (result, variables) => {
       const response = responseOf(result)
-      if (!options.quiet) {
+      if (announceWaiting(result) === 'done' && !options.quiet) {
         const message =
           typeof options.success === 'function'
             ? options.success(result, variables)

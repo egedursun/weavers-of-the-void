@@ -286,6 +286,7 @@ function KeystoneForge({
       columns={3}
       action={
         <Button
+          act={designating}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -376,6 +377,7 @@ function BrandForge({
       columns={2}
       action={
         <Button
+          act={founding}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

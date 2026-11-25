@@ -127,6 +127,7 @@ function TieForge({
       columns={4}
       action={
         <Button
+          act={binding}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -288,6 +289,7 @@ function SellForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={selling}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -297,6 +299,7 @@ function SellForge({
             Sell it
           </Button>
           <Button
+            act={granting}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -476,6 +479,7 @@ function BaseForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={setting}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

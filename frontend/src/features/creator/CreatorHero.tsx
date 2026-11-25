@@ -17,6 +17,7 @@ export function RedrawLikenessButton() {
   return (
     <div className='flex min-w-0 flex-col items-start gap-2'>
       <ActionButton
+        act={action}
         label='Redraw the likeness'
         icon={Brush}
         blocked={

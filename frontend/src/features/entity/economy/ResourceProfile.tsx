@@ -20,6 +20,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type Permission } from '@/api/teamGate'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
@@ -144,6 +145,7 @@ function WorkingForm({
     )
   )
   const edit = useGodAction({
+    writes: [{ lever: 'resource:edit' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -181,6 +183,7 @@ function WorkingForm({
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
         <Label variant='overline'>Craft, seal and by-product</Label>
         <SwitchToggle
+          permission='lock_canon'
           label='Hold what I set'
           checked={hold}
           disabled={blocked !== null}
@@ -248,6 +251,7 @@ function WorkingForm({
         closed to peoples who do not know them yet.
       </Muted>
       <Button
+        act={edit}
         size='sm'
         className='self-start'
         disabled={blocked !== null}
@@ -276,6 +280,7 @@ function WorkersForm({
   const [workers, setWorkers] = useState(first ? String(first.workers) : '10')
   const [hold, setHold] = useState(true)
   const set = useGodAction({
+    writes: [{ lever: 'resource:workers' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -305,6 +310,7 @@ function WorkersForm({
       <div className='flex min-w-0 flex-wrap items-center justify-between gap-2'>
         <Label variant='overline'>Hands at work</Label>
         <SwitchToggle
+          permission='lock_canon'
           label='Hold the hands'
           checked={hold}
           disabled={busy !== null}
@@ -331,6 +337,7 @@ function WorkersForm({
           onChange={setWorkers}
         />
         <Button
+          act={set}
           size='sm'
           variant='outline'
           className='justify-self-start'
@@ -348,6 +355,7 @@ function WorkersForm({
 
 function SwitchToggle({
   label,
+  permission,
   checked,
   disabled,
   onChange,
@@ -356,10 +364,12 @@ function SwitchToggle({
   checked: boolean
   disabled?: boolean
   onChange: (value: boolean) => void
+  permission?: Permission
 }) {
   return (
     <label className='flex shrink-0 items-center gap-2'>
       <Switch
+        permission={permission}
         checked={checked}
         disabled={disabled}
         onCheckedChange={onChange}
@@ -393,6 +403,7 @@ function ProfileForm({
   )
   const [owner, setOwner] = useState<string | null>(null)
   const save = useGodAction({
+    writes: [{ lever: 'resource:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resource:set', {
@@ -410,6 +421,7 @@ function ProfileForm({
       ),
   })
   const retype = useGodAction({
+    writes: [{ lever: 'resource:commodity' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resource:commodity', {
@@ -423,6 +435,7 @@ function ProfileForm({
       ),
   })
   const reveal = useGodAction({
+    writes: [{ lever: 'resource:reveal' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resource:reveal', {
@@ -434,6 +447,7 @@ function ProfileForm({
       ),
   })
   const give = useGodAction({
+    writes: [{ lever: 'resource:owner' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resource:owner', {
@@ -456,6 +470,7 @@ function ProfileForm({
     }))
   return (
     <AdjustPanel
+      acts={[save, reveal, retype, give]}
       label='Adjust the deposit'
       title='Shape this deposit'
       note='Set how much is left and how it is worked, change what it yields, reveal or hide it, or hand it to a new master. Every change goes into the ledger.'
@@ -478,6 +493,7 @@ function ProfileForm({
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={save}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -487,6 +503,7 @@ function ProfileForm({
             Save the reserve
           </Button>
           <Button
+            act={reveal}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -516,6 +533,7 @@ function ProfileForm({
             onPick={setMaterial}
           />
           <Button
+            act={retype}
             size='sm'
             variant='outline'
             className='justify-self-start'
@@ -546,6 +564,7 @@ function ProfileForm({
             />
           </FieldTile>
           <Button
+            act={give}
             size='sm'
             variant='outline'
             className='justify-self-start'
@@ -571,6 +590,7 @@ function Summary({
 }) {
   const names = useNames()
   const release = useGodAction({
+    writes: [{ lever: 'resource:release' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -580,6 +600,7 @@ function Summary({
       ),
   })
   const remove = useGodAction({
+    writes: [{ lever: 'resource:delete' }],
     invalidate: ECONOMY_REFRESH,
     run: () =>
       unwrap(
@@ -589,6 +610,7 @@ function Summary({
       ),
   })
   const freeWorker = useGodAction({
+    writes: [{ lever: 'resource:workers' }],
     invalidate: ECONOMY_REFRESH,
     run: (community: number) =>
       unwrap(
@@ -678,11 +700,13 @@ function Summary({
         </div>
         <div className='flex min-w-0 flex-wrap gap-2'>
           <ReleaseButton
+            act={release}
             held={profile.held}
             busy={busy}
             onRelease={() => release.mutate(undefined)}
           />
           <ConfirmButton
+            act={remove}
             icon={Trash2}
             label='Unmake the deposit'
             title='Unmake this deposit?'
@@ -799,6 +823,7 @@ function Summary({
                 />
                 <HeldBadge held={row.held} />
                 <ReleaseButton
+                  act={freeWorker}
                   held={row.held}
                   busy={busy}
                   onRelease={() => freeWorker.mutate(row.community_id)}

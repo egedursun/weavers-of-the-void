@@ -68,6 +68,7 @@ import { IncitementCard } from '@/features/foundations/IncitementCard'
 import { StratumBadge } from '@/features/map/StratumBadge'
 import { useGodGate } from '@/features/pantheon/gate'
 import { useGodAction } from '@/features/pantheon/godAction'
+import { useWriteRefusal } from '@/features/team/writeGate'
 import { WARS } from '@/features/worldview/labels'
 import { ArmyPanel } from './ArmyPanel'
 import { BattleDepthPanel } from './BattleDepth'
@@ -222,6 +223,7 @@ function WearinessEditor({
 }) {
   const [value, setValue] = useState(String(entry.weariness))
   const save = useGodAction({
+    writes: [{ lever: 'war:weariness' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:weariness', {
@@ -234,6 +236,7 @@ function WearinessEditor({
       ),
   })
   const allies = useGodAction({
+    writes: [{ lever: 'war:call_allies' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:call_allies', {
@@ -267,6 +270,7 @@ function WearinessEditor({
           />
         </div>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -276,6 +280,7 @@ function WearinessEditor({
           Set
         </Button>
         <Button
+          act={allies}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -301,6 +306,7 @@ function AimEditor({
 }) {
   const [achieved, setAchieved] = useState(String(aim.achieved))
   const save = useGodAction({
+    writes: [{ lever: 'war:aim' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:aim', {
@@ -315,6 +321,7 @@ function AimEditor({
       ),
   })
   const drop = useGodAction({
+    writes: [{ lever: 'war:drop_aim' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:drop_aim', { body: { aim_id: aim.id } })
@@ -342,6 +349,7 @@ function AimEditor({
           />
         </div>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -351,6 +359,7 @@ function AimEditor({
           Set
         </Button>
         <Button
+          act={drop}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -379,6 +388,7 @@ function AddAim({ room, blocked }: { room: Room; blocked: string | null }) {
   const [kind, setKind] = useState<string>('conquer_region')
   const [target, setTarget] = useState<number | null>(null)
   const add = useGodAction({
+    writes: [{ lever: 'war:aim' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/war:aim', {
@@ -423,6 +433,7 @@ function AddAim({ room, blocked }: { room: Room; blocked: string | null }) {
       </FieldGrid>
       <div>
         <Button
+          act={add}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -443,8 +454,17 @@ function WarControls({
   room: Room
   blocked: string | null
 }) {
+  const formGate = {
+    blockedReason: useWriteRefusal([
+      { lever: 'war:weariness' },
+      { lever: 'war:call_allies' },
+      { lever: 'war:edit_side' },
+      { lever: 'war:separate_peace' },
+    ]),
+  }
   return (
     <Adjust
+      acts={[formGate]}
       label='Command the war'
       title='Weariness and aims'
       note='How weary each side is, what each fights for and what winning will demand. Every change goes into the ledger and can be undone.'
@@ -721,6 +741,7 @@ function SiegeEditor({
   const [starvation, setStarvation] = useState<string>(siege.starvation)
   const [status, setStatus] = useState<string>(siege.status)
   const save = useGodAction({
+    writes: [{ lever: 'siege:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/siege:edit', {
@@ -743,6 +764,7 @@ function SiegeEditor({
   const busy = busyOf(blocked, save.isPending)
   return (
     <Adjust
+      acts={[save]}
       title='Shape the siege'
       note='Stores, walls and sickness on both sides of the walls. The next season goes on from what you set.'
     >
@@ -778,6 +800,7 @@ function SiegeEditor({
       </div>
       <div>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -932,6 +955,7 @@ export function OccupationCard({
   const [resistance, setResistance] = useState(String(occupation.resistance))
   const region = occupation.region?.id ?? 0
   const save = useGodAction({
+    writes: [{ lever: 'occupation:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/occupation:edit', {
@@ -945,6 +969,7 @@ export function OccupationCard({
       ),
   })
   const end = useGodAction({
+    writes: [{ lever: 'occupation:edit' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/occupation:edit', {
@@ -1000,6 +1025,7 @@ export function OccupationCard({
       </div>
       <div className='mt-auto flex min-w-0 flex-col'>
         <Adjust
+          acts={[save, end]}
           title='Shape the occupation'
           note='Control and resistance decide whether the land rises, submits or is given back.'
         >
@@ -1021,6 +1047,7 @@ export function OccupationCard({
           </div>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={save}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}
@@ -1030,6 +1057,7 @@ export function OccupationCard({
               Set
             </Button>
             <Button
+              act={end}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -1058,6 +1086,7 @@ export function CohortCard({
   const [fate, setFate] = useState<string>(cohort.fate)
   const [count, setCount] = useState(String(cohort.count))
   const settle = useGodAction({
+    writes: [{ lever: 'captives:settle' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/captives:settle', {
@@ -1107,6 +1136,7 @@ export function CohortCard({
       </div>
       <div className='mt-auto flex min-w-0 flex-col'>
         <Adjust
+          acts={[settle]}
           label='Decide their fate'
           title='Their fate'
           note='Ransom, enslave, sacrifice, set to labour, exchange or release any number of them.'
@@ -1129,6 +1159,7 @@ export function CohortCard({
           </div>
           <div>
             <Button
+              act={settle}
               size='sm'
               disabled={busy !== null}
               disabledReason={busy ?? undefined}

@@ -409,12 +409,14 @@ function BeastControls({ id, card, blocked }: Blocked) {
   const [tamed, setTamed] = useState(false)
   const [lair, setLair] = useState<number | null>(null)
   const rouse = useGodAction<boolean>({
+    writes: [{ lever: 'beast:rouse' }],
     run: (awake) =>
       unwrap(
         api.POST('/api/actions/beast:rouse', { body: { beast_id: id, awake } })
       ),
   })
   const bind = useGodAction<number | null>({
+    writes: [{ lever: 'beast:bind' }],
     run: (node) =>
       unwrap(
         api.POST('/api/actions/beast:bind', {
@@ -423,6 +425,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
       ),
   })
   const move = useGodAction({
+    writes: [{ lever: 'beast:lair' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/beast:lair', {
@@ -432,6 +435,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
   })
   const [owner, setOwner] = useState<number | null>(null)
   const keep = useGodAction<number | null>({
+    writes: [{ lever: 'pet:set' }],
     run: (node) =>
       unwrap(
         api.POST('/api/actions/pet:set', {
@@ -449,6 +453,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
   )
   return (
     <AdjustPanel
+      acts={[edit, rouse, bind, move, keep]}
       title='Command the beast'
       note='Wake or lull it, bind it to a master, move its lair, fill its hoard or set any of its values. What you set is held until you let the world decide again.'
       head={
@@ -466,6 +471,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
         <Group title='Temper and size' icon={ShieldAlert}>
           <div className='flex min-w-0 flex-wrap items-end gap-3'>
             <MindPicker
+              act={edit}
               label='Temper'
               value={card.temper}
               table={pickTable(beastTemperValues, TEMPER)}
@@ -473,6 +479,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
               onPick={(value) => edit.mutate({ values: { temper: value } })}
             />
             <MindPicker
+              act={edit}
               label='Size'
               value={card.size_class}
               table={pickTable(sizeClassValues, SIZE)}
@@ -482,6 +489,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
           </div>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={rouse}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -492,6 +500,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
               Wake it
             </Button>
             <Button
+              act={rouse}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -520,6 +529,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
                   onChange={setTamed}
                 />
                 <Button
+                  act={bind}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null || holder === null}
@@ -533,6 +543,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
                 </Button>
                 {card.bound_to && (
                   <Button
+                    act={bind}
                     size='sm'
                     variant='outline'
                     disabled={busy !== null}
@@ -554,6 +565,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
                 placeholder='Choose a place…'
               />
               <Button
+                act={move}
                 size='sm'
                 variant='outline'
                 className='self-start'
@@ -583,6 +595,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
               placeholder='Give it to a mortal…'
             />
             <Button
+              act={keep}
               size='sm'
               variant='outline'
               disabled={busy !== null || owner === null}
@@ -596,6 +609,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
             </Button>
             {card.pet_of && (
               <Button
+                act={keep}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}
@@ -610,6 +624,7 @@ function BeastControls({ id, card, blocked }: Blocked) {
         </Group>
         <Group title='Its hoard' icon={Coins}>
           <ShareEditor
+            act={edit}
             key={JSON.stringify(card.hoard)}
             table={HOARD}
             value={card.hoard}
@@ -732,6 +747,7 @@ function HerdCard({
     values: EditValues
     release?: string[]
   }>({
+    writes: [{ lever: 'herd:edit' }],
     run: ({ values, release }) =>
       unwrap(
         api.POST('/api/actions/herd:edit', {
@@ -856,6 +872,7 @@ function HerdCard({
           </Muted>
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={save}
               size='sm'
               aria-label='Set the herd'
               disabled={busy !== null}
@@ -877,6 +894,7 @@ function HerdCard({
             </Button>
             {row.locked.length > 0 && (
               <Button
+                act={save}
                 size='sm'
                 variant='outline'
                 disabled={busy !== null}

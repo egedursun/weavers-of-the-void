@@ -22,6 +22,7 @@ import { usePickerData } from '@/features/entity/actions/usePickerData'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { MEMORY_ICONS, named } from '@/features/entity/mind/labels'
 import { OpinionBreakdown } from '@/features/entity/sections/MemoriesSection'
+import { toastDone } from '@/features/team/outcome'
 import { RelationParts } from './RelationParts'
 import {
   type RelationEntry,
@@ -117,6 +118,7 @@ function RelationRow({ entry, selfId, readOnlyReason }: RowProps) {
           className='w-36'
         />
         <Button
+          act={set}
           variant='outline'
           size='sm'
           disabled={invalid || set.isPending || readOnlyReason !== null}
@@ -131,7 +133,7 @@ function RelationRow({ entry, selfId, readOnlyReason }: RowProps) {
               { otherId: entry.other.id, value: parsed },
               {
                 onSuccess: (result) => {
-                  toast.success(result.message)
+                  toastDone(result, result.message)
                   setDraft('')
                 },
                 onError: fail,
@@ -144,13 +146,14 @@ function RelationRow({ entry, selfId, readOnlyReason }: RowProps) {
         </Button>
         {entry.blood_feud_since_epoch !== null && (
           <Button
+            act={endFeud}
             variant='outline'
             size='sm'
             disabled={endFeud.isPending || readOnlyReason !== null}
             disabledReason={readOnlyReason ?? 'Working'}
             onClick={() =>
               endFeud.mutate(entry.other.id, {
-                onSuccess: (result) => toast.success(result.message),
+                onSuccess: (result) => toastDone(result, result.message),
                 onError: fail,
               })
             }
@@ -301,6 +304,7 @@ function NewRelation({
       </FieldTile>
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={set}
           disabled={
             noTarget || valueInvalid || set.isPending || readOnlyReason !== null
           }
@@ -317,7 +321,7 @@ function NewRelation({
             set.mutate(
               { otherId, value: parsed },
               {
-                onSuccess: (result) => toast.success(result.message),
+                onSuccess: (result) => toastDone(result, result.message),
                 onError: fail,
               }
             )
@@ -327,6 +331,7 @@ function NewRelation({
           Set relation
         </Button>
         <Button
+          act={start}
           variant='destructive'
           disabled={noTarget || start.isPending || readOnlyReason !== null}
           disabledReason={
@@ -335,7 +340,7 @@ function NewRelation({
           onClick={() =>
             otherId !== null &&
             start.mutate(otherId, {
-              onSuccess: (result) => toast.success(result.message),
+              onSuccess: (result) => toastDone(result, result.message),
               onError: fail,
             })
           }

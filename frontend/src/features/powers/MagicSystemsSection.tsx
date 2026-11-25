@@ -166,6 +166,7 @@ function Part({
     <RecordRow icon={SYSTEMS_ICON} tone='info' title={title} caption={caption}>
       {PART_FIELDS[kind].length ? (
         <RecordEditor
+          act={editing}
           title={`Set this ${PART_LABELS[kind]}`}
           note='Values you set are held against the engine.'
           fields={PART_FIELDS[kind]}
@@ -176,6 +177,7 @@ function Part({
         />
       ) : null}
       <StepButton
+        act={dropping}
         icon={Trash2}
         label={`Take the ${PART_LABELS[kind]} away`}
         busy={why(blocked, dropping.isPending)}
@@ -341,6 +343,7 @@ function System({
         columns={3}
         action={
           <StepButton
+            act={adding}
             icon={CirclePlus}
             label='Add the part'
             busy={why(blocked ?? missing, adding.isPending)}
@@ -416,6 +419,7 @@ function System({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this system'
         note='Values you set are held against the engine until you release them.'
         fields={SYSTEM_FIELDS}
@@ -425,6 +429,7 @@ function System({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={deleting}
         icon={Trash2}
         label='Unmake the system'
         busy={why(blocked, deleting.isPending)}
@@ -547,6 +552,7 @@ export function MagicSystemsSection({
               columns={3}
               action={
                 <StepButton
+                  act={creating}
                   icon={CirclePlus}
                   label='Shape it'
                   variant='default'

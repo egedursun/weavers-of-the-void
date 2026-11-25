@@ -28,6 +28,7 @@ export function HoardControl({
   const [metal, setMetal] = useState<string>('kind:gold')
   const [units, setUnits] = useState(DEFAULT_UNITS)
   const pour = useGodAction({
+    writes: [{ lever: 'hoard:inject' }],
     invalidate: ECONOMY_REFRESH,
     run: () => {
       const ref = materialRef(metal)
@@ -83,6 +84,7 @@ export function HoardControl({
           onChange={setUnits}
         />
         <Button
+          act={pour}
           size='sm'
           className='justify-self-start'
           disabled={busy !== null}

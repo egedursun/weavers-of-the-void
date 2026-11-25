@@ -88,6 +88,7 @@ function EffectShape({
         onPick={setForm}
       />
       <Button
+        act={save}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -201,6 +202,7 @@ function Requirements({
         </label>
       </div>
       <Button
+        act={save}
         size='sm'
         className='self-start'
         disabled={busy !== null}
@@ -265,6 +267,7 @@ export function RiteControls({
       </AdjustBlock>
       <AdjustBlock title='Teach it' icon={BookUser}>
         <PickAndRun
+          act={teach}
           types={HOLDERS}
           placeholder='Choose a pupil…'
           label='Teach the rite'
@@ -289,6 +292,7 @@ export function RiteControls({
                 <Ban aria-hidden='true' />
                 <Who item={item} />
                 <Button
+                  act={forbid}
                   size='icon'
                   variant='ghost'
                   aria-label={`Lift the ban of ${item.name}`}
@@ -305,6 +309,7 @@ export function RiteControls({
           </PagedList>
         )}
         <PickAndRun
+          act={forbid}
           types={AUTHORITIES}
           placeholder='Choose a realm, cult or people…'
           label='Forbid it there'
@@ -318,6 +323,7 @@ export function RiteControls({
       <AdjustBlock title='Undo its last working' icon={Eraser}>
         <Muted variant='caption'>{`Lifts the weather it called, the ward it raised or the curse it laid (${wordOf(magicSchoolValues, card.school)}).`}</Muted>
         <Button
+          act={dispel}
           size='sm'
           variant='outline'
           className='self-start'

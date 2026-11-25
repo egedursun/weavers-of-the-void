@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { type ActionBody } from '@/api/actions'
+import { type ActProp } from '@/api/mutation'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -75,11 +76,13 @@ function OptionTile({
   current,
   busy,
   onPick,
+  act,
 }: {
   row: Technique
   current: boolean
   busy: string | null
   onPick: () => void
+  act?: ActProp
 }) {
   const branch = branchOf(row.branch)
   return (
@@ -128,6 +131,7 @@ function OptionTile({
           </Badge>
         ) : (
           <Button
+            act={act}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -213,6 +217,7 @@ function FocusCard({
             <Paged items={options} as='li'>
               {(row) => (
                 <OptionTile
+                  act={set}
                   key={row.technique}
                   row={row}
                   current={row.technique === focus?.technique}
@@ -241,6 +246,7 @@ function FocusCard({
             </div>
             <label className='flex items-center gap-1.5'>
               <Switch
+                permission='lock_canon'
                 checked={hold}
                 aria-label='Hold it against their scholars'
                 onCheckedChange={setHold}
@@ -250,6 +256,7 @@ function FocusCard({
               </Muted>
             </label>
             <Button
+              act={set}
               size='sm'
               disabled={busy !== null || pick === ''}
               disabledReason={
@@ -268,6 +275,7 @@ function FocusCard({
             <div className='flex min-w-0 flex-wrap gap-2'>
               {held && (
                 <Button
+                  act={set}
                   size='sm'
                   variant='outline'
                   disabled={busy !== null}
@@ -281,6 +289,7 @@ function FocusCard({
                 </Button>
               )}
               <Button
+                act={set}
                 size='sm'
                 variant='ghost'
                 disabled={busy !== null}
@@ -375,6 +384,7 @@ function InstitutionTile({
       <div className='flex min-w-0 flex-wrap items-center gap-3'>
         <label className='flex items-center gap-1.5'>
           <Switch
+            act={set}
             checked={row.embraced}
             disabled={busy !== null}
             aria-label='Embraced'
@@ -386,6 +396,7 @@ function InstitutionTile({
         </label>
         <label className='flex items-center gap-1.5'>
           <Switch
+            act={set}
             checked={row.origin}
             disabled={busy !== null}
             aria-label='Born here'
@@ -398,12 +409,14 @@ function InstitutionTile({
       </div>
       <RowEditors>
         <RowEditor
+          act={set}
           label='Epochs refused'
           value={row.refused_epochs}
           blocked={busy}
           onSave={(refused_epochs) => save({ refused_epochs })}
         />
         <RowEditor
+          act={set}
           label='Since epoch'
           value={row.since_epoch}
           blocked={busy}
@@ -413,6 +426,7 @@ function InstitutionTile({
       <div className='mt-auto flex min-w-0 flex-wrap gap-2'>
         {row.locked.length > 0 && (
           <Button
+            act={set}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -431,6 +445,7 @@ function InstitutionTile({
           </Button>
         )}
         <Button
+          act={set}
           size='sm'
           variant='ghost'
           className='ml-auto'
@@ -515,6 +530,7 @@ function InstitutionsCard({
               />
             </div>
             <Button
+              act={set}
               size='sm'
               disabled={busy !== null || pick === ''}
               disabledReason={
@@ -573,6 +589,7 @@ function BoostTile({
         </div>
       </div>
       <RowEditor
+        act={edit}
         label='Boost'
         value={row.progress}
         min={1}
@@ -581,6 +598,7 @@ function BoostTile({
         onSave={(progress) => edit.mutate({ progress })}
       >
         <Button
+          act={remove}
           type='button'
           size='icon'
           variant='ghost'
@@ -673,6 +691,7 @@ function BoostsCard({
             />
           </div>
           <RowEditor
+            act={grant}
             label='Push toward it'
             value={0}
             min={1}

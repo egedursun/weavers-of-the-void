@@ -77,6 +77,7 @@ function GeneEditor({
   const [first, setFirst] = useState(gene.first)
   const [second, setSecond] = useState(gene.second)
   const save = useGodAction({
+    writes: [{ lever: 'genome:gene' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/genome:gene', {
@@ -125,6 +126,7 @@ function GeneEditor({
       </Muted>
       <div className='flex justify-end'>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -150,12 +152,14 @@ function GenomeCard({
 }) {
   const nodeId = view.node_id
   const redraw = useGodAction({
+    writes: [{ lever: 'genome:redraw' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/genome:redraw', { body: { mortal_id: nodeId } })
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'genome:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/genome:remove', { body: { mortal_id: nodeId } })
@@ -353,6 +357,7 @@ function GenomeCard({
       ))}
       <div className='flex min-w-0 flex-wrap justify-end gap-2'>
         <Button
+          act={redraw}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -363,6 +368,7 @@ function GenomeCard({
           Draw the blood anew
         </Button>
         <Button
+          act={strike}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -589,6 +595,7 @@ function PoolCard({
 }) {
   const nodeId = view.node_id
   const stance = useGodAction({
+    writes: [{ lever: 'allele_pool:stance' }],
     run: (value: GiftStance) =>
       unwrap(
         api.POST('/api/actions/allele_pool:stance', {
@@ -597,6 +604,7 @@ function PoolCard({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'allele_pool:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/allele_pool:remove', {
@@ -625,6 +633,7 @@ function PoolCard({
         />
         <div className='flex min-w-0 flex-col gap-2'>
           <MindPicker
+            act={stance}
             label='How the people read the gift'
             value={pool.gift_stance}
             table={stances}
@@ -716,6 +725,7 @@ function PoolCard({
       </Paged>
       <div className='flex justify-end'>
         <Button
+          act={strike}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -749,6 +759,7 @@ function LikenessCard({
     view.resemblance?.allele ?? locus?.alleles[0]?.key ?? ''
   )
   const save = useGodAction({
+    writes: [{ lever: 'resemblance:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resemblance:set', {
@@ -763,6 +774,7 @@ function LikenessCard({
       ),
   })
   const strike = useGodAction({
+    writes: [{ lever: 'resemblance:remove' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/resemblance:remove', {
@@ -785,6 +797,7 @@ function LikenessCard({
           meta={`${view.resemblance.locus_label}, shared by ${view.resemblance.share}% since epoch ${view.resemblance.since_epoch}`}
           actions={
             <Button
+              act={strike}
               size='icon-sm'
               variant='ghost'
               aria-label='Strike the family likeness'
@@ -824,6 +837,7 @@ function LikenessCard({
       </div>
       <div className='flex justify-end'>
         <Button
+          act={save}
           size='sm'
           disabled={busy !== null || !allele}
           disabledReason={
@@ -847,6 +861,7 @@ function WriteGenome({
   blocked: string | null
 }) {
   const found = useGodAction({
+    writes: [{ lever: 'genome:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/genome:found', { body: { mortal_id: nodeId } })
@@ -855,6 +870,7 @@ function WriteGenome({
   const busy = why(blocked, found.isPending)
   return (
     <Button
+      act={found}
       size='sm'
       disabled={busy !== null}
       disabledReason={busy ?? undefined}
@@ -874,6 +890,7 @@ function DrawPool({
   blocked: string | null
 }) {
   const found = useGodAction({
+    writes: [{ lever: 'allele_pool:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/allele_pool:found', {
@@ -884,6 +901,7 @@ function DrawPool({
   const busy = why(blocked, found.isPending)
   return (
     <Button
+      act={found}
       size='sm'
       disabled={busy !== null}
       disabledReason={busy ?? undefined}

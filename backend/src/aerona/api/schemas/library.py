@@ -4,6 +4,7 @@ from pydantic import Field
 
 from aerona.api.schemas.common import ApiModel, RequestModel
 from aerona.constants.library import COVER_PROMPT_MAX_LENGTH, UNIVERSE_NAME_MAX_LENGTH, UNIVERSE_NOTES_MAX_LENGTH, UNIVERSE_TAGS_MAX
+from aerona.domain.enums.accounts import Permission, UniverseRole
 from aerona.domain.enums.library import LibraryEventKind, UniverseOrigin, UniverseStatus
 from aerona.domain.enums.library_jobs import LibraryJobKind, LibraryJobStage, LibraryJobStatus, LibraryStreamKind
 
@@ -35,6 +36,11 @@ class UniverseView(ApiModel):
     media_prefix: str
     is_open: bool
     running_jobs: list[str]
+    workspace_id: int | None
+    canon_approval: bool
+    legacy_author_name: str
+    role: UniverseRole
+    permissions: list[Permission]
 
 
 class UniverseTagFacet(ApiModel):
@@ -73,6 +79,7 @@ class LibraryEventView(ApiModel):
     universe_id: str
     universe_name: str
     detail: str
+    account_name: str
 
 
 class LibraryEventPage(ApiModel):

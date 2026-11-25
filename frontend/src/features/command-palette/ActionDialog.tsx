@@ -28,6 +28,7 @@ import { FormRow, PagedList, FieldTile } from '@/components/domain'
 import { Text } from '@/components/typography'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { toastWithUndo } from '@/features/ledger/undoToast'
+import { announceWaiting } from '@/features/team/outcome'
 import { type ActionItem, useRunAction } from './api'
 import {
   type FieldValues,
@@ -146,7 +147,7 @@ function ActionForm({
   onClose: () => void
 }) {
   const queryClient = useQueryClient()
-  const run = useRunAction()
+  const run = useRunAction(action.id)
   const fields = fieldsOf(action.input_schema)
   const [values, setValues] = useState<FieldValues>(() => initialValues(fields))
   const [typed, setTyped] = useState('')
@@ -173,6 +174,7 @@ function ActionForm({
       {
         onSuccess: (result) => {
           onClose()
+          if (announceWaiting(result) !== 'done') return
           if (result?.job_id)
             toast.success(result.message || `${action.title} started`)
           else
@@ -248,6 +250,7 @@ function ActionForm({
           Cancel
         </Button>
         <Button
+          act={run}
           type='submit'
           disabled={
             run.isPending || (needsWord && typed.trim() !== action.confirmation)

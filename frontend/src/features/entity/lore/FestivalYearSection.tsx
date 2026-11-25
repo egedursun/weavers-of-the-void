@@ -105,6 +105,7 @@ function FestivalCard({
       </Muted>
       <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
         <ChoicePicker
+          act={edit}
           label='Season it is kept in'
           value={
             row.season_position === null ? NONE : String(row.season_position)

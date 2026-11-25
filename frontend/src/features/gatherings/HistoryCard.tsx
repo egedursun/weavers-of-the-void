@@ -78,6 +78,7 @@ function MemberRow({
         <Muted variant='caption'>{`${role.label} since epoch ${member.since_epoch}`}</Muted>
       </div>
       <MindPicker
+        act={set}
         label='Part played'
         value={member.role}
         table={table(COLLECTION_ROLES)}
@@ -86,6 +87,7 @@ function MemberRow({
       />
       <div className='flex justify-end'>
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -124,6 +126,7 @@ function SiteChip({
       <MapPin />
       <Ref node={site} />
       <Button
+        act={drop}
         size='icon-sm'
         variant='ghost'
         aria-label={`Strike ${site.name} from this history`}
@@ -178,6 +181,7 @@ function AddToHistory({
           onPick={(value) => setRole(value as CollectionRole)}
         />
         <Button
+          act={join}
           size='sm'
           variant='outline'
           disabled={busy !== null || node === null || listed}
@@ -207,6 +211,7 @@ function AddToHistory({
           types={PLACE_TYPES}
         />
         <Button
+          act={site}
           size='sm'
           variant='outline'
           disabled={busy !== null || place === null || placed}
@@ -389,6 +394,7 @@ function HistoryBody({
         )}
       </div>
       <RecordEditor
+        act={edit}
         title='Rewrite this history'
         note='Values you set are held: the engine will not rename, close or reopen it until you release them.'
         fields={[
@@ -464,6 +470,7 @@ export function HistoryCard({
             {open ? 'Close' : 'Open'}
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}

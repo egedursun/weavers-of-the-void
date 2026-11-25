@@ -112,6 +112,7 @@ export function SonEditForm({ view }: { view: SonPublic }) {
   })
   const { reason } = useGodGate()
   const save = useGodAction({
+    writes: [{ lever: 'son:edit' }],
     run: (body: Body) =>
       unwrap(
         api.PATCH('/api/sons/{son_id}', {
@@ -152,7 +153,7 @@ export function SonEditForm({ view }: { view: SonPublic }) {
   return (
     <Collapsible className='flex min-w-0 flex-col gap-3'>
       <CollapsibleTrigger asChild>
-        <Button variant='outline' className='self-start'>
+        <Button act={save} variant='outline' className='self-start'>
           <PenLine />
           Edit name, plan, personality, stats and resources
         </Button>
@@ -287,6 +288,7 @@ export function SonEditForm({ view }: { view: SonPublic }) {
           </FieldTile>
           <div>
             <ActionButton
+              act={save}
               label='Save'
               variant='default'
               blocked={reason() ?? (name.trim() ? null : 'A name is needed.')}

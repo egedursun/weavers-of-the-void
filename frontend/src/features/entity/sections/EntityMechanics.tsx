@@ -103,6 +103,7 @@ export function EntityMechanics({
   const [epochs, setEpochs] = useState('')
   const [mechanic, setMechanic] = useState('')
   const pin = useGodAction({
+    writes: [{ lever: 'lever:pin' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/lever:pin', {
@@ -112,6 +113,7 @@ export function EntityMechanics({
     success: `${humanize(field)} is pinned`,
   })
   const unpin = useGodAction({
+    writes: [{ lever: 'lever:unpin' }],
     run: (key: string) =>
       unwrap(
         api.POST('/api/actions/lever:unpin', { body: { node_id: nodeId, key } })
@@ -119,6 +121,7 @@ export function EntityMechanics({
     success: 'The field is free again',
   })
   const suppress = useGodAction({
+    writes: [{ lever: 'lever:suppress' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/lever:suppress', {
@@ -132,6 +135,7 @@ export function EntityMechanics({
     success: 'The mechanic is held back here',
   })
   const unsuppress = useGodAction({
+    writes: [{ lever: 'lever:unsuppress' }],
     run: (key: string) =>
       unwrap(
         api.POST('/api/actions/lever:unsuppress', {
@@ -141,6 +145,7 @@ export function EntityMechanics({
     success: 'The mechanic acts here again',
   })
   const runNow = useGodAction({
+    writes: [{ lever: 'lever:run' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/lever:run', {
@@ -149,6 +154,7 @@ export function EntityMechanics({
       ),
   })
   const add = useGodAction({
+    writes: [{ lever: 'modifier:add' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/modifier:add', {
@@ -220,6 +226,7 @@ export function EntityMechanics({
               <Paged items={data.pins}>
                 {(guard) => (
                   <Button
+                    act={unpin}
                     key={`pin-${guard.id}`}
                     size='sm'
                     variant='outline'
@@ -235,6 +242,7 @@ export function EntityMechanics({
               <Paged items={data.suppressions}>
                 {(guard) => (
                   <Button
+                    act={unsuppress}
                     key={`suppression-${guard.id}`}
                     size='sm'
                     variant='outline'
@@ -344,6 +352,7 @@ export function EntityMechanics({
         </div>
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
           <Button
+            act={add}
             disabled={
               needs(
                 !field ? PICK_FIELD : magnitude === '' ? ENTER_MAGNITUDE : null
@@ -358,6 +367,7 @@ export function EntityMechanics({
             Add modifier
           </Button>
           <Button
+            act={pin}
             variant='outline'
             disabled={needs(!field ? PICK_FIELD : null) !== undefined}
             disabledReason={needs(!field ? PICK_FIELD : null)}
@@ -383,6 +393,7 @@ export function EntityMechanics({
             </Select>
           </FieldTile>
           <Button
+            act={suppress}
             variant='outline'
             disabled={needs(!mechanic ? PICK_MECHANIC : null) !== undefined}
             disabledReason={needs(!mechanic ? PICK_MECHANIC : null)}
@@ -392,6 +403,7 @@ export function EntityMechanics({
             Hold it back here
           </Button>
           <Button
+            act={runNow}
             variant='outline'
             disabled={needs(!mechanic ? PICK_MECHANIC : null) !== undefined}
             disabledReason={needs(!mechanic ? PICK_MECHANIC : null)}

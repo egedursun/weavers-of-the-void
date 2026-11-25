@@ -145,6 +145,7 @@ function BattlePlan({
   const region = value('battle_region_id')
   return (
     <Adjust
+      acts={[actions.save, actions.release, actions.remove]}
       title='Battle plan and camp'
       note='The tactic it opens with, how hard it drills, its fodder, its temper and where it means to fight. Held values bind the army.'
       label='Battle plan'
@@ -213,6 +214,7 @@ function Leadership({
   const [commander, setCommander] = useState<number | null>(null)
   const [owner, setOwner] = useState<number | null>(null)
   const assign = useGodAction({
+    writes: [{ lever: 'army:assign' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/army:assign', {
@@ -224,6 +226,7 @@ function Leadership({
   const busy = busyOf(blocked, assign.isPending)
   return (
     <Adjust
+      acts={[assign]}
       title='Command and allegiance'
       note='Hand the army to a new commander, or have it swear to another community.'
       label='Change command'
@@ -247,6 +250,7 @@ function Leadership({
         />
       </FieldGrid>
       <Button
+        act={assign}
         size='sm'
         className='self-start'
         disabled={busy !== null || (commander === null && owner === null)}
@@ -305,6 +309,7 @@ function OfficerCard({
         <Held locked={row.locked} />
       </div>
       <Adjust
+        acts={[actions.save, actions.release, actions.remove]}
         title='Officer'
         note='Give the officer another post, or strike the appointment.'
       >
@@ -373,6 +378,7 @@ function Officers({
         </ul>
       )}
       <Adjust
+        acts={[create]}
         title='Appoint an officer'
         note='A living mortal takes a post in this army.'
         label='Appoint'
@@ -396,6 +402,7 @@ function Officers({
           />
         </FieldGrid>
         <Button
+          act={create}
           size='sm'
           className='self-start'
           disabled={

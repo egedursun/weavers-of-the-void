@@ -64,6 +64,7 @@ export function SelfNoteForm() {
         </FormRow>
         <div>
           <Button
+            act={add}
             type='submit'
             variant='outline'
             disabled={empty || add.isPending}

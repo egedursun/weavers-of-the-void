@@ -358,6 +358,7 @@ function LandForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={ringing}
             size='sm'
             disabled={ringBusy !== null}
             disabledReason={ringBusy ?? undefined}
@@ -367,6 +368,7 @@ function LandForge({
             Set the ring
           </Button>
           <Button
+            act={feeding}
             size='sm'
             variant='secondary'
             disabled={soilBusy !== null}
@@ -377,6 +379,7 @@ function LandForge({
             Set the soil
           </Button>
           <Button
+            act={pressing}
             size='sm'
             variant='secondary'
             disabled={pressBusy !== null}
@@ -469,6 +472,7 @@ function CentralForge({
       columns={2}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

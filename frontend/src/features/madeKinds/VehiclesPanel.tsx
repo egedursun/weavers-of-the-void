@@ -286,6 +286,7 @@ function GroupCard({
         action={
           <div className='flex min-w-0 flex-wrap gap-2'>
             <Button
+              act={move}
               size='sm'
               disabled={
                 (busy ??
@@ -304,6 +305,7 @@ function GroupCard({
               Hand them over
             </Button>
             <Button
+              act={repair}
               size='sm'
               variant='outline'
               disabled={busy !== null}
@@ -314,6 +316,7 @@ function GroupCard({
               Mend at a yard
             </Button>
             <Button
+              act={strike}
               size='sm'
               variant='outline'
               disabled={(busy ?? (section ? null : 'Pick a section')) !== null}
@@ -421,6 +424,7 @@ export function VehiclesPanel({
         columns={2}
         action={
           <Button
+            act={give}
             size='sm'
             disabled={
               (busy ??

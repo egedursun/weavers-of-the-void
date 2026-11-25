@@ -139,6 +139,7 @@ function Effect({
       caption={`${effect.amount > 0 ? '+' : ''}${effect.amount}`}
     >
       <RecordEditor
+        act={editing}
         title='Set this effect'
         note='Values you set are held against the engine until you release them.'
         fields={EFFECT_FIELDS}
@@ -148,6 +149,7 @@ function Effect({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={dropping}
         icon={Trash2}
         label='Take this effect away'
         busy={why(blocked, dropping.isPending)}
@@ -214,6 +216,7 @@ function Augment({
         columns={3}
         action={
           <StepButton
+            act={adding}
             icon={CirclePlus}
             label='Add the effect'
             busy={why(blocked ?? noKey, adding.isPending)}
@@ -243,6 +246,7 @@ function Augment({
         />
       </ForgeCard>
       <RecordEditor
+        act={editing}
         title='Set this augment'
         note='Values you set are held against the engine until you release them.'
         fields={AUGMENT_FIELDS}
@@ -253,12 +257,14 @@ function Augment({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={removing}
           icon={CircleMinus}
           label='Take it out'
           busy={why(blocked, removing.isPending)}
           onClick={() => removing.mutate()}
         />
         <StepButton
+          act={struck}
           icon={Trash2}
           label='Strike it from the record'
           busy={why(blocked, struck.isPending)}
@@ -381,6 +387,7 @@ export function AugmentsSection({
               columns={3}
               action={
                 <StepButton
+                  act={installing}
                   icon={CirclePlus}
                   label='Install it'
                   variant='default'

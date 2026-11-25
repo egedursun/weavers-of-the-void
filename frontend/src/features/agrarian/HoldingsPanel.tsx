@@ -265,6 +265,7 @@ function CommonCard({
             types={HOLDER_TYPES}
           />
           <Button
+            act={enclosing}
             size='sm'
             variant='secondary'
             disabled={closing !== null}
@@ -536,6 +537,7 @@ function HoldingsForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={planting}
             size='sm'
             disabled={plantBusy !== null}
             disabledReason={plantBusy ?? undefined}
@@ -545,6 +547,7 @@ function HoldingsForge({
             Plant it
           </Button>
           <Button
+            act={opening}
             size='sm'
             variant='secondary'
             disabled={commonBusy !== null}
@@ -555,6 +558,7 @@ function HoldingsForge({
             Hold it in common
           </Button>
           <Button
+            act={reserving}
             size='sm'
             variant='secondary'
             disabled={reserveBusy !== null}
@@ -662,6 +666,7 @@ function LoreForge({
       columns={3}
       action={
         <Button
+          act={setting}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

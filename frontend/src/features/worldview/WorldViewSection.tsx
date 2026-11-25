@@ -237,6 +237,7 @@ export function WorldViewSection({
             <Shares data={query.data} />
             {query.data.nature && <Numbers nature={query.data.nature} />}
             <RecordEditor
+              act={editing}
               title='Set the nature of this world'
               note='Every value you set is held against the engine and against the sons until you release it.'
               fields={FIELDS}
@@ -249,12 +250,14 @@ export function WorldViewSection({
             />
             <div className='flex min-w-0 flex-wrap gap-2'>
               <StepButton
+                act={resetting}
                 icon={RotateCcw}
                 label='Return it to the nature of its kind'
                 busy={why(blocked, resetting.isPending)}
                 onClick={() => resetting.mutate()}
               />
               <StepButton
+                act={running}
                 icon={WORLD_VIEW_ICON}
                 label='Read every world now'
                 busy={why(readOnlyReason, running.isPending)}

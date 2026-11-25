@@ -100,6 +100,7 @@ function ManifestoEditor({
         onChange={setValue}
       />
       <Button
+        act={writing}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -280,6 +281,7 @@ export function MovementPanel({
         columns={2}
         action={
           <Button
+            act={founding}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -497,6 +499,7 @@ export function ClubPanel({
         columns={2}
         action={
           <Button
+            act={founding}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -654,6 +657,7 @@ export function LeaguePanel({
         columns={2}
         action={
           <Button
+            act={founding}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -918,6 +922,7 @@ export function MatchPanel({
         columns={3}
         action={
           <Button
+            act={playing}
             size='sm'
             disabled={playBusy !== null}
             disabledReason={playBusy ?? undefined}
@@ -959,6 +964,7 @@ export function MatchPanel({
         columns={4}
         action={
           <Button
+            act={betting}
             size='sm'
             disabled={betBusy !== null}
             disabledReason={betBusy ?? undefined}

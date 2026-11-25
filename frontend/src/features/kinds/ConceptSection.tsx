@@ -68,6 +68,7 @@ function Forge({
       columns={2}
       action={
         <StepButton
+          act={making}
           icon={CirclePlus}
           label={`Make the ${noun}`}
           variant='default'

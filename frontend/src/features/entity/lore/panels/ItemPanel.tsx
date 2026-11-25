@@ -70,6 +70,7 @@ export function ItemPanel({
 }) {
   const [effect, setEffect] = useState('')
   const enchant = useGodAction<{ effect: string; strength: number }>({
+    writes: [{ lever: 'item:enchant' }],
     run: ({ effect: chosen, strength }) =>
       unwrap(
         api.POST('/api/actions/item:enchant', {
@@ -340,6 +341,7 @@ export function ItemPanel({
                   const spec = lookup(EFFECTS, row.effect)
                   return (
                     <RowEditor
+                      act={enchant}
                       key={row.effect}
                       label={`${spec.label} strength`}
                       icon={spec.icon}
@@ -372,6 +374,7 @@ export function ItemPanel({
               />
             </div>
             <Button
+              act={enchant}
               size='sm'
               variant='outline'
               disabled={busy !== null || effect === ''}

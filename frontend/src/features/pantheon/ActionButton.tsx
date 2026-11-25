@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { type LucideIcon, Sparkles } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button, type ButtonProps } from '@/components/ui/button'
@@ -61,7 +62,8 @@ export function ActionButton({
   variant = 'outline',
   size = 'default',
   type = 'button',
-}: ActionButtonProps) {
+  act,
+}: ActionButtonProps & { act?: ActProp }) {
   const [open, setOpen] = useState(false)
   const [typed, setTyped] = useState('')
   const wordId = useId()
@@ -77,6 +79,7 @@ export function ActionButton({
   }
   const control = (
     <Button
+      act={act}
       type={confirm ? 'button' : type}
       variant={variant}
       size={size}
@@ -103,6 +106,7 @@ export function ActionButton({
       )}
       {confirm && (
         <ConfirmDialog
+          act={act}
           open={open}
           onOpenChange={setOpen}
           title={confirm.title}

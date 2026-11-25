@@ -53,12 +53,15 @@ function GoldenAgeControls({
   const [hold, setHold] = useState(true)
   const target = { body: { world_id: worldId } }
   const proclaim = useGodAction({
+    writes: [{ lever: 'world:golden_age' }],
     run: () => unwrap(api.POST('/api/actions/world:golden_age', target)),
   })
   const end = useGodAction({
+    writes: [{ lever: 'world:end_golden_age' }],
     run: () => unwrap(api.POST('/api/actions/world:end_golden_age', target)),
   })
   const date = useGodAction({
+    writes: [{ lever: 'world:date_golden_age' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/world:date_golden_age', {
@@ -70,12 +73,14 @@ function GoldenAgeControls({
   const busy = blocked ?? (pending ? 'Working…' : null)
   return (
     <Adjust
+      acts={[proclaim, end, date]}
       label='Shape the age'
       title='Golden age'
       note='Begin or end it, set the age it began from, and hold it so the world neither starts nor ends one on its own. Every change can be undone.'
     >
       <div className='flex min-w-0 flex-wrap gap-2'>
         <Button
+          act={proclaim}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -85,6 +90,7 @@ function GoldenAgeControls({
           {age.active ? 'Renew the golden age' : 'Proclaim a golden age'}
         </Button>
         <Button
+          act={end}
           size='sm'
           variant='outline'
           disabled={busy !== null || !age.active}
@@ -109,6 +115,7 @@ function GoldenAgeControls({
         </FieldTile>
         <label className='flex min-w-0 items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'>
           <Switch
+            permission='lock_canon'
             checked={hold}
             onCheckedChange={setHold}
             aria-label='Hold the golden age'
@@ -116,6 +123,7 @@ function GoldenAgeControls({
           <Text as='span'>Hold it</Text>
         </label>
         <Button
+          act={date}
           size='sm'
           disabled={busy !== null || !age.active || since === ''}
           disabledReason={busy ?? (age.active ? undefined : 'No golden age')}

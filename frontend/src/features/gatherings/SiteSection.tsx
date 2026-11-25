@@ -91,6 +91,7 @@ function ContentChip({
       {` · ${content.strength}`}
       {content.locked && ' · held'}
       <Button
+        act={remove}
         size='icon-sm'
         variant='ghost'
         aria-label={`Take the ${look.label.toLowerCase()} from the room`}
@@ -166,6 +167,7 @@ function AddContent({
         onPick={setStrength}
       />
       <Button
+        act={add}
         size='sm'
         variant='outline'
         disabled={busy !== null || missing !== null}
@@ -207,6 +209,7 @@ function RoomCard({
       caption={`${challenge.label} · difficulty ${room.difficulty}${room.cleared_epoch !== null ? ` · cleared in epoch ${room.cleared_epoch}` : ' · not yet cleared'}`}
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -240,6 +243,7 @@ function RoomCard({
       </div>
       <AddContent room={room} blocked={busy} />
       <RecordEditor
+        act={edit}
         title='Reshape this room'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -313,6 +317,7 @@ function OpenRoom({
       meta={<Chip icon={DoorOpen}>{`${plural(count, 'room', 'rooms')}`}</Chip>}
       action={
         <Button
+          act={create}
           size='sm'
           disabled={busy !== null || kind === ''}
           disabledReason={
@@ -386,6 +391,7 @@ function Delve({
         types={DELVERS}
       />
       <Button
+        act={delve}
         size='sm'
         disabled={busy !== null || missing !== null}
         disabledReason={busy ?? missing ?? undefined}
@@ -424,6 +430,7 @@ function HolderRow({
         </Muted>
       </span>
       <Button
+        act={remove}
         size='icon-sm'
         variant='ghost'
         aria-label='Strike this holding'
@@ -476,6 +483,7 @@ function Holders({
           types={HOLDERS}
         />
         <Button
+          act={set}
           size='sm'
           variant='outline'
           disabled={busy !== null || holder === null}
@@ -526,6 +534,7 @@ function StageRow({
         )}
       </div>
       <RecordEditor
+        act={edit}
         title='Reshape this stage'
         note='Values you set are held until you release them.'
         fields={[
@@ -589,6 +598,7 @@ function DigCard({ dig, blocked }: { dig: DigView; blocked: string | null }) {
       aside={
         <div className='flex shrink-0 flex-wrap items-center gap-1'>
           <Button
+            act={advance}
             size='sm'
             variant='outline'
             disabled={busy !== null || !going}
@@ -599,6 +609,7 @@ function DigCard({ dig, blocked }: { dig: DigView; blocked: string | null }) {
             Dig deeper
           </Button>
           <Button
+            act={remove}
             size='sm'
             variant='ghost'
             disabled={busy !== null}
@@ -633,6 +644,7 @@ function DigCard({ dig, blocked }: { dig: DigView; blocked: string | null }) {
         ))}
       </div>
       <RecordEditor
+        act={edit}
         title='Reshape this dig'
         note='Values you set are held against the engine until you release them.'
         fields={[
@@ -775,6 +787,7 @@ function BeginDig({
       }
       action={
         <Button
+          act={begin}
           size='sm'
           disabled={busy !== null || missing !== null}
           disabledReason={busy ?? missing ?? undefined}
@@ -829,6 +842,7 @@ function FeatureRow({
       caption={`Laid in epoch ${feature.epoch}${feature.battle_id !== null ? ` by ${feature.battle_name ?? 'a battle'}` : ' by the gods'}`}
       aside={
         <Button
+          act={remove}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -850,6 +864,7 @@ function FeatureRow({
         />
       ) : null}
       <RecordEditor
+        act={edit}
         title='Reshape this mark'
         note='A strength you set is held until you release it.'
         fields={[
@@ -907,6 +922,7 @@ function MarkBattlefield({
         onPick={(value) => setFeature(value as FeatureView['feature'])}
       />
       <Button
+        act={create}
         size='sm'
         variant='outline'
         disabled={busy !== null || missing !== null}

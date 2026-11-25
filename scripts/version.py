@@ -42,7 +42,7 @@ MENTIONS = (
     ),
     Mention(
         ROOT / "docs" / "wov-basic-information.md",
-        re.compile(rf"(Sürüm )({VERSION_TEXT})(, )"),
+        re.compile(rf"(S\u00fcr\u00fcm )({VERSION_TEXT})(, )"),
     ),
 )
 SEMVER = re.compile(

@@ -235,6 +235,7 @@ function DesignCard({
       </div>
       <div className='mt-auto flex min-w-0 flex-col gap-2'>
         <Adjust
+          acts={[actions.save, actions.release, actions.remove]}
           title='Reshape the design'
           note='Every stat, gear and calling of this kind of soldier; armies muster it where their doctrine and stores allow.'
         >
@@ -297,6 +298,7 @@ function NewDesign({
   )
   return (
     <Adjust
+      acts={[create]}
       title='Devise a new kind of soldier'
       note='Grow it from a known unit and change what you will; its stats start from that unit.'
       label='Devise a unit'
@@ -307,6 +309,7 @@ function NewDesign({
         blocked={blocked}
       />
       <Button
+        act={create}
         size='sm'
         className='self-start'
         disabled={busy !== null || !name}

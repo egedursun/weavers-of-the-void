@@ -54,6 +54,7 @@ const MAIMED_KEY = 'maimed'
 
 function useHold(communityId: number) {
   return useGodAction({
+    writes: [{ lever: 'lever:pin' }, { lever: 'lever:unpin' }],
     run: ({ key, hold }: { key: string; hold: boolean }) =>
       hold
         ? unwrap(
@@ -196,6 +197,7 @@ export function SickCohorts({
                 {item.label}
               </FieldLabel>
               <Switch
+                act={hold}
                 id={`hold-${item.key}-${view.entity_id}`}
                 checked={item.held}
                 disabled={busy !== null}
@@ -236,6 +238,7 @@ export function SetCohort({
     )?.count ?? 0
   const [count, setCount] = useState('')
   const set = useGodAction({
+    writes: [{ lever: 'cohort:set' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/cohort:set', {
@@ -306,6 +309,7 @@ export function SetCohort({
           />
         </FieldTile>
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null || invalid}
           disabledReason={
@@ -329,6 +333,7 @@ export function DormancyPanel({
   blocked: string | null
 }) {
   const act = useGodAction({
+    writes: [{ lever: 'mortal:dormancy' }],
     run: (body: {
       mortal_id: number
       dormant: boolean | null
@@ -381,6 +386,7 @@ export function DormancyPanel({
                     </Badge>
                   )}
                   <Button
+                    act={act}
                     size='sm'
                     variant='outline'
                     disabled={busy !== null}
@@ -397,6 +403,7 @@ export function DormancyPanel({
                     {mortal.dormant ? 'Wake' : 'Doze'}
                   </Button>
                   <Button
+                    act={act}
                     size='sm'
                     variant={mortal.held ? 'secondary' : 'outline'}
                     disabled={busy !== null}

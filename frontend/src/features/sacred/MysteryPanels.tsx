@@ -260,6 +260,7 @@ function MysticCard({ row, blocked }: { row: Mystic; blocked: string | null }) {
           onPick={setVision}
         />
         <StepButton
+          act={sending}
           icon={Eye}
           label={
             god === null ? 'Another vision of its own' : 'Answer in a vision'
@@ -348,6 +349,7 @@ export function MysticsPanel({
         columns={2}
         action={
           <Button
+            act={seizing}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -602,6 +604,7 @@ export function MovementsPanel({
         columns={3}
         action={
           <Button
+            act={stirring}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -778,6 +781,7 @@ export function CrisesPanel({
         columns={3}
         action={
           <Button
+            act={testing}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}

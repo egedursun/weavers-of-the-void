@@ -6,6 +6,7 @@ from weakref import WeakKeyDictionary
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.core.account_scope import detached
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.session import Database
 from aerona.events.bus import Event, EventBus
@@ -63,7 +64,7 @@ class BookWarmer:
 
     def _spawn(self, work: Any) -> None:
         try:
-            task = asyncio.get_running_loop().create_task(work)
+            task = detached(work)
         except RuntimeError:
             work.close()
             return

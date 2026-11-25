@@ -159,7 +159,10 @@ function useRow<E extends UrbanAction, D extends UrbanAction, K extends object>(
   )
   const removing = useUrbanAction(remove, (_: void) => keys as never, 'Done')
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }
@@ -229,6 +232,7 @@ function TownCard({
       caption={`${town.homeless} without a home`}
       aside={
         <Button
+          act={clear}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -241,6 +245,7 @@ function TownCard({
       }
     >
       <RecordEditor
+        act={edit}
         title='Reshape the town'
         note='A planned town carries its services further and burns slower; a ringed one defends better in a siege.'
         fields={[
@@ -360,6 +365,7 @@ function DistrictCard({
           onChange={setCoverage}
         />
         <Button
+          act={[recover, cover]}
           size='sm'
           variant='outline'
           disabled={busy !== null}
@@ -371,6 +377,7 @@ function DistrictCard({
         </Button>
       </div>
       <RecordEditor
+        act={edit}
         title='Reshape the district'
         note='Homes rise when water, faith and market reach them and fall when they do not; high land value prices the poor out.'
         fields={[
@@ -422,6 +429,7 @@ function ServiceChip({
   const spec = SERVICES[row.service]
   return (
     <Button
+      act={remove}
       size='sm'
       variant='ghost'
       disabled={busy !== null || row.locked.length === 0}
@@ -477,6 +485,7 @@ function PlacementCard({
         onPick={setDistrict}
       />
       <Button
+        act={place}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -729,6 +738,7 @@ function TribunalCard({
       }
       aside={
         <Button
+          act={strike}
           size='sm'
           variant='ghost'
           disabled={busy !== null}
@@ -1044,6 +1054,7 @@ function CrimeForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={racketSet}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -1053,6 +1064,7 @@ function CrimeForge({
             Racket in that town
           </Button>
           <Button
+            act={payroll}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -1063,6 +1075,7 @@ function CrimeForge({
             Pay that official
           </Button>
           <Button
+            act={stanceSet}
             size='sm'
             variant='outline'
             disabled={busy !== null}
@@ -1150,6 +1163,7 @@ function TurfForge({
       columns={3}
       action={
         <Button
+          act={set}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -1227,6 +1241,7 @@ function OrderForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={set}
             size='sm'
             disabled={busy !== null}
             disabledReason={busy ?? undefined}
@@ -1236,6 +1251,7 @@ function OrderForge({
             Keep the law
           </Button>
           <Button
+            act={convene}
             size='sm'
             variant='outline'
             disabled={busy !== null || accused === null}
@@ -1340,6 +1356,7 @@ function TradeForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <Button
+            act={post}
             size='sm'
             disabled={pair !== null}
             disabledReason={pair ?? undefined}
@@ -1349,6 +1366,7 @@ function TradeForge({
             Open a post there
           </Button>
           <Button
+            act={send}
             size='sm'
             variant='outline'
             disabled={pending !== null || route === null}
@@ -1361,6 +1379,7 @@ function TradeForge({
             Send a convoy
           </Button>
           <Button
+            act={fleet}
             size='sm'
             variant='outline'
             disabled={pending !== null || (house === null && place === null)}
@@ -1374,6 +1393,7 @@ function TradeForge({
             Give a fleet
           </Button>
           <Button
+            act={corner}
             size='sm'
             variant='outline'
             disabled={pair !== null}

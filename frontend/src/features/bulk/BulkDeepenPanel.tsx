@@ -147,6 +147,7 @@ export function BulkDeepenPanel() {
                       {run.stop_requested ? 'Stopping' : 'Running'}
                     </Badge>
                     <Button
+                      act={stop}
                       variant='destructive'
                       disabled={run.stop_requested || stop.isPending}
                       disabledReason='It stops when the current record finishes'
@@ -166,6 +167,7 @@ export function BulkDeepenPanel() {
                   </>
                 ) : (
                   <Button
+                    act={start}
                     disabled={
                       blocked !== null || waiting === 0 || start.isPending
                     }
@@ -181,6 +183,7 @@ export function BulkDeepenPanel() {
                 )}
                 {unnamed > 0 && (
                   <Button
+                    act={names}
                     variant='outline'
                     disabled={blocked !== null || names.isPending}
                     disabledReason={blocked ?? 'Naming'}
@@ -235,6 +238,7 @@ export function BulkDeepenPanel() {
                 <BulkLog lines={log} />
               )}
               <ConfirmDialog
+                act={start}
                 open={confirming}
                 onOpenChange={setConfirming}
                 title={`Deepen ${plural(waiting, 'record', 'records')}?`}

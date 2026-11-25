@@ -25,7 +25,10 @@ export function useRegimeRow<
   )
   const removing = useRegimeAction(remove, (_: void) => keys as never, 'Done')
   return {
-    busy: why(blocked, editing.isPending, removing.isPending),
+    busy:
+      editing.blockedReason ??
+      removing.blockedReason ??
+      why(blocked, editing.isPending, removing.isPending),
     onEdit: (vars: Edit) => editing.mutate(vars),
     onRemove: () => removing.mutate(),
   }
@@ -38,5 +41,8 @@ export function useRegimeStep<A extends RegimeAction, K extends object>(
   success: string
 ) {
   const running = useRegimeAction(action, (_: void) => keys as never, success)
-  return { busy: why(blocked, running.isPending), run: () => running.mutate() }
+  return {
+    busy: running.blockedReason ?? why(blocked, running.isPending),
+    run: () => running.mutate(),
+  }
 }

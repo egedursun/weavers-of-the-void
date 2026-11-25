@@ -462,6 +462,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
             ]}
           />
           <RecordEditor
+            act={edit}
             title='Form and account'
             note='Its name, kind, element and account.'
             fields={[
@@ -491,6 +492,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
             onRelease={(release) => edit.mutate({ values: {}, release })}
           />
           <RecordEditor
+            act={edit}
             title='Laws of the dimension'
             note='How thin its veil is, how steady, how fast its time runs and what it does to those inside.'
             fields={[

@@ -95,6 +95,7 @@ function Source({
     >
       <Ref node={row.giver} empty='given by no one named' />
       <RecordEditor
+        act={editing}
         title='Set this source'
         note={HOLD}
         fields={SOURCE_FIELDS}
@@ -104,6 +105,7 @@ function Source({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Take it away'
         busy={why(blocked, removing.isPending)}
@@ -142,6 +144,7 @@ function Law({
       columns={2}
       action={
         <StepButton
+          act={setting}
           icon={CirclePlus}
           label='Set the law'
           busy={why(blocked ?? noWorld, setting.isPending)}
@@ -268,6 +271,7 @@ export function FortuneSection({
               }
             >
               <RecordEditor
+                act={editing}
                 title='Set its fortune'
                 note={HOLD}
                 fields={PROFILE_FIELDS}
@@ -304,6 +308,7 @@ export function FortuneSection({
               columns={3}
               action={
                 <StepButton
+                  act={giving}
                   icon={CirclePlus}
                   label='Turn it'
                   variant='default'
@@ -374,6 +379,7 @@ export function FortuneSection({
               columns={2}
               action={
                 <StepButton
+                  act={striking}
                   icon={Zap}
                   label='Let it befall'
                   busy={why(blocked, striking.isPending)}

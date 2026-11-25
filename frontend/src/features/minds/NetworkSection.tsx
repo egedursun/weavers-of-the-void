@@ -179,6 +179,7 @@ function Member({
       aside={<Ref node={showNetwork ? member.network : member.member} />}
     >
       <RecordEditor
+        act={editing}
         title='Set this membership'
         note='Values you set are held against the engine until you release them.'
         fields={MEMBER_FIELDS}
@@ -188,6 +189,7 @@ function Member({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Unplug}
         label='Take it off the network'
         busy={why(blocked, removing.isPending)}
@@ -215,6 +217,7 @@ function Gateway({
       aside={<Ref node={gateway.owner} empty='kept by no one' />}
     >
       <RecordEditor
+        act={editing}
         title='Set this gateway'
         note='Values you set are held against the engine until you release them.'
         fields={GATEWAY_FIELDS}
@@ -224,6 +227,7 @@ function Gateway({
         onRelease={(keys) => editing.mutate({ values: {}, release: keys })}
       />
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Close the gateway'
         busy={why(blocked, removing.isPending)}
@@ -250,6 +254,7 @@ function Outage({
       caption={`For ${plural(outage.epochs, 'epoch', 'epochs')}, severity ${outage.severity}`}
     >
       <StepButton
+        act={removing}
         icon={Trash2}
         label='Strike this outage from the record'
         busy={why(blocked, removing.isPending)}
@@ -342,6 +347,7 @@ function NetworkControls({
         columns={3}
         action={
           <StepButton
+            act={founding}
             icon={NETWORK_ICON}
             label='Found it'
             variant='default'
@@ -383,6 +389,7 @@ function NetworkControls({
         columns={2}
         action={
           <StepButton
+            act={joining}
             icon={Plug}
             label='Join'
             busy={why(blocked ?? nobody, joining.isPending)}
@@ -422,6 +429,7 @@ function NetworkControls({
         columns={2}
         action={
           <StepButton
+            act={linking}
             icon={Link2}
             label='Open the gateway'
             busy={why(blocked ?? notNetwork ?? noOther, linking.isPending)}
@@ -446,6 +454,7 @@ function NetworkControls({
         columns={3}
         action={
           <StepButton
+            act={cutting}
             icon={WifiOff}
             label='Bring it down'
             busy={why(blocked ?? notNetwork, cutting.isPending)}
@@ -581,6 +590,7 @@ export function NetworkSection({
                   <Ref node={profile.owner} empty='owned by no one' />
                 </div>
                 <RecordEditor
+                  act={editing}
                   title='Set this network'
                   note='Values you set are held against the engine until you release them.'
                   fields={PROFILE_FIELDS}

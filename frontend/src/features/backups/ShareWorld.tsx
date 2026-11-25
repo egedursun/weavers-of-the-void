@@ -216,6 +216,7 @@ export function ShareWorld({ hasWorld, readOnly }: ShareWorldProps) {
           )}
           {mode === 'merge' && <MergeExplanation />}
           <Button
+            act={importer}
             type='submit'
             className='self-start'
             variant={mode === 'discovery' ? 'default' : 'destructive'}
@@ -236,6 +237,7 @@ export function ShareWorld({ hasWorld, readOnly }: ShareWorldProps) {
         </form>
       </div>
       <TypedConfirm
+        act={importer}
         open={confirming}
         onOpenChange={setConfirming}
         title={

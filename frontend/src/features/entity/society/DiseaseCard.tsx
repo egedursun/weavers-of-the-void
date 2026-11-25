@@ -26,6 +26,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -155,11 +156,13 @@ function OutbreakItem({
   last,
   blocked,
   onEnd,
+  act,
 }: {
   item: Outbreak
   last: boolean
   blocked: string | null
   onEnd: () => void
+  act?: ActProp
 }) {
   const status = STATUS_SPEC[item.status]
   const path = PATH_SPEC[item.path]
@@ -235,6 +238,7 @@ function OutbreakItem({
           </Badge>
           {item.status !== 'ended' && (
             <Button
+              act={act}
               size='sm'
               variant='outline'
               className='ms-auto'
@@ -438,6 +442,7 @@ function NatureControls({
   blocked: string | null
 }) {
   const edit = useGodAction({
+    writes: [{ lever: 'disease:edit' }],
     run: ({ key, value }: { key: string; value: number | string }) =>
       unwrap(
         api.POST('/api/actions/disease:edit', {
@@ -464,6 +469,7 @@ function NatureControls({
       }
       return (
         <NumberEditor
+          act={edit}
           key={`${field.key}-${field.value}`}
           id={`disease-${view.entity_id}`}
           field={field}
@@ -478,6 +484,7 @@ function NatureControls({
     <>
       <EditorGroup title='How it spreads' icon={Biohazard} pairs>
         <ChoiceEditor
+          act={edit}
           label='Spreads by'
           hint='How it passes from one to the next'
           value={view.primary_route}
@@ -487,6 +494,7 @@ function NatureControls({
           onPick={(value) => edit.mutate({ key: 'primary_route', value })}
         />
         <ChoiceEditor
+          act={edit}
           label='Warmth it favours'
           hint='Where it spreads fastest by warmth'
           value={view.affinity_warmth}
@@ -496,6 +504,7 @@ function NatureControls({
           onPick={(value) => edit.mutate({ key: 'affinity_warmth', value })}
         />
         <ChoiceEditor
+          act={edit}
           label='Moisture it favours'
           hint='Where it spreads fastest by moisture'
           value={view.affinity_moisture}
@@ -553,6 +562,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
     }
   }, [names.data, world])
   const loose = useGodAction({
+    writes: [{ lever: 'disease:loose' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/disease:loose', {
@@ -565,6 +575,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
       ),
   })
   const cure = useGodAction({
+    writes: [{ lever: 'disease:cure' }],
     run: (revoke: boolean) =>
       unwrap(
         api.POST('/api/actions/disease:cure', {
@@ -577,6 +588,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
       ),
   })
   const immunity = useGodAction({
+    writes: [{ lever: 'disease:immunity' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/disease:immunity', {
@@ -590,6 +602,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
       ),
   })
   const quarantine = useGodAction({
+    writes: [{ lever: 'disease:quarantine' }],
     run: (span: number) =>
       unwrap(
         api.POST('/api/actions/disease:quarantine', {
@@ -636,6 +649,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
           onChange={setSeverity}
         />
         <Button
+          act={loose}
           size='sm'
           variant='destructive'
           className='mt-auto'
@@ -674,6 +688,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
           />
         </FieldTile>
         <Button
+          act={quarantine}
           size='sm'
           variant='outline'
           className='mt-auto'
@@ -701,6 +716,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
         />
         <div className='mt-auto flex min-w-0 flex-col gap-1.5'>
           <Button
+            act={cure}
             className='self-start'
             size='sm'
             variant='outline'
@@ -712,6 +728,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
             Give the cure
           </Button>
           <Button
+            act={cure}
             className='self-start'
             size='sm'
             variant='outline'
@@ -723,6 +740,7 @@ function Levers({ view, blocked }: { view: Disease; blocked: string | null }) {
             Take the cure away
           </Button>
           <Button
+            act={immunity}
             className='self-start'
             size='sm'
             variant='outline'
@@ -750,6 +768,7 @@ export function DiseaseSection({
   const { reason } = useGodGate()
   const blocked = readOnlyReason ?? reason()
   const end = useGodAction({
+    writes: [{ lever: 'outbreak:end' }],
     run: (outbreakId: number) =>
       unwrap(
         api.POST('/api/actions/outbreak:end', {
@@ -961,6 +980,7 @@ export function DiseaseSection({
                 <Paged items={data.outbreaks} as='li'>
                   {(item, index) => (
                     <OutbreakItem
+                      act={end}
                       key={item.id}
                       item={item}
                       last={index === data.outbreaks.length - 1}
@@ -974,6 +994,19 @@ export function DiseaseSection({
           </Panel>
           <Reach view={data} />
           <AdjustPanel
+            writes={[
+              { lever: 'disease:create' },
+              { lever: 'disease:cure' },
+              { lever: 'disease:edit' },
+              { lever: 'disease:immunity' },
+              { lever: 'disease:loose' },
+              { lever: 'disease:quarantine' },
+              { lever: 'disease_route:remove' },
+              { lever: 'disease_route:set' },
+              { lever: 'endemic:remove' },
+              { lever: 'endemic:set' },
+              { lever: 'outbreak:edit' },
+            ]}
             title='Shape the sickness'
             note='Change how it spreads, what it strikes and what carries it; reshape its outbreaks and where it lingers; loose it, seal lands, heal communities or forge a new sickness. Every change goes into the ledger and can be undone.'
           >

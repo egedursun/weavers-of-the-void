@@ -52,6 +52,7 @@ function PatronRow({
           : GODLESS
   const [choice, setChoice] = useState(initial)
   const assign = useLoreMutation({
+    writes: [{ lever: 'entity:patron' }],
     run: (value: string) => {
       const [kind, raw] = value.split(':')
       const id = raw ? Number(raw) : null
@@ -120,6 +121,7 @@ function PatronRow({
             </SelectContent>
           </Select>
           <Button
+            act={assign}
             variant='outline'
             disabled={reason !== null}
             disabledReason={reason ?? undefined}
@@ -151,6 +153,7 @@ function ArchiveRow({
   const [mode, setMode] = useState<ArchiveMode>(initial)
   const importance = ctx.detail.importance
   const assign = useLoreMutation({
+    writes: [{ method: 'PUT', path: '/api/entities/{entity_id}/archive' }],
     run: (next: ArchiveMode) =>
       unwrap(
         api.PUT('/api/entities/{entity_id}/archive', {
@@ -196,6 +199,7 @@ function ArchiveRow({
               </SelectContent>
             </Select>
             <Button
+              act={assign}
               variant='outline'
               disabled={reason !== null}
               disabledReason={reason ?? undefined}
@@ -220,6 +224,9 @@ function SuggestBonds({
 }) {
   const gate = useLoreGate()
   const suggest = useLoreMutation({
+    writes: [
+      { method: 'POST', path: '/api/entities/{entity_id}/suggest-links' },
+    ],
     run: () =>
       unwrap(
         api.POST('/api/entities/{entity_id}/suggest-links', {
@@ -241,6 +248,7 @@ function SuggestBonds({
       {() => (
         <div className='flex w-full min-w-0 flex-col gap-2'>
           <Button
+            act={suggest}
             variant='outline'
             className='self-start'
             disabled={reason !== null}
@@ -274,6 +282,7 @@ function Voyage({
       (item.status === 'underway' || item.status === 'waiting')
   )
   const recall = useLoreMutation({
+    writes: [{ lever: 'journey:recall' }],
     run: (journeyId: number) =>
       unwrap(
         api.POST('/api/voyages/{journey_id}/recall', {
@@ -307,6 +316,7 @@ function Voyage({
               {`On the road to ${worldName(journey.destination_world_id)} · ${wordOf(journeyIntentValues, journey.intent)} · ${journey.epochs_left > 0 ? `arrives in ${plural(journey.epochs_left, 'epoch', 'epochs')}` : 'arrives this epoch'}`}
             </Text>
             <Button
+              act={recall}
               variant='ghost'
               disabled={reason !== null}
               disabledReason={reason ?? undefined}
@@ -316,6 +326,7 @@ function Voyage({
               Recall
             </Button>
             <ConfirmDialog
+              act={recall}
               open={confirming}
               onOpenChange={setConfirming}
               title='Recall the expedition?'

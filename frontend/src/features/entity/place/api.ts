@@ -45,6 +45,7 @@ export function usePlaceAction<Action extends PlaceAction>(
   success?: string
 ) {
   return useGodAction<ActionBody<Action>>({
+    writes: [{ lever: 'place:edit' }, { lever: action }],
     success,
     run: (body) =>
       unwrap(

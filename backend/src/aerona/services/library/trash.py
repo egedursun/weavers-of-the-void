@@ -26,13 +26,16 @@ class TrashEntry:
     population: int
     sons: int
     size_bytes: int
+    workspace_id: int | None = None
+    deleted_by: int | None = None
+    hidden_from: tuple[int, ...] = ()
 
 
 def entry_id_of(universe_id: str, at: datetime) -> str:
     return f"{universe_id}-{at.astimezone(UTC).strftime(TRASH_STAMP_FORMAT)}"
 
 
-def note_of(record: UniverseRecord, at: datetime) -> dict[str, object]:
+def note_of(record: UniverseRecord, at: datetime, deleted_by: int | None = None, hidden_from: tuple[int, ...] = ()) -> dict[str, object]:
     return {
         "deleted_at": at.isoformat(),
         "pinned": record.pinned,
@@ -40,13 +43,18 @@ def note_of(record: UniverseRecord, at: datetime) -> dict[str, object]:
         "population": record.population,
         "sons": record.sons,
         "size_bytes": record.size_bytes,
+        "workspace_id": record.workspace_id,
+        "deleted_by": deleted_by,
+        "hidden_from": list(hidden_from),
     }
 
 
-def move_to_trash(paths: UniversePaths, trash: Path, record: UniverseRecord, at: datetime) -> str:
+def move_to_trash(
+    paths: UniversePaths, trash: Path, record: UniverseRecord, at: datetime, *, deleted_by: int | None = None, hidden_from: tuple[int, ...] = ()
+) -> str:
     paths.root.mkdir(parents=True, exist_ok=True)
     write_manifest(paths.manifest, record.manifest())
-    (paths.root / TRASH_NOTE_FILENAME).write_text(json.dumps(note_of(record, at)), encoding="utf-8")
+    (paths.root / TRASH_NOTE_FILENAME).write_text(json.dumps(note_of(record, at, deleted_by, hidden_from)), encoding="utf-8")
     trash.mkdir(parents=True, exist_ok=True)
     entry_id = entry_id_of(record.id, at)
     os.replace(paths.root, trash / entry_id)
@@ -79,6 +87,9 @@ def read_entry(folder: Path) -> TrashEntry | None:
         population=number(note.get("population")),
         sons=number(note.get("sons")),
         size_bytes=number(note.get("size_bytes")),
+        workspace_id=number(note.get("workspace_id")) or None,
+        deleted_by=number(note.get("deleted_by")) or None,
+        hidden_from=tuple(number(item) for item in note.get("hidden_from") or () if number(item)),
     )
 
 
@@ -101,3 +112,23 @@ def bring_back(entry: TrashEntry, paths: UniversePaths, manifest: UniverseManife
     os.replace(entry.folder, paths.root)
     (paths.root / TRASH_NOTE_FILENAME).unlink(missing_ok=True)
     write_manifest(paths.manifest, manifest)
+
+
+def set_entry_workspace(entry: TrashEntry, workspace_id: int) -> None:
+    note_path = entry.folder / TRASH_NOTE_FILENAME
+    try:
+        note = json.loads(note_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        note = {}
+    if not isinstance(note, dict):
+        note = {}
+    note.setdefault("deleted_at", entry.deleted_at.isoformat())
+    note["workspace_id"] = workspace_id
+    note_path.write_text(json.dumps(note), encoding="utf-8")
+
+
+def stamp_workspace(trash: Path, workspace_id: int) -> int:
+    unstamped = [entry for entry in trash_entries(trash) if entry.workspace_id is None]
+    for entry in unstamped:
+        set_entry_workspace(entry, workspace_id)
+    return len(unstamped)

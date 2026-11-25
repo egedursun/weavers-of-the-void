@@ -1,4 +1,5 @@
 import { type LucideIcon } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { ActionButton } from '@/features/pantheon/ActionButton'
 import { useCosmicCatalogue } from './api'
 import { useCosmicGate } from './useCosmicAction'
@@ -33,7 +34,8 @@ export function CosmicActionButton({
   size = 'default',
   blockedReason,
   confirm,
-}: CosmicActionButtonProps) {
+  act,
+}: CosmicActionButtonProps & { act?: ActProp }) {
   const gate = useCosmicGate()
   const { data: catalogue } = useCosmicCatalogue()
   const entry = catalogue?.find((item) => item.id === actionId)
@@ -51,6 +53,7 @@ export function CosmicActionButton({
       : undefined
   return (
     <ActionButton
+      act={act}
       label={label}
       icon={icon}
       cost={cost}

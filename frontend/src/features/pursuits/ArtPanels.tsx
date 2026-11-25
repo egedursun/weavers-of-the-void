@@ -337,18 +337,21 @@ function MarketForge({
       action={
         <div className='flex min-w-0 flex-wrap gap-2'>
           <StepButton
+            act={valuing}
             icon={Coins}
             label='Value it'
             busy={why(blocked ?? noWork, valuing.isPending)}
             onClick={() => valuing.mutate()}
           />
           <StepButton
+            act={selling}
             icon={Handshake}
             label='Sell it'
             busy={why(blocked ?? noWork ?? noBuyer, selling.isPending)}
             onClick={() => selling.mutate()}
           />
           <Button
+            act={collecting}
             size='sm'
             disabled={why(blocked ?? collects, collecting.isPending) !== null}
             disabledReason={
@@ -606,6 +609,7 @@ function ForgeryForge({
       columns={3}
       action={
         <Button
+          act={forging}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}
@@ -793,6 +797,7 @@ function CanonForge({
       columns={3}
       action={
         <Button
+          act={placing}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

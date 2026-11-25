@@ -24,6 +24,7 @@ ACTING_GROUPS = frozenset({SpeakerGroup.SONS, SpeakerGroup.MORTALS, SpeakerGroup
 READING_GROUPS = frozenset({*ACTING_GROUPS, SpeakerGroup.BEINGS})
 
 Opener = Callable[[], Awaitable[int]]
+Deferrer = Callable[[str, dict[str, Any]], Awaitable[str]]
 
 
 @dataclass
@@ -35,6 +36,11 @@ class SpeakerTools:
     opener: Opener | None = None
     opened: bool = False
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    defer: Deferrer | None = None
+
+    @property
+    def deferred(self) -> bool:
+        return self.defer is not None
 
     @property
     def read_only(self) -> frozenset[str]:
@@ -60,8 +66,12 @@ class SpeakerTools:
         if tool.name in self.read_only:
             return tool
         inner = tool.handler
+        defer = self.defer
+        name = tool.name
 
         async def handler(arguments: dict[str, Any]) -> dict[str, Any]:
+            if defer is not None:
+                return {"content": [{"type": "text", "text": await defer(name, dict(arguments or {}))}], "is_error": False}
             await self.open_turn()
             return await inner(arguments)
 
@@ -112,16 +122,27 @@ async def join_turn(session: AsyncSession, rules: Rules, speaker: Speaker, epoch
 
 
 async def speaker_tools(
-    database: Database, toolkits: Toolkits | None, rules: Rules, speaker: Speaker, *, record: PresenceRecord, epoch: int, world_busy: bool
+    database: Database,
+    toolkits: Toolkits | None,
+    rules: Rules,
+    speaker: Speaker,
+    *,
+    record: PresenceRecord,
+    epoch: int,
+    world_busy: bool,
+    defer: Deferrer | None = None,
 ) -> SpeakerTools:
     if toolkits is None or speaker.group not in READING_GROUPS:
         return SpeakerTools(None, acting=False, points=0, paused=world_busy)
-    acting = may_act(speaker, record, world_busy)
+    later = world_busy and defer is not None and may_act(speaker, record, False)
+    acting = later or may_act(speaker, record, world_busy)
     toolkit = await toolkits.speaker_toolkit(speaker.node_id, epoch, acting=acting)
     if not acting:
         return SpeakerTools(toolkit, acting=False, points=0, paused=world_busy)
     async with database.read() as session:
         points = await points_left(session, rules, speaker, epoch)
+    if later:
+        return SpeakerTools(toolkit, acting=True, points=points, paused=True, defer=defer)
 
     async def opener() -> int:
         async with database.write() as session:

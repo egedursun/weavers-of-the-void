@@ -133,12 +133,14 @@ export function PlanCard({
       />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={forward}
           icon={ChevronsRight}
           label='A step forward'
           busy={moving}
           onClick={() => forward.mutate(1)}
         />
         <StepButton
+          act={forward}
           icon={Undo2}
           label='A step back'
           busy={
@@ -198,6 +200,7 @@ function PlanForge({
       columns={3}
       action={
         <Button
+          act={creating}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

@@ -105,6 +105,7 @@ export function useArcanaAction<Name extends ArcanaAction, T>(
   success?: string
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => postAction(name, toBody(vars)),
     success,
   })

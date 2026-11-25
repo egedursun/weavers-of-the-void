@@ -15,6 +15,7 @@ import {
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { formatInteger } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -224,10 +225,12 @@ function HeldList({
   route,
   busy,
   onRelease,
+  act,
 }: {
   route: RouteView
   busy: string | null
   onRelease: (keys: string[]) => void
+  act?: ActProp
 }) {
   if (route.locked.length === 0) return null
   return (
@@ -235,6 +238,7 @@ function HeldList({
       <Lock aria-hidden='true' className='size-icon-xs shrink-0 text-primary' />
       {route.locked.map((key) => (
         <Button
+          act={act}
           key={key}
           size='sm'
           variant='outline'
@@ -247,6 +251,7 @@ function HeldList({
         </Button>
       ))}
       <Button
+        act={act}
         size='sm'
         variant='outline'
         disabled={busy !== null}
@@ -302,6 +307,7 @@ export function RouteEditor({
   })
   const [chokepoint, setChokepoint] = useState(route.chokepoint)
   const edit = useGodAction({
+    writes: [{ lever: 'trade_route:edit' }],
     run: (body: { values?: Values; release?: string[] }) =>
       unwrap(
         api.POST('/api/actions/trade_route:edit', {
@@ -326,6 +332,7 @@ export function RouteEditor({
         />
       </div>
       <Button
+        act={edit}
         size='icon'
         variant={route.locked.includes(key) ? 'default' : 'outline'}
         aria-label={`Hold ${fieldLabel(key).toLowerCase()}`}
@@ -340,6 +347,7 @@ export function RouteEditor({
   return (
     <div data-surface='RouteEditor' className='flex min-w-0 flex-col gap-4'>
       <HeldList
+        act={edit}
         route={route}
         busy={blocked}
         onRelease={(keys) => edit.mutate({ release: keys })}
@@ -356,6 +364,7 @@ export function RouteEditor({
             />
           </div>
           <Button
+            act={edit}
             size='icon'
             variant={route.locked.includes('mode') ? 'default' : 'outline'}
             aria-label='Hold the way of travel'
@@ -377,6 +386,7 @@ export function RouteEditor({
             />
           </div>
           <Button
+            act={edit}
             size='icon'
             variant={route.locked.includes('status') ? 'default' : 'outline'}
             aria-label='Hold the state'
@@ -398,6 +408,7 @@ export function RouteEditor({
             />
           </div>
           <Button
+            act={edit}
             size='icon'
             variant={
               route.locked.includes('closed_season') ? 'default' : 'outline'
@@ -426,6 +437,7 @@ export function RouteEditor({
             />
           </div>
           <Button
+            act={edit}
             size='icon'
             variant={route.locked.includes('carrier') ? 'default' : 'outline'}
             aria-label='Hold the carrier'
@@ -453,6 +465,7 @@ export function RouteEditor({
                 />
               </div>
               <Button
+                act={edit}
                 size='icon'
                 variant={
                   route.locked.includes('controller_entity_id')
@@ -489,6 +502,7 @@ export function RouteEditor({
                 />
               </div>
               <Button
+                act={edit}
                 size='icon'
                 variant={
                   route.locked.includes('blockaded_by_entity_id')
@@ -540,6 +554,7 @@ export function RouteEditor({
           <Text as='span'>A chokepoint for strategic goods</Text>
         </label>
         <Button
+          act={edit}
           size='sm'
           variant={route.locked.includes('chokepoint') ? 'default' : 'outline'}
           disabled={blocked !== null}
@@ -572,6 +587,7 @@ export function TollControls({
   const [keeper, setKeeper] = useState<string | null>(null)
   const [rate, setRate] = useState('5')
   const raise = useGodAction({
+    writes: [{ lever: 'trade_route:toll_stop' }],
     run: (body: {
       region: number
       controller: number | null
@@ -591,6 +607,7 @@ export function TollControls({
       ),
   })
   const forbid = useGodAction({
+    writes: [{ lever: 'trade_route:toll_remove' }],
     run: (region: number) =>
       unwrap(
         api.POST('/api/actions/trade_route:toll_remove', {
@@ -599,6 +616,7 @@ export function TollControls({
       ),
   })
   const allow = useGodAction({
+    writes: [{ lever: 'trade_route:edit' }],
     run: (region: number) =>
       unwrap(
         api.POST('/api/actions/trade_route:edit', {
@@ -640,6 +658,7 @@ export function TollControls({
                 <div className='ms-auto flex min-w-0 flex-wrap gap-2'>
                   {toll.controller_held && (
                     <Button
+                      act={raise}
                       size='sm'
                       variant='outline'
                       disabled={blocked !== null}
@@ -658,6 +677,7 @@ export function TollControls({
                     </Button>
                   )}
                   <Button
+                    act={forbid}
                     size='sm'
                     variant='outline'
                     disabled={blocked !== null}
@@ -678,6 +698,7 @@ export function TollControls({
           <Paged items={route.untolled}>
             {(id) => (
               <Button
+                act={allow}
                 key={id}
                 size='sm'
                 variant='outline'
@@ -721,6 +742,7 @@ export function TollControls({
             onChange={setRate}
           />
           <Button
+            act={raise}
             size='sm'
             className='justify-self-start'
             disabled={blocked !== null || keeper === null || region === ''}
@@ -754,6 +776,7 @@ export function StrikeRoute({
 }) {
   const [open, setOpen] = useState(false)
   const strike = useGodAction({
+    writes: [{ lever: 'trade_route:delete' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/trade_route:delete', {
@@ -766,6 +789,7 @@ export function StrikeRoute({
   return (
     <>
       <Button
+        act={strike}
         size='sm'
         variant='destructive'
         disabled={busy !== null}
@@ -776,6 +800,7 @@ export function StrikeRoute({
         Strike the route from the world
       </Button>
       <ConfirmDialog
+        act={strike}
         open={open}
         onOpenChange={setOpen}
         destructive
@@ -809,6 +834,7 @@ export function FoundRouteDialog({
   const [toll, setToll] = useState('10')
   const naming = useShape()
   const found = useGodAction({
+    writes: [{ lever: 'trade_route:found' }],
     run: () =>
       unwrap(
         api.POST('/api/actions/trade_route:found', {
@@ -838,7 +864,7 @@ export function FoundRouteDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size='sm'>
+        <Button act={found} size='sm'>
           <Route />
           {triggerLabel}
         </Button>
@@ -920,6 +946,7 @@ export function FoundRouteDialog({
         </div>
         <DialogFooter>
           <Button
+            act={found}
             disabled={blocked !== null}
             disabledReason={blocked ?? undefined}
             onClick={() => found.mutate(undefined)}

@@ -1,6 +1,7 @@
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import type { components } from '@/api/generated/schema'
+import { type ActProp } from '@/api/mutation'
 import { Badge } from '@/components/ui/badge'
 import {
   EmptyState,
@@ -36,11 +37,13 @@ function EthicRow({
   stances,
   blocked,
   onStance,
+  act,
 }: {
   item: Ethic
   stances: Record<string, string>
   blocked: string | null
   onStance: (stance: EthicalStance) => void
+  act?: ActProp
 }) {
   const spec = named(STANCES, item.stance)
   return (
@@ -54,6 +57,7 @@ function EthicRow({
       </div>
       <div className='w-40 min-w-0'>
         <MindPicker
+          act={act}
           label='Stance'
           value={item.stance}
           table={stances}
@@ -68,6 +72,7 @@ function EthicRow({
 function Ladder({ view }: { view: CultureMind }) {
   const { reason } = useGodGate()
   const stance = useGodAction({
+    writes: [{ lever: 'ethics:set' }],
     run: ({ act, next }: { act: ActKind; next: EthicalStance }) =>
       unwrap(
         api.POST('/api/actions/ethics:set', {
@@ -81,6 +86,7 @@ function Ladder({ view }: { view: CultureMind }) {
       ),
   })
   const honour = useGodAction({
+    writes: [{ lever: 'ethics:honour' }],
     run: ({ model, ending }: { model: HonourModel; ending: DuelEnd | null }) =>
       unwrap(
         api.POST('/api/actions/ethics:honour', {
@@ -125,6 +131,7 @@ function Ladder({ view }: { view: CultureMind }) {
           <Paged items={view.ethics} initial={8} noun={['act', 'acts']}>
             {(item) => (
               <EthicRow
+                act={stance}
                 key={item.act}
                 item={item}
                 stances={stances}
@@ -142,6 +149,7 @@ function Ladder({ view }: { view: CultureMind }) {
         >
           <div className='grid min-w-0 grid-cols-1 gap-3 @xl/eth:grid-cols-2'>
             <MindPicker
+              act={honour}
               label='Honour model'
               value={view.honour_model}
               table={models}
@@ -159,6 +167,7 @@ function Ladder({ view }: { view: CultureMind }) {
               {view.honour_held && <Muted variant='caption'>Held by you</Muted>}
             </div>
             <MindPicker
+              act={honour}
               label='Duels end'
               value={view.duel_end ?? BY_MODEL}
               table={endings}

@@ -108,6 +108,7 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
         </div>
         <VetoButton ruling={row} busy={pending} />
         <Button
+          act={revoke}
           size='sm'
           variant='ghost'
           disabled={pending !== null}
@@ -119,6 +120,7 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
         </Button>
       </div>
       <Held
+        act={edit}
         keys={row.locked}
         label={heldLabel}
         busy={pending}
@@ -126,6 +128,7 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
       />
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
         <SwitchField
+          act={edit}
           label='In force'
           checked={row.active}
           disabled={pending !== null}
@@ -142,6 +145,7 @@ function RulingRow({ row, busy }: { row: RulingView; busy: string | null }) {
         />
         <div className='flex min-w-0 items-end'>
           <Button
+            act={edit}
             size='sm'
             disabled={pending !== null || until === ''}
             disabledReason={
@@ -323,6 +327,7 @@ export function CouncilRulingsPanel() {
               />
             </div>
             <Button
+              act={decree}
               disabled={busy !== null || problem !== null}
               disabledReason={busy ?? problem ?? undefined}
               onClick={() => decree.mutate()}

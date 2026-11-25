@@ -14,6 +14,7 @@ export function CreatorNote({ note }: { note: string | null }) {
   const [text, setText] = useState(saved)
   const { reason } = useGodGate()
   const write = useGodAction({
+    writes: [{ lever: 'creator:note' }],
     run: (value: string) =>
       unwrap(api.PUT('/api/creator/note', { body: { text: value } })),
     success: 'Written into canon',
@@ -43,6 +44,7 @@ export function CreatorNote({ note }: { note: string | null }) {
       />
       <div className='flex min-w-0 flex-wrap items-center gap-3'>
         <ActionButton
+          act={write}
           label='Write into canon'
           variant='default'
           blocked={reason() ?? (text === saved ? 'Nothing changed.' : null)}

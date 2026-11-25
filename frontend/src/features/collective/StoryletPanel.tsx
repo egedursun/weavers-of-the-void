@@ -49,6 +49,7 @@ function ChoiceButton({
   const chosen = run.choice === index
   return (
     <Button
+      act={choosing}
       size='sm'
       variant={chosen ? 'default' : 'outline'}
       disabled={busy !== null}
@@ -86,6 +87,7 @@ function StoryletCard({
   const busy = why(blocked, editing.isPending, removing.isPending)
   return (
     <Held
+      act={[editing, removing]}
       icon={spec.icon}
       tone={state.tone}
       title={row.title}
@@ -207,6 +209,7 @@ function StoryletForge({ blocked }: { blocked: string | null }) {
       columns={2}
       action={
         <Button
+          act={opening}
           size='sm'
           disabled={busy !== null}
           disabledReason={busy ?? undefined}

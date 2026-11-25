@@ -85,6 +85,7 @@ type Edit = { values: Record<string, unknown>; release?: string[] }
 
 export function useSpeciesEdit(id: number) {
   return useGodAction<Edit>({
+    writes: [{ lever: 'species:edit' }],
     run: ({ values, release }) =>
       unwrap(
         api.POST('/api/actions/species:edit', {
@@ -138,6 +139,7 @@ export function useWildAction<Name extends WildAction, T>(
   onDone?: () => void
 ) {
   return useGodAction<T>({
+    writes: [{ lever: name }],
     run: (vars) => runWild(name, toBody(vars)),
     onDone: () => onDone?.(),
   })
@@ -183,6 +185,7 @@ export function useRangeMap(id: number | null) {
 
 export function useBeastEdit(id: number) {
   return useGodAction<Edit>({
+    writes: [{ lever: 'beast:edit' }],
     run: ({ values, release }) =>
       unwrap(
         api.POST('/api/actions/beast:edit', {

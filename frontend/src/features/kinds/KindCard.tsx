@@ -169,6 +169,7 @@ function KindPassing({
         />
         <div className='flex min-w-0 @2xl:col-span-3'>
           <StepButton
+            act={passing}
             icon={Send}
             label='Give it to them'
             busy={why(reason ?? missing, passing.isPending)}
@@ -307,6 +308,7 @@ export function KindCard({
         <Muted variant='caption'>No one holds it now.</Muted>
       )}
       <RecordEditor
+        act={editing}
         title={`Set ${row.name}`}
         note={HOLD}
         fields={kindFields(info, siblings, row.id)}
@@ -318,18 +320,21 @@ export function KindCard({
       <KindPassing info={info} row={row} blocked={blocked} />
       <div className='flex min-w-0 flex-wrap gap-2'>
         <StepButton
+          act={holding}
           icon={held ? LockOpen : Lock}
           label={held ? 'Release it to the world' : 'Hold it against the world'}
           busy={busy}
           onClick={() => holding.mutate()}
         />
         <StepButton
+          act={retiring}
           icon={row.retired ? ArchiveRestore : Archive}
           label={row.retired ? 'Bring it back into use' : 'Retire it'}
           busy={busy}
           onClick={() => retiring.mutate()}
         />
         <StepButton
+          act={removing}
           icon={Trash2}
           label='Unmake this kind'
           busy={busy}

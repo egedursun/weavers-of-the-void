@@ -1,5 +1,6 @@
 import { type ReactNode, useId } from 'react'
 import { type LucideIcon } from 'lucide-react'
+import { type ActProp } from '@/api/mutation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Label as FieldLabel } from '@/components/ui/label'
@@ -22,6 +23,7 @@ export function ChoiceTiles<T extends string>({
   onChange,
   columns = 3,
   blocked = null,
+  act,
 }: {
   label: string
   value: T
@@ -29,6 +31,7 @@ export function ChoiceTiles<T extends string>({
   onChange: (value: T) => void
   columns?: 2 | 3 | 4
   blocked?: string | null
+  act?: ActProp
 }) {
   return (
     <div
@@ -45,6 +48,7 @@ export function ChoiceTiles<T extends string>({
         const active = option.value === value
         return (
           <Button
+            act={act}
             key={option.value}
             type='button'
             role='radio'

@@ -69,6 +69,7 @@ export function KnowledgeLawPanel({
     (item) => item.knowledge.id === ctx.entity.id
   )
   const teach = useLoreMutation({
+    writes: [{ lever: 'knowledge:set' }],
     run: (input: { knowledge_id: number; known: boolean }) =>
       unwrap(
         api.PUT('/api/entities/{entity_id}/knowledge', {
@@ -137,6 +138,7 @@ export function KnowledgeLawPanel({
                     </EntityLink>
                   )}
                   <Button
+                    act={teach}
                     variant='ghost'
                     size='icon-sm'
                     aria-label={`Make it forget ${bond.other?.name ?? 'this'}`}
@@ -181,6 +183,7 @@ export function KnowledgeLawPanel({
                   />
                 </div>
                 <Button
+                  act={teach}
                   variant='outline'
                   disabled={blocked !== null || chosen === null}
                   disabledReason={blocked ?? 'Choose knowledge first.'}

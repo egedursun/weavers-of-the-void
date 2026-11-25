@@ -90,7 +90,7 @@ export function Composer({
   const setDraft = useWill((state) => state.setDraft)
   const seed = useWill((state) => state.seed)
   const takeSeed = useWill((state) => state.takeSeed)
-  const send = useSendCycle()
+  const send = useSendCycle(mode)
   const cancel = useCancelCycle()
   const tray = useAttachmentTray(capabilities)
   const [over, setOver] = useState(false)
@@ -249,6 +249,7 @@ export function Composer({
         <span aria-hidden='true' className='flex-1 @md/will:hidden' />
         {running ? (
           <Button
+            act={cancel}
             type='button'
             variant='destructive'
             size='sm'
@@ -265,6 +266,7 @@ export function Composer({
           </Button>
         ) : (
           <Button
+            act={send}
             type='button'
             size='sm'
             disabled={blocked !== null}
