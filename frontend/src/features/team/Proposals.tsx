@@ -12,6 +12,7 @@ import {
   Medallion,
   ShowMore,
   useShowMore,
+  PagedList,
 } from '@/components/domain'
 import { FieldTile } from '@/components/domain/FieldTile'
 import { Label, Muted, Text } from '@/components/typography'
@@ -109,18 +110,25 @@ export function ProposalCard({ proposal }: { proposal: CanonProposalView }) {
           className='italic'
         >{`“${proposal.reason}”`}</Text>
       )}
-      <div className='flex min-w-0 flex-wrap gap-1.5'>
-        {proposal.touches.map((touch) => {
+      <PagedList
+        items={proposal.touches}
+        initial={SHOWN}
+        noun={['change', 'changes']}
+        as='div'
+        className='flex min-w-0 flex-wrap gap-1.5'
+        itemKey={(touch) => touch}
+      >
+        {(touch) => {
           const look = CANON_TOUCH[touch]
           const Icon = look.icon
           return (
-            <Badge key={touch} variant='warning' size='sm'>
+            <Badge variant='warning' size='sm'>
               <Icon />
               {look.label}
             </Badge>
           )
-        })}
-      </div>
+        }}
+      </PagedList>
       {proposal.held_node_ids.length > 0 && (
         <div className='flex min-w-0 flex-wrap items-center gap-1.5'>
           <Label>Held things it touches</Label>

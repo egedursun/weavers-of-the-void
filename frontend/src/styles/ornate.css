@@ -510,6 +510,39 @@
   border: 1px solid color-mix(in oklch, var(--gild) 35%, transparent);
 }
 
+[data-domain='account-avatar'] {
+  container-type: size;
+}
+
+.medallion[data-domain='account-avatar'] > [data-typography] {
+  font-size: 38cqmin;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.avatar-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: color-mix(in oklch, var(--tone) 80%, var(--gem-ink));
+  background: radial-gradient(
+    circle at 36% 30%,
+    color-mix(in oklch, var(--tone) 42%, var(--frame-hi)) 0%,
+    color-mix(in oklch, var(--tone) 16%, var(--frame-lo)) 70%,
+    var(--frame-lo) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--gild) 55%, transparent),
+    inset 0 0 10px -3px color-mix(in oklch, var(--tone) 70%, transparent);
+}
+
+.avatar-tile > [data-typography] {
+  font-size: 56cqmin;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
 .medallion > svg {
   filter: drop-shadow(
     0 0 4px color-mix(in oklch, var(--tone) 75%, transparent)

@@ -11,9 +11,11 @@ from aerona.db.session import Database
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine_will import DivineWillConfirmationRow, DivineWillCycleRow
+from aerona.db.tables.team import QueuedActRow
 from aerona.domain.enums.divine_will import ConfirmationReason, ConfirmationStatus, CycleStatus, DivineWillMode
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.team import QueuedActStatus
 from aerona.engine.primitives.stats import set_stats
 from aerona.epoch.concurrency import WORLD_GROUP
 from aerona.events.bus import EventBus
@@ -133,7 +135,7 @@ async def test_an_act_at_the_costly_threshold_asks_first(database: Database, tmp
     assert creator is not None and creator.mood_anger != 90
 
 
-async def test_acts_wait_while_the_world_lives_an_epoch(database: Database, tmp_path: Path) -> None:
+async def test_an_act_made_while_the_world_lives_an_epoch_waits_in_the_queue(database: Database, tmp_path: Path) -> None:
     world = await will_world(database)
     release = asyncio.Event()
 
@@ -146,7 +148,13 @@ async def test_acts_wait_while_the_world_lives_an_epoch(database: Database, tmp_
     try:
         call = will_call(database, world, DivineWillMode.COMMAND, tmp_path, player=harness_player(database, tmp_path, jobs))
         result = await call_tool(call, W.PERFORM_ACTION, {"action_id": "creator:mood", "input": {"anger": 90}})
-        assert result.is_error and "busy with an epoch" in result.text
+        assert not result.is_error and "waits in the queue" in result.text
+        assert result.payload["ledger_entry_id"] is None
+        async with database.read() as session:
+            queued = list(await session.scalars(select(QueuedActRow)))
+            creator = await session.scalar(select(CreatorRow))
+        assert [(row.action_id, row.status) for row in queued] == [("creator:mood", QueuedActStatus.QUEUED)]
+        assert creator is not None and creator.mood_anger != 90
     finally:
         release.set()
         await jobs.shutdown()

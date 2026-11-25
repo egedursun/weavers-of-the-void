@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy import select
 
 from aerona.core.account_scope import AccountRef, acting_account
+from aerona.db.authorship import owns
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.divine_will import DivineWillCycleRow, DivineWillSessionRow
@@ -218,3 +219,10 @@ async def test_each_person_chooses_their_own_notifications_and_read_state(team: 
     assert note_id not in [item["id"] for item in (await other.get("/api/notifications")).json()["items"]]
     assert note_id in [item["id"] for item in (await team.owner.get("/api/notifications")).json()["items"]]
     assert (await team.owner.get("/api/notifications")).json()["settings"]["note"] is True
+
+
+def test_a_writing_with_no_author_is_shared_and_anyone_may_change_it() -> None:
+    with acting_account(AccountRef(id=7, name="Mara")):
+        assert owns(None)
+        assert owns(7)
+        assert not owns(8)

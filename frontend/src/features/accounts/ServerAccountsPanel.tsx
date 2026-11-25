@@ -368,7 +368,7 @@ export function ServerAccountsPanel() {
         <EmptyState
           icon={ShieldCheck}
           title='Only server admins manage accounts'
-          description='Ask the owner of the server or a server admin. Members of your workspaces are managed in its settings.'
+          description='Ask the owner of the server or a server admin. Members of a workspace are managed under Members and roles in the workspace menu.'
         />
       ) : (
         <>

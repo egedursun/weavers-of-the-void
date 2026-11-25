@@ -192,7 +192,7 @@ WORLD_ROUTERS = frozenset(
 )
 DIVINE_WILL = world(Permission.DIVINE_WILL_READ, Permission.DIVINE_WILL_READ)
 ROUTER_ACCESS: dict[str, RouterAccess] = {
-    **{name: world() for name in WORLD_ROUTERS},
+    **{name: world() for name in sorted(WORLD_ROUTERS)},
     "health": RouterAccess(open_route(), open_route()),
     "auth": RouterAccess(signed_in(), signed_in()),
     "accounts": RouterAccess(server_admin(), server_admin()),

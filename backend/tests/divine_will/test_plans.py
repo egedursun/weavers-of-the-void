@@ -62,7 +62,7 @@ def real_desk(database: Database, folder: Path) -> tuple[PlanDesk, JobManager]:
     host = cast(
         Services,
         HarnessServices(
-            database, jobs, RulesService(database), HarnessApplication(Ledger(bus), DiscoveryService(settings)), PlayerRuntime(database, jobs, bus)
+            database, jobs, RulesService(database), HarnessApplication(Ledger(bus), DiscoveryService(settings)), PlayerRuntime(database, jobs, bus), bus
         ),
     )
 

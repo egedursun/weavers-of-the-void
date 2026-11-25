@@ -17,7 +17,7 @@ PERSON = re.compile(
     re.IGNORECASE,
 )
 WHO = re.compile(r"\b(who (they|he|she) (are|is)|their name|name and title|the one who (writes|tells|speaks|sang|wrote))\b", re.IGNORECASE)
-SNAPSHOT_REFERENCE = re.compile(r"_(entity|node)_id$")
+SNAPSHOT_REFERENCE = re.compile(r"_(entity|node|account)_id$")
 
 
 def output_models() -> list[type[OutputModel]]:
@@ -50,9 +50,12 @@ def test_a_table_never_keeps_a_person_by_name_alone() -> None:
             person = PERSON.search(column.name.replace("_", " "))
             if person is None or not isinstance(column.type, (String, Text)) or getattr(column.type, "enum_class", None) is not None:
                 continue
-            if not any(reference.startswith(person.group(1).lower()) for reference in references):
+            stem = column.name.removesuffix("_name")
+            if not any(reference.startswith((person.group(1).lower(), stem)) for reference in references):
                 found.append(f"{table.name}.{column.name}")
-    assert found == [], "keep the person as a link to the mortal (a column ending in _entity_id) beside any name snapshot: " + ", ".join(found)
+    assert found == [], (
+        "keep the person as a link to the mortal or the account (a column ending in _entity_id or _account_id) beside any name snapshot: " + ", ".join(found)
+    )
 
 
 TEMPLATES = Path(__file__).resolve().parents[2] / "src" / "aerona" / "prompts" / "templates"

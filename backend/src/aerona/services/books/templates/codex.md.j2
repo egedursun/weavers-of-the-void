@@ -934,6 +934,7 @@ Score **{{ book.deeds.total }}** · Achievements **{{ book.deeds.earned | length
 
 {% for entry in book.ledger %}
 - **Epoch {{ entry.epoch }}.** {{ entry.actor_name }}{% if entry.author_name %} *(by {{ entry.author_name }})*{% endif %} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} *(undone{% if entry.undone_by_name %} by {{ entry.undone_by_name }}{% endif %})*{% endif %}{% if entry.input_summary %} — {{ entry.input_summary | plain }}{% endif %}{% if entry.reason %}
+
   - Why: {{ entry.reason | plain }}{% endif %}
 
 {% for change in book.ledger_changes.get(entry.id, []) %}

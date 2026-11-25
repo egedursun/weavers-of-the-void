@@ -19,6 +19,7 @@
 {% endif %}
 {% for act in hand.acts %}
 - **Epoch {{ act.epoch }}.** {{ act.label }}{% if act.undone %} *(undone{% if act.undone_by %} by {{ act.undone_by }}{% endif %})*{% endif %}{% if act.summary %} — {{ act.summary | plain }}{% endif %}{% if act.reason %}
+
   - Why: {{ act.reason | plain }}{% endif %}
 
 {% endfor %}

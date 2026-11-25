@@ -143,6 +143,42 @@ async def test_only_changed_passages_are_embedded_again(tmp_path: Path, open_dat
     await database.dispose()
 
 
+async def test_a_built_index_refreshes_quietly_and_skips_an_unchanged_world(
+    tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database, realm = await open_world(open_database, tmp_path)
+    index = LoreIndex(database, Rules, embedder=CountingEmbedder())
+    await index.refresh()
+    assert index.state().status is IndexStatus.READY
+    shown: list[IndexStatus] = []
+    original = index._set
+
+    def watched(status: IndexStatus, note: str, *, force: bool = False) -> None:
+        shown.append(status)
+        original(status, note, force=force)
+
+    monkeypatch.setattr(index, "_set", watched)
+    reads: list[str] = []
+    gather = index_module.gathered
+
+    def counted(url: str, rules: Rules) -> Any:
+        reads.append(url)
+        return gather(url, rules)
+
+    monkeypatch.setattr(index_module, "gathered", counted)
+    await index.refresh()
+    assert reads == []
+    async with database.write() as session:
+        town = await session.get(EntityRow, realm.settlement_id)
+        assert town is not None
+        town.description = "A new harbour wall stands where the old one fell."
+    await index.refresh()
+    assert len(reads) == 1
+    assert IndexStatus.BUILDING not in shown
+    assert index.state().status is IndexStatus.READY
+    await database.dispose()
+
+
 async def test_paging_reaches_every_hit(tmp_path: Path, open_database: OpenDatabase) -> None:
     database, _realm = await open_world(open_database, tmp_path)
     index = LoreIndex(database, Rules, embedder=CountingEmbedder())

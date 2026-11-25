@@ -38,7 +38,12 @@ async def read_stream(api: ApiWorld, *, query: str = "", headers: dict[str, str]
         "path": "/api/events",
         "raw_path": b"/api/events",
         "query_string": "&".join(part for part in (f"{UNIVERSE_QUERY}={api.universe_id}", query) if part).encode(),
-        "headers": [(b"host", b"localhost"), (b"accept", b"text/event-stream"), *[(key.encode(), value.encode()) for key, value in (headers or {}).items()]],
+        "headers": [
+            (b"host", b"localhost"),
+            (b"accept", b"text/event-stream"),
+            (b"cookie", "; ".join(f"{name}={value}" for name, value in api.http.cookies.items()).encode()),
+            *[(key.encode(), value.encode()) for key, value in (headers or {}).items()],
+        ],
         "server": ("localhost", 80),
         "client": ("127.0.0.1", 1),
     }

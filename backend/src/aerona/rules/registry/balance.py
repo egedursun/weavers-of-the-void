@@ -15,6 +15,6 @@ class BalanceRules:
     dream: int = rule(8, 0, 1000, RuleGroup.MAJOR_ACTIONS_AND_ESSENCE, "Dream sent by the Creator to a mortal")
     awaken_peoples: int = rule(35, 0, 1000, RuleGroup.MAJOR_ACTIONS_AND_ESSENCE, "Awaken the peoples")
     apocalypse_threshold: int = rule(100, 1, 1000, RuleGroup.MAJOR_ACTIONS_AND_ESSENCE, "Apocalypse threshold (apocalypse happens when the clock reaches this)")
-    apocalypse_speed: int = rule(100, 0, 300, RuleGroup.MAJOR_ACTIONS_AND_ESSENCE, "Apocalypse speed (%; 0 = clock stops)")
+    apocalypse_speed: int = rule(1, 0, 300, RuleGroup.MAJOR_ACTIONS_AND_ESSENCE, "Apocalypse speed (%; 0 = clock stops)")
     suppress_revolt: int = rule(20, 0, 1000, RuleGroup.MAJOR_ACTIONS_AND_ESSENCE, "Suppress an uprising")
     creator_starting_essence: int = rule(150, 0, 1000, RuleGroup.MAJOR_ACTIONS_AND_ESSENCE, "Creator's starting essence in a new cosmos")

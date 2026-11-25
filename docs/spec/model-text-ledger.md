@@ -1254,7 +1254,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/prompts/templates/opportunities/son_opportunities.md.j2` | 3 | 2026-11-16 | `9eb96912ecde8e05` |
 | `backend/src/aerona/prompts/templates/presence/presence_closing.md.j2` | 8 | 2026-11-25 | `5d990ad423eb312b` |
 | `backend/src/aerona/prompts/templates/presence/presence_system.md.j2` | 27 | 2026-11-25 | `e2e8751b6b136d9c` |
-| `backend/src/aerona/prompts/templates/presence/presence_user.md.j2` | 13 | 2026-11-25 | `9fc155f2734ec1d0` |
+| `backend/src/aerona/prompts/templates/presence/presence_user.md.j2` | 13 | 2026-11-26 | `6a23185eeeb82098` |
 | `backend/src/aerona/prompts/templates/shared/_epic_rule.md.j2` | 1 | 2026-11-19 | `dd3722e371f3dfa4` |
 | `backend/src/aerona/prompts/templates/shared/_harm_narration.md.j2` | 1 | 2026-11-19 | `ffd7702b78147ab0` |
 | `backend/src/aerona/prompts/templates/shared/image_prompt_rules.md.j2` | 1 | 2026-11-19 | `60fe2f9eada71b0b` |
@@ -1314,7 +1314,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/records.py` | 7 | 2026-11-17 | `ed6deef434b0c5d8` |
 | `backend/src/aerona/services/books/seasons.py` | 14 | 2026-11-23 | `807a497e46a49a58` |
 | `backend/src/aerona/services/books/templates/book.html.j2` | 228 | 2026-11-25 | `62f78eca14e7e558` |
-| `backend/src/aerona/services/books/templates/codex.md.j2` | 428 | 2026-11-25 | `07189552eafaf74c` |
+| `backend/src/aerona/services/books/templates/codex.md.j2` | 428 | 2026-11-26 | `07189552eafaf74c` |
 | `backend/src/aerona/services/books/templates/divine_will.html.j2` | 32 | 2026-11-25 | `c4df08b4d2ac6489` |
 | `backend/src/aerona/services/books/templates/divine_will.md.j2` | 73 | 2026-11-25 | `5f9893552dc8b1b4` |
 | `backend/src/aerona/services/books/templates/empty.html.j2` | 3 | 2026-11-16 | `fb62253fdc00812e` |
@@ -1324,7 +1324,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/templates/presence.html.j2` | 19 | 2026-11-25 | `26372aae7d9e8695` |
 | `backend/src/aerona/services/books/templates/presence.md.j2` | 25 | 2026-11-25 | `45ee700b2390b6c5` |
 | `backend/src/aerona/services/books/templates/team.html.j2` | 11 | 2026-11-25 | `53749fd217405c84` |
-| `backend/src/aerona/services/books/templates/team.md.j2` | 23 | 2026-11-25 | `b85c8a0cd22020d7` |
+| `backend/src/aerona/services/books/templates/team.md.j2` | 23 | 2026-11-26 | `b85c8a0cd22020d7` |
 | `backend/src/aerona/services/books/typed.py` | 11 | 2026-11-21 | `822dadbada92cf63` |
 | `backend/src/aerona/services/books/typeset.py` | 2 | 2026-11-19 | `80b6661985e24ab0` |
 | `backend/src/aerona/services/bulk_deepen.py` | 15 | 2026-11-16 | `e6ba12e5fc751475` |
@@ -1787,7 +1787,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/tools/toolkit.py` | 3 | 2026-11-25 | `61e46c9b9309da0d` |
 | `frontend/src/components/domain/ToolList.tsx` | 1 | 2026-11-16 | `a21492ecd415e33b` |
 | `frontend/src/components/layout/entry/EntryRail.tsx` | 1 | 2026-11-23 | `093c315c6147e65b` |
-| `frontend/src/features/accounts/ServerAccountsScreen.tsx` | 1 | 2026-11-25 | `7bcb217c6602948c` |
+| `frontend/src/features/accounts/ServerAccountsPanel.tsx` | 1 | 2026-11-26 | `7bcb217c6602948c` |
 | `frontend/src/features/atlas/AtlasFilters.tsx` | 1 | 2026-11-16 | `71f7209d9f2d397a` |
 | `frontend/src/features/backups/SecondaryTargetForm.tsx` | 1 | 2026-11-16 | `b8333653e9c60285` |
 | `frontend/src/features/belonging/FugitivePanel.tsx` | 1 | 2026-11-23 | `c7f937836f5d82d5` |

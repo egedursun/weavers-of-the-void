@@ -42,6 +42,7 @@ class HarnessServices:
     rules: RulesService
     application: HarnessApplication
     player: PlayerRuntime
+    bus: EventBus
 
 
 def harness_player(database: Database, folder: Path, jobs: JobManager | None = None) -> CatalogPlayer:
@@ -49,7 +50,7 @@ def harness_player(database: Database, folder: Path, jobs: JobManager | None = N
     jobs = jobs or JobManager(database, bus)
     settings = Settings(data_dir=folder, llm_enabled=False, image_worker_url="")
     application = HarnessApplication(Ledger(bus), DiscoveryService(settings))
-    host = HarnessServices(database, jobs, RulesService(database), application, PlayerRuntime(database, jobs, bus))
+    host = HarnessServices(database, jobs, RulesService(database), application, PlayerRuntime(database, jobs, bus), bus)
     return CatalogPlayer(cast(Services, host))
 
 

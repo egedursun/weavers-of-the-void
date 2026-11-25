@@ -71,4 +71,4 @@ def may_see(author_account_id: int | None, shared: bool) -> bool:
 
 def owns(author_account_id: int | None) -> bool:
     account = current_account()
-    return account is None or author_account_id == account.id
+    return account is None or author_account_id is None or author_account_id == account.id

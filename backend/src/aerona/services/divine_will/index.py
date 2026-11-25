@@ -3,7 +3,8 @@ import logging
 import sqlite3
 import time
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import AsyncIterator, Callable, Iterable, Mapping, Sequence
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from itertools import batched
@@ -13,6 +14,7 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 from sqlalchemy import delete, insert, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.account_scope import current_account, detached
 from aerona.core.grammar import several
@@ -300,6 +302,7 @@ class LoreIndex:
         self._reset = False
         self._background = False
         self._built_generation: int | None = None
+        self._own_writes = 0
         self._attached_generation: int | None = None
         self._failed_at: float | None = None
         self._status, self._note = first_state(directory, fetch, embedder)
@@ -423,6 +426,16 @@ class LoreIndex:
         self._world_cache.clear()
         self._attached_cache.clear()
 
+    @asynccontextmanager
+    async def _own_write(self) -> AsyncIterator[AsyncSession]:
+        async with self._database.write() as session:
+            yield session
+        self._own_writes += 1
+
+    def _quiet_since(self, generation: int, writes: int) -> int:
+        current = self._database.generation
+        return current if current - generation == self._own_writes - writes else generation
+
     def _url(self) -> str:
         return self._database.engine.url.render_as_string(hide_password=False)
 
@@ -483,7 +496,11 @@ class LoreIndex:
                 self._reset = False
                 await self.load()
             generation = self._database.generation
-            self._set(IndexStatus.BUILDING, self._note if self._status is IndexStatus.UNAVAILABLE else "")
+            writes = self._own_writes
+            if self._world is not None and self._built_generation == generation:
+                return {"passages": len(self._world.chunks), "embedded": self._world.embedded_count, "written": 0}
+            if self._world is None:
+                self._set(IndexStatus.BUILDING, self._note if self._status is IndexStatus.UNAVAILABLE else "")
             passages = await asyncio.to_thread(gathered, self._url(), self._rules())
             embedder = await self.ready_embedder()
             count = await self.token_count()
@@ -496,7 +513,7 @@ class LoreIndex:
             if embedder is not None:
                 paused = await self._embed(embedder, layer, known, context, yielding=True)
                 written = await self._persist(layer.chunks, known, None)
-            self._built_generation = generation
+            self._built_generation = self._quiet_since(generation, writes)
             self._built_at = datetime.now(UTC)
             self._finish(paused)
             return {"passages": len(layer.chunks), "embedded": layer.embedded_count, "written": written}
@@ -535,6 +552,7 @@ class LoreIndex:
         total = len(order)
         self._pending = total
         done = 0
+        quiet = self._status is IndexStatus.READY
         persisted_at = time.monotonic()
         for batch in batched(order, max(1, self._rules().divine_will.index_batch), strict=False):
             reason = self._yield_reason() if yielding else ""
@@ -552,7 +570,8 @@ class LoreIndex:
             self._pending = total - done
             if context is not None:
                 context.report(done / total, f"{done}/{total}")
-            self._set(IndexStatus.BUILDING, "")
+            if not quiet:
+                self._set(IndexStatus.BUILDING, "")
             if yielding and time.monotonic() - persisted_at >= PERSIST_SECONDS:
                 await self._persist(layer.chunks, known, None)
                 persisted_at = time.monotonic()
@@ -600,11 +619,11 @@ class LoreIndex:
         fresh = [chunk for key, chunk in wanted.items() if key not in existing or existing[key][0] in dropped]
         epoch = self._database_epoch()
         for batch in batched(stale, PERSIST_BATCH, strict=False):
-            async with self._database.write() as session:
+            async with self._own_write() as session:
                 session.info[UNCAPTURED] = True
                 await session.execute(delete(row).where(row.id.in_(batch)))
         for part in batched(fresh, PERSIST_BATCH, strict=False):
-            async with self._database.write() as session:
+            async with self._own_write() as session:
                 session.info[UNCAPTURED] = True
                 await session.execute(
                     insert(row),
@@ -678,7 +697,7 @@ class LoreIndex:
         ready = sorted(int(source_id) for source_id, whole in complete.items() if whole)
         if not ready:
             return
-        async with self._database.write() as session:
+        async with self._own_write() as session:
             await session.execute(
                 update(DivineWillAttachmentRow)
                 .where(DivineWillAttachmentRow.id.in_(ready), DivineWillAttachmentRow.status == AttachmentStatus.CONVERTED)

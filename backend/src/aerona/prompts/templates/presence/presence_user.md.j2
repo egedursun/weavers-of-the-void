@@ -17,7 +17,7 @@ You answered: {{ exchange.reply_text }}
 {% if trace %}
 
 YOUR ANSWER SO FAR (the connection broke; go on from the last line and do not repeat an act that is already done):
-{% set labels = {"text": "you said", "thought": "your thought", "tool_call": "you called", "tool_result": "result of", "error": "error", "retry": "the connection broke"} %}
+{% set labels = {"player": caller ~ " said", "thought": "your thought", "text": "you said", "tool_call": "you called", "tool_result": "result of", "confirmation_request": "you asked to confirm", "confirmation_reply": "the answer to confirm", "notice": "notice", "retry": "the connection broke", "error": "error"} %}
 {% for line in trace %}
 [{{ labels[line.kind] }}{% if line.tool %} {{ line.tool }}{% endif %}] {{ line.text }}
 {% endfor %}

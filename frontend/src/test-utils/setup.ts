@@ -1,11 +1,17 @@
-import { afterEach } from 'vitest'
+import { afterEach, beforeEach } from 'vitest'
 import { viewerExit } from '@/api/viewerExit'
+import { chooseWorkspace, forgetLastWorkspace } from '@/api/workspaceStore'
 import { installNestingGuard, takeNestingViolations } from './domNesting'
 import { installNetworkGuard, takeNetworkViolations } from './networkGuard'
 
 installNetworkGuard()
 installNestingGuard()
 viewerExit.reload = () => undefined
+
+beforeEach(() => {
+  chooseWorkspace(null)
+  forgetLastWorkspace()
+})
 
 afterEach(() => {
   const violations = takeNetworkViolations()
