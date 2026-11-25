@@ -1,4 +1,6 @@
 import re
+from enum import Enum
+from functools import cache
 from string import Formatter
 from typing import Any
 
@@ -192,5 +194,12 @@ def fact_word(enum_name: str | None, value: str) -> str:
 
 
 def spoken(value: object) -> str:
+    if isinstance(value, Enum):
+        return spoken_member(value)
     raw = str(getattr(value, "value", value))
     return fact_word(type(value).__name__, raw) if hasattr(value, "value") else raw.replace("_", " ")
+
+
+@cache
+def spoken_member(member: Enum) -> str:
+    return fact_word(type(member).__name__, str(member.value))

@@ -499,7 +499,7 @@ class LoreIndex:
             writes = self._own_writes
             if self._world is not None and self._built_generation == generation:
                 return {"passages": len(self._world.chunks), "embedded": self._world.embedded_count, "written": 0}
-            if self._world is None:
+            if self._status is not IndexStatus.READY:
                 self._set(IndexStatus.BUILDING, self._note if self._status is IndexStatus.UNAVAILABLE else "")
             passages = await asyncio.to_thread(gathered, self._url(), self._rules())
             embedder = await self.ready_embedder()

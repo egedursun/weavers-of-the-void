@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -20,9 +21,13 @@ from aerona.constants.library import (
     DEFAULT_PARALLEL_EPOCHS,
     DEFAULT_TRASH_DAYS,
 )
-from aerona.constants.llm import ClaudeAuth
+from aerona.constants.llm import EMBED_THREADS_RESERVED, ClaudeAuth
 from aerona.constants.media import DEFAULT_MEDIA_BUCKET, DEFAULT_MEDIA_ENDPOINT, DEFAULT_MEDIA_REGION, MediaBackend
 from aerona.paths import ProcessPaths, UniversePaths
+
+
+def embedding_threads() -> int:
+    return max(1, (os.process_cpu_count() or EMBED_THREADS_RESERVED + 1) - EMBED_THREADS_RESERVED)
 
 
 class Settings(BaseSettings):
@@ -37,7 +42,7 @@ class Settings(BaseSettings):
     image_worker_url: str = ""
     divine_will_upload_max_mb: int = 50
     divine_will_upload_max_files: int = 10
-    embed_threads: int = 2
+    embed_threads: int = Field(default_factory=embedding_threads)
     embed_model_dir: Path | None = None
     secondary_backup_dir: Path | None = None
     static_dir: Path | None = None

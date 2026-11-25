@@ -14,3 +14,6 @@ OAUTH_TOKEN_KEY = "CLAUDE_CODE_OAUTH_TOKEN"
 class ClaudeAuth(StrEnum):
     TOKEN = "token"
     LOGIN = "login"
+
+
+EMBED_THREADS_RESERVED = 2

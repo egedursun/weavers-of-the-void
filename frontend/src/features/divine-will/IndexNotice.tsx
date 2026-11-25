@@ -9,7 +9,7 @@ import {
   SearchX,
 } from 'lucide-react'
 import { chunkSourceValues } from '@/api/generated/schema'
-import { formatDateTime } from '@/lib/format'
+import { formatDateTime, formatInteger, formatPercent } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -53,6 +53,7 @@ export function IndexNotice() {
   const data = index.data
   if (!data || data.status === 'ready') return null
   const look = STATUS_LOOK[data.status]
+  const share = data.passages > 0 ? data.embedded / data.passages : 0
   const Icon = look.icon
   return (
     <div
@@ -73,15 +74,21 @@ export function IndexNotice() {
         >
           {look.title}
         </Text>
-        <Muted as='span' variant='caption'>
-          {`${plural(data.embedded, 'passage')} of ${String(data.passages)} read`}
+        <Text
+          as='span'
+          variant='caption'
+          weight='semibold'
+          className='tabular-nums'
+        >
+          {formatPercent(share)}
+        </Text>
+        <Muted as='span' variant='caption' className='tabular-nums'>
+          {`${formatInteger(data.embedded)} of ${formatInteger(data.passages)} read`}
         </Muted>
       </div>
       <Progress
         size='sm'
-        value={
-          data.passages > 0 ? (data.embedded / data.passages) * PERCENT : 0
-        }
+        value={share * PERCENT}
         indeterminate={data.status === 'fetching'}
         aria-label='Reading the world'
       />

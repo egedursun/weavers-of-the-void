@@ -17,4 +17,4 @@ class DivineWillRules:
     search_page: int = rule(12, 3, 100, C, "Hits on one page of a Divine Will search")
     costly_essence: int = rule(25, 0, 100000, A, "Essence at or above which an act of the Divine Will asks the player first")
     forecast_max_epochs: int = rule(3, 1, 10, A, "Most epochs a Divine Will forecast may live on its copy of the world")
-    index_batch: int = rule(16, 1, 256, A, "Passages the Divine Will index embeds in one batch")
+    index_batch: int = rule(64, 1, 256, A, "Passages the Divine Will index embeds in one batch")

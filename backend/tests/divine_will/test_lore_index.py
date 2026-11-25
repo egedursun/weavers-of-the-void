@@ -179,6 +179,31 @@ async def test_a_built_index_refreshes_quietly_and_skips_an_unchanged_world(
     await database.dispose()
 
 
+async def test_an_index_that_waited_for_an_epoch_shows_it_reads_again_at_once(
+    tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database, realm = await open_world(open_database, tmp_path)
+    index = LoreIndex(database, Rules, embedder=CountingEmbedder())
+    await index.refresh()
+    index._set(IndexStatus.WAITING, index_module.EPOCH_RUNNING)
+    shown: list[IndexStatus] = []
+    original = index._set
+
+    def watched(status: IndexStatus, note: str, *, force: bool = False) -> None:
+        shown.append(status)
+        original(status, note, force=force)
+
+    monkeypatch.setattr(index, "_set", watched)
+    async with database.write() as session:
+        town = await session.get(EntityRow, realm.settlement_id)
+        assert town is not None
+        town.description = "The ferry runs again."
+    await index.refresh()
+    assert shown[0] is IndexStatus.BUILDING
+    assert index.state().status is IndexStatus.READY
+    await database.dispose()
+
+
 async def test_paging_reaches_every_hit(tmp_path: Path, open_database: OpenDatabase) -> None:
     database, _realm = await open_world(open_database, tmp_path)
     index = LoreIndex(database, Rules, embedder=CountingEmbedder())

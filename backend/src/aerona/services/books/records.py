@@ -147,6 +147,8 @@ class Ledger:
     names: dict[int, str]
     incidents: dict[int, IncidentRow] = field(default_factory=dict)
     lines: dict[int, str] = field(default_factory=dict)
+    heads: dict[int, str] = field(default_factory=dict)
+    tails: dict[int, list[str]] = field(default_factory=dict)
     participants: dict[int, list[IncidentParticipantRow]] = field(default_factory=lambda: defaultdict(list))
     facts: dict[int, list[IncidentFactRow]] = field(default_factory=lambda: defaultdict(list))
     steps: dict[int, list[IncidentStepRow]] = field(default_factory=lambda: defaultdict(list))
@@ -353,20 +355,40 @@ class Ledger:
         return f"{when}: {body}{actor}{phase}{why}{cause}"
 
     def account_text(self, incident: IncidentRow, node_id: int | None) -> str:
-        roles = [participant for participant in self.participants.get(incident.id, [])]
+        roles = self.participants.get(incident.id, [])
         own = [spoken(row.role) for row in roles if row.node_id == node_id]
-        parts = [f"{self.when(incident)}: {self.line_of(incident)}"]
-        if incident.id in self.named:
-            parts.append(f"named {self.name_of(incident)}")
+        parts = [self.account_head(incident)]
         if own:
             parts.append(f"as {', '.join(own)}")
+        parts.extend(self.account_place(incident))
+        others = [f"{spoken(row.role)} {self.name(row.node_id)}" for row in roles if row.node_id != node_id and row.role is not IncidentRole.PLACE]
+        if others:
+            parts.append("with " + ", ".join(others))
+        parts.extend(self.account_tail(incident))
+        return " · ".join(parts)
+
+    def account_head(self, incident: IncidentRow) -> str:
+        found = self.heads.get(incident.id)
+        if found is None:
+            found = f"{self.when(incident)}: {self.line_of(incident)}"
+            if incident.id in self.named:
+                found = f"{found} · named {self.name_of(incident)}"
+            self.heads[incident.id] = found
+        return found
+
+    def account_place(self, incident: IncidentRow) -> list[str]:
+        parts = []
         if incident.place_entity_id is not None:
             parts.append(f"at {self.name(incident.place_entity_id)}")
         if incident.origin_entity_id is not None or incident.destination_entity_id is not None:
             parts.append(f"from {self.name(incident.origin_entity_id) or 'somewhere'} to {self.name(incident.destination_entity_id) or 'somewhere'}")
-        others = [f"{spoken(row.role)} {self.name(row.node_id)}" for row in roles if row.node_id != node_id and row.role is not IncidentRole.PLACE]
-        if others:
-            parts.append("with " + ", ".join(others))
+        return parts
+
+    def account_tail(self, incident: IncidentRow) -> list[str]:
+        found = self.tails.get(incident.id)
+        if found is not None:
+            return found
+        parts = []
         facts = [self.fact_text(fact) for fact in self.facts.get(incident.id, [])]
         if facts:
             parts.append("account: " + "; ".join(facts))
@@ -385,7 +407,8 @@ class Ledger:
         cause = self.incidents.get(incident.cause_incident_id) if incident.cause_incident_id is not None else None
         if cause is not None:
             parts.append(f"cause: {self.line_of(cause)}")
-        return " · ".join(parts)
+        self.tails[incident.id] = parts
+        return parts
 
     def changes_cell(self, incident: IncidentRow) -> str:
         if incident.kind.startswith(PHASE_PREFIX):

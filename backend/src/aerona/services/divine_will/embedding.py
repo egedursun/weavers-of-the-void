@@ -2,6 +2,7 @@ import hashlib
 import re
 import threading
 from collections.abc import Callable, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -161,15 +162,16 @@ class Embedder:
     def __init__(self, directory: Path, threads: int) -> None:
         self.vocabulary = Vocabulary(directory / VOCABULARY_FILE.path)
         options = onnxruntime.SessionOptions()
-        options.intra_op_num_threads = max(1, threads)
+        options.intra_op_num_threads = 1
         options.inter_op_num_threads = 1
-        options.enable_cpu_mem_arena = False
+        options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
         self._session = onnxruntime.InferenceSession(str(directory / MODEL_FILE.path), options, providers=[CPU_PROVIDER])
+        self._pool = ThreadPoolExecutor(max_workers=max(1, threads), thread_name_prefix="embed")
 
     def embed(self, texts: Sequence[str], role: TextRole) -> Vector:
         found = np.zeros((len(texts), DIMENSIONS), dtype=np.float32)
-        for index, text in enumerate(texts):
-            found[index] = self.one(role.value + text)
+        for index, vector in enumerate(self._pool.map(self.one, [role.value + text for text in texts])):
+            found[index] = vector
         return found
 
     def one(self, text: str) -> Vector:
