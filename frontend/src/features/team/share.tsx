@@ -97,16 +97,37 @@ export function ShareToggle({
   shared,
   mine,
   author,
+  inline = false,
 }: {
   kind: ShareKind
   id: number
   shared: boolean
   mine: boolean
   author: string | null | undefined
+  inline?: boolean
 }) {
   const share = useShare(kind)
   const switchId = useId()
   if (!mine) return <AuthorMark name={author} verb='Shared by' />
+  if (inline)
+    return (
+      <div
+        data-presence='free'
+        className='flex shrink-0 flex-col items-center gap-1 px-2'
+      >
+        <Switch
+          id={switchId}
+          act={share}
+          checked={shared}
+          disabled={share.isPending}
+          onCheckedChange={(next) => share.mutate({ id, shared: next })}
+          aria-label={`Share this ${NOUN[kind]} with the team`}
+        />
+        <Label htmlFor={switchId} variant='overline'>
+          {shared ? 'Shared' : 'Only you'}
+        </Label>
+      </div>
+    )
   return (
     <div
       data-presence='free'

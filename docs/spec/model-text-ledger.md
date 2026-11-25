@@ -1338,7 +1338,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/divine_will/exports.py` | 7 | 2026-11-25 | `d9695fce0f411fad` |
 | `backend/src/aerona/services/divine_will/foresight.py` | 16 | 2026-11-25 | `f3aef37b7fbd6b47` |
 | `backend/src/aerona/services/divine_will/fountain.py` | 6 | 2026-11-25 | `10d003c97053be43` |
-| `backend/src/aerona/services/divine_will/index.py` | 13 | 2026-11-25 | `9927b953fcb55d32` |
+| `backend/src/aerona/services/divine_will/index.py` | 15 | 2026-11-26 | `e180f65267a4cc4f` |
 | `backend/src/aerona/services/divine_will/passages.py` | 3 | 2026-11-25 | `18ecd5ad5e849a8d` |
 | `backend/src/aerona/services/divine_will/plans.py` | 47 | 2026-11-25 | `86f5c16c7a5c8243` |
 | `backend/src/aerona/services/divine_will/player.py` | 2 | 2026-11-25 | `472008e36931d8c4` |

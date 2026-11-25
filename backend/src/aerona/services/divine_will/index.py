@@ -4,10 +4,13 @@ import sqlite3
 import time
 from collections import Counter
 from collections.abc import AsyncIterator, Callable, Iterable, Mapping, Sequence
+from concurrent.futures import ProcessPoolExecutor
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from itertools import batched
+from functools import lru_cache
+from itertools import batched, repeat
+from multiprocessing import get_context
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +43,8 @@ from aerona.services.divine_will.embedding import (
     EMBEDDER_KEY,
     MODEL_FILES,
     MODEL_NAME,
+    VOCABULARY_FILE,
+    Embedder,
     EmbedderUnavailableError,
     Fetcher,
     TextEmbedder,
@@ -68,6 +73,9 @@ LOOKUP_BATCH = 500
 QUIET_SECONDS = 3.0
 POLL_SECONDS = 2.0
 RETRY_SECONDS = 900.0
+PARALLEL_PASSAGES = 2000
+COUNT_MEMORY = 1 << 18
+PARALLEL_SHARES = 4
 PROGRESS_SECONDS = 1.0
 PERSIST_SECONDS = 60.0
 REFRESH_KINDS = frozenset(
@@ -82,6 +90,8 @@ REFRESH_KINDS = frozenset(
 INDEXABLE_ATTACHMENTS = frozenset({AttachmentStatus.CONVERTED, AttachmentStatus.INDEXED})
 NO_DIRECTORY = "No folder is set for the embedding model."
 EPOCH_RUNNING = "An epoch is running; the index waits for it to end."
+GATHERING = "Gathering everything the world holds to read."
+CUTTING = "Cutting what it gathered into passages."
 ON_DEMAND = "The index is built when the Divine Will first searches."
 OTHER_WORK = "Other work is waiting for its turn; the index goes on after it."
 REFRESH_FAILED = "The last refresh of the index failed and the next change of the world tries again: {reason}"
@@ -208,6 +218,20 @@ def similarities(layer: Layer, query: NDArray[np.float32]) -> NDArray[np.float32
         block = layer.vectors[start : start + SCORE_BLOCK].astype(np.float32)
         found[start : start + SCORE_BLOCK] = block @ query
     return found
+
+
+WORKER_COUNTERS: dict[str, TokenCounter] = {}
+
+
+def chunked_in_worker(passages: list[Passage], directory: str) -> list[list[Chunk]]:
+    count = WORKER_COUNTERS.get(directory)
+    if count is None:
+        count = WORKER_COUNTERS[directory] = remembered(token_counter(Path(directory)))
+    return [chunk_passage(passage, count, EMBEDDER_KEY) for passage in passages]
+
+
+def remembered(count: TokenCounter) -> TokenCounter:
+    return lru_cache(maxsize=COUNT_MEMORY)(count)
 
 
 def chunk_order(chunk: Chunk) -> tuple[int, str, int]:
@@ -474,6 +498,11 @@ class LoreIndex:
         self._counter = None
         return self._embedder
 
+    def _shared_directory(self) -> Path | None:
+        directory = self._directory
+        portable = isinstance(self._embedder, Embedder) or (self._embedder is None and self._counter is not count_tokens)
+        return directory if directory is not None and portable and holds(directory, VOCABULARY_FILE) else None
+
     async def token_count(self) -> TokenCounter:
         if self._embedder is not None:
             return self._embedder.count
@@ -499,14 +528,16 @@ class LoreIndex:
             writes = self._own_writes
             if self._world is not None and self._built_generation == generation:
                 return {"passages": len(self._world.chunks), "embedded": self._world.embedded_count, "written": 0}
-            if self._status is not IndexStatus.READY:
-                self._set(IndexStatus.BUILDING, self._note if self._status is IndexStatus.UNAVAILABLE else "")
+            quiet = self._status is IndexStatus.READY
+            self._stage(context, quiet, GATHERING)
             passages = await asyncio.to_thread(gathered, self._url(), self._rules())
             embedder = await self.ready_embedder()
             count = await self.token_count()
-            chunks = await asyncio.to_thread(self._chunked, passages, count, self._world_cache)
+            self._stage(context, quiet, CUTTING)
+            chunks = await asyncio.to_thread(self._chunked, passages, count, self._world_cache, self._shared_directory(), self._threads)
             known = known_vectors(self._world)
             layer = await asyncio.to_thread(build_layer, chunks, known)
+            self._stage(context, quiet, "")
             self._world = layer
             paused = ""
             written = 0
@@ -517,6 +548,12 @@ class LoreIndex:
             self._built_at = datetime.now(UTC)
             self._finish(paused)
             return {"passages": len(layer.chunks), "embedded": layer.embedded_count, "written": written}
+
+    def _stage(self, context: JobContext | None, quiet: bool, note: str) -> None:
+        if context is not None:
+            context.report(context.progress, note or None)
+        if not quiet:
+            self._set(IndexStatus.BUILDING, note, force=True)
 
     def _finish(self, paused: str) -> None:
         if self._embedder is None:
@@ -529,16 +566,38 @@ class LoreIndex:
                 self._loop.call_soon_threadsafe(self._wanted.set)
 
     @staticmethod
-    def _chunked(passages: Sequence[Passage], count: TokenCounter, cache: dict[tuple[ChunkSource, str], Cached]) -> list[Chunk]:
+    def _chunked(
+        passages: Sequence[Passage],
+        count: TokenCounter,
+        cache: dict[tuple[ChunkSource, str], Cached],
+        directory: Path | None = None,
+        workers: int = 1,
+    ) -> list[Chunk]:
         fresh: dict[tuple[ChunkSource, str], Cached] = {}
-        found: list[Chunk] = []
+        made: dict[tuple[ChunkSource, str], list[Chunk]] = {}
+        missing: list[Passage] = []
         for passage in passages:
             key = (passage.source, passage.source_id)
             cached = cache.get(key)
-            reusable = cached is not None and cached[0] == passage and cached[1] == count
-            chunks = cached[2] if cached is not None and reusable else chunk_passage(passage, count, EMBEDDER_KEY)
-            fresh[key] = (passage, count, chunks)
-            found.extend(chunks)
+            if cached is not None and cached[0] == passage and cached[1] == count:
+                made[key] = cached[2]
+            else:
+                missing.append(passage)
+        if directory is not None and workers > 1 and len(missing) >= PARALLEL_PASSAGES:
+            groups = [list(group) for group in batched(missing, max(1, -(-len(missing) // (workers * PARALLEL_SHARES))), strict=False)]
+            with ProcessPoolExecutor(max_workers=workers, mp_context=get_context("spawn")) as pool:
+                for group, chunked in zip(groups, pool.map(chunked_in_worker, groups, repeat(str(directory))), strict=True):
+                    for passage, chunks in zip(group, chunked, strict=True):
+                        made[(passage.source, passage.source_id)] = chunks
+        else:
+            counting = remembered(count)
+            for passage in missing:
+                made[(passage.source, passage.source_id)] = chunk_passage(passage, counting, EMBEDDER_KEY)
+        found: list[Chunk] = []
+        for passage in passages:
+            key = (passage.source, passage.source_id)
+            fresh[key] = (passage, count, made[key])
+            found.extend(made[key])
         cache.clear()
         cache.update(fresh)
         return found

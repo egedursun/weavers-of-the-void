@@ -4,6 +4,9 @@ import numpy as np
 import pytest
 from tokenizers import Tokenizer
 
+from aerona.domain.enums.divine_will import ChunkSource
+from aerona.services.divine_will import index as index_module
+from aerona.services.divine_will.chunking import Passage
 from aerona.services.divine_will.embedding import (
     MAX_POSITIONS,
     MODEL_FILE,
@@ -17,7 +20,9 @@ from aerona.services.divine_will.embedding import (
     ensure_files,
     load_embedder,
     model_directory,
+    token_counter,
 )
+from aerona.services.divine_will.index import LoreIndex
 from aerona.settings import Settings
 from tests.divine_will.embedder_fixtures import REFERENCE_TOKENIZER, model_folder
 
@@ -118,3 +123,18 @@ def test_fetched_files_are_verified_before_use(tmp_path: Path) -> None:
 def test_the_model_folder_defaults_under_the_data_folder(tmp_path: Path) -> None:
     assert model_directory(Settings(data_dir=tmp_path)) == tmp_path / "models" / MODEL_NAME
     assert model_directory(Settings(data_dir=tmp_path, embed_model_dir=tmp_path / "elsewhere")) == tmp_path / "elsewhere"
+
+
+def test_cutting_passages_across_processes_gives_the_same_chunks(monkeypatch: pytest.MonkeyPatch) -> None:
+    directory = model_folder()
+    count = token_counter(directory)
+    passages = [
+        Passage(ChunkSource.ENTITY, str(number), f"Town {number}", " ".join(SAMPLES[number % len(SAMPLES)] for _ in range(1 + number % 5)))
+        for number in range(40)
+    ]
+    monkeypatch.setattr(index_module, "PARALLEL_PASSAGES", 10)
+    alone = LoreIndex._chunked(passages, count, {})
+    spread = LoreIndex._chunked(passages, count, {}, directory, 2)
+    assert [(chunk.source_id, chunk.ordinal, chunk.digest, chunk.tokens) for chunk in spread] == [
+        (chunk.source_id, chunk.ordinal, chunk.digest, chunk.tokens) for chunk in alone
+    ]

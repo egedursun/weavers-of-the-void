@@ -204,5 +204,11 @@ describe('Divine Will panel', () => {
     ).toHaveLength(0)
     await screen.getByRole('button', { name: 'Every past session' }).click()
     await expect.element(screen.getByText('Your sessions')).toBeInTheDocument()
+    const card = screen.getByRole('listitem').filter({ hasText: 'Only you' })
+    await expect
+      .element(
+        card.getByRole('switch', { name: 'Share this session with the team' })
+      )
+      .toBeInTheDocument()
   })
 })

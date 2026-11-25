@@ -319,10 +319,14 @@ function SessionGroup({
             noun={['session', 'sessions']}
           >
             {(item) => (
-              <li key={item.id} className='flex min-w-0 flex-col gap-1.5'>
+              <li
+                key={item.id}
+                className='flex min-w-0 items-center gap-1 rounded-md border surface-framed border-gild/60 bg-card p-1'
+              >
                 <Button
-                  variant='outline'
+                  variant='ghost'
                   size='tile'
+                  className='flex-1'
                   onClick={() => onOpen(item.id)}
                 >
                   <History />
@@ -353,6 +357,7 @@ function SessionGroup({
                   shared={item.shared}
                   mine={item.mine}
                   author={item.author?.name}
+                  inline
                 />
               </li>
             )}
