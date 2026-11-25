@@ -28,3 +28,7 @@ class BusyError(AeronaError):
 
 class ReadOnlyError(AeronaError):
     status_code = 423
+
+
+class UniverseRequiredError(ConflictError):
+    pass

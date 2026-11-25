@@ -15,9 +15,9 @@ export const controlSquare: Record<ControlSize, string> = {
 }
 
 export const controlIcon: Record<ControlSize, string> = {
-  sm: '[&_svg]:size-icon-sm',
-  default: '[&_svg]:size-icon-md',
-  lg: '[&_svg]:size-icon-lg',
+  sm: '[&_svg:not([data-domain=sigil])]:size-icon-sm',
+  default: '[&_svg:not([data-domain=sigil])]:size-icon-md',
+  lg: '[&_svg:not([data-domain=sigil])]:size-icon-lg',
 }
 
 export const controlFieldPadding: Record<ControlSize, string> = {

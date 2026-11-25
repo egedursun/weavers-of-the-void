@@ -158,6 +158,7 @@ def sources() -> dict[Path, str]:
         for path in sorted(SOURCE.rglob("*.py"))
         if "__pycache__" not in path.parts
         and not any(path.is_relative_to(base) for base in SKIPPED)
+        and "alembic" not in path.parts
     }
 
 

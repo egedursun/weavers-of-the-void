@@ -346,21 +346,21 @@ thead{display:table-header-group}
 {% if not links.printing %}
 <header class="toolbar">
 <div class="bar">
-<a class="back" href="/" aria-label="Back to Weavers of the Void" title="Back to Weavers of the Void">{{ icon("back") }}</a>
+<a class="back" href="{{ links.home() }}" aria-label="Back to Weavers of the Void" title="Back to Weavers of the Void">{{ icon("back") }}</a>
 <div class="heading"><span class="eyebrow">{% if single %}From the book{% else %}The book of the world{% endif %}</span><span class="title">{% block toolbar_title %}{{ self.title() }}{% endblock %}</span></div>
 <nav class="group jump" aria-label="Book sections">
 {% if not single %}
 <a class="tool" href="#contents" data-tip="Jump to the table of contents">{{ icon("contents") }}<span class="label">Contents</span></a>
 <a class="tool" href="#index" data-tip="Jump to the index of every name">{{ icon("index") }}<span class="label">Index</span></a>
 {% else %}
-<a class="tool" href="/api/book" data-tip="Open the whole book">{{ icon("book") }}<span class="label">Whole book</span></a>
+<a class="tool" href="{{ links.api('/api/book') }}" data-tip="Open the whole book">{{ icon("book") }}<span class="label">Whole book</span></a>
 {% endif %}
 </nav>
 <span class="sep" aria-hidden="true"></span>
 <div class="group actions" role="group" aria-label="PDF and printing">
 {% if pdf is not none %}
 <button type="button" id="pdf-make" class="tool{% if not pdf.ready or pdf.stale %} primary{% endif %}" aria-describedby="pdf-state-text" data-tip="{% if pdf.ready %}Typeset the whole book again and replace the stored PDF{% else %}Typeset the whole book into a PDF on the server{% endif %}">{{ icon("generate", "rest") }}{{ icon("spinner", "spin") }}<span class="label" id="pdf-make-label">{% if pdf.ready %}Regenerate PDF{% else %}Generate PDF{% endif %}</span></button>
-<a id="pdf-download" class="tool{% if pdf.ready and not pdf.stale %} primary{% endif %}" data-url="{{ pdf.url }}" aria-describedby="pdf-state-text" {% if pdf.ready %}href="{{ pdf.url }}" download data-tip="Download the PDF"{% else %}role="link" tabindex="0" aria-disabled="true" data-tip="Generate the PDF first; there is nothing to download yet"{% endif %}>{{ icon("download") }}<span class="label">Download PDF</span><span class="size" id="pdf-size">{% if pdf.ready %}{{ pdf.size_mb }} MB{% endif %}</span></a>
+<a id="pdf-download" class="tool{% if pdf.ready and not pdf.stale %} primary{% endif %}" data-url="{{ links.api(pdf.url) }}" aria-describedby="pdf-state-text" {% if pdf.ready %}href="{{ links.api(pdf.url) }}" download data-tip="Download the PDF"{% else %}role="link" tabindex="0" aria-disabled="true" data-tip="Generate the PDF first; there is nothing to download yet"{% endif %}>{{ icon("download") }}<span class="label">Download PDF</span><span class="size" id="pdf-size">{% if pdf.ready %}{{ pdf.size_mb }} MB{% endif %}</span></a>
 {% endif %}
 <button type="button" id="print-book" class="tool" data-tip="Open your browser's print dialog for this page">{{ icon("print") }}<span class="label">Print</span></button>
 </div>
@@ -469,7 +469,7 @@ thead{display:table-header-group}
     note.textContent = "Lost touch with the server. Try again.";
   }
   function poll() {
-    fetch("/api/book/pdf", { headers: { accept: "application/json" } })
+    fetch({{ links.api("/api/book/pdf")|tojson }}, { headers: { accept: "application/json" } })
       .then(function (response) { return response.json(); })
       .then(show)
       .catch(lost);
@@ -484,7 +484,7 @@ thead{display:table-header-group}
     holder.dataset.state = "running";
     stateText.textContent = "Starting the typesetting…";
     note.textContent = "";
-    fetch("/api/book/pdf", { method: "POST", headers: { accept: "application/json" } })
+    fetch({{ links.api("/api/book/pdf")|tojson }}, { method: "POST", headers: { accept: "application/json" } })
       .then(function (response) {
         if (response.ok) { polling = true; setTimeout(poll, 600); return null; }
         return response.json().then(function (body) { lost(); note.textContent = message(body); poll(); });

@@ -221,11 +221,25 @@ async def test_queue_generates_and_bulk(tmp_path: Path, file_database: Database,
     assert status.width == Rules().image_gen.width
 
 
+async def test_a_free_prompt_is_painted_in_the_world_style_without_a_subject(tmp_path: Path, file_database: Database) -> None:
+    worker = FakeWorker()
+    queue = ImageQueue(file_database, ImageWorkerClient(WORKER_URL, transport=worker.transport()), make_records(tmp_path), Rules)
+    with pytest.raises(ValidationFailedError):
+        await queue.paint("   ")
+    painted = await queue.paint("  a harbour   under two moons ")
+    assert painted == worker.image
+    assert "a harbour under two moons" in worker.bodies[-1]["prompt"]
+    async with file_database.read() as session:
+        assert await session.scalar(select(ImageRow.id)) is None
+
+
 async def test_queue_disabled() -> None:
     queue = ImageQueue(Database("sqlite+aiosqlite:///:memory:"), ImageWorkerClient(""), make_records(Path(".")), Rules)
     assert not queue.available
     with pytest.raises(ConflictError):
         await queue.enqueue(1)
+    with pytest.raises(ConflictError):
+        await queue.paint("a cover")
 
 
 def test_generated_png_signature() -> None:

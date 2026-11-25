@@ -14,6 +14,7 @@ from sqlalchemy import case, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.app import APP_VERSION
+from aerona.core.universe_scope import current_universe
 from aerona.db.telemetry.setup import TelemetryDatabase
 from aerona.db.telemetry.tables import LiveEventRow, LlmCallRow
 from aerona.domain.enums.meta import HealthStatus
@@ -67,10 +68,30 @@ class ErrorRing(logging.Handler):
         return [entry for entry in self._entries if entry.level in {"ERROR", "CRITICAL"} and entry.at >= moment]
 
 
-def install_error_ring(ring: ErrorRing) -> None:
+class ErrorRouter(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__(level=logging.WARNING)
+        self.rings: dict[str | None, ErrorRing] = {}
+
+    def emit(self, record: logging.LogRecord) -> None:
+        ring = self.rings.get(current_universe())
+        if ring is not None:
+            ring.handle(record)
+
+
+ERROR_ROUTER = ErrorRouter()
+
+
+def install_error_ring(ring: ErrorRing, universe_id: str | None) -> None:
+    ERROR_ROUTER.rings[universe_id] = ring
     root = logging.getLogger()
-    if ring not in root.handlers:
-        root.addHandler(ring)
+    if ERROR_ROUTER not in root.handlers:
+        root.addHandler(ERROR_ROUTER)
+
+
+def release_error_ring(ring: ErrorRing, universe_id: str | None) -> None:
+    if ERROR_ROUTER.rings.get(universe_id) is ring:
+        del ERROR_ROUTER.rings[universe_id]
 
 
 def capture_loop_errors(loop: asyncio.AbstractEventLoop) -> None:

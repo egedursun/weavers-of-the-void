@@ -3,8 +3,6 @@ import pkgutil
 
 from pydantic import BaseModel
 
-import aerona
-
 PACKAGES = ("aerona.api", "aerona.services.player", "aerona.tools", "aerona.prompts")
 
 
@@ -20,8 +18,8 @@ def subclasses(root: type[BaseModel]) -> set[type[BaseModel]]:
 
 
 def test_no_field_of_a_served_or_received_model_shadows_a_model_attribute() -> None:
-    for module in pkgutil.walk_packages(aerona.__path__, "aerona."):
-        if module.name.startswith(PACKAGES):
+    for package in PACKAGES:
+        for module in pkgutil.walk_packages(importlib.import_module(package).__path__, f"{package}."):
             importlib.import_module(module.name)
     shadowed = sorted(
         f"{kind.__module__}.{kind.__name__}.{name}"

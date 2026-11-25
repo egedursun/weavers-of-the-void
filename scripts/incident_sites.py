@@ -73,7 +73,7 @@ class Index:
 
 def source_files() -> Iterator[Path]:
     for path in sorted(SOURCE.rglob("*.py")):
-        if not any(path.is_relative_to(skipped) for skipped in SKIPPED):
+        if "alembic" not in path.parts and not any(path.is_relative_to(skipped) for skipped in SKIPPED):
             yield path
 
 

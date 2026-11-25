@@ -1,4 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react'
+import { subscribeUniverse } from '@/api/universeStore'
+import { universeKey } from '@/lib/universeStorage'
 import { COMPARE_MAX, COMPARE_STORAGE_KEY } from './constants'
 
 const listeners = new Set<() => void>()
@@ -8,7 +10,7 @@ function read(): number[] {
   if (cache) return cache
   try {
     const parsed: unknown = JSON.parse(
-      localStorage.getItem(COMPARE_STORAGE_KEY) ?? '[]'
+      localStorage.getItem(universeKey(COMPARE_STORAGE_KEY)) ?? '[]'
     )
     cache = Array.isArray(parsed)
       ? parsed.filter((item): item is number => typeof item === 'number')
@@ -22,12 +24,17 @@ function read(): number[] {
 function write(next: number[]) {
   cache = next
   try {
-    localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(next))
+    localStorage.setItem(universeKey(COMPARE_STORAGE_KEY), JSON.stringify(next))
   } catch {
     cache = next
   }
   for (const listener of listeners) listener()
 }
+
+subscribeUniverse(() => {
+  cache = null
+  for (const listener of listeners) listener()
+})
 
 function subscribe(listener: () => void) {
   listeners.add(listener)

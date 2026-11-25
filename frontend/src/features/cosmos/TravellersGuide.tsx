@@ -19,6 +19,7 @@ import {
 } from '@/components/domain'
 import { type EntryPageProps } from '@/components/layout/entry/EntryWindow'
 import { Muted, Text } from '@/components/typography'
+import { codexUrl } from '@/features/chronicle/api'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { DialectDetails } from './DialectDetails'
 import { RouteStatusChips } from './RouteStatusChips'
@@ -98,7 +99,7 @@ export function TravellersGuide({ id }: EntryPageProps) {
               Its map
             </Button>
             <Button variant='outline' asChild>
-              <a href='/api/codex.zip' download>
+              <a href={codexUrl()} download>
                 <BookOpen />
                 Codex
               </a>

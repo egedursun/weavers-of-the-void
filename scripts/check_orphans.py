@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "backend" / "src" / "aerona"
-USERS = (ROOT / "backend" / "tests", ROOT / "scripts", ROOT / "backend" / "src" / "aerona" / "db" / "alembic")
+USERS = (ROOT / "backend" / "tests", ROOT / "scripts", *sorted(path for path in SOURCE.rglob("alembic") if path.is_dir()))
 SKIPPED = frozenset({"alembic"})
 DEFINITION = re.compile(r"^(?:async )?def ([a-zA-Z]\w*)\(|^([A-Z][A-Z0-9_]+)\s*(?::[^=\n]+)?=", re.M)
 WORD = re.compile(r"\b\w+\b")

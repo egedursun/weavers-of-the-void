@@ -115,7 +115,7 @@ def problems() -> list[str]:
             found.append(f"{table}.{column} names a stratum column {stratum} that does not exist")
     for path in sorted(SOURCE.rglob("*.py")):
         relative = path.relative_to(SOURCE).as_posix()
-        if "__pycache__" in relative or relative.startswith("db/alembic/"):
+        if "__pycache__" in relative or "alembic" in relative.split("/"):
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):

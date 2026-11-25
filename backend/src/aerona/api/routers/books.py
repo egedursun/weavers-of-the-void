@@ -38,7 +38,7 @@ from aerona.services.books import book_page, codex_file
 from aerona.services.books.codex_archive import build_codex_archive
 from aerona.services.books.mapsvg import load_map
 from aerona.services.books.pdf import build_pdf, pdf_path, pdf_state, read_manifest
-from aerona.services.books.render import BRAND_LOGO, FONT_DIRECTORY, CodexLinks
+from aerona.services.books.render import BRAND_LOGO, FONT_DIRECTORY, CodexLinks, ScreenLinks
 from aerona.services.books.terrain import render_terrain
 from aerona.services.exchange import stream_and_delete
 
@@ -52,7 +52,7 @@ NO_FONT = "No such font."
 NO_PDF = "The book has not been printed yet."
 FONT_PATTERN = r"^[a-z0-9-]+\.ttf$"
 LOGO_MEDIA_TYPE = "image/png"
-TERRAIN_CACHE: OrderedDict[tuple[int, str], bytes] = OrderedDict()
+TERRAIN_CACHE: OrderedDict[tuple[str, int, str], bytes] = OrderedDict()
 
 
 class BookPdfStatus(ApiModel):
@@ -77,7 +77,13 @@ async def codex(request: Request, services: ServicesDep) -> StreamingResponse:
     async with reader(services) as session:
         rules = await world_rules(services, session)
         cosmos = await CosmosRepository(session).get()
-        path = await codex_file(services.database, session, rules, CodexLinks(base=str(request.base_url)), services.settings.exports_dir)
+        path = await codex_file(
+            services.database,
+            session,
+            rules,
+            CodexLinks(base=str(request.base_url), universe=services.settings.universe_id or None),
+            services.settings.exports_dir,
+        )
     name = f"{_file_stem(cosmos.name if cosmos else None)}{CODEX_FILENAME_SUFFIX}"
     headers = {"content-disposition": f'attachment; filename="{name}"', "content-length": str(path.stat().st_size)}
     return StreamingResponse(stream_and_delete(path), media_type=MARKDOWN_MEDIA_TYPE, headers=headers)
@@ -109,7 +115,8 @@ async def book(services: ServicesDep, son_id: int | None = Query(default=None, g
         rules = await world_rules(services, session)
         cosmos = await CosmosRepository(session).get()
         state = pdf_state(services, cosmos.epoch) if cosmos else None
-        rendered = await book_page(services.database, session, rules, son_id=son_id, entity_id=entity_id, pdf=state)
+        links = ScreenLinks(universe=services.settings.universe_id or None)
+        rendered = await book_page(services.database, session, rules, son_id=son_id, entity_id=entity_id, pdf=state, links=links)
     return HTMLResponse(rendered.html, headers={"content-security-policy": BOOK_CSP.format(nonce=rendered.nonce), "x-content-type-options": "nosniff"})
 
 
@@ -120,7 +127,7 @@ async def book_map(services: ServicesDep, world_id: int = Path(ge=1)) -> Respons
     if loaded is None:
         raise NotFoundError(NO_MAP)
     world_map, signature = loaded
-    key = (world_id, signature)
+    key = (services.settings.universe_id, world_id, signature)
     data = TERRAIN_CACHE.get(key)
     if data is None:
         data = await to_thread.run_sync(render_terrain, world_map, TERRAIN_WIDTH)

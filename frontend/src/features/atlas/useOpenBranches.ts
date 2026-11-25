@@ -1,11 +1,12 @@
 import { useCallback, useState } from 'react'
+import { universeKey } from '@/lib/universeStorage'
 import { DEFAULT_OPEN } from './atlasModel'
 
 const STORAGE_KEY = 'aerona.atlas.open'
 
 function load(): Set<string> {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
+    const raw = window.localStorage.getItem(universeKey(STORAGE_KEY))
     const parsed: unknown = raw ? JSON.parse(raw) : null
     if (Array.isArray(parsed))
       return new Set(
@@ -19,7 +20,10 @@ function load(): Set<string> {
 
 function save(keys: Set<string>) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...keys]))
+    window.localStorage.setItem(
+      universeKey(STORAGE_KEY),
+      JSON.stringify([...keys])
+    )
   } catch {
     return
   }

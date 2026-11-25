@@ -16,9 +16,10 @@ const SERVER_KEY = process.env.VITEST
     ? (process.argv[PORT_AT + 1] ?? 'dev')
     : 'dev'
 
-const { version } = JSON.parse(
-  readFileSync(path.resolve(import.meta.dirname, 'package.json'), 'utf-8')
-) as { version: string }
+const version = readFileSync(
+  path.resolve(import.meta.dirname, '../VERSION'),
+  'utf-8'
+).trim()
 
 export default defineConfig({
   cacheDir: path.resolve(ROOT, '.vite-cache', SERVER_KEY),

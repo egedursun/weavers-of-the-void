@@ -23,8 +23,12 @@ DEEP_PASSAGE_ORIGIN = total(
         DeepPassageOrigin.NATURAL: Defined(
             "Formed with the world", checked_by=(), used_by=("db.tables.geology.DeepPassageRow", "engine.environment.cells.lay_natural_passages")
         ),
-        DeepPassageOrigin.DUG: Defined("Dug by a people", checked_by=(), used_by=("engine.environment.cells.dig_toward",)),
+        DeepPassageOrigin.DUG: Defined(
+            "Dug by a people",
+            checked_by=(),
+            used_by=("engine.environment.cells.dig_toward", "engine.environment.cells.open_the_way_down", "engine.environment.deep.reach_stratum"),
+        ),
         DeepPassageOrigin.BREACH: Defined("Broken open", checked_by=(), used_by=("engine.environment.cells.breach_opening",)),
-        DeepPassageOrigin.DIVINE: Defined("Made by a god", checked_by=(), used_by=("tools.son.deep.open_the_deep",)),
+        DeepPassageOrigin.DIVINE: Defined("Made by a god", checked_by=(), used_by=("engine.environment.shaping.stir_ground", "tools.son.deep.open_the_deep")),
     },
 )

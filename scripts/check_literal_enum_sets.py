@@ -782,7 +782,7 @@ def literal_sets(families: tuple[Family, ...]) -> list[Literal]:
     words = {enum for family in families for enum in family.enums}
     found: list[Literal] = []
     for path in sorted(SOURCE.rglob("*.py")):
-        if path.is_relative_to(MIGRATIONS) or path.is_relative_to(META_CATALOGUE):
+        if path.is_relative_to(MIGRATIONS) or "alembic" in path.parts or path.is_relative_to(META_CATALOGUE):
             continue
         text = path.read_text(encoding="utf-8")
         if any(word in text for word in words):

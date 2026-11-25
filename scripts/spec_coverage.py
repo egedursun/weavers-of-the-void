@@ -52,6 +52,9 @@ TEST_CASE = re.compile(r"\b(tests/[\w/]+\.py)::(\w+)")
 FRONT_TEST = re.compile(r"\b(\w+\.test\.tsx?)\b")
 MODULE_PATH = re.compile(r"\b(?:engine|db|services|catalog|rules|agents|tools|api|domain|prompts|epoch|language)/[\w/]*(?:\{[^}]*\})?[\w/]*\.py\b")
 BRACES = re.compile(r"(.*)\{([^}]*)\}(.*)")
+LEVER_ID = re.compile(r"\b([a-z][a-z0-9_]*:[a-z][a-z0-9_]*)\b")
+LEVER_DEFINITION = re.compile(r'(?:Meta|player_action)\(\s*"([a-z][a-z0-9_]*:[a-z][a-z0-9_]*)"')
+PLAYER = PACKAGE / "services" / "player"
 REFERENCE = re.compile(r"\b(F\d+(?:\.\d+)?|\d+\.\d+[a-z]?|J\.\d+[a-z]?|I\.\d+)(?: (?:RP|reference pass)(?: ?(\d+))?)?\b")
 
 
@@ -301,7 +304,11 @@ def front_tests() -> set[str]:
     return {path.name for path in FRONTEND.rglob("*.test.ts*")}
 
 
-def reference_problems(key: str, row: Row, front: set[str]) -> list[str]:
+def lever_ids() -> set[str]:
+    return {lever for path in sorted(PLAYER.rglob("*.py")) for lever in LEVER_DEFINITION.findall(path.read_text(encoding="utf-8"))}
+
+
+def reference_problems(key: str, row: Row, front: set[str], levers: set[str]) -> list[str]:
     problems = [f"row {key} names a test file that does not exist: {path}" for path in TEST_PATH.findall(row.get("Test")) if not (BACKEND / path).exists()]
     for path, name in TEST_CASE.findall(row.get("Test")):
         if (BACKEND / path).exists() and f"def {name}(" not in (BACKEND / path).read_text(encoding="utf-8"):
@@ -309,6 +316,7 @@ def reference_problems(key: str, row: Row, front: set[str]) -> list[str]:
     problems += [f"row {key} names a frontend test that does not exist: {name}" for name in FRONT_TEST.findall(row.get("Test")) if name not in front]
     for module in MODULE_PATH.findall(row.get("Module")):
         problems += [f"row {key} names a module that does not exist: {path}" for path in expanded(module) if not (PACKAGE / path).exists()]
+    problems += [f"row {key} names a lever that is not in the action catalogue: {lever}" for lever in LEVER_ID.findall(row.get("Lever")) if lever not in levers]
     return problems
 
 
@@ -338,9 +346,10 @@ def check(items: list[Item], rows: dict[str, Row]) -> list[str]:
     for key, row in rows.items():
         problems += status_problems(key, row)
     front = front_tests()
+    levers = lever_ids()
     for key, row in rows.items():
         if row.get("Status") == "done":
-            problems += reference_problems(key, row, front)
+            problems += reference_problems(key, row, front, levers)
     by_key = {item.key: item for item in items}
     for key, row in rows.items():
         item = by_key.get(key)

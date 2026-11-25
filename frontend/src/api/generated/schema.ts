@@ -31,6 +31,358 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/library/universes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_universes_api_library_universes_get']
+    put?: never
+    post: operations['create_universe_api_library_universes_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_universe_api_library_universes__universe_id__get']
+    put?: never
+    post?: never
+    delete: operations['delete_universe_api_library_universes__universe_id__delete']
+    options?: never
+    head?: never
+    patch: operations['edit_universe_api_library_universes__universe_id__patch']
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/open': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['open_universe_api_library_universes__universe_id__open_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/close': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['close_universe_api_library_universes__universe_id__close_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/duplicate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['duplicate_universe_api_library_universes__universe_id__duplicate_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/archive': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['archive_universe_api_library_universes__universe_id__archive_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/restore': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['restore_universe_api_library_universes__universe_id__restore_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/trash': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_trash_api_library_trash_get']
+    put?: never
+    post?: never
+    delete: operations['empty_trash_api_library_trash_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/trash/{entry_id}/restore': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['recover_universe_api_library_trash__entry_id__restore_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/trash/{entry_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['purge_universe_api_library_trash__entry_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['export_universe_api_library_universes__universe_id__export_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/exports/{job_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_export_api_library_exports__job_id__get']
+    put?: never
+    post?: never
+    delete: operations['discard_export_api_library_exports__job_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/exports/{job_id}/file': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['download_export_api_library_exports__job_id__file_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/imports': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['import_universe_api_library_imports_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/imports/{job_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_import_api_library_imports__job_id__get']
+    put?: never
+    post?: never
+    delete: operations['cancel_import_api_library_imports__job_id__delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/imports/{job_id}/confirm': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['confirm_import_api_library_imports__job_id__confirm_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/jobs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_jobs_api_library_jobs_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/cover': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_cover_api_library_universes__universe_id__cover_get']
+    put: operations['upload_library_cover']
+    post?: never
+    delete: operations['clear_cover_api_library_universes__universe_id__cover_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/cover/from-media': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['cover_from_media_api_library_universes__universe_id__cover_from_media_put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/universes/{universe_id}/cover/paint': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['cover_paint_prompt_api_library_universes__universe_id__cover_paint_get']
+    put?: never
+    post: operations['paint_cover_api_library_universes__universe_id__cover_paint_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/events': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['library_events_api_library_events_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/library/events/stream': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['library_stream_api_library_events_stream_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/jobs': {
     parameters: {
       query?: never
@@ -52930,8 +53282,14 @@ export interface components {
       wholeness_required: boolean
       updated_epoch: number
     }
+    Body_import_universe_api_library_imports_post: {
+      file: string
+    }
     Body_upload_attachments_api_divine_will_attachments_post: {
       files: string[]
+    }
+    Body_upload_library_cover: {
+      file: string
     }
     BondCategory: 'mechanical' | 'event' | 'narrative'
     BondKind:
@@ -57134,6 +57492,15 @@ export interface components {
       until_epoch: number | null
       breaches: number
       locked: string[]
+    }
+    CoverFromMedia: {
+      file_name: string
+    }
+    CoverPaint: {
+      prompt: string
+    }
+    CoverPaintPrompt: {
+      prompt: string
     }
     CoverageView: {
       service: components['schemas']['UrbanService']
@@ -62744,6 +63111,7 @@ export interface components {
       | 'too_large'
       | 'unavailable'
       | 'internal'
+      | 'universe_required'
     ErrorPayload: {
       epoch?: number | null
       text: string
@@ -68352,6 +68720,9 @@ export interface components {
       text: string
       locked: string[]
     }
+    ImportConfirm: {
+      name?: string | null
+    }
     ImportMode: 'replace' | 'merge' | 'discovery'
     ImportResult: {
       mode: components['schemas']['ImportMode']
@@ -72313,7 +72684,64 @@ export interface components {
       function: number | null
       locked: string[]
     }
+    LibraryEventKind:
+      | 'created'
+      | 'adopted'
+      | 'opened'
+      | 'renamed'
+      | 'edited'
+      | 'exported'
+      | 'imported'
+      | 'duplicated'
+      | 'archived'
+      | 'restored'
+      | 'deleted'
+      | 'recovered'
+      | 'purged'
+    LibraryEventPage: {
+      items: components['schemas']['LibraryEventView'][]
+      total: number
+      offset: number
+      limit: number
+    }
+    LibraryEventView: {
+      id: number
+      at: string
+      kind: components['schemas']['LibraryEventKind']
+      universe_id: string
+      universe_name: string
+      detail: string
+    }
+    LibraryJobKind: 'export' | 'import'
+    LibraryJobStage:
+      'snapshot' | 'gather' | 'pack' | 'check' | 'place' | 'register'
+    LibraryJobStatus: 'running' | 'waiting' | 'done' | 'failed' | 'cancelled'
+    LibraryJobView: {
+      id: string
+      kind: components['schemas']['LibraryJobKind']
+      status: components['schemas']['LibraryJobStatus']
+      stage: components['schemas']['LibraryJobStage']
+      universe_id: string | null
+      universe_name: string
+      progress: number
+      done: number
+      total: number
+      error: string
+      notes: string[]
+      file_name: string
+      size_bytes: number
+      preview: components['schemas']['PackagePreviewView'] | null
+    }
     LibrarySort: 'relevance' | 'updated' | 'created' | 'title' | 'length'
+    LibraryStreamEvent: {
+      id: number
+      kind: components['schemas']['LibraryStreamKind']
+      at: string
+      universe_id: string | null
+      universe: components['schemas']['UniverseView'] | null
+      job: components['schemas']['LibraryJobView'] | null
+    }
+    LibraryStreamKind: 'hello' | 'universe' | 'removed' | 'trash' | 'job'
     LifeClassEditInput: {
       values?: {
         [key: string]: number | string | boolean | string[] | null
@@ -78822,6 +79250,25 @@ export interface components {
       epoch: number | null
       creator: string | null
       date: string
+    }
+    PackagePreviewView: {
+      name: string
+      summary: string
+      notes: string
+      tags: string[]
+      source_id: string
+      created_at: string | null
+      exported_at: string | null
+      app_version: string
+      schema_revision: string
+      epoch: number
+      year: number
+      population: number
+      sons: number
+      files: number
+      size_bytes: number
+      legacy: boolean
+      dropped: number
     }
     PackageView: {
       kind: components['schemas']['PackageKind']
@@ -93993,6 +94440,25 @@ export interface components {
       condition: number
       locked: string[]
     }
+    TrashEmptied: {
+      purged: number
+    }
+    TrashEntryView: {
+      id: string
+      universe_id: string
+      name: string
+      deleted_at: string
+      purge_at: string
+      size_bytes: number
+    }
+    TrashPageView: {
+      items: components['schemas']['TrashEntryView'][]
+      total: number
+      offset: number
+      limit: number
+      held_bytes: number
+      keep_days: number
+    }
     TravelMechanism:
       | 'gate'
       | 'fold'
@@ -94815,6 +95281,101 @@ export interface components {
       loadout: components['schemas']['LoadoutView'][]
       techniques: components['schemas']['Technique'][]
       locked: string[]
+    }
+    UniverseCreate: {
+      name: string
+      notes: string
+      summary: string
+      tags?: string[]
+    }
+    UniverseDetail: {
+      id: string
+      name: string
+      summary: string
+      notes: string
+      cover_path: string | null
+      status: components['schemas']['UniverseStatus']
+      pinned: boolean
+      created_at: string
+      opened_at: string | null
+      updated_at: string
+      epoch: number
+      year: number
+      population: number
+      sons: number
+      size_bytes: number
+      schema_revision: string
+      app_version: string
+      origin: components['schemas']['UniverseOrigin']
+      origin_note: string
+      tags: string[]
+      media_prefix: string
+      is_open: boolean
+      running_jobs: string[]
+      events: components['schemas']['LibraryEventView'][]
+    }
+    UniverseDuplicate: {
+      name?: string | null
+    }
+    UniverseFacets: {
+      tags: components['schemas']['UniverseTagFacet'][]
+      origins: components['schemas']['UniverseOriginFacet'][]
+      statuses: components['schemas']['UniverseStatusFacet'][]
+    }
+    UniverseList: {
+      items: components['schemas']['UniverseView'][]
+      total: number
+      offset: number
+      limit: number
+      facets: components['schemas']['UniverseFacets']
+    }
+    UniverseOrigin: 'created' | 'imported' | 'duplicated' | 'adopted'
+    UniverseOriginFacet: {
+      value: components['schemas']['UniverseOrigin']
+      count: number
+    }
+    UniversePatch: {
+      name?: string | null
+      notes?: string | null
+      summary?: string | null
+      tags?: string[] | null
+      pinned?: boolean | null
+      status?: components['schemas']['UniverseStatus'] | null
+    }
+    UniverseSort: 'opened' | 'created' | 'name' | 'epoch' | 'size'
+    UniverseStatus: 'active' | 'archived'
+    UniverseStatusFacet: {
+      value: components['schemas']['UniverseStatus']
+      count: number
+    }
+    UniverseTagFacet: {
+      value: string
+      count: number
+    }
+    UniverseView: {
+      id: string
+      name: string
+      summary: string
+      notes: string
+      cover_path: string | null
+      status: components['schemas']['UniverseStatus']
+      pinned: boolean
+      created_at: string
+      opened_at: string | null
+      updated_at: string
+      epoch: number
+      year: number
+      population: number
+      sons: number
+      size_bytes: number
+      schema_revision: string
+      app_version: string
+      origin: components['schemas']['UniverseOrigin']
+      origin_note: string
+      tags: string[]
+      media_prefix: string
+      is_open: boolean
+      running_jobs: string[]
     }
     UpkeepView: {
       law: components['schemas']['NodeRef'] | null
@@ -97756,6 +98317,939 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HealthReportResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_universes_api_library_universes_get: {
+    parameters: {
+      query?: {
+        q?: string
+        status?: components['schemas']['UniverseStatus'] | null
+        include_archived?: boolean
+        origin?: components['schemas']['UniverseOrigin'] | null
+        tag?: string | null
+        sort?: components['schemas']['UniverseSort']
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseList']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  create_universe_api_library_universes_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UniverseCreate']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_universe_api_library_universes__universe_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseDetail']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  delete_universe_api_library_universes__universe_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TrashEntryView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  edit_universe_api_library_universes__universe_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UniversePatch']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  open_universe_api_library_universes__universe_id__open_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  close_universe_api_library_universes__universe_id__close_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  duplicate_universe_api_library_universes__universe_id__duplicate_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UniverseDuplicate']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  archive_universe_api_library_universes__universe_id__archive_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  restore_universe_api_library_universes__universe_id__restore_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_trash_api_library_trash_get: {
+    parameters: {
+      query?: {
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TrashPageView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  empty_trash_api_library_trash_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TrashEmptied']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  recover_universe_api_library_trash__entry_id__restore_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entry_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  purge_universe_api_library_trash__entry_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        entry_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  export_universe_api_library_universes__universe_id__export_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryJobView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_export_api_library_exports__job_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryJobView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  discard_export_api_library_exports__job_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryJobView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  download_export_api_library_exports__job_id__file_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/octet-stream': unknown
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  import_universe_api_library_imports_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_import_universe_api_library_imports_post']
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryJobView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_import_api_library_imports__job_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryJobView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cancel_import_api_library_imports__job_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryJobView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  confirm_import_api_library_imports__job_id__confirm_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        job_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ImportConfirm']
+      }
+    }
+    responses: {
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryJobView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  list_jobs_api_library_jobs_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryJobView'][]
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_cover_api_library_universes__universe_id__cover_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'image/png': unknown
+          'image/jpeg': unknown
+          'image/webp': unknown
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  upload_library_cover: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['Body_upload_library_cover']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  clear_cover_api_library_universes__universe_id__cover_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cover_from_media_api_library_universes__universe_id__cover_from_media_put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CoverFromMedia']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UniverseView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  cover_paint_prompt_api_library_universes__universe_id__cover_paint_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CoverPaintPrompt']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  paint_cover_api_library_universes__universe_id__cover_paint_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        universe_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CoverPaint']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'image/png': unknown
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  library_events_api_library_events_get: {
+    parameters: {
+      query?: {
+        offset?: number
+        limit?: number
+        universe_id?: string | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryEventPage']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  library_stream_api_library_events_stream_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LibraryStreamEvent']
         }
       }
       default: {
@@ -197866,6 +199360,7 @@ export const errorCodeValues: ReadonlyArray<
   'too_large',
   'unavailable',
   'internal',
+  'universe_required',
 ]
 export const escalationStepValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['EscalationStep']
@@ -200795,9 +202290,38 @@ export const legitimacyTypeValues: ReadonlyArray<
   'performance',
   'conquest',
 ]
+export const libraryEventKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LibraryEventKind']
+> = [
+  'created',
+  'adopted',
+  'opened',
+  'renamed',
+  'edited',
+  'exported',
+  'imported',
+  'duplicated',
+  'archived',
+  'restored',
+  'deleted',
+  'recovered',
+  'purged',
+]
+export const libraryJobKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LibraryJobKind']
+> = ['export', 'import']
+export const libraryJobStageValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LibraryJobStage']
+> = ['snapshot', 'gather', 'pack', 'check', 'place', 'register']
+export const libraryJobStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LibraryJobStatus']
+> = ['running', 'waiting', 'done', 'failed', 'cancelled']
 export const librarySortValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LibrarySort']
 > = ['relevance', 'updated', 'created', 'title', 'length']
+export const libraryStreamKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LibraryStreamKind']
+> = ['hello', 'universe', 'removed', 'trash', 'job']
 export const lifeComplexityValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LifeComplexity']
 > = ['none', 'microbial', 'simple', 'complex', 'sapient']
@@ -208626,6 +210150,15 @@ export const unitKindValues: ReadonlyArray<
 export const unitTypeStatsKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UnitTypeStats']['kind']
 > = ['unit_type']
+export const universeOriginValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['UniverseOrigin']
+> = ['created', 'imported', 'duplicated', 'adopted']
+export const universeSortValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['UniverseSort']
+> = ['opened', 'created', 'name', 'epoch', 'size']
+export const universeStatusValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['UniverseStatus']
+> = ['active', 'archived']
 export const urbanServiceValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['UrbanService']
 > = [

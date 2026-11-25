@@ -3,10 +3,14 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
+import { apiUrl } from '@/api/url'
 
 export type BookPdfStatus = components['schemas']['BookPdfStatus']
 
-export const BOOK_PDF_URL = '/api/book.pdf'
+export function bookPdfUrl(): string {
+  return apiUrl('/api/book.pdf')
+}
+
 const POLL_MS = 2000
 
 export const bookKeys = {

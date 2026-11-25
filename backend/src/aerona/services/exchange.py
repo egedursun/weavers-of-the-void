@@ -20,7 +20,6 @@ from aerona.constants.maintenance import (
     PACKAGE_READ_BYTES,
     PACKAGE_SUFFIX,
     REPLACE_CONFIRMATION,
-    WORK_DIRNAME,
 )
 from aerona.core.errors import ValidationFailedError
 from aerona.events.bus import EventBus
@@ -120,7 +119,7 @@ def image_row_safe(file_name: object, object_key: object, digest: object) -> boo
     return is_safe_image_name(str(file_name)) and is_original_key(str(object_key)) and is_sha256(str(digest))
 
 
-def sanitize_database(path: Path) -> None:
+def sanitize_database(path: Path, *, require_cosmos: bool = True) -> None:
     try:
         connection = sqlite3.connect(path)
     except sqlite3.Error as error:
@@ -132,7 +131,7 @@ def sanitize_database(path: Path) -> None:
         if check is None or check[0] != "ok":
             raise ValidationFailedError(CORRUPT_PACKAGE)
         tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
-        if not set(CORE_TABLES) <= tables or connection.execute(META_QUERY).fetchone() is None:
+        if not set(CORE_TABLES) <= tables or (require_cosmos and connection.execute(META_QUERY).fetchone() is None):
             raise ValidationFailedError(CORRUPT_PACKAGE)
         if connection.execute(VIRTUAL_QUERY).fetchone() is not None:
             raise ValidationFailedError(CORRUPT_PACKAGE)
@@ -181,7 +180,7 @@ class ExchangeService:
 
     @property
     def work_dir(self) -> Path:
-        return self._settings.data_dir / WORK_DIRNAME
+        return self._settings.paths.work
 
     def _temporary(self, prefix: str, suffix: str) -> Path:
         self.work_dir.mkdir(parents=True, exist_ok=True)

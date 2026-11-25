@@ -15,6 +15,7 @@ import { EntityLink, HeroFrame, Paged } from '@/components/domain'
 import { DomainIcon } from '@/components/domain/DomainIcon'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { Label, Muted, PageTitle } from '@/components/typography'
+import { bookUrl } from '@/features/chronicle/api'
 import { ArmsCrest } from '@/features/collective/ArmsCrest'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
@@ -162,7 +163,7 @@ export function EntityHero({
             )}
             <Button variant='outline' size='sm' asChild>
               <a
-                href={`/api/book?entity_id=${entity.id}`}
+                href={bookUrl({ entity_id: entity.id })}
                 target='_blank'
                 rel='noreferrer'
               >

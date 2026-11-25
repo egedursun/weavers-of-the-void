@@ -3,18 +3,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.economy import CommunityStockRow
 from aerona.db.tables.environment import RegionEnvironmentRow
-from aerona.db.tables.geology import RegionGeologyRow, RegionStratumRow
+from aerona.db.tables.geology import DeepPassageRow, RegionGeologyRow, RegionStratumRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.domain.enums.economy import CommodityKind
 from aerona.domain.enums.environment import ScarKind
-from aerona.domain.enums.geology import RockKind, UndergroundStratum
+from aerona.domain.enums.geology import DeepPassageOrigin, DeepPassageState, RockKind, UndergroundStratum
+from aerona.domain.enums.happening import LandAct
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.world import WorldType
 from aerona.engine.environment.columns import column_depth, stratum_depth
 from aerona.engine.environment.deep import deepen, dissolve_salt
 from aerona.engine.environment.geology import Layer, lay_columns, strata_for
+from aerona.engine.environment.shaping import LandOutcome, reshape_ground
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.manual import manual_context
 from aerona.rules.registry import Rules
@@ -119,3 +121,45 @@ async def test_a_hollow_world_keeps_only_its_shafts_to_the_inner_surface(session
     await lay_columns(ctx)
     shafts = await session.scalar(select(func.count()).select_from(RegionStratumRow).where(RegionStratumRow.stratum == U.HOLLOW_INTERIOR))
     assert shafts == 1
+
+
+async def test_a_mine_that_reaches_the_ocean_under_the_ice_opens_a_way_down_into_it(session: AsyncSession) -> None:
+    world = await seed_core_world(session)
+    await surveyed(session, world)
+    region = world.regions[0]
+    ctx = await manual_context(session, "test", tuned_rules(underground={"bore_flood_pct": 0}))
+    for order, rock in enumerate((R.WATER_ICE, R.GRANITE)):
+        session.add(RegionGeologyRow(region_entity_id=region.id, depth_order=order, rock=rock, thickness=5, veins={}, locked=[]))
+    ocean = RegionStratumRow(region_entity_id=region.id, stratum=U.UNDER_OCEAN, volume=0, pressure=0, locked=[])
+    session.add(ocean)
+    land = await session.get(RegionEnvironmentRow, region.id)
+    assert land is not None
+    land.mined = 100
+    await session.flush()
+    await deepen(ctx)
+    await deepen(ctx)
+    assert ocean.reached_epoch == ctx.epoch
+    ways = list(await session.scalars(select(DeepPassageRow).where(DeepPassageRow.second_stratum == U.UNDER_OCEAN)))
+    assert [(way.first_region_entity_id, way.first_stratum, way.second_region_entity_id, way.origin, way.state) for way in ways] == [
+        (region.id, None, region.id, DeepPassageOrigin.DUG, DeepPassageState.OPEN)
+    ]
+    assert "deep.passage_formed" in set(await session.scalars(select(IncidentRow.kind)))
+
+
+async def test_a_god_that_opens_the_ground_reaches_every_stratum_and_opens_the_ways_down(session: AsyncSession) -> None:
+    world = await seed_core_world(session)
+    await surveyed(session, world)
+    region = world.regions[0]
+    ctx = await manual_context(session, "test", tuned_rules(underground={"bore_flood_pct": 0, "cavern_place_pct": 0}))
+    cavern = RegionStratumRow(region_entity_id=region.id, stratum=U.CAVERN_UPPER, volume=0, pressure=0, locked=[])
+    kept = RegionStratumRow(region_entity_id=region.id, stratum=U.AQUIFER, volume=0, pressure=0, locked=["reached_epoch"])
+    session.add_all([cavern, kept])
+    land = await session.get(RegionEnvironmentRow, region.id)
+    assert land is not None
+    await session.flush()
+    outcome = await reshape_ground(ctx, region, land, LandAct.OPEN_UNDERGROUND, god_id=world.son.id, fiery=False)
+    assert outcome is LandOutcome.DONE
+    assert cavern.reached_epoch == ctx.epoch and kept.reached_epoch is None
+    ways = list(await session.scalars(select(DeepPassageRow).where(DeepPassageRow.first_region_entity_id == region.id)))
+    assert [(way.second_stratum, way.origin, way.by_node_id) for way in ways] == [(U.CAVERN_UPPER, DeepPassageOrigin.DIVINE, world.son.id)]
+    assert "deep.stratum_reached" in set(await session.scalars(select(IncidentRow.kind)))

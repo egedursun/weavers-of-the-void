@@ -13,25 +13,28 @@ import {
   ShellSidebarTools,
 } from '@/features/epoch/ShellStatus'
 import { SonRevealOverlay } from '@/features/pantheon/SonRevealOverlay'
+import { UniverseBoundary } from '@/features/universes/UniverseBoundary'
 
 export const Route = createFileRoute('/_app')({
   component: () => (
-    <AppShell
-      entryPages={ENTRY_PAGES}
-      topBarContext={<ShellContext />}
-      topBarActions={<ShellActions />}
-      banner={<ShellBanner />}
-      aside={<ShellAside />}
-      sidebarFooter={<ShellSidebarTools />}
-      navBadges={ShellNavBadges}
-      overlays={
-        <>
-          <ShellServices />
-          <CommandPalette />
-          <SonRevealOverlay />
-          <DivineWill />
-        </>
-      }
-    />
+    <UniverseBoundary>
+      <AppShell
+        entryPages={ENTRY_PAGES}
+        topBarContext={<ShellContext />}
+        topBarActions={<ShellActions />}
+        banner={<ShellBanner />}
+        aside={<ShellAside />}
+        sidebarFooter={<ShellSidebarTools />}
+        navBadges={ShellNavBadges}
+        overlays={
+          <>
+            <ShellServices />
+            <CommandPalette />
+            <SonRevealOverlay />
+            <DivineWill />
+          </>
+        }
+      />
+    </UniverseBoundary>
   ),
 })

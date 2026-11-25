@@ -6,6 +6,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
+COPY VERSION /VERSION
 COPY frontend ./
 RUN npm run build
 

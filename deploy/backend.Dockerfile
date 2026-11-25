@@ -39,6 +39,7 @@ ENV PATH="/app/.venv/bin:${PATH}" \
     AERONA_PORT=8000
 
 COPY --from=builder --chown=aerona:aerona /app/.venv /app/.venv
+COPY --chown=aerona:aerona scripts/backup_library.py /app/scripts/backup_library.py
 
 WORKDIR /home/aerona
 USER aerona

@@ -8,6 +8,7 @@ import {
 } from '@/test-utils/fakeApi'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
+import { universeKey } from '@/lib/universeStorage'
 import actions from '../../../e2e/fixtures/actions.json'
 import cosmosFixture from '../../../e2e/fixtures/cosmos.json'
 import { CosmosLegend } from './CosmosLegend'
@@ -214,7 +215,7 @@ describe('cosmos side panel', () => {
 
 describe('world card', () => {
   it('opens the dialect accordion and remembers it per world', async () => {
-    window.localStorage.removeItem('aerona.cosmos.dialect.3')
+    window.localStorage.removeItem(universeKey('aerona.cosmos.dialect.3'))
     const { screen } = await renderApp(<Harness />)
     const toggle = screen.getByRole('button', {
       name: 'Its dialect: how names are born here',
@@ -231,7 +232,9 @@ describe('world card', () => {
     await expect
       .element(screen.getByText('Velmora', { exact: true }).first())
       .toBeVisible()
-    expect(window.localStorage.getItem('aerona.cosmos.dialect.3')).toBe('true')
+    expect(
+      window.localStorage.getItem(universeKey('aerona.cosmos.dialect.3'))
+    ).toBe('true')
   })
 
   it('descends to the map, opens Atlas and the traveller guide drawer', async () => {

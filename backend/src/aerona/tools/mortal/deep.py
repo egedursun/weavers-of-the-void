@@ -95,7 +95,7 @@ async def bore(call: MortalCall, args: BoreInput) -> str:
     region, ground = await ground_here(call, args.region_id)
     row = await stratum_here(call, region.id, args.stratum)
     if row.reached_epoch is None:
-        await reach_stratum(call.tick, ground, row, DeepTally())
+        await reach_stratum(call.tick, ground, row, DeepTally(), digger_id=call.me.id)
     call.target(region.id)
     return result(MortalResult.BORED, place=region.name, stratum=STRATA[args.stratum].label.lower())
 
@@ -106,7 +106,7 @@ async def drill_reservoir(call: MortalCall, args: RegionInput) -> str:
     if row.volume <= 0:
         fail(MortalResult.DEEP_REFUSED, why="that reservoir is spent")
     if row.reached_epoch is None:
-        await reach_stratum(call.tick, ground, row, DeepTally())
+        await reach_stratum(call.tick, ground, row, DeepTally(), digger_id=call.me.id)
     await draw_reservoir(call.tick, ground, row, DeepTally())
     call.target(region.id)
     return result(MortalResult.RESERVOIR_DRILLED, place=region.name, volume=row.volume)

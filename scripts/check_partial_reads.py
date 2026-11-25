@@ -415,7 +415,7 @@ def partial_reads(used: set[tuple[str, str, str]]) -> list[PartialRead]:
     sys.path.insert(0, str(PACKAGE.parent))
     found: list[PartialRead] = []
     for info in pkgutil.walk_packages([str(PACKAGE)], "aerona."):
-        if info.name.startswith(SKIPPED):
+        if info.name.startswith(SKIPPED) or "alembic" in info.name.split("."):
             continue
         module = importlib.import_module(info.name)
         source = getattr(module, "__file__", None)

@@ -393,7 +393,7 @@ def under(path: Path, bases: tuple[Path, ...]) -> bool:
 
 
 def skipped(path: Path) -> bool:
-    return any(path == base or path.is_relative_to(base) for base in SKIPPED)
+    return "alembic" in path.parts or any(path == base or path.is_relative_to(base) for base in SKIPPED)
 
 
 def backend_targets() -> list[Path]:

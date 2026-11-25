@@ -29408,16 +29408,27 @@ def enum_of(values: tuple[str, ...], name: str) -> sa.Enum:
     return sa.Enum(*values, name=name, native_enum=False, create_constraint=True, length=40)
 
 
+def union_of(old: tuple[str, ...], new: tuple[str, ...]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys((*old, *new)))
+
+
+def widen(forward: bool, rows: tuple[tuple[str, str, str, tuple[str, ...], tuple[str, ...], bool], ...] = RETYPED) -> None:
+    for table, column, name, old, new, nullable in rows:
+        before = old if forward else new
+        with op.batch_alter_table(table, schema=None) as batch_op:
+            batch_op.alter_column(column, existing_type=enum_of(before, name), type_=enum_of(union_of(old, new), name), existing_nullable=nullable)
+
+
 def retype(forward: bool, rows: tuple[tuple[str, str, str, tuple[str, ...], tuple[str, ...], bool], ...] = RETYPED) -> None:
     for table, column, name, old, new, nullable in rows:
-        before, after = (old, new) if forward else (new, old)
+        after = new if forward else old
         gone = ", ".join(f"'{value}'" for value in new if value not in old)
-        if not forward and nullable:
+        if not forward and nullable and gone:
             op.execute(f"UPDATE {table} SET {column} = NULL WHERE {column} IN ({gone})")
-        elif not forward:
+        elif not forward and gone:
             op.execute(f"DELETE FROM {table} WHERE {column} IN ({gone})")
         with op.batch_alter_table(table, schema=None) as batch_op:
-            batch_op.alter_column(column, existing_type=enum_of(before, name), type_=enum_of(after, name), existing_nullable=nullable)
+            batch_op.alter_column(column, existing_type=enum_of(union_of(old, new), name), type_=enum_of(after, name), existing_nullable=nullable)
 
 
 STRATUM_COLUMNS = (("region_underground", "stratum"),)
@@ -30087,6 +30098,7 @@ def upgrade() -> None:
     with op.batch_alter_table("world_type_profiles", schema=None) as batch_op:
         batch_op.add_column(sa.Column("sea_roads", sa.Boolean(), server_default=sa.false(), nullable=False))
         batch_op.add_column(sa.Column("ship_pct", sa.Integer(), server_default="100", nullable=False))
+    widen(True)
     rename_values(True)
     move_areas(True)
     retype(True)
@@ -30095,9 +30107,10 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     add_checks(False)
-    retype(False)
+    widen(False)
     move_areas(False)
     rename_values(False)
+    retype(False)
     with op.batch_alter_table("world_physics", schema=None) as batch_op:
         batch_op.drop_column("sulphur_dioxide")
     with op.batch_alter_table("world_type_profiles", schema=None) as batch_op:

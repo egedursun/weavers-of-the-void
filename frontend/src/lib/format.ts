@@ -38,6 +38,30 @@ export function formatDateTime(value: string): string {
   return dateTimeFormat.format(new Date(value))
 }
 
+const relativeFormat = new Intl.RelativeTimeFormat(LOCALE, {
+  numeric: 'auto',
+})
+
+const RELATIVE_STEPS: readonly [Intl.RelativeTimeFormatUnit, number][] = [
+  ['second', 60],
+  ['minute', 60],
+  ['hour', 24],
+  ['day', 7],
+  ['week', 4.35],
+  ['month', 12],
+  ['year', Number.POSITIVE_INFINITY],
+]
+
+export function formatSince(value: string, now = Date.now()): string {
+  let amount = (new Date(value).getTime() - now) / 1000
+  for (const [unit, size] of RELATIVE_STEPS) {
+    if (Math.abs(amount) < size)
+      return relativeFormat.format(Math.round(amount), unit)
+    amount /= size
+  }
+  return formatDateTime(value)
+}
+
 export function formatCompact(value: number): string {
   return compactFormat.format(value)
 }

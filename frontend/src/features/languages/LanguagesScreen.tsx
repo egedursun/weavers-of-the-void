@@ -30,7 +30,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MiniStat, PageHeader } from '@/components/domain'
 import { Text } from '@/components/typography'
-import { BOOK_URL } from '@/features/chronicle/api'
+import { bookUrl } from '@/features/chronicle/api'
 import {
   useKnowledge,
   useLanguageTree,
@@ -161,7 +161,7 @@ export function LanguagesScreen() {
               {"Add this epoch's words"}
             </Button>
             <Button variant='outline' size='sm' asChild>
-              <a href={BOOK_URL} target='_blank' rel='noreferrer'>
+              <a href={bookUrl()} target='_blank' rel='noreferrer'>
                 <BookText />
                 The book
               </a>

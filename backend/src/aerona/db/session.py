@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -75,6 +75,12 @@ class Database:
     async def dispose(self) -> None:
         await self.engine.dispose()
         self.generation += 1
+
+    async def replace_file(self, swap: Callable[[], None]) -> None:
+        async with self._write_lock:
+            await self.dispose()
+            swap()
+            await self.dispose()
 
 
 class Steps:

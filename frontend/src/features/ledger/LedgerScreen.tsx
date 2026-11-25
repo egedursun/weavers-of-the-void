@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { navItem } from '@/config/navigation'
 import { Bookmark, NotebookPen, StickyNote } from 'lucide-react'
+import { universeKey } from '@/lib/universeStorage'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader, Section } from '@/components/domain'
@@ -18,7 +19,7 @@ type RecordsTab = (typeof TABS)[number]
 
 function storedTab(): RecordsTab {
   try {
-    const value = localStorage.getItem(TAB_KEY)
+    const value = localStorage.getItem(universeKey(TAB_KEY))
     return TABS.find((tab) => tab === value) ?? 'ledger'
   } catch {
     return 'ledger'
@@ -43,7 +44,7 @@ export function LedgerScreen() {
     const next = TABS.find((item) => item === value) ?? 'ledger'
     setTab(next)
     try {
-      localStorage.setItem(TAB_KEY, next)
+      localStorage.setItem(universeKey(TAB_KEY), next)
     } catch {
       return
     }

@@ -12,7 +12,6 @@ from aerona.services.rule_changes import rule_desk
 from aerona.tools.divine_will.framework import PlayerPort
 from aerona.tools.divine_will.retrieval_ports import LoreIndexPort
 
-FORECAST_FOLDER = "forecasts"
 ARTIFACT_SOURCES = frozenset({ChunkSource.ARTIFACT})
 
 
@@ -52,5 +51,5 @@ def library_for(services: Services, index: LoreIndexPort | None = None) -> Divin
     return DivineWillLibrary(
         artifacts=ArtifactLibrary(services.database, services.bus, artifact_ranker(index) if index is not None else None),
         plans=PlanDesk(services.database, services.bus, services.jobs, player_for, RuleSteps(rule_desk(services))),
-        foresight=Foresight(services.database, services.bus, services.jobs, services.settings.data_dir / FORECAST_FOLDER),
+        foresight=Foresight(services.database, services.bus, services.jobs, services.settings.paths.forecasts),
     )

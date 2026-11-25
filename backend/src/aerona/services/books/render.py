@@ -4,7 +4,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from markupsafe import Markup, escape
@@ -26,6 +26,7 @@ from aerona.constants.books import (
     PRINT_PORTRAIT_PIXELS,
     PRINT_PORTRAIT_WIDTH,
 )
+from aerona.constants.library import UNIVERSE_QUERY
 from aerona.core.grammar import spoken
 from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.divine import CouncilMotion
@@ -78,6 +79,16 @@ class RenderedBook:
     nonce: str
 
 
+OVERVIEW_PATH = "/overview"
+
+
+def in_universe(url: str, universe: str | None) -> str:
+    if not universe:
+        return url
+    joiner = "&" if "?" in url else "?"
+    return f"{url}{joiner}{urlencode({UNIVERSE_QUERY: universe})}"
+
+
 class BookLinks(Protocol):
     printing: bool
 
@@ -89,21 +100,36 @@ class BookLinks(Protocol):
 
     def logo(self) -> str: ...
 
+    def api(self, path: str) -> str: ...
 
+    def entry(self, kind: str, node_id: int) -> str: ...
+
+
+@dataclass
 class ScreenLinks:
-    printing = False
+    universe: str | None = None
+    printing: bool = False
 
     def media(self, file_name: str | None, size: str) -> str:
-        return f"{MEDIA_PREFIX}{quote(file_name)}?w={SCREEN_WIDTHS[size]}" if file_name else ""
+        return in_universe(f"{MEDIA_PREFIX}{quote(file_name)}?w={SCREEN_WIDTHS[size]}", self.universe) if file_name else ""
 
     def terrain(self, picture: MapPicture) -> str:
-        return f"{BOOK_ASSET_PREFIX}maps/{picture.world_id}.jpg?v={quote(picture.signature)}"
+        return in_universe(f"{BOOK_ASSET_PREFIX}maps/{picture.world_id}.jpg?v={quote(picture.signature)}", self.universe)
 
     def font(self, file_name: str) -> str:
-        return f"{BOOK_ASSET_PREFIX}fonts/{quote(file_name)}"
+        return in_universe(f"{BOOK_ASSET_PREFIX}fonts/{quote(file_name)}", self.universe)
 
     def logo(self) -> str:
-        return f"{BOOK_ASSET_PREFIX}brand/logo.png"
+        return in_universe(f"{BOOK_ASSET_PREFIX}brand/logo.png", self.universe)
+
+    def api(self, path: str) -> str:
+        return in_universe(path, self.universe)
+
+    def entry(self, kind: str, node_id: int) -> str:
+        return in_universe(f"?{kind}_id={node_id}", self.universe)
+
+    def home(self) -> str:
+        return in_universe(OVERVIEW_PATH, self.universe)
 
 
 @dataclass
@@ -128,6 +154,12 @@ class PrintLinks:
 
     def logo(self) -> str:
         return BRAND_LOGO.as_uri()
+
+    def api(self, path: str) -> str:
+        return path
+
+    def entry(self, kind: str, node_id: int) -> str:
+        return f"#{kind}-{node_id}"
 
 
 def _inline(text: str) -> Markup:
@@ -170,6 +202,7 @@ def prose(text: str | None) -> str:
 @dataclass
 class CodexLinks:
     base: str | None = None
+    universe: str | None = None
     images: dict[tuple[str, int, int], str] = field(default_factory=dict)
     maps: dict[int, str] = field(default_factory=dict)
     heavens: dict[str, str] = field(default_factory=dict)
@@ -185,12 +218,12 @@ class CodexLinks:
         if not file_name:
             return ""
         if self.base is not None:
-            return f"{self.base}{MEDIA_PREFIX.lstrip('/')}{quote(file_name)}?w={CODEX_IMAGE_WIDTH}"
+            return in_universe(f"{self.base}{MEDIA_PREFIX.lstrip('/')}{quote(file_name)}?w={CODEX_IMAGE_WIDTH}", self.universe)
         return self.images.setdefault((file_name, CODEX_IMAGE_WIDTH, CODEX_IMAGE_WIDTH), f"{CODEX_IMAGE_DIRECTORY}/{quote(Path(file_name).stem)}.jpg")
 
     def terrain(self, picture: MapPicture) -> str:
         if self.base is not None:
-            return f"{self.base}{BOOK_ASSET_PREFIX.lstrip('/')}maps/{picture.world_id}.jpg?v={quote(picture.signature)}"
+            return in_universe(f"{self.base}{BOOK_ASSET_PREFIX.lstrip('/')}maps/{picture.world_id}.jpg?v={quote(picture.signature)}", self.universe)
         return self.maps.setdefault(picture.world_id, f"{CODEX_IMAGE_DIRECTORY}/map-{picture.world_id}.jpg")
 
 
@@ -278,9 +311,12 @@ def render_book(model: BookModel | None, rules: Rules, *, links: BookLinks | Non
     return RenderedBook(html, nonce)
 
 
-def render_entry(model: BookModel, rules: Rules, *, son: SonArticle | None = None, entity: EntityArticle | None = None) -> RenderedBook:
+def render_entry(
+    model: BookModel, rules: Rules, *, son: SonArticle | None = None, entity: EntityArticle | None = None, links: ScreenLinks | None = None
+) -> RenderedBook:
     nonce = new_nonce()
-    html = HTML.get_template(ENTRY_TEMPLATE).render(book=model, rules=rules, nonce=nonce, single=True, son=son, entity=entity, links=ScreenLinks(), pdf=None)
+    chosen = links or ScreenLinks()
+    html = HTML.get_template(ENTRY_TEMPLATE).render(book=model, rules=rules, nonce=nonce, single=True, son=son, entity=entity, links=chosen, pdf=None)
     return RenderedBook(html, nonce)
 
 

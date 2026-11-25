@@ -29,7 +29,7 @@ export function WorldBorn({ state }: { state: WorldState }) {
     return () => window.clearInterval(timer)
   }, [])
   useEffect(() => {
-    if (left === 0) void navigate({ to: '/' })
+    if (left === 0) void navigate({ to: '/overview' })
   }, [left, navigate])
   const world = state.world
   const creator = state.creator
@@ -94,7 +94,7 @@ export function WorldBorn({ state }: { state: WorldState }) {
         />
       </div>
       <div className='relative flex min-w-0 flex-col items-center gap-2'>
-        <Button size='lg' onClick={() => void navigate({ to: '/' })}>
+        <Button size='lg' onClick={() => void navigate({ to: '/overview' })}>
           <MapPinned />
           Enter your world
           <ArrowRight />

@@ -1555,7 +1555,10 @@ publish({kind:'konsey', id, topic, passed, motion})  (errors ignored)
 return {id, ...minutes}
 ```
 
-### 7.4 Chat with a son (`chatWithSon(sonId, text)`) — player action, free, not ledgered
+### 7.4 Chat with a son (`chatWithSon(sonId, text)`) — retired
+
+**Retired by spec 19 §12.** Summon to Presence (`docs/spec/19-summon-to-presence.md`) replaces this chat: any being that can speak is summoned, speaks from its own mind and acts only through its own tools, and speaking never moves loyalty. The legacy behaviour below is kept only as the record of the old app.
+
 ```
 s must exist ("No son"); dead → "{s} is dead; your voice does not reach their bones."
 text = trim[:chat_text]; empty → "Say something."

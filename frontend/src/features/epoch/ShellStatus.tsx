@@ -9,6 +9,7 @@ import { LiveFeedSheet } from '@/features/feed/LiveFeedSheet'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { OnboardingTracker } from '@/features/onboarding/OnboardingTracker'
 import { useWorldState } from '@/features/overview/api'
+import { UniverseSwitcher } from '@/features/universes/UniverseSwitcher'
 import { WorldHeader } from '@/features/world-header/WorldHeader'
 import { ActivityStrip } from './ActivityStrip'
 import { JobsMenu } from './JobsMenu'
@@ -21,6 +22,12 @@ function ShellWorldSwitcher({ compact = false }: { compact?: boolean }) {
 export function ShellContext() {
   return (
     <>
+      <span className='hidden min-w-0 @4xl/topbar:inline-flex'>
+        <UniverseSwitcher />
+      </span>
+      <span className='inline-flex min-w-0 @4xl/topbar:hidden'>
+        <UniverseSwitcher compact />
+      </span>
       <span className='hidden min-w-0 @5xl/topbar:inline-flex'>
         <ShellWorldSwitcher />
       </span>

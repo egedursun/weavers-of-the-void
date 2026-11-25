@@ -84,7 +84,7 @@ function SelectTrigger({
         controlText,
         'hover:bg-field-hover data-placeholder:text-muted-foreground',
         '*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2',
-        '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:text-muted-foreground',
+        '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([data-domain=sigil])]:text-muted-foreground',
         className
       )}
       {...props}
@@ -159,7 +159,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot='select-item'
       className={cn(
-        'relative flex w-full min-w-0 cursor-default items-center gap-2 rounded-sm py-1.5 ps-2 pe-8 text-control wrap-anywhere outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-icon-md [&_svg]:shrink-0 [&_svg]:text-muted-foreground *:[span]:last:flex *:[span]:last:min-w-0 *:[span]:last:items-center *:[span]:last:gap-2',
+        'relative flex w-full min-w-0 cursor-default items-center gap-2 rounded-sm py-1.5 ps-2 pe-8 text-control wrap-anywhere outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([data-domain=sigil])]:size-icon-md [&_svg:not([data-domain=sigil])]:text-muted-foreground *:[span]:last:flex *:[span]:last:min-w-0 *:[span]:last:items-center *:[span]:last:gap-2',
         className
       )}
       {...props}

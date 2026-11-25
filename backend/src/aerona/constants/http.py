@@ -1,5 +1,6 @@
 API_PREFIX = "/api"
 HEALTH_PATH = "/health"
+LIBRARY_PATH = "/library"
 EVENTS_PATH = "/events"
 JOBS_PATH = "/jobs"
 CORRELATION_ID_HEADER = "x-correlation-id"

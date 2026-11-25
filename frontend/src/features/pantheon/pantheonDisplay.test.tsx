@@ -2,6 +2,7 @@ import { godData, godRoutes } from '@/test-utils/godRoutes'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
+import { universeKey } from '@/lib/universeStorage'
 import { CouncilRecord } from '@/features/council/CouncilRecord'
 import { CompareSons } from './CompareSons'
 import { GodPanel } from './GodPanel'
@@ -340,7 +341,7 @@ describe('compare sons', () => {
       .toBeDisabled()
     expect(
       JSON.parse(
-        localStorage.getItem('aerona.compare') ??
+        localStorage.getItem(universeKey('aerona.compare')) ??
           localStorage.getItem(Object.keys(localStorage)[0]) ??
           '[]'
       )

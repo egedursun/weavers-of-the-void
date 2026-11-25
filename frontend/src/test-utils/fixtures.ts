@@ -1,3 +1,5 @@
+import { APP_VERSION } from '@/config/brand'
+
 export function serverEvent(
   kind: string,
   payload: Record<string, unknown>,
@@ -38,7 +40,7 @@ export function worldState(overrides: Record<string, unknown> = {}) {
     pulse: null,
     read_only: false,
     discovery: null,
-    version: '0.1.0',
+    version: APP_VERSION,
     notifications_unread: 0,
     running_jobs: 0,
     epoch_running: false,

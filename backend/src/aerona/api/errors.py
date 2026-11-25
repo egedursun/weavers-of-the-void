@@ -11,7 +11,16 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from aerona.api.schemas.common import ErrorCode, ErrorResponse
 from aerona.constants.api import CORRELATION_ID_LENGTH, SCRUBBED_PATH
 from aerona.constants.http import CORRELATION_ID_HEADER
-from aerona.core.errors import AeronaError, BusyError, ConflictError, InsufficientResourcesError, NotFoundError, ReadOnlyError, ValidationFailedError
+from aerona.core.errors import (
+    AeronaError,
+    BusyError,
+    ConflictError,
+    InsufficientResourcesError,
+    NotFoundError,
+    ReadOnlyError,
+    UniverseRequiredError,
+    ValidationFailedError,
+)
 from aerona.imaging.errors import ImageWorkerError
 from aerona.llm.errors import LlmDisabledError, LlmError, LlmTransientError
 from aerona.media.errors import MediaStoreError
@@ -36,6 +45,7 @@ STATUS_CODES: dict[int, ErrorCode] = {
 ERROR_CODES: tuple[tuple[type[AeronaError], ErrorCode], ...] = (
     (NotFoundError, ErrorCode.NOT_FOUND),
     (BusyError, ErrorCode.BUSY),
+    (UniverseRequiredError, ErrorCode.UNIVERSE_REQUIRED),
     (ConflictError, ErrorCode.CONFLICT),
     (ReadOnlyError, ErrorCode.READ_ONLY),
     (InsufficientResourcesError, ErrorCode.INSUFFICIENT),

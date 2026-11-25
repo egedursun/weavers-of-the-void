@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
+import { followUniverse, universePersisted } from '@/lib/universeStorage'
 
 export const ONBOARDING_STEPS = [
   'son',
@@ -34,12 +35,11 @@ export const useOnboarding = create<OnboardingStore>()(
       dismiss: () => set({ dismissed: true }),
       reopen: () => set({ dismissed: false }),
     }),
-    {
-      name: 'aerona.onboarding',
-      storage: createJSONStorage(() => localStorage),
-    }
+    universePersisted<OnboardingStore>('aerona.onboarding')
   )
 )
+
+followUniverse(useOnboarding)
 
 export function stepForLocation(
   pathname: string,

@@ -1,17 +1,13 @@
 import ast
-import importlib
-import pkgutil
 import re
 from collections.abc import Mapping
 from enum import Enum, StrEnum
 from functools import cache
 from pathlib import Path
 
-import aerona
 from aerona.core.total import DECLARED_PARTIAL
+from tests.source_modules import SOURCE, source_modules
 
-SOURCE = Path(aerona.__file__).resolve().parent
-SKIPPED = ("aerona.db.alembic", "aerona.migration", "aerona.services.books.pdf_worker")
 NEAR_TOTAL = 0.75
 
 
@@ -31,15 +27,13 @@ def subscripted() -> frozenset[str]:
 
 def enum_tables() -> dict[int, tuple[str, str, Mapping[Enum, object]]]:
     found: dict[int, tuple[str, str, Mapping[Enum, object]]] = {}
-    for info in pkgutil.walk_packages([str(SOURCE)], "aerona."):
-        if info.name.startswith(SKIPPED):
-            continue
-        for name, value in vars(importlib.import_module(info.name)).items():
+    for module in source_modules():
+        for name, value in vars(module).items():
             if not name.isupper() or not isinstance(value, Mapping) or not value:
                 continue
             keys = list(value)
             if isinstance(keys[0], Enum) and all(type(key) is type(keys[0]) for key in keys):
-                found.setdefault(id(value), (info.name, name, value))
+                found.setdefault(id(value), (module.__name__, name, value))
     return found
 
 
@@ -56,10 +50,8 @@ def test_a_near_total_enum_table_read_by_subscript_is_total_or_declares_what_it_
 
 def enum_kinds() -> list[type[StrEnum]]:
     found: dict[str, type[StrEnum]] = {}
-    for info in pkgutil.walk_packages([str(SOURCE)], "aerona."):
-        if info.name.startswith(SKIPPED):
-            continue
-        for value in vars(importlib.import_module(info.name)).values():
+    for module in source_modules():
+        for value in vars(module).values():
             if isinstance(value, type) and issubclass(value, StrEnum) and value is not StrEnum and len(value) > 1:
                 found.setdefault(f"{value.__module__}.{value.__qualname__}", value)
     return [found[key] for key in sorted(found)]
@@ -67,12 +59,10 @@ def enum_kinds() -> list[type[StrEnum]]:
 
 def text_tables() -> list[tuple[str, str, Mapping[str, object]]]:
     found: dict[int, tuple[str, str, Mapping[str, object]]] = {}
-    for info in pkgutil.walk_packages([str(SOURCE)], "aerona."):
-        if info.name.startswith(SKIPPED):
-            continue
-        for name, value in vars(importlib.import_module(info.name)).items():
+    for module in source_modules():
+        for name, value in vars(module).items():
             if name.isupper() and isinstance(value, Mapping) and value and all(type(key) is str for key in value):
-                found.setdefault(id(value), (info.name, name, value))
+                found.setdefault(id(value), (module.__name__, name, value))
     return sorted(found.values(), key=lambda item: item[:2])
 
 
@@ -94,15 +84,12 @@ def test_a_near_total_table_keyed_by_the_text_of_enum_values_is_total() -> None:
 
 def enum_orders() -> dict[tuple[str, str], tuple[Enum, ...]]:
     found: dict[tuple[str, str], tuple[Enum, ...]] = {}
-    for info in pkgutil.walk_packages([str(SOURCE)], "aerona."):
-        if info.name.startswith(SKIPPED):
-            continue
-        module = importlib.import_module(info.name)
+    for module in source_modules():
         for name, value in vars(module).items():
             if not name.isupper() or not isinstance(value, tuple) or len(value) < 2:
                 continue
             if isinstance(value[0], Enum) and all(type(item) is type(value[0]) for item in value) and is_defined_in(module, name):
-                found[(info.name, name)] = value
+                found[(module.__name__, name)] = value
     return found
 
 

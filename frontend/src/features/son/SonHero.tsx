@@ -30,6 +30,7 @@ import {
 import { MentionText } from '@/components/domain/MentionText'
 import { RecordNavLink } from '@/components/domain/RecordNavLink'
 import { Label, Muted, PageTitle, Text } from '@/components/typography'
+import { bookUrl } from '@/features/chronicle/api'
 import { NamedRecord } from '@/features/entity/NamedRecord'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { type SonPublic, useWorldState } from '@/features/pantheon/api'
@@ -259,7 +260,7 @@ export function SonHero({
             )}
             <Button variant='outline' size='sm' asChild>
               <a
-                href={`/api/book?son_id=${son.id}`}
+                href={bookUrl({ son_id: son.id })}
                 target='_blank'
                 rel='noreferrer'
               >

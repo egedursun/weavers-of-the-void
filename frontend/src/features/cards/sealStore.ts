@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
+import { followUniverse, universePersisted } from '@/lib/universeStorage'
 
 export type SealLedger = {
   openedThrough: number
@@ -12,8 +13,6 @@ type CardSeals = SealLedger & {
   openAll: (latest: number) => void
   sealAll: () => void
 }
-
-export const CARD_SEALS_KEY = 'aerona.cards.seals'
 
 export function sealedIn(ledger: SealLedger, id: number): boolean {
   const opened = id <= ledger.openedThrough
@@ -49,12 +48,13 @@ export const useCardSeals = create<CardSeals>()(
       sealAll: () => set({ openedThrough: 0, turned: [] }),
     }),
     {
-      name: CARD_SEALS_KEY,
-      storage: createJSONStorage(() => localStorage),
+      ...universePersisted<SealLedger>('aerona.cards.seals'),
       partialize: ({ openedThrough, turned }) => ({ openedThrough, turned }),
     }
   )
 )
+
+followUniverse(useCardSeals)
 
 export function useSealed(id: number): boolean {
   return useCardSeals((state) => sealedIn(state, id))

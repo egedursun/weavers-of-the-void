@@ -160,7 +160,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/domain_effects.py` | 58 | 2026-11-16 | `69cc61cfe621566b` |
 | `backend/src/aerona/catalog/effect_packages.py` | 39 | 2026-11-23 | `671b9f348686a905` |
 | `backend/src/aerona/catalog/entity_types.py` | 5 | 2026-11-16 | `5a64164db10e8bec` |
-| `backend/src/aerona/catalog/enum_layers.py` | 1365 | 2026-11-25 | `762c8c6ee2004ebd` |
+| `backend/src/aerona/catalog/enum_layers.py` | 1373 | 2026-11-25 | `975088e7851ed65c` |
 | `backend/src/aerona/catalog/estates.py` | 8 | 2026-11-23 | `7629c1ecb1550397` |
 | `backend/src/aerona/catalog/ethics.py` | 43 | 2026-11-23 | `393fd6776459f691` |
 | `backend/src/aerona/catalog/facets.py` | 23 | 2026-11-19 | `fd9cd80d7c481027` |
@@ -1313,9 +1313,9 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/templates/divine_will.html.j2` | 32 | 2026-11-25 | `c4df08b4d2ac6489` |
 | `backend/src/aerona/services/books/templates/divine_will.md.j2` | 73 | 2026-11-25 | `5f9893552dc8b1b4` |
 | `backend/src/aerona/services/books/templates/empty.html.j2` | 3 | 2026-11-16 | `fb62253fdc00812e` |
-| `backend/src/aerona/services/books/templates/entry.html.j2` | 6 | 2026-11-18 | `7f1335c9cd560b4b` |
-| `backend/src/aerona/services/books/templates/layout.html.j2` | 348 | 2026-11-25 | `b3795f15dc6160b2` |
-| `backend/src/aerona/services/books/templates/macros.html.j2` | 131 | 2026-11-25 | `92ecc3c306ebfe22` |
+| `backend/src/aerona/services/books/templates/entry.html.j2` | 6 | 2026-11-25 | `524659734be5259b` |
+| `backend/src/aerona/services/books/templates/layout.html.j2` | 348 | 2026-11-25 | `9dbe2ff27d696056` |
+| `backend/src/aerona/services/books/templates/macros.html.j2` | 131 | 2026-11-25 | `b37dd37604a2ae5a` |
 | `backend/src/aerona/services/books/templates/presence.html.j2` | 19 | 2026-11-25 | `26372aae7d9e8695` |
 | `backend/src/aerona/services/books/templates/presence.md.j2` | 25 | 2026-11-25 | `45ee700b2390b6c5` |
 | `backend/src/aerona/services/books/typed.py` | 11 | 2026-11-21 | `822dadbada92cf63` |
@@ -1367,6 +1367,16 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/kinship/naming.py` | 1 | 2026-11-25 | `40880fc2dad7009d` |
 | `backend/src/aerona/services/ledger.py` | 3 | 2026-11-17 | `2f28c806ebee63bf` |
 | `backend/src/aerona/services/ledger_narration.py` | 1 | 2026-11-16 | `69711226ca59d84d` |
+| `backend/src/aerona/services/library/adoption.py` | 6 | 2026-11-25 | `f60685fa9f6a0880` |
+| `backend/src/aerona/services/library/catalogue.py` | 3 | 2026-11-25 | `633ffa68b1ceb30b` |
+| `backend/src/aerona/services/library/facts.py` | 2 | 2026-11-25 | `26ed0c210fc94213` |
+| `backend/src/aerona/services/library/hub.py` | 7 | 2026-11-25 | `3561c615f0208990` |
+| `backend/src/aerona/services/library/jobs.py` | 3 | 2026-11-25 | `a63d551909d487e2` |
+| `backend/src/aerona/services/library/package.py` | 18 | 2026-11-25 | `847c3c8158313dd6` |
+| `backend/src/aerona/services/library/runtime.py` | 4 | 2026-11-25 | `0dd213afc5aeb020` |
+| `backend/src/aerona/services/library/service.py` | 17 | 2026-11-25 | `65a0656d63d5e768` |
+| `backend/src/aerona/services/library/transfer.py` | 1 | 2026-11-25 | `8b436ff6e6812828` |
+| `backend/src/aerona/services/library/trash.py` | 1 | 2026-11-25 | `3de8a8119c81faa8` |
 | `backend/src/aerona/services/live_log.py` | 1 | 2026-11-16 | `492d23d48750db00` |
 | `backend/src/aerona/services/maintenance/runner.py` | 3 | 2026-11-16 | `4a30786fb5411aa5` |
 | `backend/src/aerona/services/maintenance/tasks.py` | 39 | 2026-11-16 | `7d3e10b3db0cca4d` |
@@ -1958,7 +1968,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `frontend/src/features/onboarding/FirstEpochsGuide.tsx` | 20 | 2026-11-16 | `dc93ffb154efe90a` |
 | `frontend/src/features/onboarding/GenesisPreview.tsx` | 35 | 2026-11-16 | `33389819b6533d0c` |
 | `frontend/src/features/onboarding/GenesisRecord.tsx` | 23 | 2026-11-16 | `1bd248e006fa1e5d` |
-| `frontend/src/features/onboarding/GenesisScreen.tsx` | 28 | 2026-11-16 | `061811bb09f6b596` |
+| `frontend/src/features/onboarding/GenesisScreen.tsx` | 30 | 2026-11-25 | `33c74f7fd49b9460` |
 | `frontend/src/features/onboarding/GenesisStepper.tsx` | 13 | 2026-11-18 | `e169b68f1d130fd4` |
 | `frontend/src/features/onboarding/GenesisWizard.tsx` | 16 | 2026-11-18 | `5ca5b7dcf5690733` |
 | `frontend/src/features/onboarding/TechnologyFamilyFields.tsx` | 11 | 2026-11-18 | `7394731a6a6b3c3e` |
@@ -1997,6 +2007,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `frontend/src/features/tales/AgesPanel.tsx` | 2 | 2026-11-16 | `72a3d0f64dcccdfe` |
 | `frontend/src/features/tales/TalePanels.tsx` | 5 | 2026-11-16 | `ea80a39e7a039d6d` |
 | `frontend/src/features/tales/WorldPanels.tsx` | 6 | 2026-11-23 | `db5ecf05249f6c7e` |
+| `frontend/src/features/universes/ShelfFilters.tsx` | 1 | 2026-11-25 | `055e31350860b5b4` |
 | `frontend/src/features/usage/UsageFilters.tsx` | 1 | 2026-11-17 | `a7f9960fa51046bf` |
 | `frontend/src/features/wars/military/Orders.tsx` | 2 | 2026-11-16 | `a6fc17c606baf86e` |
 | `frontend/src/features/wars/military/Vendettas.tsx` | 1 | 2026-11-16 | `c3630a6044431a1b` |

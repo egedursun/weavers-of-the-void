@@ -10,7 +10,8 @@ import { api } from '@/api/client'
 import { errorFromResponse, unwrap } from '@/api/errors'
 import { queryKeys } from '@/api/queryKeys'
 import { READ_ONLY_MESSAGE, isReadOnly } from '@/api/readOnly'
-import { API_BASE_URL } from '@/constants/api'
+import { UNIVERSE_HEADER, currentUniverse } from '@/api/universeStore'
+import { apiUrl } from '@/api/url'
 import {
   type ArtifactFormat,
   type ArtifactKind,
@@ -23,7 +24,6 @@ import {
   type WillUpload,
 } from './types'
 
-const BASE = `${API_BASE_URL}/api/divine-will`
 const HTTP_OK_MIN = 200
 const HTTP_OK_MAX = 300
 
@@ -228,7 +228,9 @@ export function uploadAttachment(
     const request = new XMLHttpRequest()
     const form = new FormData()
     form.append('files', file, file.name)
-    request.open('POST', `${BASE}/attachments`)
+    request.open('POST', apiUrl('/api/divine-will/attachments'))
+    const universe = currentUniverse()
+    if (universe !== null) request.setRequestHeader(UNIVERSE_HEADER, universe)
     request.responseType = 'json'
     request.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress(event.loaded / event.total)
@@ -256,7 +258,7 @@ export function uploadAttachment(
 }
 
 export function attachmentFileUrl(id: number): string {
-  return `${BASE}/attachments/${String(id)}/file`
+  return apiUrl(`/api/divine-will/attachments/${String(id)}/file`)
 }
 
 export function useAttachment(id: number | null) {
@@ -387,9 +389,10 @@ export function artifactExportUrl(
   format: ExportFormat,
   version: number | null
 ): string {
-  const search = new URLSearchParams({ format })
-  if (version !== null) search.set('version', String(version))
-  return `${BASE}/artifacts/${String(id)}/export?${search.toString()}`
+  return apiUrl(`/api/divine-will/artifacts/${String(id)}/export`, {
+    format,
+    version,
+  })
 }
 
 export function usePlan(id: number) {

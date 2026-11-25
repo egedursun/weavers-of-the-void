@@ -7,8 +7,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from aerona.constants.paths import MODELS_DIRNAME
 from aerona.llm.token_count import count_tokens
-from aerona.services.divine_will.embedding import DIMENSIONS, MODEL_FILES, MODEL_NAME, MODELS_DIRNAME, TextRole, Vector, holds, sha256_of
+from aerona.services.divine_will.embedding import DIMENSIONS, MODEL_FILES, MODEL_NAME, TextRole, Vector, holds, sha256_of
 
 REPOSITORY = Path(__file__).resolve().parents[3]
 MODEL_ENV = "AERONA_TEST_EMBED_MODEL_DIR"

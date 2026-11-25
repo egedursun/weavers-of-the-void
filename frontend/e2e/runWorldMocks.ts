@@ -1,3 +1,4 @@
+import { APP_VERSION } from './appVersion'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
@@ -252,7 +253,7 @@ const SETTINGS = {
 const HEALTH_REPORT = {
   report: {
     status: 'ok',
-    version: '0.1.0',
+    version: APP_VERSION,
     uptime_seconds: 9300,
     database: { file: 'aerona.db', size: 48_234_496, wal_size: 2_097_152, quick_check: 'ok' },
     latest_backup: 'epoch-0006.db',

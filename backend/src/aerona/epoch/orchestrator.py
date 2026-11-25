@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -47,11 +48,14 @@ class EpochReport:
 
 
 class EpochOrchestrator:
-    def __init__(self, runtime: AgentRuntime, jobs: JobManager | None = None, hooks: EpochHooks | None = None) -> None:
+    def __init__(
+        self, runtime: AgentRuntime, jobs: JobManager | None = None, hooks: EpochHooks | None = None, *, slots: asyncio.Semaphore | None = None
+    ) -> None:
         self.runtime = runtime
         self.jobs = jobs
         self.hooks = hooks or EpochHooks()
         self.stop = StopSignal()
+        self.slots = slots
 
     async def recover(self) -> int:
         async with self.runtime.database.write() as session:
@@ -93,7 +97,10 @@ class EpochOrchestrator:
         return await run_son_turn(self.runtime, son_id)
 
     async def handler(self, job: JobContext) -> dict[str, Any]:
-        return (await self.run(job)).as_result()
+        if self.slots is None:
+            return (await self.run(job)).as_result()
+        async with self.slots:
+            return (await self.run(job)).as_result()
 
     async def require_world(self) -> None:
         async with self.runtime.database.read() as session:

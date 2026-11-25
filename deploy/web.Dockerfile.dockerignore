@@ -1,5 +1,6 @@
 **
 !deploy/nginx.conf
+!VERSION
 !frontend/**
 frontend/node_modules
 frontend/dist

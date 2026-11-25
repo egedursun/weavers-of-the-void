@@ -108,7 +108,7 @@ def parse_manifest(raw: bytes) -> PackageManifest:
     )
 
 
-def _member(name: str, size: int) -> tarfile.TarInfo:
+def package_member(name: str, size: int) -> tarfile.TarInfo:
     info = tarfile.TarInfo(name)
     info.size = size
     info.mtime = int(time.time())
@@ -119,15 +119,15 @@ def _member(name: str, size: int) -> tarfile.TarInfo:
 def write_package(target: Path, manifest: PackageManifest, database: Path, open_object: ObjectOpener) -> None:
     encoded = json.dumps(manifest.payload()).encode()
     with tarfile.open(target, WRITE_MODE) as archive:
-        archive.addfile(_member(PACKAGE_MANIFEST_MEMBER, len(encoded)), io.BytesIO(encoded))
+        archive.addfile(package_member(PACKAGE_MANIFEST_MEMBER, len(encoded)), io.BytesIO(encoded))
         with database.open("rb") as handle:
-            archive.addfile(_member(PACKAGE_DATABASE_MEMBER, database.stat().st_size), handle)
+            archive.addfile(package_member(PACKAGE_DATABASE_MEMBER, database.stat().st_size), handle)
         for item in manifest.objects:
             reader = open_object(item.key)
             if reader is None:
                 raise MediaStoreError(VANISHED)
             with reader:
-                archive.addfile(_member(f"{PACKAGE_MEDIA_MEMBER_PREFIX}{item.key}", item.size), reader)
+                archive.addfile(package_member(f"{PACKAGE_MEDIA_MEMBER_PREFIX}{item.key}", item.size), reader)
 
 
 def _read_member(handle: IO[bytes], limit: int) -> bytes:

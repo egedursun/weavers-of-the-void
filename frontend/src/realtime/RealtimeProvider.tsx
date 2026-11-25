@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { EVENTS_URL } from '@/constants/api'
+import { apiUrl } from '@/api/url'
 import { createEventBus } from './eventBus'
 import {
   EventStream,
@@ -18,9 +18,10 @@ type RealtimeProviderProps = {
 
 export function RealtimeProvider({
   children,
-  url = EVENTS_URL,
+  url: givenUrl,
   createSource,
 }: RealtimeProviderProps) {
+  const url = givenUrl ?? apiUrl('/api/events')
   const queryClient = useQueryClient()
   const bus = useMemo(() => createEventBus(), [])
   const [status, setStatus] = useState<StreamStatus>('connecting')

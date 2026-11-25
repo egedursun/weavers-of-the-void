@@ -3,6 +3,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
+import { apiUrl } from '@/api/url'
 
 export type BackupInfo = components['schemas']['BackupInfo']
 export type ImportMode = components['schemas']['ImportMode']
@@ -23,17 +24,15 @@ export const backupKeys = {
 }
 
 export function databaseUrl(file: string): string {
-  return `/api/backups/${encodeURIComponent(file)}/database`
+  return apiUrl(`/api/backups/${encodeURIComponent(file)}/database`)
 }
 
 export function packageUrl(file: string): string {
-  return `/api/backups/${encodeURIComponent(file)}/package`
+  return apiUrl(`/api/backups/${encodeURIComponent(file)}/package`)
 }
 
-const WORLD_EXPORT_PATH = '/api/world/export'
-
 export function exportUrl(images: boolean): string {
-  return `${WORLD_EXPORT_PATH}?images=${String(images)}`
+  return apiUrl('/api/world/export', { images })
 }
 
 export function useBackups() {

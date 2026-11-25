@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { DomainGlyph, HeroFrame, StatBar } from '@/components/domain'
 import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { Label, Muted, PageTitle } from '@/components/typography'
+import { bookUrl } from '@/features/chronicle/api'
 import { PortraitGenerateOverlay } from '@/features/images/PortraitGenerateOverlay'
 import { useRuleLookup } from '@/features/pantheon/gate'
 import {
@@ -122,7 +123,7 @@ export function ForeignGodHero({ detail }: { detail: ForeignGodDetail }) {
             )}
             <Button variant='outline' size='sm' asChild>
               <a
-                href={`/api/book#foreign-god-${god.id}`}
+                href={`${bookUrl()}#foreign-god-${god.id}`}
                 target='_blank'
                 rel='noreferrer'
               >

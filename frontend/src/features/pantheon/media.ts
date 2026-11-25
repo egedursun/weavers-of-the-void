@@ -1,3 +1,4 @@
+import { apiUrl } from '@/api/url'
 import { type ThumbnailWidth } from '@/features/images/media'
 
 export const THUMBNAIL_WIDTH: ThumbnailWidth = 320
@@ -7,5 +8,5 @@ export function mediaUrl(
   width: ThumbnailWidth = THUMBNAIL_WIDTH
 ): string | null {
   if (!fileName) return null
-  return `/api/media/${encodeURIComponent(fileName)}?w=${width}`
+  return apiUrl(`/api/media/${encodeURIComponent(fileName)}`, { w: width })
 }

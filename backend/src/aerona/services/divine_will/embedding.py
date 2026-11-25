@@ -17,7 +17,6 @@ from aerona.llm.token_count import count_tokens
 from aerona.settings import Settings
 
 MODEL_NAME = "multilingual-e5-small"
-MODELS_DIRNAME = "models"
 DIMENSIONS = 384
 MAX_POSITIONS = 512
 BODY_TOKENS = MAX_POSITIONS - 2
@@ -84,7 +83,7 @@ class EmbedderUnavailableError(Exception):
 
 
 def model_directory(settings: Settings) -> Path:
-    return settings.embed_model_dir or settings.data_dir / MODELS_DIRNAME / MODEL_NAME
+    return settings.embed_model_dir or settings.process.models / MODEL_NAME
 
 
 def sha256_of(path: Path) -> str:
@@ -104,7 +103,15 @@ def download(file: ModelFile, directory: Path) -> None:
     hf_hub_download(repo_id=file.repo, filename=file.path, revision=file.revision, local_dir=directory)
 
 
+FETCHING = threading.Lock()
+
+
 def ensure_files(directory: Path, fetch: Fetcher | None) -> None:
+    with FETCHING:
+        fetch_missing(directory, fetch)
+
+
+def fetch_missing(directory: Path, fetch: Fetcher | None) -> None:
     for file in MODEL_FILES:
         if holds(directory, file):
             continue

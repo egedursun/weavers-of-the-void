@@ -34,8 +34,9 @@ describe('navigation', () => {
     for (const item of allNavItems()) expect(paths).toContain(item.to)
   })
 
-  it('marks sections active by prefix but the overview only exactly', () => {
-    expect(isNavItemActive('/', navItem('overview'))).toBe(true)
+  it('marks sections active by their own path and its children', () => {
+    expect(isNavItemActive('/overview', navItem('overview'))).toBe(true)
+    expect(isNavItemActive('/', navItem('overview'))).toBe(false)
     expect(isNavItemActive('/atlas', navItem('overview'))).toBe(false)
     expect(
       isNavItemActive('/settings/world-rules', navItem('settings-world-rules'))

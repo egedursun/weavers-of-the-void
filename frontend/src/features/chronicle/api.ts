@@ -8,6 +8,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
+import { type QueryValue, apiUrl } from '@/api/url'
 import { useCatalogue } from '@/features/entity/api/queries'
 
 export type EpochListItem = components['schemas']['EpochListItem']
@@ -41,8 +42,17 @@ export const chronicleKeys = {
     [...world, 'chronicle', 'scope', scope, scopeId, loaded] as const,
 }
 
-export const CODEX_URL = '/api/codex.zip'
-export const BOOK_URL = '/api/book'
+export function bookUrl(params: Record<string, QueryValue> = {}): string {
+  return apiUrl('/api/book', params)
+}
+
+export function codexUrl(): string {
+  return apiUrl('/api/codex.zip')
+}
+
+export function codexMarkdownUrl(): string {
+  return apiUrl('/api/codex.md')
+}
 export const SEARCH_MIN_LENGTH = 2
 
 export function useEpochs() {

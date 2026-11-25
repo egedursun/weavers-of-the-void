@@ -1525,6 +1525,8 @@ Old namespace `COSTS` · 16 rows · defined in `src/rules.js` · also read by `s
 
 Old namespace `KONSEY` · 34 rows · defined in `src/konsey.js`. Council of sons, god-son chat, dream and translation limits.
 
+The eight `chat_*` rows below are **retired by spec 19 §12**: the old son chat is gone, its legacy keys map to nothing (`migration/legacy/schema_map.json` lists them as unmapped), and Summon to Presence uses `rules.presence`.
+
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
 | max_members | uye | 9 | 2 | 30 | Council | Maximum sons joining the council |

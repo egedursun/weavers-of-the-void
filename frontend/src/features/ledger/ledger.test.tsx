@@ -9,6 +9,7 @@ import { renderScreen } from '@/test-utils/renderScreen'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
+import { universeKey } from '@/lib/universeStorage'
 import { ThemeProvider } from '@/context/ThemeProvider'
 import { Toaster } from '@/components/ui/sonner'
 import { ActionLedger } from './ActionLedger'
@@ -489,11 +490,13 @@ describe('records screen', () => {
     await expect
       .element(screen.getByText('No favourites yet'))
       .toBeInTheDocument()
-    expect(localStorage.getItem('aerona.records-tab')).toBe('bookmarks')
+    expect(localStorage.getItem(universeKey('aerona.records-tab'))).toBe(
+      'bookmarks'
+    )
   })
 
   it('restores the remembered tab', async () => {
-    localStorage.setItem('aerona.records-tab', 'notes')
+    localStorage.setItem(universeKey('aerona.records-tab'), 'notes')
     const { screen } = await renderScreen(<LedgerScreen />, routes)
     await expect
       .element(screen.getByRole('tab', { name: /^Notes/ }))
@@ -504,7 +507,7 @@ describe('records screen', () => {
   })
 
   it('ignores an unknown remembered tab', async () => {
-    localStorage.setItem('aerona.records-tab', 'garbage')
+    localStorage.setItem(universeKey('aerona.records-tab'), 'garbage')
     const { screen } = await renderScreen(<LedgerScreen />, routes)
     await expect
       .element(screen.getByRole('tab', { name: 'Ledger' }))

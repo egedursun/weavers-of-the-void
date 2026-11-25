@@ -41,7 +41,7 @@ import {
 } from 'lucide-react'
 
 export type NavRoute =
-  | '/'
+  | '/overview'
   | '/epoch'
   | '/pantheon'
   | '/cards'
@@ -180,7 +180,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         id: 'overview',
         title: 'Overview',
-        to: '/',
+        to: '/overview',
         icon: LayoutDashboard,
         description: 'The state of your cosmos at a glance.',
         shortcut: '1',
@@ -468,6 +468,5 @@ export function navItem(id: string): NavItem {
 }
 
 export function isNavItemActive(pathname: string, item: NavItem): boolean {
-  if (item.to === '/') return pathname === '/'
   return pathname === item.to || pathname.startsWith(`${item.to}/`)
 }

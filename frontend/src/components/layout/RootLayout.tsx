@@ -1,5 +1,4 @@
 import { Outlet } from '@tanstack/react-router'
-import { RealtimeProvider } from '@/realtime'
 import { TOAST_DURATION_MS } from '@/constants/ui'
 import { Toaster } from '@/components/ui/sonner'
 import { NavigationProgress } from './NavigationProgress'
@@ -8,7 +7,7 @@ const TOAST_LIFT = '5.5rem'
 
 export function RootLayout() {
   return (
-    <RealtimeProvider>
+    <>
       <NavigationProgress />
       <Outlet />
       <Toaster
@@ -16,6 +15,6 @@ export function RootLayout() {
         offset={{ bottom: TOAST_LIFT }}
         mobileOffset={{ bottom: TOAST_LIFT }}
       />
-    </RealtimeProvider>
+    </>
   )
 }

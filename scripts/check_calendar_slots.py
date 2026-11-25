@@ -69,7 +69,7 @@ def special_cases() -> list[Special]:
     found: list[Special] = []
     for path in sorted(SOURCE.rglob("*.py")):
         relative = str(path.relative_to(SOURCE))
-        if relative in HOMES or relative.startswith(SKIPPED):
+        if relative in HOMES or relative.startswith(SKIPPED) or "alembic" in relative.split("/"):
             continue
         text = path.read_text(encoding="utf-8")
         if ENUM in text:

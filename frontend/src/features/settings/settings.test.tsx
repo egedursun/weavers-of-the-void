@@ -1,3 +1,4 @@
+import { APP_VERSION } from '@/config/brand'
 import { worldState } from '@/test-utils/fixtures'
 import { failure, type MockRequest } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
@@ -353,7 +354,7 @@ describe('feed and sound settings', () => {
 describe('health panel', () => {
   const report = {
     status: 'ok',
-    version: '0.1.0',
+    version: APP_VERSION,
     uptime_seconds: 3700,
     database: {
       file: 'aerona.db',

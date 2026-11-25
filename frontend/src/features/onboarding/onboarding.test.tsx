@@ -1,6 +1,7 @@
 import { worldState } from '@/test-utils/fixtures'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { universeKey } from '@/lib/universeStorage'
 import { useFeed } from '@/features/feed/feedStore'
 import { FirstEpochsGuide } from './FirstEpochsGuide'
 import { GenesisScreen } from './GenesisScreen'
@@ -50,7 +51,7 @@ describe('first epochs guide', () => {
     await expect
       .element(screen.getByText('The first epochs'))
       .not.toBeInTheDocument()
-    expect(localStorage.getItem('aerona.onboarding')).toContain(
+    expect(localStorage.getItem(universeKey('aerona.onboarding'))).toContain(
       '"dismissed":true'
     )
   })
@@ -75,7 +76,9 @@ describe('onboarding store', () => {
     mark('prayers')
     mark('rules')
     expect(useOnboarding.getState().done).toEqual(['rules', 'prayers'])
-    expect(localStorage.getItem('aerona.onboarding')).toContain('rules')
+    expect(localStorage.getItem(universeKey('aerona.onboarding'))).toContain(
+      'rules'
+    )
   })
 
   it('knows every step by its location', () => {
@@ -201,7 +204,7 @@ describe('creation screen', () => {
     emit('genesis.finished', {})
     await expect.element(screen.getByText(/is born\./)).toBeInTheDocument()
     await screen.getByRole('button', { name: /Enter your world/ }).click()
-    await expect.poll(() => router.state.location.pathname).toBe('/')
+    await expect.poll(() => router.state.location.pathname).toBe('/overview')
   })
 })
 

@@ -19,13 +19,11 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { type KpiTone, Medallion, Section } from '@/components/domain'
 import { Muted, Text } from '@/components/typography'
+import { bookUrl, codexMarkdownUrl, codexUrl } from '@/features/chronicle/api'
 import { ModelMetrics } from '@/features/metrics/ModelMetrics'
 import { useWorldState } from '@/features/overview/api'
-import { BOOK_PDF_URL, useBookPdf, usePrintBook } from './bookApi'
+import { bookPdfUrl, useBookPdf, usePrintBook } from './bookApi'
 
-const BOOK_URL = '/api/book'
-const CODEX_URL = '/api/codex.zip'
-const CODEX_MARKDOWN_URL = '/api/codex.md'
 const PERCENT = 100
 
 function BookPdfCard() {
@@ -105,7 +103,7 @@ function BookPdfCard() {
         </Button>
         {data?.ready ? (
           <Button variant={data.stale ? 'outline' : 'default'} asChild>
-            <a href={BOOK_PDF_URL} download>
+            <a href={bookPdfUrl()} download>
               <FileDown />
               Download PDF
             </a>
@@ -185,7 +183,7 @@ function BookCodexLinks({ hasWorld }: { hasWorld: boolean }) {
           {(inner) =>
             hasWorld ? (
               <Button variant='outline' size='tile' asChild>
-                <a href={BOOK_URL} target='_blank' rel='noreferrer'>
+                <a href={bookUrl()} target='_blank' rel='noreferrer'>
                   {inner}
                 </a>
               </Button>
@@ -210,7 +208,7 @@ function BookCodexLinks({ hasWorld }: { hasWorld: boolean }) {
           {(inner) =>
             hasWorld ? (
               <Button variant='outline' size='tile' asChild>
-                <a href={CODEX_URL} download>
+                <a href={codexUrl()} download>
                   {inner}
                 </a>
               </Button>
@@ -235,7 +233,7 @@ function BookCodexLinks({ hasWorld }: { hasWorld: boolean }) {
           {(inner) =>
             hasWorld ? (
               <Button variant='outline' size='tile' asChild>
-                <a href={CODEX_MARKDOWN_URL} download>
+                <a href={codexMarkdownUrl()} download>
                   {inner}
                 </a>
               </Button>

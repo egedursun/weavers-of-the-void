@@ -1,7 +1,6 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
-
-export const WORLD_FILTER_STORAGE_KEY = 'aerona.world-filter'
+import { persist } from 'zustand/middleware'
+import { followUniverse, universePersisted } from '@/lib/universeStorage'
 
 export const WORLD_FILTER_ROUTES = [
   '/map',
@@ -32,12 +31,11 @@ export const useWorldFilter = create<WorldFilterStore>()(
       worldId: null,
       setWorldId: (worldId) => set({ worldId }),
     }),
-    {
-      name: WORLD_FILTER_STORAGE_KEY,
-      storage: createJSONStorage(() => localStorage),
-    }
+    universePersisted<WorldFilterStore>('aerona.world-filter')
   )
 )
+
+followUniverse(useWorldFilter)
 
 export function useGlobalWorld(): number | null {
   return useWorldFilter((state) => state.worldId)

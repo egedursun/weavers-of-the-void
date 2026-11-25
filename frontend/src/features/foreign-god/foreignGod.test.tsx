@@ -2,6 +2,7 @@ import { ruleList, worldState } from '@/test-utils/fixtures'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
+import { universeKey } from '@/lib/universeStorage'
 import { CompareToggle } from '@/features/pantheon/CompareCards'
 import { DepthView } from '@/features/pantheon/DepthView'
 import { AttitudeBar } from './AttitudeBar'
@@ -323,13 +324,13 @@ describe('compare toggle', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Compare D' }))
       .toHaveAttribute('aria-disabled', 'true')
-    expect(localStorage.getItem('aerona.compare')).toBe('[1,2,3]')
+    expect(localStorage.getItem(universeKey('aerona.compare'))).toBe('[1,2,3]')
     await userEvent.click(
       screen.getByRole('button', { name: 'Remove B from comparison' })
     )
     await expect
       .element(screen.getByRole('button', { name: 'Compare D' }))
       .toBeEnabled()
-    expect(localStorage.getItem('aerona.compare')).toBe('[1,3]')
+    expect(localStorage.getItem(universeKey('aerona.compare'))).toBe('[1,3]')
   })
 })

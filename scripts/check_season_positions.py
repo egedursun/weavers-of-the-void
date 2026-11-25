@@ -114,7 +114,7 @@ def stray_writes() -> list[Finding]:
     found: list[Finding] = []
     for path in sorted(SOURCE.rglob("*.py")):
         relative = str(path.relative_to(SOURCE))
-        if relative.startswith(SKIPPED) or relative in REMAPPERS:
+        if relative.startswith(SKIPPED) or "alembic" in relative.split("/") or relative in REMAPPERS:
             continue
         watched: dict[str, set[str]] = {}
         for entry in SEASON_POSITIONS:

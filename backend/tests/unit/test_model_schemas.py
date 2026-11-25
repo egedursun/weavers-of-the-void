@@ -1,23 +1,14 @@
-import importlib
-import pkgutil
-from pathlib import Path
-
 from pydantic import BaseModel
 
-import aerona
 from aerona.prompts.contexts.base import OpaqueRules
 from aerona.rules.registry import Rules
-
-SOURCE = Path(aerona.__file__).resolve().parent
-SKIPPED = ("aerona.db.alembic", "aerona.migration", "aerona.services.books.pdf_worker")
+from tests.source_modules import source_modules
 
 
 def models() -> set[type[BaseModel]]:
     found: set[type[BaseModel]] = set()
-    for info in pkgutil.walk_packages([str(SOURCE)], "aerona."):
-        if info.name.startswith(SKIPPED):
-            continue
-        for value in vars(importlib.import_module(info.name)).values():
+    for module in source_modules():
+        for value in vars(module).values():
             if isinstance(value, type) and issubclass(value, BaseModel) and value.__module__.startswith("aerona."):
                 found.add(value)
     return found

@@ -3,7 +3,7 @@ import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
-import { API_BASE_URL } from '@/constants/api'
+import { apiUrl } from '@/api/url'
 
 export type UsageReport = components['schemas']['UsageReport']
 export type UsageShare = components['schemas']['UsageShare']
@@ -79,7 +79,7 @@ export function usageExportUrl(filter: UsageFilter, order: UsageOrder) {
   }
   params.set('sort', order.sort)
   params.set('descending', String(order.descending))
-  return `${API_BASE_URL}/api/usage/calls/export?${params.toString()}`
+  return apiUrl('/api/usage/calls/export', params)
 }
 
 export function useUsageSummary(filter: UsageFilter, bucket: UsageBucket) {

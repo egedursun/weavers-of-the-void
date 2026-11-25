@@ -57,6 +57,10 @@ class EventBus:
             self._epoch = value
 
     @property
+    def subscriber_count(self) -> int:
+        return len(self._subscribers)
+
+    @property
     def last_id(self) -> int:
         return self._sequence
 

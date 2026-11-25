@@ -12,11 +12,13 @@ from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import SOCIETY_TYPES
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind
+from aerona.domain.enums.geology import DeepPassageOrigin
 from aerona.domain.enums.happening import LandAct, RiverShiftCause
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.life_traits import LandActTrait
 from aerona.engine.context import TickContext
 from aerona.engine.divine.standing import standing_row
+from aerona.engine.environment.deep import DeepTally, reach_stratum
 from aerona.engine.environment.geomorph import downhill, erupted, ranked_up, set_soil, shape_of, shift_river
 from aerona.engine.environment.succession import burn_back
 from aerona.engine.phases.disasters import apply_disaster
@@ -100,7 +102,7 @@ async def work_soil(
     return LandOutcome.DONE if set_soil(ctx.rules, ground, soil) else LandOutcome.UNCHANGED
 
 
-async def stir_ground(ctx: TickContext, region: EntityRow, ground: RegionEnvironmentRow, act: LandAct) -> LandOutcome:
+async def stir_ground(ctx: TickContext, region: EntityRow, ground: RegionEnvironmentRow, act: LandAct, *, god_id: int) -> LandOutcome:
     table = ctx.rules.land_shaping
     if act is A.OPEN_SPRING:
         wetter = hold_value(ground, "moisture", clamp_int(ground.moisture + table.spring_moisture, 0, PERCENT))
@@ -117,7 +119,7 @@ async def stir_ground(ctx: TickContext, region: EntityRow, ground: RegionEnviron
         opened = 0
         for stratum in await ctx.session.scalars(select(RegionStratumRow).where(RegionStratumRow.region_entity_id == region.id).order_by(RegionStratumRow.id)):
             if stratum.reached_epoch is None and "reached_epoch" not in stratum.locked:
-                stratum.reached_epoch = ctx.epoch
+                await reach_stratum(ctx, ground, stratum, DeepTally(), origin=DeepPassageOrigin.DIVINE, by_node_id=god_id)
                 opened += 1
         return LandOutcome.DONE if opened else LandOutcome.UNCHANGED
     if ground.coast_kind is CoastKind.NONE:
@@ -161,7 +163,7 @@ async def reshape_ground(
     elif act in LIFTS:
         outcome = LandOutcome.DONE if lift(ground, act, ctx.rules.land_shaping.step) else LandOutcome.UNCHANGED
     else:
-        outcome = await stir_ground(ctx, region, ground, act)
+        outcome = await stir_ground(ctx, region, ground, act, god_id=god_id)
     if outcome is LandOutcome.DONE:
         above_the_sea(ctx.rules, ground, act)
         await downstream(ctx, region, act)

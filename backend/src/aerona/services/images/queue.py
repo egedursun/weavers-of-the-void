@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 TrackedJob = tuple[JobContext, ActivityLog]
 
 SEED_BITS = 31
+EMPTY_PAINT_PROMPT = "Write what the image should show first."
 PERCENT = 100
 DISABLED_REASON = "Image generation is off: no image worker is configured (IMAGE_WORKER_URL)."
 READ_ONLY_REASON = "Image generation is paused while a guest world is open."
@@ -257,6 +258,30 @@ class ImageQueue:
             raise
         await self._jobs.end_external(context, log, JobStatus.SUCCEEDED, {"image_id": created})
         return created
+
+    async def paint(self, prompt: str) -> bytes:
+        reason = self.unavailable_reason()
+        if reason is not None:
+            raise ConflictError(reason)
+        subject = " ".join(prompt.split())
+        if not subject:
+            raise ValidationFailedError(EMPTY_PAINT_PROMPT)
+        rules = self._rules().image_gen
+        async with self._database.read() as session:
+            style = await world_style(session)
+        request = ImageJobRequest(
+            prompt=styled_prompt(subject, style.style, style.custom),
+            width=rules.width,
+            height=rules.height,
+            steps=rules.steps,
+            seed=secrets.randbits(SEED_BITS),
+            priority=ImagePriority.MANUAL,
+            load_timeout_seconds=rules.startup_timeout_seconds,
+            image_timeout_seconds=rules.image_timeout_seconds,
+            idle_unload_seconds=rules.idle_unload_seconds,
+        )
+        async with self._gpu:
+            return (await self._client.generate(request)).png
 
     async def _generate(self, item: QueuedImage) -> int | None:
         async with self._gpu:

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { createJSONStorage, persist } from 'zustand/middleware'
+import { persist } from 'zustand/middleware'
+import { followUniverse, universePersisted } from '@/lib/universeStorage'
 import { isMode } from './modes'
 import { type DivineWillMode } from './types'
 
@@ -46,8 +47,6 @@ type WillState = {
   plant: (seed: ComposerSeed) => void
   takeSeed: () => ComposerSeed | null
 }
-
-export const WILL_STORE_KEY = 'aerona.divine-will.composer'
 
 const EMPTY_LIVE: LiveCycle = { text: '', tools: [] }
 
@@ -125,8 +124,9 @@ export const useWill = create<WillState>()(
       },
     }),
     {
-      name: WILL_STORE_KEY,
-      storage: createJSONStorage(() => localStorage),
+      ...universePersisted<Pick<WillState, 'mode' | 'draft'>>(
+        'aerona.divine-will.composer'
+      ),
       partialize: (state) => ({ mode: state.mode, draft: state.draft }),
       merge: (persisted, current) => {
         const saved = (persisted ?? {}) as Partial<WillState>
@@ -139,3 +139,5 @@ export const useWill = create<WillState>()(
     }
   )
 )
+
+followUniverse(useWill)

@@ -30,6 +30,7 @@ class ErrorCode(StrEnum):
     TOO_LARGE = "too_large"
     UNAVAILABLE = "unavailable"
     INTERNAL = "internal"
+    UNIVERSE_REQUIRED = "universe_required"
 
 
 class ErrorResponse(ApiModel):

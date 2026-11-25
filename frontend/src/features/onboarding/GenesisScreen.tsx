@@ -29,6 +29,7 @@ import { FeedCollector } from '@/features/feed/FeedCollector'
 import { useFeed } from '@/features/feed/feedStore'
 import { useWorldState } from '@/features/overview/api'
 import { useRevealQueue } from '@/features/pantheon/revealStore'
+import { LibraryReturn } from '@/features/universes/LibraryReturn'
 import { GenesisWizard } from './GenesisWizard'
 import { WorldBorn } from './WorldBorn'
 
@@ -188,6 +189,7 @@ export function GenesisScreen() {
         className='pointer-events-none absolute inset-x-0 top-0 h-160 bg-linear-to-b from-brand-violet/12 via-primary/5 to-transparent'
       />
       <FeedCollector />
+      <LibraryReturn />
       <Hero />
       <div className='relative flex w-full max-w-6xl min-w-0 flex-col gap-8'>
         {state.isPending && <Skeleton className='h-160 w-full' />}
@@ -204,7 +206,7 @@ export function GenesisScreen() {
               description='A world can only be created once. Reset it in Settings, Data, to begin again.'
               action={
                 <Button variant='outline' asChild>
-                  <Link to='/'>
+                  <Link to='/overview'>
                     <ArrowLeft />
                     Back to the overview
                   </Link>

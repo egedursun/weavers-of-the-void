@@ -1,3 +1,4 @@
+import { APP_VERSION } from './appVersion'
 import { mechanicsResponse } from './mechanicsMocks'
 import { type Page, type Route } from '@playwright/test'
 import { controlsResponse } from './controlsMocks'
@@ -15,7 +16,7 @@ const NOW = '2026-01-01T12:00:00+00:00'
 
 export const HEALTH = {
   status: 'ok',
-  version: '0.1.0',
+  version: APP_VERSION,
   database_ok: true,
   llm_enabled: false,
   image_worker_configured: false,

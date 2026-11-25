@@ -3,6 +3,7 @@ import json
 from typing import Any
 
 from aerona.api.routers.events import stream_events
+from aerona.constants.library import UNIVERSE_QUERY
 from aerona.constants.timeouts import SSE_PING_SECONDS
 from aerona.domain.enums.job import JobKind
 from aerona.events.kinds import EventKind
@@ -36,7 +37,7 @@ async def read_stream(api: ApiWorld, *, query: str = "", headers: dict[str, str]
         "scheme": "http",
         "path": "/api/events",
         "raw_path": b"/api/events",
-        "query_string": query.encode(),
+        "query_string": "&".join(part for part in (f"{UNIVERSE_QUERY}={api.universe_id}", query) if part).encode(),
         "headers": [(b"host", b"localhost"), (b"accept", b"text/event-stream"), *[(key.encode(), value.encode()) for key, value in (headers or {}).items()]],
         "server": ("localhost", 80),
         "client": ("127.0.0.1", 1),

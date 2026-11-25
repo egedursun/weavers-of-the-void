@@ -1,7 +1,7 @@
 BACKEND := backend
 FRONTEND := frontend
 
-.PHONY: install dev backend frontend test lint typecheck rules version migration typegen check migrate-legacy legacy-rule-map anatomy
+.PHONY: install dev backend frontend test lint typecheck rules version bump prerelease release migration typegen check migrate-legacy legacy-rule-map anatomy
 
 install:
 	cd $(BACKEND) && uv sync
@@ -21,7 +21,16 @@ rules:
 	cd $(BACKEND) && uv run python ../scripts/version.py check
 
 version:
-	cd $(BACKEND) && uv run --no-sync python ../scripts/version.py set $(v)
+	cd $(BACKEND) && uv run --no-sync python ../scripts/version.py $(if $(v),set $(v),show)
+
+bump:
+	cd $(BACKEND) && uv run --no-sync python ../scripts/version.py bump $(part) $(pre)
+
+prerelease:
+	cd $(BACKEND) && uv run --no-sync python ../scripts/version.py pre $(pre)
+
+release:
+	cd $(BACKEND) && uv run --no-sync python ../scripts/version.py release
 
 test:
 	cd $(BACKEND) && uv run pytest -q -n auto

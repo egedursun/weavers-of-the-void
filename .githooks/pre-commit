@@ -28,6 +28,7 @@ run() {
 }
 
 run source_rules "$PYTHON" scripts/check_source_rules.py
+run version "$PYTHON" scripts/version.py check
 run prompt_bias "$PYTHON" scripts/check_prompt_bias.py
 run wiring "$PYTHON" scripts/check_wiring.py
 run control "$PYTHON" scripts/check_control.py
@@ -64,6 +65,7 @@ run morale_losses "$PYTHON" scripts/check_morale_losses.py
 run node_joins "$PYTHON" scripts/check_node_joins.py
 run scene_colors "$PYTHON" scripts/check_scene_colors.py
 run css_overrides "$PYTHON" scripts/check_css_overrides.py
+run raw_api_urls "$PYTHON" scripts/check_raw_api_urls.py
 run counts "$PYTHON" scripts/check_counts.py
 run theme_tokens "$PYTHON" scripts/check_theme_tokens.py
 run zero_ids "$PYTHON" scripts/check_zero_ids.py

@@ -1540,6 +1540,8 @@ Old Turkish field/enum names (for tracing): `konusmalar/ogul_id/soz`, `onerge`, 
 
 ## Son chat (konsey.js `ogulSohbet`)
 
+**Retired by spec 19 §12.** Summon to Presence replaces this prompt (`prompts/templates/presence/`); the old prompt below is kept only as the record of the old app.
+
 ### `son_chat.system`
 
 Variables: son `s`, world `w`, `{multi}` (more than one world), `{current_world}` = name of the son's `aktif_dunya`.

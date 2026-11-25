@@ -161,9 +161,11 @@ class EpochWiring:
         )
 
 
-def build_orchestrator(application: ApplicationServices, database: Database, bus: EventBus, jobs: JobManager, rules: RulesService) -> EpochOrchestrator:
+def build_orchestrator(
+    application: ApplicationServices, database: Database, bus: EventBus, jobs: JobManager, rules: RulesService, *, slots: asyncio.Semaphore | None = None
+) -> EpochOrchestrator:
     wiring = EpochWiring(application, database, bus, jobs, rules, BackgroundPool(jobs, rules))
-    return EpochOrchestrator(application.agents, jobs, wiring.hooks())
+    return EpochOrchestrator(application.agents, jobs, wiring.hooks(), slots=slots)
 
 
 def build_player(application: ApplicationServices, database: Database, bus: EventBus, jobs: JobManager, ports: CreativePorts) -> PlayerRuntime:

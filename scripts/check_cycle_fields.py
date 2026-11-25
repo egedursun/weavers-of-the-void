@@ -96,7 +96,7 @@ def fixed_cycles() -> list[Fixed]:
     found: list[Fixed] = []
     for path in sorted(SOURCE.rglob("*.py")):
         relative = str(path.relative_to(SOURCE))
-        if relative == HOME or relative.startswith(SKIPPED):
+        if relative == HOME or relative.startswith(SKIPPED) or "alembic" in relative.split("/"):
             continue
         found.extend(fixed_in(relative, path.read_text(encoding="utf-8")))
     return sorted(set(found), key=lambda item: (item.path, item.line))

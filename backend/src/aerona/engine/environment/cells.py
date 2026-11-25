@@ -227,6 +227,23 @@ async def tell(ctx: TickContext, key: str, row: DeepPassageRow, actor: int | Non
     )
 
 
+async def open_the_way_down(
+    ctx: TickContext,
+    ground: RegionEnvironmentRow,
+    stratum: UndergroundStratum,
+    *,
+    origin: DeepPassageOrigin = DeepPassageOrigin.DUG,
+    digger_id: int | None = None,
+    by_node_id: int | None = None,
+) -> DeepPassageRow | None:
+    region = ground.entity_id
+    if held(region) or await passage_between(ctx, (region, None), (region, stratum)) is not None:
+        return None
+    row = await make_passage(ctx, ground.world_id, (region, None), (region, stratum), origin=origin, digger_id=digger_id, by_node_id=by_node_id)
+    await tell(ctx, "deep.passage_formed", row, by_node_id if by_node_id is not None else digger_id)
+    return row
+
+
 async def sealed_passages(ctx: TickContext) -> set[int]:
     return {
         passage

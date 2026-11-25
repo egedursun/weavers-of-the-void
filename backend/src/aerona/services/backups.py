@@ -26,7 +26,6 @@ from aerona.constants.maintenance import (
     RESTORE_SAFETY_LABEL,
     SAFE_FILE_NAME_PATTERN,
     SAFE_IMAGE_NAME_MAX_LENGTH,
-    SECONDARY_TARGET_FILENAME,
     SECONDARY_TARGET_KEY,
 )
 from aerona.core.errors import NotFoundError, ValidationFailedError
@@ -227,7 +226,7 @@ class BackupService:
 
     @property
     def _secondary_file(self) -> Path:
-        return self._settings.data_dir / SECONDARY_TARGET_FILENAME
+        return self._settings.paths.secondary_target
 
     def secondary_target(self) -> Path | None:
         stored = self._secondary_file
@@ -328,12 +327,15 @@ class BackupService:
         return RestoreResult(restored=cleaned, safety=safety.file)
 
     async def load_file(self, source: Path) -> None:
-        await self._database.dispose()
         staged = self.live_path.with_name(self.live_path.name + ".incoming")
         await asyncio.to_thread(shutil.copy2, source, staged)
-        for suffix in WAL_SUFFIXES:
-            self.live_path.with_name(self.live_path.name + suffix).unlink(missing_ok=True)
-        staged.replace(self.live_path)
+
+        def swap() -> None:
+            for suffix in WAL_SUFFIXES:
+                self.live_path.with_name(self.live_path.name + suffix).unlink(missing_ok=True)
+            staged.replace(self.live_path)
+
+        await self._database.replace_file(swap)
         if await asyncio.to_thread(has_migration_table, self.live_path):
             await upgrade_to_head(self._settings.database_url)
 

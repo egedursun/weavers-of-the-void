@@ -3284,13 +3284,21 @@ Every port binds to `127.0.0.1` by default (`AERONA_BIND_ADDRESS`), and every pu
 | `make test`, `make lint`, `make typecheck` | The individual checks |
 | `make typegen` | Regenerates the typed frontend client from the OpenAPI schema |
 | `make rules` | Source rules and version consistency check |
-| `make version v=<x.y.z>` | Sets the version across the project |
+| `make version` | Shows the version; `make version v=<x.y.z[-pre]>` sets it everywhere |
+| `make bump part=<major\|minor\|patch> [pre=<label>]` | Moves to the next version, optionally as a pre-release (`pre=beta.1`) |
+| `make prerelease pre=<label>` / `make release` | Marks the current version as a pre-release, or drops the label |
 | `make migration name=<name>` | Creates an Alembic migration |
 | `make docker-up`, `make docker-up-gpu`, `make docker-up-console`, `make docker-down` | Docker stack variants |
 | `make minio` | MinIO for local development |
 | `make image-worker`, `make image-worker-test` | Runs or tests the image worker |
 | `make worker-start`, `make worker-stop`, `make worker-status` | Native image worker in the background |
 | `make migrate-legacy`, `make legacy-rule-map` | Legacy world migration |
+
+### Versioning
+
+The version of the app lives in one place: the `VERSION` file at the root of the repository, in [Semantic Versioning](https://semver.org) form (`0.1.0`, `0.2.0-beta.1`). Never edit a copy by hand; change it with the Make targets above. `scripts/version.py` writes it into every place that needs its own copy (the backend and image worker `pyproject.toml`, `frontend/package.json` and its lock file, the badge at the top of this README and the edition line of the information pack) and the pre-commit hook refuses a commit where any copy differs.
+
+Everything else reads it from there: the backend serves it on `/api/health` and in the OpenAPI schema, every exported `.aerona` package and every universe in the library records the version that made it, and the frontend takes it straight from `VERSION` when it is built or served, so the library screen and the About window show the same `v…` as the backend.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
@@ -3352,6 +3360,35 @@ This builds and starts:
 On an NVIDIA host, `make docker-up-gpu` also starts the `image-worker` container (profile `gpu`); the backend reaches it at `http://image-worker:8100` by default. Model weights are downloaded on the first image into the `aerona-models` volume, never into the image.
 
 `make docker-down` stops everything. Volumes are kept.
+
+### The library in the volume
+
+The `aerona-data` volume holds the whole Library of Universes:
+
+- `library.db`: the catalogue of universes and the library's own log.
+- `universes/<id>/`: one folder per universe with its own SQLite database (`aerona.db`), its backups, book PDF, Codex files and work files. Universes never share a database, so one universe's epoch never waits on another's lock.
+- `trash/`: deleted universes, kept for `AERONA_LIBRARY_TRASH_DAYS` days so they can be brought back.
+- `models/`: the shared embedding model.
+
+Media objects live in the MinIO bucket under a per-universe prefix (`universes/<id>/…`); a universe adopted from the old single-world layout keeps its old keys.
+
+The first start after upgrading from a single world moves `/data/aerona.db` and its files into the library as the first universe. The move is resumable: if the container stops halfway, the next start finishes it.
+
+Back up the whole library while the app runs:
+
+```sh
+docker compose exec backend python /app/scripts/backup_library.py /data /data/library-backup
+```
+
+Every database is copied with SQLite's online backup, so the copy is consistent even during an epoch. To share one universe, export it from the library screen as an `.aerona` file; anyone can import it into their own library.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `AERONA_LIBRARY_OPEN_UNIVERSES` | 4 | Universes kept open at once; the least recently used idle one closes first. |
+| `AERONA_LIBRARY_IDLE_MINUTES` | 20 | A universe with no requests, jobs or listeners closes after this many minutes. |
+| `AERONA_LIBRARY_PARALLEL_EPOCHS` | 2 | Epochs of different universes that may run at the same time. |
+| `AERONA_LIBRARY_IMPORT_MAX_MB` | 2048 | The largest `.aerona` file the library accepts. |
+| `AERONA_LIBRARY_TRASH_DAYS` | 30 | Days a deleted universe stays in the trash. |
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 

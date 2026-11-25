@@ -85,7 +85,7 @@ const STORAGE = {
   hidden: 'aerona.map.hidden-types',
   fallen: 'aerona.map.fallen',
   depth: 'aerona.map.depth',
-}
+} as const
 const DEFAULT_OVERLAYS: Record<Overlay, boolean> = {
   roads: true,
   trade: true,

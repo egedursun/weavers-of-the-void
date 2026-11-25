@@ -4,16 +4,16 @@ from pathlib import Path
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from aerona.constants.library import (
+    DEFAULT_IDLE_MINUTES,
+    DEFAULT_IMPORT_MAX_MB,
+    DEFAULT_OPEN_UNIVERSES,
+    DEFAULT_PARALLEL_EPOCHS,
+    DEFAULT_TRASH_DAYS,
+)
 from aerona.constants.llm import ClaudeAuth
 from aerona.constants.media import DEFAULT_MEDIA_BUCKET, DEFAULT_MEDIA_ENDPOINT, DEFAULT_MEDIA_REGION, MediaBackend
-from aerona.constants.paths import (
-    BACKUPS_DIRNAME,
-    DATABASE_FILENAME,
-    EXPORTS_DIRNAME,
-    LOG_FILENAME,
-    LOGS_DIRNAME,
-    MEDIA_DIRNAME,
-)
+from aerona.paths import ProcessPaths, UniversePaths
 
 
 class Settings(BaseSettings):
@@ -40,14 +40,30 @@ class Settings(BaseSettings):
     media_secret_key: SecretStr = SecretStr("")
     media_region: str = DEFAULT_MEDIA_REGION
     media_secure: bool = False
+    media_prefix: str = ""
+    library_open_universes: int = Field(default=DEFAULT_OPEN_UNIVERSES, ge=1)
+    library_idle_minutes: float = Field(default=DEFAULT_IDLE_MINUTES, gt=0)
+    library_parallel_epochs: int = Field(default=DEFAULT_PARALLEL_EPOCHS, ge=1)
+    library_import_max_mb: int = Field(default=DEFAULT_IMPORT_MAX_MB, ge=1)
+    library_trash_days: int = Field(default=DEFAULT_TRASH_DAYS, ge=0)
+    library_root: Path | None = None
+    universe_id: str = ""
 
     @property
     def claude_auth(self) -> ClaudeAuth:
         return ClaudeAuth.TOKEN if self.claude_code_oauth_token.get_secret_value() else ClaudeAuth.LOGIN
 
     @property
+    def paths(self) -> UniversePaths:
+        return UniversePaths(self.data_dir)
+
+    @property
+    def process(self) -> ProcessPaths:
+        return ProcessPaths(self.library_root or self.data_dir)
+
+    @property
     def database_path(self) -> Path:
-        return self.data_dir / DATABASE_FILENAME
+        return self.paths.database
 
     @property
     def database_url(self) -> str:
@@ -55,23 +71,40 @@ class Settings(BaseSettings):
 
     @property
     def media_dir(self) -> Path:
-        return self.data_dir / MEDIA_DIRNAME
+        return self.paths.media
 
     @property
     def backups_dir(self) -> Path:
-        return self.data_dir / BACKUPS_DIRNAME
+        return self.paths.backups
 
     @property
     def exports_dir(self) -> Path:
-        return self.data_dir / EXPORTS_DIRNAME
+        return self.paths.exports
 
     @property
     def log_file(self) -> Path:
-        return self.data_dir / LOGS_DIRNAME / LOG_FILENAME
+        return self.process.log_file
 
     def ensure_directories(self) -> None:
         for directory in (self.data_dir, self.backups_dir, self.exports_dir, self.log_file.parent):
             directory.mkdir(parents=True, exist_ok=True)
+
+    def ensure_process_directories(self) -> None:
+        for directory in (self.process.root, self.process.logs, self.process.universes):
+            directory.mkdir(parents=True, exist_ok=True)
+
+    def for_universe(self, universe_id: str, media_prefix: str) -> "Settings":
+        process = self.process
+        secondary = self.secondary_backup_dir / universe_id if self.secondary_backup_dir is not None else None
+        return self.model_copy(
+            update={
+                "data_dir": process.universe(universe_id).root,
+                "library_root": process.root,
+                "universe_id": universe_id,
+                "media_prefix": media_prefix,
+                "secondary_backup_dir": secondary,
+            }
+        )
 
 
 @lru_cache

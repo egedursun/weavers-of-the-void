@@ -31,8 +31,8 @@ import { EpochStrip } from './EpochStrip'
 import { EpochTraces } from './EpochTraces'
 import { RecordSearch } from './RecordSearch'
 import {
-  BOOK_URL,
-  CODEX_URL,
+  bookUrl,
+  codexUrl,
   chronicleKeys,
   useChronicleCounts,
   useChronicleKindLabels,
@@ -132,13 +132,13 @@ export function ChronicleScreen() {
         actions={
           <>
             <Button variant='outline' size='sm' asChild>
-              <a href={CODEX_URL} download>
+              <a href={codexUrl()} download>
                 <Download />
                 Codex (Markdown)
               </a>
             </Button>
             <Button variant='outline' size='sm' asChild>
-              <a href={BOOK_URL} target='_blank' rel='noreferrer'>
+              <a href={bookUrl()} target='_blank' rel='noreferrer'>
                 <BookText />
                 The book
               </a>

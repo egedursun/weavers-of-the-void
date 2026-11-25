@@ -37,6 +37,11 @@ STORED: dict[tuple[str, int], tuple[tuple[Any, ...], list[RegionRecord]]] = {}
 VERSION_COLUMNS = (WorldMapRow.signature, WorldMapRow.epoch, WorldMapRow.generator_version, WorldMapRow.updated_at)
 
 
+def forget_database(url: object) -> None:
+    for key in [key for key in STORED if key[0] == str(url)]:
+        del STORED[key]
+
+
 async def stored_regions(session: AsyncSession) -> dict[int, list[RegionRecord]]:
     database = str(session.sync_session.get_bind().engine.url)
     versions = {row[0]: tuple(row[1:]) for row in await session.execute(select(WorldMapRow.world_id, *VERSION_COLUMNS).order_by(WorldMapRow.world_id))}

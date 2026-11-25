@@ -1930,6 +1930,8 @@ External tunables read by tools (defined elsewhere; listed so the integrator wir
 
 ## 6. Agent roles outside agents.js (council, son chat, linguist, world birth, Fate network repair, mortals)
 
+**The son chat role is retired by spec 19 §12**; Summon to Presence (`docs/spec/19-summon-to-presence.md`) replaces it. Its legacy description and its `chat_*` rules below are kept only as the record of the old app.
+
 All roles below call **Haiku** (user rule: every LLM call uses Haiku; no Sonnet/Opus fallback; no `effort` parameter).
 Old code looked the model up with `modelFor(key)` from `dunya.modeller` JSON (defaults all `'haiku'`, fallback
 `MODEL_YEDEK='haiku'`); in the new app the model is a single constant and the per-key model setting is removed.

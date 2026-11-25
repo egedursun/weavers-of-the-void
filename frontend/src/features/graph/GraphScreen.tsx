@@ -100,7 +100,7 @@ const STORAGE = {
   whole: 'aerona.graph.whole',
   cluster: 'aerona.graph.cluster',
   cap: 'aerona.graph.cap',
-}
+} as const
 const FALLBACK = { cap: 10000, autoFocusLinks: 50 }
 const DEFAULT_RADIUS = 2
 const NO_3D_LIBRARY =

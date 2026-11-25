@@ -13,6 +13,7 @@ from aerona.main import create_app
 from aerona.services.container import Services
 from aerona.settings import Settings
 from tests.agents.world import AgentWorld, seed_agent_world
+from tests.library_support import opened_services, sole_universe, universe_headers
 from tests.polling import until
 
 STARTUP_SECONDS = 120
@@ -26,6 +27,7 @@ class ApiWorld:
     http: AsyncClient
     services: Services
     app: ASGIApp
+    universe_id: str
     world: AgentWorld | None = None
 
     async def wait_job(self, job_id: str) -> dict[str, Any]:
@@ -47,9 +49,10 @@ async def open_api(settings: Settings, *, model: LanguageModel | None = None, se
     app = create_app(settings, model=model)
     async with LifespanManager(app, startup_timeout=STARTUP_SECONDS, shutdown_timeout=STARTUP_SECONDS) as manager:
         transport = ASGITransport(app=manager.app)
-        async with AsyncClient(transport=transport, base_url=LOCAL_BASE_URL) as http:
-            services: Services = app.state.services
-            api = ApiWorld(http=http, services=services, app=manager.app)
+        universe = await sole_universe(app)
+        services = await opened_services(app, universe)
+        async with AsyncClient(transport=transport, base_url=LOCAL_BASE_URL, headers=universe_headers(universe)) as http:
+            api = ApiWorld(http=http, services=services, app=manager.app, universe_id=universe)
             await api.settle()
             if seeded:
                 async with services.database.write() as session:

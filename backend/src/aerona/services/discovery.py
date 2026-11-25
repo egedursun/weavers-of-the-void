@@ -10,7 +10,6 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from aerona.constants.maintenance import DISCOVERY_DIRNAME, DISCOVERY_STATE_FILENAME
 from aerona.core.errors import ConflictError, ReadOnlyError
 from aerona.services.backups import referenced_objects
 from aerona.settings import Settings
@@ -75,11 +74,11 @@ class DiscoveryService:
 
     @property
     def directory(self) -> Path:
-        return self._settings.data_dir / DISCOVERY_DIRNAME
+        return self._settings.paths.discovery
 
     @property
     def state_path(self) -> Path:
-        return self._settings.data_dir / DISCOVERY_STATE_FILENAME
+        return self._settings.paths.discovery_state
 
     @property
     def active(self) -> bool:

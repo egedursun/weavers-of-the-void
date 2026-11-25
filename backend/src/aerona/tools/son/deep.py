@@ -98,7 +98,7 @@ async def open_the_deep(call: SonCall, args: DeepInput) -> str:
         call.spend_essence(call.rules.underground.open_essence)
         call.target(region.id)
         return result(SonResult.PASSAGE_OPENED, kind=spoken(passage_kind(*ends)), first=region.name, second=await region_name(call, args.to_region_id))
-    await reach_stratum(call.tick, ground, row, DeepTally())
+    await reach_stratum(call.tick, ground, row, DeepTally(), origin=DeepPassageOrigin.DIVINE, by_node_id=call.son.id)
     call.spend_essence(call.rules.underground.open_essence)
     call.target(region.id)
     return result(SonResult.DEEP_OPENED, stratum=STRATA[args.stratum].label.lower(), name=region.name)

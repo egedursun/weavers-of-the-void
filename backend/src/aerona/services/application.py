@@ -3,6 +3,7 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from weakref import WeakKeyDictionary
 
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
@@ -50,7 +51,7 @@ from aerona.services.integrity.network import RepairLog
 from aerona.services.ledger import Ledger
 from aerona.services.live_log import LiveLog
 from aerona.services.lore_ports import LorePorts
-from aerona.services.metrics import ErrorRing, MetricsService, capture_loop_errors, install_error_ring
+from aerona.services.metrics import ErrorRing, MetricsService, capture_loop_errors, install_error_ring, release_error_ring
 from aerona.services.motifs import MotifCache
 from aerona.services.notification_stream import NotificationStream
 from aerona.services.notifications import Notifier, prune_notifications
@@ -107,6 +108,8 @@ class ApplicationServices:
     model: LanguageModel
     agents: AgentRuntime
     lore_index: LoreIndex
+    database: Database
+    universe_id: str | None = None
     background: set[asyncio.Task[Any]] = field(default_factory=set)
     repairs_ready: asyncio.Event = field(default_factory=ready_event)
 
@@ -127,32 +130,49 @@ def _row_key(instance: object) -> tuple[str, str] | None:
     return table, str(identity)
 
 
+TRACKED_FEEDS: WeakKeyDictionary[Engine, ChangeFeed] = WeakKeyDictionary()
+
+
+def feed_of(session: Session) -> ChangeFeed | None:
+    bind = session.get_bind()
+    return TRACKED_FEEDS.get(bind) if isinstance(bind, Engine) else None
+
+
+def track_flush(session: Session, context: UOWTransaction) -> None:
+    del context
+    if feed_of(session) is None:
+        return
+    pending: list[tuple[str, str, ChangeOperation]] = session.info.setdefault(PENDING_CHANGES, [])
+    for operation, instances in ((ChangeOperation.INSERT, session.new), (ChangeOperation.UPDATE, session.dirty), (ChangeOperation.DELETE, session.deleted)):
+        for instance in instances:
+            key = _row_key(instance)
+            if key is not None and (operation is not ChangeOperation.UPDATE or (session.is_modified(instance) and meaningful_update(instance))):
+                pending.append((key[0], key[1], operation))
+
+
+def track_commit(session: Session) -> None:
+    pending = session.info.pop(PENDING_CHANGES, None)
+    feed = feed_of(session)
+    if pending and feed is not None:
+        feed.record_many(pending)
+
+
+def track_rollback(session: Session) -> None:
+    session.info.pop(PENDING_CHANGES, None)
+
+
+TRACKING_LISTENERS = (("after_flush", track_flush), ("after_commit", track_commit), ("after_rollback", track_rollback))
+
+
 def install_change_tracking(database: Database, feed: ChangeFeed) -> None:
-    engine: Engine = database.engine.sync_engine
-    pending_key = f"{PENDING_CHANGES}.{id(feed)}"
+    TRACKED_FEEDS[database.engine.sync_engine] = feed
+    for name, listener in TRACKING_LISTENERS:
+        if not event.contains(Session, name, listener):
+            event.listen(Session, name, listener)
 
-    def after_flush(session: Session, context: UOWTransaction) -> None:
-        del context
-        if session.get_bind() is not engine:
-            return
-        pending: list[tuple[str, str, ChangeOperation]] = session.info.setdefault(pending_key, [])
-        for operation, instances in ((ChangeOperation.INSERT, session.new), (ChangeOperation.UPDATE, session.dirty), (ChangeOperation.DELETE, session.deleted)):
-            for instance in instances:
-                key = _row_key(instance)
-                if key is not None and (operation is not ChangeOperation.UPDATE or (session.is_modified(instance) and meaningful_update(instance))):
-                    pending.append((key[0], key[1], operation))
 
-    def after_commit(session: Session) -> None:
-        pending = session.info.pop(pending_key, None)
-        if pending:
-            feed.record_many(pending)
-
-    def after_rollback(session: Session) -> None:
-        session.info.pop(pending_key, None)
-
-    event.listen(Session, "after_flush", after_flush)
-    event.listen(Session, "after_commit", after_commit)
-    event.listen(Session, "after_rollback", after_rollback)
+def release_change_tracking(database: Database) -> None:
+    TRACKED_FEEDS.pop(database.engine.sync_engine, None)
 
 
 async def build_application(
@@ -189,7 +209,7 @@ async def build_application(
     )
     agents = attach_toolkits(AgentRuntime(database=database, model=language_model, publish=bus_publisher(bus)))
     errors = ErrorRing()
-    install_error_ring(errors)
+    install_error_ring(errors, settings.universe_id or None)
     live_log = LiveLog(bus, metrics, current, database)
     await live_log.restore()
     await seed_bus_epoch(database, bus)
@@ -248,6 +268,8 @@ async def build_application(
         model=language_model,
         agents=agents,
         lore_index=lore_index,
+        database=database,
+        universe_id=settings.universe_id or None,
     )
     world_changed.register(live_log.world_changed)
     world_changed.register(rules.load)
@@ -356,6 +378,8 @@ async def stop_application(application: ApplicationServices) -> None:
     await application.image_client.aclose()
     await application.media.close()
     await application.telemetry.dispose()
+    release_error_ring(application.errors, application.universe_id)
+    release_change_tracking(application.database)
 
 
 def publish_changes(bus: EventBus, feed: ChangeFeed) -> None:

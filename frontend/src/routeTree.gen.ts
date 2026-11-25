@@ -9,9 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteRouteImport } from './routes/_app/route'
 import { Route as GenesisRouteImport } from './routes/genesis'
-import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAtlasRouteImport } from './routes/_app/atlas'
 import { Route as AppCardsRouteImport } from './routes/_app/cards'
 import { Route as AppChronicleRouteImport } from './routes/_app/chronicle'
@@ -32,6 +32,7 @@ import { Route as AppLibraryRouteImport } from './routes/_app/library'
 import { Route as AppMapRouteImport } from './routes/_app/map'
 import { Route as AppNetworkRouteImport } from './routes/_app/network'
 import { Route as AppNotificationsRouteImport } from './routes/_app/notifications'
+import { Route as AppOverviewRouteImport } from './routes/_app/overview'
 import { Route as AppPantheonRouteImport } from './routes/_app/pantheon'
 import { Route as AppPrayersRouteImport } from './routes/_app/prayers'
 import { Route as AppPresenceRouteImport } from './routes/_app/presence'
@@ -50,6 +51,11 @@ import { Route as AppSettingsPromptsRouteImport } from './routes/_app/settings/p
 import { Route as AppSettingsRecordsRouteImport } from './routes/_app/settings/records'
 import { Route as AppSettingsWorldRulesRouteImport } from './routes/_app/settings/world-rules'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRouteRoute = AppRouteRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
@@ -58,11 +64,6 @@ const GenesisRoute = GenesisRouteImport.update({
   id: '/genesis',
   path: '/genesis',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRouteRoute,
 } as any)
 const AppAtlasRoute = AppAtlasRouteImport.update({
   id: '/atlas',
@@ -164,6 +165,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppOverviewRoute = AppOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppPantheonRoute = AppPantheonRouteImport.update({
   id: '/pantheon',
   path: '/pantheon',
@@ -251,7 +257,7 @@ const AppSettingsWorldRulesRoute = AppSettingsWorldRulesRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
+  '/': typeof IndexRoute
   '/genesis': typeof GenesisRoute
   '/settings': typeof AppSettingsRouteRouteWithChildren
   '/atlas': typeof AppAtlasRoute
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/map': typeof AppMapRoute
   '/network': typeof AppNetworkRoute
   '/notifications': typeof AppNotificationsRoute
+  '/overview': typeof AppOverviewRoute
   '/pantheon': typeof AppPantheonRoute
   '/prayers': typeof AppPrayersRoute
   '/presence': typeof AppPresenceRoute
@@ -292,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/genesis': typeof GenesisRoute
   '/atlas': typeof AppAtlasRoute
   '/cards': typeof AppCardsRoute
@@ -313,12 +321,12 @@ export interface FileRoutesByTo {
   '/map': typeof AppMapRoute
   '/network': typeof AppNetworkRoute
   '/notifications': typeof AppNotificationsRoute
+  '/overview': typeof AppOverviewRoute
   '/pantheon': typeof AppPantheonRoute
   '/prayers': typeof AppPrayersRoute
   '/presence': typeof AppPresenceRoute
   '/usage': typeof AppUsageRoute
   '/wars': typeof AppWarsRoute
-  '/': typeof AppIndexRoute
   '/settings/appearance': typeof AppSettingsAppearanceRoute
   '/settings/data': typeof AppSettingsDataRoute
   '/settings/engine': typeof AppSettingsEngineRoute
@@ -333,6 +341,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_app': typeof AppRouteRouteWithChildren
   '/genesis': typeof GenesisRoute
   '/_app/settings': typeof AppSettingsRouteRouteWithChildren
@@ -356,12 +365,12 @@ export interface FileRoutesById {
   '/_app/map': typeof AppMapRoute
   '/_app/network': typeof AppNetworkRoute
   '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/overview': typeof AppOverviewRoute
   '/_app/pantheon': typeof AppPantheonRoute
   '/_app/prayers': typeof AppPrayersRoute
   '/_app/presence': typeof AppPresenceRoute
   '/_app/usage': typeof AppUsageRoute
   '/_app/wars': typeof AppWarsRoute
-  '/_app/': typeof AppIndexRoute
   '/_app/settings/appearance': typeof AppSettingsAppearanceRoute
   '/_app/settings/data': typeof AppSettingsDataRoute
   '/_app/settings/engine': typeof AppSettingsEngineRoute
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/map'
     | '/network'
     | '/notifications'
+    | '/overview'
     | '/pantheon'
     | '/prayers'
     | '/presence'
@@ -418,6 +428,7 @@ export interface FileRouteTypes {
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/genesis'
     | '/atlas'
     | '/cards'
@@ -439,12 +450,12 @@ export interface FileRouteTypes {
     | '/map'
     | '/network'
     | '/notifications'
+    | '/overview'
     | '/pantheon'
     | '/prayers'
     | '/presence'
     | '/usage'
     | '/wars'
-    | '/'
     | '/settings/appearance'
     | '/settings/data'
     | '/settings/engine'
@@ -458,6 +469,7 @@ export interface FileRouteTypes {
     | '/settings'
   id:
     | '__root__'
+    | '/'
     | '/_app'
     | '/genesis'
     | '/_app/settings'
@@ -481,12 +493,12 @@ export interface FileRouteTypes {
     | '/_app/map'
     | '/_app/network'
     | '/_app/notifications'
+    | '/_app/overview'
     | '/_app/pantheon'
     | '/_app/prayers'
     | '/_app/presence'
     | '/_app/usage'
     | '/_app/wars'
-    | '/_app/'
     | '/_app/settings/appearance'
     | '/_app/settings/data'
     | '/_app/settings/engine'
@@ -501,12 +513,20 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AppRouteRoute: typeof AppRouteRouteWithChildren
   GenesisRoute: typeof GenesisRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app': {
       id: '/_app'
       path: ''
@@ -520,13 +540,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/genesis'
       preLoaderRoute: typeof GenesisRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_app/': {
-      id: '/_app/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRouteRoute
     }
     '/_app/atlas': {
       id: '/_app/atlas'
@@ -666,6 +679,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/overview': {
+      id: '/_app/overview'
+      path: '/overview'
+      fullPath: '/overview'
+      preLoaderRoute: typeof AppOverviewRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/pantheon': {
@@ -843,12 +863,12 @@ interface AppRouteRouteChildren {
   AppMapRoute: typeof AppMapRoute
   AppNetworkRoute: typeof AppNetworkRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
+  AppOverviewRoute: typeof AppOverviewRoute
   AppPantheonRoute: typeof AppPantheonRoute
   AppPrayersRoute: typeof AppPrayersRoute
   AppPresenceRoute: typeof AppPresenceRoute
   AppUsageRoute: typeof AppUsageRoute
   AppWarsRoute: typeof AppWarsRoute
-  AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteRouteChildren: AppRouteRouteChildren = {
@@ -873,12 +893,12 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppMapRoute: AppMapRoute,
   AppNetworkRoute: AppNetworkRoute,
   AppNotificationsRoute: AppNotificationsRoute,
+  AppOverviewRoute: AppOverviewRoute,
   AppPantheonRoute: AppPantheonRoute,
   AppPrayersRoute: AppPrayersRoute,
   AppPresenceRoute: AppPresenceRoute,
   AppUsageRoute: AppUsageRoute,
   AppWarsRoute: AppWarsRoute,
-  AppIndexRoute: AppIndexRoute,
 }
 
 const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
@@ -886,6 +906,7 @@ const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AppRouteRoute: AppRouteRouteWithChildren,
   GenesisRoute: GenesisRoute,
 }

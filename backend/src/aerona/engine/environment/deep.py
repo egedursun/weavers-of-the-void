@@ -20,13 +20,14 @@ from aerona.domain.enums.cosmography import OceanCurrent
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, ScarKind
-from aerona.domain.enums.geology import RockKind, UndergroundStratum
+from aerona.domain.enums.geology import DeepPassageOrigin, RockKind, UndergroundStratum
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepLocus
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.context import TickContext
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.environment.book import add_scar
+from aerona.engine.environment.cells import open_the_way_down
 from aerona.engine.environment.columns import column_depth, columns_by_region, stratum_depth
 from aerona.engine.phases.geography import NATURES_BY_SUBTYPE, seed_place
 from aerona.engine.primitives.distance import RegionAtlas
@@ -110,7 +111,16 @@ async def reach_layer(ctx: TickContext, ground: RegionEnvironmentRow, row: Regio
         )
 
 
-async def reach_stratum(ctx: TickContext, ground: RegionEnvironmentRow, row: RegionStratumRow, tally: DeepTally) -> None:
+async def reach_stratum(
+    ctx: TickContext,
+    ground: RegionEnvironmentRow,
+    row: RegionStratumRow,
+    tally: DeepTally,
+    *,
+    origin: DeepPassageOrigin = DeepPassageOrigin.DUG,
+    digger_id: int | None = None,
+    by_node_id: int | None = None,
+) -> None:
     row.reached_epoch = ctx.epoch
     tally.strata += 1
     await record(
@@ -121,6 +131,7 @@ async def reach_stratum(ctx: TickContext, ground: RegionEnvironmentRow, row: Reg
         place=ground.entity_id,
         steps=(StepDraft(StepAction.ENTER, locus_kind=StepLocus.STRATUM, locus_key=row.stratum.value, locus_node=ground.entity_id),),
     )
+    await open_the_way_down(ctx, ground, row.stratum, origin=origin, digger_id=digger_id, by_node_id=by_node_id)
     if row.stratum in BREACHING:
         await breach(ctx, ground, row)
     elif row.stratum is U.DEEP_UNDERWORLD:

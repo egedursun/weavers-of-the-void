@@ -5,10 +5,11 @@ from httpx import ASGITransport, AsyncClient
 
 from aerona.services.statistics import EpochStatistics
 from tests.api.conftest import ApiWorld
+from tests.library_support import universe_headers
 
 
 def foreign(api: ApiWorld, base_url: str) -> AsyncClient:
-    return AsyncClient(transport=ASGITransport(app=api.app), base_url=base_url)
+    return AsyncClient(transport=ASGITransport(app=api.app), base_url=base_url, headers=universe_headers(api.universe_id))
 
 
 async def test_only_localhost_hosts_are_served(api: ApiWorld) -> None:
@@ -47,7 +48,7 @@ async def test_unknown_endpoints_and_crashes_are_structured(api: ApiWorld, monke
 
     monkeypatch.setattr("aerona.api.routers.epochs.series", broken)
     transport = ASGITransport(app=api.app, raise_app_exceptions=False)
-    async with AsyncClient(transport=transport, base_url="http://localhost") as client:
+    async with AsyncClient(transport=transport, base_url="http://localhost", headers=universe_headers(api.universe_id)) as client:
         crashed = await client.get("/api/stats/epochs")
     assert crashed.status_code == 500
     body = crashed.json()

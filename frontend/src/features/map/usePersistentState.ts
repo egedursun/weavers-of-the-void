@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react'
+import { type UniversePrefixedKey, universeKey } from '@/lib/universeStorage'
 
 function readStored<T>(
-  key: string,
+  key: UniversePrefixedKey,
   fallback: T,
   valid: (value: unknown) => boolean
 ): T {
   try {
-    const raw = window.localStorage.getItem(key)
+    const raw = window.localStorage.getItem(universeKey(key))
     if (raw === null) return fallback
     const parsed: unknown = JSON.parse(raw)
     return valid(parsed) ? (parsed as T) : fallback
@@ -15,16 +16,16 @@ function readStored<T>(
   }
 }
 
-function writeStored(key: string, value: unknown): void {
+function writeStored(key: UniversePrefixedKey, value: unknown): void {
   try {
-    window.localStorage.setItem(key, JSON.stringify(value))
+    window.localStorage.setItem(universeKey(key), JSON.stringify(value))
   } catch {
     return
   }
 }
 
 export function usePersistentState<T>(
-  key: string,
+  key: UniversePrefixedKey,
   fallback: T | (() => T),
   valid: (value: unknown) => boolean
 ): [T, (next: T | ((current: T) => T)) => void] {

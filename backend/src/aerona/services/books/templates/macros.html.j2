@@ -1,6 +1,6 @@
 {% from "presence.html.j2" import audiences %}
-{% macro link(kind, id, name, single) -%}
-{% if single %}<a href="?{{ kind }}_id={{ id }}">{{ name }}</a>{% else %}<a href="#{{ kind }}-{{ id }}">{{ name }}</a>{% endif %}
+{% macro link(kind, id, name, single, links=none) -%}
+{% if single %}<a href="{{ links.entry(kind, id) if links else '?' ~ kind ~ '_id=' ~ id }}">{{ name }}</a>{% else %}<a href="#{{ kind }}-{{ id }}">{{ name }}</a>{% endif %}
 {%- endmacro %}
 
 {% macro facts(items) -%}
@@ -160,7 +160,7 @@
 {% if article.relations %}<p class="sublabel">Siblings</p>{{ stats(article.relations) }}{% endif %}
 {% if article.bonds or article.past_bonds %}<p class="sublabel">Ties</p><ul class="bonds">{% for bond in article.bonds %}<li>{{ bond }}</li>{% endfor %}{% for bond in article.past_bonds %}<li class="muted"><span class="relation">once</span>{{ bond }}</li>{% endfor %}</ul>{% endif %}
 {% if article.fate %}<p class="sublabel">Fate</p><ul class="timeline">{% for line in article.fate %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
-{% if article.creations %}<p class="sublabel">Creations · {{ article.creations | length }}</p><p class="small">{% for id, name in article.creations %}{{ link("entity", id, name, single) }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+{% if article.creations %}<p class="sublabel">Creations · {{ article.creations | length }}</p><p class="small">{% for id, name in article.creations %}{{ link("entity", id, name, single, links) }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
 </article>
 {%- endmacro %}
 
@@ -183,8 +183,8 @@
 </article>
 {%- endmacro %}
 
-{% macro chronicle_lines(lines, book, single) -%}
-{% if lines %}<ul class="timeline">{% for line in lines %}<li><span class="when">{{ line.kind }}{% if line.year is not none %} · year {{ line.year }}{% endif %}</span>{{ line.text }}{% if line.son_id %} <span class="meta">— {{ link("son", line.son_id, book.names.get(line.son_id, "?"), single) }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
+{% macro chronicle_lines(lines, book, single, links=none) -%}
+{% if lines %}<ul class="timeline">{% for line in lines %}<li><span class="when">{{ line.kind }}{% if line.year is not none %} · year {{ line.year }}{% endif %}</span>{{ line.text }}{% if line.son_id %} <span class="meta">— {{ link("son", line.son_id, book.names.get(line.son_id, "?"), single, links) }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}
 {%- endmacro %}
 
 {% macro chapter_head(id, numeral, title, lede=None) -%}

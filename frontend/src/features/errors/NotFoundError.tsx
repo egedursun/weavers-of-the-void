@@ -12,7 +12,7 @@ export function NotFoundError() {
       description='The page you are looking for does not exist or was removed.'
       action={
         <Button asChild>
-          <Link to='/'>Back to overview</Link>
+          <Link to='/overview'>Back to overview</Link>
         </Button>
       }
     />

@@ -35,6 +35,10 @@ class BodyLimit:
     max_bytes: int
     binary: bool
     multipart: bool = False
+    path_prefix: str = ""
+
+    def covers(self, path: str) -> bool:
+        return path.startswith(self.path_prefix) and path.endswith(self.path_suffix)
 
 
 class RefusalError(Exception):
@@ -85,7 +89,7 @@ class OriginGuard:
         await self.app(scope, self.limited(receive, limit), send)
 
     def limit_for(self, path: str) -> BodyLimit:
-        found = next((limit for limit in self.limits if path.endswith(limit.path_suffix)), None)
+        found = next((limit for limit in self.limits if limit.covers(path)), None)
         return found or BodyLimit("", JSON_BODY_MAX_BYTES, binary=False)
 
     def check(self, headers: Headers, method: str, path: str) -> BodyLimit | None:

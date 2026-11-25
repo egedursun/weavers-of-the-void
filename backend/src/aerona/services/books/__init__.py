@@ -11,15 +11,33 @@ from aerona.db.session import Database
 from aerona.rules.registry import Rules
 from aerona.services.books.cache import cached_book
 from aerona.services.books.model import BookModel, build_book, entry_chronicle
-from aerona.services.books.render import CodexLinks, PdfState, RenderedBook, codex_chunks, find_entity, find_son, render_book, render_codex, render_entry
+from aerona.services.books.render import (
+    CodexLinks,
+    PdfState,
+    RenderedBook,
+    ScreenLinks,
+    codex_chunks,
+    find_entity,
+    find_son,
+    render_book,
+    render_codex,
+    render_entry,
+)
 
 
 async def book_page(
-    database: Database, session: AsyncSession, rules: Rules, *, son_id: int | None = None, entity_id: int | None = None, pdf: PdfState | None = None
+    database: Database,
+    session: AsyncSession,
+    rules: Rules,
+    *,
+    son_id: int | None = None,
+    entity_id: int | None = None,
+    pdf: PdfState | None = None,
+    links: ScreenLinks | None = None,
 ) -> RenderedBook:
     model = await cached_book(database, session, rules)
     if son_id is None and entity_id is None:
-        return render_book(model, rules, pdf=pdf)
+        return render_book(model, rules, links=links, pdf=pdf)
     if model is None:
         raise NotFoundError("There is no world yet.")
     son = find_son(model, son_id) if son_id is not None else None
@@ -27,7 +45,7 @@ async def book_page(
     if son is None and entity is None:
         raise NotFoundError("No such entry in the book.")
     chronicle = await entry_chronicle(session, son_id=son.son.id if son else None, entity_id=entity.entity.id if entity else None)
-    return render_entry(replace(model, single_chronicle=chronicle), rules, son=son, entity=entity)
+    return render_entry(replace(model, single_chronicle=chronicle), rules, son=son, entity=entity, links=links)
 
 
 async def codex_markdown(session: AsyncSession, rules: Rules, links: CodexLinks) -> str:
