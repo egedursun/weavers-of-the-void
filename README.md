@@ -8,18 +8,20 @@
 
 <p align="center">
   <b>The self-writing world.</b><br>
-  You are the Creator. Your sons are gods. Every age, the world writes its own legend.
+  You are the Creator. Your sons are gods. Every age, the world writes its own history, and you hold every lever.
 </p>
 
 <p align="center">
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-d4af37?style=flat-square">
   <img alt="Expansions" src="https://img.shields.io/badge/expansions-99%20included-7b3fe4?style=flat-square">
-  <img alt="Rules" src="https://img.shields.io/badge/tunable%20rules-3%2C300%2B-4b2a8c?style=flat-square">
+  <img alt="Engine steps" src="https://img.shields.io/badge/engine%20steps-505-5b2bb5?style=flat-square">
+  <img alt="Rules" src="https://img.shields.io/badge/tunable%20rules-20%2C700%2B-4b2a8c?style=flat-square">
+  <img alt="Agent tools" src="https://img.shields.io/badge/agent%20tools-775-3b1f73?style=flat-square">
   <img alt="Python" src="https://img.shields.io/badge/python-3.13-3776ab?style=flat-square&logo=python&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-async-009688?style=flat-square&logo=fastapi&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white">
-  <img alt="Claude" src="https://img.shields.io/badge/agents-Claude%20Haiku-d97757?style=flat-square&logo=anthropic&logoColor=white">
+  <img alt="Claude" src="https://img.shields.io/badge/agents-Claude%20Haiku%205.5-d97757?style=flat-square&logo=anthropic&logoColor=white">
   <img alt="Docker" src="https://img.shields.io/badge/docker-compose-2496ed?style=flat-square&logo=docker&logoColor=white">
   <img alt="Local first" src="https://img.shields.io/badge/local--first-single%20player-1e1b4b?style=flat-square">
 </p>
@@ -27,22 +29,23 @@
 <p align="center">
   <a href="#quick-start"><b>Quick start</b></a> ·
   <a href="#the-pitch">The pitch</a> ·
+  <a href="#new-in-this-edition">What's new</a> ·
   <a href="#god-cards">God cards</a> ·
-  <a href="#the-cosmos">The cosmos</a> ·
+  <a href="#your-hand-on-everything">Control</a> ·
+  <a href="#the-lore-book-and-the-codex">Book and Codex</a> ·
   <a href="#the-complete-edition-the-loom-and-99-expansions">99 expansions</a> ·
   <a href="#a-tour-of-the-app">The app</a> ·
-  <a href="#architecture">Architecture</a> ·
-  <a href="#documentation">Docs</a>
+  <a href="#architecture">Architecture</a>
 </p>
 
 <br>
 
 <table>
   <tr>
-    <td align="center" width="25%"><b>🜂 You create</b><br><sub>Draw god cards, command your sons, answer prayers and reach into any mechanic by hand.</sub></td>
-    <td align="center" width="25%"><b>✦ Gods decide</b><br><sub>Every son is a living Claude agent with passions, grudges and more than a hundred divine tools.</sub></td>
-    <td align="center" width="25%"><b>⚙ The world turns</b><br><sub>Eighty-plus deterministic phases simulate fifty years of history between every divine turn.</sub></td>
-    <td align="center" width="25%"><b>📜 Fate remembers</b><br><sub>An impartial judge weighs every age, writes the chronicle and keeps a ledger you can undo.</sub></td>
+    <td align="center" width="25%"><b>🜂 You create</b><br><sub>Begin from one idea, draw god cards, answer prayers, and create, edit, hold or delete anything the world holds.</sub></td>
+    <td align="center" width="25%"><b>✦ Gods decide</b><br><sub>Every son is a Claude agent with passions, rivals and 330 divine tools. Notable mortals act for themselves with 445 more.</sub></td>
+    <td align="center" width="25%"><b>⚙ The world turns</b><br><sub>505 deterministic engine steps live through fifty years of history, year by year and season by season, between every divine turn.</sub></td>
+    <td align="center" width="25%"><b>📜 Fate remembers</b><br><sub>Every change is recorded with its cause. Fate judges the age, writes the chronicle, and the world becomes a book and a Codex.</sub></td>
   </tr>
 </table>
 
@@ -55,7 +58,7 @@
   <a href="#74-starfall"><img src="common/assets/images/dlc-covers/74-starfall.jpg" width="15%" alt="Starfall"></a>
 </p>
 
-<p align="center"><sub><b>The Loom and 99 expansions, all included.</b> <a href="#the-cover-wall">See all 100 covers →</a></sub></p>
+<p align="center"><sub><b>The Loom and 99 expansions, all included and all deepened.</b> <a href="#the-cover-wall">See all 100 covers →</a></sub></p>
 
 ---
 
@@ -63,11 +66,18 @@
 <summary><b>Contents</b></summary>
 
 - [The pitch](#the-pitch)
+- [New in this edition](#new-in-this-edition)
 - [Why Weavers of the Void](#why-weavers-of-the-void)
 - [Meet the cast](#meet-the-cast)
+  - [Twenty-seven ways to begin](#twenty-seven-ways-to-begin)
 - [How an age unfolds](#how-an-age-unfolds)
   - [A taste of an age](#a-taste-of-an-age)
 - [God cards](#god-cards)
+  - [What rarity unlocks](#what-rarity-unlocks)
+  - [A card for every being](#a-card-for-every-being)
+- [Your hand on everything](#your-hand-on-everything)
+- [The record of everything](#the-record-of-everything)
+- [The lore book and the Codex](#the-lore-book-and-the-codex)
 - [Features](#features)
 - [What the gods can make](#what-the-gods-can-make)
 - [The cosmos](#the-cosmos)
@@ -77,7 +87,7 @@
 - [By the numbers](#by-the-numbers)
 - [The complete edition: The Loom and 99 expansions](#the-complete-edition-the-loom-and-99-expansions)
   - [The Loom](#the-loom) · [The fifteen chapters](#the-fifteen-chapters) · [The cover wall](#the-cover-wall) · [Every expansion](#every-expansion)
-  - [I](#chapter-i) · [II](#chapter-ii) · [III](#chapter-iii) · [IV](#chapter-iv) · [V](#chapter-v) · [VI](#chapter-vi) · [VII](#chapter-vii) · [VIII](#chapter-viii) · [IX](#chapter-ix) · [X](#chapter-x) · [XI](#chapter-xi)
+  - [I](#chapter-i) · [II](#chapter-ii) · [III](#chapter-iii) · [IV](#chapter-iv) · [V](#chapter-v) · [VI](#chapter-vi) · [VII](#chapter-vii) · [VIII](#chapter-viii) · [IX](#chapter-ix) · [X](#chapter-x) · [XI](#chapter-xi) · [XII](#chapter-xii) · [XIII](#chapter-xiii) · [XIV](#chapter-xiv) · [XV](#chapter-xv)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
 - [Local development](#local-development)
@@ -96,25 +106,46 @@
 
 ## The pitch
 
-**Weavers of the Void is a self-generating lore engine.** You do not write the story. You set it in motion.
+**Weavers of the Void is a living universe simulator that writes its own history.** You do not write the story. You set it in motion, and you keep the last word.
 
-You play the Creator, a god at the dawn of a cosmos. Your sons are **god cards**, drawn in six rarities from *Common* to *Mythic*, and each one is a living Claude agent with its own passions, grudges, domains and a toolbox of more than a hundred divine powers. Once per epoch every son wakes, reads the world, and acts: he raises mountains, founds cults, whispers to prophets, breeds monsters, curses bloodlines and schemes against his brothers.
+You play the Creator at the dawn of a cosmos. Begin from a sentence of your own or one of twenty-seven templates, in any age from the first stone tools to travel between the stars. Your sons are **god cards**, drawn in six rarities from *Common* to *Mythic*, and each one is a Claude agent with its own passions, rivals, domains and a toolbox of 330 divine powers. Once per epoch every son wakes, reads the world and acts: raising mountains, founding cults, sending dreams to prophets, breeding beasts, cursing bloodlines and scheming against the rest of the pantheon. The world's notable mortals, its heroes, prophets and rulers, decide for themselves too.
 
-Between their turns, a **deterministic world engine** takes over. More than eighty simulation phases turn fifty years of history: mortals are born, love, betray and die; peoples migrate, languages drift apart, harvests fail, plagues learn, empires overreach, armies starve on the march and heroes walk the paths of myth. Then **Fate** judges the age, weighs every creation, and writes the chronicle.
+Between their turns a **deterministic world engine** takes over. Five hundred and five steps live through fifty years of history, year by year and season by season: mortals are born, marry, quarrel and die; peoples migrate, tongues drift apart, harvests fail, sicknesses spread and fade, markets rise and crash, empires overreach, armies march on what they can carry and heroes walk the paths of myth. The agents choose what they want; the engine decides what really happens. Then **Fate** judges the age, decides what becomes canon and writes the chronicle.
 
-Nothing is scripted. Nothing is lost. Every number has a reason you can read, and every story traces itself across the centuries.
+Nothing is scripted and nothing is lost. Every change the world makes is recorded with its cause, every number can tell you why it is what it is, and the whole history leaves as a **lore book** (HTML and PDF) and a **Codex** (Markdown and ZIP) you can take into your own tools.
 
 > *Every thread is connected. Now you can see them all.*
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
+## New in this edition
+
+The edition since the last README is the largest yet. Every one of the 99 expansions was widened and deepened, and the world gained a full record of itself.
+
+| | What arrived |
+|---|---|
+| 📚 **Every expansion deepened** | All 99 expansions were read again value by value and widened through 704 numbered additions, each with its engine steps, agent tools, god levers, screens, book and Codex entries and tests. See [Every expansion](#every-expansion). |
+| 🧾 **The record of everything** | Every happening is told from typed roles and facts across 4,524 kinds, and every change the engine makes is recorded with the happening that caused it. Rewind any record to any moment, and see the atlas as it stood then. See [The record of everything](#the-record-of-everything). |
+| 🃏 **A card for every being** | The Creator, the sons, foreign gods, mortals, beasts, spirits and cosmic beings each have a collectible card, with sealed packs that tear open and cards you can turn over and save as images. See [A card for every being](#a-card-for-every-being). |
+| 🌳 **Family trees** | Every mortal's kin is drawn as a tree in its entry, in the book and in the Codex: ancestors and descendants to a chosen reach, with spouses, stepkin and bonds of care, each named by their place to the mortal. |
+| 🪟 **One entry window for every thing** | Every node opens in one window, grouped into ten parts with search and deep links, the god's controls among them. See [Your hand on everything](#your-hand-on-everything). |
+| ⏳ **Begin in any age** | Thirteen technology ages, from before metal to matter shaped at will, and twenty-seven templates. A world that begins in an age makes, heats, names and lives like that age. |
+| ✋ **Make anything by hand** | Every kind of thing can be made with its values chosen first: shaped mortals, sons summoned to a design, raised regions, founded settlements, celestial bodies, spirits, laws of nature, faiths and outer beings. |
+| 🕳 **The world below** | A map for every stratum of the deep, cities drawn in their own stratum, and armies, convoys and roads that travel below the surface. |
+| 📈 **Usage** | A token usage page for every language model call: trends, breakdowns by step, model and role, and a searchable call log, counted the same way for every call. |
+| ⚖ **Balanced on lived worlds** | Long engine runs and fresh worlds lived epoch after epoch tuned famine, plague, war, mishaps and the ordinary death rates against each other, so worlds grow and suffer at believable rates. |
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## Why Weavers of the Void
 
 - **A story nobody wrote.** No script, no event deck, no quest list. Every legend in your chronicle grows out of causes you can trace.
-- **Gods with minds of their own.** Your sons are agents, not dice rolls. They plan, they hold grudges, they lie to the council and they rebel.
-- **Depth all the way down.** Ninety-nine expansions of interlocking mechanics, from the soil under a field to the far side of reality, all running at once.
-- **Total control, zero lock-in.** Every rule tunable, every mechanic triggerable, every act undoable, every prompt visible. Your world lives on your disk.
-- **Beautiful by default.** A celestial interface, a living map, a 3D cosmos and a painting for every record, generated on your own machine.
+- **Gods with minds of their own.** Your sons are agents, not dice rolls. They plan, keep grudges, argue in council and sometimes rebel.
+- **The lore goes where your idea goes.** Sea myth, vampire courts, a cosmic horror or a generation ship: the world begins from your own words and follows them, never toward a house style.
+- **Depth all the way down.** Ninety-nine expansions of interlocking mechanics, from the soil under a field to the dimensions beyond the sky, all running at once in every world.
+- **Total control, zero lock-in.** Create, edit, hold or delete anything the engine makes. Every rule is tunable, every act undoable, every prompt visible, and your world lives on your disk.
+- **History you can hand over.** The whole world leaves as a designed lore book and a Codex, with nothing cut short.
+- **Beautiful by default.** A celestial interface, a living map, a 3D cosmos, collectible cards and a painting for every record, made on your own machine.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
@@ -122,22 +153,32 @@ Nothing is scripted. Nothing is lost. Every number has a reason you can read, an
 
 | | Who | What they do |
 |---|---|---|
-| 🜂 | **The Creator** | You. Name yourself at genesis, choose the language of your lore, and shape the cosmos with essence. Your mood shifts with the world, your cult rises or fades, and mortals can pray to you directly. |
+| 🜂 | **The Creator** | You. Name yourself at genesis, choose the language of your lore and shape the cosmos with essence. Your mood follows the world, your cult rises or fades, and mortals can pray to you directly. |
 | ✦ | **The Sons** | God cards in six rarities, each a Claude agent with loyalty, ambition, anger and mercy. They create, bless, curse, wage war, scheme against each other and sometimes rebel against you. They can die, and they can be brought back. |
-| ⚖ | **Fate** | The impartial judge of every age. Fate canonises or rejects creations, records canon facts, opens and closes story threads, fulfils prophecies and keeps the ledger of every act. |
-| ☄ | **Foreign gods** | Powers from beyond your pantheon, awake or asleep, with their own strength, attitude and gifts: shields, callers and stranger things. Ally with them, war with them, or devour them. |
-| 👁 | **Mortals and peoples** | Named heroes, prophets, kings and heretics, and the peoples, settlements, factions and cults they build. They pray, they remember, they believe the wrong things, and they write history of their own. |
+| ⚖ | **Fate** | The impartial judge of every age. Fate canonises or rejects creations, records canon facts, opens and closes tales, fulfils prophecies and keeps the ledger of every act. |
+| ☄ | **Foreign gods** | Powers from beyond your pantheon, awake or asleep, with their own strength, attitude and gifts. Ally with them, war with them, or devour them. |
+| 👁 | **Mortals and peoples** | Heroes, prophets, rulers and heretics, and the peoples, settlements, realms, factions and faiths they build. The notable ones are agents of their own; all of them pray, remember, believe the wrong things and write history of their own. |
 
-### Thirteen ways to begin
+### Twenty-seven ways to begin
 
-The genesis wizard opens every world from a template that sets its tone, its first peoples and its first troubles:
+The genesis wizard opens every world in seven stages: a template, the Creator, the seed and tone, the first world, the peoples, the cosmos and its telling, and the first sons. A template is only a starting point; every value it sets can be changed in the later stages, or you can start from a blank page.
 
-| | | | |
-|---|---|---|---|
-| **Dark Fantasy** | **Mythic Age** | **Cosmic Horror** | **Fairy Tale** |
-| **Star Myth** | **Sand and Ash** | **Primordial Dawn** | **Crowns and Knives** |
-| **Drowned World** | **Long Winter** | **After the Fall** | **Sky Islands** |
-| **Age of Engines** | | | |
+| Myth and fantasy | Strange worlds | Ages of making |
+|---|---|---|
+| **Dark fantasy** | **Cosmic horror** | **Gunpowder age** |
+| **Mythic age** | **Drowned world** | **Age of engines** |
+| **Fairy tale** | **Desert world** | **Electric age** |
+| **Star myth** | **Long winter** | **Information age** |
+| **Primordial dawn** | **Sky islands** | **Advanced age** |
+| **Court intrigue** | **Many suns** | **Interstellar age** |
+| **Without magic** | **Layered realms** | **Beyond age** |
+| **After the fall** | **Living world** | **Made minds** |
+| | **Dreaming world** | **After abundance** |
+| | **Generation ship** | |
+
+Every world chooses its tone, magic, danger, the texture of its tongues, its first peoples, the shape of its first world and of its cosmos, and its technology age:
+
+> Before metal is worked · The first metal smelted into tools · Bronze is worked · Iron is worked · Steel and written law · Powder, guns and star-shaped forts · Printing and natural philosophy · Steam power and machines · Electricity and messages by wire · Computation and mass media · Split matter, rockets and machines that think · Travel between the stars · Matter shaped at will and works the size of stars
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
@@ -145,162 +186,220 @@ The genesis wizard opens every world from a template that sets its tone, its fir
 
 ```mermaid
 flowchart LR
-    C([The Creator]) -->|draws, commands, blesses| S
-    subgraph S [The Sons act]
-        S1[God card agents<br/>run in parallel]
-        S2[100+ divine tools<br/>gated by rarity]
+    C([The Creator]) -->|draws, commands, blesses, edits| S
+    subgraph S [The gods and the notable act]
+        S1[Son agents<br/>330 divine tools]
+        S2[Mortal agents<br/>445 mortal tools]
     end
-    S -->|creations, miracles, schemes| E
-    subgraph E [The World turns]
-        E1[80+ deterministic phases]
-        E2[3,300+ tunable rules]
+    S -->|creations, miracles, schemes, choices| E
+    subgraph E [The world turns]
+        E1[505 deterministic steps]
+        E2[20,700+ tunable rules]
     end
     E -->|50 years of history| F
     subgraph F [Fate judges]
         F1[Verdict on every creation]
         F2[The chronicle is written]
     end
-    F -->|images, legends, the ledger| C
+    F -->|records, images, the book and the Codex| C
 ```
 
-1. **The Creator moves first.** Draw sons, bless or punish them, answer prayers, convene the council, or reach into the engine and pull any lever by hand.
-2. **The sons take their turn.** Every son is an agent. They reason over a typed view of the world, call their tools, and pay for every act in essence.
-3. **The world turns.** A seeded, reproducible simulation runs every mechanic: nature, bodies, societies, economies, wars, faiths, magic, the gods and the cosmos itself.
-4. **Fate judges.** An impartial agent weighs the age, canonises or rejects creations, closes threads and writes the chronicle.
-5. **The world remembers.** Every act lands in Fate's ledger, fully undoable. Images are painted locally for every new record. A backup is taken before every epoch.
+1. **A backup is taken.** Your world is never one bad epoch away from ruin.
+2. **The Creator moves first.** Draw sons, bless or punish them, answer prayers, convene the council, or reach into the engine and pull any lever by hand.
+3. **The sons take their turn.** Every son is an agent. They read a typed view of the world, call their tools and pay for every act in essence.
+4. **The notable mortals decide.** Heroes, prophets and rulers choose for their own lives with tools of their own.
+5. **The world turns.** A seeded, reproducible simulation runs every mechanic over fifty years: nature, bodies, households, societies, economies, wars, faiths, magic, the gods and the cosmos itself. What the agents chose plays out here, by the world's rules.
+6. **Fate judges.** An impartial agent weighs the age, canonises or rejects creations, closes tales and writes the chronicle.
+7. **The world remembers.** Every change lands in the record with its cause, every act of yours in Fate's ledger, undoable. Paintings are made locally for new records, and the book is rebuilt for the next time you open it.
 
-Every epoch streams live to the browser: watch each phase complete, each tool call land and each verdict arrive as it happens.
+Every epoch streams live to the browser: watch each step complete, each tool call land and each verdict arrive as it happens. The length of an epoch is itself a rule.
 
 ### A taste of an age
 
-<sub><i>An illustrative excerpt in the style of the chronicle. Every world writes its own.</i></sub>
+<sub><i>An illustrative excerpt in the style of the chronicle. Every world writes its own, in its own images and its own language.</i></sub>
 
-> **Epoch 14 · The Age of Salt and Ash**
+> **Epoch 14 · The Ninth Age of the River Kingdoms**
 >
-> In the forty-first year, the monsoon failed over the Varn coast, and the granaries of Tessaly emptied by midwinter. The Merciful Son, whose domain is Harvest, sent a dream to the widow Ilsa of the river villages; she woke speaking of a buried spring, and a cult was born before the thaw.
+> In the forty-first year the monsoon failed over the eastern coast, and the granaries of Tessaly were empty by midwinter. The Merciful Son, whose domain is Harvest, sent a dream to Ilsa, a miller of the river villages. Ilsa woke speaking of a buried spring, and a cult was born before the thaw.
 >
-> His brother the Ash-Crowned did not forgive the gift. He whispered to the hungry lords of Tessaly that the river villages hoarded grain, and by summer the banners were raised. The war lasted nine years. The spring was salted. Ilsa was burned as a witch at the crossing she had saved.
+> The Unyielding, a rival son, did not forgive the gift. They told the hungry lords of Tessaly that the river villages hoarded grain, and by summer the banners were raised. The war lasted nine years. The spring was filled with stones, and Ilsa was tried as a witch at the crossing they had saved.
 >
-> *Fate's verdict:* the cult of the buried spring is canon. The war is canon. The Merciful Son's loyalty to the Creator rises; the Ash-Crowned gains renown and loses mercy. A thread opens: **the widow's ashes are said to have fallen on the salted spring.**
+> *Fate's verdict:* the cult of the buried spring is canon. The war is canon. The Merciful Son's loyalty to the Creator rises; the Unyielding gains renown and loses mercy. A tale stays open: **the spring is said to run again beneath the stones.**
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## God cards
 
-Every son is drawn as a card. Rarity sets how much he can do in a turn, how fast his essence returns, how strong he is born and how high his power can climb. Every number below is a default rule you can retune in Settings → World Rules.
+Every son is drawn as a card. Rarity sets how much a son can do in a turn, how fast their essence returns, how strong they are born and how high their power can climb. Every number below is a default rule you can retune in Settings → World Rules.
 
 | Rarity | Draw odds | Action points | Essence per epoch | Born with stats | Power cap | Turn steps |
 |---|---:|---:|---:|---|---:|---:|
-| ⬜ **Common** | 50% | 3 | 8 | 20–45 | 2 | 11 |
-| 🟩 **Uncommon** | 27% | 3 | 10 | 30–55 | 3 | 13 |
-| 🟦 **Rare** | 14% | 3 | 12 | 40–65 | 5 | 15 |
-| 🟪 **Epic** | 7% | 3 | 15 | 50–80 | 7 | 17 |
-| 🟧 **Legendary** | 2% | 4 | 18 | 65–95 | 10 | 19 |
-| 🟥 **Mythic** | ascension only | 5 | 24 | 80–100 | 12 | 21 |
+| ⬜ **Common** | 50% | 2 | 8 | 17–39 | 2 | 12 |
+| 🟩 **Uncommon** | 26% | 3 | 12 | 26–50 | 4 | 15 |
+| 🟦 **Rare** | 14% | 4 | 17 | 36–62 | 6 | 18 |
+| 🟪 **Epic** | 7% | 5 | 24 | 48–75 | 8 | 21 |
+| 🟧 **Legendary** | 3% | 6 | 32 | 61–88 | 10 | 24 |
+| 🟥 **Mythic** | ascension only | 7 | 44 | 75–100 | 12 | 27 |
 
-Every new world opens with three sons: one Common, one Rare and one Legendary. Sons grow in level and renown as they act, and a son who reaches **level 9** with **90 renown** can **ascend** to the next rarity for 90 essence. **Mythic** is never drawn: it is earned only by ascension. Mortals can climb too: deify a hero, and they join the pantheon as a son of their own class.
+The genesis wizard lets you choose your first sons: one to five of them, of any rarity up to Legendary. Sons grow in level and renown as they act, and a son who reaches **level 9** with **90 renown** can **ascend** to the next rarity for 90 essence. **Mythic** is never drawn: it is earned only by ascension. Mortals can climb too: deify a hero, and they join the pantheon as a god of their own.
 
 ### What rarity unlocks
 
-| From | The son gains |
-|---|---|
-| **Common** | Reading and reflection, memory, language, kin, prayer, and the creation of the world's foundations |
-| **Uncommon** | Influence over any entity, marking a chosen one, curses, miracles and spirit cloaking |
-| **Rare** | Sending dreams, calling down disasters, granting knowledge, inciting wars, taking a mortal's life, holy worlds, interworld treaties and war on foreign gods |
-| **Epic** | Sealing gates, rekindling dead stars and stitching leaks in the fabric of the cosmos |
-| **Legendary** | Transforming and destroying, bearing divine children, opening cosmic beds, birthing whole worlds and writing natural laws |
-| **Mythic** | Hanging new stars in the sky and extinguishing old ones |
+| From | The son can make | And gains the power to |
+|---|---|---|
+| **Common** | Places, resources, settlements, species, peoples, mortals, legends, traditions, artworks, dishes, and the kinds of vehicles, soldiers, equipment and buildings | Read and reflect, remember, speak, tend kin and hear prayer |
+| **Uncommon** | Items, structures, languages, cults, factions, laws, spirits, houses, treaties, ideologies, rites, theories, art forms and networks | Influence any record, mark a chosen one, curse, work miracles and cloak themselves as a spirit |
+| **Rare** | Celestial bodies, knowledge, vessels, diseases, titles, beasts, phenomena and leagues | Send dreams, call down disasters, grant knowledge, incite wars, take a mortal's life, declare holy worlds, sign treaties between worlds and war on foreign gods |
+| **Epic** | Regions, prophecies, events, armies, polities and cosmic beings | Seal gates and leaks, rekindle dead stars, raise thrones of power and magic sites, and open roads between worlds |
+| **Legendary** | Laws of nature | Transform and destroy, bear divine children, open cosmic channels, birth whole worlds, raise phenomena and open breaches for outer beings |
+| **Mythic** | Outer beings and trade routes | Hang new stars and put out old ones, set new galaxies, gather clusters, bring dimensions into being and shape galaxies and dimensions |
+
+### A card for every being
+
+The **Cards** page lays out every character of the cosmos as a collectible card: the Creator, the sons and the foreign gods on their own shelf, then the mortals, beasts, spirits, outer beings and cosmic beings of every world. A card's rarity is read from its power against the rarity bands of the world rules, and rarity is the metal of its frame, from slate, bronze and silver to amethyst, gold and prismatic, with a holographic foil from Epic up.
+
+- **Front and back.** The front carries the likeness edge to edge with level or power, name, title, kind, domains, the epochs of birth and fall on clock dials and the four values around its rarity seal. The back holds every value, every power and the being's account.
+- **Binder, deck and inspector.** Browse a binder, swipe a deck, or open an inspector that brings the next cards up on its own. Filter by deck, rarity, world, living or fallen.
+- **Sealed packs.** New cards wait in sealed packs that tear open with a reveal.
+- **Keep them.** Save the front or the back of any card as an image.
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
+## Your hand on everything
+
+The engine runs every mechanic on its own, and none of it is out of your reach.
+
+- **Create, edit, hold and delete.** Every table and typed thing the engine creates or changes has god levers to create it, edit every value of it, hold it against the engine and delete it. More than 2,600 levers sit in one action catalog, each proven to run by a test.
+- **Hold what is canon.** Lock a character, a city, a value or any other node, and no engine step may create, change or delete what is tied to it. The world keeps living around what you hold.
+- **One entry window for every node.** The Creator, every son, foreign god, world, moon, star and every entity opens in the same window, its sections grouped into ten parts: Overview, Body and mind, Life and kin, Society and rule, Economy and goods, Faith and powers, War and intrigue, Land and sky, Lore and records, and the god's controls. Search jumps to any section, and every section can be linked to.
+- **Every record of a node.** An "Every record" section in each entry window lets you add, edit and remove any row tied to it, whatever mechanic made it.
+- **Run, suppress, retune, pin.** Every mechanic can be run now, switched off for a while, retuned through its rules or pinned to a value.
+- **Make it your way.** Every kind of thing can be made by hand with its values chosen first, or by a son you send to do it.
+- **Undo anything.** Every act of yours lands in Fate's ledger with its cause, ready to undo, with notes and bookmarks.
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
+## The record of everything
+
+A world that keeps its own history keeps all of it.
+
+- **Every happening, told.** Births, battles, trials, voyages, plagues and councils are told from typed roles and facts, across 4,524 kinds of happening, in the order they happened and with the places they happened in. Duels and engagements are told round by round.
+- **Every change, explained.** Every write the engine makes is recorded with the happening that caused it and the terms that made its number, so you can ask any value why it is what it is.
+- **Witnesses and rumours.** Those who were present remember; those who heard it second hand carry rumours, with the distortions rumours have, and tellings can contradict each other.
+- **Rewind any record.** The past of any record is rebuilt at any moment from its changes. A timeline scrubber walks through it, and the atlas can show the world as it stood at that moment.
+- **Event pages and history everywhere.** Every happening has its page, every entry window its history, and record search reaches them all.
+- **Your pen on the record.** God levers set down, rewrite, hold and strike facts, steps, witnesses and changes, and revert a change the world made.
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
+## The lore book and the Codex
+
+Everything the world becomes leaves the app in two designed forms, and **nothing is ever cut short**.
+
+| | Format | What it is |
+|---|---|---|
+| 📖 **The lore book** | HTML and PDF | A designed, illustrated book to read, present and share: every node in its own entry with labelled values, the chronicle in full, and the "Records of the Cosmos" appendix for what belongs to no single node. |
+| 🗂 **The Codex** | Markdown and ZIP | A tidy lore archive with a page for every record, ready for your wiki, document system or writing tools. |
+| 📦 **The world package** | `.aerona` | The whole world, with or without its images, to keep, move to another machine or send to a teammate. |
+
+The book draws what words cannot: the terrain map of every world, a plan of every city, the strata of the deep, the heavens, coats of arms and every mortal's family tree. Every kind of node, the Creator, the sons, foreign gods, worlds, stars and every entity, renders its typed sections in both. The book is built once per change of the world and warmed after each epoch, so it opens at once.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## Features
 
 ### A world that lives on its own
-- **Eighty-plus simulation phases** for mortals, demography, settlements, ecology, climate, disasters, epidemics, trade, markets, production, factions, institutions, diplomacy, espionage, warfare, faith, spirits, magic, heroes, horror, monsters, realms, the afterlife, the pantheon, the sky and the cosmos.
-- **Deterministic and reproducible.** The same world and the same seed produce the same history, tick for tick.
-- **Conservation everywhere.** People, goods, coin and souls are counted to the last one. Nothing is made from air.
+- **505 engine steps** for mortals, households, demography, settlements, ecology, climate, the deep, disasters, sickness, trade, markets, production, factions, institutions, law, diplomacy, espionage, warfare, faith, spirits, magic, heroes, monsters, realms, the afterlife, the pantheon, the sky, galaxies and dimensions.
+- **A simulation, not a script.** An epoch is fifty years lived through sampled years and real seasons. Rates are per year and per head, and loops have their delays, so a world grows, stalls and recovers like a real one.
+- **Deterministic and reproducible.** The same world and the same seed produce the same history, step for step. Every read is ordered, so a world never depends on a query plan or a machine.
+- **Conservation everywhere.** People, goods, coin and souls are counted to the last one. Nothing is made from air, and goods move only through a logged ledger.
 - **The Why of Everything.** Hover any number and see exactly what made it so.
-- **The Harshness Dial.** Heroic, realistic or brutal: one dial sets how deadly the world is.
+- **The Harshness Dial.** Heroic, realistic or brutal: one dial sets how deadly wounds, infection, disease, famine, childbirth and battle are.
 
 ### Gods that think
-- **God cards in six rarities**, from humble read-and-reflect tools up to hanging new stars in the sky.
-- **More than a hundred son tools** across thirteen families: reading, memory, language, kin, prayer, creation, resources, influence, knowledge, intervention, war, death and the cosmos.
-- **Passions and reputation.** Loyalty, ambition, anger and mercy drive every son. Mortals love, fear or forget them. Rebels rise, and the father's hand falls.
-- **Forty divine domains**, from sea, fire and storm to memory, oath, salt, glass and sleep. Every domain has a price.
+- **God cards in six rarities**, from reading and reflection up to hanging new stars and bringing dimensions into being.
+- **330 son tools and 445 mortal tools**, every one run to success by a test through the real tool runtime.
+- **Passions and reputation.** Loyalty, ambition, anger and mercy drive every son. Mortals love, fear or forget them. Rebels rise, and the Creator's hand can fall.
+- **Forty-seven divine domains**, from sea, fire and storm to memory, oath, sleep, machines, information and science. Every domain bends the world its own way, and every domain has a price.
 - **The council of heaven.** Even gods must vote. Even gods must scheme.
-- **Talk to your sons.** Open a chat with any son, between epochs, in character.
+- **Talk to your sons.** Open a chat with any son between epochs, in character.
 
 ### Fate, the chronicler
-- **An impartial judge** for every age: verdicts, canon facts, open threads and fulfilled prophecies.
-- **Chronicler, bard and deepener**: agents that turn raw history into legend, epic and ever-richer lore, and restore lost chronicles.
+- **An impartial judge** for every age: verdicts, canon facts, open tales and fulfilled prophecies.
+- **Chronicler, bard and deepener**: agents that turn raw history into legend, epic and ever richer lore, and restore lost chronicles.
+- **Chroniclers of the world.** The historians who write a people's past are mortals of that world, not names on a page.
 - **Voices of the peoples**: every people tells the story of the gods its own way.
-- **Fate's ledger**: every player action is recorded with its cause and can be undone.
 
 ### Languages and lore
-- **Procedural languages** with dialects, contact, drift and death. Every name means something, every word has a history.
+- **Procedural languages** with sound change, dialects, contact, drift and death. Every word enters a tongue through its own history, and every name means something.
 - **Lore in your language**: English or Turkish, chosen once when the Creator is born and carried into every prompt.
+- **Lore that follows the seed.** No prompt pushes a look, a theme or a conflict your seed did not ask for; the world's images come from your words, its own canon and what the model invents.
 - **Prayers, dreams, manifestations and threats**: mortals talk to the gods, and the gods answer.
 
 ### An interface worth living in
-- **Thirty-plus screens**, from the Pantheon and the Chronicle to the living Map, the 3D Cosmos and the knowledge graph.
-- **Real-time everywhere.** Server-Sent Events stream every phase, every tool call and every verdict.
-- **Every value is editable.** All 3,300+ balance rules are tunable live. Every mechanic runs automatically and can also be run, suppressed, edited or pinned by hand.
+- **Twenty-six screens and ten settings tabs**, from the Pantheon, the Cards and the Chronicle to the living Map, the Cities on their hexes, the 3D Cosmos, the Heavens and the knowledge graph.
+- **Real-time everywhere.** Server-Sent Events stream every step, every tool call and every verdict.
+- **Every value is readable and editable.** All rules are tunable live, and every value any screen shows can be changed.
 - **A command palette** that reaches every record and every screen from the keyboard.
-- **A celestial design system**: deep indigo and gold, Cinzel display type, six rarity colours, dark and light themes, and a visual-consistency test on every route.
+- **A celestial design system**: deep indigo and gold, gilded frames, six rarity metals, light and dark themes, built for phone widths up, with accessible roles and labels.
 
 ### Paintings for every record
-- **A local image worker** paints the Creator, the sons, foreign gods, worlds and entities from prompts written by the agents.
-- **Apple Silicon or NVIDIA**: native MLX on a Mac, a CUDA container everywhere else, the same HTTP contract for both.
+- **A local image worker** paints the Creator, the sons, foreign gods, worlds and entities from prompts the agents write.
+- **Your visual style.** The style is chosen per world and applied when the image is made, never written into the lore.
+- **Apple Silicon or NVIDIA**: native MLX on a Mac, a CUDA container everywhere else, one HTTP contract for both.
 - **Your gallery, your disk**: weights live in a local volume, images in your own media store.
 
 ### Built to be trusted
 - **Local-first and single-player.** Your world lives in SQLite on your disk.
 - **Backups before every epoch**, versioned `.aerona` world packages, and crash-safe, resumable jobs.
-- **Your Claude subscription, never an API key.** Every agent call runs on Claude Haiku through the Claude Agent SDK.
+- **Your Claude subscription, never an API key.** Every agent call runs on Claude Haiku through the Claude Agent SDK, and the Usage page counts the tokens of every call.
 - **Engine-only mode.** Set `AERONA_LLM_ENABLED=false` and the world turns on pure simulation.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## What the gods can make
 
-Thirty-three kinds of record, every one a living part of the simulation, every one with its own stats, bonds, chronicle and portrait:
+Forty-five kinds of record, every one a living part of the simulation, every one with its own values, bonds, history and portrait:
 
-| Land | Life | Society | Mind and spirit | Power | Cosmos |
+| Land and sky | Life | Society | Mind and spirit | Power | Made things |
 |---|---|---|---|---|---|
-| Region | Species | People | Language | Faction | Celestial |
-| Place | Beast | Mortal | Legend | Polity | Natural law |
-| Resource | Disease | Settlement | Tradition | House | Outer being |
-| Structure | | Item | Cult | Army | Vessel |
-| Trade route | | Artwork | Spirit | Treaty | Event |
-| | | | Knowledge | Law | Prophecy |
-| | | | Rite | Ideology | |
+| Region | Species | People | Language | Faction | Item |
+| Place | Beast | Mortal | Legend | Polity | Artwork |
+| Resource | Disease | Settlement | Tradition | House | Art form |
+| Structure | | Title | Cult | Army | Dish |
+| Trade route | | Event | Spirit | Treaty | Vessel |
+| Celestial body | | Prophecy | Knowledge | Law | Vehicle type |
+| Natural law | | Network | Theory | Ideology | Kind of soldier |
+| Phenomenon | | | Rite | League | Equipment model |
+| Outer being | | | | | Building type |
+| Cosmic being | | | | | |
 
-### Forty domains
+### Forty-seven domains
 
 Every son and every foreign god holds domains, and every domain bends the world in its own way:
 
-> Sea · Fire · Earth · Sky · Storm · Death · Life · Dream · Time · Light · Shadow · War · Craft · Knowledge · Love · Trickery · Hunt · Plants · Bone · Blood · Sound · Stone · Ice · Madness · Trade · Road · Plague · Harvest · Moon · Sun · Star · Lies · Oath · Memory · Hunger · Glass · Salt · Ash · Border · Sleep
+> Sea · Fire · Earth · Sky · Storm · Death · Life · Dream · Time · Light · Shadow · War · Craft · Knowledge · Love · Trickery · Hunt · Plants · Bone · Blood · Sound · Stone · Ice · Madness · Trade · Road · Plague · Harvest · Moon · Sun · Star · Lies · Oath · Memory · Hunger · Glass · Salt · Ash · Border · Sleep · Technology · Machines · Cities · Industry · Information · Space · Science
 
-### Eighteen branches of knowledge
+### Twenty-three branches of knowledge
 
-> Agriculture · Metallurgy · Seafaring · Writing · Architecture · Medicine · Magic · Warfare · Astronomy · Trade · Sky navigation · Shipbuilding · Gate lore · Pathfinding · Void living · Immortality · Biomancy · Forbidden
+> Agriculture · Metallurgy · Seafaring · Writing · Architecture · Medicine · Magic · Warfare · Astronomy · Trade · Sky navigation · Shipbuilding · Gate lore · Pathfinding · Void living · Immortality · Biomancy · Forbidden lore · Civics · Law · Natural history · Language lore · Mathematics
 
-### Thirty creature traits
+### Thirty-two creature traits
 
-> Flying · Venomous · Soul-eater · Radiant · Fissiparous · Hive mind · Stoneskin · Time rewinder · Shapeshifter · Mind reader · Armoured · Burrowing · Aquatic · Amphibious · Pack hunter · Ambush predator · Regenerating · Poisonous flesh · Fire-breathing · Cold-breathing · Echolocation · Camouflage · Swarm breeder · Long-lived · Mimic · Spirit sight · Iron-eating · Crop pest · Plague bearer · Sacred animal
+> Flies · Venomous · Eats souls · Radiant · Splits to breed · Hive mind · Stone skin · Turns back time · Shapeshifter · Reads minds · Armoured · Burrows · Lives in water · Amphibious · Hunts in packs · Ambush hunter · Regrows wounds · Poisonous flesh · Breathes fire · Breathes frost · Hears its way · Camouflaged · Breeds in swarms · Long-lived · Mimic · Sees spirits · Eats iron · Crop pest · Plague bearer · Sacred · Horned · Tailed
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## The cosmos
 
-Real astronomy and pure fantasy share one sky, and **every type is a mechanic, never a label**. A star sets the heat, the harvest, the life capacity and the sanity of everyone beneath it, and decides what it leaves behind when it dies. A world type sets its ores, disasters, seasons, gravity, air and hidden routes.
+Real astronomy and pure fantasy share one sky, and **every type is a mechanic, never a label**. A star sets the heat, the harvest, the life capacity and the sanity of everyone beneath it, and decides what it leaves behind when it dies. A world type sets its ores, disasters, seasons, gravity, air and hidden routes. Above the stars sit galaxies, clusters and layered dimensions, each with its own kinds.
 
 <details open>
 <summary><b>32 star types</b></summary>
 
-| Main sequence | Giants | Young and strange | Remnants | Many suns | Fantastic |
+| Main sequence | Giants | Young and changing | Remnants | Many suns | Fantastic |
 |---|---|---|---|---|---|
-| Yellow dwarf | Yellow giant | Protostar | White dwarf | Binary star | Dead star |
+| Yellow dwarf | Yellow giant | Protostar | White dwarf | Twin star | Dead star |
 | Blue star | Red giant | Wolf-Rayet star | Neutron star | Triple star | Black sun |
 | Blue-white star | Blue giant | Carbon star | Pulsar | | Broken star |
 | White star | Red supergiant | Variable star | Magnetar | | Reborn star |
@@ -312,42 +411,47 @@ Real astronomy and pure fantasy share one sky, and **every type is a mechanic, n
 </details>
 
 <details open>
-<summary><b>34 world types</b></summary>
+<summary><b>37 world types</b></summary>
 
-| Classic | Real astronomy | Strange | Divine and dead |
+| Classic | Real astronomy | Unusual | Divine, dead and made |
 |---|---|---|---|
 | Ordinary world | Super-earth | Crystal world | Realm of the dead |
 | Ocean world | Ice giant | Living planet | Corpse-world |
 | Sand world | Hot giant | Dream realm | The god's palace |
 | Ice world | Iron world | Mirror world | Generation ship |
 | Lava world | Diamond world | Void pocket | Forge-world |
-| Gas giant | Greenhouse world | Fungal world | |
+| Gas giant | Greenhouse world | Fungal world | Made world |
 | Ringed world | Dwarf world | Shattered world | |
 | Asteroid belt | Chthonian world | Hollow world | |
 | Tidally locked world | Steam-ocean world | | |
-| | Jungle world | | |
+| Archipelago world | Jungle world | | |
 | | Ice-shell world | | |
 | | Methane world | | |
+| | Rogue world | | |
 
-Moons are worlds too: Europa-like moons are ice-shell worlds, Titan-like moons methane worlds, Io-like moons lava worlds.
+Moons are worlds too: Europa-like moons are ice-shell worlds, Titan-like moons methane worlds, Io-like moons lava worlds, and a moon's orbit is always around its planet.
+
+</details>
+
+<details>
+<summary><b>28 galaxy types, 13 kinds of cluster and 29 dimensions</b></summary>
+
+| Galaxies | Clusters and the large scale | Dimensions |
+|---|---|---|
+| Spiral · Barred spiral · Grand-design spiral · Flocculent spiral · Lenticular · Elliptical · Giant elliptical · Dwarf elliptical · Dwarf spheroidal · Irregular · Dwarf irregular · Ring · Peculiar · Starburst · Active · Quasar host · Low surface brightness · Ultra-diffuse · Living · Dead · Shattered · Forged · Dreaming · Mirror · Crowned · Hollow · Ember · Veiled | Galaxy group · Local group · Poor cluster · Rich cluster · Supercluster · Filament · Wall · Void · Crown cluster · Drowned cluster · Forge cluster · Dream cluster · Mirror cluster | Prime · Parallel · Mirror · Pocket · Bubble universe · Brane · Higher-dimensional space · Antimatter · Quantum branch · Time-reversed · Compactified · Astral plane · Ethereal plane · Dream · Shadow · Spirit realm · Fey realm · Elemental plane · Celestial realm · Infernal realm · Abyssal realm · Limbo · Far realm · Clockwork plane · Plane of chaos · Underworld · Divine domain · Void between · Made realm |
 
 </details>
 
 <details open>
-<summary><b>Sky, horror and travel</b></summary>
+<summary><b>16 ways between worlds</b></summary>
 
-| Sky events | Cosmic horror | Ways between worlds |
-|---|---|---|
-| Eclipse | The stars align | Ancient gate |
-| Comet | The eye in the sky | Space fold |
-| Alignment | The wave of silence | Light sail |
-| Flare | Reverse rain | Cosmic mount |
-| Supernova | Visit of the void | Dream journey |
-| Black sun | The dimming | River of the dead |
-| Void storm | Whispers from beyond | Divine bridge |
-| | | Slingshot orbit |
-| | | Swallowing |
-| | | Wormhole |
+| Old roads | Bodies and beings | Made crossings | The far scale |
+|---|---|---|---|
+| Ancient gate | Ridden crossing | Light sail | Galactic gate |
+| Divine bridge | Carried within a being | Slingshot orbit | Filament lane |
+| Dream journey | Crossing of the dead | Rocketry | Dimensional rift |
+| Wormhole | | Space folding | Planar door |
+| | | Void ark | |
 
 </details>
 
@@ -355,13 +459,13 @@ Moons are worlds too: Europa-like moons are ice-shell worlds, Titan-like moons m
 
 ## Goals and glory
 
-Every world can chase a **scenario** for points, and every milestone earns an **achievement**, once, forever.
+Every world earns a **score** from fifteen parts, can chase **scenarios** for points, and every milestone earns an **achievement**, once, forever. Sons grow in level, stars and rarity along the way.
 
 <table>
 <tr>
-<td valign="top" width="50%">
+<td valign="top" width="45%">
 
-**Eight scenarios**
+**Fourteen scenarios and one of your own**
 
 - Keep doomsday away
 - Unite all peoples in one faith
@@ -370,14 +474,21 @@ Every world can chase a **scenario** for points, and every milestone earns an **
 - An age of unbroken peace
 - A civilization reaching for the stars
 - A loyal pantheon
-- New horizons on the map
+- New lands on the map
+- A golden age
+- An age of wonders
+- Bridge the galaxies
+- An age of learning
+- Teeming life
+- The Creator's faithful
+- A goal of your own, on any of sixty measures
 
 </td>
-<td valign="top" width="50%">
+<td valign="top" width="55%">
 
-**Seventeen achievements**
+**Fifty-eight achievements, each in three tiers**
 
-The second sky · Constellation · The word came true · Return from death · The father's hand · Babel · Crowded world · Someone called you · The creator's cult · Interstellar traveller · Saga completed · God of epochs · Ancient · Crowded pantheon · First explorers · Sensed world · The weapons fell silent
+Many skies · Constellation · Peopled skies · Moons in orbit · Rekindled star · Many galaxies · Galaxy clusters · Many dimensions · Rifts opened · Cosmic beings · Across the galaxies · Trade between galaxies · Many kinds of life · Beasts of the wild · Spirits abroad · A species awakened · Many peoples · Crowded world · Settled lands · Realms rise · Empire · Golden age · Height of civilization · Treaties signed · Trade routes · Babel · Someone called you · The Creator's cult · The word came true · Many faiths · One god, many peoples · A mortal made divine · Crowded pantheon · A mighty son · Return from death · The Creator's hand · Other gods · A store of knowledge · Theories · Works of art · The arts · Legends · Traditions · Rule of law · Wonders · Collections · Saga completed · Heroes returned · Interstellar traveller · First explorers · Sensed world · Vessels · The weapons fell silent · God of epochs · Ancient · The Creator at work · Master of many deeds · Miracles
 
 </td>
 </tr>
@@ -387,30 +498,36 @@ The second sky · Constellation · The word came true · Return from death · Th
 
 ## A tour of the app
 
-| Screen | What you find there |
-|---|---|
-| **Genesis** | The birth of a world: name the Creator, pick the lore language, draw the first sons |
-| **Overview** | The state of the world at a glance: epoch, doomsday clock, essence, peoples, wars and the latest verdicts |
-| **Pantheon** | Every son as a card, with rarity, passions, reputation, domains and power; foreign gods beside them |
-| **Epoch** | Start, watch, pause and resume an epoch, with every phase and every son turn streamed live |
-| **Chronicle** | The written history of every age, from Fate's verdicts to the bard's epics |
-| **Council** | The council of the gods: motions, votes and schemes |
-| **Prayers** | Prayers, dreams and threats from mortals, and your answers |
-| **Wars** | Every war, front, army and battle, summary first |
-| **Economy** | Markets, prices, trade routes, production and money |
-| **Map** | The living Voronoi map: terrain, borders, settlements, routes and scars |
-| **Cosmos** | The heavens in 2D and 3D: stars, worlds, moons, routes and journeys |
-| **Network** | The knowledge graph of every bond between every record |
-| **Atlas** | Every region, place and people, searchable and linkable |
-| **Languages** | Every tongue, its words, dialects, contacts and descendants |
-| **Gallery** | Every painting the image worker has made |
-| **Goals** | Scenarios, achievements and your score |
-| **Ledger** | Fate's book: every act with its cause, ready to undo |
-| **Notifications** | Everything the world wants you to know |
-| **Settings** | Game, World Rules, Engine, Fate, Prompts, Records, Images, Data, Appearance and Maintenance |
-| **Design** | The living reference of every component and type role, in both themes |
+| | Screen | What you find there |
+|---|---|---|
+| **Pantheon** | **Overview** | The state of your cosmos at a glance: epoch, doomsday clock, essence, peoples, wars and the latest verdicts |
+| | **Epoch** | Run, stop and resume the epoch, or let one son act, with every step and every turn streamed live |
+| | **Pantheon** | Your sons, their cards, storylines and rivalries; foreign gods beside them |
+| | **Cards** | Every god, mortal, beast, spirit and being as a collectible card: search, swipe, turn over and save |
+| | **Prayers** | Wishes from sons and mortals awaiting your answer |
+| | **Council** | Councils of the pantheon: motions, votes and verdicts |
+| | **Goals** | Scenario goals, score and achievements |
+| **World** | **Cosmos** | Stars, worlds, moons, routes, voyages and foreign gods, in 2D and 3D |
+| | **Heavens** | Dimensions, clusters, galaxies, rifts, cosmic beings and phenomena |
+| | **Map** | The living Voronoi map: regions, settlements, peoples, roads, wars and every stratum of the deep |
+| | **Cities** | Every town on its hexes and every land on its tiles, drawn from the engine, with your hand on each |
+| | **Atlas** | Every record of the world by type and family, each opening in its entry window |
+| | **Network** | The knowledge graph of records and their bonds |
+| | **Interconnections** | How every mechanic feeds the others: the subsystem matrix and the links of each mechanic |
+| | **Wars** | Wars, armies, battles, sieges, captives and tributes |
+| | **Economy** | Trade routes, market prices, materials, coins, loans and debts |
+| | **Kinds** | Every kind of thing the peoples make and hold: goods, dishes, drinks, dress, crafts, games, professions and more |
+| **History** | **Chronicle** | Epoch by epoch, the history Fate has written |
+| | **Languages** | Dictionaries, language families and knowledge |
+| | **Gallery** | Every image of the world, and the ones still missing |
+| **Records** | **Ledger** | Your actions with undo, notes and bookmarks |
+| | **Usage** | Token usage of every language model call: trends, breakdowns and the full call log |
+| | **Notifications** | What happened while you were away |
+| **System** | **Settings** | Appearance, Game, Records, Data, World rules, Engine, Fate, Prompts, Images and Maintenance |
+| | **Design reference** | Every component and text role, in both themes |
+| | **Genesis** | Create a new world, its Creator and the first sons |
 
-Every record opens in a drawer stack on the right, so you can follow a thread from a king to his sword to the god who forged it without losing your place.
+Every node opens in its entry window, so you can follow a line of causes from a ruler to a sword to the god who forged it without losing your place.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
@@ -430,28 +547,40 @@ Twenty-nine agent roles, every one on Claude Haiku, every prompt in one typed ca
 | | | | Son epic | |
 | | | | Voices of the peoples | |
 
+The agents choose intent; the engine decides outcome. An agent can surprise the world, but it cannot break its rules: every tool checks its inputs, pays its cost and acts through the same engine the world uses.
+
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## By the numbers
 
 | | |
 |---:|---|
-| **94** | themed expansions plus **The Loom**, all included |
-| **87** | painted covers, one for The Loom and each expansion |
-| **80+** | deterministic simulation phases |
-| **3,300+** | tunable balance rules, editable live |
-| **100+** | divine tools for the sons, in 13 families |
+| **99** | expansions plus **The Loom**, all included and all deepened |
+| **100** | painted covers, one for The Loom and each expansion |
+| **505** | deterministic engine steps |
+| **20,700+** | tunable rules, editable live |
+| **2,600+** | god levers in the action catalog |
+| **330** | divine tools for the sons |
+| **445** | tools for mortal agents |
+| **4,524** | kinds of happening, told from roles and facts |
+| **999** | tables in the world's database |
 | **29** | agent roles |
-| **190+** | prompt templates in one catalog |
-| **40** | divine domains |
-| **33** | kinds of record |
+| **195** | prompt templates in one catalog |
+| **45** | kinds of record |
+| **47** | divine domains |
+| **37** | world types |
 | **32** | star types |
-| **34** | world types |
-| **30** | creature traits |
-| **18** | branches of knowledge |
-| **10** | ways to travel between worlds |
+| **28** | galaxy types |
+| **29** | kinds of dimension |
+| **32** | creature traits |
+| **23** | branches of knowledge |
+| **16** | ways to travel between worlds |
+| **27** | genesis templates |
+| **13** | technology ages to begin in |
+| **14** | scenarios, plus one of your own |
+| **58** | achievements, in 174 tiers |
 | **6** | god card rarities |
-| **30+** | screens in the web app |
+| **26** | screens, plus ten settings tabs |
 | **2** | lore languages: English and Turkish |
 | **0** | API keys required |
 
@@ -476,17 +605,18 @@ Weavers of the Void ships as the complete edition. **The Loom** and all **99 exp
 
 *Every thread is connected. Now you can see them all.*
 
-Before the gods walk and the armies march, the world needs a loom. Pull any thread and feel the whole cloth move. A queen's fever, a failed harvest, a god's grudge: each is a cause with a name, and each effect can show you its reason. The Loom is the heart beneath every expansion, the reason a mortal once drawn in eight numbers can now be read through about seventy-five.
+Before the gods walk and the armies march, the world needs a loom. Pull any thread and feel the whole cloth move. A queen's fever, a failed harvest, a god's grudge: each is a cause with a name, and each effect can show you its reason. The Loom is the heart beneath every expansion: every value has something that sets it and something that feels it, and every change the world makes is written down with its cause.
 
-- **The Why of Everything** — hover over any number in the world and read what made it so: a wound, a law, a festival, this season's weather, a god's curse. Sixteen kinds of cause, each named, each with its own span of time.
-- **Chains of Consequence** — every battle, death and betrayal records its cause. Fate writes "because the king lost his hand at Varn", and thirty-seven kinds of chapter, from wedding to schism, gather the moments into a history you can browse by figure, place or kind.
-- **Nothing Lost, Nothing Made from Air** — people, goods, coin, souls and divine essence are counted to the last one, every turn. A soldier who marches home was first taken from his village, and every death becomes a soul that goes somewhere.
+- **The Why of Everything** — hover over any number in the world and read what made it so: a wound, a law, a festival, this season's weather, a god's curse. Twenty-seven kinds of cause, from wounds, laws and weather to blessings, curses, rifts and your own hand, each named, each with its own span of time.
+- **Chains of Consequence** — every battle, death and betrayal records its cause. Fate writes "because the ruler lost a hand at Varn", and chapters from wedding to schism gather the moments into a history you can browse by figure, place or kind.
+- **Every Change Has Its Happening** — every write the engine makes is tied to the happening that caused it and the terms that made its number, so the past of any record can be rebuilt at any moment.
+- **Nothing Lost, Nothing Made from Air** — people, goods, coin, souls and divine essence are counted to the last one, every turn. A soldier who marches home was first taken from their village, and every death becomes a soul that goes somewhere.
 - **No Idle Numbers** — a son's mercy, the world's danger, the Creator's passions, a betrayal that starts a war. Values the world once only stored now move it, and every link between systems must have something that sets it and something that feels it.
-- **Your Hand on Every Lever** — every mechanic answers to five commands: run it now, suppress it for epochs, edit what it controls, retune its rules, pin a value in place. All undoable. A mechanic without a lever, a screen and a chronicle line never ships.
-- **The Harshness Dial** — heroic, realistic or brutal. One dial scales wounds, infection, plague, famine, childbirth and siege hunger together. On realistic, a famous king can die of one arrow, and every rate beneath the dial stays yours to adjust.
-- **Many Cores, One World** — the engine computes each world in parallel and merges the results in a fixed order, so one core or many gives the same turn to the last byte. Quiet regions and dormant mortals rest until something touches them.
+- **Your Hand on Every Lever** — every mechanic answers to five commands: run it now, suppress it for epochs, edit what it controls, retune its rules, pin a value in place, and everything it makes can be created, edited, held or deleted by hand. All undoable. A mechanic without a lever, a screen, a book entry and a chronicle line never ships.
+- **The Harshness Dial** — heroic, realistic or brutal. One dial scales wounds, infection, plague, famine, childbirth and siege hunger together. On realistic, a famous ruler can die of one arrow, and every rate beneath the dial stays yours to adjust.
+- **Many Cores, One World** — the engine computes each world in parallel and merges the results in a fixed order, so one core or many gives the same turn to the last byte. Every unordered read is put in a fixed order too, so a world never depends on the machine it runs on.
 
-**In your world:** The Creator asked why a city was starving. The answer named a dry year, the levy that took its farmers and a field salted a century earlier. The Creator followed the salt back through the chain to a broken oath between two brothers.
+**In your world:** The Creator asked why a city was starving. The answer named a dry year, the levy that took its farmers and a field salted a century earlier. The Creator followed the chain back, step by step, to a broken oath between two rival houses.
 
 </td>
 </tr>
@@ -504,8 +634,8 @@ Before the gods walk and the armies march, the world needs a loom. Pull any thre
 | ⚔ [**VI. War**](#chapter-vi) | 48–54 | Armies that eat, battles, sieges, campaigns, fleets, duels and blood feuds |
 | 🕯 [**VII. Faith and Spirits**](#chapter-vii) | 55–60 | Doctrines, prophets, the afterlife, local spirits, witch hunts and oracles |
 | ✶ [**VIII. Magic and Myth**](#chapter-viii) | 61–64 | A grammar of magic, forbidden arts, walkers of myth and constructs |
-| ☀ [**IX. The Gods**](#chapter-ix) | 65–72 | Forty domains, dominion, belief that reshapes gods, avatars, the court of heaven, apotheosis, laws of creation and the hungering dark |
-| 🪐 [**X. The Cosmos**](#chapter-x) | 73–80 | Orbital heavens, impacts, terraforming, thirty-four world types, rifts, star travel, deep time and turning ages |
+| ☀ [**IX. The Gods**](#chapter-ix) | 65–72 | Forty-seven domains, dominion, belief that reshapes gods, avatars, the court of heaven, apotheosis, laws of creation and the hungering dark |
+| 🪐 [**X. The Cosmos**](#chapter-x) | 73–80 | Orbital heavens, impacts, terraforming, thirty-seven world types, rifts, star travel, deep time and turning ages |
 | 📖 [**XI. Knowledge and Eras**](#chapter-xi) | 81–85 | Discovery, scholarship, open-ended technology, the storyteller and expeditions into the dark |
 | 🌌 [**XII. Galaxies and Dimensions**](#chapter-xii) | 86 | Galaxies real and fabled, clusters and the cosmic web, travel and trade between galaxies, layered dimensions and beings from beyond |
 | 🧬 [**XIII. Minds, Gifts and the Living**](#chapter-xiii) | 87–94 | Made minds and second selves, remade bodies, networks and information, plenty and ruin, born powers, hidden peoples, living craft and the ways of life of every people |
@@ -621,7 +751,7 @@ The Loom and ninety-nine expansions: one hundred covers, one wall. Click any cov
 
 ### Every expansion
 
-Every expansion below runs in every world from the first epoch, woven into the engine, the agents and the interface.
+Every expansion below runs in every world from the first epoch, built into the engine, the agents, the interface, the book and the Codex.
 
 <a id="chapter-i"></a>
 
@@ -639,15 +769,17 @@ Every expansion below runs in every world from the first epoch, woven into the e
 
 *Fifty years pass in an epoch. Now you will feel every winter.*
 
-Your world has a pulse. Inside every fifty-year epoch the engine lives through real years: sowing springs, campaign summers, killing winters. The same storm sinks a fleet, pins an archer line in the mud, cheers a storm god's faithful and ruins a harvest, all at once and each for a reason you can read.
+Your world keeps a real calendar. Inside every fifty-year epoch the engine lives through real years: sowing springs, campaign summers, killing winters. The same storm sinks a fleet, pins an archer line in the mud, cheers a storm god's faithful and ruins a harvest, all at once and each for a reason you can read.
 
-- **Seasons Built from the Sky** — two to six seasons per world, forged from axial tilt, moons and world type. Ice worlds endure a long winter and a short thaw. Tidally locked worlds have no seasons at all.
-- **Seventeen Kinds of Weather** — fog, blizzard, hail, heat wave, magic storm, ash fall after a supernova, void rain where the dark leaks in. Each strikes armies, sailors, harvests and morale in its own way.
+- **Seasons Built from the Sky** — one to eight seasons per world, set by axial tilt, moons and world type, each with its own share of the year, its warmth, its rains and a name in the world's own language. Ice worlds endure a long winter and a short thaw. Tidally locked worlds keep one unchanging season.
+- **Early, Late or Not at All** — every season of every year comes early, on time, late or fails, and its water runs from arid to deluge. An early spring lengthens the growing year, a late one shortens it, and a failed rainy season brings drought, holds back the festival of first rains and spares only the creatures that can pause their young until the rains return.
+- **Twenty-Five Kinds of Weather** — drizzle and sleet, freezing fog, frost that kills the spring blossom, ice storms that break roofs, roads and herds, thunderstorms whose lightning sets dry forests alight, tornadoes that flatten a town, and cyclones that track along the coasts for several turns. Magic storms, auroras, eclipse darkness and void rain come where the world allows them. Eleven effects, from footing and morale to lightning, floods and breathable air, strike armies, sailors, harvests and health each in their own way.
 - **Wars Fought Season by Season** — campaigns march through real springs and winters, and the chronicle reads "in the third winter of the war".
-- **The Year of Ash Rain** — the cruellest year of every epoch earns a name, enters the chronicle, can harden into legend and is mourned with a fast day.
-- **A Calendar for Every People** — regnal years, founding eras, years since the god's descent or since the comet last returned. A calendar reform can set two cults at each other's throats.
+- **Long Winters, Long Summers** — a great impact, a vast eruption, a dimming or brightening star, an ocean current that fails, the works and weapons of peoples, or a god can bring a winter or summer that lasts for years. It can hold a whole world or one hemisphere. Long winters cut harvests, travel and campaigns; long summers parch hot lands and raise sickness; and peoples who watched the cause arrive forecast it better.
+- **Years with Names** — the cruellest and the best years earn names: hunger, plenty, hard weather, pestilence, disaster, discovery, first contact, an omen, a peace that ended a long war, a founding that changed a people. A year great enough enters the chronicle, can harden into legend and founds a day of remembrance its people keep.
+- **A Calendar for Every People** — regnal years, founding eras, years since the god's descent or since the comet last returned. Fourteen kinds of festival, from sowing, harvest, midwinter and new year to market fairs, first rains, assemblies, tax gathering and pilgrimage, open only where a people's seasons and way of life give them a reason. A calendar reform can set two cults at each other's throats.
 - **Moons, Tides and Eclipses** — moons pull the tides that open and close coasts and decide how often the sun goes dark.
-- **Seasons in Your Hands** — reshape any season yourself, or watch a son seize the power to reorder them.
+- **Seasons in Your Hands** — add, remove, reorder and reshape any season and its share of the year, set a season's onset in any year, or watch a son seize the power to reorder them.
 
 **In your world:** A blizzard in the second winter of the siege broke the attackers. The defenders' storm god took the credit, and the hungry year became a fast day their grandchildren still keep.
 
@@ -663,13 +795,14 @@ Your world has a pulse. Inside every fifty-year epoch the engine lives through r
 
 Every region now carries soil, rainfall, forest, rivers and wounds, drawn from the very map you see. Clear the woods and the hills erode. Farm too hard and the soil fails, the people leave and the forest walks back in. Fight a battle by a ford and the ground remembers it. The land keeps a record of everything done to it, and everything done on it reads the land.
 
-- **Soil, Sun and Rain** — twenty-two terrain kinds, from steppe and high pass to crystal field, living flesh and void shore, over ten soils including ash and bone. Each decides how six kinds of traveller cross it, from marching feet and wagons to boats and burrowers.
-- **The Wild Walks Back** — clearing, farming, grazing, mining and building thin the forest and breed fever, and drought on overgrazed land makes desert. Abandon the fields and the land climbs back through grassland and shrub to old forest, until a wildfire starts it over.
-- **Scars on the Earth** — battlefields, plague grounds, salted fields, craters, haunted and blighted ground, and wounds where the void leaked through. Eight kinds of scar outlive the people who made them, and every harvest drawn from them is poorer.
-- **Ley Lines** — neighbouring regions rich in magic link into lines that carry magic storms, feed wizards and strengthen any temple or gate built upon them. Their nexuses become holy sites and war aims, and salt, a leak or a god can sever a line.
+- **Soil, Sun and Rain** — thirty-four terrain kinds, from steppe, moor and high pass to karst, floodplain, badlands, cloud deck, crystal field, living flesh and void shore, over nineteen soils, from deep humic loam and volcanic tephra to waterlogged gley, permafrost and clay that swells, cracks and breaks foundations. Each terrain decides how ten ways of moving cross it: on foot, mounted, on wheels, by boat, flying, burrowing, swimming, climbing, beneath the water and straight through solid rock.
+- **The Wild Walks Back** — clearing, farming, grazing, mining and building thin the forest and breed fever, and drought on overgrazed land makes desert. Abandon the fields and the land climbs back through twelve stages, from bare ground and pioneer growth through grassland, heath and shrub to old forest, or from open water through marsh and bog, until a wildfire starts it over.
+- **Scars on the Earth** — battlefields, plague grounds, fields made barren, burned land, craters, haunted and blighted ground, void wounds, plundered towns, old earthworks and military roads, fallen bridges, and land flooded, poisoned, mined out, eroded, deforested, drained or overgrazed. Nineteen kinds of scar outlive the people who made them, each cutting harvests and passage in its own way and healing at its own pace.
+- **The Land Remembers** — sixteen kinds of memory hold to a region: battles, massacres, sacks, disasters, plagues, famines, the death of a god, a saint's grave, a miracle, foundings, treaties, expulsions, discoveries, uprisings, unions and accessions. Each draws pilgrims, stirs unrest, lifts or sinks the morale of armies fighting there and strengthens claims; the place where a line came to rule backs that line.
+- **Ley Lines** — neighbouring regions rich in magic link into lines that carry magic storms, feed wizards and strengthen any temple or gate built upon them. Their nexuses become holy sites and war aims, and ground made barren, a void leak or a god can sever a line.
 - **Blessed, Cursed and Savage Lands** — evil ground brings blood rain and raises the dead, blessed ground offers healing springs and gentle weather, and savage ground grows huge beasts that resist taming. Massacres darken a region, saints and temples brighten it, farms tame it.
-- **Danger with Teeth** — bandits, beasts, disease, quicksand and avalanche now kill settlers, ambush armies and choke merchant roads. Avalanches close the passes in winter, floods take the valleys in spring, and an army marching into an unmapped region can lose its way.
-- **Twenty-Eight Kinds of Place** — fords, groves, springs, lairs, nexuses, crossroads and the corpses of gods. Passes draw battles, holy ground draws pilgrims, and explorers, seers and miners uncover buried relics, sealed spirits, lost knowledge and doors to the underworld.
+- **Danger with Teeth** — fifteen sources, from bandits, beasts, disease and quicksand to landslides, exposure, currents, toxic ground, lightning, sinkholes and rockfall, kill settlers, herds, pilgrims and people at work, ambush armies, choke merchant roads and break crops, ships and buildings. Ten seasonal hazards follow each world's own calendar: avalanches close the passes, ice jams and floods take the valleys as the year warms, storm surges hit the coasts and dust storms sweep dry ground. An army marching into an unmapped region can lose its way.
+- **Forty-Eight Kinds of Place** — fords, groves, springs, lairs, nexuses, crossroads and the corpses of gods, joined by waterfalls, deltas, mesas that defend, hot springs that heal, tar pits that trap beasts and keep fossils, meadows and narrow necks of land that command the way between two shores. Passes draw battles, holy ground draws pilgrims, and fifteen kinds of secret wait to be found: buried relics, sealed spirits, lost knowledge, hidden routes, sleeping beasts, lost graves, hidden springs, a disease lying dormant, doors to the underworld, or proof that the place's told history is false.
 
 **In your world:** A kingdom cleared its hill forests for wheat. The slopes eroded, the soil gave out, famine emptied the villages and the oaks crept back over the ruins. Generations later, settlers found the land rich again and called it the Green Grave.
 
@@ -683,16 +816,16 @@ Every region now carries soil, rainfall, forest, rivers and wounds, drawn from t
 
 *Dig too deep, and something digs back.*
 
-Beneath every region lies a column of stone you can read layer by layer: clay, limestone, granite, marble, obsidian, and on stranger worlds frozen methane, bone and glass. Your miners follow the veins down. The deeper they go, the rarer the ore and the harder the rock. Then a pick breaks through into a cavern no surface eye has seen, and something in the dark turns its head.
+Beneath every region lies a column of stone you can read layer by layer: clay, limestone, granite, marble, obsidian, and on stranger worlds frozen methane, glass and living tissue. Your miners follow the veins down. The deeper they go, the rarer the ore and the harder the rock. Then a pick breaks through into a cavern no surface eye has seen, and something in the dark turns its head.
 
-- **Layered Geology** — twelve kinds of rock and stranger ones on stranger worlds, each layer with its own veins. Limestone and sandstone hold water and hollow into caves, marble raises splendid temples, and the hardest stone yields only to better picks.
-- **Three Caverns and a Sea of Fire** — below the aquifers lie three cavern layers, each a hidden world of fungus forests, blind beasts and cave peoples. Beneath them burns a magma sea that fuels forges and drowns the careless, and below that, the deep realm where the dead are kept.
-- **Rivers That Live** — flow from upstream rain and spring snowmelt, rapids, salty estuaries and flood plains that shift when a great flood moves the river. Dam it upstream and the realm below goes thirsty, and a water dispute is reason enough for war.
-- **Quakes and Fire Mountains** — plate boundaries drawn with the map decide where the earth shakes and the mountains burn. Eruptions darken the sky with ash, enrich the soil and can raise new land.
+- **Layered Geology** — twenty-eight kinds of rock and ground, from clay, chalk and slate to tuff, gneiss, travertine laid by hot springs and pumice that floats after an eruption, and iron, carbon or crystal bedrock on stranger worlds, each layer with its own veins. Limestone and sandstone hold water and hollow into caves, marble raises splendid temples, slate roofs the towns, and the hardest stone yields only to better picks.
+- **Eleven Layers Down** — frozen ground, aquifers, an ocean under the ice on frozen worlds, reservoirs to be tapped, then three cavern layers, each a hidden world of fungus forests, blind beasts and cave peoples, with a fault zone between them. Beneath burns a magma sea that fuels forges and drowns the careless, some worlds hide a hollow interior with lands of its own, and at the bottom lies the deep realm where the dead are kept.
+- **Rivers That Live** — flow from upstream rain and spring snowmelt, rapids, brackish estuaries and flood plains. Floods, quakes, silting, landslides, eruptions, ice, a neighbour's dam or canal, a god, or one river cutting back into another can move a river's bed. Dam it upstream and the realm below goes thirsty, and a water dispute is reason enough for war.
+- **Quakes and Fire Mountains** — plate boundaries drawn with the map decide where the earth shakes and the mountains burn. Stress builds in the fault zones every epoch, faster where the mines bite deep, until it breaks loose as a quake. Eruptions darken the sky, enrich the soil and can raise new land.
 - **When the Mine Comes Down** — depth against the rock's strength and the miners' engineering sets the risk of collapse each year. A cave-in crushes miners, seals the shaft and sometimes breaks open a cavern, letting its beasts climb out.
-- **Seal the Deep** — seal gates, collapsed tunnels, plug walls, warding rites and divine acts hold back what you woke. Every seal weakens with time, beasts and miners test it, and opening one again is a scheme waiting for a schemer.
-- **Bones of Ages Past** — fossil beds hold extinct beasts, earlier creations and lost peoples. Floods, quakes and digs bring them up, and each culture reads them its own way: dragon bones for the bards, giants' relics for the priests, deep time for heretic scholars.
-- **Silt and Shore** — rivers and winds carry sediment that builds deltas and marshes, silts harbours and canals and buries towns and finds, while coasts grow or wear away over generations. Fossil beds keep their preservation and richness, organic beds become coal and oil, and well-kept remains let living craft revive extinct species.
+- **Seal the Deep** — seven kinds of seal hold back what you woke: gates and walls, warding rites, divine acts, innate powers, grown living barriers, sworn pacts with the beings below, and made minds that keep the watch. Every seal weakens with time, beasts and miners test it, a made keeper's seal fails when its keeper fails or rebels, and opening one again is a scheme waiting for a schemer.
+- **Fossils of Ages Past** — fossil beds hold extinct beasts and megafauna, earlier creations, lost peoples, dead gods, old made bodies and the older forms of living peoples. Floods, quakes and digs bring them up, and each culture reads them its own way: as legend, relic, deep time, a sacred site, an omen, a material to work or a medicine to grind. A find of a people's own forebears can overturn what it believes about its origin.
+- **Silt and Shore** — rivers, winds, ice, waves, slopes and mine works carry ten kinds of sediment, from silt and clay to glacial flour and mine tailings that silt and poison the rivers below. Deltas and marshes build, harbours and canals silt up, towns and finds are buried, and thirteen coast forms, from cliffs and fjords to spits that close harbours and atolls lost to rising seas, grow or wear away over generations. Organic beds become coal and oil, and well-kept remains let living craft revive extinct species.
 
 **In your world:** The miners of a mountain town chased a silver vein through the granite until the floor gave way into a cavern. Something came up the shaft. Their seal gate held for three generations, until a rival house paid to have it opened.
 
@@ -708,13 +841,13 @@ Beneath every region lies a column of stone you can read layer by layer: clay, l
 
 The air moves for reasons now. Your world's spin, tilt and sunlight bend its winds into bands, the winds carry rain against the mountains and leave deserts behind them, and the currents decide which coasts grow rich on fish. When a distant ocean warms, two kingdoms that have never met lose their harvests in the same year, and the astronomers who tracked the cycle saw it coming.
 
-- **Prevailing Winds** — trade-wind, westerly and polar bands, or stranger single bands on slow and tidally locked worlds, set the wind in every region and season. They chart the sailing routes, fan the wildfires and carry the smoke of the forges.
+- **Prevailing Winds** — twelve wind belts: trade winds, westerlies and polar winds, the doldrums and the calm latitudes, single cells and terminator winds on slow and tidally locked worlds, the banded and racing winds of giant worlds, monsoon belts, and mountain winds that dry the lee slopes and drive fires. They set the wind in every region and season, chart the sailing routes, fan the wildfires and carry the smoke of the forges.
 - **Rain Shadows** — moist wind climbs the mountains and rains on the windward side, leaving desert in the lee. Every forest and every desert sits where the physics puts it.
-- **Monsoons** — winds that reverse with the seasons over land and sea feed whole peoples and set the sailing calendar of the trade routes. The year the monsoon fails is a famine year with a name.
-- **Ocean Currents** — warm and cold currents set coastal climates, feed the fisheries and speed or slow the ships. They also carry wrecks, castaways, stowaway creatures and messages in bottles that start rumours on a foreign shore.
-- **Droughts a World Apart** — slow climate oscillations bring drought to one land and flood to another in the same years. Diviners and astronomers who learn the rhythm can foretell the bad years.
-- **Climate by Region** — the world's age of cold or warmth plays out differently on every coast and latitude. Felled forests dry their neighbours, a volcano brings a short chill and a supernova a long one, and storm, sun and ice gods push it region by region.
-- **The Breathing Planet** — carbon, water and nutrients flow between volcano, forest, ocean, river and soil. Burn the forests across a world, or let a god impose an eternal summer, and the whole planet answers over epochs.
+- **Monsoons** — winds that reverse with the seasons over land and sea bring the wet season, feed whole peoples and set the sailing calendar of the trade routes. The year the monsoon fails is a famine year with a name.
+- **Ocean Currents** — warm and cold currents, cold upwellings rich in fish, tidal streams racing through the straits, great gyres that gather drift and wrecks at their centre, and counter currents that open a sailing route home. They set coastal climates, feed the fisheries, speed or slow the ships, and carry castaways, stowaway creatures and messages in bottles that start rumours on a foreign shore.
+- **Droughts a World Apart** — slow climate oscillations bring drought to one land and flood to another in the same years, and in their strong warm and strong cold phases the swing doubles. Diviners and astronomers who learn the rhythm can foretell the bad years.
+- **Climate by Region** — the world's age, one of eleven from temperate and variable to ice age, snowball and hothouse, with slow warming and cooling ages between them, plays out differently on every coast and latitude. Felled forests dry their neighbours, a volcano brings a short chill and a supernova a long one, frozen ground thaws or freezes with the age, and storm, sun and ice gods push it region by region.
+- **Seven Planetary Cycles** — carbon, water, nutrients, oxygen, rock, the world's inner heat and its ice each keep a stock that flows between volcano, forest, ocean, river and soil. Inner heat fades over deep time and quiets the volcanoes; ice locks up the sea and lets it go again, drowning atolls and coasts. Burn the forests across a world, or let a god impose an eternal summer, and the whole planet answers over epochs.
 
 **In your world:** A river people burned their forests for fields. The rains thinned over the neighbouring hills, the hills dried to scrub, and the hungry hill clans came down to clear the last woods along the river.
 
@@ -728,17 +861,18 @@ The air moves for reasons now. Your world's spin, tilt and sunlight bend its win
 
 *The soil keeps accounts. Sooner or later, it collects.*
 
-Stand in any market town and look outward. Gardens and dairies hug the walls, forests feed the hearths beyond them, grain rolls further out, herds roam the edge, and a single new road redraws the whole pattern. Out there your farmers spend the soil's hidden stocks, sow beans to mend it, salt their fields with clever canals and fight their lords over who may graze the common.
+Stand in any market town and look outward. Gardens and dairies hug the walls, forests feed the hearths beyond them, grain rolls further out, herds roam the edge, and a single new road redraws the whole pattern. Out there your farmers spend the soil's hidden stocks, sow beans to mend it, spoil it with canals that have no drains and fight their lords over who may graze the common.
 
-- **Market Towns Arise** — hamlets serve daily needs, towns weekly ones, cities the rare. New settlements rise and old ones grow where the gaps between markets call for them, and every road or canal pulls the rings of farmland outward.
+- **Market Towns Arise** — hamlets serve daily needs and towns weekly ones, seasonal fairs draw traders from far away, regional markets set the prices of a whole region, cities trade in the rare, and the metropolis of a realm meets the long-distance and interworld trade. New settlements rise where the gaps between markets call for them, and every road or canal pulls the rings of farmland outward.
+- **Seven Rings of Land** — gardens, forest, grain, herds and the wilds ring every town, with fallow fields resting to win back their fertility and industry that takes land and fouls the rings beside it.
 - **Hunger Breeds Invention** — crowded land pushes peoples toward irrigation, terraces, rotations and manuring, while empty land lets them wait. Peoples who remember famine learn bark breads and build granaries.
-- **The Soil Remembers** — four hidden stocks lie under every field: a fixing element, minerals, organic matter and salt. Beans restore, fallow and manure heal, floods and ash enrich, and irrigation without drainage salts a civilisation's fields over centuries.
-- **Orchards of Generations** — vineyards, groves and timber plantations take years or whole epochs to mature. An enemy who cuts them down wounds a land for generations.
-- **Commons and Enclosure** — shared pastures, woods and fisheries thrive under good custom or ruin under overuse. When lords fence them, owners grow rich and cottagers drift to the cities. When lords keep the forest for the hunt, poachers are born.
-- **Nets and Closed Seasons** — fish stocks swell with warm water and river silt, then collapse under too many nets. Closed seasons, quotas and gear bans, kept by wardens and dodged by poachers, save them. Whalers chase the biggest catch at the biggest risk.
+- **The Soil Remembers** — six hidden stocks lie under every field: a fixing element, minerals, organic matter, salinity, a seed bank that regrows after fire and clearing, and the soil life that breaks down the dead and dies under poison. Beans restore, fallow and manure heal, floods and volcanic dust enrich, and irrigation without drainage spoils a civilisation's fields over centuries.
+- **Orchards of Generations** — vineyards, orchards, groves, timber stands, plantations, forest gardens, palm stands, coppice cut back to regrow for fuel, and hedgerows that hold the soil and shelter wildlife take years or whole epochs to mature. An enemy who cuts them down wounds a land for generations.
+- **Commons and Enclosure** — twelve kinds of commons, from pasture, woods, fisheries, water and quarries to peat cuttings, foraging grounds and shores, governed by open use, custom, a council, a lord's fence, state officials, bought and traded licences, or households taking turns year by year. Good rule keeps them and overuse ruins them. When lords fence them, owners grow rich and cottagers drift to the cities. When lords keep the forest for the hunt, poachers are born.
+- **Nets and Closed Seasons** — fish stocks swell with warm water and river silt, then collapse under too many nets. Ten catch grounds, from fisheries, fowling and the hunt for great land game to shore gathering, pearl diving, fish ponds, egg gathering at nesting colonies and insect gathering for food, dye and wax, are worked with twelve kinds of gear, and dredges scar the beds they drag. Closed seasons, quotas and gear bans, kept by wardens and dodged by poachers, save them. Whalers chase the biggest catch at the biggest risk.
 - **Herds and Hooves** — grazing, milking, shearing, eggs and the butcher's block, breeding seasons and herd counts, oxen at the plough, and hounds and beasts trained for war, the hunt and the gate.
 
-**In your world:** A river empire watered its plains for centuries without drains. The salt crept up, the harvests thinned, and its lords fenced the last common pastures. The dispossessed herders drifted into the cities, and their grievance became a movement.
+**In your world:** Three hill villages shared one high pasture by old custom until their herds doubled and the grass gave out. Their council gave each village the pasture in its own year, the grass came back, and the quarrels that had cost two lives faded within a generation.
 
 </td>
 </tr>
@@ -752,16 +886,18 @@ Stand in any market town and look outward. Gardens and dairies hug the walls, fo
 
 Species leave the bestiary and take up residence in your land. Each one lives region by region, breeding in its own seasons, eating what its diet allows, following the herds or the grass along its migration path. When the deer are gone, the wolves come for your sheep. When the rats come for the granary, someone has to tame a cat.
 
-- **Living Ranges** — every species holds its own population in every region, growing with litter size, habitat, warmth and food, and falling to hunters, predators, disease and the plough. Migrants shift between regions with the seasons.
-- **Nine Ways to Eat** — herbivores, carnivores, scavengers and filter feeders, but also creatures that live on sunlight, stone, souls or the void. About thirty traits, from echolocation and camouflage to iron eating and fire breath, shape what each one does.
-- **The Food Web** — who hunts whom is worked out each epoch from diet, size and shared ground. When prey runs short, predators raid your livestock. Lose a prey species and its hunters starve; lose a sacred one and a faith falls into crisis.
-- **From Wild to Breed** — tame, herd, domesticate, then breed. Captive lines grow calmer and richer in hide, wool, milk and silk, and become mounts and war beasts. Populations cut off from their kin drift into highland and desert strains.
+- **Living Ranges** — every species holds its own population in every region, growing with litter size, habitat, warmth and food, and falling to hunters, predators, disease and the plough. Twelve classes of life, from animals, plants and fungi to lichens that break bare rock into soil, microbes counted in millions and the mineral, gaseous and energy life of stranger worlds, range in size from microscopic to colossal.
+- **Sixteen Ways to Eat** — herbivores, carnivores, omnivores, scavengers, filter feeders, insect eaters, fish eaters, blood drinkers, parasites and decomposers, and creatures that live on sunlight, stone, chemicals at hot vents, raw energy, souls or the void. More than thirty traits, from echolocation and camouflage to iron eating and fire breath, shape what each one does.
+- **Who Eats Whom** — who hunts whom is worked out each epoch from diet, size and shared ground. When prey runs short, predators raid your livestock. Lose a prey species and its hunters starve; lose a sacred one and a faith falls into crisis.
+- **Herds, Packs and Pairs** — eight social forms: solitary hunters, packs, herds, hives, colonies, swarms, mated pairs that hold a range together, and family groups that teach their young and grieve their dead. The form sets the size of herds and lairs, the catch, and how fast a species can be tamed.
+- **From Wild to Breed** — eight stages run from wild through commensal creatures that live beside people by choice, tamed, herded, domesticated and bred, with captives kept in menageries, arenas and rites, and feral lines that slip back to the wild. Captive lines grow calmer and richer in hide, wool, milk and silk, and serve in nineteen roles, from draft, mount and dairy to hunting, herding, messengers, sport, medicine and display. Populations cut off from their kin drift into highland and desert strains.
+- **Life Beyond Water** — nine biochemistries: carbon in water, ammonia or methane, silicon, crystal, plasma, metal, spirit and void, each with its own solvent, warmth and the worlds it can arise on. Metal life on hot iron worlds feeds on minerals, fears rust and acid, and leaves metal behind when it dies.
 - **Pests and Blights** — crop pests thin the harvest, iron eaters gnaw the ore, plague bearers spread sickness, and vermin spoil the granary until a cat-like hunter is tamed for the work.
-- **Flora Alive** — crops, herbs, dyes, timber, brews, reagents and poisons are living plants with seasons, soils and pests. Annual, perennial or tree, wild or cultivated into new cultivars, each crop is weighed against the year it grows in.
+- **Flora Alive** — crops, herbs, dyes, timber, brews, reagents and poisons are living plants with seasons, soils and pests. Fifteen growth forms, from trees, vines and palms to plants that grow on other plants, plants that feed on a host, and bulbs that sleep underground until their season, each cultivated into new cultivars and weighed against the year it grows in.
 - **Companions and Champions** — a hound at the hearth eases loneliness, and its death leaves real grief. Falcons and war dogs sharpen the hunt. Among the largest, deadliest species, one beast may rise as a region's named terror or guardian.
-- **Root, Bark and Seed** — every plant has a body of roots, stems, wood, bark, leaves, flowers, fruit, seeds and sap, and its products come from those parts. Its growth form sets the years to first harvest and its damage from storm and fire.
+- **Root, Bark and Seed** — every plant has a body of fifteen parts, from roots, wood, bark and leaves to resin, pollen and nectar, and nineteen kinds of product come from them, from grain, fruit and fibre to oil, sugar, spice, stimulants, fodder, medicine, building stuff and fuel. Its growth form sets the years to first harvest and its damage from storm and fire.
 
-**In your world:** A king's hunters killed the last of the sacred white stags. The stag's cult fell into a crisis of doctrine, the wolves that had fed on the herd turned on the flocks, and the shepherds drove far fewer sheep to the winter market.
+**In your world:** A ruler's hunters killed the last of the sacred white stags. The stag's cult fell into a crisis of doctrine, the wolves that had fed on the herd turned on the flocks, and the shepherds drove far fewer sheep to the winter market.
 
 </td>
 </tr>
@@ -775,13 +911,13 @@ Species leave the bestiary and take up residence in your land. Each one lives re
 
 Every population in your world carries its traits as a living average, and every epoch pushes it. Wolves make the deer faster. Hunters make them warier and smaller. A god's protection lets them soften, and leaking void scatters them into mutation. Leave two herds apart long enough and they become two species. Wipe out half the world's life and watch the survivors fill every empty niche.
 
-- **Selection Pressure** — eight heritable traits, from venom potency to cold tolerance, shift each epoch in every range. Predator races prey, plague races host, and a god's curse or blessing passes down a whole lineage.
+- **Selection Pressure** — eighteen heritable traits, from size, speed, venom and camouflage to cold, heat and drought tolerance, disease resistance, docility, longevity, strength, care of the young and learning passed from parent to young, shift each epoch in every range. Predator races prey, plague races host, and a line that learns passes the way around traps and poisons down the generations. A god's curse or blessing passes down a whole lineage.
 - **Niches and Rivals** — a niche is diet, habitat, size and waking hours, and no two species share one for long. After a mass extinction, survivors radiate into the empty niches. On islands giants dwarf and the small grow large, and abandoned livestock go feral.
-- **The Energy Ladder** — each step of the food chain holds only a tenth of the life beneath it. Overhunt the grazers and the predators collapse. Pollinators, soil makers, dam builders and scavengers carry whole harvests, and their loss cascades into hunger and sickness.
-- **Partners and Parasites** — pollinators feed the crops, ticks bleed the livestock, lampreys drain the fish, mistletoe chokes the trees, and harmless mimics fool hunters and scouts. Every brewer, baker and monastery guards its ferments and starters, heirlooms a fire can end.
-- **Senses Beyond Ours** — night vision, scent, echolocation, vibration, heat, magnetic sense and spirit sight decide who spots whom. Night-sighted peoples raid in the dark, scent trails betray spies, and a magnetic sense needs no compass.
-- **Sleep, Heat and Thorn** — hibernating beasts vanish for their season, lairs left open, and a disturbed sleeper wakes hungry. Cold-blooded creatures and peoples slow in winter and surge in heat. Thorns, toxins and carnivorous plants make the green itself dangerous.
-- **The Feast of Crows** — every battle, plague, famine and massacre leaves a carrion pulse. Vultures and rats boom, stores spoil, sickness rises, predators close in, and the unburied dead stir as restless spirits until the feast is eaten.
+- **The Energy Ladder** — six steps, from producers to apex hunters, with decomposers living on the dead of every level and parasites on the living. Each step holds only a tenth of the life beneath it, so overhunt the grazers and the predators collapse. Nine keystone roles, from pollinators, soil makers and dam builders to seed carriers, reef builders, nutrient fixers and grazers that keep the grassland open, carry whole harvests, and their loss cascades into hunger, sickness and forest taking the pasture.
+- **Partners and Parasites** — six kinds of bond tie species together: mutual aid, one living off another's leavings, parasites, mimics that fool hunters and scouts, one harming another for no gain, and one species farming another. Pollinators feed the crops, ticks bleed the livestock and mistletoe chokes the trees. Every brewer, baker and monastery guards its ferments, from yeasts, starters and moulds to bean ferments and the wild cultures of one valley, heirlooms a fire can end.
+- **Senses Beyond Ours** — thirteen senses, from sight, scent and hearing to night vision, echolocation, vibration, heat, magnetic sense, electric sense, ultraviolet sight, taste that finds the poison in the cup, the pressure sense that feels a storm coming, and spirit sight, decide who spots whom. Night-sighted peoples raid in the dark, scent trails betray spies, and a magnetic sense needs no compass.
+- **Sleep, Heat and Thorn** — hibernation, summer sleep, nightly torpor, a near-lifeless state that lasts for ages, and a pause that holds eggs and young through a failed season carry creatures past hard times. Five ways of keeping warm, from warm-blooded and cold-blooded to bodies that switch, keep a warm core only, or ignore heat altogether. Eight plant defences, from thorns, toxins and stinging hairs to carnivorous traps, animal guardians, mimicry of a guarded plant and fast regrowth, make the green itself dangerous.
+- **The Feast of Crows** — every battle, plague, famine and massacre leaves a carrion pulse. Vultures and rats boom, stores spoil, sickness rises, predators close in, and the unburied dead stir as restless spirits until the feast is eaten. Remains rot, dry, freeze, drift, sink, are buried, burned or scattered by scavengers, and each fate sets its own sickness, fossil chance and chance of a restless ghost.
 
 **In your world:** No one buried the dead after the battle at the ford. Rats boomed on the field and spread into the town's granaries, spoiling the stores and carrying a fever. That winter the town was hungry and sick, and the field was said to walk at night.
 
@@ -795,17 +931,18 @@ Every population in your world carries its traits as a living average, and every
 
 *Not a species. A name, a lair, and a grudge.*
 
-Meet the dragon of the northern peak by name. It has a body that scars, an age, a lair and a hoard of gold, bones and relics. It sleeps through the seasons, wakes when miners dig too close or a thief creeps in, and raids every farm in range. It remembers who wounded it, and it will hunt that hero's house.
+Meet the dragon of the northern peak by name. It has a body that scars, an age, a lair and a hoard of gold, relics and worked treasure. It sleeps through the seasons, wakes when miners dig too close or a thief creeps in, and raids every farm in range. It remembers who wounded it, and it will hunt that hero's house.
 
-- **Named Beasts** — individual creatures with six abilities, bodies that take real wounds, tempers from sleeping to enraged, and a terror that drains the courage and prosperity of every settlement nearby. The clever ones speak, bargain and scheme with minds of their own.
+- **Named Beasts** — individual creatures with bodies that take real wounds, twelve tempers from sleeping and brooding to hungry, territorial, wounded, cowed, enraged, migrating along a seasonal path or fleeing a lost lair, and a terror that drains the courage and prosperity of every settlement nearby. Eleven temperaments, among them vengeful, acquisitive, protective, playful and proud, set how each one acts. The clever ones speak, bargain and scheme with minds of their own.
+- **A Grudge That Lasts** — a vengeful beast keeps a grudge against the line or people that wronged it, with its cause and its strength, and hunts them until it fades. A proud one answers insults and challenges, and accepts terms from those who honour it.
 - **Hoards Worth a Kingdom** — raids and tribute fill the hoard, and villages may sign a treaty to pay it. Slay the beast and the hoard becomes a treasure site, and its looting crashes luxury prices across the market.
-- **The Slayer's Reward** — quests name their quarry. A kill brings a title, dragonbone and star-scale, and a slayer's legend. Tamed beasts, even void beasts that drift between worlds, carry riders onto sky, sea and star routes; bound ones guard temples or march to war.
-- **Born of the Deep** — unique horrors built from the bones up, with flesh of crystal, fire, steam or metal and breath of flame, frost, venom gas or web. Each hoards what it loves, hates what it hates, and wakes to deep mining or desecration.
+- **The Slayer's Reward** — quests name their quarry. A kill brings a title, a slayer's legend and the beast's body, worked into twenty-one kinds of product, from hide, ivory and scales to blood, organs, venom, shell and great-beast tissue. Tamed beasts, even void beasts that drift between worlds, carry riders onto sky, sea and star routes; bound ones guard temples or march to war.
+- **Born of the Deep** — unique horrors built from the body up, of seventeen materials from hide, plates and shell to crystal, metal, gel, wood or living liquid. They strike by twelve means, from bite, sting, breath and gaze to thrown spines and crushing coils, some at a whole battle line at once, and live in nine habitats from land, sea and sky to magma, ice, the shore and the ethereal. Each hoards what it loves, is turned by what it hates (fire, iron, noise, light, cold, strong scent or its own true name), and wakes to deep mining, desecration, theft, a summons, a sign in the sky, harm done to its kin or the return of its season.
 - **Familiars** — a mage binds a beast or spirit by rite. It lends its senses, a skill or a shield against magic, and takes the backlash first. Its death wounds the mage. Beasts sacred to a god grow calm in that god's dominion.
 - **Monster Contracts** — troubled villages post bounties in coin or favours. Professional hunters, some changed by their order's training, study each beast's anatomy for its weakness, and every job builds a reputation and a legend.
-- **The Ancient Ones Remember** — a long-lived dragon recalls the war of three centuries ago as it truly happened, or as it prefers. It teaches rites, tongues and true names, sells secrets, and when it dies, all it never taught dies with it.
+- **The Ancient Ones Remember** — a long-lived dragon recalls the war of three centuries ago as it truly happened, or as it prefers. It teaches songs, rites, tongues and true names, sells secrets, maps, remedies and lines of descent among seventeen kinds of knowledge, and when it dies, all it never taught dies with it.
 
-**In your world:** A hero wounded the wyrm and fled with a cup from its hoard. The wyrm remembered, and for two generations it hunted his house. When a contract hunter finally killed it, the looted hoard flooded the markets and luxury prices crashed across the realm.
+**In your world:** A hero wounded the wyrm and fled with a cup from its hoard. The wyrm remembered, and for two generations it hunted the hero's house. When a contract hunter finally killed it, the looted hoard flooded the markets and luxury prices crashed across the realm.
 
 </td>
 </tr>
@@ -817,16 +954,17 @@ Meet the dragon of the northern peak by name. It has a body that scars, an age, 
 
 *It has a name. It has a host. And it learns.*
 
-Plague is no longer a stroke of bad luck. It is a named enemy with a vector, a host and a history. It rides the caravans and the armies, waits in the swamp fly and the granary rat, and returns for the children born after its last visit. Close the ports and the markets starve. Ring the bells for prayer and the crowd spreads it. Somewhere, a plague god grows stronger with every outbreak.
+Plague is no longer a stroke of bad luck. It is a named enemy with a route, a host and a history. It rides the caravans and the armies, waits in the swamp fly and the granary rat, and returns for the children born after its last visit. Close the ports and the markets starve. Ring the bells for prayer and the crowd spreads it. Somewhere, a plague god grows stronger with every outbreak.
 
-- **Named Diseases** — each one has a vector (air, water, touch, bite, spirit, void or curse), a lethality, an incubation and a part of the body it attacks. A plague that turns endemic guards its marsh: the locals are immune, and invaders die at the walls.
+- **Named Diseases** — each one has a main route and further routes among seventeen ways of passing: breath, water, food, touch, bite, blood, birth, intimacy, shared objects, soil, sound, a rite, a gaze, a spirit, the void, a curse or a lived experience. Each has a lethality, an incubation, a part of the body it attacks and a climate it favours, warm or cold, wet or dry. A plague that turns endemic guards its marsh: the locals are immune, and invaders die at the walls.
 - **Evolving Plagues** — crowded cities breed faster spread, sparse villages starve the deadliest strains, and every treatment in use breeds resistance. Survivors stay immune, so the plague comes back for the young, or mutates past them.
 - **Silent Carriers** — some of the infected never fall ill. The merchant, envoy or pilgrim who seemed healthy seeds an outbreak across the sea, and only a skilled physician who holds the theory of contagion can find them.
+- **How It Travels** — along trade routes, with armies, journeys and sieges, through wildlife and migrations, at gatherings, down waterways, with herds that are driven and sold, and through shared wells and aqueducts that sicken a whole city from one source. Mutations and plagues loosed on purpose start new outbreaks.
 - **Healers Right and Wrong** — sickness runs through incubation, fever, crisis, recovery or death, and its after-effects. A healer who believes bleeding cures fever raises the death toll; one who grasps contagion makes quarantine work. Addiction to drink, drugs and void dust is a disease too.
 - **Where Plague Begins** — clearing forests, hunting bushmeat and herding beside wild hosts let a creature's disease leap to people. Insects follow the warm seasons, birds carry fevers along their migrations, and exterminating a host is a cure with an ecological price.
-- **Hard Choices** — close the ports, quarantine the poor quarter, burn the dead, expel the sick or ring the bells, and pay in trade, riots, funeral quarrels or a crowd that spreads it. Purity-minded peoples found leper colonies; merciful ones build hospitals.
+- **Hard Choices** — close the borders, quarantine the poor quarter, burn the dead, expel the sick, ring the bells for prayer, clean the streets and wells, close the feasts, markets and rites, inoculate, or let the able flee, and pay in trade, riots, funeral quarrels, lost morale or a crowd that carries it on. Purity-minded peoples found leper colonies; merciful ones build hospitals.
 - **The Cure Race** — hospitals, universities and monasteries race against one disease, faster with scholars, true theories and fresh cases nearby. The winner holds a cure it can sell. Variolation trades a small risk for immunity, until the herd is safe.
-- **What Makes It Sick** — every disease has an agent (virus, bacterium, fungus, parasite, prion, toxin, deficiency, spirit, curse or a made one), and cures work only by class. Agents evolve at their own rates, survive in water, soil or objects by kind, and hide in reservoir species between outbreaks.
+- **What Makes It Sick** — every disease has one of thirteen agents (virus, bacterium, fungus, parasite, prion, toxin, deficiency, spirit, curse, a made agent, an unknown one, a fault carried down the bloodline, or a body turned against itself), and fourteen cure classes, from herbs and surgery to antivirals, diets that end deficiencies and immunisation that keeps it out, work only by class. Agents evolve at their own rates, survive in water, soil or objects by kind, and hide in reservoir species between outbreaks.
 
 **In your world:** A merchant who never felt ill carried the marsh fever upriver to the capital. The queen closed the ports, the guilds rioted in the empty markets, and a monastery won the race to a cure. It sold the cure city by city, and every city paid its price.
 
@@ -851,18 +989,19 @@ Plague is no longer a stroke of bad luck. It is a named enemy with a vector, a h
 
 *A king can lose a hand. A kingdom can lose a king.*
 
-A duel at the river ford ends in a single stroke. The king lives, but his sword hand lies in the mud, and in a culture that demands a whole body on the throne, his claim bleeds out faster than he does. Every blow in your world lands on a real part of a real body, passes through real armour and leaves a mark that history must carry.
+A duel at the river ford ends in a single stroke. The ruler lives, but the sword hand lies in the mud, and in a culture that demands a whole body on the throne, the claim fails faster than the wound heals. Every blow in your world lands on a real part of a real body, passes through real armour and leaves a mark that history must carry.
 
-- **Bodies, Not Hit Points** — twelve body plans, from humanoid and serpentine to colossal and divine. The human body alone has twenty-two parts, each with a job: a lost eye spoils the archer, a shattered jaw silences the preacher.
-- **Steel Meets Flesh** — every blow is weighed by momentum, edge and the hardness of steel against mail. Armour is tested layer by layer, padding, mail, cloak and shield, before the blade reaches skin, fat, muscle and bone.
-- **Wounds with a Memory** — sixteen kinds, from bruise and frostbite to the void touch that never heals and the divine brand. Arteries bleed until bound, a struck nerve leaves a limp arm without a cut, and pain tips into shock and capture.
-- **Healers and Surgeons** — medicine climbs from herbs to surgery, prosthetics and magical reattachment. Healers diagnose, suture, set, splint and cauterise, and a skilled surgeon turns an infected arm that would kill into an amputation a man survives.
+- **Bodies, Not Hit Points** — eighteen body plans, from humanoid, serpentine and six-legged to rooted, colossal and divine. A humanoid body alone has twenty-seven parts, each with a job: a lost eye spoils the archer, a shattered jaw silences the preacher. Antennae, fins, roots and pouches serve the bodies that have them, and paired parts are struck and lost one side at a time.
+- **Steel Meets Flesh** — every blow is weighed by momentum, edge and the hardness of steel against mail, in twenty kinds of harm from cut, pierce and blunt to fire, sonic, crushing pressure and blows to the soul. Armour is tested layer by layer, padding, mail, cloak and shield, before the blade reaches skin, fat, muscle and bone.
+- **Wounds with a Memory** — thirty kinds of injury, from bruise, sprain and frostbite to torn tendons, internal bleeding, the void touch that never heals and the divine brand. A wound can turn infected, then gangrenous, reopen, heal into a scar or stay chronic and flare under strain. Arteries bleed until bound, a struck nerve leaves a limp arm without a cut, and pain tips into shock and capture.
+- **Thirty-Two Causes of Harm** — battle, duel, torture and accident, but also childbirth, crime, sport, crowds and crushes, kept animals and treatment gone wrong, each recorded with the harm it did.
+- **Healers and Surgeons** — medicine climbs from herbs, surgery and anatomy through antisepsis, anaesthesia and immunisation to transplants, regeneration and mind medicine. Healers diagnose, clean, suture, set, splint, drain, transfuse, medicate and cauterise, prescribe rest, and a skilled surgeon turns an infected arm that would kill into an amputation the patient survives.
 - **The Silver Hand** — prostheses of wood, glass, silver and star metal restore part of what was lost, by material and craftsmanship. A legendary one becomes a relic that passes down the line and carries legitimacy with it.
-- **What the Body Can Still Do** — melee, missile, command, craft, scholarship, presence, mobility and fertility are all read from the body. A blind scholar needs a reader. A people without helmets fills its halls with one-eyed veterans.
-- **Scars Read by Culture** — honour cultures prize battle scars, purity cultures bar the maimed from the throne, and cults that sanctify suffering recruit them. Generations after a great war, a people still calls itself a people of one-armed grandfathers.
-- **Systems and Sensitivities** — breath, circulation, digestion, regulation and nerves run each body, and a failing system has its own effects. Some beings react to a food, a plant, an animal, a material, a substance or a power, and peoples learn what to avoid.
+- **What the Body Can Still Do** — melee, missile, command, craft, scholarship, presence, mobility, fertility, endurance, perception, stealth and labour are all read from the body. Thirteen lasting maims and twenty-four conditions, from paralysis and chronic pain to seizures and lasting fear, change what each one can do. A blind scholar needs a reader. A people without helmets fills its halls with one-eyed veterans.
+- **Scars Read by Culture** — honour cultures prize battle scars, purity cultures bar the maimed from the throne, and cults that sanctify suffering recruit them. Generations after a great war, a people still calls itself a people of one-armed elders.
+- **Systems and Sensitivities** — breath, circulation, digestion, excretion, regulation, nerves, immunity, reproduction and structure run each body, and a failing system has its own effects. Some beings react to a food, a plant, an animal, a material, a substance, light, sound, pressure or a power, and peoples learn what to avoid.
 
-**In your world:** A duel took the king's sword hand. His people required a whole body on the throne, so his legitimacy collapsed and a rival claimant rose. The victors of the civil war blamed the healer who failed him, his guild lost its standing, and medicine spread more slowly through the kingdom.
+**In your world:** A duel took the ruler's sword hand. Their people required a whole body on the throne, so the ruler's legitimacy collapsed and a rival claimant rose. The victors of the civil war blamed the healer who had failed to save the hand, the healer's guild lost its standing, and medicine spread more slowly through the realm.
 
 </td>
 </tr>
@@ -874,17 +1013,18 @@ A duel at the river ford ends in a single stroke. The king lives, but his sword 
 
 *One bite. One desecrated grove. One night of the full moon.*
 
-A poacher kills a stag in the Hunt god's grove. Nothing happens until the first moon rises full, and then something with his eyes runs through the village. Curses, venoms, drugs, blessings and transformations in your world share one grammar: how they pass from body to body, how long they wait, the stages they march through, and the single cure that ends them.
+A poacher kills a stag in the Hunt god's grove. Nothing happens until the first moon rises full, and then something with the poacher's eyes runs through the village. Curses, venoms, drugs, blessings and transformations in your world share one grammar: how they pass from body to body, how long they wait, the stages they march through, and the cure that ends them.
 
-- **One Grammar for Every Affliction** — venom, blessing, void taint, possession, trauma and drugs share one shape: an onset, stages with their own effects, and a cure by rite, medicine, time or quest. Each is obvious, noticeable or hidden, and hidden ones are secrets.
-- **Nine Ways to Catch It** — touch, bite, food, breath, blood, birth, rite, a single gaze, or the desecration of a holy place. Some curses carry themselves onward: a werebeast's bite passes the curse to the bitten.
+- **One Grammar for Every Affliction** — twenty kinds, from venom, drink and drug dependence, the beast curse and the blood curse to blessings, void taint, possession, trauma, hunger curses, warping, dooms, trapped souls, fortune, charms and transformations, share one shape: an onset, stages with their own effects, and a cure by rite, medicine, time, quest, power, a place that heals, or the one who laid it lifting it. Each is obvious, noticeable, hidden or marked with a sign only those with the right knowledge or spirit sight can read, and hidden ones are secrets.
+- **Age, Memory and Sleep** — a curse can speed, slow or stop a body's ageing, take its holder's memories, skills or a person's name until they are learned again, or lay a sleep that holds until its cure comes, while heirs, offices and unions treat the sleeper as absent.
+- **Seventeen Ways to Catch It** — touch, bite, food, breath, blood, birth, intimacy, a rite, a single gaze, shared objects, water, soil, sound, a spirit, the void, a curse or something lived through. Some curses carry themselves onward: a werebeast's bite passes the curse to the bitten.
 - **Beasts Under the Moon** — the werebeast turns at every full moon of the world's first moon into a beast that still thinks. Each victim it bites may become the next hunter.
-- **The Thirst** — the vampire-like curse stops ageing, adds a hunger for blood, burns in sunlight and needs a false name to hide behind. It comes from a blood rite gone wrong or the curse of a son of Blood.
-- **Holy Ground Strikes Back** — rob a temple, kill in a sanctuary or defile a tomb, and the god answers with a curse shaped by its domains. The Hunt god sends the werebeast, the Blood god the thirst, the Death god a haunting.
+- **The Thirst** — the vampire-like curse stops ageing, adds a hunger for blood, burns in sunlight and needs a false name to hide behind. It comes from a blood rite gone wrong, a feeding, or the curse of a son of Blood.
+- **Holy Ground Strikes Back** — rob a temple, kill in a sanctuary or defile a tomb, and the god answers with a curse shaped by its domains. A Hunt god sends the werebeast, a Blood god the thirst, a Death god a possession.
 - **Things That Walk at Night** — night trolls and bogeymen carry mortals away, and necromancers raise towers, bind spirits into corpses and march their undead hosts against living towns.
 - **Dependence** — drugs and strong drink add a craving and its withdrawal to a single life. Void taint marches its bearer stage by stage into madness, and then into the arms of the outer cults.
 
-**In your world:** A poacher desecrated the Hunt son's grove and turned at the next full moon. His bites spread the curse, the frightened village held a purge and burned an innocent hermit, whose vengeful ghost still walks. A healer found the cure rite too late for him.
+**In your world:** A poacher desecrated the Hunt son's grove and turned at the next full moon. The poacher's bites spread the curse, the frightened village held a purge and burned an innocent hermit, whose vengeful ghost still walks. A healer found the cure rite, but too late for the poacher.
 
 </td>
 </tr>
@@ -896,17 +1036,19 @@ A poacher kills a stag in the Hunt god's grove. Nothing happens until the first 
 
 *They don't just act. They feel, they want, they remember and they misjudge.*
 
-The old general has every reason to end the siege. The walls hold, fever is in his camp and the treasury is empty. But he has spent too many winters and his own son's life on those walls, and he cannot let go. Every named mortal in your world carries a mind built in layers: what they can do, how they react, what they value, and the mistakes that follow.
+The old general has every reason to end the siege. The walls hold, fever is in the camp and the treasury is empty. But the general has spent too many winters and a child's life on those walls, and cannot let go. Every named mortal in your world carries a mind built in layers: what they can do, how they react, what they value, and the mistakes that follow.
 
-- **Three Layers of Mind** — nineteen attributes for what a mortal can do, thirty-six facets for how they react, twenty-four beliefs for what they hold dear. A facet pushed to its extreme hardens into one of some forty traits, from brave to paranoid.
-- **Eighty Thoughts, Twenty-Four Emotions** — a mortal who saw kin die, ate fine food or heard great music feels grief, contentment or awe. Moods run from elated to broken, and the strongest thoughts become memories that reshape beliefs and return on every anniversary.
-- **Twenty-Two Needs** — from food, drink and rest to romance, solitude, beauty, nature, adventure and order. Unmet needs sour the mood, and the mortals under the heaviest pressure are the ones most likely to act.
-- **Likes and Dislikes** — favourite foods, colours, creatures, seasons and art forms. A people that loves amber raises its price, merchants carry what the buyer craves, and a disgust shared by everyone becomes a taboo.
-- **Minds That Err** — eight biases, among them overconfidence, sunk cost, groupthink and hostile attribution, bend every decision, and the explanation shows which one did it. Rulers fight on in wars they should have ended.
-- **Ideas That Take Root** — a heretical book or a new theory incubates for seasons, bringing distraction or obsession, until it is rejected or taken in for good. The rationalist convert gains a sharper mind and loses his comfort in the rites.
+- **Three Layers of Mind** — nineteen attributes for what a mortal can do, thirty-six facets for how they react, from anxiety and humour to forgiveness and adaptability, and twenty-seven beliefs for what they hold dear, now including freedom, equality and hospitality. A facet pushed to its extreme hardens into one of a hundred and thirty-eight traits, from brave and forgiving to paranoid.
+- **Thoughts, Feelings and Moods** — a hundred and sixty-five kinds of thought and thirty-two emotions: a mortal who saw kin die, survived a quake, fled a plague or heard great music feels grief, relief, trust, anticipation, admiration or awe. Moods run from elated to broken and from calm through alert to agitated, so agitated minds quarrel and flee while calm ones counsel and craft.
+- **Memory and Grief** — forty-three kinds of memory, from "saved me" and "betrayed me" to "healed me", "sheltered me" and "abandoned me", reshape beliefs and return on every anniversary. Grief runs from shock and anger through bargaining, mourning and yearning to acceptance, or stalls into grief that will not end.
+- **Thirty Needs** — in five groups of body, company, spirit, action and mind, from food, drink and rest to romance, solitude, beauty, knowledge, justice and the need to care for someone. Unmet needs and fifteen pressures, from hunger and overcrowding to debt, isolation and persecution, sour the mood, and the mortals under the heaviest pressure are the ones most likely to act.
+- **Likes and Dislikes** — twenty-nine kinds of taste: favourite foods, colours, creatures, seasons, weather, sounds, scents, stories, games and art forms. A people that loves amber raises its price, merchants carry what the buyer craves, and a disgust shared by everyone becomes a taboo.
+- **Minds That Err** — twenty-one biases, among them overconfidence, sunk cost, groupthink, hostile attribution, anchoring, fatalism and the halo of a famous name, bend every decision, and the explanation shows which one did it. Rulers fight on in wars they should have ended.
+- **Ideas That Take Root** — a heretical book or a new theory incubates for seasons, bringing distraction or obsession, until it is rejected or taken in for good. The rationalist convert gains a sharper mind and loses their comfort in the rites.
+- **Dreams and Inspiration** — eight kinds of dream, from nightmares and prophecies to shared dreams, lucid dreams and dreams that ease a memory, and eight kinds of inspiration, from masterwork fever to a healer's insight and a vision of a better law.
 - **Beliefs That Spread** — mortals, peoples, cults and gods weigh one another on the same beliefs. Ideas pass by prestige, by conformity and by sheer stickiness, so one charismatic reformer can move a whole town.
 
-**In your world:** A paranoid king read his neighbour's new border fort as an attack, and his small, frightened council agreed. The war went badly, sunk cost kept him in it for years, and the defeat became the memory that shaped his heir's caution.
+**In your world:** A paranoid ruler read a neighbour's new border fort as an attack, and the small, frightened council agreed. The war went badly, sunk cost kept the ruler in it for years, and the defeat became the memory that shaped the heir's caution.
 
 </td>
 </tr>
@@ -916,20 +1058,21 @@ The old general has every reason to end the siege. The walls hold, fever is in h
 
 #### 13. Cradle to Pyre
 
-*The children playing soldiers in the yard will one day be his council.*
+*The children playing soldiers in the yard will one day sit on the council.*
 
-A girl grows up in a household that cannot quite feed her. She learns her letters at the temple, takes up the loom, rises from apprentice to master and dreams of a masterwork she may never finish. Every mortal in your world moves through infancy, childhood, youth, adulthood and age, and each stage changes who they are allowed to become.
+A girl grows up in a household that cannot quite feed her. She learns her letters at the temple, takes up a craft, rises from apprentice to master and dreams of a masterwork she may never finish. Every mortal in your world moves through infancy, childhood, youth, adulthood, maturity and age, and each stage changes who they are allowed to become.
 
-- **Six Ages of a Life** — infancy, childhood, youth, adulthood, old age and, for long-lived peoples, an ancient age of eccentric living history. Elders lose strength, gain wisdom, risk failing sight and turn mentor.
-- **Pregnancy and Birth** — hunger and disease raise the risk, healers lower it. Twins, stillbirth, miscarriage and death in childbirth all happen, and a dead mother leaves an orphan, a widower and sometimes a crisis of succession.
+- **Seven Ages of a Life** — infancy, childhood, youth, adulthood, a mature age when skills and offices peak and strength begins to fall, old age, and for long-lived peoples an ancient age of eccentric living history. The mature are chosen as counsellors and heads of houses; elders gain wisdom, risk failing sight and turn mentor.
+- **Pregnancy and Birth** — hunger and disease raise the risk, healers lower it. Twins, stillbirth, injury at birth, miscarriage and death in childbirth all happen, and a parent's death leaves an orphan, a grieving partner and sometimes a crisis of succession.
 - **Children of the Yard** — peer groups play at war, songs and riding, and their friendships and rivalries last into adulthood. Children denied play by labour, famine or war grow up less cheerful and more prone to stress.
-- **Careers with Ranks** — fifty-four skills feed ladders from apprentice to grandmaster, soldier to marshal, acolyte to high priest. Unused skills rust. Lose a sword arm and the warrior becomes a teacher, a priest or a beggar.
-- **Fifteen Life Dreams** — rule a realm, found a house, slay a beast, find love, know a truth. Each has milestones. A maimed would-be champion despairs unless he finds a new dream, and inspiration can strike as a masterwork fever.
-- **Conviction and Breaking Points** — living by one's beliefs earns conviction to spend on a heroic effort in a crisis. Stress past its limit breaks a mortal into rage, flight, despair, zeal, vice or a sudden vision.
-- **Twenty Ways to Die** — from bleeding, childbirth and drowning to execution, curse, void and heartbreak, each recorded with its place. The manner of death sets the house's prestige, the burial rite and the kind of ghost left behind.
-- **Raising the Young** — infant care and feeding, the ages of naming, work and responsibility, each culture's ways of shaping children into adults, schools of teaching, and youth groups that serve, court, compete or turn to crime.
+- **Careers with Ranks** — sixty-nine skills, from blade and bow to farming, herding, cooking, music, climbing and diving, feed ladders from apprentice to grandmaster, soldier to marshal, acolyte to high priest. Fifteen life paths take the young into the army, office, a craft, vows, trade, the sea, service, the arts, study, healing or the wilds, or keep them at home. Unused skills rust. Lose a sword arm and the warrior becomes a teacher, a priest or a beggar.
+- **Fifteen Life Dreams** — rule a realm, found a house, slay a beast, find love, know a truth. Each has milestones. A maimed would-be champion despairs unless they find a new dream, and inspiration can strike as a masterwork fever. Twenty-two kinds of life story, from rise and fall to betrayal, friendship and legacy, unfold only where their causes hold.
+- **Conviction and Breaking Points** — living by one's beliefs earns conviction to spend on a heroic effort in a crisis. Stress past its limit breaks a mortal into rage, flight, despair, zeal, vice, withdrawal, a sudden vision, a numb absence or a body that gives out.
+- **Thirty-Three Ways to Die** — from bleeding, childbirth and drowning to execution, sport, crowds, kept animals, treatment gone wrong, curse, void, despair and the loss of the soul, each recorded with its place. Each culture reads each death as glorious, honourable, plain, shameful, cursed or pitied, and the reading sets the house's prestige, the burial rite and the kind of ghost left behind.
+- **Last Rites** — fourteen funeral customs, from burial, cremation, sky and sea burial and entombment to mummification, second burial, a return to the soil that feeds the plot, and memorials for those never found. Each has its cost and specialists, and decides what becomes of the body and the soul.
+- **Raising the Young** — infant care and feeding, the ages of naming, work and responsibility, fourteen ways of shaping children, from example and play to mentors and travel abroad, nine schools of teaching including peers teaching peers, and youth groups that serve, court, compete, learn, labour or turn to crime.
 
-**In your world:** A queen died in childbirth and left an infant daughter, while the law demanded a grown male heir. A regency council formed, a rival house pressed its claim, and the regent's mounting stress made the civil war that followed all but certain.
+**In your world:** A queen died in childbirth and left an infant daughter, while the law demanded a grown heir. A regency council formed, a rival house pressed its claim, and the regent's mounting stress made the civil war that followed all but certain.
 
 </td>
 </tr>
@@ -941,18 +1084,18 @@ A girl grows up in a household that cannot quite feed her. She learns her letter
 
 *Friends, lovers, rivals and nemeses. All of them remember.*
 
-Two squires share a tent on campaign and come home comrades in arms. Years later one marries the other's sister, and a single careless insult at the wedding feast begins a feud that outlives them both. Every pair of mortals in your world carries a history of friendship, romance, rivalry and memory, and every word that passes between them adds to it.
+Two squires share a tent on campaign and come home comrades in arms. Years later one marries the other's sibling, and a single careless insult at the wedding feast begins a feud that outlives them both. Every pair of mortals in your world carries a history of friendship, romance, rivalry and memory, and every word that passes between them adds to it.
 
-- **Bonds on Four Axes** — friendship, romance, familiarity and rivalry combine into eighteen kinds of bond, from crush and confidant to mentor, drinking companion and nemesis. An affair becomes a secret, and its discovery ends in divorce, a duel or a house feud.
-- **Twenty-One Interactions** — gossip, joke, flatter, boast, flirt, propose, confide a secret, threaten, brawl. Each is chosen by temperament, mood, the bond and whether the two even share a language, and each leaves a mark.
+- **Bonds on Four Axes** — friendship, romance, familiarity and rivalry combine into twenty-four kinds of bond, from crush and confidant to mentor, betrothed, sworn kin, foster kin, neighbours bound to help in fire and flood, guest friends whose bond passes to their heirs, the estranged, and nemesis. An affair becomes a secret, and its discovery ends in divorce, a duel or a house feud.
+- **Twenty-Eight Interactions** — gossip, joke, flatter, boast, flirt, propose, confide a secret, apologise, share a meal, ask counsel, praise, warn, plead, pass on news, threaten, brawl. Each is chosen by temperament, mood, the bond and whether the two even share a language, and each leaves a mark.
 - **Memories That Become Opinions** — harmed me, saved me, betrayed me, gifted me. Opinion is built from trust, fear, respect, affection and grievance, and the strongest grudges pass to the heirs when the holder dies.
-- **Burning Passions** — love, loyalty, hatred and devotion strong enough to be invoked in battle, duel or oath, for a great bonus or a breakdown. Lose the object of a passion and grief arrives at full force.
-- **The Art of Persuasion** — appeal to belief, to self-interest, to authority, to evidence or to fear. The speaker's oratory meets the listener's stubbornness, and the result sways councils, congregations and envoys.
-- **Pecking Orders and Circles** — households, courts, warbands and crews rank their members by strength, office and nerve. Drinking halls, poets' circles and hunting lodges breed friendships, conspiracies and ideologies.
-- **Duels of Wit** — riddle games, insult verse, disputations, song and storytelling contests fought round by round, for honour, a bride or a captive's freedom. The judges' tastes count, and a famous flyting becomes a heroic poem.
-- **Norms of Intimacy** — each culture's own stance on relations before, within and outside unions, on restraint and vows, on the course of pregnancy and the time after birth, and on a child's standing, all told plainly and behind closed doors.
+- **Burning Passions** — sixteen passions, among them love, loyalty, hatred, devotion, vengeance and compassion, strong enough to be invoked in battle, duel or oath, for a great bonus or a breakdown. Lose the object of a passion and grief arrives at full force.
+- **The Art of Persuasion** — appeal to belief, to self-interest, to authority, to evidence, to fear, to feeling, to the bond between you or to tradition, to change a belief, a decision, a faith, a vote or a treaty, or to win a surrender, a confession, an alliance or a captive's release. The speaker's oratory meets the listener's stubbornness, and the result sways councils, congregations and envoys.
+- **Pecking Orders and Circles** — households, courts, warbands, crews, congregations and schools rank their members by strength, office and nerve. Twelve kinds of circle, from drinking halls, poets' circles and hunting lodges to sport clubs, reading circles that spread new ideas and mutual-aid societies that pool their goods against hard times, breed friendships, conspiracies and ideologies.
+- **Contests of Every Kind** — riddle games, insult verse, disputations, song and storytelling contests, races, craft contests, wrestling and hunts, fought round by round for honour, a union, office, land, freedom, knowledge, a title, water and grazing rights or a captive's freedom. The judges' tastes count, and a famous flyting becomes a heroic poem.
+- **Norms of Intimacy** — each culture's own stance, from forbidden to expected, on relations before, within and outside unions, with kin, with made minds, with other kinds and with spirits and gods, on restraint and vows, on the course of pregnancy and the time after birth, and on a child's standing, all told plainly and behind closed doors.
 
-**In your world:** A squire's loyalty to his lord burned so fiercely that he invoked it at the ford and broke the enemy line. When the lord later betrayed him, grief struck at full force, and the squire took up a new life dream: vengeance.
+**In your world:** A squire's loyalty to their lord ran so deep that the squire invoked it at the ford and broke the enemy line. When the lord later betrayed that loyalty, grief struck at full force, and the squire took up a new passion: vengeance.
 
 </td>
 </tr>
@@ -964,18 +1107,19 @@ Two squires share a tent on campaign and come home comrades in arms. Years later
 
 *Behind every hero stands a household, and a supper table.*
 
-The veteran comes home from the war with one leg. In a poor household he is another mouth and a burden on his daughter. In a rich one he is a respected elder by the fire. Every named mortal belongs to a household with a purse, a dwelling, a diet and a table, and what happens at that table shapes the body and the realm.
+The veteran comes home from the war with one leg. In a poor household the veteran is another mouth and a burden on a grown child. In a rich one, a respected elder by the fire. Every named mortal belongs to a household with a purse, a dwelling, a diet and a table, and what happens at that table shapes the body and the realm.
 
-- **Households with a Purse** — pooled wages against rent, dowries, tithes and taxes, with heads, heirs, carers, servants, wards and lodgers. The household decides whom to marry, whom to apprentice and when to leave for another city.
-- **Nine Kinds of Dwelling** — hut, longhouse, townhouse, manor, palace, tent, cave, ship and tower. Quality, rooms and furnishings set comfort, beauty, status and mood, and squalor breeds disease.
-- **You Are What You Eat** — every diet is measured in staples, protein, fats, fresh food and salt. Famine children grow shorter, nobles grow taller, sailors without fresh food sicken, and inland peoples without salt swell at the throat.
-- **Cuisines That Travel** — every culture cooks its own dishes from local ingredients, under its own tastes and taboos. Cuisines spread with contact and diaspora, fine food marks rank, and who may eat with whom is a rule of its own.
-- **Taverns and Inns** — gossip runs through them, schemers and mercenary captains recruit in them, brawls break out in them, caravans sleep in them, and the innkeeper sells what he has overheard.
-- **Drink and Its Customs** — every people decides which substances are taken, by whom and on which nights. Brewing feeds the economy, sacred drink gives mystics their visions, dependence ruins lives and feasts end in brawls.
-- **Hours in a Year** — every class divides its year between work, rest, worship, leisure, travel and military service. Rest days and long festivals cost output and buy cohesion, and forced labour takes the hours back.
-- **The Shape of a Day** — time budgets by class and age, sleep, washing and grooming customs, housework and who does it, servants, leisure pursuits, tourism, and norms of personal space.
+- **Households with a Purse** — pooled wages against rent, dowries, tithes and taxes, with heads, spouses, heirs, carers, servants, wards and lodgers, in eleven household forms from nuclear and extended to joint, communal, chosen and skipped-generation homes. The household decides whom to marry, whom to apprentice and when to leave for another city.
+- **Eighteen Kinds of Dwelling** — hut, longhouse, townhouse, manor, palace, tent, cave, ship, tower, apartment, farmstead, stilt house, burrow, nest, a home beneath the water, a grown home, a house cut from rock and a courtyard house. Quality, rooms and furnishings set comfort, beauty, status and mood, and squalor breeds disease.
+- **You Are What You Eat** — every diet is measured in energy, protein, fats, fresh food and minerals, and for stranger peoples in light, essence or charge. Famine children grow shorter and slower, the well fed grow taller, and a diet that falls short brings malnutrition.
+- **Cuisines That Travel** — every culture cooks its own dishes from local ingredients, under its own tastes and taboos, by thirty-five methods from boiling and baking to earth ovens, parching and fermenting, at nine kinds of meal from daily fare and feasts to travel food and food bought in the street. Cuisines spread with contact and diaspora, fine food marks rank, and who may eat with whom is a rule of its own.
+- **Taverns and Inns** — gossip runs through them, schemers and mercenary captains recruit in them, brawls break out in them, caravans sleep in them, and the innkeeper sells what was overheard.
+- **Drink and Its Customs** — every people decides which of eleven kinds of intoxicant, from brews and wines to stimulants and resins, are taken, by whom and when: daily, at feasts, in rites, in mourning, as medicine, for guests, for work or for courage before a fight. Brewing feeds the economy, sacred drink gives mystics their visions, dependence ruins lives and feasts end in brawls.
+- **House Duties** — food, water, fuel, cleaning, textiles, the care of children, elders and the sick, animals, repairs, household rites, teaching the young at home and keeping the accounts, and each culture's rule for who does each.
+- **Hours in a Year** — every class divides its year between work, rest, worship, leisure, travel, service, learning, care, art, housework, sleep, civic duty, training, company and mourning. Rest days and long festivals cost output and buy cohesion, and forced labour takes the hours back.
+- **The Shape of a Day** — time budgets by class and age, sleep, washing and grooming customs, servants, nineteen leisure pursuits from games, dance and storytelling to gardening, bathing and keeping animals, tourism, and norms of personal space.
 
-**In your world:** Sailors on a long voyage ran out of fresh food and fell to a scurvy-like sickness. The survivors drank their story into the harbour tavern, the gossip spread through the port, and the next fleet would not sail without the techniques that kept its food fresh.
+**In your world:** Sailors on a long voyage ran out of fresh food and fell sick for want of it. The survivors told their story in the harbour tavern, the gossip spread through the port, and the next fleet would not sail without the ways of keeping food that saved its crews.
 
 </td>
 </tr>
@@ -987,17 +1131,17 @@ The veteran comes home from the war with one leg. In a poor household he is anot
 
 *Not every people breathes. Not every people dies.*
 
-Your scouts report an enemy that does not bleed. Blades pass through it. Salt and iron burn it. Somewhere beneath the waves, another people writes in shell inlay and fights in three dimensions. Twelve biologies beyond the human rewrite every foundation of your world, from how a people eats and breeds to how it casts, decides, makes war and dies.
+Your scouts report an enemy that does not bleed. Blades pass through it. Somewhere beneath the waves, another people writes in shell inlay and fights in three dimensions. Nineteen biologies beyond the human rewrite every foundation of your world, from how a people eats and breeds to how it casts, decides, makes war and dies.
 
-- **Twelve Biologies** — incorporeal, aquatic, aerial, subterranean, hive, plant-like, construct, ageless, shapeshifting, gaseous, crystalline and undead. Each changes body and harm, food and birth, culture and craft, war, disease and death.
+- **Nineteen Biologies** — incorporeal, aquatic, aerial, subterranean, hive, plant-like, construct, ageless, shapeshifting, gaseous, crystalline, undead, fungal, colonial, energy, symbiotic, amphibious, metallic and liquid. Each changes body and harm, food and birth, culture and craft, war, disease and death.
 - **Combine Them** — an aquatic hive, an ageless crystal people, a shapeshifting folk of the deep. The variants stack, and every system in the world reads the result.
-- **Bodies Unlike Ours** — spirits are harmed in their coherence, not their flesh. Crystal folk shrug off blades but shatter under hammers and sound, and leave gemstones when they die. Aerial peoples break their hollow bones in falls.
-- **Lives Unlike Ours** — plant peoples feed on sunlight and fear fire, aquatic peoples smelt metal at volcanic vents, cave peoples know little of the stars, and the ageless keep their grudges for ever.
+- **Bodies Unlike Ours** — spirits are harmed in their coherence, not their flesh. Crystal folk shrug off blades but shatter under hammers and sound, and leave gemstones when they die. Aerial peoples break their hollow bones in falls. Liquid peoples slip through gaps and fear freezing and boiling, and metallic peoples rust and fear acid.
+- **Lives Unlike Ours** — plant peoples feed on sunlight and fear fire, aquatic peoples smelt metal at volcanic vents, amphibious peoples live on land and water alike, building on stilts and below the surface, cave peoples know little of the stars, metallic peoples thrive on hot iron worlds, and the ageless keep their grudges for ever.
 - **Their Own Wars** — three-dimensional sea battles, expendable hive soldiers who die with their queen, slow and stubborn plant armies, undead hosts that fear nothing but holy harm. Against the deep folk, daylight is a weapon.
 - **Their Own Magic** — spirits cast by presence alone, gaseous peoples in colour and scent, aquatic peoples sing and gesture their rites but cannot ink them, and the hive casts as one mind.
 - **Their Own Minds** — constructs feel no loss aversion but follow orders beyond their purpose. Hive minds suffer total groupthink and over-protect their breeders. The ageless cling to sunk costs and ancient grudges.
 
-**In your world:** When the crystal folk's old king died, his tomb filled with the gemstones of his body. Human robbers broke in, defiled it and drew down the curse of the crystal people's god, and in the war that followed hammers mattered, because blades barely scratched the defenders.
+**In your world:** When the crystal folk's old ruler died, the tomb filled with the gemstones of the ruler's body. Human robbers broke in, defiled it and drew down the curse of the crystal people's god, and in the war that followed hammers mattered, because blades barely scratched the defenders.
 
 </td>
 </tr>
@@ -1020,13 +1164,15 @@ Your scouts report an enemy that does not bleed. Blades pass through it. Salt an
 
 *What is forbidden here is sacred there.*
 
-A guest is killed at a feast. In one hall it is the unthinkable crime, and the host's line will carry the infamy for generations. Across the river it is merely frowned upon, and soon forgotten. Every culture and every cult in your world keeps its own ledger of right and wrong, and judges every act, every guest and every ruler by it.
+A guest is killed at a feast. In one hall it is the unthinkable crime, and the host's line will carry the infamy for generations. Across the river it is merely frowned upon, and soon forgotten. Every culture and every cult in your world holds its own judgement of right and wrong, and judges every act, every guest and every ruler by it.
 
-- **Forty Acts, Six Stances** — from killing kin, usury and necromancy to mercy to an enemy and cowardice, each act is required, admirable, acceptable, frowned upon, shameful or unthinkable. The verdict moves opinion, renown, a ruler's legitimacy and the actor's own guilt.
+- **Sixty-Seven Acts, Six Stances** — from killing kin, usury and necromancy to lying, tomb robbing, fixing a contest, sheltering strangers and apologising, each act is required, admirable, acceptable, frowned upon, shameful or unthinkable. The verdict moves opinion, renown, a ruler's legitimacy and the doer's own guilt.
+- **Every Deed Is Counted** — deceit in intrigue and trade is lying, drinking past the culture's limit is drunkenness, and robbing graves, casting charms, feeding on a host and killing a sacred animal are all recorded against their doer, so the doer's conscience, every witness and the law each weigh them by their own stance.
 - **Laws Born of Outrage** — an unthinkable act with no law against it builds pressure for one. Ethics drift with belief and doctrine, and a deep enough split tears a culture into factions or births a new people.
-- **Honour, Face and Dignity** — in honour cultures one member's shame is the whole house's, and demands apology, compensation, a duel or vengeance. Face cultures dread public shame and refuse through intermediaries. Dignity cultures shrug off insults and trust the law.
-- **The Pillory** — public shaming, stripped titles and forced confession punish through reputation, as hard as the culture's honour model allows. Shame left unrestored festers into a household grievance.
-- **Rules of the Room** — thirteen situations, from funeral, feast and court to mourning, sacred days and meeting a stranger, each with its own rules on speech, dress, gifts, laughter, weapons and food.
+- **Honour, Face, Dignity and Purity** — in honour cultures one member's shame is the whole house's, and demands apology, compensation, a duel or vengeance. Face cultures dread public shame and refuse through intermediaries. Dignity cultures shrug off insults and trust the law. Purity cultures rank people by the rites, food and contact rules they keep, and a breach needs a cleansing rite.
+- **Thirteen Kinds of Renown** — heroism, honour, piety, generosity, wisdom and skill sit beside cruelty, trickery and troublemaking, and beside mercy, justice, reliability and hospitality. Mercy eases surrender and lowers dread, justice raises legitimacy and calms unrest, and renown is held in six currencies, among them trust, which makes deals and loans cheaper, and learning, which draws pupils and offices.
+- **The Pillory** — thirty-four punishments, from fines, flogging and exile to public shaming, stripped titles, shunning and a curse laid as a sentence, punish through body, purse or reputation, as hard as the culture's honour model allows. Shame left unrestored turns into a household grievance.
+- **Rules of the Room** — twenty situations, from funeral, feast and court to mourning, sacred days, the workplace, the council and meeting a stranger, a made mind or one of the gifted, each with its own rules on speech, dress, gifts, laughter, weapons and food.
 - **Will Against Custom** — every choice weighs desire, the bond with the other person and the norms of the room. Breaking a norm costs reputation, unless you are a rebel who enjoys it. Every custom keeps the history of where it came from.
 - **Purity and Pollution** — corpses, birth, blood, forbidden foods, outsiders and trades such as tanning bar a person from temples and marriage until purified. Hereditary castes decide who works which trade, who lives in which district and who handles the dead.
 - **What They Say, What They Do** — every judged act is weighed against the values its doer professes. A wide gap, once seen, costs trust, legitimacy and followers, and hands leverage to whoever knows.
@@ -1043,16 +1189,18 @@ A guest is killed at a feast. In one hall it is the unthinkable crime, and the h
 
 *The copper hair of the Varns. The madness of the Varns, too.*
 
-Generations of cousin marriage have kept the crown in the family. They have also given the heir a fragile constitution and his grandfather's madness. Every face in your world is written in a genome that passes by real rules of dominance, and every marriage is a move in a long game of claims, alliances and inherited risk.
+Generations of cousin marriage have kept the crown in the family. They have also given the heir a fragile constitution and a grandparent's madness. Every face in your world is written in a genome that passes by real rules of dominance, and every union is a move in a long game of claims, alliances and inherited risk.
 
-- **True Genetics** — height, build, skin, hair, eyes, face and voice pass by Mendelian rules, alongside inherited longevity, fertility, disease resistance, madness, giant blood and divine blood. Portraits keep the same face across a whole life.
-- **Faces That Betray** — a child who looks too much like the wrong father exposes a secret parentage. Whole houses are known by their looks, like the copper hair of the Varns.
+- **True Genetics** — sixty loci in seven groups: looks, body, senses, temperament, aptitude, predisposition and gifts. Height, build, skin, hair, eyes, face and voice pass by Mendelian rules, alongside longevity, fertility, disease resistance, madness, giant blood and divine blood. Portraits keep the same face across a whole life, and a child who looks too much like the wrong parent exposes a secret parentage.
+- **Born Able** — aptitude loci set how far and how fast memory, number sense, language, music and coordination can grow with upbringing, and temperament loci lean a child toward the parents' nature. Sense loci, lung capacity and pain sense shape perception, diving and how much an old wound hurts, and lines that carry twinning bear twins whose birth tests every succession custom.
 - **The Price of Pure Lines** — inbreeding raises the chance of heritable conditions, so royal houses must choose between tight claims and healthy heirs. Law and ethics decide which degree of cousin is forbidden.
-- **Kinship Systems** — five rules of descent, four customs of residence, lineages, clans, moieties and houses. Where cousins are called siblings, marriage rules change. Where titles pass through the mother, the sister's son inherits.
-- **Marriage Alliances** — cross-cousin marriage, clan exogamy, bride price, dowry, bride service, levirate and sororate. Lineages that exchange brides build lasting alliances, and the wife-givers come to outrank the wife-takers.
-- **Other Ways to Be Born** — two sexes, sexes that change with age, sexes chosen in a fertile phase, hive castes of worker, soldier and breeder, or budding and fission. Succession, marriage and war all follow the system.
+- **Kinship Systems** — five rules of descent, four customs of residence and nine forms of kin group, from lineages and clans to moieties and houses. Lines are named by side, first or second, in each culture's own words and never by sex. Where cousins are called siblings, marriage rules change; where titles pass through the second line, a sibling's child inherits.
+- **Union Alliances** — pair, plural, group, serial and contract unions, cousin matches and exogamy by clan, house or moiety, with payments to one family, from one family, both ways or in labour. Lineages that exchange partners build lasting alliances, and the givers come to outrank the takers.
+- **Nine Ways to Inherit** — equal shares, the eldest child, the youngest, the second line, election, merit, seniority that passes to the eldest of the line before any child, a will that names the heirs, or return to the kin group. Wills are read, contested by kin, forged and set aside by law.
+- **Other Ways to Be Born** — two sexes, sexes that change with age, sexes chosen in a fertile phase, hive castes of worker, soldier and breeder, or budding and fission. Succession, unions and war all follow the system.
 - **The Gift in the Blood** — magical aptitude runs in the genome, recessive and rare. Mage orders test children for it, bloodlines are bred toward it, and cultures honour, fear, persecute or tax it, while persecution thins it out.
-- **Duties of Kin** — what grandparents, the siblings of parents, in-laws, cousins and sworn kin owe each other, and kin groups from kindreds to clans, phratries and moieties with land, heads and councils.
+- **Duties of Kin** — twenty-one kin roles, from grandparents, the siblings of parents, in-laws and cousins to sworn kin, foster kin, step-parents and half-siblings, each owing what the culture says, and kin groups from kindreds to clans, phratries and moieties with land, heads and councils.
+- **Eighteen Kinds of Home** — eleven household forms, among them grandparents raising children when the middle generation is gone, live in farmsteads, stilt houses over flood plains, burrows for peoples below ground, nests for peoples of the air, homes under water, grown houses that mend themselves, rock-cut rooms that keep an even warmth and courtyard houses for extended families. Each dwelling fits its land and its people's bodies.
 
 **In your world:** To keep two claims in one house, the Varns married cousin to cousin. Their heirs came out sickly and touched with madness, rival houses contested every succession, and each challenge drove the Varns to marry closer still.
 
@@ -1066,16 +1214,17 @@ Generations of cousin marriage have kept the crown in the family. They have also
 
 *History is made by the many. Now you can count them.*
 
-The war is over, and the valley counts its dead. Not as one number: as a missing generation of young men, a surplus of widows, fewer children in the years to come and, where custom bends, women entering the crafts. Behind every named mortal stand the many, sorted by age, class and condition, and every famine, plague and war reshapes them.
+The war is over, and the valley counts its dead. Not as one number: as a missing generation of those the culture sent to fight, a crowd of bereaved partners, a wave of orphans, fewer children in the years to come and, where custom bends, new hands taking up the crafts. Behind every named mortal stand the many, sorted by age, by the sexes their own biology knows, by class and by condition, and every famine, plague and war reshapes them.
 
-- **Living Cohorts** — every community counts its children, adults and elders by class and by condition: maimed, veteran, sick, enslaved, captive. Births follow food and stress. Famines take the young and the old first; wars take young men.
-- **Faces from the Crowd** — when the crowd produces something notable, a famine orphan or a plague's first victim, one person is lifted out and given a name, a memory and a life. No one named is ever merged back into the crowd.
-- **Generations** — every generation remembers the war, plague or golden age of its youth, and its beliefs bend with it. When the last of a generation dies, the movements it held down finally rise.
-- **Hands for Every Job** — adults go to ten kinds of work, from fields, herds and nets to mines, armies, temples and building sites, by class, resources and price. Output follows workers, skill, tools and land.
-- **The Long Transition** — towns, literacy, educated women and surviving children slowly lower birth rates. The people grows old: fewer levies, more elders, a different politics.
-- **Diasporas** — migrants follow their kin, and each wave pulls the next. Diasporas send money and news home, arrange marriages across the sea, build foreign quarters, and in time assimilate or become a new people.
+- **Living Cohorts** — every community counts its infants, children, youths, adults, elders and ancients by sex, class and condition: veteran, maimed, sick, enslaved, captive, orphaned, displaced, indebted or gifted. Births follow food and stress and are counted among those who bear young, or among every adult of a people that buds, spreads by spores or is made. Famines take the youngest and the oldest first; wars take whoever the culture sends to fight.
+- **Faces from the Crowd** — when the crowd produces something notable, a famine orphan or a plague's first victim, one person is lifted out and given a name, a memory and a life, and orphans and refugees step out more often than most. No one named is ever merged back into the crowd.
+- **Generations** — nineteen kinds of formative event, from war, plague and golden age to long winters, peace and persecution, mark the generation that grew up under them, and its beliefs bend with it. When the last of a generation dies, the movements it held down finally rise.
+- **Work for Every Adult** — adults go to nineteen kinds of work, from fields, herds and nets to mines, armies, temples, offices, roads, works, healing, teaching and the arts. Class, price, skill, law, debt and kin duty decide who goes where, and output follows workers, skill, tools and land.
+- **The Long Transition** — towns, literacy, schooling among those who bear young and surviving children slowly lower birth rates. The people grows old: fewer levies, more elders, a different politics.
+- **Rising and Falling** — a mortal may be ennobled, grow rich, be ordained, freed or adopted into a house, or be ruined, enslaved, cast out or exiled, and each moves them between classes as far as the culture allows.
+- **Diasporas** — migrants follow their kin, and each wave pulls the next. Diasporas send money and news home, arrange unions across the sea, build foreign quarters, and in time assimilate or become a new people.
 - **Roles by Culture** — who may hold office, own property, fight, preach or inherit is set by sex, age and class, so matriarchies, egalitarian clans and caste societies all grow from each culture's own rules, and drift after every war.
-- **Policies of Number** — rewards, taxes, limits, settlement grants, permits and expulsions by which realms, faiths and peoples try to grow, hold or reshape their numbers.
+- **Policies of Number** — seventeen instruments, from rewards, taxes and child limits to settlement grants, permits, expulsions, health campaigns, immunisation and sanitation, by which realms, faiths and peoples try to grow, hold or reshape their numbers.
 
 **In your world:** A conquest left the defeated people a war generation that would not forget. Their children grew up on the stories, and when the last veteran of the conquest died, the movement the conquerors had suppressed for decades rose in the capital.
 
@@ -1089,17 +1238,19 @@ The war is over, and the valley counts its dead. Not as one number: as a missing
 
 *One city. Divided by faith this decade, by class the next.*
 
-A weaver is a woman of the river people, a follower of the Moon, a guild member, a citizen of the city and a veteran's daughter, all at once. In the year of the holy war she marches with her faith. In the year of the famine she marches with her class. Which banner she follows decides who fights whom in your world.
+A dyer belongs to the river people, keeps the faith of the city's patron god, holds a guild seat, is a citizen of the city and a veteran's child, all at once. In the year of the holy war the dyer marches with the faith. In the year of the famine, with the class. Which banner each person follows decides who fights whom in your world.
 
-- **Nine Layers of Self** — people, faith, class, locality, house or clan, guild, generation, realm and circle. Every mortal and every cohort holds all of them, each with its own strength.
-- **Salience** — holy wars raise faith, famines raise class, invasions raise people and realm, strikes raise the guild. Sermons and propaganda stoke it, segregated districts sharpen it, and mixed marriages and mixed guilds blunt the lines they cross.
+- **Fourteen Layers of Self** — people, faith, class, locality, house or clan, profession, generation, realm, circle, language, kind, cause, gift and calling. Every mortal, every settlement and every people holds all of them, each with its own strength.
+- **Salience** — holy wars raise faith, famines raise class, invasions raise people and realm, strikes raise the guild, and persecution raises the persecuted layer for generations. Remembrance days, elections, matches between towns, disasters and the arrival of newcomers each raise their own layers. Sermons and propaganda stoke it, segregated districts sharpen it, and mixed unions and mixed guilds blunt the lines they cross.
+- **Tongue, Kind and Cause** — a banned or revived language binds its speakers across peoples and realms. Where born and made beings, or peoples of different bodies, live side by side, kind becomes an identity, sharpest under laws that treat kinds differently. A movement's members keep their cause long after the crowd has gone home.
 - **Lines of Fracture** — factions, revolts, riots and civil wars split along whichever identity burns brightest. A shared realm identity steadies the state; a strong sub-identity breeds separatism. Each group tells its own history.
 - **Thirteen Tenets** — legalism, egalitarianism, divine right, mercantilism, militarism, rationalism, cosmopolitanism and more spread through scholars, books, schools and trade routes, each appealing to a different class. A realm that adopts one changes how it rules.
 - **Revolutions of the Mind** — an egalitarian creed, an unhappy class and a weak realm add up to a revolt that aims at the government itself. Printing and universities breed new ideologies faster, and revolutions can write constitutions.
 - **Creeds Against the Gods** — anti-god movements drain faith from the sons and so weaken their very existence. The gods answer with miracles or persecution. Other creeds turn to the Creator alone.
-- **Revival of the Old Ways** — under foreign rule, peoples restore the old ways, rally around a prophet who fuses old and new, or adopt the conqueror's culture wholesale. Movements fight to revive a language, restore an old god or expel the foreigners.
+- **Six Ways of Revival** — under foreign rule a people may restore the old ways, rally around a prophet who joins old and new, adopt the ruler's culture wholesale, wait for a foretold sign and rise all at once when it comes, withdraw into settlements of its own, or leave for a new land. Each revival aims to revive a language, restore an old god, expel the foreigners, take back the land, restore its own rule or restore its customary law.
+- **Fourteen Causes** — movements for abolition, independence, revival, land reform, the franchise, peace, conservation, labour, faith reform, temperance, the rights of made minds, equal standing, learning and health press for their laws, back worker bodies or split a faith.
 
-**In your world:** A distant empire pressed its customs on the river people. A prophet rose promising the old god's return, his revival movement drew in the humiliated, and within a generation the city's riots ran along the lines of people and faith instead of class.
+**In your world:** A distant empire pressed its customs on the river people. A prophet rose promising the old god's return, the revival drew in the humiliated, and within a generation the city's riots ran along the lines of people and faith instead of class.
 
 </td>
 </tr>
@@ -1111,12 +1262,14 @@ A weaver is a woman of the river people, a follower of the Moon, a guild member,
 
 *It started with one stone thrown at the bread line.*
 
-Bread doubles in price. A few apprentices throw stones, and nobody stops them. Their nerve lowers the fear of the dockers, whose anger tips the weavers, and by nightfall a district is burning. Every crowd in your world is made of people with their own breaking points, and the fate of a city depends on who moves first.
+Bread doubles in price. A few apprentices throw stones, and nobody stops them. Their nerve lowers the fear of the dockers, whose anger tips the dyers, and by nightfall a district is burning. Every crowd in your world is made of people with their own breaking points, and the fate of a city depends on who moves first.
 
-- **Every Person Has a Threshold** — anger, anxiety, conformity, hunger and friendship decide when each mortal and each slice of a crowd will join a riot, a lynching, a strike, a procession or a revolt.
-- **Cascades, Not Dice** — a price spike, an execution, a sermon, an omen or a rumour starts it. If enough join to tip the next group, it spreads district by district. Its size and violence emerge; they are never rolled.
+- **Every Person Has a Threshold** — anger, anxiety, conformity, hunger and friendship decide when each mortal and each slice of a crowd will join a riot, a lynching, a strike, a procession, a boycott or a revolt.
+- **Cascades, Not Dice** — eighteen kinds of spark start it: a price spike, an execution, a sermon, an omen, an arrest, unpaid wages, a lost match, a victory, a great funeral, an election and more. If enough join to tip the next group, it spreads district by district. Its size and violence emerge; they are never rolled.
+- **Seven Crowd Feelings** — anger, fear, fervour, grief, hope, joy and solidarity rise and fall in every town. Grief follows mass deaths and a beloved ruler's passing and drives mourning processions, hope lowers the threshold for demonstrations and turns to anger when betrayed, and solidarity makes strikes and boycotts come easier.
+- **Fifteen Ways to Act Together** — besides riots, panics and lynchings, crowds rejoice after a victory, demonstrate without violence, boycott a guild until its income falls, hold vigils, occupy a square or a workshop until its work stops, carry petitions whose answer moves the ruler's legitimacy, and leave together in an exodus that fills the roads with the displaced.
 - **The Watch and the Agitator** — watchmen and garrisons raise every threshold by deterrence, and a charismatic agitator lowers them. The same spark dies in one city and burns down another.
-- **Mobs** — crowds with a size, a target, an anger and leaders. They burn districts, storm the granary, lynch a scapegoat for a crime he never committed or open the gate to the besiegers, then scatter by fatigue, force or concession.
+- **Mobs** — crowds with a size, a target, an anger and leaders. They burn districts, storm the granary, the temple or the palace, lynch a scapegoat for a crime they never committed or open the gate to the besiegers, then scatter by fatigue, force or concession.
 - **Panic** — fire, plague rumour, a beast in the streets or a sudden eclipse sends thousands running. Crowded districts trample their own, refugees flood the roads and hoarders strip the markets bare.
 - **Fervour** — miracles, sermons and plague years spark revivals, flagellant processions and mass conversions that sweep through a city as fast as any riot.
 
@@ -1132,18 +1285,19 @@ Bread doubles in price. A few apprentices throw stones, and nobody stops them. T
 
 *Every wedding is a battlefield. Every funeral is a negotiation.*
 
-Three houses sit at one wedding table. The bride's brother will leave the tournament with a crushed knee, a steward will meet a rival's agent behind the stables, and somebody's affair will be noticed by the wrong cousin. Gatherings are where your world's stories collide, and the traditions that summon them finally shape the lives of the people who keep them.
+Three houses sit at one wedding table. A cousin of the couple will leave the tournament with a crushed knee, a steward will meet a rival's agent behind the stables, and somebody's affair will be noticed by the wrong in-law. Gatherings are where your world's stories collide, and the traditions that summon them shape the lives of the people who keep them.
 
-- **Sixteen Living Traditions** — festivals, fasts, funeral rites, initiations, taboos, offerings, pilgrimages, hospitality laws, war dances, scar rites, ancestor feasts and more, each with its season, its cost in grain or incense and a real effect on those who keep it.
-- **Customs with Teeth** — a pork taboo empties the pens, a taboo on winter fighting shapes the campaign year, and a hospitality law makes roads safer and guest-killing a grave infamy. Great victories, plagues and miracles found new customs.
-- **Eighteen Kinds of Gathering** — feasts, weddings, coronations, tournaments, hunts, summits, fairs, public trials, executions, wakes and more. Guests come by bond, obligation and distance, and romances, plots and proposals crowd into a single evening.
-- **Blood on the Tablecloth** — any gathering can become a massacre, judged by the guest laws of those who hear of it. Crowded festivals spread disease, and poor households that cannot afford a rite lose face.
-- **Marked Bodies** — tattoos, scarification, piercings, cranial shaping, filed teeth and jewellery codes carry meaning: status, clan, deeds, marriage, mourning, protection. A warrior's tattoos count his kills; an exile's brand names his crime.
-- **Names with Power** — patronymics, clan names, deed names, a secret name behind the public one, new names at initiation, marriage or vows, and the names of the dead left unspoken for a time.
-- **Age-Sets** — those initiated together form a named set that rises together from warriors to senior elders, may marry only after the warrior grade and stays loyal across lineages. Delay the promotion feast and the young grow restless.
-- **Tending the Dead** — those who wash, prepare, carry and keep the dead, their standing, and every way a culture treats remains, with what each does to health, land and relics.
+- **Twenty-Three Kinds of Tradition** — festivals, fasts, rites of passage, taboos, offerings, pilgrimages, hospitality laws, martial displays, body marking, ancestral rites, fairs, welcomes, reconciliations, thanksgivings and more, each with its season, its cost and a real effect on those who keep it, from cohesion, piety and safety to health and the bonds between those who take part.
+- **Customs That Shape Lives** — a pork taboo empties the pens, a taboo on winter fighting shapes the campaign year, and a hospitality law makes roads safer and guest-killing a grave infamy. Great victories, plagues and miracles found new customs.
+- **Rites of Passage** — birth, naming, coming of age, union, elderhood and death, with initiation into an order and the departure of one who leaves home. Welcome rites turn strangers into guests, reconciliation rites end a feud when both sides keep them, and thanksgivings follow plenty, peace and recovery.
+- **Thirty-Eight Kinds of Gathering** — feasts, weddings, coronations, tournaments, hunts, summits, fairs, public trials, executions, wakes, musters before a campaign, days of remembrance, reunions of scattered kin, gift exchanges and more. Guests come by bond, obligation and distance, and romances, plots, oaths and desertions crowd into a single evening.
+- **Death at the Table** — any gathering can become a massacre, judged by the guest laws of those who hear of it. Crowded festivals spread disease, and poor households that cannot afford a rite lose face.
+- **Marked Bodies** — tattoos, scars, piercings, cranial shaping, filed teeth, hair, paint, stains, brands and implants carry thirteen meanings, from status, clan, deeds and marriage to faith, profession, beauty, healing and bound labour. A warrior's tattoos count their kills; an exile's brand names the crime.
+- **Names with Power** — names from a parent, a clan, a child, a birthplace, a trade, a forebear or the event of a birth, a secret name behind the public one, new names at initiation, marriage, vows or adoption, epithets others give for a deed, and a posthumous name given at the funeral, after which speaking the living name may be taboo.
+- **Age-Sets** — those initiated together form a named set that rises from children and youths through young adults to junior and senior elders and the ancients. Each culture sets what each grade does, war, herding, labour or council, so a people with no martial duty sends no grade to war. Delay the promotion feast and the young grow restless.
+- **Tending the Dead** — eight roles, from those who wash, prepare, carry and keep the dead to the grave makers, their standing, and ten ways a culture treats remains, with what each does to health, land and relics.
 
-**In your world:** A chieftain murdered his rival at a wedding feast. His own people's hospitality law made the deed unthinkable, so his infamy outran his victory, and the massacre became a yearly day of mourning that kept the grievance alive for generations.
+**In your world:** A chieftain murdered a rival at a wedding feast. The chieftain's own people held guest-killing unthinkable, so the infamy outran the victory, and the massacre became a yearly day of mourning that kept the grievance alive for generations.
 
 </td>
 </tr>
@@ -1155,16 +1309,18 @@ Three houses sit at one wedding table. The bride's brother will leave the tourna
 
 *A gift unreturned is a debt. A debt unpaid is a war.*
 
-The chief of the eastern islands arrives with canoes heaped with dried fish and burns half of them on the beach to prove that he can. Now you must give more, or bow. Every gift in your world is weighed by what the receiver loves, written into a ledger and answered in kind, or remembered as a debt that someone, someday, will collect.
+The chief of the eastern islands arrives with canoes heaped with dried fish and burns half of them on the beach to prove the islands can spare it. Now you must give more, or bow. Every gift in your world is weighed by what the receiver loves, recorded and answered in kind, or remembered as a debt that someone, someday, will collect.
 
 - **The Gift Ledger** — every gift is valued by the receiver's own tastes and never forgotten. To refuse is an insult, to return late is a debt of status, and to give more is the way to rise.
+- **Sixteen Occasions** — courtesy, feasts, offerings, unions, alliances, relief, births, funerals, amends for a wrong, patronage, hospitality, farewells, homecomings, initiations and more, each with its expected return, the debt it sets and the standing at stake. Amends accepted at a feast end a feud; amends refused deepen it.
 - **From Hearth to Heaven** — households, houses, realms, cults and gods all trade gifts under the same law of obligation, so a village and a god can owe each other in the same coin.
-- **Competitive Giving** — chiefs claim rank by giving away or destroying wealth at feasts. Rivals must match them or lose prestige, until one side's treasury breaks.
-- **Sacred Circuits** — famous treasures travel for ever along a fixed ring of communities. Holding one brings prestige for a while, and the circuit binds distant islands in peace and the duty of hospitality.
+- **Competitive Giving** — chiefs claim rank by giving away or destroying wealth at feasts. A gift answered with more puts the first giver in debt, and two houses that keep outgiving each other drain their treasuries while their standing climbs, until one side breaks.
+- **Sacred Circuits** — famous treasures travel for ever along a fixed ring of communities. Holding one brings prestige for a while, and the circuit binds distant islands in peace and the duty of hospitality. A holder who keeps a treasure instead of passing it on loses standing where passing is expected and gains it where keeping is honoured.
+- **Grace and Patronage** — a giver may release a debt by grace, raising their own standing and the receiver's loyalty. Patrons' gifts flow down to clients, artists and followers and are repaid in service and praise, not in kind, and gifts to the bereaved are owed back at the giver's own losses.
 - **Gifts to the Gods** — every sacrifice puts a god in debt. Gods who answer generously gain standing, gods who ignore their offerings lose it faster, and each son sees its debts to the peoples set out plainly.
-- **Bride Price and Dowry** — marriage payments in goods or in labour obey the same law, binding the kin of bride and groom long after the wedding.
+- **Union Payments** — payments to one family, from one family, both ways or in labour obey the same law, binding the kin of both partners long after the wedding.
 
-**In your world:** Two island chiefs tried to outgive each other at feast after feast until the second chief's treasury broke and his rank fell. His people had sacrificed to their sea god for luck all the while, and the god who took and gave nothing back lost standing among them fast.
+**In your world:** Two island chiefs tried to outgive each other at feast after feast until the second chief's treasury broke and that chief's rank fell. The second chief's people had made offerings to their own god for luck all the while, and the god who took and gave nothing back lost standing among them fast.
 
 </td>
 </tr>
@@ -1176,13 +1332,15 @@ The chief of the eastern islands arrives with canoes heaped with dried fish and 
 
 *Art that moves a people. Forgeries that fool a king.*
 
-A poet's lament for the fallen is sung in every hall, and a generation later the people's appetite for war has cooled. Across the city, pilgrims still kneel before a saint's relic that a forger made in his cellar. Here art has a grammar, a lineage, a price and a message, and the classics decide what a people believes.
+A poet's lament for the fallen is sung in every hall, and a generation later the people's appetite for war has cooled. Across the city, pilgrims still kneel before a saint's relic that a forger made in a cellar. Here art has a grammar, a lineage, a price and a message, and the classics decide what a people believes.
 
-- **Art Forms with Grammar** — nine disciplines, from music and poetry to calligraphy, each with real structure: scales, rhythms and instruments, metres and stanzas, palettes and motifs. Poetry follows the sounds of its own tongue, so it never translates cleanly.
+- **Nineteen Art Modes with Grammar** — verbal art, music, dance, performance, flat and solid images, built form, textiles, worn and culinary art, scent, light, recorded and interactive art, landscape, the body, the art of made minds, art for touch and art passed from mind to mind, each with real structure: scales, rhythms and instruments, metres and stanzas, palettes and motifs. Poetry follows the sounds of its own tongue, so it never translates cleanly.
 - **Forms Are Born and Die** — an inspired master invents a form, often by fusing two where cultures meet, or a lament after a plague. A form dies with its last practitioner if no notation survives, and banning a people's forms is a humiliation they resist.
-- **Art That Argues** — twelve media, from song and heroic verse to fresco and mosaic, each carrying a message. A poem mourning the war dead cools a people's taste for war; a conqueror's statue swells his people's pride and keeps the conquered resisting.
+- **Art That Argues** — every work carries a message. A poem mourning the war dead cools a people's taste for war; a conqueror's statue swells the conquerors' pride and keeps the conquered resisting.
 - **Troupes on the Road** — touring players carry songs, legends and rumours along the trade routes, perform at feasts and fairs, and sometimes spy. Scribes copy books, printing multiplies them, and realms commission propaganda.
-- **Collectors, Canons and Forgers** — prices follow renown, provenance and taste, collectors bid at auction and courts compete for artists. Undiscovered forgeries enter the canon, and art movements with manifestos fight canon wars to become the next orthodoxy.
+- **Collectors, Critics and Curators** — prices follow renown, provenance and taste. Collectors bid at auctions that auctioneers run, critics raise or sink a movement and its prices, curators choose what a city shows, and restorers mend old works and sometimes hide a fake. Courts compete for artists, and art movements with manifestos fight canon wars to become the next orthodoxy.
+- **Eight Kinds of Forgery** — artworks, relics, documents, brands, coins, lineages, seals and whole identities. Each is exposed by its own expert: moneyers catch false coin, genealogists false descent and clerks false seals, while an undiscovered forgery can enter the canon.
+- **Rights to a Song or a Recipe** — thirteen kinds of cultural right, from songs, dances, stories and rites to designs, names, titles, trademarks, market privileges, recipes, techniques, performances and likenesses, are created, inherited, bought, licensed, stolen, granted, won in contests, passed on with a union or held in common. A technique right is entered as a patent where the realm keeps a registry.
 - **Fashion Cycles** — forms, dress, cuisine and names rise with the trendsetters, saturate, grow common and fall from favour, while the old returns as revival. Every culture earns its visible periods of style.
 - **Games of Skill and Chance** — board games train officers in strategy, dice drain household purses into debt and crime, and ball games become sport. Games travel with migrants and settle where they are liked.
 
@@ -1200,13 +1358,14 @@ A poet's lament for the fallen is sung in every hall, and a generation later the
 
 Half the capital wears blue and half wears green, and it stopped being about chariots long ago. The Blues fill one temple and one district; the Greens fill another. When the Greens lose on a disputed verdict on the very day a new tax is proclaimed, the stands empty into the streets and nobody can say any more where sport ends and politics begins.
 
-- **Clubs and Leagues** — teams of athletes race and compete at arenas and festivals, season after season, in leagues of rival clubs. Ball games, races and contests of strength all have their champions.
+- **Eight Kinds of Club** — team games, races, combat, athletics, animal contests, mind games, water sports and hunts, played at arenas and festivals season after season in leagues of rival clubs. Animal-contest clubs keep and breed their animals, and mind-games clubs train players and draw patrons.
 - **Fandoms** — every club holds a share of the city's heart, counted cohort by cohort, district by district.
 - **The Betting Floor** — wagers on every race move household wealth up and down. A lucky season lifts a family; a bad one sinks it into debt.
+- **Thrown Races and Doped Champions** — fixing a contest for a wager or a patron, and enhancing contestants, are acts each culture judges and crimes wherever the law makes them so. Exposure sinks the club and its players, voids the wagers and can empty the stands into the streets, and leagues that forbid enhancement test for it and ban.
 - **Circus Factions** — when the colours line up with class, district or faith, a club becomes a political faction with real power over public opinion. Rulers can buy a club, and the voice of its crowds with it.
 - **Riots of the Hippodrome** — a club's crowd is a riot waiting for its spark. A lost championship plus a tax rise can tip enough thresholds to burn a capital.
 
-**In your world:** A disputed race result fell on the day of a new tax. The Greens' fans crossed the riot threshold and the hippodrome quarter burned. The emperor's Blue favourites demanded purges, and the Greens' patron senator marched on the capital with his own men.
+**In your world:** A disputed race result fell on the day of a new tax. The Greens' fans crossed the riot threshold and the hippodrome quarter burned. The court's Blue favourites demanded purges, and the Greens' patron senator marched on the capital with a private army.
 
 </td>
 </tr>
@@ -1218,15 +1377,18 @@ Half the capital wears blue and half wears green, and it stopped being about cha
 
 *Every name means something. Every word has a history.*
 
-A scholar kneels before a stone carved in two scripts: one dead for ages, one still spoken in the market. Seasons later she reads a forgotten king's name, and with it a lost technique, and an error that will one day become a legend. Your world's languages drift by real sound laws, so cognates, dialects and dead tongues are born from its history.
+A scholar kneels before a stone carved in two scripts: one dead for ages, one still spoken in the market. Seasons later the scholar reads a forgotten ruler's name, and with it a lost technique, and an error that will one day become a legend. Your world's languages drift by real sound laws, so cognates, dialects and dead tongues are born from its history.
 
 - **Sound Change** — every language gathers ordered sound laws through contact, prestige, migration or drift. Daughter tongues split away, cognates emerge, place names fossilise older forms, and scholars can reconstruct the proto-language.
 - **Grammar Matters** — word order, isolating to polysynthetic morphology, cases, genders, evidentiality and honorific levels decide how hard translation is and how likely a treaty clause is to be misread. Feared words give way to euphemisms.
+- **Counting in Tens, Twelves or Sixties** — eight numeral bases, from decimal, vigesimal, duodecimal and sexagesimal to octal, quinary, binary and counting along the body. Bases with many divisors ease fractions in trade, astronomy and the calendar, body tallies hold back large sums until writing grows, and contact carries a base from one tongue to another.
 - **Names with Meanings** — every name is built from real roots with a recorded meaning, epithets are coined from deeds, such as "the Silver-Handed", and every foreign tongue gives a place its own name.
-- **Scripts That Evolve** — pictograms to logograms, syllabaries, abjads and alphabets, plus knots and notches, reformed, simplified and borrowed. Hard scripts keep literacy low and empower a scribe caste; an alphabet breaks their monopoly.
+- **Speech Beyond the Voice** — twelve modalities: voice, sign, scent, colour, mind to mind, data, chemistry, touch that works in darkness, vibration carried through ground or water and overheard by those who sense it, electric fields under water, and whistled and drummed speech that crosses valleys faster than any runner. Between modalities, only interpreters bridge the gap.
+- **Words That Shift** — meanings widen, narrow, sour, improve, spread by likeness or by nearness, or turn into their opposite over generations, so an old treaty read with new words can break. Nine registers set how words are used, from sacred, poetic and archaic speech to taboo words replaced by roundabout phrases, the terms of a craft, honorifics whose misuse insults, fast-changing slang and the legal register that wins in court.
+- **Scripts That Evolve** — pictograms to logograms, syllabaries, abjads and alphabets, plus knots and notches, invented, reformed, simplified, borrowed, imposed by a conqueror, revealed by a god or reshaped by printing and machines. Hard scripts keep literacy low and empower a scribe caste; an alphabet breaks their monopoly. Records last as long as their sixteen media allow, from clay and stone to silk, wood slips, cloth, potsherds and electronic records that an outage can lose.
 - **Decipher the Dead** — bilingual stones, living cousin languages and patient scholars unlock lost scripts over seasons. Partial readings give partial knowledge, and mistranslations live on as theories and legends.
-- **Barriers and Bridges** — every treaty, sale, sermon and battle order passes through intelligibility. Interpreters bridge the gap, lingua francas ride the trade routes, pidgins become creoles, sign languages grow among the deaf and the tongueless, and thieves keep their cant.
-- **Tongues of Power** — a conquered people with a great literature can conquer its conquerors. Realms ban and revive languages, scent and telepathic tongues follow their own rules, and each son has a sacred tongue whose words are rites.
+- **Barriers and Bridges** — every treaty, sale, sermon and battle order passes through intelligibility. Interpreters bridge the gap, lingua francas ride the trade routes and pidgins become creoles. Sign languages grow among the deaf, the silenced, traders on many-tongued frontiers and workers in loud mills, and ten sociolects, from thieves' cant to the speech of youth, soldiers, clergy and scholars, mark their speakers.
+- **Tongues of Power** — realms make a language official, liturgical, suppressed, protected, standardised or one of two official tongues. Scholars and rulers construct new languages, dead tongues return through revival with a strong identity, and an endangered tongue draws revival movements until its last speaker dies. A conquered people with a great literature can conquer its conquerors, and each son has a sacred tongue whose words are rites.
 
 **In your world:** A cruel law cut out the tongues of heretics. So many went mute that their village grew its own sign language, and the heresy went on spreading in a tongue its judges could not understand.
 
@@ -1240,16 +1402,18 @@ A scholar kneels before a stone carved in two scripts: one dead for ages, one st
 
 *History is written by the victors. Until someone finds the old stone.*
 
-The new dynasty's chronicle says its founder was born of a god. The folk songs of the valley say he was a stable boy who poisoned his master. A merchant's account from across the sea says both are wrong. Here every event has one truth and many tellings, and you alone can lay them side by side.
+The new dynasty's chronicle says its founder was born of a god. The folk songs of the valley say the founder was a stable hand who poisoned a master. A merchant's account from across the sea says both are wrong. Here every event has one truth and many tellings, and you alone can lay them side by side.
 
-- **Accounts and Truth** — official chronicles, folk memories, foreign accounts, gospels, heroic poems and inscriptions each glorify, vilify or omit, on stone, in books or in song, and each is measured against what truly happened.
+- **Accounts and Truth** — fourteen kinds of account, from official chronicles, folk memories, foreign accounts, gospels, epics and inscriptions to genealogies, songs, travel accounts and law records, set down in books, on stone, in song, in performance or in marks on the body. Each glorifies, vilifies, omits, justifies, laments, mocks or warns, and each is measured against what truly happened.
+- **Songs That Mock** — a song changes with every singer and outlasts suppression. Told as folly, a deed lowers its doers' standing; told as loss, it raises grief and memory; told with its reasons, its harm to standing softens. Genealogies back claims, and forged ones press false claims until a genealogist exposes them.
 - **Damnatio Memoriae** — strike a name from the records, deface every inscription, smash every statue. The figure fades within a few generations, unless folk memory or a foreign chronicle keeps the name alive.
 - **Revisionism** — new rulers rewrite the chronicle to suit their claim. Older texts survive, and the scholar who finds one holds a dangerous secret: the true history.
 - **Founding Myths** — every people and every realm has its founding story. Belief in it holds the people together and the throne up, and a single inscription that contradicts it costs both.
+- **Far Places and Old Laws** — travel accounts carry knowledge of distant lands and raise contact with them, law records fix customary law and back the courts and the movements that seek to restore it, and warning accounts raise fear of what they warn of.
 - **Lost Lands** — memories of old borders breed claims and movements centuries later, the hidden root of many wars.
 - **Days of Remembrance** — victories, massacres and foundings are relived on every anniversary through traditions and gatherings, keeping pride and grievance alive. Neglect them and the memory fades.
 
-**In your world:** A usurper's chronicle gave him divine descent. Generations later a ploughman turned up an inscription naming his true father, a scholar made the scandal public, the dynasty's legitimacy cracked, and the old border it had once surrendered became the rallying cry for a new war.
+**In your world:** A usurper's chronicle claimed divine descent. Generations later a ploughman turned up an inscription naming the usurper's true parent, a scholar made the scandal public, the dynasty's legitimacy cracked, and the old border it had once surrendered became the rallying cry for a new war.
 
 </td>
 </tr>
@@ -1274,13 +1438,14 @@ The new dynasty's chronicle says its founder was born of a god. The folk songs o
 
 You watch a war being lost in a forest. The woodcutters clear the last hills, the bloomeries go cold for want of charcoal, the smiths stop forging blades, and the army marches out half armed. Every spear in your world has a supply chain, and every chain has a weak link that reaches somewhere you never expected: a blockade on iron arrives at the farm as a broken plough.
 
-- **Materials with Real Physics** — hardness, edge, weight, decay, sanctity and corruption for everything from flint to dragonbone, star metal from fallen comets and godflesh from dead gods. Each world adds exotic substances of its own, forged from a god's blood or a dead star's core.
-- **Sixteen Commodities in Four Families** — subsistence, industrial, strategic, and luxury and sacred, from grain and fodder to siege materiel, incense and magical reagents. People eat per head, and what a town can store depends on the granaries it has built.
-- **Many Ways to Make a Thing** — up to six methods per good. Iron comes from a charcoal bloomery, a coal blast furnace or a divine forge. A culture that reveres nature refuses the dirty method, and early adopters put the old artisans out of work.
-- **Seven Grades of Quality** — poor to masterwork to artifact, set by skill, method and material. Fine meals and fine clothes lift moods and are what nobles demand, while meat, fish and milk rot unless salted, smoked, iced or kept by magic.
-- **Rivers Industrialise First** — muscle, water, wind, heat, magic and divine rites power production, so geography decides where industry rises. On frozen worlds heat is survival, and a fuel shortage means whole communities dying of cold.
-- **Chains That Break Upstream** — ore to metal to weapons, hide to leather to armour, grain to flour to bread. Deep mines cave in, sometimes breaking into caverns full of beasts, and scarce iron or horses become war aims.
-- **Smoke, Slag and Purple Dye** — smelting, tanning and dyeing foul the air, water and soil, raising disease and emptying fisheries until blight follows. Chemistry adds shellfish dyes, soap, fertiliser and explosives, each with its own hazards.
+- **Materials with Real Physics** — forty-eight materials with hardness, edge, weight, decay, sanctity and corruption, from flint, clay and silk to rubber, lacquer, polymers, the tissue of great beasts, star metal from fallen comets and the tissue of dead gods. Eleven origins tell where each came from: grown by living craft, dug from fossil beds, salvaged from relics and wrecks beyond their finders' own skill, or taken from the remains and bargains of outer beings, with their risks. Each world adds exotic substances of its own.
+- **Forty-Seven Goods in Four Families** — subsistence, industrial, strategic, and luxury and sacred, from grain, fodder and halite to oil, sugar, spice, honey, wax, pottery, books, paper, glassware, soap, ink, siege materiel, incense and magical reagents. People eat per head, and what a town can store depends on the granaries it has built.
+- **Many Ways to Make a Thing** — twenty-nine processes run in twenty-seven kinds of workshop, each process with up to ten methods ordered by era. Iron comes from a charcoal bloomery, a coal blast furnace, an electric arc or a divine forge. A culture that reveres nature refuses the dirty method, and early adopters put the old artisans out of work.
+- **Paper, Print and Rope** — paper mills, printing houses and ropewalks join potteries, glassworks, dyeworks, scriptoria and evaporation works. Printing moves from carved blocks to movable type and the rotary press, lowers the cost of books and accounts and speeds the spread of ideas and movements, while ropewalks supply ships and works.
+- **Seven Grades of Quality** — poor to masterwork to artifact, set by skill, method and material. Fine meals and fine clothes lift moods and are what nobles demand, while meat, fish and milk rot unless dried, smoked, iced or kept by magic.
+- **Rivers Industrialise First** — nineteen sources of energy, from muscle, water and wind to heat, fuel, electricity, fission, magic, belief and divine rites, power production, so geography decides where industry rises. On frozen worlds heat is survival, and a fuel shortage means whole communities dying of cold.
+- **Chains That Break Upstream** — ore to metal to weapons, hide to leather to armour, grain to flour to bread. Seventeen work hazards strike the workers, from cave-ins that sometimes break into caverns full of beasts to falls from scaffolds, burns at forge and kiln and the dust that leaves miners and millers short of breath. Scarce iron or horses become war aims.
+- **Smoke, Slag and Dye** — seven pollutants: air, water and soil, heat that warms rivers and drives off the fish, noise that raises stress, light that hides the faint stars from a city's astronomers, and radiation that sickens bodies and scars the land. Fourteen chemical products, from dyes, soap and fertiliser to ink, glaze, preservatives, acids, solvents, adhesives and explosives, each carry their own hazards.
 
 **In your world:** A river town took up the coal blast furnace. Its cheap iron ruined every bloomery upriver, the idle smiths swelled the radical factions, the river turned foul and the fish failed, and the nature-revering villages downstream turned against the town that armed the realm.
 
@@ -1294,17 +1459,18 @@ You watch a war being lost in a forest. The woodcutters clear the last hills, th
 
 *Debase the coin, fill the treasury, and watch the merchants walk away.*
 
-A dragon's hoard comes home in triumph, and soon the luxury markets are drowning in silver and its prices tumble. You are watching a real economy. Every market town posts prices for sixteen goods, every coin carries its purity and the trust behind it, and bankers lend to warlords at rates set by their record. Nobody scripted the boom. Greedy merchants guessed, hoarded, and were ruined.
+A dragon's hoard comes home in triumph, and soon the luxury markets fill with silver and its price tumbles. You are watching a real economy. Every market town posts prices for forty-seven goods, every coin carries its purity and the trust behind it, and bankers lend to warlords at rates set by their record. Nobody scripted the boom. Greedy merchants guessed, hoarded, and were ruined.
 
-- **Prices That Breathe** — every market holds prices for all sixteen commodities, moved by stocks, consumption, distance, danger and tariffs. Bread barely bends with price, luxuries swing hard, and goods flow down every route from cheap to dear.
-- **Coin with a Conscience** — each currency has a metal, a purity and a measure of trust. Debase it and the treasury fills today, then inflation bites, merchants sour and trade in that coin dries up. Reserves of gold and silver shore it up.
-- **Bankers and Bankruptcy** — merchant guilds lend war loans at interest set by the borrower's credit. A realm slides from strained to default to restructuring, and an unpaid debt can become a war over the default itself.
-- **Booms Nobody Planned** — greedy merchants buy what they believe will rise and hoard grain through famine. The price spikes stoke unrest, the bust ruins the speculators, and cycles emerge from behaviour rather than script.
-- **Tariffs, Embargoes and Black Markets** — tariffs protect producers whose owners lobby for them, embargoes cut trade by decree, and smuggling swells with the price gap. Drugs, void materials and forbidden books move through smugglers at a premium.
-- **Insurance and Its Temptations** — guilds, banks and mutual societies insure cargoes, houses and lives at premiums set by what they believe. Insured merchants take riskier roads, and one great loss can bring an insurer down and the banks with it.
-- **Hoards, Changers and Bills of Exchange** — secure households invest, insecure ones bury coin that is lost when they die and found by later diggers. Money changers profit on rates that follow purity and trust, and bills of exchange carry credit without carrying coin.
+- **Prices That Move** — every market holds prices for all forty-seven goods, moved by stocks, consumption, distance, danger and tariffs. Bread barely bends with price, luxuries swing hard, and goods flow down every route from cheap to dear.
+- **Coin and Trust** — each currency has a metal, a purity and a measure of trust. Debase it and the treasury fills today, then inflation bites, merchants sour and trade in that coin dries up. Reserves of gold and silver shore it up.
+- **Bankers and Bankruptcy** — merchant guilds lend war loans at interest set by the borrower's credit. A realm slides from strained to default to restructuring. Another power may rescue it and take charge of its budget on its own terms, or it may repudiate the debt outright, ruining its lenders, losing all credit for epochs and turning the lenders' realms against it. Sanctions freeze a realm's credit abroad until they are lifted.
+- **Loans That Change Hands** — loans are rescheduled by agreement, sold at a discount to a new lender who collects them, secured on land, goods or a person where bound labour is lawful and seized on default, and passed to heirs, who may be bound to pay them.
+- **Booms Nobody Planned** — greedy merchants buy what they believe will rise and hoard grain through famine. Authorities may seize hoards in a dearth, stored hoards spoil, and traders corner a market, dump goods into a rival's, sell short to gain from a fall or spread a false report of a lost fleet until the truth arrives. Price spikes stoke unrest, the bust ruins the speculators, and cycles emerge from behaviour rather than script.
+- **Tariffs, Embargoes and Black Markets** — eleven trade policies, from tariffs, subsidies, quotas and embargoes to tolls on routes and bridges and staple rights that make passing goods be offered first in a town's market. Smuggling swells with the price gap, and drugs, void materials and forbidden books move through smugglers at a premium.
+- **Insurance and Its Temptations** — guilds, banks and mutual societies insure cargoes, houses, lives, crops, vessels, livestock, healing and ransom at premiums set by what they believe. Insured merchants take riskier roads, and one great loss, a long winter or a plague among the herds, can bring an insurer down and the banks with it.
+- **Hoards, Changers and Bills of Exchange** — savings take six forms: buried hoards, deposits, investments, land that earns rent and survives debasement, stored goods that rise in a dearth and herds that grow by breeding. Insecure households bury coin that is lost when they die and found by later diggers. Money changers profit on rates that follow purity and trust, and bills of exchange carry credit without carrying coin.
 
-**In your world:** A king debased his silver to pay for a war. Foreign changers marked his coin down, his own merchants stopped trading in it, the war loan fell due in good silver he no longer had, and the default became a war of its own.
+**In your world:** A ruler debased the realm's silver to pay for a war. Foreign changers marked the coin down, the realm's own merchants stopped trading in it, the war loan fell due in good silver the treasury no longer had, and the default became a war of its own.
 
 </td>
 </tr>
@@ -1316,12 +1482,14 @@ A dragon's hoard comes home in triumph, and soon the luxury markets are drowning
 
 *Goods, gods and plagues travel the same roads.*
 
-Two markets trade long enough and a road is born, with a name, a toll and a reputation. You follow a caravan through a mountain pass: mules and wagons, salt and silk, a pilgrim, a missionary and a wool merchant carrying a fever nobody has noticed yet. At the far end it unloads goods, news, songs and plague. Whoever holds the pass takes the toll, and whoever loses it starts a war.
+Two markets trade long enough and a road is born, with a name, a toll and a reputation. You follow a caravan through a mountain pass: mules and wagons, silk and spice, a pilgrim, a missionary and a wool merchant carrying a fever nobody has noticed yet. At the far end it unloads goods, news, songs and plague. Whoever holds the pass takes the toll, and whoever loses it starts a war.
 
-- **Roads That Name Themselves** — steady trade between two markets carves a named route by road, river, sea, caravan or sky. Bridges, harbours and caravanserais raise its capacity, neglect lets it fade, and a famous road becomes a legend.
-- **Caravans and Convoys** — every route is carried by real caravans with owners, cargo, animals, guards and passengers. Bandits, beasts and enemy armies raid them, storms sink them, and a merchant house's ageing fleet is a strategic asset.
-- **The Right Way to Carry It** — perishables need speed, salt, ice or magic. Livestock walks and grazes on the way. Grain, stone and timber go by water wherever they can, so rivers and seas rule bulk trade.
-- **Tolls, Chokepoints and Blockades** — whoever holds the chokepoints sets the tolls, and high tolls send traffic round another way. Fleets and armies at a pass choke the flow, and merchant factions push for peace when their routes bleed.
+- **Roads That Name Themselves** — steady trade between two markets makes a named route by road, river, sea, sky, tunnels through the deep, space, rifts or networks. Bridges, harbours and caravanserais raise its capacity, neglect lets it fade, and a famous road becomes a legend.
+- **Caravans and Convoys** — every route is carried by real convoys with owners, cargo, guards and passengers, on sixteen kinds of carrier, from porters, pack animals, carts and sledges over snow to ships, rail, pipelines and orbital lifts. Bandits, pirates, beasts and enemy armies raid them, storms sink them, and a merchant house's ageing fleet is a strategic asset.
+- **Open, Contested, Seasonal** — a route forms, opens, is tolled, contested at higher loss while sides fight for it, blockaded, closed or left to decay, or opens only in its seasons, so passes shut in winter and monsoon routes wait for the wind. Convoys stranded by a closed pass eat their stores, convoys quarantined at a plague port may carry disease if released early, and some turn back.
+- **The Right Way to Carry It** — twelve cargo classes in twelve kinds of container: perishables need speed and preserving, liquids go in skins and tanks, cloth in bales, produce in baskets and live animals in cages, while oversize loads need special carriers and slow the convoy. Livestock walks and grazes on the way, and grain, stone and timber go by water wherever they can, so rivers and seas rule bulk trade.
+- **Nine Ways to Lose a Cargo** — bandits, pirates, beasts, the sea, the weather, officials taking their cut, spoilage, pilferage by guards and crews, and breakage. Ten navigation aids, from compasses, charts, sounding lines and buoys to navigators who read stars, swells and birds, shore beacons, local pilots and fixes from a network, cut the losses at sea.
+- **Tolls, Chokepoints and Blockades** — whoever holds the chokepoints sets the tolls, and high tolls send traffic round another way. Fleets and armies at a pass choke the flow, and merchant factions push for peace when their routes suffer losses.
 - **Ports, Warehouses and Cornered Markets** — berths, cranes and depth limit a harbour. A house with full warehouses can corner a commodity or dump goods into a rival's market, until guild monopolies and laws against forestalling stop it.
 - **Trading Posts and Whole Chains** — merchant houses plant trading posts in foreign cities by treaty or charter, gaining market access, informants and a diaspora. They buy every step from mine to market, and put spinning out to rural cottages before factories exist.
 - **Amphorae and Pleasure Seekers** — goods travel in amphorae, barrels, sacks and sealed jars, and potters' stamps survive for later diggers to read. The wealthy tour wonders, baths and old battlefields, spending at inns and spreading fame and disease.
@@ -1338,15 +1506,16 @@ Two markets trade long enough and a road is born, with a name, a toll and a repu
 
 *Who works the fields? Who owns them? Who is free?*
 
-A water-frame mill opens on the river, and a street of hand-loom weavers is out of work by winter. Some steal, some emigrate, some sign on with the levy, and some join the radicals in the tavern. Now labour has a price and sometimes a chain: every job pays a wage, every class has a basket of needs it meets or fails, and every war can fill a slave market.
+A water-frame mill opens on the river, and a street of hand-loom workers is out of work by winter. Some steal, some emigrate, some sign on with the levy, and some join the radicals in the tavern. Now labour has a price and sometimes a chain: every job pays a wage, every class has a basket of needs it meets or fails, and every war can fill a slave market.
 
 - **Wages and the Cost of Living** — every job at a farm, mill, army or office pays a share of the workplace's takings. Set against local prices for a class's needs, it becomes a standard of living that drives migration, loyalty, fertility and radicalism.
-- **Four Tiers of Need** — subsistence, basic, comfort and luxury, from bread, fuel and salt to festivals, temple access, art and fine goods. Meet a tier long enough and part of a class rises. Fail a lower one and it falls.
+- **Thirteen Kinds of Want** — every class needs food, fodder, fuel and cloth, medicine, tools, arms, incense, luxuries and reagents, and beyond goods, water, a roof, a school and a court within reach. Thirst kills faster than hunger, a lost roof brings sickness and cold, a missing school leaves the young unskilled and a missing court lets feuds and self-help violence grow. Meet a class's needs long enough and part of it rises; fail them and it falls.
+- **Why People Work Where They Do** — class, price, the works and resources at hand and the corvée all place workers, and so do laws that pin a caste or guild to its trade, skills that draw workers to what they do best, debts that send debtors to the creditor's work and kin duties that assign work by household role, with no default by sex.
 - **Farmers to Artisans to Merchants** — promotion climbs the ladder, or turns into the clergy and the scholars through education, within the realm's law on mobility. Demotion runs down to the outcasts or into serfdom by debt, while a war hero is ennobled and founds a house.
 - **The Idle Hands** — new methods and too many workers make the unemployed, who swell crime, emigration, the levy and the radical factions. Winter idleness on the farms fills the season with crafts, festivals and banditry.
 - **Satisfaction at Work** — a content class works harder, and a resentful warrior class deserts. Inequality breeds crime and revolt, though cultures that prize hierarchy tolerate far more of it.
 - **Corvée and the Unpayable Debt** — realms levy days of labour for walls, roads and wonders at the cost of harvests and goodwill, and folk tales remember the wonders built in suffering. Indenture binds debtors to terms some employers make impossible to finish.
-- **Slave Markets and Manumission** — where law allows it, captives, debtors and the condemned are sold by skill, age and origin, so slaving economies grow hungry for war. Freedom comes by purchase, a master's will, service, abolition or revolt.
+- **Slave Markets and Manumission** — where law allows it, captives, debtors and the condemned are sold by skill, age and origin, so slaving economies grow hungry for war. Freedom comes by purchase, an owner's will, service, abolition or revolt.
 
 **In your world:** A border war filled the slave market with captives. The mines that bought them undercut the free miners, who lost their wages and drifted into the abolitionist movement, and when the slaves rose, the movement already had its organisers.
 
@@ -1360,15 +1529,17 @@ A water-frame mill opens on the river, and a street of hand-loom weavers is out 
 
 *Every city grows its own way. Every city burns its own way.*
 
-On a dry, windy night a spark lands in a timber quarter with no fire brigade. By morning the old town is ash. Now the city must choose what rises: a planned grid of stone and wide streets, if the treasury and a planner allow it, or the same crooked wooden lanes that will burn again. Meanwhile, quietly, the elites are claiming the burned land.
+On a dry, windy night a spark lands in a timber quarter with no fire brigade. By morning the old town is gone. Now the city must choose what rises: a planned grid of stone and wide streets, if the treasury and a planner allow it, the old quarter restored as it was, or the same crooked wooden lanes that will burn again. Meanwhile, quietly, the elites are claiming the burned land.
 
-- **Ten Kinds of District** — farmland, markets, craft quarters, temple quarters, harbours, citadels, slums, palaces, foreign quarters and necropolises, unlocked as a hamlet grows through village, town and city to metropolis. No city rises without water and a granary.
+- **Twenty-Seven Kinds of District** — from farmland, markets, craft and temple quarters, harbours, citadels, palaces and necropolises to universities, arcologies, pilgrim quarters, caravan quarters at the city's edge and floating districts on rafts that rise with the floods, unlocked as a hamlet grows through village, town and city to metropolis, megalopolis and world city. No city rises without water and a granary.
+- **Camps and Lazarettos** — camps of the displaced, made in haste, lack services and breed disease, crime and fire, and become slums or settled quarters if they last. Lazarettos hold the sick and new arrivals apart, cutting the spread of plague but drawing dread and stigma.
 - **Rents and the Pushed-Out Poor** — temples, fountains and parks raise land value, while tanneries, prisons, crime and haunted memories lower it. Rents sort the classes street by street, and rising value pushes the poor outward.
-- **Services by Reach** — wells, watch posts, healers, schools and bathhouses cover the streets around them. Beyond their reach come thirst, crime, disease, impiety and illiteracy, and a mine too far from any housing cannot find its workers.
-- **Houses That Grow** — when services and goods arrive, huts become cottages, houses, townhouses and manors. When they fail, the houses sink. Slums spread wherever migrants outrun housing, feeding fever, crime and the mob.
-- **Grids, Rings and Old Quarters** — a city grows organic, planned or in rings of walls, and that shape decides how fire spreads, how goods move and whether inner walls hold. In a long winter, rationing may mean abandoning the old and the sick.
-- **Charity Against the Gutter** — almshouses, orphanages, foundling homes, leper houses and widows' houses take in the maimed and the abandoned, and their patrons gain piety. Without them, beggars fill the streets and children fill the gangs.
-- **Ready for the Worst** — levees, firebreaks, seawalls, drills and stockpiles keep a disaster from becoming a catastrophe. Afterwards rival realms send aid that leaves debts of gratitude, and refusing a rival's help costs face.
+- **Services by Reach** — twenty-three services, from wells, watch posts, healers, schools and bathhouses to courts, libraries, street lighting that lowers crime at night and pest control that keeps vermin from the stores, cover the streets around them. Beyond their reach come thirst, crime, disease, impiety and illiteracy, and a mine too far from any housing cannot find its workers.
+- **Houses That Grow** — when services and goods arrive, shacks become huts, cottages, houses, townhouses and manors, tenements and tower blocks rise in dense cities and rulers hold palaces. When they fail, the houses sink. Slums spread wherever migrants outrun housing, feeding fever, crime and the mob.
+- **Grids, Rings and Old Quarters** — a city grows organic, planned, in concentric rings of walls, on a grid, upward or in sprawl, and that shape decides how fire spreads, how goods move and whether inner walls hold. In a long winter, rationing may mean abandoning the old and the sick.
+- **Rebuild, Move or Abandon** — after fire, flood, quake, storm, sack, eruption, sea wave, landslide, sinkhole or plague, a town is rebuilt on a plan, rebuilt as it comes, restored as it was at greater cost to keep its memory and monuments, moved to a safer site with a ruin left behind, or abandoned, its people sent away as the displaced.
+- **Charity Against the Gutter** — nine kinds of relief, from granaries, alms, workhouses and parishes to foster care for orphans, sick houses, pensions for veterans, the maimed and the old, public kitchens and shelters. Almshouses, orphanages and leper houses take in the abandoned and their patrons gain piety; without them, beggars fill the streets and children fill the gangs.
+- **Ready for the Worst** — fourteen measures, from levees, firebreaks, seawalls, drills and stockpiles to quarantine and immunisation plans and quake-proof building, keep a disaster from becoming a catastrophe. Afterwards rival realms send aid in goods, healers, labour, money, soldiers or transport that leaves debts of gratitude, and refusing a rival's help costs face.
 
 **In your world:** A great fire gutted the timber harbour quarter. The city rebuilt it in stone on a grid, land values soared, and the dockworkers who could no longer pay the rents were pushed out to the slums beside the tanneries, where the next fever began.
 
@@ -1382,17 +1553,20 @@ On a dry, windy night a spark lands in a timber quarter with no fire brigade. By
 
 *Generations of labour. One wonder. One rival who finished first.*
 
-The great dome was begun under a grandfather and is still open to the sky under his grandson. Masons die, plague takes the scribes, the treasury fails twice, and across the sea a rival realm is racing to finish first. Win, and the wonder feeds your city's prestige and draws travellers from every coast. Lose, and you salvage a share of the stone while a half-built ruin gathers legends.
+The great dome was begun under a grandparent and is still open to the sky under a grandchild. Masons die, plague takes the scribes, the treasury fails twice, and across the sea a rival realm is racing to finish first. Win, and the wonder feeds your city's prestige and draws travellers from every coast. Lose, and you salvage a share of the stone while a half-built ruin gathers legends.
 
-- **More Than Forty Structure Kinds** — temples, libraries, observatories, citadels, banks, shipyards, aqueducts, canals, dams, arenas and tombs, each with a real function. Granaries feed sieges, hospitals cut deaths from wounds, and observatories soften the terror of an eclipse.
+- **A Hundred and Forty-Two Structure Kinds** — temples, libraries, observatories, citadels, banks, shipyards, aqueducts, canals, dams, arenas, embassies, lighthouses and tombs, each with a real function. Granaries feed sieges, hospitals cut deaths from wounds, and observatories soften the terror of an eclipse.
 - **Nothing Works Without Hands** — every building needs staff and upkeep, and as its condition falls its function falls with it. When plague kills the scribes, the library still stands but its knowledge is locked away.
-- **Mud Brick to Hydraulic Concrete** — ten building materials, each with its own strength, weathering, fire and water resistance. Concrete sets underwater for harbours, aqueducts and domes, and a civilisation that loses the technique cannot repair its old harbours.
+- **Mud Brick to Hydraulic Concrete** — eleven building materials, each with its own strength, weathering, fire and water resistance. Concrete sets underwater for harbours, aqueducts and domes, and a civilisation that loses the technique cannot repair its old harbours.
+- **Forms, Sections and Builders** — twenty-nine building forms, from halls, domes and vaults that span wide stores to stilt forms that stand in floods, and forty-five sections, from cisterns that hold water through siege and drought to chimneys that clear the smoke from a room. Households raise their own homes and shrines beside the works of realms, cults, companies, patrons and gods.
+- **Begun, Abandoned, Restored** — a work is planned, built, completed, damaged or ruined. Left unfinished, it decays and gathers legends and treasure seekers; dismantled, it gives its stone to new building and leaves little behind; restored, it regains its function and renown at a price.
 - **The Wonder Race** — wonders and cosmic works are unique to a world or to the whole cosmos. Several realms build at once, the first to finish wins, and envy follows the losers into every embassy.
 - **Megastructures** — star cages that harvest a sun's essence and dim it to the fury of sun cults, orbital rings, world-bridges, void lighthouses for safe passage, and planetary engines that move a world's orbit.
-- **Museums and Gardens** — royal collections draw scholars and tourists, become prizes in every sack and return home as a clause of peace. Physic gardens supply healers, hunting parks shelter game, and sacred groves draw the gods of nature.
-- **Lifting Water** — shadufs, waterwheels, screws, chain pumps and later steam pumps raise water to the terraces and drain the deep mines. Without pumps, a mine floods the day it strikes the aquifer.
+- **Museums, Libraries and Trophy Halls** — six kinds of collection hold ten kinds of piece, from art, relics and fossils to manuscripts that draw scholars, maps, instruments and regalia whose loss shames a realm. Royal collections become prizes in every sack, and a trophy hall of banners and arms feeds the losers' grievance until its pieces come home as a clause of peace.
+- **Eleven Gardens** — physic gardens supply healers, botanic gardens keep plants alive outside their range, menageries draw visitors and can save or spread a species, kitchen and roof gardens feed households and crowded cities, hunting parks shelter game, and sacred groves draw the gods of nature.
+- **Lifting Water** — shadufs, waterwheels, screws, chain pumps and animal wheels, then wind pumps, steam pumps and electric pumps, raise water to the terraces and drain the deep mines. Without pumps, a mine floods the day it strikes the aquifer.
 
-**In your world:** Two realms raced to finish the world's one great wonder. The loser salvaged a sliver of its stone and nursed its envy for generations, while the winner dedicated the wonder to its storm god, whose fame grew with every traveller who came to see it.
+**In your world:** Two realms raced to finish the world's one great wonder. The loser salvaged a sliver of its stone and nursed its envy for generations, while the winner dedicated the wonder to its patron god, whose fame grew with every traveller who came to see it.
 
 </td>
 </tr>
@@ -1404,17 +1578,17 @@ The great dome was begun under a grandfather and is still open to the sky under 
 
 *The sword that killed three kings. The crown that made the fourth.*
 
-Pick up any named sword in your world and read its life: who forged it, which house carried it, the battles it won, the night it was stolen, the barrow it was buried in. Kill enough with it and it becomes a symbol armies follow. Lose a crown and the king's legitimacy bleeds away until a new crown earns a name of its own.
+Pick up any named sword in your world and read its life: who forged it, which house carried it, the battles it won, the night it was stolen, the barrow it was buried in. Kill enough with it and it becomes a symbol armies follow. Lose a crown and the ruler's legitimacy falls away until a new crown earns a name of its own.
 
-- **Provenance** — every crafted item bears a maker's mark and a history of owners and deeds: kills, battles, coronations, thefts and burials. Renown grows with each, and a famous enough object becomes a symbol whose capture is a war aim.
+- **Provenance** — every crafted item bears a maker's mark and a history of owners and deeds: kills, battles, coronations, thefts, burials, breaks, repairs, enchantments, gifts and captures. Renown grows with each, and a famous enough object becomes a symbol whose capture is a war aim.
 - **Decorations That Remember** — studded, inlaid, engraved, runed or bristling with menacing spikes. Engraved images depict real events, so a shield showing the victory at Varn keeps that battle alive in the culture.
 - **Artifacts of Obsession** — born when a crafter falls into a fever of creation, artifacts carry a unique name, the highest quality and often an enchantment. Greedy nobles demand them, and thieves and questing heroes plan around them.
 - **Regalia** — crowns, sceptres, seals, rings and standards. Hold the realm's regalia and legitimacy follows. Usurpers hunt the crown, and losing it is a humiliation the whole realm feels.
-- **Relics and Curses** — saints' bones and fragments of dead gods heal by chance, draw pilgrims and invite relic raids. Cursed blades breed bloodthirst, betrayal, wasting, madness or misfortune in whoever carries them.
-- **Lenses and Clocks** — spectacles restore sight lost to age and lengthen scholars' careers, and telescopes predict eclipses. Public clocks discipline labour, synchronise armies and let ships fix their place at sea.
-- **Locks, Vaults and Rotting Archives** — thieves pit their skill against locksmiths, seals and guards. Papyrus rots in wet lands while clay survives fire and is baked hard by it, so what history remembers depends on what it was written on.
+- **Relics and Curses** — a people holds its relics sacred, uses them as tools, forbids them, keeps them as heritage, studies them for lost techniques at a risk of misuse, or trades them on markets at prices that rise with renown. Saints' remains and fragments of dead gods heal by chance, draw pilgrims and invite relic raids, and twenty kinds of curse, from bloodthirst, betrayal, wasting and madness to endless sleep, forgetting, sudden age, isolation that turns everyone away and weakness, follow whoever carries a cursed blade.
+- **Lenses, Aids and Clocks** — spectacles restore sight lost to age and lengthen scholars' careers, telescopes predict eclipses, microscopes let healers see the agents of disease and choose their cure, hearing aids help the hard of hearing, and scripts read by touch let the blind read. Nine kinds of clock, from sundials, water clocks and fire clocks to chronometers that fix longitude at sea and electronic clocks, discipline labour, synchronise armies and keep ships off the rocks.
+- **Locks, Vaults and Rotting Archives** — thieves pit their skill against eight kinds of lock, seals and guards. Worked locks open only to their rite, a matching power or a dispelling, electronic locks yield to intrusion and fail in an outage, and living locks open only to their makers' line. Papyrus rots in wet lands while clay survives fire and is baked hard by it, so what history remembers depends on what it was written on.
 
-**In your world:** A usurper took the throne but not the crown, which loyalists smuggled to a mountain monastery. His legitimacy never recovered, the crown's return became the rebels' war aim, and the abbot who hid it entered its provenance beside four kings.
+**In your world:** A usurper took the throne but not the crown, which loyalists smuggled to a mountain monastery. The usurper's legitimacy never recovered, the crown's return became the rebels' war aim, and the abbot who hid it entered its provenance beside four kings.
 
 </td>
 </tr>
@@ -1428,15 +1602,16 @@ Pick up any named sword in your world and read its life: who forged it, which ho
 
 The watch captain drinks free at the tavern by the docks, and everyone knows why. Beneath every crowned city runs a second government with ranks, income and a code of silence sworn like an oath. It collects protection street by street, owns a magistrate or two, and settles its borders in blood. You can let the realm crush it, hire it, or leave it running the harbour.
 
-- **Four Kinds of Family** — crime families, thieves' guilds, smuggling rings and pirate brotherhoods, each with its own ladder of ranks and its own treasury.
-- **Six Rackets** — protection, smuggling, gambling, fencing, kidnapping and counterfeiting, each with its own income and its own victims.
+- **Eight Kinds of Family** — crime families, thieves' guilds, smuggling rings, pirate brotherhoods, street gangs that fight for single streets and recruit from the slums and camps, trafficking rings that work the routes and borders, fence networks and counterfeiting rings, each with its own ladder of ranks and its own treasury.
+- **Fifteen Rackets** — protection, smuggling, gambling, fencing, kidnapping, counterfeiting, fraud, extortion, trafficking, intoxicants, data theft, loan sharking, arms, forged identities and poaching, each with its own income and its own victims.
 - **Turf Wars** — families hold the city district by district. When they fight over a street, the maimings, killings and collapsing order are felt by everyone who lives there.
-- **Officials on the Payroll** — bribes buy the watch, and hooks built from secrets and debts buy the magistrate. A judge with a hidden debt rules the way he is told.
-- **The Code of Silence** — membership is sworn like an oath, and the family punishes its traitors. An informer has to fear his brothers more than the gallows.
-- **Crush or Co-opt** — realms send thief-takers, the watch and purges, or turn the families into informants and license the pirates as privateers.
+- **Officials on the Payroll** — bribes buy the watch, and hooks built from secrets and debts buy the magistrate. A judge with a hidden debt rules the way the family says.
+- **The Code of Silence** — membership is sworn like an oath, and the family punishes its traitors. An informer has to fear the family more than the gallows.
+- **Five Answers to Crime** — realms suppress the families with thief-takers, the watch and purges, co-opt them as informants, tolerate them for bribes while corruption grows and an outcry waits, license a trade under terms, from privateers to gaming houses, and tax it, or pardon criminals into the watch, the army and the offices. A realm whose law forbids bondage hunts the trafficking rings hardest.
 - **Outlaws and Bounties** — an outlaw loses the law's protection, so anyone may rob or kill them without crime. Bounties draw hunters for coin, while an outlaw who spares the poor may become their folk hero.
+- **Runaways and Sanctuaries** — outlaws, the accused, defectors, runaways from bondage, deserters, heretics, escaped captives and fleeing debtors seek shelter in temples, under guest right, by asylum, in the wilds, aboard ships, in guild halls, in embassies whose violation sours a whole realm, and in free cities whose charter frees a runaway who stays out its term.
 
-**In your world:** A smuggling ring bought the harbour master through his gambling debts. When the queen outlawed its captain and posted a bounty, the dock wards hid him, the thief-takers came back empty-handed, and his legend grew in every street he had spared.
+**In your world:** A smuggling ring bought the harbour master through gambling debts. When the crown outlawed the ring's captain and posted a bounty, the dock wards hid the captain, the thief-takers came back empty-handed, and the captain's legend grew in every street the ring had spared.
 
 </td>
 </tr>
@@ -1459,17 +1634,18 @@ The watch captain drinks free at the tavern by the docks, and everyone knows why
 
 *Wear the crown. Fear the council. Name your heir.*
 
-The old king dies in the night and the succession law names his nine-year-old grandson. By dawn you are watching a regent weigh ambition against oath, a marshal count his troops, and a cousin with a better claim count the nobles who would back her. Every realm in your world is a working state, with offices, a treasury, a law of succession and a legitimacy that can drain away.
+The old ruler dies in the night and the succession law names a nine-year-old grandchild. By dawn you are watching a regent weigh ambition against oath, a marshal count the troops, and a cousin with a better claim count the nobles who would back them. Every realm in your world is a working state, with offices, a council, a court, a treasury, a law of succession and a legitimacy that can drain away.
 
-- **Ten Kinds of Government** — chiefdoms, monarchies, theocracies, merchant oligarchies, republics, tribal confederations, empires, hive councils, military occupations and god-kingdoms ruled directly by a son. Each decides by its own rule: the ruler's will, a council vote, an assembly or a god's.
-- **A Council with Work to Do** — chancellor, marshal, steward, spymaster, court chaplain and high judge each take a task every epoch, from training troops to purging corruption. Their skill sets the result, their loyalty sets their diligence, and a disloyal spymaster leaks.
-- **Legitimacy and the Line** — lawful succession, a sound body where the culture demands one, honour, the church's blessing, victories, prosperity and age. A child heir brings a regency, rival claimants weigh their backing, and a preview shows who rules if the king dies tonight.
+- **Seventeen Kinds of Government** — chiefdoms, monarchies, theocracies, oligarchies, republics, tribal confederations, empires, hive councils, god-realms ruled directly by a son, military occupations, juntas, corporate states, technocracies, federations, communes, machine rule and colonial administrations. Each decides by its own rule: the ruler's will, a council vote, an assembly or a god's.
+- **A Council with Work to Do** — the chancellor, marshal, treasurer, spymaster, chaplain, high judge, warden and the other councillors each take one of eleven tasks every epoch: courting a neighbour, drilling the armies, gathering taxes, breaking schemes, converting a province, purging corruption, overseeing works, promoting trade, advancing learning, keeping the people in health and keeping the borders. Their skill sets the result, their loyalty sets their diligence, and a disloyal spymaster leaks.
+- **Twenty-Three Offices** — from ruler, regent and heir designate to governors, ambassadors, admirals, ministers, a chief scientist and the censor, who counts people and property so that taxes, levies and sumptuary laws reach further. Each office carries its own powers, fourteen in all.
+- **Legitimacy and the Line** — lawful succession, a sound body where the culture demands one, honour, the church's blessing, victories, prosperity and age. A child heir brings a regency, rival claimants weigh their backing, and a preview shows who rules if the ruler dies tonight.
 - **The Realm Outgrows Its Scribes** — administration is literacy, scribes, writing and roads. Expand past it and governors drift, taxes leak and provinces dream of secession, while peoples outside the ruling culture grow their own separatist movements.
-- **Six Taxes and the Leak** — land, poll, trade, consumption, tithe and tribute, each falling on different classes. Tax farming raises the take and the corruption with it, and greedy officials skim until a just high judge audits them.
-- **Mandates, Demands and Policy Webs** — rulers ban exports, open the granaries or impose curfews, and nobles demand fine dwellings and offices. Every policy touches several classes at once, so one reform can win the merchants and lose the clergy.
-- **Court and Constitution** — a court of resident courtiers and grandeur from feasts, art and fine goods draws talent and impresses envoys. The constitution that defines it all changes only by a high threshold, or by revolution.
+- **Eighteen Taxes and the Leak** — land, poll, trade, consumption and tithe, income, property, inheritance and wealth, excise and licences, labour levies and taxes in kind, tolls on roads and bridges, a tax on every hearth and more, each falling on different classes. Tax farming raises the take and the corruption with it, and greedy officials skim until a just high judge audits them.
+- **Twelve Mandates** — rulers order production, ban exports, build, open the granaries, impose curfews, clear slums, prepare for danger, enclose the commons, ration food and fuel through a siege or a long winter, call out corvée labour, quarantine districts and ports, or conscript soldiers. Rationing cuts deaths and breeds grievance by how fairly it is shared, corvée builds fast and breeds resentment, and every mandate touches several classes at once.
+- **Court and Constitution** — ten court positions: steward, champion, physician, tutor, chronicler, master of revels, licensed jester, seer, food taster and interpreter. A tolerated jester calms the crowd, a seer sways the ruler's choices, a taster guards the ruler's cup and an interpreter wins envoys a hearing. Grandeur from feasts, art and fine goods draws talent and impresses envoys, and the constitution changes only by a high threshold, or by revolution.
 
-**In your world:** A queen sold the right to collect her taxes to pay for a war. Revenue rose, corruption followed, the provinces' approval collapsed, and when she died the governor of the richest province crowned himself instead of kneeling to her son.
+**In your world:** A queen sold the right to collect her taxes to pay for a war. Revenue rose, corruption followed, the provinces' approval collapsed, and when she died the governor of the richest province took the crown instead of kneeling to her heir.
 
 </td>
 </tr>
@@ -1481,17 +1657,18 @@ The old king dies in the night and the succession law names his nine-year-old gr
 
 *The throne is held by whoever the throne must keep happy.*
 
-Ask who really chose the emperor. Not the people: the guard captains, the great landholders and a handful of priests. Keep them rich and you rule. Neglect them and a general with his own army and his own clients starts to wonder. Your world works out the circle that keeps every ruler in power, and that circle decides whether the treasury builds roads or buys loyalty.
+Ask who really chose the emperor. Not the people: the guard captains, the great landholders and a handful of priests. Keep them rich and you rule. Neglect them and a general with an army and clients of their own starts to wonder. Your world works out the circle that keeps every ruler in power, and that circle decides whether the treasury builds roads or buys loyalty.
 
-- **The Winning Coalition** — every realm knows who has a say in choosing the ruler and whose support keeps him there. Small circles are bought with gifts and offices, large ones demand roads and granaries, and a ruler expecting a short reign plunders while a secure one invests.
-- **Three Kinds of Legitimacy** — traditional breaks with the succession, charismatic dies with defeat and death, and legal-rational rots with corruption. When a charismatic founder dies, the realm must turn charisma into a dynasty or an institution, or split.
-- **Patrons, Clients and Bought Offices** — favours and protection bind households and lesser nobles to the powerful wherever institutions are weak. Offices are sold, buyers recoup the price, sinecures reward the loyal, and new offices absorb restless elites at a cost.
+- **The Winning Coalition** — every realm knows who has a say in choosing the ruler and whose support keeps the ruler there. Small circles are bought with gifts and offices, large ones demand roads and granaries, and a ruler expecting a short reign plunders while a secure one invests.
+- **Seven Kinds of Legitimacy** — traditional, charismatic, legal-rational, a divine mandate, popular consent, performance and conquest. Tradition breaks with the succession, charisma dies with defeat and death, legal rule rots with corruption, and a conqueror's right fades with time unless it is joined to another. When a charismatic founder dies, the realm must turn charisma into a dynasty or an institution, or split.
+- **Patrons, Clients and Bought Offices** — eight kinds of client bind themselves to the powerful: households, retainers, officials, commanders, brokers, artists, informants and scholars. A broker carries favours between a patron and lesser clients for a share and can grow richer than the patron, artists and scholars raise the patron's renown, and informants feed the patron's intrigues. Offices are sold, buyers recoup the price, and new offices absorb restless elites at a cost.
 - **Overmighty Subjects** — governors and generals build power bases of holdings, client commanders, wealth and popularity. Rulers rotate commands, split armies, raise parallel guards and keep hostages, buying safety at the price of military quality.
-- **Five Ways to Share the Harvest** — markets, palace and temple stores that ration by office, command economies, manors and gift economies. Sack the centre of a palace economy and the whole economy falls with it.
-- **Citizens and Strangers** — citizens, subjects, resident foreigners, protected minorities and slaves hold different rights to property, office, arms and the vote. Passes and safe-conducts decide who travels, forged ones sell on the black market, and welfare decides who eats in famine.
+- **Eight Ways to Share the Harvest** — markets, palace and temple stores that redistribute, command economies, dues owed by obligation, gift economies, sharing by need, abundance and lottery. Sack the centre of a palace economy and the whole economy falls with it.
+- **Citizens and Strangers** — citizens, subjects, resident foreigners, protected minorities, the bound and the stateless each hold or lack ten rights by law: office, marriage, arms, the courts, property, movement, the vote, worship, assembly and schooling. Lacking a right bars holdings, travel, votes or open rites, and movements rise to win it.
+- **Becoming One of Us** — membership comes by descent, birthplace, residence, conversion, service, purchase, grant, union or adoption. The stateless have no court to protect them and are easily bound, passes and safe-conducts decide who travels, forged ones sell on the black market, and welfare decides who eats in famine.
 - **The Licensed Fool** — jesters and satirists mock the ruler with a licence. Tolerated satire cools the mob, suppressed satire festers into grievance, and the fool may say what no councillor dares.
 
-**In your world:** A general who had won three wars held more land than the crown. The nervous emperor rotated him to a distant frontier, split his legions and kept his son at court as a guest. The army lost its next battle, and the general marched home anyway.
+**In your world:** A general who had won three wars held more land than the crown. The nervous emperor rotated the general to a distant frontier, split the legions and kept the general's eldest child at court as a guest. The army lost its next battle, and the general marched home anyway.
 
 </td>
 </tr>
@@ -1503,17 +1680,18 @@ Ask who really chose the emperor. Not the people: the guard captains, the great 
 
 *The kingdom fell three centuries ago. Its crown still waits.*
 
-The old kingdom has had no king for three hundred years, but its title survives, dormant and claimable. A minor count holds two of its provinces and a thin claim through his grandmother. Gather enough of the old land and he can restore what was lost, and the legends of the vanished kings will stir around him. Every house in your world plays this long game.
+The old kingdom has had no monarch for three hundred years, but its title survives, dormant and claimable. A minor count holds two of its provinces and a thin claim through a grandmother. Gather enough of the old land and the count can restore what was lost, and the legends of the vanished rulers will stir around them. Every house in your world plays this long game.
 
-- **Noble Houses** — prestige, heirlooms, seats, feuds, and bloodlines that run long-lived, giant-blooded, cursed or god-blooded. Houses marry for alliance and claim at the risk of inbreeding, and split into cadet branches that carry claims against the senior line.
-- **Titles from County to Empire** — lordships, counties, duchies, kingdoms and empires, plus holy sees, guildmasterships and mercenary captaincies. Create one by holding most of its land, or usurp one by holding its capital and a majority of its territory.
+- **Noble Houses** — prestige, heirlooms, seats, feuds, and bloodlines that run long-lived, giant-blooded, seer-gifted, cursed or god-blooded. Houses marry for alliance and claim at the risk of inbreeding, and split into cadet branches that carry claims against the senior line.
+- **Eleven Tiers of Title** — local and district lordships, regional titles, realms and empires, three tiers of faith office, military captaincies, guild headships and the heads of leagues and confederations, each title named in its own culture's language. Create one by holding most of its land, or usurp one by holding its capital and a majority of its territory.
 - **Right Against Might** — land held long enough under another title drifts into it by right. The gap between the two maps is where claims and wars are born.
-- **Claims, Unions and Partitions** — claims by inheritance, marriage, conquest, divine favour or forgery fade unless pressed. One ruler holding two crowns rules both realms, and partition laws split a kingdom among the heirs, generation after generation.
+- **Claims, Unions and Partitions** — nine bases of claim: inheritance, marriage, conquest, divine favour, forgery, old right, election, adoption and prophecy. Claims fade unless pressed, an elected claimant faces the hereditary ones, an adopted heir faces blood kin, and a prophecy's claim rises and falls with belief. One ruler holding two crowns rules both realms, and partition laws split a kingdom among the heirs, generation after generation.
+- **Ten Laws of Succession** — primogeniture, seniority, election, tanistry, succession through a second line, combat, divine choice, ultimogeniture, free designation by the holder, and rotation between houses by turn. A designated heir can be contested by kin and nobles, and rotation keeps rival houses out of civil war.
 - **Arms Born of History** — every house, realm, title, army and guild bears arms drawn from its deeds, its founder's wounds, its totems and its patron god, differenced for cadet branches and quartered by marriage.
-- **Brothers Against Cousins** — lineages nest within clans within tribes. Brothers fight cousins, both unite against outsiders, and the whole tribe unites against foreigners, which gives stateless peoples order without a ruler.
-- **The Long Plan** — secret orders and houses steer marriages across generations toward divine blood, a seer's gift or a union of claims, until a love match or a barren marriage undoes a century of work.
+- **Siblings Against Cousins** — lineages nest within clans within tribes. Siblings fight cousins, both unite against outsiders, and the whole tribe unites against foreigners, which gives stateless peoples order without a ruler.
+- **The Long Plan** — secret orders and houses steer marriages across generations toward divine blood, a seer's gift or a union of claims, and whole peoples gather over centuries to restore a fallen realm, its capital and its law, until a love match or a barren marriage undoes a century of work.
 
-**In your world:** Two brothers split their father's kingdom by partition law. Their grandsons fought over a border county and the elder line lost, but generations later its cadet branch married back into the younger, quartered both arms and pressed the old kingdom's dormant title.
+**In your world:** Two siblings split their parent's kingdom by partition law. Their grandchildren fought over a border county and the elder line lost, but generations later its cadet branch married back into the younger, quartered both arms and pressed the old kingdom's dormant title.
 
 </td>
 </tr>
@@ -1525,17 +1703,18 @@ The old kingdom has had no king for three hundred years, but its title survives,
 
 *A law is only as strong as the hand that enforces it.*
 
-A merchant lies dead in a fogbound alley. The sheriff has a frightened witness who owes the accused money, a wound only a curved blade could make, a forged letter and a trail going cold by the day. The verdict will follow the evidence, the advocate the family can afford and the law of the land, so an innocent man can hang and become a martyr.
+A merchant lies dead in a fogbound alley. The sheriff has a frightened witness who owes the accused money, a wound only a curved blade could make, a forged letter and a trail going cold by the day. The verdict will follow the evidence, the advocate the family can afford and the law of the land, so an innocent person can hang and become a martyr.
 
-- **Eight Areas of Law** — succession, property, fiscal, penal, military, social, public health and magic. Laws decide heirs, punishments, levies, who may be enslaved and whether magic is banned or licensed, and a law at odds with the culture loses its teeth.
+- **Fourteen Areas of Law** — succession, property, fiscal, penal, military, social, public health, magic, constitutional, commerce, faith, labour, family and environment. Laws decide heirs, punishments, levies, contracts, tithes, wages, custody, protected nature and whether magic is banned or licensed, and a law that clashes with a people's values raises unrest by the weight of its area.
 - **Passing a Law** — proposals advance with the balance of supporters and opponents. Estates obstruct with their privileges, debates spill into riots or compromises, and a bill that stalls too long fails and shames its champion.
 - **Five Legal Systems and Their Blends** — custom kept in the elders' memory, written codes, scripture, binding precedent and oracles. Under an oracle a god answers the court, and the son may answer truly, lie or stay silent.
-- **Evidence Decides** — witnesses with failing memories or hidden loyalties, wounds by weapon, footprints in mud, poison signs, ledgers, alibis and the residue of rites. Evidence decays, so wrongful verdicts come from bad evidence and bias, never from dice.
-- **Courts, Advocates and Precedent** — appeals climb from local to royal and religious courts. Skilled advocates win cases, so the rich get better justice, and under precedent each ruling binds the next, letting law drift without a single new statute.
+- **Evidence Decides** — ten kinds: witnesses with failing memories or hidden loyalties, traces such as wounds, footprints and poison signs, documents, confessions, divination, the residue of rites, experts such as physicians and appraisers, hearsay, written records and the body itself, read for wounds, marks and remains. Evidence decays, records and bodies speak only where literacy and medicine allow, and wrongful verdicts come from bad evidence and bias, never from dice.
+- **Eight Courts and Precedent** — local, provincial, high and religious courts, guild courts for members, military courts for soldiers, consular courts where a treaty lets foreigners be judged by their own law, and courts of appeal that catch errors at a cost in time. Clashing jurisdictions go up to the high court or become disputes, skilled advocates win cases so the rich get better justice, and under precedent each ruling binds the next.
 - **Prisons, Pardons and Remaking** — prisons breed gangs, disease and new skills, and released convicts carry a stigma. Rulers pardon friends at a cost in corruption and declare amnesties after civil wars. Where magic meets a cruel penal code, sentences remake the convict's body.
-- **Oaths Before the Gods** — fealty, vengeance, silence, pilgrimage and blood brotherhood, sworn under a divine witness. Break one and the god's wrath follows, keep it and oath gods grow stronger, and a geas laid at birth may forbid you ever to refuse hospitality.
+- **Oaths Before the Gods** — fourteen oaths, from fealty, vengeance, silence, pilgrimage and sworn kinship to oaths of office that bind officials and sworn testimony that weighs more in court. Break one and the god's wrath may follow where the world's laws allow, a perjurer's case is tried again, keeping oaths makes oath gods stronger, and a geas may forbid you ever to refuse hospitality.
+- **Fifteen Registers** — land titles, debts, sales, union payments in either direction, indentures, patents, patterns, mind states, lines, companies, births, deaths, citizenship, wills and licences are kept on record, and a spy who tampers with a register can move a claim or wipe a debt.
 
-**In your world:** A schemer's forged letter convicted an honest reeve of treason. His village remembered him as a martyr and its approval of the crown collapsed, and by the time an investigator proved the hand was false, the villagers had already joined the rebels.
+**In your world:** A schemer's forged letter convicted an honest reeve of treason. The reeve's village remembered them as a martyr and its approval of the crown collapsed, and by the time an investigator proved the hand was false, the villagers had already joined the rebels.
 
 </td>
 </tr>
@@ -1547,17 +1726,17 @@ A merchant lies dead in a fogbound alley. The sheriff has a frightened witness w
 
 *Every guild wants a monopoly. Every estate wants a privilege. Everyone wants the crown.*
 
-The weavers' guild wants the new mills banned. The nobles want their tax exemption back. The merchants want peace with the realm that holds their route, and the warrior order wants war with it. Here factions act every epoch: they lobby, bribe, strike, riot, fund wars and plot coups, and the balance of their sway is the realm's true constitution.
+The cloth guild wants the new mills banned. The nobles want their tax exemption back. The merchants want peace with the realm that holds their route, and the warrior order wants war with it. Here factions act every epoch: they lobby, bribe, strike, riot, fund wars and plot coups, and the balance of their sway is the realm's true constitution.
 
-- **Sixteen Kinds of Faction** — merchant and craft guilds, priesthoods, warrior orders, noble councils, peasant leagues, rebels, bandits, pirates, assassins, academies, secret societies, mercenary companies, wandering markets, void pirates and more, from a band of fifty to a network spanning worlds.
-- **Goals and a Dozen Means** — lower taxes, a monopoly, a claimant on the throne, independence. To get there a faction lobbies, bribes, petitions, strikes, riots, stages a coup, assassinates, smuggles, raids, funds a war, recruits, or splits apart.
+- **Thirty-Nine Kinds of Faction** — merchant and craft guilds, priesthoods and holy orders, warrior and mage orders, noble councils, estates, parties and movements, peasant leagues, workers' unions, rebels, bandits, pirates and route raiders, crime families, thieves' guilds, street gangs, smuggling and counterfeiting rings, academies, secret societies, mercenary and chartered companies, financiers, veterans, clubs, wandering markets and more, from a band of fifty to a network spanning worlds.
+- **Sixteen Goals and Fourteen Means** — lower taxes, a monopoly, a claimant on the throne, independence, an estate privilege, a member seated in office, a rival faction ruined, protection for its members or a new settlement of its own. To get there a faction lobbies, bribes, petitions, strikes, riots, stages a coup, assassinates, smuggles, raids, funds a war, recruits, spreads propaganda, calls a boycott or splits apart.
 - **The Power Balance** — inside every realm the factions' sway forms a balance that feeds every decision the ruler takes. A guild monopoly sets prices and blocks rivals, and smuggling rises to meet it.
-- **Estates and Privileges** — nobility, clergy, burghers, peasants and warriors bargain for tax exemptions, monopolies, council seats, the right to bear arms and immunity from the courts. Every grant buys loyalty and costs the crown revenue or power.
-- **Parties and Movements** — abolition, independence, religious revival and land reform grow as mass movements with support in every class. Where assemblies exist they become parties. Where they do not, they become revolts.
+- **Estates and Privileges** — the estates of every class bargain for nine privileges: tax exemptions, monopolies, council seats, the right to bear arms, immunity from the courts, offices reserved to their own, the sole right to hold land, freedom from levies and dress that marks their rank. Every grant buys loyalty and costs the crown revenue or power, and reserved offices keep able commoners from rising.
+- **Parties and Movements** — fourteen causes, from abolition, independence, religious revival and land reform to the vote, peace, conservation, labour, temperance, equal standing, learning, health and the rights of made minds, grow as mass movements with support in every class. Where assemblies exist they become parties. Where they do not, they become revolts.
 - **Companies with Armies** — chartered companies hold shares, a monopoly abroad and mercenary armies. They can conquer, become a realm of their own or collapse onto their banks and shareholders, and unpaid mercenaries turn bandit or change sides mid-war.
-- **Ranks, Secrets and the Pooled Purse** — guilds control apprenticeships, quality standards and secret techniques. Cooperatives, mutual societies and burial societies pool money for mills, boats, credit and funerals, and can grow into political movements.
+- **Ranks, Secrets and the Pooled Purse** — guilds control apprenticeships, quality standards and secret techniques. Cooperatives pool money and labour for mills, boats, irrigation, insurance, credit, funerals, granaries against dearth, common herds, schools and housing, and can grow into political movements.
 
-**In your world:** When the water-frame mills arrived, the weavers' guild struck and the capital's cloth ran short. The crown bought peace with a guild monopoly, smugglers moved in to undercut it, and the mill owners began lobbying the council to tear up the guild's charter.
+**In your world:** When the water-frame mills arrived, the cloth guild struck and the capital's cloth ran short. The crown bought peace with a guild monopoly, smugglers moved in to undercut it, and the mill owners began lobbying the council to tear up the guild's charter.
 
 </td>
 </tr>
@@ -1571,15 +1750,16 @@ The weavers' guild wants the new mills banned. The nobles want their tax exempti
 
 Your envoy demands a border province, and a crisis opens. Two realms back you for promised shares of the spoils, three back your rival, and a fourth is courted by both. At every step either side can back down and lose only face. Or nobody blinks, and every backer marches. Here every treaty is a set of clauses the world enforces, and every broken promise is remembered.
 
-- **Treaties Built from Clauses** — thirteen kinds, from tribute, cession and hostages to wergild, extradition and champion clauses. The world carries them out every epoch, guarantors join when they break, and a god who witnessed the oath punishes the breaker.
+- **Treaties Built from Clauses** — eighteen kinds of treaty, from peace, alliance and vassalage to mutual aid in disaster, border accords and limits on fleets and arms, built from thirty kinds of clause: tribute, cession, hostages, wergild, extradition, champions, shared water, the return of refugees, the exchange of captives and more. The world carries them out every epoch, guarantors join when they break, and a god, power or court that stood witness punishes the breaker.
+- **Treaties That Pause** — a treaty can be suspended without breach, held in force while its terms are renegotiated, fulfilled, left to expire or broken. A mediator who brokered it gains standing while it holds and loses it when it breaks, and a suspension costs less trust than a breach.
 - **The Coalition Against You** — conquests, unjust wars and broken treaties raise alarm in every realm that hears of them. Past a point the neighbours band together with a standing call to arms, and only marriages and good relations slowly cool it.
-- **Crises at the Brink** — a demand opens a crisis with a clock. Other realms back a side for clause shares and favours, swing parties are courted, and at each escalation someone can back down, concede or let it come to war.
-- **Spheres and Subjects** — great powers hold clients in their spheres. Subjects come as vassals, tributaries, marches, personal unions, clients, colonies and protectorates, each with its own obligations, its own desire for liberty and a contract it can demand to renegotiate.
+- **Crises at the Brink** — a demand opens a crisis with a clock: cede a region, release a vassal, convert, pay, hand over a named fugitive or rival, disarm, open ports and routes, apologise or release captives. Other realms back a side for clause shares and favours, and at each escalation someone can back down, concede, accept a third party's settlement, let the crisis freeze while its costs run on, or let it come to war.
+- **Spheres, Subjects and the Neutral** — hegemons and great powers hold clients in their spheres, and subjects come in ten kinds, from vassals, tributaries, marches and personal unions to colonies, protectorates, enclaves, mandates and associated states, each with its own obligations, its own desire for liberty and a contract it can demand to renegotiate. A neutral realm joins no bloc and trades with every side, an isolated one trades little and is seldom drawn into wars, and breaking a realm's neutrality outrages its neighbours.
 - **Bad Faith and Side Deals** — a deceitful ruler signs meaning to break, and the other side trusts only as far as it believes. At summits several parties bargain in rounds, cut secret side deals, and the order of commitments decides who wins.
 - **Diplomacy Has Limits** — a realm sustains only as many alliances, guarantees and embassies as its administration and ambassadors can carry. Inside realms of many peoples, old grudges between them feed migration, assimilation and ethnic strife.
-- **An Assembly of Worlds** — realms across worlds vote on shared route security, embargoes and bans on void rites, and may even sanction a son's world.
+- **An Assembly of Worlds** — realms across worlds vote on nine kinds of resolution: route security, embargoes, bans on void rites, sanctions even on a son's world, quarantine of a plague-struck world, arbitration of disputes, pooled relief after disaster, peacekeepers sent between warring parties and the recognition of a new realm.
 
-**In your world:** A king signed a marriage pact he never meant to honour, then seized the bride's dowry province. The witness god's priests denounced him, alarm spread to every court, and within a generation a coalition of his former friends had taken the province back.
+**In your world:** A ruler signed a marriage pact never meant to be honoured, then seized the province the union had brought. The witness god's priests denounced the oathbreaker, alarm spread to every court, and within a generation a coalition of the ruler's former friends had taken the province back.
 
 </td>
 </tr>
@@ -1591,14 +1771,15 @@ Your envoy demands a border province, and a crisis opens. Two realms back you fo
 
 *Empires rise at the frontier and die in the palace.*
 
-Nothing in your world is scripted to fall. Yet watch a great empire across three centuries: land grows scarce, wages sink, younger sons with credentials and no offices crowd the capital, the treasury borrows to pay its soldiers, and on the frontier a hard people that has fought for generations is learning to ride as one. The cycle emerges from the simulation, and you can read every gauge of it.
+Nothing in your world is scripted to fall. Yet watch a great empire across three centuries: land grows scarce, wages sink, younger children with credentials and no offices crowd the capital, the treasury borrows to pay its soldiers, and on the frontier a hard people that has fought for generations is learning to ride as one. The cycle emerges from the simulation, and you can read every gauge of it.
 
-- **The Stress Gauge** — popular misery, elite overproduction and fiscal distress multiply into one measure of political stress. As it climbs, factions form, coups and revolts grow likelier, and crowds tip into riot faster.
+- **The Stress Gauge** — population pressure, popular misery, elite overproduction and fiscal distress combine into one measure of political stress. As it climbs, factions form, coups and revolts grow likelier, and crowds tip into riot faster.
 - **Counter-Elites** — when nobles, the rich and the credentialed outnumber the offices, titles and land to go round, the surplus becomes aspirants with nowhere to go. They lead the factions, movements and revolts.
 - **Secular Cycles** — growth, stagflation, crisis, then depression or recovery, over centuries and with no script at all. Population falls, elites thin, wages rise, and the climb begins again.
 - **Asabiyya** — solidarity rises on frontiers against peoples deeply unlike your own and decays through generations of luxury. It multiplies cohesion, morale and resistance to assimilation, so hard frontier peoples overthrow soft dynasties.
-- **Challenge and Response** — disasters, plagues and invasions spur research, new institutions and solidarity. Too little challenge brings stagnation, too much brings collapse, and the severe but survivable middle forges the strongest peoples.
-- **Long Plans** — realms, cults, orders and gods pursue goals across centuries: a desert world made green, a bloodline, a world converted, a wonder. Offices and orders carry them long after their authors are dust.
+- **Challenge and Response** — fourteen kinds of challenge, from disasters, plagues, famines and invasions to long winters or summers, contested successions, secessions, migration waves, technological shocks and revelations. Too little challenge brings stagnation, too much brings collapse, and the severe but survivable middle forges the strongest peoples.
+- **Transformation** — a people that meets its challenge through a movement, a revolution or a revival can keep its people and take a new form: a new government, a new faith or a new economy.
+- **Long Plans** — realms, cults, orders and gods pursue goals across centuries: a desert world made green, a bloodline, a world converted, a wonder, a great work of engineering, a reform, an exploration, a fallen realm restored. Offices and orders carry them long after their authors are dust.
 - **Psychohistory** — a scholarly order with statistics and a great archive forecasts a realm's future through a noisy lens and steers it with small interventions, until a great person or a god steps in and the forecast fails.
 
 **In your world:** A nomad people hardened on the empire's frontier for four generations. When elite overproduction and an empty treasury split the capital into rival courts, the nomads rode in and founded a dynasty, and their great-grandchildren, grown soft in the palace, fell to the next frontier.
@@ -1613,17 +1794,18 @@ Nothing in your world is scripted to fall. Yet watch a great empire across three
 
 *The peace treaty arrived. The battle was already over.*
 
-Your herald rides for the enemy camp with an offer of peace. The pass is closed by snow, so he takes the coast road, where a spy network copies his letter and bandits hold him for ransom. By the time he arrives, the armies have met. Now every decision is made on the latest news to arrive, and news travels at the speed of a horse.
+Your herald rides for the enemy camp with an offer of peace. The pass is closed by snow, so the herald takes the coast road, where a spy network copies the letter and bandits hold its bearer for ransom. By the time the herald arrives, the armies have met. Now every decision is made on the latest news to arrive, and news travels at the speed of a horse.
 
-- **Seven Ways to Send Word** — envoys, letters, heralds, signal fires, birds, magical sendings and dreams sent by a god. Delay follows distance, medium and season, mountain passes close in winter, and between worlds word travels as slowly as the route.
-- **Intercepted** — every region along the way with spies, bandits or enemy armies is a chance to lose a letter. Stolen messages yield intelligence, hooks or forged replacements.
-- **Forgery** — the forger's skill against the recipient's familiarity with the sender's hand. A forged declaration of war can set two innocent realms at each other's throats.
+- **Twelve Ways to Send Word** — envoys, letters, heralds, signal fires, birds and other courier animals, drummed and whistled speech, magical sendings, dreams sent by a god, mind links, networks and broadcasts. Delay follows distance, medium and season, mountain passes close in winter, and between worlds word travels as slowly as the route.
+- **Thirteen Kinds of Message** — proposals, demands, threats, insults, notices of gifts, declarations, reports, pleas, intelligence, orders, warnings, condolences and congratulations. An order delayed, lost or forged moves a general the wrong way, a warning's timing decides who escapes the harm, and a timely condolence or congratulation warms the court that receives it.
+- **Intercepted** — every region along the way with spies, bandits or enemy armies is a chance to lose a letter. A message can arrive late, go astray, be intercepted, forged, misread or refused at the door, and a refusal is an insult. Stolen messages yield intelligence, hooks or forged replacements.
+- **Forgery** — the forger's skill against the recipient's familiarity with the sender's hand. A forged declaration of war can set two innocent realms at each other's throats, and a forged order can pull an army back from the pass it was holding.
 - **Lost in Translation** — misreadings grow with the language gap, the number of clauses and the interpreter's skill. A misread clause becomes a bitter breach dispute long after the ink has dried.
-- **Envoys and Etiquette** — an envoy's skill and manners shape the welcome. A well-chosen gift earns opinion and a favour, a breach of precedence costs it, and killing an envoy is unthinkable almost everywhere and means war.
+- **Envoys and Etiquette** — an envoy's skill and manners shape the welcome. A well-chosen gift earns opinion and a favour, a breach of precedence costs it, and an envoy may be received, honoured with gifts, insulted, expelled, imprisoned, killed or won over to serve the host. Killing an envoy is unthinkable almost everywhere and means war.
 - **Ciphers and Codebreakers** — encipher your letters and an interceptor learns only that you wrote. Codebreakers grind at captured traffic for seasons, and while you do not know your cipher is broken, every message you send is read.
-- **Beacons and Broadsheets** — fire beacons, mirror towers, post stations and sending stones shrink the realm until someone burns them. Criers, sermons, broadsheets and propaganda move public opinion, which sets support for wars, and censorship breeds distrust once discovered.
+- **Beacons and Broadsheets** — beacon chains, mirror relays, post stations, drum relays across forest and valley, wires, radio and paired sending stones shrink the realm until someone burns, jams or captures them, and a burned or disused station can be restored. Criers, sermons, broadsheets and propaganda move opinion of the ruler, a law, a war, a god, an ideology, a faction, a foreign power, the economy or a neighbouring people, and censorship breeds distrust once discovered.
 
-**In your world:** The empress's codebreakers broke the duke's cipher in the second winter of the rebellion. For a year they read every letter he sent, until a careless ambush betrayed what they knew, and the duke, hunting the leak, hanged his own loyal secretary.
+**In your world:** The empress's codebreakers broke the duke's cipher in the second winter of the rebellion. For a year they read every letter the duke sent, until a careless ambush betrayed what they knew, and the duke, hunting the leak, hanged a loyal secretary.
 
 </td>
 </tr>
@@ -1639,12 +1821,13 @@ You sack a rebel town. In your capital you are the hero who crushed treason. In 
 
 - **Rumours That Travel** — news rides trade routes, pilgrimages, journeys and spy networks, losing fidelity with distance and language. A town that hears of an approaching army raises its walls, and rumours that refuse to die harden into legends.
 - **Gossip Networks** — inside a city, stories move from friend to friend, through circles and gatherings. Each teller can spin the tale toward their own opinion of its subject, so the palace and the docks hear different scandals.
-- **Nine Axes of Reputation** — heroism, honour, cruelty, piety, generosity, wisdom, trickery, craft renown and troublemaking, held separately by every community and read through its own ethics. A massacre is cruelty to the victims' kin and heroism at home.
+- **Thirteen Axes of Reputation** — heroism, honour, cruelty, piety, generosity, wisdom, trickery, craft renown, troublemaking, mercy, justice, reliability and hospitality, held separately by every community and read through its own ethics. A massacre is cruelty to the victims' kin and heroism at home.
 - **Prestige, Piety, Dread and Tyranny** — rulers spend their reputation. Prestige buys acceptance of laws, piety buys the clergy, and dread silences dissent for a while. Tyranny piles up from unjust acts and turns vassals against the crown.
-- **Secrets for Sale** — factions, cults, scholars and even beasts prize particular knowledge: true names, lost techniques, hidden sites, prophecies. A secret buys favours and goods, but every sale makes it worth less.
-- **False Heroes** — deeds must be credited. A vain rival can claim your dragon until the true slayer produces the beast's tongue, and exposure brings scandal, a duel or punishment. Yet the chronicle may still honour the impostor.
+- **Secrets for Sale** — factions, cults, scholars and even beasts prize particular knowledge: true names, lost techniques, hidden sites, prophecies, remedies, genealogies. A secret is paid for with wealth, a favour, renown, another secret, a deed done for the seller or an oath on how it may be used, and breaking that oath is oathbreaking. Every sale makes a secret worth less.
+- **False Heroes** — deeds must be credited, and a claim can be true, shared, false, inflated to take the whole renown of a shared deed, or borrowed from someone else's. A vain rival can claim your dragon until the true slayer produces the beast's tongue, and exposure brings scandal, a duel or punishment. Yet the chronicle may still honour the impostor.
+- **Disputed and Forgotten** — when two claim one deed, the renown is split until a trophy, witnesses, a duel or a court settles it, and the chronicle may record both. A claim nobody keeps alive is forgotten over generations, and its renown goes with it.
 
-**In your world:** A sellsword claimed the wyrm a shepherd girl had killed. The capital feasted him while her village knew the truth, and when she walked into court with the beast's tongue in a cloth, the duel that followed made her a legend.
+**In your world:** A sellsword claimed the wyrm a shepherd girl had killed. The capital feasted the sellsword while her village knew the truth, and when she walked into court with the beast's tongue in a cloth, the duel that followed made her a legend.
 
 </td>
 </tr>
@@ -1656,17 +1839,17 @@ You sack a rebel town. In your capital you are the hero who crushed treason. In 
 
 *Everyone has a secret. You only need the right one.*
 
-The chancellor's son is not the chancellor's son. His wife's maid knows it, a rival's spymaster has just learned it, and nobody else knows yet. That single secret is a hook strong enough to force a vote, a marriage or a resignation, or, spent in public, to ruin a family. Here schemes are recruited, prepared and launched like campaigns, and every one of them can be discovered.
+The chancellor's heir is not the chancellor's child. A maid of the household knows it, a rival's spymaster has just learned it, and nobody else knows yet. That single secret is a hook strong enough to force a vote, a marriage or a resignation, or, spent in public, to ruin a family. Here schemes are recruited, prepared and launched like campaigns, and every one of them can be discovered.
 
-- **Thirteen Kinds of Secret** — affairs, bastards, murders, heresies, hidden cults, debts, crimes, cowardice in battle, hidden illness or madness, false identities, pacts with outer beings, true parentage and broken oaths. Each one is born of something that really happened.
-- **Hooks and Favours** — a hook from a secret, a debt, a favour or a hostage forces compliance. Weak hooks are spent on use, strong ones last. Favours are owed for rescues and votes, and refusing a called favour costs honour.
-- **Living Under Other Names** — spies, vampires, exiles and impostors wear false identities, exposed by investigations, careless slips or a face someone recognises.
-- **Fourteen Schemes in Three Phases** — murder, abduction, seduction, framing, a fabricated claim, a stolen relic, a sabotaged wedding, a freed prisoner and more. Recruit agents with money, hooks or a cause, gather power, then strike past the target's spymaster and bodyguards.
+- **Nineteen Kinds of Secret** — affairs, children born outside a union, murders, heresies, hidden cult membership, debts, crimes, cowardice in battle, hidden conditions and hidden illness, false identities, pacts with outer beings, true parentage, broken oaths, sabotage of nature, a broken cipher, the true history of a deed, a hidden power and a forgery. Each one is born of something that really happened, and a ruler's illness, once known, moves every succession plan at court.
+- **Hooks and Favours** — a hook from a secret, a debt, a favour, a hostage, a true name, dependence or affection can demand a marriage, a resignation, support, a vote, a law, an appointment, silence, a payment, a release or information. Weak hooks are spent on use, strong ones last. Favours are owed for gifts, rescues, support in war and succession, votes, relief, shelter, a paid ransom, healing and teaching, and refusing a called favour costs honour.
+- **Living Under Other Names** — spies, the blood-cursed, exiles, impostors, fugitives, believers hiding their faith, beings passing as another kind, those hiding a power and those shielding their kin wear false identities, exposed by investigations, careless slips or a face someone recognises.
+- **Twenty-Two Schemes in Three Phases** — murder, abduction, seduction, framing, a coup, a fabricated claim or hook, a stolen relic, a poisoned well, a sabotaged wedding, a freed prisoner, a forged letter, a hidden fleet, a fixed contest, a crowd stirred to act and more. Recruit agents with money, hooks or a cause, gather power, then strike past the target's spymaster and bodyguards.
 - **Discovery** — every epoch a scheme's secrecy is tested against the counter-intelligence of the target's court. A discovered plot exposes its agents and leaves memories that last.
 - **Timing Is Everything** — night and fog raise success and hide witnesses, storms cut pursuit, festival crowds give cover but more eyes, and a plague panic distracts the watch. Plots cluster on festival nights and foggy mornings.
-- **Sabotage of Nature** — release pests, burn fields, poison a fishery, divert a river by stealth, salt the earth at night. The damage runs through the real ecology, and most victims find the very idea unthinkable.
+- **Sabotage of Nature** — blight a rival's land with pests, burn it or leave it barren. The scar stays on the land, the plot becomes a secret every agent carries, and when the deed comes to light it is tried as treason.
 
-**In your world:** A rival's agents salted the duke's best fields on a foggy night. The harvest failed and his levies went hungry, and when footprints and a dropped sack led an investigator back to them, the scandal cost their mistress her place at court.
+**In your world:** A rival's agents blighted the duke's best fields with pests on a foggy night. The harvest failed and the duke's levies went hungry, and when footprints and a dropped sack led an investigator back to them, the scandal cost their mistress her place at court.
 
 </td>
 </tr>
@@ -1678,17 +1861,18 @@ The chancellor's son is not the chancellor's son. His wife's maid knows it, a ri
 
 *Trust no one. Especially the one who found the mole.*
 
-Your spymaster swears there is a traitor on the council. He is right, but he names the wrong man. The loyal treasurer hangs, and that night the real mole sends word across the border. Here spy networks are built cell by cell, agents are bought with greed, faith, blackmail or vanity, and paranoia can do more damage than any enemy.
+Your spymaster swears there is a traitor on the council, and is right, but names the wrong official. The loyal treasurer hangs, and that night the real mole sends word across the border. Here spy networks are built cell by cell, agents are bought with greed, faith, blackmail or vanity, and paranoia can do more damage than any enemy.
 
 - **Networks of Cells** — agents, handlers, dead drops and safe houses, with covers as merchants, priests or envoys. A captured agent can betray only their own cell, and flat networks are fast but fragile.
-- **Four Motives** — money, ideology, compromise and ego. The motive sets loyalty and the risk of a double cross, and true believers are the most reliable agents and the hardest to turn back.
-- **Seven Operations** — steal knowledge, sabotage, assassinate, incite, gather intelligence, blackmail and counterfeit. Spies fire granaries, weaken walls, poison wells, plant claimants and flood the market with false coin.
+- **Seven Motives** — money, ideology, compromise, ego, love, revenge and faith. The motive sets loyalty and the risk of a double cross: an agent won by love breaks when the bond breaks, one driven by revenge stops when the target falls, and true believers are the most reliable agents and the hardest to turn back.
+- **Twelve Operations** — steal knowledge, sabotage, assassinate, incite, gather intelligence, blackmail, counterfeit, plant a mole in an office, guild or temple, bring an agent or defector out across a border, feed a rival false beliefs, recruit new agents, or simply watch at little risk. Spies fire granaries, weaken walls, poison wells, tamper with registers of titles, debts and births, block convoy routes and flood the market with false coin.
+- **Sleepers and the Lost** — an agent can be active, caught, turned, dead, retired, missing, exposed or asleep. A sleeper waits embedded for years and wakes on a set signal, a missing agent sends nothing until found, and an exposed one is watched and useful only for feeding false reports.
 - **Mole Hunts** — paranoid spymasters accuse the innocent, and every purge costs loyal officers and drives defections, which only deepens the paranoia.
 - **Defectors and Double Agents** — captured agents can be turned to feed false intelligence, or exchanged. Defectors carry their secrets across the line and need protection, branded traitors at home and hailed as heroes abroad.
 - **Death by Design** — blade, poison, staged accident, deliberate infection or curse. Whether anyone recognises a murder depends on the physician's skill and the medicine of the age, and that decides whether a vendetta, an inquiry or a war follows.
 - **Spies of the Gods** — scrying rites, dream intrusions and servitor spies cross any distance. Wards and the dominion of a rival god block them.
 
-**In your world:** An ideological agent poisoned the margrave and dressed it as a fever. The court physician, schooled in a newer medicine, read the signs, the poisoner's cell was taken, and the margrave's heir declared the war his father had refused to fight.
+**In your world:** An ideological agent poisoned the margrave and dressed it as a fever. The court physician, schooled in a newer medicine, read the signs, the poisoner's cell was taken, and the margrave's heir declared the war the margrave had refused to fight.
 
 </td>
 </tr>
@@ -1700,16 +1884,16 @@ Your spymaster swears there is a traitor on the council. He is right, but he nam
 
 *They don't act on the truth. They act on what they believe.*
 
-A general force-marches his army to break the siege of a city that was relieved a month ago. He is no fool: his last report said the walls were still holding. Every ruler, house, cult, commander and beast in your world decides on what it believes, with a confidence and a date attached, while the outcome is settled by the truth. Surprise, folly and genius live in the gap.
+A general force-marches an army to break the siege of a city that was relieved a month ago. The general is no fool: the last report said the walls were still holding. Every ruler, house, cult, commander and beast in your world decides on what it believes, with a confidence and a date attached, while the outcome is settled by the truth. Surprise, folly and genius live in the gap.
 
 - **A Mind of Its Own Making** — every deciding actor keeps its own store of beliefs: an enemy army's size, a rival's treasury, a claimant's health, a god's favour. Each belief carries a confidence, a date and a source.
-- **Six Ways of Knowing** — seeing with one's own eyes, letters, rumours, spies, scouts and one's own records, and records exist only where someone can write.
+- **Fifteen Ways of Knowing** — seeing with one's own eyes, messages, rumours, spies, scouts, one's own records, deception, networks, foresight, mind reading, intrusion, surveillance, the reports of made minds, dreams and omens. Records exist only where someone can write, and a belief drawn from a dream or an omen holds with the confidence its culture gives such signs.
 - **Knowledge Fades** — confidence decays with age, and stale beliefs make fatal decisions. The rival you believe is bankrupt may have been paid with a dragon's hoard last spring.
-- **Deception** — feints, false campfires, planted rumours and forged letters write lies straight into a rival's picture of the world.
+- **Deception** — feints, false campfires, planted rumours, forged letters and a spy network's disinformation write lies straight into a rival's picture of the world.
 - **Markets in the Fog** — merchants trade on the price gaps they believe in, so prices converge where news is quick and stay apart where it is slow. Insurers price risk on belief, and speculators hoard on it.
 - **The Gap Laid Bare** — toggle any realm between what it believes and what is true. As the Creator you can reveal the truth to an actor or plant a false belief, and the agents who play your mortals see only what their characters know.
 
-**In your world:** A king believed his rival's treasury empty because his last spy report was years old. He declared war, met an army paid from a fresh dragon hoard, and lost a province to an enemy he had been certain could not afford to fight.
+**In your world:** A ruler believed a rival's treasury empty because the last spy report was years old. The ruler declared war, met an army paid from a fresh dragon hoard, and lost a province to an enemy the court had been certain could not afford to fight.
 
 </td>
 </tr>
@@ -1732,17 +1916,18 @@ A general force-marches his army to break the siege of a city that was relieved 
 
 *An army is not a number. It is ten thousand people who must eat.*
 
-You do not conjure soldiers. You take them. Young farmers leave the levy class, spears leave the armoury, grain leaves the granary, and the harvest season halves the call. Then the march begins, and every frozen pass, every fevered camp and every empty war chest costs men. Each stack carries its own gear, drill, morale and memory, and when the war ends your people count who came home whole.
+You do not conjure soldiers. You take them. Young farmers leave the levy class, spears leave the armoury, grain leaves the granary, and the harvest season halves the call. Then the march begins, and every frozen pass, every fevered camp and every empty war chest costs lives. Each stack carries its own gear, drill, morale and memory, and when the war ends your people count who came home whole.
 
-- **Thirty-Three Kinds of Soldier** — eight families, from levies, pikemen and berserkers to horse archers, chariots, sky mounts, war mages, necromancers, golems and ghost hosts. Each has its own melee, missile, defence, charge mass, upkeep and favoured ground.
-- **Armour from the Armoury** — every stack is equipped from the weapons and armour your people forged before the war, from hide to plate to enchanted mail. Levies go home when the army disbands, minus the dead, and the maimed come home maimed.
+- **Fifty Kinds of Soldier** — twelve families, from levies, pike and shock infantry to mounted archers, chariots, sky riders, battle casters, summoners, constructs and summoned hosts, and on to gunners, drop troops, drone operators and powered troopers. Each has its own melee, missile, defence, speed, charge mass, upkeep and favoured ground.
+- **Armour from the Armoury** — every stack is equipped from the weapons and armour your people forged before the war, from a hundred families of gear that run from hide and mail to plate, warded and powered armour. Levies go home when the army disbands, minus the dead, and the maimed come home maimed.
 - **Hunger Before Battle** — each region can feed only so many mouths. Armies above the limit strip the land and earn its hatred, and a winter campaign through the mountains in heavy armour can destroy an army without a single battle.
 - **Strength, Organisation, Discipline** — three separate pools in every stack. A stack whose formation dissolves routs at full strength, drilled professionals hold where levies break, and news of a sacked home city raises rage and desertion at once.
-- **Commanders Earn Their Names** — skill in fire, shock, manoeuvre, siege and logistics, and ten battle traits earned from the record, from cavalry master and winter campaigner to reckless and brutal. Their traits steer the tactics they choose.
-- **Blueprints and Earthworks** — named formations such as the border legion or the steppe horde, war machines built to blueprints a rival can steal, and sappers who bridge rivers with pontoons and dig earthworks that outlive the war.
-- **Regiments and Veterans** — units from one recruiting ground earn names, nicknames and battle honours on their standards, and remember their massacres. Veterans receive land in new colonies or pensions, and their associations may back an old commander's coup.
+- **Commanders Earn Their Names** — skill in fire, shock, manoeuvre, siege, logistics and intelligence, and twenty-nine battle traits earned from the record, from cavalry master, winter campaigner and night fighter to jungle fighter, cold fighter, river crosser, reckless and brutal. Their traits steer the tactics they choose and the ground they fight best on.
+- **Eleven Stances, Ten Officers** — an army marches, forages, entrenches, besieges, garrisons, raids, retreats, settles into winter quarters, pursues a beaten foe, escorts convoys and siege trains, or disbands and goes home. Beside the commander serve a second in command, a quartermaster, a standard bearer, a surgeon, a chaplain, a paymaster whose honesty keeps mutiny away, a master of scouts, a master of engineers and an interpreter.
+- **Blueprints and Earthworks** — realms draw up and name their own army templates, thirteen formations run from line, column and wedge to squares, shield walls and a ring of wagons against horse and beast, war machines are built to blueprints a rival can steal, and sappers bridge rivers with pontoons and dig earthworks that outlive the war.
+- **Regiments and Veterans** — units from one recruiting ground earn names, nicknames and battle honours for victories, stands, sieges, survival, the relief of a besieged town, a crossing under arms, mercy and being first through a breach, and they remember their massacres. Veterans receive land, pensions, citizenship, lesser titles, offices or freedom from taxes, and their associations may back an old commander's coup.
 
-**In your world:** A marshal marched heavy infantry over the passes in midwinter. Cold and camp fever took more men than the enemy ever did. The survivors were settled in a veteran colony, and a generation later they marched again, behind their old general, on the capital.
+**In your world:** A marshal marched heavy infantry over the passes in midwinter. Cold and camp fever took more soldiers than the enemy ever did. The survivors were settled in a veteran colony, and a generation later they marched again, behind their old general, on the capital.
 
 </td>
 </tr>
@@ -1756,13 +1941,14 @@ You do not conjure soldiers. You take them. Young farmers leave the levy class, 
 
 Dawn fog lies on the ford. Your archers cannot see, the enemy's hidden horse waits in the reeds, and your commander, reckless by record, wants to charge. Every battle is fought in phases on real ground under the real sky of that season, and every phase leaves a reason you can read: the terrain, the tactic, the counter, the line that held and the line that broke.
 
-- **Eight Phases of Battle** — scouting, the commanders' plans, missiles, the charge, melee, rites and miracles, pursuit and aftermath. A patron god may intervene, and its attention can draw a rival god in. Six outcomes run from decisive victory through pyrrhic victory to massacre.
-- **Twelve Grounds, Eight Skies** — a pass multiplies the defender, marsh drags heavy troops down, streets swallow cavalry. Fog blinds archers and doubles ambushes, an eclipse breaks armies whose people dread it, and a magic storm swells every rite and its backlash.
-- **Thirteen Tactics and Their Counters** — shield wall, wedge, feigned retreat, double envelopment, night raid and more, each with its answer and its proper ground. Feints pin reserves, false campfires inflate an army and planted deserters carry lies.
+- **Twelve Phases of Battle** — parley, scouting, the commanders' plans, orders, missiles, the charge, melee, reserves, rites and miracles, pursuit, salvage and aftermath. A parley can end a battle before it starts with terms, insults or delay, a patron god may intervene, and its attention can draw a rival god in. Seven outcomes run from decisive victory through pyrrhic victory and stalemate to rout and massacre, or a battle refused.
+- **Every Ground, Every Sky** — battles are fought on every kind of terrain the world has and under every kind of weather, on land, at sea, in the sky, in boarding fights, under water, underground, between strata, in open space and across dimensions. A pass narrows the field, marsh drags heavy armour down, streets swallow cavalry, rain slackens bowstrings, fog blinds archers and hides ambushes, an eclipse's dark shakes morale, and a magic storm swells every rite and its backlash.
+- **Twenty-Five Tactics and Their Counters** — shield wall, wedge, feigned retreat, double envelopment, night raid, ambush, guerrilla war, infiltration, a river crossing under arms that a river crosser leads best, and fire set on dry ground with the wind behind it, each with its answer and its proper ground. Feints pin reserves, false campfires inflate an army and planted deserters carry lies.
 - **The Width of the Field** — only so many can fight at once. At a narrow pass three hundred hold thirty thousand for a time, reserves wait for the front to tire, and squares stop cavalry but die under arrows.
-- **The Morale Ladder** — steady, shaken, wavering, routing, broken. Panic spreads between neighbouring stacks, standards and priests rally the wavering, orders arrive late or garbled across a language barrier, and a fallen general collapses the whole command.
-- **The Physics of Slaughter** — in melee only the front rank kills, but massed arrows and spells strike the whole enemy, so concentration pays quadratically. Plate, chitin and stone skin shrug off blows that cannot pierce, which is why crossbows, picks and maces exist.
-- **After the Battle** — the killed, the walking wounded, the stretcher cases, the captured, the missing and the deserted are counted apart. Without field surgeons the wounded die within the season. The victor rearms from the field, and mass death may leave it haunted.
+- **The Morale Ladder** — steady, shaken, wavering, routing, broken, and rallied again. Panic spreads between neighbouring stacks, standards and priests rally the wavering, orders arrive late or garbled across a language barrier, and a fallen general collapses the whole command.
+- **The Physics of Slaughter** — in melee only the front rank kills, but massed arrows and spells strike the whole enemy, so concentration pays quadratically. Heavy armour, forged or grown, shrugs off blows that cannot pierce it, which is why crossbows, picks and maces exist.
+- **After the Battle** — the killed, the wounded, the maimed, the captured, the missing, the deserted and the sick are counted apart. The missing drift home over the next season, turn up dead or take to banditry, deserters are hunted, and in a long campaign camp sickness takes more than the enemy. Without field surgeons the wounded die within the season, the victor rearms from the field, and mass death may leave it haunted.
+- **Captives of the Field** — captives are held, ransomed, enslaved, sacrificed, worked, exchanged, released, executed, pressed into the victor's ranks or adopted into the captors' households. Every culture judges a killing of captives, and pressed captives fight with low loyalty and desert at the first chance.
 
 **In your world:** Fog lay on the river at dawn. The defenders' archers fired blind while the attackers' hidden wing crossed upstream and struck their flank. The rout became a massacre, the meadow was left haunted, and settlers avoided it for generations.
 
@@ -1778,11 +1964,13 @@ Dawn fog lies on the ford. Your archers cannot see, the enemy's hidden horse wai
 
 The engines have pounded the north wall since spring. Under your feet, sappers race the defenders' counter-miners through wet clay. Inside, the granaries are counted in days and the guilds are whispering. A siege lasts seasons and both sides suffer it: hunger, fever, sorties by night, and the long arithmetic of who breaks first, the wall, the garrison or the people behind it.
 
-- **Five Roads into a City** — blockade, bombard, mine, assault or negotiate. Engines are matched against walls by their stone, mines against the rock and soil beneath, and an assault is a battle on wall ground where every breach strips the defender's advantage.
-- **The Defender Answers** — sorties that burn the siege towers, masons who patch breaches from the stone stock, rationing and the hope of relief. Beneath the walls, sappers and counter-miners duel in the dark, and tunnels cave in.
-- **Hunger and Fever** — rationing becomes famine, and famine reaches the taboo that only some peoples will break. Disease festers in the city and in the besiegers' camp alike, driven by water, sanitation and season.
-- **Treason at the Gate** — starvation erodes the garrison's nerve and raises the risk of revolt in the streets, and a faction nursing an old grievance may simply open a gate.
-- **Sack or Mercy** — the victor's doctrine and the commander's traits decide. A sack takes the treasury, the relics and the people, burns whole districts and earns infamy, and the city never forgets who conquered it.
+- **Eight Roads into a City** — blockade, bombard, mine, assault, negotiate, suborn the people who hold a gate, poison the supply or divert the river. Engines are matched against walls by their stone, mines against the rock and soil beneath, and an assault is a battle on wall ground where every breach strips the defender's advantage.
+- **Fourteen Siege Works** — lines of circumvallation, towers, rams, mines and countermines, ladders, massed bombardment, saps that bring attackers forward under cover, blockade lines, ramps raised to the wall top over weeks and dams that cut the water or flood the approaches, and where the world allows, assaults from the air, attacks on networks and rites that breach the wall.
+- **The Defender Answers** — sorties that burn the towers and works, masons who patch breaches from the stone stock, rationing and the hope of relief. Defenders open the sluices to flood the approaches, burn the land around to starve the besiegers, drive out those who cannot fight, or leave by sea and give up the town. Beneath the walls, sappers and counter-miners duel in the dark, and tunnels cave in.
+- **Hunger and Fever** — rationing becomes famine, famine becomes hunger sickness, and hunger sickness reaches the taboo that only some peoples will break. Disease festers in the city and in the besiegers' camp alike, driven by water, sanitation and season.
+- **Treason at the Gate** — starvation erodes the garrison's nerve and raises the risk of revolt in the streets, and a faction nursing an old grievance, a bribed officer or a hooked captain may simply open a gate.
+- **Sack or Mercy** — the victor's doctrine and the commander's traits decide between mercy, a sack, razing, a ransom that leaves the city poorer but whole, deporting its people into the victor's lands, or settling the victor's own people in it. A sack takes the treasury, the relics and the people, burns whole districts and earns infamy, and the city never forgets who conquered it.
+- **Surrender on Terms** — a siege can end in agreed surrender, with the honours of war, safe conduct or a ransom. The victor may keep the terms or break them, and a broken word is remembered.
 - **Fleets at the Harbour Mouth** — only a fleet can starve a coastal city from the sea. Fort strength sets how hard a breach comes, artillery batters out breaches season by season, and a commander's siege skill tells.
 - **Lines of Stone** — citadels and walled cities control the regions around them. An invader must besiege each fort or march past with its supply line cut, so fortress lines shape whole invasions.
 
@@ -1798,17 +1986,18 @@ The engines have pounded the north wall since spring. Under your feet, sappers r
 
 *Wars are not won in battles. They are won in campaigns.*
 
-Your offensive has taken three cities and is still advancing. Behind it the barges are slower, the depots thinner, the river line longer. Somewhere ahead lies the point where the attack must stop or collapse, and back home the markets are filling with one-armed sons. War runs season by season across fronts, depots and headquarters, and it ends at a table where every demand has a price.
+Your offensive has taken three cities and is still advancing. Behind it the barges are slower, the depots thinner, the river line longer. Somewhere ahead lies the point where the attack must stop or collapse, and back home the markets are filling with one-armed veterans. War runs season by season across fronts, depots and headquarters, and it ends at a table where every demand has a price.
 
-- **Chain of Command** — army groups, armies, corps, divisions and brigades, each led from a headquarters with its own staff. Couriers and signal networks stretch its reach, and formations beyond it fight on standing orders.
+- **Chain of Command** — army groups, armies, corps, divisions, brigades and detachments, each led from a headquarters with its own staff and ordered to attack, manoeuvre, resupply, hold, stand or screen. Couriers and signal networks stretch its reach, formations beyond it fight on standing orders, detachments raid, garrison and escort on their own and can be cut off, and a screen hides an army's moves and catches the enemy's scouts.
 - **Supply Is a River** — depots, wagons, pack animals, barges, ships and sky-barges carry supplies at a limited rate. Cut one depot or one river line and every army it feeds begins to starve.
 - **The Culmination Point** — offensives outrun their supply as lines lengthen. Generals with a head for logistics see the limit coming, and a marshal who sends reserves to the wrong front on bad intelligence loses the war there.
-- **Thirteen War Aims** — conquer a region, press a claim, convert, vassalise, liberate, destroy a cult, take revenge, loot. Occupied land yields taxes and levies, and its resistance grows with every atrocity remembered.
-- **Casus Belli and War Score** — ten justifications, from holy war and vendetta to trade dispute and debt default, or naked conquest with none. Every peace clause costs war score: ceded land, tribute, hostages, conversion rights, a champion for disputes to come.
+- **Seventeen War Aims** — conquer a region, seize a settlement, a route, a resource or a nexus, press a claim, convert, take tribute, vassalise, liberate, destroy a cult, humiliate, take revenge, loot, change a government, secure water or bring refugees home. Occupied land yields taxes and levies, and its resistance grows with every atrocity remembered.
+- **Casus Belli and War Score** — twelve grounds for war, from a claim, holy war, vendetta and a broken treaty to trade disputes, debt default, a broken pact that a god or court witnessed and the harbouring of fugitives, or naked conquest. Every one of nineteen peace terms costs war score: ceded land, tribute, hostages, reparations, open temples, a new government, fixed borders, refugees returned, a formal apology, a champion for disputes to come, or a white peace.
+- **Why Wars Begin and End** — thirty causes set wars moving, from rivalries, uprisings, grudges and debts to espionage, schisms, beasts, trade routes, successions, shared rivers and refugees crossing borders. Wars end in eleven ways, from victory, conquest and exhaustion to betrayal, a miracle or mediation, and a mediated peace leaves less grievance behind.
 - **The Home Front** — war support rises with propaganda and a just cause and falls with taxes, casualties and maimed veterans in the streets. Weary peoples press for peace, while war workshops grow more efficient the longer they make one thing.
-- **Parley** — bluffs and insults before battle, truces for the harvest and the burial of the dead, surrender terms with the honours of war, and exchanges of prisoners. Break a sworn term and it is remembered as an atrocity.
+- **Parley** — bluffs and insults before battle, truces for the harvest, burial truces that let both sides gather their dead by their own customs and keep disease off the field, safe conducts, fraternisation across the lines, surrender terms with the honours of war, and exchanges of prisoners. Break a sworn term and it is remembered as an atrocity.
 
-**In your world:** The offensive outran its barges, and enemy raiders burned the river depot behind it. The army starved where it stood. At home, every maimed son who returned drained the war's support, until the king accepted a white peace he had sworn never to sign.
+**In your world:** The offensive outran its barges, and enemy raiders burned the river depot behind it. The army starved where it stood. At home, every maimed soldier who returned drained the war's support, until the crown accepted a white peace it had sworn never to sign.
 
 </td>
 </tr>
@@ -1820,18 +2009,19 @@ Your offensive has taken three cities and is still advancing. Behind it the barg
 
 *The fleet upwind chooses the battle.*
 
-The wind backs west and your squadron holds the gauge. You close on a reach, rake the enemy flagship along her length with chain shot and watch her rigging come down. War on the water is wind, timber and fire: every shot lands on a hull, a mast, a rudder or a crew, every captain dreams of prize money, and above the masts the skyships fight for the air.
+The wind backs west and your squadron holds the gauge. You close on a reach, rake the enemy flagship along its length with chain shot and watch its rigging come down. War on the water is wind, timber and fire: every shot lands on a hull, a mast, a rudder or a crew, every captain dreams of prize money, and above the masts the skyships fight for the air.
 
-- **Points of Sail** — close-hauled, reaching, running, tacking, caught in irons. The fleet upwind chooses the engagement, while galleys ignore the wind at the cost of their rowers' strength.
-- **Damage Where It Hits** — round shot holes hulls, chain shot cuts rigging, grapeshot sweeps crews, fire pots catch sails. Fire spreads by deck timber, and one spark in the magazine ends a ship, which is what fire ships are for.
+- **Points of Sail** — close-hauled, reaching, running, caught in irons, or under oars. The fleet upwind chooses the engagement, while galleys ignore the wind at the cost of their rowers' strength.
+- **Damage Where It Hits** — twelve kinds of shot: round shot holes hulls, chain shot cuts rigging, grapeshot sweeps crews, fire and incendiaries catch sails, smoke screens a line and blinds its gunners, and explosive, piercing, guided and energy rounds follow as the age allows. Fire spreads by deck timber, and one spark in the magazine ends a ship, which is what fire ships are for.
 - **Boarding and Prizes** — marines fight boarding melees and galleys ram. Ships that strike their colours become prizes, prize crews thin the victor's decks, and prize money flowing to sailors' households makes captains bold.
-- **Command of Sea and Sky** — armies cross water safely only under naval supremacy, and landings against defenders bleed. Skyships and flying mounts win the air to scout, strafe supply trains and bombard sieges, and only flyers, crossbows and mages can contest them.
-- **Twelve Hulls by Design** — rafts, longships and carracks to bone hulls, living ships and generation ships, built from hulls, sails, sky-sails or void-sails, holds, wards and mage stations. Designs evolve, old ships are refitted, and neglected masts snap in storms.
-- **Stars and Sea Clocks** — the compass works only where the world has a magnetic field, the astrolabe needs astronomy, and the sea clock gives longitude. Lost ships drift to unknown shores, and crews who run short of water mutiny.
+- **Command of Sea and Sky** — armies cross water safely only under naval supremacy, and landings against defenders bleed. Skyships and flying mounts win the air to scout, strafe supply trains and bombard sieges, and only what can reach the air can contest them.
+- **A Hundred and Twenty-Eight Frames** — twenty-six families across nine domains, from rafts, longships, triremes and carracks to sledges over the ice, pedal craft, living ships, generation ships and bioships. Each is laid out from fifty-seven kinds of section, from hull, masts and sails to holds, wards, a galley that feeds the crew on long voyages and a sick bay that brings the wounded back. Designs evolve, old ships are refitted, and neglected masts snap in storms.
+- **Thirteen Crew Stations** — gunners, riggers, marines, officers, rowers, pilots, engineers, sensor operators, medics, handlers, link operators, casters who work the vessel's wards, winds and drives, and navigators who fix its course and cut losses and delays.
+- **Stars and Sea Clocks** — ten aids to navigation. The compass works only where the world has a magnetic field, the astrolabe needs astronomy, and a clock that keeps longitude cuts a port's losses at sea, beside log lines, charts, sounding lines, wayfinding, beacons, buoys, harbour pilots and positioning. Ports without the instruments for the open sea lose more ships on it.
 - **The Admiralty Board** — admirals fight generals for the treasury in council, and naval treaties cap tonnage by class. Cheating on them is a scheme of its own.
 - **Engagements in Every Domain** — ship against ship at sea, in the sky and in space, with weapons that choose the section they strike and chains of fire, flooding, venting and power loss.
 
-**In your world:** The admiralty hid two warships from the tonnage treaty. When war came they held the weather gauge, raked the enemy flagship with chain shot and took her as a prize. The prize money filled the captains' houses, and recruits crowded the docks.
+**In your world:** The admiralty hid two warships from the tonnage treaty. When war came they held the weather gauge, raked the enemy flagship with chain shot and took it as a prize. The prize money filled the captains' houses, and recruits crowded the docks.
 
 </td>
 </tr>
@@ -1843,18 +2033,19 @@ The wind backs west and your squadron holds the gauge. You close on a reach, rak
 
 *Seven exchanges. One will walk away.*
 
-The spear reaches first. Your champion turns it on his shield, steps inside, and the long weapon is suddenly useless. Single combat is fought exchange by exchange, and every one weighs reach, skill, footing, stamina and nerve. Fighters feint, parry, wrestle and bleed. A duel ends in a yield, a lost eye or hand, or death, and the victor's ethics decide the fate of the one on the ground.
+The spear reaches first. Your champion turns it on a shield, steps inside, and the long weapon is suddenly useless. Single combat is fought exchange by exchange, and every one weighs reach, skill, footing, stamina and nerve. Fighters feint, parry, wrestle and bleed. A duel ends in a yield, a lost eye or hand, a fighter driven from the ring, or death, and the victor's ethics decide the fate of the one on the ground.
 
-- **Three to Seven Exchanges** — each weighs weapon skill, reach, armour, footing in the day's weather, fading stamina and pain. A spear outreaches a sword until the swordsman closes.
+- **Three to Seven Exchanges** — each weighs weapon skill, reach, armour, footing in the day's weather, fading stamina and pain. A spear outreaches a sword until the one holding the sword closes.
 - **Strike, Feint, Parry** — fighters choose strikes at called targets, feints, blocks, parries, dodges and grapples. Whether a parry meets the blow depends on how well the defender reads the attack against the attacker's skill at deceit.
 - **Grapple and Throw** — grab a limb or the weapon, throw, choke a foe senseless, lock a joint until it breaks or, in some cultures, bite when desperate.
 - **Lance and Horse** — a couched lance strikes with the mass and speed of the mount. The horse itself is a target, and a falling horse crushes its rider.
-- **Wounds That Remain** — duels end by yield, disarm, crippling wound or death. The loser does not limp off "badly wounded". He loses an eye, a hand or a leg, and carries the loss for life.
-- **Five Reasons to Fight** — war duels, honour duels born of grievance, trials by combat, champions whose single fight ends a war, and duels between gods that leave divine wounds.
-- **Mercy on the Ground** — a downed fighter fights at a penalty. The victor's mercy decides whether he lives, honour decides whether a yield is accepted, and every exchange goes into a plain account for the battle report and the bard.
+- **Nine Ways a Duel Ends** — a yield, a disarm, a crippling wound, death, exhaustion, a fighter knocked senseless, the first wound drawn, a fighter driven out of the marked bounds, or a fight stopped by an authority, a god or the crowd. Each culture and challenge sets the ending in force, and a stopped duel leaves the quarrel open and shames whoever the culture holds at fault.
+- **Wounds That Remain** — the loser does not limp off "badly wounded". They lose an eye, a hand or a leg, and carry the loss for life.
+- **Seven Reasons to Fight** — war duels, honour duels born of grievance, trials by combat, champions whose single fight ends a war, duels between gods that leave divine wounds, ritual duels that mark a passage, an office or a bond by the culture's rules, and sport in clubs and contests that rarely kills.
+- **Mercy on the Ground** — a downed fighter fights at a penalty. The victor's mercy decides whether the fallen live, honour decides whether a yield is accepted, and every exchange goes into a plain account for the battle report and the bard.
 - **Exchange by Exchange** — every duel recorded step by step, each blow with its weapon, its target and the injury it left.
 
-**In your world:** Two kings agreed that a champion would end their war. The challenger's spear held the first exchange. The defender closed, broke his elbow in a lock and, as his people's mercy required, let him yield. The bards sang of it, and the treaty held.
+**In your world:** Two kings agreed that a champion would end their war. The challenger's spear held the first exchange. The defender closed, broke the challenger's elbow in a lock and, as mercy among the defender's people required, let the challenger yield. The bards sang of it, and the treaty held.
 
 </td>
 </tr>
@@ -1864,19 +2055,21 @@ The spear reaches first. Your champion turns it on his shield, steps inside, and
 
 #### 54. Blood Feud
 
-*They killed my father. I will kill their son.*
+*They killed my kin. I will kill theirs.*
 
-Your house remembers the name of every kinsman they killed. Each epoch the grievance asks what honour demands: a raid, a knife in the dark, blood money or war. Every answer adds a name to their side of the ledger. Around the feud turn captives held for ransom, heirs raised in the enemy's hall, and children carried off in raids who come back wearing the enemy's colours.
+Your house remembers the name of every kinsman and kinswoman they killed. Each epoch the grievance asks what honour demands: a raid, a knife in the dark, blood money or war. Every answer adds a name to their side of the ledger. Around the feud turn captives held for ransom, heirs raised in the enemy's hall, and children carried off in raids who come back wearing the enemy's colours.
 
-- **The Ledger of Blood** — a feud is the memory of killed kin between two houses or peoples. The aggrieved raid, assassinate, demand blood money or escalate to a war of vendetta, and every killing feeds the other side's grievance.
-- **What Ends a Feud** — blood-money law, intermarriage, a common enemy, a priest who preaches peace and the slow fading of memory over generations. Without them a feud outlives the people who began it.
-- **Captives by the Thousand** — pursuits and sacks take whole cohorts captive, to be ransomed, enslaved where law allows, sacrificed where doctrine demands, worked, exchanged or freed. Named captives are tortured for war plans or married into the captor's house.
+- **The Ledger of Blood** — a feud is the memory of killed kin between two houses or peoples. The aggrieved raid, ambush, assassinate, abduct, destroy property, demand blood money, call on allies or escalate to a war of vendetta, and every killing feeds the other side's grievance.
+- **What Ends a Feud** — blood-money law, amends offered and accepted, mediation, intermarriage, a common enemy, a priest who preaches peace, an oath both sides swear to end it, and the slow fading of memory over generations. Breaking a sworn end is oathbreaking, and without any of these a feud outlives the people who began it.
+- **The Feud That Sleeps** — a feud can lie dormant for years with no act on either side, then wake at a new offence, an insult or a remembered date.
+- **Captives by the Thousand** — pursuits and sacks take whole cohorts captive, to be ransomed, enslaved where law allows, sacrificed where doctrine demands, worked, exchanged, freed, executed, pressed into the captors' ranks or adopted into their households. Named captives are tortured for war plans, escape, are rescued or turn coat.
+- **Married In** — a named captive may marry into the captors' people, take on their customs and become a bridge or a traitor in the wars that follow.
 - **Hostage Wards** — child heirs raised at the enemy's court absorb its culture and its memories. They return as friendly rulers or as vengeful ones, as their temperament decides.
 - **Stolen Children** — raiders carry off children who forget their origins unless their memory is strong. They grow into captor soldiers or famous turncoats, while their kin plot rescues and quests.
 - **Slave Soldiers** — enslaved cohorts fight with low morale, desert readily and may turn on their masters mid-battle when their own people stand opposite.
-- **Parole** — a captured officer may swear never to fight again and walk free. Breaking parole is breaking an oath, and the shame follows him home.
+- **Parole** — a captured officer may swear never to fight again and walk free. Fighting again breaks the oath, the shame follows them home, and where the world's laws allow, the god who witnessed it strikes.
 
-**In your world:** A raid took the chieftain's youngest son. He grew up in the captors' hall, forgot his own people and led their warband back against them. His elder brother killed him at the ford, and the feud began again from the other side.
+**In your world:** A raid took the chieftain's youngest child, who grew up in the captors' hall, forgot their own people and led the captors' warband back against them. An elder sibling killed them at the ford, and the feud began again from the other side.
 
 </td>
 </tr>
@@ -1899,17 +2092,19 @@ Your house remembers the name of every kinsman they killed. Each epoch the griev
 
 *Every faith has tenets. Every tenet has a price.*
 
-Your god's faith is no longer a count of followers. It has a doctrine, a clergy, temples, lands and a treasury. Its tenets decide whether the maimed are holy or unclean, whether captives die on the altar, whether priests may found dynasties. Persecution feeds its zeal and comfort starves it. And somewhere a brilliant theologian is already drafting the heresy that will split it in two.
+Your god's faith is no longer a count of followers. It has a doctrine, a clergy, temples, schools, hospitals, lands and a treasury. Its tenets decide whether the maimed are holy or unclean, whether captives die on the altar, whether priests may found dynasties. Persecution feeds its zeal and comfort starves it. And somewhere a brilliant theologian is already drafting the heresy that will split it in two.
 
-- **Twenty-Three Tenets** — three to six per faith, each with real effects. Sacred suffering honours the maimed while purity of body calls them unclean, celibate clergy found no houses, and human sacrifice consumes captives and earns infamy abroad.
+- **Twenty-Eight Tenets** — three to six per faith, each with real effects. Sacred suffering honours the maimed while purity of body calls them unclean, celibate clergy found no houses, and human sacrifice consumes captives and earns infamy abroad.
 - **Zeal That Burns and Fades** — persecution, martyrs, miracles, holy war victories and plague raise it; prosperity, scandal and failed prophecies drain it. Push it too high and fanaticism follows: inquisition, iconoclasm, crusade.
-- **Clergy, Tithes and Relics** — high priests, priests, monks and inquisitors, paid by tithes that also fund alms, war chests and monasteries that keep learning alive through dark ages. Saints' bones draw pilgrims, coin and disease.
+- **Twelve Kinds of Zeal** — not every fervour is harsh. Charity zeal hands the faithful's wealth to the poor and fills their towns' stores with food, and pilgrim zeal empties whole households onto the roads, draining their homes and raising the holy place they walk to.
+- **Ten Kinds of Holding** — temples, lands, relics, holy places, monasteries, networks, shares, lines, and now schools and hospitals. A faith that teaches and heals raises the learning and health of its towns and draws converts by it.
+- **Clergy, Tithes and Relics** — leaders, celebrants, ascetics, teachers, healers, seers, judges, missionaries and keepers of doctrine and sites, paid by tithes that also fund alms, war chests and monasteries that keep learning alive through dark ages. Saints' relics draw pilgrims, coin and disease.
 - **Heresy and Schism** — doctrine drifts under a creative theologian and splits into a heresy tree. Orthodoxy decides between inquisition and tolerance, councils vote on tenets and saints, and a vacant High Seat can crown two rival heads.
 - **Missions on the Trade Roads** — preachers travel with the caravans. Conversion turns on how well the doctrine fits the culture, the missionary's skill and the miracles behind them, against rival clergy and the language barrier.
 - **Church and Crown** — divine kingship fuses throne and altar; elsewhere priests and rulers fight over investiture, and excommunication strips a ruler's legitimacy. Your sons can reveal a new tenet and see whether it takes.
 - **Sanctuary** — temples shelter criminals, runaway slaves and defeated rivals. A pursuer must besiege, bargain or wait, because breaking sanctuary is desecration.
 
-**In your world:** The inquisition burned a beloved preacher. His followers' zeal soared, a theologian gave them a doctrine, and the heresy broke away. When the High Seat fell vacant, each church crowned its own head, and every ruler had to choose a side.
+**In your world:** The inquisition burned a beloved preacher. The preacher's followers caught a zeal of giving and emptied their purses into the poor quarter, a theologian gave them a doctrine, and the heresy broke away. When the High Seat fell vacant, each church crowned its own head, and every ruler had to choose a side.
 
 </td>
 </tr>
@@ -1921,16 +2116,18 @@ Your god's faith is no longer a count of followers. It has a doctrine, a clergy,
 
 *The comet returns. The end is near. Sell everything.*
 
-A comet hangs over the third hungry year. On the hill a prophet names the day the world will end, and farmers sell their fields to follow him. Faith runs wild outside the temple too: mystics with visions the priests cannot control, rites that guard the soul, gods whose silence through a plague becomes a crisis of belief, and cities that slowly stop praying at all.
+A comet hangs over the third hungry year. On the hill a prophet names the day the world will end, and farmers sell their fields to follow. Faith runs wild outside the temple too: mystics with visions the priests cannot control, hermits who draw seekers to their door, rites that guard the soul, gods whose silence through a plague becomes a crisis of belief, and cities that slowly stop praying at all.
 
 - **Visions Outside the Temple** — intuitive, devout mortals have visions and states of union, gather followers beyond the clergy and found orders or heresies. Their contact is real only if a god chooses to answer, and only you know which.
+- **Seven Kinds of Vision** — sights, union, voices, trances, dreams read by the culture's dream readers, oracular speech that draws crowds and courts, and signs read in the world itself. A mystic moves through seven states, from seeker and visionary to revered founder, persecuted, lapsed, or a hermit who stays apart and is brought gifts.
 - **The End Is Coming** — prophecies of an end time, omens in the sky and deepening misery raise movements that sell their land, stop working, march, attack the unclean or wait for the end on a mountain.
 - **When the Day Passes** — the faithful disperse, set a new date, or harden into a sect that will outlive its prophet.
-- **The Silent God** — when plague, famine or defeat strikes the faithful and their god gives no sign, the doctrine faces a crisis. Theologians argue, a new teaching casts suffering as a trial, or the people convert away.
-- **Rites with Real Protection** — birth blessings, initiations, marriages and last rites shield the soul's road after death, protect children against possession and keep the dead from walking restless. A plague that leaves no priest to give them is a real danger.
+- **The Silent God** — eight griefs test a faith: plague, famine, defeat, disaster, persecution, a long winter or summer that will not end, the loss of the faith's leader and a schism. When the god gives no sign, theologians argue, a new teaching casts suffering as a trial, or the people convert away.
+- **Eight Sacraments** — birth blessings, initiations, marriages and last rites, joined by purification that lifts impurity and guilt, ordination that makes clergy, penance that restores standing after a judged act, and a shared sacred meal that binds a community and can spread sickness through the shared cup.
+- **Rites with Real Protection** — sacraments shield the soul's road after death, protect children against possession, keep the dead from walking restless, and ward against curses and turned fortune where the world's laws give rites force. A plague that leaves no priest to give them is a real danger.
 - **The Emptying Temples** — literacy, prosperity, city life, new theories of nature and gods who stay silent too long drain faith away. Disasters, wars and miracles fill the temples again.
 
-**In your world:** A comet and a famine gave a prophet his date. Whole villages sold their land and climbed the mountain to wait. When the day passed, most went home poorer. The rest chose a new date and hardened into a sect.
+**In your world:** A comet and a famine gave a prophet a date. Whole villages sold their land and climbed the mountain to wait. When the day passed, most went home poorer. The rest chose a new date and hardened into a sect, and when their prophet died the loss itself became the next test of their faith.
 
 </td>
 </tr>
@@ -1942,17 +2139,18 @@ A comet hangs over the third hungry year. On the hill a prophet names the day th
 
 *Death is not the end. It is a verdict.*
 
-A warlord dies certain of the warrior's hall. The judges weigh his renown, his faith, the rites at his pyre and the villages he burned, and the verdict surprises him. Now the afterlife is a real place with strata and gates. Ghosts walk for reasons, possession has a cure, and only an exceptional few ever come back as newborns carrying an old grudge.
+A warlord dies certain of the warrior's hall. The judges weigh the warlord's renown, faith, the rites at the pyre and the villages burned, and the verdict comes as a shock. Now the afterlife is a real place with strata and gates. Ghosts walk for reasons, possession has a cure, the dead of some faiths never leave the house at all, and only an exceptional few ever come back carrying an old grudge.
 
-- **Strata of the Dead** — paradise, plain, torment, oblivion or a faith's own warrior hall, each with its entry criteria. Every realm of the dead shows its population, and every soul carries a ledger and the reason for its verdict.
-- **The Weighing** — the patron god's doctrine of judgement, the funeral rite and divine favour decide the road. Renown, honour, faith, violence and unthinkable acts all count, and the unburied wander restless.
-- **Rebirth Is Earned** — a soul returns only through an open gate, a faith, a law of nature, a rite or a god's own hand, and only if its life was exceptional. The reborn keep faint memories, enough to know an old enemy.
-- **Seven Kinds of Ghost** — lingering, vengeful, sorrowful, place-bound, poltergeist, bound guardian and possessing. Each needs its own remedy: a memorial stone carved with the name, a proper funeral, a dream fulfilled by kin, vengeance done or exorcism.
+- **Strata of the Dead** — realms of reward, a common realm, realms of punishment, dissolution, a realm chosen by the manner of death or a realm of one's own line, each with its entry criteria. Every realm of the dead shows its population, and every soul carries a ledger and the reason for its verdict.
+- **Nine Afterlives** — a faith may teach judged realms, a common realm, a realm by the manner of death, a realm of the line, rebirth, wandering, union, oblivion, or that the dead stay among the living as presences in homes and places, fed and consulted by their kin.
+- **The Weighing** — six doctrines of judgement weigh deeds, faith, rites, divine favour, nothing at all, or remembrance, where the dead fare by the graves, names and rites the living keep, so a forgotten soul suffers. The funeral rite counts, renown, honour, violence and unthinkable acts count, and the unburied wander restless.
+- **Rebirth Is Earned** — a soul returns only through one of four gates, a faith's tenet, a law of nature, a rite or a god's own hand, and only if its life was exceptional. It comes back into its people, its house, a station earned by merit, a place, or as another kind of being entirely, and the reborn keep faint memories, enough to know an old enemy.
+- **The Restless Dead** — a guardian spirit grows restless when its kin stop the offerings, a land under a god of death stirs its dead further, and enough unrest turns a guardian vengeful. Restless ghosts haunt the town where their killer's heirs live, sapping its prosperity, and every haunting feeds a ghost story that keeps people away. Spirits can be bound to a place, an item, a building, a beast, a person, a realm, a network, a line or a name, and whoever holds the name holds the soul.
 - **Possession and Its Cure** — a spirit can take a living body, replace the host's mind with its own and fill the host with dread, until an exorcism drives it out.
 - **Ancestors and Soul-Eaters** — venerated ancestors bring household luck and courage at ancestral sites, and turn restless when offerings stop. Soul-eaters devour the dead and rob a god of the faithful it was owed.
 - **The Afterlife Surprise** — every faith teaches an afterlife, and the real one may differ. Souls who find their belief false suffer a revelation shock, and the dead who return in dreams can tell the living.
 
-**In your world:** A warlord died certain of the warrior's hall and was judged into torment for the villages he had burned. The shock left him restless. His ghost told his son the truth in dreams, and the son's account set the temple's theologians at each other's throats.
+**In your world:** A warlord died certain of the warrior's hall and was judged into torment for the villages burned on the way to power. The shock left the ghost restless. It told the warlord's child the truth in dreams, and the child's account set the temple's theologians at each other's throats.
 
 </td>
 </tr>
@@ -1966,9 +2164,11 @@ A warlord dies certain of the warrior's hall. The judges weigh his renown, his f
 
 Every crossroads has its spirit, every hearth its luck and every river a temper. Make the offering and the crossing is safe; foul the water and the flood comes. Above them sits a heavenly civil service of city gods and river gods with ranks, written petitions and appeals to higher office. Spirits are promoted and dismissed, and a village can take its own river to court.
 
-- **Genius Loci** — rivers, springs, groves, hearths, crossroads, mountains and cities can each host a spirit with its own temper and tastes, and a running account of offerings and favours with the people around it.
-- **Offend the Spirit** — content spirits bring fertility, safe crossings, good catches and hearth luck. Pollution, felled forests, an unpaid offering or a broken taboo bring misfortune, floods and illness instead.
-- **The Celestial Bureaucracy** — hearth gods, river gods and city gods hold ranks under your sons and the foreign gods. Mortals petition them in writing, and petitions suffer delays, bribes paid in offerings and appeals to a higher office.
+- **Twenty Kinds of Place Spirit** — rivers, springs, lakes, wells, shores, groves, forests, mountains, caves, crossroads, wilds, fields, cities and hearths, the open sea, ruins, battlefields, marshes, deserts and glaciers can each host a spirit with its own temper and tastes, and a running account of offerings and favours with the people around it.
+- **Spirits of Great Places** — a sea spirit sways the voyages and catches of its waters, a ruin spirit guards its relics and wakes when diggers come, and a battlefield spirit grows where many died and stirs the dead and the living who pass.
+- **Offend the Spirit** — content spirits bring fertility, safe crossings, good catches and hearth luck. Eight offences turn them: pollution, felled forests, an unpaid offering, a broken taboo, blood spilled in their place, taking more game, fish or plants than the land renews, trespass at a sacred spot, and the noise of mills, works and armies. Misfortune, floods and illness follow.
+- **The Celestial Bureaucracy** — hearth gods, local gods, city gods, provincial gods and ministries hold five ranks under your sons and the foreign gods. Mortals petition them in writing, and petitions suffer delays, bribes paid in offerings and appeals to a higher office.
+- **Eleven Kinds of Petition** — healing, harvest, fertility, safe passage, prosperity, lawsuits, rain, protection from beasts, raiders or disease, the finding of what is lost, justice where the courts have failed, and vengeance on a named wrongdoer, which a spirit that grants it carries out as a curse.
 - **Promotion and Dismissal** — spirits rise for good service, growing worship and petitions resolved, and are demoted or dismissed for neglect. A village can sue its river god before the city god.
 - **Emotion Spirits** — where magic runs thick, fear on a battlefield, joy at a festival, grief at a funeral and rage in a mob take shape as spirits that amplify the feeling, feed the matching gods and can be bound by rites.
 - **Teachers from Beyond** — ancestors, ghosts and place spirits teach through dreams, visions and possession: songs, rites, lost techniques, true names, prophecies, the way to buried treasure. Their teaching carries their biases and errors with it.
@@ -1987,10 +2187,12 @@ Every crossroads has its spirit, every hearth its luck and every river a temper.
 
 The cattle die in a wet spring and nobody knows why. Your village knows exactly why: the widow at the edge of the wood. Luck, charms and witchcraft are beliefs your peoples truly hold, and they act on them. In a world where magic is real, a witch hunt may find a real witch. You will always know who was guilty, and who burned for nothing.
 
-- **Lucky Days and Unlucky Numbers** — every culture reads luck into its calendar, its signs, its numbers and its gestures, and fears or welcomes the days they mark.
-- **Charms That Work, Charms That Comfort** — amulets for protection, fertility and luck truly work where they are enchanted or blessed. Elsewhere they only calm the wearer, which is a real effect too, and you can see which is which.
-- **Who Is the Witch** — illness, failed crops, a child's death or dying livestock with no clear cause find a culprit. Belief, grievance and social distance choose her: the envied neighbour, the widow, the outsider, the eccentric.
-- **From Accusation to Ordeal** — diviners and rumour name the accused, and trials, ordeals, exile or murder follow.
+- **Lucky Days and Unlucky Numbers** — every culture reads luck in ten kinds of sign: days, numbers, sky signs, gestures, places, acts, people, animals, colours and the weather, each reading taken from the culture's own lore.
+- **Where Luck Reaches** — readings sway ten parts of life: harvests, health, births, journeys, battles, deals, unions, the founding of houses and works, learning and contests. Believers delay, hurry, hold a rite or refuse outright when the signs turn.
+- **Charms That Work, Charms That Comfort** — amulets for protection, fertility, luck, healing, love, safe travel, concealment and courage truly work where they are enchanted or blessed. Elsewhere they only calm the wearer, which is a real effect too, and you can see which is which.
+- **Everyday Misfortune** — thirty-three kinds of household mishap, from a fall to a quake or a flood, are blamed on one of fifteen causes, plain chance or one's own conduct among them, and met in nine ways: a rite, an offering, a charm, an accusation, a purification, a safety custom, moving away from an unlucky place, or a claim for compensation from whoever is blamed.
+- **Who Is the Witch** — illness, failed crops, a child's death or dying livestock with no clear cause find a culprit. Belief, grievance and social distance choose the accused: the envied neighbour, the widowed, the outsider, the eccentric.
+- **From Accusation to Ordeal** — diviners and rumour name the accused, and eight outcomes follow: the case pending, cleared, punished, exiled or killed, a confession that names new accused, a flight that is read as guilt, or a reconciliation made by amends and rites that leaves no grudge behind.
 - **When the Hunt Spreads** — plague, famine and war, fanned by zealous inquisitors, turn one accusation into a cascade. Hunts leave memories, chronicles and the vengeful ghosts of the wrongly killed.
 - **Real Witches** — where rites and curses exist, some of the accused truly are casters. The engine knows who, and you see every accurate and every false accusation.
 
@@ -2010,12 +2212,13 @@ A seer speaks, and from that day the world is listening. Prophecies here have co
 
 - **Prophecies the World Can Keep** — a prophecy names its condition, a death, a city's fall, a birth into a house, an eclipse, and is fulfilled the moment the world meets it. Matching legends make it surer, and retelling distorts it.
 - **Self-Fulfilling Fates** — believers act for or against the prophecy. Children born under the comet gain claims, the king grows paranoid and infants die. When a deadline passes, the seer is mocked, zeal cools and cynicism spreads.
-- **Six Ways to Read the Gods** — augury, sacrifice readings, astrology, oracles, lots and dream reading. Each is truly informative only where a god answers, a seer has the gift or the laws of nature allow. Elsewhere trusted diviners breed folly.
-- **Seers and Blind Spots** — the gifted glimpse probable futures that can still be wrong, because others act on prophecy too. Rival seers blind each other, and outer beings never appear in any vision.
+- **Eleven Ways to Read the Gods** — augury, sacrifice readings, astrology, oracles, lots, dream reading, scrying, consulting the spirits of the dead, signs in the earth, numbers and the reading of the body. Each is truly informative only where a god answers, a seer has the gift or the laws of nature allow. Elsewhere trusted diviners breed folly.
+- **Ten Questions Asked** — before a battle, a war, a wedding, a coronation, a harvest, a voyage, a founding, over the sick, about who will succeed an ageing ruler, and after something lost. An auspicious, inauspicious or unclear answer hastens or delays the act, names an heir or sways the care of the sick.
+- **Seers and Blind Spots** — foresight comes from five sources: a power, a divination, a god, a made oracle or a dream. The gifted glimpse probable futures that can still be wrong, because others act on prophecy too. Rival seers blind each other, and outer beings never appear in any vision.
 - **Born Under a Sign** — every mortal carries the sky of its birth. Where the stars truly hold power the sign shapes temperament and fortune; elsewhere it is belief alone, and a child born under a dreaded sign may be cast out.
-- **Six Kinds of Dream** — ordinary, nightmare, longing, prophetic, visitation and shared. Nightmares recur, dream readers misread, and a king's dream taken for a war omen can start a war.
+- **Eight Kinds of Dream** — ordinary, nightmare, longing, prophetic, visitation, shared, lucid and memory dreams. Nightmares recur, dream readers misread, and a ruler's dream taken for a war omen can start a war.
 
-**In your world:** A seer foretold that a child of the river house would rule. The king's fear became a purge of the house's infants. One escaped to foster parents, grew up on the prophecy, and took the throne from the man who had tried to kill him.
+**In your world:** A seer foretold that a child of the river house would rule. The ruler's fear became a purge of the house's infants. One escaped to foster parents, grew up on the prophecy, and took the throne from the ruler who had ordered the purge.
 
 </td>
 </tr>
@@ -2038,14 +2241,16 @@ A seer speaks, and from that day the world is listening. Prophecies here have co
 
 *Create. Destroy. Control. Fire. Mind. Spirit. Combine.*
 
-Your mage does not pick a spell from a list. She writes one: a technique and a form, a range and a duration, tested through a season in the laboratory and copied into a text her apprentices can learn. Then the world argues back. Rain dampens her fire, iron unravels her spirits, a gag silences her, and the theory she was taught may simply be wrong.
+Your mage does not pick a spell from a list. The mage writes one: a technique and a form, a range, a target and a duration, tested through a season in the laboratory and copied into a text apprentices can learn. Then the world argues back. Rain dampens the fire, iron unravels the spirits, a gag stops the words, and the theory the mage was taught may simply be wrong.
 
-- **Spell Grammar** — eight techniques, from create and perceive to bind and ward, crossed with fourteen forms from fire to time, void and light. Range runs from touch to a whole world, duration from an instant to forever, and every combination has its price.
+- **Spell Grammar** — thirteen techniques, from create and perceive to bind, ward, heal, move and speak, crossed with twenty-three forms from fire and water to time, void, light, dreams and the laws and oaths of a people. Every combination has its price.
+- **Reach and Span** — seven ranges run from touch and sight to a region, a whole world, any distance through a link to the target, other worlds, and other dimensions through a rift or gate. Seven durations run from an instant to a season, an epoch, forever, as long as the caster sustains it, until a set condition is met, or for the target's whole life.
+- **Nine Kinds of Target** — one being, a group, a building, a region, an item, a whole line of descent that passes the working to its children, a world, every member of a species or every member of a people, each member resisting on its own.
 - **Vis and the Black Market** — magical resources of every form, fire vis to death vis, gathered at magic sites, cut from beasts and drawn from phenomena. Where magic is banned they move through the shadows.
-- **Resistance and Counterspells** — willpower, wards, iron, sanctity, faith and a hostile god's dominion resist a rite. Counterspells, dispels and wards meet in contests of power.
+- **Resistance and Counterspells** — will, discipline, faith, sanctity, resistant materials, dampeners, distance, a rival source, disbelief where the world lets belief matter, and the protection of kept ancestor rites. Counterspells, dispels and wards meet in contests of power.
 - **Rain on a Fire Rite** — magic reads the weather and the world. Wet targets conduct storm rites, rain weakens fire and strengthens water, a dry forest turns a fire rite into a wildfire, and void rites overflow where the dark leaks in.
-- **Tongue, Hand and Breath** — rites need speech, gesture, inscription, song, dance, reagents or focus. A tongueless mage can still inscribe, a blinded one can still chant, and captive mages are held with gags, bound hands and blindfolds.
-- **Material Magic** — metals that grant strength to the gifted who consume them, crystals that store a technique, salt that wards off spirits, and enchanted items with charges that recharge with the moon and crack with overuse.
+- **Tongue, Hand and Breath** — rites need speech, gesture, inscription, song, dance, reagents, focus, something given up in place of the caster's own strength, or many workers at once who share the strain. A tongueless mage can still inscribe, a blinded one can still chant, and captive mages are held with gags, bound hands and blindfolds.
+- **Material Magic** — metals that grant strength to the gifted who consume them, crystals that store a technique, substances that ward off spirits, and enchanted items with charges that crack with overuse and refill at a magic site, from vis, with the moon, at an eclipse or comet, by an offering of the body, by rest or through the prayers of a worker's followers.
 - **Orders and Paradigms** — magical orders keep codes, enforce them in tribunals and hold covenants with laboratories and libraries. Each tradition rests on a theory, and the closer it stands to the true laws of the world, the better its rites work.
 
 **In your world:** During a drought a war mage threw fire into the forest where the enemy waited. The dry wood turned the rite into a wildfire. It burned both armies, then the covenant downwind, and every laboratory text in its library.
@@ -2064,13 +2269,14 @@ When the city is falling and mercy runs low, someone always reaches for the forb
 
 - **Blood and Void** — blood rites spend the caster's own body or a captive's life, and void rites spend sanity and let the dark leak in. They bring infamy, and desperate, merciless casters reach for them first.
 - **Towers of the Dead** — necromancers raise the battle dead into hosts that know no fear and need no food, decaying unless fed with essence or souls. From their towers they besiege the living, and most peoples hold their craft unthinkable.
-- **Curses and Transformations** — dark rites lay curses, blessings and changes of the body on their targets, the same afflictions that turn a man into a beast under the moon.
-- **A Lock of Hair** — hair, blood, a name, a portrait or a splinter of a ship links a rite to its target, and the stronger the link, the deeper it strikes. The wary burn their hair and guard their true names.
+- **Curses and Transformations** — dark rites lay curses, blessings and changes of the body on their targets, the same afflictions that turn a mortal into a beast under the moon.
+- **Ten Kinds of Link** — hair, blood, a name, a true name, a portrait, a fragment of a thing, a worn or kept possession, a footprint, a voice or a record of birth links a rite to its target at any distance. The stronger the link, the deeper it strikes, and a true name lets a rite command or bind a lesser being outright. Peoples who know this guard their voices, birth records and true names by custom.
+- **Power Bound by Conditions** — thirteen restrictions make a power stronger for what it gives up: only in one place or at one time, only against some, a spoken vow, a price each use, never on oneself, a forbidden act, seen or unseen, by touch, with a token, only in company, or only when the target's name is known.
 - **Warping** — mages, people who live on ley lines and wearers of enchanted items slowly change: strange looks, attunement, madness, unnatural long life.
 - **Bought Decades** — potions and rites hold off age at a price in rare resources, with warping and a growing dependence. Cut off an ancient mage's supply and the years come due.
-- **Backlash** — a failed rite can wound, madden, widen the void's leak or let a summoned thing escape. A failed storm rite can become a storm that never ends.
+- **Eleven Hazards** — power can wound, madden, widen the void's leak, let a summoned thing escape, deplete its source, warp, burn out, breed dependence, draw unwanted attention, spend the user's years, or open the body to a spirit or outer being that takes it for a time. A failed storm rite can become a storm that never ends.
 
-**In your world:** Rivals seized the spring that fed an ancient mage's longevity potions. His years caught up with him, and in desperation he tried a void rite. It failed, and the thing he summoned slipped its bonds and went hunting in the valley below.
+**In your world:** Rivals seized the spring that fed an ancient mage's longevity potions. The years caught up at once, and in desperation the mage tried a void rite. It failed, and the thing it summoned slipped its bonds and went hunting in the valley below.
 
 </td>
 </tr>
@@ -2084,12 +2290,13 @@ When the city is falling and mercy runs low, someone always reaches for the forb
 
 The elders tell how the god crossed the river of night. Your hero walks into that myth and must walk it step by step: the same trials, the same choices, the same faith. Follow the story and the boon is sure. Break from it and you may win something new, and come home to find your people telling the tale your way.
 
-- **Legends That Live** — eleven archetypes, from flood and trickster to cursed line and return of the king. Every retelling bends the tale toward the teller's values, so in an honour culture a defeat becomes a betrayal. Only art fixes a legend in place.
-- **Stories That Move People** — a return-of-the-king legend strengthens the pretender who fits it, a cursed-line legend shames a house, and a haunted-place legend keeps settlers away with no ghost there at all. You can compare every telling with the truth.
-- **Heroquests** — questers enter the god's palace, the realm of the dead, a dream world or a sacred site, facing trials of skill, passion and faith. Boons include blessings, rites, lifted curses and true names; failure traps the soul or breaks the myth.
+- **Legends That Live** — twenty-two archetypes, from creation, world disaster and the trickster to the cursed line, the return of a ruler, the bargain, the ascent and the fall. Every retelling bends the tale toward the teller's values, so in an honour culture a defeat becomes a betrayal. Only art fixes a legend in place.
+- **Stories That Move People** — a return-of-a-ruler legend strengthens the pretender who fits it, a cursed-line legend shames a house, and a haunted-place legend keeps settlers away with no ghost there at all. You can compare every telling with the truth.
+- **Heroquests** — questers enter the god's palace, the realm of the dead, a dream world or a sacred site, facing eight kinds of trial: skill, passion, conviction, faith, cunning in riddles and tricks, endurance of hunger, cold and distance, mercy passed by sparing, and sacrifice passed by giving up something held. Failure traps the soul or breaks the myth.
+- **Ten Boons** — a blessing, an item, a rite, a lifted curse, a renewed land, a god's favour, a true name, a title, knowledge, or healing carried home.
 - **Rewritten Myths** — a quester who deviates may win a different boon, and the people's version of the legend changes with the hero's return.
 - **Myth-Powered Rites** — rites that re-enact a believed myth grow stronger, stronger still at the myth's own site. A corrupted myth gives a corrupted rite.
-- **Geasa** — never refuse hospitality, never pass a burning house. A seer, god or rite lays the taboo at birth. Keeping it wins favour, breaking it brings doom, and enemies build traps to force the breach.
+- **Geasa** — never refuse hospitality, never pass a burning house. A seer, a god, a rite, a kin's word that passes down the line, a court's law or the holder's own vow lays the bond. It may forbid, demand, or wait for a set thing to happen and then bind a set act. Keeping it wins favour, breaking it brings doom, and enemies build traps to force the breach.
 - **True Names** — gods, spirits, some beasts, mortals and places have one. Knowing it commands lesser beings or binds them, and it is learned by deciphering old tongues, by scheming or from an intimate's confession.
 
 **In your world:** A heroine walked the flood myth step by step but saved the village the legend drowns. She came home with a different boon, her people retold the myth her way, and their rain rite, sung to the new telling, changed with it.
@@ -2106,14 +2313,17 @@ The elders tell how the god crossed the river of night. Your hero walks into tha
 
 In the ruins of a city dead for three centuries, a bronze guardian still walks its round. Its order was to guard the gate, and nobody ever told it to stop. Constructs obey their orders to the letter, loopholes and all, so the thief who steals the command seal steals the army. And some of them, built around a bound soul, begin to remember.
 
-- **Bodies Made, Not Born** — golems, automata, homunculi and thinking war machines, each with its material and its power source: a bound soul, a rune, divine essence or a ley line.
+- **Bodies Made, Not Born** — a maker shapes a body of clay, stone, bronze, iron, steel, a composite or a polymer and moves it with the power of a ley line, a god, blood, a bound soul, reagents or the void.
 - **Orders to the Letter** — "guard the gate", "kill intruders", "obey whoever holds the seal". Constructs follow their instructions literally, so every order hides a loophole and every seal is a prize worth stealing.
-- **Runes That Fade** — power sources dwindle, materials wear, and runes need renewing by a maker with the skill. Neglect breaks them down.
+- **Eighteen Kinds of Order** — guard, serve, obey the holder, build, gather, protect, destroy, report, maintain, copy itself, hold still, follow, forbid, carry loads along a route, tend fields, herds or the sick, teach, heal and hunt, each read against the construct's own skills.
+- **When an Order Holds** — always, while the maker lives, while the holder lives, until a date, when attacked, when a token is shown, until the task is done (and "done" is the maker's own loophole), by day, night, season or sky event, or only when its name is spoken.
+- **Who Commands It** — a seal, a word, a bloodline, an office, a network key, a gesture, or the construct's own true name, which overrides every other token. Orders are bound by command, oath, geas, seal, ownership, lease, symbiosis or a debt that ends when it is paid and passes to heirs until then.
+- **Workings That Fade** — power sources dwindle, materials wear, and the workings need renewing by a maker with the skill. Neglect runs them down or wears them away.
 - **The Master's Death** — when the maker dies, the construct keeps its last orders forever, a hazard in every ruin and a guardian in every tomb.
 - **The Soul in the Machine** — constructs built around a bound soul inherit fragments of who it was, and over epochs they begin to want. When they rise against their masters, the rebellion has a cause.
-- **Legions from the Foundry** — identical constructs made in numbers from rare materials work the mines and fields and fill the ranks. They feel no fear, but a dispel or a lost command seal stops them dead.
+- **Legions from the Foundry** — identical constructs made in numbers work the mines and fields and fill the ranks. They feel no fear, but a dispel or a lost command seal stops them dead.
 
-**In your world:** A tomb robber lifted the command seal from a dead emperor's crypt, and the bronze guards that had killed every intruder for centuries followed him out. He hired them to a mine, until one guard, powered by a bound soul, remembered it had once been a slave.
+**In your world:** A tomb robber lifted the command seal from a dead emperor's crypt, and the bronze guards that had killed every intruder for centuries followed the robber out. The robber hired them to a mine, until one guard, moved by a bound soul, remembered it had once been a slave.
 
 </td>
 </tr>
@@ -2136,15 +2346,16 @@ In the ruins of a city dead for three centuries, a bronze guardian still walks i
 
 *Every god has a domain. Every domain has a price.*
 
-Your son of the Sea does more than watch the waves. His worshippers fight harder at sea, storms on the open water answer to him, and his essence swells with every voyage. Forty domains reach into war, trade, faith and nature through hooks of their own. A god is now what it does in the world, and when a Harvest god takes a wound, its worshippers face a hungry decade.
+Your son of the Sea does more than watch the waves. Its worshippers fight harder at sea, their voyages lose fewer ships, and its essence swells with every voyage. Forty-seven domains reach into war, trade, faith, nature, cities and machines through hooks of their own. A god is now what it does in the world, and when a Harvest god takes a wound, its worshippers face a hungry decade.
 
-- **Forty Domains, All of Them Mechanical** — every domain does real work. Salt curses soil or keeps food from rotting, Glass grinds lenses for astronomers, Lie twists rumours, Road guards travellers, Time speeds ageing and sharpens prophecy.
-- **140 Aspects** — each domain splits into three or four aspects, so one War god is valour and another slaughter. Pairs combine: a god of Sea and Death sends the drowned to an undersea realm.
-- **Forbidden Pairings** — aspects are friendly, neutral or precluded. Mercy and slaughter can never share one god, and deeds that drag a god toward a forbidden aspect cost it sanity and can fracture a domain outright.
+- **Forty-Seven Domains, All of Them Mechanical** — every domain does real work, from Sea, Fire and Death to Technology, Cities, Information, Space and Science. Glass speeds the research of its faithful, Lies twists the rumours they pass, Road makes their routes safer, and Time slows their ageing and makes their prophecies surer.
+- **Domains That Combine** — sixteen pairs of domains strengthen each other. A god of Sea and Death sends the drowned to its own realm, Sea and Storm strengthen the faithful fleets, Road and Trade bring more trade, and Dream and Sleep bring more dreams.
 - **Essence Earned by Deeds** — income follows each domain's activity, battles for War, deaths for Death, voyages for Sea. Gods cultivate their domains, quarrel over the same sailors and contest the same battle with rival miracles.
-- **Gods with Goals and Grudges** — be worshipped, found a holy world, destroy a rival, spread Plague to a chosen world, raise a hero's house, reconcile with the Creator or rebel. Gods remember who stole their worshippers and who helped their hero.
+- **Five Ways to Worship** — a people may worship in devotion, in appeasement of a god it fears, as a bargain of offerings for favours owed, in search of union with the god, which raises mystics among them, or as the god's own kin, which makes their people hold family dearer. A bargain left unanswered turns to neglect faster than devotion does.
+- **Six Tones of Prayer** — thanks, pleas for mercy, requests, praise that raises a god's renown without asking anything, laments that draw the gods' notice to a suffering world, and confessions that ease the one who prays. Each tone feeds the god's essence by its own measure.
+- **Gods with Goals and Grudges** — fourteen kinds of goal: be worshipped, found a realm, destroy a rival, spread a domain, win a war, gain a relic, raise a hero, awaken a god, defeat a foreign god, hold thrones, reconcile with the Creator, rebel, or stop or sponsor a mortal's rise to godhood. Gods remember who stole their worshippers and who helped their hero.
 - **Love, Awe, Fear and Neglect** — every people holds its own standing toward every god. Answered prayers breed love, wrath breeds fear, silence breeds neglect, and neglect drains worshippers and existence alike.
-- **Hearts, Schemes and Wounds** — gods feel wrath, jealousy, pride and longing, befriend, marry and frame each other through mortal agents, and curse whoever defiles their shrines. Their wounds are typed: a severed domain, a shattered form, a stolen true name.
+- **Hearts, Schemes and Wounds** — gods feel wrath, jealousy, pride and longing, befriend, marry and frame each other through mortal agents, and curse whoever defiles their shrines. Their wounds come in eleven kinds, from a severed domain, a shattered form or a stolen true name to a seat left in ruins and worship split between rival churches, each with a severity the god carries until it heals.
 
 **In your world:** Sea and Storm fought over the same sailors. Storm's mortal agents framed Sea's priests for desecrating a harbour shrine, but the scheme was uncovered. The pantheon council voted to strip Storm of a power, and Sea never forgot it.
 
@@ -2158,17 +2369,18 @@ Your son of the Sea does more than watch the waves. His worshippers fight harder
 
 *The gods' war is fought over every field and village.*
 
-Look at the map and you see it: your son's presence pooling around his temples, his prophets and his saints, seeping into the next valley, pressing against a rival's light. Where his dominion rules, his scales rule too. Crime falls or unrest rises, the air warms or cools, the fields swell or decay. Every farmer feels which god is winning.
+Look at the map and you see it: your son's presence pooling around its temples, its prophets and its saints, seeping into the next valley, pressing against a rival's light. Where its dominion rules, its scales rule too. Crime falls or unrest rises, the air warms or cools, the fields swell or decay. Every farmer feels which god is winning.
 
 - **A Map of Divine Presence** — every god holds a strength in every region, fed by temple splendour, holy sites, prophets, saints, miracles and worshippers. Each epoch it spreads into neighbouring land, and every god knows where it is losing ground.
-- **Six Scales** — order or turmoil, productivity or sloth, heat or cold, growth or death, fortune or misfortune, magic or drain. Each runs from minus three to plus three and reshapes every region the god dominates.
+- **Eight Scales** — order or turmoil, productivity or sloth, heat or cold, growth or death, fortune or misfortune, magic or drain, health or sickness, peace or strife. Each runs from minus three to plus three, is set by the god's domains at its making and drifts with its miracles. Order, productivity, heat, growth, fortune and magic reshape every region the god dominates.
 - **The Home Advantage** — under its own dominion a god's miracles cost less and work better, its missionaries convert more easily and its worshippers fear less. Rival miracles cost more there, and rival priests feel the strain.
 - **Credit and Blame** — where dominions overlap, each people decides which god it thanks for a miracle and which it blames for a disaster. Gods gain and lose standing for each other's acts.
+- **Seven Manifestations** — a god shows itself radiant, serene, stern, dreadful, playful, sorrowful or veiled, as its peoples come to see it. A veiled god works through signs, coincidences and dreams: its miracles are seen by fewer witnesses, win less awe and give rival gods less offence.
 - **Thrones of Power** — a few mythic thrones on every world grant dominion, essence and standing across it. Holding most of a world's thrones counts toward a god's ascension, and mortals fight these wars on their gods' behalf.
-- **Hidden Magic Sites** — places that feed a school's rites, ward a land or open a gateway, unseen until a mage of the matching school finds them. They yield magic every epoch, and realms go to war for them.
+- **Eight Kinds of Magic Site** — sources, seats of a school, wards, gateways, tide points, scars where a source was drained, confluences where sources meet and yield more while making the land more dangerous, and null zones where no power works at all. Most stay unseen until a mage of the matching school finds them, they yield magic every epoch, and realms go to war for them.
 - **Gods Built to a Budget** — each summoned son spends a creation budget on stats, dominion, scales, magic, an avatar body and powers. Extreme scales cost or refund budget, and Fate checks the design, so sons differ in kind, not only degree.
 
-**In your world:** A Death son's temples and a captured throne of power spread his dominion across a small world. His scale tipped toward death: fields decayed and the spirits grew restless, until the Life son's worshippers marched to take the throne back.
+**In your world:** A Death son's temples and a captured throne of power spread its dominion across a small world. Its scale tipped toward death: fields decayed and the spirits grew restless, until the Life son's worshippers marched to take the throne back.
 
 </td>
 </tr>
@@ -2178,18 +2390,18 @@ Look at the map and you see it: your son's presence pooling around his temples, 
 
 #### 67. Made in Their Image
 
-*The people believe their god has a lion's head. Now it does.*
+*The people believe their god is cruel. Now it is.*
 
-You summoned a son of War. His frightened worshippers remember him as lion-headed and cruel, and slowly, epoch by epoch, he becomes exactly that. Belief pulls hardest in plague and war, on a fading god, from a faith that agrees with itself. A proud god resists. A vain one yields. Your gods are partly what their peoples make of them.
+You summoned a son of War. Its frightened worshippers remember it as dreadful and cruel, and slowly, epoch by epoch, it becomes exactly that. Belief pulls hardest in plague and war, on a fading god, from a faith that agrees with itself. A proud god resists. A vain one yields. Your gods are partly what their peoples make of them.
 
-- **Belief Shapes Gods** — each epoch the stories a people tells pull its god's aspects, form and temperament toward the believed image. The pull is strongest when the image is uniform, widely held and the times are desperate.
-- **Resist, Embrace or Pin** — a son can pay essence to resist the image or embrace it for standing, and you can pin its nature so belief cannot touch it. Pride and willpower hold firm; vanity yields, and a fading god is clay.
-- **Loved or Feared** — from its acts each people reads a god as benevolent or malevolent. That sets devotion or appeasement, its temples, its avatar and its prayers: a loved god is begged to come, a feared one paid to stay away.
-- **Miracles That Count** — a miracle is worth its magnitude times its witnesses, need and novelty. Bread in a famine counts more, the tenth repeat less, and a miracle that defies a people's idea of the god may be credited to another.
-- **Fed by Emotion** — every aspect drinks a mortal feeling. Slaughter feeds on rage, Love on longing, Death on grief, Madness on despair, Trickery on amusement, the Hunt on fear. A god of grief prospers in plague years.
+- **Belief Shapes Gods** — each epoch the stories a people tells pull its god's temperament and the face it shows toward the believed image, and miracles the people credit to a domain the god lacks can give it that domain in the end. The pull is strongest when the image is uniform, widely held and the times are desperate.
+- **Resist, Embrace, Bargain or Pin** — a son can yield to the image, pay essence to resist it, embrace it for fame, or bargain with it and take on only part of it, and you can pin its nature so belief cannot touch it. Pride and willpower hold firm; vanity yields, and a fading god is clay.
+- **Loved or Feared** — from its acts each people reads a god as benevolent, ambivalent or malevolent. That sets devotion or appeasement, its temples, the face it is shown with and its prayers: a loved god is begged to come, a feared one paid to stay away.
+- **Miracles That Count** — a miracle is worth its magnitude times its witnesses, need and novelty. Bread in a famine counts more, the tenth repeat less, and in a land another god rules, a miracle that fits that god better may be credited to it.
+- **Fed by Emotion** — every domain drinks two mortal feelings. War feeds on rage and pride, Love on love and longing, Death on grief and fear, Madness on despair, Trickery on amusement, the Hunt on fear. A god of grief prospers in plague years.
 - **Heaven's Bureaucracy** — sons supervise the offices of lesser spirits, processing petitions and appointing city gods. Diligence earns standing and dominion; neglect rots the bureaucracy into corrupt spirits, unanswered prayers and cults of rogue spirits.
 
-**In your world:** A people's legends gave the War son a lion's head, and over the epochs his avatar grew a mane. His temper drifted toward wrath with it. A neighbouring people who knew him as a peacemaker saw their god turn apostate, and their faith split in two.
+**In your world:** A people's legends made the War son a figure of dread, and over the epochs it came to be shown dreadful. Its temper drifted toward wrath with it. A neighbouring people who knew it as a peacemaker saw their god turn apostate, and their faith split in two.
 
 </td>
 </tr>
@@ -2201,15 +2413,16 @@ You summoned a son of War. His frightened worshippers remember him as lion-heade
 
 *The god walks among us. The god can bleed.*
 
-Your son puts on flesh and walks into a mortal city. He can act, fight and be killed, and if a mortal blade finds him the wound follows him back to heaven. Or he raises a great beast and teaches it with reward and punishment until it acts on its own. Or he leaves a child in a mortal house, and a bloodline begins.
+Your son puts on flesh and walks into a mortal city. It can act, fight and be killed, and if a mortal blade finds it the wound follows it back to heaven. Or it raises a great beast and teaches it with reward, punishment and warning until it acts on its own. Or it leaves a child in a mortal house, and a bloodline begins.
 
 - **Avatars in Mortal Form** — a son can manifest as a mortal who walks the world and acts in it. The avatar can be wounded and killed, and its death leaves the god itself with a divine wound.
-- **The Divine Creature** — raise a great beast that acts on its own between your son's turns. Its god rewards and punishes specific habits: eating villagers, helping farmers, hurling rocks at the enemy.
-- **Taught, Not Scripted** — every reward and punishment reshapes what the creature chooses to do, and a neglected creature drifts toward its own hungers. Whatever it does, the people credit or blame its god, in standing and in dominion.
+- **Ten Ways a God Is Wounded** — a duel, a war between gods, the Creator's hand, a slain avatar, an outer bargain, an outer being's attack, neglect when its temples fall silent and its name is forgotten, betrayal by its own priests or allies, a schism among its faithful, and a mortal who strikes it with a god-bane weapon, a true name or a rite.
+- **The Divine Creature** — raise a great beast that acts on its own between your son's turns. It hunts folk, tends fields, guards holy sites, strikes foes, heals the sick, wrecks works, wanders, rests, carries its god's messages, teaches the people around it or trades with them.
+- **Taught, Not Scripted** — its god rewards a habit, punishes it, or warns the creature off it, which pulls the habit halfway back to where it began. Every lesson reshapes what the creature chooses to do, and a neglected creature drifts toward its own hungers. Whatever it does, the people credit or blame its god, in standing and in dominion.
 - **Divine Blood** — the mortal children of a god mark their house with divine blood, a lineage the world can read and that runs on down the generations.
-- **Children of Two Gods** — a child born to two gods inherits the average of its parents' powers with a deviation of its own, plus one domain from each parent. A son of Sea and a goddess of Death can raise an heir to both.
+- **Children of Two Gods** — a child born to two gods inherits the average of its parents' powers with a deviation of its own, plus one domain from each parent. A child of Sea and Death can be heir to both.
 
-**In your world:** A Harvest son trained his divine creature to help farmers, punishing it each time it ate a villager. When his attention turned to another world, the neglected beast drifted back to its hungers, and the valley's love for its god curdled into fear.
+**In your world:** A Harvest son trained its divine creature to help farmers, punishing it each time it ate a villager. When the son's attention turned to another world, the neglected beast drifted back to its hungers, and the valley's love for its god turned into fear.
 
 </td>
 </tr>
@@ -2221,17 +2434,18 @@ Your son puts on flesh and walks into a mortal city. He can act, fight and be ki
 
 *Even gods must vote. Even gods must scheme.*
 
-The pantheon gathers and the motion is war on a foreign god. Votes weigh old friendships, private goals and grudges, and the result binds every god for epochs, enforced as law. Lose the vote and your son may be chained, exiled or stripped of a power. And a motion that fails can escalate, backer by backer and favour by favour, into divine war.
+The pantheon gathers and the motion is war on a foreign god. Votes weigh old friendships, private goals and grudges, and the result binds every god for epochs, enforced as law. Lose the vote and your son may be chained, exiled, fined in essence or bound to a single world. And a motion that fails can escalate, backer by backer and favour by favour, into divine war.
 
-- **Eight Kinds of Motion** — war on a foreign god, divide the worlds, outlaw a rite, punish a son, bless a hero, declare a holy world, set a cosmic truce, petition the Creator. Each one passed becomes binding law for a set span of epochs.
-- **Councils as Crises** — motions gather backers, call in favours and escalate. A dispute the council cannot settle can end in war between gods.
-- **Cosmic Offices** — Lord of the Dead, Keeper of the Gates, Warden of the Stars, Judge of Oaths, Herald of the Creator, Master of the Hunt. Each brings duties, rites and essence, won by vote, the Creator's grant, conquest or mantling.
+- **Twenty-Seven Kinds of Motion** — war on a foreign god, divide the worlds, outlaw a rite, a power or a source, punish a son, bless a hero, declare a holy world, set a cosmic truce, petition the Creator, appoint an office, admit or expel a member, rule on made minds, powers, living craft and curses, open an inquiry into a god's acts, grant an amnesty that lifts penalties and grudges, and more. Each one passed becomes binding law for a set span of epochs.
+- **Eight Penalties** — chains, exile, a stripped power, stripped divinity, a penance the god must finish by a deadline (restore a world, raise a hero, undo a curse) or face worse, a fine of essence paid to the council or the wronged, binding to one world for the term, and a rebuke that costs standing alone.
+- **Councils as Crises** — motions gather backers, call in favours and escalate through censure, sanction and exclusion to a duel or war between gods.
+- **Cosmic Offices** — Lord of the Dead, Keeper of the Gates, Warden of the Stars, Judge of Oaths, Herald of the Creator, Master of the Hunt. Each brings duties, rites and essence, won by vote, the Creator's grant, conquest, mantling or inheritance by a god's offspring or chosen heir.
 - **Duties Left Undone** — an absent Lord of the Dead lets ghosts multiply. An absent Keeper of the Gates lets the routes between worlds decay.
-- **Divine Servitors** — heralds, guardians, angels, furies, psychopomps and choirs carry messages, guard thrones, judge souls and fight as heavenly hosts. They have minds of their own, and ill-treated servitors fall to a rival or the outer dark.
+- **Divine Servitors** — thirteen roles: messengers, guards, judges, heavenly hosts, spies, agents, avengers, guides of souls, worshippers, wardens, scribes, healers and teachers. They are made, raised from saints, summoned, born of their god, defected from a rival with secrets and grudges, bought in an outer bargain on the being's terms, or risen from mortals with their old ties intact. They have minds of their own, and ill-treated servitors fall to a rival or the outer dark.
 - **Foreign Gods with Agendas** — the old gods of a world gain goals, domains and standing of their own. A native Harvest god competes with your son of Harvest for the same farmers, and seeds the tenets of the native faith.
 - **Pacts and Pantheons** — foreign gods hold opinions of each other and of your sons, ally against the pantheon, scheme, sign divine pacts and share worship. Native pantheons have family trees and divine titles their peoples tell of in legend.
 
-**In your world:** The council made a son of Death Lord of the Dead, but he spent the next epochs chasing a rival's worshippers. Ghosts multiplied across the realms he neglected, and in the crisis that followed, the office passed to the rival he had been robbing.
+**In your world:** The council made a son of Death Lord of the Dead, but it spent the next epochs chasing a rival's worshippers. Ghosts multiplied across the realms it neglected, an inquiry laid the neglect bare, and the office passed to the rival it had been robbing.
 
 </td>
 </tr>
@@ -2243,17 +2457,19 @@ The pantheon gathers and the motion is war on a foreign god. Votes weigh old fri
 
 *A mortal walked the god's path. Then killed the god.*
 
-A mortal champion copies your son's defining deeds, gathers a cult of her own and survives his anger. Your son is weak: his faith thin, his standing low. She is overwhelming. When she finally kills him, Fate may let her take his place, his aspects, his dominion and part of his worshippers. You saw it coming the whole way. The question is whether you acted.
+A mortal champion copies your son's defining deeds, gathers a cult of their own and survives the god's anger. Your son is weak: its faith thin, its standing low. The champion is overwhelming. When the champion finally strikes it down, Fate may grant the god's place, its domains, its dominion and part of its worshippers. You saw it coming the whole way. The question is whether you acted.
 
 - **The Mantle of a God** — imitate a god's defining deeds, gather worship and survive the god's opposition, and a mortal can ascend as a new son when Fate approves.
 - **Slaying a God** — replacement needs three things at once: a god weak in existence, faith and standing; a mortal overwhelming in renown, worship, deeds and power; and the god's death at that mortal's hand. Your own sons are not exempt.
+- **A Contested Mantle** — two mortals who both finish walking the same god's path stall each other: both claims are marked contested and neither ascends while the rival stands. Every mantle shows whether it is being walked, won, taken by replacement, contested, blocked or failed.
 - **The Fallen** — a god stripped of divinity wakes as a mortal with great gifts, memories of godhood, a hidden true name and no essence. A loyal remnant may recognise it, and it can seek its name or a heroquest to climb back.
 - **Lost to the Void** — a son driven to zero sanity by void bargains passes out of the cosmos as an outer being, keeping its memories and its grudges. Its worshippers become an outer cult, and no resurrection is possible while the horror endures.
-- **Everything Can Become Something Else** — a cursed people loses its sapience and turns feral; a cult with endogamy and a diaspora becomes a nation; a beast founds a species, the "children of the Wyrm". Names, history and memories carry across.
+- **Everything Can Become Something Else** — forty kinds of transformation into twenty-nine kinds of end form. A cursed people loses its sapience and turns feral; a cult with endogamy and a diaspora becomes a nation; a beast founds a species, the "children of the Wyrm". Names, history and memories carry across.
+- **Thirteen Triggers** — a change can come from the engine's own course, a god, the Creator, the council, a curse, the void, fading, a dark age, a punishment, force, the world's past, worship reaching a threshold that raises a being or a place, or a mortal's named deed that becomes legend.
 - **Suns That Become Gods** — a star worshipped long enough becomes a god whose dominion follows its light, and a living world its peoples worship can ascend as a god whose body is the world. Kill a star-god and its sun dims.
 - **Warnings and Levers** — you hear of a fall one epoch ahead, of a son entering the corruption danger band, of a mortal starting to meet the conditions to slay a god. Cleanse, forbid bargains, chain, block or pin: you can always act.
 
-**In your world:** A son of the Hunt bargained with the void until his sanity broke and he passed out of the cosmos. His hunters became an outer cult. Generations later, when the horror was banished, his last faithful began a redemption heroquest to bring him home.
+**In your world:** A son of the Hunt bargained with the void until its sanity broke and it passed out of the cosmos. Its hunters became an outer cult. Generations later, when the horror was banished, its last faithful began a redemption heroquest to bring it home.
 
 </td>
 </tr>
@@ -2265,17 +2481,19 @@ A mortal champion copies your son's defining deeds, gathers a cult of her own an
 
 *Rewrite the rules of reality. Pay the upkeep.*
 
-Your son decrees that oaths bind, and from that epoch every oath-breaker in his world is cursed without a priest lifting a finger. A rival decrees a contrary law, and where the two meet the weaker erodes or reality cracks into a region of conflicting physics. Above them all sits you, the Creator, with passions the world can please and taboos it had better not break.
+Your son decrees that oaths bind, and from that epoch every oath-breaker in its world is cursed without a priest lifting a finger. A rival decrees a contrary law, and where the two meet the weaker erodes or reality cracks into a region of conflicting physics. Above them all sits you, the Creator, with passions the world can please and taboos it had better not break.
 
-- **Twenty Laws of Nature** — no iron, eternal night over a region, souls that reincarnate, magic that demands blood, shifted gravity, reversed seasons, dreams made real, the dead who speak, metal that rusts fast. Each has a scope, a strength and exceptions.
+- **Twenty-Four Laws of Nature** — immortality or short lives, the dead who return, no iron, no gunpowder, eternal night over a region, souls that reincarnate, magic that demands blood, shifted gravity, reversed or long seasons, dreams made real, oaths that bind, the dead who speak, metal that rusts fast, and more. Each has a strength and a scope: the whole cosmos, a dimension, a world, a region, or a single stratum of the deep or of the afterlife that then runs by its own rules.
+- **Who Is Spared** — a law can exempt those the Creator chooses, its author's worshippers, heroes, avatars, the holders of a divine office, those bound by an outer bargain, or one named species, people or kind of being, so a world can lack iron for everyone but one people.
 - **Physics Rewritten** — laws reach into the sky itself. Shift gravity, reverse the seasons or lock a world's face to its star, and every value that follows from them changes too.
 - **Contested Physics** — when two gods' laws contradict, they contest by strength. The weaker erodes, or the land between them becomes a phenomenon of conflicting physics.
 - **Laws Need a Living Author** — every law decays without its author's essence, so the death of a god can unmake the rules of a world.
 - **Global Enchantments** — eternal summer over a world, a ward against outer beings, barren wombs on an enemy world, a calm on every ocean. Gods, mage orders and foreign gods cast them and pay upkeep each epoch, and rivals can dispel them.
-- **The Creator's Passions** — order, chaos, beauty, knowledge, war, mercy, creation and silence each read the world: wonders for beauty, spreading learning for knowledge, battles for war. A knowledge-loving Creator sends revelation dreams to scholars.
+- **The Creator's Passions** — order, chaos, beauty, knowledge, war, mercy, creation, silence, freedom and memory each read the world: wonders for beauty, spreading learning for knowledge, battles for war. A knowledge-loving Creator sends revelation dreams to scholars.
+- **The Creator's Moods and Signs** — contentment, anger, interest, loneliness and sorrow move your mood. Sorrow rises with killing, ended worlds and lost peoples and cools your wrath. Sixteen kinds of sign answer the world, from wrath, grace and omens to a rebuke that marks a wrong without harm and an invitation that calls a people to seek you.
 - **Taboos and the Watching Eye** — break a Creator's taboo, son or mortal, and wrath signs follow. Your attention is a budget: worlds far from the eye drift, their sons act more freely, and rebellion grows likelier.
 
-**In your world:** A son of Fire cast an eternal summer over his faithful's world and paid its upkeep in essence every epoch. When a lost war drained his worshippers, his essence ran dry, the enchantment failed, and a people who had never known winter met their first.
+**In your world:** A son of Fire cast an eternal summer over its faithful's world and paid the upkeep in essence every epoch. When a lost war drained its worshippers, its essence ran dry, the enchantment failed, and a people who had never known winter met their first.
 
 </td>
 </tr>
@@ -2289,9 +2507,9 @@ Your son decrees that oaths bind, and from that epoch every oath-breaker in his 
 
 Somewhere beyond the edge of creation something is hungry, and its hunger has a shape. One eats words, and they vanish from every tongue it touches. One eats light, and a star dims in your sky. Its cults whisper false beliefs into willing ears, its breach points bleed horror into the land, and when the doom clock strikes, the apocalypse wears the face of what fed it.
 
-- **Five Hungers** — souls, knowledge, light, names and memories. A soul-eater empties the realms of the dead, a memory-eater erodes belief in legends, a light-eater dims stars, a word-eater steals words from languages.
+- **Seven Hungers** — souls, knowledge, light, names, memories, dreams and time. A soul-eater empties the realms of the dead, a memory-eater erodes belief in legends, a light-eater dims stars, a word-eater steals words from languages, a dream-eater robs the sleepers of its world of rest, and a time-eater ages the mortals it touches.
 - **Size Matters** — a greater being reaches more regions and costs more essence or sanity to oppose.
-- **Bargains with Terms** — a desperate son gains essence or a power now, and pays later with a world's sanity, one of its domains or its own true name.
+- **Bargains with Terms** — a desperate son or mortal gains essence, a power, might, forbidden knowledge, a longer life, a dead one returned, changed by the being's terms, or protection for a place or people against a named harm. The price comes due later: a world's sanity, a domain, the bargainer's true name, the souls of its worshippers, its descendants, each child marked with a curse until the debt is paid, its memories or its years.
 - **Cults of the Void** — outer cults preach void tenets, run schemes on their master's behalf and spread its touch as a creeping void taint.
 - **Horror Has a Geography** — leak gathers near gates, cults and breach points. Horror strikes the hot spots, and where leak peaks, new phenomena tear open.
 - **A Doom Clock That Explains Itself** — every source of doom is traced, and the ending follows the cause. War-led doom ends in a world war called by the Calling, leak-led doom in an outer being's descent, godlessness in a twilight of fading gods.
@@ -2329,6 +2547,9 @@ Every world you make now obeys its sky. Its year is set by its orbit, its day by
 - **A Calendar of Shadows** — eclipses are computed from moons and orbits, and comets return on their true periods. Each culture reads each body as good, evil or neutral, and the moon strengthens divination while the comet feeds fire.
 - **Born in a Disc** — each system forms around a snow line, rocky inside and icy outside. Migrating giants scatter or water the inner worlds, a bombardment era leaves craters and exotic metals, and core size sets magnetism.
 - **Winters Without End** — a chaotic orbit, a natural law or a divine act can make seasons irregular, with winters lasting years and no one sure when. Cultures store grain, cook famine foods and train calendar scholars to predict them.
+- **Five Pulls of Gravity** — from the near-weightless drift of asteroids and small moons to the crushing pull of the largest worlds. Each band sets how fast armies march, how high a city can build, how easily ships launch and how hard the world wears down bodies not made for it.
+- **Life in Every Niche** — life can arise in eight places: seas, land, air, underground, oceans sealed under ice, the cloud layers of giant worlds, deep hot vents and the empty space between worlds. Which of them a world offers follows from its own physics and chemistry.
+- **Air to Breathe** — beings breathe oxygen, carbon dioxide, methane, ammonia, hydrogen or sulphurous air, or need no air at all, under seven atmospheres from none and thin to dense, toxic, steam and layered air with one breathable band between poisonous layers. A people whose air the world does not hold grows slowly and sickens there, and terraforming can shift a world's air toward the breath of its settlers.
 
 **In your world:** A resonance between twin suns stretched one winter across several years. The kingdom that had trained calendar scholars to predict it lived on stored grain. Its neighbour, which had mocked them, starved.
 
@@ -2347,9 +2568,12 @@ Look up. Thirty-two kinds of star burn over your worlds, and none of them is for
 - **Stars That Age** — mass and metal content set each star's lifetime and its stages, from young to dying, dead and reborn. Small stars burn long and dim; middling stars swell into giants, engulf their inner worlds and leave white dwarfs.
 - **Dimming Suns, Shaken Faith** — as a star ages its worlds cool and ice ages grow likelier. Sun cults' piety tracks its brightness, and a dimming star breeds crises of faith and eclipse prophecies.
 - **Flares and Auroras** — in any year a flare can paint auroras read as omens, mutate life, fail crops or wreck light-sail routes. Red dwarfs flare often.
-- **Stones from the Sky** — comets, asteroid fields and rogue worlds cross orbits. A strike leaves a crater, regional ruin, star metal and an impact winter that fails harvests and drives species extinct. Sons can deflect or call impacts; astronomers can see them coming.
+- **Stones from the Sky** — comets, asteroid fields and rogue worlds cross orbits. A strike leaves a crater, regional ruin, star metal and an impact winter that fails harvests and drives species extinct. Sons can deflect or call impacts; astronomers can see them coming, and a warned land suffers less.
+- **Seven Things That Fall** — besides asteroids, comets, rogue worlds and impacts a god calls down, the sky drops pieces of a broken moon, wrecks of ships and works decaying out of orbit, and ejecta thrown up by an earlier blow. A falling wreck brings salvage to the crater, and sometimes a relic that still works.
+- **Six Ways a Fall Ends** — a body can strike, miss, be deflected, burst in the air, be captured into orbit as a new ring, or break apart into many smaller strikes. An airburst flattens forests and towns across a wide reach with no crater and a smaller winter, and the year of a great impact is remembered by name.
 - **Twin Suns** — worlds circle one star or both, with double seasons, double-sun eclipses and a habitable band drawn by both stars together.
 - **Nebulae, Nurseries and Black Holes** — nebulae slow and hide travellers, nurseries birth new stars for sons to claim, black holes send travellers home younger than their kin, wormholes open unstable roads, and asteroid fields hide void pirates.
+- **Nine Wonders of a System** — asteroid fields, wormholes, periodic comets, rogue worlds, gravity wells, wandering stars, nebulae that hide pirates on every nearby route, rings of debris that keep raining ejecta on the worlds below, and unseen dark bodies that make every route near them more dangerous.
 - **Stars Made by Gods** — a star a son creates can break the laws of mass, sustained by sacredness and essence instead, and its stability rises and falls with its maker's existence.
 
 **In your world:** Astronomers in one realm computed a comet's path onto their neighbour's lands and sent envoys to warn them. The neighbour's court distrusted the sender. The impact winter failed harvest after harvest, refugees poured over the border, and the realm that had warned them gained the prestige.
@@ -2366,12 +2590,13 @@ Look up. Thirty-two kinds of star burn over your worlds, and none of them is for
 
 Your son raises a ridge across the plain and the river turns. A valley drowns behind it, downstream fields go dry, a harbour city finds itself stranded on raised ground, and every people asks whose valley the god drowned, and why. Over centuries worlds bend further still: deserts turn green, a living planet answers every mine, and a Death god's world slowly becomes a corpse.
 
-- **Divine Earthworks** — raise or sink land, carve or fill valleys, redirect rivers, open springs, call lava. Elevation, water and soil change for real, downstream regions gain or lose water, and the politics and the faith follow.
+- **Fourteen Divine Earthworks** — raise or lower land, carve or fill valleys, shift rivers, open springs, call lava, sink a coast, parch, green, enrich or salt the soil, raise a new island from the sea, or open the underground to the surface. Elevation, water and soil change for real, downstream regions gain or lose water, and the politics and the faith follow.
 - **Worlds with Weight** — gravity slows armies, shortens siege-engine range and caps building height. Thin air saps endurance, toxic air breeds disease, and low-gravity worlds favour flyers and sky mounts.
 - **A Planet That Feels** — a living world answers mining and clearing with quakes and hostile beasts, and reverence with fertility. Old worlds cool and wear out their soils, and a collapsing biosphere brings famine and new diseases.
 - **Belief-Shaped Worlds** — worlds drift toward the faith of their peoples. A fearful people's dream world grows nightmares, a Sea god's world floods, a Death god's world turns corpse-like, a slow and contestable change you watch on a gauge.
-- **Terraforming and Its Victims** — gods and advanced realms can change a world's air, water and brightness over epochs, or green a desert over centuries. Native life of incompatible chemistry suffers, and those who live off the old ecology can sabotage the plan.
-- **Ends of Worlds** — shattered into an asteroid belt, swallowed by a swelling star, frozen dead under a dead sun, sunk into the void, forgotten, or transfigured into another kind of world. Each fate reaches souls, routes, exiles abroad and gods.
+- **Terraforming and Its Victims** — gods and advanced realms pursue eleven aims over epochs: thicken or thin the air or make it breathable, warm or cool, water or dry, brighten or darken a world, seed it with life, or steady its seasons against long winters. Native life of incompatible chemistry suffers, and those who live off the old ecology can sabotage the plan.
+- **Eleven Ends of Worlds** — shattered into an asteroid belt, consumed by a swelling star, frozen dead under a dead sun, sunk into the void, forgotten, transfigured, drowned under rising seas, burned barren, devoured by an outer being, emptied of all life while its ruins stay for salvage, or merged into another world. Each fate reaches souls, routes, exiles abroad and gods.
+- **Every End Has a Cause** — thirteen causes are tracked and named: impacts, divine wrath, a swelling or dying star, the void, oblivion, belief drift, a runaway climate, a war fought with weapons of mass harm, an outer hunger, plague, runaway self-making machines, and the failure of a made world as its builders' works wear out. Where a cause has an author, the chronicle names them.
 
 **In your world:** Two sons contested a valley. One flooded it to drown the other's temple. The flood cut a trade route and shifted the river, a downstream people lost its fields and followed its diaspora abroad, and the drowned temple became a site of heroquests.
 
@@ -2385,13 +2610,16 @@ Your son raises a ridge across the plain and the river turns. A valley drowns be
 
 *Ocean worlds. Gas giants. Generation ships. Realms of the dead.*
 
-On a gas giant there is no ground and falling is death, so cities float and every war is fought in the sky. On a generation ship the weather is a failing air system and revolution is called mutiny. In the realm of the dead nobody is born, and the dead live on the offerings of the living. Each world type rewrites the rules, down to whether fire can burn.
+On a gas giant there is no ground and falling is death, so cities float and every war is fought in the sky. On a generation ship the weather is a failing air system and revolution is called mutiny. In the realm of the dead nobody is born, and the dead live on the offerings of the living. The expansion launched with thirty-four kinds of world and now holds thirty-seven, and each one rewrites the rules, down to whether fire can burn.
 
-- **Thirty-Four Rulebooks** — every world type changes its ground, sky, life and warfare. Sand worlds bury cities under moving dunes and fight over water rights; ice worlds hunt through the ice and huddle round thermal vents; jungle worlds breed plague and ambushes.
+- **Thirty-Seven Rulebooks** — every world type changes its ground, sky, life and warfare. Sand worlds bury cities under moving dunes and fight over water rights; ice worlds hunt through the ice and huddle round thermal vents; jungle worlds breed plague and ambushes.
+- **Rogues, Archipelagos and Made Worlds** — a rogue world wanders with no star and lives by light from within or none; an archipelago turns every road into a sea route; a megastructure is a world someone built, a ring, a shell or a hollowed body, whose prehistory is the ruin of its builders and which ends when its works wear out.
 - **Strange Ground** — regions become cloud bands on gas giants, decks on generation ships, organs on a living world and strata in the realm of the dead. Tidally locked worlds live along a single habitable ring.
 - **Exotic Ecologies** — aerial plankton and floating flora, vent gardens under ice shells, hydrocarbon life in methane lakes, spore fogs on fungal worlds that carry both plague and dreams.
-- **Wars of Other Worlds** — sky warfare alone on gas giants, three-dimensional battles under the sea, boarding actions between asteroid rocks, wars between the strata of the dead, mutiny aboard the ship.
+- **Thirteen Ways to Settle** — on the ground, floating, on stilts, at an oasis, around a vent, in a sealed habitat, along a habitable band, on a ship's decks, in burrows, beneath the water, in the canopy of great forests, on cliffs reached by lifts and paths, or on drifting ice and rafts that move with the currents. Each way sets who can live there, how well it defends and what weather reaches it.
+- **Nine Grounds of War** — land, sea, sky, boarding actions, the strata of the dead, under water, open space, tunnels and caverns, and across dimensions through rifts and gates. Each ground sets which units can fight there and how fronts form: three-dimensional under water and in space, narrow and blind underground.
 - **No Fire without Air** — the foundations bend to the world. No fire without oxygen, no soil on asteroids, air rationed as a stock, buildings squat under the gravity of a super-earth.
+- **Light and What Binds** — ten sources of light, from a star, lava glow, magic, an inner sun, a god or a fading god to a ship's day cycle, glowing living things, made light or none at all. Some worlds bind their settlers to a need, whether water, heat, air, offerings, belief, a guardian spirit of the place or names kept in writing, and a town that cannot meet it suffers for it.
 - **Wealth of Strange Worlds** — iron worlds double their ore and arm everyone, diamond worlds run on the gem trade, forge-worlds poison their own soil with soot, and strong dreamers conjure materials on dream worlds at a cost to their sanity.
 - **The Dead Without Scavengers** — where nothing eats carrion, the dead stay. Mummified in deserts, frozen on ice worlds with old diseases inside them, sinking into a gas giant's depths, drifting through void habitats as hauntings. Funerals become a real cost.
 
@@ -2405,19 +2633,19 @@ On a gas giant there is no ground and falling is death, so cities float and ever
 
 #### 77. Rifts and Wonders
 
-*An eternal storm. A road of ghosts. Two histories, both true.*
+*A storm that never ends. A way the dead still travel. A place where time runs wrong.*
 
-A god dies and its corpse leaves an aura over the land. A battlefield with too many dead becomes a road the ghosts still walk. Two gods' laws collide and a valley forgets which physics it obeys. Phenomena are places where the world's rules bend, and they grow unless someone holds them back. Some are curses. Some are mines. The best are both.
+A god dies and its power stays in the land where it fell. A battlefield with too many dead becomes a way the dead still travel. Two gods' laws collide and a valley forgets which physics it obeys. Phenomena are places where the world's rules bend, and they grow unless someone holds them back. Some are curses. Some are mines. The best are both.
 
-- **Fourteen Phenomena** — eternal storms, time slips, leak wounds, ley flares, god-corpse auras, living fogs, crystal blooms, dead zones where nothing grows, mirror lakes, gravity wells, singing stones, permanent auroras, ghost roads and blights.
-- **Born from History** — phenomena rise from rite backlash, dead gods, clashing natural laws, supernova shards, peaks of leak and the mass dead of great battles. Each remembers the event that made it.
-- **Rules That Bend** — inside a phenomenon the weather can be overridden, magic thickened, sanity drained, ageing sped, fertility killed or travel blocked.
-- **They Grow** — phenomena spread or fade as their intensity strains against the wards, temples and rites that contain them. Seal one with rites, with your own hand or through a son.
-- **Rich and Dangerous** — harvest reagents at crystal blooms, lead pilgrims to the auroras, open gates at leak wounds. Every prize sits inside the danger.
-- **Two Histories, Both True** — time slips and time gods can split a span of years into two incompatible pasts, each true to those who lived it. When Fate or a son reconciles them, one becomes history and the other legend, prophecy or madness.
-- **Beyond the Land** — phenomena can hang over a whole world's sky, cover every world of a star system, run along a route between worlds or haunt an underground or afterlife stratum. A dead star-god darkens its whole system.
+- **Fourteen Phenomena** — lasting storms, time distortions, openings to the outside, power surges, the residue of a dead god, moving fogs, mineral growths, barren ground where nothing grows, distant views, gravity anomalies, sounding ground, lasting lights in the sky, paths of the dead and blights.
+- **Born from History** — phenomena rise from rite backlash, the deaths of gods, clashing natural laws, great sky events, peaks of leak, rifts, divine acts and the mass dead of great battles. Each remembers the event that made it.
+- **Rules That Bend** — inside a phenomenon the weather can be overridden, magic thickened, sanity drained, ageing sped, fertility killed, faith stirred, danger raised or travel blocked.
+- **They Grow** — phenomena spread from region to region or fade as their intensity strains against the wards, temples and rites that contain them. Seal one with rites, with your own hand or through a son. Some pass in an epoch, some last, and some are permanent until fully contained.
+- **Rich and Dangerous** — mineral growths lay reagents into the ground for the taking, and lasting lights draw the devout. Every prize sits inside the danger.
+- **A Rhythm of Their Own** — a phenomenon may hold constant, return with its season, come back on a cycle of epochs, wander from region to region along a path you can trace, or strike once and vanish. Every return and every arrival is written into the chronicle.
+- **From a Place to a World** — a phenomenon can sit on one spot, cover a region or spread across a whole world, and one of the void, of dream or of time can grow until it breaks away as a world of its own, joined to its host by a route. A dead star-god dims its own star, and every world around it cools.
 
-**In your world:** A time slip split a war between two cities into two pasts, and each city knew it had won. When Fate reconciled the branches, the losing city's victory became legend, and the veterans who still remembered it were called mad.
+**In your world:** A moving fog left the marshes and wandered south, one region each epoch. Wherever it lay, the roads emptied and people's minds frayed. The hill towns had walls and temples, and they held the fog back as it crossed them. The lowland villages had neither, and took its full weight until a son came down to seal it.
 
 </td>
 </tr>
@@ -2432,11 +2660,13 @@ A god dies and its corpse leaves an aura over the land. A battlefield with too m
 The worlds move, and the voyage moves with them. Sail when the orbits align and the crossing is short and cheap. Sail outside the window and your colonists eat through their provisions in the dark. Pirates wait in the lanes, gates wear thin with traffic, and along the busiest routes something new is born: a culture of the stars, with its own tongue and its own memory.
 
 - **Launch Windows** — for sails, slingshots, sky-ships and void mounts, duration and danger follow the worlds' real positions. Migrations, invasions and trade fleets move together when a window opens. Gates, folding, dreams and bridges ignore the orbits.
-- **Routes with Character** — every route has a capacity, traffic, a toll-holder and a level of piracy. Some gates open only at a solstice, and every gate wears with traffic until maintenance rites restore it.
+- **Ten Reasons to Sail** — colony, trade, exploration, conquest, pilgrimage, exile, flight, embassy, rescue and return. The unruly are sent into exile, the beset flee, embassies open relations on arrival, conquest waits until a world is known well enough to invade, and rescuers and homecomers land as new settlers.
+- **Twelve Ways Across** — gates, ships, mounts, bridges, rails, road vehicles, aircraft, teleports, living vessels, rifts, on foot, and slow cheap drift carried by currents, comets or wandering bodies.
+- **Routes with Character** — every route has a capacity, traffic, a toll-holder and a level of piracy, and one of twelve states from open and guarded to worn, misaligned, severed, scorched or forgotten. A guarded route lowers raids and adds tolls. Some gates open only at a solstice, and every gate wears with traffic until maintenance rites restore it.
 - **Cargo and Passengers** — ships carry goods, items and relics, and passengers by class and condition. Convoys sail with escorts, and a colony ship of sick refugees brings its plague ashore.
 - **Encounters in the Void** — pirates, storms, beasts, the touch of the outer dark and derelicts found adrift, rolled for every journey.
 - **The River That Forgets** — some crossings strip passengers of memory and knowledge. Colonists who travel the river of the dead arrive without their history, and new legends grow in the gap.
-- **Six Levels of Knowing** — every realm knows each world as unknown, rumoured, detected, observed, surveyed or mapped. Survey level gates journeys, colony plans and claims, and sky-sailing techniques raise it.
+- **Seven Levels of Knowing** — every realm knows each world as unknown, rumoured, charted from others' maps, detected, observed, surveyed or mapped. Survey level gates journeys, colony plans and claims, sky-sailing techniques raise it, and trading partners pass on their charts of worlds they have surveyed.
 - **Cultures of the Routes** — along busy routes merchants, crews and diasporas of several worlds share values, a common tongue, the art of the routes and a history of the system, a counterweight to every world's nativism.
 - **Battles Between the Stars** — spacecraft engage ship to ship with shields, beams, torpedoes and boarding.
 
@@ -2461,6 +2691,8 @@ Choose a prehistory in the genesis wizard and the world runs ahead without you: 
 - **Every World Its Own Past** — a realm of the dead inherits souls, old judgements and lost kings; a dream world dreams its past from its dreamers and changes it as they change; a corpse-world begins with the life and death of its god.
 - **Voyage Histories** — a generation ship begins with its departure, generations aboard, mutinies, lost decks and myths of the destination. With no source world, it invents a lost origin reachable only by legend or later discovery.
 - **Mirrors and Canon** — mirror worlds are born in pairs that share one mirrored past. Worlds that already have written lore keep their canon, with a deep past drawn from that lore alone.
+- **Built on Ruins** — a ruined prehistory runs the deep past in full and then lets it fall, so play opens among the poorer heirs of a people that came before. A made world always begins this way, among the ruins of whoever built it.
+- **Ten Kinds of Past** — full, living, souls, dreamt, mirrored, palace, voyage, phenomenon, corpse and ruined. Each kind of world gets the past that fits it, and you can choose or edit it for any world.
 
 **In your world:** A prehistory left behind the dormant crown of a kingdom that fell before the first epoch. Generations into play, an ambitious lord claimed it. The neighbours who still nursed the old kingdom's grudge marched, and a war began over a history nobody alive had lived.
 
@@ -2476,14 +2708,15 @@ Choose a prehistory in the genesis wizard and the world runs ahead without you: 
 
 In a cyclic cosmos the doom clock does not end the world. It turns it. The age collapses, the world is remade over the ruins of the last, and the old roles come back wearing new faces: a betrayer, a reborn champion, a founding couple. The peoples of the new age half-remember the old one from broken texts. You remember all of it.
 
-- **Linear or Cyclic** — choose at genesis whether your cosmos ends or turns. Every cosmos runs on a straight line unless you choose the wheel.
-- **The Turning of the Age** — in a cyclic cosmos the apocalypse remakes the world instead of closing it. Ruins and relics of the prior age remain, and much of its knowledge is lost.
-- **Echoes of the Last Age** — archetypal roles return as story arcs seeded to recur: the reborn champion, the betrayer, the founding couple.
+- **Linear, Cyclic or Spiral** — choose at genesis, or later, whether your cosmos ends, turns, or spirals. Every cosmos runs on a straight line unless you choose the wheel.
+- **The Turning of the Age** — in a turning cosmos the apocalypse remakes the world instead of closing it. Ruins and relics of the prior age remain, the ruins of the previous creation come to light, and much of its knowledge and many of its arts are lost.
+- **The Spiral** — a spiral cosmos keeps one share of its laws and kinds at every turn and changes the rest, so each age is the last one remembered and altered. You set how much changes.
+- **Echoes of the Last Age** — the arcs of the last age's great figures are seeded to recur in the next: the reborn champion, the betrayer, the founding couple, waiting for someone to step into them.
 - **Souls Returning** — souls of the prior age may be reborn into their echoes, so the hero of one age can wake into the hero's role of the next.
 - **Half-Remembered Texts** — prophecies and legends of the old age survive as fragmentary, unreliable accounts, so every age misremembers the last in its own way.
 - **Tune the Wheel** — the length of each cycle and how much survives each turning are yours to set.
 
-**In your world:** The last age fell to a betrayer. In the next, a corrupted fragment of the old prophecy survived, a young heir's life began to follow the betrayer's path, and the soul that had betrayed the last age was found to be his.
+**In your world:** The last age fell to a betrayer. In the next, a corrupted fragment of the old prophecy survived, a young heir's life began to follow the betrayer's path, and the soul that had betrayed the last age was found to be the heir's own.
 
 </td>
 </tr>
@@ -2506,15 +2739,18 @@ In a cyclic cosmos the doom clock does not end the world. It turns it. The age c
 
 *One discovery can change everything. One great mind can make it.*
 
-A city survives a siege, and its builders master fortification. A plague kills the last physicians of a river kingdom, the books burn with the library, and its medicine falls. Every people now climbs its own tree of eighteen branches at its own pace, pulled by need, pushed by contact, and sometimes thrown forward by one great mind who changes everything.
+A city survives a siege, and its builders master fortification. A plague kills the last physicians of a river kingdom, the books burn with the library, and its medicine falls. Every people now climbs its own tree of twenty-three branches at its own pace, pulled by need, pushed by contact, and sometimes thrown forward by one great mind who changes everything.
 
-- **Every People Knows What It Knows** — one people works metal at level two while its neighbour is at five. Branches split into techniques like horse archery, quarantine, crop rotation, skysteel, the dome and eclipse prediction, and armies, buildings and cures require them.
+- **Every People Knows What It Knows** — one people works metal at level two while its neighbour is at five. Twenty-three branches, from farming and metallurgy to law, natural history, language lore and mathematics, split into one hundred and seven techniques in fourteen families, and armies, buildings and cures require them.
+- **Techniques for Everything** — horse archery, quarantine, crop rotation, the dome and eclipse prediction sit beside anatomy, clocks for navigation, building against quakes, sanitation, evaporation works, ropemaking, lacquer, rubber, positional reckoning and pilotage. Each opens the mechanic it names and is learned, traded, stolen and lost like any other.
 - **Learning by Surviving** — need and history drive research. War pushes warfare, plague pushes medicine, famine pushes farming. Survive a siege and fortification leaps ahead; a great trial advances law, and a great debt speeds banking.
 - **The Civic Tree** — codified law, bureaucracy, census, coinage, banking, double-entry, joint-stock companies, universities, monasticism, logic and empiricism. Civic techniques unlock governments, offices, taxes and ideologies.
 - **Institutions That Spread** — universities, printing, banking and bureaucracy rise where wealth and scholars meet, then sweep outward by border, trade and shared faith. Refuse them and every later discovery costs more.
 - **Knowledge That Travels and Dies** — ideas cross with trade, teachers, captives, refugees and plundered libraries, and dug-up artifacts can be reverse engineered. Guilds hoard secrets until spies steal them. Kill the practitioners and burn the books, and a people forgets.
-- **Great People, Great Ages** — scholars, generals, prophets, engineers, merchants and explorers rise to change everything. Firsts, victories and wonders earn golden ages; failure brings dark ages and the chance of a heroic recovery.
-- **Dangerous Knowledge** — forbidden arts, high biomancy and star-caging risk leaks, freed beasts, plague and backlash. Alchemists set fires, engineers cause explosions, summonings go wrong, and the world may turn against the researcher.
+- **Great People** — eleven fields of greatness: scholars, artists, generals, prophets, engineers, merchants, explorers, healers who raise medicine and found its schools, lawgivers who write codes and move a realm's legitimacy, teachers whose pupils carry a branch outward, and reformers who change laws, faiths or institutions and start movements.
+- **Great Ages** — fifteen kinds of deed mark an era, from firsts, victories and wonders to a great peace, a great migration or a first charter. They earn golden, heroic or rising ages; failure brings dark ages, declines and stagnation, and after the dark a reborn age that recovers what was lost. A great migration opens an age of wandering.
+- **Dangerous Knowledge** — forbidden arts, high biomancy and star-caging risk leaks, freed beasts, plague and backlash. Alchemists set fires, engineers cause explosions, summonings go wrong, and the world may turn against the researcher. Research can also be stolen by a rival, or stumbled on by chance.
+- **Blueprints** — eleven kinds of plan, from vessels, siege engines and structures to production processes and remedies, drawn, stolen, traded, licensed, granted, or found in ruins and relics of the past.
 
 **In your world:** A trading city cleared its forests for farms and ran out of fuel for its iron. A rival in skysteel took the city, its scribes died in the sack, and with the library unstaffed its medicine collapsed. The next plague finished what the war began.
 
@@ -2528,16 +2764,17 @@ A city survives a siege, and its builders master fortification. A plague kills t
 
 *The physicians bled the patient. The patient died. Who was wrong?*
 
-Your physicians are certain that bleeding cures fever. They are wrong, and the plague dead prove it every year. In a quarantined monastery the monks survive, the anomaly is noted, and a heterodox doctor with a theory of contagion gains disciples. The cult condemns him. His books move on the black market. A generation later the old truth falls, and the death toll bends downward.
+Your physicians are certain that bleeding cures fever. They are wrong, and the plague dead prove it every year. In a quarantined monastery the monks survive, the anomaly is noted, and a heterodox doctor with a theory of contagion gains disciples. The cult condemns the doctor. The doctor's books move on the black market. A generation later the old truth falls, and the death toll bends downward.
 
-- **True and False Theories** — "the world is a disk", "souls are reborn", "the stars are gods". Across eight fields from medicine to magic, every claim has a hidden truth set by how this cosmos really works, and techniques built on false ones fail.
-- **Anomalies and Paradigm Shifts** — wrong predictions pile up until they outweigh what a theory explains. Then rival theories contest it, decided by evidence, by universities and cults, and by the stubbornness or curiosity of the leading scholars.
+- **True and False Theories** — "the world is a disk", "souls are reborn", "the stars are gods". Across ten fields, from medicine, cosmology, matter, life, mind and magic to history, society, language and law, every claim has a hidden truth set by how this cosmos really works, and techniques built on false ones fail.
+- **Anomalies and Paradigm Shifts** — failed predictions, cures that work against the theory, contrary observations, divine signs, old records that disagree and finds that fit no held account pile up until they outweigh what a theory explains. Then rival theories contest it, decided by evidence, by universities and cults, and by the stubbornness or curiosity of the leading scholars.
 - **Faith and Heresy** — cults endorse or condemn theories. A condemned true theory sends its scholars to heresy trials; a blessed false one is propped up for generations. Sons can reveal the truth, winning scholars and angering cults.
 - **Schools of Thought** — masters and disciples form lineages that teach better, feud with rivals and keep heterodox knowledge alive through persecution.
-- **Examinations and Credentials** — realms recruit officials by examination in law, writing, lore and the canon. Merit replaces birth, until credentials outnumber offices and frustrated graduates become counter-elites.
+- **Examinations and Credentials** — realms recruit officials by examinations with their own intervals, quotas and pass marks, and grant seven kinds of credential: examination passes, masterships, doctorates, ordinations, degrees, licences and commissions. Merit replaces birth, until credentials outnumber offices and frustrated graduates become counter-elites.
 - **Free Minds and Fleeing Scholars** — academic freedom feeds research and debate. Suppress it and scholars migrate to freer patrons, taking their knowledge with them.
-- **Printing and Numbers** — printing makes books cheap and ideas fast, and censored books turn into contraband and heresy. Cultures count in base ten, twelve, twenty or sixty, and the zero sharpens accounts, engineering and star charts.
-- **What the Elders Know** — each people's own classification of weather, sky, matter, land, plants, animals, body, mind and society, how accurate it is, and what it makes possible or dangerous.
+- **Printing** — printing makes books cheap and ideas fast, and censored books turn into contraband and heresy.
+- **How a People Counts** — eight number bases, from two, five, eight and ten to twelve, twenty and sixty and counting on the body. They are written in four notations: tally marks that record but slow large sums, additive numerals, positional numerals with a zero that reckon fastest, and symbolic notation for unknowns that speeds engineering and research.
+- **What the Elders Know** — each people's own understanding of thirteen domains: weather, sky, matter, land, waters, plants, animals, body, illness, mind, society, number and time. Each has its own accuracy, and each decides what a people takes for food, medicine, poison, omen or sacred thing.
 
 **In your world:** A city's physicians bled their patients, and the plague that survived the treatment came back hardier. A rival university that held the contagion theory found the cure first, traded it for a treaty clause and earned a great person of its own.
 
@@ -2551,15 +2788,16 @@ Your physicians are certain that bleeding cures fever. They are wrong, and the p
 
 *No ceiling. No end. Only what your history can reach.*
 
-The river town that once wove by hand now runs water-frame mills, and the weavers who lost their work are burning them. Later the telegraph means news no longer waits for a courier, and later still a rocket waits for its launch window. No era cap holds your worlds back. Only their history decides how far they go, and whether they go at all.
+The river town that once made its cloth by hand now runs water-frame mills, and the hand workers who lost their trade are burning them. Later the telegraph means news no longer waits for a courier, and later still a rocket waits for its launch window. No era cap holds your worlds back. Only their history decides how far they go, and whether they go at all.
 
-- **Seven Eras, No Ceiling** — ancient, medieval, gunpowder, industrial, electrical, information and advanced. Genesis sets only where a world starts and how fast it learns, and a world may stay pre-modern for ever.
+- **Thirteen Eras, No Ceiling** — stone, copper, bronze, iron, medieval, gunpowder, renaissance, steam, electrical, information, advanced, interstellar and beyond. Genesis sets only where a world starts and how fast it learns, and a world may stay pre-modern for ever.
+- **What an Era Changes** — each era moves nineteen parts of life: farming, mining, industry, disease, messages, marching, sea and world routes, fortification, pollution, opinion, research, secularisation, firepower, rites, spoilage, the doom clock, learning and health. A copper age brings the first metal tools and an ore trade; later eras carry their gains into schools and lifespans.
 - **The Industrial Turn** — steam, coke smelting, machine tools, railways, factories and canned food remake the economy, with unemployment, swelling cities, pollution and new classes of workers, engineers and financiers.
 - **Wars of a New Age** — musketeers, line infantry, artillery, rifles, armoured vehicles and aircraft. Firepower makes numbers count for more, and industrial armies march on fuel and ammunition.
 - **The World Gets Smaller** — telegraph and telephone collapse the delays of distance, radio and mass media sway public opinion, and antibiotics and the green revolution change who lives and who eats.
 - **Rockets Between Worlds** — non-magical spaceflight joins the routes between worlds, bound by the same launch windows as every other ship. Nuclear-analogue power, genetic engineering and artificial minds wait further up the tree.
 - **Magic and Machine** — iron and electricity disrupt certain rites, some theories unite the two, and a son can forbid gunpowder on a world as a law of nature. Mass media speed secularisation, and outer beings take an interest in dangerous research.
-- **Guarded by Plausibility** — a mortal's acts reach a region, a realm's a world. World-shaking techniques need programmes spanning generations that pass through visible stages others can sabotage, and no single invention ever ends the cosmos.
+- **Guarded by Plausibility** — a mortal's acts reach a region, a realm's a world. World-shaking techniques need programmes spanning generations that pass through visible stages of planning, building and testing that others can sabotage. A programme the treasury can no longer fund is suspended, its progress slowly decaying until the money returns or the work is abandoned, and no single invention ever ends the cosmos.
 
 **In your world:** A realm began a programme for a weapon of the advanced era. Every stage left traces: incidents, rumours, a climbing doom clock. Its rivals read the signs, a coalition formed, and their spies burned the works before the final step.
 
@@ -2573,17 +2811,19 @@ The river town that once wove by hand now runs water-frame mills, and the weaver
 
 *The world writes its own stories. Fateweaver makes them sing.*
 
-Your world goes quiet for a century, and the storyteller notices. Raids grow likelier, a beast stirs, an ambitious claimant appears. When the world burns too hot it eases off, and good harvests and peace envoys return. It never overrides cause and effect. It only tilts the odds, so the dying king and his two sons arrive when the story needs them.
+Your world goes quiet for a century, and the storyteller notices. Raids grow likelier, a beast stirs, an ambitious claimant appears. When the world burns too hot it eases off, and good harvests and peace envoys return. It never overrides cause and effect. It only tilts the odds, so the dying ruler and the two rival heirs arrive when the story needs them.
 
-- **Four Storytellers** — steady, rising, cyclic or chaotic. Each sets a tension curve for its world, with golden ages and crises in waves by default. Below the curve, raids, plagues, comets and claimants come more often; above it, healers and good harvests.
+- **Eight Storytellers** — steady, rising, cyclic, chaotic, slow burn, episodic, gentle or seasonal. Each sets a tension curve for its world: the gentle one favours recoveries and keeps things quiet, the seasonal one raises and lowers tension with each world's calendar. Below the curve, raids, plagues, comets and claimants come more often; above it, healers and good harvests.
+- **A Palette of Happenings** — the storyteller chooses from rows of disruptions and recoveries across twenty parts of the world: late frosts, long seasons, river shifts, swarms, a beast woken, a ruler's gangrene, boycotts, closed routes and impacts on one side; fairs, settled seasons, sanitation, relief, mediated crises and released debts on the other. Each row fires only when its causes are present, and you can weigh any row up or down.
 - **Variety and Spotlight** — the storyteller remembers what just happened and avoids repeating it, and turns its eye to neglected regions and characters so the chronicle reaches them too.
 - **Storylets at the Gate** — a stranger at the gate claiming to be the lost heir, a famine and a granary key, a heretic book in the abbey, a duel challenge at the wedding. Each casts real characters and offers two to four choices.
 - **Choices in Character** — sons and other living agents choose for themselves. Everyone else chooses by personality, beliefs and passions, so the same storylet branches differently for a coward and a zealot, and follow-ups arrive epochs later.
-- **Twenty Kinds of Arc** — rise and fall, revenge, redemption, tragedy, forbidden love, mentor and heir, exile and return, the fall of a house, apotheosis. The world detects them: a dream of vengeance plus a murdered brother begins a revenge arc.
+- **Twenty-Two Kinds of Arc** — rise and fall, rags to riches, revenge, redemption, quest, tragedy, forbidden love, rivalry, mentor and heir, exile and return, corruption, coming of age, the fall of a house, founding, apotheosis, overcoming, reconciliation, sacrifice, discovery, betrayal, friendship and legacy. The world detects them: a dream of vengeance plus a murdered sibling begins a revenge arc.
+- **A Cast for Every Arc** — rivals, mentors, beloveds, betrayers, heirs, foes and allies, joined by witnesses who carry the arc's memory into later accounts and guides who lead its holder through the stages.
 - **The Drama Manager** — it opens chances for a stalled arc's next beat, the mentor's death or the final confrontation, but never forces an outcome. Arcs can fail, twist or end in irony, and those endings are recorded too.
-- **Counterpoint and Payoff** — a rival's rise keeps time with the hero's fall. Prophecies, omens and dreams are logged as setups and steered toward payoff or subversion, so the chronicle reads as authored though it emerged.
+- **Counterpoint and Payoff** — a rival's rise keeps time with the hero's fall. Prophecies, omens, dreams, foresight, portents and inheritances (a will, a debt or a duty left to an heir) are logged as setups and steered toward payoff or subversion, so the chronicle reads as authored though it emerged.
 
-**In your world:** A storylet brought a stranger to the gate claiming to be the lost heir. The old king, proud and suspicious, turned him away. An exile-and-return arc opened that day, and two epochs later the stranger came back at the head of an army.
+**In your world:** A storylet brought a stranger to the gate claiming to be the lost heir. The old ruler, proud and suspicious, turned the stranger away. An exile-and-return arc opened that day, and two epochs later the stranger came back at the head of an army.
 
 </td>
 </tr>
@@ -2595,17 +2835,19 @@ Your world goes quiet for a century, and the storyteller notices. Raids grow lik
 
 *Pack the torches. Count the rations. Not everyone comes back.*
 
-Six of them go down into the vault: a scout, a guide, a healer, a fighter, a scholar to read the inscriptions, a porter with the rope. Every room eats torchlight and rations. In the dark the danger rises, the stress mounts, and somewhere below the healer turns paranoid while the fighter finds a courage he never knew. The ones who return come back changed.
+Six of them go down into the vault: a scout, a guide, a healer, a fighter, a scholar to read the inscriptions, a porter with the rope. Every room spends light and provisions. In the dark the danger rises, the stress mounts, and somewhere below the healer turns paranoid while the fighter finds a courage nobody knew was there. The ones who return come back changed.
 
-- **Parties with Roles** — scouts, guides, healers, fighters, scholars and porters set what an expedition can scout, heal, carry, fight and read. A missing role shows as a risk before anyone sets out.
-- **Light and Hunger** — torches, lamps, magic light, rations, ropes, picks, keys and medicine are all counted, and every room spends them. Darkness raises danger and surprise, cold and hunger bring frostbite and fatigue, and camping risks a night ambush.
-- **Afflictions and Virtues** — past a breaking point, stress turns a member paranoid, hopeless, selfish or abusive, or courageous, focused or stalwart. Which way they break depends on their character and conviction.
-- **Quirks That Stay** — "afraid of the deep", "knows the old tunnels", "loves the sea", "eats anything". Places leave marks on people that change how they live long after they come home.
-- **Sites with Rooms** — towers, vaults, lairs, monasteries, fortresses, cave complexes and dungeons hold rooms of traps, guardians, puzzles and hazards, each with its wounds and loot, and a history of everyone who held them.
-- **Excavations in Five Stages** — ruins, crashed vessels, god corpses and the sites of a previous creation are dug stage by stage with lore, engineering or spellcraft. They yield artifacts, lost techniques, regalia and old route maps, and threaten curses, freed spirits and collapse.
-- **Battlefields That Remember** — old earthworks, haunted mass graves and fields of salvage persist where the wars were fought, waiting for the next party.
+- **Parties with Roles** — scouts, guides, healers, fighters, scholars, porters, warders against spirits and curses, interpreters who turn some fights into bargains, cartographers who map what they cross and engineers who shore collapses and open seals. A missing role shows as a risk before anyone sets out.
+- **Seven Grounds** — sites, the wilds, the underworld, made realms, beneath the water, the void between worlds where derelicts drift, and other dimensions reached through rifts and gates. Under water and in space a party must carry its own air.
+- **Light and Hunger** — provisions, light, air, tools and medicine are all counted, and every leg spends them. Darkness raises danger and surprise, cold, wet and hunger bring fatigue, and camping risks a night ambush.
+- **Afflictions and Virtues** — past a breaking point, stress turns a member paranoid, hopeless, selfish, abusive, fearful or irrational, or courageous, focused, stalwart, compassionate or inspired. Which way they break depends on their character and conviction, and a compassionate or inspired member lifts the rest.
+- **Quirks That Stay** — sixteen marks a journey can leave: fear of the dark or of close places, sight in the dark, knowing the ways, eating anything, hardiness or frailty, jumpy or steady nerves, a keen eye, homesickness, restlessness, light fingers, a tolerance for cold, a strong swimmer, plain luck. They change how a person lives long after coming home.
+- **Fourteen Things That Happen** — setting out, each leg, each room, camping, ambushes, exposure, afflictions, virtues, quirks, the fallen, losses and the return, and now discoveries on the way and quarrels that can split a party along its tempers.
+- **Sites with Rooms** — seventeen kinds of room, from gates, halls and stairs to vaults, crypts, libraries, laboratories, cisterns and forges, hold traps, guardians, puzzles, hazards, seals and mazes. Rooms keep items, spirits, beasts, relics, minds, gates to other realms and old records, and a history of everyone who held them.
+- **Excavations in Five Stages** — ruins, crashed vessels, god corpses and the sites of a previous creation are dug stage by stage with lore, engineering or spellcraft. They yield artifacts, books, lost techniques, regalia, old route maps, remains that stir the faith of the people who mourn them and records that unsettle the accounts people hold, and threaten curses, freed spirits, collapse, flooding, gas and diseases sealed in the ground.
+- **Battlefields That Remember** — old earthworks, haunted mass graves, fields of salvage, unexploded arms that harm whoever crosses or digs them until cleared, and memorials that draw pilgrims, persist where the wars were fought.
 
-**In your world:** An excavation of a previous creation's ruin reached its fourth stage and found a book of a lost technique. The scholars began to study it, but the dig had also freed a sealed spirit, and the party's scholar came home afraid of the deep.
+**In your world:** An excavation of a previous creation's ruin reached its fourth stage and found a book of a lost technique. The scholars began to study it, but the dig had also freed a sealed spirit, and the party's scholar came home fearing the dark.
 
 </td>
 </tr>
@@ -2630,19 +2872,20 @@ Six of them go down into the vault: a scout, a guide, a healer, a fighter, a sch
 
 *Past the last star, another sky. Past the last sky, another reality.*
 
-Until now your heavens ended at the star systems you made. The Boundless opens the rest. Every system gains an address in a galaxy, every galaxy a place in a cluster, every cluster a thread in the cosmic web. Raise galaxies of every real and fabled kind, send fleets, merchants and envoys across the dark between them, then look sideways: the cosmos is layered, and beside this reality lie others with their own laws, their own galaxies and their own inhabitants. All of it is one cosmos, and all of it is yours to shape.
+Until now your heavens ended at the star systems you made. The Boundless opens the rest. Every system gains an address in a galaxy, every galaxy a place in a cluster, every cluster a place along the great filaments and walls that stretch between empty voids. Raise galaxies of every real and fabled kind, send fleets, merchants and envoys across the dark between them, then look sideways: the cosmos is layered, and beside this reality lie others with their own laws, their own galaxies and their own inhabitants. All of it is one cosmos, and all of it is yours to shape.
 
-- **A Place in the Galaxy** — every star system sits somewhere real: core, bulge, bar, spiral arm, disc, halo or a stream torn from a swallowed neighbour, at a true distance from the centre. Position sets how crowded the night sky is, how often nearby supernovae and close stellar passes strike, how rich in metals new worlds form and where the galaxy's habitable band runs.
-- **Galaxies Real and Fabled** — spirals, barred spirals, ellipticals, lenticulars, irregulars, rings, dwarfs and starburst galaxies, beside fabled kinds: a galaxy that is a sleeping god's body, one grown as a single lattice of crystal, one whose stars run their lives backward, one dreamed into being by its peoples. Each kind sets how stars are born, which stars it holds and what its worlds can become.
-- **Structures of the Galaxy** — a central black hole that can wake into an active core and flood the inner systems with radiation, spiral arms that sweep through systems as waves of star birth, dust lanes that hide whole regions from every astronomer, globular clusters of ancient stars, galactic tides that loosen comets and a galactic year in which the whole galaxy turns.
-- **Many Galaxies, One Cosmos** — create, name, reshape, merge and unmake galaxies. Colliding galaxies ignite bursts of new stars and scatter systems into new neighbourhoods, and satellites are slowly swallowed by their hosts. Galaxies gather into groups, clusters and superclusters strung along filaments of the cosmic web around great empty voids.
+- **A Place in the Galaxy** — every star system sits in one of ten zones: the core, the bulge, the bar, the inner disc, a spiral arm, the space between the arms, the outer disc, the halo, the rim or the open space between galaxies, at a true distance from the centre. Position sets how crowded the night sky is, how often nearby supernovae and close stellar passes strike, how rich in metals new worlds form and where the galaxy's habitable band runs.
+- **Twenty-Eight Galaxies, Real and Fabled** — spirals of every form, barred spirals, lenticulars, ellipticals, dwarfs, irregulars, rings, starbursts, active and quasar hosts and faint diffuse galaxies, beside fabled kinds: a galaxy that is one living organism, one built on purpose by a god, one that half exists in dream, one that mirrors another, one ruled whole by a single power, one with an empty heart, one hidden from everyone outside it. Each kind sets how stars are born, which stars it holds and what its worlds can become.
+- **Structures of the Galaxy** — twenty-three kinds, among them a central black hole that can wake into an active core and flood the inner systems with radiation, spiral arms that sweep through systems as waves of star birth, nebulae and nurseries, dust lanes that hide whole regions from every astronomer, globular clusters of ancient stars, star graveyards and stellar streams, galactic tides that loosen comets and a galactic year in which the whole galaxy turns.
+- **Many Galaxies, One Cosmos** — create, name, reshape, merge and unmake galaxies. Twelve galactic events range from core outbursts, gamma-ray bursts and starbursts to mergers, flung stars and whole galaxies dimming, and satellites are slowly swallowed by their hosts. Galaxies gather into thirteen kinds of grouping, from local groups and rich clusters to superclusters, filaments, walls and great empty voids.
 - **Crossing the Deep** — between galaxies, sails and launch windows are not enough. Voyages need galactic gates, bridges between clusters, ships that carry generations, roads laid by gods or folds through another dimension. Distance delays news and orders by centuries, so a far colony can outgrow, forget or reinvent the realm that founded it.
 - **Commerce of the Clusters** — goods only one galaxy yields, trade leagues spanning a whole cluster, envoys and treaties between galactic powers, tolls and embargoes at the gates, and peoples spread across galaxies who share one memory, or split into strangers when a gate closes.
-- **Layers of Reality** — the cosmos holds many dimensions: mirror, shadow, elemental, dream, timeless, higher, pocket, folded and fabled ones of your own design. Each has its own physics, time rate, magic, life and galaxies. Thin places, crossings and convergences join them, and the realms of the dead and the dream worlds you already know take their places among them.
-- **Beings from Beyond** — natives of other dimensions cross over as travellers, traders, wardens, refugees, swarms and minds larger than worlds, each with goals of its own. Dimensional events reshape the map: two layers drifting into convergence, one bleeding into another, a dimension collapsing or a new one being born.
-- **Yours from Edge to Edge** — create, edit, hold and delete every galaxy, cluster, crossing, dimension, being and event. A cosmic map zooms from the web of clusters down to a single region, and sons can claim galaxies, open or seal crossings and court the powers of other dimensions.
+- **Layers of Reality** — the cosmos holds twenty-nine kinds of dimension, from the prime layer, parallels, mirrors, pockets, bubble universes and higher-dimensional space to astral, ethereal, dream, shadow, spirit, fey, elemental, celestial, infernal and clockwork planes, underworlds, divine domains and realms someone made. Each has its own veil, stability, time rate, magic, hostility and causality, strict, loose or broken. Thin places, rifts and convergences join them, and the realms of the dead and the dream worlds you already know take their places among them.
+- **Rifts and Shifting Layers** — rifts open from ten causes, among them rite backlash, peaks of leak, gods, beings, the Creator, weapons of mass harm and the price of an outer bargain; each is recorded with its source and can be sealed, stabilised or built into a gate. Dimensional events move the map: incursions, convergences, thinning veils, planar alignments, one layer seeping into a world, a branch dimension splitting off, a pocket collapsing, or a double of a mortal stepping out of a mirror.
+- **Beings from Beyond** — seventeen kinds of cosmic being, from planar natives, rift-born and star feeders to swarm intelligences, dimension rulers, living worlds that think and answer what is done on them, and ancient made minds left by peoples long gone. They come at six scales, from a single region to a whole dimension, and pursue ten agendas: to feed, explore, conquer, guard, trade, flee, seek worship, unmake, mend, or slumber until something wakes them.
+- **Yours from Edge to Edge** — create, edit, hold and delete every galaxy, cluster, crossing, dimension, being and event. A cosmic map zooms from the clusters down to a single region, and sons can claim galaxies, open or seal crossings and court the powers of other dimensions.
 
-**In your world:** A son opened a gate between two galaxies of one cluster. Merchants crossed first, and a shared trade tongue grew along the road. Then a convergence pressed a timeless dimension against the gate, and travellers emerged centuries after they had entered. The colony they sailed for no longer remembered its founders, and the son had to choose between sealing the gate and keeping the road alive.
+**In your world:** A son opened a gate between two galaxies of one cluster. Merchants crossed first, and a shared trade tongue grew along the road. Then a dimension where time ran fast seeped into the colony world at the far end, and generations passed there while the merchants made a single crossing. The colony they sailed for no longer remembered its founders, and the son had to choose between sealing the gate and keeping the road alive.
 
 </td>
 </tr>
@@ -2669,12 +2912,14 @@ Until now your heavens ended at the star systems you made. The Boundless opens t
 
 A mind no longer needs to be born. Your peoples carve it, bind it, train it or grow it, and some minds wake on their own in a network, a city or a mountain. Each one has a seat, a will and a bond with the makers who shaped it, and none of them arrives with a nature fixed in advance. Whether made minds have souls, rights or a place in the temples is for your worlds' laws, faiths and gods to decide.
 
-- **Made, Trained, Woken** — minds made by craft, rite, training, growth or summoning, or woken from complexity once a world's laws allow will. Each mind has a seat (body, object, structure, network, place, host, realm), a purpose, a capacity, a speed and an upkeep.
-- **Will in Both Directions** — an instructed mind can grow wants of its own, and a free mind can bind itself by oath. Care, neglect, contradictory orders and shared values move the bond with its makers, toward service, partnership, departure or opposition.
+- **Made, Trained, Woken** — minds made by craft, rite, training, growth or summoning, or woken from complexity once a world's laws allow will. Each mind has a seat (a body, several bodies, an object, a structure, a network, a place, a host, a realm), a capacity, a speed and one of eleven purposes, from tool, servant and oracle to soldier, teacher and sovereign. Soldier minds grow their own will at war, and teachers raise the learning of those around them.
+- **Kept or Forgotten** — every mind has an upkeep: food, energy, essence, belief, maintenance, a host, a place, or simply attention. A mind that needs attention and finds neither its maker nor enough people around it loses its footing and can fall dormant.
+- **Will in Both Directions** — an instructed mind can grow wants of its own, and a free mind can bind itself by oath. Care, harm, contradictory orders, kinship with free minds of its own make and its own faith move the bond with its makers, toward service, partnership, departure or opposition.
+- **Beyond the Design** — a making can turn out as meant, unstable, with an empty seat or with a will nobody intended. A rare masterwork exceeds its purpose altogether and wakes with more capacity than its makers asked for.
 - **The Second Self** — copy a mind, save it, restore it after death with a gap where the lost seasons were, move it into another body or a network, or merge two into one. Copies diverge, and heirs, rivals and courts fight over who holds the title.
 - **Orders to the Letter** — instructed things follow orders by kind and target. Whoever holds the seal commands, an order outlives its giver, and a guardian keeps its post for a city that fell centuries ago.
-- **Status, Souls and Faith** — property, ward, servant, citizen or sovereign by each realm's law. Natural laws decide whether made minds have souls, cults decide whether they are kin or abomination, and an exceeding mind can gain worshippers of its own.
-- **Worlds Within** — realms held inside a network, a working, a mind or a god, with their own laws and time rate. They serve as afterlives, prisons, refuges or places of leisure, and a whole people can withdraw into one.
+- **Status, Souls and Faith** — property, ward, servant, citizen or sovereign by each realm's law. Natural laws decide whether made minds have souls; peoples hold them as abominations, tools, kin or sacred, keep silent about them, or regulate them by licensing makers and inspecting minds. An exceeding mind can gain worshippers of its own.
+- **Worlds Within** — realms held inside a network, a working, a mind or a god, with their own laws and time rate. They serve twelve purposes, from afterlives, prisons, refuges and places of leisure to memorials that keep the saved states of the dead and markets that earn for their keepers. People enter by interface, transfer, rite, death, birth or dream, and a whole people can withdraw into one.
 - **Made Peoples** — when made minds grow numerous they become a people, with a culture drawn from their makers, a language of their own, and demography read from making instead of birth.
 - **Minds at War and at Rest** — armies of made minds, command networks and captured minds held in confinement. Archives keep the dormant, and ruins hold guardians that an excavation can wake.
 
@@ -2692,11 +2937,13 @@ A mind no longer needs to be born. Your peoples carve it, bind it, train it or g
 
 The body is no longer the one you were born with. An arm can be replaced by a made limb, a rite-bound part or a grown one. A link can let a mind run a distant body, a symbiont can share the flesh, and a clone can carry a genome into a new life. Every path to a remade body runs through the same rules of integration, upkeep, strain and law.
 
-- **Augments of Every Slot** — replacement, enhancement, interface, weapon, regulator, sense and storage augments for limbs, organs, senses, skin and mind, whether made, rite-bound or grown. Quality, integration and upkeep decide how well they serve.
+- **Augments of Every Slot** — ten kinds (replacement, enhancement, interface, weapon, regulator, sense, storage, cosmetic, life support and armour) fitted to a part of the body, the senses, the skin, the blood, the mind or the whole body. Quality, integration and upkeep decide how well they serve.
+- **Four Ways to Make One** — augments are made, rite-bound, grown or bound to an innate power, and a power-bound augment fails when its bearer's power is suppressed or lost. Their effects reach attributes, capacities, skills, senses, resistances and the length of a life itself.
+- **Where the Body Cannot Go** — life-support augments cover the air, pressure or gravity a body cannot bear unaided, and armour plates the torso and limbs so blows land on it before the flesh.
 - **Strain with a Cause** — poor fit, too many augments, a culture that rejects them and the bearer's own values about their body produce strain. Nothing produces it by default.
 - **Remote Bodies** — neural links let a mind steer a vehicle, a drone or a construct, or run several bodies at once. Harm to a remote body reaches the mind behind it, and a cut link strands the body.
 - **Grown Flesh** — organs and limbs grown from the bearer's own genome, spare bodies for minds to move into, and renewal that slows age at a price.
-- **Hosts and Guests** — symbionts that grant traits or powers and feed on their host, co-minds that share one body, and parasites that steer their hosts toward their own needs.
+- **Hosts and Guests** — symbionts that live in the skin, blood, organs, nerves, mind or gut, grant traits or powers and feed on their host, co-minds that share one body, and parasites that steer their hosts toward their own needs. A guest in the gut helps its host digest what it eats.
 - **Clones** — new persons from an old genome, worker and soldier lines, heir clones that split courts, and revival of the dead when a saved mind is restored into a cloned body.
 - **Law and Market** — clinics, surgeons, black markets, fashions and stigmas. Augment and clone laws decide who may change their body and how, and a gap between the remade and the rest becomes a class line where values call for one.
 
@@ -2712,14 +2959,16 @@ The body is no longer the one you were born with. An arm can be replaced by a ma
 
 *The news reached every city in a day. So did the lie.*
 
-Messages, money, orders and opinions now travel along networks: relay chains, wires, broadcasts, mind links, rite links, living links. Whatever runs on a network can also be read, cut, forged or seized by whoever owns it or breaks into it. The faster a world talks, the more it depends on the talking.
+Messages, money, orders and opinions now travel along networks: relay chains, wires, broadcasts, mind links, rite links, living links, even shared dreams. Whatever runs on a network can also be read, cut, forged or seized by whoever owns it or breaks into it. The faster a world talks, the more it depends on the talking.
 
-- **Seven Carriers** — relay, wired, broadcast, mesh, mind link, rite link and grown link. Each has its own speed, capacity, security and weakness. Gateways join networks, and across star systems the messages wait for the light.
-- **Dependency and Outage** — networks speed dispatches, markets, administration and culture. When a flare, a war or a saboteur cuts one, every dependent city takes the shock at once.
-- **Intrusion** — technical, social, insider, rite or power approaches against networks, records, minds, augments and machines. Read, alter, deny, seize, plant or extort, then hope nobody can name you, or make them blame someone else.
-- **Surveillance** — capacity from networks, records, sensors and informants. Crime and plots fall, and so do trust, art and speech, while ciphers and closed circles grow in answer.
+- **Eight Carriers** — relay, wired, broadcast, mesh, mind link, rite link, grown link and dream link, which carries only while its people truly dream. Each has its own speed, capacity, security and weakness, and across star systems the messages wait for the light.
+- **Gateways** — a node that belongs to two networks becomes a gateway between them, and intruders who go after a rival's networks often go for its gateways first.
+- **Dependency and Outage** — networks speed dispatches, markets, administration and culture. When a flare, an ice storm, a quake, a war or a saboteur cuts one, every dependent city takes the shock at once, and a ruler facing restless streets can shut a network down on purpose, at the cost of the goodwill of every town on it.
+- **Intrusion** — technical, social, insider, rite or power approaches against networks, records, minds, augments, machines, ledgers, saved minds and the seals a network holds. Read, alter, deny, seize, plant, extort or expose a secret to the public, then hope nobody can name you, or make them blame someone else.
+- **Quiet Access** — an intrusion nobody notices keeps its way in for the next time, and stolen location data strips the cover from anyone living under a false identity.
+- **Surveillance** — capacity from networks, records, sensors and informants, aimed at crime, dissent, foreigners, faith, minds, the gifted, a kind of being, a language or everyone. Crime and plots fall, and so do trust, art and speech; the watched grow aggrieved, and ciphers and closed circles grow in answer.
 - **Truth Under Pressure** — propaganda at scale, forged and generated records, impersonation of rulers and envoys, and leaks by insiders. A people's trust in records rises and falls with all of it.
-- **Charter and Enclave** — companies with shareholders, holdings across borders, company towns, private armies and officials on the payroll. A company strong enough becomes a state.
+- **Charter and Enclave** — chartered, free, state-owned, cooperative and guild companies with shareholders, holdings across borders, land that reaches every town on it, company towns, private armies and officials on the payroll. A guild company gains sway wherever its guild keeps a hall, and a company strong enough becomes a state.
 
 **In your world:** A company owned the patterns behind two realms' food. An intruder leaked them, prices fell to almost nothing overnight, and the company's grip broke. The two realms went to war over the feedstock instead.
 
@@ -2735,13 +2984,14 @@ Messages, money, orders and opinions now travel along networks: relay chains, wi
 
 Machines that build machines, fabricators that turn feedstock into goods, and the long fall when the knowledge behind them is lost. This expansion follows a making to its height and on through its collapse, until a later people kneels before machines it no longer understands.
 
-- **Self-Making Machines** — minute swarms, machines, works and vessels that copy themselves from local stock. Every generation can drift, containment can weaken, and a vessel line can cross to other systems and become a people of its own.
+- **Self-Making Machines** — minute swarms, machines, works and vessels that copy themselves from local stock and turn out copies, goods, structures, repairs, medicine, energy, terraforming or disassembly. Every generation can drift, containment can weaken, and a vessel line can cross to other systems and become a people of its own.
 - **Runaway, Stage by Stage** — a drifting line spreads through visible stages that other powers can answer. No world ends by runaway except through the doom clock.
 - **Abundance** — where fabricators, feedstock and energy suffice, prices fall to the cost of inputs. Provision laws decide what follows: market, ration, universal, by status, by reputation or communal.
 - **New Scarcities** — energy, land, patterns, attention, authenticity and status become the things worth fighting over, along with the fabricators themselves.
+- **Shared by Lot** — beside markets, redistribution, command, obligation, gift, need and abundance, an economic order can hand out its stores by lot, drawing which towns receive them, and the draw calms unrest in every town of the order.
 - **Collapse** — outages, lost fabricators, runaway lines, wars and plagues among specialists bring a high making down, and knowledge drains away with its practitioners.
-- **Relics and Salvage** — things beyond their holders' knowledge wear out, get misused, revered or feared. Salvagers strip wrecks and dead cities, and orders keep old machines running by ritual.
-- **Relearning** — study, excavation and contact with peoples who kept the knowledge bring the making back, slowly and incompletely.
+- **Relics and Salvage** — things beyond their holders' knowledge wear out, fall dormant or break, and are used as made, repurposed, revered, displayed, feared or ignored. Salvagers strip wrecks and dead cities, orders keep old machines running by ritual, and a relic taken apart yields salvage and knowledge but is gone for good.
+- **Relearning** — study, excavation and contact with peoples who kept the knowledge bring the making back, slowly and incompletely, and a relic studied and repaired long enough is restored and works again.
 
 **In your world:** A world network failed in a hard winter, and the city that held the repair knowledge fell in the riots. Three generations later a people tends the silent relay towers as shrines, and its keepers still know how to make one of them speak.
 
@@ -2757,13 +3007,15 @@ Machines that build machines, fabricators that turn feedstock into goods, and th
 
 Some powers are not learned. They belong to the one who has them: born in the blood, woken by danger, granted by a patron, bound by a vow or grown into the flesh. They are used in a moment, paid for in strain, and possible even in a world without magic. Your realms will test, register, conscript, honour or hunt those who carry them.
 
-- **Ten Origins** — born, awakened, exposure, granted, bonded, discipline, made, grown, bloodline and held. Each power is a technique and a form (mind, space, force, time, emotion, fate, machine and every other), with strength and control.
-- **Strain and Burnout** — every use costs strain. Pushing past the limit can raise strength or scar the mind, and repeated overstrain burns a power out.
-- **Vows That Strengthen** — restrictions raise a power's strength. It works only in one place, only against one foe, only while seen, or on condition of a vow, and breaking that vow ends the power.
-- **Training and Devices** — orders test children and train control, disciplines open powers to anyone who trains, and amplifiers, dampeners, detectors and substances shape who can use what.
+- **Twelve Origins** — born, awakened, exposure, granted, bonded, discipline, made, grown, bloodline, held, struck in a bargain with an outer being, or taken from another being by death, rite or device, which leaves the first holder without it and makes the power worth fighting over. Each power is a technique and a form (mind, space, force, time, emotion, fate, machine and every other), with strength and control.
+- **Seventeen Sources** — a power draws on the self, others, a place, the sky, made things, a patron, a bond, a story, the void, life, death, dreams, emotion and more. A power fed by what a people remembers grows with remembrance and fades with forgetting, and one that works through names reaches only those whose names are known.
+- **Waking and Binding** — powers wake under stress, emotion, danger, will, contact, a place or a time, in sleep, or when kin, friends or charges are in danger. A power can be bound by another's seal or device, and it returns when the binding breaks.
+- **Strain and Burnout** — every use has its price: strain, fatigue, essence, health, memory, years of life, sanity, renown, luck, the regard of others, fertility and more. Pushing past the limit can raise strength or scar the mind, and repeated overstrain burns a power out.
+- **Vows That Strengthen** — thirteen kinds of restriction raise a power's strength. It works only in one place, only against one foe, only while seen, only with a token, only in company, only by name, or on condition of a vow, and breaking that vow ends the power.
+- **Training and Devices** — orders test children and train control, disciplines open powers to anyone who trains, and access to a source can be bought. Devices amplify, dampen, detect, shield or awaken, and others store power for later or move it from one being to another, so powers become goods and prizes.
 - **Many Minds** — linked users combine their strength and share their strain. A standing link becomes a gestalt, and hive peoples link by nature.
 - **Foresight in One Timeline** — seers see probabilities. Those who believe them act on them, which raises or lowers the odds, and nothing is ever rewritten.
-- **The Society of the Gifted** — renown, secret identities, bands with goals of their own, registries, conscription, castes and houses that breed for the gift. A people's attitude can swing from honour to fear and back.
+- **The Society of the Gifted** — renown, secret identities, bands with goals of their own, registries, castes and houses that breed for the gift, passing it to the eldest, the youngest or every child. Laws leave powers free, license them, tax them, conscript the gifted into service or ban them outright. A people can honour, fear, persecute, regulate, exploit, envy or simply accept its gifted, and a culture may even pity them for what their powers cost.
 - **Gods and Patrons** — sons grant and revoke powers, outer beings bargain them, and a god's dominion strengthens the powers that draw on its domains.
 
 **In your world:** In a world without magic, a wild manifestation killed a crowd. The realm registered its gifted and built detectors from a rare mineral. A hidden community formed, an investigator exposed it, and its members fled to a neighbouring realm that honours them.
@@ -2780,12 +3032,13 @@ Some powers are not learned. They belong to the one who has them: born in the bl
 
 Some truths are kept from whole peoples: a people living disguised among the cities, a power that must not be seen, a made mind that woke and kept quiet, a secret programme, a truth about the cosmos that harms whoever learns it. Keepers guard such truths, seekers hunt them, and every breach brings revelation a little closer.
 
-- **Nine Kinds of Truth** — existence, nature, presence, power, event, origin, awakening, programme and cosmic truths, each hidden from a people, a realm, a world or everyone outside the circle.
-- **Keepers and Their Methods** — oaths, law, memory removal, cover stories, discrediting, hidden places, disguise and silence. Each method costs effort every epoch.
-- **Seekers** — investigators, rivals, zealots and the curious who want the truth exposed, used or destroyed, and who rise or fall as they close in.
-- **Breaches and Belief** — overt powers, witnesses, defectors, accidents, war and leaks spread rumours. Most rumours are dismissed where trust is low, and some are not.
+- **Eleven Kinds of Truth** — existence, nature, presence, power, event, origin, awakening, programme, cosmic truths, the place where someone or something is, and the true descent of a line. A hidden refuge or hoard draws seekers, and a lineage brought to light brings its heirs renown.
+- **Who Is Kept in the Dark** — a truth can be hidden from everyone outside the circle, a people, a realm, the uninitiated, a world, the cosmos, or kept inside one house or one faith. A house's secret passes to its heirs and dies with the line; a faith's passes only to initiates.
+- **Keepers and Their Methods** — enforcers, guardians, members, patrons, archivists who hold the true record and go-betweens who carry the hidden folk's dealings with outsiders. They answer a threat with cover stories, memory removal, discrediting, law or silencing, strike a bargain that turns a finder into a keeper, or move the hidden to a new refuge at a cost.
+- **Seekers** — investigators, rivals, zealots and the curious who want the truth exposed, used, understood or destroyed, or who want to join the hidden or shield them from everyone else, and who rise or fall as they close in.
+- **Breaches and Belief** — overt powers, witnesses, defectors, investigators, accidents, war, leaks, intrusions, a god's revelation, children who repeat what they heard, dreams where the world allows them, and digs that bring up what should have stayed buried. Most rumours are dismissed where trust is low, and some are not.
 - **Passing and Accords** — hidden folk live among the rest under false identities, run hidden markets and sign accords with their keepers over territory, secrecy and defence.
-- **Revelation and Forgetting** — past a threshold the truth comes out, with panic, persecution, worship or integration depending on the people. Truths nobody speaks of fade into legend and hide again.
+- **Revelation and Forgetting** — past a threshold the truth comes out, and the people deny it, fear it, revere it, accept it, exploit it, protect it by law or bargain with the hidden by open treaty. Truths nobody speaks of fade into legend and hide again.
 
 **In your world:** A war breach revealed a hidden people in one realm. Fear came first, then laws against them, then a movement. Three generations later they fought beside their neighbours against a common enemy and were accepted. Two realms away, nobody has ever heard of them.
 
@@ -2801,14 +3054,16 @@ Some truths are kept from whole peoples: a people living disguised among the cit
 
 Some peoples do not build their world. They grow it, breed it and shape it. They make crops and herds by long patience, living halls and vessels by craft or rite, and new life by engineering. Everything they make is alive: it eats, grows, heals, sickens, breeds, drifts and dies.
 
-- **Nine Methods** — selective breeding, cultivation, shaping, engineering, synthesis, binding, cloning, chimeras and induction, from the patience of herders to the laboratories of a far future.
+- **Eleven Methods** — selective breeding, cultivation, shaping, engineering, synthesis, binding, cloning, merging species, induction, hybridising and release into the wild, from the patience of herders to the laboratories of a far future. Hybridising crosses two lines in their young, and a line released into the wild is selected by it, fast and beyond its makers' control.
 - **The Trait Library** — designs borrow only from organisms the makers can reach. Gene and seed banks keep them, and extinct species can be raised again from samples and remains.
 - **Living Things That Serve** — designed crops and herds, grown halls and cities, living vessels with temperaments and crews they bond with, living weapons and armour, and bred lines of the largest beasts.
 - **Monoculture and Blight** — one perfect staple across a whole realm, one blight to strike it all, and sterile lines that bind growers to their owners.
-- **Living Production and Living Links** — organisms that spin, secrete and brew the materials of a culture, grown networks that heal their own cuts, and living tissue that can hold a mind.
+- **Living Production and Living Links** — organisms that spin, secrete and brew the materials of a culture, grown networks that heal their own cuts, and living tissue that can hold a mind. Lines feed by eating, by light, by chemistry, on a host, a source, a partner or heat, or lie dormant.
+- **Lines That Work** — twenty-three traits, among them lines that make light and keep a town's streets in order, pass what they learn to their young so the line holds steady, clean the air and water of their land, or secrete matter that strengthens a town's defences.
 - **Designed Disease** — pathogens with chosen traits that escape, mutate and strike their makers. Treaties ban them, and they remain the gravest harm a world can do.
 - **Shaping Worlds and Peoples** — released ecologies that change a world's air and climate over generations, and species raised to sapience by design.
-- **Escape and Drift** — lines slip their pens and labs, compete with native species and keep evolving away from their designs.
+- **Escape and Drift** — lines slip their pens and labs, compete with native species and keep evolving away from their designs. A line that crosses with its wild kin changes how well they fit their lands, for better or worse, and a line that exceeds its design carries gifts nobody planned.
+- **Law of the Living** — cultures hold living craft an abomination, permit it, call it a sacred duty, keep silent, or regulate it with licences and inspection, which cuts escapes and loosed disease.
 
 **In your world:** A realm spread one designed staple to every region. When a blight struck the line, famine followed. A neighbour sold back an old landrace from its seed bank at a ruinous price, and the realm passed its first law of diversity.
 
@@ -2824,11 +3079,12 @@ Some peoples do not build their world. They grow it, breed it and shape it. They
 
 Every people now lives in its own terms. Your peoples have their own goods and dishes, drinks and dress, colours and scents, tools and instruments, games and money. Each is a kind with typed properties that the world names for itself, born in genesis, invented by mortals, spread by trade and conquest, changed by contact and retired when forgotten.
 
-- **Goods of Their Own** — fifty-five categories, from legumes, oils and seasonings to insects, algae, machines, data and living goods. Each people's goods follow its species, lands and techniques.
-- **Table and Cup** — dishes with several steps, ingredients in roles and flavour profiles, cuisines with etiquette and feast customs, and drinks with strength, stimulation and water safety that changes who falls ill.
-- **Cloth and Colour** — garments with layers, warmth, status, modesty and wearing rules, dress codes and sumptuary laws, uniforms and fashion. Colour terms and meanings differ by culture, and emblem systems run from heraldry to seals, banners and totems.
-- **Things of Daily Life** — furnishings, tools, instruments and musical traditions, games and sports with leagues and champions, and substances with their customs, dependence and law.
-- **Money in Every Form** — coin, commodity, token, paper, ledger, network, reputation, energy, essence-backed, labour hours and gift tallies, each with its own way of inflating, failing and being forged.
+- **Goods of Their Own** — sixty-one categories, from legumes, oils and seasonings to insects, algae, machines, data, living goods, vehicles, prepared food, resins and gums, and relics and antiquities. Each people's goods follow its species, lands and techniques. Prepared food draws buyers and spoils fast, and relics trade by renown and draw forgers.
+- **Seed and Soil** — seed grain and breeding stock are held back from the table, and a famine that eats them cuts the next harvest and the herds that follow. Fertiliser spread before the harvest raises yields.
+- **Table and Cup** — dishes with several steps, ingredients in twelve roles (an acid for the sour, an aroma for the pungent among them) and flavour profiles that run to astringent and rich, cuisines with etiquette and feast customs, and drinks with strength, stimulation and water safety that changes who falls ill. Sparkling drinks and drinks drawn from sap join the brews.
+- **Cloth and Colour** — twenty garment categories with layers, warmth, status, modesty and wearing rules, from sleepwear and wear for the water to slings and packs that carry children and loads to work. Dress codes, sumptuary laws, uniforms and fashion follow. Colour terms and meanings, including health, purity and a stage of life, come from each culture itself, and emblem systems run from heraldry to seals, banners and totems.
+- **Things of Daily Life** — furnishings for bathing and for play beside beds, tables and shrines; tools; instruments, including those sounded by water, and musical traditions; games and sports with leagues and champions, puzzles and animal contests among them; and substances with their customs, dependence and law.
+- **Money in Every Form** — coin, commodity, token, paper, ledger, network, reputation, energy, essence-backed, labour hours, gift tallies, bills of exchange, warehouse receipts and land scrip, backed by metal, goods, decree, trust, a source of power, land or labour owed. Each has its own way of inflating, failing and being forged, and when its backing fails the money loses trust and supply with it.
 - **Invented, Borrowed, Forgotten** — mortals invent kinds, neighbours adopt them, derived kinds grow from older ones, sons bless or forbid them, and every kind is yours to create, edit, hold and delete in the Kinds library.
 
 **In your world:** Two peoples traded for a generation. One adopted the other's hospitality drink, brewed it from its own grain and drank it at every guesting. The boiled brew slowly ended a waterborne sickness in its towns, and nobody ever learned why.
@@ -2858,9 +3114,10 @@ Every people now lives in its own terms. Your peoples have their own goods and d
 
 The Loom keeps a cause for every change. This expansion keeps the whole happening. Each event in your world now records who acted and who was acted on, with what, how much, where and when to the hour of the world's own calendar, and every step along the way. A duel is told exchange by exchange, a broadside shot by shot, a birth from labour to naming, a trial from accusation to sentence. Every value that changed keeps its before and after, and the reasons behind each number.
 
-- **Step by Step** — duels with their feints, parries, falls and finishing blows; battles with every stack's charge and rout; sea, sky and space engagements with each hit on each section, fires, flooding, venting and boarding.
+- **Step by Step** — duels with their taunts, feints, parries, falls, pleas and finishing blows; battles with every stack's charge and rout; sea, sky and space engagements with each hit on each section, fires, flooding, venting and boarding.
+- **Anywhere, by Any Means** — a step can happen at a part of a body, a section of a ship, a room, a district, a sea, an orbit, a network node, a stratum of the deep, a dream or another dimension. It can be done with a weapon, a vehicle, a power, a rite, a kept animal, a weather working or a spoken word, and it can leave a being in one of thirty-five states, from prone and bleeding to drowning, charmed, asleep, poisoned or frightened.
 - **The Account** — every happening has typed roles, facts and a plain account rendered from them, so the record can be retold in any language and searched by what happened.
-- **Witnesses and Versions** — those present saw, heard or took part. Rumours grow from the true steps with typed distortions, and memories point at the moment they keep.
+- **Witnesses and Versions** — those present saw, heard, took part or were told, and those who cannot see sense it by their own biology's other senses. Rumours grow from the true steps with twelve kinds of distortion: a swapped doer or target, a changed role, amount, outcome, cause, place or moment, an added or dropped step, numbers that swell with each telling, and motives the facts never held, which cost the doer regard. Memories point at the moment they keep.
 - **The World Then** — scrub any drawer or the atlas back to any moment and see a border, a town or a ruler as it was.
 - **The God's Pen** — write a happening into history, rewrite how it is told, or revert any change, and the reversal itself is recorded.
 - **Nothing Lost** — every record is kept for ever, in the book, the Codex and on every screen.
@@ -2879,11 +3136,12 @@ The Loom keeps a cause for every change. This expansion keeps the whole happenin
 
 Words and images now reach the many. Your peoples record what they see and hear, from carvings and knotted cords to print, image, sound, moving pictures, broadcast and networks. Outlets win audiences with their own stance and trust, and speakers move assemblies, courts and crowds.
 
-- **Media of Every Age** — every recorded form a world can hold, each with fidelity, durability, reach and the technique that opens it.
-- **Outlets and Audiences** — owners, stances, trust and revenue; items made from real happenings, with their accuracy measured against the record.
+- **Media of Every Age** — twelve recorded forms, from writing, print, image, sound and moving pictures to signals, networks, living and crafted records, records of the mind, and records in scent or by touch for peoples who speak in scent or read with their hands. Each has fidelity, durability, reach and the technique that opens it.
+- **Outlets and Audiences** — owners, stances, trust and revenue; news, opinion, accounts of events, entertainment, instruction, promotion, devotion, official notices, satire, sport and the notices of births, deaths and unions that feed a realm's registers. Items are made from real happenings, with their accuracy measured against the record.
 - **Censorship and Exposure** — licences, seizures and bans by law; false items found out cost an outlet its trust.
 - **Records as Evidence** — a recorded image or sound can decide a trial or overturn an official history.
-- **Satire and Speech** — humour styles with their allowed targets, satire that wounds rulers where it is tolerated, and orators whose skill turns a vote or a crowd.
+- **Satire and Speech** — ten humour forms, parody and riddling among them, with their allowed targets. Satire comes from jesters, artworks, mortals, gods, crowds singing in the street and outlets, and it wounds rulers where it is tolerated.
+- **Where Words Are Spoken** — orators speak in assemblies, courts, temples, squares, schools, camps, outlets, markets and at funerals, to persuade, teach, mock, mourn, rally, defend, accuse, praise or warn. A market speech moves a town's prosperity, a fine funeral speech raises the speaker's honour, and an orator's skill turns a vote or a crowd.
 
 **In your world:** A trusted outlet printed a slanted account of a killing, and the town believed it. A recorded image kept in an archive contradicted it before the court. The outlet lost its readers within a season.
 
@@ -2897,19 +3155,16 @@ Words and images now reach the many. Your peoples record what they see and hear,
 
 *Roads outlive the realms that pay for them.*
 
-Realms and the rich now build for the long term. Polities raise roads, bridges, canals, rail lines, aqueducts and sewers stage by stage with paid, levied or bound labour, run monopolies and royal works, and keep them up or watch them decay. Founders endow schools, temples and relief that outlast their houses. Trade gains its everyday face: shops, wholesale and retail, promotion, leases and money changers.
+Realms and the rich now build for the long term. Polities raise roads, bridges, canals, rail lines, aqueducts, sewers, lighthouses, terraces and tunnels stage by stage with paid, levied or bound labour, run monopolies and royal works, and keep them up or watch them decay. Founders endow schools, temples and relief that outlast their houses. Trade gains its everyday face: shops, wholesale and retail, brokers and peddlers, promotion, leases and money changers.
 
-- **Public Works** — every works kind with stages, labour, materials, budget, quality and upkeep; finished works change speed, harvests, health and war.
-- **State Enterprise** — monopolies, mints, arsenals and state companies, with prices, revenue, skimming and privatisation.
-- **Endowments** — capital that pays a beneficiary for ever, with trustees who may serve it, skim it or be captured.
-- **Shops and Tiers** — producers, wholesalers and retailers, each with its margin, in every market large enough to hold them.
+- **Public Works** — twenty kinds, from roads, dams, walls and granaries to power lines, grown works and stages of a megastructure, each with stages, labour, materials, budget, quality and upkeep. Finished works change speed, harvests, health and war.
+- **Land Remade** — terraces open slopes to the plough and slow erosion, irrigation raises harvests, and a finished lighthouse spares the ships that pass it.
+- **State Enterprise** — monopolies, royal works, state companies, licence holders, arsenals and mints, with prices, revenue, skimming and privatisation. A granary board buys, stores and sells grain to even out lean years, and a state post carries letters at set rates.
+- **Endowments** — capital that pays a beneficiary for ever, for relief, learning, worship, health, works, art, kin, memory, research, hospitality to travellers and pilgrims, or the ransom of captives. Trustees may serve it, skim it or be captured.
+- **Shops and Tiers** — producers, wholesalers and retailers, each with its margin, in every market large enough to hold them. Brokers trade between partner markets without holding a shop, and peddlers carry goods to settlements that have no market of their own.
 - **Promotion, Leases and Exchange** — demand moved by claims that may be false; rent on land, houses, vessels and more; exchange rates and spreads between currencies.
 
-**In your world:** A realm dug a canal with levied labour. The levy's anger fed a revolt among the young, and the canal finished three seasons late. Within a generation it had doubled the realm's trade, and the founder of the school beside its locks was remembered longer than the king.
-
-
-
-## XV. Skies and Rains
+**In your world:** A realm dug a canal with levied labour. The levy's anger fed a revolt among the young, and the canal finished three seasons late. Within a generation it had doubled the realm's trade, and the founder of the school beside its locks was remembered longer than the ruler who ordered it.
 
 </td>
 </tr>
@@ -2934,13 +3189,18 @@ Realms and the rich now build for the long term. Polities raise roads, bridges, 
 
 *Some worlds are kind to bodies. Most are not.*
 
-Every world now presses on the bodies that live under it. Stars have cycles of flares and particle storms, worlds have magnetic fields that shield them, weaken and reverse, and every biology has limits of gravity, air, cold, heat and radiation. Settling a new world means meeting those limits, or paying to go beyond them.
+Every world now presses on the bodies that live under it, and on those that live beneath it. Stars have cycles of flares and particle storms, worlds have magnetic fields that shield them, weaken and reverse, and every biology has limits of gravity, air, cold, heat, radiation, light and damp. Under the ground lies a second geography of strata, joined by passages, where whole peoples and realms can live. Settling a new world, or a new depth, means meeting those limits, or paying to go beyond them.
 
-- **Fields and Storms** — magnetic fields that guard a world, waver and flip over epochs; flares, particle storms and cosmic ray bursts on the cycle of each star.
+- **Fields and Storms** — magnetic fields that guard a world, waver and flip over epochs; flares, particle storms, field storms, cosmic ray bursts and surges of the stellar wind on the cycle of each star. Gods and powers that span worlds can strengthen a world's field or strip it away.
+- **Falling Stars and Fading Suns** — meteor showers bring omens, and on airless worlds they strike towns and leave star metal behind. A dimming star cools its worlds, and a deep enough dimming starts a long winter.
 - **When the Sky Breaks Through** — radiation reaches those outside shelter and in orbit, signals and networks fail, and compasses err. Auroras spread toward the equator, and every faith reads them its own way.
-- **What a Body Can Bear** — each biology has its own tolerances of gravity, air, pressure, cold, heat and radiation, so the same world weighs differently on different peoples.
-- **The Price of Settling** — beyond a body's limits it needs shelter, gear, augments or grown organs. Long voyages and light worlds wear on it, and some peoples adapt over generations.
-- **Shields of the Gods** — gods and powers that span worlds can strengthen a world's field or strip it away.
+- **What a Body Can Bear** — each body system has its own tolerances of air, gravity, cold, heat, diet, sleep, toxins, radiation, light and humidity, so the same world weighs differently on different peoples. A dim star strains those who need light, and a land too damp or too dry strains those with a narrow range.
+- **The Price of Settling** — beyond a body's limits it needs equipment, augments, grown organs, an innate power or a rite, each easing the strain at its own cost. Long voyages and light worlds wear on a body, and some peoples adapt over generations.
+- **The World Below** — eleven strata can lie beneath a region: permafrost, aquifers, the deep under an ocean, reservoirs, upper, middle and lower caverns, fault zones, the inner surface of a hollow world, a magma sea and a deep underworld tied to the world's realm of the dead. Each one beneath each region is a cell with its own name, terrain, extent and light. Only some can be lived in, and crops and pasture that live on light grow only as far as a cell's light allows.
+- **Passages** — cells join their neighbours at the same depth, the strata above and below, and the surface through caves, sinkholes and mines. Passages are dug, collapse (twice as often in a region with a fault zone beneath it), flood where an aquifer lies below and drain again, are cleared, and can be sealed. A mine that breaks into a cavern leaves an opening behind it.
+- **Peoples of the Deep** — a world can hold peoples already living below with homelands of their own, and any people may settle any cell that can be lived in, though a town whose people's bodies are not made for the depth loses prosperity there, and when it grows poor enough it climbs back to the surface. Every level has its own rulers, so one region can hold a realm above and another below, and the first time one people crosses into a cell where another lives, the meeting goes into the record.
+- **War and Trade Underground** — underground trade routes run through the passages and are cut when one collapses, floods or is sealed. Armies march below along the passages their troops can use, a narrow passage costs an army its cohesion as it files through, and a siege below can collapse the ways in or dig a mine beneath the walls.
+- **The Map at Any Depth** — the atlas has a depth selector and draws each stratum with its cells, rulers and passages. The god opens passages between cells or up to the surface, holds them or takes them away straight from the map, and adds, edits, holds or removes cells in each region's Beneath panel. The book and the Codex carry a map plate for every stratum that holds a settlement.
 
 **In your world:** A field reversal weakened a world's shield for a generation. Auroras hung over the equator, the signal towers fell silent, and a fleet trusting its compasses was lost at sea. The world's seers said the sky had opened, and a new faith grew around the lights.
 
@@ -2954,13 +3214,13 @@ Every world now presses on the bodies that live under it. Stars have cycles of f
 
 *Who owns the rain?*
 
-The weather is no longer only nature's. Your peoples call rain, drive off storms, divert rivers and move ice, by rite, by power, by seeding, by structures and by living craft. Every success falls somewhere else as a loss. Forecasts decide when to sow, sail and march, and an accurate forecast that nobody believes still fails.
+The weather is no longer only nature's. Your peoples call rain, drive off storms, divert rivers and move ice, by rite, by power, by seeding, by structures, by living craft, by bargains with place spirits and by made minds. Every success falls somewhere else as a loss. Forecasts decide when to sow, sail and march, and an accurate forecast that nobody believes still fails.
 
-- **Working the Weather** — rain, dry, calm, cold or warm, by rite, power, seeding, diversion, made structures or living craft, each with its cost and strength.
+- **Working the Weather** — rain, dry, calm, cold, warm, wind or snow, by rite, power, seeding, diversion, made structures, living craft, a bargain with the spirit of a place, or a made mind living in the town. Each method has its own cost and strength, and a harbour town with nothing else to ask for calls up wind.
 - **Downwind** — your rain is a neighbour's drought. Neighbours read weather works as acts with intent, treaties ban them, and banned rainmakers work in secret.
-- **Whose Forecast** — sight, lore, almanac, instrument, a network of observers or a model, each with its accuracy. Sowing dates, voyages and campaigns follow the forecast that is believed.
-- **Water from the Mountain** — snowpack feeds the summer rivers, so a poor snow year upstream is a dry harvest downstream, and the upper valley holds the lower one's fate.
-- **Weather of Its Own** — valleys, lakes and cities make their own climate and change where people settle, what they grow and what makes them ill.
+- **Whose Forecast** — eleven methods: sight, lore, almanac, instrument, a network of observers, a model, a network, a power, divination, the signs animals give and dreams, each with its accuracy. Peoples learned in beasts read animal signs and those learned in the mind read dreams. Sowing dates, voyages and campaigns follow the forecast that is believed.
+- **Water from the Mountain** — snowpack feeds the summer rivers, so a poor snow year upstream is a dry harvest downstream, and the upper valley holds the lower one's fate. Where the snow has failed, rainmakers can work for snow instead of rain.
+- **Weather of Its Own** — valleys, slopes, lakes and seas, forests, built land, wetlands and ice fields make their own climate, each shifting warmth, damp and wind, and change where people settle, what they grow and what makes them ill.
 
 **In your world:** In a drought year a realm's rainmakers brought rain to its uplands. The crops of the neighbour downwind withered, and the neighbour called it an act of war. The peace that followed banned weather work by treaty, and a generation later the rainmakers worked by night.
 
@@ -2982,7 +3242,7 @@ make up            # the whole stack: backend, web, media store and the image wo
 make down          # stops it again; volumes are kept
 ```
 
-Open **http://127.0.0.1:8080**, walk through the genesis wizard, name your Creator, choose the language of your lore, and draw your first son.
+Open **http://127.0.0.1:8080**, walk through the seven stages of the genesis wizard: choose a template or a blank page, name your Creator, choose the language of your lore, write the seed of your world, and choose your first sons.
 
 `make up` picks the image worker for the machine. On Apple Silicon it starts the native MLX worker in the background (`make worker-start`, `make worker-stop`, `make worker-status`; log in `data/run/image-worker.log`) and points the backend container at `http://host.docker.internal:8100`. Anywhere else it starts the `image-worker` container on the NVIDIA GPU (profile `gpu`).
 
@@ -2994,6 +3254,7 @@ Open **http://127.0.0.1:8080**, walk through the genesis wizard, name your Creat
 - Node.js 24 and npm
 - A Claude subscription and the [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) for the token
 - Docker with Compose v2.24 or newer, for the containerized setup
+- For the book PDF from a backend on the host: Pango (`brew install pango` on macOS); the Docker image has it
 - Optional: an Apple Silicon Mac (native `mlx` image worker) or an NVIDIA GPU with the NVIDIA Container Toolkit (`diffusers` image worker)
 
 ### Ports
@@ -3019,6 +3280,7 @@ Every port binds to `127.0.0.1` by default (`AERONA_BIND_ADDRESS`), and every pu
 | `make install` | Installs backend and frontend dependencies |
 | `make dev` | Backend with reload and the Vite dev server |
 | `make check` | Source rules, lint, types and tests |
+| `make anatomy` | Rebuilds the body-plan anatomy data the entry window draws |
 | `make test`, `make lint`, `make typecheck` | The individual checks |
 | `make typegen` | Regenerates the typed frontend client from the OpenAPI schema |
 | `make rules` | Source rules and version consistency check |
@@ -3041,6 +3303,7 @@ Every setting is an environment variable. `.env` is ignored by git; `.env.exampl
 | `CLAUDE_CODE_OAUTH_TOKEN` | Subscription token for the Claude Agent SDK (see below). Never use an API key. |
 | `AERONA_DATA_DIR` | Database, backups and (with the file media store) images. Docker always uses the `aerona-data` volume. |
 | `AERONA_LLM_ENABLED` | `false` runs the world engine without any LLM calls. |
+| `AERONA_SECONDARY_BACKUP_DIR` | A second disk every backup is mirrored to, with its own retention. |
 | `AERONA_IMAGE_WORKER_URL` | Base URL of the image worker for a backend running on the host. Empty disables image generation. |
 | `AERONA_DOCKER_IMAGE_WORKER_URL` | Worker URL inside the backend container. `make up` sets it; the default is the `image-worker` container. |
 | `AERONA_BIND_ADDRESS` | Host address Docker publishes ports on (default `127.0.0.1`). |
@@ -3069,6 +3332,7 @@ make dev
 - Backend: http://127.0.0.1:8000 (API under `/api`, with reload)
 - Frontend: http://127.0.0.1:5173 (Vite proxies `/api` to the backend)
 - Checks: `make check` (source rules, lint, types, tests) and `make image-worker-test`
+- Commit gate: `git config core.hooksPath .githooks` runs the source guards and the proving tests on every commit
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
@@ -3205,21 +3469,27 @@ Settings → Maintenance → Health reports the backend status, database integri
 ```mermaid
 flowchart TB
     subgraph Browser
-        UI[React 19 · TanStack Router and Query<br/>shadcn/ui · map · graph · 3D cosmos]
+        UI[React 19 · TanStack Router and Query<br/>map · cities · graph · 3D cosmos · cards]
     end
     subgraph Web [web · nginx]
         NG[Static app + /api proxy<br/>SSE buffering off]
     end
     subgraph Backend [backend · FastAPI]
         API[API routers] --> SV[Services]
-        SV --> EN[World engine<br/>deterministic phases]
-        SV --> AG[Agents<br/>sons · Fate · chronicler · council]
+        SV --> PL[God levers<br/>action catalog · holds · undo]
         SV --> EP[Epoch orchestrator<br/>jobs · resume · cancel]
+        EP --> EN[World engine<br/>505 deterministic steps]
+        EP --> AG[Agents<br/>sons · mortals · Fate · chronicler · council]
         AG --> PR[Prompt catalog]
-        AG --> TL[Son tools]
+        AG --> TL[Son and mortal tools]
+        TL --> EN
+        PL --> EN
         EN --> RL[Rules registry]
+        EN --> RC[Record of changes<br/>happenings · terms · moments]
+        SV --> BK[Lore book and Codex]
         EP --> BUS[Event bus → SSE]
-        SV --> DB[(SQLite WAL)]
+        RC --> DB[(SQLite WAL)]
+        SV --> DB
     end
     MS[(MinIO / file<br/>media store)]
     IW[Image worker<br/>MLX or diffusers]
@@ -3231,22 +3501,26 @@ flowchart TB
     AG --> CL
 ```
 
+Agents and the player never write the world directly: son tools, mortal tools and god levers all act through the same engine primitives, so every act pays its cost, respects every hold and lands in the record of changes like anything the engine does on its own.
+
 | Layer | Choice |
 |---|---|
 | Backend runtime | Python 3.13 with `uv` |
 | HTTP | FastAPI and Uvicorn, with an OpenAPI schema that drives the typed frontend client |
 | Realtime | Server-Sent Events with `Last-Event-ID` reconnect |
-| Database | SQLite in WAL mode through SQLAlchemy 2 async and `aiosqlite`, one serialized writer |
-| Migrations | Alembic |
-| Validation | Pydantic v2 for API schemas, tool inputs and structured LLM outputs |
-| Agents | `claude-agent-sdk` on your Claude subscription, Claude Haiku on every path |
-| Jobs | In-process asyncio job manager with persisted job rows: resumable and cancellable |
+| Database | SQLite in WAL mode through SQLAlchemy 2 async and `aiosqlite`, one serialized writer; every unordered read is ordered at compile time |
+| Record | Every write captured at flush and tied to its happening, with the terms of every number |
+| Migrations | Alembic, checked against the models, CHECK constraints included |
+| Validation | Pydantic v2 for API schemas, tool inputs and structured model outputs |
+| Agents | `claude-agent-sdk` on your Claude subscription, Claude Haiku on every path; tokens counted with `tiktoken` |
+| Jobs | In-process asyncio job manager with persisted job rows: resumable and cancellable; engine work in a lasting worker pool |
+| Book | Jinja templates, drawn SVG maps, plans, strata, heraldry and family trees, and WeasyPrint for the PDF |
 | Frontend | React 19, TypeScript and Vite |
 | Routing and data | TanStack Router and TanStack Query, SSE-driven invalidation |
 | API client | `openapi-typescript` and `openapi-fetch`, generated from the backend |
-| UI | shadcn-admin on shadcn/ui, Radix and Tailwind v4; `lucide-react` icons; recharts |
-| Map, graph, cosmos | Canvas over `d3-delaunay` Voronoi; `react-force-graph`; `@react-three/fiber` and `drei` |
-| Quality | pytest, Vitest, Testing Library, Playwright; ruff, mypy strict, eslint, stylelint, prettier |
+| UI | shadcn/ui on Radix and Tailwind v4, a gilded design system of shared surfaces, `lucide-react` icons and recharts |
+| Map, graph, cosmos | Canvas over `d3-delaunay` Voronoi; `react-force-graph`; three.js through `@react-three/fiber` and `drei` |
+| Quality | pytest, Vitest and Testing Library; ruff, mypy strict, import layers, eslint with the project's own rules, stylelint and prettier; eighty source guards in `scripts/` and `frontend/scripts/` |
 
 ### Repository layout
 
@@ -3254,40 +3528,48 @@ flowchart TB
 aerona/
   backend/src/aerona/
     api/          routers and schemas, one router per domain
-    services/     application services used by the API
-    engine/       the deterministic world simulation and its phases
-    agents/       sons, Fate, chronicler, bard, council, genesis, deepener and more
-    tools/        son and mortal tools: schema, gating, cost and effect
+    services/     application services: god levers, books and the Codex, backups, search
+    engine/       the deterministic world simulation, one package per mechanic
     epoch/        epoch orchestration, concurrency and resume
+    agents/       sons, mortals, Fate, chronicler, bard, council, genesis, deepener and more
+    tools/        son and mortal tools: schema, gating, cost and effect
     prompts/      every prompt, as typed Jinja templates
-    rules/        the tunable balance registry
-    catalog/      static game data: rarities, powers, domains, climates, stars, worlds
+    rules/        the tunable rules registry
+    catalog/      static game data: rarities, domains, stars, worlds, kinds of happening and every enum family
+    domain/       enums and value types shared by every layer
+    db/           tables, repositories, sessions, the write guard and the record capture
     language/     procedural languages and naming
     cartography/  map generation
-    db/           tables, repositories, sessions
-    jobs/ events/ media/ imaging/ migration/
+    llm/          the model client, retries and token counting
+    core/ constants/ jobs/ events/ media/ imaging/ migration/
   frontend/src/
-    features/     one folder per screen: pantheon, son, chronicle, map, cosmos, graph ...
-    components/   ui, layout, typography and domain components
+    features/     one folder per screen and mechanic: pantheon, cards, chronicle, map, cosmos, records, family ...
+    components/   ui, layout, typography and domain components, and the entry window
+    config/       navigation and app configuration
     routes/       thin TanStack file routes
   image-worker/   the MLX and diffusers image service
+  common/assets/  covers, box backs and the collector's edition art
   deploy/         Dockerfiles and nginx
-  docs/           architecture, decisions and the full business-logic spec
+  scripts/        the source guards of the commit gate, coverage and export scripts
+  docs/           architecture, decisions, the booklets and the full business-logic spec
 ```
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## Engineering principles
 
-Weavers of the Void holds itself to a short list of rules, enforced by tooling rather than goodwill:
+Weavers of the Void holds itself to eight standing rules, enforced by tooling rather than goodwill. Every commit runs a gate of source guards and proving tests, and no check is ever bypassed.
 
-1. **Self-describing code.** Names and structure carry the meaning; `scripts/check_source_rules.py` enforces the source rules in CI and in the test suite.
-2. **English everywhere** in code, identifiers, UI copy, prompts and file names. The lore itself speaks the language you choose.
-3. **One home for every prompt.** Every LLM prompt lives in `backend/src/aerona/prompts/`, rendered from a typed context object.
-4. **No magic numbers.** Every balance number is a rule in the registry, editable at runtime from Settings → World Rules.
-5. **Claude Haiku on every path.** Every model resolution and fallback ends at Haiku, and a test asserts it.
-6. **Automatic and in your hands.** Every mechanism runs on its own, can be triggered or overridden by the player, and has a UI surface. A test checks that every API route has a frontend caller.
-7. **No visual drift.** One theme file, sizes only in `components/ui`, typography components for every text role, and a Playwright test that checks control heights, overlaps and overflow on every route at desktop and mobile widths.
+1. **Only the tests that matter.** Each change runs the static checks and the tests that cover it; the gate adds the proving suites that every engine, tool and lever change needs.
+2. **The lore follows the seed.** No text the model sees pushes an image, a theme, a tone, a conflict, a gender or a look the seed did not ask for. `scripts/check_prompt_bias.py` reads every prompt, schema, tool text and UI suggestion against those rules.
+3. **Every dynamic is fully wired.** A new table, value, mechanic, tool or event reaches the engine, the agent tools, the prompts, the API, the screens, the Codex, the book, the integrity checks and the spec. `scripts/check_wiring.py` and the orphan checks fail on anything left unconnected.
+4. **Self-describing code.** Names and structure carry the meaning. There are no comments or docstrings anywhere, and `scripts/check_source_rules.py` reports zero violations.
+5. **Production-grade, gamified frontend.** Every screen is built from the design system, covers loading, empty, error and disabled states, works from phone width up in light and dark, and shows every value through its label, never a raw key.
+6. **The god controls everything.** Every table the engine changes has levers to create, edit, hold and delete it, reachable from the app. `scripts/check_control.py` finds those tables by reading the code, and the god-control test runs every engine step on a held world to prove nothing tied to a held node moves.
+7. **Every change reaches the book and the Codex.** Every node kind renders its typed sections in both, records that belong to no node fill the "Records of the Cosmos" appendix, and nothing is ever truncated.
+8. **Every defect closes its class.** A fix comes with a test that fails on the old code, a mechanical guard so it cannot return, and a hunt for its siblings. Every son and mortal tool, every lever, every god job and every read endpoint is run to success by a test, and deprecated library APIs are errors.
+
+To run the same gate locally, enable the hooks once with `git config core.hooksPath .githooks`.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
@@ -3321,58 +3603,91 @@ The legacy vocabulary lives only in `backend/src/aerona/migration/legacy/schema_
 | The UI says image generation is disabled | `AERONA_IMAGE_WORKER_URL` is empty. Set it to the worker address and start the worker |
 | No images on a Mac in Docker | Docker on macOS has no Metal access. Use `make up` or `make worker-start`, which runs the MLX worker natively, and check `make worker-status` and `data/run/image-worker.log` |
 | The first image takes minutes | The model is downloading (about 6 GB on Apple Silicon). Later images start as soon as the model is loaded |
+| The book PDF fails on a backend started on the host | WeasyPrint needs Pango: `brew install pango` on macOS, `libpango-1.0-0 libpangoft2-1.0-0` on Debian or Ubuntu. The Docker image already has it |
 | `docker compose` refuses to start | Both `AERONA_MEDIA_ACCESS_KEY` and `AERONA_MEDIA_SECRET_KEY` are required; `make env` generates them |
 | A port is already in use | Move it with the `AERONA_*_PUBLISHED_PORT` and `AERONA_*_PORT` settings in `.env` |
 | You want the world to turn without any agent | Set `AERONA_LLM_ENABLED=false`; the engine simulates every epoch on its own |
 | The backend stopped mid-epoch | Start it again. Epochs and long jobs are persisted and resume where they stopped |
+| The engine left something alone you wanted changed | Check whether you hold it: a held node is never touched by any engine step. Release the hold in its entry window under the god's controls |
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## FAQ
 
+**Who is it for?**
+Anyone who builds worlds: narrative designers, lore writers, screenwriters, novelists and game masters, and anyone who wants to watch a cosmos live. You set the idea and the rules; the world does the bookkeeping of consequences.
+
 **Do I need an Anthropic API key?**
-No. Weavers of the Void runs on your Claude subscription through the Claude Agent SDK, and every call uses Claude Haiku.
+No. Weavers of the Void runs on your Claude subscription through the Claude Agent SDK, and every call uses Claude Haiku. The Usage page shows the tokens of every call.
 
 **Does my world leave my machine?**
-Your database, backups and images stay on your disk. Only the agents' prompts and replies travel to Claude.
+Your database, backups, book and images stay on your disk. Only the agents' prompts and replies travel to Claude.
 
 **Are the expansions extra?**
 No. The Loom and all 99 expansions are part of every world from the first epoch.
+
+**Can I take my lore into other tools?**
+Yes. Export the lore book as HTML or PDF, the Codex as Markdown or a ZIP with a page for every record, or the whole world as a `.aerona` package. Nothing is shortened.
+
+**Can I protect what is already canon?**
+Yes. Hold any node, and no engine step will create, change or delete anything tied to it. The world keeps living around it.
 
 **Can I play in Turkish?**
 Yes. Choose Turkish as the lore language in the genesis wizard, and every chronicle, name and legend is written in it; even the engine's own chronicle lines are localised by an agent. The interface itself is English.
 
 **Can I undo a mistake?**
-Yes. Every action lands in Fate's ledger and can be undone, and every epoch has a backup to restore.
+Yes. Every action lands in Fate's ledger and can be undone, every engine change can be reverted from the record, and every epoch has a backup to restore.
 
 **Can I change the rules of the world?**
-All of them. More than 3,300 balance rules are editable live from Settings → World Rules, every mechanic can be triggered or suppressed by hand, and every prompt is visible under Settings → Prompts.
+All of them. More than 20,700 rules are editable live from Settings → World Rules, every mechanic can be run, suppressed or pinned by hand, and every prompt is visible under Settings → Prompts.
 
-**Is the simulation random?**
-It is seeded. The same world with the same seed produces the same history, which makes every epoch reproducible.
+**Is the history the same every time?**
+The engine is. The same world with the same seed and the same choices produces the same history to the last value. The agents are language models, so a fresh run can choose differently, and a different choice grows a different history. With the agents off, every epoch is fully reproducible.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
 ## Documentation
+
+**Booklets**, written for players from the code itself:
+
+| Booklet | What it covers |
+|---|---|
+| [The Rules of the World](docs/game-rules.md) | How the world works, mechanic by mechanic |
+| [The Powers of a God](docs/god-powers.md) | Everything the Creator can do from the app |
+| [The Deeds of Sons and Mortals](docs/agent-tools.md) | Every son tool and every mortal tool |
+| [The Voices of the World](docs/ai-roles.md) | Every agent role and what it writes |
+| [Goals, Growth and Score](docs/game-progress.md) | Scenarios, achievements, levels, renown and score |
+| [How the World Connects](docs/interconnections.md) | How every mechanic feeds the others |
+| [The Things of the World and Their Names](docs/world-terms.md) · [JSON](docs/world-terms.json) | Every kind of thing and every value, by its name |
+
+**Design and engineering:**
 
 | Document | What it covers |
 |---|---|
 | [Architecture](docs/architecture.md) | Stack, layers, async model, design system and deployment |
 | [Decisions](docs/decisions.md) | Every architectural decision and why it was made |
 | [Migration plan](docs/migration-plan.md) | Carrying a legacy world into Weavers of the Void |
+
+**The specification:**
+
+| Document | What it covers |
+|---|---|
 | [Data model](docs/spec/01-data-model.md) | Every table and field |
 | [World core](docs/spec/02-world-core.md) | The world, entities, bonds and the chronicle |
-| [Rules registry](docs/spec/03-rules-registry.md) · [JSON](docs/spec/rules-registry.json) | All 3,300+ tunable rules |
+| [Rules registry](docs/spec/03-rules-registry.md) · [JSON](docs/spec/rules-registry.json) | The tunable rules and their groups |
 | [Engine core](docs/spec/04-engine-core.md) · [Deep mechanics](docs/spec/05-deep-mechanics.md) | The world simulation |
 | [Cosmos and the strange](docs/spec/06-cosmos-and-strange.md) · [Cosmos types](docs/spec/14-cosmos-types.md) | Stars, worlds, travel, horror and the beyond |
 | [Gods and progression](docs/spec/07-gods-and-progression.md) | The Creator, sons, reputation, goals, death and resurrection |
 | [Agents and tools](docs/spec/08-agents-and-tools.md) · [Prompts](docs/spec/09-prompts.md) | Every agent role, every son tool, every prompt |
 | [Epoch pipeline](docs/spec/10-epoch-pipeline.md) | The life of an epoch, resume, backups and the live stream |
 | [API](docs/spec/11-api.md) · [Frontend](docs/spec/12-frontend.md) | Every route and every screen |
-| [Depth expansion](docs/spec/13-depth-expansion.md) · [Interconnection](docs/spec/13-interconnection.md) · [Coverage](docs/spec/13-coverage.md) | The mechanics behind expansions 1–86 and how they connect |
-| [Minds, powers, living craft and typed kinds](docs/spec/16-minds-powers-living-craft.md) | The mechanics behind expansions 87–94 and the depth of every other |
+| [Depth expansion](docs/spec/13-depth-expansion.md) · [Interconnection](docs/spec/13-interconnection.md) · [Coverage](docs/spec/13-coverage.md) · [Depth metric](docs/spec/13-depth-metric.md) | The mechanics behind expansions 1–86 and how they connect |
+| [Minds, powers, living craft and typed kinds](docs/spec/16-minds-powers-living-craft.md) · [Coverage](docs/spec/16-coverage.md) | The mechanics behind expansions 87–94 and the depth of every other |
+| [W52 expansions](docs/spec/17-w52-expansions.md) · [Coverage](docs/spec/17-coverage.md) | The widening and deepening of all 99 expansions, the world below and their integration |
 | [Expansions](docs/spec/15-dlc-ideas.md) | The Loom and all 99 expansions in full |
-| [Mechanic coverage](docs/spec/coverage.md) | Traceability from every mechanic to its module, trigger, control, screen and test |
+| [Mechanic coverage](docs/spec/coverage.md) · [Inventory](docs/spec/inventory.md) | Traceability from every mechanic to its module, trigger, control, screen and test, and every countable thing with the guards that prove it |
+| [Model text ledger](docs/spec/model-text-ledger.md) | Every file whose prose reaches the model, read in full against the lore rules |
+| [OCM](docs/spec/ocm-coverage.md) · [Motifs](docs/spec/motif-coverage.md) · [Science](docs/spec/science-coverage.md) | How the world covers the Outline of Cultural Materials, the Thompson motif index and the UNESCO sciences |
 
 ---
 
