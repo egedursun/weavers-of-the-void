@@ -7,7 +7,7 @@ export type PasswordCheck = {
   met: boolean
 }
 
-export type Strength = 0 | 1 | 2 | 3 | 4
+export type Strength = 0 | 1 | 2 | 3 | 4 | 5
 
 const CLASSES = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/] as const
 const LONG = 16
@@ -50,11 +50,11 @@ export function strengthOf(
   if (password.length < min) return password.length === 0 ? 0 : 1
   const kinds = CLASSES.filter((pattern) => pattern.test(password)).length
   const score =
-    1 +
+    2 +
     (kinds >= 3 ? 1 : 0) +
     (password.length >= LONG ? 1 : 0) +
     (password.length >= VERY_LONG || kinds === CLASSES.length ? 1 : 0)
-  return Math.min(4, score) as Strength
+  return Math.min(5, score) as Strength
 }
 
 export function emailName(email: string): string {

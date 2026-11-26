@@ -8,12 +8,13 @@ import { type PasswordCheck, type Strength, strengthOf } from './passwordRules'
 const STRENGTH: Record<Strength, { label: string; tone: ProgressTone }> = {
   0: { label: 'Not set yet', tone: 'muted' },
   1: { label: 'Too short', tone: 'destructive' },
-  2: { label: 'Fair', tone: 'warning' },
-  3: { label: 'Strong', tone: 'success' },
-  4: { label: 'Very strong', tone: 'success' },
+  2: { label: 'Weak', tone: 'warning' },
+  3: { label: 'Fair', tone: 'warning' },
+  4: { label: 'Strong', tone: 'success' },
+  5: { label: 'Very strong', tone: 'success' },
 }
 
-const STEPS = 4
+const STEPS = 5
 const PERCENT = 100
 
 export function PasswordStrength({
