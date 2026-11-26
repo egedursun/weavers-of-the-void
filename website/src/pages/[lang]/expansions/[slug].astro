@@ -4,7 +4,7 @@ import Frame from '../../../components/Frame.astro'
 import Icon from '../../../components/Icon.astro'
 import DepthBlock from '../../../components/expansions/DepthBlock.astro'
 import crest from '../../../assets/ornate/crest.webp'
-import corner from '../../../assets/ornate/corner-small.webp'
+import corner from '../../../assets/ornate/corner.webp'
 import { LOCALES, REPOSITORY, asset, copyFor, page, type Locale } from '../../../i18n'
 import { backOf, coverOf, expansionBySlug, expansionsFor, isList, neighbours, type Expansion } from '../../../data/expansions'
 
@@ -47,20 +47,30 @@ const title = `${item.name} · Weavers of the Void`
               <img class="xdetail__face xdetail__face--front" src={asset(coverOf(item))} alt={item.name} width="480" height="720" decoding="async" />
               <img class="xdetail__face xdetail__face--back" src={asset(back ?? coverOf(item))} alt="" width="960" height="1431" loading="lazy" decoding="async" />
               <span class="xdetail__side xdetail__side--right xdetail__spine" aria-hidden="true">
-                <img class="xdetail__spine-crest" src={crest.src} alt="" width="480" height="97" />
-                {['tl', 'tr', 'bl', 'br'].map((place) => <img class="xdetail__spine-corner" data-corner={place} src={corner.src} alt="" width="96" height="96" />)}
+                {['tl', 'tr', 'bl', 'br'].map((place) => <img class="xdetail__spine-corner" data-corner={place} src={corner.src} alt="" width="256" height="267" />)}
+                <span class="xdetail__spine-seal"><img src={asset('brand/logo-256.webp')} alt="" width="256" height="256" /></span>
                 <span class="xdetail__spine-plate">
                   <span class="xdetail__spine-name">{item.name}</span>
                 </span>
-                <img class="xdetail__spine-crest xdetail__spine-crest--foot" src={crest.src} alt="" width="480" height="97" />
+                <img class="xdetail__spine-crest" src={crest.src} alt="" width="480" height="97" />
+                <span class="xdetail__spine-brand" lang="en">
+                  <span>Weavers</span>
+                  <em>of the</em>
+                  <span>Void</span>
+                </span>
               </span>
               <span class="xdetail__side xdetail__side--left xdetail__spine" aria-hidden="true">
-                <img class="xdetail__spine-crest" src={crest.src} alt="" width="480" height="97" />
-                {['tl', 'tr', 'bl', 'br'].map((place) => <img class="xdetail__spine-corner" data-corner={place} src={corner.src} alt="" width="96" height="96" />)}
+                {['tl', 'tr', 'bl', 'br'].map((place) => <img class="xdetail__spine-corner" data-corner={place} src={corner.src} alt="" width="256" height="267" />)}
+                <span class="xdetail__spine-seal"><img src={asset('brand/logo-256.webp')} alt="" width="256" height="256" /></span>
                 <span class="xdetail__spine-plate">
                   <span class="xdetail__spine-name">{item.name}</span>
                 </span>
-                <img class="xdetail__spine-crest xdetail__spine-crest--foot" src={crest.src} alt="" width="480" height="97" />
+                <img class="xdetail__spine-crest" src={crest.src} alt="" width="480" height="97" />
+                <span class="xdetail__spine-brand" lang="en">
+                  <span>Weavers</span>
+                  <em>of the</em>
+                  <span>Void</span>
+                </span>
               </span>
               <span class="xdetail__side xdetail__side--top" aria-hidden="true"></span>
               <span class="xdetail__side xdetail__side--bottom" aria-hidden="true"></span>
@@ -314,19 +324,17 @@ const title = `${item.name} · Weavers of the Void`
 
   .xdetail__spine {
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
     justify-items: center;
     align-items: center;
-    gap: 0;
-    padding: calc(var(--d) * 0.16) 0;
+    gap: calc(var(--d) * 0.07);
+    padding: calc(var(--d) * 0.3) 0 calc(var(--d) * 0.32);
     overflow: hidden;
     background:
-      linear-gradient(180deg,
-        transparent 15%, oklch(0.98 0.07 95 / 0.6) 15%, var(--gild-hi) 15.5%, var(--gild-lo) 16.3%, oklch(0.1 0.04 290 / 0.9) 16.3%, transparent 17.2%,
-        transparent 82.8%, oklch(0.98 0.07 95 / 0.6) 82.8%, var(--gild-hi) 83.3%, var(--gild-lo) 84.1%, oklch(0.1 0.04 290 / 0.9) 84.1%, transparent 85%),
-      radial-gradient(120% 60% at 50% 50%, oklch(0.34 0.13 303 / 0.9), transparent 70%),
-      repeating-linear-gradient(90deg, oklch(1 0 0 / 0.025) 0 1px, transparent 1px 3px),
-      linear-gradient(90deg, oklch(0.07 0.035 292), oklch(0.22 0.09 299) 22%, oklch(0.29 0.11 302) 50%, oklch(0.22 0.09 299) 78%, oklch(0.07 0.035 292));
+      radial-gradient(90% 40% at 50% 46%, oklch(0.38 0.15 303 / 0.7), transparent 75%),
+      radial-gradient(70% 18% at 50% 14%, oklch(0.84 0.16 86 / 0.16), transparent 80%),
+      radial-gradient(70% 16% at 50% 88%, oklch(0.84 0.16 86 / 0.12), transparent 80%),
+      linear-gradient(90deg, oklch(0.07 0.035 292), oklch(0.2 0.085 299) 20%, oklch(0.27 0.11 302) 50%, oklch(0.2 0.085 299) 80%, oklch(0.07 0.035 292));
     box-shadow:
       inset 0 0 0 2px oklch(0.6 0.12 70 / 0.85),
       inset 0 0 0 4px oklch(0.12 0.05 294),
@@ -334,66 +342,98 @@ const title = `${item.name} · Weavers of the Void`
       inset 0 0 30px oklch(0.02 0.02 290 / 0.75);
   }
 
-  .xdetail__spine-crest {
-    width: 86%;
-    height: auto;
-    filter: drop-shadow(0 -1px 0 oklch(0.98 0.07 95 / 0.7)) drop-shadow(0 1px 0 oklch(0.25 0.07 50)) drop-shadow(0 3px 2px oklch(0.02 0.02 290 / 0.9)) drop-shadow(0 6px 8px oklch(0.02 0.02 290 / 0.6));
+  .xdetail__spine::before {
+    content: '';
+    position: absolute;
+    inset: 9px;
+    border-radius: 3px;
+    border: 1px solid oklch(0.84 0.14 86 / 0.45);
+    box-shadow: inset 0 0 0 3px oklch(0.84 0.14 86 / 0.08);
+    pointer-events: none;
   }
 
-  .xdetail__spine-crest--foot {
-    transform: rotate(180deg);
+  .xdetail__spine-crest {
+    width: 84%;
+    height: auto;
+    filter: drop-shadow(0 2px 4px oklch(0.02 0.02 290 / 0.85));
   }
 
   .xdetail__spine-corner {
     position: absolute;
-    width: calc(var(--d) * 0.28);
-    height: calc(var(--d) * 0.28);
-    filter: drop-shadow(-1px -1px 0 oklch(0.98 0.07 95 / 0.6)) drop-shadow(1px 1px 0 oklch(0.25 0.07 50)) drop-shadow(1px 3px 3px oklch(0.02 0.02 290 / 0.9));
+    z-index: 1;
+    width: calc(var(--d) * 0.34);
+    height: auto;
+    filter: drop-shadow(0 2px 3px oklch(0.02 0.02 290 / 0.85));
   }
 
   .xdetail__spine-corner[data-corner='tl'] {
-    top: 3px;
-    left: 3px;
+    top: 4px;
+    left: 4px;
   }
 
   .xdetail__spine-corner[data-corner='tr'] {
-    top: 3px;
-    right: 3px;
+    top: 4px;
+    right: 4px;
     transform: scaleX(-1);
   }
 
   .xdetail__spine-corner[data-corner='bl'] {
-    bottom: 3px;
-    left: 3px;
+    bottom: 4px;
+    left: 4px;
     transform: scaleY(-1);
   }
 
   .xdetail__spine-corner[data-corner='br'] {
-    bottom: 3px;
-    right: 3px;
+    bottom: 4px;
+    right: 4px;
     transform: scale(-1);
+  }
+
+  .xdetail__spine-seal {
+    display: grid;
+    place-items: center;
+    position: relative;
+    z-index: 2;
+    width: calc(var(--d) * 0.5);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    padding: 3px;
+    background:
+      radial-gradient(circle, oklch(0.18 0.07 297), oklch(0.08 0.03 292)) padding-box,
+      linear-gradient(160deg, #fff1b8, var(--gild) 30%, var(--gild-lo) 60%, #f7dc8a 85%, var(--gild)) border-box;
+    border: 2px solid transparent;
+    box-shadow:
+      0 0 0 1px oklch(0.3 0.07 56),
+      0 0 0 4px oklch(0.12 0.05 294),
+      0 0 0 5px oklch(0.84 0.14 86 / 0.6),
+      0 0 26px 2px oklch(0.6 0.23 302 / 0.7),
+      0 6px 12px oklch(0.02 0.02 290 / 0.85);
+  }
+
+  .xdetail__spine-seal img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: contain;
   }
 
   .xdetail__spine-plate {
     display: grid;
     place-items: center;
-    height: 88%;
-    width: 50%;
-    padding: 0.6rem 0;
+    height: 100%;
+    width: 56%;
+    padding: 0.8rem 0.2rem;
     border-radius: 4px;
     background:
-      linear-gradient(90deg, oklch(0.1 0.04 292), oklch(0.18 0.07 297) 50%, oklch(0.1 0.04 292)) padding-box,
+      linear-gradient(90deg, oklch(0.08 0.035 292), oklch(0.16 0.065 297) 50%, oklch(0.08 0.035 292)) padding-box,
       linear-gradient(180deg, #fff1b8, var(--gild) 25%, var(--gild-lo) 50%, var(--gild) 75%, #fff1b8) border-box;
     border: 2px solid transparent;
     box-shadow:
       0 0 0 1px oklch(0.3 0.07 56),
-      -1px -1px 0 1px oklch(0.98 0.07 95 / 0.55),
-      2px 3px 0 1px oklch(0.2 0.05 50),
-      3px 6px 10px oklch(0.02 0.02 290 / 0.85),
-      inset 0 0 0 3px oklch(0.1 0.04 292),
+      inset 0 0 0 3px oklch(0.08 0.035 292),
       inset 0 0 0 4px oklch(0.84 0.14 86 / 0.35),
-      inset 2px 3px 8px oklch(0.02 0.02 290 / 0.8),
-      0 0 18px -4px oklch(0.84 0.16 86 / 0.45);
+      0 0 20px -4px oklch(0.84 0.16 86 / 0.45),
+      0 6px 14px -4px oklch(0.02 0.02 290 / 0.9);
   }
 
   .xdetail__spine-name {
@@ -402,17 +442,67 @@ const title = `${item.name} · Weavers of the Void`
     max-height: 100%;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(0.8rem, calc(var(--d) * 0.15), 1.3rem);
-    letter-spacing: 0.14em;
+    font-size: clamp(0.75rem, calc(var(--d) * 0.12), 1.15rem);
+    line-height: 1.15;
+    letter-spacing: 0.12em;
+    text-align: center;
     text-transform: uppercase;
-    white-space: nowrap;
+    text-wrap: balance;
     overflow: hidden;
-    text-overflow: ellipsis;
-    background: linear-gradient(90deg, #fff6d6, var(--gild-hi) 45%, var(--gild) 75%, var(--gild-lo));
+    background: linear-gradient(180deg, var(--gild), #fff6d6 30%, var(--gild-hi) 55%, var(--gild) 80%, var(--gild-lo));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(-1px 0 0 oklch(0.98 0.07 95 / 0.55)) drop-shadow(1px 0 0 oklch(0.2 0.05 50)) drop-shadow(2px 1px 2px oklch(0.02 0.02 290 / 0.9));
+    filter: drop-shadow(0 0 6px oklch(0.84 0.16 86 / 0.35));
+  }
+
+  .xdetail__cube--square .xdetail__spine {
+    padding: calc(var(--d) * 0.22) 0;
+    gap: calc(var(--d) * 0.05);
+  }
+
+  .xdetail__cube--square .xdetail__spine-seal {
+    width: calc(var(--d) * 0.36);
+  }
+
+  .xdetail__cube--square .xdetail__spine-plate {
+    width: 72%;
+    padding: 0.5rem 0.7rem;
+  }
+
+  .xdetail__cube--square .xdetail__spine-name {
+    writing-mode: horizontal-tb;
+    transform: none;
+    background: linear-gradient(90deg, var(--gild), #fff6d6 30%, var(--gild-hi) 55%, var(--gild) 80%, var(--gild-lo));
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .xdetail__spine-brand {
+    display: grid;
+    justify-items: center;
+    gap: 0.05rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, #fff6d6, var(--gild-hi) 40%, var(--gild) 70%, var(--gild-lo));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 1px 2px oklch(0.02 0.02 290 / 0.9));
+  }
+
+  .xdetail__spine-brand span {
+    font-size: clamp(0.7rem, calc(var(--d) * 0.12), 1.15rem);
+    letter-spacing: 0.08em;
+  }
+
+  .xdetail__spine-brand em {
+    font-style: normal;
+    font-size: clamp(0.45rem, calc(var(--d) * 0.06), 0.62rem);
+    letter-spacing: 0.3em;
+    text-transform: lowercase;
   }
 
   .xdetail__side--top,
