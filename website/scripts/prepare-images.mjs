@@ -53,7 +53,7 @@ await webp(join(art, 'collectors-edition.jpg'), join(publicDir, 'art', 'collecto
 const minds = join(site, 'art')
 mkdirSync(join(publicDir, 'art', 'minds'), { recursive: true })
 for (const name of readdirSync(minds)) {
-  if (name.startsWith('minds-') && extname(name) === '.jpg') await webp(join(minds, name), join(publicDir, 'art', 'minds', name.replace('.jpg', '.webp')), 900)
+  if ((name.startsWith('minds-') || name.startsWith('audience-')) && extname(name) === '.jpg') await webp(join(minds, name), join(publicDir, 'art', 'minds', name.replace('.jpg', '.webp')), 900)
 }
 
 const steps = join(site, 'art', 'steps')
