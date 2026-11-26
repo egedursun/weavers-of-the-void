@@ -16,7 +16,7 @@ from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.account_scope import current_account, detached
@@ -25,8 +25,20 @@ from aerona.db.authorship import visible
 from aerona.db.record_context import UNCAPTURED
 from aerona.db.repositories.divine_will import active_session
 from aerona.db.session import Database
-from aerona.db.tables.divine_will import DivineWillArtifactRow, DivineWillAttachmentRow, DivineWillChunkRow, DivineWillCycleRow, DivineWillSessionRow
+from aerona.db.tables.changes import StateChangeRow
+from aerona.db.tables.cosmos import AppliedFixupRow
+from aerona.db.tables.divine_will import (
+    DivineWillArtifactRow,
+    DivineWillArtifactVersionRow,
+    DivineWillAttachmentRow,
+    DivineWillChunkRow,
+    DivineWillCycleRow,
+    DivineWillSessionRow,
+)
+from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeRow
+from aerona.db.tables.records import IncidentFactRow
 from aerona.domain.enums.divine_will import AttachmentStatus, ChunkSource, IndexStatus
 from aerona.domain.enums.job import JobKind
 from aerona.epoch.concurrency import WORLD_GROUP
@@ -74,6 +86,14 @@ QUIET_SECONDS = 3.0
 POLL_SECONDS = 2.0
 RETRY_SECONDS = 900.0
 PARALLEL_PASSAGES = 2000
+INDEX_MARK = "divine_will_index_mark"
+MARKS = (
+    (StateChangeRow.__tablename__, select(func.max(StateChangeRow.id))),
+    (IncidentRow.__tablename__, select(func.max(IncidentRow.id))),
+    (IncidentFactRow.__tablename__, select(func.max(IncidentFactRow.id))),
+    (ChronicleRow.__tablename__, select(func.max(ChronicleRow.id))),
+    (DivineWillArtifactVersionRow.__tablename__, select(func.count()).select_from(DivineWillArtifactVersionRow)),
+)
 COUNT_MEMORY = 1 << 18
 PARALLEL_SHARES = 4
 PROGRESS_SECONDS = 1.0
@@ -528,6 +548,16 @@ class LoreIndex:
             writes = self._own_writes
             if self._world is not None and self._built_generation == generation:
                 return {"passages": len(self._world.chunks), "embedded": self._world.embedded_count, "written": 0}
+            mark = await self._world_mark()
+            if (
+                self._world is not None
+                and self._built_generation is None
+                and self._world.embedded_count == len(self._world.chunks)
+                and await self._marked() == mark
+            ):
+                self._built_generation = generation
+                self._finish("")
+                return {"passages": len(self._world.chunks), "embedded": self._world.embedded_count, "written": 0}
             quiet = self._status is IndexStatus.READY
             self._stage(context, quiet, GATHERING)
             passages = await asyncio.to_thread(gathered, self._url(), self._rules())
@@ -544,10 +574,25 @@ class LoreIndex:
             if embedder is not None:
                 paused = await self._embed(embedder, layer, known, context, yielding=True)
                 written = await self._persist(layer.chunks, known, None)
+            if embedder is not None and not paused:
+                await self._remember_mark(mark)
             self._built_generation = self._quiet_since(generation, writes)
             self._built_at = datetime.now(UTC)
             self._finish(paused)
             return {"passages": len(layer.chunks), "embedded": layer.embedded_count, "written": written}
+
+    async def _world_mark(self) -> dict[str, int]:
+        async with self._database.read() as session:
+            return {name: int(await session.scalar(statement) or 0) for name, statement in MARKS}
+
+    async def _marked(self) -> dict[str, int] | None:
+        async with self._database.read() as session:
+            row = await session.get(AppliedFixupRow, INDEX_MARK)
+        return row.result if row is not None else None
+
+    async def _remember_mark(self, mark: dict[str, int]) -> None:
+        async with self._own_write() as session:
+            await session.merge(AppliedFixupRow(key=INDEX_MARK, result=mark))
 
     def _stage(self, context: JobContext | None, quiet: bool, note: str) -> None:
         if context is not None:

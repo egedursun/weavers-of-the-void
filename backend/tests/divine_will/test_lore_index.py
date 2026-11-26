@@ -204,6 +204,33 @@ async def test_an_index_that_waited_for_an_epoch_shows_it_reads_again_at_once(
     await database.dispose()
 
 
+async def test_a_restarted_index_leaves_an_unchanged_world_unread(tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch) -> None:
+    database, realm = await open_world(open_database, tmp_path)
+    await LoreIndex(database, Rules, embedder=CountingEmbedder()).refresh()
+    reads: list[str] = []
+    gather = index_module.gathered
+
+    def counted(url: str, rules: Rules) -> Any:
+        reads.append(url)
+        return gather(url, rules)
+
+    monkeypatch.setattr(index_module, "gathered", counted)
+    restarted = LoreIndex(database, Rules, embedder=CountingEmbedder())
+    await restarted.load()
+    await restarted.refresh()
+    assert reads == []
+    assert restarted.state().status is IndexStatus.READY
+    async with database.write() as session:
+        town = await session.get(EntityRow, realm.settlement_id)
+        assert town is not None
+        town.description = "A bridge now spans the river."
+    again = LoreIndex(database, Rules, embedder=CountingEmbedder())
+    await again.load()
+    await again.refresh()
+    assert len(reads) == 1
+    await database.dispose()
+
+
 async def test_paging_reaches_every_hit(tmp_path: Path, open_database: OpenDatabase) -> None:
     database, _realm = await open_world(open_database, tmp_path)
     index = LoreIndex(database, Rules, embedder=CountingEmbedder())
