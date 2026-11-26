@@ -1,7 +1,13 @@
 import { godRoutes } from '@/test-utils/godRoutes'
 import { renderScreen } from '@/test-utils/renderScreen'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
+import { libraryQueryClient } from '@/api/queryClients'
+import { chooseUniverse } from '@/api/universeStore'
+import {
+  FIRST_ID,
+  universeSummary,
+} from '@/features/universes/universeFixtures'
 import cosmosFixture from '../../../e2e/fixtures/cosmos.json'
 import { GOD_STATE } from '../../../e2e/godMocks'
 import { WorldHeader } from './WorldHeader'
@@ -18,6 +24,11 @@ describe('world header', () => {
     await page.viewport(1280, 900)
   })
 
+  afterEach(() => {
+    chooseUniverse(null)
+    libraryQueryClient.clear()
+  })
+
   it('names the world with its seed and shows the epoch and year', async () => {
     const { screen } = await renderScreen(<WorldHeader />, routes())
     await expect
@@ -28,6 +39,24 @@ describe('world header', () => {
       .toBeVisible()
     await expect
       .element(screen.getByRole('link', { name: 'Epoch 12, year 1' }))
+      .toBeVisible()
+  })
+
+  it('names the universe as the library names it, not after its first world', async () => {
+    chooseUniverse(FIRST_ID)
+    const { screen } = await renderScreen(
+      <WorldHeader />,
+      routes({
+        'GET /api/library/universes/{id}': universeSummary({
+          name: 'Rakhesis',
+        }),
+      })
+    )
+    await expect
+      .element(screen.getByText('Rakhesis', { exact: true }).first())
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('A cosmos of drowned bells.'))
       .toBeVisible()
   })
 

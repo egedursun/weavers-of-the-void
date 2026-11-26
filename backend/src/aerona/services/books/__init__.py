@@ -23,6 +23,8 @@ from aerona.services.books.render import (
     render_codex,
     render_entry,
 )
+from aerona.services.books.title import titled
+from aerona.settings import Settings
 
 
 async def book_page(
@@ -34,8 +36,10 @@ async def book_page(
     entity_id: int | None = None,
     pdf: PdfState | None = None,
     links: ScreenLinks | None = None,
+    settings: Settings | None = None,
 ) -> RenderedBook:
-    model = await cached_book(database, session, rules)
+    cached = await cached_book(database, session, rules)
+    model = titled(cached, settings) if settings is not None else cached
     if son_id is None and entity_id is None:
         return render_book(model, rules, links=links, pdf=pdf)
     if model is None:
@@ -58,8 +62,9 @@ def write_codex(target: Path, model: BookModel | None, rules: Rules, links: Code
             out.write(chunk)
 
 
-async def codex_file(database: Database, session: AsyncSession, rules: Rules, links: CodexLinks, folder: Path) -> Path:
-    model = await cached_book(database, session, rules)
+async def codex_file(database: Database, session: AsyncSession, rules: Rules, links: CodexLinks, folder: Path, *, settings: Settings | None = None) -> Path:
+    cached = await cached_book(database, session, rules)
+    model = titled(cached, settings) if settings is not None else cached
     await to_thread.run_sync(lambda: folder.mkdir(parents=True, exist_ok=True))
     handle, name = tempfile.mkstemp(suffix=".md", dir=folder)
     os.close(handle)

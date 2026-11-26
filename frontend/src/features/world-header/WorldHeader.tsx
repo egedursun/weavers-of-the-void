@@ -13,6 +13,7 @@ import {
   Thermometer,
   Zap,
 } from 'lucide-react'
+import { useUniverseId } from '@/api/universeStore'
 import { plural } from '@/lib/units'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { Badge } from '@/components/ui/badge'
@@ -39,6 +40,7 @@ import { SummonButton } from '@/features/pantheon/SummonButton'
 import { useWorldState } from '@/features/pantheon/api'
 import { MOOD_LABEL } from '@/features/pantheon/labels'
 import { mediaUrl } from '@/features/pantheon/media'
+import { useUniverse } from '@/features/universes/api'
 import { CreateHub } from './CreateHub'
 import { DoomChip } from './DoomChip'
 import { EssenceChip } from './EssenceChip'
@@ -166,6 +168,7 @@ function ClimateChips() {
 
 export function WorldHeader() {
   const state = useWorldState()
+  const universe = useUniverse(useUniverseId())
   const { open } = useEntryStack()
   const mobile = useIsMobile()
   const [expanded, setExpanded] = useState<boolean | null>(null)
@@ -188,6 +191,7 @@ export function WorldHeader() {
   const data = state.data
   const world = data?.world
   if (!data || !world) return null
+  const title = universe.data?.name ?? world.name
   const mood = data.mood
   const prayers = data.prayers_pending
   return (
@@ -196,20 +200,16 @@ export function WorldHeader() {
       className='@container/header flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 border-b bg-linear-to-r from-primary/6 via-background to-background px-3 py-2 md:px-4'
     >
       <div className='flex min-w-0 flex-1 basis-56 items-center gap-2.5 @5xl/header:max-w-sm @5xl/header:flex-none'>
-        <Portrait
-          name={world.name}
-          src={mediaUrl(data.world_cover)}
-          size='sm'
-        />
+        <Portrait name={title} src={mediaUrl(data.world_cover)} size='sm' />
         <div className='flex min-w-0 flex-1 flex-col'>
           <Text
             as='span'
             weight='semibold'
             truncate
-            title={world.name}
+            title={title}
             className='font-display'
           >
-            {world.name}
+            {title}
           </Text>
           <Muted as='span' variant='caption' truncate title={world.seed_idea}>
             {world.seed_idea}

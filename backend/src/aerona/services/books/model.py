@@ -389,6 +389,7 @@ class IndexEntry:
 @dataclass
 class BookModel:
     cosmos: CosmosRow
+    title: str
     creator: CreatorRow | None
     cover: str | None
     epochs_count: int
@@ -1184,6 +1185,7 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
     world = await session.get(WorldRow, cosmos.primary_world_id) if cosmos.primary_world_id else None
     return BookModel(
         cosmos=cosmos,
+        title=cosmos.name,
         creator=creator,
         cover=(await cover_of(session, world.id) if world else None) or (await cover_of(session, creator.id) if creator else None),
         epochs_count=cosmos.epoch,

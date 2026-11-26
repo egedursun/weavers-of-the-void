@@ -32,6 +32,7 @@ from aerona.constants.books import (
 )
 from aerona.core.errors import NotFoundError
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.cosmos import CosmosRow
 from aerona.domain.enums.job import JobKind
 from aerona.jobs.context import JobContext
 from aerona.services.books import book_page, codex_file
@@ -40,6 +41,8 @@ from aerona.services.books.mapsvg import load_map
 from aerona.services.books.pdf import build_pdf, pdf_path, pdf_state, read_manifest
 from aerona.services.books.render import BRAND_LOGO, FONT_DIRECTORY, CodexLinks, ScreenLinks
 from aerona.services.books.terrain import render_terrain
+from aerona.services.books.title import universe_title
+from aerona.services.container import Services
 from aerona.services.exchange import stream_and_delete
 
 router = APIRouter(tags=["books"])
@@ -67,8 +70,9 @@ class BookPdfStatus(ApiModel):
     stage: str | None
 
 
-def _file_stem(name: str | None) -> str:
-    stem = UNSAFE_FILE_CHARACTERS.sub("-", name or "").strip("-")
+def _file_stem(services: Services, cosmos: CosmosRow | None) -> str:
+    name = universe_title(services.settings, cosmos)
+    stem = UNSAFE_FILE_CHARACTERS.sub("-", name).strip("-")
     return stem or FALLBACK_NAME
 
 
@@ -83,8 +87,9 @@ async def codex(request: Request, services: ServicesDep) -> StreamingResponse:
             rules,
             CodexLinks(base=str(request.base_url), universe=services.settings.universe_id or None),
             services.settings.exports_dir,
+            settings=services.settings,
         )
-    name = f"{_file_stem(cosmos.name if cosmos else None)}{CODEX_FILENAME_SUFFIX}"
+    name = f"{_file_stem(services, cosmos)}{CODEX_FILENAME_SUFFIX}"
     headers = {"content-disposition": f'attachment; filename="{name}"', "content-length": str(path.stat().st_size)}
     return StreamingResponse(stream_and_delete(path), media_type=MARKDOWN_MEDIA_TYPE, headers=headers)
 
@@ -95,8 +100,8 @@ async def codex_archive(services: ServicesDep) -> StreamingResponse:
     async with reader(services) as session:
         rules = await world_rules(services, session)
         cosmos = await CosmosRepository(session).get()
-        codex = await codex_file(services.database, session, rules, links, services.settings.exports_dir)
-    stem = _file_stem(cosmos.name if cosmos else None)
+        codex = await codex_file(services.database, session, rules, links, services.settings.exports_dir, settings=services.settings)
+    stem = _file_stem(services, cosmos)
     try:
         archive = await build_codex_archive(services, codex, links, stem)
     finally:
@@ -116,7 +121,7 @@ async def book(services: ServicesDep, son_id: int | None = Query(default=None, g
         cosmos = await CosmosRepository(session).get()
         state = pdf_state(services, cosmos.epoch) if cosmos else None
         links = ScreenLinks(universe=services.settings.universe_id or None)
-        rendered = await book_page(services.database, session, rules, son_id=son_id, entity_id=entity_id, pdf=state, links=links)
+        rendered = await book_page(services.database, session, rules, son_id=son_id, entity_id=entity_id, pdf=state, links=links, settings=services.settings)
     return HTMLResponse(rendered.html, headers={"content-security-policy": BOOK_CSP.format(nonce=rendered.nonce), "x-content-type-options": "nosniff"})
 
 
@@ -186,5 +191,5 @@ async def download_book(services: ServicesDep) -> FileResponse:
         raise NotFoundError(NO_PDF)
     async with reader(services) as session:
         cosmos = await CosmosRepository(session).get()
-    name = f"{_file_stem(cosmos.name if cosmos else None)}{BOOK_FILENAME_SUFFIX}"
+    name = f"{_file_stem(services, cosmos)}{BOOK_FILENAME_SUFFIX}"
     return FileResponse(path, media_type=PDF_MEDIA_TYPE, filename=name)

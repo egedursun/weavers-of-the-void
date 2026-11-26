@@ -1,8 +1,8 @@
 {% extends "layout.html.j2" %}
 {% from "macros.html.j2" import entity_article, son_article, chronicle_lines %}
-{% block title %}{% if son %}{{ son.son.name }}{% else %}{{ entity.entity.name }}{% endif %} · {{ book.cosmos.name }}{% endblock %}
+{% block title %}{% if son %}{{ son.son.name }}{% else %}{{ entity.entity.name }}{% endif %} · {{ book.title }}{% endblock %}
 {% block body %}
-<p class="overline"><a href="{{ links.api('/api/book') }}">{{ book.cosmos.name }}</a></p>
+<p class="overline"><a href="{{ links.api('/api/book') }}">{{ book.title }}</a></p>
 {% if son %}{{ son_article(son, true, links) }}{% else %}{% for article in [entity] | with_descendants %}{{ entity_article(article, true, links, entity.depth_level) }}{% endfor %}{% endif %}
 {% if book.single_chronicle %}<h4>In the chronicle</h4>{{ chronicle_lines(book.single_chronicle, book, true, links) }}{% endif %}
 {% endblock %}

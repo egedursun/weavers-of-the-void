@@ -33,6 +33,7 @@ from aerona.services.books.assets import write_images, write_maps
 from aerona.services.books.cache import cached_book
 from aerona.services.books.chunks import split_book
 from aerona.services.books.render import PdfState, PrintLinks, render_book
+from aerona.services.books.title import titled, universe_title
 from aerona.services.books.typeset import Typesetter, bind
 from aerona.services.container import Services
 
@@ -99,7 +100,7 @@ async def build_pdf(services: Services, context: JobContext) -> dict[str, Any]:
             raise ConflictError(NO_WORLD)
         rules = rules_from_snapshot(cosmos.rules_snapshot) if cosmos.rules_snapshot else services.rules.current
         epoch = cosmos.epoch
-        model = await cached_book(services.database, session, rules)
+        model = titled(await cached_book(services.database, session, rules), services.settings)
     exports = services.settings.exports_dir
     exports.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=exports) as scratch:
@@ -111,7 +112,14 @@ async def build_pdf(services: Services, context: JobContext) -> dict[str, Any]:
         await write_images(services, links.images, lambda share: context.report(PDF_PROGRESS_IMAGES + span * share, PDF_STAGE_IMAGES))
         await write_maps(services, links.maps)
         target = directory / PDF_FILENAME
-        await typeset(rendered.html, directory, target, workers=min(workers_for(rules), PDF_MOST_WORKERS), title=cosmos.name or "", context=context)
+        await typeset(
+            rendered.html,
+            directory,
+            target,
+            workers=min(workers_for(rules), PDF_MOST_WORKERS),
+            title=universe_title(services.settings, cosmos),
+            context=context,
+        )
         size = target.stat().st_size
         shutil.move(target, pdf_path(services))
     manifest = PdfManifest(epoch=epoch, created_at=datetime.now(UTC).isoformat(), size=size)

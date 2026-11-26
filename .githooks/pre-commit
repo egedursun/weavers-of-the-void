@@ -68,6 +68,7 @@ run scene_colors "$PYTHON" scripts/check_scene_colors.py
 run css_overrides "$PYTHON" scripts/check_css_overrides.py
 run root_overflow "$PYTHON" scripts/check_root_overflow.py
 run pending_reads "$PYTHON" scripts/check_pending_reads.py
+run universe_title "$PYTHON" scripts/check_universe_title.py
 run raw_api_urls "$PYTHON" scripts/check_raw_api_urls.py
 run route_access "$PYTHON" scripts/check_route_access.py
 run counts "$PYTHON" scripts/check_counts.py

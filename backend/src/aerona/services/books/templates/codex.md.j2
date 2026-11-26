@@ -269,13 +269,13 @@
 # There is no world yet
 {% else %}
 {% set world_count = book.stars | sum(attribute="worlds", start=[]) | length %}
-# {{ book.cosmos.name }}
+# {{ book.title }}
 
 {% if book.creator %}
-*The book of {{ book.cosmos.name }}, as witnessed by {{ book.creator.name }}{% if book.creator.title %}, {{ book.creator.title }}{% endif %}*
+*The book of {{ book.title }}, as witnessed by {{ book.creator.name }}{% if book.creator.title %}, {{ book.creator.title }}{% endif %}*
 
 {% endif %}
-{{ image(book.cover, book.cosmos.name) }}
+{{ image(book.cover, book.title) }}
 | Epochs | Years | Children | Worlds | Records |
 |---|---|---|---|---|
 | {{ book.epochs_count }} | {{ book.world_year }} | {{ book.sons | length }} | {{ world_count }} | {{ book.record_count }} |
