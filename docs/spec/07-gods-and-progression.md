@@ -1779,6 +1779,9 @@ Calls `harita-gen`, `harita.haritaVarliklari`, `rules` catalogues, `world.allSon
 ## 10. Codex, traveller's guide, cosmic chronicle (`kodeks.js`)
 
 ### 10.1 Codex (`codex()` → Markdown; `GET` export)
+
+> This format specification is licensed under [CC BY 4.0](../../LICENSES/CC-BY-4.0.txt), so that anyone can build compatible tools under any license. See [LICENSING.md](../../LICENSING.md#the-open-format-specifications).
+
 No world → "# There is no world yet". Otherwise lines:
 1. `# {world}`, `*Epoch {e} · world year {y}*`, world-1 image `![](gorsel/{file})`.
 2. `## Cosmology`, `## Tone`, `## Naming language`.

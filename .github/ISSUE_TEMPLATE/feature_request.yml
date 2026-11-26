@@ -1,0 +1,23 @@
+name: Idea or feature
+description: Propose a feature, a mechanic or an expansion.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What should be possible, and for whom.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it matters
+      description: The problem it solves or what it adds to a world.
+    validations:
+      required: true
+  - type: textarea
+    id: control
+    attributes:
+      label: Control and output
+      description: How the player would create, edit, hold or delete it, and how it would appear in the book and the Codex, if you have thought about it.

@@ -2,6 +2,12 @@
 !deploy/nginx.conf
 !VERSION
 !frontend/**
+!LICENSE
+!NOTICE
+!LICENSING.md
+!TRADEMARKS.md
+!THIRD_PARTY_NOTICES.md
+!LICENSES/**
 frontend/node_modules
 frontend/dist
 frontend/e2e/screenshots

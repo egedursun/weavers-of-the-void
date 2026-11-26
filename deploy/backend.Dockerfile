@@ -46,6 +46,11 @@ USER aerona
 VOLUME ["/data"]
 EXPOSE 8000
 
+LABEL org.opencontainers.image.title="Weavers of the Void backend" \
+      org.opencontainers.image.licenses="AGPL-3.0-only" \
+      org.opencontainers.image.source="https://github.com/egedursun/weavers-of-the-void"
+COPY LICENSE NOTICE LICENSING.md TRADEMARKS.md THIRD_PARTY_NOTICES.md LICENSES /usr/share/licenses/weavers-of-the-void/
+
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD ["python", "-c", "import os, sys, urllib.request; sys.exit(0 if urllib.request.urlopen(f\"http://127.0.0.1:{os.environ['AERONA_PORT']}/api/health\", timeout=4).status == 200 else 1)"]
 

@@ -15,6 +15,11 @@ FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
 
 COPY deploy/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY LICENSE NOTICE LICENSING.md TRADEMARKS.md THIRD_PARTY_NOTICES.md LICENSES /usr/share/licenses/weavers-of-the-void/
+
+LABEL org.opencontainers.image.title="Weavers of the Void web" \
+      org.opencontainers.image.licenses="AGPL-3.0-only" \
+      org.opencontainers.image.source="https://github.com/egedursun/weavers-of-the-void"
 
 ENV AERONA_BACKEND_ORIGIN=http://backend:8000 \
     NGINX_ENVSUBST_FILTER=^AERONA_

@@ -5,6 +5,7 @@ description = "Weavers of the Void backend: a self-generating pantheon and lore 
 authors = [
     { name = "Ege Dogan Dursun" }
 ]
+license = "AGPL-3.0-only"
 requires-python = ">=3.13"
 dependencies = [
     "aiobotocore>=3.10.0",

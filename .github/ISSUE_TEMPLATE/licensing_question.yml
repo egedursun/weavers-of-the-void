@@ -1,0 +1,27 @@
+name: Licensing or trademark question
+description: Ask about licensing, redistribution or use of the name and logo.
+labels: ["licensing"]
+body:
+  - type: markdown
+    attributes:
+      value: Please read LICENSING.md, TRADEMARKS.md and THIRD_PARTY_NOTICES.md first. Answers here explain the project's policy and are not legal advice.
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      options:
+        - The AGPL-3.0 and its obligations
+        - Ownership and use of worlds, books and Codices
+        - The format specifications (CC BY 4.0)
+        - The image worker (Apache 2.0)
+        - Third-party components and agent programs
+        - Name, logo and trademark permission
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: Describe what you plan to do and what you want to know.
+    validations:
+      required: true

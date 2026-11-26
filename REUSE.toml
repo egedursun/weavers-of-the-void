@@ -1,0 +1,25 @@
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Ege Dogan Dursun and the Weavers of the Void contributors"
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+[[annotations]]
+path = "image-worker/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Ege Dogan Dursun and the Weavers of the Void contributors"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "docs/spec/11-api.md"
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Ege Dogan Dursun and the Weavers of the Void contributors"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+[[annotations]]
+path = "frontend/public/models/kaykit/**"
+precedence = "override"
+SPDX-FileCopyrightText = "2023-2024 Kay Lousberg"
+SPDX-License-Identifier = "CC0-1.0"

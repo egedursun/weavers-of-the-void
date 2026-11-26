@@ -2,6 +2,12 @@
 !backend/pyproject.toml
 !backend/uv.lock
 !backend/src/**
+!LICENSE
+!NOTICE
+!LICENSING.md
+!TRADEMARKS.md
+!THIRD_PARTY_NOTICES.md
+!LICENSES/**
 **/__pycache__
 **/*.pyc
 **/.mypy_cache

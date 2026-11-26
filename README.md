@@ -13,6 +13,7 @@
 
 <p align="center">
   <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-d4af37?style=flat-square">
+  <a href="LICENSING.md"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-2e7d32?style=flat-square"></a>
   <img alt="Expansions" src="https://img.shields.io/badge/expansions-99%20included-7b3fe4?style=flat-square">
   <img alt="Engine steps" src="https://img.shields.io/badge/engine%20steps-505-5b2bb5?style=flat-square">
   <img alt="Rules" src="https://img.shields.io/badge/tunable%20rules-20%2C700%2B-4b2a8c?style=flat-square">
@@ -35,7 +36,8 @@
   <a href="#the-lore-book-and-the-codex">Book and Codex</a> ·
   <a href="#the-complete-edition-the-loom-and-99-expansions">99 expansions</a> ·
   <a href="#a-tour-of-the-app">The app</a> ·
-  <a href="#architecture">Architecture</a>
+  <a href="#architecture">Architecture</a> ·
+  <a href="#license">License</a>
 </p>
 
 <br>
@@ -101,6 +103,7 @@
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
 - [Documentation](#documentation)
+- [License](#license)
 
 </details>
 
@@ -3687,6 +3690,12 @@ No. The Loom and all 99 expansions are part of every world from the first epoch.
 **Can I take my lore into other tools?**
 Yes. Export the lore book as HTML or PDF, the Codex as Markdown or a ZIP with a page for every record, or the whole world as a `.aerona` package. Nothing is shortened.
 
+**Is it free?**
+Yes, completely. Weavers of the Void is open source under the AGPL-3.0: every feature and every expansion, for personal and commercial use, self-hosted wherever you like, with no limit on users, universes or epochs. The project funds itself through optional services such as custom worldbuilding, engineering, consulting and managed hosting, never by locking features. See [License](#license).
+
+**Who owns the worlds I make?**
+You do. The lore, the book, the Codex, the World Package and the images are yours, with no fee or royalty, and they are not bound by the AGPL. See [LICENSING.md](LICENSING.md).
+
 **Can I protect what is already canon?**
 Yes. Hold any node, and no engine step will create, change or delete anything tied to it. The world keeps living around it.
 
@@ -3726,6 +3735,18 @@ The engine is. The same world with the same seed and the same choices produces t
 | [Decisions](docs/decisions.md) | Every architectural decision and why it was made |
 | [Migration plan](docs/migration-plan.md) | Carrying a legacy world into Weavers of the Void |
 
+**The project:**
+
+| Document | What it covers |
+|---|---|
+| [Licensing](LICENSING.md) | Which license covers which part, what it asks of you, and why your worlds are yours |
+| [Third-party notices](THIRD_PARTY_NOTICES.md) | Every dependency, font, model, service and agent program with its license |
+| [Trademarks](TRADEMARKS.md) | How the name and the logo may be used by forks and hosted services |
+| [Contributing](CONTRIBUTING.md) · [DCO](DCO) | How to set up, the rules every change follows, and signing off commits |
+| [Governance](GOVERNANCE.md) · [Maintainers](MAINTAINERS.md) | Who decides, how contributions are judged and how the project pays for itself |
+| [Security](SECURITY.md) | How to report a vulnerability privately |
+| [Code of Conduct](CODE_OF_CONDUCT.md) | How we treat each other |
+
 **The specification:**
 
 | Document | What it covers |
@@ -3746,6 +3767,20 @@ The engine is. The same world with the same seed and the same choices produces t
 | [Mechanic coverage](docs/spec/coverage.md) · [Inventory](docs/spec/inventory.md) | Traceability from every mechanic to its module, trigger, control, screen and test, and every countable thing with the guards that prove it |
 | [Model text ledger](docs/spec/model-text-ledger.md) | Every file whose prose reaches the model, read in full against the lore rules |
 | [OCM](docs/spec/ocm-coverage.md) · [Motifs](docs/spec/motif-coverage.md) · [Science](docs/spec/science-coverage.md) | How the world covers the Outline of Cultural Materials, the Thompson motif index and the UNESCO sciences |
+
+<p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
+
+## License
+
+Weavers of the Void is free software, licensed under the [GNU Affero General Public License v3.0](LICENSE) (`AGPL-3.0-only`). Use it for anything, commercially or not, self-host it, fork it and offer it as a service. If you run a modified version for others over a network, offer them its source code.
+
+- **Your worlds are yours.** Books, Codices, World Packages and images you make carry no AGPL obligations and no royalty, by an additional permission in [NOTICE](NOTICE).
+- **Open formats.** The World Package, Codex and HTTP API specifications are under [CC BY 4.0](LICENSES/CC-BY-4.0.txt), so anyone can build compatible tools.
+- **Image worker.** [`image-worker/`](image-worker/) is under the [Apache License 2.0](image-worker/LICENSE).
+- **Third parties.** Dependencies, fonts, models, the Bifrost gateway and the vendors' agent programs keep their own licenses; some agent programs are proprietary. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- **The name.** "Weavers of the Void" and its logo are trademarks; forks and hosted services use their own name. See [TRADEMARKS.md](TRADEMARKS.md).
+
+The full picture is in [LICENSING.md](LICENSING.md). Contributions are welcome under the same terms, signed off under the [DCO](DCO); see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

@@ -42,6 +42,8 @@ The app holds many worlds. The first screen is the **World Library**: every worl
 
 ## 4. Lifecycle acts
 
+> The package manifest described under **Export** is a format specification licensed under [CC BY 4.0](../../LICENSES/CC-BY-4.0.txt). See [LICENSING.md](../../LICENSING.md#the-open-format-specifications).
+
 - **Create:** name (required), optional notes and tags → a new folder and database at the schema head; the world opens on its genesis screen (today's world-birth flow), and the catalogue records it.
 - **Open:** marks `opened_at`, opens the runtime, and the frontend enters the world (§7).
 - **Rename / notes / tags / cover / pin:** catalogue edits; the name is also written to the world manifest.

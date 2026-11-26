@@ -3,6 +3,8 @@
 !image-worker/uv.lock
 !image-worker/.python-version
 !image-worker/src/**
+!image-worker/LICENSE
+!THIRD_PARTY_NOTICES.md
 **/__pycache__
 **/*.pyc
 **/.mypy_cache

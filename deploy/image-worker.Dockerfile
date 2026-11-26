@@ -52,6 +52,11 @@ USER worker
 VOLUME ["/models"]
 EXPOSE 8100
 
+LABEL org.opencontainers.image.title="Weavers of the Void image worker" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.source="https://github.com/egedursun/weavers-of-the-void"
+COPY image-worker/LICENSE THIRD_PARTY_NOTICES.md /usr/share/licenses/weavers-of-the-void-image-worker/
+
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD ["python", "-c", "import os, sys, urllib.request; sys.exit(0 if urllib.request.urlopen(f\"http://127.0.0.1:{os.environ['AERONA_IMAGE_WORKER_PORT']}/health\", timeout=4).status == 200 else 1)"]
 

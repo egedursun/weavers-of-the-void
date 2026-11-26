@@ -1,5 +1,7 @@
 # 11 — HTTP API and realtime event stream
 
+> This specification is licensed under [CC BY 4.0](../../LICENSES/CC-BY-4.0.txt), so that anyone can build compatible tools under any license. See [LICENSING.md](../../LICENSING.md#the-open-format-specifications).
+
 Source of truth (old app): `server.js` (≈1,075 lines, a hand-rolled `node:http` router: an ordered array of `[method, regex, handler]`), plus the domain functions it calls in `src/*.js`. Response shapes in this document were taken from a live run of the old server against a copy of a real world database (epoch 48, ≈3,600 graph nodes, ≈19,000 links), not guessed.
 
 This document gives, for every endpoint:

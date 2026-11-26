@@ -5,6 +5,7 @@ description = "Weavers of the Void image worker: a single-GPU text-to-image queu
 authors = [
     { name = "Ege Dogan Dursun" }
 ]
+license = "Apache-2.0"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.162.0",

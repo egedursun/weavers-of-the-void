@@ -1136,6 +1136,8 @@ The rewrite has no image directory and no backup image pool. Every image byte li
 
 ### 23.1 Package format `.aerona`
 
+> This format specification is licensed under [CC BY 4.0](../../LICENSES/CC-BY-4.0.txt), so that anyone can build compatible tools under any license. See [LICENSING.md](../../LICENSING.md#the-open-format-specifications).
+
 Legacy version 1 was a gzip-compressed JSON object:
 ```json
 {"bicim":"aerona-dunya","surum":1,"ad":"<world>","cag":<epoch>,"tanri":"<creator>","tarih":"<ISO>",

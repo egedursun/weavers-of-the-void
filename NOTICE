@@ -1,0 +1,47 @@
+Weavers of the Void
+Copyright (C) 2026 Ege Dogan Dursun and the Weavers of the Void contributors
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, version 3 of the License only.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program, in the file LICENSE. If not, see
+<https://www.gnu.org/licenses/>.
+
+Additional permission under GNU AGPL version 3 section 7
+
+You may use, copy, modify and distribute the Universe Book, the Codex, the
+World Package, the generated images and any other output of Weavers of the
+Void, including the parts of the software that the software itself placed
+in that output, under terms of your choice, without the requirements of the
+GNU Affero General Public License. This permission does not cover
+third-party material that keeps its own license, such as fonts embedded in
+a document, and it does not grant any right to the Weavers of the Void
+trademarks beyond what TRADEMARKS.md allows.
+
+Parts under other licenses
+
+- The image worker in image-worker/ is licensed under the Apache License,
+  Version 2.0 (image-worker/LICENSE).
+- The World Package, Codex and HTTP API format specifications listed in
+  LICENSING.md are licensed under the Creative Commons Attribution 4.0
+  International License (LICENSES/CC-BY-4.0.txt).
+- The KayKit models in frontend/public/models/kaykit/ by Kay Lousberg are
+  dedicated to the public domain under CC0 1.0 (LICENSES/CC0-1.0.txt).
+- Parts of the frontend come from shadcn-admin by Sat Naing, under the MIT
+  License (frontend/THIRD_PARTY_LICENSE_shadcn-admin.txt).
+- Every other third-party component, service and agent program keeps its
+  own license; see THIRD_PARTY_NOTICES.md. Some agent programs the
+  application drives are proprietary and are not covered by this notice.
+
+Trademarks
+
+"Weavers of the Void", its logo and its visual identity are trademarks of
+the copyright holder named above and are not licensed under the AGPL-3.0.
+See TRADEMARKS.md.
