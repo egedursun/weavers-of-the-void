@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.grammar import fact_word, spoken
+from aerona.core.grammar import spoken
 from aerona.db.base import Base
 from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -16,17 +16,18 @@ from aerona.db.tables.divine_will import DivineWillArtifactNodeRow, DivineWillAr
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import EpochRow, EpochWorldNarrativeRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
-from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.job import JobRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow, CouncilRow, LexemeRow, MessageRow
 from aerona.db.tables.meta import MapNoteRow
 from aerona.db.tables.node import NodeRow
-from aerona.db.tables.records import IncidentFactRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine_will import ArtifactFormat, ChunkSource
 from aerona.domain.enums.entity import EntityStatus
 from aerona.rules.registry import Rules
 from aerona.services.books.model import BookBuilder
+from aerona.services.books.records import LEDGER_TITLES, Ledger
 from aerona.services.books.typed import RecordTable, TypedSection, title_of, words
 from aerona.services.divine_will.chunking import PARAGRAPH_BREAK, Passage
 
@@ -40,6 +41,8 @@ YES = "yes"
 NO = "no"
 DUPLICATE_MARK = "#"
 DIVINE_WILL_TITLES = frozenset(title_of(table.name) for table in Base.metadata.sorted_tables if table.name.startswith(DIVINE_WILL_PREFIX))
+UNREAD_TABLES = frozenset({JobRow.__tablename__})
+UNREAD_TITLES = DIVINE_WILL_TITLES | LEDGER_TITLES | frozenset(title_of(table) for table in UNREAD_TABLES)
 SOURCE_ORDER = {source: position for position, source in enumerate(ChunkSource)}
 
 
@@ -257,40 +260,37 @@ async def chronicle_passages(session: AsyncSession) -> tuple[list[Passage], dict
     return found, lines
 
 
-def fact_text(fact: IncidentFactRow, names: Mapping[int, str]) -> str:
-    if fact.node_id is not None:
-        return named(names, fact.node_id)
-    if fact.number is not None:
-        return f"{fact.number:g}" + (f" {spoken(fact.unit)}" if fact.unit is not None else "")
-    if fact.enum_value is not None:
-        return fact_word(fact.enum_name, fact.enum_value)
-    return fact.name or ""
+def incident_body(ledger: Ledger, incident: IncidentRow, lines: Mapping[int, str]) -> str:
+    grouped: dict[str, list[str]] = defaultdict(list)
+    for row in ledger.participants.get(incident.id, []):
+        grouped[spoken(row.role)].append(ledger.name(row.node_id))
+    cause = ledger.incidents.get(incident.cause_incident_id) if incident.cause_incident_id is not None else None
+    terms = [ledger.term_text(term.op, term.term, term.amount, term.source_node_id, term.source_incident_id) for term in ledger.terms.get(incident.id, [])]
+    return body_of(
+        [lines.get(incident.chronicle_id, "") if incident.chronicle_id is not None else ""],
+        fields(("Named", ledger.name_of(incident))),
+        [f"{role[:1].upper()}{role[1:]}: {', '.join(name for name in people if name)}" for role, people in grouped.items()],
+        [FACT_SEPARATOR.join(ledger.fact_text(fact) for fact in ledger.facts.get(incident.id, []))],
+        fields(
+            ("Terms", LIST_SEPARATOR.join(terms)),
+            ("Steps", " ".join(ledger.step_text(step) for step in ledger.steps.get(incident.id, []))),
+            ("Rumours", LIST_SEPARATOR.join(ledger.rumour_text(rumour) for rumour in ledger.rumours.get(incident.id, []))),
+            ("Cause", ledger.line_of(cause) if cause is not None else None),
+            ("From", ledger.name(incident.origin_entity_id)),
+            ("To", ledger.name(incident.destination_entity_id)),
+            ("Note", incident.note),
+        ),
+    )
 
 
-async def incident_passages(session: AsyncSession, names: Mapping[int, str], lines: Mapping[int, str]) -> list[Passage]:
-    roles: dict[int, list[tuple[int, str, int]]] = defaultdict(list)
-    for row in await session.scalars(select(IncidentParticipantRow).order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.position)):
-        roles[row.incident_id].append((row.position, spoken(row.role), row.node_id))
-    facts: dict[int, list[str]] = defaultdict(list)
-    for fact in await session.scalars(select(IncidentFactRow).order_by(IncidentFactRow.incident_id, IncidentFactRow.key, IncidentFactRow.position)):
-        text = fact_text(fact, names)
-        if text:
-            facts[fact.incident_id].append(f"{words(fact.key)}: {text}")
+def incident_passages(ledger: Ledger, lines: Mapping[int, str]) -> list[Passage]:
     found: list[Passage] = []
-    for incident in await session.scalars(select(IncidentRow).order_by(IncidentRow.id)):
-        place = named(names, incident.place_entity_id)
+    for incident in ledger.incidents.values():
+        place = ledger.name(incident.place_entity_id)
         moment = f"epoch {incident.epoch}" + (f", year {incident.year}" if incident.year is not None else "") + (f", at {place}" if place else "")
-        taking = roles.get(incident.id, [])
-        grouped: dict[str, list[str]] = defaultdict(list)
-        for _, role, node_id in taking:
-            grouped[role].append(named(names, node_id))
-        body = body_of(
-            [lines.get(incident.chronicle_id, "") if incident.chronicle_id is not None else ""],
-            [f"{role[:1].upper()}{role[1:]}: {', '.join(name for name in people if name)}" for role, people in grouped.items()],
-            [FACT_SEPARATOR.join(facts.get(incident.id, []))],
-            fields(("From", named(names, incident.origin_entity_id)), ("To", named(names, incident.destination_entity_id)), ("Note", incident.note)),
-        )
-        node = incident.place_entity_id or (taking[0][2] if taking else None) or incident.world_id
+        taking = ledger.participants.get(incident.id, [])
+        node = incident.place_entity_id or (taking[0].node_id if taking else None) or incident.world_id
+        body = incident_body(ledger, incident, lines)
         found.append(Passage(ChunkSource.INCIDENT, str(incident.id), heading(words(incident.kind), moment), body, node_id=node))
     return found
 
@@ -364,21 +364,19 @@ def record_body(table: RecordTable) -> str:
     return body_of(FACT_SEPARATOR.join(f"{header}: {value}" for header, value in zip(table.headers, row, strict=False) if value) for row in table.rows)
 
 
-async def typed_passages(session: AsyncSession, rules: Rules, names: Mapping[int, str]) -> list[Passage]:
-    builder = BookBuilder(session, rules)
-    await builder.load_common()
+def typed_passages(builder: BookBuilder, names: Mapping[int, str]) -> list[Passage]:
     found: list[Passage] = []
     for node_id in sorted(builder.typed.sections):
         seen: dict[str, int] = defaultdict(int)
         for section in builder.typed.of(node_id):
-            if section.title in DIVINE_WILL_TITLES:
+            if section.title in UNREAD_TITLES:
                 continue
             seen[section.title] += 1
             mark = f"{DUPLICATE_MARK}{seen[section.title]}" if seen[section.title] > 1 else ""
             title = heading(named(names, node_id) or builder.names.get(node_id, ""), section.title)
             found.append(Passage(ChunkSource.TYPED_SECTION, f"{node_id}:{section.title}{mark}", title, section_body(section), node_id=node_id))
     for table in builder.typed.records:
-        if table.title in DIVINE_WILL_TITLES:
+        if table.title in UNREAD_TITLES:
             continue
         found.append(Passage(ChunkSource.TYPED_SECTION, f"records:{table.title}", heading("Records of the Cosmos", table.title), record_body(table)))
     return found
@@ -386,12 +384,14 @@ async def typed_passages(session: AsyncSession, rules: Rules, names: Mapping[int
 
 async def world_passages(session: AsyncSession, rules: Rules) -> list[Passage]:
     names = await node_names(session)
+    builder = BookBuilder(session, rules)
+    await builder.load_common()
     chronicle, lines = await chronicle_passages(session)
     found = [
         *await entity_passages(session, names),
-        *await typed_passages(session, rules, names),
+        *typed_passages(builder, names),
         *chronicle,
-        *await incident_passages(session, names, lines),
+        *incident_passages(builder.ledger, lines),
         *await son_passages(session, names),
         *await foreign_god_passages(session, names),
         *await world_body_passages(session, names),

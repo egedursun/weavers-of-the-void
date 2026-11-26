@@ -7,8 +7,8 @@ NODE_FIELD = "The id of the node: an entity, son, foreign god, world, star, gala
 
 DESCRIPTIONS: dict[DivineWillToolId, str] = {
     W.READ_NODE: (
-        "Reads one node's entry in full: its identity and every value it holds, its lore texts, every typed section of its records "
-        "and every bond it has or had. Ask for one part to read less. Long entries come in pages."
+        "Reads one node's entry in full: its identity and every value it holds, its lore texts, every typed section of its records, "
+        "every bond it has or had and every change made to its records. Ask for one part to read less. Long entries come in pages."
     ),
     W.READ_RECORDS: (
         "Lists every record row a node owns, table by table, with each row's key columns, every value and which values are held. "
@@ -52,7 +52,8 @@ DESCRIPTIONS: dict[DivineWillToolId, str] = {
 FIELDS: dict[DivineWillToolId, dict[str, str]] = {
     W.READ_NODE: {
         "node_id": NODE_FIELD,
-        "part": "Which part to read: all, identity (every value of the node), lore (its long texts), sections (its typed records) or bonds.",
+        "part": "Which part to read: all, identity (every value of the node), lore (its long texts), sections (its typed records), bonds, "
+        "or changes (every change made to its records, oldest first, with who made it, why and during which incident).",
         "page": PAGE_FIELD,
     },
     W.READ_RECORDS: {

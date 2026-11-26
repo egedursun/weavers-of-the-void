@@ -37,7 +37,7 @@ const STATUS_LOOK: Record<
     tone: 'text-info',
   },
   waiting: {
-    title: 'The Divine Will reads on once the epoch ends',
+    title: 'The Divine Will has paused its reading',
     icon: Hourglass,
     tone: 'text-warning',
   },

@@ -67,6 +67,7 @@ class NodePart(StrEnum):
     LORE = "lore"
     SECTIONS = "sections"
     BONDS = "bonds"
+    CHANGES = "changes"
 
 
 class ReadNodeInput(PagedInput):
@@ -199,6 +200,7 @@ async def read_node(call: WillCall, query: ReadNodeInput) -> WillResult:
         facts, lore = identity_blocks(node, names)
         head = f"# {node.name} (node {node.id}, {spoken(node.kind)})"
         items: list[str] = []
+        every: dict[int, str] = {}
         if query.part in (NodePart.ALL, NodePart.IDENTITY):
             items += ["## Identity", *facts]
             if isinstance(node, EntityRow):
@@ -217,6 +219,11 @@ async def read_node(call: WillCall, query: ReadNodeInput) -> WillResult:
             bonds = await bond_lines(session, node.id)
             if bonds:
                 items += ["## Bonds", *bonds]
+        if query.part in (NodePart.ALL, NodePart.CHANGES):
+            every = every or {node_id: name for node_id, name in await session.execute(select(NodeRow.id, NodeRow.name))}
+            changes = await will_reads(call).change_lines(session, every, node.id)
+            if changes:
+                items += ["## Changes", *[f"- {line}" for line in changes]]
     return await paged(call, W.READ_NODE, query, items, head=head, empty="Nothing recorded in this part.")
 
 

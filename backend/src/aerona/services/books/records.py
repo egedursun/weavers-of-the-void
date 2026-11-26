@@ -4,9 +4,10 @@ import struct
 import tempfile
 import weakref
 from array import array
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
+from itertools import batched
 from typing import overload
 
 from sqlalchemy import func, select
@@ -25,12 +26,16 @@ from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.records import FactUnit, InstrumentKind, ProcessGroup, StepLocus
+from aerona.engine.recording.record import KNOWERS
 from aerona.services.books.typed import RecordTable, TypedIndex, TypedSection, title_of, words
 
 PHASE_PREFIX = "phase."
 HISTORY_TITLE = "History"
 CHANGES_TITLE = "Changes"
 THEN_TITLE = "Then and now"
+LEDGER_TITLES = frozenset({HISTORY_TITLE, CHANGES_TITLE})
+UNLISTED_ROLES = KNOWERS | {IncidentRole.PLACE}
+KNOWER_WORDS = {IncidentRole.WITNESS: ("witness", "witnesses"), IncidentRole.TELLER: ("teller", "tellers")}
 REPORT_GROUPS = {ProcessGroup.BATTLES: "Battle report", ProcessGroup.VESSELS: "Engagement report"}
 NO_UNIT = frozenset({FactUnit.NONE, FactUnit.COUNT})
 
@@ -139,6 +144,7 @@ class SpilledRows(Sequence[str]):
 
 CHANGE_COLUMNS = tuple(StateChangeRow.__table__.c[name] for name in ChangeLine.__dataclass_fields__)
 CHANGE_CHUNK = 50_000
+LOOKUP_BATCH = 500
 LENGTH = struct.Struct("<I")
 
 
@@ -356,12 +362,16 @@ class Ledger:
 
     def account_text(self, incident: IncidentRow, node_id: int | None) -> str:
         roles = self.participants.get(incident.id, [])
-        own = [spoken(row.role) for row in roles if row.node_id == node_id]
+        own = [row.role for row in roles if row.node_id == node_id]
         parts = [self.account_head(incident)]
         if own:
-            parts.append(f"as {', '.join(own)}")
+            parts.append(f"as {', '.join(spoken(role) for role in own)}")
         parts.extend(self.account_place(incident))
-        others = [f"{spoken(row.role)} {self.name(row.node_id)}" for row in roles if row.node_id != node_id and row.role is not IncidentRole.PLACE]
+        if own and all(role in KNOWERS for role in own):
+            return " · ".join(parts)
+        others = [f"{spoken(row.role)} {self.name(row.node_id)}" for row in roles if row.node_id != node_id and row.role not in UNLISTED_ROLES]
+        knowing = Counter(row.role for row in roles if row.node_id != node_id and row.role in KNOWERS)
+        others.extend(several(knowing[role], *KNOWER_WORDS[role]) for role in sorted(knowing))
         if others:
             parts.append("with " + ", ".join(others))
         parts.extend(self.account_tail(incident))
@@ -398,9 +408,6 @@ class Ledger:
         steps = [self.step_text(step) for step in self.steps.get(incident.id, [])]
         if steps:
             parts.append("steps: " + " ".join(steps))
-        changes = self.by_incident.get(incident.id, [])
-        if changes:
-            parts.append("changes: " + "; ".join(changes))
         rumours = [self.rumour_text(rumour) for rumour in self.rumours.get(incident.id, [])]
         if rumours:
             parts.append("rumours: " + "; ".join(rumours))
@@ -480,6 +487,37 @@ async def add_history_sections(session: AsyncSession, index: TypedIndex) -> Ledg
             section.rows = [f"{label}: {text}" for label, text in then]
             index.sections[node_id].append(section)
     return ledger
+
+
+async def node_change_lines(session: AsyncSession, names: dict[int, str], node_id: int) -> list[str]:
+    ledger = Ledger(names)
+    rows = [ChangeLine(*row) for row in await session.execute(select(*CHANGE_COLUMNS).where(StateChangeRow.node_id == node_id).order_by(StateChangeRow.id))]
+    terms: dict[int, list[TermLine]] = defaultdict(list)
+    for batch in batched([row.id for row in rows], LOOKUP_BATCH, strict=False):
+        term_rows = await session.execute(
+            select(
+                StateChangeTermRow.change_id,
+                StateChangeTermRow.op,
+                StateChangeTermRow.term,
+                StateChangeTermRow.amount,
+                StateChangeTermRow.source_node_id,
+                StateChangeTermRow.source_incident_id,
+            )
+            .where(StateChangeTermRow.change_id.in_(batch))
+            .order_by(StateChangeTermRow.change_id, StateChangeTermRow.position)
+        )
+        for change_id, op, term, amount, source_node_id, source_incident_id in term_rows:
+            terms[change_id].append(TermLine(op, term, amount, source_node_id, source_incident_id))
+    named = {row.incident_id for row in rows if row.incident_id is not None}
+    named.update(term.source_incident_id for found in terms.values() for term in found if term.source_incident_id is not None)
+    for batch in batched(sorted(named), LOOKUP_BATCH, strict=False):
+        for incident in await session.scalars(select(IncidentRow).where(IncidentRow.id.in_(batch)).order_by(IncidentRow.id)):
+            ledger.incidents[incident.id] = incident
+    told = sorted({incident.chronicle_id for incident in ledger.incidents.values() if incident.chronicle_id is not None})
+    for batch in batched(told, LOOKUP_BATCH, strict=False):
+        for chronicle_id, text in await session.execute(select(ChronicleRow.id, ChronicleRow.text).where(ChronicleRow.id.in_(batch)).order_by(ChronicleRow.id)):
+            ledger.lines[chronicle_id] = text
+    return [ledger.change_text(row, terms.get(row.id, [])) for row in rows]
 
 
 def age_spans(ages: Iterable[AgeRow]) -> list[tuple[str, int, int | None]]:

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.rules.registry import Rules
+from aerona.services.books.records import node_change_lines
 from aerona.services.books.typed import TypedIndex
 from aerona.services.player.catalog import ACTIONS
 from aerona.services.search import find_path, neighbours
@@ -18,6 +19,9 @@ class LoreReads:
     async def typed_sections(self, session: AsyncSession, names: Mapping[int, str], node_id: int) -> list[SectionView]:
         index = await TypedIndex.load_node(session, dict(names), node_id)
         return [SectionView(section.title, tuple((fact.label, fact.value) for fact in section.facts), tuple(section.lines)) for section in index.of(node_id)]
+
+    async def change_lines(self, session: AsyncSession, names: Mapping[int, str], node_id: int) -> list[str]:
+        return await node_change_lines(session, dict(names), node_id)
 
     async def links(self, session: AsyncSession, node_id: int) -> list[LinkView]:
         return [LinkView(step.source, other, step.kind, step.forward, step.description) for other, step in await neighbours(session, node_id)]

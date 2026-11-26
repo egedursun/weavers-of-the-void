@@ -9,12 +9,18 @@ from sqlalchemy import func, select
 from aerona.db.profile_guard import table_name
 from aerona.db.session import Database
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine_will import DivineWillConfirmationRow, DivineWillCycleRow
+from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.team import QueuedActRow
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine_will import ConfirmationReason, ConfirmationStatus, CycleStatus, DivineWillMode
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.meta import LedgerOperation
+from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.team import QueuedActStatus
 from aerona.engine.primitives.stats import set_stats
 from aerona.epoch.concurrency import WORLD_GROUP
@@ -189,3 +195,37 @@ async def test_enumerate_sorts_and_filters_by_a_things_stats(database: Database,
     assert [line.split("name: ", 1)[1].split(" · ", 1)[0] for line in lines][:3] == ["Town 1", "Town 2", "Town 0"]
     chosen = await call_tool(call, W.ENUMERATE, {"kind": "settlement", "filters": {"population": 1200}})
     assert "Town 2" in chosen.text and "Town 1" not in chosen.text
+
+
+async def test_read_node_reads_every_change_of_its_records_page_by_page(database: Database, tmp_path: Path) -> None:
+    world = await will_world(database)
+    people = world.realm.people_id
+    async with database.write() as session:
+        line = ChronicleRow(epoch=2, year=70, kind=ChronicleKind.WORLD, world_id=world.realm.cosmos.world_id, text="The Kessar Folk held a great fair.")
+        session.add(line)
+        await session.flush()
+        fair = IncidentRow(kind="player.history", epoch=2, year=70, world_id=world.realm.cosmos.world_id, chronicle_id=line.id, magnitude=5, locked=[])
+        session.add(fair)
+        await session.flush()
+        for step in range(60):
+            session.add(
+                StateChangeRow(
+                    epoch=2,
+                    year=70,
+                    table_name="entities",
+                    row_key=f'{{"id": {people}}}',
+                    node_id=people,
+                    operation=LedgerOperation.UPDATE,
+                    field="power_level",
+                    before_number=float(step),
+                    after_number=float(step + 1),
+                    actor_kind=ActorKind.ENGINE,
+                    incident_id=fair.id,
+                )
+            )
+    call = will_call(database, world, DivineWillMode.ASK_LORE, tmp_path, rules=SMALL_PAGES)
+    pages = await every_page(call, W.READ_NODE, {"node_id": people, "part": "changes"})
+    told = [line for line in listed(pages) if "power level of entities of Kessar Folk" in line]
+    assert len(pages) > 1
+    assert [line.split(": ", 2)[2].split(" by ", 1)[0] for line in told] == [f"{step} → {step + 1}" for step in range(60)]
+    assert all("during: The Kessar Folk held a great fair." in line for line in told)

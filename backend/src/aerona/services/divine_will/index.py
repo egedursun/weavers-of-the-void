@@ -69,7 +69,7 @@ from aerona.services.divine_will.embedding import (
 from aerona.services.divine_will.embedding import (
     Counter as TokenCounter,
 )
-from aerona.services.divine_will.passages import SOURCE_ORDER, heading, world_passages
+from aerona.services.divine_will.passages import SOURCE_ORDER, UNREAD_TABLES, heading, world_passages
 from aerona.services.search import TOKENIZER, fold, match_expression
 from aerona.tools.divine_will.retrieval_ports import LoreHit, LoreSearch
 
@@ -88,7 +88,7 @@ RETRY_SECONDS = 900.0
 PARALLEL_PASSAGES = 2000
 INDEX_MARK = "divine_will_index_mark"
 MARKS = (
-    (StateChangeRow.__tablename__, select(func.max(StateChangeRow.id))),
+    (StateChangeRow.__tablename__, select(func.max(StateChangeRow.id)).where(StateChangeRow.table_name.not_in(sorted(UNREAD_TABLES)))),
     (IncidentRow.__tablename__, select(func.max(IncidentRow.id))),
     (IncidentFactRow.__tablename__, select(func.max(IncidentFactRow.id))),
     (ChronicleRow.__tablename__, select(func.max(ChronicleRow.id))),
@@ -114,6 +114,7 @@ GATHERING = "Gathering everything the world holds to read."
 CUTTING = "Cutting what it gathered into passages."
 ON_DEMAND = "The index is built when the Divine Will first searches."
 OTHER_WORK = "Other work is waiting for its turn; the index goes on after it."
+STOPPED = "The reading was stopped; it goes on when the world next changes."
 REFRESH_FAILED = "The last refresh of the index failed and the next change of the world tries again: {reason}"
 MISSING_MODEL = "The embedding model files {names} are missing from {directory}."
 WORDS_ONLY = "Passages are matched by their words only, because the meaning index is unavailable. {reason}"
@@ -347,6 +348,8 @@ class LoreIndex:
         self._background = False
         self._built_generation: int | None = None
         self._own_writes = 0
+        self._reading_mark: dict[str, int] | None = None
+        self._stopped_mark: dict[str, int] | None = None
         self._attached_generation: int | None = None
         self._failed_at: float | None = None
         self._status, self._note = first_state(directory, fetch, embedder)
@@ -438,6 +441,8 @@ class LoreIndex:
                 if jobs.busy_group(WORLD_GROUP) is not None:
                     self._set(IndexStatus.WAITING, EPOCH_RUNNING)
                 await asyncio.sleep(POLL_SECONDS)
+            if await self._still_stopped():
+                continue
             try:
                 await jobs.submit(JobKind.DIVINE_WILL_INDEX, self._job, exclusive_group=INDEX_GROUP)
             except Exception:
@@ -447,6 +452,10 @@ class LoreIndex:
         try:
             counts = await self.refresh(context)
             counts.update(await self.refresh_attachments())
+        except asyncio.CancelledError:
+            self._stopped_mark = self._reading_mark
+            self._set(IndexStatus.WAITING, STOPPED, force=True)
+            raise
         except Exception as error:
             self._set(IndexStatus.WAITING, REFRESH_FAILED.format(reason=str(error) or type(error).__name__), force=True)
             raise
@@ -549,6 +558,7 @@ class LoreIndex:
             if self._world is not None and self._built_generation == generation:
                 return {"passages": len(self._world.chunks), "embedded": self._world.embedded_count, "written": 0}
             mark = await self._world_mark()
+            self._reading_mark = mark
             if (
                 self._world is not None
                 and self._built_generation is None
@@ -580,6 +590,14 @@ class LoreIndex:
             self._built_at = datetime.now(UTC)
             self._finish(paused)
             return {"passages": len(layer.chunks), "embedded": layer.embedded_count, "written": written}
+
+    async def _still_stopped(self) -> bool:
+        if self._stopped_mark is None:
+            return False
+        if await self._world_mark() == self._stopped_mark:
+            return True
+        self._stopped_mark = None
+        return False
 
     async def _world_mark(self) -> dict[str, int]:
         async with self._database.read() as session:
@@ -654,8 +672,10 @@ class LoreIndex:
                 places.setdefault(chunk.digest, []).append(position)
         order = sorted(places, key=lambda digest: (layer.chunks[places[digest][0]].tokens, digest))
         total = len(order)
+        weight = max(1, sum(layer.chunks[places[digest][0]].tokens for digest in order))
         self._pending = total
         done = 0
+        read = 0
         quiet = self._status is IndexStatus.READY
         persisted_at = time.monotonic()
         for batch in batched(order, max(1, self._rules().divine_will.index_batch), strict=False):
@@ -671,9 +691,10 @@ class LoreIndex:
                     layer.vectors[position] = stored_vector
                     layer.embedded[position] = True
             done += len(batch)
+            read += sum(layer.chunks[places[digest][0]].tokens for digest in batch)
             self._pending = total - done
             if context is not None:
-                context.report(done / total, f"{done}/{total}")
+                context.report(read / weight, f"{done}/{total}")
             if not quiet:
                 self._set(IndexStatus.BUILDING, "")
             if yielding and time.monotonic() - persisted_at >= PERSIST_SECONDS:

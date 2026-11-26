@@ -31,6 +31,7 @@ from tests.engine.core.factories import CoreWorld, mortal
 
 SCRIPTS = Path(__file__).resolve().parents[4] / "scripts"
 DUEL = "duel.honour"
+CROWD = 30
 DUEL_KIND = IncidentKindSpec(
     key=DUEL,
     group=ProcessGroup.SINGLE_COMBAT,
@@ -207,13 +208,40 @@ async def test_the_book_tells_every_tier_of_a_happening_in_each_entry(session: A
     assert "Arem fought Bessa for honour." in told and "as target" in told and "stake honour" in told
     assert "Arem strike Bessa with mace" in told or ("strike" in told and "mace" in told)
     assert "named The Honour Fight" in told and "role changed (instrument) told as axe" in told
-    assert "Bessa prone" in told and "power level of entities of Bessa: 3 → 2" in told and "during: Arem fought Bessa for honour." in told
+    assert "Bessa prone" in told and "power level of entities of Bessa: 3 → 2" not in told
     changes = next(section for section in index.of(second) if section.title == "Changes")
-    assert any("power level of entities of Bessa: 3 → 2" in row for row in changes.lines)
+    assert any("power level of entities of Bessa: 3 → 2" in row and "during: Arem fought Bessa for honour." in row for row in changes.lines)
     tables = await book_records.record_tables(session, ledger)
     ages = [table for table in tables if table.title.startswith("Happenings")]
-    assert ages and any(row[2] == "Arem fought Bessa for honour." and "stake honour" in row[6] for table in ages for row in table.rows)
+    rows = [row for table in ages for row in table.rows if row[2] == "Arem fought Bessa for honour."]
+    assert len(rows) == 1 and "stake honour" in rows[0][6] and "power level of entities of Bessa: 3 → 2" in rows[0][8]
     assert incident.id
+
+
+async def test_a_crowded_happening_is_told_once_and_its_witnesses_only_named_there(session: AsyncSession, world: CoreWorld) -> None:
+    incident, first, second = await duel(session, world)
+    names = {first: "Arem", second: "Bessa", world.regions[0].id: world.regions[0].name}
+    crowd = []
+    for number in range(CROWD):
+        onlooker = await mortal(session, f"Onlooker {number:02d}", world, world.regions[0].id)
+        names[onlooker.id] = onlooker.name
+        crowd.append(onlooker.id)
+        role = IncidentRole.TELLER if number == 0 else IncidentRole.WITNESS
+        session.add(IncidentParticipantRow(incident_id=incident.id, node_id=onlooker.id, role=role, position=number + 2))
+    await session.flush()
+    index = TypedIndex(names)
+    ledger = await add_history_sections(session, index)
+    taker = next(section for section in index.of(second) if section.title == "History").lines[0]
+    assert f"{CROWD - 1} witnesses" in taker and "1 teller" in taker and "stake honour" in taker
+    assert not any(names[onlooker] in taker for onlooker in crowd)
+    seen = [next(section for section in index.of(onlooker) if section.title == "History").lines[0] for onlooker in crowd]
+    head = ledger.account_head(incident)
+    assert head.endswith("Arem fought Bessa for honour. · named The Honour Fight (in an unnamed record)")
+    assert seen[0] == f"{head} · as teller · at {world.regions[0].name}"
+    assert set(seen[1:]) == {f"{head} · as witness · at {world.regions[0].name}"}
+    tables = await book_records.record_tables(session, ledger)
+    told = [row[5] for table in tables if table.title.startswith("Happenings") for row in table.rows if row[2] == "Arem fought Bessa for honour."]
+    assert len(told) == 1 and all(names[onlooker] in told[0] for onlooker in crowd)
 
 
 def test_the_record_cuts_guard_finds_a_record_read_cut_short() -> None:

@@ -1,6 +1,9 @@
 import asyncio
+import itertools
 import json
-from dataclasses import replace
+import threading
+from collections.abc import Sequence
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -10,10 +13,20 @@ import pytest
 from sqlalchemy import func, select
 
 from aerona.db.session import Database
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.divine_will import DivineWillAttachmentRow, DivineWillChunkRow, DivineWillCycleRow, DivineWillSessionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.records import IncidentStepRow
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine_will import AttachmentKind, AttachmentStatus, ChunkSource, CycleStatus, DivineWillMode, IndexStatus
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.job import JobKind
+from aerona.domain.enums.meta import LedgerOperation
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.records import StepAction
 from aerona.epoch.concurrency import WORLD_GROUP
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
@@ -22,16 +35,19 @@ from aerona.jobs.manager import JobManager
 from aerona.media.file_store import FileMediaStore
 from aerona.prompts.tools.divine_will_ids import DivineWillToolId
 from aerona.rules.registry import Rules
+from aerona.services.books.records import LEDGER_TITLES
 from aerona.services.divine_will import index as index_module
+from aerona.services.divine_will.embedding import TextRole, Vector
 from aerona.services.divine_will.index import RRF_K, SMALL_SAMPLE, LoreIndex, fuse, relevant
 from aerona.tools.divine_will.catalogue import tool_by_name
 from aerona.tools.divine_will.framework import PlayerPort, WillCall, WillResult, invoke
 from tests.conftest import OpenDatabase
 from tests.divine_will.embedder_fixtures import CountingEmbedder, model_folder
 from tests.polling import until
-from tests.tools.factories import EPOCH, Realm, seed_realm
+from tests.tools.factories import EPOCH, Realm, make_entity, seed_realm
 
 W = DivineWillToolId
+CROWD = 40
 NOTE_TEXT = "# Field notes\n\nThe ferry of Brinewatch crosses the bay twice a day.\n\nIts keeper writes each crossing in a book."
 
 
@@ -364,6 +380,164 @@ async def test_the_indexer_follows_world_changes_and_waits_for_epochs(tmp_path: 
     assert len(embedder.passages) == built
     epoch_done.set()
     assert await until(lambda: any("lighthouse" in text for text in embedder.passages), seconds=60)
+    assert await until(lambda: index.state().status is IndexStatus.READY, seconds=60)
+    await index.stop()
+    await jobs.shutdown()
+    await database.dispose()
+
+
+async def crowded_fair(database: Database, realm: Realm) -> tuple[int, list[int]]:
+    async with database.write() as session:
+        cause_line = ChronicleRow(epoch=2, year=60, kind=ChronicleKind.WORLD, world_id=realm.cosmos.world_id, text="A drought emptied the granaries.")
+        line = ChronicleRow(epoch=2, year=61, kind=ChronicleKind.WORLD, world_id=realm.cosmos.world_id, text="The Kessar Folk shared their grain.")
+        session.add_all([cause_line, line])
+        await session.flush()
+        cause = IncidentRow(kind="player.history", epoch=2, year=60, world_id=realm.cosmos.world_id, chronicle_id=cause_line.id, magnitude=5, locked=[])
+        session.add(cause)
+        await session.flush()
+        fair = IncidentRow(
+            kind="player.history",
+            epoch=2,
+            year=61,
+            world_id=realm.cosmos.world_id,
+            place_entity_id=realm.settlement_id,
+            chronicle_id=line.id,
+            cause_incident_id=cause.id,
+            magnitude=5,
+            locked=[],
+        )
+        session.add(fair)
+        await session.flush()
+        session.add(IncidentParticipantRow(incident_id=fair.id, node_id=realm.people_id, role=IncidentRole.ACTOR, position=0))
+        session.add(IncidentStepRow(incident_id=fair.id, position=0, actor_node_id=realm.people_id, action=StepAction.GIVE, target_node_id=realm.settlement_id))
+        onlookers = [
+            (await make_entity(session, f"Onlooker {number:02d}", EntityType.MORTAL, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)).id
+            for number in range(CROWD)
+        ]
+        session.add(
+            StateChangeRow(
+                epoch=2,
+                year=61,
+                table_name="entities",
+                row_key=f'{{"id": {realm.people_id}}}',
+                node_id=realm.people_id,
+                operation=LedgerOperation.UPDATE,
+                field="power_level",
+                before_number=4.0,
+                after_number=5.0,
+                actor_kind=ActorKind.ENGINE,
+                incident_id=fair.id,
+            )
+        )
+        return fair.id, onlookers
+
+
+async def test_the_index_reads_each_happening_once_and_no_view_of_the_ledger(tmp_path: Path, open_database: OpenDatabase) -> None:
+    database, realm = await open_world(open_database, tmp_path)
+    fair, onlookers = await crowded_fair(database, realm)
+    index = LoreIndex(database, Rules, embedder=CountingEmbedder())
+    before = await index.refresh()
+    async with database.write() as session:
+        session.add_all(
+            IncidentParticipantRow(incident_id=fair, node_id=onlooker, role=IncidentRole.WITNESS, position=number + 1)
+            for number, onlooker in enumerate(onlookers)
+        )
+    after = await index.refresh()
+    async with database.read() as session:
+        chunks = list(await session.scalars(select(DivineWillChunkRow).order_by(DivineWillChunkRow.id)))
+    viewed = [chunk.source_id for chunk in chunks if chunk.source is ChunkSource.TYPED_SECTION and chunk.source_id.rsplit(":", 1)[-1] in LEDGER_TITLES]
+    told = " ".join(chunk.text for chunk in chunks if chunk.source is ChunkSource.INCIDENT and chunk.source_id == str(fair))
+    assert viewed == []
+    assert after["passages"] - before["passages"] <= 2
+    assert "The Kessar Folk shared their grain." in told and "Cause: A drought emptied the granaries." in told and "Steps: 1." in told
+    async with database.read() as session:
+        named = [entity.name for entity in await session.scalars(select(EntityRow).where(EntityRow.id.in_(onlookers)).order_by(EntityRow.id))]
+    assert all(name in told for name in named)
+    await database.dispose()
+
+
+class GatedEmbedder(CountingEmbedder):
+    def __init__(self) -> None:
+        super().__init__()
+        self.closed = threading.Event()
+        self.held = threading.Event()
+        self.opened = threading.Event()
+        self.finished = threading.Event()
+        self.opened.set()
+
+    def embed(self, texts: Sequence[str], role: TextRole) -> Vector:
+        if not (self.closed.is_set() and role is TextRole.PASSAGE):
+            return super().embed(texts, role)
+        self.held.set()
+        self.opened.wait()
+        found = super().embed(texts, role)
+        self.finished.set()
+        return found
+
+
+@dataclass
+class WatchedContext(JobContext):
+    shares: list[float] = field(default_factory=list)
+
+    def report(self, progress: float, stage: str | None = None) -> None:
+        if stage and "/" in stage:
+            self.shares.append(progress)
+        super().report(progress, stage)
+
+
+async def test_the_index_job_reports_its_share_by_tokens_read(tmp_path: Path, open_database: OpenDatabase) -> None:
+    database, _realm = await open_world(open_database, tmp_path)
+    rules = replace(Rules(), divine_will=replace(Rules().divine_will, index_batch=1))
+    index = LoreIndex(database, lambda: rules, embedder=CountingEmbedder())
+    context = WatchedContext(job_id="index", kind=JobKind.DIVINE_WILL_INDEX, params={}, bus=EventBus())
+    await index.refresh(context)
+    assert index._world is not None
+    tokens = sorted(chunk.tokens for chunk in index._world.chunks)
+    expected = list(itertools.accumulate(tokens))
+    assert context.shares == pytest.approx([read / expected[-1] for read in expected])
+    assert len(set(tokens)) > 1
+    await database.dispose()
+
+
+async def test_a_cancelled_index_job_stays_stopped_until_the_world_changes(
+    tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(index_module, "QUIET_SECONDS", 0.01)
+    monkeypatch.setattr(index_module, "POLL_SECONDS", 0.01)
+    database, realm = await open_world(open_database, tmp_path)
+    bus = EventBus()
+    jobs = JobManager(database, bus)
+    embedder = GatedEmbedder()
+    index = LoreIndex(database, Rules, embedder=embedder)
+    index.attach(bus)
+    index.start(jobs)
+    assert await until(lambda: index.state().status is IndexStatus.READY and jobs.busy_group(index_module.INDEX_GROUP) is None, seconds=60)
+    embedder.closed.set()
+    embedder.opened.clear()
+    async with database.write() as session:
+        town = await session.get(EntityRow, realm.settlement_id)
+        assert town is not None
+        town.description = "Brinewatch keeps a lighthouse on the northern cliff."
+    bus.publish(EventKind.WORLD_CHANGED, {"action": "entity:edit"})
+    assert await until(embedder.held.is_set, seconds=60)
+    running = jobs.busy_group(index_module.INDEX_GROUP)
+    assert running is not None
+    await jobs.cancel(running)
+    assert await until(lambda: jobs.busy_group(index_module.INDEX_GROUP) is None, seconds=30)
+    embedder.closed.clear()
+    embedder.opened.set()
+    assert await until(embedder.finished.is_set, seconds=30)
+    read = len(embedder.passages)
+    bus.publish(EventKind.CHANGES_AVAILABLE, {"version": 1})
+    await asyncio.sleep(0.3)
+    assert jobs.busy_group(index_module.INDEX_GROUP) is None and len(embedder.passages) == read
+    assert index.state().status is IndexStatus.WAITING and index.state().note == index_module.STOPPED
+    async with database.write() as session:
+        town = await session.get(EntityRow, realm.settlement_id)
+        assert town is not None
+        town.description = "Brinewatch keeps a ferry across the bay."
+    bus.publish(EventKind.WORLD_CHANGED, {"action": "entity:edit"})
+    assert await until(lambda: any("ferry across the bay" in text for text in embedder.passages), seconds=60)
     assert await until(lambda: index.state().status is IndexStatus.READY, seconds=60)
     await index.stop()
     await jobs.shutdown()

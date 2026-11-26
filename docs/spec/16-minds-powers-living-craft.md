@@ -3291,7 +3291,9 @@ Spec 13 5.6 reference pass 2 (planned) is the duel model. Whichever wave builds 
   - `state_change:delete` removes a change record (erasing it from history is a god's power).
   - Every lever is registered in the action catalog, reached from the Event page and the History section, and proven in `test_every_lever.py` with real values.
 - **Codex and book (rule 7).**
-  - Every node's entry renders its History through `services/books/typed.py` (accounts and steps, in full).
+  - Every node's entry renders its History through `services/books/typed.py`. Each happening is told in full once: in the History of everyone who took part in it other than as a witness or teller (accounts, terms, steps, rumours and cause), and in the incidents-by-age table of the appendix.
+  - A witness's or teller's History names the happening, its moment and place and the node's own role; the other witnesses and tellers are counted in a taker's line and named in the appendix row, so the text grows with the number of takers, never with its square.
+  - A change is told under the record it changed (Changes) and in its incident's appendix row, never again in a History line.
   - The Records of the Cosmos appendix gains designed tables of incidents by age with their accounts, steps and changes.
   - Battle and engagement reports get their own layouts.
   - "Then and now" lines come from F58.11.
