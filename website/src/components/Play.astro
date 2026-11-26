@@ -1,0 +1,175 @@
+---
+import Emblem, { type EmblemName } from './Emblem.astro'
+import Frame from './Frame.astro'
+import { copyFor, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = copyFor(locale).play
+const emblems: EmblemName[] = ['crown', 'chest', 'orb']
+---
+
+<section class="section play" id="play" aria-labelledby="play-title">
+  <Frame size="panel" gem class="wrap play__panel">
+    <div class="play__head">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="play-title" style="--delay: 0.08s">{copy.title}</h2>
+      <p class="lead play__lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+    </div>
+    <ul class="play__items">
+      {
+        copy.items.map((item, index) => (
+          <Frame as="li" size="tile" class="play__item reveal" style={`--delay: ${0.08 * index}s`}>
+            <span class="play__shine" aria-hidden="true" />
+            <span class="play__count gilded" aria-hidden="true">{['I', 'II', 'III'][index]}</span>
+            <span class="medallion play__medal">
+              <Emblem name={emblems[index] ?? 'orb'} />
+            </span>
+            <h3 class="gilded">{item.title}</h3>
+            <p>{item.text}</p>
+          </Frame>
+        ))
+      }
+    </ul>
+  </Frame>
+</section>
+
+<style>
+  .play__panel {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+    padding: clamp(3rem, 5vw, 3.8rem) clamp(2rem, 4vw, 3.6rem) clamp(3.6rem, 6vw, 4.2rem);
+    background:
+      radial-gradient(40rem 18rem at 50% 0%, oklch(0.6 0.23 302 / 0.22), transparent 70%),
+      radial-gradient(30rem 16rem at 50% 100%, oklch(0.84 0.16 86 / 0.1), transparent 70%),
+      linear-gradient(180deg, var(--frame-hi), var(--frame-lo));
+  }
+
+  .play__head {
+    text-align: center;
+  }
+
+  .play__lead {
+    margin-inline: auto;
+    color: var(--fg);
+    opacity: 0.9;
+  }
+
+  .play__items {
+    display: grid;
+    gap: 2.2rem 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .play__item {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 0.75rem;
+    padding: 2rem 1.5rem 1.9rem;
+    text-align: center;
+    transition:
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.6s var(--ease);
+  }
+
+  .play__shine {
+    position: absolute;
+    inset: 3px;
+    z-index: 1;
+    overflow: hidden;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .play__shine::after {
+    content: '';
+    position: absolute;
+    inset: -30% -80%;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      oklch(1 0 0 / 0.05) 45%,
+      oklch(0.98 0.07 92 / 0.22) 50%,
+      oklch(1 0 0 / 0.05) 55%,
+      transparent 60%
+    );
+    transform: translateX(-70%);
+  }
+
+  .play__item:hover {
+    transform: translateY(-5px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 34px -6px oklch(0.84 0.16 86 / 0.55),
+      0 26px 48px -26px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .play__item:hover .play__shine::after {
+    animation: play-sweep 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .play__count {
+    position: absolute;
+    top: 1.5rem;
+    right: 2.4rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.1em;
+    opacity: 0.85;
+  }
+
+  .play__medal {
+    width: 4.4rem;
+    height: 4.4rem;
+    margin-bottom: 0.2rem;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .play__medal :global(.emblem) {
+    width: 2.45rem;
+    height: 2.45rem;
+  }
+
+  .play__item:hover .play__medal {
+    transform: scale(1.08);
+  }
+
+  .play__item h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.25rem;
+    line-height: 1.25;
+    text-wrap: balance;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.85));
+  }
+
+  .play__item p {
+    margin: 0;
+    color: var(--fg);
+    opacity: 0.86;
+    font-size: 0.97rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  @keyframes play-sweep {
+    to {
+      transform: translateX(70%);
+    }
+  }
+
+  @media (min-width: 860px) {
+    .play__items {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

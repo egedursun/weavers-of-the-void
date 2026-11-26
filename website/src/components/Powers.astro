@@ -1,0 +1,302 @@
+---
+import Emblem, { type EmblemName } from './Emblem.astro'
+import Frame from './Frame.astro'
+import star from '../assets/ornate/star.webp'
+import { copyFor, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = copyFor(locale).powers
+const emblems: EmblemName[] = ['key', 'scroll', 'anvil']
+---
+
+<section class="section powers" id="powers" aria-labelledby="powers-title">
+  <div class="wrap">
+    <div class="head center">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="powers-title" style="--delay: 0.08s">{copy.title}</h2>
+      <p class="lead powers__lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+    </div>
+
+    <Frame size="panel" gem class="powers__book reveal">
+      <span class="medallion powers__crown" aria-hidden="true">
+        <Emblem name="crown" />
+      </span>
+      <ul class="powers__spells">
+        {
+          copy.examples.map((example) => (
+            <li class="powers__spell">
+              <img class="star-bullet powers__star" src={star.src} alt="" width="104" height="108" />
+              <span>{example}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </Frame>
+
+    <ul class="powers__pillars">
+      {
+        copy.pillars.map((pillar, index) => (
+          <Frame as="li" size="card" class="powers__pillar reveal" style={`--delay: ${0.08 * index}s`}>
+            <span class="powers__shine" aria-hidden="true" />
+            <span class="medallion powers__medal">
+              <Emblem name={emblems[index]} />
+            </span>
+            <h3 class="gilded">{pillar.title}</h3>
+            <p>{pillar.text}</p>
+          </Frame>
+        ))
+      }
+    </ul>
+
+    <ul class="powers__stats">
+      {
+        copy.stats.map((stat, index) => (
+          <li class="powers__stat reveal" style={`--delay: ${0.1 * index}s`}>
+            <span class="powers__value gilded">{stat.value}</span>
+            <span class="powers__label">{stat.label}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .powers__lead {
+    color: var(--fg);
+    opacity: 0.9;
+  }
+
+  .powers__book {
+    display: grid;
+    justify-items: center;
+    gap: 1.6rem;
+    margin-top: 1.5rem;
+    padding: clamp(2.8rem, 5vw, 3.6rem) clamp(1.4rem, 4vw, 3.2rem) clamp(2.2rem, 4vw, 3rem);
+    background:
+      radial-gradient(46rem 16rem at 50% 0%, oklch(0.84 0.16 86 / 0.1), transparent 70%),
+      radial-gradient(36rem 18rem at 50% 100%, oklch(0.6 0.23 302 / 0.2), transparent 70%),
+      linear-gradient(180deg, var(--frame-hi), var(--frame-lo));
+  }
+
+  .powers__crown {
+    width: 4.6rem;
+    height: 4.6rem;
+  }
+
+  .powers__crown :global(.emblem) {
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+
+  .powers__spells {
+    display: grid;
+    gap: 0.8rem 1.4rem;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .powers__spell {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+    padding: 0.85rem 1.1rem;
+    border: 1px solid oklch(0.84 0.14 86 / 0.32);
+    border-radius: 10px;
+    background: linear-gradient(180deg, oklch(0.22 0.075 297 / 0.9), oklch(0.15 0.05 293 / 0.9));
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06);
+    color: var(--fg);
+    font-size: 1.04rem;
+    line-height: 1.45;
+    transition:
+      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s var(--ease),
+      box-shadow 0.45s var(--ease);
+  }
+
+  .powers__spell:hover {
+    transform: translateX(4px);
+    border-color: var(--border-strong);
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.1),
+      0 0 24px -6px oklch(0.84 0.16 86 / 0.45);
+  }
+
+  .powers__star {
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .powers__spell:hover .powers__star {
+    transform: rotate(45deg) scale(1.15);
+  }
+
+  .powers__pillars {
+    display: grid;
+    gap: 2.4rem;
+    margin: clamp(2.5rem, 5vw, 3.5rem) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .powers__pillar {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 0.8rem;
+    padding: 2.3rem 1.7rem 2.1rem;
+    text-align: center;
+    transition:
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.6s var(--ease);
+  }
+
+  .powers__shine {
+    position: absolute;
+    inset: 4px;
+    z-index: 1;
+    overflow: hidden;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .powers__shine::after {
+    content: '';
+    position: absolute;
+    inset: -30% -80%;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      oklch(1 0 0 / 0.05) 45%,
+      oklch(0.98 0.07 92 / 0.22) 50%,
+      oklch(1 0 0 / 0.05) 55%,
+      transparent 60%
+    );
+    transform: translateX(-70%);
+  }
+
+  .powers__pillar:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 40px -6px oklch(0.84 0.16 86 / 0.55),
+      0 30px 56px -28px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .powers__pillar:hover .powers__shine::after {
+    animation: powers-sweep 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .powers__medal {
+    width: 4.6rem;
+    height: 4.6rem;
+    margin-bottom: 0.3rem;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .powers__medal :global(.emblem) {
+    width: 2.55rem;
+    height: 2.55rem;
+  }
+
+  .powers__pillar:hover .powers__medal {
+    transform: scale(1.08);
+  }
+
+  .powers__pillar h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.3rem, 2vw, 1.5rem);
+    line-height: 1.2;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.85));
+  }
+
+  .powers__pillar p {
+    margin: 0;
+    color: var(--fg);
+    opacity: 0.88;
+    font-size: 1.02rem;
+    line-height: 1.65;
+  }
+
+  .powers__stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.4rem;
+    margin: clamp(2.5rem, 5vw, 3.5rem) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .powers__stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.1rem;
+    max-width: 100%;
+    padding: 0.7rem 1.6rem 0.7rem 1.3rem;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, oklch(0.24 0.08 298), oklch(0.16 0.06 294)) padding-box,
+      linear-gradient(135deg, #fff1b8, var(--gild) 30%, var(--gild-lo) 55%, #f7dc8a 78%, var(--gild)) border-box;
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56 / 0.7),
+      0 0 30px -8px oklch(0.84 0.16 86 / 0.5),
+      inset 0 1px 0 oklch(1 0 0 / 0.12);
+  }
+
+  .powers__value {
+    flex: none;
+    font-family: var(--font-decorative);
+    font-weight: 700;
+    font-size: clamp(1.9rem, 3.4vw, 2.5rem);
+    line-height: 1;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9));
+  }
+
+  .powers__label {
+    min-width: 0;
+    max-width: 17rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gild-hi);
+  }
+
+  @keyframes powers-sweep {
+    to {
+      transform: translateX(70%);
+    }
+  }
+
+  @media (min-width: 760px) {
+    .powers__spells {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .powers__pillars {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 520px) {
+    .powers__stat {
+      border-radius: 18px;
+      padding: 0.9rem 1.2rem;
+    }
+  }
+</style>

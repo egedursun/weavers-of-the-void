@@ -3,31 +3,58 @@ import Emblem, { type EmblemName } from './Emblem.astro'
 import Frame from './Frame.astro'
 import star from '../assets/ornate/star.webp'
 import { copyFor, page, type Locale } from '../i18n'
+import { studioCopy } from '../i18n/studio'
+
+type Part = 'packages' | 'offers' | 'hourly'
 
 interface Props {
   locale: Locale
   compact?: boolean
+  parts?: Part[]
+  heading?: boolean
+  detailed?: boolean
+  id?: string
 }
 
-const { locale, compact = false } = Astro.props
-const copy = copyFor(locale).services
+const { locale, compact = false, parts = ['packages', 'offers', 'hourly'], heading = true, detailed = false, id = 'services' } = Astro.props
+const all = copyFor(locale)
+const copy = all.services
+const details = studioCopy(locale).details
+const showing = (part: Part) => parts.includes(part)
+const titleId = `${id}-title`
+const cloudPoints = detailed ? details.cloud : copy.cloud.points
+const enterprisePoints = detailed ? details.enterprise : copy.enterprise.points
+const hourlyPoints = (key: string): string[] => (detailed ? (details.hourly[key as keyof typeof details.hourly] ?? []) : [])
 const packageEmblems: Record<string, EmblemName> = { standard: 'quill', professional: 'tome', enterprise: 'crown' }
 const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon: 'scroll', consulting: 'book' }
 ---
 
-<section class="section services" id="services" aria-labelledby="services-title">
+<section class:list={['section', 'services', { 'services--bare': !heading }]} id={id} aria-labelledby={titleId}>
   <div class="wrap">
-    <div class="head center">
-      <p class="eyebrow reveal">{copy.eyebrow}</p>
-      <h2 class="title reveal" id="services-title" style="--delay: 0.08s">{copy.title}</h2>
-      <p class="lead services__lead reveal" style="--delay: 0.14s">{copy.lead}</p>
-    </div>
+    {
+      heading ? (
+        <div class="head center">
+          <p class="eyebrow reveal">{copy.eyebrow}</p>
+          <h2 class="title reveal" id={titleId} style="--delay: 0.08s">{copy.title}</h2>
+          <p class="lead services__lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+        </div>
+      ) : (
+        Astro.slots.has('head') && (
+          <div class="head center">
+            <slot name="head" />
+          </div>
+        )
+      )
+    }
 
+    {showing('packages') && (
     <div class="services__intro reveal">
       <h3 class="gilded">{copy.packagesTitle}</h3>
       <p>{copy.packagesLead}</p>
     </div>
+    )}
 
+    {showing('packages') && (
     <ul class="packages">
       {
         copy.packages.map((item, index) => {
@@ -72,7 +99,9 @@ const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon:
         })
       }
     </ul>
+    )}
 
+    {showing('offers') && (
     <div class="offers">
       <Frame as="article" size="card" class="offer offer--cloud reveal">
         <span class="sweep" aria-hidden="true"></span>
@@ -91,7 +120,7 @@ const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon:
         <p class="offer__text">{copy.cloud.text}</p>
         <ul class="points">
           {
-            copy.cloud.points.map((point) => (
+            cloudPoints.map((point) => (
               <li>
                 <img class="star-bullet" src={star.src} alt="" width="104" height="108" />
                 <span>{point}</span>
@@ -120,7 +149,7 @@ const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon:
         <p class="offer__text">{copy.enterprise.text}</p>
         <ul class="points">
           {
-            copy.enterprise.points.map((point) => (
+            enterprisePoints.map((point) => (
               <li>
                 <img class="star-bullet" src={star.src} alt="" width="104" height="108" />
                 <span>{point}</span>
@@ -133,8 +162,12 @@ const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon:
         </a>
       </Frame>
     </div>
+    )}
 
+    {showing('hourly') && (
     <h3 class="services__subtitle gilded reveal">{copy.hourlyTitle}</h3>
+    )}
+    {showing('hourly') && (
     <ul class="hourly">
       {
         copy.hourly.map((item, index) => (
@@ -149,6 +182,16 @@ const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon:
               <span class="price__unit">{copy.perHour}</span>
             </p>
             <p class="hourly__text">{item.text}</p>
+            {hourlyPoints(item.key).length > 0 && (
+              <ul class="points hourly__points">
+                {hourlyPoints(item.key).map((point) => (
+                  <li>
+                    <img class="star-bullet" src={star.src} alt="" width="104" height="108" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
             <a class="button button--ghost hourly__cta" href="#contact" data-service={item.key}>
               {copy.enterprise.cta}
             </a>
@@ -156,8 +199,9 @@ const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon:
         ))
       }
     </ul>
+    )}
 
-    <p class="services__notes reveal">{copy.notes}</p>
+    {heading && <p class="services__notes reveal">{copy.notes}</p>}
     {
       compact && (
         <div class="center reveal">
@@ -183,6 +227,17 @@ const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon:
 </script>
 
 <style>
+  .services--bare {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .hourly__points {
+    width: 100%;
+    margin-bottom: 0.4rem;
+    text-align: start;
+    font-size: 0.95rem;
+  }
+
   .services__lead {
     color: var(--fg);
     opacity: 0.88;

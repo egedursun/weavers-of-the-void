@@ -1,0 +1,418 @@
+---
+import Emblem, { type EmblemName } from './Emblem.astro'
+import Frame from './Frame.astro'
+import { copyFor, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = copyFor(locale).cascade
+const emblems: Record<string, EmblemName> = {
+  harvest: 'chest',
+  beast: 'anvil',
+  treaty: 'scroll',
+  plague: 'orb',
+}
+const numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII']
+---
+
+<section class="section cascade" id="alive" aria-labelledby="cascade-title">
+  <div class="wrap wrap--wide">
+    <div class="head center">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="cascade-title" style="--delay: 0.08s">
+        <span class="gilded cascade__title">{copy.title}</span>
+      </h2>
+      <p class="lead cascade__lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+    </div>
+
+    <div class="cascade__body reveal" data-cascade>
+      <p class="cascade__pick">{copy.pick}</p>
+      <div class="cascade__threads" role="tablist" aria-label={copy.pick}>
+        {
+          copy.chains.map((chain, index) => (
+            <button
+              class="cascade__thread"
+              type="button"
+              role="tab"
+              id={`thread-${chain.key}`}
+              aria-controls={`chain-${chain.key}`}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? 0 : -1}
+              data-thread
+            >
+              <Emblem name={emblems[chain.key] ?? 'orb'} class="cascade__thread-emblem" />
+              <span>{chain.label}</span>
+            </button>
+          ))
+        }
+      </div>
+
+      {
+        copy.chains.map((chain, index) => (
+          <ol
+            class="cascade__chain"
+            role="tabpanel"
+            id={`chain-${chain.key}`}
+            aria-labelledby={`thread-${chain.key}`}
+            hidden={index !== 0}
+            data-chain
+          >
+            <span class="cascade__rail" aria-hidden="true" />
+            {chain.steps.map((step, position) => (
+              <li class="cascade__step" style={`--order: ${position}`}>
+                <span class="medallion cascade__medal" aria-hidden="true">
+                  <span class="cascade__numeral">{numerals[position]}</span>
+                </span>
+                <Frame as="div" size="tile" class="cascade__card">
+                  <h3>{step.title}</h3>
+                  <p>{step.text}</p>
+                </Frame>
+              </li>
+            ))}
+          </ol>
+        ))
+      }
+
+      <ul class="cascade__proof">
+        {
+          copy.proof.map((item) => (
+            <li>
+              <strong class="gilded">{item.value}</strong>
+              <span>{item.label}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-cascade]').forEach((root) => {
+    const threads = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-thread]'))
+    const chains = Array.from(root.querySelectorAll<HTMLElement>('[data-chain]'))
+    const select = (index: number, focus = false) => {
+      threads.forEach((thread, position) => {
+        const chosen = position === index
+        thread.setAttribute('aria-selected', String(chosen))
+        thread.tabIndex = chosen ? 0 : -1
+        chains[position].hidden = !chosen
+      })
+      if (focus) threads[index].focus()
+    }
+    threads.forEach((thread, index) => {
+      thread.addEventListener('click', () => select(index))
+      thread.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+        if (event.key === 'Home') select(0, true)
+        else if (event.key === 'End') select(threads.length - 1, true)
+        else if (step !== 0) select((index + step + threads.length) % threads.length, true)
+      })
+    })
+  })
+</script>
+
+<style>
+  .cascade {
+    overflow: clip;
+  }
+
+  .cascade__title {
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9)) drop-shadow(0 0 26px oklch(0.84 0.16 86 / 0.3));
+  }
+
+  .cascade__lead {
+    color: var(--fg);
+    opacity: 0.9;
+  }
+
+  .cascade__pick {
+    margin: 0 0 1rem;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--gild);
+  }
+
+  .cascade__threads {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin: 0 0 clamp(2.5rem, 5vw, 3.5rem);
+  }
+
+  .cascade__thread {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.6rem 1.3rem 0.6rem 0.8rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: linear-gradient(180deg, oklch(0.21 0.07 296 / 0.9), oklch(0.15 0.05 292 / 0.9));
+    color: var(--fg);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.92rem;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition:
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.5s var(--ease),
+      color 0.3s var(--ease);
+  }
+
+  .cascade__thread :global(.cascade__thread-emblem) {
+    width: 1.7rem;
+    height: 1.7rem;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .cascade__thread:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 24px -6px oklch(0.84 0.16 86 / 0.55);
+  }
+
+  .cascade__thread:hover :global(.cascade__thread-emblem) {
+    transform: scale(1.1) rotate(-4deg);
+  }
+
+  .cascade__thread[aria-selected='true'] {
+    color: oklch(0.18 0.06 290);
+    border-color: transparent;
+    background:
+      linear-gradient(180deg, #fff1b8, var(--gild-hi) 35%, var(--gild) 70%, var(--gild-lo)) padding-box,
+      linear-gradient(135deg, #fff6d6, var(--gild-lo)) border-box;
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56 / 0.8),
+      0 0 30px -4px oklch(0.84 0.16 86 / 0.65),
+      inset 0 1px 0 oklch(1 0 0 / 0.5);
+  }
+
+  .cascade__thread:focus-visible {
+    outline: 2px solid var(--gild-hi);
+    outline-offset: 3px;
+  }
+
+  .cascade__chain {
+    position: relative;
+    display: grid;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0 0 0 4.4rem;
+    list-style: none;
+  }
+
+  .cascade__chain[hidden] {
+    display: none;
+  }
+
+  .cascade__rail {
+    position: absolute;
+    top: 1.5rem;
+    bottom: 1.5rem;
+    left: 1.85rem;
+    width: 2px;
+    background: linear-gradient(180deg, var(--gild-lo), var(--gild-hi) 50%, var(--gild-lo));
+    box-shadow: 0 0 12px oklch(0.84 0.16 86 / 0.55);
+    transform-origin: top;
+  }
+
+  .is-shown .cascade__rail {
+    animation: cascade-draw-down 1.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .cascade__step {
+    position: relative;
+  }
+
+  .is-shown .cascade__step {
+    animation: cascade-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.15s + var(--order) * 0.18s);
+  }
+
+  .cascade__medal {
+    --medal: 3.7rem;
+    position: absolute;
+    left: -4.4rem;
+    top: 0.4rem;
+    z-index: 2;
+    width: var(--medal);
+    height: var(--medal);
+  }
+
+  .is-shown .cascade__medal {
+    animation: cascade-glow 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(0.25s + var(--order) * 0.18s);
+  }
+
+  .cascade__numeral {
+    position: relative;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    line-height: 1;
+    background: linear-gradient(180deg, #fff6d6, var(--gild) 60%, var(--gild-lo));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 1px 0 oklch(0.25 0.07 56));
+  }
+
+  .cascade__card {
+    display: grid;
+    align-content: start;
+    gap: 0.45rem;
+    padding: 1.25rem 1.35rem 1.35rem;
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.55s var(--ease);
+  }
+
+  .cascade__step:hover .cascade__card {
+    transform: translateY(-4px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 30px -6px oklch(0.84 0.16 86 / 0.5),
+      0 22px 40px -22px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .cascade__card h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.12rem;
+    line-height: 1.25;
+    color: var(--gild-hi);
+    text-wrap: balance;
+  }
+
+  .cascade__card p {
+    margin: 0;
+    color: var(--fg);
+    opacity: 0.85;
+    font-size: 0.97rem;
+    line-height: 1.55;
+  }
+
+  .cascade__proof {
+    display: grid;
+    gap: 1.25rem;
+    margin: clamp(3rem, 6vw, 4.25rem) auto 0;
+    padding: 1.6rem clamp(1.25rem, 3vw, 2.5rem);
+    max-width: 62rem;
+    list-style: none;
+    border-block: 1px solid transparent;
+    border-image: linear-gradient(90deg, transparent, var(--gild-lo) 15%, var(--gild-hi) 50%, var(--gild-lo) 85%, transparent) 1;
+  }
+
+  .cascade__proof li {
+    display: grid;
+    align-content: start;
+    justify-items: center;
+    gap: 0.3rem;
+    text-align: center;
+  }
+
+  .cascade__proof strong {
+    font-family: var(--font-decorative);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 4vw, 2.9rem);
+    line-height: 1;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9)) drop-shadow(0 0 18px oklch(0.84 0.16 86 / 0.25));
+  }
+
+  .cascade__proof span {
+    max-width: 16rem;
+    color: var(--fg);
+    opacity: 0.85;
+    font-size: 0.95rem;
+  }
+
+  @keyframes cascade-rise {
+    from {
+      opacity: 0;
+      translate: 0 18px;
+    }
+  }
+
+  @keyframes cascade-glow {
+    from {
+      opacity: 0;
+      scale: 0.6;
+    }
+    60% {
+      box-shadow: 0 0 0 6px oklch(0.84 0.16 86 / 0.25), 0 0 40px oklch(0.84 0.16 86 / 0.7);
+    }
+  }
+
+  @keyframes cascade-draw-down {
+    from {
+      transform: scaleY(0);
+    }
+  }
+
+  @keyframes cascade-draw-across {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @media (min-width: 640px) {
+    .cascade__proof {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1080px) {
+    .cascade__chain {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 1.4rem;
+      padding: 0;
+    }
+
+    .cascade__rail {
+      top: 1.85rem;
+      bottom: auto;
+      left: 10%;
+      right: 10%;
+      width: auto;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gild-lo), var(--gild-hi) 50%, var(--gild-lo));
+      transform-origin: left;
+      animation-name: cascade-draw-across;
+    }
+
+    .cascade__step {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      justify-items: center;
+      gap: 1.4rem;
+    }
+
+    .cascade__medal {
+      position: relative;
+      left: auto;
+      top: auto;
+    }
+
+    .cascade__card {
+      align-self: stretch;
+      height: 100%;
+      text-align: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .is-shown .cascade__rail,
+    .is-shown .cascade__step,
+    .is-shown .cascade__medal {
+      animation: none;
+    }
+  }
+</style>

@@ -1,0 +1,180 @@
+---
+import Emblem from '../Emblem.astro'
+import Frame from '../Frame.astro'
+import Icon from '../Icon.astro'
+import star from '../../assets/ornate/star.webp'
+import { REPOSITORY, type Locale } from '../../i18n'
+import { studioCopy } from '../../i18n/studio'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = studioCopy(locale).promise
+const sides = [
+  { key: 'free', side: copy.free, emblem: 'key', href: REPOSITORY, external: true, icon: 'github', gold: false },
+  { key: 'studio', side: copy.studio, emblem: 'crown', href: '#journey', external: false, icon: 'arrowRight', gold: true },
+] as const
+---
+
+<section class="section promise" aria-labelledby="promise-title">
+  <div class="wrap">
+    <div class="head center">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="promise-title" style="--delay: 0.08s">
+        {copy.title} <span class="gilded promise__accent">{copy.titleAccent}</span>
+      </h2>
+      <p class="lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+    </div>
+
+    <div class="promise__pair">
+      {
+        sides.map(({ key, side, emblem, href, external, icon, gold }, index) => (
+          <Frame
+            as="article"
+            size="card"
+            class:list={['promise__side', 'reveal', `promise__side--${key}`]}
+            style={`--delay: ${0.1 * index}s`}
+            aria-labelledby={`promise-${key}`}
+          >
+            <div class="promise__top">
+              <span class="medallion">
+                <Emblem name={emblem} />
+              </span>
+              <h3 id={`promise-${key}`}>{side.title}</h3>
+              <strong class="promise__price gilded">{side.price}</strong>
+            </div>
+            <ul class="promise__list">
+              {side.items.map((item) => (
+                <li>
+                  <img class="star-bullet" src={star.src} alt="" width="104" height="108" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              class:list={['button', gold ? 'button--gold' : 'button--ghost', 'promise__cta']}
+              href={href}
+              target={external ? '_blank' : undefined}
+              rel={external ? 'noopener noreferrer' : undefined}
+            >
+              <Icon name={icon} />
+              {side.cta}
+            </a>
+          </Frame>
+        ))
+      }
+      <span class="promise__join medallion" aria-hidden="true">
+        <Icon name="infinity" />
+      </span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .promise__accent {
+    display: inline-block;
+  }
+
+  .promise__pair {
+    position: relative;
+    display: grid;
+    gap: 2.6rem;
+  }
+
+  .promise__side {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 2.2rem 1.9rem 1.9rem;
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.55s var(--ease);
+  }
+
+  .promise__side:hover {
+    transform: translateY(-5px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 40px -6px oklch(0.84 0.16 86 / 0.5),
+      0 28px 52px -26px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .promise__side--studio {
+    --frame-hi: oklch(0.31 0.12 302);
+    --frame-lo: oklch(0.19 0.08 296);
+    --frame-glow: oklch(0.84 0.16 86 / 0.22);
+  }
+
+  .promise__top {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.4rem 1rem;
+  }
+
+  .promise__top h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.45rem;
+    line-height: 1.2;
+    color: var(--gild-hi);
+  }
+
+  .promise__price {
+    grid-column: 2;
+    font-family: var(--font-decorative);
+    font-size: 1.35rem;
+    line-height: 1.1;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9));
+  }
+
+  .promise__list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 1.1rem 0 0;
+    border-top: 1px solid var(--frame-rule);
+    list-style: none;
+  }
+
+  .promise__list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    line-height: 1.45;
+  }
+
+  .promise__list .star-bullet {
+    margin-top: 0.12rem;
+  }
+
+  .promise__cta {
+    align-self: flex-start;
+    margin-top: auto;
+  }
+
+  .promise__join {
+    display: none;
+  }
+
+  @media (min-width: 900px) {
+    .promise__pair {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4.5rem;
+    }
+
+    .promise__join {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 5;
+      display: grid;
+      width: 4.2rem;
+      height: 4.2rem;
+      translate: -50% -50%;
+    }
+  }
+</style>

@@ -1,0 +1,562 @@
+---
+import Emblem, { type EmblemName } from '../Emblem.astro'
+import Frame from '../Frame.astro'
+import Icon from '../Icon.astro'
+import star from '../../assets/ornate/star.webp'
+import { copyFor, type Locale } from '../../i18n'
+import { studioCopy } from '../../i18n/studio'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = studioCopy(locale).hero
+const charter = copy.charter
+const outputs = copyFor(locale).outputs.items
+const tally = [
+  { target: 50, suffix: '', label: charter.epochs },
+  { target: 2500, suffix: '', label: charter.years },
+  { target: 30000, suffix: '', label: charter.records },
+  { target: 16500, suffix: '+', label: charter.rules },
+]
+const relics: EmblemName[] = ['book', 'tome', 'chest']
+const formatted = (value: number) => new Intl.NumberFormat(locale === 'tr' ? 'tr-TR' : 'en-US').format(value)
+---
+
+<section class="studio" aria-labelledby="studio-title">
+  <div class="studio__backdrop" aria-hidden="true">
+    <span class="studio__nebula studio__nebula--violet"></span>
+    <span class="studio__nebula studio__nebula--gold"></span>
+  </div>
+
+  <div class="wrap studio__grid">
+    <div class="studio__copy">
+      <p class="eyebrow rise">{copy.eyebrow}</p>
+      <h1 class="studio__title rise" id="studio-title" style="--delay: 0.08s">
+        {copy.title} <span class="studio__accent">{copy.titleAccent}</span>
+      </h1>
+      <p class="lead rise" style="--delay: 0.16s">{copy.lead}</p>
+      <div class="studio__actions rise" style="--delay: 0.24s">
+        <a class="button button--gold" href="#contact">
+          <Icon name="sparkles" />
+          {copy.primary}
+        </a>
+        <a class="button button--ghost" href="#compare">
+          <Icon name="layers" />
+          {copy.secondary}
+        </a>
+      </div>
+      <ul class="studio__proof rise" style="--delay: 0.32s">
+        {
+          copy.proof.map((item) => (
+            <li>
+              <img class="star-bullet" src={star.src} alt="" width="104" height="108" />
+              {item}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <Frame as="article" size="panel" gem class="charter rise" style="--delay: 0.18s" aria-labelledby="charter-title">
+      <span class="charter__glow" aria-hidden="true"></span>
+      <header class="charter__head">
+        <span class="medallion charter__medal">
+          <Emblem name="quill" />
+        </span>
+        <div class="charter__heading">
+          <h2 class="charter__title" id="charter-title">{charter.title}</h2>
+          <p class="charter__seed">
+            <span>{charter.seed}</span>
+            <strong>{charter.seedValue}</strong>
+          </p>
+        </div>
+        <span class="charter__status">
+          <span class="charter__pulse" aria-hidden="true"></span>
+          {charter.status}
+        </span>
+      </header>
+
+      <dl class="charter__tally">
+        {
+          tally.map((item) => (
+            <div class="charter__stat">
+              <dt>{item.label}</dt>
+              <dd>
+                <span class="gilded" data-count-to={item.target} data-count-suffix={item.suffix}>
+                  {formatted(item.target)}
+                  {item.suffix}
+                </span>
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+
+      <div class="charter__depth">
+        <p class="charter__label">
+          <span>{charter.depth}</span>
+          <strong>{charter.depthValue}</strong>
+        </p>
+        <div class="charter__meter" aria-hidden="true">
+          <span class="charter__fill"></span>
+          <span class="charter__tick" style="--at: 8%"></span>
+          <span class="charter__tick" style="--at: 32%"></span>
+          <span class="charter__tick" style="--at: 96%"></span>
+        </div>
+      </div>
+
+      <div class="charter__relics">
+        <p class="charter__label"><span>{charter.relics}</span></p>
+        <ul>
+          {
+            outputs.map((item, index) => (
+              <li>
+                <span class="medallion charter__relic">
+                  <Emblem name={relics[index] ?? 'book'} />
+                </span>
+                <span class="charter__relic-name">{item.title}</span>
+                <span class="charter__relic-format">{item.format}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </Frame>
+  </div>
+</section>
+
+<script>
+  const numbers = Array.from(document.querySelectorAll<HTMLElement>('[data-count-to]'))
+  const language = document.documentElement.lang === 'tr' ? 'tr-TR' : 'en-US'
+  const format = new Intl.NumberFormat(language)
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  const count = (element: HTMLElement) => {
+    const target = Number(element.dataset.countTo ?? 0)
+    const suffix = element.dataset.countSuffix ?? ''
+    const started = performance.now()
+    const length = 1400 + Math.min(target, 30000) / 30
+    const step = (now: number) => {
+      const progress = Math.min((now - started) / length, 1)
+      const eased = 1 - Math.pow(1 - progress, 4)
+      element.textContent = `${format.format(Math.round(target * eased))}${suffix}`
+      if (progress < 1) window.requestAnimationFrame(step)
+    }
+    window.requestAnimationFrame(step)
+  }
+
+  if (!still && 'IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            count(entry.target as HTMLElement)
+            observer.unobserve(entry.target)
+          }
+        }
+      },
+      { threshold: 0.4 },
+    )
+    numbers.forEach((element) => observer.observe(element))
+  }
+</script>
+
+<style>
+  .studio {
+    position: relative;
+    padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(3rem, 6vw, 4.5rem);
+    isolation: isolate;
+  }
+
+  .studio__backdrop {
+    position: absolute;
+    inset: -80px 0 -120px;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    mask-image: linear-gradient(180deg, #000 0%, #000 60%, transparent 100%);
+  }
+
+  .studio__nebula {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.75;
+    animation: studio-drift 26s ease-in-out infinite alternate;
+  }
+
+  .studio__nebula--violet {
+    width: 50rem;
+    height: 38rem;
+    right: -14rem;
+    top: -6rem;
+    background: radial-gradient(closest-side, oklch(0.5 0.24 302 / 0.55), transparent);
+  }
+
+  .studio__nebula--gold {
+    width: 28rem;
+    height: 24rem;
+    right: 16%;
+    top: 34%;
+    background: radial-gradient(closest-side, oklch(0.78 0.15 80 / 0.26), transparent);
+    animation-duration: 32s;
+  }
+
+  .studio__grid {
+    display: grid;
+    gap: clamp(2.5rem, 5vw, 3.5rem);
+    align-items: center;
+  }
+
+  .studio__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.2rem, 4.4vw, 3.6rem);
+    line-height: 1.08;
+    text-wrap: balance;
+    text-shadow: 0 2px 30px oklch(0.1 0.04 290 / 0.8);
+  }
+
+  .studio__accent {
+    display: block;
+    margin-top: 0.08em;
+    font-family: var(--font-decorative);
+    background: linear-gradient(
+      100deg,
+      var(--gild-lo) 0%,
+      var(--gild) 25%,
+      var(--gild-hi) 45%,
+      #fffbe8 50%,
+      var(--gild-hi) 55%,
+      var(--gild) 75%,
+      var(--gild-lo) 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 0 26px oklch(0.84 0.16 86 / 0.32));
+    animation: studio-shine 7s ease-in-out infinite;
+  }
+
+  .studio__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 2rem;
+  }
+
+  .studio__proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.8rem;
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .studio__proof li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  .charter {
+    display: grid;
+    gap: 1.4rem;
+    padding: clamp(2rem, 4vw, 2.6rem) clamp(1.3rem, 3vw, 2.2rem) clamp(1.6rem, 3vw, 2.2rem);
+    --frame-glow: oklch(0.6 0.23 302 / 0.34);
+  }
+
+  .charter__glow {
+    position: absolute;
+    inset: 12% 10% auto;
+    z-index: -1;
+    height: 50%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, oklch(0.84 0.16 86 / 0.12), transparent);
+    filter: blur(20px);
+    pointer-events: none;
+  }
+
+  .charter__head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.6rem 1rem;
+  }
+
+  .charter__heading {
+    min-width: 0;
+  }
+
+  .charter__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.45rem;
+    line-height: 1.2;
+    color: var(--gild-hi);
+  }
+
+  .charter__seed {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.5rem;
+    margin: 0.2rem 0 0;
+    color: var(--faint);
+    font-size: 0.92rem;
+  }
+
+  .charter__seed strong {
+    color: var(--fg);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  .charter__status {
+    grid-column: 1 / -1;
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid oklch(0.78 0.16 150 / 0.45);
+    border-radius: 999px;
+    background: oklch(0.78 0.16 150 / 0.1);
+    color: oklch(0.88 0.12 150);
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .charter__pulse {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 oklch(0.78 0.16 150 / 0.6);
+    animation: studio-pulse 2.2s ease-out infinite;
+  }
+
+  .charter__tally {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  .charter__stat {
+    display: grid;
+    gap: 0.15rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--frame-rule);
+    border-radius: 6px;
+    background: linear-gradient(180deg, oklch(0.24 0.09 298 / 0.65), oklch(0.16 0.05 292 / 0.65));
+    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06);
+  }
+
+  .charter__stat dt {
+    order: 2;
+    color: var(--faint);
+    font-size: 0.82rem;
+    line-height: 1.3;
+  }
+
+  .charter__stat dd {
+    margin: 0;
+    font-family: var(--font-decorative);
+    font-weight: 700;
+    font-size: clamp(1.5rem, 2.6vw, 1.9rem);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .charter__stat dd span {
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9));
+  }
+
+  .charter__label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin: 0 0 0.6rem;
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gild);
+  }
+
+  .charter__label strong {
+    color: var(--gild-hi);
+    letter-spacing: 0.08em;
+  }
+
+  .charter__meter {
+    position: relative;
+    height: 0.8rem;
+    border: 1px solid var(--gild-deep);
+    border-radius: 999px;
+    background: oklch(0.12 0.04 291);
+    box-shadow: inset 0 2px 4px oklch(0.05 0.04 290 / 0.8);
+  }
+
+  .charter__fill {
+    position: absolute;
+    inset: 1px;
+    width: calc(96% - 2px);
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--gem-lo), var(--violet) 40%, var(--gild) 85%, var(--gild-hi));
+    box-shadow: 0 0 14px -2px oklch(0.84 0.16 86 / 0.6);
+    transform-origin: left;
+    animation: studio-fill 2.4s 0.6s var(--ease) both;
+  }
+
+  .charter__tick {
+    position: absolute;
+    top: 50%;
+    left: var(--at);
+    width: 0.7rem;
+    height: 0.7rem;
+    border: 2px solid var(--gild-hi);
+    border-radius: 50%;
+    background: var(--gem-lo);
+    translate: -50% -50%;
+    box-shadow: 0 0 8px oklch(0.84 0.16 86 / 0.7);
+  }
+
+  .charter__relics ul {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .charter__relics li {
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    text-align: center;
+  }
+
+  .charter__relic {
+    width: 3rem;
+    height: 3rem;
+    transition: transform 0.4s var(--ease);
+  }
+
+  .charter__relic .emblem {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  .charter__relics li:hover .charter__relic {
+    transform: translateY(-3px) rotate(-6deg);
+  }
+
+  .charter__relic-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    color: var(--fg);
+  }
+
+  .charter__relic-format {
+    color: var(--faint);
+    font-size: 0.76rem;
+    line-height: 1.3;
+  }
+
+  .rise {
+    animation: studio-rise 0.9s var(--ease) both;
+    animation-delay: var(--delay, 0s);
+  }
+
+  @keyframes studio-rise {
+    from {
+      opacity: 0;
+      translate: 0 18px;
+    }
+  }
+
+  @keyframes studio-fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+
+  @keyframes studio-pulse {
+    70% {
+      box-shadow: 0 0 0 0.5rem oklch(0.78 0.16 150 / 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 oklch(0.78 0.16 150 / 0);
+    }
+  }
+
+  @keyframes studio-drift {
+    to {
+      translate: -3rem 2rem;
+      scale: 1.08;
+    }
+  }
+
+  @keyframes studio-shine {
+    0%,
+    100% {
+      background-position: 100% 0;
+    }
+    50% {
+      background-position: 0 0;
+    }
+  }
+
+  @media (min-width: 560px) {
+    .charter__head {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .charter__status {
+      grid-column: auto;
+      justify-self: end;
+    }
+
+    .charter__tally {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .charter__stat {
+      padding: 0.85rem 0.7rem;
+      text-align: center;
+    }
+  }
+
+  @media (min-width: 980px) {
+    .studio__grid {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    }
+
+    .charter__tally {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .charter__stat {
+      padding: 0.85rem 1rem;
+      text-align: start;
+    }
+  }
+</style>

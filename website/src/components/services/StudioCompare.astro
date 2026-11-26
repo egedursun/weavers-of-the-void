@@ -1,0 +1,393 @@
+---
+import Emblem, { type EmblemName } from '../Emblem.astro'
+import Frame from '../Frame.astro'
+import Icon from '../Icon.astro'
+import { copyFor, type Locale } from '../../i18n'
+import { studioCopy } from '../../i18n/studio'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const all = copyFor(locale)
+const copy = studioCopy(locale).compare
+const packages = all.services.packages
+const values = copy.values
+const rows = copy.rows
+const emblems: Record<string, EmblemName> = { standard: 'quill', professional: 'tome', enterprise: 'crown' }
+const chosen = 'professional'
+const percent = (value: number) => (locale === 'tr' ? `%${value}` : `${value}%`)
+
+type Row = { key: string; label: string; cells: string[]; meter?: boolean }
+const tableRows: Row[] = [
+  { key: 'epochs', label: rows.epochs, cells: packages.map(() => values.epochs) },
+  { key: 'history', label: rows.history, cells: packages.map(() => values.history) },
+  { key: 'records', label: rows.records, cells: packages.map(() => values.records) },
+  { key: 'review', label: rows.review, cells: values.reviewHours },
+  { key: 'sampled', label: rows.sampled, cells: values.sampled },
+  { key: 'depth', label: copy.depth, cells: copy.depthLevels.map(percent), meter: true },
+  { key: 'delivery', label: rows.delivery, cells: packages.map((item) => item.delivery) },
+  { key: 'revisions', label: rows.revisions, cells: values.revisions },
+  { key: 'extra', label: rows.extra, cells: packages.map(() => values.extra) },
+  { key: 'payment', label: rows.payment, cells: packages.map(() => values.payment) },
+]
+---
+
+<section class="section compare" id="compare" aria-labelledby="compare-title">
+  <div class="wrap">
+    <div class="head center">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="compare-title" style="--delay: 0.08s">{copy.title}</h2>
+      <p class="lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+    </div>
+
+    <div class="compare__picker reveal" role="group" aria-label={copy.pick} data-tier-picker>
+      {
+        packages.map((item) => (
+          <button type="button" class="compare__tier" aria-pressed={item.key === chosen ? 'true' : 'false'} data-tier={item.key}>
+            <Emblem name={emblems[item.key] ?? 'quill'} />
+            <span>{item.name}</span>
+          </button>
+        ))
+      }
+    </div>
+
+    <Frame size="panel" class="compare__frame reveal" data-compare data-chosen={chosen}>
+      <div class="compare__scroll">
+        <table class="compare__table">
+          <caption class="visually-hidden">{copy.title}</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="compare__corner">{copy.feature}</th>
+              {
+                packages.map((item) => (
+                  <th scope="col" class="compare__col" data-col={item.key}>
+                    {item.key === 'professional' && <span class="compare__flag">{all.services.popular}</span>}
+                    <span class="medallion compare__medal">
+                      <Emblem name={emblems[item.key] ?? 'quill'} />
+                    </span>
+                    <span class="compare__name">{item.name}</span>
+                    <span class="compare__price gilded">{item.price}</span>
+                    <span class="compare__unit">{all.services.perProject}</span>
+                  </th>
+                ))
+              }
+            </tr>
+          </thead>
+          <tbody>
+            {
+              tableRows.map((row) => (
+                <tr data-row={row.key}>
+                  <th scope="row">{row.label}</th>
+                  {row.cells.map((cell, index) => (
+                    <td data-col={packages[index]?.key}>
+                      {row.meter ? (
+                        <span class="compare__depth">
+                          <span class="compare__meter" aria-hidden="true">
+                            <span class="compare__fill" style={`--level: ${copy.depthLevels[index] ?? 0}%`} />
+                          </span>
+                          <strong>{cell}</strong>
+                        </span>
+                      ) : (
+                        cell
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td></td>
+              {
+                packages.map((item) => (
+                  <td data-col={item.key}>
+                    <a
+                      class:list={['button', 'button--block', item.key === 'professional' ? 'button--gold' : 'button--ghost', 'compare__cta']}
+                      href="#contact"
+                      data-service={item.key}
+                    >
+                      {copy.cta} · {item.name}
+                      <Icon name="arrowRight" />
+                    </a>
+                  </td>
+                ))
+              }
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </Frame>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-tier-picker]').forEach((picker) => {
+    const table = picker.parentElement?.querySelector<HTMLElement>('[data-compare]')
+    const buttons = Array.from(picker.querySelectorAll<HTMLButtonElement>('[data-tier]'))
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        buttons.forEach((other) => other.setAttribute('aria-pressed', String(other === button)))
+        if (table && button.dataset.tier) table.dataset.chosen = button.dataset.tier
+      })
+    })
+  })
+</script>
+
+<style>
+  .compare__picker {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto 2.2rem;
+    padding: 0.35rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: oklch(0.16 0.05 292 / 0.85);
+    box-shadow: inset 0 2px 6px oklch(0.05 0.04 290 / 0.7);
+  }
+
+  .compare__tier {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+      color 0.25s var(--ease),
+      background-color 0.25s var(--ease),
+      box-shadow 0.25s var(--ease);
+  }
+
+  .compare__tier :global(.emblem) {
+    width: 1.3rem;
+    height: 1.3rem;
+    opacity: 0.65;
+    transition: opacity 0.25s var(--ease), transform 0.4s var(--ease);
+  }
+
+  .compare__tier:hover {
+    color: var(--fg);
+  }
+
+  .compare__tier[aria-pressed='true'] {
+    background: linear-gradient(180deg, oklch(0.36 0.14 302), oklch(0.22 0.09 296));
+    border-color: var(--gild);
+    color: var(--gild-hi);
+    box-shadow: 0 0 22px -6px oklch(0.84 0.16 86 / 0.55);
+  }
+
+  .compare__tier[aria-pressed='true'] :global(.emblem) {
+    opacity: 1;
+    transform: scale(1.1) rotate(-6deg);
+  }
+
+  .compare__frame {
+    padding: clamp(1.2rem, 3vw, 2rem) clamp(0.8rem, 2.5vw, 1.8rem);
+  }
+
+  .compare__scroll {
+    overflow-x: auto;
+  }
+
+  .compare__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.98rem;
+  }
+
+  .compare__table th,
+  .compare__table td {
+    padding: 0.85rem 1rem;
+    text-align: center;
+    vertical-align: middle;
+    transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+  }
+
+  .compare__table tbody th {
+    color: var(--muted);
+    font-weight: 500;
+    text-align: start;
+  }
+
+  .compare__table tbody tr + tr > * {
+    border-top: 1px solid oklch(0.84 0.16 86 / 0.14);
+  }
+
+  .compare__table tbody td {
+    color: var(--fg);
+  }
+
+  .compare__corner {
+    color: var(--gild);
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-align: start;
+    text-transform: uppercase;
+    vertical-align: bottom;
+  }
+
+  .compare__col {
+    position: relative;
+    padding-top: 1.8rem;
+  }
+
+  .compare__col > span {
+    display: block;
+  }
+
+  .compare__flag {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    padding: 0.15rem 0.7rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--gild-hi), var(--gild));
+    color: oklch(0.18 0.06 290);
+    font-family: var(--font-display);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    translate: -50% 0;
+  }
+
+  .compare__medal {
+    margin: 0 auto 0.6rem;
+    width: 3.1rem;
+    height: 3.1rem;
+  }
+
+  .compare__medal :global(.emblem) {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .compare__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--gild-hi);
+  }
+
+  .compare__price {
+    margin-top: 0.2rem;
+    font-family: var(--font-decorative);
+    font-size: clamp(1.5rem, 2.4vw, 1.9rem);
+    line-height: 1.1;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9));
+  }
+
+  .compare__unit {
+    margin-top: 0.2rem;
+    color: var(--gild);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .compare__depth {
+    display: grid;
+    gap: 0.35rem;
+    justify-items: center;
+  }
+
+  .compare__depth strong {
+    color: var(--gild-hi);
+    font-family: var(--font-display);
+  }
+
+  .compare__meter {
+    position: relative;
+    width: min(100%, 9rem);
+    height: 0.6rem;
+    overflow: hidden;
+    border: 1px solid var(--gild-deep);
+    border-radius: 999px;
+    background: oklch(0.12 0.04 291);
+  }
+
+  .compare__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--level);
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--violet), var(--gild) 80%, var(--gild-hi));
+    box-shadow: 0 0 10px -1px oklch(0.84 0.16 86 / 0.6);
+    transform-origin: left;
+    transform: scaleX(0);
+    transition: transform 1.6s 0.3s var(--ease);
+  }
+
+  .compare__frame:global(.is-shown) .compare__fill {
+    transform: none;
+  }
+
+  .compare__table tfoot td {
+    padding-top: 1.4rem;
+  }
+
+  .compare__cta {
+    min-height: 2.7rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.85rem;
+    white-space: normal;
+  }
+
+  [data-chosen='standard'] [data-col='standard'],
+  [data-chosen='professional'] [data-col='professional'],
+  [data-chosen='enterprise'] [data-col='enterprise'] {
+    background: oklch(0.6 0.23 302 / 0.13);
+  }
+
+  [data-chosen='standard'] thead [data-col='standard'],
+  [data-chosen='professional'] thead [data-col='professional'],
+  [data-chosen='enterprise'] thead [data-col='enterprise'] {
+    border-radius: 8px 8px 0 0;
+    box-shadow: inset 0 2px 0 var(--gild);
+  }
+
+  [data-chosen='standard'] tfoot [data-col='standard'],
+  [data-chosen='professional'] tfoot [data-col='professional'],
+  [data-chosen='enterprise'] tfoot [data-col='enterprise'] {
+    border-radius: 0 0 8px 8px;
+  }
+
+  @media (max-width: 759px) {
+    .compare__table th,
+    .compare__table td {
+      padding: 0.75rem 0.6rem;
+    }
+
+    [data-chosen='standard'] [data-col]:not([data-col='standard']),
+    [data-chosen='professional'] [data-col]:not([data-col='professional']),
+    [data-chosen='enterprise'] [data-col]:not([data-col='enterprise']) {
+      display: none;
+    }
+
+    .compare__table tfoot td:first-child {
+      display: none;
+    }
+
+    .compare__table tfoot td[data-col] {
+      padding-inline: 0;
+    }
+  }
+</style>

@@ -3,13 +3,16 @@ import Emblem, { type EmblemName } from './Emblem.astro'
 import Frame from './Frame.astro'
 import { copyFor, type Locale } from '../i18n'
 
+type FaqCopy = { eyebrow: string; title: string; items: { q: string; a: string }[] }
+
 interface Props {
   locale: Locale
+  content?: FaqCopy
 }
 
-const { locale } = Astro.props
-const copy = copyFor(locale).faq
-const emblems: EmblemName[] = ['chest', 'orb', 'key', 'tome', 'tower']
+const { locale, content } = Astro.props
+const copy: FaqCopy = content ?? copyFor(locale).faq
+const emblems: EmblemName[] = ['network', 'chest', 'orb', 'key', 'tome', 'tower']
 ---
 
 <section class="section section--tight faq" aria-labelledby="faq-title">

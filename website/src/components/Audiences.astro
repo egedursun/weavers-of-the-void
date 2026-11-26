@@ -1,0 +1,154 @@
+---
+import Emblem, { type EmblemName } from './Emblem.astro'
+import Frame from './Frame.astro'
+import { copyFor, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = copyFor(locale).audiences
+---
+
+<section class="section audiences" id="for" aria-labelledby="audiences-title">
+  <div class="wrap wrap--wide">
+    <div class="head center">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="audiences-title" style="--delay: 0.08s">{copy.title}</h2>
+    </div>
+    <ul class="audiences__grid">
+      {
+        copy.items.map((item, index) => (
+          <Frame as="li" size="card" gem class="audiences__card reveal" style={`--delay: ${0.08 * index}s`}>
+            <span class="audiences__shine" aria-hidden="true" />
+            <span class="medallion audiences__medal">
+              <Emblem name={item.emblem as EmblemName} />
+            </span>
+            <h3 class="gilded">{item.title}</h3>
+            <span class="audiences__rule" aria-hidden="true" />
+            <p>{item.text}</p>
+          </Frame>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .audiences__grid {
+    display: grid;
+    gap: 2.8rem 2.8rem;
+    margin: 0;
+    padding: 1rem 0 0;
+    list-style: none;
+  }
+
+  .audiences__card {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 0.9rem;
+    height: 100%;
+    padding: 2.8rem 1.7rem 2.3rem;
+    text-align: center;
+    transition:
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.6s var(--ease);
+  }
+
+  .audiences__shine {
+    position: absolute;
+    inset: 4px;
+    z-index: 1;
+    overflow: hidden;
+    border-radius: 2px;
+    pointer-events: none;
+  }
+
+  .audiences__shine::after {
+    content: '';
+    position: absolute;
+    inset: -30% -80%;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      oklch(1 0 0 / 0.05) 45%,
+      oklch(0.98 0.07 92 / 0.22) 50%,
+      oklch(1 0 0 / 0.05) 55%,
+      transparent 60%
+    );
+    transform: translateX(-70%);
+  }
+
+  .audiences__card:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 40px -6px oklch(0.84 0.16 86 / 0.55),
+      0 30px 56px -28px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .audiences__card:hover .audiences__shine::after {
+    animation: audiences-sweep 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .audiences__medal {
+    width: 5.4rem;
+    height: 5.4rem;
+    margin-bottom: 0.3rem;
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .audiences__medal :global(.emblem) {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .audiences__card:hover .audiences__medal {
+    transform: scale(1.08);
+  }
+
+  .audiences__card h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.4rem, 2vw, 1.6rem);
+    line-height: 1.2;
+    text-wrap: balance;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.85));
+  }
+
+  .audiences__rule {
+    width: 4.5rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gild-hi), transparent);
+  }
+
+  .audiences__card p {
+    margin: 0;
+    color: var(--fg);
+    opacity: 0.86;
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  @keyframes audiences-sweep {
+    to {
+      transform: translateX(70%);
+    }
+  }
+
+  @media (min-width: 720px) {
+    .audiences__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1240px) {
+    .audiences__grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+</style>

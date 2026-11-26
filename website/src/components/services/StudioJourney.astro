@@ -1,0 +1,271 @@
+---
+import Emblem, { type EmblemName } from '../Emblem.astro'
+import Frame from '../Frame.astro'
+import Icon from '../Icon.astro'
+import type { Locale } from '../../i18n'
+import { studioCopy } from '../../i18n/studio'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = studioCopy(locale).journey
+const emblems: EmblemName[] = ['scroll', 'planet', 'network', 'chest']
+const numerals = ['I', 'II', 'III', 'IV']
+---
+
+<section class="section journey" id="journey" aria-labelledby="journey-title">
+  <div class="wrap">
+    <div class="head center">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="journey-title" style="--delay: 0.08s">{copy.title}</h2>
+      <p class="lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+      <span class="divider reveal" style="--delay: 0.18s" aria-hidden="true"></span>
+    </div>
+
+    <div class="journey__track">
+    <span class="journey__road" aria-hidden="true"><span class="journey__glow"></span></span>
+    <ol class="journey__path">
+      {
+        copy.steps.map((step, index) => (
+          <li class="journey__stop reveal" style={`--delay: ${0.12 * index}s`}>
+            <span class="journey__marker">
+              <span class="medallion journey__medal">
+                <Emblem name={emblems[index] ?? 'scroll'} />
+              </span>
+              <span class="journey__numeral" aria-hidden="true">{numerals[index]}</span>
+            </span>
+            <Frame size="card" class="journey__card">
+              <p class="journey__stage">
+                {copy.stage} {numerals[index]}
+              </p>
+              <h3>{step.title}</h3>
+              <p class="journey__text">{step.text}</p>
+              <p class="journey__reward">
+                <Icon name="check" />
+                <span>
+                  <span class="journey__reward-label">{copy.reward}</span>
+                  {step.reward}
+                </span>
+              </p>
+            </Frame>
+          </li>
+        ))
+      }
+    </ol>
+    </div>
+  </div>
+</section>
+
+<style>
+  .journey__track {
+    position: relative;
+  }
+
+  .journey__path {
+    position: relative;
+    display: grid;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .journey__road {
+    position: absolute;
+    top: 1.8rem;
+    bottom: 1.8rem;
+    left: 1.8rem;
+    width: 2px;
+    background: linear-gradient(180deg, transparent, var(--gild-deep) 8%, var(--gild-deep) 92%, transparent);
+    translate: -50% 0;
+  }
+
+  .journey__glow {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent, var(--gild-hi), transparent);
+    background-size: 100% 30%;
+    background-repeat: no-repeat;
+    animation: journey-travel-down 5s linear infinite;
+    opacity: 0.85;
+  }
+
+  .journey__stop {
+    position: relative;
+    display: grid;
+    grid-template-columns: 3.6rem minmax(0, 1fr);
+    gap: 1.1rem;
+    align-items: start;
+  }
+
+  .journey__marker {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    justify-items: center;
+  }
+
+  .journey__numeral {
+    position: absolute;
+    right: -0.45rem;
+    bottom: -0.45rem;
+    display: grid;
+    place-items: center;
+    min-width: 1.6rem;
+    height: 1.6rem;
+    padding: 0 0.3rem;
+    border: 1px solid var(--gild);
+    border-radius: 999px;
+    background: linear-gradient(180deg, oklch(0.34 0.13 302), oklch(0.2 0.08 296));
+    color: var(--gild-hi);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    box-shadow: 0 4px 10px oklch(0.05 0.04 290 / 0.8);
+  }
+
+  .journey__card {
+    display: grid;
+    gap: 0.6rem;
+    padding: 1.6rem 1.5rem 1.5rem;
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.55s var(--ease);
+  }
+
+  .journey__stop:hover .journey__card {
+    transform: translateY(-4px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 36px -6px oklch(0.84 0.16 86 / 0.45),
+      0 26px 48px -24px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .journey__stop:hover .journey__medal {
+    animation: journey-bob 1.2s var(--ease);
+  }
+
+  .journey__stage {
+    margin: 0;
+    color: var(--gild);
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .journey__card h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.35rem;
+    line-height: 1.2;
+    color: var(--gild-hi);
+  }
+
+  .journey__text {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.98rem;
+    text-wrap: pretty;
+  }
+
+  .journey__reward {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin: 0.4rem 0 0;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid oklch(0.6 0.23 302 / 0.4);
+    border-radius: 6px;
+    background: oklch(0.6 0.23 302 / 0.12);
+    color: var(--fg);
+    font-size: 0.93rem;
+    line-height: 1.4;
+  }
+
+  .journey__reward :global(svg) {
+    margin-top: 0.1rem;
+    color: var(--gild);
+  }
+
+  .journey__reward-label {
+    display: block;
+    color: var(--violet-hi);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  @keyframes journey-travel-down {
+    from {
+      background-position: 0 -40%;
+    }
+    to {
+      background-position: 0 140%;
+    }
+  }
+
+  @keyframes journey-travel-across {
+    from {
+      background-position: -40% 0;
+    }
+    to {
+      background-position: 140% 0;
+    }
+  }
+
+  @keyframes journey-bob {
+    40% {
+      transform: translateY(-6px) rotate(-6deg);
+    }
+  }
+
+  @media (min-width: 1000px) {
+    .journey__path {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.6rem;
+    }
+
+    .journey__road {
+      top: 1.8rem;
+      bottom: auto;
+      left: 12.5%;
+      right: 12.5%;
+      width: auto;
+      height: 2px;
+      translate: 0 -50%;
+      background: linear-gradient(90deg, transparent, var(--gild-deep) 4%, var(--gild-deep) 96%, transparent);
+    }
+
+    .journey__glow {
+      background: linear-gradient(90deg, transparent, var(--gild-hi), transparent);
+      background-size: 30% 100%;
+      background-repeat: no-repeat;
+      animation-name: journey-travel-across;
+    }
+
+    .journey__stop {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto 1fr;
+      justify-items: center;
+      gap: 1.4rem;
+    }
+
+    .journey__card {
+      height: 100%;
+      align-content: start;
+      text-align: center;
+    }
+
+    .journey__reward {
+      text-align: start;
+      margin-top: auto;
+    }
+  }
+</style>
