@@ -2,7 +2,7 @@
 import Emblem, { type EmblemName } from './Emblem.astro'
 import Frame from './Frame.astro'
 import Icon from './Icon.astro'
-import { REPOSITORY, copyFor, type Locale } from '../i18n'
+import { COMMUNITY, REPOSITORY, copyFor, type Locale } from '../i18n'
 
 interface Props {
   locale: Locale
@@ -37,6 +37,10 @@ const emblems: EmblemName[] = ['chest', 'crown', 'key', 'orb']
         <a class="button button--ghost" href={REPOSITORY} target="_blank" rel="noopener noreferrer">
           <Icon name="star" />
           {copy.star}
+        </a>
+        <a class="button button--ghost" href={COMMUNITY} target="_blank" rel="noopener noreferrer">
+          <Emblem name="network" class="free__community-emblem" />
+          {copy.community}
         </a>
       </div>
     </div>
@@ -117,6 +121,11 @@ const emblems: EmblemName[] = ['chest', 'crown', 'key', 'orb']
   .free__lead {
     color: var(--fg);
     opacity: 0.9;
+  }
+
+  .free__actions :global(.free__community-emblem) {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
   .free__actions {

@@ -8,6 +8,7 @@ import {
   LOCALES,
   LOCALE_NAMES,
   LOCALE_TAGS,
+  COMMUNITY,
   REPOSITORY,
   asset,
   copyFor,
@@ -193,6 +194,7 @@ const links = [
           <h2 id="footer-project">{copy.footer.company}</h2>
           <ul>
             <li><a href={REPOSITORY} target="_blank" rel="noopener noreferrer">{copy.footer.github}</a></li>
+            <li><a href={COMMUNITY} target="_blank" rel="noopener noreferrer">{copy.footer.community}</a></li>
             <li><a href={repositoryFile('LICENSING.md')} target="_blank" rel="noopener noreferrer">{copy.footer.license}</a></li>
             <li><a href={repositoryFile('TRADEMARKS.md')} target="_blank" rel="noopener noreferrer">{copy.footer.trademarks}</a></li>
             <li><a href={repositoryFile('CONTRIBUTING.md')} target="_blank" rel="noopener noreferrer">{copy.footer.contribute}</a></li>

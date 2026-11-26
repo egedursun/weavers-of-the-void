@@ -299,6 +299,7 @@ export const tr: Copy = {
     rightsNote: 'Telif payı yok, lisans ücreti yok, hiçbir zaman.',
   },
   free: {
+    community: 'Topluluğa katıl',
     eyebrow: 'Ücretsiz, gerçekten ücretsiz',
     title: ['Deneme süresi yok.', 'Paket yok.', 'Tuzak yok.'],
     price: '$0',
@@ -377,6 +378,9 @@ export const tr: Copy = {
     details: 'Tüm ayrıntıları gör',
   },
   contact: {
+    communityTitle: 'Yazılımla ilgili sorun mu var?',
+    communityText: 'Topluluğa sor, dünyalarını paylaş ve fikir öner.',
+    communityCta: 'Tartışmalara katıl',
     eyebrow: 'Dünyanı birlikte kuralım',
     title: 'Aklındakini anlat',
     lead: 'Bir hizmet seç ve birkaç satır yaz. Her talebe bizzat yanıt veriyoruz.',
@@ -466,6 +470,10 @@ export const tr: Copy = {
         a: 'Kendi bilgisayarında ya da kendi sunucunda. Hazır bir Docker kurulumu her şeyi tek komutla başlatır ve dünyaların senin diskinde kalır. Kendin çalıştırmak istemezsen senin için özel bir sunucu barındırabiliriz.',
       },
       {
+        q: 'Nereden yardım alabilir, dünyamı nerede paylaşabilirim?',
+        a: 'GitHub\u2019daki topluluk tartışmalarında. Soru sor, yaptığın dünyaları göster, fikir öner ve simülatörü geliştirenlerle konuş. Bağlantı sayfanın altında ve indirme düğmesinin yanında.',
+      },
+      {
         q: 'Bu bir oyun mu?',
         a: 'İstersen. Tanrıların, seviye atlayan ve yıldız kazanan altı nadirlikte kartlardır; hedefler, başarımlar ve dünyanla birlikte büyüyen bir skor vardır. Hepsinin altında bir kıyamet saati işler. Ya da bunların hepsini boş ver ve dünyanın yaşamasını izle.',
       },
@@ -507,6 +515,7 @@ export const tr: Copy = {
     cta: '100’ünü de ücretsiz edin',
   },
   footer: {
+    community: 'Topluluk',
     tagline: 'Kendi tarihini yazan açık kaynak evren simülatörü.',
     product: 'Ürün',
     company: 'Proje',

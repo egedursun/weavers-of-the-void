@@ -14,7 +14,7 @@ const { locale, content } = Astro.props
 const copy: FaqCopy = content ?? copyFor(locale).faq
 const shown = copy.more ? 8 : copy.items.length
 const hiddenCount = copy.items.length - shown
-const emblems: EmblemName[] = ['network', 'chest', 'planet', 'anvil', 'scroll', 'crown', 'book', 'orb', 'tower', 'map', 'tome', 'key', 'quill', 'chest', 'book', 'tower']
+const emblems: EmblemName[] = ['network', 'chest', 'planet', 'anvil', 'scroll', 'crown', 'book', 'orb', 'tower', 'map', 'tome', 'key', 'network', 'quill', 'chest', 'book', 'tower']
 ---
 
 <section class="section section--tight faq" aria-labelledby="faq-title">

@@ -10,6 +10,7 @@ export const LOCALE_TAGS: Record<Locale, string> = { en: 'en_US', tr: 'tr_TR' }
 const COPY: Record<Locale, Copy> = { en, tr }
 
 export const REPOSITORY = 'https://github.com/egedursun/weavers-of-the-void'
+export const COMMUNITY = 'https://github.com/egedursun/weavers-of-the-void/discussions'
 export const FORM_ENDPOINT = 'https://formsubmit.co/ajax/edogandursun@gmail.com'
 
 export function copyFor(locale: Locale): Copy {

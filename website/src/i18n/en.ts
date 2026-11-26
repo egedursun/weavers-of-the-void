@@ -297,6 +297,7 @@ export const en = {
     rightsNote: 'No royalties, no licence fees, ever.',
   },
   free: {
+    community: 'Join the community',
     eyebrow: 'Free means free',
     title: ['No trial.', 'No tiers.', 'No catch.'],
     price: '$0',
@@ -375,6 +376,9 @@ export const en = {
     details: 'See every detail',
   },
   contact: {
+    communityTitle: 'Questions about the software?',
+    communityText: 'Ask the community, share your worlds and suggest ideas.',
+    communityCta: 'Join the discussions',
     eyebrow: 'Let’s build your world',
     title: 'Tell us what you have in mind',
     lead: 'Pick a service and share a few lines. We answer every request personally.',
@@ -464,6 +468,10 @@ export const en = {
         a: 'On your own computer or your own server. A ready Docker setup starts everything with one command, and your worlds stay on your disk. If you would rather not run it yourself, we can host a private server for you.',
       },
       {
+        q: 'Where can I get help or share my world?',
+        a: 'In the community discussions on GitHub. Ask questions, show the worlds you have made, suggest ideas and talk with the people who build the simulator. The link is in the footer and next to the download button.',
+      },
+      {
         q: 'Is it a game?',
         a: 'If you want it to be. Your gods are cards in six rarities that level up and earn stars, and there are goals, achievements and a score that grows with your world. A doom clock ticks under it all. Or ignore all that and simply watch your world live.',
       },
@@ -505,6 +513,7 @@ export const en = {
     cta: 'Get all 100 free',
   },
   footer: {
+    community: 'Community',
     tagline: 'The open-source universe simulator that writes its own history.',
     product: 'Product',
     company: 'Project',
