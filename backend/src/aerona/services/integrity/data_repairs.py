@@ -114,6 +114,7 @@ async def mark_rejected_bonds(session: AsyncSession, epoch: int) -> int:
 
 
 GRAPH_ENDS_STEP = "graph_ends"
+SCHEMA_STEP = "schema_repairs"
 
 
 class DataRepairs:
@@ -175,15 +176,15 @@ class DataRepairs:
             ("engine_drafts", lambda session, rules, epoch: requeue_engine_drafts(session)),
             ("value_axes", lambda session, rules, epoch: complete_value_axes(session)),
             ("retuned_rules", lambda session, rules, epoch: move_retuned_rules(session)),
-            ("schema_repairs", lambda session, rules, epoch: schema_repairs(session)),
+            (SCHEMA_STEP, lambda session, rules, epoch: schema_repairs(session)),
         ]
 
-    async def run(self, session: AsyncSession, rules: Rules, on_step: StepReport | None = None) -> dict[str, int]:
+    async def run(self, session: AsyncSession, rules: Rules, on_step: StepReport | None = None, *, skip: frozenset[str] = frozenset()) -> dict[str, int]:
         cosmos = await CosmosRepository(session).get()
         if cosmos is None:
             return {}
         counters: dict[str, int] = {}
-        steps = self.steps()
+        steps = [step for step in self.steps() if step[0] not in skip]
         for index, (name, step) in enumerate(steps, start=1):
             if on_step is not None:
                 on_step(name, index, len(steps))
@@ -218,7 +219,10 @@ class DataRepairs:
         ]
 
     async def run_all(self, session: AsyncSession, rules: Rules, epoch: int) -> int:
-        return sum((await self.run(session, rules)).values())
+        return sum((await self.run(session, rules, skip=frozenset({SCHEMA_STEP}))).values())
+
+    async def schema(self, session: AsyncSession, rules: Rules, epoch: int) -> int:
+        return await schema_repairs(session)
 
     async def graph_ends(self, session: AsyncSession, rules: Rules, epoch: int) -> int:
         return (await repair_graph_ends(session, rules, epoch, self._log)).total
@@ -228,7 +232,7 @@ class DataRepairs:
         if cosmos is None:
             return {}
         counters: dict[str, int] = {}
-        steps = self.startup_steps() + (self.history_steps() if history else [])
+        steps = [*self.startup_steps(), (SCHEMA_STEP, self.schema), *(self.history_steps() if history else [])]
         for name, step in steps:
             counters[name] = await step(session, rules, cosmos.epoch)
         if history:

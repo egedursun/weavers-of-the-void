@@ -8,7 +8,7 @@ from aerona.catalog.incident_kinds.spec import FactSpec
 from aerona.catalog.life.services import PRESENT_MODES
 from aerona.constants.engine import LOCATION_CHAIN_MAX_HOPS
 from aerona.db.base import Base
-from aerona.db.ledger_capture import jsonable, key_text
+from aerona.db.ledger_capture import UNCAPTURED_TABLES, jsonable, key_text
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.entities import EntityRow
@@ -281,7 +281,11 @@ async def broken_checkpoints(session: AsyncSession) -> list[int]:
     )
     found: list[int] = []
     for checkpoint in await session.scalars(statement):
-        if checkpoint.table_name in Base.metadata.tables and not await checkpoint_still_holds(session, checkpoint):
+        if (
+            checkpoint.table_name in Base.metadata.tables
+            and checkpoint.table_name not in UNCAPTURED_TABLES
+            and not await checkpoint_still_holds(session, checkpoint)
+        ):
             found.append(checkpoint.id)
     return found
 

@@ -46,7 +46,15 @@ from aerona.services.images.queue import ImageQueue
 from aerona.services.images.records import ImageRecords
 from aerona.services.importance import persist
 from aerona.services.integrity.containment import close_market_trade, close_mismatched_inside
-from aerona.services.integrity.data_repairs import GRAPH_ENDS_STEP, DataRepairs, checkpoint, history_signed, refresh_planner_statistics, sign_history
+from aerona.services.integrity.data_repairs import (
+    GRAPH_ENDS_STEP,
+    SCHEMA_STEP,
+    DataRepairs,
+    checkpoint,
+    history_signed,
+    refresh_planner_statistics,
+    sign_history,
+)
 from aerona.services.integrity.graph_ends import repair_at_epoch_end
 from aerona.services.integrity.network import RepairLog
 from aerona.services.ledger import Ledger
@@ -331,6 +339,7 @@ async def run_maintenance(application: ApplicationServices, database: Database, 
     finally:
         application.repairs_ready.set()
     counters[GRAPH_ENDS_STEP] = await repair_graph_in_background(application, database, rules)
+    counters[SCHEMA_STEP] = await repair_schema_in_background(application, database, rules)
     return counters
 
 
@@ -344,6 +353,15 @@ async def repair_graph_in_background(application: ApplicationServices, database:
             return await application.repairs.graph_ends(session, rules.current, cosmos.epoch)
     except Exception:
         logger.exception("background graph repair failed")
+        return 0
+
+
+async def repair_schema_in_background(application: ApplicationServices, database: Database, rules: RulesService) -> int:
+    try:
+        async with database.write() as session:
+            return await application.repairs.schema(session, rules.current, 0)
+    except Exception:
+        logger.exception("background schema repair failed")
         return 0
 
 
