@@ -1117,10 +1117,17 @@ export function SettlementPlanSection({
       icon={Landmark}
     >
       {view.isPending && <Muted>Walking the streets…</Muted>}
+      {plan === null && (
+        <EmptyState
+          icon={Landmark}
+          title='Not surveyed yet'
+          description='This settlement is surveyed at the end of the next epoch.'
+        />
+      )}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}
-          title='Not surveyed yet'
+          title='The settlement could not be read'
           description={view.error.message}
         />
       )}

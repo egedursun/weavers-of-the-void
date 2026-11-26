@@ -4,6 +4,7 @@ from fastapi import APIRouter, Path
 from sqlalchemy import select
 
 from aerona.api.dependencies import ServicesDep, reader, world_rules
+from aerona.api.missing import NO_SPECIES
 from aerona.api.schemas.records import NodeRef
 from aerona.api.schemas.wilds import (
     AnatomyView,
@@ -87,12 +88,14 @@ def listed(refs: Refs, ids: list[int]) -> list[NodeRef]:
     return [refs[item] for item in ids if item in refs]
 
 
-@router.get("/entities/{entity_id}/ecology", response_model=SpeciesCard)
-async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard:
+@router.get("/entities/{entity_id}/ecology", response_model=SpeciesCard | None)
+async def species_card(entity_id: Id, services: ServicesDep) -> SpeciesCard | None:
     async with reader(services) as session:
+        if await session.get(EntityRow, entity_id) is None:
+            raise NotFoundError(NO_SPECIES)
         row = await session.get(SpeciesProfileRow, entity_id)
         if row is None:
-            raise NotFoundError("The world has not yet described this kind; it will after the next epoch.")
+            return None
         ranges = list(
             await session.scalars(select(SpeciesRangeRow).where(SpeciesRangeRow.species_entity_id == entity_id).order_by(SpeciesRangeRow.abundance.desc()))
         )

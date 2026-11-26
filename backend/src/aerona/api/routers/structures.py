@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.missing import NO_STRUCTURE
 from aerona.api.schemas.structures import (
     ConstructionView,
     DesignView,
@@ -249,12 +250,14 @@ async def host_structures(services: ServicesDep, entity_id: int = Path(ge=1)) ->
         )
 
 
-@router.get("/entities/{entity_id}/structure", response_model=StructureView)
-async def one_structure(services: ServicesDep, entity_id: int = Path(ge=1)) -> StructureView:
+@router.get("/entities/{entity_id}/structure", response_model=StructureView | None)
+async def one_structure(services: ServicesDep, entity_id: int = Path(ge=1)) -> StructureView | None:
     async with reader(services) as session:
         rules = await rules_of(session)
         work = await session.get(EntityRow, entity_id)
         profile = await session.get(StructureProfileRow, entity_id)
-        if work is None or work.entity_type is not EntityType.STRUCTURE or profile is None:
-            raise NotFoundError("This structure is surveyed at the next epoch.")
+        if work is None or work.entity_type is not EntityType.STRUCTURE:
+            raise NotFoundError(NO_STRUCTURE)
+        if profile is None:
+            return None
         return await structure_view(session, rules, work, profile)

@@ -129,14 +129,14 @@ def prosthesis_view(row: ProsthesisRow, names: dict[int, tuple[str, str]]) -> Pr
     )
 
 
-@router.get("/bodies/{node_id}", response_model=BodyView)
-async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyView:
+@router.get("/bodies/{node_id}", response_model=BodyView | None)
+async def body_view(services: ServicesDep, node_id: int = Path(ge=1)) -> BodyView | None:
     rules = services.rules.current
     async with reader(services) as session:
         bearer = await bearer_row(session, node_id)
         body = await session.get(BodyRow, node_id)
         if body is None:
-            raise NotFoundError("This bearer has no body yet; it forms on the next epoch.")
+            return None
         anatomy = anatomy_for(body)
         injuries = await injuries_of(session, node_id)
         prostheses = await prostheses_of(session, node_id)

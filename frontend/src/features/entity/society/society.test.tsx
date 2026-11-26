@@ -244,6 +244,21 @@ describe('society sections', () => {
     await expect.element(screen.getByText('Held').first()).toBeVisible()
   })
 
+  it('says a city founded this epoch is not surveyed yet', async () => {
+    serve()
+    onApi('GET', '/api/entities/30/settlement-plan', null)
+    onApi('GET', '/api/entities/40/disease', null)
+    const { screen } = await renderApp(
+      <>
+        <SettlementPlanSection settlementId={30} />
+        <DiseaseSection diseaseId={40} />
+      </>
+    )
+    await expect.element(screen.getByText('Not surveyed yet')).toBeVisible()
+    await expect.element(screen.getByText('Not yet studied')).toBeVisible()
+    expect(callsTo('GET', '/api/entities/30/settlement-plan')).toHaveLength(1)
+  })
+
   it('shows the city and governs it field by field', async () => {
     serve()
     onApi('GET', '/api/entities/30/settlement-plan', PLAN)

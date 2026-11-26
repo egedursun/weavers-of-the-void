@@ -1,4 +1,3 @@
-import { failure } from '@/test-utils/mockServer'
 import { renderScreen } from '@/test-utils/renderScreen'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { page } from 'vitest/browser'
@@ -407,10 +406,7 @@ describe('Speak with them', () => {
     const { screen, server } = await renderScreen(
       <EntryWindow pages={PAGES} />,
       {
-        'GET /api/presence/speakers/{node_id}': failure(
-          404,
-          'This record cannot speak.'
-        ),
+        'GET /api/presence/speakers/{node_id}': null,
       },
       '/?entry=entity:30'
     )

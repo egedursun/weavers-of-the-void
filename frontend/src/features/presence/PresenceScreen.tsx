@@ -27,7 +27,7 @@ import { PastAudiences } from './PastAudiences'
 import { PresenceStage, STAGE_ID } from './PresenceStage'
 import { SpeakerRail } from './SpeakerRail'
 import { SummonForm } from './SummonForm'
-import { isNotSpeaker, useSpeaker } from './api'
+import { useSpeaker } from './api'
 import { validatePresenceSearch } from './presenceSearch'
 import { usePresenceStream } from './usePresenceStream'
 
@@ -45,32 +45,34 @@ function Chosen({ nodeId }: { nodeId: number }) {
   if (speaker.isError)
     return (
       <Section title='Summon to Presence' icon={Speech} surface='card'>
-        {isNotSpeaker(speaker.error) ? (
-          <EmptyState
-            icon={MicOff}
-            title='This one cannot be summoned'
-            description='Only a son, a foreign god, or a mortal, spirit, being or beast with a mind of its own can speak. The Creator, places, peoples and other collectives cannot; their members can.'
-          />
-        ) : (
-          <EmptyState
-            icon={CircleAlert}
-            title='The speaker could not be called'
-            description={speaker.error.message}
-            action={
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => void speaker.refetch()}
-              >
-                <RefreshCw />
-                Try again
-              </Button>
-            }
-          />
-        )}
+        <EmptyState
+          icon={CircleAlert}
+          title='The speaker could not be called'
+          description={speaker.error.message}
+          action={
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => void speaker.refetch()}
+            >
+              <RefreshCw />
+              Try again
+            </Button>
+          }
+        />
       </Section>
     )
   const view = speaker.data
+  if (view === null)
+    return (
+      <Section title='Summon to Presence' icon={Speech} surface='card'>
+        <EmptyState
+          icon={MicOff}
+          title='This one cannot be summoned'
+          description='Only a son, a foreign god, or a mortal, spirit, being or beast with a mind of its own can speak. The Creator, places, peoples and other collectives cannot; their members can.'
+        />
+      </Section>
+    )
   const card = view.card
   return (
     <>

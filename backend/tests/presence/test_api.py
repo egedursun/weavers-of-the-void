@@ -74,8 +74,10 @@ async def test_a_speaker_card_names_place_world_patron_and_tongues(presence: Api
 
 async def test_only_beings_with_minds_can_be_summoned(presence: ApiWorld) -> None:
     core = seeded(presence).core
-    assert (await presence.http.get(f"/api/presence/speakers/{core.people.id}")).status_code == 400
-    assert (await presence.http.get(f"/api/presence/speakers/{core.creator.id}")).status_code == 400
+    silent = await presence.http.get(f"/api/presence/speakers/{core.people.id}")
+    assert (silent.status_code, silent.json()) == (200, None)
+    silent = await presence.http.get(f"/api/presence/speakers/{core.creator.id}")
+    assert (silent.status_code, silent.json()) == (200, None)
     assert (await presence.http.get(f"/api/presence/speakers/{MISSING}")).status_code == 404
     refused = await presence.http.post("/api/presence/sessions", json={"node_id": core.people.id, "guise": "creator", "record": "on_record"})
     assert refused.status_code == 400

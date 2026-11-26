@@ -91,7 +91,7 @@ export function startMockServer(routes: MockRoutes): MockServer {
         : route.handler
     if (reply instanceof MockFailure)
       return jsonResponse({ detail: reply.detail }, reply.status)
-    return jsonResponse(reply ?? {}, 200)
+    return jsonResponse(reply === undefined ? {} : reply, 200)
   })
   return {
     calls,

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { plural } from '@/lib/units'
@@ -9,14 +9,15 @@ import { Input } from '@/components/ui/input'
 import {
   EmptyState,
   EntityLink,
+  FieldTile,
   FormRow,
+  LoadingBlock,
+  Paged,
   Section,
   StatBar,
   Timeline,
   TimelineItem,
   type TimelineTone,
-  Paged,
-  FieldTile,
 } from '@/components/domain'
 import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { type EntryKind } from '@/components/layout/entry/entryStack'
@@ -462,13 +463,22 @@ export function MemoriesSection({ nodeId }: { nodeId: number }) {
       description='What this one remembers of others and how it regards them. Memories fade with time, are weighed by its values, pass to heirs and can set a mortal on vengeance.'
       icon={MEMORY_ICON}
     >
-      {!mind ? (
+      {query.isPending && <LoadingBlock label='Reading the memories' />}
+      {query.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='The memories could not be read'
+          description={query.error.message}
+        />
+      )}
+      {mind === null && (
         <EmptyState
           icon={MEMORY_ICON}
           title='No memories yet'
           description='The next epoch gives this one a mind and the memories of its past.'
         />
-      ) : (
+      )}
+      {mind && (
         <div className='@container/mind flex min-w-0 flex-col gap-4'>
           {mind.opinions.length > 0 && (
             <MindCard

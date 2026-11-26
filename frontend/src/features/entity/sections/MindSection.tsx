@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Lock, Plus, Unlock, X } from 'lucide-react'
+import { Lock, Plus, TriangleAlert, Unlock, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type ActProp } from '@/api/mutation'
@@ -15,6 +15,7 @@ import {
   EmptyState,
   EntityLink,
   KpiTile,
+  LoadingBlock,
   Medallion,
   Paged,
   PagedList,
@@ -632,13 +633,22 @@ export function MindSection({ nodeId }: { nodeId: number }) {
       description='What this one values, what temper it has, what it needs or what presses on it. Values drift with neighbours, rulers, gods and what they live through.'
       icon={MIND_ICON}
     >
-      {!mind ? (
+      {query.isPending && <LoadingBlock label='Reading the mind' />}
+      {query.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='The mind could not be read'
+          description={query.error.message}
+        />
+      )}
+      {mind === null && (
         <EmptyState
           icon={MIND_ICON}
           title='No mind yet'
           description='The next epoch gives this one values, a temper and needs.'
         />
-      ) : (
+      )}
+      {mind && (
         <div className='@container/mind flex min-w-0 flex-col gap-4'>
           <MindHero mind={mind} />
           <div className='grid min-w-0 grid-cols-1 gap-3 @xl/mind:grid-cols-2'>

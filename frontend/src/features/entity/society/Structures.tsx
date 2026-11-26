@@ -1213,10 +1213,17 @@ export function StructureSection({
       icon={Landmark}
     >
       {view.isPending && <Muted>Surveying the work…</Muted>}
+      {data === null && (
+        <EmptyState
+          icon={Landmark}
+          title='Not surveyed yet'
+          description='This work is surveyed at the end of the next epoch.'
+        />
+      )}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}
-          title='Not surveyed yet'
+          title='The work could not be read'
           description={view.error.message}
         />
       )}

@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Compass,
-  Gem,
   Eye,
   Footprints,
+  Gem,
   Ghost,
   Lock,
   Map as MapIcon,
@@ -16,6 +16,7 @@ import {
   Skull,
   Sparkles,
   Trash2,
+  TriangleAlert,
   Undo2,
   Unlock,
   Waves,
@@ -38,12 +39,13 @@ import {
 } from '@/components/ui/tooltip'
 import {
   EmptyState,
+  FieldTile,
   KpiTile,
+  LoadingBlock,
   Medallion,
+  Paged,
   Section,
   StatBar,
-  Paged,
-  FieldTile,
 } from '@/components/domain'
 import { MultiSelect } from '@/components/domain/MultiSelect'
 import { Label, Muted, Text } from '@/components/typography'
@@ -1051,13 +1053,22 @@ export function RegionTerrainSection({ regionId }: { regionId: number }) {
       description='What preys on those who live and pass here, what the land remembers, how holy it is, and which realms know it.'
       icon={ScrollText}
     >
-      {!data ? (
+      {view.isPending && <LoadingBlock label='Reading the land' />}
+      {view.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='The land could not be read'
+          description={view.error.message}
+        />
+      )}
+      {data === null && (
         <EmptyState
           icon={ShieldAlert}
           title='Not surveyed yet'
           description='The next epoch reads this land’s dangers and memory.'
         />
-      ) : (
+      )}
+      {data && (
         <div className='@container/wild flex min-w-0 flex-col gap-4'>
           <div className='grid min-w-0 grid-cols-1 gap-3 @md/wild:grid-cols-2 @3xl/wild:grid-cols-4'>
             <KpiTile

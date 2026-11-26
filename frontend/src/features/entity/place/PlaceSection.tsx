@@ -1,8 +1,16 @@
 import { useState } from 'react'
-import { Eye, Footprints, Lock, Sparkles, Swords, Unlock } from 'lucide-react'
+import {
+  Eye,
+  Footprints,
+  Lock,
+  Sparkles,
+  Swords,
+  TriangleAlert,
+  Unlock,
+} from 'lucide-react'
 import { placeKindValues } from '@/api/generated/schema'
 import { Button } from '@/components/ui/button'
-import { EmptyState, KpiTile, Section } from '@/components/domain'
+import { EmptyState, KpiTile, LoadingBlock, Section } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { useGodGate } from '@/features/pantheon/gate'
 import { busyOf, PERCENT } from '../lore/model'
@@ -227,13 +235,22 @@ export function PlaceSection({ placeId }: { placeId: number }) {
       description='What kind of place this is, how holy it is, who comes to it, and what it hides.'
       icon={PLACE_ICON}
     >
-      {!profile ? (
+      {view.isPending && <LoadingBlock label='Surveying the place' />}
+      {view.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='The place could not be read'
+          description={view.error.message}
+        />
+      )}
+      {profile === null && (
         <EmptyState
           icon={PLACE_ICON}
           title='Not surveyed yet'
           description='The next epoch gives this place its kind.'
         />
-      ) : (
+      )}
+      {profile && (
         <div className='@container/place flex min-w-0 flex-col gap-4'>
           <Summary profile={profile} />
           <PlaceSecrets profile={profile} />

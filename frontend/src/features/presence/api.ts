@@ -46,7 +46,7 @@ function refreshWorld(client: QueryClient) {
   void client.invalidateQueries({ queryKey: queryKeys.ledger.all })
 }
 
-export function isNotSpeaker(error: unknown): boolean {
+function isMissingNode(error: unknown): boolean {
   return error instanceof ApiError && error.status === HTTP_NOT_FOUND
 }
 
@@ -85,7 +85,7 @@ export function useSpeaker(nodeId: number | null) {
       ),
     enabled: nodeId !== null,
     retry: (failures, error) =>
-      !isNotSpeaker(error) && failures < SPEAKER_RETRIES,
+      !isMissingNode(error) && failures < SPEAKER_RETRIES,
   })
 }
 

@@ -215,15 +215,17 @@ async def memory_views(session: AsyncSession, node_id: int, epoch: int) -> list[
     ]
 
 
-@router.get("/minds/{node_id}", response_model=MindView)
-async def mind_view(services: ServicesDep, node_id: int = Path(ge=1)) -> MindView:
+@router.get("/minds/{node_id}", response_model=MindView | None)
+async def mind_view(services: ServicesDep, node_id: int = Path(ge=1)) -> MindView | None:
     async with reader(services) as session:
         rules = await world_rules(services, session)
         node = await load_holder(session, node_id)
         kind = holder_kind(node) if node is not None else None
         mind = await mind_of(session, node_id)
-        if node is None or kind is None or mind is None:
+        if node is None or kind is None:
             raise NotFoundError(NO_MIND)
+        if mind is None:
+            return None
         epoch = await cosmos_epoch(session)
         reference = await reference_of(session, node)
         reference_values = await values_of(session, reference) if reference is not None else {}

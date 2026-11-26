@@ -43,7 +43,7 @@ from aerona.services.accounts.guard import ensure_allowed
 from aerona.services.container import Services
 from aerona.services.images.records import covers_of
 from aerona.services.presence.runtime import PresenceRuntime
-from aerona.services.presence.speakers import SpeakerCard, require_speaker, speaker_card, speaker_lines
+from aerona.services.presence.speakers import SpeakerCard, heard_speaker, speaker_card, speaker_lines
 from aerona.services.presence.tools import may_act
 
 router = APIRouter(prefix="/presence", tags=["presence"])
@@ -200,11 +200,13 @@ async def read_speakers(
     )
 
 
-@router.get("/speakers/{node_id}", response_model=PresenceSpeakerView)
-async def read_speaker(services: ServicesDep, node_id: int = Path(ge=1)) -> PresenceSpeakerView:
+@router.get("/speakers/{node_id}", response_model=PresenceSpeakerView | None)
+async def read_speaker(services: ServicesDep, node_id: int = Path(ge=1)) -> PresenceSpeakerView | None:
     async with reader(services) as session:
         rules = await world_rules(services, session)
-        speaker = await require_speaker(session, rules, node_id)
+        speaker = await heard_speaker(session, rules, node_id)
+        if speaker is None:
+            return None
         card = await speaker_card(session, speaker)
         covers = await covers_of(session, [node_id])
         current = await open_session_of(session, node_id)

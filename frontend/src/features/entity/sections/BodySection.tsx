@@ -2,12 +2,10 @@ import { type ReactNode, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   Activity,
-  Stethoscope,
   Check,
-  Hand,
-  X,
   Eye,
   EyeOff,
+  Hand,
   HeartPulse,
   Lock,
   Minus,
@@ -17,10 +15,13 @@ import {
   RotateCcw,
   Shapes,
   Sparkles,
+  Stethoscope,
   Swords,
+  TriangleAlert,
+  type LucideIcon,
   Unlock,
   Wrench,
-  type LucideIcon,
+  X,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -41,7 +42,9 @@ import { Switch } from '@/components/ui/switch'
 import {
   EmptyState,
   EntityLink,
+  FieldTile,
   KpiTile,
+  LoadingBlock,
   Medallion,
   Paged,
   PagedList,
@@ -50,7 +53,6 @@ import {
   Timeline,
   TimelineItem,
   type TimelineTone,
-  FieldTile,
 } from '@/components/domain'
 import { type EntryKind } from '@/components/layout/entry/entryStack'
 import { Label, Muted, Text } from '@/components/typography'
@@ -1854,13 +1856,22 @@ export function BodySection({
       description='Their body as the world has shaped it: every wound and where it fell, what heals and what is lost for good, and what they can still do.'
       icon={PersonStanding}
     >
-      {!body ? (
+      {view.isPending && <LoadingBlock label='Reading the body' />}
+      {view.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='The body could not be read'
+          description={view.error.message}
+        />
+      )}
+      {body === null && (
         <EmptyState
           icon={PersonStanding}
           title='No body yet'
           description={emptyNote}
         />
-      ) : (
+      )}
+      {body && (
         <div className='@container/body flex min-w-0 flex-col gap-4'>
           <BodyHero body={body} />
           {body.bearer_kind !== 'species' && <Vitals body={body} />}

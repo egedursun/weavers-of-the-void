@@ -1737,10 +1737,17 @@ export function SpeciesSection({
       tone='success'
     >
       {view.isPending && <LoadingBlock label='Reading the kind' />}
+      {view.data === null && (
+        <EmptyState
+          icon={ECOLOGY_ICON}
+          title='The kind is not yet described'
+          description='The world describes this kind at the end of the next epoch.'
+        />
+      )}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}
-          title='The kind is not yet described'
+          title='The kind could not be read'
           description={view.error.message}
         />
       )}

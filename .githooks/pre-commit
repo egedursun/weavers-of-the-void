@@ -66,6 +66,8 @@ run morale_losses "$PYTHON" scripts/check_morale_losses.py
 run node_joins "$PYTHON" scripts/check_node_joins.py
 run scene_colors "$PYTHON" scripts/check_scene_colors.py
 run css_overrides "$PYTHON" scripts/check_css_overrides.py
+run root_overflow "$PYTHON" scripts/check_root_overflow.py
+run pending_reads "$PYTHON" scripts/check_pending_reads.py
 run raw_api_urls "$PYTHON" scripts/check_raw_api_urls.py
 run route_access "$PYTHON" scripts/check_route_access.py
 run counts "$PYTHON" scripts/check_counts.py

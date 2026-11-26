@@ -135,6 +135,13 @@ async def speaker_of(session: AsyncSession, rules: Rules, node: NodeRow | None) 
     return Speaker(node, group, entity_dead(node))
 
 
+async def heard_speaker(session: AsyncSession, rules: Rules, node_id: int) -> Speaker | None:
+    node = await session.get(NodeRow, node_id)
+    if node is None:
+        raise NotFoundError(NO_SUCH_NODE)
+    return await speaker_of(session, rules, node)
+
+
 async def require_speaker(session: AsyncSession, rules: Rules, node_id: int) -> Speaker:
     node = await session.get(NodeRow, node_id)
     if node is None:

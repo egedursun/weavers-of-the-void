@@ -801,10 +801,17 @@ export function DiseaseSection({
       tone='danger'
     >
       {view.isPending && <LoadingBlock label='Reading the sickness' />}
+      {data === null && (
+        <EmptyState
+          icon={Biohazard}
+          title='Not yet studied'
+          description='This sickness gains its profile at the end of the next epoch.'
+        />
+      )}
       {view.isError && (
         <EmptyState
           icon={TriangleAlert}
-          title='Not yet studied'
+          title='The sickness could not be read'
           description={view.error.message}
         />
       )}

@@ -166,12 +166,12 @@ async def festival_year(services: ServicesDep, people_id: int = Path(ge=1)) -> F
         )
 
 
-@router.get("/regions/{region_id}/works", response_model=RegionWorksView)
-async def region_works_view(services: ServicesDep, region_id: int = Path(ge=1)) -> RegionWorksView:
+@router.get("/regions/{region_id}/works", response_model=RegionWorksView | None)
+async def region_works_view(services: ServicesDep, region_id: int = Path(ge=1)) -> RegionWorksView | None:
     async with reader(services) as session:
         ground = await session.get(RegionEnvironmentRow, region_id)
         if ground is None:
-            raise NotFoundError("This region has not been surveyed yet.")
+            return None
         rules = services.rules.current
         atlas = await RegionAtlas.load(session)
         works = (await region_works(session, atlas, rules)).get(region_id)

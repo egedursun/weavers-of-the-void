@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Hourglass, Pencil, Plus, Shapes, X } from 'lucide-react'
+import { Hourglass, Pencil, Plus, Shapes, TriangleAlert, X } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
 import { type ActProp } from '@/api/mutation'
@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   EmptyState,
+  FieldTile,
+  LoadingBlock,
+  Paged,
   Section,
   StatBar,
-  Paged,
-  FieldTile,
 } from '@/components/domain'
 import { Muted } from '@/components/typography'
 import { type AdjustGroup, AdjustStats } from '@/features/pantheon/AdjustStats'
@@ -351,13 +352,22 @@ export function SkillsSection({ nodeId }: { nodeId: number }) {
       description='What this mortal can do and how well: learned by doing, from masters and in battle; rusting when unused and fading in old age. Their best skills decide their calling.'
       icon={SKILLS_ICON}
     >
-      {!mind ? (
+      {query.isPending && <LoadingBlock label='Reading the skills' />}
+      {query.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='The skills could not be read'
+          description={query.error.message}
+        />
+      )}
+      {mind === null && (
         <EmptyState
           icon={SKILLS_ICON}
           title='No skills yet'
           description='The next epoch gives this mortal the skills of their life so far.'
         />
-      ) : (
+      )}
+      {mind && (
         <div className='@container/skills flex min-w-0 flex-col gap-4'>
           {mind.skills.length === 0 ? (
             <EmptyState

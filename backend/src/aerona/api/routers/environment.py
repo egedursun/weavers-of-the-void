@@ -3,6 +3,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.missing import NO_REGION
 from aerona.api.schemas.environment import (
     AstronomyRecordView,
     CalendarView,
@@ -108,13 +109,15 @@ def notable_view(row: NotableYearRow) -> NotableYearView:
     )
 
 
-@router.get("/regions/{region_id}/environment", response_model=RegionEnvironmentView)
-async def region_environment(services: ServicesDep, region_id: int = Path(ge=1)) -> RegionEnvironmentView:
+@router.get("/regions/{region_id}/environment", response_model=RegionEnvironmentView | None)
+async def region_environment(services: ServicesDep, region_id: int = Path(ge=1)) -> RegionEnvironmentView | None:
     async with reader(services) as session:
         ground = await session.get(RegionEnvironmentRow, region_id)
         region = await session.get(EntityRow, region_id)
-        if ground is None or region is None:
-            raise NotFoundError("This region has not been surveyed yet.")
+        if region is None:
+            raise NotFoundError(NO_REGION)
+        if ground is None:
+            return None
         cosmos = await CosmosRepository(session).require_cosmos()
         book = await EnvironmentBook.load(session, services.rules.current, cosmos.epoch)
         forecast = []
@@ -183,12 +186,12 @@ async def region_environment(services: ServicesDep, region_id: int = Path(ge=1))
         )
 
 
-@router.get("/places/{place_id}/environment", response_model=PlaceEnvironmentView)
-async def place_environment(services: ServicesDep, place_id: int = Path(ge=1)) -> PlaceEnvironmentView:
+@router.get("/places/{place_id}/environment", response_model=PlaceEnvironmentView | None)
+async def place_environment(services: ServicesDep, place_id: int = Path(ge=1)) -> PlaceEnvironmentView | None:
     async with reader(services) as session:
         ground = await session.get(PlaceEnvironmentRow, place_id)
         if ground is None:
-            raise NotFoundError("This place has not been surveyed yet.")
+            return None
         return PlaceEnvironmentView(
             place_id=ground.entity_id,
             region_id=ground.region_entity_id,

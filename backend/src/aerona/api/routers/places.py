@@ -3,6 +3,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.missing import NO_PLACE
 from aerona.api.schemas.places import PlaceProfileView, PlaceSecretView
 from aerona.catalog.place_terrain import kind_spec
 from aerona.core.errors import NotFoundError
@@ -24,14 +25,16 @@ async def names_of(session: AsyncSession, ids: set[int]) -> dict[int, str]:
     return {row.id: row.name for row in await session.scalars(select(EntityRow).where(EntityRow.id.in_(sorted(ids))))}
 
 
-@router.get("/places/{place_id}/profile", response_model=PlaceProfileView)
-async def place_profile(services: ServicesDep, place_id: int = Path(ge=1)) -> PlaceProfileView:
+@router.get("/places/{place_id}/profile", response_model=PlaceProfileView | None)
+async def place_profile(services: ServicesDep, place_id: int = Path(ge=1)) -> PlaceProfileView | None:
     rules = services.rules.current
     async with reader(services) as session:
         place = await session.get(EntityRow, place_id)
         profile = await session.get(PlaceProfileRow, place_id)
-        if place is None or profile is None:
-            raise NotFoundError("This place has not been surveyed yet.")
+        if place is None:
+            raise NotFoundError(NO_PLACE)
+        if profile is None:
+            return None
         ground = await session.get(PlaceEnvironmentRow, place_id)
         secrets = list(await session.scalars(select(PlaceSecretRow).where(PlaceSecretRow.place_entity_id == place_id).order_by(PlaceSecretRow.id)))
         names = await names_of(session, {item for secret in secrets for item in (secret.revealed_by_entity_id, secret.result_entity_id) if item is not None})

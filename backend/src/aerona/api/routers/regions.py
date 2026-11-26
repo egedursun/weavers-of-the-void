@@ -3,6 +3,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.dependencies import ServicesDep, reader
+from aerona.api.missing import NO_REGION
 from aerona.api.schemas.records import NodeRef
 from aerona.api.schemas.regions import (
     BeneathView,
@@ -47,14 +48,16 @@ from aerona.engine.primitives.numbers import round_half_up
 router = APIRouter(tags=["environment"])
 
 
-@router.get("/regions/{region_id}/terrain", response_model=RegionTerrainView)
-async def region_terrain(services: ServicesDep, region_id: int = Path(ge=1)) -> RegionTerrainView:
+@router.get("/regions/{region_id}/terrain", response_model=RegionTerrainView | None)
+async def region_terrain(services: ServicesDep, region_id: int = Path(ge=1)) -> RegionTerrainView | None:
     rules = services.rules.current
     async with reader(services) as session:
         ground = await session.get(RegionEnvironmentRow, region_id)
         region = await session.get(EntityRow, region_id)
-        if ground is None or region is None:
-            raise NotFoundError("This region has not been surveyed yet.")
+        if region is None:
+            raise NotFoundError(NO_REGION)
+        if ground is None:
+            return None
         dangers = list(
             await session.scalars(select(RegionDangerRow).where(RegionDangerRow.region_entity_id == region_id).order_by(RegionDangerRow.strength.desc()))
         )

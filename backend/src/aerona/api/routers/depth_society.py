@@ -344,13 +344,13 @@ async def source_regions(session: AsyncSession, rows: list[OutbreakRow]) -> dict
     return {row.id: row.region_entity_id for row in await session.scalars(select(OutbreakRow).where(OutbreakRow.id.in_(list(wanted))))}
 
 
-@router.get("/entities/{entity_id}/disease", response_model=DiseaseView)
-async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> DiseaseView:
+@router.get("/entities/{entity_id}/disease", response_model=DiseaseView | None)
+async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> DiseaseView | None:
     async with reader(services) as session:
         entity = await entity_of(session, entity_id, frozenset({EntityType.DISEASE}))
         profile = await session.get(DiseaseProfileRow, entity.id)
         if profile is None:
-            raise NotFoundError("This disease has not been studied yet; it gains its profile in the next epoch.")
+            return None
         strains = list(await session.scalars(select(DiseaseProfileRow).where(DiseaseProfileRow.parent_disease_id == entity.id)))
         outbreaks = list(
             await session.scalars(select(OutbreakRow).where(OutbreakRow.disease_entity_id == entity.id).order_by(OutbreakRow.started_epoch, OutbreakRow.id))
@@ -435,15 +435,15 @@ async def disease(services: ServicesDep, entity_id: int = Path(ge=1)) -> Disease
         )
 
 
-@router.get("/entities/{entity_id}/settlement-plan", response_model=SettlementPlanView)
-async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) -> SettlementPlanView:
+@router.get("/entities/{entity_id}/settlement-plan", response_model=SettlementPlanView | None)
+async def settlement_plan(services: ServicesDep, entity_id: int = Path(ge=1)) -> SettlementPlanView | None:
     async with reader(services) as session:
         rules = await rules_of(session)
         entity = await entity_of(session, entity_id, frozenset({EntityType.SETTLEMENT}))
         profile = await session.get(SettlementProfileRow, entity.id)
         infrastructure = await session.get(SettlementInfrastructureRow, entity.id)
         if profile is None or infrastructure is None:
-            raise NotFoundError("This settlement is surveyed at the next epoch.")
+            return None
         districts = list(await session.scalars(select(DistrictRow).where(DistrictRow.settlement_entity_id == entity.id).order_by(DistrictRow.id)))
         town = Town(entity, profile, infrastructure, districts, designs=await designs_for(session, districts))
         readout = await plan_readout(session, rules, town)

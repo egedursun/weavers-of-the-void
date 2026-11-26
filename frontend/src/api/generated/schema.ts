@@ -111563,7 +111563,8 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['RegionEnvironmentView']
+          'application/json':
+            components['schemas']['RegionEnvironmentView'] | null
         }
       }
       default: {
@@ -111592,7 +111593,8 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['PlaceEnvironmentView']
+          'application/json':
+            components['schemas']['PlaceEnvironmentView'] | null
         }
       }
       default: {
@@ -111650,7 +111652,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['RegionTerrainView']
+          'application/json': components['schemas']['RegionTerrainView'] | null
         }
       }
       default: {
@@ -111708,7 +111710,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['BodyView']
+          'application/json': components['schemas']['BodyView'] | null
         }
       }
       default: {
@@ -111938,7 +111940,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['RegionWorksView']
+          'application/json': components['schemas']['RegionWorksView'] | null
         }
       }
       default: {
@@ -111967,7 +111969,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['MindView']
+          'application/json': components['schemas']['MindView'] | null
         }
       }
       default: {
@@ -115358,7 +115360,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['PlaceProfileView']
+          'application/json': components['schemas']['PlaceProfileView'] | null
         }
       }
       default: {
@@ -115874,7 +115876,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['DiseaseView']
+          'application/json': components['schemas']['DiseaseView'] | null
         }
       }
       default: {
@@ -115903,7 +115905,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['SettlementPlanView']
+          'application/json': components['schemas']['SettlementPlanView'] | null
         }
       }
       default: {
@@ -117394,7 +117396,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['SpeciesCard']
+          'application/json': components['schemas']['SpeciesCard'] | null
         }
       }
       default: {
@@ -117740,7 +117742,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['StructureView']
+          'application/json': components['schemas']['StructureView'] | null
         }
       }
       default: {
@@ -118940,7 +118942,8 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          'application/json': components['schemas']['PresenceSpeakerView']
+          'application/json':
+            components['schemas']['PresenceSpeakerView'] | null
         }
       }
       default: {

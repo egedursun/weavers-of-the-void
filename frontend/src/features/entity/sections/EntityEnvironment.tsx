@@ -10,15 +10,16 @@ import {
   Lock,
   Mountain,
   Scissors,
+  Scroll,
   Shield,
   Sparkles,
   Sprout,
   Trees,
+  TriangleAlert,
+  type LucideIcon,
   Unlock,
   Waypoints,
   Wheat,
-  type LucideIcon,
-  Scroll,
 } from 'lucide-react'
 import { api } from '@/api/client'
 import { unwrap } from '@/api/errors'
@@ -42,12 +43,13 @@ import {
 import {
   EmptyState,
   EntityLink,
+  FieldTile,
   KpiTile,
+  LoadingBlock,
   Medallion,
   Paged,
   Section,
   StatBar,
-  FieldTile,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
 import { LandSection } from '@/features/city/LandSection'
@@ -671,13 +673,22 @@ function RegionEnvironmentSection({ regionId }: { regionId: number }) {
       description='The land itself: what grows, how the seasons and weather fall, how armies and travellers cross it, and what it remembers.'
       icon={Mountain}
     >
-      {!ground ? (
+      {view.isPending && <LoadingBlock label='Surveying the land' />}
+      {view.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='The land could not be read'
+          description={view.error.message}
+        />
+      )}
+      {ground === null && (
         <EmptyState
           icon={Mountain}
           title='Not surveyed yet'
           description='The next epoch surveys this region from the map.'
         />
-      ) : (
+      )}
+      {ground && (
         <div className='@container/env flex min-w-0 flex-col gap-4'>
           <LandHero ground={ground} />
           <Vitals ground={ground} />
@@ -844,7 +855,7 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
     success: (_result, change: Change) =>
       `${change.key === 'nexus' ? 'Ley nexus' : fieldLabel(change.key)} set`,
   })
-  const ground: PlaceEnvironment | undefined = view.data
+  const ground: PlaceEnvironment | null | undefined = view.data
   const busy = reason() ?? (set.isPending ? WORKING : null)
   const terrain = ground?.terrain ? named(TERRAIN, ground.terrain) : null
   return (
@@ -854,13 +865,22 @@ function PlaceEnvironmentSection({ placeId }: { placeId: number }) {
       description='The ground of this place: its own terrain, cover, water and height, and whether it holds a pass or a ley nexus.'
       icon={Mountain}
     >
-      {!ground ? (
+      {view.isPending && <LoadingBlock label='Surveying the land' />}
+      {view.isError && (
+        <EmptyState
+          icon={TriangleAlert}
+          title='The land could not be read'
+          description={view.error.message}
+        />
+      )}
+      {ground === null && (
         <EmptyState
           icon={Mountain}
           title='Not surveyed yet'
           description='The next epoch surveys this place.'
         />
-      ) : (
+      )}
+      {ground && (
         <div className='@container/env flex min-w-0 flex-col gap-4'>
           <div className='grid min-w-0 grid-cols-1 gap-3 @md/env:grid-cols-2 @3xl/env:grid-cols-4'>
             <KpiTile
