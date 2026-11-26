@@ -66,6 +66,7 @@ from aerona.services.motifs import MotifCache
 from aerona.services.notification_stream import NotificationStream
 from aerona.services.notifications import Notifier, prune_notifications
 from aerona.services.providers.hub import Providers
+from aerona.services.providers.legacy import worker_candidates
 from aerona.services.rules import RulesService
 from aerona.services.search import SearchIndex
 from aerona.services.startup_completion import StartupCompletion
@@ -237,7 +238,8 @@ async def build_application(
     image_records = ImageRecords(backups.collector)
     server = rules.current.server
     thumbnails = Thumbnailer(store, server.thumbnail_concurrency, server.thumbnail_timeout)
-    image_client: ImageProvider = providers.images(settings.universe_id) if providers is not None else ImageWorkerClient(settings.image_worker_url)
+    local_worker = next(iter(worker_candidates(settings.image_worker_url)), "")
+    image_client: ImageProvider = providers.images(settings.universe_id) if providers is not None else ImageWorkerClient(local_worker)
     images = ImageQueue(database, image_client, image_records, current, bus=bus, prompts=lore.prompts, read_only=lambda: discovery.active, jobs=jobs)
     bulk = BulkDeepening(database, current, lore.deepener, namer=lore.namer, bus=bus, read_only=lambda: discovery.active, jobs=jobs)
     completion = StartupCompletion(database, current, lore, read_only=lambda: discovery.active)

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from aerona.llm.tool_gate import ToolGate
 from aerona.services.library.catalogue import Catalogue
 from aerona.services.providers.directory import ProviderDirectory
-from aerona.services.providers.legacy import adopt_legacy
+from aerona.services.providers.legacy import adopt_legacy, reachable_worker
 from aerona.services.providers.login import LoginRunner
 from aerona.services.providers.pool import BackendPool, base_environment
 from aerona.services.providers.routes import ImageChain, UniverseRoutes
@@ -23,7 +23,8 @@ class Providers:
     worker_url: str
 
     async def adopt(self) -> None:
-        if await adopt_legacy(self.service.store, self.service.box, self.claude_token, self.worker_url):
+        worker = await reachable_worker(self.worker_url)
+        if await adopt_legacy(self.service.store, self.service.box, self.claude_token, worker):
             await self.directory.refresh()
 
     def routes(self, universe_id: str) -> UniverseRoutes:

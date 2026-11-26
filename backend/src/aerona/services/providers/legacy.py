@@ -1,7 +1,9 @@
 from datetime import UTC, datetime
 
+import httpx
 from sqlalchemy import select
 
+from aerona.constants.imaging import WORKER_HEALTH_PATH, WORKER_PROBE_TIMEOUT_SECONDS, WORKER_URL_SEPARATOR
 from aerona.constants.providers import LEGACY_CLAUDE_LABEL, LEGACY_CLAUDE_MODEL, LEGACY_WORKER_LABEL
 from aerona.db.library.tables import AccountRow, WorkspaceRow
 from aerona.domain.enums.accounts import ServerRole, WorkspaceKind
@@ -21,6 +23,27 @@ async def owners_workspace(store: ProviderStore) -> int | None:
             .order_by(WorkspaceRow.id)
             .limit(1)
         )
+
+
+def worker_candidates(configured: str) -> list[str]:
+    return [url.strip().rstrip("/") for url in configured.split(WORKER_URL_SEPARATOR) if url.strip()]
+
+
+async def answers(url: str, transport: httpx.AsyncBaseTransport | None) -> bool:
+    try:
+        async with httpx.AsyncClient(transport=transport, timeout=WORKER_PROBE_TIMEOUT_SECONDS) as client:
+            response = await client.get(f"{url}{WORKER_HEALTH_PATH}")
+    except httpx.HTTPError:
+        return False
+    return response.is_success
+
+
+async def reachable_worker(configured: str, transport: httpx.AsyncBaseTransport | None = None) -> str:
+    candidates = worker_candidates(configured)
+    for url in candidates:
+        if await answers(url, transport):
+            return url
+    return candidates[0] if candidates else ""
 
 
 async def adopt_legacy(store: ProviderStore, box: SecretBox, claude_token: str, worker_url: str) -> bool:
