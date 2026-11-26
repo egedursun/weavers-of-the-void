@@ -20,6 +20,7 @@ import { useWillIndex } from './api'
 import { type IndexStatus } from './types'
 
 const PERCENT = 100
+const PREPARING = 'The Divine Will is preparing what it will read'
 
 const STATUS_LOOK: Record<
   Exclude<IndexStatus, 'ready'>,
@@ -54,6 +55,7 @@ export function IndexNotice() {
   if (!data || data.status === 'ready') return null
   const look = STATUS_LOOK[data.status]
   const share = data.passages > 0 ? data.embedded / data.passages : 0
+  const preparing = data.status === 'building' && data.pending === 0
   const Icon = look.icon
   return (
     <div
@@ -72,24 +74,28 @@ export function IndexNotice() {
           weight='medium'
           className='min-w-0 flex-1'
         >
-          {look.title}
+          {preparing ? PREPARING : look.title}
         </Text>
-        <Text
-          as='span'
-          variant='caption'
-          weight='semibold'
-          className='tabular-nums'
-        >
-          {formatPercent(share)}
-        </Text>
-        <Muted as='span' variant='caption' className='tabular-nums'>
-          {`${formatInteger(data.embedded)} of ${formatInteger(data.passages)} read`}
-        </Muted>
+        {!preparing && (
+          <>
+            <Text
+              as='span'
+              variant='caption'
+              weight='semibold'
+              className='tabular-nums'
+            >
+              {formatPercent(share)}
+            </Text>
+            <Muted as='span' variant='caption' className='tabular-nums'>
+              {`${formatInteger(data.embedded)} of ${formatInteger(data.passages)} read`}
+            </Muted>
+          </>
+        )}
       </div>
       <Progress
         size='sm'
         value={share * PERCENT}
-        indeterminate={data.status === 'fetching'}
+        indeterminate={data.status === 'fetching' || preparing}
         aria-label='Reading the world'
       />
       <Muted variant='caption'>
