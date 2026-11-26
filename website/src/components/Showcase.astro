@@ -49,6 +49,7 @@ const total = numerals[copy.tabs.length - 1]
             >
               <Emblem name={emblems[tab.key] ?? 'orb'} class="showcase__tab-emblem" />
               <span class="showcase__tab-label">{tab.label}</span>
+              <span class="showcase__progress" aria-hidden="true" data-progress />
             </Frame>
           ))
         }
@@ -97,26 +98,85 @@ const total = numerals[copy.tabs.length - 1]
 
 <script>
   document.querySelectorAll<HTMLElement>('[data-tabs]').forEach((root) => {
+    const strip = root.querySelector<HTMLElement>('[role=tablist]')
     const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tab]'))
     const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-panel]'))
-    const select = (index: number, focus = false) => {
+    const bars = tabs.map((tab) => tab.querySelector<HTMLElement>('[data-progress]'))
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let current = tabs.findIndex((tab) => tab.getAttribute('aria-selected') === 'true')
+    const reasons = new Set<string>()
+    root.dataset.auto = still ? 'off' : 'on'
+
+    const pause = (reason: string, on: boolean) => {
+      if (on) reasons.add(reason)
+      else reasons.delete(reason)
+      root.toggleAttribute('data-paused', reasons.size > 0)
+    }
+
+    const restartBar = (index: number) => {
+      const bar = bars[index]
+      if (!bar) return
+      bar.style.animation = 'none'
+      void bar.offsetWidth
+      bar.style.animation = ''
+    }
+
+    const warm = (index: number) => {
+      const image = panels[index]?.querySelector<HTMLImageElement>('img')
+      if (image) image.loading = 'eager'
+    }
+
+    const reveal = (index: number) => {
+      const tab = tabs[index]
+      if (!strip || strip.scrollWidth <= strip.clientWidth) return
+      const target = tab.offsetLeft - (strip.clientWidth - tab.offsetWidth) / 2
+      strip.scrollTo({ left: target, behavior: still ? 'auto' : 'smooth' })
+    }
+
+    const select = (index: number, focus = false, manual = false) => {
+      if (manual) root.dataset.auto = 'off'
+      current = index
       tabs.forEach((tab, position) => {
         const chosen = position === index
         tab.setAttribute('aria-selected', String(chosen))
         tab.tabIndex = chosen ? 0 : -1
         panels[position].hidden = !chosen
       })
+      restartBar(index)
+      warm((index + 1) % tabs.length)
+      reveal(index)
       if (focus) tabs[index].focus()
     }
-    tabs.forEach((tab, index) => {
-      tab.addEventListener('click', () => select(index))
-      tab.addEventListener('keydown', (event) => {
-        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
-        if (event.key === 'Home') select(0, true)
-        else if (event.key === 'End') select(tabs.length - 1, true)
-        else if (step !== 0) select((index + step + tabs.length) % tabs.length, true)
+
+    bars.forEach((bar, index) => {
+      bar?.addEventListener('animationend', (event) => {
+        if (event.pseudoElement || event.target !== bar) return
+        if (root.dataset.auto === 'on' && index === current) select((current + 1) % tabs.length)
       })
     })
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(index, false, true))
+      tab.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+        if (event.key === 'Home') select(0, true, true)
+        else if (event.key === 'End') select(tabs.length - 1, true, true)
+        else if (step !== 0) select((index + step + tabs.length) % tabs.length, true, true)
+      })
+    })
+
+    root.addEventListener('pointerenter', () => pause('pointer', true))
+    root.addEventListener('pointerleave', () => pause('pointer', false))
+    root.addEventListener('focusin', () => pause('focus', true))
+    root.addEventListener('focusout', (event) => {
+      if (!root.contains(event.relatedTarget as Node | null)) pause('focus', false)
+    })
+    document.addEventListener('visibilitychange', () => pause('hidden', document.hidden))
+    if ('IntersectionObserver' in window) {
+      pause('away', true)
+      new IntersectionObserver(([entry]) => pause('away', !entry.isIntersecting), { threshold: 0.35 }).observe(root)
+    }
+    warm((current + 1) % tabs.length)
   })
 </script>
 
@@ -163,6 +223,56 @@ const total = numerals[copy.tabs.length - 1]
       transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
       box-shadow 0.55s var(--ease),
       color 0.3s var(--ease);
+  }
+
+  .showcase__progress {
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: 0.55rem;
+    height: 3px;
+    border-radius: 999px;
+    background: oklch(0.84 0.14 86 / 0.14);
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+  }
+
+  .showcase__progress::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--gild-lo), var(--gild-hi) 70%, #fff6d6);
+    box-shadow: 0 0 10px oklch(0.84 0.16 86 / 0.8);
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  [data-auto='on'] .showcase__tab[aria-selected='true'] .showcase__progress {
+    opacity: 1;
+    animation: showcase-progress 6.5s linear forwards;
+  }
+
+  [data-auto='on'] .showcase__tab[aria-selected='true'] .showcase__progress::after {
+    animation: showcase-fill 6.5s linear forwards;
+  }
+
+  [data-auto='on'][data-paused] .showcase__tab[aria-selected='true'] .showcase__progress,
+  [data-auto='on'][data-paused] .showcase__tab[aria-selected='true'] .showcase__progress::after {
+    animation-play-state: paused;
+  }
+
+  @keyframes showcase-progress {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes showcase-fill {
+    to {
+      transform: scaleX(1);
+    }
   }
 
   .showcase__tab-label {

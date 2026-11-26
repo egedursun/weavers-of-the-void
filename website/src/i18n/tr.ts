@@ -63,18 +63,6 @@ export const tr: Copy = {
     lead: 'Her ekran dünyana açılan bir pencere ve içindeki her değeri değiştirmek senin elinde.',
     tabs: [
       {
-        key: 'genesis',
-        label: 'Genesis',
-        title: 'Bir dünyayı doğmadan önce şekillendir',
-        text: 'Çağını, büyüsünü, tehlikelerini, halklarını ve tanrılarını seç ya da tek bir cümleyle başla, dünya ondan büyüsün.',
-      },
-      {
-        key: 'map',
-        label: 'Yaşayan harita',
-        title: 'Hatırlayan bir toprak',
-        text: 'Bölgeler, halklar, şehirler, yollar ve savaşlar; oynadığın her çağla değişen tek bir haritada.',
-      },
-      {
         key: 'cosmos',
         label: 'Evren',
         title: 'Yıldızlar, dünyalar ve aralarındaki yollar',
@@ -87,10 +75,22 @@ export const tr: Copy = {
         text: 'Kümeler, galaksiler, yarıklar ve kat kat boyutlar; her birinin kendi harikaları ve kendi varlıklarıyla.',
       },
       {
+        key: 'map',
+        label: 'Yaşayan harita',
+        title: 'Hatırlayan bir toprak',
+        text: 'Bölgeler, halklar, şehirler, yollar ve savaşlar; oynadığın her çağla değişen tek bir haritada.',
+      },
+      {
         key: 'entry',
         label: 'Her kayıt',
         title: 'Herkes hakkında her şey, tek bir pencerede',
         text: 'Her kişi, yer ve güç için portre, değerler, soy ağacı, bağlar ve eksiksiz bir geçmiş; hepsinde senin elin.',
+      },
+      {
+        key: 'network',
+        label: 'Dünyanın ağı',
+        title: 'Her şeyin nasıl bağlandığını gör',
+        text: 'Her kişi, halk, inanç ve şehir, onları birbirine bağlayan bağlarla tek bir yaşayan grafikte.',
       },
       {
         key: 'will',
@@ -99,10 +99,10 @@ export const tr: Copy = {
         text: 'Bir şehrin neden açlıktan kırıldığını ya da savaşı kimin başlattığını sor. Dünyan kendi kayıtlarından yanıt verir ve söylediğinde harekete geçer.',
       },
       {
-        key: 'network',
-        label: 'Dünyanın ağı',
-        title: 'Her şeyin nasıl bağlandığını gör',
-        text: 'Her kişi, halk, inanç ve şehir, onları birbirine bağlayan bağlarla tek bir yaşayan grafikte.',
+        key: 'genesis',
+        label: 'Genesis',
+        title: 'Bir dünyayı doğmadan önce şekillendir',
+        text: 'Çağını, büyüsünü, tehlikelerini, halklarını ve tanrılarını seç ya da tek bir cümleyle başla, dünya ondan büyüsün.',
       },
     ],
     placeholder: 'Uygulamadan bir görünüm',

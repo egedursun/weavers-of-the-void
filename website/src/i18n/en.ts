@@ -61,18 +61,6 @@ export const en = {
     lead: 'Every screen is a window into your world, and every value in it is yours to change.',
     tabs: [
       {
-        key: 'genesis',
-        label: 'Genesis',
-        title: 'Shape a world before it is born',
-        text: 'Choose its age, its magic, its dangers, its peoples and its gods, or start from a single sentence and let the world grow from it.',
-      },
-      {
-        key: 'map',
-        label: 'The living map',
-        title: 'A land that remembers',
-        text: 'Regions, peoples, cities, roads and wars on one map that changes with every age you play.',
-      },
-      {
         key: 'cosmos',
         label: 'The cosmos',
         title: 'Stars, worlds and the roads between them',
@@ -85,10 +73,22 @@ export const en = {
         text: 'Clusters, galaxies, rifts and layered dimensions, each with its own wonders and its own beings.',
       },
       {
+        key: 'map',
+        label: 'The living map',
+        title: 'A land that remembers',
+        text: 'Regions, peoples, cities, roads and wars on one map that changes with every age you play.',
+      },
+      {
         key: 'entry',
         label: 'Every entry',
         title: 'Everything about anyone, in one window',
         text: 'Portraits, values, family trees, bonds and a full history for every person, place and power, with your hand on each of them.',
+      },
+      {
+        key: 'network',
+        label: 'The web of the world',
+        title: 'See how everything is connected',
+        text: 'Every person, people, faith and city linked by the bonds that tie them, in one living graph.',
       },
       {
         key: 'will',
@@ -97,10 +97,10 @@ export const en = {
         text: 'Ask why a city starved or who started a war. Your world answers from its own records, and acts when you tell it to.',
       },
       {
-        key: 'network',
-        label: 'The web of the world',
-        title: 'See how everything is connected',
-        text: 'Every person, people, faith and city linked by the bonds that tie them, in one living graph.',
+        key: 'genesis',
+        label: 'Genesis',
+        title: 'Shape a world before it is born',
+        text: 'Choose its age, its magic, its dangers, its peoples and its gods, or start from a single sentence and let the world grow from it.',
       },
     ],
     placeholder: 'A view of the app',

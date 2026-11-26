@@ -201,26 +201,55 @@ const en = {
   faq: {
     eyebrow: 'Before you commission',
     title: 'Questions studios ask us',
+    more: 'Show more questions',
     items: [
+      {
+        q: 'How do I choose between Standard, Professional and Enterprise?',
+        a: 'Every package lives the same 50 epochs and 2,500 years, so the world itself is just as rich. What changes is how much of it our reviewers read and refine by hand. Standard suits a novel or a campaign of your own. Professional suits a series or a studio that will build on its canon for years. Enterprise is for franchises and licensed worlds where nearly every record has to be checked.',
+      },
+      {
+        q: 'What do I need to bring to the brief?',
+        a: 'As much or as little as you have. One paragraph is enough to begin. The more you share about the tone, the peoples, the history you want, the facts that must not change and what the world is for, the closer the first configuration lands. We follow up with questions before anything is simulated.',
+      },
+      {
+        q: 'Can you build on a world or canon I already have?',
+        a: 'Yes. Your existing facts, maps, characters and timelines are set in the world as locked canon before the simulation starts, so the new history grows around them instead of overwriting them.',
+      },
       {
         q: 'Do I need to know how to use the software?',
         a: 'Not at all. We run every step. You share your vision, answer our questions and review the result.',
       },
       {
+        q: 'How involved am I along the way?',
+        a: 'As involved as you like. You approve the configured universe before the simulation begins, you can follow its progress, and your revision rounds let you steer the finished canon until it is exactly yours.',
+      },
+      {
         q: 'Why do I bring my own AI account?',
-        a: 'Your world is generated through an AI account you control. You pay its usage directly to your provider, with no markup from us, and you decide which provider your ideas go to.',
+        a: 'Your world is generated through an AI account you control, for both text and pictures. You pay its usage directly to your provider, with no markup from us, and you decide which provider your ideas go to. A model running on your own hardware works too.',
+      },
+      {
+        q: 'How much will the AI usage cost me?',
+        a: 'It depends on the provider and the models you choose. Before we start, we help you pick a setup that fits your budget, and you can watch every bit of usage in your own provider account as the work goes on.',
+      },
+      {
+        q: 'Is my world kept confidential?',
+        a: 'Yes. Everyone who works on your world is bound by confidentiality, and we never show it publicly, not even as an example, without your permission.',
       },
       {
         q: 'Who owns the world you build for me?',
-        a: 'You do. The universe, its lore, its pictures and its books are yours to publish, adapt and sell, with no royalties and no licence fees.',
+        a: 'You do. The universe, its lore, its pictures and its books are yours to publish, adapt and sell, for a novel, a game, a show or anything else, with no royalties and no licence fees.',
       },
       {
         q: 'What if my world needs a mechanic that does not exist yet?',
-        a: 'Tuning the existing rules is part of every package. A brand-new system, such as your own magic or physics, is built as Universe Engineering, by the hour or for a fixed quote.',
+        a: 'Tuning the more than 16,500 existing rules is part of every package. A brand-new system, such as your own magic, physics or economy, is built as Universe Engineering, by the hour or for a fixed quote.',
+      },
+      {
+        q: 'What if I want changes after delivery?',
+        a: 'Your package includes one, two or three revision rounds. Beyond those, extra revisions are billed at $79 per hour, always agreed with you first. For a world that keeps growing, Canon Management looks after it for as long as you need.',
       },
       {
         q: 'Can I keep the world running after delivery?',
-        a: 'Yes. The World Package opens in any copy of Weavers of the Void, on your machine, your servers or our Managed Cloud, and Canon Management can keep it growing.',
+        a: 'Yes. The World Package opens in any copy of Weavers of the Void, on your machine, your servers or our Managed Cloud. Keep playing it yourself as its god, or let Canon Management carry it into new ages.',
       },
     ],
   },
@@ -435,26 +464,55 @@ const tr: StudioCopy = {
   faq: {
     eyebrow: 'Sipariş vermeden önce',
     title: 'Stüdyoların bize sorduğu sorular',
+    more: 'Daha fazla soru göster',
     items: [
+      {
+        q: 'Standard, Professional ve Enterprise arasında nasıl seçim yaparım?',
+        a: 'Her paket aynı 50 devri ve 2.500 yılı yaşar; dünyanın kendisi hepsinde aynı zenginliktedir. Değişen, inceleyicilerimizin onun ne kadarını elle okuyup iyileştirdiğidir. Standard kendi romanın ya da kampanyan için uygundur. Professional, kanonu üzerine yıllarca inşa edecek bir seri ya da stüdyo içindir. Enterprise ise neredeyse her kaydın kontrol edilmesi gereken markalar ve lisanslı dünyalar içindir.',
+      },
+      {
+        q: 'Brief için ne getirmem gerekiyor?',
+        a: 'Elinde ne varsa. Başlamak için tek bir paragraf yeterli. Ton, halklar, istediğin tarih, değişmemesi gereken gerçekler ve dünyanın ne için kullanılacağı hakkında ne kadar çok şey paylaşırsan ilk yapılandırma o kadar isabetli olur. Simülasyon başlamadan önce sorularımızla geri döneriz.',
+      },
+      {
+        q: 'Elimdeki bir dünyanın ya da kanonun üzerine inşa edebilir misiniz?',
+        a: 'Evet. Var olan gerçeklerin, haritaların, karakterlerin ve zaman çizelgelerin simülasyon başlamadan önce dünyaya kilitli kanon olarak yerleştirilir; yeni tarih onların üzerine yazılmaz, etraflarında büyür.',
+      },
       {
         q: 'Yazılımı kullanmayı bilmem gerekiyor mu?',
         a: 'Hiç gerekmiyor. Her adımı biz yürütürüz. Sen vizyonunu paylaşır, sorularımızı yanıtlar ve sonucu incelersin.',
       },
       {
+        q: 'Süreçte ne kadar yer alırım?',
+        a: 'İstediğin kadar. Simülasyon başlamadan önce yapılandırılmış evreni sen onaylarsın, ilerleyişini takip edebilirsin ve revizyon turlarınla bitmiş kanonu tam olarak senin olana dek yönlendirirsin.',
+      },
+      {
         q: 'Neden kendi yapay zekâ hesabımı getiriyorum?',
-        a: 'Dünyan, kontrolü sende olan bir yapay zekâ hesabıyla üretilir. Kullanım bedelini, bizim hiçbir ek ücretimiz olmadan doğrudan sağlayıcına ödersin ve fikirlerinin hangi sağlayıcıya gideceğine sen karar verirsin.',
+        a: 'Dünyan, metinleri ve görselleriyle birlikte, kontrolü sende olan bir yapay zekâ hesabıyla üretilir. Kullanım bedelini, bizim hiçbir ek ücretimiz olmadan doğrudan sağlayıcına ödersin ve fikirlerinin hangi sağlayıcıya gideceğine sen karar verirsin. Kendi donanımında çalışan bir model de olur.',
+      },
+      {
+        q: 'Yapay zekâ kullanımı bana kaça mal olur?',
+        a: 'Seçtiğin sağlayıcıya ve modellere bağlıdır. Başlamadan önce bütçene uyan bir kurulum seçmene yardım ederiz; iş ilerlerken her kullanımı kendi sağlayıcı hesabından izleyebilirsin.',
+      },
+      {
+        q: 'Dünyam gizli tutulur mu?',
+        a: 'Evet. Dünyan üzerinde çalışan herkes gizlilik yükümlülüğü altındadır ve onu iznin olmadan, örnek olarak bile, asla herkese açık göstermeyiz.',
       },
       {
         q: 'Benim için kurduğunuz dünya kimin?',
-        a: 'Senin. Evren, lore’u, görselleri ve kitapları yayımlaman, uyarlaman ve satman için senindir; telif ya da lisans ücreti yoktur.',
+        a: 'Senin. Evren, lore’u, görselleri ve kitapları bir roman, oyun, dizi ya da başka her şey için yayımlaman, uyarlaman ve satman için senindir; telif ya da lisans ücreti yoktur.',
       },
       {
         q: 'Dünyamın henüz var olmayan bir mekaniğe ihtiyacı varsa?',
-        a: 'Mevcut kuralların ayarlanması her paketin parçasıdır. Kendi büyün ya da fiziğin gibi bütünüyle yeni bir sistem, saatlik ya da sabit teklifle Evren Mühendisliği olarak geliştirilir.',
+        a: 'Mevcut 16.500’ü aşkın kuralın ayarlanması her paketin parçasıdır. Kendi büyün, fiziğin ya da ekonomin gibi bütünüyle yeni bir sistem, saatlik ya da sabit teklifle Evren Mühendisliği olarak geliştirilir.',
+      },
+      {
+        q: 'Teslimattan sonra değişiklik istersem ne olur?',
+        a: 'Paketin bir, iki ya da üç revizyon turu içerir. Bunların ötesindeki ek revizyonlar, her zaman önce seninle kararlaştırılarak saatlik $79 üzerinden faturalanır. Büyümeye devam eden bir dünya için Kanon Yönetimi ona ihtiyacın olduğu sürece bakar.',
       },
       {
         q: 'Teslimattan sonra dünyayı yaşatmaya devam edebilir miyim?',
-        a: 'Evet. World Package, Weavers of the Void’un her kopyasında açılır: kendi bilgisayarında, kendi sunucularında ya da Yönetilen Bulut’umuzda. Kanon Yönetimi de onu büyütmeye devam edebilir.',
+        a: 'Evet. World Package, Weavers of the Void’un her kopyasında açılır: kendi bilgisayarında, kendi sunucularında ya da Yönetilen Bulut’umuzda. Onu tanrısı olarak kendin oynamaya devam edebilir ya da Kanon Yönetimi ile yeni çağlara taşıyabilirsin.',
       },
     ],
   },
