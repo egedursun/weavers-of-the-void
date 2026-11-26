@@ -16,7 +16,7 @@ from aerona.rules.registry import Rules
 from aerona.rules.snapshot import catalog
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "docs" / "game-rules.md"
+DEFAULT_OUTPUT = ROOT / "docs" / "mechanics" / "game-rules.md"
 SIGNATURE = f'[booklet]: # "{APP_NAME} booklet: the rules of the world"'
 PERCENT_SUFFIX = "_pct"
 ANCHOR = re.compile(r'<a id="([^"]+)"></a>')

@@ -3720,13 +3720,14 @@ The engine is. The same world with the same seed and the same choices produces t
 
 | Booklet | What it covers |
 |---|---|
-| [The Rules of the World](docs/game-rules.md) | How the world works, mechanic by mechanic |
-| [The Powers of a God](docs/god-powers.md) | Everything the Creator can do from the app |
-| [The Deeds of Sons and Mortals](docs/agent-tools.md) | Every son tool and every mortal tool |
-| [The Voices of the World](docs/ai-roles.md) | Every agent role and what it writes |
-| [Goals, Growth and Score](docs/game-progress.md) | Scenarios, achievements, levels, renown and score |
-| [How the World Connects](docs/interconnections.md) | How every mechanic feeds the others |
-| [The Things of the World and Their Names](docs/world-terms.md) · [JSON](docs/world-terms.json) | Every kind of thing and every value, by its name |
+| [The Rules of the World](docs/mechanics/game-rules.md) | How the world works, mechanic by mechanic |
+| [The Powers of a God](docs/mechanics/god-powers.md) | Everything the Creator can do from the app |
+| [The Deeds of Sons and Mortals](docs/mechanics/agent-tools.md) | Every son tool and every mortal tool |
+| [The Voices of the World](docs/mechanics/ai-roles.md) | Every agent role and what it writes |
+| [Goals, Growth and Score](docs/mechanics/game-progress.md) | Scenarios, achievements, levels, renown and score |
+| [How the World Connects](docs/mechanics/interconnections.md) | How every mechanic feeds the others |
+| [The Things of the World and Their Names](docs/mechanics/world-terms.md) · [JSON](docs/mechanics/world-terms.json) | Every kind of thing and every value, by its name |
+| [Every Type in the Game](docs/mechanics/game-types.md) | Every type list and every value in it, counted |
 
 **Design and engineering:**
 

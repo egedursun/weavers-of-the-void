@@ -23,7 +23,7 @@ from pydantic.fields import FieldInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 FRONTEND = ROOT / "frontend" / "src"
-DEFAULT_OUTPUT = ROOT / "docs" / "god-powers.md"
+DEFAULT_OUTPUT = ROOT / "docs" / "mechanics" / "god-powers.md"
 SIGNATURE = f'[booklet]: # "{APP_NAME} booklet: the powers of a god"'
 ANCHOR = re.compile(r'<a id="([^"]+)"></a>')
 LINK = re.compile(r"\]\(#([^)]+)\)")

@@ -24,7 +24,7 @@ from aerona.rules.registry import Rules
 from aerona.rules.snapshot import catalog
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "docs" / "game-progress.md"
+DEFAULT_OUTPUT = ROOT / "docs" / "mechanics" / "game-progress.md"
 GLOSSARY = ROOT / "frontend" / "src" / "features" / "help" / "glossary.ts"
 TERMS = "world-terms.md"
 SIGNATURE = f'[booklet]: # "{APP_NAME} booklet: goals, growth and score"'
@@ -387,7 +387,7 @@ def missing_entries(text: str) -> list[str]:
 
 
 def missing_terms(text: str) -> list[str]:
-    companion = ROOT / "docs" / TERMS
+    companion = ROOT / "docs" / "mechanics" / TERMS
     if not companion.exists():
         return []
     known = set(ANCHOR.findall(companion.read_text(encoding="utf-8")))

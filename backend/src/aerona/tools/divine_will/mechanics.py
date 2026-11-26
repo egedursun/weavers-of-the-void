@@ -22,7 +22,7 @@ from aerona.tools.divine_will.paging import failed, paged, paged_hits, plain
 W = DivineWillToolId
 MECHANICS = frozenset({Toolset.MECHANICS})
 RULE_READING = frozenset({Toolset.MECHANICS, Toolset.RULES_READ})
-GAME_RULES = Path(__file__).resolve().parents[5] / "docs" / "game-rules.md"
+GAME_RULES = Path(__file__).resolve().parents[5] / "docs" / "mechanics" / "game-rules.md"
 HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 ANCHOR = re.compile(r'<a id="[^"]*"></a>')
 PATH_JOIN = " > "

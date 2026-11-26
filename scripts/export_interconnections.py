@@ -17,7 +17,7 @@ from aerona.engine.interconnect.registry import Edge, EdgeKind, Mechanic, Subsys
 from aerona.engine.pipeline import all_phases
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "docs" / "interconnections.md"
+DEFAULT_OUTPUT = ROOT / "docs" / "mechanics" / "interconnections.md"
 SIGNATURE = f'[booklet]: # "{APP_NAME} booklet: how the world connects"'
 PART_NAMES = {Subsystem.SOCIAL: "Society"}
 KIND_VERBS = {

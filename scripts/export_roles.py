@@ -17,7 +17,7 @@ from aerona.rules.registry import Rules
 
 ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "backend" / "src" / "aerona"
-DEFAULT_OUTPUT = ROOT / "docs" / "ai-roles.md"
+DEFAULT_OUTPUT = ROOT / "docs" / "mechanics" / "ai-roles.md"
 TOOLS = "agent-tools.md"
 SIGNATURE = f'[booklet]: # "{APP_NAME} booklet: the voices of the world"'
 ANCHOR = re.compile(r'<a id="([^"]+)"></a>')
@@ -407,7 +407,7 @@ def missing_entries(text: str) -> list[str]:
 
 
 def missing_tools(text: str) -> list[str]:
-    companion = ROOT / "docs" / TOOLS
+    companion = ROOT / "docs" / "mechanics" / TOOLS
     if not companion.exists():
         return []
     known = set(ANCHOR.findall(companion.read_text(encoding="utf-8")))

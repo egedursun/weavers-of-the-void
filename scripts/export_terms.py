@@ -36,8 +36,8 @@ from aerona.domain.enums.node import NodeKind
 from aerona.rules.registry import Rules
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "docs" / "world-terms.md"
-TERMS = ROOT / "docs" / "world-terms.json"
+DEFAULT_OUTPUT = ROOT / "docs" / "mechanics" / "world-terms.md"
+TERMS = ROOT / "docs" / "mechanics" / "world-terms.json"
 GLOSSARY = ROOT / "frontend" / "src" / "features" / "help" / "glossary.ts"
 TOOLS = "agent-tools.md"
 SIGNATURE = f'[booklet]: # "{APP_NAME} booklet: the things of the world and their names"'
@@ -320,7 +320,7 @@ def missing_entries(text: str) -> list[str]:
 
 
 def missing_tools(text: str) -> list[str]:
-    companion = ROOT / "docs" / TOOLS
+    companion = ROOT / "docs" / "mechanics" / TOOLS
     if not companion.exists():
         return []
     known = set(ANCHOR.findall(companion.read_text(encoding="utf-8")))

@@ -32,7 +32,7 @@ from aerona.tools.son.availability import AGE_LIMITS as SON_LIMITS
 from aerona.tools.son.registry import son_specs
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUTPUT = ROOT / "docs" / "agent-tools.md"
+DEFAULT_OUTPUT = ROOT / "docs" / "mechanics" / "agent-tools.md"
 SIGNATURE = f'[booklet]: # "{APP_NAME} booklet: the deeds of sons and mortals"'
 CONNECTIONS = "interconnections.md"
 ANCHOR = re.compile(r'<a id="([^"]+)"></a>')
@@ -437,7 +437,7 @@ def missing_entries(text: str) -> list[str]:
 
 
 def missing_mechanics(text: str) -> list[str]:
-    companion = ROOT / "docs" / CONNECTIONS
+    companion = ROOT / "docs" / "mechanics" / CONNECTIONS
     if not companion.exists():
         return []
     known = set(ANCHOR.findall(companion.read_text(encoding="utf-8")))

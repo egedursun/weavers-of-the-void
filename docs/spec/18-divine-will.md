@@ -102,7 +102,7 @@ Paging envelope (every list-like or long result): `{"items" | "text", "total", "
 - **catalog-read** — `search_actions`, `describe_action`.
 - **rules-read** — `search_rules`, `read_rule` (also in mechanics).
 - **act** also holds `set_rule(namespace, name, value)` and `reset_rule(namespace, name)`; plan steps and forecast interventions change rules with the reserved acts `rule:set` and `rule:reset`.
-- **mechanics** — `search_rules(query)`, `read_rule(namespace, name)`, `search_mechanics(query)`, `read_mechanic(key)` (the interconnection registry), `read_game_rules(section?)` (docs/game-rules.md, paged).
+- **mechanics** — `search_rules(query)`, `read_rule(namespace, name)`, `search_mechanics(query)`, `read_mechanic(key)` (the interconnection registry), `read_game_rules(section?)` (docs/mechanics/game-rules.md, paged).
 - **plan** — `plan_create(title, steps)`, `plan_read(plan_id)`, `plan_revise(plan_id, steps)`; steps name catalog actions with inputs validated against their models.
 - **foresight** — `forecast_estimate(epochs)`, `forecast_run(interventions, epochs)`, `forecast_read(forecast_id)`.
 - **artifacts** — `artifact_create(title, kind, format, body, language, tags, node_ids)`, `artifact_read(artifact_id, version?)` (paged), `artifact_edit(artifact_id, edits)` where an edit is `{replace: {old, new}} | {insert_after: {anchor, text}} | {append: text} | {rewrite: body}`, each producing a new version, `artifact_list(filters)`.
