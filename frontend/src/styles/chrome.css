@@ -617,3 +617,26 @@ body {
   > [role='radio'][aria-checked='false']:not(:hover):not(:focus-visible) {
   opacity: 0.7;
 }
+
+[data-collapsible='icon'] [data-sidebar='header'] {
+  padding-top: 2.6rem;
+}
+
+[data-collapsible='icon'] [data-sidebar='header'] [data-sidebar='menu-item'] {
+  display: flex;
+  justify-content: center;
+}
+
+[data-variant='floating'] [data-sidebar='content'],
+[data-variant='inset'] [data-sidebar='content'] {
+  padding-bottom: 2.6rem;
+}
+
+[data-collapsible='icon'] [data-sidebar='content'] {
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+
+[data-collapsible='icon'] [data-sidebar='content']::-webkit-scrollbar {
+  display: none;
+}
