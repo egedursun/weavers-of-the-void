@@ -1,0 +1,13 @@
+services:
+  image-worker:
+    environment:
+      AERONA_IMAGE_WORKER_MODEL_ID: ${AERONA_DOCKER_IMAGE_WORKER_MODEL_ID:-unsloth/Z-Image-Turbo-unsloth-bnb-4bit}
+      AERONA_IMAGE_WORKER_LOAD_TIMEOUT_SECONDS: ${AERONA_DOCKER_IMAGE_WORKER_LOAD_TIMEOUT_SECONDS:-1800}
+      AERONA_IMAGE_WORKER_IMAGE_TIMEOUT_SECONDS: ${AERONA_DOCKER_IMAGE_WORKER_IMAGE_TIMEOUT_SECONDS:-300}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

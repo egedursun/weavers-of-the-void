@@ -5,19 +5,25 @@ from diffusers import DiffusionPipeline
 
 from aerona_image_worker.backends.base import BackendSpec, ImageBackend
 from aerona_image_worker.backends.png import encode_png, snap_dimension
-from aerona_image_worker.constants.models import DIFFUSERS_DEVICE, DIFFUSERS_GUIDANCE_SCALE
+from aerona_image_worker.constants.models import DIFFUSERS_CPU_DEVICE, DIFFUSERS_GPU_DEVICE, DIFFUSERS_GUIDANCE_SCALE
 from aerona_image_worker.domain.enums import EventKind
 from aerona_image_worker.domain.generation import GenerationRequest, ProgressSink
 from aerona_image_worker.errors import GenerationFailedError
+
+
+def available_device() -> str:
+    return DIFFUSERS_GPU_DEVICE if torch.cuda.is_available() else DIFFUSERS_CPU_DEVICE
 
 
 class DiffusersBackend:
     def __init__(self, spec: BackendSpec) -> None:
         self._spec = spec
         self._pipeline: Any = None
+        self._device = DIFFUSERS_CPU_DEVICE
 
     def load(self) -> None:
-        self._pipeline = DiffusionPipeline.from_pretrained(self._spec.model_id, torch_dtype=torch.bfloat16).to(DIFFUSERS_DEVICE)
+        self._device = available_device()
+        self._pipeline = DiffusionPipeline.from_pretrained(self._spec.model_id, torch_dtype=torch.bfloat16).to(self._device)
 
     def generate(self, request: GenerationRequest, report: ProgressSink) -> bytes:
         if self._pipeline is None:
@@ -38,7 +44,7 @@ class DiffusersBackend:
                 height=snap_dimension(request.height),
                 num_inference_steps=total,
                 guidance_scale=DIFFUSERS_GUIDANCE_SCALE,
-                generator=torch.Generator(device=DIFFUSERS_DEVICE).manual_seed(request.seed),
+                generator=torch.Generator(device=self._device).manual_seed(request.seed),
                 callback_on_step_end=on_step_end,
             )
         return encode_png(output.images[0])

@@ -42,3 +42,12 @@ async def test_a_worker_that_is_not_up_yet_is_still_connected() -> None:
 
 async def test_no_configured_worker_stays_empty() -> None:
     assert await reachable_worker("", only_up(HOST_WORKER)) == ""
+
+
+def test_the_image_worker_starts_with_every_stack() -> None:
+    compose = COMPOSE.read_text(encoding="utf-8")
+    worker = compose[compose.index("\n  image-worker:\n") :]
+    worker = worker[: worker.index("\nvolumes:")] if "\nvolumes:" in worker else worker
+    assert "profiles:" not in worker, "the image worker only starts under a compose profile"
+    assert "nvidia" not in worker, "the image worker cannot start on a machine without an NVIDIA GPU"
+    assert "nvidia" in (ROOT / "docker-compose.gpu.yml").read_text(encoding="utf-8"), "docker-compose.gpu.yml no longer gives the worker the GPU"

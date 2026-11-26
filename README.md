@@ -3246,7 +3246,7 @@ make down          # stops it again; volumes are kept
 
 Open **http://127.0.0.1:8080**, create the owner account, connect a model (see [Models and providers](#models-and-providers)), then walk through the seven stages of the genesis wizard: choose a template or a blank page, name your Creator, choose the language of your lore, write the seed of your world, and choose your first sons.
 
-`make up` picks the image worker for the machine. On Apple Silicon it starts the native MLX worker in the background (`make worker-start`, `make worker-stop`, `make worker-status`; log in `data/run/image-worker.log`) and points the backend container at `http://host.docker.internal:8100`. Anywhere else it starts the `image-worker` container on the NVIDIA GPU (profile `gpu`).
+Every setup comes with an image worker; nothing has to be connected by hand. `make up` picks the fastest one the machine has: an NVIDIA GPU first, then on Apple Silicon the native MLX worker it starts in the background (`make worker-start`, `make worker-stop`, `make worker-status`; log in `data/run/image-worker.log`), and the CPU otherwise. The `image-worker` container always starts with the stack and runs on the GPU when it sees one, on the CPU when it does not. The backend tries the worker on the host first (`http://host.docker.internal:8100`), then the container (`http://image-worker:8100`), and connects the first that answers.
 
 ### Requirements
 
@@ -3255,7 +3255,7 @@ Open **http://127.0.0.1:8080**, create the owner account, connect a model (see [
 - A model to think with: a subscription (Claude, ChatGPT, Google AI or GitHub Copilot), an API key, or a model server of your own
 - Docker with Compose v2.24 or newer, for the containerized setup
 - For the book PDF from a backend on the host: Pango (`brew install pango` on macOS); the Docker image has it
-- Optional: an Apple Silicon Mac (native `mlx` image worker) or an NVIDIA GPU with the NVIDIA Container Toolkit (`diffusers` image worker)
+- Optional, for faster images: an NVIDIA GPU with the NVIDIA Container Toolkit, or an Apple Silicon Mac for the native `mlx` worker. Without either, images are made on the CPU.
 
 ### Ports
 
@@ -3361,7 +3361,7 @@ This builds and starts:
 - `minio-init`: a one-shot job that creates the bucket with `mc` and keeps it private. The backend starts after it finished.
 - `web`: the built frontend served by nginx at http://127.0.0.1:8080. nginx proxies `/api` to the backend with SSE buffering off.
 
-On an NVIDIA host, `make docker-up-gpu` also starts the `image-worker` container (profile `gpu`); the backend reaches it at `http://image-worker:8100` by default. Model weights are downloaded on the first image into the `aerona-models` volume, never into the image.
+The `image-worker` container starts with every `docker compose up` and runs on the CPU with `Tongyi-MAI/Z-Image-Turbo`. On an NVIDIA host, `make docker-up-gpu` adds `docker-compose.gpu.yml`, which gives the container the GPU and the faster `unsloth/Z-Image-Turbo-unsloth-bnb-4bit`. The backend reaches it at `http://image-worker:8100` without any setting. Model weights are downloaded on the first image into the `aerona-models` volume, never into the image. On the CPU the first image waits for that download and each image takes minutes.
 
 `make docker-down` stops everything. Volumes are kept.
 
@@ -3489,7 +3489,8 @@ The model loads on the first job and is released after `AERONA_IMAGE_WORKER_IDLE
 | Backend | Where | Model |
 |---|---|---|
 | `mlx` | Apple Silicon host (`make image-worker`) | `mflux-community/z-image-turbo-mflux-q4` |
-| `diffusers` | NVIDIA container (profile `gpu`) | `unsloth/Z-Image-Turbo-unsloth-bnb-4bit` |
+| `diffusers` | Container on an NVIDIA GPU (`docker-compose.gpu.yml`) | `unsloth/Z-Image-Turbo-unsloth-bnb-4bit` |
+| `diffusers` | Container on the CPU (default) | `Tongyi-MAI/Z-Image-Turbo` |
 | `fake` | Tests and CI | Deterministic gradient PNG |
 
 ### Worker HTTP contract

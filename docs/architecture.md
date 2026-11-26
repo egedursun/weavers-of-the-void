@@ -191,7 +191,7 @@ The user wants no visual drift: every select is exactly as tall as every input a
 
 The app generates images for records (the Creator, sons, foreign gods, worlds and entities) from image prompts written by the LLM. Generation runs in a separate `image-worker` service behind a small HTTP contract: enqueue a job, stream progress (`loading`, `encoding`, `step k/n`, `decoding`, `done`, `error`) and fetch the PNG. The backend owns the queue (one GPU means one job at a time, and manual requests go ahead of bulk ones). Images are only ever added, never replaced. Auto-generation at the end of an epoch is a tunable rule. There are two worker backends behind the same contract:
 
-- `diffusers`: containerized, for NVIDIA hosts (compose `gpu` profile, CUDA base image).
+- `diffusers`: containerized and always part of the stack. It runs on an NVIDIA GPU when the container sees one (`docker-compose.gpu.yml` adds the device and the 4-bit model) and on the CPU otherwise.
 - `mlx`: Apple Silicon. Docker on macOS cannot reach Metal, so this backend runs natively on the host (`make image-worker`). The containers reach it at `host.docker.internal`.
 
 Model weights come from a pre-quantized repo and live in a named volume, never in the image. The worker releases the model after an idle timeout (a tunable rule). `IMAGE_WORKER_URL` empty means image generation is disabled and the UI says so.
@@ -206,7 +206,7 @@ Single-user, local-first. `docker compose up` brings up:
 - `bifrost`: the Bifrost gateway that carries API keys sent with each request (`deploy/bifrost/config.json`, direct keys on, no stored keys).
 - `web`: the frontend built with Vite, served by nginx. nginx also reverse-proxies `/api` to the backend, with SSE buffering disabled.
 - `minio`: the S3-compatible media store behind the `MediaStore` interface (decision 77), with the `aerona-media` volume, a healthcheck and no host port. `minio-init` creates the private bucket with `mc` before the backend starts. The profile `media-console` publishes the MinIO console on `127.0.0.1` only.
-- `image-worker` (profile `gpu`): the diffusers worker with an NVIDIA device reservation and an `aerona-models` volume.
+- `image-worker`: the diffusers worker with an `aerona-models` volume, started with every stack. `docker-compose.gpu.yml` adds the NVIDIA device reservation. The backend tries a worker on the host first, then this container, and connects the first that answers.
 
 Every setting comes from environment variables declared in `settings.py`, with a checked-in `.env.example`. Ports bind to `127.0.0.1` by default. Local development without Docker is `make dev`: backend with reload, Vite dev server, and optionally the native image worker.
 

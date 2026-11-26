@@ -11,6 +11,7 @@ BACKEND_MODULES = {
     BackendName.FAKE: "aerona_image_worker.backends.fake",
 }
 MLX_PROMPT_PLACEHOLDER = "-"
-DIFFUSERS_DEVICE = "cuda"
+DIFFUSERS_GPU_DEVICE = "cuda"
+DIFFUSERS_CPU_DEVICE = "cpu"
 DIFFUSERS_GUIDANCE_SCALE = 0.0
 PNG_FORMAT = "PNG"

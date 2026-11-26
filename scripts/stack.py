@@ -2,6 +2,7 @@ import argparse
 import os
 import platform
 import secrets
+import shutil
 import signal
 import subprocess
 import sys
@@ -150,18 +151,24 @@ def compose(args: list[str], worker_url: str) -> None:
     subprocess.run(["docker", "compose", *args], cwd=ROOT, env=environment, check=True)
 
 
+def nvidia_gpu() -> bool:
+    return shutil.which("nvidia-smi") is not None
+
+
 def up() -> None:
     init_env()
     if apple_silicon():
         start_worker()
-        compose(["up", "-d", "--build"], DOCKER_HOST_WORKER_URL)
+        compose(["up", "-d", "--build"], f"{DOCKER_HOST_WORKER_URL},{DOCKER_WORKER_URL}")
+    elif nvidia_gpu():
+        compose(["-f", "docker-compose.yml", "-f", "docker-compose.gpu.yml", "up", "-d", "--build"], DOCKER_WORKER_URL)
     else:
-        compose(["--profile", "gpu", "up", "-d", "--build"], DOCKER_WORKER_URL)
+        compose(["up", "-d", "--build"], DOCKER_WORKER_URL)
     print("Weavers of the Void is up: http://127.0.0.1:8080")
 
 
 def down() -> None:
-    compose(["--profile", "gpu", "--profile", "media-console", "down"], DOCKER_WORKER_URL)
+    compose(["--profile", "media-console", "down"], DOCKER_WORKER_URL)
     if apple_silicon():
         stop_worker()
 

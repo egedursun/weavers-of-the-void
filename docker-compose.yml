@@ -54,7 +54,6 @@ services:
         condition: service_healthy
       image-worker:
         condition: service_healthy
-        required: false
     healthcheck:
       test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=4).status == 200 else 1)"]
       interval: 30s
@@ -142,8 +141,6 @@ services:
         condition: service_healthy
 
   image-worker:
-    profiles:
-      - gpu
     build:
       context: .
       dockerfile: deploy/image-worker.Dockerfile
@@ -157,19 +154,15 @@ services:
       AERONA_IMAGE_WORKER_BACKEND: diffusers
       AERONA_IMAGE_WORKER_HOST: 0.0.0.0
       AERONA_IMAGE_WORKER_PORT: "8100"
+      AERONA_IMAGE_WORKER_MODEL_ID: ${AERONA_DOCKER_IMAGE_WORKER_MODEL_ID:-Tongyi-MAI/Z-Image-Turbo}
+      AERONA_IMAGE_WORKER_LOAD_TIMEOUT_SECONDS: ${AERONA_DOCKER_IMAGE_WORKER_LOAD_TIMEOUT_SECONDS:-3600}
+      AERONA_IMAGE_WORKER_IMAGE_TIMEOUT_SECONDS: ${AERONA_DOCKER_IMAGE_WORKER_IMAGE_TIMEOUT_SECONDS:-1800}
       HF_HOME: /models
     volumes:
       - aerona-models:/models
     ports:
       - "${AERONA_BIND_ADDRESS:-127.0.0.1}:${AERONA_IMAGE_WORKER_PUBLISHED_PORT:-8100}:8100"
     shm_size: 2gb
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=4).status == 200 else 1)"]
       interval: 30s

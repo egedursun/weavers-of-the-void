@@ -82,13 +82,13 @@ docker-up:
 	docker compose up -d --build
 
 docker-up-gpu:
-	docker compose --profile gpu up -d --build
+	docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
 
 docker-up-console:
 	docker compose --profile media-console up -d --build
 
 docker-down:
-	docker compose --profile gpu --profile media-console down
+	docker compose --profile media-console down
 
 minio:
 	@set -a; if [ -f .env ]; then . ./.env; fi; set +a; \
