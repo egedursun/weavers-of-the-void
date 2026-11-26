@@ -2,6 +2,8 @@ from datetime import UTC, datetime
 
 import httpx
 
+from aerona.catalog.providers import PROVIDERS
+from aerona.domain.enums.providers import ModelRole, ProviderKind
 from aerona.imaging.client import ImageWorkerClient
 from aerona.imaging.contract import GeneratedImage, ImageJobRequest
 from aerona.imaging.errors import ImageJobFailedError
@@ -72,3 +74,12 @@ def test_only_picture_models_are_offered_for_images() -> None:
     assert picture_model("imagen-4.0-generate-001")
     assert not picture_model("gpt-6-luna")
     assert not picture_model("claude-sonnet-5-5")
+
+
+GATEWAY_DRAWERS = {ProviderKind.OPENAI, ProviderKind.GEMINI, ProviderKind.XAI, ProviderKind.REPLICATE, ProviderKind.HUGGINGFACE}
+OWN_DRAWERS = {ProviderKind.OPENROUTER, ProviderKind.IMAGE_WORKER}
+
+
+def test_the_images_role_lists_exactly_the_providers_that_can_draw() -> None:
+    offered = {kind for kind, spec in PROVIDERS.items() if ModelRole.IMAGES in spec.roles}
+    assert offered == GATEWAY_DRAWERS | OWN_DRAWERS

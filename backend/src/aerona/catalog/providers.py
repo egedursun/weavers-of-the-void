@@ -193,8 +193,8 @@ PROVIDERS = total(
         ProviderKind.MISTRAL: api("Mistral", "mistral", "https://console.mistral.ai/api-keys"),
         ProviderKind.GROQ: api("Groq", "groq", "https://console.groq.com/keys"),
         ProviderKind.DEEPSEEK: api("DeepSeek", "deepseek", "https://platform.deepseek.com/api_keys"),
-        ProviderKind.XAI: api("xAI", "xai", "https://console.x.ai"),
-        ProviderKind.OPENROUTER: api("OpenRouter", "openrouter", "https://openrouter.ai/keys"),
+        ProviderKind.XAI: api("xAI", "xai", "https://console.x.ai", TEXT_AND_IMAGES),
+        ProviderKind.OPENROUTER: api("OpenRouter", "openrouter", "https://openrouter.ai/keys", TEXT_AND_IMAGES),
         ProviderKind.COHERE: api("Cohere", "cohere", "https://dashboard.cohere.com/api-keys"),
         ProviderKind.CEREBRAS: api("Cerebras", "cerebras", "https://cloud.cerebras.ai"),
         ProviderKind.PERPLEXITY: api("Perplexity", "perplexity", "https://www.perplexity.ai/settings/api"),
@@ -220,7 +220,7 @@ ROLE_DESCRIPTIONS = total(
         ModelRole.WORLD_AGENTS: "The sons, mortals and fallen who act during an age.",
         ModelRole.WRITING: "Genesis, the chronicle, fate, councils, voices, deepening, naming, translation and image prompts.",
         ModelRole.CONVERSATION: "The Divine Will and Presence. A model that sees pictures can read the ones you attach.",
-        ModelRole.IMAGES: "Pictures of things and covers. The check draws one small test picture, or asks the local worker whether it is up; a failed picture is noted on the image queue.",
+        ModelRole.IMAGES: "Pictures of things and covers. The check draws one test picture, or asks the local worker whether it is up.",
     },
 )
 

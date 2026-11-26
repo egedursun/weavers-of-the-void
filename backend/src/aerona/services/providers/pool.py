@@ -5,10 +5,10 @@ from openai import AsyncOpenAI
 
 from aerona.catalog.providers import HOME, PROVIDERS, AgentSpec
 from aerona.constants.llm import TOOL_SERVER_NAME
-from aerona.constants.providers import AGENT_PACKAGE_BIN, GATEWAY_DIRECT_KEY_HEADER
+from aerona.constants.providers import AGENT_PACKAGE_BIN, GATEWAY_DIRECT_KEY_HEADER, OPENROUTER_API_URL, OPENROUTER_PREFIX
 from aerona.domain.enums.providers import ProviderFamily, ProviderKind
 from aerona.imaging.client import ImageWorkerClient
-from aerona.imaging.gateway import GatewayImages
+from aerona.imaging.gateway import ChatImages, GatewayImages
 from aerona.imaging.provider import ImageProvider
 from aerona.llm.backends.acp import AcpBackend, AgentLaunch
 from aerona.llm.backends.base import ModelBackend
@@ -137,4 +137,6 @@ class BackendPool:
     def _build_images(self, connection: Connection, model: str) -> ImageProvider:
         if connection.kind is ProviderKind.IMAGE_WORKER:
             return ImageWorkerClient(connection.base_url)
+        if connection.kind is ProviderKind.OPENROUTER:
+            return ChatImages(AsyncOpenAI(base_url=OPENROUTER_API_URL, api_key=connection.secret), model.removeprefix(OPENROUTER_PREFIX))
         return GatewayImages(self._gateway_client(connection), f"{PROVIDERS[connection.kind].gateway_name}/{model}")
