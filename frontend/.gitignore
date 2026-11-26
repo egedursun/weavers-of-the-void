@@ -6,3 +6,4 @@ playwright-report
 test-results
 __screenshots__
 .vite-cache
+.tanstack

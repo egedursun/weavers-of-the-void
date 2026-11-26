@@ -10,7 +10,6 @@ ROOT = Path(__file__).resolve().parent.parent
 VERSION_FILE = ROOT / "VERSION"
 PYTHON_PROJECTS = (ROOT / "backend", ROOT / "image-worker")
 FRONTEND = ROOT / "frontend"
-VERSION_TEXT = r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+?)?"
 
 
 @dataclass(frozen=True)
@@ -39,10 +38,6 @@ MENTIONS = (
         ROOT / "README.md",
         re.compile(r"(badge/version-)((?:[0-9A-Za-z.]|--)+?)(-[0-9a-f]{6}\?style)"),
         escaped=True,
-    ),
-    Mention(
-        ROOT / "docs" / "wov-basic-information.md",
-        re.compile(rf"(S\u00fcr\u00fcm )({VERSION_TEXT})(, )"),
     ),
 )
 SEMVER = re.compile(
