@@ -61,9 +61,9 @@ async def remove_connection(accounts: AccountsDep, providers: ProvidersDep, work
 
 @router.get("/connections/{connection_id}/models", response_model=ProviderModels)
 async def connection_models(
-    accounts: AccountsDep, providers: ProvidersDep, workspace_id: int = WorkspaceId, connection_id: int = ConnectionId
+    accounts: AccountsDep, providers: ProvidersDep, workspace_id: int = WorkspaceId, connection_id: int = ConnectionId, role: ModelRole | None = None
 ) -> ProviderModels:
-    return ProviderModels(models=await providers.service.models(await scope_of(accounts, workspace_id), connection_id))
+    return ProviderModels(models=await providers.service.models(await scope_of(accounts, workspace_id), connection_id, role))
 
 
 @router.post("/connections/{connection_id}/login", response_model=ProviderLoginView)

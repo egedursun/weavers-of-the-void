@@ -100783,7 +100783,9 @@ export interface operations {
   }
   connection_models_api_workspaces__workspace_id__providers_connections__connection_id__models_get: {
     parameters: {
-      query?: never
+      query?: {
+        role?: components['schemas']['ModelRole'] | null
+      }
       header?: never
       path: {
         workspace_id: number
@@ -101151,7 +101153,9 @@ export interface operations {
   }
   server_connection_models_api_server_providers_connections__connection_id__models_get: {
     parameters: {
-      query?: never
+      query?: {
+        role?: components['schemas']['ModelRole'] | null
+      }
       header?: never
       path: {
         connection_id: number

@@ -15,6 +15,8 @@ import {
   Save,
   ScanSearch,
   Trash2,
+  ImageOff,
+  ImagePlus,
   TriangleAlert,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -36,6 +38,7 @@ import { ROLE_LOOK } from './providerLook'
 import {
   type ChainEntry,
   type ChainLink,
+  type ModelRole,
   type ProviderConnection,
   type ProviderKindView,
   type ProviderScope,
@@ -45,12 +48,35 @@ import {
 const MODEL_MAX = 200
 const CHAIN_SHOWN = 12
 
+function DrawingBadge({ entry }: { entry: ChainEntry }) {
+  if (entry.tools_work === null)
+    return (
+      <Badge variant='outline' size='sm'>
+        <CircleHelp />
+        Not checked yet
+      </Badge>
+    )
+  return entry.tools_work ? (
+    <Badge variant='success' size='sm'>
+      <ImagePlus />
+      Draws pictures
+    </Badge>
+  ) : (
+    <Badge variant='destructive' size='sm'>
+      <ImageOff />
+      Skipped: drew no picture
+    </Badge>
+  )
+}
+
 function CheckBadges({
   entry,
   pictures,
+  drawing,
 }: {
   entry: ChainEntry | null
   pictures: boolean
+  drawing: boolean
 }) {
   if (entry === null)
     return (
@@ -61,7 +87,9 @@ function CheckBadges({
     )
   return (
     <span className='flex min-w-0 flex-wrap items-center gap-1.5'>
-      {entry.tools_work === null ? (
+      {drawing ? (
+        <DrawingBadge entry={entry} />
+      ) : entry.tools_work === null ? (
         <Badge variant='outline' size='sm'>
           <CircleHelp />
           Not checked yet
@@ -94,6 +122,7 @@ function CheckBadges({
 
 function ChainRow({
   scope,
+  role,
   position,
   link,
   saved,
@@ -109,6 +138,7 @@ function ChainRow({
   onRemove,
 }: {
   scope: ProviderScope
+  role: ModelRole
   position: number
   link: ChainLink
   saved: ChainEntry | null
@@ -125,7 +155,7 @@ function ChainRow({
 }) {
   const listId = useId()
   const [asked, setAsked] = useState(false)
-  const models = useConnectionModels(scope, link.connection_id, asked)
+  const models = useConnectionModels(scope, link.connection_id, role, asked)
   const chosen = choices.find((item) => item.id === link.connection_id)
   const worker = chosen
     ? kinds.get(chosen.kind)?.kind === 'image_worker'
@@ -241,7 +271,11 @@ function ChainRow({
           <Trash2 />
         </Button>
       </div>
-      <CheckBadges entry={saved} pictures={pictures} />
+      <CheckBadges
+        entry={saved}
+        pictures={pictures}
+        drawing={role === 'images'}
+      />
       {saved?.check_note && (
         <Muted as='span' variant='caption'>
           {saved.check_note}
@@ -249,7 +283,9 @@ function ChainRow({
       )}
       {models.isSuccess && models.data.models.length === 0 && (
         <Muted as='span' variant='caption'>
-          The provider listed no models for this key; type the model name.
+          {role === 'images'
+            ? 'The provider listed no picture models for this key; type the model name.'
+            : 'The provider listed no models for this key; type the model name.'}
         </Muted>
       )}
       {models.isError && (
@@ -373,6 +409,7 @@ export function RoleChain({
               <ChainRow
                 key={`${index}-${link.connection_id}`}
                 scope={scope}
+                role={role.role}
                 position={index}
                 link={link}
                 saved={savedOf(link)}
@@ -452,7 +489,7 @@ export function RoleChain({
           )}
         </span>
         <span className='flex min-w-0 flex-wrap items-center gap-2'>
-          {role.role !== 'images' && !dirty && role.entries.length > 0 && (
+          {!dirty && role.entries.length > 0 && (
             <Button
               act={check}
               type='button'

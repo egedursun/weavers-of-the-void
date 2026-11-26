@@ -25,8 +25,8 @@ export const providerKeys = {
   all: PROVIDERS_KEY,
   view: (scope: ProviderScope) =>
     [...PROVIDERS_KEY, 'view', scopeKey(scope)] as const,
-  models: (scope: ProviderScope, connectionId: number) =>
-    [...PROVIDERS_KEY, 'models', scopeKey(scope), connectionId] as const,
+  models: (scope: ProviderScope, connectionId: number, role: ModelRole) =>
+    [...PROVIDERS_KEY, 'models', scopeKey(scope), connectionId, role] as const,
   login: (workspaceId: number, connectionId: number) =>
     [...PROVIDERS_KEY, 'login', workspaceId, connectionId] as const,
 }
@@ -65,11 +65,12 @@ export function useProviders(scope: ProviderScope | null) {
 export function useConnectionModels(
   scope: ProviderScope,
   connectionId: number | null,
+  role: ModelRole,
   wanted: boolean
 ) {
   return useQuery(
     {
-      queryKey: providerKeys.models(scope, connectionId ?? -1),
+      queryKey: providerKeys.models(scope, connectionId ?? -1, role),
       queryFn: () => {
         const id = connectionId ?? -1
         return scope === 'server'
@@ -77,7 +78,7 @@ export function useConnectionModels(
               api.GET(
                 '/api/server/providers/connections/{connection_id}/models',
                 {
-                  params: { path: { connection_id: id } },
+                  params: { path: { connection_id: id }, query: { role } },
                 }
               )
             )
@@ -90,6 +91,7 @@ export function useConnectionModels(
                       workspace_id: scope.workspaceId,
                       connection_id: id,
                     },
+                    query: { role },
                   },
                 }
               )

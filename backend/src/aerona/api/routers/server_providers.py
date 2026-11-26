@@ -42,8 +42,8 @@ async def remove_server_connection(providers: ProvidersDep, connection_id: int =
 
 
 @router.get("/connections/{connection_id}/models", response_model=ProviderModels)
-async def server_connection_models(providers: ProvidersDep, connection_id: int = ConnectionId) -> ProviderModels:
-    return ProviderModels(models=await providers.service.models(SERVER, connection_id))
+async def server_connection_models(providers: ProvidersDep, connection_id: int = ConnectionId, role: ModelRole | None = None) -> ProviderModels:
+    return ProviderModels(models=await providers.service.models(SERVER, connection_id, role))
 
 
 @router.put("/roles/{role}", response_model=ModelRoleView)

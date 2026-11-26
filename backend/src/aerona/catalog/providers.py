@@ -20,6 +20,22 @@ CHECK_SYSTEM = "Follow the instruction exactly."
 CHECK_PROMPT = "Call the tool named echo with the word ready as its input, then answer with the single word done."
 CHECK_PICTURE_PROMPT = "Which colour fills this picture? Answer with one English word."
 CHECK_PICTURE_ANSWER = "red"
+CHECK_DRAWING_PROMPT = "A single filled circle in the middle of an empty square."
+IMAGE_MODEL_MARKS = (
+    "image",
+    "dall-e",
+    "dalle",
+    "imagen",
+    "flux",
+    "stable-diffusion",
+    "sdxl",
+    "recraft",
+    "ideogram",
+    "z-image",
+    "qwen-image",
+    "seedream",
+    "hidream",
+)
 TEAM_SUBSCRIPTION_REASON = "A subscription belongs to one person, so it can only be logged in to in a personal workspace."
 GEMINI_OWN_TOOLS = (
     "update_topic",
@@ -204,7 +220,7 @@ ROLE_DESCRIPTIONS = total(
         ModelRole.WORLD_AGENTS: "The sons, mortals and fallen who act during an age.",
         ModelRole.WRITING: "Genesis, the chronicle, fate, councils, voices, deepening, naming, translation and image prompts.",
         ModelRole.CONVERSATION: "The Divine Will and Presence. A model that sees pictures can read the ones you attach.",
-        ModelRole.IMAGES: "Pictures of things and covers. A picture model proves itself when it draws; a failed picture is noted on the image queue.",
+        ModelRole.IMAGES: "Pictures of things and covers. The check draws one small test picture, or asks the local worker whether it is up; a failed picture is noted on the image queue.",
     },
 )
 

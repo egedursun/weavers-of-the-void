@@ -7,8 +7,9 @@ from aerona.catalog.providers import PROVIDERS, ROLE_LABELS, TEAM_SUBSCRIPTION_R
 from aerona.constants.providers import CONNECTION_LABEL_MAX_LENGTH
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
 from aerona.domain.enums.providers import ModelRole, ProviderFamily, ProviderKind
+from aerona.imaging.client import ImageWorkerClient
 from aerona.llm.errors import LlmError
-from aerona.services.providers.checks import check_model
+from aerona.services.providers.checks import check_drawing, check_model, check_worker, picture_model
 from aerona.services.providers.directory import ProviderDirectory, Scope
 from aerona.services.providers.login import LoginRun, LoginRunner, forget_login
 from aerona.services.providers.pool import BackendPool
@@ -133,14 +134,17 @@ class ProviderService:
         await self.directory.refresh()
         return self.directory.own_chain(scope.key, role)
 
-    async def models(self, scope: ProviderScope, connection_id: int) -> list[str]:
+    async def models(self, scope: ProviderScope, connection_id: int, role: ModelRole | None = None) -> list[str]:
         connection = self.usable_in(scope, connection_id)
         if connection.kind is ProviderKind.IMAGE_WORKER:
             return []
         try:
-            return await (await self.pool.text(connection)).models()
+            listed = await (await self.pool.text(connection)).models()
         except LlmError as error:
             raise ConflictError(str(error)) from error
+        if role is ModelRole.IMAGES:
+            return [name for name in listed if picture_model(name)]
+        return [name for name in listed if not picture_model(name)] if role is not None else listed
 
     async def log_in(self, scope: ProviderScope, connection_id: int) -> LoginRun:
         connection = self.connection_in(scope, connection_id)
@@ -183,12 +187,21 @@ class ProviderService:
     async def _check(self, entry: ChainEntry) -> CheckResult:
         now = datetime.now(UTC)
         if entry.role is ModelRole.IMAGES:
-            return CheckResult(None, None, "", now)
+            return await self._check_pictures(entry, now)
         try:
             backend = await self.pool.text(entry.connection)
         except LlmError as error:
             return CheckResult(False, None, str(error), now)
         return await check_model(backend, entry.model, entry.role, now)
+
+    async def _check_pictures(self, entry: ChainEntry, now: datetime) -> CheckResult:
+        try:
+            provider = await self.pool.images(entry.connection, entry.model)
+        except LlmError as error:
+            return CheckResult(False, None, str(error), now)
+        if isinstance(provider, ImageWorkerClient):
+            return await check_worker(provider, now)
+        return await check_drawing(provider, now)
 
     async def _changed(self, connection_id: int) -> None:
         await self.pool.forget(connection_id)
