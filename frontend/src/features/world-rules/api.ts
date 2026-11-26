@@ -25,11 +25,7 @@ export function useRules() {
   })
 }
 
-export function useRuleValue(path: string): number | null {
-  const rules = useRules()
-  const found = rules.data?.find((rule) => rulePath(rule) === path)
-  return found ? found.value : null
-}
+export { useRuleValue } from '@/api/ruleValues'
 
 const RULE_WRITES = [{ method: 'PATCH', path: '/api/rules' }] as const
 

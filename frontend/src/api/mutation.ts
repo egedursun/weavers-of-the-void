@@ -4,9 +4,11 @@ import {
   type UseMutationOptions,
   type UseMutationResult,
   useMutation as useQueryMutation,
+  useQueryClient,
 } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { type WriteTarget, useWriteRefusal } from '@/features/team/writeGate'
+import { settleRefetches } from './refetchSettle'
 import { type Permission } from './teamGate'
 
 export type ActGate = { blockedReason: string | null }
@@ -54,7 +56,18 @@ export function useMutation<
   client?: QueryClient
 ): GatedMutation<TData, TError, TVariables, TContext> {
   const blockedReason = useWriteRefusal(writes, permission)
-  const mutation = useQueryMutation(options, client)
+  const queryClient = useQueryClient(client)
+  const { onSuccess, onSettled } = options
+  const settling: UseMutationOptions<TData, TError, TVariables, TContext> = {
+    ...options,
+    onSuccess:
+      onSuccess &&
+      ((...args) => settleRefetches(queryClient, () => onSuccess(...args))),
+    onSettled:
+      onSettled &&
+      ((...args) => settleRefetches(queryClient, () => onSettled(...args))),
+  }
+  const mutation = useQueryMutation(settling, client)
   if (blockedReason === null) return { ...mutation, blockedReason }
   return {
     ...mutation,

@@ -12,3 +12,4 @@ export const HEADER_COLLAPSE_SCROLL_PX = 60
 export const HEADER_COLLAPSE_QUERY = '(max-width: 600px)'
 export const RULES_STALE_TIME_MS = 300_000
 export const WORLD_REFRESH_MIN_MS = 4_000
+export const MUTATION_SETTLE_MAX_MS = 8_000

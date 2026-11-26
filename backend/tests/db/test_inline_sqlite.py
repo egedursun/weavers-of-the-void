@@ -1,4 +1,6 @@
 import asyncio
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -6,7 +8,7 @@ from sqlalchemy import event, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from aerona.db.inline_sqlite import InlineConnection
+from aerona.db.inline_sqlite import InlineConnection, ThreadedConnection
 from aerona.db.read_memo import KEEP_KEY
 from aerona.db.session import Database
 
@@ -108,4 +110,60 @@ async def test_rows_read_in_one_step_stay_kept_for_the_next_and_are_let_go_after
             assert session.sync_session.info[KEEP_KEY] is not first
             renewed = await session.get(Probe, 1)
             assert renewed is not None and renewed.value == 3
+    await database.dispose()
+
+
+async def test_reads_in_a_thread_run_sql_off_the_event_loop_and_see_committed_writes(tmp_path: Path) -> None:
+    database = Database(f"sqlite+aiosqlite:///{tmp_path / 'threaded.db'}")
+    async with database.engine.begin() as connection:
+        await connection.execute(text("CREATE TABLE items (id INTEGER PRIMARY KEY, name TEXT)"))
+    async with database.write() as session:
+        await session.execute(text("INSERT INTO items (name) VALUES ('seen')"))
+    loop_thread = threading.get_ident()
+    threads: list[int] = []
+
+    def thread_of() -> int:
+        threads.append(threading.get_ident())
+        return 1
+
+    async with database.threaded.connect() as connection:
+        raw = await connection.get_raw_connection()
+        assert isinstance(raw.driver_connection, ThreadedConnection)
+        raw.driver_connection.live.create_function("thread_of", 0, thread_of)
+    async with database.read_in_thread() as session:
+        names = (await session.execute(text("SELECT name FROM items WHERE thread_of() = 1 ORDER BY id"))).scalars().all()
+        assert (await session.execute(text("PRAGMA foreign_keys"))).scalar() == 1
+    assert names == ["seen"]
+    assert threads and loop_thread not in threads
+    await database.dispose()
+
+
+async def test_a_slow_read_in_a_thread_leaves_the_event_loop_free(tmp_path: Path) -> None:
+    database = Database(f"sqlite+aiosqlite:///{tmp_path / 'threaded.db'}")
+    beats: list[int] = []
+
+    async def heartbeat() -> None:
+        while True:
+            beats.append(1)
+            await asyncio.sleep(0)
+
+    def pause() -> int:
+        time.sleep(0.2)
+        return 1
+
+    async with database.threaded.connect() as connection:
+        raw = await connection.get_raw_connection()
+        assert isinstance(raw.driver_connection, ThreadedConnection)
+        raw.driver_connection.live.create_function("pause", 0, pause)
+    pulse = asyncio.create_task(heartbeat())
+    async with database.read_in_thread() as session:
+        assert (await session.execute(text("SELECT pause()"))).scalar() == 1
+    pulse.cancel()
+    assert len(beats) > 10
+    await database.dispose()
+
+
+async def test_an_in_memory_database_reads_through_its_one_engine() -> None:
+    database = Database("sqlite+aiosqlite:///:memory:")
+    assert database.threaded is database.engine
     await database.dispose()

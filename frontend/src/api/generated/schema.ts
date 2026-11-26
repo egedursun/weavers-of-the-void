@@ -1103,6 +1103,22 @@ export interface paths {
     patch: operations['update_rules_api_rules_patch']
     trace?: never
   }
+  '/api/rules/values': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['rule_values_api_rules_values_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/rules/{namespace}/{key}': {
     parameters: {
       query?: never
@@ -87184,6 +87200,11 @@ export interface components {
     RuleUpdateRequest: {
       value: number
     }
+    RuleValuesResponse: {
+      values: {
+        [key: string]: number
+      }
+    }
     RulerHeirInput: {
       ruler_id: number
       heir_id: number
@@ -102384,6 +102405,33 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['QueuedActView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  rule_values_api_rules_values_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RuleValuesResponse']
         }
       }
       default: {

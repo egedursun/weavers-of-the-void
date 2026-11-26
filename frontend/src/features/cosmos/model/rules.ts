@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { type RuleValue, type TravelMethod, useCosmosRules } from '../api'
+import { type RuleValues, useRuleValues } from '@/api/ruleValues'
+import { type TravelMethod } from '../api'
 
 export const RULE = {
   createWorld: 'balance.create_world',
@@ -54,11 +55,8 @@ export type RuleBook = {
   methodDanger: (method: TravelMethod) => number | undefined
 }
 
-export function buildRuleBook(rules: RuleValue[] | undefined): RuleBook {
-  const values = new Map<string, number>()
-  for (const item of rules ?? [])
-    values.set(`${item.namespace}.${item.key}`, item.value)
-  const path = (key: string) => values.get(key)
+export function buildRuleBook(rules: RuleValues | undefined): RuleBook {
+  const path = (key: string): number | undefined => rules?.[key]
   return {
     ready: rules !== undefined,
     get: (name) => path(RULE[name]),
@@ -69,7 +67,7 @@ export function buildRuleBook(rules: RuleValue[] | undefined): RuleBook {
 }
 
 export function useRuleBook(): RuleBook {
-  const { data } = useCosmosRules()
+  const { data } = useRuleValues()
   return useMemo(() => buildRuleBook(data), [data])
 }
 

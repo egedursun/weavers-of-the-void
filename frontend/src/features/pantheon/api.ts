@@ -4,14 +4,12 @@ import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
 import { fetchJobs } from '@/api/system'
-import { RULES_STALE_TIME_MS } from '@/constants/ui'
 
 export type WorldState = components['schemas']['StateResponse']
 export type SonPublic = components['schemas']['SonPublic']
 export type SonRecord = components['schemas']['SonRecord']
 export type ThreadRecord = components['schemas']['ThreadRecord']
 export type PlayerHints = components['schemas']['PlayerHints']
-export type RuleValue = components['schemas']['RuleResponse']
 export type ActionCatalogueItem = components['schemas']['ActionCatalogueItem']
 export type ActionResponse = components['schemas']['ActionResponse']
 export type Catalogue = components['schemas']['Catalogue']
@@ -98,14 +96,6 @@ export function useWorldSettings() {
   return useQuery({
     queryKey: godKeys.settings,
     queryFn: () => unwrap(api.GET('/api/settings')),
-  })
-}
-
-export function useRules() {
-  return useQuery({
-    queryKey: queryKeys.rules.all,
-    queryFn: () => unwrap(api.GET('/api/rules')),
-    staleTime: RULES_STALE_TIME_MS,
   })
 }
 

@@ -26,6 +26,7 @@ import {
   Waypoints,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ruleValue, useRuleValues } from '@/api/ruleValues'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -42,13 +43,7 @@ import { useThemeColors } from '@/components/domain/useThemeColors'
 import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { useGlobalWorld, useWorldFilter } from '@/components/layout/worldFilter'
 import { Muted } from '@/components/typography'
-import {
-  type CosmosView,
-  ruleValue,
-  useCatalogue,
-  useCosmos,
-  useRules,
-} from '@/features/map/api'
+import { type CosmosView, useCatalogue, useCosmos } from '@/features/map/api'
 import {
   isBoolean,
   isNumber,
@@ -243,7 +238,7 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
   const navigate = useNavigate()
   const entryStack = useEntryStack()
   const tokens = useThemeColors()
-  const rules = useRules()
+  const rules = useRuleValues()
   const catalogue = useCatalogue()
   const [mode, setMode] = usePersistentState<GraphMode>(
     STORAGE.mode,

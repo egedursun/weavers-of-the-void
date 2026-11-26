@@ -23,6 +23,17 @@ async def test_rules_can_be_listed_updated_and_reset(client: AsyncClient) -> Non
     assert reset.json()["value"] == target["default"]
 
 
+async def test_rule_values_carry_every_rule_by_path_and_follow_a_change(client: AsyncClient) -> None:
+    rules = (await client.get("/api/rules")).json()
+    values = (await client.get("/api/rules/values")).json()["values"]
+    assert values == {f"{item['namespace']}.{item['key']}": item["value"] for item in rules}
+    target = next(item for item in rules if item["namespace"] == "agents" and item["key"] == "concurrent_jobs")
+    await client.put("/api/rules/agents/concurrent_jobs", json={"value": target["minimum"]})
+    changed = (await client.get("/api/rules/values")).json()["values"]
+    assert changed["agents.concurrent_jobs"] == target["minimum"]
+    await client.delete("/api/rules/agents/concurrent_jobs")
+
+
 async def test_rule_update_that_breaks_ordering_is_rejected(client: AsyncClient) -> None:
     response = await client.put("/api/rules/core_rules/tier_uncommon", json={"value": 9})
     assert response.status_code == 400

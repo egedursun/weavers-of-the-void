@@ -13,6 +13,7 @@ export const queryKeys = {
   },
   rules: {
     all: ['rules'] as const,
+    values: ['rules', 'values'] as const,
   },
   world: {
     all: ['world'] as const,

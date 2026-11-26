@@ -4,7 +4,6 @@ import { unwrap } from '@/api/errors'
 import { type components } from '@/api/generated/schema'
 import { queryKeys } from '@/api/queryKeys'
 import { fetchJob } from '@/api/system'
-import { RULES_STALE_TIME_MS } from '@/constants/ui'
 
 type Schemas = components['schemas']
 
@@ -23,7 +22,6 @@ export type DiscoverySummary = Schemas['DiscoverySummary']
 export type SensedWorld = Schemas['SensedWorld']
 export type WorldState = Schemas['StateResponse']
 export type SonPublic = Schemas['SonPublic']
-export type RuleValue = Schemas['RuleResponse']
 export type ActionResponse = Schemas['ActionResponse']
 export type ActionCatalogueItem = Schemas['ActionCatalogueItem']
 export type TravelResource = Schemas['TravelResource']
@@ -108,14 +106,6 @@ export function useCosmosState() {
   return useQuery({
     queryKey: cosmosKeys.state,
     queryFn: () => unwrap(api.GET('/api/state')),
-  })
-}
-
-export function useCosmosRules() {
-  return useQuery({
-    queryKey: queryKeys.rules.all,
-    queryFn: () => unwrap(api.GET('/api/rules')),
-    staleTime: RULES_STALE_TIME_MS,
   })
 }
 

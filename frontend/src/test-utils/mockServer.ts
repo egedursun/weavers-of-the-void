@@ -1,4 +1,5 @@
 import { installFetch } from './networkGuard'
+import { RULE_LIST_ROUTE, RULE_VALUES_ROUTE, ruleValuesOf } from './ruleValues'
 
 export type MockRequest = {
   method: string
@@ -62,12 +63,27 @@ async function readBody(request: Request): Promise<unknown> {
   return text
 }
 
+function withRuleValues(routes: MockRoutes): MockRoutes {
+  if (!(RULE_LIST_ROUTE in routes) || RULE_VALUES_ROUTE in routes) return routes
+  const list = routes[RULE_LIST_ROUTE]
+  return {
+    ...routes,
+    [RULE_VALUES_ROUTE]: (request: MockRequest) => {
+      const reply =
+        typeof list === 'function' ? (list as MockHandler)(request) : list
+      return reply instanceof MockFailure ? reply : ruleValuesOf(reply)
+    },
+  }
+}
+
 export function startMockServer(routes: MockRoutes): MockServer {
-  const compiled = Object.entries(routes).map(([key, handler]) => ({
-    key,
-    ...compile(key),
-    handler,
-  }))
+  const compiled = Object.entries(withRuleValues(routes)).map(
+    ([key, handler]) => ({
+      key,
+      ...compile(key),
+      handler,
+    })
+  )
   const calls: MockRequest[] = []
   installFetch(async (input, init) => {
     const request = new Request(input as RequestInfo, init)

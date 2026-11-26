@@ -16,6 +16,10 @@ class RuleResponse(ApiModel):
     warning: str | None = None
 
 
+class RuleValuesResponse(ApiModel):
+    values: dict[str, float]
+
+
 class RuleUpdateRequest(ApiModel):
     value: float
 

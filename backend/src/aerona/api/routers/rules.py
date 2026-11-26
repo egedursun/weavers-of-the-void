@@ -4,7 +4,7 @@ from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
 from aerona.api.dependencies import ServicesDep
-from aerona.api.schemas.rules import RuleBatchRequest, RuleResponse, RuleUpdateRequest
+from aerona.api.schemas.rules import RuleBatchRequest, RuleResponse, RuleUpdateRequest, RuleValuesResponse
 from aerona.api.schemas.team import QueuedActView
 from aerona.api.views.team import queued_view
 from aerona.constants.http import RULES_PATH
@@ -44,6 +44,11 @@ def to_response(descriptor: RuleDescriptor) -> RuleResponse:
 @router.get("", response_model=list[RuleResponse])
 async def list_rules(services: ServicesDep) -> list[RuleResponse]:
     return [to_response(item) for item in services.rules.catalog()]
+
+
+@router.get("/values", response_model=RuleValuesResponse)
+async def rule_values(services: ServicesDep) -> RuleValuesResponse:
+    return RuleValuesResponse(values={f"{item.namespace}{KEY_SEPARATOR}{item.key}": item.value for item in services.rules.catalog()})
 
 
 async def queued_rules(services: Services, changes: dict[str, float | None], *, reset_all: bool = False) -> JSONResponse | None:

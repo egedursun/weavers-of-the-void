@@ -1,9 +1,8 @@
 import { useMemo } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { type ServerEvent, useEvent } from '@/realtime'
 import { create } from 'zustand'
 import { useRoleModel } from '@/features/providers/api'
-import { imageKeys, useImageGenStatus } from './api'
+import { useImageGenStatus } from './api'
 
 export type ImageLine = {
   key: string
@@ -139,24 +138,11 @@ export const useImageGenStore = create<ImageGenStore>((set, get) => ({
 
 export function useImageGenEvents(): void {
   const record = useImageGenStore((store) => store.record)
-  const queryClient = useQueryClient()
-  const refresh = () =>
-    void queryClient.invalidateQueries({ queryKey: imageKeys.status })
-  useEvent('image.queued', (event) => {
-    record(event)
-    refresh()
-  })
+  useEvent('image.queued', record)
   useEvent('image.progress', record)
-  useEvent('image.done', (event) => {
-    record(event)
-    refresh()
-  })
-  useEvent('image.failed', (event) => {
-    record(event)
-    refresh()
-  })
+  useEvent('image.done', record)
+  useEvent('image.failed', record)
   useEvent('image.bulk_log', record)
-  useEvent('image.status', refresh)
 }
 
 export type NodeImageState =

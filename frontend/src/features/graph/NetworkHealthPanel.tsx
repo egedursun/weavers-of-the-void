@@ -8,6 +8,7 @@ import {
   Waypoints,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ruleValue, useRuleValues } from '@/api/ruleValues'
 import { formatDecimal, formatNumber } from '@/lib/format'
 import { agree, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
@@ -20,7 +21,6 @@ import {
   Paged,
 } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
-import { ruleValue, useRules } from '@/features/map/api'
 import {
   useFateLink,
   useFateLinkJob,
@@ -43,7 +43,7 @@ function counted(counters: Record<string, number>): string {
 
 export function NetworkHealthPanel({ intro = false }: { intro?: boolean }) {
   const health = useNetworkHealth()
-  const rules = useRules()
+  const rules = useRuleValues()
   const job = useFateLinkJob()
   const repair = useRepairNetwork()
   const fate = useFateLink()

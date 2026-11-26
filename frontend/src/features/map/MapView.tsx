@@ -3,6 +3,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { navItem } from '@/config/navigation'
 import { Compass, Loader2, Map as MapIcon, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { ruleValue, useRuleValues } from '@/api/ruleValues'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -38,7 +39,6 @@ import { PastEpochBanner } from './PastEpochBanner'
 import { SpeciesRangePanel } from './SpeciesRangePanel'
 import {
   type MapView as MapViewData,
-  ruleValue,
   useAddMapNote,
   useCatalogue,
   useCosmos,
@@ -46,7 +46,6 @@ import {
   useMoveMarker,
   useRegenerateMap,
   useRemoveMapNote,
-  useRules,
   useDeepMap,
   useSons,
   useWorldMap,
@@ -137,7 +136,7 @@ function MapLoading() {
 }
 
 function useMapSettings() {
-  const rules = useRules()
+  const rules = useRuleValues()
   return useMemo(() => {
     const data = rules.data
     const thresholds: Thresholds = {

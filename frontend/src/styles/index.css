@@ -24,12 +24,6 @@
   body {
     @apply min-h-svh w-full overflow-x-hidden bg-background text-body text-foreground antialiased has-[div[data-variant='inset']]:bg-sidebar;
     font-variant-numeric: lining-nums;
-    background-image: radial-gradient(
-      ellipse 80% 50% at 50% -10%,
-      var(--app-glow),
-      transparent 70%
-    );
-    background-attachment: fixed;
   }
 
   button:not(:disabled),

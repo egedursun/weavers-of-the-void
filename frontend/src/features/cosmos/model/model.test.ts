@@ -471,30 +471,10 @@ describe('sky calendar', () => {
 
 describe('rules and search', () => {
   it('reads rules by name and travel method', () => {
-    const book = buildRuleBook([
-      {
-        namespace: 'cosmic_costs',
-        key: 'seal_gate',
-        value: 30,
-        default: 30,
-        minimum: 0,
-        maximum: 500,
-        group: 'x',
-        label: 'Seal',
-        integer: true,
-      },
-      {
-        namespace: 'travel_methods',
-        key: 'light_sail_duration',
-        value: 3,
-        default: 3,
-        minimum: 1,
-        maximum: 20,
-        group: 'x',
-        label: 'Sail',
-        integer: true,
-      },
-    ])
+    const book = buildRuleBook({
+      'cosmic_costs.seal_gate': 30,
+      'travel_methods.light_sail_duration': 3,
+    })
     expect(book.get('sealGate')).toBe(30)
     expect(book.methodDuration('light_sail')).toBe(3)
     expect(book.get('igniteStar')).toBeUndefined()

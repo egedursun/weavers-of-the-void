@@ -114,6 +114,15 @@
 
 body {
   background-color: var(--background);
+  isolation: isolate;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
   background-image:
     radial-gradient(
       ellipse 80% 50% at 50% -10%,
@@ -128,10 +137,9 @@ body {
       var(--background),
       color-mix(in oklch, var(--background) 92%, var(--gem-lo))
     );
-  background-attachment: fixed;
 }
 
-.dark body {
+.dark body::before {
   background-image:
     radial-gradient(
       ellipse 80% 50% at 50% -10%,

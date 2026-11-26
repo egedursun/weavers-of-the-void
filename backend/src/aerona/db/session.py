@@ -13,7 +13,7 @@ from aerona.db.bond_index import drop_lookup
 from aerona.db.cascades import install_cascade_following
 from aerona.db.fast_session import FastSession
 from aerona.db.flush_batch import install_flush_batching
-from aerona.db.inline_sqlite import inline_engine
+from aerona.db.inline_sqlite import inline_engine, threaded_engine
 from aerona.db.key_moves import install_key_guard
 from aerona.db.ledger_capture import install_change_capture
 from aerona.db.ordered_reads import install_ordered_reads
@@ -25,10 +25,13 @@ class Database:
     def __init__(self, url: str) -> None:
         self.engine: AsyncEngine = inline_engine(url)
         self._sessions = async_sessionmaker(self.engine, expire_on_commit=False, class_=FastSession)
+        self.threaded: AsyncEngine = threaded_engine(url, self.engine)
+        self._threaded_sessions = async_sessionmaker(self.threaded, expire_on_commit=False, class_=FastSession)
         self._write_lock = asyncio.Lock()
         self.generation = 0
-        event.listen(self.engine.sync_engine, "connect", self._configure_connection)
-        event.listen(self.engine.sync_engine, "begin", self._begin)
+        for engine in {self.engine, self.threaded}:
+            event.listen(engine.sync_engine, "connect", self._configure_connection)
+            event.listen(engine.sync_engine, "begin", self._begin)
         install_activity_capture()
         install_flush_batching()
         install_ordered_reads()
@@ -61,6 +64,12 @@ class Database:
             yield session
 
     @asynccontextmanager
+    async def read_in_thread(self) -> AsyncIterator[AsyncSession]:
+        async with self._threaded_sessions() as session:
+            mark_read_only(session)
+            yield session
+
+    @asynccontextmanager
     async def write(self) -> AsyncIterator[AsyncSession]:
         async with self._write_lock:
             async with self._sessions() as session, session.begin():
@@ -73,6 +82,7 @@ class Database:
             yield Steps(self, session)
 
     async def dispose(self) -> None:
+        await self.threaded.dispose()
         await self.engine.dispose()
         self.generation += 1
 

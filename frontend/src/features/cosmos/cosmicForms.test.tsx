@@ -7,6 +7,7 @@ import {
   renderApp,
   resetApi,
 } from '@/test-utils/fakeApi'
+import { ruleMap } from '@/test-utils/ruleValues'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import actions from '../../../e2e/fixtures/actions.json'
@@ -24,7 +25,7 @@ vi.mock('@/api/client', async () => {
 })
 
 const COSMOS = cosmosFixture.cosmos as unknown as CosmosData
-const RULES: RuleBook = buildRuleBook(cosmosFixture.rules as never)
+const RULES: RuleBook = buildRuleBook(ruleMap(cosmosFixture.rules))
 const INDEX = indexCosmos(COSMOS)
 
 function stateWith(essence: number, epochRunning = false, readOnly = false) {

@@ -17,7 +17,6 @@ export type MapNote = MapView['notes'][number]
 export type CosmosView = components['schemas']['CosmosView']
 export type CosmosWorld = components['schemas']['CosmosWorld']
 export type Catalogue = components['schemas']['Catalogue']
-export type RuleResponse = components['schemas']['RuleResponse']
 export type SonPublic = components['schemas']['SonPublic']
 export type LanguageView = components['schemas']['LanguageView']
 export type ActionResponse = components['schemas']['ActionResponse']
@@ -101,13 +100,6 @@ export function useCatalogue() {
   })
 }
 
-export function useRules() {
-  return useQuery({
-    queryKey: queryKeys.rules.all,
-    queryFn: () => unwrap(api.GET('/api/rules')),
-  })
-}
-
 export function useSons() {
   return useQuery({
     queryKey: mapKeys.sons,
@@ -120,18 +112,6 @@ export function useLanguages() {
     queryKey: mapKeys.languages,
     queryFn: () => unwrap(api.GET('/api/languages')),
   })
-}
-
-export function ruleValue(
-  rules: readonly RuleResponse[] | undefined,
-  namespace: string,
-  key: string,
-  fallback: number
-): number {
-  return (
-    rules?.find((rule) => rule.namespace === namespace && rule.key === key)
-      ?.value ?? fallback
-  )
 }
 
 function useMapMutation<TInput, TOutput>(

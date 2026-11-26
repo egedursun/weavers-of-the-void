@@ -6,6 +6,7 @@ import {
   renderApp,
   resetApi,
 } from '@/test-utils/fakeApi'
+import { ruleMap } from '@/test-utils/ruleValues'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 import { storedItem, universeKey, viewerKey } from '@/lib/universeStorage'
@@ -28,7 +29,7 @@ vi.mock('@/api/client', async () => {
 })
 
 const COSMOS = cosmosFixture.cosmos as unknown as CosmosData
-const RULES = buildRuleBook(cosmosFixture.rules as never)
+const RULES = buildRuleBook(ruleMap(cosmosFixture.rules))
 const INDEX = indexCosmos(COSMOS)
 const SONS = [
   {

@@ -13,6 +13,7 @@ import { render } from 'vitest-browser-react'
 import { type paths } from '@/api/generated/schema'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { validateEntrySearch } from '@/components/layout/entry/entryStack'
+import { RULE_LIST_ROUTE, RULE_VALUES_PATH, ruleValuesOf } from './ruleValues'
 
 const TEST_TOASTS = {
   classNames: {
@@ -85,6 +86,18 @@ function findResponder(call: ApiCall): unknown {
   return NONE
 }
 
+function derivedResponder(call: ApiCall): unknown {
+  const found = findResponder(call)
+  if (found !== NONE || call.method !== 'GET' || call.path !== RULE_VALUES_PATH)
+    return found
+  const list = responders.get(RULE_LIST_ROUTE)
+  if (list === undefined) return NONE
+  return (current: ApiCall) => {
+    const value = typeof list === 'function' ? list(current) : list
+    return isReply(value) ? value : ruleValuesOf(value)
+  }
+}
+
 async function fakeFetch(request: Request): Promise<Response> {
   const url = new URL(request.url, window.location.origin)
   const text = request.method === 'GET' ? '' : await request.text()
@@ -95,7 +108,7 @@ async function fakeFetch(request: Request): Promise<Response> {
     body: text ? JSON.parse(text) : null,
   }
   apiCalls.push(call)
-  const responder = findResponder(call)
+  const responder = derivedResponder(call)
   if (responder === NONE) {
     return Response.json({ detail: 'Not found' }, { status: STATUS_NOT_FOUND })
   }

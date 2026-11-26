@@ -233,7 +233,7 @@ async def reader(services: Services) -> AsyncIterator[AsyncSession]:
         async with discovery.guest_session() as session:
             yield session
         return
-    async with services.database.read() as session:
+    async with services.database.read_in_thread() as session:
         yield session
 
 

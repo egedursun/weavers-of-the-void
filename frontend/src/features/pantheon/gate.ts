@@ -1,15 +1,11 @@
 import { useCallback, useMemo } from 'react'
 import { type components } from '@/api/generated/schema'
+import { useRuleLookup } from '@/api/ruleValues'
 import { type Permission, refusalIn, useTeamGate } from '@/api/teamGate'
 import { formatInteger } from '@/lib/format'
 import { TERMINAL_JOB_STATUSES, isJobStatus } from '@/constants/jobs'
 import { modelBlock } from '@/features/providers/modelReadiness'
-import {
-  useActionCatalogue,
-  useActiveJobs,
-  useRules,
-  useWorldState,
-} from './api'
+import { useActionCatalogue, useActiveJobs, useWorldState } from './api'
 
 type Job = components['schemas']['JobResponse']
 
@@ -20,17 +16,7 @@ export function essenceReason(cost: number, essence: number): string {
   return `${formatInteger(cost)} essence needed; you have ${formatInteger(essence)}.`
 }
 
-export function useRuleLookup() {
-  const rules = useRules()
-  const table = useMemo(() => {
-    const map = new Map<string, number>()
-    for (const rule of rules.data ?? []) {
-      map.set(`${rule.namespace}.${rule.key}`, rule.value)
-    }
-    return map
-  }, [rules.data])
-  return useCallback((path: string) => table.get(path), [table])
-}
+export { useRuleLookup }
 
 export function useCostText() {
   const catalogue = useActionCatalogue()

@@ -4,6 +4,7 @@ import { queryKeys } from '@/api/queryKeys'
 import { WORLD_REFRESH_MIN_MS } from '@/constants/ui'
 import { type EventKind, type ServerEvent } from './events'
 import { whenIdle } from './idleGate'
+import { refreshNodeViews } from './nodeRefresh'
 
 type Job = components['schemas']['JobResponse']
 
@@ -18,7 +19,6 @@ const notifications = (): QueryKey[] => [
   queryKeys.world.all,
 ]
 const images = (): QueryKey[] => [queryKeys.images.all]
-const painted = (): QueryKey[] => [queryKeys.images.all, queryKeys.world.all]
 const batchDeepen = (): QueryKey[] => [[...queryKeys.world.all, 'batch-deepen']]
 const epochRun = (): QueryKey[] => [queryKeys.epochs.all]
 const epochClosed = (): QueryKey[] => [
@@ -106,7 +106,7 @@ export const INVALIDATIONS: { [K in EventKind]: InvalidationRule<K> } = {
   'backup.taken': () => [queryKeys.backups.all],
   'image.queued': images,
   'image.progress': nothing,
-  'image.done': painted,
+  'image.done': images,
   'image.failed': images,
   'image.status': images,
   'image.bulk_log': nothing,
@@ -199,6 +199,8 @@ export function applyServerEvent(
     return
   }
   if (event.kind === 'job.progress') patchJobProgress(queryClient, event)
+  if (event.kind === 'image.done')
+    refreshNodeViews(queryClient, event.payload.node_id)
   for (const queryKey of invalidationsFor(event)) {
     const refresh = () => void queryClient.invalidateQueries({ queryKey })
     if (queryKey[0] === queryKeys.world.all[0])
