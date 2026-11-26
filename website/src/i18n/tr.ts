@@ -356,7 +356,7 @@ export const tr: Copy = {
       name: 'Yönetilen Bulut',
       price: '$99,90',
       period: 'aylık',
-      text: 'Kurulumu, güncellemesi ve yedeklemesi bizden, sana özel bir sunucu. Bütün özellikler, sınırsız dünya ve çağ; kurman gereken hiçbir şey yok.',
+      text: 'Sana özel bir sunucu; kurulumu, güncellemesi ve yedeklemesi bizden. Bütün özellikler, sınırsız dünya ve çağ; senin kurman gereken hiçbir şey yok.',
       points: ['Sana özel bir sunucu', 'Güncelleme ve yedekleme dahil', 'Kendi yapay zekâ hesabını kullan'],
       cta: 'Sunucunu talep et',
     },
