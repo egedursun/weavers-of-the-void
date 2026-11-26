@@ -1,9 +1,18 @@
 ---
 import Base from '../../layouts/Base.astro'
 import StudioHero from '../../components/services/StudioHero.astro'
+import StudioPromise from '../../components/services/StudioPromise.astro'
+import StudioJourney from '../../components/services/StudioJourney.astro'
+import StudioCompare from '../../components/services/StudioCompare.astro'
+import StudioIncluded from '../../components/services/StudioIncluded.astro'
+import StudioCanon from '../../components/services/StudioCanon.astro'
+import StudioTerms from '../../components/services/StudioTerms.astro'
+import StudioFinal from '../../components/services/StudioFinal.astro'
 import Services from '../../components/Services.astro'
 import Contact from '../../components/Contact.astro'
+import Faq from '../../components/Faq.astro'
 import { LOCALES, copyFor, type Locale } from '../../i18n'
+import { studioCopy } from '../../i18n/studio'
 
 export function getStaticPaths() {
   return LOCALES.map((lang) => ({ params: { lang } }))
@@ -11,11 +20,32 @@ export function getStaticPaths() {
 
 const locale = Astro.params.lang as Locale
 const copy = copyFor(locale)
+const studio = studioCopy(locale)
 ---
 
 <Base locale={locale} path="services" title={copy.meta.servicesTitle} description={copy.meta.servicesDescription}>
   <StudioHero locale={locale} />
-  <Services locale={locale} parts={['packages']} heading={false} id="packages" />
-  <Services locale={locale} parts={['offers', 'hourly']} heading={false} detailed id="specialists" />
+  <StudioPromise locale={locale} />
+  <StudioJourney locale={locale} />
+  <Services locale={locale} parts={['packages']} heading={false} id="packages">
+    <Fragment slot="head">
+      <p class="eyebrow reveal">{copy.services.packagesTitle}</p>
+      <h2 class="title reveal" id="packages-title" style="--delay: 0.08s">{studio.packages.title}</h2>
+      <p class="lead reveal" style="--delay: 0.14s">{copy.services.packagesLead}</p>
+    </Fragment>
+  </Services>
+  <StudioCompare locale={locale} />
+  <StudioIncluded locale={locale} />
+  <StudioCanon locale={locale} />
+  <Services locale={locale} parts={['offers', 'hourly']} heading={false} detailed id="specialists">
+    <Fragment slot="head">
+      <p class="eyebrow reveal">{studio.more.eyebrow}</p>
+      <h2 class="title reveal" id="specialists-title" style="--delay: 0.08s">{studio.more.title}</h2>
+      <p class="lead reveal" style="--delay: 0.14s">{studio.more.lead}</p>
+    </Fragment>
+  </Services>
+  <StudioTerms locale={locale} />
+  <StudioFinal locale={locale} />
+  <Faq locale={locale} content={studio.faq} />
   <Contact locale={locale} />
 </Base>

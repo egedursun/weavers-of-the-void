@@ -47,7 +47,7 @@ const hourlyEmblems: Record<string, EmblemName> = { engineering: 'anvil', canon:
       )
     }
 
-    {showing('packages') && (
+    {showing('packages') && (heading || !Astro.slots.has('head')) && (
     <div class="services__intro reveal">
       <h3 class="gilded">{copy.packagesTitle}</h3>
       <p>{copy.packagesLead}</p>

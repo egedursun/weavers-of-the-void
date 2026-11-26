@@ -415,14 +415,59 @@ export const en = {
   faq: {
     eyebrow: 'Questions',
     title: 'Good to know',
+    more: 'Show all questions',
     items: [
+      {
+        q: 'How is this different from an AI chatbot or a world generator?',
+        a: 'A generator rolls a world once and stops. A chatbot tells you whatever sounds right and forgets it. Here a simulation lives your world forward age after age by more than twenty thousand rules, and the AI only gives voice to the gods, the mortals and Fate inside those rules. Every change is kept with its cause, so the history holds together and you can trace any event back to where it started.',
+      },
       {
         q: 'Is it really free?',
         a: 'Yes. The whole simulator, every expansion and every feature is free to use, for personal and commercial work, on your own machine or your own servers. We earn from the services we offer, never from the software.',
       },
       {
+        q: 'What kinds of worlds can I make?',
+        a: 'Any kind your idea asks for. Start from a single sentence or one of twenty-seven templates, in any age from the first stone tools to travel between the stars, with strong magic, a little or none. A world can stay one land, or grow into many worlds, galaxies and dimensions. The game adds no themes of its own, so the lore goes wherever your seed leads.',
+      },
+      {
+        q: 'Do things really have consequences, or is it just text?',
+        a: 'They really have consequences. Behind every sentence is a simulated state: harvests, prices, armies, diseases, beliefs and bloodlines that the engine works out by its rules. A failed harvest raises the price of bread, a hungry city riots, a famine leaves its mark on faith for generations. The words describe what the world did, not the other way round.',
+      },
+      {
+        q: 'Will the history contradict itself?',
+        a: 'No. Fate judges every age, decides what becomes canon and checks the chronicle against what was really simulated before it is kept. Inside the world, people may still disagree: rumours distort, and a new dynasty may rewrite the reign it ousted. That is on purpose, and the true record always stays underneath for you to read.',
+      },
+      {
+        q: 'How much of the world can I control?',
+        a: 'All of it. Every person, people, place, creature, god, world and star, and every value they hold, can be created, changed, held against the engine or removed. Every rule of the world can be tuned, from how often wars break out to how harsh life is, and any change can be undone.',
+      },
+      {
+        q: 'Can I use what it writes in my book or game?',
+        a: 'Yes, and it is yours. Export your world as an illustrated Universe Book in HTML or PDF, as a Codex of linked Markdown notes, or as one portable World Package. You can also ask your world to draft a story, a chapter, a screenplay or an encyclopedia entry from its own records, and export it as EPUB, DOCX or Fountain.',
+      },
+      {
         q: 'Do I need an AI subscription?',
-        a: 'You need access to an AI model, and you choose which: a subscription you already have, an API key from a major provider, or a model running on your own machine. The world engine itself runs without any AI at all.',
+        a: 'You need access to an AI model, and you choose which: a subscription you already have, an API key from a major provider, or a model running on your own machine. You can give different jobs to different models. The world engine itself runs without any AI at all.',
+      },
+      {
+        q: 'How long does an age take to play?',
+        a: 'An age is fifty years of your world. How long it takes in real time depends on your AI model and how large your world has grown, usually minutes. You can play age by age, or let the world run while you do something else.',
+      },
+      {
+        q: 'What languages does it speak?',
+        a: 'You choose the language your lore is written in, English or Turkish, when the world is born. Inside the world, every people speaks tongues of its own that drift, split into dialects and borrow words over time, and any text can be translated into them with its pronunciation.',
+      },
+      {
+        q: 'Can my team work in the same world?',
+        a: 'Yes. Invite people into a world and give each a role that decides what they may see and change. Exchanges with your world can be shared with the team, and every change anyone makes is recorded with who made it and why.',
+      },
+      {
+        q: 'Where does it run?',
+        a: 'On your own computer or your own server. A ready Docker setup starts everything with one command, and your worlds stay on your disk. If you would rather not run it yourself, we can host a private server for you.',
+      },
+      {
+        q: 'Is it a game?',
+        a: 'If you want it to be. Your gods are cards in six rarities that level up and earn stars, and there are goals, achievements and a score that grows with your world. A doom clock ticks under it all. Or ignore all that and simply watch your world live.',
       },
       {
         q: 'Who owns what I create?',
@@ -430,7 +475,7 @@ export const en = {
       },
       {
         q: 'What does a commissioned world include?',
-        a: 'A fully simulated universe of 50 epochs and about 2,500 years, tuned to your vision and reviewed by people, delivered as the Universe Book, the Codex and the World Package.',
+        a: 'A fully simulated universe of 50 ages and about 2,500 years, tuned to your vision and reviewed by people, delivered as the Universe Book, the Codex and the World Package.',
       },
       {
         q: 'Can I run it for my team or company?',

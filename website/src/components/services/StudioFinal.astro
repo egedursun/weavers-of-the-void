@@ -1,0 +1,89 @@
+---
+import Emblem from '../Emblem.astro'
+import Frame from '../Frame.astro'
+import Icon from '../Icon.astro'
+import { REPOSITORY, type Locale } from '../../i18n'
+import { studioCopy } from '../../i18n/studio'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = studioCopy(locale).final
+---
+
+<section class="section section--tight final" aria-labelledby="final-title">
+  <div class="wrap">
+    <Frame size="panel" gem class="final__panel reveal">
+      <span class="final__aura" aria-hidden="true"></span>
+      <span class="medallion final__medal" aria-hidden="true">
+        <Emblem name="orb" />
+      </span>
+      <h2 class="title final__title" id="final-title"><span class="gilded">{copy.title}</span></h2>
+      <p class="lead">{copy.lead}</p>
+      <div class="final__actions">
+        <a class="button button--gold" href="#contact">
+          <Icon name="sparkles" />
+          {copy.cta}
+        </a>
+        <a class="button button--ghost" href={REPOSITORY} target="_blank" rel="noopener noreferrer">
+          <Icon name="github" />
+          {copy.free}
+        </a>
+      </div>
+    </Frame>
+  </div>
+</section>
+
+<style>
+  .final__panel {
+    display: grid;
+    justify-items: center;
+    gap: 0.4rem;
+    padding: clamp(3rem, 6vw, 4.2rem) var(--gutter) clamp(2.4rem, 5vw, 3.4rem);
+    text-align: center;
+    --frame-glow: oklch(0.84 0.16 86 / 0.2);
+  }
+
+  .final__aura {
+    position: absolute;
+    inset: 8% 18%;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, oklch(0.6 0.23 302 / 0.35), transparent);
+    filter: blur(30px);
+    animation: final-breathe 6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .final__medal {
+    width: 4.4rem;
+    height: 4.4rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .final__medal :global(.emblem) {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .final__title {
+    font-size: clamp(1.8rem, 3.8vw, 2.8rem);
+  }
+
+  .final__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.9rem;
+    margin-top: 1.8rem;
+  }
+
+  @keyframes final-breathe {
+    50% {
+      opacity: 0.6;
+      scale: 1.08;
+    }
+  }
+</style>

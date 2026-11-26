@@ -1,0 +1,126 @@
+---
+import Emblem, { type EmblemName } from '../Emblem.astro'
+import Frame from '../Frame.astro'
+import Icon from '../Icon.astro'
+import type { Locale } from '../../i18n'
+import { studioCopy } from '../../i18n/studio'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = studioCopy(locale).canon
+const emblems: EmblemName[] = ['crown', 'network', 'tome', 'key']
+---
+
+<section class="section canon" aria-labelledby="canon-title">
+  <Frame size="panel" gem class="wrap canon__panel">
+    <div class="canon__copy">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title canon__title reveal" id="canon-title" style="--delay: 0.08s">{copy.title}</h2>
+      <p class="lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+      <p class="canon__note reveal" style="--delay: 0.2s">
+        <Icon name="shield" />
+        <span>{copy.note}</span>
+      </p>
+    </div>
+    <ol class="canon__pillars">
+      {
+        copy.pillars.map((pillar, index) => (
+          <li class="canon__pillar reveal" style={`--delay: ${0.08 * index}s`}>
+            <span class="medallion canon__medal">
+              <Emblem name={emblems[index] ?? 'key'} />
+            </span>
+            <div>
+              <h3>{pillar.title}</h3>
+              <p>{pillar.text}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </Frame>
+</section>
+
+<style>
+  .canon__panel {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+    padding: clamp(2.4rem, 5vw, 3.6rem) clamp(1.3rem, 4vw, 3.2rem);
+    --frame-glow: oklch(0.6 0.23 302 / 0.34);
+  }
+
+  .canon__title {
+    font-size: clamp(1.8rem, 3.6vw, 2.7rem);
+  }
+
+  .canon__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin: 1.6rem 0 0;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--frame-rule);
+    border-radius: 6px;
+    background: oklch(0.12 0.04 291 / 0.55);
+    color: var(--fg);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .canon__note :global(svg) {
+    margin-top: 0.1rem;
+    color: var(--gild);
+  }
+
+  .canon__pillars {
+    position: relative;
+    display: grid;
+    gap: 1.1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .canon__pillar {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid oklch(0.84 0.16 86 / 0.2);
+    border-radius: 8px;
+    background: linear-gradient(90deg, oklch(0.26 0.1 300 / 0.55), oklch(0.17 0.05 292 / 0.35));
+    transition:
+      border-color 0.35s var(--ease),
+      transform 0.45s var(--ease),
+      background-color 0.35s var(--ease);
+  }
+
+  .canon__pillar:hover {
+    border-color: var(--gild);
+    transform: translateX(4px);
+  }
+
+  .canon__pillar h3 {
+    margin: 0 0 0.2rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.12rem;
+    line-height: 1.25;
+    color: var(--gild-hi);
+  }
+
+  .canon__pillar p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  @media (min-width: 960px) {
+    .canon__panel {
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      align-items: center;
+    }
+  }
+</style>

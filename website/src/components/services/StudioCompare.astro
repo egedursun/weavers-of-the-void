@@ -193,6 +193,19 @@ const tableRows: Row[] = [
     transform: scale(1.1) rotate(-6deg);
   }
 
+  @media (max-width: 480px) {
+    .compare__tier {
+      gap: 0.35rem;
+      padding: 0.45rem 0.7rem;
+      font-size: 0.8rem;
+    }
+
+    .compare__tier :global(.emblem) {
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
   .compare__frame {
     padding: clamp(1.2rem, 3vw, 2rem) clamp(0.8rem, 2.5vw, 1.8rem);
   }
@@ -241,9 +254,9 @@ const tableRows: Row[] = [
     vertical-align: bottom;
   }
 
-  .compare__col {
+  .compare__table th.compare__col {
     position: relative;
-    padding-top: 1.8rem;
+    padding-top: 2.3rem;
   }
 
   .compare__col > span {
@@ -371,6 +384,13 @@ const tableRows: Row[] = [
   }
 
   @media (max-width: 759px) {
+    .compare__picker {
+      position: sticky;
+      top: 84px;
+      z-index: 6;
+      backdrop-filter: blur(10px);
+    }
+
     .compare__table th,
     .compare__table td {
       padding: 0.75rem 0.6rem;

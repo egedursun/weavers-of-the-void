@@ -417,14 +417,59 @@ export const tr: Copy = {
   faq: {
     eyebrow: 'Sorular',
     title: 'Bilmekte fayda var',
+    more: 'Tüm soruları göster',
     items: [
+      {
+        q: 'Bir yapay zekâ sohbet botundan ya da dünya üreticisinden farkı ne?',
+        a: 'Bir üretici dünyayı bir kez üretir ve durur. Bir sohbet botu kulağa doğru geleni anlatır ve unutur. Burada bir simülasyon, yirmi binden fazla kuralla dünyanı çağdan çağa yaşatır; yapay zekâ ise yalnızca bu kuralların içinde tanrılara, ölümlülere ve Kader’e ses verir. Her değişiklik nedeniyle birlikte saklanır; böylece tarih tutarlı kalır ve her olayın izini başladığı yere kadar sürebilirsin.',
+      },
       {
         q: 'Gerçekten ücretsiz mi?',
         a: 'Evet. Simülatörün tamamı, her genişleme ve her özellik kişisel ve ticari işler için, kendi bilgisayarında ya da kendi sunucularında ücretsiz kullanılabilir. Gelirimizi yazılımdan değil, sunduğumuz hizmetlerden elde ederiz.',
       },
       {
+        q: 'Nasıl dünyalar yaratabilirim?',
+        a: 'Fikrin ne istiyorsa. Tek bir cümleden ya da yirmi yedi şablondan biriyle başla; ilk taş aletlerden yıldızlar arası yolculuğa kadar her çağda, güçlü büyüyle, biraz büyüyle ya da hiç büyü olmadan. Bir dünya tek bir kara olarak kalabilir ya da birçok dünyaya, galaksiye ve boyuta büyüyebilir. Oyun kendinden hiçbir tema eklemez; lore, tohumun nereye götürürse oraya gider.',
+      },
+      {
+        q: 'Olayların gerçekten sonuçları var mı, yoksa hepsi metin mi?',
+        a: 'Gerçekten sonuçları var. Her cümlenin arkasında simüle edilmiş bir durum vardır: motorun kurallarıyla hesapladığı hasatlar, fiyatlar, ordular, hastalıklar, inançlar ve soylar. Kıtlık veren bir hasat ekmeğin fiyatını yükseltir, aç bir şehir isyan eder, bir kıtlık inançta kuşaklarca iz bırakır. Kelimeler dünyanın yaptığını anlatır, tersi değil.',
+      },
+      {
+        q: 'Tarih kendisiyle çelişir mi?',
+        a: 'Hayır. Kader her çağı yargılar, neyin kanon olacağına karar verir ve vakayinameyi saklamadan önce gerçekte simüle edilenle karşılaştırır. Dünyanın içinde insanlar yine de anlaşamayabilir: söylentiler olayları çarpıtır, yeni bir hanedan devirdiği dönemi yeniden yazabilir. Bu bilerek böyledir ve gerçek kayıt her zaman altta, senin okuman için durur.',
+      },
+      {
+        q: 'Dünyanın ne kadarını kontrol edebilirim?',
+        a: 'Tamamını. Her insan, halk, yer, yaratık, tanrı, dünya ve yıldız ile taşıdıkları her değer yaratılabilir, değiştirilebilir, motora karşı tutulabilir ya da kaldırılabilir. Savaşların ne sıklıkla çıktığından hayatın ne kadar acımasız olduğuna kadar dünyanın her kuralı ayarlanabilir ve her değişiklik geri alınabilir.',
+      },
+      {
+        q: 'Yazdıklarını kitabımda ya da oyunumda kullanabilir miyim?',
+        a: 'Evet, hepsi senin. Dünyanı HTML ya da PDF olarak resimli bir Evren Kitabı, birbirine bağlı Markdown notlarından oluşan bir Codex ya da tek bir taşınabilir World Package olarak dışa aktar. Dünyandan kendi kayıtlarına dayanarak bir öykü, bir bölüm, bir senaryo ya da bir ansiklopedi maddesi taslağı yazmasını isteyebilir, bunu EPUB, DOCX ya da Fountain olarak dışa aktarabilirsin.',
+      },
+      {
         q: 'Bir yapay zekâ aboneliğine ihtiyacım var mı?',
-        a: 'Bir yapay zekâ modeline erişimin olmalı ve hangisi olacağına sen karar verirsin: zaten sahip olduğun bir abonelik, büyük bir sağlayıcının API anahtarı ya da kendi bilgisayarında çalışan bir model. Dünya motorunun kendisi hiç yapay zekâ olmadan da çalışır.',
+        a: 'Bir yapay zekâ modeline erişimin olmalı ve hangisi olacağına sen karar verirsin: zaten sahip olduğun bir abonelik, büyük bir sağlayıcının API anahtarı ya da kendi bilgisayarında çalışan bir model. Farklı işleri farklı modellere verebilirsin. Dünya motorunun kendisi hiç yapay zekâ olmadan da çalışır.',
+      },
+      {
+        q: 'Bir çağı oynamak ne kadar sürer?',
+        a: 'Bir çağ, dünyanın elli yılıdır. Gerçek zamanda ne kadar süreceği yapay zekâ modeline ve dünyanın ne kadar büyüdüğüne bağlıdır; genellikle dakikalar. Çağ çağ oynayabilir ya da sen başka bir şeyle uğraşırken dünyanın akmasına izin verebilirsin.',
+      },
+      {
+        q: 'Hangi dilleri konuşuyor?',
+        a: 'Lorenun yazılacağı dili, İngilizce ya da Türkçe, dünya doğarken sen seçersin. Dünyanın içinde ise her halkın zamanla kayan, lehçelere ayrılan ve sözcük ödünç alan kendi dilleri vardır; her metin telaffuzuyla birlikte bu dillere çevrilebilir.',
+      },
+      {
+        q: 'Ekibim aynı dünyada çalışabilir mi?',
+        a: 'Evet. İnsanları bir dünyaya davet et ve her birine neyi görüp neyi değiştirebileceğini belirleyen bir rol ver. Dünyanla yaptığın konuşmalar ekiple paylaşılabilir ve herkesin yaptığı her değişiklik, kimin ve neden yaptığıyla birlikte kaydedilir.',
+      },
+      {
+        q: 'Nerede çalışıyor?',
+        a: 'Kendi bilgisayarında ya da kendi sunucunda. Hazır bir Docker kurulumu her şeyi tek komutla başlatır ve dünyaların senin diskinde kalır. Kendin çalıştırmak istemezsen senin için özel bir sunucu barındırabiliriz.',
+      },
+      {
+        q: 'Bu bir oyun mu?',
+        a: 'İstersen. Tanrıların, seviye atlayan ve yıldız kazanan altı nadirlikte kartlardır; hedefler, başarımlar ve dünyanla birlikte büyüyen bir skor vardır. Hepsinin altında bir kıyamet saati işler. Ya da bunların hepsini boş ver ve dünyanın yaşamasını izle.',
       },
       {
         q: 'Yarattıklarım kime ait?',
@@ -432,7 +477,7 @@ export const tr: Copy = {
       },
       {
         q: 'Sipariş edilen bir evrene neler dahil?',
-        a: 'Vizyonuna göre ayarlanmış, insanlar tarafından incelenmiş, 50 devir ve yaklaşık 2.500 yıllık, baştan sona simüle edilmiş bir evren; Evren Kitabı, Codex ve World Package olarak teslim edilir.',
+        a: 'Vizyonuna göre ayarlanmış, insanlar tarafından incelenmiş, 50 çağ ve yaklaşık 2.500 yıllık, baştan sona simüle edilmiş bir evren; Evren Kitabı, Codex ve World Package olarak teslim edilir.',
       },
       {
         q: 'Ekibim ya da şirketim için çalıştırabilir miyim?',

@@ -3,7 +3,7 @@ import Emblem, { type EmblemName } from './Emblem.astro'
 import Frame from './Frame.astro'
 import { copyFor, type Locale } from '../i18n'
 
-type FaqCopy = { eyebrow: string; title: string; items: { q: string; a: string }[] }
+type FaqCopy = { eyebrow: string; title: string; more?: string; items: { q: string; a: string }[] }
 
 interface Props {
   locale: Locale
@@ -12,7 +12,9 @@ interface Props {
 
 const { locale, content } = Astro.props
 const copy: FaqCopy = content ?? copyFor(locale).faq
-const emblems: EmblemName[] = ['network', 'chest', 'orb', 'key', 'tome', 'tower']
+const shown = copy.more ? 8 : copy.items.length
+const hiddenCount = copy.items.length - shown
+const emblems: EmblemName[] = ['network', 'chest', 'planet', 'anvil', 'scroll', 'crown', 'book', 'orb', 'tower', 'map', 'tome', 'key', 'quill', 'chest', 'book', 'tower']
 ---
 
 <section class="section section--tight faq" aria-labelledby="faq-title">
@@ -22,10 +24,10 @@ const emblems: EmblemName[] = ['network', 'chest', 'orb', 'key', 'tome', 'tower'
       <h2 class="title reveal" id="faq-title" style="--delay: 0.08s">{copy.title}</h2>
       <span class="divider reveal" style="--delay: 0.12s" aria-hidden="true"></span>
     </div>
-    <div class="faq__list">
+    <div class="faq__list" data-faq>
       {
         copy.items.map((item, index) => (
-          <Frame size="tile" class="faq__item reveal" style={`--delay: ${0.05 * index}s`}>
+          <Frame size="tile" class="faq__item reveal" style={`--delay: ${0.05 * (index % 8)}s`} hidden={index >= shown} data-faq-more={index >= shown ? '' : undefined}>
             <details class="faq__details" open={index === 0}>
             <summary class="faq__question">
               <span class="medallion faq__medal">
@@ -47,8 +49,33 @@ const emblems: EmblemName[] = ['network', 'chest', 'orb', 'key', 'tome', 'tower'
         ))
       }
     </div>
+    {
+      hiddenCount > 0 && (
+        <div class="faq__more">
+          <button class="button button--ghost faq__more-button" type="button" data-faq-reveal aria-expanded="false">
+            {copy.more}
+            <span class="faq__count">+{hiddenCount}</span>
+          </button>
+        </div>
+      )
+    }
   </div>
 </section>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-faq-reveal]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const hidden = Array.from(document.querySelectorAll<HTMLElement>('[data-faq-more]'))
+      hidden.forEach((item) => {
+        item.hidden = false
+        item.classList.add('is-shown')
+      })
+      button.setAttribute('aria-expanded', 'true')
+      button.parentElement?.remove()
+      hidden[0]?.querySelector<HTMLElement>('summary')?.focus()
+    })
+  })
+</script>
 
 <style>
   .faq {
@@ -62,6 +89,32 @@ const emblems: EmblemName[] = ['network', 'chest', 'orb', 'key', 'tome', 'tower'
   .faq__list {
     display: grid;
     gap: 1.7rem;
+  }
+
+  .faq__item[hidden] {
+    display: none;
+  }
+
+  .faq__more {
+    display: flex;
+    justify-content: center;
+    margin-top: 2.25rem;
+  }
+
+  .faq__more-button {
+    gap: 0.75rem;
+  }
+
+  .faq__count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 2.3rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--gild-hi), var(--gild));
+    color: oklch(0.18 0.06 290);
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
   }
 
   .faq__item {

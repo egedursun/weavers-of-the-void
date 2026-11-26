@@ -65,8 +65,11 @@ const sides = [
           </Frame>
         ))
       }
-      <span class="promise__join medallion" aria-hidden="true">
-        <Icon name="infinity" />
+      <span class="promise__join" aria-hidden="true">
+        <span class="promise__bridge"></span>
+        <span class="promise__gem">
+          <Icon name="sparkles" />
+        </span>
       </span>
     </div>
   </div>
@@ -163,7 +166,7 @@ const sides = [
   @media (min-width: 900px) {
     .promise__pair {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 4.5rem;
+      gap: 5rem;
     }
 
     .promise__join {
@@ -172,9 +175,91 @@ const sides = [
       left: 50%;
       z-index: 5;
       display: grid;
-      width: 4.2rem;
-      height: 4.2rem;
+      place-items: center;
+      width: calc(5rem + 10px);
+      height: 3rem;
       translate: -50% -50%;
+      pointer-events: none;
+    }
+
+    .promise__bridge {
+      position: absolute;
+      inset: 50% 0 auto;
+      height: 2px;
+      overflow: hidden;
+      background: linear-gradient(90deg, var(--gild-lo), var(--gild-hi) 50%, var(--gild-lo));
+      box-shadow: 0 0 10px oklch(0.84 0.16 86 / 0.55);
+      translate: 0 -50%;
+    }
+
+    .promise__bridge::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, #fffbe8, transparent);
+      background-size: 40% 100%;
+      background-repeat: no-repeat;
+      animation: promise-flow 3.2s ease-in-out infinite;
+    }
+
+    .promise__bridge::before {
+      content: '';
+      position: absolute;
+      inset: -3px 0;
+      background:
+        radial-gradient(circle, var(--gild-hi) 0 2px, transparent 2.5px) left center / 8px 8px no-repeat,
+        radial-gradient(circle, var(--gild-hi) 0 2px, transparent 2.5px) right center / 8px 8px no-repeat;
+    }
+
+    .promise__gem {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 2.2rem;
+      height: 2.2rem;
+      border: 2px solid transparent;
+      border-radius: 5px;
+      background:
+        radial-gradient(circle at 35% 30%, #f5ddff, #b86ef4 35%, #5b1b9c 75%, #2c0a55) padding-box,
+        linear-gradient(135deg, #fff4c4, #d9a63e 35%, #8a5a15 60%, #f5d77f) border-box;
+      rotate: 45deg;
+      box-shadow:
+        0 0 0 1px oklch(0.36 0.09 56),
+        0 6px 14px -4px oklch(0.05 0.04 290 / 0.9);
+      animation: promise-glint 3.2s ease-in-out infinite;
+    }
+
+    .promise__gem :global(svg) {
+      width: 1rem;
+      height: 1rem;
+      rotate: -45deg;
+      color: #fff6d2;
+      filter: drop-shadow(0 0 4px oklch(0.96 0.09 96 / 0.9));
+    }
+  }
+
+  @keyframes promise-flow {
+    0% {
+      background-position: -60% 0;
+    }
+    100% {
+      background-position: 160% 0;
+    }
+  }
+
+  @keyframes promise-glint {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 1px oklch(0.36 0.09 56),
+        0 0 12px -2px oklch(0.7 0.19 312 / 0.6),
+        0 6px 14px -4px oklch(0.05 0.04 290 / 0.9);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px oklch(0.36 0.09 56),
+        0 0 26px 2px oklch(0.84 0.16 86 / 0.65),
+        0 6px 14px -4px oklch(0.05 0.04 290 / 0.9);
     }
   }
 </style>

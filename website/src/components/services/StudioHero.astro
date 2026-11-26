@@ -145,6 +145,9 @@ const formatted = (value: number) => new Intl.NumberFormat(locale === 'tr' ? 'tr
       if (progress < 1) window.requestAnimationFrame(step)
     }
     window.requestAnimationFrame(step)
+    window.setTimeout(() => {
+      element.textContent = `${format.format(target)}${suffix}`
+    }, length + 120)
   }
 
   if (!still && 'IntersectionObserver' in window) {

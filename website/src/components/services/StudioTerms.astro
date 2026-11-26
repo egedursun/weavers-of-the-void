@@ -1,0 +1,170 @@
+---
+import Emblem, { type EmblemName } from '../Emblem.astro'
+import Frame from '../Frame.astro'
+import star from '../../assets/ornate/star.webp'
+import type { Locale } from '../../i18n'
+import { studioCopy } from '../../i18n/studio'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = studioCopy(locale).terms
+const emblems: Record<string, EmblemName> = {
+  worldbuilding: 'planet',
+  hourly: 'anvil',
+  consulting: 'book',
+  cloud: 'tower',
+  deployment: 'crown',
+}
+---
+
+<section class="section section--tight terms" aria-labelledby="terms-title">
+  <div class="wrap">
+    <div class="head center">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="terms-title" style="--delay: 0.08s">{copy.title}</h2>
+      <span class="divider reveal" style="--delay: 0.12s" aria-hidden="true"></span>
+    </div>
+
+    <div class="terms__grid">
+      <Frame as="article" size="card" class="terms__card reveal" aria-labelledby="terms-billing">
+        <h3 class="terms__heading" id="terms-billing">{copy.billingTitle}</h3>
+        <dl class="terms__ledger">
+          {
+            copy.billing.map((item) => (
+              <div class="terms__line">
+                <dt>
+                  <span class="medallion terms__medal">
+                    <Emblem name={emblems[item.key] ?? 'scroll'} />
+                  </span>
+                  {item.name}
+                </dt>
+                <dd>{item.terms}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </Frame>
+
+      <Frame as="article" size="card" class="terms__card reveal" style="--delay: 0.08s" aria-labelledby="terms-promises">
+        <h3 class="terms__heading" id="terms-promises">{copy.promisesTitle}</h3>
+        <ul class="terms__promises">
+          {
+            copy.promises.map((promise) => (
+              <li>
+                <img class="star-bullet" src={star.src} alt="" width="104" height="108" />
+                <span>{promise}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </Frame>
+    </div>
+  </div>
+</section>
+
+<style>
+  .terms__grid {
+    display: grid;
+    gap: 2.2rem;
+  }
+
+  .terms__card {
+    padding: 2rem 1.7rem 1.8rem;
+  }
+
+  .terms__heading {
+    margin: 0 0 1.2rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--frame-rule);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--gild-hi);
+  }
+
+  .terms__ledger {
+    display: grid;
+    gap: 0;
+    margin: 0;
+  }
+
+  .terms__line {
+    display: grid;
+    gap: 0.3rem 1rem;
+    padding: 0.8rem 0;
+  }
+
+  .terms__line + .terms__line {
+    border-top: 1px dashed oklch(0.84 0.16 86 / 0.18);
+  }
+
+  .terms__line dt {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: var(--fg);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .terms__medal {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-width: 2px;
+  }
+
+  .terms__medal :global(.emblem) {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .terms__line dd {
+    margin: 0;
+    padding-left: 3.2rem;
+    color: var(--gild);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+
+  .terms__promises {
+    display: grid;
+    gap: 0.9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .terms__promises li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    color: var(--fg);
+    line-height: 1.5;
+  }
+
+  .terms__promises .star-bullet {
+    margin-top: 0.15rem;
+  }
+
+  @media (min-width: 620px) {
+    .terms__line {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+
+    .terms__line dd {
+      padding-left: 0;
+      text-align: end;
+    }
+  }
+
+  @media (min-width: 980px) {
+    .terms__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

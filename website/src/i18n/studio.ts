@@ -80,6 +80,9 @@ const en = {
       },
     ],
   },
+  packages: {
+    title: 'Choose how deeply we read your world',
+  },
   compare: {
     eyebrow: 'Side by side',
     title: 'Compare the packages',
@@ -199,10 +202,6 @@ const en = {
     eyebrow: 'Before you commission',
     title: 'Questions studios ask us',
     items: [
-    {
-      q: 'How is this different from an AI chatbot or a world generator?',
-      a: 'A generator rolls a world once and stops. A chatbot tells you whatever sounds right and forgets it. Here a simulation lives your world forward age after age by thousands of rules, and the AI only gives voice to the gods, the mortals and Fate inside those rules. Every change is kept with its cause, so the history stays consistent and you can trace it.',
-    },
       {
         q: 'Do I need to know how to use the software?',
         a: 'Not at all. We run every step. You share your vision, answer our questions and review the result.',
@@ -314,6 +313,9 @@ const tr: StudioCopy = {
         reward: 'Evren Kitabı, Codex ve World Package',
       },
     ],
+  },
+  packages: {
+    title: 'Dünyanın ne kadar derin okunacağını seç',
   },
   compare: {
     eyebrow: 'Yan yana',
@@ -434,10 +436,6 @@ const tr: StudioCopy = {
     eyebrow: 'Sipariş vermeden önce',
     title: 'Stüdyoların bize sorduğu sorular',
     items: [
-    {
-      q: 'Bir yapay zekâ sohbet botundan ya da dünya üreticisinden farkı ne?',
-      a: 'Bir üretici dünyayı bir kez üretir ve durur. Bir sohbet botu kulağa doğru geleni anlatır ve unutur. Burada bir simülasyon binlerce kuralla dünyanı çağdan çağa yaşatır; yapay zekâ ise yalnızca bu kuralların içinde tanrılara, ölümlülere ve Kader\u2019e ses verir. Her değişiklik nedeniyle birlikte saklanır; böylece tarih tutarlı kalır ve izini sürebilirsin.',
-    },
       {
         q: 'Yazılımı kullanmayı bilmem gerekiyor mu?',
         a: 'Hiç gerekmiyor. Her adımı biz yürütürüz. Sen vizyonunu paylaşır, sorularımızı yanıtlar ve sonucu incelersin.',
