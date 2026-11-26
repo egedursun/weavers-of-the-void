@@ -20,7 +20,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.reckoning import CaseOutcome, ReckoningMeasure
 from aerona.engine.concealment.truths import knowledge
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import give_coin
+from aerona.engine.economy.purse import give_coin, held_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.reckoning.book import ReckoningTally, acts_of, case_of, realm_of, servants
@@ -168,7 +168,7 @@ async def restitution(ctx: TickContext, row: ReckoningRow, measure: ReckoningMea
     realm = await realm_of(ctx.session, row)
     if measure.started_epoch != ctx.epoch or realm is None or "treasury" in (realm.locked or []):
         return
-    cost = round_half_up(realm.treasury * ctx.rules.reckoning.restitution_cost_pct * measure.strength // PERCENT / PERCENT)
+    cost = round_half_up(held_coin(realm.treasury) * ctx.rules.reckoning.restitution_cost_pct * measure.strength // PERCENT / PERCENT)
     realm.treasury -= cost
     society = await ctx.session.get(CommunitySocietyRow, realm.capital_entity_id) if realm.capital_entity_id is not None else None
     if society is not None:

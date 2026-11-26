@@ -5,6 +5,7 @@ from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.faction import FactionScale
 from aerona.domain.models.entity_stats import FactionStats
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.factions.book import move_member
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -45,7 +46,7 @@ async def found_offshoot(
             pending=False,
         ),
     )
-    taken = round_half_up(profile.treasury * share)
+    taken = round_half_up(held_coin(profile.treasury) * share)
     ctx.session.add(
         FactionProfileRow(
             faction_entity_id=child.id,

@@ -14,6 +14,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.leagues import LeagueAim, LeagueDecisionKind, LeagueOrgan, LeagueStanding
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.leagues.book import LeagueTally, aims_of, core_of, living_polity, members_of
 from aerona.engine.leagues.decisions import lift_sanctions, propose
 from aerona.engine.monetary.authorities import authority_of, currency_for
@@ -32,7 +33,7 @@ async def pay_dues(ctx: TickContext, profile: PolityLeagueRow, members: list[Lea
         realm = await ctx.session.get(PolityProfileRow, member.polity_entity_id)
         if realm is None or held(member.polity_entity_id):
             continue
-        dues = round_half_up(realm.treasury * profile.dues_pct / PERCENT)
+        dues = round_half_up(held_coin(realm.treasury) * profile.dues_pct / PERCENT)
         if dues <= 0 or not move_amount(realm, profile, "treasury", dues):
             broke.append(member)
             continue

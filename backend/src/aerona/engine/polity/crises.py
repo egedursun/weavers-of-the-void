@@ -21,6 +21,7 @@ from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
 from aerona.domain.enums.war import WarCause
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.intrigue.leverage import leaned_on
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.mediation import find_mediator
@@ -158,9 +159,9 @@ async def crisis_instead(ctx: TickContext, first_id: int, second_id: int, cause:
     if not ctx.rng(f"statecraft.crisis.{demander.entity.id}.{target.entity.id}.{ctx.epoch}").chance(ctx.rules.statecraft.crisis_pct * weight):
         return False
     subject = await subject_for(ctx, book, demander, target, demand)
-    if demand in PERSON_DEMANDS and subject is None:
+    amount = round_half_up(held_coin(target.profile.treasury) * ctx.rules.statecraft.pay_share_pct / PERCENT) if demand is CrisisDemand.PAY else 0
+    if (demand in PERSON_DEMANDS and subject is None) or (demand is CrisisDemand.PAY and amount <= 0):
         return False
-    amount = round_half_up(target.profile.treasury * ctx.rules.statecraft.pay_share_pct / PERCENT) if demand is CrisisDemand.PAY else 0
     return await open_crisis(ctx, demander, target, demand, subject_id=subject, amount=amount) is not None
 
 

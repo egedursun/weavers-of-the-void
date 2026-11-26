@@ -39,6 +39,7 @@ from aerona.domain.enums.society import Commodity, SocialClass
 from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.economy.stocks import holding, holdings
 from aerona.engine.environment.dangers import ease_danger
 from aerona.engine.environment.harvest_harm import shift_harvest
@@ -324,7 +325,7 @@ async def hold_fair(ctx: TickContext, community: EntityRow, amount: int) -> None
     shift_stat(community, "prosperity", amount, 0)
     town = await ctx.session.get(SettlementProfileRow, community.id)
     if town is not None and "treasury" not in town.locked:
-        town.treasury = max(0, town.treasury + town.treasury * amount // PERCENT)
+        town.treasury += held_coin(town.treasury) * amount // PERCENT
     await record(ctx, "tradition.fair_held", roles={IncidentRole.SUBJECT: community.id}, facts={"lift": amount}, place=community.id)
 
 

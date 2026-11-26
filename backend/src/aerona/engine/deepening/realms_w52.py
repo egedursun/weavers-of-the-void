@@ -36,6 +36,7 @@ from aerona.domain.enums.polity import ClaimBasis, OathKind, OathStatus
 from aerona.domain.enums.titles import TitleTenure, TitleTier
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.intrigue.identities import assume
 from aerona.engine.kin_dynamics.book import parents_of
 from aerona.engine.polity.book import RealmBook
@@ -344,7 +345,7 @@ async def pursue_goals(ctx: TickContext, tally: RealmTally) -> None:
                     await record(ctx, "deepened.member_shielded", roles={IncidentRole.ACTOR: faction.faction_entity_id, IncidentRole.SUBJECT: member.id})
             tally.goals += 1
             continue
-        spend = min(faction.treasury, table.settle_spend)
+        spend = min(held_coin(faction.treasury), table.settle_spend)
         if "treasury" in faction.locked or spend <= 0:
             continue
         with explaining():

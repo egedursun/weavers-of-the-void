@@ -23,6 +23,10 @@ async def realm_purse(session: AsyncSession, payer: EntityRow) -> PolityProfileR
     return await session.get(PolityProfileRow, polity_id) if polity_id is not None else None
 
 
+def held_coin(treasury: int) -> int:
+    return max(0, treasury)
+
+
 def wealth_points(rules: Rules, amount: int) -> int:
     return max(1, round_half_up(amount / max(1, rules.taxation.wealth_per_treasury))) if amount > 0 else 0
 

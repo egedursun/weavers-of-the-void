@@ -34,7 +34,7 @@ from aerona.engine.body.variants import fear_of
 from aerona.engine.context import TickContext
 from aerona.engine.couplings.field import offer_terms
 from aerona.engine.economy.equipment import siege_engines
-from aerona.engine.economy.purse import receive_coin, riches_of
+from aerona.engine.economy.purse import held_coin, receive_coin, riches_of
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.environment.deep_war import press_below
 from aerona.engine.folkways.biases import lean_community
@@ -543,7 +543,7 @@ async def plunder_treasury(ctx: TickContext, besieged: EntityRow, victor: Entity
     if town is None or "treasury" in town.locked or town.treasury <= 0:
         return 0
     share = ctx.rules.siege_depth.treasury_sack_pct * (2 if choice is SackChoice.RAZE else 1)
-    seized = min(town.treasury, round_half_up(town.treasury * share / PERCENT))
+    seized = min(held_coin(town.treasury), round_half_up(held_coin(town.treasury) * share / PERCENT))
     town.treasury -= seized
     note = f"plundered by {victor.name}" if victor is not None else "plundered"
     ctx.session.add(

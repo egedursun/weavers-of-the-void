@@ -33,7 +33,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.settlement import WaterSupply
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
+from aerona.engine.economy.purse import coin_of, held_coin, receive_coin, take_coin
 from aerona.engine.environment.book import add_scar
 from aerona.engine.environment.harvest_harm import harm_harvest
 from aerona.engine.interconnect.flows import FlowCategory, flowing
@@ -341,7 +341,7 @@ async def ransom_city(ctx: TickContext, besieged: EntityRow, victor: EntityRow) 
     town = await ctx.session.get(SettlementProfileRow, besieged.id)
     paid = 0
     if town is not None and "treasury" not in town.locked and town.treasury > 0:
-        paid = round_half_up(town.treasury * table.ransom_share_pct / PERCENT)
+        paid = round_half_up(held_coin(town.treasury) * table.ransom_share_pct / PERCENT)
         town.treasury -= paid
     wealth = stat(besieged, "wealth")
     if wealth is not None:

@@ -13,7 +13,7 @@ from aerona.domain.enums.settlement import WaterSupply
 from aerona.domain.enums.structure import StructureKind
 from aerona.engine.city_rules.book import CityTally
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import take_coin
+from aerona.engine.economy.purse import held_coin, take_coin
 from aerona.engine.primitives.mirrors import close_legacy, first_sight
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
@@ -60,7 +60,7 @@ async def pay(ctx: TickContext, row: MunicipalServiceRow, town: EntityRow, wante
         profile = await ctx.session.get(SettlementProfileRow, town.id)
         if profile is None or "treasury" in (profile.locked or []):
             return 0
-        paid = min(wanted, profile.treasury)
+        paid = min(wanted, held_coin(profile.treasury))
         profile.treasury -= paid
         return paid
     return wanted if await take_coin(ctx.session, ctx.rules, payer, wanted) else 0

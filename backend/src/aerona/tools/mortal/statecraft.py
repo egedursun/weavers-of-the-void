@@ -10,6 +10,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisSide, CrisisState
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.crises import nearest_land, open_crisis
 from aerona.prompts import MortalToolId
@@ -53,7 +54,9 @@ async def issue_demand(call: MortalCall, args: DemandInput) -> str:
             fail(MortalResult.DEMAND_REFUSED, why="name the person to be handed over")
     if args.demand in ISSUE_DEMAND_CRISIS_DEMANDS and subject is None:
         fail(MortalResult.DEMAND_REFUSED, why="there is nothing of that kind to demand")
-    amount = target.profile.treasury * call.rules.statecraft.pay_share_pct // 100 if args.demand is CrisisDemand.PAY else 0
+    amount = held_coin(target.profile.treasury) * call.rules.statecraft.pay_share_pct // 100 if args.demand is CrisisDemand.PAY else 0
+    if args.demand is CrisisDemand.PAY and amount <= 0:
+        fail(MortalResult.DEMAND_REFUSED, why="their treasury holds nothing to pay")
     row = await open_crisis(call.tick, realm, target, args.demand, subject_id=subject, amount=amount)
     if row is None:
         fail(MortalResult.DEMAND_REFUSED, why="a crisis between you already runs, or a god holds one of you")

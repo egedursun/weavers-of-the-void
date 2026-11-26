@@ -25,6 +25,7 @@ from aerona.domain.enums.society import Commodity
 from aerona.domain.enums.war import WarCause
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.faith.book import Church, FaithBook, FaithLine, patron_node
 from aerona.engine.faith.church import clergy_sway
 from aerona.engine.faith.works import credit, spend_devotion
@@ -67,7 +68,7 @@ async def crusade(ctx: TickContext, church: Church, book: FaithBook, atlas: Regi
     realm_id = await ctx.session.scalar(select(PolityMemberRow.polity_entity_id).where(PolityMemberRow.member_entity_id == member.id).limit(1))
     realm = await ctx.session.get(PolityProfileRow, realm_id) if realm_id is not None else None
     if doctrine is not None and realm is not None:
-        gift = -credit(doctrine, -round_half_up(doctrine.treasury * ctx.rules.tithes.war_chest_pct / PERCENT))
+        gift = -credit(doctrine, -round_half_up(held_coin(doctrine.treasury) * ctx.rules.tithes.war_chest_pct / PERCENT))
         realm.war_chest += gift
     return FaithLine("faith.crusade", {IncidentRole.AUTHORITY: church.cult.id, IncidentRole.ACTOR: member.id, IncidentRole.TARGET: infidel.id})
 

@@ -1685,7 +1685,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/tools/mortal/social.py` | 7 | 2026-11-23 | `e5c62245d984c169` |
 | `backend/src/aerona/tools/mortal/speech.py` | 5 | 2026-11-19 | `b629c7eea0a71c29` |
 | `backend/src/aerona/tools/mortal/standing.py` | 7 | 2026-11-19 | `3e464da674ffac50` |
-| `backend/src/aerona/tools/mortal/statecraft.py` | 8 | 2026-11-23 | `d2e5ac8880858b33` |
+| `backend/src/aerona/tools/mortal/statecraft.py` | 9 | 2026-11-26 | `c8acd8bbb6cd8c03` |
 | `backend/src/aerona/tools/mortal/titles.py` | 7 | 2026-11-16 | `f4e57aaab45f6e15` |
 | `backend/src/aerona/tools/mortal/tongues.py` | 7 | 2026-11-16 | `405b489a72e88977` |
 | `backend/src/aerona/tools/mortal/transform.py` | 4 | 2026-11-16 | `6e3b13526c6e7d00` |

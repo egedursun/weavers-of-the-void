@@ -57,6 +57,7 @@ run frontend_orphans "$PYTHON" scripts/check_frontend_orphans.py
 run folk_queries "$PYTHON" scripts/check_folk_queries.py
 run coin_units "$PYTHON" scripts/check_coin_units.py
 run zero_fallbacks "$PYTHON" scripts/check_zero_fallbacks.py
+run treasury_shares "$PYTHON" scripts/check_treasury_shares.py
 run temperature_scale "$PYTHON" scripts/check_temperature_scale.py
 run stream_keys "$PYTHON" scripts/check_stream_keys.py
 run yearly_rules "$PYTHON" scripts/check_yearly_rules.py

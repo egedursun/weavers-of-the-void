@@ -31,6 +31,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.lineage import preference_bonus
 from aerona.engine.daily.service import engage_servant, release_servant
 from aerona.engine.demography.kinship import has_room, may_wed
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.factions.guilds import enrol_apprentice
 from aerona.engine.folkways.biases import lean
 from aerona.engine.genetics.genome import body_marks
@@ -181,7 +182,7 @@ async def ruler_draw(ctx: TickContext, household: HouseholdRow) -> int:
     realm = await ctx.session.get(PolityProfileRow, office.polity_entity_id) if office is not None else None
     if realm is None or held(realm.polity_entity_id) or "treasury" in (realm.locked or []):
         return 0
-    drawn = min(realm.treasury, ctx.rules.households.ruler_draw)
+    drawn = min(held_coin(realm.treasury), ctx.rules.households.ruler_draw)
     realm.treasury -= drawn
     return drawn
 

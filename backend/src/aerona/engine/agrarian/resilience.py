@@ -43,7 +43,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.gifts import give
 from aerona.engine.cycles.standing import regard
 from aerona.engine.divine.standing import standing_row
-from aerona.engine.economy.purse import give_coin
+from aerona.engine.economy.purse import give_coin, held_coin
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.intrigue.favours import owe
@@ -408,7 +408,7 @@ async def aid_from(
     coin = realm is not None and realm.profile.treasury > 0
     kind = kind or aid_kind(event, rebuild is not None, coin=coin)
     most = per_thousand(table.cap, town)
-    amount = amount if amount is not None else min(most, realm.profile.treasury * table.share_pct // PERCENT) if realm is not None else 0
+    amount = amount if amount is not None else min(most, held_coin(realm.profile.treasury) * table.share_pct // PERCENT) if realm is not None else 0
     target = receiver.entity if receiver is not None else town
     rival = await relation(ctx.session, ctx.rules, target.id, giver.id) <= table.refuse_below
     gift = None if rival else await give(ctx, giver.id, target.id, max(1, amount), GiftOccasion.RELIEF, pay=False)
@@ -524,11 +524,11 @@ async def plan_rebuild(ctx: TickContext, row: ReconstructionRow, town: EntityRow
     planned = hasty * table.planned_pct // PERCENT
     planner = await best_architect(ctx, town)
     able = planner is not None and knowledge.level(town.id, KnowledgeBranch.ARCHITECTURE) >= table.architecture_level
-    if able and profile.treasury * 2 >= planned and "plan" not in row.locked:
+    if able and held_coin(profile.treasury) * 2 >= planned and "plan" not in row.locked:
         row.plan = RebuildPlan.PLANNED
     await choose_way(ctx, row, town)
     restored = hasty * ctx.rules.rebuilding.restored_cost_pct // PERCENT
-    if row.plan is RebuildPlan.OPPORTUNISTIC and "plan" not in row.locked and profile.treasury * 2 >= restored and await monuments_of(ctx, town.id):
+    if row.plan is RebuildPlan.OPPORTUNISTIC and "plan" not in row.locked and held_coin(profile.treasury) * 2 >= restored and await monuments_of(ctx, town.id):
         row.plan = RebuildPlan.RESTORED
     put(row, "cost", planned if row.plan is RebuildPlan.PLANNED else restored if row.plan is RebuildPlan.RESTORED else hasty)
     put(row, "planner_entity_id", planner.id if planner is not None and row.plan is RebuildPlan.PLANNED else None)
@@ -580,7 +580,7 @@ async def rebuild(ctx: TickContext, tally: ResilienceTally) -> None:
                 await seize(ctx, row, town, profile, tally)
         due = max(0, row.cost - row.paid)
         built = await town_of(ctx, town, knowledge)
-        paid = -ledger(ctx, built, TreasuryEntry.REBUILDING, -min(due, profile.treasury * table.pay_pct // PERCENT), "rebuilding") if due else 0
+        paid = -ledger(ctx, built, TreasuryEntry.REBUILDING, -min(due, held_coin(profile.treasury) * table.pay_pct // PERCENT), "rebuilding") if due else 0
         put(row, "paid", row.paid + paid)
         step = table.planned_step if row.plan is RebuildPlan.PLANNED else table.hasty_step
         if row.plan is RebuildPlan.OPPORTUNISTIC or paid > 0 or due == 0:

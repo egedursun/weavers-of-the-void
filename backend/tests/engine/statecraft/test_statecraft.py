@@ -83,6 +83,14 @@ async def test_a_claim_war_opens_a_crisis_and_a_concession_pays_and_rewards_back
     assert favour is not None and favour.owed_to_node_id == backer.id
 
 
+async def test_a_debt_war_against_a_realm_in_debt_demands_no_payment(realm: Realm) -> None:
+    ctx = context(realm.session, tuned(statecraft={"crisis_pct": 100}))
+    _, creditor_core = await polity(realm, "Gull Throne")
+    _, debtor_core = await polity(realm, "Moth Throne", treasury=-40)
+    assert not await crisis_instead(ctx, creditor_core.id, debtor_core.id, WarCause.DEBT)
+    assert await realm.session.scalar(select(CrisisRow)) is None
+
+
 async def test_a_crisis_that_no_one_yields_becomes_war(realm: Realm) -> None:
     ctx = context(realm.session)
     demander, demander_core = await polity(realm, "Wolf Throne")

@@ -10,6 +10,7 @@ from aerona.domain.enums.finance import TradePolicyKind
 from aerona.domain.enums.leagues import LeagueDecisionKind, LeagueDecisionOutcome, LeagueOrgan, LeagueStanding, LeagueVoteBasis
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.finance.credit import realm_of
 from aerona.engine.leagues.book import LeagueTally, core_of, living_polity, membership, voters_of
 from aerona.engine.leagues.founding import join
@@ -195,7 +196,7 @@ async def carry(ctx: TickContext, profile: PolityLeagueRow, decision: LeagueDeci
     elif decision.kind is LeagueDecisionKind.RULING:
         await rule_on(ctx, league, decision, tally)
     elif decision.kind is LeagueDecisionKind.BUDGET and "depth" not in (profile.locked or []):
-        spent = min(profile.treasury, decision.rate_pct * max(1, profile.treasury) // PERCENT)
+        spent = min(held_coin(profile.treasury), decision.rate_pct * max(1, profile.treasury) // PERCENT)
         profile.treasury -= spent
         profile.depth = clamp_int(profile.depth + ctx.rules.leagues.depth_gain, 0, PERCENT)
     elif decision.kind is LeagueDecisionKind.MEDIATION and subject is not None:

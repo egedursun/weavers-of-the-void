@@ -8,6 +8,7 @@ from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.occupation_regimes import CollaborationKind, OccupationMeasure
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.military.occupation import pay_occupier
 from aerona.engine.mind.memories import remember
 from aerona.engine.occupation_regime.book import RegimeTally, locals_of, occupation_of, towns_of
@@ -64,7 +65,7 @@ async def requisition(ctx: TickContext, regime: OccupationRegimeRow, strength: i
         profile = await ctx.session.get(SettlementProfileRow, town.id)
         if profile is None or held(town.id) or "treasury" in (profile.locked or []):
             continue
-        taken = profile.treasury * ctx.rules.occupation.requisition_pct * strength // (PERCENT * PERCENT)
+        taken = held_coin(profile.treasury) * ctx.rules.occupation.requisition_pct * strength // (PERCENT * PERCENT)
         if taken > 0:
             profile.treasury -= taken
             await pay_occupier(ctx, regime.occupier_entity_id, taken)

@@ -43,6 +43,7 @@ from aerona.domain.enums.polity import CoupCause, LawKind, OfficeKind
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.factions.book import FactionBook, log
 from aerona.engine.factions.estates import grant
 from aerona.engine.factions.offshoots import found_offshoot
@@ -612,7 +613,7 @@ async def fund_war(move: Move) -> bool:
     realm = await realm_for(realms, profile)
     if realm is None or goal.target_node_id is None or profile.treasury <= 0:
         return False
-    given = round_half_up(profile.treasury * table.fund_war_share_pct / PERCENT)
+    given = round_half_up(held_coin(profile.treasury) * table.fund_war_share_pct / PERCENT)
     profile.treasury -= given
     realm.profile.war_chest += given
     gain_influence(profile, realm.entity.id, table.lobby_influence)

@@ -29,6 +29,7 @@ from aerona.domain.enums.unions import UnionPurpose
 from aerona.domain.enums.war import CaptiveStatus, TributeStatus, WarCause, WarSide, WarStatus
 from aerona.engine.communication.post import proposal_pending
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.intrigue.beliefs import daring
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.intrigue.leverage import leaned_on
@@ -505,7 +506,7 @@ async def pay_tribute(ctx: TickContext, profile: TreatyProfileRow, clause: Treat
     payer_realm = await ctx.session.get(PolityProfileRow, payer.id)
     receiver_realm = await ctx.session.get(PolityProfileRow, receiver.id)
     if payer_realm is not None and receiver_realm is not None:
-        moved = min(payer_realm.treasury, amount * table.realm_tribute_scale)
+        moved = min(held_coin(payer_realm.treasury), amount * table.realm_tribute_scale)
         paid = (move_amount(payer_realm, receiver_realm, "treasury", moved) and moved > 0) or paid
     if paid:
         clause.last_kept_epoch = ctx.epoch
@@ -636,7 +637,7 @@ async def vassal_duties(ctx: TickContext, book: RealmBook) -> dict[str, int]:
         overlord = book.realms.get(row.overlord_entity_id)
         if vassal is None or overlord is None:
             continue
-        owed = round_half_up(vassal.profile.treasury * row.tribute_pct / PERCENT) if pays_tribute(row) else 0
+        owed = round_half_up(held_coin(vassal.profile.treasury) * row.tribute_pct / PERCENT) if pays_tribute(row) else 0
         if owed > 0 and move_amount(vassal.profile, overlord.profile, "treasury", owed):
             counts["tribute"] += owed
         if sends_levies(row):

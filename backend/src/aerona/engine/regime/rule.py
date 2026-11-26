@@ -24,6 +24,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.engine.collective.book import shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import psi_of
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.factions.balance import power_balance
 from aerona.engine.lore.civics import realm_allows
 from aerona.engine.lore.legends import foretold_return
@@ -204,7 +205,7 @@ def forget_rewards(ctx: TickContext, members: list[CoalitionMemberRow]) -> None:
 
 async def spend_goods(ctx: TickContext, book: RealmBook, realm: Realm, row: RegimeRow, *, members: list[CoalitionMemberRow], tally: RegimeTally) -> None:
     table = ctx.rules.selectorate
-    budget = realm.profile.treasury * table.spend_pct // PERCENT
+    budget = held_coin(realm.profile.treasury) * table.spend_pct // PERCENT
     if budget <= 0:
         return
     public = budget * row.public_share // PERCENT

@@ -40,6 +40,7 @@ from aerona.engine.collective.feelings import fade_feelings, feelings_of, stir_f
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import psi_of, realm_of
 from aerona.engine.cycles.indenture import indentured_share
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.history.collections import open_collection
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.mind.split import facets_of
@@ -582,7 +583,7 @@ async def boycott(ctx: TickContext, town: EntityRow, row: CascadeRow) -> None:
     else:
         realm = await realm_of_town(ctx, town.id)
         if realm is not None and not held(realm.polity_entity_id) and "treasury" not in realm.locked:
-            realm.treasury = max(0, realm.treasury - realm.treasury * cut // PERCENT)
+            realm.treasury -= held_coin(realm.treasury) * cut // PERCENT
             target_id = realm.polity_entity_id
     if target_id is not None:
         await record(

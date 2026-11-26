@@ -50,6 +50,7 @@ from aerona.domain.enums.war import WarCause
 from aerona.engine.body.customs import culture_of
 from aerona.engine.communication.opinion import mean_approval
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.eras.effects import era_techniques
 from aerona.engine.factions.balance import faction_pull
 from aerona.engine.folkways.biases import lean_community
@@ -565,7 +566,7 @@ async def collect(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
         share = round_half_up(int(income) * table.polity_tax_pct / PERCENT)
         skim = realm.profile.corruption * ctx.rules.affairs.skim_pct / PERCENT / PERCENT
         arriving = round_half_up(share * (1 - leak * member.autonomy / PERCENT) * (1 - skim))
-        taken = min(town.treasury, share)
+        taken = min(held_coin(town.treasury), share)
         town.treasury -= taken
         ctx.session.add(
             SettlementTreasuryRow(
@@ -584,7 +585,7 @@ async def collect(ctx: TickContext, book: RealmBook, realm: Realm) -> int:
     if upkeep:
         spend(ctx, realm, -upkeep, TreasuryEntry.GARRISON, "offices")
     if realm.profile.debt and realm.profile.treasury:
-        paid = min(realm.profile.debt, realm.profile.treasury)
+        paid = min(realm.profile.debt, held_coin(realm.profile.treasury))
         realm.profile.debt -= paid
         realm.profile.treasury -= paid
     await service_debt(ctx, book, realm)

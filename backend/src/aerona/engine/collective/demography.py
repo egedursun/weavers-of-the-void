@@ -33,6 +33,7 @@ from aerona.engine.cycles.book import asabiyya_factor
 from aerona.engine.cycles.breeding import breeding_factor, fixed_sexes_at
 from aerona.engine.cycles.sides import first_sex, system_of_people
 from aerona.engine.demography.cohorts import cohort_rows
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.fertility_means.factor import people_factor
 from aerona.engine.mind.book import stored_values
 from aerona.engine.polity.laws import law_param
@@ -263,7 +264,9 @@ async def remit(ctx: TickContext, row: DiasporaRow, host: SettlementProfileRow, 
     home = await ctx.session.get(SettlementProfileRow, row.home_entity_id) if row.home_entity_id is not None else None
     if home is None or held(home.settlement_entity_id):
         return
-    sent = min(host.treasury, round_half_up(row.population * WEALTH_PER_HEAD / PERCENT * ctx.rules.diaspora.remittance_pct / PERCENT * row.ties / PERCENT))
+    sent = min(
+        held_coin(host.treasury), round_half_up(row.population * WEALTH_PER_HEAD / PERCENT * ctx.rules.diaspora.remittance_pct / PERCENT * row.ties / PERCENT)
+    )
     if sent > 0 and move_amount(host, home, "treasury", sent):
         if "remittance" not in row.locked:
             row.remittance = sent

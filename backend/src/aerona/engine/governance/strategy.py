@@ -9,6 +9,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.governance import OPEN_MERGER_STAGES, MergerKind, OrgStrategy
 from aerona.engine.context import TickContext
+from aerona.engine.economy.purse import held_coin
 from aerona.engine.factions.companies import realm_of
 from aerona.engine.governance.heads import STRATEGY_LOCK, set_strategy
 from aerona.engine.governance.mergers import open_bid, worth
@@ -46,7 +47,7 @@ async def follow_strategy(ctx: TickContext, row: OrgGovernanceRow, org: EntityRo
     profile = await ctx.session.get(FactionProfileRow, org.id)
     strategy = row.strategy
     if profile is not None and TREASURY_LOCK not in (profile.locked or []):
-        change = round_half_up(profile.treasury * STRATEGY_TREASURY_PCT[strategy] * table.strategy_treasury_pct / PERCENT / PERCENT)
+        change = round_half_up(held_coin(profile.treasury) * STRATEGY_TREASURY_PCT[strategy] * table.strategy_treasury_pct / PERCENT / PERCENT)
         profile.treasury = max(0, profile.treasury + change)
     if strategy is OrgStrategy.LOBBY and profile is not None and INFLUENCE_LOCK not in (profile.locked or []):
         realm = await realm_of(ctx, profile.home_entity_id or org.location_id)

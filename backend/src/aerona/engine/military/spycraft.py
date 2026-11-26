@@ -25,7 +25,7 @@ from aerona.domain.enums.polity import ClaimBasis, OfficeKind
 from aerona.domain.enums.settlement import DistrictKind
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import TREASURY_LOCK, points_of, receive_coin, shift_points
+from aerona.engine.economy.purse import TREASURY_LOCK, held_coin, points_of, receive_coin, shift_points
 from aerona.engine.environment.book import region_environment, scar_region
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.spy_depth import compromise, motivate
@@ -249,7 +249,7 @@ async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow
     realm = await ctx.session.get(PolityProfileRow, realm_id)
     if office.kind is OfficeKind.TREASURER and realm is not None:
         if TREASURY_LOCK not in realm.locked:
-            drained = min(realm.treasury, table.blackmail_wealth * ctx.rules.taxation.wealth_per_treasury)
+            drained = min(held_coin(realm.treasury), table.blackmail_wealth * ctx.rules.taxation.wealth_per_treasury)
             realm.treasury -= drained
             await receive_coin(ctx.session, ctx.rules, owner, drained)
     elif office.kind is OfficeKind.SPYMASTER:
