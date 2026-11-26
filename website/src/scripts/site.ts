@@ -92,17 +92,32 @@ function startMasthead(): void {
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
   if (!toggle || !menu) return
+  let resting = 0
   const setOpen = (open: boolean) => {
+    const wasOpen = toggle.getAttribute('aria-expanded') === 'true'
+    if (open && !wasOpen) resting = window.scrollY
     toggle.setAttribute('aria-expanded', String(open))
     menu.hidden = !open
     masthead.classList.toggle('is-open', open)
-    document.body.classList.toggle('menu-open', open)
+    document.documentElement.classList.toggle('menu-open', open)
+    if (!open && wasOpen) window.scrollTo({ top: resting, behavior: 'instant' })
     if (label) label.textContent = (open ? label.dataset.close : label.dataset.open) ?? ''
   }
   toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'))
   menu.addEventListener('click', (event) => {
     if ((event.target as HTMLElement).closest('a')) setOpen(false)
   })
+  document.addEventListener(
+    'click',
+    (event) => {
+      if (toggle.getAttribute('aria-expanded') !== 'true') return
+      if (masthead.contains(event.target as Node)) return
+      event.preventDefault()
+      event.stopPropagation()
+      setOpen(false)
+    },
+    { capture: true },
+  )
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
       setOpen(false)

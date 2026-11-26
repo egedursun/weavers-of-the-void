@@ -2,6 +2,8 @@
 import '../styles/global.css'
 import '../styles/layout.css'
 import Icon from '../components/Icon.astro'
+import Emblem, { type EmblemName } from '../components/Emblem.astro'
+import divider from '../assets/ornate/divider.webp'
 import crest from '../assets/ornate/crest.webp'
 import wing from '../assets/ornate/wing.webp'
 import {
@@ -32,11 +34,11 @@ const site = Astro.site?.toString().replace(/\/$/, '') ?? ''
 const canonical = `${site}${page(locale, path)}`
 const image = `${site}${asset('art/collectors-edition.webp')}`
 const year = new Date().getFullYear()
-const links = [
-  { href: anchor('how'), label: copy.nav.how },
-  { href: page(locale, 'expansions'), label: copy.nav.expansions },
-  { href: page(locale, 'services'), label: copy.nav.services },
-  { href: anchor('free'), label: copy.nav.free },
+const links: { href: string; label: string; emblem: EmblemName; current: boolean }[] = [
+  { href: anchor('how'), label: copy.nav.how, emblem: 'orb', current: false },
+  { href: page(locale, 'expansions'), label: copy.nav.expansions, emblem: 'tome', current: path.startsWith('expansions') },
+  { href: page(locale, 'services'), label: copy.nav.services, emblem: 'anvil', current: path === 'services' },
+  { href: anchor('free'), label: copy.nav.free, emblem: 'chest', current: false },
 ]
 ---
 
@@ -129,14 +131,26 @@ const links = [
           </div>
         </nav>
         <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle>
-          <Icon name="menu" class="menu-toggle__open" />
-          <Icon name="close" class="menu-toggle__close" />
+          <span class="menu-toggle__bars" aria-hidden="true"><span></span><span></span><span></span></span>
           <span class="visually-hidden" data-menu-label data-open={copy.nav.menu} data-close={copy.nav.close}>{copy.nav.menu}</span>
         </button>
       </div>
       <div class="mobile-menu" id="mobile-menu" hidden data-mobile-menu>
+        <img class="mobile-menu__divider" src={divider.src} alt="" width="960" height="115" />
         <ul>
-          {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+          {
+            links.map((link, index) => (
+              <li style={`--order: ${index}`}>
+                <a href={link.href} aria-current={link.current ? 'page' : undefined}>
+                  <span class="medallion mobile-menu__medal" aria-hidden="true">
+                    <Emblem name={link.emblem} />
+                  </span>
+                  <span class="mobile-menu__label">{link.label}</span>
+                  <Icon name="arrowRight" class="mobile-menu__arrow" />
+                </a>
+              </li>
+            ))
+          }
         </ul>
         <div class="mobile-menu__tools">
           <div class="lang" role="group" aria-label={copy.nav.language}>

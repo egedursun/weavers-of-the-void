@@ -193,19 +193,6 @@ const tableRows: Row[] = [
     transform: scale(1.1) rotate(-6deg);
   }
 
-  @media (max-width: 480px) {
-    .compare__tier {
-      gap: 0.35rem;
-      padding: 0.45rem 0.7rem;
-      font-size: 0.8rem;
-    }
-
-    .compare__tier :global(.emblem) {
-      width: 1rem;
-      height: 1rem;
-    }
-  }
-
   .compare__frame {
     padding: clamp(1.2rem, 3vw, 2rem) clamp(0.8rem, 2.5vw, 1.8rem);
   }
@@ -388,26 +375,129 @@ const tableRows: Row[] = [
       position: sticky;
       top: 84px;
       z-index: 6;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      width: 100%;
+      gap: 0.3rem;
+      padding: 0.3rem;
+      border-radius: 18px;
       backdrop-filter: blur(10px);
     }
 
-    .compare__table th,
-    .compare__table td {
-      padding: 0.75rem 0.6rem;
+    .compare__tier {
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.3rem;
+      min-width: 0;
+      padding: 0.55rem 0.3rem;
+      border-radius: 14px;
+      font-size: 0.74rem;
+      letter-spacing: 0.02em;
+    }
+
+    .compare__tier span {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .compare__tier :global(.emblem) {
+      width: 1.35rem;
+      height: 1.35rem;
+    }
+
+    .compare__frame {
+      padding: 2.2rem 1.1rem 1.6rem;
+    }
+
+    .compare__scroll {
+      overflow: visible;
+    }
+
+    .compare__table,
+    .compare__table thead,
+    .compare__table tbody,
+    .compare__table tfoot,
+    .compare__table tr {
+      display: block;
+      width: 100%;
+    }
+
+    .compare__corner,
+    .compare__table tfoot td:first-child {
+      display: none;
+    }
+
+    .compare__table thead th[data-col] {
+      display: grid;
+      justify-items: center;
+      gap: 0.15rem;
+      padding: 2.4rem 1rem 1.3rem;
+      border-radius: 14px 14px 0 0;
+    }
+
+    .compare__table tbody tr {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      column-gap: 1rem;
+      padding: 0.15rem 1rem;
+      background: oklch(0.6 0.23 302 / 0.08);
+    }
+
+    .compare__table tbody tr + tr {
+      border-top: 1px solid oklch(0.84 0.16 86 / 0.14);
+    }
+
+    .compare__table tbody tr + tr > * {
+      border-top: 0;
+    }
+
+    .compare__table tbody th,
+    .compare__table tbody td {
+      padding: 0.8rem 0;
+      background: none;
+    }
+
+    .compare__table tbody th {
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+
+    .compare__table tbody th {
+      flex: 1 1 auto;
+    }
+
+    .compare__table tbody td {
+      flex: 0 1 auto;
+      margin-inline-start: auto;
+      font-weight: 600;
+      text-align: end;
+    }
+
+    .compare__depth {
+      grid-auto-flow: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .compare__meter {
+      width: 6.5rem;
+    }
+
+    .compare__table tfoot td[data-col] {
+      display: block;
+      padding: 1.2rem 1rem 1rem;
+      border-radius: 0 0 14px 14px;
+      background: oklch(0.6 0.23 302 / 0.08);
     }
 
     [data-chosen='standard'] [data-col]:not([data-col='standard']),
     [data-chosen='professional'] [data-col]:not([data-col='professional']),
     [data-chosen='enterprise'] [data-col]:not([data-col='enterprise']) {
-      display: none;
-    }
-
-    .compare__table tfoot td:first-child {
-      display: none;
-    }
-
-    .compare__table tfoot td[data-col] {
-      padding-inline: 0;
+      display: none !important;
     }
   }
 </style>
