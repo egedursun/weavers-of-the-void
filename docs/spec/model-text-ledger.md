@@ -1291,7 +1291,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/accounts/passwords.py` | 3 | 2026-11-25 | `27f241a6e723d6df` |
 | `backend/src/aerona/services/accounts/permissions.py` | 36 | 2026-11-25 | `64122c09312c74a2` |
 | `backend/src/aerona/services/accounts/service.py` | 31 | 2026-11-25 | `64d0ec1e43bab6f5` |
-| `backend/src/aerona/services/application.py` | 3 | 2026-11-16 | `28d6109d746c3716` |
+| `backend/src/aerona/services/application.py` | 4 | 2026-11-26 | `6b1a108aa4e805d4` |
 | `backend/src/aerona/services/backups.py` | 14 | 2026-11-16 | `6a699aaba0847312` |
 | `backend/src/aerona/services/bonds.py` | 3 | 2026-11-17 | `5829a3d9c0239444` |
 | `backend/src/aerona/services/books/__init__.py` | 2 | 2026-11-16 | `799c7916f64b2225` |
