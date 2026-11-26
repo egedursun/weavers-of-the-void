@@ -6,12 +6,10 @@ import {
   ArchiveRestore,
   ArrowLeft,
   ChevronDown,
-  CircleAlert,
   CircleCheck,
   Globe,
   LoaderCircle,
 } from 'lucide-react'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -29,6 +27,8 @@ import { FeedCollector } from '@/features/feed/FeedCollector'
 import { useFeed } from '@/features/feed/feedStore'
 import { useWorldState } from '@/features/overview/api'
 import { useRevealQueue } from '@/features/pantheon/revealStore'
+import { ModelNeeded } from '@/features/providers/ModelNeeded'
+import { modelBlock } from '@/features/providers/modelReadiness'
 import { LibraryReturn } from '@/features/universes/LibraryReturn'
 import { GenesisWizard } from './GenesisWizard'
 import { WorldBorn } from './WorldBorn'
@@ -178,7 +178,8 @@ export function GenesisScreen() {
   )
   if (running && !witnessed) setWitnessed(true)
   const world = state.data?.world ?? null
-  const llm = state.data?.llm_enabled ?? false
+  const llm =
+    state.data !== undefined && modelBlock(state.data, 'writing') === null
   return (
     <main
       id='content'
@@ -217,18 +218,10 @@ export function GenesisScreen() {
         )}
         {state.data && !running && !world && (
           <>
-            {!llm && (
-              <Alert variant='destructive'>
-                <CircleAlert />
-                <AlertTitle>The language model is turned off</AlertTitle>
-                <AlertDescription>
-                  You can shape the whole world below, but genesis writes it
-                  with the language model. Configure the Claude token on the
-                  server and restart it to create the world, or open an existing
-                  world instead.
-                </AlertDescription>
-              </Alert>
-            )}
+            <ModelNeeded
+              role='writing'
+              what='You can shape the whole world below, but writing it'
+            />
             <GenesisWizard llmEnabled={llm} />
             <RestoreWorld />
           </>

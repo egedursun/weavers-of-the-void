@@ -231,14 +231,14 @@ async def test_long_job_success_and_refund(database: Database) -> None:
     await retry.settle_long_jobs()
 
 
-async def test_sdk_tool_wraps_runtime(database: Database) -> None:
+async def test_agent_tool_wraps_runtime(database: Database) -> None:
     realm = await seed_realm(database)
     toolkit = await son_toolkit(database, realm.son_id)
     tool = next(item for item in toolkit.tools() if item.name == "inspect_entity")
     assert isinstance(tool.input_schema, dict)
     assert tool.input_schema["properties"]["id"]["type"] == ["integer", "string"]
     reply = await tool.handler({"id": f"#{realm.people_id}"})
-    assert reply["is_error"] is False
-    assert "Kessar" in reply["content"][0]["text"]
+    assert reply.is_error is False
+    assert "Kessar" in reply.text
     reply = await tool.handler({"id": 999999})
-    assert reply["is_error"] is True
+    assert reply.is_error is True

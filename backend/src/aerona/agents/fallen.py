@@ -8,7 +8,6 @@ from aerona.agents.text import extract_word
 from aerona.agents.turns.ports import SpeechOnlyToolkit, ToolCatalogue, TurnToolkit
 from aerona.agents.turns.session import TurnPlan, run_turn
 from aerona.agents.turns.state import long_job_notes
-from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import TrueNameRow
@@ -78,7 +77,7 @@ async def run_fallen_turn(runtime: AgentRuntime, son_id: int) -> MortalTurnResul
     system = await fallen_system(runtime, son_id, started.action_points, catalogue)
     prompt = (await mortal_prompts(runtime, started, catalogue))[1]
     rules = await runtime.current_rules()
-    runtime.publish(EventKind.MORTAL_TURN_STARTED, {"entity_id": body_id, "name": started.name, "resumed": started.resumed, "model": HAIKU_MODEL_ID})
+    runtime.publish(EventKind.MORTAL_TURN_STARTED, {"entity_id": body_id, "name": started.name, "resumed": started.resumed, "model": runtime.world_model})
 
     async def follow_up(reason: TurnInterruption, detail: str | None, done: list[DoneAction]) -> str | None:
         async with runtime.database.read() as session:
@@ -104,6 +103,6 @@ async def run_fallen_turn(runtime: AgentRuntime, son_id: int) -> MortalTurnResul
     await mark_acted(runtime, son_id, started.epoch)
     runtime.publish(
         EventKind.MORTAL_TURN_FINISHED,
-        {"entity_id": body_id, "name": result.name, "word": result.word, "creations": result.creations, "status": result.status, "model": HAIKU_MODEL_ID},
+        {"entity_id": body_id, "name": result.name, "word": result.word, "creations": result.creations, "status": result.status, "model": runtime.world_model},
     )
     return result

@@ -6,7 +6,7 @@ This spec is the contract every part of the build follows. Every name below is t
 
 ## 1. Principles
 
-- **D1. One model.** The Divine Will uses the model the game uses (`LlmClient`, the claude-agent-sdk OAuth client, today `claude-haiku-5-5`). No architectural change to model selection.
+- **D1. One model seam.** The Divine Will uses the model chain of the conversation role (spec 22) through `LlmClient`; a model that sees pictures reads the attached ones.
 - **D2. Everything, through one door.** Every god action reachable from the frontend is reachable by the Divine Will, because it acts through the same action catalog (`services/player/catalog.py`, `ACTIONS`) and the same runner (`run_action` / `perform`), with the same validation, essence, ledger, `acting(ActorKind.CREATOR, …)` scope and undo. A new action is automatically a Divine Will action.
 - **D3. Nothing is cut.** No tool result, lore text, document or artifact is ever truncated. Large results are paged under a token budget and the model asks for the next page through a handle. The model decides when it has read enough.
 - **D4. Agentic retrieval.** Retrieval is a set of tools the model drives in a loop (search, read, expand along the graph, enumerate exhaustively, read more), not a fixed top-k injection. "All X" questions are answered by exhaustive enumeration, never by similarity.

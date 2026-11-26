@@ -23,7 +23,6 @@ class LlmCall(ApiModel):
     turns: int | None
     input_tokens: int
     output_tokens: int
-    cost_usd: float
     error: str | None
     created_at: datetime
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
+  BrainCircuit,
   KeySquare,
   LogOut,
   Monitor,
@@ -97,6 +98,14 @@ export function AccountMenu({ framed = false }: { framed?: boolean }) {
           >
             <UsersRound />
             Team and workspace
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() =>
+              void navigate({ to: '/workspace', search: { part: 'providers' } })
+            }
+          >
+            <BrainCircuit />
+            Models and providers
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!canManage}

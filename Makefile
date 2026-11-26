@@ -1,11 +1,18 @@
 BACKEND := backend
 FRONTEND := frontend
 
-.PHONY: install dev backend frontend test lint typecheck rules version bump prerelease release migration typegen check migrate-legacy legacy-rule-map anatomy
+.PHONY: install agents gateway dev backend frontend test lint typecheck rules version bump prerelease release migration typegen check migrate-legacy legacy-rule-map anatomy
 
-install:
+install: agents
 	cd $(BACKEND) && uv sync
 	cd $(FRONTEND) && npm install
+
+agents:
+	cd deploy/agents && npm ci --no-audit --no-fund
+
+gateway:
+	mkdir -p data/bifrost && cp deploy/bifrost/config.json data/bifrost/config.json
+	npx -y @maximhq/bifrost@1.6.3 --transport-version v2.6.0 -app-dir data/bifrost -host 127.0.0.1 -port 8180
 
 backend:
 	cd $(BACKEND) && uv run uvicorn aerona.main:create_app --factory --reload --host 127.0.0.1 --port 8000
@@ -14,7 +21,7 @@ frontend:
 	cd $(FRONTEND) && npm run dev
 
 dev:
-	$(MAKE) -j2 backend frontend
+	$(MAKE) -j3 gateway backend frontend
 
 rules:
 	cd $(BACKEND) && uv run python ../scripts/check_source_rules.py
@@ -66,7 +73,7 @@ anatomy:
 
 check: rules lint typecheck test
 
-.PHONY: docker-up docker-up-gpu docker-up-console docker-down image-worker image-worker-test minio env claude-token worker-start worker-stop worker-status up down
+.PHONY: docker-up docker-up-gpu docker-up-console docker-down image-worker image-worker-test minio env worker-start worker-stop worker-status up down
 
 MINIO_IMAGE ?= pgsty/minio:RELEASE.2026-08-04T00-00-00Z
 MINIO_DEV_DIR ?= data/minio
@@ -103,9 +110,6 @@ image-worker-test:
 
 env:
 	cd $(BACKEND) && uv run python ../scripts/stack.py env
-
-claude-token:
-	cd $(BACKEND) && uv run python ../scripts/stack.py claude-token
 
 worker-start:
 	cd $(BACKEND) && uv run python ../scripts/stack.py worker-start

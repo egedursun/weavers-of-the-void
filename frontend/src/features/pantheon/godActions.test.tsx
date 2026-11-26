@@ -142,7 +142,19 @@ describe('summon a son', () => {
     [
       'no language model',
       { llm_enabled: false },
-      'The language model is not connected; this needs it.',
+      'The language model is turned off on this server.',
+    ],
+    [
+      'no writing model',
+      {
+        role_models: [
+          { role: 'world_agents', model: 'quick · Studio key' },
+          { role: 'writing', model: '' },
+          { role: 'conversation', model: 'deep · Studio key' },
+          { role: 'images', model: '' },
+        ],
+      },
+      'No model is set for writing; choose one under Models in the workspace settings.',
     ],
     ['a guest world', { read_only: true }, 'A guest world is open read-only.'],
   ]

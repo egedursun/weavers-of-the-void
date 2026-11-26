@@ -158,6 +158,12 @@ const STATE = {
   },
   batch_deepen: { running: true, stop_requested: false, total: 40, done: 12, failed: 1, skipped: 2 },
   llm_enabled: true,
+  role_models: [
+    { role: 'world_agents', model: 'quick · Studio key' },
+    { role: 'writing', model: 'quick · Studio key' },
+    { role: 'conversation', model: 'deep · Studio key' },
+    { role: 'images', model: 'painter · Studio key' },
+  ],
 }
 
 const EMPTY_STATE = { ...STATE, world: null, creator: null, sons: [], worlds: [], pending_son_ids: [], last_epoch: null }
@@ -283,15 +289,15 @@ const BULK = {
 }
 
 const METRICS = {
-  totals: { calls: 1240, milliseconds: 4_210_000, cost: 18.4, input_tokens: 3_400_000, output_tokens: 610_000 },
-  epochs: [5, 6].map((epoch) => ({ epoch, calls: 200 + epoch, milliseconds: 380_000, input_tokens: 520_000, output_tokens: 90_000, cost: 2.6, errors: epoch === 6 ? 2 : 0, retried: epoch === 6 ? 1 : 0, slow: 3 })),
-  models: [{ model: 'claude-haiku-4-5-20251001', calls: 1240, milliseconds: 4_210_000, average_ms: 3395, input_tokens: 3_400_000, output_tokens: 610_000, cost: 18.4 }],
+  totals: { calls: 1240, milliseconds: 4_210_000, input_tokens: 3_400_000, output_tokens: 610_000 },
+  epochs: [5, 6].map((epoch) => ({ epoch, calls: 200 + epoch, milliseconds: 380_000, input_tokens: 520_000, output_tokens: 90_000, errors: epoch === 6 ? 2 : 0, retried: epoch === 6 ? 1 : 0, slow: 3 })),
+  models: [{ model: 'claude-haiku-4-5-20251001', calls: 1240, milliseconds: 4_210_000, average_ms: 3395, input_tokens: 3_400_000, output_tokens: 610_000 }],
   steps: [
-    { step: 'Son turn', calls: 620, average_ms: 5200, longest_ms: 42_000, cost: 11.2, errors: 2 },
-    { step: 'Deepening', calls: 140, average_ms: 2900, longest_ms: 9000, cost: 2.1, errors: 0 },
+    { step: 'Son turn', calls: 620, average_ms: 5200, longest_ms: 42_000, errors: 2 },
+    { step: 'Deepening', calls: 140, average_ms: 2900, longest_ms: 9000, errors: 0 },
   ],
-  slowest: [{ id: 1, epoch: 6, job: 'epoch', role: 'son', model: 'claude-haiku-4-5-20251001', kind: 'agent', status: 'ok', duration_ms: 42_000, attempts: 1, turns: 8, input_tokens: 9000, output_tokens: 1200, cost_usd: 0.04, error: null, created_at: NOW }],
-  latest_errors: [{ id: 2, epoch: 6, job: 'epoch', role: 'fate', model: 'claude-haiku-4-5-20251001', kind: 'structured', status: 'error', duration_ms: 30_000, attempts: 3, turns: null, input_tokens: 0, output_tokens: 0, cost_usd: 0, error: 'The model did not answer in time.', created_at: NOW }],
+  slowest: [{ id: 1, epoch: 6, job: 'epoch', role: 'son', model: 'claude-haiku-4-5-20251001', kind: 'agent', status: 'ok', duration_ms: 42_000, attempts: 1, turns: 8, input_tokens: 9000, output_tokens: 1200, error: null, created_at: NOW }],
+  latest_errors: [{ id: 2, epoch: 6, job: 'epoch', role: 'fate', model: 'claude-haiku-4-5-20251001', kind: 'structured', status: 'error', duration_ms: 30_000, attempts: 3, turns: null, input_tokens: 0, output_tokens: 0, error: 'The model did not answer in time.', created_at: NOW }],
   slow_threshold_ms: 20_000,
 }
 

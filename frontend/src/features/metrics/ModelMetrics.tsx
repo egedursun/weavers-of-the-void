@@ -3,20 +3,14 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   ChevronDown,
-  CircleDollarSign,
   Gauge,
   Hourglass,
   PhoneCall,
   Timer,
   TriangleAlert,
 } from 'lucide-react'
-import { formatCompact, formatDecimal } from '@/lib/format'
-import {
-  formatDuration,
-  formatMilliseconds,
-  formatUsd,
-  plural,
-} from '@/lib/units'
+import { formatCompact } from '@/lib/format'
+import { formatDuration, formatMilliseconds, plural } from '@/lib/units'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -128,7 +122,7 @@ function CallList({
             <Text as='span' variant='caption' tone={tone}>
               {tone === 'destructive'
                 ? (call.error ?? 'Failed')
-                : `${formatMilliseconds(call.duration_ms)}${call.cost_usd > 0 ? ` · $${formatDecimal(call.cost_usd, 4)}` : ''}`}
+                : formatMilliseconds(call.duration_ms)}
             </Text>
           </li>
         )}
@@ -151,7 +145,7 @@ function MetricsBody({ data }: { data: ModelMetricsView }) {
     )
   return (
     <div className='flex min-w-0 flex-col gap-4'>
-      <div className='grid min-w-0 grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6'>
+      <div className='grid min-w-0 grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5'>
         <MiniStat
           icon={PhoneCall}
           label='Calls'
@@ -177,77 +171,71 @@ function MetricsBody({ data }: { data: ModelMetricsView }) {
           tone='verdigris'
         />
         <MiniStat
-          icon={CircleDollarSign}
-          label='API equivalent'
-          value={formatUsd(totals.cost)}
-          tone='muted'
-          hint='What these calls would cost at API prices. The subscription does not charge it separately; it counts against the quota.'
-        />
-        <MiniStat
           icon={TriangleAlert}
           label='Errors'
-          value={data.epochs.reduce((sum, epoch) => sum + epoch.errors, 0)}
-          tone={
-            data.epochs.some((epoch) => epoch.errors > 0) ? 'danger' : 'success'
-          }
+          value={totals.errors}
+          tone={totals.errors > 0 ? 'danger' : 'success'}
         />
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Epoch</TableHead>
-            <TableHead className='text-end'>Calls</TableHead>
-            <TableHead className='text-end'>Time</TableHead>
-            <TableHead className='text-end'>Tokens in / out</TableHead>
-            <TableHead className='text-end'>Cost</TableHead>
-            <TableHead className='text-end'>Errors</TableHead>
-            <TableHead className='text-end'>Slow</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.epochs.map((epoch) => (
-            <TableRow key={epoch.epoch}>
-              <TableCell>{`Epoch ${epoch.epoch}`}</TableCell>
-              <TableCell className='text-end'>
-                <div className='flex min-w-0 items-center justify-end gap-2'>
-                  <Progress
-                    size='sm'
-                    className='w-16'
-                    value={(epoch.calls / busiest) * PERCENT}
-                    aria-label={`Calls in epoch ${epoch.epoch}`}
-                  />
-                  <Stat value={epoch.calls} />
-                </div>
-              </TableCell>
-              <TableCell className='text-end'>
-                {formatMilliseconds(epoch.milliseconds)}
-              </TableCell>
-              <TableCell className='text-end'>
-                {`${formatCompact(epoch.input_tokens)} / ${formatCompact(epoch.output_tokens)}`}
-              </TableCell>
-              <TableCell className='text-end'>
-                {formatUsd(epoch.cost)}
-              </TableCell>
-              <TableCell className='text-end'>
-                <Stat
-                  value={
-                    epoch.retried > 0
-                      ? `${epoch.errors} · ${epoch.retried} retried`
-                      : epoch.errors
-                  }
-                  tone={epoch.errors > 0 ? 'destructive' : 'inherit'}
-                />
-              </TableCell>
-              <TableCell className='text-end'>
-                <Stat
-                  value={epoch.slow}
-                  tone={epoch.slow > 0 ? 'warning' : 'inherit'}
-                />
-              </TableCell>
+      {data.epochs.length === 0 ? (
+        <Muted variant='caption' className='rounded-md p-3 sealed-well'>
+          No epoch has called a model yet; the calls above came from genesis,
+          deepening or other work outside an epoch.
+        </Muted>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Epoch</TableHead>
+              <TableHead className='text-end'>Calls</TableHead>
+              <TableHead className='text-end'>Time</TableHead>
+              <TableHead className='text-end'>Tokens in / out</TableHead>
+              <TableHead className='text-end'>Errors</TableHead>
+              <TableHead className='text-end'>Slow</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {data.epochs.map((epoch) => (
+              <TableRow key={epoch.epoch}>
+                <TableCell>{`Epoch ${epoch.epoch}`}</TableCell>
+                <TableCell className='text-end'>
+                  <div className='flex min-w-0 items-center justify-end gap-2'>
+                    <Progress
+                      size='sm'
+                      className='w-16'
+                      value={(epoch.calls / busiest) * PERCENT}
+                      aria-label={`Calls in epoch ${epoch.epoch}`}
+                    />
+                    <Stat value={epoch.calls} />
+                  </div>
+                </TableCell>
+                <TableCell className='text-end'>
+                  {formatMilliseconds(epoch.milliseconds)}
+                </TableCell>
+                <TableCell className='text-end'>
+                  {`${formatCompact(epoch.input_tokens)} / ${formatCompact(epoch.output_tokens)}`}
+                </TableCell>
+                <TableCell className='text-end'>
+                  <Stat
+                    value={
+                      epoch.retried > 0
+                        ? `${epoch.errors} · ${epoch.retried} retried`
+                        : epoch.errors
+                    }
+                    tone={epoch.errors > 0 ? 'destructive' : 'inherit'}
+                  />
+                </TableCell>
+                <TableCell className='text-end'>
+                  <Stat
+                    value={epoch.slow}
+                    tone={epoch.slow > 0 ? 'warning' : 'inherit'}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
       <PagedList
         items={data.models}
         initial={12}
@@ -259,7 +247,7 @@ function MetricsBody({ data }: { data: ModelMetricsView }) {
         {(model) => (
           <Chip
             key={model.model}
-            label={`· ${plural(model.calls, 'call', 'calls')} · average ${formatMilliseconds(model.average_ms)}`}
+            label={`· ${plural(model.calls, 'call', 'calls')} · average ${formatMilliseconds(model.average_ms)} · ${formatCompact(model.input_tokens)} in / ${formatCompact(model.output_tokens)} out`}
             value={model.model}
           />
         )}
@@ -272,7 +260,6 @@ function MetricsBody({ data }: { data: ModelMetricsView }) {
               <TableHead className='text-end'>Calls</TableHead>
               <TableHead className='text-end'>Average</TableHead>
               <TableHead className='text-end'>Longest</TableHead>
-              <TableHead className='text-end'>Cost</TableHead>
               <TableHead className='text-end'>Errors</TableHead>
             </TableRow>
           </TableHeader>
@@ -288,9 +275,6 @@ function MetricsBody({ data }: { data: ModelMetricsView }) {
                 </TableCell>
                 <TableCell className='text-end'>
                   {formatMilliseconds(step.longest_ms)}
-                </TableCell>
-                <TableCell className='text-end'>
-                  {formatUsd(step.cost)}
                 </TableCell>
                 <TableCell className='text-end'>
                   <Stat
@@ -352,7 +336,7 @@ export function ModelMetrics() {
   return (
     <Section
       title='Model metrics'
-      description='Every language model call: how many, how long, how many tokens, what it would cost, and what failed.'
+      description='Every language model call: which model answered, how many, how long, how many tokens, and what failed.'
       surface='card'
       level={3}
       icon={Gauge}

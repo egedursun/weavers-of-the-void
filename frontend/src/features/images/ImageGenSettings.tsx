@@ -276,7 +276,7 @@ export function ImageGenSettings() {
         </SettingGroup>
         <SettingGroup
           label='Time limit per image'
-          description='A single image that takes longer is stopped and the worker restarts.'
+          description='A single image that takes longer is stopped; a local worker restarts.'
         >
           <ChoiceRow
             label='Time limit per image'
@@ -292,7 +292,7 @@ export function ImageGenSettings() {
           <TriangleAlert />
           <AlertTitle>Large images need more time</AlertTitle>
           <AlertDescription>
-            {`At ${width} × ${height} one image can take many minutes. Raise the time limit per image to 20 or 30 minutes so the worker is not stopped midway.`}
+            {`At ${width} × ${height} one image can take many minutes. Raise the time limit per image to 20 or 30 minutes so a local worker is not stopped midway.`}
           </AlertDescription>
         </Alert>
       )}

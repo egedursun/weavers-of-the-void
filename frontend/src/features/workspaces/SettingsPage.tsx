@@ -47,7 +47,7 @@ export function SettingsPage({
             </span>
           </Link>
         </Button>
-        <span className='flex items-center gap-0.5 rounded-md border surface-framed border-gild/70 bg-card p-0.5'>
+        <span className='flex items-center gap-0.5 rounded-md border surface-sheen border-gild/70 bg-card px-1.5 py-0.5'>
           <ThemeSwitch />
           <AccountMenu />
         </span>

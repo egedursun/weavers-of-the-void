@@ -33,15 +33,19 @@ def _configure(connection: Any, _record: Any) -> None:
 def rebuild_stale_calls(connection: Connection) -> None:
     table = LlmCallRow.__tablename__
     definition = connection.execute(text(TABLE_DEFINITION_QUERY), {"name": table}).scalar()
-    if definition is None or all(f"'{status.value}'" in definition for status in LlmCallStatus):
+    if definition is None:
+        return
+    calls = TelemetryBase.metadata.tables[table]
+    present = {str(row[1]) for row in connection.execute(text(f'PRAGMA table_info("{table}")'))}
+    wanted = {column.name for column in calls.columns}
+    if present == wanted and all(f"'{status.value}'" in definition for status in LlmCallStatus):
         return
     stale = f"{table}{STALE_SUFFIX}"
-    calls = TelemetryBase.metadata.tables[table]
     for index in calls.indexes:
         connection.execute(text(f'DROP INDEX IF EXISTS "{index.name}"'))
     connection.execute(text(f'ALTER TABLE "{table}" RENAME TO "{stale}"'))
     TelemetryBase.metadata.create_all(connection, tables=[calls])
-    columns = ", ".join(f'"{column.name}"' for column in calls.columns)
+    columns = ", ".join(f'"{column.name}"' for column in calls.columns if column.name in present)
     connection.execute(text(f'INSERT INTO "{table}" ({columns}) SELECT {columns} FROM "{stale}"'))
     connection.execute(text(f'DROP TABLE "{stale}"'))
 

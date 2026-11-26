@@ -108,9 +108,9 @@ def capture_loop_errors(loop: asyncio.AbstractEventLoop) -> None:
 class Totals:
     calls: int
     milliseconds: int
-    cost: float
     input_tokens: int
     output_tokens: int
+    errors: int
 
 
 @dataclass(frozen=True)
@@ -120,7 +120,6 @@ class EpochMetrics:
     milliseconds: int
     input_tokens: int
     output_tokens: int
-    cost: float
     errors: int
     retried: int
     slow: int
@@ -134,7 +133,6 @@ class ModelMetrics:
     average_ms: int
     input_tokens: int
     output_tokens: int
-    cost: float
 
 
 @dataclass(frozen=True)
@@ -143,7 +141,6 @@ class StepMetrics:
     calls: int
     average_ms: int
     longest_ms: int
-    cost: float
     errors: int
 
 
@@ -295,13 +292,13 @@ class MetricsService:
                 select(
                     func.count(),
                     func.coalesce(func.sum(LlmCallRow.duration_ms), 0),
-                    func.coalesce(func.sum(LlmCallRow.cost_usd), 0.0),
                     func.coalesce(func.sum(LlmCallRow.input_tokens), 0),
                     func.coalesce(func.sum(LlmCallRow.output_tokens), 0),
+                    func.coalesce(func.sum(case((LlmCallRow.status == LlmCallStatus.ERROR, 1), else_=0)), 0),
                 )
             )
         ).one()
-        return Totals(int(row[0]), int(row[1]), float(row[2]), int(row[3]), int(row[4]))
+        return Totals(int(row[0]), int(row[1]), int(row[2]), int(row[3]), int(row[4]))
 
     async def _epochs(self, session: AsyncSession, count: int, slow_ms: int) -> list[EpochMetrics]:
         statement = (
@@ -311,7 +308,6 @@ class MetricsService:
                 func.sum(LlmCallRow.duration_ms),
                 func.sum(LlmCallRow.input_tokens),
                 func.sum(LlmCallRow.output_tokens),
-                func.sum(LlmCallRow.cost_usd),
                 func.sum(case((LlmCallRow.status == LlmCallStatus.ERROR, 1), else_=0)),
                 func.sum(case((LlmCallRow.attempts > 1, 1), else_=0)),
                 func.sum(case((LlmCallRow.duration_ms > slow_ms, 1), else_=0)),
@@ -328,10 +324,9 @@ class MetricsService:
                 int(row[2] or 0),
                 int(row[3] or 0),
                 int(row[4] or 0),
-                float(row[5] or 0),
+                int(row[5] or 0),
                 int(row[6] or 0),
                 int(row[7] or 0),
-                int(row[8] or 0),
             )
             for row in await session.execute(statement)
         ]
@@ -343,14 +338,10 @@ class MetricsService:
             func.sum(LlmCallRow.duration_ms),
             func.sum(LlmCallRow.input_tokens),
             func.sum(LlmCallRow.output_tokens),
-            func.sum(LlmCallRow.cost_usd),
         ).group_by(LlmCallRow.model)
         rows = await session.execute(statement)
         return [
-            ModelMetrics(
-                str(row[0]), int(row[1]), int(row[2] or 0), int((row[2] or 0) // max(1, row[1])), int(row[3] or 0), int(row[4] or 0), float(row[5] or 0)
-            )
-            for row in rows
+            ModelMetrics(str(row[0]), int(row[1]), int(row[2] or 0), int((row[2] or 0) // max(1, row[1])), int(row[3] or 0), int(row[4] or 0)) for row in rows
         ]
 
     async def _steps(self, session: AsyncSession) -> list[StepMetrics]:
@@ -363,7 +354,6 @@ class MetricsService:
                 calls=len(rows),
                 average_ms=sum(row.duration_ms for row in rows) // len(rows),
                 longest_ms=max(row.duration_ms for row in rows),
-                cost=sum(row.cost_usd for row in rows),
                 errors=sum(1 for row in rows if row.status is LlmCallStatus.ERROR),
             )
             for name, rows in grouped.items()

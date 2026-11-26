@@ -8,6 +8,7 @@ backend/.import_linter_cache/
 .ruff_cache/
 .pytest_cache/
 frontend/node_modules/
+deploy/agents/node_modules/
 frontend/dist/
 image-worker/.venv/
 data-fresh*/

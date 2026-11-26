@@ -24,13 +24,13 @@ from aerona.api.schemas.divine_will import (
 )
 from aerona.api.schemas.team import SharedUpdate
 from aerona.api.views.team import author_view
-from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.core.errors import ForbiddenError, NotFoundError
 from aerona.db.authorship import may_see, owns, visible
 from aerona.db.repositories.divine_will import active_session, memory_boundary
 from aerona.db.tables.divine_will import DivineWillAttachmentRow, DivineWillConfirmationRow, DivineWillCycleRow, DivineWillSessionRow
 from aerona.domain.enums.accounts import Permission
 from aerona.domain.enums.divine_will import DivineWillMode
+from aerona.domain.enums.providers import ModelRole
 from aerona.prompts.data.divine_will import MODE_TEXTS
 from aerona.services.accounts.guard import ensure_allowed
 from aerona.services.container import Services
@@ -117,12 +117,13 @@ async def owned_cycle(services: Services, cycle_id: int) -> None:
 async def capabilities_view(services: Services) -> WillCapabilitiesView:
     found = await DivineWillRuntime(services).capabilities()
     settings = services.settings
+    model = services.application.model
     return WillCapabilitiesView(
-        enabled=services.application.model.enabled,
+        enabled=model.ready(ModelRole.CONVERSATION),
         images=found.images,
         probed=found.probed,
         note=found.note,
-        model=HAIKU_MODEL_ID,
+        model=model.model_of(ModelRole.CONVERSATION),
         upload_max_files=settings.divine_will_upload_max_files,
         upload_max_mb=settings.divine_will_upload_max_mb,
     )

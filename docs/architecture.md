@@ -10,7 +10,7 @@ This document describes the clean rewrite. The business logic is specified in `d
 2. English only in code, identifiers, UI copy, prompts and file names. The same check rejects Turkish characters.
 3. Every LLM prompt lives in one place: `backend/src/aerona/prompts/`. No module builds prompt prose inline. Modules pass typed context objects to the prompt catalog.
 4. No magic numbers. Every balance number is a tunable in the rules registry (`backend/src/aerona/rules/registry/`). The registry can be edited at runtime from Settings → World Rules. Non-gameplay constants (paths, limits, timeouts and enums) live in `constants/` modules.
-5. Every LLM call uses Claude Haiku. Every model resolution path and fallback ends at Haiku, and a test asserts this.
+5. Every LLM call goes through one seam (`LlmClient`), which walks the ordered model chain of the call's role for the universe's workspace, or the server default (spec 22). Nothing outside `llm/` and `services/providers/` knows which provider answered.
 6. Every mechanism runs automatically and can also be triggered or overridden by the player. It also has a UI surface. A test checks that every API route has a frontend caller.
 7. The UI is built on the proven shadcn-admin template and shadcn/ui components. Feature code composes those components and never restyles them. See the Design system section.
 
@@ -24,7 +24,7 @@ This document describes the clean rewrite. The business logic is specified in `d
 | Database | SQLite (WAL) through SQLAlchemy 2 async + `aiosqlite` | Durable local DB with a typed ORM |
 | Migrations | Alembic | Versioned schema; no ad-hoc `ALTER` at startup |
 | Validation | Pydantic v2 | API schemas, tool input schemas, LLM structured outputs |
-| LLM | `claude-agent-sdk` (Python) on the user's Claude Max login | Same auth model as today, no API key |
+| LLM | Subscription agents over the Agent Client Protocol (tools served over MCP from a loopback tool gate), API keys through the Bifrost gateway with the `openai` client, local OpenAI-compatible servers directly | One seam for every provider (spec 22) |
 | Jobs | In-process asyncio job manager with persisted job rows | Epochs and long tasks are resumable and cancellable, with progress events |
 | Frontend | React 19 + TypeScript + Vite | |
 | Routing / data | TanStack Router + TanStack Query | Type-safe routes, cache, SSE-driven invalidation |
@@ -81,8 +81,9 @@ aerona/
       language/                   procedural languages and naming
       cartography/                map generation
       llm/
-        client.py                 SDK wrapper: Haiku-only, retries, timeouts, metrics
-        structured.py             structured-output calls
+        client.py                 the one model seam: role chains, fallback, retries, timeouts, metrics
+        backends/                 acp.py (subscription agents), openai.py (gateway and local servers)
+        tool_gate.py              MCP over loopback HTTP for the agents' run tools
       prompts/                    THE single source of every prompt
         templates/                one .md.j2 file per prompt
         catalog.py                prompt ids → template + typed context model
@@ -201,7 +202,8 @@ Single-user, local-first. `docker compose up` brings up:
 
 - `backend`: Python image (multi-stage, `uv` lockfile, non-root user, healthcheck on `/api/health`).
   - SQLite and backups live in the `aerona-data` volume.
-  - The Claude Agent SDK authenticates with the user's Claude subscription through `CLAUDE_CODE_OAUTH_TOKEN` (created once with `claude setup-token`), passed from an `.env` file that git ignores. No API key.
+  - Model connections (subscriptions, API keys, local servers) live sealed in `library.db` and are set under Workspace settings → Providers. The image installs Node and the pinned subscription agents in `/opt/agents`.
+- `bifrost`: the Bifrost gateway that carries API keys sent with each request (`deploy/bifrost/config.json`, direct keys on, no stored keys).
 - `web`: the frontend built with Vite, served by nginx. nginx also reverse-proxies `/api` to the backend, with SSE buffering disabled.
 - `minio`: the S3-compatible media store behind the `MediaStore` interface (decision 77), with the `aerona-media` volume, a healthcheck and no host port. `minio-init` creates the private bucket with `mc` before the backend starts. The profile `media-console` publishes the MinIO console on `127.0.0.1` only.
 - `image-worker` (profile `gpu`): the diffusers worker with an NVIDIA device reservation and an `aerona-models` volume.

@@ -4,13 +4,12 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 
-from claude_agent_sdk import CLIConnectionError, ProcessError
-
 from aerona.agents.ports import LanguageModel, Publish
 from aerona.agents.turns.ports import DoneAction, TurnToolkit
 from aerona.constants.agents import ERROR_REASON_CHARS
 from aerona.domain.enums.node import ActorKind
 from aerona.events.kinds import EventKind
+from aerona.llm.backends.base import StopReason
 from aerona.llm.errors import LlmError, LlmTimeoutError, LlmTransientError
 from aerona.llm.stream import StreamActor, current_actor
 from aerona.prompts.contexts.son_turn import DoneAction as PromptDoneAction
@@ -18,7 +17,7 @@ from aerona.prompts.contexts.son_turn import TurnInterruption
 from aerona.rules.registry.model import ModelRules
 
 LOGGER = logging.getLogger(__name__)
-STEP_LIMIT_REASONS = frozenset({"error_max_turns", "max_turns"})
+STEP_LIMIT_REASON = StopReason.STEP_LIMIT.value
 
 
 class SessionStatus(StrEnum):
@@ -85,7 +84,7 @@ async def one_session(model: LanguageModel, plan: TurnPlan, prompt: str, toolkit
         run = await model.run_agent(plan.label, plan.system_prompt, prompt, tools=toolkit.tools(), max_turns=plan.max_turns, timeout_seconds=plan.timeout)
     except LlmTimeoutError as error:
         return SessionResult(status=SessionStatus.TIMEOUT, error=str(error))
-    except (LlmTransientError, CLIConnectionError, ProcessError) as error:
+    except LlmTransientError as error:
         return SessionResult(status=SessionStatus.ERROR, error=str(error))
     except LlmError as error:
         return SessionResult(status=SessionStatus.ERROR, error=str(error), transient=False)
@@ -93,7 +92,7 @@ async def one_session(model: LanguageModel, plan: TurnPlan, prompt: str, toolkit
         current_actor.reset(token)
     if run.completed:
         return SessionResult(text=run.text, status=SessionStatus.SUCCESS)
-    if run.stop_reason in STEP_LIMIT_REASONS:
+    if run.stop_reason == STEP_LIMIT_REASON:
         return SessionResult(text=run.text, status=SessionStatus.STEP_LIMIT)
     return SessionResult(text=run.text, status=SessionStatus.ENDED, error=run.stop_reason)
 

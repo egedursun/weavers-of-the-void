@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FormRow } from '@/components/domain'
+import { useConnectStep } from '@/features/providers/connectStep'
 import { AuthFrame } from './AuthFrame'
 import { NewPasswordFields } from './NewPasswordFields'
 import {
@@ -20,6 +21,7 @@ import { emailName, passwordChecks } from './passwordRules'
 
 export function SetupScreen() {
   const setup = useSetup()
+  const showConnectStep = useConnectStep((state) => state.show)
   const min = usePasswordMin()
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
@@ -43,12 +45,15 @@ export function SetupScreen() {
   const submit = (event: FormEvent) => {
     event.preventDefault()
     if (problem !== null || setup.isPending) return
-    setup.mutate({
-      display_name: displayName.trim(),
-      username: username.trim(),
-      email: email.trim(),
-      password,
-    })
+    setup.mutate(
+      {
+        display_name: displayName.trim(),
+        username: username.trim(),
+        email: email.trim(),
+        password,
+      },
+      { onSuccess: showConnectStep }
+    )
   }
   return (
     <AuthFrame

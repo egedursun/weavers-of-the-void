@@ -5,7 +5,6 @@ from aerona.agents.runtime import AgentRuntime
 from aerona.agents.son import continuation_prompt, run_son_turn, start_turn
 from aerona.agents.turns.ports import DoneAction, ToolCatalogue
 from aerona.agents.turns.session import TurnFailedError
-from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.core.errors import ValidationFailedError
 from aerona.db.session import Database
 from aerona.db.tables.agency import AgentTurnRow
@@ -17,7 +16,7 @@ from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
 from aerona.llm.errors import LlmTransientError
 from aerona.prompts.contexts.son_turn import TurnInterruption
-from tests.agents.fakes import FakeModel, ScriptedToolkits, spoken
+from tests.agents.fakes import FAKE_MODEL, FakeModel, ScriptedToolkits, spoken
 from tests.agents.world import AgentWorld
 
 
@@ -47,7 +46,7 @@ async def test_traceless_crash_restarts_and_missing_word_continues(runtime: Agen
     assert retries[1]["kept_steps"] == 0
     started = next(event.payload for event in events if event.kind is EventKind.SON_TURN_STARTED)
     finished = next(event.payload for event in events if event.kind is EventKind.SON_TURN_FINISHED)
-    assert started["model"] == finished["model"] == HAIKU_MODEL_ID
+    assert started["model"] == finished["model"] == FAKE_MODEL
     assert started["rarity"] == finished["rarity"] == world.core.son.rarity.value
     assert "YOUR TURN WAS LEFT HALF-DONE (you finished without saying your word)" in model.calls[-1].prompt
 

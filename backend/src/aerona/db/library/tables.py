@@ -12,12 +12,14 @@ from aerona.constants.accounts import (
     WORKSPACE_NAME_MAX_LENGTH,
 )
 from aerona.constants.library import UNIVERSE_ID_LENGTH, UNIVERSE_NAME_MAX_LENGTH
+from aerona.constants.providers import BASE_URL_MAX_LENGTH, CHECK_NOTE_MAX_LENGTH, CONNECTION_LABEL_MAX_LENGTH, MODEL_NAME_MAX_LENGTH, SECRET_HINT_LENGTH
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.db.base import NAMING_CONVENTION
 from aerona.db.columns import at_least, enum_type
 from aerona.db.types import UtcDateTime
 from aerona.domain.enums.accounts import AccountStatus, AvatarTone, Permission, ServerRole, TunedRole, UniverseRole, WorkspaceKind, WorkspaceRole
 from aerona.domain.enums.library import LibraryEventKind, UniverseOrigin, UniverseStatus
+from aerona.domain.enums.providers import ModelRole, ProviderKind
 
 
 class LibraryBase(DeclarativeBase):
@@ -154,3 +156,34 @@ class UniversePermissionRow(LibraryBase):
     role: Mapped[TunedRole] = mapped_column(enum_type(TunedRole, "role"), primary_key=True)
     permission: Mapped[Permission] = mapped_column(enum_type(Permission, "permission"), primary_key=True)
     allowed: Mapped[bool]
+
+
+class ProviderConnectionRow(LibraryBase):
+    __tablename__ = "provider_connections"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[ProviderKind] = mapped_column(enum_type(ProviderKind, "kind"))
+    label: Mapped[str] = mapped_column(String(CONNECTION_LABEL_MAX_LENGTH))
+    secret: Mapped[str] = mapped_column(Text, default="", server_default="")
+    secret_hint: Mapped[str] = mapped_column(String(SECRET_HINT_LENGTH), default="", server_default="")
+    base_url: Mapped[str] = mapped_column(String(BASE_URL_MAX_LENGTH), default="", server_default="")
+    logged_in_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("accounts.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(UtcDateTime(), server_default=func.now())
+
+
+class ProviderChainEntryRow(LibraryBase):
+    __tablename__ = "provider_chain_entries"
+    __table_args__ = (at_least("position", 0),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    workspace_id: Mapped[int | None] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    role: Mapped[ModelRole] = mapped_column(enum_type(ModelRole, "role"))
+    position: Mapped[int]
+    connection_id: Mapped[int] = mapped_column(ForeignKey("provider_connections.id", ondelete="CASCADE"), index=True)
+    model: Mapped[str] = mapped_column(String(MODEL_NAME_MAX_LENGTH), default="", server_default="")
+    tools_work: Mapped[bool | None]
+    sees_images: Mapped[bool | None]
+    checked_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
+    check_note: Mapped[str] = mapped_column(String(CHECK_NOTE_MAX_LENGTH), default="", server_default="")

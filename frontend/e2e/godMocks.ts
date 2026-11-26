@@ -351,6 +351,12 @@ export const GOD_STATE: Schemas['StateResponse'] = {
   image_gen: { available: false, reason: 'No image worker is configured.', current: null, queue: [], bulk: { running: false, stop_requested: false, auto: false, total: 0, done: 0, failed: 0, skipped: 0, rerun_requested: false, restyle: false }, width: 512, height: 512, steps: 20, log: [] },
   batch_deepen: { running: false, stop_requested: false, total: 0, done: 0, failed: 0, skipped: 0 },
   llm_enabled: true,
+  role_models: [
+    { role: 'world_agents', model: 'fast · Studio key' },
+    { role: 'writing', model: 'fast · Studio key' },
+    { role: 'conversation', model: 'deep · Studio key' },
+    { role: 'images', model: '' },
+  ],
 }
 
 const ENTITY = (id: number, name: string, type: Schemas['EntityType']): Schemas['EntitySummary'] => ({

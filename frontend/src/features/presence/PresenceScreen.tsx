@@ -21,6 +21,7 @@ import {
   PageHeader,
   Section,
 } from '@/components/domain'
+import { ModelNeeded } from '@/features/providers/ModelNeeded'
 import { AudiencePanel } from './AudiencePanel'
 import { PastAudiences } from './PastAudiences'
 import { PresenceStage, STAGE_ID } from './PresenceStage'
@@ -74,6 +75,7 @@ function Chosen({ nodeId }: { nodeId: number }) {
   return (
     <>
       <PresenceStage view={view} />
+      <ModelNeeded role='conversation' what='An audience' />
       {view.open_session ? (
         <AudiencePanel
           key={view.open_session.id}

@@ -4,6 +4,8 @@ import { onAuthSignal } from '@/api/authSignals'
 import { forgetViewer } from '@/api/viewerExit'
 import { Button } from '@/components/ui/button'
 import { EmptyState, LoadingBlock } from '@/components/domain'
+import { ConnectModelStep } from '@/features/providers/ConnectModelStep'
+import { useConnectStep } from '@/features/providers/connectStep'
 import { SetPasswordScreen } from './SetPasswordScreen'
 import { SetupScreen } from './SetupScreen'
 import { SignInScreen } from './SignInScreen'
@@ -22,6 +24,7 @@ function Waiting({ children }: { children: ReactNode }) {
 
 export function AuthGate({ children }: { children: ReactNode }) {
   const state = useAuthState()
+  const connecting = useConnectStep((store) => store.open)
   const seen = useRef<number | null>(null)
   const accountId = state.data?.account?.id ?? null
   useEffect(() => onAuthSignal(() => void refreshAuth()), [])
@@ -61,5 +64,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (auth.account === null) return <SignInScreen />
   if (auth.must_change_password)
     return <SetPasswordScreen account={auth.account} />
+  if (connecting) return <ConnectModelStep />
   return children
 }

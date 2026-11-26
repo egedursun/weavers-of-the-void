@@ -3,15 +3,18 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from claude_agent_sdk import SdkMcpTool
 from pydantic import BaseModel
 
 from aerona.agents.turns.ports import DoneAction, ToolCatalogue
+from aerona.domain.enums.providers import ModelRole
+from aerona.llm.backends.base import StopReason
 from aerona.llm.content import AgentWatch, ImagePart, ModelCapabilities
 from aerona.llm.errors import LlmDisabledError
 from aerona.llm.records import AgentRun, Usage
+from aerona.llm.tools import AgentTool
 
 Responder = Callable[[str], BaseModel]
+FAKE_MODEL = "fake-model · Test"
 
 
 @dataclass
@@ -38,6 +41,14 @@ class FakeModel:
     def labels(self) -> list[str]:
         return [call.label for call in self.calls]
 
+    def ready(self, role: ModelRole) -> bool:
+        del role
+        return self.enabled
+
+    def model_of(self, role: ModelRole) -> str:
+        del role
+        return FAKE_MODEL if self.enabled else ""
+
     async def structured[T: BaseModel](
         self,
         label: str,
@@ -48,6 +59,7 @@ class FakeModel:
         attempts: int | None = None,
         schema: dict[str, Any] | None = None,
         timeout_seconds: int | None = None,
+        role: ModelRole = ModelRole.WRITING,
     ) -> T:
         if not self.enabled:
             raise LlmDisabledError("LLM calls are disabled.")
@@ -69,11 +81,12 @@ class FakeModel:
         system_prompt: str,
         prompt: str,
         *,
-        tools: list[SdkMcpTool[Any]],
+        tools: Sequence[AgentTool],
         max_turns: int | None = None,
         timeout_seconds: int | None = None,
         images: Sequence[ImagePart] = (),
         watch: AgentWatch | None = None,
+        role: ModelRole = ModelRole.WORLD_AGENTS,
     ) -> AgentRun:
         if not self.enabled:
             raise LlmDisabledError("LLM calls are disabled.")
@@ -85,11 +98,12 @@ class FakeModel:
             raise item
         return item() if callable(item) else item
 
-    async def capabilities(self) -> ModelCapabilities:
+    async def capabilities(self, role: ModelRole = ModelRole.CONVERSATION) -> ModelCapabilities:
+        del role
         return ModelCapabilities(images=self.vision and self.enabled, probed=self.enabled)
 
 
-def spoken(text: str, completed: bool = True, stop_reason: str | None = "success") -> AgentRun:
+def spoken(text: str, completed: bool = True, stop_reason: str | None = StopReason.COMPLETED.value) -> AgentRun:
     return AgentRun(text=text, usage=Usage(), completed=completed, stop_reason=stop_reason)
 
 
@@ -115,7 +129,7 @@ class ScriptedToolkit:
     def read_only_tools(self) -> frozenset[str]:
         return frozenset()
 
-    def tools(self) -> list[SdkMcpTool[Any]]:
+    def tools(self) -> list[AgentTool]:
         return []
 
     async def settle_long_jobs(self) -> None:

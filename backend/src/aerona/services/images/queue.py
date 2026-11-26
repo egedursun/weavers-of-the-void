@@ -19,9 +19,9 @@ from aerona.db.session import Database
 from aerona.domain.enums.job import JobKind, JobStatus
 from aerona.events.bus import EventBus
 from aerona.events.kinds import EventKind
-from aerona.imaging.client import ImageWorkerClient
 from aerona.imaging.contract import ImageJobRequest, ImagePriority, ImageProgress, ImageStage
 from aerona.imaging.errors import ImageWorkerError
+from aerona.imaging.provider import ImageProvider
 from aerona.jobs.context import JOB_LABEL_KEY, JobContext
 from aerona.jobs.manager import JobManager
 from aerona.rules.registry import Rules
@@ -43,7 +43,7 @@ TrackedJob = tuple[JobContext, ActivityLog]
 SEED_BITS = 31
 EMPTY_PAINT_PROMPT = "Write what the image should show first."
 PERCENT = 100
-DISABLED_REASON = "Image generation is off: no image worker is configured (IMAGE_WORKER_URL)."
+DISABLED_REASON = "Image generation is off: no image model is set. Add one under Providers."
 READ_ONLY_REASON = "Image generation is paused while a guest world is open."
 
 
@@ -138,7 +138,7 @@ class ImageQueue:
     def __init__(
         self,
         database: Database,
-        client: ImageWorkerClient,
+        client: ImageProvider,
         records: ImageRecords,
         rules: Callable[[], Rules],
         *,
@@ -447,6 +447,9 @@ class ImageQueue:
                 self.log(LogLevel.INFO, f"{target.name}: image ready.")
             return
         self.bulk.failed += 1
+
+    def model_name(self) -> str:
+        return self._client.model_name()
 
     def status(self) -> QueueStatus:
         rules = self._rules().image_gen

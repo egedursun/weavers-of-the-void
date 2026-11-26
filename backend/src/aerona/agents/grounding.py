@@ -1,7 +1,6 @@
 from collections.abc import Sequence
 from typing import Any
 
-from claude_agent_sdk import SdkMcpTool
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,8 +12,10 @@ from aerona.core.grammar import spoken
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.db.tables.technology import TECH_LEVEL_MAX, TechnologyProfileRow
+from aerona.domain.enums.providers import ModelRole
 from aerona.llm.content import AgentWatch, ImagePart, ModelCapabilities
 from aerona.llm.records import AgentRun
+from aerona.llm.tools import AgentTool
 
 GROUND_HEAD = "WHAT THE PLAYER SET FOR THIS WORLD (everything you write follows it):"
 
@@ -64,6 +65,12 @@ class GroundedModel:
     def enabled(self) -> bool:
         return self.inner.enabled
 
+    def ready(self, role: ModelRole) -> bool:
+        return self.inner.ready(role)
+
+    def model_of(self, role: ModelRole) -> str:
+        return self.inner.model_of(role)
+
     async def ground(self) -> str:
         async with self.database.read() as session:
             return await world_ground(session)
@@ -78,9 +85,17 @@ class GroundedModel:
         attempts: int | None = None,
         schema: dict[str, Any] | None = None,
         timeout_seconds: int | None = None,
+        role: ModelRole = ModelRole.WRITING,
     ) -> T:
         return await self.inner.structured(
-            label, grounded(await self.ground(), system_prompt), prompt, output=output, attempts=attempts, schema=schema, timeout_seconds=timeout_seconds
+            label,
+            grounded(await self.ground(), system_prompt),
+            prompt,
+            output=output,
+            attempts=attempts,
+            schema=schema,
+            timeout_seconds=timeout_seconds,
+            role=role,
         )
 
     async def run_agent(
@@ -89,11 +104,12 @@ class GroundedModel:
         system_prompt: str,
         prompt: str,
         *,
-        tools: list[SdkMcpTool[Any]],
+        tools: Sequence[AgentTool],
         max_turns: int | None = None,
         timeout_seconds: int | None = None,
         images: Sequence[ImagePart] = (),
         watch: AgentWatch | None = None,
+        role: ModelRole = ModelRole.WORLD_AGENTS,
     ) -> AgentRun:
         return await self.inner.run_agent(
             label,
@@ -104,10 +120,11 @@ class GroundedModel:
             timeout_seconds=timeout_seconds,
             images=images,
             watch=watch,
+            role=role,
         )
 
-    async def capabilities(self) -> ModelCapabilities:
-        return await self.inner.capabilities()
+    async def capabilities(self, role: ModelRole = ModelRole.CONVERSATION) -> ModelCapabilities:
+        return await self.inner.capabilities(role)
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.inner, name)

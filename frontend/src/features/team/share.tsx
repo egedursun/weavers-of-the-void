@@ -7,6 +7,7 @@ import { unwrap } from '@/api/errors'
 import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { Switch } from '@/components/ui/switch'
+import { FieldTile } from '@/components/domain/FieldTile'
 import { Label } from '@/components/typography'
 import { AuthorMark } from './AuthorMark'
 
@@ -61,7 +62,7 @@ function send(kind: ShareKind, id: number, shared: boolean) {
   }
 }
 
-export function useShare(kind: ShareKind) {
+function useShare(kind: ShareKind) {
   const client = useQueryClient()
   return useMutation({
     writes: [
@@ -111,21 +112,21 @@ export function ShareToggle({
   if (!mine) return <AuthorMark name={author} verb='Shared by' />
   if (inline)
     return (
-      <div
-        data-presence='free'
-        className='flex shrink-0 flex-col items-center gap-1 px-2'
-      >
-        <Switch
+      <div data-presence='free' className='shrink-0'>
+        <FieldTile
           id={switchId}
-          act={share}
-          checked={shared}
-          disabled={share.isPending}
-          onCheckedChange={(next) => share.mutate({ id, shared: next })}
-          aria-label={`Share this ${NOUN[kind]} with the team`}
-        />
-        <Label htmlFor={switchId} variant='overline'>
-          {shared ? 'Shared' : 'Only you'}
-        </Label>
+          label={shared ? 'Shared' : 'Only you'}
+          icon={Share2}
+        >
+          <Switch
+            id={switchId}
+            act={share}
+            checked={shared}
+            disabled={share.isPending}
+            onCheckedChange={(next) => share.mutate({ id, shared: next })}
+            aria-label={`Share this ${NOUN[kind]} with the team`}
+          />
+        </FieldTile>
       </div>
     )
   return (

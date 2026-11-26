@@ -80,6 +80,32 @@ export const WRITE_PERMISSIONS: {
   },
   '/api/workspaces/{workspace_id}/universes/{universe_id}/access/canon-approval':
     { PUT: 'universe_admin' },
+  '/api/workspaces/{workspace_id}/providers/connections': {
+    POST: 'workspace_admin',
+  },
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}': {
+    PATCH: 'workspace_admin',
+    DELETE: 'workspace_admin',
+  },
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}/login':
+    { POST: 'workspace_admin', DELETE: 'workspace_admin' },
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}/login/input':
+    { POST: 'workspace_admin' },
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}/logout':
+    { POST: 'workspace_admin' },
+  '/api/workspaces/{workspace_id}/providers/roles/{role}': {
+    PUT: 'workspace_admin',
+  },
+  '/api/workspaces/{workspace_id}/providers/roles/{role}/check': {
+    POST: 'workspace_admin',
+  },
+  '/api/server/providers/connections': { POST: 'account' },
+  '/api/server/providers/connections/{connection_id}': {
+    PATCH: 'account',
+    DELETE: 'account',
+  },
+  '/api/server/providers/roles/{role}': { PUT: 'account' },
+  '/api/server/providers/roles/{role}/check': { POST: 'account' },
   '/api/library/universes': { POST: 'none' },
   '/api/library/universes/{universe_id}': {
     PATCH: 'manage_shelf',

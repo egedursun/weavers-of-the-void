@@ -42,6 +42,8 @@ STATUS_ERRORS: dict[int, type[ImageWorkerError]] = {
     httpx.codes.UNPROCESSABLE_ENTITY: ImageJobRejectedError,
 }
 
+WORKER_MODEL_NAME = "Local image worker"
+
 
 class ImageWorkerClient:
     def __init__(self, base_url: str, *, transport: httpx.AsyncBaseTransport | None = None) -> None:
@@ -69,6 +71,9 @@ class ImageWorkerClient:
     async def aclose(self) -> None:
         if self._http is not None:
             await self._http.aclose()
+
+    def model_name(self) -> str:
+        return WORKER_MODEL_NAME if self.enabled else ""
 
     async def health(self) -> WorkerHealth:
         return parse_model(WorkerHealth, await self._request("GET", WORKER_HEALTH_PATH))

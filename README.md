@@ -22,7 +22,7 @@
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-async-009688?style=flat-square&logo=fastapi&logoColor=white">
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white">
-  <img alt="Claude" src="https://img.shields.io/badge/agents-Claude%20Haiku%205.5-d97757?style=flat-square&logo=anthropic&logoColor=white">
+  <img alt="Models" src="https://img.shields.io/badge/agents-any%20model-d97757?style=flat-square">
   <img alt="Docker" src="https://img.shields.io/badge/docker-compose-2496ed?style=flat-square&logo=docker&logoColor=white">
   <img alt="Local first" src="https://img.shields.io/badge/local--first-single%20player-1e1b4b?style=flat-square">
 </p>
@@ -45,7 +45,7 @@
 <table>
   <tr>
     <td align="center" width="25%"><b>🜂 You create</b><br><sub>Begin from one idea, draw god cards, answer prayers, and create, edit, hold or delete anything the world holds.</sub></td>
-    <td align="center" width="25%"><b>✦ Gods decide</b><br><sub>Every son is a Claude agent with passions, rivals and 330 divine tools. Notable mortals act for themselves with 445 more.</sub></td>
+    <td align="center" width="25%"><b>✦ Gods decide</b><br><sub>Every son is an agent with passions, rivals and 330 divine tools. Notable mortals act for themselves with 445 more.</sub></td>
     <td align="center" width="25%"><b>⚙ The world turns</b><br><sub>505 deterministic engine steps live through fifty years of history, year by year and season by season, between every divine turn.</sub></td>
     <td align="center" width="25%"><b>📜 Fate remembers</b><br><sub>Every change is recorded with its cause. Fate judges the age, writes the chronicle, and the world becomes a book and a Codex.</sub></td>
   </tr>
@@ -111,7 +111,7 @@
 
 **Weavers of the Void is a living universe simulator that writes its own history.** You do not write the story. You set it in motion, and you keep the last word.
 
-You play the Creator at the dawn of a cosmos. Begin from a sentence of your own or one of twenty-seven templates, in any age from the first stone tools to travel between the stars. Your sons are **god cards**, drawn in six rarities from *Common* to *Mythic*, and each one is a Claude agent with its own passions, rivals, domains and a toolbox of 330 divine powers. Once per epoch every son wakes, reads the world and acts: raising mountains, founding cults, sending dreams to prophets, breeding beasts, cursing bloodlines and scheming against the rest of the pantheon. The world's notable mortals, its heroes, prophets and rulers, decide for themselves too.
+You play the Creator at the dawn of a cosmos. Begin from a sentence of your own or one of twenty-seven templates, in any age from the first stone tools to travel between the stars. Your sons are **god cards**, drawn in six rarities from *Common* to *Mythic*, and each one is an agent with its own passions, rivals, domains and a toolbox of 330 divine powers. Once per epoch every son wakes, reads the world and acts: raising mountains, founding cults, sending dreams to prophets, breeding beasts, cursing bloodlines and scheming against the rest of the pantheon. The world's notable mortals, its heroes, prophets and rulers, decide for themselves too.
 
 Between their turns a **deterministic world engine** takes over. Five hundred and five steps live through fifty years of history, year by year and season by season: mortals are born, marry, quarrel and die; peoples migrate, tongues drift apart, harvests fail, sicknesses spread and fade, markets rise and crash, empires overreach, armies march on what they can carry and heroes walk the paths of myth. The agents choose what they want; the engine decides what really happens. Then **Fate** judges the age, decides what becomes canon and writes the chronicle.
 
@@ -157,7 +157,7 @@ The edition since the last README is the largest yet. Every one of the 99 expans
 | | Who | What they do |
 |---|---|---|
 | 🜂 | **The Creator** | You. Name yourself at genesis, choose the language of your lore and shape the cosmos with essence. Your mood follows the world, your cult rises or fades, and mortals can pray to you directly. |
-| ✦ | **The Sons** | God cards in six rarities, each a Claude agent with loyalty, ambition, anger and mercy. They create, bless, curse, wage war, scheme against each other and sometimes rebel against you. They can die, and they can be brought back. |
+| ✦ | **The Sons** | God cards in six rarities, each an agent with loyalty, ambition, anger and mercy. They create, bless, curse, wage war, scheme against each other and sometimes rebel against you. They can die, and they can be brought back. |
 | ⚖ | **Fate** | The impartial judge of every age. Fate canonises or rejects creations, records canon facts, opens and closes tales, fulfils prophecies and keeps the ledger of every act. |
 | ☄ | **Foreign gods** | Powers from beyond your pantheon, awake or asleep, with their own strength, attitude and gifts. Ally with them, war with them, or devour them. |
 | 👁 | **Mortals and peoples** | Heroes, prophets, rulers and heretics, and the peoples, settlements, realms, factions and faiths they build. The notable ones are agents of their own; all of them pray, remember, believe the wrong things and write history of their own. |
@@ -347,7 +347,7 @@ The book draws what words cannot: the terrain map of every world, a plan of ever
 - **A celestial design system**: deep indigo and gold, gilded frames, six rarity metals, light and dark themes, built for phone widths up, with accessible roles and labels.
 
 ### Paintings for every record
-- **A local image worker** paints the Creator, the sons, foreign gods, worlds and entities from prompts the agents write.
+- **Any image model** paints the Creator, the sons, foreign gods, worlds and entities from prompts the agents write: a cloud model through an API key, or the local image worker.
 - **Your visual style.** The style is chosen per world and applied when the image is made, never written into the lore.
 - **Apple Silicon or NVIDIA**: native MLX on a Mac, a CUDA container everywhere else, one HTTP contract for both.
 - **Your gallery, your disk**: weights live in a local volume, images in your own media store.
@@ -355,7 +355,7 @@ The book draws what words cannot: the terrain map of every world, a plan of ever
 ### Built to be trusted
 - **Local-first and single-player.** Your world lives in SQLite on your disk.
 - **Backups before every epoch**, versioned `.aerona` world packages, and crash-safe, resumable jobs.
-- **Your Claude subscription, never an API key.** Every agent call runs on Claude Haiku through the Claude Agent SDK, and the Usage page counts the tokens of every call.
+- **Any model you have.** A paid subscription you log in to (Claude, ChatGPT, Google AI or GitHub Copilot), an API key of a cloud provider through the Bifrost gateway, or a model server of your own; every role keeps its own ordered chain of models, and the Usage page counts the tokens of every call.
 - **Engine-only mode.** Set `AERONA_LLM_ENABLED=false` and the world turns on pure simulation.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
@@ -536,7 +536,7 @@ Every node opens in its entry window, so you can follow a line of causes from a 
 
 ## The agents
 
-Twenty-nine agent roles, every one on Claude Haiku, every prompt in one typed catalog:
+Twenty-nine agent roles, each on the model its role is given under Models, every prompt in one typed catalog:
 
 | Creation | Play | Judgement | Lore | Art and language |
 |---|---|---|---|---|
@@ -3236,26 +3236,23 @@ The weather is no longer only nature's. Your peoples call rain, drive off storms
 
 ## Quick start
 
-Four commands from a fresh clone to a living world:
+Three commands from a fresh clone to a living world:
 
 ```sh
 make env           # creates .env with a generated media secret and the worker URL
-make claude-token  # signs in with your Claude subscription and stores the token in .env
-make up            # the whole stack: backend, web, media store and the image worker
+make up            # the whole stack: backend, web, gateway, media store and the image worker
 make down          # stops it again; volumes are kept
 ```
 
-Open **http://127.0.0.1:8080**, walk through the seven stages of the genesis wizard: choose a template or a blank page, name your Creator, choose the language of your lore, write the seed of your world, and choose your first sons.
+Open **http://127.0.0.1:8080**, create the owner account, connect a model (see [Models and providers](#models-and-providers)), then walk through the seven stages of the genesis wizard: choose a template or a blank page, name your Creator, choose the language of your lore, write the seed of your world, and choose your first sons.
 
 `make up` picks the image worker for the machine. On Apple Silicon it starts the native MLX worker in the background (`make worker-start`, `make worker-stop`, `make worker-status`; log in `data/run/image-worker.log`) and points the backend container at `http://host.docker.internal:8100`. Anywhere else it starts the `image-worker` container on the NVIDIA GPU (profile `gpu`).
-
-`make claude-token` runs `claude setup-token`, asks you to paste the printed token with hidden input, checks it with a one-word Claude Haiku reply and only then writes it to `.env` (mode 600). The token never appears on screen twice and never goes into git.
 
 ### Requirements
 
 - [uv](https://docs.astral.sh/uv/) (Python 3.13 is installed by uv)
 - Node.js 24 and npm
-- A Claude subscription and the [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) for the token
+- A model to think with: a subscription (Claude, ChatGPT, Google AI or GitHub Copilot), an API key, or a model server of your own
 - Docker with Compose v2.24 or newer, for the containerized setup
 - For the book PDF from a backend on the host: Pango (`brew install pango` on macOS); the Docker image has it
 - Optional: an Apple Silicon Mac (native `mlx` image worker) or an NVIDIA GPU with the NVIDIA Container Toolkit (`diffusers` image worker)
@@ -3278,7 +3275,8 @@ Every port binds to `127.0.0.1` by default (`AERONA_BIND_ADDRESS`), and every pu
 | Target | What it does |
 |---|---|
 | `make env` | Creates `.env` from `.env.example` with a generated media secret |
-| `make claude-token` | Stores a verified Claude subscription token in `.env` |
+| `make agents` | Installs the pinned subscription agents into `deploy/agents` |
+| `make gateway` | Runs the Bifrost gateway for API keys at `http://127.0.0.1:8180` |
 | `make up` / `make down` | Starts or stops the whole stack with the right image worker |
 | `make install` | Installs backend and frontend dependencies |
 | `make dev` | Backend with reload and the Vite dev server |
@@ -3311,25 +3309,28 @@ Every setting is an environment variable. `.env` is ignored by git; `.env.exampl
 
 | Variable | Meaning |
 |---|---|
-| `CLAUDE_CODE_OAUTH_TOKEN` | Subscription token for the Claude Agent SDK (see below). Never use an API key. |
+| `AERONA_GATEWAY_URL` | Address of the Bifrost gateway that carries API keys (`make gateway` runs one at `http://127.0.0.1:8180`; Docker uses the `bifrost` service). Empty refuses API keys. |
+| `AERONA_SECRET_KEY` | Phrase that seals provider keys and subscription tokens. Empty: a key file `secret.key` is made in the data folder at the first start; back it up with the data. |
+| `AERONA_AGENTS_DIR` | Where the subscription agents are installed (`make agents`, default `deploy/agents`; Docker `/opt/agents`). |
+| `CLAUDE_CODE_OAUTH_TOKEN` | Older setting: when set, the first start turns it into a Claude subscription of the owner's personal workspace. |
 | `AERONA_DATA_DIR` | Database, backups and (with the file media store) images. Docker always uses the `aerona-data` volume. The server refuses to start when any folder of this or any other path setting begins or ends with a space. |
 | `AERONA_LLM_ENABLED` | `false` runs the world engine without any LLM calls. |
 | `AERONA_SECONDARY_BACKUP_DIR` | A second disk every backup is mirrored to, with its own retention. |
-| `AERONA_IMAGE_WORKER_URL` | Base URL of the image worker for a backend running on the host. Empty disables image generation. |
+| `AERONA_IMAGE_WORKER_URL` | Older setting: when set, the first start adds the image worker as the server's image model. Add or change it later under Models. |
 | `AERONA_DOCKER_IMAGE_WORKER_URL` | Worker URL inside the backend container. `make up` sets it; the default is the `image-worker` container. |
 | `AERONA_BIND_ADDRESS` | Host address Docker publishes ports on (default `127.0.0.1`). |
 | `AERONA_IMAGE_WORKER_*` | Image worker settings: backend, model, timeouts, idle unload. |
 | `AERONA_MEDIA_*` | Media store: backend (`file` or `s3`), endpoint, bucket, credentials, region, TLS. See [Media store](#media-store). |
 
-### Claude token
+### Models and providers
 
-Weavers of the Void runs on your Claude subscription through the Agent SDK, never an API key. Create a long-lived token once:
+Every model call goes through one seam, so the world can think and paint with whatever you have. Connect models under **Workspace settings → Models** (or in the second step of the first setup):
 
-```sh
-claude setup-token
-```
+- **Subscriptions**: Claude Pro or Max, ChatGPT Plus or Pro, Google AI Pro or Ultra and GitHub Copilot, each through its own official agent, logged in on the server with the address and code shown in the panel. A subscription belongs to one person, so it is logged in to in a personal workspace only. Using a subscription inside another program may be against the provider's terms; the panel says so on every card and the risk is yours.
+- **API keys**: OpenAI, Anthropic, Google Gemini, Mistral, Groq, DeepSeek, xAI, OpenRouter, Cohere, Cerebras, Perplexity, Replicate and Hugging Face, through the Bifrost gateway; the key is sent with each request and kept sealed on the server. Azure OpenAI, Bedrock and Vertex models are reachable through OpenRouter.
+- **Local**: any OpenAI-compatible model server (Ollama, LM Studio, vLLM, llama.cpp) by its address, and the local image worker for pictures.
 
-Put the printed token into `CLAUDE_CODE_OAUTH_TOKEN` in `.env`, or let `make claude-token` do it. The backend hands the token to every Agent SDK call, on the host and in Docker alike. Without a token, a backend on the host falls back to this machine's `claude` login; Settings → Maintenance → Health shows which one is in use.
+Each of the four roles (world agents, writing, conversation, images) keeps an ordered chain of models; the first one that answers serves the call and the next one takes over when it cannot. A universe uses its workspace's chain for a role and the server default when the workspace has none. **Check** runs one short tool round on each entry (and one tiny picture for conversation models) so a model that cannot use tools is skipped before it fails an age.
 
 <p align="right"><sub><a href="#top">Back to top ↑</a></sub></p>
 
@@ -3554,7 +3555,7 @@ flowchart TB
     end
     MS[(MinIO / file<br/>media store)]
     IW[Image worker<br/>MLX or diffusers]
-    CL[Claude Haiku<br/>via Agent SDK]
+    CL[Providers<br/>subscriptions, Bifrost, local]
     UI --> NG --> API
     BUS --> UI
     SV --> MS
@@ -3573,7 +3574,7 @@ Agents and the player never write the world directly: son tools, mortal tools an
 | Record | Every write captured at flush and tied to its happening, with the terms of every number |
 | Migrations | Alembic, checked against the models, CHECK constraints included |
 | Validation | Pydantic v2 for API schemas, tool inputs and structured model outputs |
-| Agents | `claude-agent-sdk` on your Claude subscription, Claude Haiku on every path; tokens counted with `tiktoken` |
+| Agents | One model seam: subscription agents over the Agent Client Protocol with tools served over MCP, API keys through the Bifrost gateway with the `openai` client, local servers directly; tokens counted with `tiktoken` |
 | Jobs | In-process asyncio job manager with persisted job rows: resumable and cancellable; engine work in a lasting worker pool |
 | Book | Jinja templates, drawn SVG maps, plans, strata, heraldry and family trees, and WeasyPrint for the PDF |
 | Frontend | React 19, TypeScript and Vite |
@@ -3660,7 +3661,7 @@ The legacy vocabulary lives only in `backend/src/aerona/migration/legacy/schema_
 
 | Symptom | Fix |
 |---|---|
-| Sons do not act and the health panel shows no Claude login | Run `make claude-token`, or put a `claude setup-token` token into `CLAUDE_CODE_OAUTH_TOKEN` in `.env`, then restart the backend |
+| Sons do not act and the health panel shows no writing model | Open Workspace settings, Providers, connect a model and give the roles a chain; press Check to see that each model can use tools |
 | The UI says image generation is disabled | `AERONA_IMAGE_WORKER_URL` is empty. Set it to the worker address and start the worker |
 | No images on a Mac in Docker | Docker on macOS has no Metal access. Use `make up` or `make worker-start`, which runs the MLX worker natively, and check `make worker-status` and `data/run/image-worker.log` |
 | The first image takes minutes | The model is downloading (about 6 GB on Apple Silicon). Later images start as soon as the model is loaded |
@@ -3678,8 +3679,8 @@ The legacy vocabulary lives only in `backend/src/aerona/migration/legacy/schema_
 **Who is it for?**
 Anyone who builds worlds: narrative designers, lore writers, screenwriters, novelists and game masters, and anyone who wants to watch a cosmos live. You set the idea and the rules; the world does the bookkeeping of consequences.
 
-**Do I need an Anthropic API key?**
-No. Weavers of the Void runs on your Claude subscription through the Claude Agent SDK, and every call uses Claude Haiku. The Usage page shows the tokens of every call.
+**Which models can I use?**
+A subscription you log in to (Claude, ChatGPT, Google AI or GitHub Copilot), an API key of thirteen cloud providers through the Bifrost gateway, or a model server of your own. Each role gets its own ordered chain. The Usage page shows the tokens of every call.
 
 **Does my world leave my machine?**
 Your database, backups, book and images stay on your disk. Only the agents' prompts and replies travel to Claude.

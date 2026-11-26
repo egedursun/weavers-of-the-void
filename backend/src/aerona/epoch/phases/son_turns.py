@@ -3,7 +3,6 @@ from sqlalchemy import select
 from aerona.agents.fallen import run_fallen_turn
 from aerona.agents.son import run_son_turn
 from aerona.agents.son_state import initiative, turn_order
-from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.core.grammar import several
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -63,7 +62,7 @@ async def son_turns(ec: EpochContext) -> None:
     async def one(son: SonRow) -> None:
         ec.publish(
             EventKind.SON_TURN_QUEUED,
-            {"no": next(counter), "total": len(order), "son_id": son.id, "name": son.name, "model": HAIKU_MODEL_ID, "rarity": son.rarity.value},
+            {"no": next(counter), "total": len(order), "son_id": son.id, "name": son.name, "model": ec.runtime.world_model, "rarity": son.rarity.value},
         )
         try:
             await turn_of(ec, son)

@@ -3,13 +3,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from claude_agent_sdk import CLIConnectionError, ProcessError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
 from aerona.agents.ports import LanguageModel
-from aerona.agents.turns.session import STEP_LIMIT_REASONS
-from aerona.constants.llm import HAIKU_MODEL_ID
+from aerona.agents.turns.session import STEP_LIMIT_REASON
 from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.constants.team import PRESENCE_QUEUED_TEXT
 from aerona.constants.units import PERCENT
@@ -30,6 +28,7 @@ from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.presence import PresenceEventKind, PresenceExchangeStatus, PresenceGuise, PresenceRecord, PresenceStatus
+from aerona.domain.enums.providers import ModelRole
 from aerona.domain.enums.team import QueuedActSource
 from aerona.engine.mind.memories import remember
 from aerona.epoch.concurrency import WORLD_GROUP
@@ -226,7 +225,7 @@ class PresenceRuntime:
         return [found] if found is not None else []
 
     async def submit(self, session_id: int, text: str) -> PresenceExchangeRow:
-        if not self.model.enabled:
+        if not self.model.ready(ModelRole.CONVERSATION):
             raise LlmDisabledError(DISABLED_TEXT)
         said = text.strip()
         if not said:
@@ -255,7 +254,7 @@ class PresenceRuntime:
                 epoch=cosmos.epoch,
                 player_text=said,
                 status=PresenceExchangeStatus.RUNNING,
-                model=HAIKU_MODEL_ID,
+                model=self.model.model_of(ModelRole.CONVERSATION),
             )
             session.add(exchange)
             await session.flush()
@@ -317,8 +316,9 @@ class PresenceRuntime:
                     max_turns=prepared.remaining,
                     timeout_seconds=prepared.rules.model.agent_timeout,
                     watch=watch,
+                    role=ModelRole.CONVERSATION,
                 )
-            except (LlmTransientError, CLIConnectionError, ProcessError) as error:
+            except LlmTransientError as error:
                 await self.count(exchange_id, watch.replies, Usage())
                 total = prepared.rules.model.retry_attempts
                 if attempt >= total:
@@ -369,7 +369,7 @@ class PresenceRuntime:
     async def settle(self, prepared: Prepared, run: AgentRun, watch: ExchangeWatch) -> PresenceExchangeStatus:
         exchange_id = prepared.exchange.id
         await self.count(exchange_id, run.usage.turns or watch.replies, run.usage)
-        if run.stop_reason in STEP_LIMIT_REASONS:
+        if run.stop_reason == STEP_LIMIT_REASON:
             await self.trace(exchange_id).add(PresenceEventKind.ERROR, payload={"text": STEP_LIMIT_TEXT})
         reply = (watch.final_text or run.text).strip()
         closing = await self.closing(prepared, reply)

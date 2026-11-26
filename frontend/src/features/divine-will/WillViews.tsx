@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState, LoadingBlock, Medallion, Paged } from '@/components/domain'
 import { DivineCrest } from '@/components/layout/divine-will/DivineCrest'
 import { Label, Muted, Text } from '@/components/typography'
+import { ModelNeeded } from '@/features/providers/ModelNeeded'
 import { ShareToggle } from '@/features/team/share'
 import { Composer } from './Composer'
 import { IndexNotice } from './IndexNotice'
@@ -202,6 +203,7 @@ export function ChatView() {
         )}
       </div>
       <div className='flex min-w-0 flex-col gap-2 border-t bg-linear-to-t from-primary/6 to-transparent px-4 py-3'>
+        <ModelNeeded role='conversation' what='The Divine Will' />
         <Composer
           capabilities={head?.capabilities ?? null}
           runningCycleId={running?.id ?? null}

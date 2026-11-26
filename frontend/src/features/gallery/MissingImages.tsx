@@ -34,7 +34,7 @@ export function MissingImages({ type }: { type: string | null }) {
     <Section
       id='gallery-missing'
       title='Waiting for a likeness'
-      description='The most important bare records first. Drop an image on a card, or let the worker paint one.'
+      description='The most important bare records first. Drop an image on a card, or let the image model paint one.'
       level={3}
     >
       {missing.isPending && <Skeleton className='h-textarea w-full' />}

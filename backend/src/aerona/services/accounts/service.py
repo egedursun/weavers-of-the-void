@@ -1,5 +1,6 @@
 import asyncio
 import re
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
@@ -156,6 +157,7 @@ class AccountService:
         self.throttle = AddressThrottle(settings.accounts_lockout_attempts * ADDRESS_ATTEMPTS_FACTOR, settings.accounts_lockout_minutes * SECONDS_PER_MINUTE)
         self._setting_up = asyncio.Lock()
         self._ready = False
+        self.owner_hooks: list[Callable[[], Awaitable[None]]] = []
 
     async def ready(self) -> bool:
         if not self._ready:
@@ -213,6 +215,8 @@ class AccountService:
             )
             self._ready = True
         await self.adopt(owner)
+        for hook in self.owner_hooks:
+            await hook()
         return await self._open_session(owner, user_agent=user_agent, address=address)
 
     async def _open_session(self, account: AccountRecord, *, user_agent: str, address: str) -> SignedIn:

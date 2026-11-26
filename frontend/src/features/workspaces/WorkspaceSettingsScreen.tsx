@@ -7,6 +7,7 @@ import { EmptyState, IntroNote, LoadingBlock } from '@/components/domain'
 import { ServerAccountsPanel } from '@/features/accounts/ServerAccountsPanel'
 import { managesAccounts } from '@/features/accounts/accountLook'
 import { useSignedInAccount } from '@/features/accounts/api'
+import { ModelsSettings } from '@/features/providers/ModelsSettings'
 import { GeneralPanel } from './GeneralPanel'
 import { MembersPanel } from './MembersPanel'
 import { SettingsPage } from './SettingsPage'
@@ -83,7 +84,7 @@ export function WorkspaceSettingsScreen() {
       title={active.name}
       lead={
         active.role === 'admin'
-          ? 'Everyone who works in this workspace, their roles, who reaches each universe, and the workspace itself.'
+          ? 'Everyone who works in this workspace, their roles, who reaches each universe, the models it thinks with, and the workspace itself.'
           : 'Who works in this workspace and in which role. Only its administrators change it.'
       }
       crest={
@@ -137,6 +138,12 @@ export function WorkspaceSettingsScreen() {
         </TabsContent>
         <TabsContent value='universes'>
           <UniverseAccessPanel key={active.id} workspace={active} />
+        </TabsContent>
+        <TabsContent value='providers'>
+          <ModelsSettings
+            workspaceId={active.id}
+            showServer={me !== null && managesAccounts(me.server_role)}
+          />
         </TabsContent>
         <TabsContent value='general'>
           <GeneralPanel

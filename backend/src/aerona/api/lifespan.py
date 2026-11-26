@@ -16,6 +16,7 @@ from aerona.services.library.adoption import prepare_library
 from aerona.services.library.catalogue import Catalogue
 from aerona.services.library.hub import UniverseHub
 from aerona.services.library.service import LibraryService
+from aerona.services.providers.hub import open_providers
 from aerona.services.team.grants import grant_hook
 from aerona.settings import Settings
 
@@ -72,12 +73,15 @@ def lifespan_for(settings: Settings, model: LanguageModel | None = None) -> Call
             await prepare_library(catalogue)
             accounts = AccountService(catalogue, settings)
             await accounts.start()
-            hub = UniverseHub(settings, catalogue, model)
+            providers = await open_providers(settings, catalogue)
+            accounts.owner_hooks.append(providers.adopt)
+            hub = UniverseHub(settings, catalogue, model, providers=providers)
             hub.opened_hooks.append(grant_hook(hub, accounts))
             library = LibraryService(hub, accounts)
             app.state.hub = hub
             app.state.library = library
             app.state.accounts = accounts
+            app.state.providers = providers
             await hub.start()
             await library.start()
             try:
@@ -85,6 +89,7 @@ def lifespan_for(settings: Settings, model: LanguageModel | None = None) -> Call
             finally:
                 await library.stop()
                 await hub.stop()
+                await providers.close()
                 await catalogue.close()
         finally:
             lock.release()

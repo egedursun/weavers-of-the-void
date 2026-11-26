@@ -1,11 +1,10 @@
 import { useCallback } from 'react'
 import { formatInteger } from '@/lib/format'
+import { modelBlock } from '@/features/providers/modelReadiness'
 import { useWorldState } from '../api/queries'
 
 export const BUSY_REASON = 'An epoch is running; this opens when it ends.'
 export const READ_ONLY_REASON = 'A guest world is open read-only.'
-export const NO_LLM_REASON =
-  'The language model is not connected; this needs it.'
 export const PENDING_REASON = 'Working on it.'
 
 const ESSENCE_COST = /^(\d+) essence$/
@@ -33,11 +32,11 @@ export function useLoreGate() {
   const essence = state.data?.creator?.essence ?? 0
   const busy = state.data?.epoch_running ?? false
   const readOnly = state.data?.read_only ?? false
-  const llm = state.data?.llm_enabled ?? true
+  const llmBlock = modelBlock(state.data, 'writing')
   const reason = useCallback(
     (needs: GateNeeds = {}): string | null => {
       if (readOnly) return READ_ONLY_REASON
-      if (needs.llm && !llm) return NO_LLM_REASON
+      if (needs.llm && llmBlock !== null) return llmBlock
       if (needs.world && busy) return BUSY_REASON
       if (
         needs.cost !== undefined &&
@@ -47,7 +46,14 @@ export function useLoreGate() {
         return essenceReason(needs.cost, essence)
       return null
     },
-    [busy, essence, llm, readOnly]
+    [busy, essence, llmBlock, readOnly]
   )
-  return { essence, busy, readOnly, llm, reason, state: state.data }
+  return {
+    essence,
+    busy,
+    readOnly,
+    llm: llmBlock === null,
+    reason,
+    state: state.data,
+  }
 }

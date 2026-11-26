@@ -15,3 +15,5 @@
 **/.pytest_cache
 **/.import_linter_cache
 !scripts/backup_library.py
+!deploy/agents/package.json
+!deploy/agents/package-lock.json

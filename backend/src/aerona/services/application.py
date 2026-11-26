@@ -25,6 +25,7 @@ from aerona.events.bus import EventBus
 from aerona.events.change_feed import TRACKED_TABLE_NAMES, ChangeFeed, ChangeOperation
 from aerona.events.kinds import EventKind
 from aerona.imaging.client import ImageWorkerClient
+from aerona.imaging.provider import ImageProvider
 from aerona.jobs.context import JobContext
 from aerona.jobs.manager import JobManager
 from aerona.llm.client import LlmClient
@@ -64,6 +65,7 @@ from aerona.services.metrics import ErrorRing, MetricsService, capture_loop_erro
 from aerona.services.motifs import MotifCache
 from aerona.services.notification_stream import NotificationStream
 from aerona.services.notifications import Notifier, prune_notifications
+from aerona.services.providers.hub import Providers
 from aerona.services.rules import RulesService
 from aerona.services.search import SearchIndex
 from aerona.services.startup_completion import StartupCompletion
@@ -113,7 +115,7 @@ class ApplicationServices:
     bulk_deepen: BulkDeepening
     completion: StartupCompletion
     ports: LorePorts
-    image_client: ImageWorkerClient
+    image_client: ImageProvider
     model: LanguageModel
     agents: AgentRuntime
     lore_index: LoreIndex
@@ -194,6 +196,7 @@ async def build_application(
     model: LanguageModel | None = None,
     media_store: MediaStore | None = None,
     jobs: JobManager | None = None,
+    providers: Providers | None = None,
 ) -> ApplicationServices:
     def current() -> Rules:
         return rules.current
@@ -213,8 +216,9 @@ async def build_application(
     exchange = ExchangeService(settings, backups, discovery, world_changed, WorldMerger(database), store=store)
     telemetry = await setup_telemetry(telemetry_url(settings.data_dir))
     metrics = MetricsService(telemetry, current)
+    routes = providers.routes(settings.universe_id) if providers is not None else None
     language_model = GroundedModel(
-        model or LlmClient(rules, settings.llm_enabled, metrics.sink(TelemetrySink(telemetry)), publish=bus_publisher(bus)), database
+        model or LlmClient(rules, settings.llm_enabled, routes, metrics.sink(TelemetrySink(telemetry)), publish=bus_publisher(bus)), database
     )
     agents = attach_toolkits(AgentRuntime(database=database, model=language_model, publish=bus_publisher(bus)))
     errors = ErrorRing()
@@ -233,7 +237,7 @@ async def build_application(
     image_records = ImageRecords(backups.collector)
     server = rules.current.server
     thumbnails = Thumbnailer(store, server.thumbnail_concurrency, server.thumbnail_timeout)
-    image_client = ImageWorkerClient(settings.image_worker_url)
+    image_client: ImageProvider = providers.images(settings.universe_id) if providers is not None else ImageWorkerClient(settings.image_worker_url)
     images = ImageQueue(database, image_client, image_records, current, bus=bus, prompts=lore.prompts, read_only=lambda: discovery.active, jobs=jobs)
     bulk = BulkDeepening(database, current, lore.deepener, namer=lore.namer, bus=bus, read_only=lambda: discovery.active, jobs=jobs)
     completion = StartupCompletion(database, current, lore, read_only=lambda: discovery.active)

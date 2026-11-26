@@ -371,7 +371,7 @@ class Ledger:
             return " · ".join(parts)
         others = [f"{spoken(row.role)} {self.name(row.node_id)}" for row in roles if row.node_id != node_id and row.role not in UNLISTED_ROLES]
         knowing = Counter(row.role for row in roles if row.node_id != node_id and row.role in KNOWERS)
-        others.extend(several(knowing[role], *KNOWER_WORDS[role]) for role in sorted(knowing))
+        others.extend(several(knowing[role], *words) for role, words in sorted(KNOWER_WORDS.items()) if knowing[role])
         if others:
             parts.append("with " + ", ".join(others))
         parts.extend(self.account_tail(incident))

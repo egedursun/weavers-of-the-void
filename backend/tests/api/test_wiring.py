@@ -1,7 +1,7 @@
 from dataclasses import fields
 
 from aerona.agents.grounding import GroundedModel
-from aerona.constants.llm import HAIKU_MODEL_ID
+from aerona.domain.enums.providers import ModelRole
 from aerona.llm.client import LlmClient
 from aerona.settings import Settings
 from tests.agents.fakes import FakeModel
@@ -11,14 +11,14 @@ from tests.polling import until
 POLL_SECONDS = 0.02
 
 
-async def test_engine_only_wiring_uses_a_disabled_haiku_client(empty_api: ApiWorld) -> None:
+async def test_engine_only_wiring_uses_a_disabled_client(empty_api: ApiWorld) -> None:
     services = empty_api.services
     grounded = services.application.model
     assert isinstance(grounded, GroundedModel) and grounded.enabled is False
     model = grounded.inner
     assert isinstance(model, LlmClient)
-    assert model.model == HAIKU_MODEL_ID
     assert model.enabled is False
+    assert all(not model.ready(role) and model.model_of(role) == "" for role in ModelRole)
     assert services.agents.toolkits is not None
     hooks = services.orchestrator.hooks
     assert all(getattr(hooks, item.name) is not None for item in fields(hooks))

@@ -5,12 +5,10 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any
 
-from claude_agent_sdk import AssistantMessage, StreamEvent, TextBlock, ToolResultBlock, ToolUseBlock, UserMessage
-
 from aerona.constants.agents import TOOL_RESULT_CHARS
-from aerona.constants.llm import TOOL_NAME_PREFIX
 from aerona.domain.enums.node import ActorKind
 from aerona.events.kinds import EventKind
+from aerona.llm.events import ReplyEnded, RunEvent, TextDelta, ToolCalled, ToolFinished, ToolPreparing, ToolWriting
 from aerona.rules.registry.server import ServerRules
 
 StreamPublish = Callable[[EventKind, dict[str, Any]], None]
@@ -40,35 +38,15 @@ current_actor: ContextVar[StreamActor | None] = ContextVar("current_stream_actor
 
 
 @dataclass
-class ToolBlock:
-    call_id: str
-    tool: str
-    chars: int = 0
-    reported: int = 0
-
-
-@dataclass
 class ReporterState:
-    blocks: dict[int, ToolBlock] = field(default_factory=dict)
-    tools: dict[str, str] = field(default_factory=dict)
+    seen: dict[str, int] = field(default_factory=dict)
+    reported: dict[str, int] = field(default_factory=dict)
     text_buffer: str = ""
     text_chars: int = 0
     last_text_flush: float = float("-inf")
     chars: int = 0
     last_progress: float = float("-inf")
     progress_sent: bool = False
-
-
-def short_tool_name(name: str) -> str:
-    return name.removeprefix(TOOL_NAME_PREFIX)
-
-
-def result_text(content: str | list[dict[str, Any]] | None) -> str:
-    if content is None:
-        return ""
-    if isinstance(content, str):
-        return content
-    return "\n".join(str(part.get("text", "")) for part in content if isinstance(part, dict))
 
 
 class StreamReporter:
@@ -81,14 +59,22 @@ class StreamReporter:
         self._stream_id = uuid.uuid4().hex
         self._state = ReporterState()
 
-    def feed(self, message: object) -> None:
-        if isinstance(message, StreamEvent):
-            if message.parent_tool_use_id is None:
-                self._partial(message.event)
-        elif self._actor is not None and isinstance(message, AssistantMessage):
-            self._assistant(message)
-        elif self._actor is not None and isinstance(message, UserMessage):
-            self._user(message)
+    def feed(self, event: RunEvent) -> None:
+        match event:
+            case TextDelta(text=text):
+                self._text(text)
+            case ToolPreparing(call_id=call_id, tool=tool):
+                self._preparing(call_id, tool)
+            case ToolWriting(call_id=call_id, tool=tool, chars=chars):
+                self._writing(call_id, tool, chars)
+            case ReplyEnded(text=text):
+                self._ended(text)
+            case ToolCalled(call_id=call_id, tool=tool, input=arguments):
+                self._called(call_id, tool, arguments)
+            case ToolFinished(call_id=call_id, tool=tool, text=text, is_error=is_error):
+                self._finished(call_id, tool, text, is_error)
+            case _:
+                return
 
     def close(self, error: str | None = None) -> None:
         state = self._state
@@ -98,59 +84,53 @@ class StreamReporter:
             return
         self._flush_text()
 
-    def _actor_fields(self) -> dict[str, Any]:
-        actor = self._actor
-        if actor is None:
-            return {}
-        return actor.fields()
-
     def _emit(self, kind: EventKind, **fields: Any) -> None:
-        self._publish(kind, {**self._actor_fields(), **fields})
+        actor = self._actor
+        self._publish(kind, {**(actor.fields() if actor is not None else {}), **fields})
 
-    def _partial(self, event: dict[str, Any]) -> None:
-        kind = event.get("type")
-        index = int(event.get("index", 0))
-        if kind == "content_block_start":
-            self._block_started(index, event.get("content_block") or {})
-        elif kind == "content_block_delta":
-            self._delta(index, event.get("delta") or {})
-        elif kind == "content_block_stop":
-            self._flush_text()
-            self._state.blocks.pop(index, None)
-
-    def _block_started(self, index: int, block: dict[str, Any]) -> None:
-        if block.get("type") != "tool_use" or self._actor is None:
+    def _text(self, text: str) -> None:
+        state = self._state
+        state.chars += len(text)
+        if self._actor is None:
+            self._maybe_writing()
             return
-        tool = short_tool_name(str(block.get("name", "")))
-        call_id = str(block.get("id", ""))
-        self._state.blocks[index] = ToolBlock(call_id, tool)
-        self._state.tools[call_id] = tool
+        state.text_buffer += text
+        if self._clock() - state.last_text_flush >= self._rules.stream_emit_interval_ms / 1000:
+            self._flush_text()
+
+    def _preparing(self, call_id: str, tool: str) -> None:
+        if self._actor is None:
+            return
+        self._flush_text()
         self._emit(EventKind.AGENT_TOOL_PREPARING, tool=tool, call_id=call_id)
 
-    def _delta(self, index: int, delta: dict[str, Any]) -> None:
+    def _writing(self, call_id: str, tool: str, chars: int) -> None:
         state = self._state
-        delta_type = delta.get("type")
-        if delta_type == "text_delta":
-            text = str(delta.get("text", ""))
-            state.chars += len(text)
-            if self._actor is None:
-                self._maybe_writing()
-                return
-            state.text_buffer += text
-            if self._clock() - state.last_text_flush >= self._rules.stream_emit_interval_ms / 1000:
-                self._flush_text()
-        elif delta_type == "input_json_delta":
-            size = len(str(delta.get("partial_json", "")))
-            state.chars += size
-            if self._actor is None:
-                self._maybe_writing()
-                return
-            block = state.blocks.get(index)
-            if block is not None:
-                block.chars += size
-                if block.chars - block.reported >= self._rules.tool_write_step_chars:
-                    block.reported = block.chars
-                    self._emit(EventKind.AGENT_TOOL_WRITING, tool=block.tool, call_id=block.call_id, chars=block.chars)
+        state.chars += max(0, chars - state.seen.get(call_id, 0))
+        state.seen[call_id] = chars
+        if self._actor is None:
+            self._maybe_writing()
+            return
+        if chars - state.reported.get(call_id, 0) >= self._rules.tool_write_step_chars:
+            state.reported[call_id] = chars
+            self._emit(EventKind.AGENT_TOOL_WRITING, tool=tool, call_id=call_id, chars=chars)
+
+    def _ended(self, text: str) -> None:
+        self._flush_text()
+        if self._actor is not None and text.strip():
+            self._emit(EventKind.AGENT_THOUGHT, text=text)
+
+    def _called(self, call_id: str, tool: str, arguments: dict[str, Any]) -> None:
+        actor = self._actor
+        if actor is None:
+            return
+        self._emit(EventKind.AGENT_TOOL_CALLED, tool=tool, call_id=call_id, input=arguments, read_only=tool in actor.read_only_tools)
+
+    def _finished(self, call_id: str, tool: str, text: str, is_error: bool) -> None:
+        actor = self._actor
+        if actor is None:
+            return
+        self._emit(EventKind.AGENT_TOOL_RESULT, tool=tool, call_id=call_id, text=text[:TOOL_RESULT_CHARS], error=is_error, quiet=tool in actor.read_only_tools)
 
     def _flush_text(self) -> None:
         state = self._state
@@ -174,34 +154,3 @@ class StreamReporter:
             EventKind.AGENT_WRITING,
             {"who": self._label, "stream_id": self._stream_id, "chars": state.chars, "finished": finished, "status": status, "error": error},
         )
-
-    def _assistant(self, message: AssistantMessage) -> None:
-        if message.parent_tool_use_id is not None:
-            return
-        actor = self._actor
-        for block in message.content:
-            if isinstance(block, TextBlock) and block.text.strip():
-                self._flush_text()
-                self._emit(EventKind.AGENT_THOUGHT, text=block.text)
-            elif isinstance(block, ToolUseBlock):
-                tool = short_tool_name(block.name)
-                self._state.tools[block.id] = tool
-                read_only = actor is not None and tool in actor.read_only_tools
-                self._emit(EventKind.AGENT_TOOL_CALLED, tool=tool, call_id=block.id, input=block.input, read_only=read_only)
-
-    def _user(self, message: UserMessage) -> None:
-        if not isinstance(message.content, list):
-            return
-        actor = self._actor
-        for block in message.content:
-            if isinstance(block, ToolResultBlock):
-                tool = self._state.tools.get(block.tool_use_id, "")
-                quiet = actor is not None and tool in actor.read_only_tools
-                self._emit(
-                    EventKind.AGENT_TOOL_RESULT,
-                    tool=tool,
-                    call_id=block.tool_use_id,
-                    text=result_text(block.content)[:TOOL_RESULT_CHARS],
-                    error=bool(block.is_error),
-                    quiet=quiet,
-                )

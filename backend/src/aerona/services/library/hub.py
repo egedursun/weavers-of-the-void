@@ -26,6 +26,7 @@ from aerona.services.divine_will.attachments import MEDIA_PREFIX as ATTACHMENT_P
 from aerona.services.library.catalogue import Catalogue, NewUniverse, UniverseEdit, UniverseRecord, new_universe_id
 from aerona.services.library.facts import facts_at, facts_of, schema_revision_at
 from aerona.services.library.runtime import UniverseRuntime, close_services, launch_services
+from aerona.services.providers.hub import Providers
 from aerona.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -87,10 +88,12 @@ class UniverseHub:
         *,
         launcher: Launcher = launch_services,
         closer: Closer = close_services,
+        providers: Providers | None = None,
     ) -> None:
         self.settings = settings
         self.catalogue = catalogue
         self.model = model
+        self.providers = providers
         self.slots = asyncio.Semaphore(settings.library_parallel_epochs)
         self.opened_hooks: list[OpenedHook] = []
         self.closed_hooks: list[ClosedHook] = []
@@ -189,8 +192,10 @@ class UniverseHub:
             found.touch()
             return found
         await self._make_room(record.id)
+        if self.providers is not None:
+            self.providers.directory.place(record.id, record.workspace_id)
         with in_universe(record.id):
-            services = await self._launcher(self.settings_of(record), self.model, slots=self.slots)
+            services = await self._launcher(self.settings_of(record), self.model, slots=self.slots, providers=self.providers)
         runtime = UniverseRuntime(record.id, services)
         services.bus.add_listener(self._watcher(record.id))
         self._runtimes[record.id] = runtime

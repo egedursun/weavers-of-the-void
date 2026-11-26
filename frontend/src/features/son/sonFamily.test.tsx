@@ -132,7 +132,7 @@ describe('a son bears a child', () => {
       .element(screen.getByRole('button', { name: 'Bear a child' }))
       .toHaveAttribute(
         'aria-description',
-        'The language model is not connected; this needs it.'
+        'The language model is turned off on this server.'
       )
   })
 })

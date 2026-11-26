@@ -2,7 +2,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from claude_agent_sdk import SdkMcpTool
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import NotFoundError
@@ -13,14 +12,15 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.world import LoreLanguage
 from aerona.engine.context import Publisher
+from aerona.llm.tools import AgentTool
 from aerona.prompts import tool_text
 from aerona.prompts.tools.ids import MortalToolId, SonToolId
 from aerona.prompts.tools.text import RenderedToolText
 from aerona.rules.registry import Rules
 from aerona.tools.framework.actors import MortalToolRuntime, SonToolRuntime
+from aerona.tools.framework.agent_tool import agent_tool
 from aerona.tools.framework.ports import ToolPorts
 from aerona.tools.framework.runtime import DoneAction, RuntimeSettings, ToolCatalogue, ToolRuntime, catalogue_of, silent_publisher
-from aerona.tools.framework.sdk import sdk_tool
 from aerona.tools.framework.spec import ToolSpec
 from aerona.tools.framework.turn import start_turn
 from aerona.tools.mortal.registry import mortal_may_use, mortal_specs, mortal_state, mortal_text_context
@@ -49,8 +49,8 @@ class TurnToolkit:
     def read_only_tools(self) -> frozenset[str]:
         return frozenset(spec.name for spec in self.runtime.specs if spec.meta.read_only)
 
-    def tools(self) -> list[SdkMcpTool[Any]]:
-        return [sdk_tool(self.runtime, spec, self._texts[spec.name]) for spec in self.runtime.specs]
+    def tools(self) -> list[AgentTool]:
+        return [agent_tool(self.runtime, spec, self._texts[spec.name]) for spec in self.runtime.specs]
 
     async def settle_long_jobs(self) -> None:
         await self.runtime.settle_long_jobs()

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, BigInteger, Float, Index, MetaData, String, Text, func
+from sqlalchemy import JSON, BigInteger, Index, MetaData, String, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
@@ -38,7 +38,6 @@ class LlmCallRow(TelemetryBase):
     turns: Mapped[int | None]
     input_tokens: Mapped[int] = mapped_column(default=0)
     output_tokens: Mapped[int] = mapped_column(default=0)
-    cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
     actions: Mapped[int | None]
     error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(UtcDateTime(), server_default=func.now())

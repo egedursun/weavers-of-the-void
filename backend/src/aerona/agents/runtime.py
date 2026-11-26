@@ -6,6 +6,7 @@ from aerona.agents.ports import LanguageModel, Publish, silent
 from aerona.agents.turns.ports import ToolkitFactory
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.session import Database
+from aerona.domain.enums.providers import ModelRole
 from aerona.events.kinds import EventKind
 from aerona.llm.errors import LlmDisabledError
 from aerona.rules.registry import Rules
@@ -22,6 +23,10 @@ class AgentRuntime:
     @property
     def llm_enabled(self) -> bool:
         return self.model.enabled
+
+    @property
+    def world_model(self) -> str:
+        return self.model.model_of(ModelRole.WORLD_AGENTS)
 
     def require_llm(self, what: str) -> None:
         if not self.model.enabled:

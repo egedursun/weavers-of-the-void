@@ -14,5 +14,9 @@ class LlmPermanentError(LlmError):
     pass
 
 
+class LlmUnavailableError(LlmError):
+    pass
+
+
 class LlmTimeoutError(LlmTransientError):
     pass

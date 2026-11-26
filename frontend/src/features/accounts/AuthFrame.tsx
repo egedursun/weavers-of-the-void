@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { APP_NAME, APP_SUBTITLE, APP_VERSION } from '@/config/brand'
 import { type LucideIcon } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Divider } from '@/components/ui/ornate'
 import { Section } from '@/components/domain'
@@ -15,6 +16,7 @@ export function AuthFrame({
   lead,
   children,
   footer = null,
+  wide = false,
 }: {
   title: string
   icon: LucideIcon
@@ -22,7 +24,9 @@ export function AuthFrame({
   lead: string
   children: ReactNode
   footer?: ReactNode
+  wide?: boolean
 }) {
+  const width = wide ? 'max-w-4xl' : 'max-w-md'
   return (
     <main
       id='content'
@@ -33,12 +37,17 @@ export function AuthFrame({
         aria-hidden='true'
         className='pointer-events-none absolute inset-x-0 top-0 h-160 bg-linear-to-b from-brand-violet/14 via-primary/6 to-transparent'
       />
-      <div className='relative flex w-full max-w-md min-w-0 justify-end'>
-        <span className='flex items-center rounded-md border surface-framed border-gild/70 bg-card p-0.5'>
+      <div className={cn('relative flex w-full min-w-0 justify-end', width)}>
+        <span className='flex items-center rounded-md border surface-sheen border-gild/70 bg-card px-1.5 py-0.5'>
           <ThemeSwitch />
         </span>
       </div>
-      <header className='relative flex w-full max-w-md min-w-0 flex-col items-center gap-3 text-center'>
+      <header
+        className={cn(
+          'relative flex w-full min-w-0 flex-col items-center gap-3 text-center',
+          width
+        )}
+      >
         <span className='relative flex items-center justify-center'>
           <span
             aria-hidden='true'
@@ -64,7 +73,7 @@ export function AuthFrame({
         </div>
         <Muted variant='prose'>{lead}</Muted>
       </header>
-      <div className='relative flex w-full max-w-md min-w-0 flex-col gap-4'>
+      <div className={cn('relative flex w-full min-w-0 flex-col gap-4', width)}>
         <Section title={title} icon={icon} surface='card'>
           {children}
         </Section>

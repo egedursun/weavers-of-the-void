@@ -3,14 +3,16 @@ from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import AsyncExitStack
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiobotocore.config import AioConfig
 from aiobotocore.response import StreamingBody
 from aiobotocore.session import get_session
 from botocore.exceptions import BotoCoreError, ClientError
-from types_aiobotocore_s3.client import S3Client
-from types_aiobotocore_s3.literals import BucketLocationConstraintType
+
+if TYPE_CHECKING:
+    from types_aiobotocore_s3.client import S3Client
+    from types_aiobotocore_s3.literals import BucketLocationConstraintType
 
 from aerona.constants.media import (
     MEDIA_CHUNK_BYTES,
@@ -57,7 +59,7 @@ class S3MediaStore:
     def bucket(self) -> str:
         return self._config.bucket
 
-    async def _s3(self) -> S3Client:
+    async def _s3(self) -> "S3Client":
         if self._client is not None:
             return self._client
         async with self._lock:

@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, File, Path, Query, Request, Response, Up
 from fastapi.responses import FileResponse, StreamingResponse
 from sse_starlette.sse import EventSourceResponse
 
+from aerona.api.dependencies import ProvidersDep
 from aerona.api.schemas.accounts import UniverseMove
 from aerona.api.schemas.common import Done
 from aerona.api.schemas.library import (
@@ -252,7 +253,7 @@ async def archive_universe(universe_id: UniverseId, library: LibraryDep) -> Univ
 
 
 @router.post("/universes/{universe_id}/move", response_model=UniverseView)
-async def move_universe(universe_id: UniverseId, body: UniverseMove, library: LibraryDep) -> UniverseView:
+async def move_universe(universe_id: UniverseId, body: UniverseMove, library: LibraryDep, providers: ProvidersDep) -> UniverseView:
     account = current_account()
     if account is None or library.accounts is None:
         raise NotFoundError(NO_SUCH_JOB)
@@ -261,6 +262,7 @@ async def move_universe(universe_id: UniverseId, body: UniverseMove, library: Li
         raise refuse_workspace(role)
     record = await library.catalogue.require(universe_id)
     await library.accounts.move_universe(record, body.workspace_id)
+    providers.directory.place(record.id, body.workspace_id)
     await library.catalogue.log(LibraryEventKind.MOVED, record.id, record.name)
     return await universe_view(library, await library.catalogue.require(universe_id))
 

@@ -313,13 +313,13 @@ test.describe('gallery and images', () => {
     await expect(page.getByLabel('Upload for Velmora-under-the-Glass')).toBeAttached()
   })
 
-  test('generating is off with the reason while no image worker is configured', async ({ page }) => {
+  test('generating is off with the reason while no image model is set', async ({ page }) => {
     await mockApi(page)
     await page.goto('/gallery')
     const button = page.getByRole('button', { name: 'Generate image' }).first()
     await expect(button).toHaveAttribute('aria-disabled', 'true')
-    await expect(page.getByText('Image worker off')).toBeVisible()
-    await expect(page.getByText('Image generation is off: no image worker is configured.').first()).toBeVisible()
+    await expect(page.getByText('No image model')).toBeVisible()
+    await expect(page.getByText('Image generation is off: no image model is set. Add one under Team and workspace, Models.').first()).toBeVisible()
   })
 
   test('uploading a file posts it to the record', async ({ page }) => {

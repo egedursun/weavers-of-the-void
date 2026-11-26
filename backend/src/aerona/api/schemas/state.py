@@ -2,9 +2,15 @@ from aerona.api.schemas.common import ApiModel
 from aerona.api.schemas.records import CosmosRecord, CreatorRecord, EntityRecord, EpochRecord, SonPublic, ThreadRecord
 from aerona.domain.enums.creator import CreatorMoodLabel
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.providers import ModelRole
 from aerona.domain.models.records import EpochStatsData
 from aerona.services.discovery import GuestWorld
 from aerona.services.images.queue import QueueStatus
+
+
+class RoleModel(ApiModel):
+    role: ModelRole
+    model: str
 
 
 class SonRelationItem(ApiModel):
@@ -85,6 +91,7 @@ class StateResponse(ApiModel):
     image_gen: QueueStatus
     batch_deepen: BulkSummary
     llm_enabled: bool
+    role_models: list[RoleModel]
 
 
 class ChangesResponse(ApiModel):

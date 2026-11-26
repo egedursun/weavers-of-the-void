@@ -45,7 +45,6 @@ const METRICS_EMPTY = {
   totals: {
     calls: 0,
     milliseconds: 0,
-    cost: 0,
     input_tokens: 0,
     output_tokens: 0,
   },
@@ -132,7 +131,7 @@ describe('game settings', () => {
       })
     )
     const language = screen
-      .getByRole('region', { name: 'Model and lore language' })
+      .getByRole('region', { name: 'Models and lore language' })
       .getByText('Turkish', { exact: true })
     await expect.element(language).toBeInTheDocument()
     await language.hover()
@@ -141,6 +140,20 @@ describe('game settings', () => {
         screen.getByText('Chosen once at genesis; it cannot be changed').first()
       )
       .toBeVisible()
+  })
+
+  it('names the model of every role and leads to the providers', async () => {
+    const { screen } = await renderScreen(<GameSettings />, gameRoutes())
+    const models = screen.getByRole('region', {
+      name: 'Models and lore language',
+    })
+    await expect
+      .element(models.getByText('deep · Studio key'))
+      .toBeInTheDocument()
+    await expect.element(models.getByText('No model set')).toBeInTheDocument()
+    await expect
+      .element(models.getByRole('link', { name: 'Choose the models' }))
+      .toHaveAttribute('href', '/workspace?part=providers')
   })
 
   it('counts missing image prompts and writes them all on request', async () => {

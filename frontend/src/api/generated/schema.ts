@@ -431,6 +431,246 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/workspaces/{workspace_id}/providers': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_providers_api_workspaces__workspace_id__providers_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/providers/connections': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['add_connection_api_workspaces__workspace_id__providers_connections_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['remove_connection_api_workspaces__workspace_id__providers_connections__connection_id__delete']
+    options?: never
+    head?: never
+    patch: operations['edit_connection_api_workspaces__workspace_id__providers_connections__connection_id__patch']
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}/models': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['connection_models_api_workspaces__workspace_id__providers_connections__connection_id__models_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}/login': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_login_api_workspaces__workspace_id__providers_connections__connection_id__login_get']
+    put?: never
+    post: operations['start_login_api_workspaces__workspace_id__providers_connections__connection_id__login_post']
+    delete: operations['stop_login_api_workspaces__workspace_id__providers_connections__connection_id__login_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}/login/input': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['answer_login_api_workspaces__workspace_id__providers_connections__connection_id__login_input_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/providers/connections/{connection_id}/logout': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['log_out_api_workspaces__workspace_id__providers_connections__connection_id__logout_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/providers/roles/{role}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['set_chain_api_workspaces__workspace_id__providers_roles__role__put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/workspaces/{workspace_id}/providers/roles/{role}/check': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['check_chain_api_workspaces__workspace_id__providers_roles__role__check_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/server/providers': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['read_server_providers_api_server_providers_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/server/providers/connections': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['add_server_connection_api_server_providers_connections_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/server/providers/connections/{connection_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['remove_server_connection_api_server_providers_connections__connection_id__delete']
+    options?: never
+    head?: never
+    patch: operations['edit_server_connection_api_server_providers_connections__connection_id__patch']
+    trace?: never
+  }
+  '/api/server/providers/connections/{connection_id}/models': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['server_connection_models_api_server_providers_connections__connection_id__models_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/server/providers/roles/{role}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['set_server_chain_api_server_providers_roles__role__put']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/server/providers/roles/{role}/check': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['check_server_chain_api_server_providers_roles__role__check_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/library/universes': {
     parameters: {
       query?: never
@@ -55129,6 +55369,15 @@ export interface components {
     }
     CentralityRank:
       'daily' | 'weekly' | 'seasonal' | 'rare' | 'metropolitan' | 'regional'
+    ChainEntryView: {
+      id: number
+      connection_id: number
+      model: string
+      tools_work: boolean | null
+      sees_images: boolean | null
+      checked_at: string | null
+      check_note: string
+    }
     ChainHoldingDeleteInput: {
       holder_id: number
       town_id: number
@@ -55148,6 +55397,13 @@ export interface components {
       town_id: number
       product: components['schemas']['CommodityKind']
       share_pct: number
+    }
+    ChainLinkBody: {
+      connection_id: number
+      model: string
+    }
+    ChainPut: {
+      entries: components['schemas']['ChainLinkBody'][]
     }
     ChainStepView: {
       key: string
@@ -55973,7 +56229,6 @@ export interface components {
       income: number
       locked: string[]
     }
-    ClaudeAuth: 'token' | 'login'
     ClauseKind:
       | 'call_to_arms'
       | 'tribute'
@@ -57089,6 +57344,17 @@ export interface components {
       by: string | null
       by_account_id: number | null
       at: string | null
+    }
+    ConnectionCreate: {
+      kind: components['schemas']['ProviderKind']
+      label: string
+      secret: string
+      base_url: string
+    }
+    ConnectionEdit: {
+      label?: string | null
+      secret?: string | null
+      base_url?: string | null
     }
     Consciousness: 'awake' | 'nauseous' | 'dizzy' | 'unconscious'
     ConservationMovementCreateInput: {
@@ -63405,7 +63671,6 @@ export interface components {
       milliseconds: number
       input_tokens: number
       output_tokens: number
-      cost: number
       errors: number
       retried: number
       slow: number
@@ -67959,8 +68224,7 @@ export interface components {
       version: string
       database_ok: boolean
       llm_enabled: boolean
-      claude_auth: components['schemas']['ClaudeAuth']
-      image_worker_configured: boolean
+      gateway_ready: boolean
       running_jobs: number
     }
     HealthStatus: 'ok' | 'warning' | 'bad' | 'degraded'
@@ -73885,7 +74149,6 @@ export interface components {
       turns: number | null
       input_tokens: number
       output_tokens: number
-      cost_usd: number
       error: string | null
       created_at: string
     }
@@ -74100,6 +74363,10 @@ export interface components {
       at: string
       text: string
     }
+    LoginInput: {
+      text: string
+    }
+    LoginState: 'running' | 'succeeded' | 'failed' | 'cancelled'
     LongPlanKind:
       | 'ecological_transformation'
       | 'bloodline'
@@ -76730,7 +76997,6 @@ export interface components {
       average_ms: number
       input_tokens: number
       output_tokens: number
-      cost: number
     }
     ModelMetricsView: {
       totals: components['schemas']['Totals']
@@ -76740,6 +77006,14 @@ export interface components {
       slowest: components['schemas']['LlmCall'][]
       latest_errors: components['schemas']['LlmCall'][]
       slow_threshold_ms: number
+    }
+    ModelRole: 'world_agents' | 'writing' | 'conversation' | 'images'
+    ModelRoleView: {
+      role: components['schemas']['ModelRole']
+      label: string
+      description: string
+      entries: components['schemas']['ChainEntryView'][]
+      server_entries: components['schemas']['ChainEntryView'][]
     }
     ModifierAddInput: {
       node_id: number
@@ -83581,6 +83855,70 @@ export interface components {
       release?: string[]
     }
     ProtectionBasis: 'law' | 'faith' | 'custom' | 'charter' | 'divine_decree'
+    ProviderConnectionView: {
+      id: number
+      kind: components['schemas']['ProviderKind']
+      label: string
+      secret_hint: string
+      base_url: string
+      logged_in_at: string | null
+      created_at: string
+      unusable: string | null
+      from_server: boolean
+    }
+    ProviderFamily: 'subscription' | 'api' | 'local'
+    ProviderKind:
+      | 'claude_subscription'
+      | 'chatgpt_subscription'
+      | 'gemini_subscription'
+      | 'copilot_subscription'
+      | 'openai'
+      | 'anthropic'
+      | 'gemini'
+      | 'mistral'
+      | 'groq'
+      | 'deepseek'
+      | 'xai'
+      | 'openrouter'
+      | 'cohere'
+      | 'cerebras'
+      | 'perplexity'
+      | 'replicate'
+      | 'huggingface'
+      | 'local_server'
+      | 'image_worker'
+    ProviderKindView: {
+      kind: components['schemas']['ProviderKind']
+      label: string
+      family: components['schemas']['ProviderFamily']
+      roles: components['schemas']['ModelRole'][]
+      asks_key: boolean
+      asks_address: boolean
+      key_page: string
+      terms: string | null
+      refusal: string | null
+    }
+    ProviderLoginView: {
+      state: components['schemas']['LoginState']
+      output: string
+      links: string[]
+      code: string
+      note: string
+      started_at: string
+      ended_at: string | null
+    }
+    ProviderModels: {
+      models: string[]
+    }
+    ProvidersView: {
+      workspace_id: number | null
+      personal: boolean
+      editable: boolean
+      gateway_ready: boolean
+      kinds: components['schemas']['ProviderKindView'][]
+      connections: components['schemas']['ProviderConnectionView'][]
+      roles: components['schemas']['ModelRoleView'][]
+    }
     PublicClockDeleteInput: {
       settlement_id: number
     }
@@ -86635,6 +86973,10 @@ export interface components {
       | 'bearers_preferred'
       | 'begetters_preferred'
     RoleKind: 'office' | 'profession' | 'combat' | 'priesthood' | 'inheritance'
+    RoleModel: {
+      role: components['schemas']['ModelRole']
+      model: string
+    }
     RoleNormDeleteInput: {
       holder_id: number
       role: components['schemas']['RoleKind']
@@ -91478,6 +91820,7 @@ export interface components {
       image_gen: components['schemas']['QueueStatus']
       batch_deepen: components['schemas']['BulkSummary']
       llm_enabled: boolean
+      role_models: components['schemas']['RoleModel'][]
     }
     StatecraftView: {
       node_id: number
@@ -91768,7 +92111,6 @@ export interface components {
       calls: number
       average_ms: number
       longest_ms: number
-      cost: number
       errors: number
     }
     StepOutcome:
@@ -94485,9 +94827,9 @@ export interface components {
     Totals: {
       calls: number
       milliseconds: number
-      cost: number
       input_tokens: number
       output_tokens: number
+      errors: number
     }
     TotemView: {
       people_id: number
@@ -100301,6 +100643,591 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['UniverseAccessView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_providers_api_workspaces__workspace_id__providers_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProvidersView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  add_connection_api_workspaces__workspace_id__providers_connections_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConnectionCreate']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderConnectionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  remove_connection_api_workspaces__workspace_id__providers_connections__connection_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  edit_connection_api_workspaces__workspace_id__providers_connections__connection_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConnectionEdit']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderConnectionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  connection_models_api_workspaces__workspace_id__providers_connections__connection_id__models_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderModels']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_login_api_workspaces__workspace_id__providers_connections__connection_id__login_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderLoginView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  start_login_api_workspaces__workspace_id__providers_connections__connection_id__login_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderLoginView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  stop_login_api_workspaces__workspace_id__providers_connections__connection_id__login_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  answer_login_api_workspaces__workspace_id__providers_connections__connection_id__login_input_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderLoginView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  log_out_api_workspaces__workspace_id__providers_connections__connection_id__logout_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        workspace_id: number
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderConnectionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  set_chain_api_workspaces__workspace_id__providers_roles__role__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        role: components['schemas']['ModelRole']
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChainPut']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ModelRoleView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  check_chain_api_workspaces__workspace_id__providers_roles__role__check_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        role: components['schemas']['ModelRole']
+        workspace_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ModelRoleView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  read_server_providers_api_server_providers_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProvidersView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  add_server_connection_api_server_providers_connections_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConnectionCreate']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderConnectionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  remove_server_connection_api_server_providers_connections__connection_id__delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Done']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  edit_server_connection_api_server_providers_connections__connection_id__patch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConnectionEdit']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderConnectionView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  server_connection_models_api_server_providers_connections__connection_id__models_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        connection_id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProviderModels']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  set_server_chain_api_server_providers_roles__role__put: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        role: components['schemas']['ModelRole']
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChainPut']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ModelRoleView']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
+  check_server_chain_api_server_providers_roles__role__check_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        role: components['schemas']['ModelRole']
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ModelRoleView']
         }
       }
       default: {
@@ -207345,9 +208272,6 @@ export const claimKindValues: ReadonlyArray<
 export const claimStatusValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClaimStatus']
 > = ['standing', 'verified', 'exposed', 'disputed', 'forgotten']
-export const claudeAuthValues: ReadonlyArray<
-  FlattenedDeepRequired<components>['schemas']['ClaudeAuth']
-> = ['token', 'login']
 export const clauseKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ClauseKind']
 > = [
@@ -213142,6 +214066,9 @@ export const locusGroupValues: ReadonlyArray<
 export const logLevelValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LogLevel']
 > = ['info', 'warning', 'error']
+export const loginStateValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['LoginState']
+> = ['running', 'succeeded', 'failed', 'cancelled']
 export const longPlanKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['LongPlanKind']
 > = [
@@ -213947,6 +214874,9 @@ export const mobilityEventValues: ReadonlyArray<
 export const mobilityModeValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['MobilityMode']
 > = ['sedentary', 'transhumant', 'nomadic']
+export const modelRoleValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ModelRole']
+> = ['world_agents', 'writing', 'conversation', 'images']
 export const modifierOpValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ModifierOp']
 > = ['add', 'multiply']
@@ -216263,6 +217193,32 @@ export const prospectStanceValues: ReadonlyArray<
 export const protectionBasisValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['ProtectionBasis']
 > = ['law', 'faith', 'custom', 'charter', 'divine_decree']
+export const providerFamilyValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ProviderFamily']
+> = ['subscription', 'api', 'local']
+export const providerKindValues: ReadonlyArray<
+  FlattenedDeepRequired<components>['schemas']['ProviderKind']
+> = [
+  'claude_subscription',
+  'chatgpt_subscription',
+  'gemini_subscription',
+  'copilot_subscription',
+  'openai',
+  'anthropic',
+  'gemini',
+  'mistral',
+  'groq',
+  'deepseek',
+  'xai',
+  'openrouter',
+  'cohere',
+  'cerebras',
+  'perplexity',
+  'replicate',
+  'huggingface',
+  'local_server',
+  'image_worker',
+]
 export const punishmentKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['PunishmentKind']
 > = [

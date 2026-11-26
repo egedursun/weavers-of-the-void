@@ -13,6 +13,7 @@ import {
 import { Label, Text } from '@/components/typography'
 import { type WorldState } from '@/features/overview/api'
 import { mediaUrl } from '@/features/pantheon/media'
+import { modelBlock } from '@/features/providers/modelReadiness'
 import { useSonTurn } from './api'
 
 type SonTurnControlProps = {
@@ -20,8 +21,8 @@ type SonTurnControlProps = {
 }
 
 function blockedReason(state: WorldState): string | null {
-  if (!state.llm_enabled)
-    return 'A son thinks with the language model, which is turned off'
+  const block = modelBlock(state, 'world_agents')
+  if (block !== null) return block
   if (state.epoch_running) return 'An epoch is running'
   if (state.read_only) return 'A guest world is read-only'
   return null

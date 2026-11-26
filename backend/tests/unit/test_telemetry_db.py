@@ -51,6 +51,9 @@ async def test_an_old_call_table_is_rebuilt_to_accept_partial_calls(tmp_path: Pa
         async with database.sessions() as session:
             statuses = list(await session.scalars(select(LlmCallRow.status).order_by(LlmCallRow.id)))
         assert statuses == [LlmCallStatus.OK, LlmCallStatus.PARTIAL]
+        async with database.engine.connect() as connection:
+            columns = await connection.run_sync(lambda sync: {column["name"] for column in inspect(sync).get_columns("llm_calls")})
+        assert "cost_usd" not in columns
     finally:
         await database.dispose()
 

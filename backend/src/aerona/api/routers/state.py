@@ -7,11 +7,13 @@ from aerona.api.schemas.state import (
     Covenant,
     HalfEpochState,
     MoodSummary,
+    RoleModel,
     SonRelationItem,
     StateResponse,
     WorldBriefItem,
 )
 from aerona.api.views.common import son_public
+from aerona.domain.enums.providers import ModelRole
 from aerona.engine.gods.mood import mood_label, mood_of
 from aerona.epoch.concurrency import WORLD_GROUP
 from aerona.epoch.resume import half_epoch
@@ -71,4 +73,7 @@ async def read_state(services: ServicesDep) -> StateResponse:
         image_gen=application.images.status(),
         batch_deepen=BulkSummary.model_validate(bulk),
         llm_enabled=services.agents.llm_enabled,
+        role_models=[
+            RoleModel(role=role, model=application.images.model_name() if role is ModelRole.IMAGES else application.model.model_of(role)) for role in ModelRole
+        ],
     )

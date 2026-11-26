@@ -20,6 +20,7 @@ from aerona.constants.paths import (
     UNIVERSE_MANIFEST_FILENAME,
     UNIVERSES_DIRNAME,
 )
+from aerona.constants.providers import PROVIDER_HOMES_DIRNAME, SECRET_KEY_FILENAME
 from aerona.constants.telemetry import TELEMETRY_DATABASE_FILENAME
 
 
@@ -133,6 +134,14 @@ class ProcessPaths:
     @property
     def legacy(self) -> UniversePaths:
         return UniversePaths(self.root)
+
+    @property
+    def secret_key(self) -> Path:
+        return self.root / SECRET_KEY_FILENAME
+
+    @property
+    def provider_homes(self) -> Path:
+        return self.root / PROVIDER_HOMES_DIRNAME
 
     def universe(self, universe_id: str) -> UniversePaths:
         return UniversePaths(self.universes / universe_id)

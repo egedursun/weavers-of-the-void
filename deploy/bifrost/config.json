@@ -1,0 +1,50 @@
+{
+  "$schema": "https://www.getbifrost.ai/schema",
+  "client": {
+    "allow_direct_keys": true,
+    "drop_excess_requests": false,
+    "enable_logging": false,
+    "disable_content_logging": true
+  },
+  "providers": {
+    "openai": {
+      "keys": []
+    },
+    "anthropic": {
+      "keys": []
+    },
+    "gemini": {
+      "keys": []
+    },
+    "mistral": {
+      "keys": []
+    },
+    "groq": {
+      "keys": []
+    },
+    "deepseek": {
+      "keys": []
+    },
+    "xai": {
+      "keys": []
+    },
+    "openrouter": {
+      "keys": []
+    },
+    "cohere": {
+      "keys": []
+    },
+    "cerebras": {
+      "keys": []
+    },
+    "perplexity": {
+      "keys": []
+    },
+    "replicate": {
+      "keys": []
+    },
+    "huggingface": {
+      "keys": []
+    }
+  }
+}

@@ -3,7 +3,6 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from claude_agent_sdk import SdkMcpTool
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +15,7 @@ from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.presence import PresenceRecord, SpeakerGroup
 from aerona.domain.enums.son import SonStatus
+from aerona.llm.tools import AgentTool, ToolReply
 from aerona.rules.registry import Rules
 from aerona.services.presence.speakers import Speaker
 from aerona.tools.toolkit import Toolkits, TurnToolkit
@@ -57,25 +57,25 @@ class SpeakerTools:
             self.points = await self.opener()
             self.opened = True
 
-    def tools(self) -> list[SdkMcpTool[Any]]:
+    def tools(self) -> list[AgentTool]:
         if self.toolkit is None:
             return []
         return [self.wrapped(tool) for tool in self.toolkit.tools()]
 
-    def wrapped(self, tool: SdkMcpTool[Any]) -> SdkMcpTool[Any]:
+    def wrapped(self, tool: AgentTool) -> AgentTool:
         if tool.name in self.read_only:
             return tool
         inner = tool.handler
         defer = self.defer
         name = tool.name
 
-        async def handler(arguments: dict[str, Any]) -> dict[str, Any]:
+        async def handler(arguments: dict[str, Any]) -> ToolReply:
             if defer is not None:
-                return {"content": [{"type": "text", "text": await defer(name, dict(arguments or {}))}], "is_error": False}
+                return ToolReply(await defer(name, dict(arguments or {})))
             await self.open_turn()
             return await inner(arguments)
 
-        return SdkMcpTool(name=tool.name, description=tool.description, input_schema=tool.input_schema, handler=handler)
+        return AgentTool(name=tool.name, description=tool.description, input_schema=tool.input_schema, handler=handler)
 
 
 def agent_kind(speaker: Speaker) -> AgentKind:

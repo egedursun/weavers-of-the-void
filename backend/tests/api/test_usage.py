@@ -28,7 +28,6 @@ async def seed_calls(api: ApiWorld) -> None:
                     attempts=2 if status is LlmCallStatus.ERROR else 1,
                     input_tokens=tokens_in,
                     output_tokens=tokens_out,
-                    cost_usd=1.5,
                     error="refused" if status is LlmCallStatus.ERROR else None,
                 )
             )

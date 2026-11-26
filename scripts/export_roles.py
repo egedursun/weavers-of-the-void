@@ -11,7 +11,6 @@ from pathlib import Path
 
 from aerona.agents.roles import AgentRole
 from aerona.constants.app import APP_NAME
-from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.prompts.catalog import PROMPTS
 from aerona.prompts.ids import PromptId
 from aerona.rules.registry import Rules
@@ -356,7 +355,8 @@ class Booklet:
                 "is listed on the Usage screen."
             ),
             (
-                f"- Every role in this build runs on Claude Haiku (`{HAIKU_MODEL_ID}`). A call that fails is tried "
+                "- Each role runs on the models chosen for it under Providers, in order: when one cannot answer, the next is asked. "
+                f"A call that fails is tried "
                 f"{count(model.retry_attempts, 'time', 'times')} in all, and a turn that breaks off may continue "
                 f"{count(model.max_continuations, 'more time', 'more times')}. These are world rules too."
             ),

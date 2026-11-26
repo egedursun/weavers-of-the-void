@@ -4,8 +4,15 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { raiseAuthSignal } from '@/api/authSignals'
 import { libraryQueryClient } from '@/api/queryClients'
+import { providersView } from '@/features/providers/providerFixtures'
 import { AuthGate } from './AuthGate'
-import { SETUP, SIGNED_OUT, account, signedIn } from './accountFixtures'
+import {
+  SETUP,
+  SIGNED_OUT,
+  account,
+  signedIn,
+  workspace,
+} from './accountFixtures'
 import { Providers } from './providerFixtures'
 import { type AuthState } from './types'
 
@@ -43,6 +50,8 @@ describe('the gate of the app', () => {
         state = signedIn()
         return account()
       },
+      'GET /api/workspaces': [workspace({ kind: 'personal' })],
+      'GET /api/workspaces/{id}/providers': providersView({ personal: true }),
     })
     await expect.element(screen.getByText('Claim this server')).toBeVisible()
     const create = screen.getByRole('button', {
@@ -74,6 +83,13 @@ describe('the gate of the app', () => {
     )
     await userEvent.fill(screen.getByLabelText('Repeat the password'), GOOD)
     await create.click()
+    await expect
+      .element(screen.getByText('Give the world a mind'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText('Your personal workspace', { exact: true }))
+      .toBeVisible()
+    await screen.getByRole('button', { name: 'Skip for now' }).click()
     await expect.element(screen.getByText('Inside the app')).toBeVisible()
     expect(server.callsTo('POST /api/auth/setup')[0].body).toEqual({
       display_name: 'Mara Ilven',

@@ -3,12 +3,10 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from claude_agent_sdk import AssistantMessage, TextBlock, ThinkingBlock, ToolResultBlock, ToolUseBlock, UserMessage
-
 from aerona.db.repositories.divine_will import add_event
 from aerona.db.session import Database
 from aerona.domain.enums.divine_will import CycleEventKind
-from aerona.llm.stream import result_text, short_tool_name
+from aerona.llm.events import ReplyEnded, RunEvent, ToolCalled, ToolFinished
 from aerona.prompts.tools.divine_will_ids import DivineWillToolId
 from aerona.tools.divine_will.framework import WillResult
 
@@ -104,28 +102,23 @@ class CycleWatch:
     def final_text(self) -> str:
         return "\n\n".join(part.strip() for part in self.final_parts if part.strip())
 
-    async def seen(self, message: object) -> None:
-        if isinstance(message, AssistantMessage) and message.parent_tool_use_id is None:
-            self.replies += 1
-            for block in message.content:
-                await self.block(block)
-        elif isinstance(message, UserMessage) and message.parent_tool_use_id is None and isinstance(message.content, list):
-            for part in message.content:
-                if isinstance(part, ToolResultBlock):
-                    await self.result(part.tool_use_id, result_text(part.content), bool(part.is_error))
-
-    async def block(self, block: object) -> None:
-        if isinstance(block, TextBlock) and block.text.strip():
-            self.final_parts.append(block.text)
-            await self.trace.add(CycleEventKind.TEXT, payload={"text": block.text})
-        elif isinstance(block, ThinkingBlock) and block.thinking.strip():
-            await self.trace.add(CycleEventKind.THOUGHT, payload={"text": block.thinking})
-        elif isinstance(block, ToolUseBlock):
-            tool = short_tool_name(block.name)
-            arguments = dict(block.input or {})
-            self.calls[block.id] = (tool, arguments)
-            self.final_parts = []
-            await self.trace.add(CycleEventKind.TOOL_CALL, tool=tool, payload={"call_id": block.id, "arguments": arguments})
+    async def seen(self, event: RunEvent) -> None:
+        match event:
+            case ReplyEnded(text=text, thoughts=thoughts):
+                self.replies += 1
+                if thoughts.strip():
+                    await self.trace.add(CycleEventKind.THOUGHT, payload={"text": thoughts})
+                if text.strip():
+                    self.final_parts.append(text)
+                    await self.trace.add(CycleEventKind.TEXT, payload={"text": text})
+            case ToolCalled(call_id=call_id, tool=tool, input=arguments):
+                self.calls[call_id] = (tool, dict(arguments))
+                self.final_parts = []
+                await self.trace.add(CycleEventKind.TOOL_CALL, tool=tool, payload={"call_id": call_id, "arguments": dict(arguments)})
+            case ToolFinished(call_id=call_id, text=text, is_error=is_error):
+                await self.result(call_id, text, is_error)
+            case _:
+                return
 
     async def result(self, call_id: str, text: str, is_error: bool) -> None:
         tool, arguments = self.calls.pop(call_id, ("", {}))

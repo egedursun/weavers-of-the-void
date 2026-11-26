@@ -27,6 +27,8 @@ import {
 import { Muted, Text } from '@/components/typography'
 import { useJob } from '@/features/entity/api/mutations'
 import { useNames, useWorldState } from '@/features/entity/api/queries'
+import { useRoleModel } from '@/features/providers/api'
+import { modelBlock } from '@/features/providers/modelReadiness'
 import { type WriteTarget } from '@/features/team/writeGate'
 import { ImageGenFeedLines } from './ImageGenFeedLines'
 import {
@@ -34,7 +36,6 @@ import {
   imageKeys,
   startBulk,
   stopBulk,
-  useHealth,
   useImageGenStatus,
   writeMissingPrompts,
 } from './api'
@@ -42,7 +43,6 @@ import { WORKER_OFF_REASON, useImageGenEvents } from './imageGenState'
 
 const PERCENT = 100
 const READ_ONLY = 'A guest world is open read-only.'
-const NO_LLM = 'The language model is not connected; this needs it.'
 
 function useImageMutation<T>(
   writes: readonly WriteTarget[],
@@ -89,7 +89,7 @@ function bulkTitle(bulk: QueueStatus['bulk']): string {
 export function BulkImageGenPanel() {
   useImageGenEvents()
   const status = useImageGenStatus()
-  const health = useHealth()
+  const imageModel = useRoleModel('images')
   const state = useWorldState()
   const names = useNames()
   const [confirming, setConfirming] = useState(false)
@@ -132,11 +132,11 @@ export function BulkImageGenPanel() {
         (() => {
           const queue = status.data.status
           const bulk = queue.bulk
-          const configured = health.data?.image_worker_configured ?? true
+          const configured = (imageModel ?? 'set') !== ''
           const offReason = !configured
             ? WORKER_OFF_REASON
             : !queue.available
-              ? (queue.reason ?? 'The image worker is not available right now.')
+              ? (queue.reason ?? 'The image model is not available right now.')
               : null
           const readOnly = state.data?.read_only ? READ_ONLY : null
           const missing = status.data.missing
@@ -156,7 +156,7 @@ export function BulkImageGenPanel() {
             (start.isPending ? 'Working on it.' : null)
           const promptReason =
             readOnly ??
-            (state.data && !state.data.llm_enabled ? NO_LLM : null) ??
+            modelBlock(state.data, 'writing') ??
             (promptless === 0
               ? 'Every record already has an image prompt.'
               : null) ??
@@ -165,7 +165,9 @@ export function BulkImageGenPanel() {
             <div className='flex min-w-0 flex-col gap-4'>
               <div className='flex min-w-0 flex-wrap items-center gap-2'>
                 <Badge variant={offReason ? 'warning' : 'success'}>
-                  {offReason ? 'Image worker off' : 'Image worker ready'}
+                  {offReason
+                    ? 'No image model'
+                    : `Painting with ${imageModel ?? 'the image model'}`}
                 </Badge>
                 {!offReason && (
                   <Muted variant='caption'>

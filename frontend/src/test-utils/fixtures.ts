@@ -49,6 +49,12 @@ export function worldState(overrides: Record<string, unknown> = {}) {
     image_gen: { running: false },
     batch_deepen: {},
     llm_enabled: true,
+    role_models: [
+      { role: 'world_agents', model: 'quick · Studio key' },
+      { role: 'writing', model: 'quick · Studio key' },
+      { role: 'conversation', model: 'deep · Studio key' },
+      { role: 'images', model: '' },
+    ],
     ...overrides,
   }
 }

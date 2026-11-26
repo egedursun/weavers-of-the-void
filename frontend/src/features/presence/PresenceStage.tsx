@@ -134,7 +134,7 @@ export function PresenceStage({ view }: { view: SpeakerView }) {
             {!view.model_enabled && (
               <Badge size='sm' variant='warning'>
                 <CloudOff />
-                No language model is on
+                No conversation model
               </Badge>
             )}
           </div>

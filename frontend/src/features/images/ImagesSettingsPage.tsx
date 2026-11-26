@@ -1,18 +1,18 @@
 import { Link } from '@tanstack/react-router'
-import { Cpu, ImageIcon, Images } from 'lucide-react'
+import { BrainCircuit, Cpu, ImageIcon, Images } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { IntroNote, MiniStat } from '@/components/domain'
 import { MissingImages } from '@/features/gallery/MissingImages'
 import { useWorldState } from '@/features/overview/api'
+import { useRoleModel } from '@/features/providers/api'
 import { BulkImageGenPanel } from './BulkImageGenPanel'
 import { ImageGenSettings } from './ImageGenSettings'
 import { ImageStyleSettings } from './ImageStyleSettings'
-import { useHealth } from './api'
 
 export function ImagesSettingsPage() {
-  const health = useHealth()
   const state = useWorldState()
-  const configured = health.data?.image_worker_configured ?? false
+  const model = useRoleModel('images') ?? ''
+  const configured = model !== ''
   return (
     <div className='flex min-w-0 flex-col gap-6'>
       <IntroNote>
@@ -23,13 +23,13 @@ export function ImagesSettingsPage() {
       <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-3'>
         <MiniStat
           icon={Cpu}
-          label='Image worker'
-          value={configured ? 'Connected' : 'Not configured'}
+          label='Image model'
+          value={configured ? model : 'No model set'}
           tone={configured ? 'success' : 'warning'}
           hint={
             configured
-              ? 'Images are painted by the worker'
-              : 'Run make worker-start or set AERONA_IMAGE_WORKER_URL'
+              ? 'The first model of the image chain paints; the next ones step in when it cannot'
+              : 'Add one under Team and workspace, Models'
           }
         />
         <MiniStat
@@ -49,12 +49,20 @@ export function ImagesSettingsPage() {
       <ImageGenSettings />
       <BulkImageGenPanel />
       <MissingImages type={null} />
-      <Button variant='outline' asChild className='self-start'>
-        <Link to='/gallery'>
-          <Images />
-          Open the gallery
-        </Link>
-      </Button>
+      <div className='flex min-w-0 flex-wrap gap-2'>
+        <Button variant='outline' asChild>
+          <Link to='/gallery'>
+            <Images />
+            Open the gallery
+          </Link>
+        </Button>
+        <Button variant='outline' asChild>
+          <Link to='/workspace' search={{ part: 'providers' }}>
+            <BrainCircuit />
+            Choose the image model
+          </Link>
+        </Button>
+      </div>
     </div>
   )
 }

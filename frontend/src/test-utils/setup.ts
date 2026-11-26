@@ -1,6 +1,7 @@
 import { afterEach, beforeEach } from 'vitest'
 import { viewerExit } from '@/api/viewerExit'
 import { chooseWorkspace, forgetLastWorkspace } from '@/api/workspaceStore'
+import { useConnectStep } from '@/features/providers/connectStep'
 import { installNestingGuard, takeNestingViolations } from './domNesting'
 import { installNetworkGuard, takeNetworkViolations } from './networkGuard'
 
@@ -11,6 +12,7 @@ viewerExit.reload = () => undefined
 beforeEach(() => {
   chooseWorkspace(null)
   forgetLastWorkspace()
+  useConnectStep.getState().finish()
 })
 
 afterEach(() => {

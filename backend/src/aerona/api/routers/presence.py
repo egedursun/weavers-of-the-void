@@ -38,6 +38,7 @@ from aerona.db.tables.presence import PresenceExchangeRow, PresenceSessionRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.accounts import Permission
 from aerona.domain.enums.presence import PresenceRecord, PresenceStatus, SpeakerGroup
+from aerona.domain.enums.providers import ModelRole
 from aerona.services.accounts.guard import ensure_allowed
 from aerona.services.container import Services
 from aerona.services.images.records import covers_of
@@ -213,7 +214,7 @@ async def read_speaker(services: ServicesDep, node_id: int = Path(ge=1)) -> Pres
         card=card_view(card, covers.get(node_id)),
         open_session=opened,
         past_sessions=past,
-        model_enabled=services.application.model.enabled,
+        model_enabled=services.application.model.ready(ModelRole.CONVERSATION),
         remembered_exchanges=rules.presence.remembered_exchanges,
     )
 

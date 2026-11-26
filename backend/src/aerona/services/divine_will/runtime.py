@@ -4,13 +4,11 @@ from dataclasses import dataclass
 from typing import Any
 from weakref import WeakKeyDictionary
 
-from claude_agent_sdk import CLIConnectionError, ProcessError, SdkMcpTool
 from sqlalchemy import select
 
 from aerona.agents.ask import ask
 from aerona.agents.ports import LanguageModel
-from aerona.agents.turns.session import STEP_LIMIT_REASONS
-from aerona.constants.llm import HAIKU_MODEL_ID
+from aerona.agents.turns.session import STEP_LIMIT_REASON
 from aerona.core.errors import AeronaError, BusyError, ConflictError, NotFoundError, ValidationFailedError
 from aerona.db.record_context import acting
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -19,6 +17,7 @@ from aerona.db.tables.divine_will import DivineWillAttachmentRow, DivineWillConf
 from aerona.domain.enums.divine_will import ConfirmationReason, ConfirmationStatus, CycleEventKind, CycleNotice, CycleStatus, DivineWillMode
 from aerona.domain.enums.job import JobKind
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.providers import ModelRole
 from aerona.events.audience import addressed_to, private_audience
 from aerona.events.kinds import EventKind
 from aerona.jobs.context import JOB_LABEL_KEY, JobContext
@@ -28,6 +27,7 @@ from aerona.llm.content import ImagePart, ModelCapabilities
 from aerona.llm.errors import LlmDisabledError, LlmTransientError
 from aerona.llm.records import AgentRun, Usage
 from aerona.llm.stream import StreamActor, current_actor
+from aerona.llm.tools import AgentTool
 from aerona.media.store import read_all
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.divine_will import DivineWillTranslateContext
@@ -51,7 +51,7 @@ from aerona.services.divine_will.sessions import (
     settle_stale,
 )
 from aerona.services.divine_will.trace import CycleTrace, CycleWatch, OutcomeBook
-from aerona.tools.divine_will.framework import WillCall, WillResult, WillTool, invoke, sdk_will_tool
+from aerona.tools.divine_will.framework import WillCall, WillResult, WillTool, invoke, will_agent_tool
 from aerona.tools.divine_will.registry import mode_tools, tool_text
 from aerona.tools.framework.runtime import LOGGER as TOOL_LOGGER
 
@@ -138,14 +138,14 @@ class DivineWillRuntime:
         return int(found) if found is not None else None
 
     async def capabilities(self) -> ModelCapabilities:
-        return await self.model.capabilities()
+        return await self.model.capabilities(ModelRole.CONVERSATION)
 
     def require_idle(self) -> None:
         if self.services.jobs.busy_group(DIVINE_WILL_GROUP) is not None:
             raise BusyError(BUSY_TEXT)
 
     async def submit(self, text: str, mode: DivineWillMode, attachment_ids: Sequence[int]) -> DivineWillCycleRow:
-        if not self.model.enabled:
+        if not self.model.ready(ModelRole.CONVERSATION):
             raise LlmDisabledError(DISABLED_TEXT)
         said = text.strip()
         if not said:
@@ -163,7 +163,7 @@ class DivineWillRuntime:
                 raise NotFoundError(NO_WORLD_TEXT)
             holder = await open_session(session, cosmos.epoch)
             settled = await settle_stale(session, holder.id)
-            cycle = await new_cycle(session, holder, mode=mode, epoch=cosmos.epoch, text=said, model=HAIKU_MODEL_ID)
+            cycle = await new_cycle(session, holder, mode=mode, epoch=cosmos.epoch, text=said, model=self.model.model_of(ModelRole.CONVERSATION))
             files = await bind_attachments(session, cycle.id, attachment_ids, self.services.settings.divine_will_upload_max_files)
             await add_event(
                 session,
@@ -224,13 +224,14 @@ class DivineWillRuntime:
                     LABEL,
                     prepared.system,
                     prepared.prompt,
-                    tools=self.sdk_tools(prepared, book),
+                    tools=self.agent_tools(prepared, book),
                     max_turns=prepared.remaining,
                     timeout_seconds=prepared.rules.model.agent_timeout,
                     images=prepared.images,
                     watch=watch,
+                    role=ModelRole.CONVERSATION,
                 )
-            except (LlmTransientError, CLIConnectionError, ProcessError) as error:
+            except LlmTransientError as error:
                 await watch.flush()
                 await self.count(cycle_id, watch.replies, Usage())
                 if book.paused:
@@ -254,7 +255,7 @@ class DivineWillRuntime:
         final = await self.in_players_language(cycle_id, watch.final_text or run.text)
         if book.paused:
             return await self.finish(cycle_id, CycleStatus.AWAITING_CONFIRMATION, final_text=final)
-        if run.stop_reason in STEP_LIMIT_REASONS:
+        if run.stop_reason == STEP_LIMIT_REASON:
             await self.trace(cycle_id).add(CycleEventKind.NOTICE, payload={"notice": STEP_LIMIT_NOTICE, "text": STEP_LIMIT_TEXT})
         return await self.finish(cycle_id, CycleStatus.DONE, final_text=final)
 
@@ -308,7 +309,7 @@ class DivineWillRuntime:
         images = pictures([(row, await read_all(media, row.media_key)) for row in shown])
         return Prepared(cycle, rules, who, system, prompt, images, tools, remaining)
 
-    def sdk_tools(self, prepared: Prepared, book: OutcomeBook) -> list[SdkMcpTool[Any]]:
+    def agent_tools(self, prepared: Prepared, book: OutcomeBook) -> list[AgentTool]:
         cycle = prepared.cycle
         call = WillCall(
             self.services.database,
@@ -331,10 +332,10 @@ class DivineWillRuntime:
             book.stash(tool.name, arguments, result)
             return result
 
-        found: list[SdkMcpTool[Any]] = []
+        found: list[AgentTool] = []
         for tool in prepared.tools:
             text = tool_text(tool.tool_id)
-            found.append(sdk_will_tool(call, tool, text.description, text.fields, run))
+            found.append(will_agent_tool(call, tool, text.description, text.fields, run))
         return found
 
     async def guarded(self, call: WillCall, creator_id: int, tool: WillTool[Any], arguments: dict[str, Any]) -> WillResult:

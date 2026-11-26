@@ -3,11 +3,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from claude_agent_sdk import AssistantMessage, SdkMcpTool, TextBlock, ThinkingBlock, ToolResultBlock, ToolUseBlock, UserMessage
-
-from aerona.constants.llm import HAIKU_MODEL_ID, TOOL_NAME_PREFIX
+from aerona.domain.enums.providers import ModelRole
+from aerona.llm.backends.base import StopReason
 from aerona.llm.content import AgentWatch, ImagePart
+from aerona.llm.events import ReplyEnded, RunEvent, ToolCalled, ToolFinished
 from aerona.llm.records import AgentRun, Usage
+from aerona.llm.tools import AgentTool
 from tests.agents.fakes import FakeModel
 
 
@@ -71,11 +72,12 @@ class ScriptedWill(FakeModel):
         system_prompt: str,
         prompt: str,
         *,
-        tools: list[SdkMcpTool[Any]],
+        tools: Sequence[AgentTool],
         max_turns: int | None = None,
         timeout_seconds: int | None = None,
         images: Sequence[ImagePart] = (),
         watch: AgentWatch | None = None,
+        role: ModelRole = ModelRole.WORLD_AGENTS,
     ) -> AgentRun:
         self.seen.append(Seen(system_prompt, prompt, [tool.name for tool in tools], list(images), max_turns))
         script = self.turns.pop(0) if self.turns else [Say("Done.")]
@@ -91,23 +93,23 @@ class ScriptedWill(FakeModel):
             replies += 1
             if isinstance(step, Say):
                 texts.append(step.text)
-                await self.show(watch, AssistantMessage(content=[TextBlock(step.text)], model=HAIKU_MODEL_ID))
+                await self.show(watch, ReplyEnded(step.text, ""))
             elif isinstance(step, Think):
-                await self.show(watch, AssistantMessage(content=[ThinkingBlock(step.text, "signature")], model=HAIKU_MODEL_ID))
+                await self.show(watch, ReplyEnded("", step.text))
             elif isinstance(step, Use):
                 call_id = f"call-{len(self.seen)}-{index}"
-                await self.show(
-                    watch, AssistantMessage(content=[ToolUseBlock(call_id, f"{TOOL_NAME_PREFIX}{step.tool}", step.arguments)], model=HAIKU_MODEL_ID)
-                )
+                await self.show(watch, ReplyEnded("", ""))
+                await self.show(watch, ToolCalled(call_id, step.tool, dict(step.arguments)))
                 answer = await offered[step.tool].handler(dict(step.arguments))
-                text = "\n".join(str(part.get("text", "")) for part in answer["content"])
-                self.outcomes.append(ToolOutcome(step.tool, text, bool(answer.get("is_error"))))
-                await self.show(watch, UserMessage(content=[ToolResultBlock(call_id, answer["content"], bool(answer.get("is_error")))]))
+                self.outcomes.append(ToolOutcome(step.tool, answer.text, answer.is_error))
+                await self.show(watch, ToolFinished(call_id, step.tool, answer.text, answer.is_error))
             if watch is not None and watch.stopped:
-                return AgentRun(text="\n".join(texts), usage=Usage(turns=replies), completed=False, stop_reason="paused")
-        return AgentRun(text="\n".join(texts), usage=Usage(input_tokens=10, output_tokens=5, turns=replies), completed=True, stop_reason="success")
+                return AgentRun(text="\n".join(texts), usage=Usage(turns=replies), completed=False, stop_reason=StopReason.STOPPED.value)
+        return AgentRun(
+            text="\n".join(texts), usage=Usage(input_tokens=10, output_tokens=5, turns=replies), completed=True, stop_reason=StopReason.COMPLETED.value
+        )
 
     @staticmethod
-    async def show(watch: AgentWatch | None, message: object) -> None:
+    async def show(watch: AgentWatch | None, event: RunEvent) -> None:
         if watch is not None:
-            await watch.seen(message)
+            await watch.seen(event)

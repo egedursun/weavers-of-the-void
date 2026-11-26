@@ -17,10 +17,11 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { KeyValueList, Paged, Section } from '@/components/domain'
 import { Label, Muted, Text } from '@/components/typography'
-import { NO_LLM_REASON, READ_ONLY_REASON } from '@/features/entity/actions/gate'
+import { READ_ONLY_REASON } from '@/features/entity/actions/gate'
 import { wordOf } from '@/features/entity/affairs/labels'
 import { loreKeys } from '@/features/entity/api/keys'
 import { useWorldState } from '@/features/entity/api/queries'
+import { modelBlock } from '@/features/providers/modelReadiness'
 
 type Translation = components['schemas']['TranslationOutput']
 
@@ -107,7 +108,7 @@ export function TranslationBox({
   })
   const reason =
     (state.data?.read_only ? READ_ONLY_REASON : null) ??
-    (state.data && !state.data.llm_enabled ? NO_LLM_REASON : null) ??
+    modelBlock(state.data, 'writing') ??
     (text.trim() === '' ? 'Write a sentence first.' : null) ??
     (translate.isPending ? 'Translating.' : null)
   return (

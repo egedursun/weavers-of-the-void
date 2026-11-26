@@ -16,6 +16,7 @@ from aerona.services.application import build_application, database_path, start_
 from aerona.services.container import Services
 from aerona.services.epoch_wiring import build_orchestrator, build_player
 from aerona.services.integrity.data_repairs import checkpoint
+from aerona.services.providers.hub import Providers
 from aerona.services.rules import RulesService
 from aerona.services.team.queue import bind_team
 from aerona.settings import Settings
@@ -26,7 +27,9 @@ LISTENERS_BUSY = "someone is watching its live events"
 REQUESTS_BUSY = "a request is being answered"
 
 
-async def open_services(settings: Settings, model: LanguageModel | None, *, slots: asyncio.Semaphore | None = None) -> Services:
+async def open_services(
+    settings: Settings, model: LanguageModel | None, *, slots: asyncio.Semaphore | None = None, providers: Providers | None = None
+) -> Services:
     database = Database(settings.database_url)
     bus = EventBus()
     jobs = JobManager(database, bus)
@@ -35,7 +38,7 @@ async def open_services(settings: Settings, model: LanguageModel | None, *, slot
     await rules.load()
     jobs.bind_capacity(lambda: rules.current.agents.concurrent_jobs)
     await prepare_engine(database)
-    application = await build_application(settings, database, bus, rules, model=model, jobs=jobs)
+    application = await build_application(settings, database, bus, rules, model=model, jobs=jobs, providers=providers)
     orchestrator = build_orchestrator(application, database, bus, jobs, rules, slots=slots)
     await orchestrator.recover()
     player = build_player(application, database, bus, jobs, player_creative_ports(application.agents))
@@ -55,10 +58,12 @@ async def close_services(services: Services) -> None:
     forget_database(services.database.engine.url)
 
 
-async def launch_services(settings: Settings, model: LanguageModel | None, *, slots: asyncio.Semaphore | None = None) -> Services:
+async def launch_services(
+    settings: Settings, model: LanguageModel | None, *, slots: asyncio.Semaphore | None = None, providers: Providers | None = None
+) -> Services:
     settings.ensure_directories()
     await upgrade_to_head(settings.database_url)
-    services = await open_services(settings, model, slots=slots)
+    services = await open_services(settings, model, slots=slots, providers=providers)
     await start_application(services.application, services.database, services.jobs, services.rules, services.agents.llm_enabled)
     return services
 

@@ -16,6 +16,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable
 
 
+FROM node:24-trixie-slim AS agents
+
+WORKDIR /opt/agents
+COPY deploy/agents/package.json deploy/agents/package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --no-audit --no-fund
+
+
 FROM python:3.13-slim-trixie AS runtime
 
 ARG AERONA_UID=10001
@@ -36,9 +44,12 @@ ENV PATH="/app/.venv/bin:${PATH}" \
     HOME=/home/aerona \
     AERONA_DATA_DIR=/data \
     AERONA_HOST=0.0.0.0 \
-    AERONA_PORT=8000
+    AERONA_PORT=8000 \
+    AERONA_AGENTS_DIR=/opt/agents
 
 COPY --from=builder --chown=aerona:aerona /app/.venv /app/.venv
+COPY --from=agents /usr/local/bin/node /usr/local/bin/node
+COPY --from=agents /opt/agents /opt/agents
 COPY --chown=aerona:aerona scripts/backup_library.py /app/scripts/backup_library.py
 
 WORKDIR /home/aerona

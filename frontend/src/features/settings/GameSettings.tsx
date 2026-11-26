@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
   Brain,
+  BrainCircuit,
   Droplet,
   Hourglass,
   Gamepad2,
   ImagePlus,
-  Languages,
   Lock,
   PenLine,
   Plus,
@@ -23,6 +24,7 @@ import { Muted, Text } from '@/components/typography'
 import { BulkDeepenPanel } from '@/features/bulk/BulkDeepenPanel'
 import { GenesisRecord } from '@/features/onboarding/GenesisRecord'
 import { type WorldState, useWorldState } from '@/features/overview/api'
+import { ROLE_LOOK } from '@/features/providers/providerLook'
 import { useRuleValue } from '@/features/world-rules/api'
 import { WorldSettingsForm } from './WorldSettingsForm'
 import {
@@ -31,7 +33,6 @@ import {
   useWriteMissingPrompts,
 } from './api'
 
-const MODEL_NAME = 'Claude Haiku'
 const CHEAT_DEFAULT = 1000
 const CHEAT_CAP_RULE = 'server.cheat_essence_max'
 const QUICK_AMOUNTS = [100, 1000, 10000] as const
@@ -45,19 +46,35 @@ function ModelAndLanguage({ state }: { state: WorldState }) {
   const language = state.world?.lore_language ?? 'english'
   return (
     <Section
-      title='Model and lore language'
-      description='Every role, from sons to Fate and the chronicler, thinks with one model.'
+      title='Models and lore language'
+      description='Each role thinks or paints with the first model of its chain in this workspace, or in the server default.'
       surface='card'
       icon={Brain}
       tone='info'
+      actions={
+        <Button variant='outline' size='sm' asChild>
+          <Link to='/workspace' search={{ part: 'providers' }}>
+            <BrainCircuit />
+            Choose the models
+          </Link>
+        </Button>
+      }
     >
-      <div className='grid min-w-0 grid-cols-1 gap-2 md:grid-cols-3'>
-        <MiniStat
-          icon={Brain}
-          label='Language model'
-          value={MODEL_NAME}
-          tone='info'
-        />
+      <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
+        {state.role_models.map((entry) => {
+          const look = ROLE_LOOK[entry.role]
+          return (
+            <MiniStat
+              key={entry.role}
+              icon={look.icon}
+              label={look.label}
+              value={entry.model || 'No model set'}
+              tone={entry.model ? look.tone : 'warning'}
+            />
+          )
+        })}
+      </div>
+      <div className='grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2'>
         <MiniStat
           icon={state.llm_enabled ? Power : PowerOff}
           label='Model calls'
@@ -274,28 +291,12 @@ export function GameSettings() {
   const data = state.data
   return (
     <div className='flex min-w-0 flex-col gap-6'>
-      <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4'>
+      <div className='grid min-w-0 grid-cols-2 gap-2'>
         <MiniStat
           icon={Droplet}
           label='Essence'
           value={data.creator?.essence ?? 0}
           tone='gold'
-        />
-        <MiniStat
-          icon={data.llm_enabled ? Power : PowerOff}
-          label='Model'
-          value={data.llm_enabled ? 'On' : 'Off'}
-          tone={data.llm_enabled ? 'success' : 'warning'}
-        />
-        <MiniStat
-          icon={Languages}
-          label='Lore language'
-          value={
-            LORE_LANGUAGE_LABEL[data.world?.lore_language ?? 'english'] ??
-            data.world?.lore_language ??
-            ''
-          }
-          tone='info'
         />
         <MiniStat
           icon={PenLine}

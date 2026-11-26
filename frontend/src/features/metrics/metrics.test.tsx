@@ -8,9 +8,9 @@ const METRICS = {
   totals: {
     calls: 1500,
     milliseconds: 90000,
-    cost: 12.5,
     input_tokens: 2_000_000,
     output_tokens: 300_000,
+    errors: 3,
   },
   epochs: [
     {
@@ -19,7 +19,6 @@ const METRICS = {
       milliseconds: 40000,
       input_tokens: 900_000,
       output_tokens: 100_000,
-      cost: 5,
       errors: 2,
       retried: 1,
       slow: 3,
@@ -30,7 +29,6 @@ const METRICS = {
       milliseconds: 50000,
       input_tokens: 1_100_000,
       output_tokens: 200_000,
-      cost: 7.5,
       errors: 0,
       retried: 0,
       slow: 0,
@@ -44,7 +42,6 @@ const METRICS = {
       average_ms: 60,
       input_tokens: 1,
       output_tokens: 1,
-      cost: 1,
     },
   ],
   steps: [
@@ -53,7 +50,6 @@ const METRICS = {
       calls: 10,
       average_ms: 1200,
       longest_ms: 4000,
-      cost: 1,
       errors: 1,
     },
   ],
@@ -71,7 +67,6 @@ const METRICS = {
       turns: 3,
       input_tokens: 1,
       output_tokens: 1,
-      cost_usd: 0,
       error: null,
       created_at: 'x',
     },
@@ -90,7 +85,6 @@ const METRICS = {
       turns: null,
       input_tokens: 0,
       output_tokens: 0,
-      cost_usd: 0,
       error: 'Invalid JSON',
       created_at: 'x',
     },
@@ -117,20 +111,23 @@ const base = (metrics: unknown) => ({
 })
 
 describe('model metrics panel', () => {
-  it('shows call, time, token and cost chips with the per-epoch table', async () => {
+  it('shows call, time and token chips with the per-epoch table and no cost', async () => {
     const { screen } = await renderScreen(<ModelMetrics />, base(METRICS))
     await expect.poll(() => tileValue('Calls')).toBe('1.5K')
     await expect.poll(() => tileValue('Time spent')).toBe('1 min 30 s')
     await expect.poll(() => tileValue('Tokens in')).toBe('2M')
     await expect.poll(() => tileValue('Tokens out')).toBe('300K')
-    await expect.poll(() => tileValue('API equivalent')).toBe('$12.5')
-    await expect.poll(() => tileValue('Errors')).toBe('2')
+    expect(tileValue('API equivalent')).toBeNull()
+    expect(document.body.textContent).not.toContain('$')
+    await expect.poll(() => tileValue('Errors')).toBe('3')
     await expect
       .element(screen.getByRole('cell', { name: 'Epoch 2' }))
       .toBeInTheDocument()
     await expect.element(screen.getByText('2 · 1 retried')).toBeInTheDocument()
     await expect
-      .element(screen.getByText(/haiku · 1,500 calls · average/))
+      .element(
+        screen.getByText(/haiku · 1,500 calls · average .* in \/ .* out/)
+      )
       .toBeInTheDocument()
     await expect
       .element(screen.getByText('Calls over 30 s count as slow.'))
@@ -166,6 +163,17 @@ describe('model metrics panel', () => {
           .some((call) => call.query.get('epochs') === '10')
       )
       .toBe(true)
+  })
+
+  it('says that no epoch has called a model instead of an empty table', async () => {
+    const { screen } = await renderScreen(
+      <ModelMetrics />,
+      base({ ...METRICS, epochs: [] })
+    )
+    await expect
+      .element(screen.getByText(/No epoch has called a model yet/))
+      .toBeInTheDocument()
+    expect(document.querySelector('table')).toBeNull()
   })
 
   it('has an empty state and the average epoch time', async () => {

@@ -160,9 +160,8 @@ void main(){
     col = uColor*(gauss((abs(vSide) - 0.62)*5.0)*0.55 + speck*1.2);
     prof = 1.0; core = 0.0;
   } else if (st == 4) {
-    float seg = floor(s/18.0);
-    float fl = step(0.38, fract(sin(seg*12.9898 + floor(uTime*7.0)*3.17)*43758.5453));
-    m = mix(0.08, 1.25, fl);
+    float fold = snoise(vec3(s*0.055, uSeed, tt*0.35));
+    m = 0.8 + 0.35*fold;
   } else if (st == 5) {
     m = 0.3 + 0.7*step(fract(s/5.0 - tt*0.35), 0.35);
     prof *= 0.6;

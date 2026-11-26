@@ -9,6 +9,7 @@ import { LiveFeedSheet } from '@/features/feed/LiveFeedSheet'
 import { NotificationBell } from '@/features/notifications/NotificationBell'
 import { OnboardingTracker } from '@/features/onboarding/OnboardingTracker'
 import { useWorldState } from '@/features/overview/api'
+import { MissingModelsBanner } from '@/features/providers/ModelNeeded'
 import { ConflictDialog } from '@/features/team/ConflictDialog'
 import { PresenceBeacon, PresentFaces } from '@/features/team/Presence'
 import { QueueTray } from '@/features/team/Queue'
@@ -87,6 +88,7 @@ export function ShellBanner() {
   return (
     <>
       <DiscoveryBanner />
+      <MissingModelsBanner />
       <ActivityStrip />
       <WorldHeader />
     </>

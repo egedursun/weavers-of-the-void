@@ -59,6 +59,7 @@ function serveState(essence: number, running = false, readOnly = false) {
     epoch_running: running,
     read_only: readOnly,
     llm_enabled: true,
+    role_models: [{ role: 'writing', model: 'quick · Studio key' }],
     world: { epoch: 4 },
   })
 }

@@ -160,7 +160,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/domain_effects.py` | 58 | 2026-11-16 | `69cc61cfe621566b` |
 | `backend/src/aerona/catalog/effect_packages.py` | 39 | 2026-11-23 | `671b9f348686a905` |
 | `backend/src/aerona/catalog/entity_types.py` | 5 | 2026-11-16 | `5a64164db10e8bec` |
-| `backend/src/aerona/catalog/enum_layers.py` | 1385 | 2026-11-25 | `0669a4165599e627` |
+| `backend/src/aerona/catalog/enum_layers.py` | 1389 | 2026-11-26 | `d7ced1b5a0349a98` |
 | `backend/src/aerona/catalog/estates.py` | 8 | 2026-11-23 | `7629c1ecb1550397` |
 | `backend/src/aerona/catalog/ethics.py` | 43 | 2026-11-23 | `393fd6776459f691` |
 | `backend/src/aerona/catalog/facets.py` | 23 | 2026-11-19 | `fd9cd80d7c481027` |
@@ -334,6 +334,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/preferences.py` | 6 | 2026-11-16 | `8f3650fab176c8d5` |
 | `backend/src/aerona/catalog/preservation.py` | 11 | 2026-11-17 | `d70c6ffb4d1fd431` |
 | `backend/src/aerona/catalog/production.py` | 40 | 2026-11-24 | `048527f6257335e0` |
+| `backend/src/aerona/catalog/providers.py` | 18 | 2026-11-26 | `7491069d1dfb4380` |
 | `backend/src/aerona/catalog/rebuilding.py` | 1 | 2026-11-23 | `cd2007afb46cb29a` |
 | `backend/src/aerona/catalog/relations.py` | 45 | 2026-11-23 | `9143f0ced038bfae` |
 | `backend/src/aerona/catalog/renown.py` | 5 | 2026-11-23 | `5d5d71602cf3f1f1` |
@@ -1282,7 +1283,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/prompts/tools/divine_will_library.py` | 65 | 2026-11-25 | `28dfd8c812a56c6a` |
 | `backend/src/aerona/prompts/tools/divine_will_mechanics.py` | 13 | 2026-11-25 | `ab6b0b7e47ea9cf0` |
 | `backend/src/aerona/prompts/tools/divine_will_notices.py` | 3 | 2026-11-25 | `6de1e81c2d593d74` |
-| `backend/src/aerona/prompts/tools/divine_will_read.py` | 46 | 2026-11-25 | `d227045dd0e22965` |
+| `backend/src/aerona/prompts/tools/divine_will_read.py` | 46 | 2026-11-26 | `916901e61f2be1fd` |
 | `backend/src/aerona/prompts/tools/divine_will_retrieval.py` | 7 | 2026-11-25 | `67fb960befd25128` |
 | `backend/src/aerona/prompts/tools/mortal.py` | 1305 | 2026-11-23 | `c7e7cb9c085b5df4` |
 | `backend/src/aerona/prompts/tools/results.py` | 1558 | 2026-11-23 | `4e328f2c4142da38` |
@@ -1338,7 +1339,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/divine_will/exports.py` | 7 | 2026-11-25 | `d9695fce0f411fad` |
 | `backend/src/aerona/services/divine_will/foresight.py` | 16 | 2026-11-25 | `f3aef37b7fbd6b47` |
 | `backend/src/aerona/services/divine_will/fountain.py` | 6 | 2026-11-25 | `10d003c97053be43` |
-| `backend/src/aerona/services/divine_will/index.py` | 15 | 2026-11-26 | `e180f65267a4cc4f` |
+| `backend/src/aerona/services/divine_will/index.py` | 16 | 2026-11-26 | `474190c95904c282` |
 | `backend/src/aerona/services/divine_will/passages.py` | 3 | 2026-11-25 | `18ecd5ad5e849a8d` |
 | `backend/src/aerona/services/divine_will/plans.py` | 47 | 2026-11-25 | `86f5c16c7a5c8243` |
 | `backend/src/aerona/services/divine_will/player.py` | 2 | 2026-11-25 | `472008e36931d8c4` |
@@ -1356,7 +1357,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/gods/goals.py` | 11 | 2026-11-16 | `f661f42dd979652f` |
 | `backend/src/aerona/services/gods/god_power.py` | 9 | 2026-11-16 | `67768ce4dd29b55e` |
 | `backend/src/aerona/services/images/media.py` | 3 | 2026-11-16 | `0c31c757b2ed6c80` |
-| `backend/src/aerona/services/images/queue.py` | 15 | 2026-11-25 | `d4b13bd2fad82e3f` |
+| `backend/src/aerona/services/images/queue.py` | 15 | 2026-11-26 | `2134dd84412bd293` |
 | `backend/src/aerona/services/images/records.py` | 7 | 2026-11-16 | `17f4ac04f766f1f0` |
 | `backend/src/aerona/services/images/transfer.py` | 5 | 2026-11-16 | `e6f29575473fd0fa` |
 | `backend/src/aerona/services/importance.py` | 5 | 2026-11-16 | `f0cd8d9a0ba7754c` |
@@ -1571,6 +1572,12 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/prompt_preview/blocks.py` | 8 | 2026-11-25 | `e978e4c3e1113574` |
 | `backend/src/aerona/services/prompt_preview/catalogue.py` | 1 | 2026-11-16 | `6c0ba510ba93931e` |
 | `backend/src/aerona/services/prompt_preview/motifs.py` | 1 | 2026-11-16 | `b82bc102d6d6f10b` |
+| `backend/src/aerona/services/providers/checks.py` | 2 | 2026-11-26 | `ddb5de5b10c3395e` |
+| `backend/src/aerona/services/providers/login.py` | 5 | 2026-11-26 | `208d311e9287b9d5` |
+| `backend/src/aerona/services/providers/pool.py` | 4 | 2026-11-26 | `f8f95514e543640a` |
+| `backend/src/aerona/services/providers/routes.py` | 1 | 2026-11-26 | `49b702c0245c89f2` |
+| `backend/src/aerona/services/providers/secrets.py` | 1 | 2026-11-26 | `405ef43eeaea2c38` |
+| `backend/src/aerona/services/providers/service.py` | 8 | 2026-11-26 | `e621b96b7c6cb986` |
 | `backend/src/aerona/services/search.py` | 5 | 2026-11-16 | `5a54f203454d51d4` |
 | `backend/src/aerona/services/startup_completion.py` | 2 | 2026-11-16 | `fe217e18a6662dd2` |
 | `backend/src/aerona/services/statistics.py` | 1 | 2026-11-16 | `d5faa2b0d726beb7` |
@@ -1982,9 +1989,9 @@ so any change to it after the read date fails the gate until the file is read ag
 | `frontend/src/features/onboarding/FirstEpochsGuide.tsx` | 20 | 2026-11-16 | `dc93ffb154efe90a` |
 | `frontend/src/features/onboarding/GenesisPreview.tsx` | 35 | 2026-11-16 | `33389819b6533d0c` |
 | `frontend/src/features/onboarding/GenesisRecord.tsx` | 23 | 2026-11-16 | `1bd248e006fa1e5d` |
-| `frontend/src/features/onboarding/GenesisScreen.tsx` | 28 | 2026-11-25 | `061811bb09f6b596` |
+| `frontend/src/features/onboarding/GenesisScreen.tsx` | 29 | 2026-11-26 | `79febf00c5ea034d` |
 | `frontend/src/features/onboarding/GenesisStepper.tsx` | 13 | 2026-11-18 | `e169b68f1d130fd4` |
-| `frontend/src/features/onboarding/GenesisWizard.tsx` | 16 | 2026-11-18 | `5ca5b7dcf5690733` |
+| `frontend/src/features/onboarding/GenesisWizard.tsx` | 16 | 2026-11-26 | `dc2a4da84a5af788` |
 | `frontend/src/features/onboarding/TechnologyFamilyFields.tsx` | 11 | 2026-11-18 | `7394731a6a6b3c3e` |
 | `frontend/src/features/onboarding/WizardSteps.tsx` | 53 | 2026-11-23 | `1d9b1a33b0aac33b` |
 | `frontend/src/features/onboarding/WorldBorn.tsx` | 16 | 2026-11-16 | `b3aafb21d5da919e` |

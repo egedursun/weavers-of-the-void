@@ -40,7 +40,7 @@ export function TopBar({ context, actions, account }: TopBarProps) {
         {context}
         <div
           data-layout='top-bar-cluster'
-          className='flex items-center gap-0.5 rounded-md border surface-framed border-gild/70 bg-card p-0.5'
+          className='flex items-center gap-0.5 rounded-md border surface-sheen border-gild/70 bg-card px-1.5 py-0.5'
         >
           <RealtimeIndicator />
           <Separator

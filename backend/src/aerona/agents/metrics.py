@@ -57,7 +57,6 @@ def call_row(record: CallRecord, epoch: int | None, actions: int | None) -> LlmC
         turns=record.usage.turns or None,
         input_tokens=record.usage.input_tokens,
         output_tokens=record.usage.output_tokens,
-        cost_usd=record.usage.cost_usd,
         actions=actions,
         error=(record.error or "")[:METRIC_ERROR_CHARS] or None,
     )

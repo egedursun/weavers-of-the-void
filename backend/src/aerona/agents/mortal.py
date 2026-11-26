@@ -17,7 +17,6 @@ from aerona.agents.turns.session import TurnOutcome, TurnPlan, run_turn
 from aerona.agents.turns.state import begin_turn, finish_turn, long_job_notes, turn_row
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.constants.agents import CHOSEN_TAG, MORTAL_WORD_CHRONICLE_CHARS
-from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.random import SeededRandom
@@ -362,7 +361,7 @@ async def run_mortal_turn(runtime: AgentRuntime, entity_id: int, order: tuple[in
     system, prompt = await mortal_prompts(runtime, started, catalogue)
     rules = await runtime.current_rules()
     position = {"order": order[0], "total": order[1]} if order is not None else {}
-    payload = {"entity_id": entity_id, "name": started.name, "resumed": started.resumed, "model": HAIKU_MODEL_ID, **position}
+    payload = {"entity_id": entity_id, "name": started.name, "resumed": started.resumed, "model": runtime.world_model, **position}
     runtime.publish(EventKind.MORTAL_TURN_STARTED, payload)
 
     async def follow_up(reason: TurnInterruption, detail: str | None, done: list[DoneAction]) -> str | None:
@@ -388,6 +387,13 @@ async def run_mortal_turn(runtime: AgentRuntime, entity_id: int, order: tuple[in
     result = await finish_mortal_turn(runtime, started, outcome, list(toolkit.created_entity_ids))
     runtime.publish(
         EventKind.MORTAL_TURN_FINISHED,
-        {"entity_id": entity_id, "name": result.name, "word": result.word, "creations": result.creations, "status": result.status, "model": HAIKU_MODEL_ID},
+        {
+            "entity_id": entity_id,
+            "name": result.name,
+            "word": result.word,
+            "creations": result.creations,
+            "status": result.status,
+            "model": runtime.world_model,
+        },
     )
     return result

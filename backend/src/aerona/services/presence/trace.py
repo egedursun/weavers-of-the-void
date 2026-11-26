@@ -1,12 +1,10 @@
 from collections.abc import Mapping
 from typing import Any
 
-from claude_agent_sdk import AssistantMessage, TextBlock, ThinkingBlock, ToolResultBlock, ToolUseBlock, UserMessage
-
 from aerona.db.repositories.presence import add_event
 from aerona.db.session import Database
 from aerona.domain.enums.presence import PresenceEventKind
-from aerona.llm.stream import result_text, short_tool_name
+from aerona.llm.events import ReplyEnded, RunEvent, ToolCalled, ToolFinished
 from aerona.services.divine_will.trace import outcome_line
 
 E = PresenceEventKind
@@ -38,27 +36,23 @@ class ExchangeWatch:
     def final_text(self) -> str:
         return "\n\n".join(part.strip() for part in self.final_parts if part.strip())
 
-    async def seen(self, message: object) -> None:
-        if isinstance(message, AssistantMessage) and message.parent_tool_use_id is None:
-            self.replies += 1
-            for block in message.content:
-                await self.block(block)
-        elif isinstance(message, UserMessage) and message.parent_tool_use_id is None and isinstance(message.content, list):
-            for part in message.content:
-                if isinstance(part, ToolResultBlock):
-                    await self.result(part.tool_use_id, result_text(part.content), bool(part.is_error))
-
-    async def block(self, block: object) -> None:
-        if isinstance(block, TextBlock) and block.text.strip():
-            self.final_parts.append(block.text)
-            await self.trace.add(E.TEXT, payload={"text": block.text})
-        elif isinstance(block, ThinkingBlock) and block.thinking.strip():
-            await self.trace.add(E.THOUGHT, payload={"text": block.thinking})
-        elif isinstance(block, ToolUseBlock):
-            tool = short_tool_name(block.name)
-            self.calls[block.id] = tool
-            self.final_parts = []
-            await self.trace.add(E.TOOL_CALL, tool=tool, payload={"call_id": block.id, "arguments": dict(block.input or {})})
+    async def seen(self, event: RunEvent) -> None:
+        match event:
+            case ReplyEnded(text=text, thoughts=thoughts):
+                self.replies += 1
+                if thoughts.strip():
+                    await self.trace.add(E.THOUGHT, payload={"text": thoughts})
+                if text.strip():
+                    self.final_parts.append(text)
+                    await self.trace.add(E.TEXT, payload={"text": text})
+            case ToolCalled(call_id=call_id, tool=tool, input=arguments):
+                self.calls[call_id] = tool
+                self.final_parts = []
+                await self.trace.add(E.TOOL_CALL, tool=tool, payload={"call_id": call_id, "arguments": dict(arguments)})
+            case ToolFinished(call_id=call_id, text=text, is_error=is_error):
+                await self.result(call_id, text, is_error)
+            case _:
+                return
 
     async def result(self, call_id: str, text: str, is_error: bool) -> None:
         tool = self.calls.pop(call_id, "")

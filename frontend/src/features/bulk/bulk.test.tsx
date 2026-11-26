@@ -111,7 +111,31 @@ describe('bulk deepening panel', () => {
       .element(screen.getByRole('button', { name: 'Deepen 12 records' }))
       .toHaveAttribute(
         'aria-description',
-        'Deepening needs the language model, which is turned off'
+        'The language model is turned off on this server.'
+      )
+  })
+
+  it('points to the models when no model writes', async () => {
+    const { screen } = await renderScreen(
+      <BulkDeepenPanel />,
+      routes(
+        {},
+        {},
+        {
+          role_models: [
+            { role: 'world_agents', model: 'quick · Studio key' },
+            { role: 'writing', model: '' },
+            { role: 'conversation', model: 'deep · Studio key' },
+            { role: 'images', model: '' },
+          ],
+        }
+      )
+    )
+    await expect
+      .element(screen.getByRole('button', { name: 'Deepen 12 records' }))
+      .toHaveAttribute(
+        'aria-description',
+        'No model is set for writing; choose one under Models in the workspace settings.'
       )
   })
 

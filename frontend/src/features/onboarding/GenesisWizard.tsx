@@ -113,7 +113,7 @@ export function GenesisWizard({ llmEnabled }: GenesisWizardProps) {
     )
   }
   const createBlocked = !llmEnabled
-    ? 'Genesis needs the language model, which is turned off'
+    ? 'Writing the world needs a model for writing; choose one under Models in the workspace settings.'
     : start.isPending
       ? 'The world is being thought'
       : null

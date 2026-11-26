@@ -1,4 +1,5 @@
 import {
+  BrainCircuit,
   type LucideIcon,
   LibraryBig,
   Settings2,
@@ -6,11 +7,13 @@ import {
   UsersRound,
 } from 'lucide-react'
 
-export type TeamPart = 'members' | 'universes' | 'general' | 'accounts'
+export type TeamPart =
+  'members' | 'universes' | 'providers' | 'general' | 'accounts'
 
 export const TEAM_PARTS: readonly TeamPart[] = [
   'members',
   'universes',
+  'providers',
   'general',
   'accounts',
 ]
@@ -24,6 +27,11 @@ export const TEAM_PART_LOOK: Record<
     label: 'Universes',
     menu: 'Who reaches each universe',
     icon: LibraryBig,
+  },
+  providers: {
+    label: 'Models',
+    menu: 'Models and providers',
+    icon: BrainCircuit,
   },
   general: { label: 'Workspace', menu: 'Workspace settings', icon: Settings2 },
   accounts: {

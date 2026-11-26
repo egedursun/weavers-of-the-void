@@ -32,6 +32,7 @@ from aerona.services.accounts.service import AccountService, Resolved, refuse, r
 from aerona.services.container import Services
 from aerona.services.library.hub import CHOOSE_UNIVERSE, UniverseHub
 from aerona.services.library.runtime import UniverseRuntime
+from aerona.services.providers.hub import Providers
 
 DISCOVERY_END_PATH = "/api/discovery/end"
 HEALTH_PREFIX = f"{API_PREFIX}{HEALTH_PATH}"
@@ -45,7 +46,7 @@ CHANGE_PASSWORD = "Set your own password before going on."
 NO_UNIVERSE = "No such universe."
 BAD_WORKSPACE = "Choose a workspace."
 NOT_IN_WORKSPACE = "This account is not a member of that workspace."
-SERVER_ADMINS_ONLY = "Only server administrators can manage accounts."
+SERVER_ADMINS_ONLY = "Only server administrators can do this."
 
 
 def get_hub(request: Request) -> UniverseHub:
@@ -62,6 +63,14 @@ def get_accounts(request: Request) -> AccountService:
 
 
 AccountsDep = Annotated[AccountService, Depends(get_accounts)]
+
+
+def get_providers(request: Request) -> Providers:
+    providers: Providers = request.app.state.providers
+    return providers
+
+
+ProvidersDep = Annotated[Providers, Depends(get_providers)]
 
 
 def route_access(request: Request) -> Access:

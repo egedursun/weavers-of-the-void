@@ -30,6 +30,11 @@ export function queryClientFor(universeId: string): QueryClient {
   return created
 }
 
+export function refreshEveryUniverse(queryKey: readonly unknown[]): void {
+  for (const client of universeClients.values())
+    void client.invalidateQueries({ queryKey })
+}
+
 export function dropQueryClient(universeId: string): void {
   universeClients.get(universeId)?.clear()
   universeClients.delete(universeId)

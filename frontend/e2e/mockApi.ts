@@ -19,7 +19,7 @@ export const HEALTH = {
   version: APP_VERSION,
   database_ok: true,
   llm_enabled: false,
-  image_worker_configured: false,
+  gateway_ready: false,
   running_jobs: 1,
 }
 

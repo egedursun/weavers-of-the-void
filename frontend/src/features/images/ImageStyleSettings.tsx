@@ -66,7 +66,7 @@ export function ImageStyleSettings() {
     : dirty
       ? 'Save the new style first.'
       : queue && !queue.available
-        ? (queue.reason ?? 'The image worker is not available right now.')
+        ? (queue.reason ?? 'The image model is not available right now.')
         : queue?.bulk.running
           ? 'A bulk run is already going.'
           : offStyle === 0
@@ -123,8 +123,8 @@ export function ImageStyleSettings() {
             variant={settings.data.image_generation ? 'success' : 'secondary'}
           >
             {settings.data.image_generation
-              ? 'The image worker is ready'
-              : 'The image worker is off; the style waits for it'}
+              ? 'The image model is ready'
+              : 'No image model is set; the style waits for one'}
           </Badge>
         </div>
         <ImageStylePicker

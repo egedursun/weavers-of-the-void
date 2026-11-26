@@ -1,9 +1,7 @@
 import argparse
-import getpass
 import os
 import platform
 import secrets
-import shutil
 import signal
 import subprocess
 import sys
@@ -19,7 +17,6 @@ WORKER_DIR = ROOT / "image-worker"
 RUN_DIR = ROOT / "data" / "run"
 WORKER_PID = RUN_DIR / "image-worker.pid"
 WORKER_LOG = RUN_DIR / "image-worker.log"
-TOKEN_KEY = "CLAUDE_CODE_OAUTH_TOKEN"
 SECRET_KEY = "AERONA_MEDIA_SECRET_KEY"
 SECRET_BYTES = 24
 NATIVE_WORKER_URL = "http://127.0.0.1:8100"
@@ -29,9 +26,6 @@ WORKER_HEALTH = f"{NATIVE_WORKER_URL}/health"
 HEALTH_TIMEOUT_SECONDS = 2
 WORKER_START_SECONDS = 120
 POLL_SECONDS = 1
-CHECK_MODEL = "claude-haiku-5-5"
-CHECK_PROMPT = "Reply with exactly one word: ready"
-CHECK_TIMEOUT_SECONDS = 120
 ENV_DEFAULTS = {
     "AERONA_IMAGE_WORKER_URL": NATIVE_WORKER_URL,
     "AERONA_IMAGE_WORKER_BACKEND": "mlx",
@@ -83,53 +77,7 @@ def init_env() -> None:
     if not env_value(lines, SECRET_KEY):
         lines = write_env(lines, SECRET_KEY, secrets.token_urlsafe(SECRET_BYTES))
     save_env(lines)
-    token = "set" if env_value(lines, TOKEN_KEY) else "missing, run: make claude-token"
-    print(f".env ready at {ENV_FILE} (Claude token: {token})")
-
-
-def check_claude(token: str) -> bool:
-    claude = shutil.which("claude")
-    if claude is None:
-        print("The claude CLI is not on PATH; skipping the live check.")
-        return True
-    environment = {key: value for key, value in os.environ.items() if key != "ANTHROPIC_API_KEY"}
-    environment[TOKEN_KEY] = token
-    try:
-        result = subprocess.run(
-            [claude, "-p", CHECK_PROMPT, "--model", CHECK_MODEL],
-            env=environment,
-            cwd=RUN_DIR,
-            capture_output=True,
-            text=True,
-            timeout=CHECK_TIMEOUT_SECONDS,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        print("Claude did not answer in time.")
-        return False
-    answer = result.stdout.strip()
-    if result.returncode != 0 or not answer:
-        print(f"Claude rejected the token: {result.stderr.strip() or answer or 'no answer'}")
-        return False
-    print(f"Claude answered through the token: {answer}")
-    return True
-
-
-def connect_claude() -> None:
-    init_env()
-    RUN_DIR.mkdir(parents=True, exist_ok=True)
-    claude = shutil.which("claude")
-    if claude is None:
-        sys.exit("Install Claude Code first so `claude setup-token` can run.")
-    print("A browser window opens; sign in with your Claude subscription.")
-    subprocess.run([claude, "setup-token"], check=False)
-    token = getpass.getpass("Paste the token printed above (input is hidden): ").strip()
-    if not token:
-        sys.exit("No token given; nothing changed.")
-    if not check_claude(token):
-        sys.exit("The token was not saved.")
-    save_env(write_env(read_env(), TOKEN_KEY, token))
-    print("Token saved to .env. Restart the backend to use it.")
+    print(f".env ready at {ENV_FILE}. Connect a model under Workspace settings, Providers, after the first sign-in.")
 
 
 def worker_healthy() -> bool:
@@ -220,7 +168,6 @@ def down() -> None:
 
 COMMANDS = {
     "env": init_env,
-    "claude-token": connect_claude,
     "worker-start": start_worker,
     "worker-stop": stop_worker,
     "worker-status": worker_status,

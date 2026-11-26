@@ -3,6 +3,7 @@ import { type components } from '@/api/generated/schema'
 import { type Permission, refusalIn, useTeamGate } from '@/api/teamGate'
 import { formatInteger } from '@/lib/format'
 import { TERMINAL_JOB_STATUSES, isJobStatus } from '@/constants/jobs'
+import { modelBlock } from '@/features/providers/modelReadiness'
 import {
   useActionCatalogue,
   useActiveJobs,
@@ -14,8 +15,6 @@ type Job = components['schemas']['JobResponse']
 
 export const BUSY_REASON = 'An epoch is running; this opens when it ends.'
 export const READ_ONLY_REASON = 'A guest world is open read-only.'
-export const NO_LLM_REASON =
-  'The language model is not connected; this needs it.'
 
 export function essenceReason(cost: number, essence: number): string {
   return `${formatInteger(cost)} essence needed; you have ${formatInteger(essence)}.`
@@ -54,22 +53,22 @@ export function useGodGate() {
   const essence = state.data?.creator?.essence ?? 0
   const busy = state.data?.epoch_running ?? false
   const readOnly = state.data?.read_only ?? false
-  const llm = state.data?.llm_enabled ?? true
+  const llmBlock = modelBlock(state.data, 'writing')
   const team = useTeamGate()
   const reason = useCallback(
     (needs: GateNeeds = {}): string | null => {
       if (readOnly) return READ_ONLY_REASON
       const refusal = refusalIn(team, needs.permission ?? null)
       if (refusal !== null) return refusal
-      if (needs.llm && !llm) return NO_LLM_REASON
+      if (needs.llm && llmBlock !== null) return llmBlock
       if (needs.world && busy) return BUSY_REASON
       if (needs.cost !== undefined && needs.cost > essence)
         return essenceReason(needs.cost, essence)
       return null
     },
-    [busy, essence, llm, readOnly, team]
+    [busy, essence, llmBlock, readOnly, team]
   )
-  return { essence, busy, readOnly, llm, reason, state }
+  return { essence, busy, readOnly, llm: llmBlock === null, reason, state }
 }
 
 export function isActiveJob(job: Job): boolean {

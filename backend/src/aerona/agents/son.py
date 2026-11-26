@@ -15,7 +15,6 @@ from aerona.agents.turns.ports import SpeechOnlyToolkit, ToolCatalogue, TurnTool
 from aerona.agents.turns.session import TurnOutcome, TurnPlan, run_turn
 from aerona.agents.turns.state import begin_turn, finish_turn, long_job_notes, turn_row
 from aerona.constants.agents import WORD_CHRONICLE_CHARS
-from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
 from aerona.db.tables.lore import MessageRow
@@ -175,7 +174,7 @@ async def run_son_turn(runtime: AgentRuntime, son_id: int) -> SonTurnResult:
     rules = await runtime.current_rules()
     runtime.publish(
         EventKind.SON_TURN_STARTED,
-        {"son_id": son_id, "son_name": started.son_name, "resumed": started.resumed, "model": HAIKU_MODEL_ID, "rarity": started.rarity.value},
+        {"son_id": son_id, "son_name": started.son_name, "resumed": started.resumed, "model": runtime.world_model, "rarity": started.rarity.value},
     )
 
     async def follow_up(reason: TurnInterruption, detail: str | None, done: list[DoneAction]) -> str | None:
@@ -207,7 +206,7 @@ async def run_son_turn(runtime: AgentRuntime, son_id: int) -> SonTurnResult:
             "word": result.word,
             "creations": result.creations,
             "status": result.status,
-            "model": HAIKU_MODEL_ID,
+            "model": runtime.world_model,
             "rarity": started.rarity.value,
         },
     )

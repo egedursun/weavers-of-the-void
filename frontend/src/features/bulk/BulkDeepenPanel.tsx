@@ -24,6 +24,7 @@ import {
 import { Muted, Stat, Text } from '@/components/typography'
 import { stepAverageMs, useModelMetrics } from '@/features/metrics/api'
 import { useWorldState } from '@/features/overview/api'
+import { modelBlock } from '@/features/providers/modelReadiness'
 import {
   type LogLine,
   useAssignNames,
@@ -84,7 +85,7 @@ export function BulkDeepenPanel() {
   const stop = useStopBulk()
   const names = useAssignNames()
   const [confirming, setConfirming] = useState(false)
-  const llm = state.data?.llm_enabled ?? false
+  const llmBlock = modelBlock(state.data, 'writing')
   const readOnly = state.data?.read_only ?? false
   const averageMs = stepAverageMs(metrics.data, DEEPEN_STEP)
 
@@ -107,11 +108,8 @@ export function BulkDeepenPanel() {
             averageMs === null
               ? 'No deepening has been measured yet, so there is no time estimate.'
               : `About ${formatMilliseconds(averageMs * waiting)} for ${plural(waiting, 'record', 'records')}.`
-          const blocked = !llm
-            ? 'Deepening needs the language model, which is turned off'
-            : readOnly
-              ? 'A guest world is read-only'
-              : null
+          const blocked =
+            llmBlock ?? (readOnly ? 'A guest world is read-only' : null)
           return (
             <div className='flex min-w-0 flex-col gap-4'>
               <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-4'>

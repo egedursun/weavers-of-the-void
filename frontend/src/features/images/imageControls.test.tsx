@@ -42,15 +42,15 @@ function routes(
   configured = true
 ): MockRoutes {
   return {
-    'GET /api/state': worldState({ promptless_count: 2 }),
-    'GET /api/health': {
-      status: 'ok',
-      version: '1',
-      database_ok: true,
-      llm_enabled: true,
-      image_worker_configured: configured,
-      running_jobs: 0,
-    },
+    'GET /api/state': worldState({
+      promptless_count: 2,
+      role_models: [
+        { role: 'world_agents', model: 'quick · Studio key' },
+        { role: 'writing', model: 'quick · Studio key' },
+        { role: 'conversation', model: 'quick · Studio key' },
+        { role: 'images', model: configured ? 'painter · Studio key' : '' },
+      ],
+    }),
     'GET /api/image-gen': { status: queue(status), missing: 7, off_style: 0 },
     'GET /api/names': [],
     'GET /api/jobs': [],

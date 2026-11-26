@@ -25,8 +25,8 @@ import {
   useWorldState,
 } from '@/features/entity/api/queries'
 import { type EntitySummary } from '@/features/entity/api/types'
-import { useHealth } from '@/features/images/api'
 import { useImageGenEvents } from '@/features/images/imageGenState'
+import { useRoleModel } from '@/features/providers/api'
 import { AtlasAtMoment } from '@/features/records/AtlasAtMoment'
 import { AtlasDetail } from './AtlasDetail'
 import { AtlasFilters } from './AtlasFilters'
@@ -63,7 +63,7 @@ export function AtlasScreen() {
   const state = useWorldState()
   const cosmos = useCosmos()
   const heavens = useCosmography()
-  const health = useHealth()
+  const imageModel = useRoleModel('images')
   const entities = useAllEntities(ALL_STATUSES, !search.history)
   const globalWorld = useGlobalWorld()
   const branches = useOpenBranches()
@@ -287,9 +287,7 @@ export function AtlasScreen() {
                     onSelect={(node) => show(node.key, entryFor(node))}
                     onActivate={activate}
                     query={filters.q}
-                    imageWorkerOn={
-                      health.data?.image_worker_configured ?? false
-                    }
+                    imageWorkerOn={(imageModel ?? '') !== ''}
                   />
                 ) : (
                   <AtlasList

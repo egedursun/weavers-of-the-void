@@ -1,8 +1,7 @@
 from collections.abc import Sequence
-from typing import Any, Protocol
+from typing import Protocol
 
-from claude_agent_sdk import SdkMcpTool
-
+from aerona.llm.tools import AgentTool
 from aerona.tools.framework.runtime import DoneAction, ToolCatalogue
 
 __all__ = ["DoneAction", "SpeechOnlyToolkit", "ToolCatalogue", "ToolkitFactory", "TurnToolkit"]
@@ -21,7 +20,7 @@ class TurnToolkit(Protocol):
     @property
     def read_only_tools(self) -> frozenset[str]: ...
 
-    def tools(self) -> list[SdkMcpTool[Any]]: ...
+    def tools(self) -> list[AgentTool]: ...
 
     async def settle_long_jobs(self) -> None: ...
 
@@ -52,7 +51,7 @@ class SpeechOnlyToolkit:
     def read_only_tools(self) -> frozenset[str]:
         return frozenset()
 
-    def tools(self) -> list[SdkMcpTool[Any]]:
+    def tools(self) -> list[AgentTool]:
         return []
 
     async def settle_long_jobs(self) -> None:

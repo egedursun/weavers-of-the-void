@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { type ServerEvent, useEvent } from '@/realtime'
 import { create } from 'zustand'
-import { imageKeys, useHealth, useImageGenStatus } from './api'
+import { useRoleModel } from '@/features/providers/api'
+import { imageKeys, useImageGenStatus } from './api'
 
 export type ImageLine = {
   key: string
@@ -165,20 +166,20 @@ export type NodeImageState =
   | { phase: 'running'; stage: string; percent: number }
 
 export const WORKER_OFF_REASON =
-  'Image generation is off: no image worker is configured.'
+  'Image generation is off: no image model is set. Add one under Team and workspace, Models.'
 
 export function useNodeImageState(nodeId: number): NodeImageState {
   const status = useImageGenStatus()
-  const health = useHealth()
+  const imageModel = useRoleModel('images')
   const live = useImageGenStore((store) => store.progress[nodeId])
   return useMemo((): NodeImageState => {
-    if (health.data && !health.data.image_worker_configured)
+    if (imageModel === '')
       return { phase: 'disabled', reason: WORKER_OFF_REASON }
     const queue = status.data?.status
     if (queue && !queue.available)
       return {
         phase: 'disabled',
-        reason: queue.reason ?? 'The image worker is not available right now.',
+        reason: queue.reason ?? 'The image model is not available right now.',
       }
     if (queue?.current?.node_id === nodeId)
       return {
@@ -193,7 +194,7 @@ export function useNodeImageState(nodeId: number): NodeImageState {
     if (live)
       return { phase: 'running', stage: live.stage, percent: live.percent }
     return { phase: 'idle' }
-  }, [health.data, status.data, live, nodeId])
+  }, [imageModel, status.data, live, nodeId])
 }
 
 export function percentOf(state: NodeImageState): number {

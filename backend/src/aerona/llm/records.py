@@ -21,17 +21,12 @@ class CallOutcome(StrEnum):
 class Usage:
     input_tokens: int = 0
     output_tokens: int = 0
-    cost_usd: float = 0.0
     turns: int = 0
     completed: bool = True
 
     def count(self, meter: TokenMeter) -> None:
         self.input_tokens += meter.input_tokens
         self.output_tokens += meter.output_tokens
-
-    def absorb(self, cost: float | None, turns: int | None) -> None:
-        self.cost_usd += float(cost or 0.0)
-        self.turns += int(turns or 0)
 
 
 @dataclass

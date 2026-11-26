@@ -21,15 +21,20 @@ from aerona.constants.library import (
     DEFAULT_PARALLEL_EPOCHS,
     DEFAULT_TRASH_DAYS,
 )
-from aerona.constants.llm import EMBED_THREADS_RESERVED, ClaudeAuth
+from aerona.constants.llm import EMBED_THREADS_RESERVED
 from aerona.constants.media import DEFAULT_MEDIA_BUCKET, DEFAULT_MEDIA_ENDPOINT, DEFAULT_MEDIA_REGION, MediaBackend
+from aerona.constants.providers import AGENTS_DIRNAME
 from aerona.paths import ProcessPaths, UniversePaths
 
 PATH_FIELDS = ("data_dir", "embed_model_dir", "secondary_backup_dir", "static_dir", "library_root")
 EDGED_PATH = (
-    "{field} names a folder that begins or ends with a space ({path!r}). Such a name is easily read without the space, "
-    "which opens a different folder or makes a new empty one; rename the folder and set the value without the space."
+    "{field} names a folder that begins or ends with a space ({path!r}), which is easily read without the space and opens "
+    "another folder or makes an empty one; rename the folder and set the value without the space."
 )
+
+
+def default_agents_dir() -> Path:
+    return Path(__file__).resolve().parents[3] / AGENTS_DIRNAME
 
 
 def embedding_threads() -> int:
@@ -46,6 +51,9 @@ class Settings(BaseSettings):
     llm_enabled: bool = True
     claude_code_oauth_token: SecretStr = Field(default=SecretStr(""), validation_alias="CLAUDE_CODE_OAUTH_TOKEN")
     image_worker_url: str = ""
+    gateway_url: str = ""
+    secret_key: SecretStr = SecretStr("")
+    agents_dir: Path = Field(default_factory=default_agents_dir)
     divine_will_upload_max_mb: int = 50
     divine_will_upload_max_files: int = 10
     embed_threads: int = Field(default_factory=embedding_threads)
@@ -83,10 +91,6 @@ class Settings(BaseSettings):
         if value is not None and any(part != part.strip() for part in value.parts):
             raise ValueError(EDGED_PATH.format(field=info.field_name, path=str(value)))
         return value
-
-    @property
-    def claude_auth(self) -> ClaudeAuth:
-        return ClaudeAuth.TOKEN if self.claude_code_oauth_token.get_secret_value() else ClaudeAuth.LOGIN
 
     @property
     def paths(self) -> UniversePaths:

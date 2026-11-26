@@ -47,10 +47,6 @@ export function formatBytes(bytes: number): string {
   return `${formatInteger(bytes)} B`
 }
 
-export function formatUsd(amount: number): string {
-  return `$${formatDecimal(amount, 2)}`
-}
-
 export function agree(
   count: number,
   singular: string,

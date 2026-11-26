@@ -1,91 +1,61 @@
-from collections.abc import AsyncIterable, AsyncIterator
 from typing import Any
 
-from claude_agent_sdk import AssistantMessage, ResultMessage, TextBlock
-
-from aerona.constants.llm import HAIKU_MODEL_ID
 from aerona.db.tables.divine_will import DivineWillAttachmentRow
 from aerona.domain.enums.divine_will import AttachmentKind, AttachmentStatus
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.providers import ModelRole
 from aerona.events.kinds import EventKind
 from aerona.llm.client import LlmClient
 from aerona.llm.content import PROBE_IMAGE, ImagePart
+from aerona.llm.events import ReplyEnded
 from aerona.llm.stream import StreamActor, StreamReporter
-from aerona.rules.registry import Rules
-from aerona.rules.registry.model import ModelRules
 from aerona.rules.registry.server import ServerRules
 from tests.api.conftest import ApiWorld
 from tests.divine_will.conftest import ask
 from tests.divine_will.scripted import Say, ScriptedWill
+from tests.llm.fakes import FakeBackend, FakeRoutes, FixedRules, route
 
 PICTURE_KEY = "divine_will/tests/picture.png"
 
 
-class FixedRules:
-    def __init__(self) -> None:
-        self.current = Rules(model=ModelRules(retry_wait_1=0, retry_wait_2=0, retry_wait_3=0))
+def conversing(backend: FakeBackend, sees_images: bool | None) -> FakeRoutes:
+    return FakeRoutes({ModelRole.CONVERSATION: [route(backend, sees_images=sees_images)]})
 
 
-def answering(text: str) -> tuple[Any, list[Any]]:
-    prompts: list[Any] = []
-
-    async def fake_query(*, prompt: str | AsyncIterable[dict[str, Any]], options: Any) -> AsyncIterator[Any]:
-        prompts.append(prompt if isinstance(prompt, str) else [item async for item in prompt])
-        yield AssistantMessage(content=[TextBlock(text)], model=HAIKU_MODEL_ID)
-        yield ResultMessage(subtype="success", duration_ms=1, duration_api_ms=1, is_error=False, num_turns=1, session_id="s", result=text)
-
-    return fake_query, prompts
+async def test_a_checked_model_that_sees_pictures_is_reported_as_seeing() -> None:
+    backend = FakeBackend()
+    found = await LlmClient(FixedRules(), enabled=True, routes=conversing(backend, True)).capabilities(ModelRole.CONVERSATION)
+    assert found.images is True and found.probed is True
+    assert backend.requests == []
 
 
-def blocks_of(sent: Any) -> list[dict[str, Any]]:
-    assert isinstance(sent, list)
-    content: list[dict[str, Any]] = sent[0]["message"]["content"]
-    return content
-
-
-async def test_the_probe_sends_one_picture_once_and_remembers_the_answer() -> None:
-    fake_query, prompts = answering("Red.")
-    client = LlmClient(FixedRules(), enabled=True, query_function=fake_query)
-    first = await client.capabilities()
-    second = await client.capabilities()
-    assert first.images is True and first.probed is True
-    assert second == first
-    assert len(prompts) == 1
-    assert [block["type"] for block in blocks_of(prompts[0])] == ["text", "image"]
-
-
-async def test_a_model_that_misreads_the_probe_cannot_see() -> None:
-    fake_query, _ = answering("I see nothing.")
-    found = await LlmClient(FixedRules(), enabled=True, query_function=fake_query).capabilities()
+async def test_a_model_whose_check_failed_cannot_see() -> None:
+    found = await LlmClient(FixedRules(), enabled=True, routes=conversing(FakeBackend(), False)).capabilities(ModelRole.CONVERSATION)
     assert found.images is False and found.probed is True
     assert found.note
 
 
-async def test_a_disabled_model_is_not_probed() -> None:
-    fake_query, prompts = answering("Red.")
-    found = await LlmClient(FixedRules(), enabled=False, query_function=fake_query).capabilities()
+async def test_a_disabled_model_is_not_asked() -> None:
+    found = await LlmClient(FixedRules(), enabled=False, routes=conversing(FakeBackend(), True)).capabilities(ModelRole.CONVERSATION)
     assert found.images is False and found.probed is False
-    assert prompts == []
 
 
-async def test_an_agent_run_streams_pictures_with_the_prompt() -> None:
-    fake_query, prompts = answering("Seen.")
-    client = LlmClient(FixedRules(), enabled=True, query_function=fake_query)
-    run = await client.run_agent("will", "system", "Look at this.", tools=[], images=[ImagePart("image/png", PROBE_IMAGE)])
+async def test_an_agent_run_sends_pictures_with_the_prompt() -> None:
+    backend = FakeBackend()
+    client = LlmClient(FixedRules(), enabled=True, routes=conversing(backend, True))
+    run = await client.run_agent("will", "system", "Look at this.", tools=[], images=[ImagePart("image/png", PROBE_IMAGE)], role=ModelRole.CONVERSATION)
     assert run.completed
-    blocks = blocks_of(prompts[0])
-    assert blocks[0] == {"type": "text", "text": "Look at this."}
-    assert blocks[1]["source"]["media_type"] == "image/png"
-    plain, more = answering("Plain.")
-    await LlmClient(FixedRules(), enabled=True, query_function=plain).run_agent("will", "system", "No picture.", tools=[])
-    assert more == ["No picture."]
+    assert backend.requests[0].prompt == "Look at this."
+    assert [image.media_type for image in backend.requests[0].images] == ["image/png"]
+    await client.run_agent("will", "system", "No picture.", tools=[], role=ModelRole.CONVERSATION)
+    assert backend.requests[1].images == ()
 
 
 def test_streamed_events_carry_the_channel_of_their_cycle() -> None:
     published: list[tuple[EventKind, dict[str, Any]]] = []
     actor = StreamActor(ActorKind.CREATOR, 1, "Ul", channel="divine_will:7")
     reporter = StreamReporter(lambda kind, payload: published.append((kind, payload)), ServerRules(), actor, "divine_will")
-    reporter.feed(AssistantMessage(content=[TextBlock("Thinking aloud.")], model=HAIKU_MODEL_ID))
+    reporter.feed(ReplyEnded("Thinking aloud.", ""))
     assert published == [
         (EventKind.AGENT_THOUGHT, {"actor_kind": "creator", "actor_id": 1, "actor_name": "Ul", "channel": "divine_will:7", "text": "Thinking aloud."})
     ]

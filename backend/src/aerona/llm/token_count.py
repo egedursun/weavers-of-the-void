@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import Any
 
 import tiktoken
-from claude_agent_sdk import AssistantMessage, SdkMcpTool, TextBlock, ThinkingBlock, ToolResultBlock, ToolUseBlock, UserMessage
+
+from aerona.llm.events import ReplyEnded, RunEvent, ToolCalled, ToolFinished
+from aerona.llm.tools import AgentTool
 
 ENCODING_NAME = "o200k_base"
 ENCODING_FILE = Path(__file__).with_name("encodings") / f"{ENCODING_NAME}.tiktoken.gz"
@@ -43,26 +45,8 @@ def as_text(value: Any) -> str:
     return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
 
 
-def tool_text(tool: SdkMcpTool[Any]) -> str:
+def tool_text(tool: AgentTool) -> str:
     return "\n".join((tool.name, tool.description, as_text(tool.input_schema)))
-
-
-def reply_text(message: AssistantMessage) -> str:
-    parts: list[str] = []
-    for block in message.content:
-        if isinstance(block, TextBlock):
-            parts.append(block.text)
-        elif isinstance(block, ThinkingBlock):
-            parts.append(block.thinking)
-        elif isinstance(block, ToolUseBlock):
-            parts.append(f"{block.name}\n{as_text(block.input)}")
-    return "\n".join(parts)
-
-
-def returned_text(message: UserMessage) -> str:
-    if isinstance(message.content, str):
-        return message.content
-    return "\n".join(as_text(block.content) if isinstance(block, ToolResultBlock) else as_text(block) for block in message.content)
 
 
 class TokenMeter:
@@ -82,8 +66,18 @@ class TokenMeter:
     def returned(self, text: str) -> None:
         self.context += count_tokens(text)
 
-    def read(self, message: object) -> None:
-        if isinstance(message, AssistantMessage):
-            self.reply(reply_text(message))
-        elif isinstance(message, UserMessage):
-            self.returned(returned_text(message))
+    def produced(self, text: str) -> None:
+        produced = count_tokens(text)
+        self.output_tokens += produced
+        self.context += produced
+
+    def read(self, event: RunEvent) -> None:
+        match event:
+            case ReplyEnded(text=text, thoughts=thoughts):
+                self.reply("\n".join(part for part in (thoughts, text) if part))
+            case ToolCalled(tool=tool, input=arguments):
+                self.produced(f"{tool}\n{as_text(arguments)}")
+            case ToolFinished(text=text):
+                self.returned(text)
+            case _:
+                return

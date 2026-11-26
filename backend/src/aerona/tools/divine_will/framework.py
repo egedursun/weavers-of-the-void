@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Protocol
 
-from claude_agent_sdk import SdkMcpTool
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +12,7 @@ from aerona.db.session import Database
 from aerona.db.tables.divine_will import DivineWillHandleRow
 from aerona.domain.enums.divine_will import DivineWillMode
 from aerona.llm.token_count import count_tokens
+from aerona.llm.tools import AgentTool, ToolReply
 from aerona.prompts.tools.divine_will_ids import DivineWillToolId
 from aerona.rules.registry import Rules
 from aerona.tools.framework.inputs import ToolInput
@@ -151,14 +151,14 @@ def envelope(text: str, *, total: int, shown: int, page: int, has_next: bool, ha
     return f"{json.dumps(head)}\n{text}" if text else json.dumps(head)
 
 
-def sdk_will_tool(
+def will_agent_tool(
     call: WillCall, tool: WillTool[Any], description: str, fields: Mapping[str, str], run: Callable[[WillTool[Any], dict[str, Any]], Awaitable[WillResult]]
-) -> SdkMcpTool[Any]:
-    async def handler(arguments: dict[str, Any]) -> dict[str, Any]:
+) -> AgentTool:
+    async def handler(arguments: dict[str, Any]) -> ToolReply:
         result = await run(tool, dict(arguments or {}))
-        return {"content": [{"type": "text", "text": result.text}], "is_error": result.is_error}
+        return ToolReply(result.text, result.is_error)
 
-    return SdkMcpTool(name=tool.name, description=description, input_schema=input_schema(tool.input_model, fields), handler=handler)
+    return AgentTool(name=tool.name, description=description, input_schema=input_schema(tool.input_model, fields), handler=handler)
 
 
 async def invoke(call: WillCall, tool: WillTool[Any], arguments: Mapping[str, Any]) -> WillResult:
