@@ -4,7 +4,7 @@
   "type": "module",
   "license": "AGPL-3.0-only",
   "scripts": {
-    "prepare-content": "node scripts/extract-expansions.mjs && node scripts/prepare-images.mjs",
+    "prepare-content": "node scripts/prepare-images.mjs",
     "dev": "npm run prepare-content && astro dev",
     "build": "npm run prepare-content && astro check && astro build",
     "preview": "astro preview"

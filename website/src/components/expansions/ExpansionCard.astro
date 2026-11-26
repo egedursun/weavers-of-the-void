@@ -1,0 +1,218 @@
+---
+import { asset, page, type Locale } from '../../i18n'
+import { coverOf, isList, leadSentence, type Expansion } from '../../data/expansions'
+
+interface Props {
+  locale: Locale
+  item: Expansion
+  labels: { lists: string; values: string }
+  index: number
+}
+
+const { locale, item, labels, index } = Astro.props
+const lists = item.depth.filter(isList)
+const values = lists.reduce((sum, list) => sum + list.values.length, 0)
+const searchText = [
+  item.name,
+  item.intro,
+  item.outcome ?? '',
+  ...item.governs.map((entry) => `${entry.title} ${entry.text}`),
+  ...item.depth.map((entry) => (isList(entry) ? `${entry.label} ${entry.values.join(' ')}` : entry.text)),
+]
+  .join(' ')
+  .toLocaleLowerCase(locale)
+---
+
+<li class="xcard-slot" data-card data-search-text={searchText}>
+  <a class="xcard" href={page(locale, `expansions/${item.slug}`)}>
+    <span class="xcard__art">
+      <img src={asset(coverOf(item))} alt="" width="480" height="720" loading={index < 8 ? 'eager' : 'lazy'} decoding="async" />
+      <span class="xcard__shine" aria-hidden="true"></span>
+      <span class="xcard__number" aria-hidden="true">{String(item.number - 2).padStart(2, '0')}</span>
+    </span>
+    <span class="xcard__body">
+      <span class="xcard__name">{item.name}</span>
+      <span class="xcard__lead">{leadSentence(item.intro)}</span>
+      <span class="xcard__chips">
+        <span class="xcard__chip">{lists.length} {labels.lists}</span>
+        <span class="xcard__chip">{values.toLocaleString(locale)} {labels.values}</span>
+      </span>
+    </span>
+  </a>
+</li>
+
+<style>
+  .xcard-slot {
+    display: flex;
+  }
+
+  .xcard-slot[hidden] {
+    display: none;
+  }
+
+  .xcard {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    width: 100%;
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--fg);
+    background:
+      linear-gradient(180deg, oklch(0.2 0.07 296), oklch(0.13 0.045 292)) padding-box,
+      linear-gradient(160deg, #fff1b8, var(--gild) 25%, var(--gild-lo) 55%, #f7dc8a 80%, var(--gild)) border-box;
+    border: 2px solid transparent;
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56 / 0.7),
+      0 22px 40px -26px oklch(0.04 0.04 290 / 0.95);
+    overflow: hidden;
+    transition:
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.6s var(--ease);
+  }
+
+  .xcard:hover,
+  .xcard:focus-visible {
+    transform: translateY(-8px);
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56 / 0.8),
+      0 0 40px -6px oklch(0.84 0.16 86 / 0.55),
+      0 30px 54px -26px oklch(0.04 0.04 290 / 0.95);
+  }
+
+  .xcard:focus-visible {
+    outline: 2px solid var(--gild-hi);
+    outline-offset: 4px;
+  }
+
+  .xcard__art {
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    background: oklch(0.12 0.04 291);
+  }
+
+  .xcard__art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    transition:
+      transform 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.6s var(--ease);
+  }
+
+  .xcard:hover .xcard__art img {
+    transform: scale(1.05);
+    filter: saturate(1.12) brightness(1.06);
+  }
+
+  .xcard__art::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 30%;
+    background: linear-gradient(180deg, transparent, oklch(0.13 0.045 292 / 0.9));
+    pointer-events: none;
+  }
+
+  .xcard__shine {
+    position: absolute;
+    inset: -20% -90%;
+    z-index: 1;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      oklch(1 0 0 / 0.07) 45%,
+      oklch(0.98 0.07 92 / 0.45) 50%,
+      oklch(1 0 0 / 0.07) 55%,
+      transparent 60%
+    );
+    transform: translateX(-70%);
+    pointer-events: none;
+  }
+
+  .xcard:hover .xcard__shine {
+    animation: xcard-shine 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .xcard__number {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    min-width: 2.3rem;
+    height: 2.3rem;
+    padding: 0 0.45rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: oklch(0.18 0.06 290);
+    background: linear-gradient(180deg, #fff1b8, var(--gild-hi) 40%, var(--gild) 75%, var(--gild-lo));
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56),
+      0 4px 10px oklch(0.05 0.04 290 / 0.7);
+  }
+
+  .xcard__body {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    padding: 0.8rem 0.75rem 0.95rem;
+  }
+
+  @media (min-width: 720px) {
+    .xcard__body {
+      padding: 0.95rem 1rem 1.1rem;
+    }
+  }
+
+  .xcard__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.08rem;
+    line-height: 1.25;
+    color: var(--gild-hi);
+    text-wrap: balance;
+  }
+
+  .xcard__lead {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  .xcard__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.15rem;
+  }
+
+  .xcard__chip {
+    padding: 0.18rem 0.6rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gild);
+    background: oklch(0.84 0.14 86 / 0.06);
+  }
+
+  @keyframes xcard-shine {
+    to {
+      transform: translateX(70%);
+    }
+  }
+</style>

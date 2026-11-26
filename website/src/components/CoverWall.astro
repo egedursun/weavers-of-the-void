@@ -1,7 +1,7 @@
 ---
 import Icon from './Icon.astro'
 import { asset, copyFor, page, type Locale } from '../i18n'
-import data from '../data/expansions.en.json'
+import { coverOf, expansionsFor } from '../data/expansions'
 
 interface Props {
   locale: Locale
@@ -9,7 +9,7 @@ interface Props {
 
 const { locale } = Astro.props
 const copy = copyFor(locale).wall
-const expansions = [data.loom, ...data.chapters.flatMap((chapter) => chapter.expansions)]
+const expansions = expansionsFor(locale).filter((item) => item.cover !== null)
 const half = Math.ceil(expansions.length / 2)
 const rows = [expansions.slice(0, half), expansions.slice(half)]
 ---
@@ -30,7 +30,7 @@ const rows = [expansions.slice(0, half), expansions.slice(half)]
           <div class="wall__track">
             {[...row, ...row].map((item) => (
               <span class="wall__card">
-                <img src={asset(`covers/${item.number}.webp`)} alt="" width="480" height="720" loading="lazy" decoding="async" />
+                <img src={asset(coverOf(item))} alt="" width="480" height="720" loading="lazy" decoding="async" />
               </span>
             ))}
           </div>

@@ -1,0 +1,215 @@
+---
+import star from '../../assets/ornate/star.webp'
+import { isList, type DepthItem, type DepthList } from '../../data/expansions'
+import type { Locale } from '../../i18n'
+
+interface Props {
+  locale: Locale
+  items: DepthItem[]
+  labels: { values: string }
+}
+
+type Group = { lines: string[]; lists: DepthList[] }
+
+const { locale, items, labels } = Astro.props
+
+const groups = items.reduce<Group[]>((all, item) => {
+  const last = all.at(-1)
+  if (isList(item)) {
+    if (last) last.lists.push(item)
+    else all.push({ lines: [], lists: [item] })
+  } else if (last && last.lists.length === 0) {
+    last.lines.push(item.text)
+  } else {
+    all.push({ lines: [item.text], lists: [] })
+  }
+  return all
+}, [])
+
+const capital = (value: string) => value.charAt(0).toLocaleUpperCase(locale) + value.slice(1)
+const emphasise = (line: string) => line.split(/(\d[\d.,]*)/).map((part) => ({ part, number: /^\d/.test(part) }))
+---
+
+<div class="xdepth">
+  {
+    groups.map((group) => (
+      <section class:list={['xdepth__group', { 'xdepth__group--plain': group.lists.length === 0 }]}>
+        {group.lines.length > 0 && (
+          <div class="xdepth__lines">
+            {group.lines.map((line) => (
+              <p class="xdepth__line">
+                <img class="star-bullet" src={star.src} alt="" width="104" height="108" />
+                <span>{emphasise(line).map((piece) => (piece.number ? <strong class="gilded">{piece.part}</strong> : piece.part))}</span>
+              </p>
+            ))}
+          </div>
+        )}
+        {group.lists.map((list) => (
+          <div class="xdepth__list">
+            <h4 class="xdepth__label">
+              <span>{capital(list.label)}</span>
+              <span class="xdepth__count">
+                {list.values.length.toLocaleString(locale)} {labels.values}
+              </span>
+            </h4>
+            <ul class="xdepth__values">
+              {list.values.map((value) => (
+                <li class="xdepth__value">{capital(value)}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    ))
+  }
+</div>
+
+<style>
+  .xdepth {
+    display: grid;
+    gap: 1.4rem;
+  }
+
+  .xdepth__group {
+    display: grid;
+    overflow: hidden;
+    border-radius: 14px;
+    border: 1px solid var(--border-strong);
+    background: linear-gradient(180deg, oklch(0.18 0.06 295 / 0.9), oklch(0.12 0.04 291 / 0.9));
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.05),
+      0 18px 36px -26px oklch(0.04 0.04 290 / 0.95);
+    transition:
+      border-color 0.35s var(--ease),
+      box-shadow 0.45s var(--ease);
+  }
+
+  .xdepth__group:hover {
+    border-color: oklch(0.84 0.14 86 / 0.7);
+    box-shadow:
+      inset 0 1px 0 oklch(1 0 0 / 0.06),
+      0 0 34px -14px oklch(0.84 0.16 86 / 0.5),
+      0 18px 36px -26px oklch(0.04 0.04 290 / 0.95);
+  }
+
+  .xdepth__group--plain {
+    border-color: var(--border);
+    background: oklch(0.15 0.05 293 / 0.6);
+  }
+
+  .xdepth__lines {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1.1rem 1.3rem;
+    background: linear-gradient(90deg, oklch(0.84 0.14 86 / 0.1), transparent 70%);
+  }
+
+  .xdepth__group:not(.xdepth__group--plain) .xdepth__lines {
+    border-bottom: 1px solid oklch(0.84 0.14 86 / 0.25);
+  }
+
+  .xdepth__line {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 0.75rem;
+    margin: 0;
+    font-size: 1.04rem;
+    line-height: 1.5;
+    color: var(--fg);
+  }
+
+  .xdepth__line .star-bullet {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.2rem;
+  }
+
+  .xdepth__line strong {
+    font-family: var(--font-decorative);
+    font-weight: 700;
+    font-size: 1.18em;
+  }
+
+  .xdepth__list {
+    padding: 1.05rem 1.3rem 1.15rem;
+  }
+
+  .xdepth__list + .xdepth__list {
+    border-top: 1px solid oklch(0.84 0.14 86 / 0.14);
+  }
+
+  .xdepth__label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 1rem;
+    margin: 0 0 0.8rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.92rem;
+    letter-spacing: 0.04em;
+    color: var(--gild-hi);
+  }
+
+  .xdepth__count {
+    padding: 0.15rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: oklch(0.18 0.06 290);
+    background: linear-gradient(180deg, var(--gild-hi), var(--gild));
+    box-shadow: 0 0 0 1px oklch(0.36 0.09 56 / 0.7);
+  }
+
+  .xdepth__values {
+    columns: 12.5rem auto;
+    column-gap: 1.4rem;
+    column-rule: 1px solid oklch(0.84 0.14 86 / 0.12);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .xdepth__value {
+    position: relative;
+    display: block;
+    break-inside: avoid;
+    margin: 0 0 0.2rem;
+    padding: 0.32rem 0.6rem 0.32rem 0.85rem;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.92rem;
+    line-height: 1.35;
+    color: var(--fg);
+    transition:
+      background-color 0.25s var(--ease),
+      color 0.25s var(--ease);
+  }
+
+  .xdepth__value::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.3rem;
+    bottom: 0.3rem;
+    width: 2px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--gild-hi), var(--gild-lo));
+    opacity: 0.55;
+    transition:
+      opacity 0.25s var(--ease),
+      box-shadow 0.25s var(--ease);
+  }
+
+  .xdepth__value:hover {
+    color: var(--gild-hi);
+    background: linear-gradient(90deg, oklch(0.84 0.14 86 / 0.14), transparent 85%);
+  }
+
+  .xdepth__value:hover::before {
+    opacity: 1;
+    box-shadow: 0 0 8px oklch(0.84 0.16 86 / 0.8);
+  }
+</style>

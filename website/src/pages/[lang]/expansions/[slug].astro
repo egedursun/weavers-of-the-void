@@ -1,0 +1,757 @@
+---
+import Base from '../../../layouts/Base.astro'
+import Frame from '../../../components/Frame.astro'
+import Icon from '../../../components/Icon.astro'
+import DepthBlock from '../../../components/expansions/DepthBlock.astro'
+import crest from '../../../assets/ornate/crest.webp'
+import corner from '../../../assets/ornate/corner-small.webp'
+import { LOCALES, REPOSITORY, asset, copyFor, page, type Locale } from '../../../i18n'
+import { backOf, coverOf, expansionBySlug, expansionsFor, isList, neighbours, type Expansion } from '../../../data/expansions'
+
+export function getStaticPaths() {
+  return LOCALES.flatMap((lang) => expansionsFor(lang).map((item) => ({ params: { lang, slug: item.slug } })))
+}
+
+const locale = Astro.params.lang as Locale
+const slug = Astro.params.slug as string
+const copy = copyFor(locale)
+const text = copy.expansionsPage
+const item = expansionBySlug(locale, slug) as Expansion
+const { previous, next } = neighbours(locale, slug)
+const total = expansionsFor(locale).length - 2
+const back = backOf(item)
+const lists = item.depth.filter(isList)
+const values = lists.reduce((sum, list) => sum + list.values.length, 0)
+const kicker =
+  item.cover === null ? text.core : item.cover === 0 ? text.loom : `${text.part} ${String(item.cover).padStart(2, '0')} / ${total}`
+const description = item.intro.length > 180 ? `${item.intro.slice(0, 177).trimEnd()}...` : item.intro
+const title = `${item.name} · Weavers of the Void`
+---
+
+<Base locale={locale} path={`expansions/${item.slug}`} title={title} description={description}>
+  <section class="section xdetail">
+    <div class="wrap wrap--wide">
+      <a class="xdetail__crumb" href={page(locale, 'expansions')}>
+        <Icon name="arrowRight" class="xdetail__crumb-arrow" />
+        {text.all}
+      </a>
+
+      <div class="xdetail__hero">
+        <div class="xdetail__box" data-box>
+          <div class="xdetail__stage" data-stage>
+            <div
+              class:list={['xdetail__cube', { 'xdetail__cube--square': item.cover === null }]}
+              style={`--front: url('${asset(coverOf(item))}'); --rear: url('${asset(back ?? coverOf(item))}')`}
+              data-flip
+            >
+              <img class="xdetail__face xdetail__face--front" src={asset(coverOf(item))} alt={item.name} width="480" height="720" decoding="async" />
+              <img class="xdetail__face xdetail__face--back" src={asset(back ?? coverOf(item))} alt="" width="960" height="1431" loading="lazy" decoding="async" />
+              <span class="xdetail__side xdetail__side--right xdetail__spine" aria-hidden="true">
+                <img class="xdetail__spine-crest" src={crest.src} alt="" width="480" height="97" />
+                {['tl', 'tr', 'bl', 'br'].map((place) => <img class="xdetail__spine-corner" data-corner={place} src={corner.src} alt="" width="96" height="96" />)}
+                <span class="xdetail__spine-plate">
+                  <span class="xdetail__spine-name">{item.name}</span>
+                </span>
+                <img class="xdetail__spine-crest xdetail__spine-crest--foot" src={crest.src} alt="" width="480" height="97" />
+              </span>
+              <span class="xdetail__side xdetail__side--left xdetail__spine" aria-hidden="true">
+                <img class="xdetail__spine-crest" src={crest.src} alt="" width="480" height="97" />
+                {['tl', 'tr', 'bl', 'br'].map((place) => <img class="xdetail__spine-corner" data-corner={place} src={corner.src} alt="" width="96" height="96" />)}
+                <span class="xdetail__spine-plate">
+                  <span class="xdetail__spine-name">{item.name}</span>
+                </span>
+                <img class="xdetail__spine-crest xdetail__spine-crest--foot" src={crest.src} alt="" width="480" height="97" />
+              </span>
+              <span class="xdetail__side xdetail__side--top" aria-hidden="true"></span>
+              <span class="xdetail__side xdetail__side--bottom" aria-hidden="true"></span>
+            </div>
+            <span class="xdetail__floor" aria-hidden="true"></span>
+          </div>
+          {
+            back && (
+              <button class="button button--ghost xdetail__turn" type="button" aria-pressed="false" data-turn>
+                {text.turn}
+              </button>
+            )
+          }
+        </div>
+
+        <div class="xdetail__words">
+          <p class="eyebrow">{kicker}</p>
+          <h1 class="xdetail__name gilded">{item.name}</h1>
+          {item.motto && <p class="xdetail__motto">{item.motto}</p>}
+          <p class="xdetail__intro">{item.intro}</p>
+          <ul class="xdetail__chips">
+            <li>{item.governs.length} {text.workings}</li>
+            <li>{lists.length} {text.lists}</li>
+            <li>{values.toLocaleString(locale)} {text.values}</li>
+          </ul>
+          {
+            item.outcome && (
+              <Frame size="card" gem class="xdetail__outcome">
+                <p class="xdetail__outcome-label">{text.outcome}</p>
+                <p class="xdetail__outcome-text">{item.outcome}</p>
+              </Frame>
+            )
+          }
+        </div>
+      </div>
+
+      <section class="xdetail__section" aria-labelledby="governs-title">
+        <h2 class="xdetail__heading" id="governs-title">
+          <span class="gilded">{text.governs}</span>
+        </h2>
+        <Frame size="panel" class="xdetail__runs">
+          <ol class="xdetail__governs">
+            {
+              item.governs.map((entry, index) => (
+                <li class="xdetail__governed">
+                  <span class="medallion xdetail__numeral" aria-hidden="true">{index + 1}</span>
+                  <span class="xdetail__governed-words">
+                    <h3>{entry.title}</h3>
+                    <p>{entry.text}</p>
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+        </Frame>
+      </section>
+
+      {
+        item.depth.length > 0 && (
+          <section class="xdetail__section" aria-labelledby="depth-title">
+            <h2 class="xdetail__heading" id="depth-title">
+              <span class="gilded">{text.depth}</span>
+            </h2>
+            <Frame size="panel" class="xdetail__depth">
+              <DepthBlock locale={locale} items={item.depth} labels={{ values: text.values }} />
+            </Frame>
+          </section>
+        )
+      }
+
+      <nav class="xdetail__nav" aria-label={text.all}>
+        {
+          previous ? (
+            <a class="xdetail__step" href={page(locale, `expansions/${previous.slug}`)}>
+              <img src={asset(coverOf(previous))} alt="" width="480" height="720" loading="lazy" />
+              <span>
+                <small>{text.previous}</small>
+                {previous.name}
+              </span>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+        <a class="button button--gold xdetail__cta" href={REPOSITORY} target="_blank" rel="noopener noreferrer">
+          <Icon name="github" />
+          {text.cta}
+        </a>
+        {
+          next ? (
+            <a class="xdetail__step xdetail__step--next" href={page(locale, `expansions/${next.slug}`)}>
+              <span>
+                <small>{text.next}</small>
+                {next.name}
+              </span>
+              <img src={asset(coverOf(next))} alt="" width="480" height="720" loading="lazy" />
+            </a>
+          ) : (
+            <span />
+          )
+        }
+      </nav>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const turn = document.querySelector<HTMLButtonElement>('[data-turn]')
+  const cube = document.querySelector<HTMLElement>('[data-flip]')
+  const stage = document.querySelector<HTMLElement>('[data-stage]')
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  turn?.addEventListener('click', () => {
+    const turned = cube?.classList.toggle('is-turned') ?? false
+    turn.setAttribute('aria-pressed', String(turned))
+  })
+  if (cube && stage && !still && window.matchMedia('(hover: hover)').matches) {
+    stage.addEventListener('pointermove', (event) => {
+      const box = stage.getBoundingClientRect()
+      const x = (event.clientX - box.left) / box.width - 0.5
+      const y = (event.clientY - box.top) / box.height - 0.5
+      cube.style.transition = 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)'
+      cube.style.setProperty('--ry', `${(-24 + x * 34).toFixed(1)}deg`)
+      cube.style.setProperty('--rx', `${(6 - y * 14).toFixed(1)}deg`)
+    })
+    stage.addEventListener('pointerleave', () => {
+      cube.style.setProperty('--ry', '-24deg')
+      cube.style.setProperty('--rx', '6deg')
+    })
+    turn?.addEventListener('click', () => {
+      cube.style.transition = ''
+    })
+  }
+</script>
+
+<style>
+  .xdetail__crumb {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gild);
+    text-decoration: none;
+  }
+
+  .xdetail__crumb:hover {
+    color: var(--gild-hi);
+  }
+
+  .xdetail__crumb :global(.xdetail__crumb-arrow) {
+    width: 1rem;
+    height: 1rem;
+    transform: rotate(180deg);
+  }
+
+  .xdetail__hero {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3.5rem);
+    align-items: start;
+    margin-bottom: clamp(3rem, 6vw, 4.5rem);
+  }
+
+  .xdetail__box {
+    display: grid;
+    justify-items: center;
+    gap: 0.4rem;
+  }
+
+  .xdetail__stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    padding: 1.5rem 0 2.5rem;
+    perspective: 1600px;
+    perspective-origin: 50% 40%;
+  }
+
+  .xdetail__cube {
+    --w: clamp(14rem, 62vw, 20rem);
+    --h: calc(var(--w) * 1.5);
+    --d: calc(var(--w) * 0.51);
+    --ry: -24deg;
+    --rx: 6deg;
+    --spin: 0deg;
+    position: relative;
+    width: var(--w);
+    height: var(--h);
+    transform-style: preserve-3d;
+    transform: rotateX(var(--rx)) rotateY(calc(var(--ry) + var(--spin)));
+    transition: transform 1.5s cubic-bezier(0.65, 0, 0.2, 1);
+    animation: xdetail-float 7s ease-in-out infinite;
+  }
+
+  .xdetail__cube--square {
+    --w: clamp(15rem, 66vw, 22rem);
+    --h: var(--w);
+    --d: calc(var(--w) * 0.66);
+  }
+
+  .xdetail__cube.is-turned {
+    --spin: 180deg;
+  }
+
+  .xdetail__face,
+  .xdetail__side {
+    position: absolute;
+    backface-visibility: hidden;
+  }
+
+  .xdetail__face {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px oklch(0.96 0.09 96 / 0.35);
+  }
+
+  .xdetail__cube--square .xdetail__face {
+    object-fit: cover;
+  }
+
+  .xdetail__face--front {
+    transform: translateZ(calc(var(--d) / 2));
+  }
+
+  .xdetail__face--back {
+    transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
+  }
+
+  .xdetail__side--right,
+  .xdetail__side--left {
+    top: 0;
+    left: calc(50% - var(--d) / 2);
+    width: var(--d);
+    height: 100%;
+  }
+
+  .xdetail__side--right {
+    transform: rotateY(90deg) translateZ(calc(var(--w) / 2));
+  }
+
+  .xdetail__side--left {
+    transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
+  }
+
+  .xdetail__spine {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    justify-items: center;
+    align-items: center;
+    gap: 0;
+    padding: calc(var(--d) * 0.16) 0;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg,
+        transparent 15%, oklch(0.98 0.07 95 / 0.6) 15%, var(--gild-hi) 15.5%, var(--gild-lo) 16.3%, oklch(0.1 0.04 290 / 0.9) 16.3%, transparent 17.2%,
+        transparent 82.8%, oklch(0.98 0.07 95 / 0.6) 82.8%, var(--gild-hi) 83.3%, var(--gild-lo) 84.1%, oklch(0.1 0.04 290 / 0.9) 84.1%, transparent 85%),
+      radial-gradient(120% 60% at 50% 50%, oklch(0.34 0.13 303 / 0.9), transparent 70%),
+      repeating-linear-gradient(90deg, oklch(1 0 0 / 0.025) 0 1px, transparent 1px 3px),
+      linear-gradient(90deg, oklch(0.07 0.035 292), oklch(0.22 0.09 299) 22%, oklch(0.29 0.11 302) 50%, oklch(0.22 0.09 299) 78%, oklch(0.07 0.035 292));
+    box-shadow:
+      inset 0 0 0 2px oklch(0.6 0.12 70 / 0.85),
+      inset 0 0 0 4px oklch(0.12 0.05 294),
+      inset 0 0 0 5px oklch(0.84 0.14 86 / 0.55),
+      inset 0 0 30px oklch(0.02 0.02 290 / 0.75);
+  }
+
+  .xdetail__spine-crest {
+    width: 86%;
+    height: auto;
+    filter: drop-shadow(0 -1px 0 oklch(0.98 0.07 95 / 0.7)) drop-shadow(0 1px 0 oklch(0.25 0.07 50)) drop-shadow(0 3px 2px oklch(0.02 0.02 290 / 0.9)) drop-shadow(0 6px 8px oklch(0.02 0.02 290 / 0.6));
+  }
+
+  .xdetail__spine-crest--foot {
+    transform: rotate(180deg);
+  }
+
+  .xdetail__spine-corner {
+    position: absolute;
+    width: calc(var(--d) * 0.28);
+    height: calc(var(--d) * 0.28);
+    filter: drop-shadow(-1px -1px 0 oklch(0.98 0.07 95 / 0.6)) drop-shadow(1px 1px 0 oklch(0.25 0.07 50)) drop-shadow(1px 3px 3px oklch(0.02 0.02 290 / 0.9));
+  }
+
+  .xdetail__spine-corner[data-corner='tl'] {
+    top: 3px;
+    left: 3px;
+  }
+
+  .xdetail__spine-corner[data-corner='tr'] {
+    top: 3px;
+    right: 3px;
+    transform: scaleX(-1);
+  }
+
+  .xdetail__spine-corner[data-corner='bl'] {
+    bottom: 3px;
+    left: 3px;
+    transform: scaleY(-1);
+  }
+
+  .xdetail__spine-corner[data-corner='br'] {
+    bottom: 3px;
+    right: 3px;
+    transform: scale(-1);
+  }
+
+  .xdetail__spine-plate {
+    display: grid;
+    place-items: center;
+    height: 88%;
+    width: 50%;
+    padding: 0.6rem 0;
+    border-radius: 4px;
+    background:
+      linear-gradient(90deg, oklch(0.1 0.04 292), oklch(0.18 0.07 297) 50%, oklch(0.1 0.04 292)) padding-box,
+      linear-gradient(180deg, #fff1b8, var(--gild) 25%, var(--gild-lo) 50%, var(--gild) 75%, #fff1b8) border-box;
+    border: 2px solid transparent;
+    box-shadow:
+      0 0 0 1px oklch(0.3 0.07 56),
+      -1px -1px 0 1px oklch(0.98 0.07 95 / 0.55),
+      2px 3px 0 1px oklch(0.2 0.05 50),
+      3px 6px 10px oklch(0.02 0.02 290 / 0.85),
+      inset 0 0 0 3px oklch(0.1 0.04 292),
+      inset 0 0 0 4px oklch(0.84 0.14 86 / 0.35),
+      inset 2px 3px 8px oklch(0.02 0.02 290 / 0.8),
+      0 0 18px -4px oklch(0.84 0.16 86 / 0.45);
+  }
+
+  .xdetail__spine-name {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    max-height: 100%;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(0.8rem, calc(var(--d) * 0.15), 1.3rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: linear-gradient(90deg, #fff6d6, var(--gild-hi) 45%, var(--gild) 75%, var(--gild-lo));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(-1px 0 0 oklch(0.98 0.07 95 / 0.55)) drop-shadow(1px 0 0 oklch(0.2 0.05 50)) drop-shadow(2px 1px 2px oklch(0.02 0.02 290 / 0.9));
+  }
+
+  .xdetail__side--top,
+  .xdetail__side--bottom {
+    left: 0;
+    top: calc(50% - var(--d) / 2);
+    width: 100%;
+    height: var(--d);
+    background:
+      linear-gradient(90deg, transparent 12%, oklch(0.32 0.08 56) 12%, var(--gild-hi) 12.8%, var(--gild-lo) 13.6%, transparent 13.6%, transparent 86.4%, oklch(0.32 0.08 56) 86.4%, var(--gild-hi) 87.2%, var(--gild-lo) 88%, transparent 88%),
+      radial-gradient(70% 120% at 50% 50%, oklch(0.3 0.12 302 / 0.85), transparent 75%),
+      linear-gradient(180deg, oklch(0.07 0.035 292), oklch(0.2 0.08 299) 30%, oklch(0.24 0.1 301) 50%, oklch(0.2 0.08 299) 70%, oklch(0.07 0.035 292));
+    box-shadow:
+      inset 0 0 0 2px oklch(0.6 0.12 70 / 0.85),
+      inset 0 0 0 4px oklch(0.12 0.05 294),
+      inset 0 0 0 5px oklch(0.84 0.14 86 / 0.5),
+      inset 0 0 24px oklch(0.02 0.02 290 / 0.7);
+  }
+
+  .xdetail__side--top {
+    transform: rotateX(90deg) translateZ(calc(var(--h) / 2));
+  }
+
+  .xdetail__side--bottom {
+    transform: rotateX(-90deg) translateZ(calc(var(--h) / 2));
+  }
+
+  .xdetail__floor {
+    position: absolute;
+    bottom: 0.6rem;
+    width: 70%;
+    height: 2.2rem;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, oklch(0.02 0.02 290 / 0.75), transparent);
+    filter: blur(6px);
+    animation: xdetail-floor 7s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .xdetail__stage::before {
+    content: '';
+    position: absolute;
+    inset: 5% 0 15%;
+    z-index: -1;
+    background: radial-gradient(closest-side, oklch(0.6 0.23 302 / 0.5), transparent 80%);
+    filter: blur(14px);
+    pointer-events: none;
+  }
+
+  @keyframes xdetail-float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -10px;
+    }
+  }
+
+  @keyframes xdetail-floor {
+    0%,
+    100% {
+      scale: 1;
+      opacity: 0.9;
+    }
+    50% {
+      scale: 0.88;
+      opacity: 0.65;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .xdetail__cube,
+    .xdetail__floor {
+      animation: none;
+    }
+
+    .xdetail__cube {
+      transition-duration: 0.01s;
+    }
+  }
+
+  .xdetail__words {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .xdetail__words .eyebrow {
+    margin: 0;
+  }
+
+  .xdetail__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2.3rem, 5vw, 3.6rem);
+    line-height: 1.05;
+    text-wrap: balance;
+    filter: drop-shadow(0 3px 0 oklch(0.25 0.07 56 / 0.9)) drop-shadow(0 0 30px oklch(0.84 0.16 86 / 0.3));
+  }
+
+  .xdetail__motto {
+    margin: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.25rem;
+    color: var(--gild-hi);
+  }
+
+  .xdetail__intro {
+    margin: 0;
+    max-width: 44rem;
+    font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+    line-height: 1.7;
+    color: var(--fg);
+  }
+
+  .xdetail__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.2rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .xdetail__chips li {
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: oklch(0.84 0.14 86 / 0.07);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.74rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gild-hi);
+  }
+
+  .xdetail__words :global(.xdetail__outcome) {
+    margin-top: 1rem;
+    padding: 1.9rem 1.6rem 1.5rem;
+  }
+
+  .xdetail__outcome-label {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gild);
+  }
+
+  .xdetail__outcome-text {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+    line-height: 1.45;
+    color: var(--gild-hi);
+  }
+
+  .xdetail__section {
+    margin-bottom: clamp(3rem, 6vw, 4.5rem);
+  }
+
+  .xdetail__heading {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 0 1.6rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+  }
+
+  .xdetail__heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gild-hi), var(--gild-lo) 40%, transparent);
+    box-shadow: 0 0 10px oklch(0.84 0.16 86 / 0.4);
+  }
+
+  .xdetail__runs {
+    padding: clamp(1.4rem, 3vw, 2.4rem);
+  }
+
+  .xdetail__governs {
+    display: grid;
+    gap: 1rem 1.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .xdetail__governed {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem 1.25rem 1.05rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, oklch(0.19 0.065 296 / 0.75), oklch(0.13 0.045 292 / 0.75));
+    transition:
+      border-color 0.35s var(--ease),
+      box-shadow 0.45s var(--ease),
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .xdetail__governed:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow:
+      0 0 30px -10px oklch(0.84 0.16 86 / 0.55),
+      0 18px 34px -24px oklch(0.04 0.04 290 / 0.95);
+  }
+
+  .xdetail__numeral {
+    width: 2.8rem;
+    height: 2.8rem;
+    font-family: var(--font-decorative);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--gild-hi);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .xdetail__governed:hover .xdetail__numeral {
+    transform: scale(1.08);
+  }
+
+  .xdetail__governed-words {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+    padding-top: 0.2rem;
+  }
+
+  .xdetail__governs h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    line-height: 1.3;
+    color: var(--gild-hi);
+  }
+
+  .xdetail__governs p {
+    margin: 0;
+    font-size: 0.97rem;
+    line-height: 1.62;
+    opacity: 0.9;
+  }
+
+  .xdetail__depth {
+    padding: clamp(1.6rem, 3vw, 2.4rem);
+  }
+
+  .xdetail__nav {
+    display: grid;
+    gap: 1.2rem;
+    align-items: center;
+    padding-top: 2rem;
+    border-top: 1px solid transparent;
+    border-image: linear-gradient(90deg, transparent, var(--gild-lo) 15%, var(--gild-hi) 50%, var(--gild-lo) 85%, transparent) 1;
+  }
+
+  .xdetail__step {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.6rem 1rem 0.6rem 0.6rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: oklch(0.15 0.05 293 / 0.7);
+    color: var(--fg);
+    text-decoration: none;
+    transition:
+      border-color 0.3s var(--ease),
+      box-shadow 0.3s var(--ease),
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .xdetail__step--next {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 0.6rem 0.6rem 0.6rem 1rem;
+    text-align: right;
+  }
+
+  .xdetail__step:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: 0 0 26px -8px oklch(0.84 0.16 86 / 0.5);
+  }
+
+  .xdetail__step img {
+    width: 3.2rem;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid var(--border-strong);
+  }
+
+  .xdetail__step span {
+    display: grid;
+    gap: 0.15rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--gild-hi);
+  }
+
+  .xdetail__step small {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gild);
+  }
+
+  .xdetail__cta {
+    justify-self: center;
+  }
+
+  @media (min-width: 900px) {
+    .xdetail__governs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 960px) {
+    .xdetail__hero {
+      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    }
+
+    .xdetail__nav {
+      grid-template-columns: 1fr auto 1fr;
+    }
+  }
+
+</style>
