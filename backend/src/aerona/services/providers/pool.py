@@ -1,14 +1,16 @@
 import os
 from pathlib import Path
 
+import httpx
 from openai import AsyncOpenAI
 
 from aerona.catalog.providers import HOME, PROVIDERS, AgentSpec
+from aerona.constants.imaging import WORKER_REQUEST_TIMEOUT_SECONDS
 from aerona.constants.llm import TOOL_SERVER_NAME
-from aerona.constants.providers import AGENT_PACKAGE_BIN, GATEWAY_DIRECT_KEY_HEADER, OPENROUTER_API_URL, OPENROUTER_PREFIX
+from aerona.constants.providers import AGENT_PACKAGE_BIN, GATEWAY_DIRECT_KEY_HEADER, OPENROUTER_API_URL, OPENROUTER_PREFIX, OPENROUTER_TIMEOUT_FACTOR
 from aerona.domain.enums.providers import ProviderFamily, ProviderKind
 from aerona.imaging.client import ImageWorkerClient
-from aerona.imaging.gateway import ChatImages, GatewayImages
+from aerona.imaging.gateway import GatewayImages, OpenRouterImages
 from aerona.imaging.provider import ImageProvider
 from aerona.llm.backends.acp import AcpBackend, AgentLaunch
 from aerona.llm.backends.base import ModelBackend
@@ -138,5 +140,12 @@ class BackendPool:
         if connection.kind is ProviderKind.IMAGE_WORKER:
             return ImageWorkerClient(connection.base_url)
         if connection.kind is ProviderKind.OPENROUTER:
-            return ChatImages(AsyncOpenAI(base_url=OPENROUTER_API_URL, api_key=connection.secret), model.removeprefix(OPENROUTER_PREFIX))
+            http = httpx.AsyncClient(
+                base_url=OPENROUTER_API_URL,
+                headers={"Authorization": f"Bearer {connection.secret}"},
+                timeout=WORKER_REQUEST_TIMEOUT_SECONDS * OPENROUTER_TIMEOUT_FACTOR,
+                follow_redirects=True,
+            )
+            client = AsyncOpenAI(base_url=OPENROUTER_API_URL, api_key=connection.secret)
+            return OpenRouterImages(client, http, model.removeprefix(OPENROUTER_PREFIX))
         return GatewayImages(self._gateway_client(connection), f"{PROVIDERS[connection.kind].gateway_name}/{model}")

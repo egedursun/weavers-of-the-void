@@ -27,3 +27,5 @@ CHAIN_MAX_ENTRIES = 12
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1"
 OPENROUTER_PREFIX = "openrouter/"
 CHAT_IMAGE_MODALITIES = ("image", "text")
+OPENROUTER_IMAGES_PATH = "/images"
+OPENROUTER_TIMEOUT_FACTOR = 4

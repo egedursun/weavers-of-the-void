@@ -15,7 +15,7 @@ from aerona.constants.imaging import PNG_SIGNATURE
 from aerona.domain.enums.providers import ModelRole
 from aerona.imaging.contract import ImageJobRequest
 from aerona.imaging.errors import ImageJobFailedError, ImageWorkerUnavailableError
-from aerona.imaging.gateway import ChatImages, GatewayImages, nearest_size
+from aerona.imaging.gateway import GatewayImages, OpenRouterImages, nearest_size
 from aerona.llm.backends.openai import OpenAIBackend
 from aerona.services.providers.checks import check_model
 from aerona.services.providers.secrets import SecretBox, SecretUnreadableError, hint_of, secret_box
@@ -74,35 +74,59 @@ async def test_a_cloud_picture_answered_as_a_link_is_downloaded() -> None:
     assert "http://pictures.test/drawn.png" in model.addresses
 
 
-def chat_client(answer: dict[str, Any], asked: list[dict[str, Any]]) -> AsyncOpenAI:
-    def handle(request: httpx.Request) -> httpx.Response:
-        asked.append(json.loads(request.content))
-        return httpx.Response(200, json=answer)
-
-    return AsyncOpenAI(
-        base_url="http://openrouter.test/api/v1", api_key="k", max_retries=0, http_client=httpx.AsyncClient(transport=httpx.MockTransport(handle))
-    )
+CHAT_ONLY = "is not an image generation model and cannot be used with the images endpoint"
+IMAGES_ONLY = "is an image generation model and cannot be used with the chat/completions endpoint. Use the /api/v1/images endpoint instead."
 
 
 def chat_answer(message: dict[str, Any]) -> dict[str, Any]:
     return {"id": "c", "object": "chat.completion", "created": 1, "model": "m", "choices": [{"index": 0, "finish_reason": "stop", "message": message}]}
 
 
-async def test_an_openrouter_picture_comes_from_the_chat_reply() -> None:
-    asked: list[dict[str, Any]] = []
-    drawn = {"role": "assistant", "content": "", "images": [{"type": "image_url", "image_url": {"url": f"data:image/png;base64,{PICTURE}"}}]}
-    picture = await ChatImages(chat_client(chat_answer(drawn), asked), "google/gemini-2.5-flash-image").generate(
-        ImageJobRequest(prompt="a hill", width=720, height=480, steps=4, seed=1)
+def openrouter(images: httpx.Response, chat: httpx.Response, asked: list[tuple[str, dict[str, Any]]]) -> OpenRouterImages:
+    def handle(request: httpx.Request) -> httpx.Response:
+        asked.append((request.url.path, json.loads(request.content)))
+        return images if request.url.path.endswith("/images") else chat
+
+    base = "http://openrouter.test/api/v1"
+    http = httpx.AsyncClient(base_url=base, transport=httpx.MockTransport(handle))
+    client = AsyncOpenAI(base_url=base, api_key="k", max_retries=0, http_client=httpx.AsyncClient(transport=httpx.MockTransport(handle)))
+    return OpenRouterImages(client, http, "a-model")
+
+
+def drawing_job() -> ImageJobRequest:
+    return ImageJobRequest(prompt="a hill", width=720, height=480, steps=4, seed=1)
+
+
+async def test_an_openrouter_image_model_draws_through_the_images_endpoint() -> None:
+    asked: list[tuple[str, dict[str, Any]]] = []
+    drawer = openrouter(
+        httpx.Response(200, json={"created": 1, "data": [{"b64_json": PICTURE}]}), httpx.Response(404, json={"error": {"message": IMAGES_ONLY}}), asked
     )
+    picture = await drawer.generate(drawing_job())
     assert picture.png.startswith(PNG_SIGNATURE)
-    assert asked[0]["modalities"] == ["image", "text"] and asked[0]["image_config"] == {"aspect_ratio": "3:2"}
+    assert [path for path, _ in asked] == ["/api/v1/images"]
+    assert asked[0][1]["aspect_ratio"] == "3:2" and asked[0][1]["response_format"] == "b64_json"
 
 
-async def test_an_openrouter_text_model_fails_as_a_drawer() -> None:
-    with pytest.raises(ImageJobFailedError):
-        await ChatImages(chat_client(chat_answer({"role": "assistant", "content": "I cannot draw."}), []), "openai/gpt-6-luna").generate(
-            ImageJobRequest(prompt="a hill", width=1024, height=1024, steps=4, seed=1)
-        )
+async def test_an_openrouter_chat_model_draws_through_the_chat_reply() -> None:
+    asked: list[tuple[str, dict[str, Any]]] = []
+    drawn = {"role": "assistant", "content": "", "images": [{"type": "image_url", "image_url": {"url": f"data:image/png;base64,{PICTURE}"}}]}
+    drawer = openrouter(httpx.Response(404, json={"error": {"message": CHAT_ONLY}}), httpx.Response(200, json=chat_answer(drawn)), asked)
+    picture = await drawer.generate(drawing_job())
+    assert picture.png.startswith(PNG_SIGNATURE)
+    assert [path for path, _ in asked] == ["/api/v1/images", "/api/v1/chat/completions"]
+    assert asked[1][1]["modalities"] == ["image", "text"] and asked[1][1]["image_config"] == {"aspect_ratio": "3:2"}
+
+
+async def test_an_openrouter_text_model_fails_with_both_reasons() -> None:
+    drawer = openrouter(
+        httpx.Response(404, json={"error": {"message": CHAT_ONLY}}),
+        httpx.Response(200, json=chat_answer({"role": "assistant", "content": "I cannot draw."})),
+        [],
+    )
+    with pytest.raises(ImageJobFailedError) as failure:
+        await drawer.generate(drawing_job())
+    assert CHAT_ONLY in str(failure.value) and "may not draw pictures" in str(failure.value)
 
 
 @pytest.mark.parametrize(("status", "error"), [(400, ImageJobFailedError), (429, ImageWorkerUnavailableError), (503, ImageWorkerUnavailableError)])
