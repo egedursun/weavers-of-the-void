@@ -3309,7 +3309,7 @@ Every setting is an environment variable. `.env` is ignored by git; `.env.exampl
 | Variable | Meaning |
 |---|---|
 | `CLAUDE_CODE_OAUTH_TOKEN` | Subscription token for the Claude Agent SDK (see below). Never use an API key. |
-| `AERONA_DATA_DIR` | Database, backups and (with the file media store) images. Docker always uses the `aerona-data` volume. |
+| `AERONA_DATA_DIR` | Database, backups and (with the file media store) images. Docker always uses the `aerona-data` volume. The server refuses to start when any folder of this or any other path setting begins or ends with a space. |
 | `AERONA_LLM_ENABLED` | `false` runs the world engine without any LLM calls. |
 | `AERONA_SECONDARY_BACKUP_DIR` | A second disk every backup is mirrored to, with its own retention. |
 | `AERONA_IMAGE_WORKER_URL` | Base URL of the image worker for a backend running on the host. Empty disables image generation. |

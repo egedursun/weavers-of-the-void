@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from aerona.constants.accounts import (
@@ -24,6 +24,12 @@ from aerona.constants.library import (
 from aerona.constants.llm import EMBED_THREADS_RESERVED, ClaudeAuth
 from aerona.constants.media import DEFAULT_MEDIA_BUCKET, DEFAULT_MEDIA_ENDPOINT, DEFAULT_MEDIA_REGION, MediaBackend
 from aerona.paths import ProcessPaths, UniversePaths
+
+PATH_FIELDS = ("data_dir", "embed_model_dir", "secondary_backup_dir", "static_dir", "library_root")
+EDGED_PATH = (
+    "{field} names a folder that begins or ends with a space ({path!r}). Such a name is easily read without the space, "
+    "which opens a different folder or makes a new empty one; rename the folder and set the value without the space."
+)
 
 
 def embedding_threads() -> int:
@@ -70,6 +76,13 @@ class Settings(BaseSettings):
     team_presence_ttl_seconds: float = Field(default=DEFAULT_PRESENCE_TTL_SECONDS, gt=0)
     team_reason_max_length: int = Field(default=DEFAULT_REASON_MAX_LENGTH, ge=1)
     universe_id: str = ""
+
+    @field_validator(*PATH_FIELDS)
+    @classmethod
+    def no_edged_folders(cls, value: Path | None, info: ValidationInfo) -> Path | None:
+        if value is not None and any(part != part.strip() for part in value.parts):
+            raise ValueError(EDGED_PATH.format(field=info.field_name, path=str(value)))
+        return value
 
     @property
     def claude_auth(self) -> ClaudeAuth:
