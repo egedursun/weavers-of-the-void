@@ -4,10 +4,11 @@ import secrets
 from datetime import UTC, datetime
 from typing import Any
 
+import httpx
 from openai import APIStatusError, AsyncOpenAI, OpenAIError
 from PIL import Image
 
-from aerona.constants.imaging import PNG_SIGNATURE
+from aerona.constants.imaging import PNG_SIGNATURE, WORKER_REQUEST_TIMEOUT_SECONDS
 from aerona.constants.providers import IMAGE_SIZES
 from aerona.imaging.client import ProgressCallback
 from aerona.imaging.contract import GeneratedImage, ImageJobRequest, ImageProgress, ImageStage
@@ -39,9 +40,10 @@ def as_png(data: bytes) -> bytes:
 
 
 class GatewayImages:
-    def __init__(self, client: AsyncOpenAI, model: str) -> None:
+    def __init__(self, client: AsyncOpenAI, model: str, downloads: httpx.AsyncClient | None = None) -> None:
         self._client = client
         self._model = model
+        self._downloads = downloads or httpx.AsyncClient(timeout=WORKER_REQUEST_TIMEOUT_SECONDS, follow_redirects=True)
 
     @property
     def enabled(self) -> bool:
@@ -52,6 +54,20 @@ class GatewayImages:
 
     async def aclose(self) -> None:
         await self._client.close()
+        await self._downloads.aclose()
+
+    async def _picture_bytes(self, answer: Any) -> bytes:
+        first = answer.data[0] if answer.data else None
+        if first is not None and first.b64_json:
+            return base64.b64decode(first.b64_json)
+        if first is not None and first.url:
+            try:
+                response = await self._downloads.get(first.url)
+                response.raise_for_status()
+            except httpx.HTTPError as error:
+                raise ImageWorkerUnavailableError(f"the picture could not be downloaded: {error}") from error
+            return response.content
+        raise ImageJobFailedError("the provider answered without a picture")
 
     async def generate(self, job: ImageJobRequest, on_progress: ProgressCallback | None = None) -> GeneratedImage:
         job_id = secrets.token_hex(8)
@@ -59,13 +75,10 @@ class GatewayImages:
         width, height = nearest_size(job.width, job.height)
         try:
             generate: Any = self._client.images.generate
-            answer = await generate(model=self._model, prompt=job.prompt, size=f"{width}x{height}", n=1, response_format="b64_json")
+            answer = await generate(model=self._model, prompt=job.prompt, size=f"{width}x{height}", n=1)
         except OpenAIError as error:
             raise image_failure(error) from error
-        data = answer.data[0].b64_json if answer.data else None
-        if not data:
-            raise ImageJobFailedError("the provider answered without a picture")
-        png = as_png(base64.b64decode(data))
+        png = as_png(await self._picture_bytes(answer))
         with Image.open(io.BytesIO(png)) as picture:
             width, height = picture.size
         await self._report(on_progress, job_id, 2, ImageStage.DONE, PERCENT_DONE)

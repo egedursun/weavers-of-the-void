@@ -1,3 +1,4 @@
+import base64
 import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -28,6 +29,7 @@ class StandInModel:
     requests: list[dict[str, Any]] = field(default_factory=list)
     headers: list[dict[str, str]] = field(default_factory=list)
     addresses: list[str] = field(default_factory=list)
+    picture_url: str = ""
 
     def transport(self) -> httpx.MockTransport:
         return httpx.MockTransport(self.handle)
@@ -38,10 +40,13 @@ class StandInModel:
         if request.url.path.endswith("/models"):
             listed = [{"id": "openai/b-model", "object": "model"}, {"id": "openai/a-model", "object": "model"}]
             return httpx.Response(200, json={"object": "list", "data": listed})
+        if self.picture_url and str(request.url) == self.picture_url:
+            return httpx.Response(200, content=base64.b64decode(PICTURE), headers={"content-type": "image/png"})
         if request.url.path.endswith("/images/generations"):
             body = json.loads(request.content)
             self.requests.append(body)
-            return httpx.Response(self.status, json={"created": 1, "data": [{"b64_json": PICTURE}]} if self.status == 200 else {"error": {"message": "no"}})
+            picture = {"url": self.picture_url} if self.picture_url else {"b64_json": PICTURE}
+            return httpx.Response(self.status, json={"created": 1, "data": [picture]} if self.status == 200 else {"error": {"message": "no"}})
         body = json.loads(request.content)
         self.requests.append(body)
         if self.status != 200:

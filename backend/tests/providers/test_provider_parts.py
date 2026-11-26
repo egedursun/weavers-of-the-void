@@ -58,9 +58,20 @@ async def test_a_cloud_picture_comes_back_as_png_at_the_nearest_size() -> None:
     picture = await GatewayImages(client(model), "openai/painter").generate(ImageJobRequest(prompt="a hill", width=720, height=480, steps=4, seed=1))
     assert picture.png.startswith(PNG_SIGNATURE)
     assert model.requests[0]["size"] == "1536x1024" and model.requests[0]["model"] == "openai/painter"
+    assert "response_format" not in model.requests[0], "gpt-image models refuse response_format, so every OpenAI picture failed"
     assert nearest_size(720, 720) == (1024, 1024) and nearest_size(480, 720) == (1024, 1536)
     with Image.open(io.BytesIO(picture.png)) as opened:
         assert opened.size == (picture.width, picture.height)
+
+
+async def test_a_cloud_picture_answered_as_a_link_is_downloaded() -> None:
+    model = StandInModel(picture_url="http://pictures.test/drawn.png")
+    downloads = httpx.AsyncClient(transport=model.transport())
+    picture = await GatewayImages(client(model), "openai/dall-e-3", downloads).generate(
+        ImageJobRequest(prompt="a hill", width=1024, height=1024, steps=4, seed=1)
+    )
+    assert picture.png.startswith(PNG_SIGNATURE)
+    assert "http://pictures.test/drawn.png" in model.addresses
 
 
 @pytest.mark.parametrize(("status", "error"), [(400, ImageJobFailedError), (429, ImageWorkerUnavailableError), (503, ImageWorkerUnavailableError)])
