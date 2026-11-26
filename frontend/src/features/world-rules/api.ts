@@ -5,6 +5,7 @@ import { type components } from '@/api/generated/schema'
 import { useMutation } from '@/api/mutation'
 import { queryKeys } from '@/api/queryKeys'
 import { RULES_STALE_TIME_MS } from '@/constants/ui'
+import { useAgeRefusal } from '@/features/team/writeGate'
 
 export type Rule = components['schemas']['RuleResponse']
 
@@ -28,6 +29,12 @@ export function useRuleValue(path: string): number | null {
   const rules = useRules()
   const found = rules.data?.find((rule) => rulePath(rule) === path)
   return found ? found.value : null
+}
+
+const RULE_WRITES = [{ method: 'PATCH', path: '/api/rules' }] as const
+
+export function useRulesWait(): string | null {
+  return useAgeRefusal(RULE_WRITES)
 }
 
 function useRefreshRules() {

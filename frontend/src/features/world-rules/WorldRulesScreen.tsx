@@ -36,6 +36,7 @@ import { Muted, Stat, Text } from '@/components/typography'
 import { toastDone } from '@/features/team/outcome'
 import { HarshnessDial } from './HarshnessDial'
 import { GroupHeader, RuleLine } from './RuleRowView'
+import { RulesWaitAlert } from './RulesWaitAlert'
 import { Spacer } from './Spacer'
 import { VariantForge } from './VariantForge'
 import {
@@ -201,6 +202,7 @@ function RulesEditor({ rules }: RulesEditorProps) {
 
   return (
     <div className='flex min-w-0 flex-col gap-4'>
+      <RulesWaitAlert />
       <HarshnessDial />
       <VariantForge />
       <div className='grid min-w-0 grid-cols-2 gap-2 lg:grid-cols-5'>

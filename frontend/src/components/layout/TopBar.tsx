@@ -34,7 +34,7 @@ export function TopBar({ context, actions, account }: TopBarProps) {
         />
         <TopBarCrumb />
       </div>
-      <div className='flex min-w-0 flex-1 items-center justify-center'>
+      <div className='@container/search flex min-w-0 flex-1 items-center justify-center'>
         <SearchButton />
       </div>
       <div className='flex shrink-0 items-center gap-2'>

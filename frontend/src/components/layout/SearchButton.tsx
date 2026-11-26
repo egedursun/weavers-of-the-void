@@ -14,7 +14,7 @@ export function SearchButton() {
       <Button
         variant='ghost'
         size='icon'
-        className='@4xl/topbar:hidden'
+        className='@xs/search:hidden'
         aria-label='Search'
         aria-keyshortcuts='Meta+K Control+K'
         onClick={() => setOpen(true)}
@@ -23,7 +23,7 @@ export function SearchButton() {
       </Button>
       <Button
         variant='field'
-        className='hidden w-full max-w-md justify-start text-muted-foreground hover:text-foreground @4xl/topbar:inline-flex'
+        className='hidden w-full max-w-md justify-start text-muted-foreground hover:text-foreground @xs/search:inline-flex'
         aria-keyshortcuts='Meta+K Control+K'
         onClick={() => setOpen(true)}
       >

@@ -11,6 +11,7 @@ import {
 import { godKeys } from '@/features/pantheon/api'
 import {
   type PlainWrite,
+  WAITS_FOR_AGE,
   WRITE_PERMISSIONS,
   type WriteRule,
 } from './writePermissions'
@@ -18,6 +19,8 @@ import {
 export type WriteTarget = PlainWrite | { lever: string }
 
 const CHECKING = 'Checking what you may do…'
+const AGE_RUNNING_REASON =
+  'An epoch is running; rules can be changed again when it ends.'
 const UNKNOWN_LEVER: Permission = 'edit_world'
 
 function ruleOf(target: WriteTarget): WriteRule {
@@ -86,20 +89,35 @@ export function useHoldFields(enabled: boolean) {
   })
 }
 
+function waitsForAge(target: WriteTarget): boolean {
+  return !('lever' in target) && WAITS_FOR_AGE.has(target.path)
+}
+
+export function useAgeRefusal(writes: readonly WriteTarget[]): string | null {
+  const bound = writes.some(waitsForAge)
+  const state = useQuery({
+    queryKey: godKeys.state,
+    queryFn: () => unwrap(api.GET('/api/state')),
+    enabled: bound,
+  })
+  return bound && state.data?.epoch_running ? AGE_RUNNING_REASON : null
+}
+
 export function useWriteRefusal(
   writes: readonly WriteTarget[],
   chosen?: Permission | null
 ): string | null {
   const gate = useTeamGate()
   const levers = useLeverPermissions(gate !== null && needsCatalogue(writes))
+  const age = useAgeRefusal(writes)
   const known = levers.data ?? null
-  if (chosen === null) return null
+  if (chosen === null) return age
   if (writes.length === 0)
     return chosen === undefined ? null : refusalIn(gate, chosen)
   let first: string | null = null
   for (const target of writes) {
     const refusal = refusalOfRule(gate, ruleOf(target), known, chosen)
-    if (refusal === null) return null
+    if (refusal === null) return age
     first ??= refusal
   }
   return first

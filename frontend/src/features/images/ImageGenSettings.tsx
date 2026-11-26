@@ -27,6 +27,7 @@ import {
 } from '@/components/domain/SettingsKit'
 import { Muted, Text } from '@/components/typography'
 import { toastDone } from '@/features/team/outcome'
+import { RulesWaitAlert } from '@/features/world-rules/RulesWaitAlert'
 import {
   type Rule,
   useResetGroup,
@@ -187,6 +188,7 @@ export function ImageGenSettings() {
         </>
       }
     >
+      <RulesWaitAlert />
       <div className='flex min-w-0 flex-wrap items-center gap-2'>
         <Badge variant='outline'>{`${width} × ${height} px`}</Badge>
         <Badge variant='outline'>{`${plural(steps, 'step', 'steps')}`}</Badge>

@@ -38,6 +38,11 @@ export type PlainWrite = {
   [P in PlainWritePath]: { method: WriteMethod<P>; path: P }
 }[PlainWritePath]
 
+export const WAITS_FOR_AGE: ReadonlySet<PlainWritePath> = new Set([
+  '/api/rules',
+  '/api/rules/{namespace}/{key}',
+])
+
 export const WRITE_PERMISSIONS: {
   [P in PlainWritePath]: { [M in WriteMethod<P>]: WriteRule }
 } = {
