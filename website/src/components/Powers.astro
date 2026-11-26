@@ -14,148 +14,200 @@ const emblems: EmblemName[] = ['key', 'scroll', 'anvil']
 ---
 
 <section class="section powers" id="powers" aria-labelledby="powers-title">
-  <div class="wrap">
-    <div class="head center">
-      <p class="eyebrow reveal">{copy.eyebrow}</p>
-      <h2 class="title reveal" id="powers-title" style="--delay: 0.08s">{copy.title}</h2>
-      <p class="lead powers__lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+  <div class="wrap wrap--wide">
+    <div class="powers__top">
+      <div class="powers__intro">
+        <p class="eyebrow reveal">{copy.eyebrow}</p>
+        <h2 class="title reveal" id="powers-title" style="--delay: 0.08s">{copy.title}</h2>
+        <p class="lead powers__lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+      </div>
+
+      <Frame size="panel" gem class="powers__ledger reveal" style="--delay: 0.18s">
+        <span class="powers__aura" aria-hidden="true" />
+        <span class="medallion powers__seal" aria-hidden="true">
+          <Emblem name="crown" />
+        </span>
+        <p class="powers__total">
+          <span class="powers__value gilded">{copy.ledger.value}</span>
+          <span class="powers__unit">{copy.ledger.label}</span>
+        </p>
+        <span class="powers__rule" aria-hidden="true" />
+        <ul class="powers__notes">
+          {
+            copy.ledger.notes.map((note) => (
+              <li>
+                <img class="star-bullet" src={star.src} alt="" width="104" height="108" />
+                <span>{note}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </Frame>
     </div>
 
-    <Frame size="panel" gem class="powers__book reveal">
-      <span class="medallion powers__crown" aria-hidden="true">
-        <Emblem name="crown" />
-      </span>
-      <ul class="powers__spells">
-        {
-          copy.examples.map((example) => (
-            <li class="powers__spell">
-              <img class="star-bullet powers__star" src={star.src} alt="" width="104" height="108" />
-              <span>{example}</span>
-            </li>
-          ))
-        }
-      </ul>
-    </Frame>
-
-    <ul class="powers__pillars">
+    <p class="powers__sample reveal">{copy.sample}</p>
+    <ul class="powers__deck">
       {
-        copy.pillars.map((pillar, index) => (
-          <Frame as="li" size="card" class="powers__pillar reveal" style={`--delay: ${0.08 * index}s`}>
+        copy.examples.map((example, index) => (
+          <Frame as="li" size="tile" class="powers__card reveal" style={`--delay: ${0.05 * (index % 4)}s`}>
             <span class="powers__shine" aria-hidden="true" />
-            <span class="medallion powers__medal">
-              <Emblem name={emblems[index]} />
+            <span class="medallion powers__icon">
+              <Emblem name={example.emblem as EmblemName} />
             </span>
-            <h3 class="gilded">{pillar.title}</h3>
-            <p>{pillar.text}</p>
+            <span class="powers__tag">{example.tag}</span>
+            <span class="powers__deed">{example.text}</span>
           </Frame>
         ))
       }
     </ul>
 
-    <ul class="powers__stats">
-      {
-        copy.stats.map((stat, index) => (
-          <li class="powers__stat reveal" style={`--delay: ${0.1 * index}s`}>
-            <span class="powers__value gilded">{stat.value}</span>
-            <span class="powers__label">{stat.label}</span>
-          </li>
-        ))
-      }
-    </ul>
+    <Frame size="panel" class="powers__band reveal">
+      <ul class="powers__pillars">
+        {
+          copy.pillars.map((pillar, index) => (
+            <li class="powers__pillar">
+              <span class="medallion powers__medal">
+                <Emblem name={emblems[index]} />
+              </span>
+              <div class="powers__pillar-words">
+                <h3 class="gilded">{pillar.title}</h3>
+                <p>{pillar.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </Frame>
   </div>
 </section>
 
 <style>
+  .powers__top {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3.5rem);
+    align-items: center;
+    margin-bottom: clamp(2.75rem, 5vw, 4rem);
+  }
+
   .powers__lead {
+    max-width: 38rem;
     color: var(--fg);
     opacity: 0.9;
   }
 
-  .powers__book {
+  .powers__ledger {
+    position: relative;
     display: grid;
     justify-items: center;
-    gap: 1.6rem;
-    margin-top: 1.5rem;
-    padding: clamp(2.8rem, 5vw, 3.6rem) clamp(1.4rem, 4vw, 3.2rem) clamp(2.2rem, 4vw, 3rem);
-    background:
-      radial-gradient(46rem 16rem at 50% 0%, oklch(0.84 0.16 86 / 0.1), transparent 70%),
-      radial-gradient(36rem 18rem at 50% 100%, oklch(0.6 0.23 302 / 0.2), transparent 70%),
-      linear-gradient(180deg, var(--frame-hi), var(--frame-lo));
+    gap: 0.9rem;
+    padding: clamp(2.6rem, 4vw, 3.2rem) clamp(1.5rem, 3vw, 2.5rem) clamp(2rem, 3vw, 2.5rem);
+    text-align: center;
+    overflow: hidden;
   }
 
-  .powers__crown {
+  .powers__aura {
+    position: absolute;
+    inset: -20% -10%;
+    z-index: -1;
+    background:
+      radial-gradient(closest-side at 50% 45%, oklch(0.84 0.16 86 / 0.22), transparent 70%),
+      radial-gradient(closest-side at 50% 60%, oklch(0.55 0.23 302 / 0.35), transparent 80%);
+    pointer-events: none;
+  }
+
+  .powers__seal {
     width: 4.6rem;
     height: 4.6rem;
   }
 
-  .powers__crown :global(.emblem) {
+  .powers__seal :global(.emblem) {
     width: 2.6rem;
     height: 2.6rem;
   }
 
-  .powers__spells {
+  .powers__total {
     display: grid;
-    gap: 0.8rem 1.4rem;
-    width: 100%;
+    justify-items: center;
+    gap: 0.4rem;
+    margin: 0;
+  }
+
+  .powers__value {
+    font-family: var(--font-decorative);
+    font-weight: 700;
+    font-size: clamp(3.4rem, 7vw, 5.2rem);
+    line-height: 0.95;
+    filter: drop-shadow(0 3px 0 oklch(0.25 0.07 56 / 0.9)) drop-shadow(0 0 30px oklch(0.84 0.16 86 / 0.4));
+  }
+
+  .powers__unit {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--gild-hi);
+  }
+
+  .powers__rule {
+    width: min(14rem, 70%);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gild-hi), transparent);
+    box-shadow: 0 0 10px oklch(0.84 0.16 86 / 0.6);
+  }
+
+  .powers__notes {
+    display: grid;
+    gap: 0.55rem;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
-  .powers__spell {
-    display: flex;
+  .powers__notes li {
+    display: inline-flex;
     align-items: center;
-    gap: 0.9rem;
-    min-width: 0;
-    padding: 0.85rem 1.1rem;
-    border: 1px solid oklch(0.84 0.14 86 / 0.32);
-    border-radius: 10px;
-    background: linear-gradient(180deg, oklch(0.22 0.075 297 / 0.9), oklch(0.15 0.05 293 / 0.9));
-    box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06);
+    justify-content: center;
+    gap: 0.6rem;
     color: var(--fg);
-    font-size: 1.04rem;
-    line-height: 1.45;
-    transition:
-      transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-      border-color 0.3s var(--ease),
-      box-shadow 0.45s var(--ease);
+    font-size: 1rem;
   }
 
-  .powers__spell:hover {
-    transform: translateX(4px);
-    border-color: var(--border-strong);
-    box-shadow:
-      inset 0 1px 0 oklch(1 0 0 / 0.1),
-      0 0 24px -6px oklch(0.84 0.16 86 / 0.45);
+  .powers__notes .star-bullet {
+    width: 1rem;
+    height: 1rem;
   }
 
-  .powers__star {
-    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  .powers__sample {
+    margin: 0 0 1.4rem;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.82rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--gild);
   }
 
-  .powers__spell:hover .powers__star {
-    transform: rotate(45deg) scale(1.15);
-  }
-
-  .powers__pillars {
+  .powers__deck {
     display: grid;
-    gap: 2.4rem;
-    margin: clamp(2.5rem, 5vw, 3.5rem) 0 0;
+    gap: 1.9rem 1.5rem;
+    margin: 0 0 clamp(2.75rem, 5vw, 3.75rem);
     padding: 0;
     list-style: none;
   }
 
-  .powers__pillar {
+  .powers__card {
     position: relative;
     display: grid;
     justify-items: center;
     align-content: start;
-    gap: 0.8rem;
-    padding: 2.3rem 1.7rem 2.1rem;
+    gap: 0.6rem;
+    padding: 1.6rem 1.2rem 1.5rem;
     text-align: center;
     transition:
-      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 0.6s var(--ease);
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.55s var(--ease);
   }
 
   .powers__shine {
@@ -175,46 +227,102 @@ const emblems: EmblemName[] = ['key', 'scroll', 'anvil']
       105deg,
       transparent 40%,
       oklch(1 0 0 / 0.05) 45%,
-      oklch(0.98 0.07 92 / 0.22) 50%,
+      oklch(0.98 0.07 92 / 0.28) 50%,
       oklch(1 0 0 / 0.05) 55%,
       transparent 60%
     );
     transform: translateX(-70%);
   }
 
-  .powers__pillar:hover {
+  .powers__card:hover {
     transform: translateY(-6px);
     box-shadow:
       0 0 0 1px var(--gild-deep),
-      0 0 40px -6px oklch(0.84 0.16 86 / 0.55),
-      0 30px 56px -28px oklch(0.05 0.04 290 / 0.95);
+      0 0 36px -6px oklch(0.84 0.16 86 / 0.6),
+      0 26px 48px -24px oklch(0.05 0.04 290 / 0.95);
   }
 
-  .powers__pillar:hover .powers__shine::after {
+  .powers__card:hover .powers__shine::after {
     animation: powers-sweep 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
+  .powers__icon {
+    width: 3.6rem;
+    height: 3.6rem;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .powers__icon :global(.emblem) {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .powers__card:hover .powers__icon {
+    transform: scale(1.1) rotate(-4deg);
+  }
+
+  .powers__tag {
+    padding: 0.18rem 0.75rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gild);
+    background: oklch(0.84 0.14 86 / 0.06);
+  }
+
+  .powers__deed {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.35;
+    color: var(--fg);
+    text-wrap: balance;
+  }
+
+  .powers__band {
+    padding: clamp(1.75rem, 3.5vw, 2.5rem) clamp(1.25rem, 3vw, 2.5rem);
+  }
+
+  .powers__pillars {
+    display: grid;
+    gap: 1.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .powers__pillar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 1.1rem;
+  }
+
   .powers__medal {
-    width: 4.6rem;
-    height: 4.6rem;
-    margin-bottom: 0.3rem;
-    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 3.9rem;
+    height: 3.9rem;
   }
 
   .powers__medal :global(.emblem) {
-    width: 2.55rem;
-    height: 2.55rem;
+    width: 2.15rem;
+    height: 2.15rem;
   }
 
-  .powers__pillar:hover .powers__medal {
-    transform: scale(1.08);
+  .powers__pillar-words {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
   }
 
   .powers__pillar h3 {
-    margin: 0;
+    margin: 0.3rem 0 0;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: clamp(1.3rem, 2vw, 1.5rem);
+    font-size: 1.3rem;
     line-height: 1.2;
     filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.85));
   }
@@ -223,56 +331,8 @@ const emblems: EmblemName[] = ['key', 'scroll', 'anvil']
     margin: 0;
     color: var(--fg);
     opacity: 0.88;
-    font-size: 1.02rem;
-    line-height: 1.65;
-  }
-
-  .powers__stats {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1.4rem;
-    margin: clamp(2.5rem, 5vw, 3.5rem) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .powers__stat {
-    display: inline-flex;
-    align-items: center;
-    gap: 1.1rem;
-    max-width: 100%;
-    padding: 0.7rem 1.6rem 0.7rem 1.3rem;
-    border: 2px solid transparent;
-    border-radius: 999px;
-    background:
-      linear-gradient(180deg, oklch(0.24 0.08 298), oklch(0.16 0.06 294)) padding-box,
-      linear-gradient(135deg, #fff1b8, var(--gild) 30%, var(--gild-lo) 55%, #f7dc8a 78%, var(--gild)) border-box;
-    box-shadow:
-      0 0 0 1px oklch(0.36 0.09 56 / 0.7),
-      0 0 30px -8px oklch(0.84 0.16 86 / 0.5),
-      inset 0 1px 0 oklch(1 0 0 / 0.12);
-  }
-
-  .powers__value {
-    flex: none;
-    font-family: var(--font-decorative);
-    font-weight: 700;
-    font-size: clamp(1.9rem, 3.4vw, 2.5rem);
-    line-height: 1;
-    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9));
-  }
-
-  .powers__label {
-    min-width: 0;
-    max-width: 17rem;
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.86rem;
-    line-height: 1.35;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gild-hi);
+    font-size: 0.98rem;
+    line-height: 1.6;
   }
 
   @keyframes powers-sweep {
@@ -281,22 +341,67 @@ const emblems: EmblemName[] = ['key', 'scroll', 'anvil']
     }
   }
 
-  @media (min-width: 760px) {
-    .powers__spells {
-      grid-template-columns: 1fr 1fr;
+  @media (max-width: 639px) {
+    .powers__deck {
+      gap: 1.2rem;
+    }
+
+    .powers__card {
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      justify-items: start;
+      align-items: center;
+      column-gap: 1rem;
+      row-gap: 0.35rem;
+      padding: 1.1rem 1.2rem;
+      text-align: left;
+    }
+
+    .powers__icon {
+      grid-row: 1 / span 2;
+      width: 3rem;
+      height: 3rem;
+    }
+
+    .powers__icon :global(.emblem) {
+      width: 1.65rem;
+      height: 1.65rem;
+    }
+
+    .powers__deed {
+      font-size: 0.98rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .powers__deck {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @media (min-width: 960px) {
+    .powers__top {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    }
+
     .powers__pillars {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0;
+    }
+
+    .powers__pillar {
+      padding: 0 1.6rem;
+    }
+
+    .powers__pillar + .powers__pillar {
+      border-left: 1px solid transparent;
+      border-image: linear-gradient(180deg, transparent, var(--gild-lo) 20%, var(--gild-hi) 50%, var(--gild-lo) 80%, transparent) 1;
     }
   }
 
-  @media (max-width: 520px) {
-    .powers__stat {
-      border-radius: 18px;
-      padding: 0.9rem 1.2rem;
+  @media (min-width: 1180px) {
+    .powers__deck {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
   }
 </style>
