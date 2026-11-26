@@ -1,7 +1,7 @@
 ---
 import Emblem, { type EmblemName } from './Emblem.astro'
 import Frame from './Frame.astro'
-import { copyFor, type Locale } from '../i18n'
+import { asset, copyFor, type Locale } from '../i18n'
 
 interface Props {
   locale: Locale
@@ -10,6 +10,7 @@ interface Props {
 const { locale } = Astro.props
 const copy = copyFor(locale).minds
 const emblems: EmblemName[] = ['crown', 'scroll', 'orb', 'tome']
+const pictures: (string | null)[] = ['minds-gods', 'minds-mortals', 'minds-belief', 'minds-history']
 ---
 
 <section class="section minds" id="minds" aria-labelledby="minds-title">
@@ -25,6 +26,11 @@ const emblems: EmblemName[] = ['crown', 'scroll', 'orb', 'tome']
         copy.items.map((item, index) => (
           <Frame as="li" size="card" class="minds__item reveal" style={`--delay: ${0.08 * index}s`}>
             <span class="minds__shine" aria-hidden="true" />
+            {pictures[index] && (
+              <figure class="minds__picture">
+                <img src={asset(`art/minds/${pictures[index]}.webp`)} alt="" width="900" height="900" loading="lazy" decoding="async" />
+              </figure>
+            )}
             <span class="medallion minds__medal">
               <Emblem name={emblems[index]} />
             </span>
@@ -123,6 +129,55 @@ const emblems: EmblemName[] = ['crown', 'scroll', 'orb', 'tome']
 
   .minds__item:hover .minds__shine::after {
     animation: minds-sweep 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .minds__picture {
+    position: relative;
+    grid-column: 1 / -1;
+    margin: 0 0 -0.4rem;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 3px;
+    padding: 3px;
+    background: linear-gradient(135deg, #fff1b8, var(--gild) 22%, var(--gild-lo) 45%, #f7dc8a 62%, var(--gild) 80%, var(--gild-lo));
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56),
+      0 16px 30px -16px oklch(0.05 0.04 290 / 0.9);
+  }
+
+  .minds__picture::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    z-index: 1;
+    border-radius: 2px;
+    box-shadow:
+      inset 0 0 0 1px oklch(0.96 0.09 96 / 0.35),
+      inset 0 -60px 50px -30px oklch(0.1 0.05 292 / 0.85);
+    pointer-events: none;
+  }
+
+  .minds__picture img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2px;
+    transition:
+      transform 1.4s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.8s ease;
+  }
+
+  .minds__item:hover .minds__picture img {
+    transform: scale(1.05);
+    filter: saturate(1.12) brightness(1.06);
+  }
+
+  .minds__picture + .minds__medal {
+    position: relative;
+    z-index: 3;
+    margin-top: -2.6rem;
+    margin-left: 0.4rem;
   }
 
   .minds__medal {

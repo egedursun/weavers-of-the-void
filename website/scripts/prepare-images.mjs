@@ -50,6 +50,12 @@ for (let number = 0; number <= 99; number += 1) {
 
 await webp(join(art, 'collectors-edition.jpg'), join(publicDir, 'art', 'collectors-edition.webp'), 1200)
 
+const minds = join(site, 'art')
+mkdirSync(join(publicDir, 'art', 'minds'), { recursive: true })
+for (const name of readdirSync(minds)) {
+  if (name.startsWith('minds-') && extname(name) === '.jpg') await webp(join(minds, name), join(publicDir, 'art', 'minds', name.replace('.jpg', '.webp')), 900)
+}
+
 const steps = join(site, 'art', 'steps')
 for (const name of readdirSync(steps)) {
   if (extname(name) === '.jpg') await webp(join(steps, name), join(publicDir, 'art', 'steps', name.replace('.jpg', '.webp')), 900)
