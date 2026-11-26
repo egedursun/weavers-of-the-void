@@ -20,6 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { ControlCluster } from '@/components/layout/ControlCluster'
 import { Muted, Text } from '@/components/typography'
 import { AccountAvatar } from './AccountAvatar'
 import { type AccountPanel, AccountDialog } from './AccountDialogs'
@@ -40,7 +41,7 @@ export function AccountMenu({ framed = false }: { framed?: boolean }) {
       <DropdownMenuTrigger asChild>
         <Button
           type='button'
-          variant='ghost'
+          variant='chrome'
           size='icon'
           aria-label={`${account.display_name}: your account`}
         >
@@ -145,13 +146,7 @@ export function AccountMenu({ framed = false }: { framed?: boolean }) {
   )
   return (
     <>
-      {framed ? (
-        <span className='flex items-center rounded-md border surface-framed border-gild/70 bg-card p-0.5'>
-          {menu}
-        </span>
-      ) : (
-        menu
-      )}
+      {framed ? <ControlCluster>{menu}</ControlCluster> : menu}
       <AccountDialog
         panel={panel}
         account={account}

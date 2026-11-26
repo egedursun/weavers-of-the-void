@@ -26,6 +26,7 @@ import {
   LoadingBlock,
   Section,
 } from '@/components/domain'
+import { ControlCluster } from '@/components/layout/ControlCluster'
 import { Logo } from '@/components/layout/Logo'
 import { Label, Muted, PageTitle } from '@/components/typography'
 import { CreateUniverseDialog } from './CreateUniverseDialog'
@@ -91,11 +92,7 @@ function HallHeader({
       {(tools || workspace) && (
         <div className='flex w-full min-w-0 flex-wrap items-center justify-between gap-2'>
           <span className='flex min-w-0 items-center'>{workspace}</span>
-          {tools && (
-            <span className='flex items-center gap-0.5 rounded-md border surface-framed border-gild/70 bg-card p-0.5'>
-              {tools}
-            </span>
-          )}
+          {tools && <ControlCluster>{tools}</ControlCluster>}
         </div>
       )}
       <div className='relative flex items-center justify-center'>

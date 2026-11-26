@@ -286,7 +286,7 @@ body {
   );
 }
 
-[data-layout='top-bar-cluster'] {
+[data-layout='control-cluster'] {
   border-color: color-mix(in oklch, var(--gild) 38%, transparent);
   background: linear-gradient(180deg, var(--plate-hi), var(--plate-lo));
   box-shadow:

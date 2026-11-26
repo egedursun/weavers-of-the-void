@@ -2,6 +2,7 @@ import { type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import { ControlCluster } from './ControlCluster'
 import { RealtimeIndicator } from './RealtimeIndicator'
 import { SearchButton } from './SearchButton'
 import { ThemeSwitch } from './ThemeSwitch'
@@ -38,10 +39,7 @@ export function TopBar({ context, actions, account }: TopBarProps) {
       </div>
       <div className='flex shrink-0 items-center gap-2'>
         {context}
-        <div
-          data-layout='top-bar-cluster'
-          className='flex items-center gap-0.5 rounded-md border surface-sheen border-gild/70 bg-card px-1.5 py-0.5'
-        >
+        <ControlCluster>
           <RealtimeIndicator />
           <Separator
             orientation='vertical'
@@ -55,7 +53,7 @@ export function TopBar({ context, actions, account }: TopBarProps) {
             />
             <ThemeSwitch />
           </span>
-        </div>
+        </ControlCluster>
         {account}
       </div>
     </header>

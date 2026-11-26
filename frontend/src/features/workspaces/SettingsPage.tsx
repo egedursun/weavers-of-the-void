@@ -4,6 +4,7 @@ import { ArrowLeft, LibraryBig } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Divider } from '@/components/ui/ornate'
 import { Medallion } from '@/components/domain'
+import { ControlCluster } from '@/components/layout/ControlCluster'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { Muted, PageTitle, Text } from '@/components/typography'
 import { AccountMenu } from '@/features/accounts/AccountMenu'
@@ -47,10 +48,10 @@ export function SettingsPage({
             </span>
           </Link>
         </Button>
-        <span className='flex items-center gap-0.5 rounded-md border surface-sheen border-gild/70 bg-card px-1.5 py-0.5'>
+        <ControlCluster>
           <ThemeSwitch />
           <AccountMenu />
-        </span>
+        </ControlCluster>
       </nav>
       <header className='relative flex w-full max-w-6xl min-w-0 flex-col items-center gap-3 text-center'>
         {crest}

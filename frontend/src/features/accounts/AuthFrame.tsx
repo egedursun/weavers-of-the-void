@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Divider } from '@/components/ui/ornate'
 import { Section } from '@/components/domain'
+import { ControlCluster } from '@/components/layout/ControlCluster'
 import { Logo } from '@/components/layout/Logo'
 import { ThemeSwitch } from '@/components/layout/ThemeSwitch'
 import { Label, Muted, PageTitle } from '@/components/typography'
@@ -38,9 +39,9 @@ export function AuthFrame({
         className='pointer-events-none absolute inset-x-0 top-0 h-160 bg-linear-to-b from-brand-violet/14 via-primary/6 to-transparent'
       />
       <div className={cn('relative flex w-full min-w-0 justify-end', width)}>
-        <span className='flex items-center rounded-md border surface-sheen border-gild/70 bg-card px-1.5 py-0.5'>
+        <ControlCluster>
           <ThemeSwitch />
-        </span>
+        </ControlCluster>
       </div>
       <header
         className={cn(

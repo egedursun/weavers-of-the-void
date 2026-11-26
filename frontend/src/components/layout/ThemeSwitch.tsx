@@ -197,7 +197,7 @@ export function ThemeSwitch() {
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
             <Button
-              variant='ghost'
+              variant='chrome'
               size='icon'
               aria-label='Appearance'
               data-theme-picker
