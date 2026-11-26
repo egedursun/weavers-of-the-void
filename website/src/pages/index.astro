@@ -1,0 +1,46 @@
+---
+import { asset, page } from '../i18n'
+
+const english = page('en')
+const turkish = page('tr')
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weavers of the Void</title>
+    <meta name="robots" content="noindex" />
+    <link rel="canonical" href={english} />
+    <link rel="icon" href={asset('brand/favicon.ico')} sizes="any" />
+    <meta http-equiv="refresh" content={`2; url=${english}`} />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        background: #110b1f;
+        color: #efe9ff;
+        font-family: system-ui, sans-serif;
+      }
+      a {
+        color: #f2cf6b;
+      }
+    </style>
+    <script is:inline define:vars={{ english, turkish }}>
+      let chosen = ''
+      try {
+        chosen = window.localStorage.getItem('wov-language') || ''
+      } catch {
+        chosen = ''
+      }
+      const preferred = chosen || (navigator.languages || [navigator.language || 'en']).find(Boolean) || 'en'
+      window.location.replace(preferred.toLowerCase().startsWith('tr') ? turkish : english)
+    </script>
+  </head>
+  <body>
+    <p><a href={english}>English</a> · <a href={turkish}>Türkçe</a></p>
+  </body>
+</html>

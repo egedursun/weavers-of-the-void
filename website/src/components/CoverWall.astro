@@ -1,0 +1,193 @@
+---
+import Icon from './Icon.astro'
+import { asset, copyFor, page, type Locale } from '../i18n'
+import data from '../data/expansions.en.json'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = copyFor(locale).wall
+const expansions = [data.loom, ...data.chapters.flatMap((chapter) => chapter.expansions)]
+const half = Math.ceil(expansions.length / 2)
+const rows = [expansions.slice(0, half), expansions.slice(half)]
+---
+
+<section class="section wall" aria-labelledby="wall-title">
+  <div class="wrap head center">
+    <p class="eyebrow reveal">{copy.eyebrow}</p>
+    <h2 class="title reveal" id="wall-title" style="--delay: 0.08s">
+      {copy.title} <span class="gilded">{copy.titleAccent}</span>
+    </h2>
+    <p class="lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+  </div>
+
+  <div class="wall__rows" aria-hidden="true">
+    {
+      rows.map((row, index) => (
+        <div class={`wall__row ${index === 1 ? 'wall__row--back' : ''}`}>
+          <div class="wall__track">
+            {[...row, ...row].map((item) => (
+              <span class="wall__card">
+                <img src={asset(`covers/${item.number}.webp`)} alt="" width="480" height="720" loading="lazy" decoding="async" />
+              </span>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="wrap center wall__cta reveal">
+    <a class="button button--gold" href={page(locale, 'expansions')}>
+      {copy.cta}
+      <Icon name="arrowRight" />
+    </a>
+  </div>
+</section>
+
+<style>
+  .wall {
+    overflow: hidden;
+  }
+
+  .wall .lead {
+    color: var(--fg);
+    opacity: 0.88;
+  }
+
+  .wall__rows {
+    position: relative;
+    display: grid;
+    gap: 0.4rem;
+    mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+  }
+
+  .wall__rows::before {
+    content: '';
+    position: absolute;
+    inset: 8% 18%;
+    z-index: -1;
+    background: radial-gradient(closest-side, oklch(0.55 0.22 300 / 0.45), transparent);
+    filter: blur(30px);
+    pointer-events: none;
+  }
+
+  .wall__row {
+    overflow-x: clip;
+    overflow-y: visible;
+    padding-block: 1.4rem;
+  }
+
+  .wall__track {
+    display: flex;
+    gap: 1.25rem;
+    width: max-content;
+    animation: wall-drift 150s linear infinite;
+  }
+
+  .wall__row--back .wall__track {
+    animation-direction: reverse;
+    animation-duration: 170s;
+  }
+
+  .wall__rows:hover .wall__track {
+    animation-play-state: paused;
+  }
+
+  .wall__card {
+    position: relative;
+    display: block;
+    flex: none;
+    width: clamp(124px, 14vw, 176px);
+    aspect-ratio: 2 / 3;
+    padding: 3px;
+    border-radius: 9px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #fff1b8, var(--gild) 22%, var(--gild-lo) 45%, #f7dc8a 62%, var(--gild) 80%, var(--gild-lo));
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56),
+      0 18px 32px -16px oklch(0.05 0.04 290 / 0.95);
+    transition:
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.6s var(--ease);
+  }
+
+  .wall__card img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    border-radius: 6px;
+    transition: filter 0.6s var(--ease);
+  }
+
+  .wall__card::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    z-index: 1;
+    border-radius: 6px;
+    box-shadow:
+      inset 0 0 0 1px oklch(0.96 0.09 96 / 0.35),
+      inset 0 0 26px 2px oklch(0.1 0.05 292 / 0.55);
+    pointer-events: none;
+  }
+
+  .wall__card::after {
+    content: '';
+    position: absolute;
+    inset: -20% -90%;
+    z-index: 2;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      oklch(1 0 0 / 0.08) 45%,
+      oklch(0.98 0.07 92 / 0.55) 50%,
+      oklch(1 0 0 / 0.08) 55%,
+      transparent 60%
+    );
+    transform: translateX(-70%);
+    pointer-events: none;
+  }
+
+  .wall__card:hover {
+    z-index: 3;
+    transform: translateY(-10px) scale(1.06);
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56),
+      0 0 34px -2px oklch(0.84 0.16 86 / 0.65),
+      0 26px 44px -18px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .wall__card:hover img {
+    filter: saturate(1.15) brightness(1.08);
+  }
+
+  .wall__card:hover::after {
+    animation: wall-shine 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .wall__cta {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  @keyframes wall-drift {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes wall-shine {
+    to {
+      transform: translateX(70%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wall__track {
+      animation: none;
+    }
+  }
+</style>

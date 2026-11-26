@@ -1,0 +1,334 @@
+---
+import Emblem, { type EmblemName } from './Emblem.astro'
+import Frame from './Frame.astro'
+import { asset, copyFor, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = copyFor(locale).showcase
+const emblems: Record<string, EmblemName> = {
+  genesis: 'quill',
+  map: 'map',
+  cosmos: 'planet',
+  heavens: 'orb',
+  entry: 'tome',
+  will: 'crown',
+  network: 'network',
+}
+const stamp = Date.now()
+const numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']
+const total = numerals[copy.tabs.length - 1]
+---
+
+<section class="section showcase" id="showcase" aria-labelledby="showcase-title">
+  <div class="wrap wrap--wide">
+    <div class="head center">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title reveal" id="showcase-title" style="--delay: 0.08s">{copy.title}</h2>
+      <p class="lead reveal" style="--delay: 0.14s">{copy.lead}</p>
+    </div>
+
+    <div class="showcase__body reveal" data-tabs>
+      <div class="showcase__tabs" role="tablist" aria-label={copy.title}>
+        {
+          copy.tabs.map((tab, index) => (
+            <Frame
+              as="button"
+              size="tile"
+              class="showcase__tab"
+              type="button"
+              role="tab"
+              id={`tab-${tab.key}`}
+              aria-controls={`panel-${tab.key}`}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? 0 : -1}
+              data-tab
+            >
+              <Emblem name={emblems[tab.key] ?? 'orb'} class="showcase__tab-emblem" />
+              <span class="showcase__tab-label">{tab.label}</span>
+            </Frame>
+          ))
+        }
+      </div>
+
+      {
+        copy.tabs.map((tab, index) => (
+          <div
+            class="showcase__panel"
+            role="tabpanel"
+            id={`panel-${tab.key}`}
+            aria-labelledby={`tab-${tab.key}`}
+            hidden={index !== 0}
+            data-panel
+          >
+            <div class="showcase__caption">
+              <span class="medallion showcase__medal">
+                <Emblem name={emblems[tab.key] ?? 'orb'} />
+              </span>
+              <div class="showcase__words">
+                <p class="showcase__count">
+                  <span>{numerals[index]}</span>
+                  <span aria-hidden="true">/</span>
+                  <span>{total}</span>
+                </p>
+                <h3 class="gilded">{tab.title}</h3>
+                <p class="showcase__text">{tab.text}</p>
+              </div>
+            </div>
+            <Frame as="figure" size="panel" class="showcase__frame">
+              <img
+                src={`${asset(`screens/${tab.key}.webp`)}?v=${stamp}`}
+                alt={`${tab.title}. ${tab.text}`}
+                width="1600"
+                height="1000"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </Frame>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-tabs]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-tab]'))
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-panel]'))
+    const select = (index: number, focus = false) => {
+      tabs.forEach((tab, position) => {
+        const chosen = position === index
+        tab.setAttribute('aria-selected', String(chosen))
+        tab.tabIndex = chosen ? 0 : -1
+        panels[position].hidden = !chosen
+      })
+      if (focus) tabs[index].focus()
+    }
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(index))
+      tab.addEventListener('keydown', (event) => {
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+        if (event.key === 'Home') select(0, true)
+        else if (event.key === 'End') select(tabs.length - 1, true)
+        else if (step !== 0) select((index + step + tabs.length) % tabs.length, true)
+      })
+    })
+  })
+</script>
+
+<style>
+  .showcase__tabs {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 8.4rem;
+    gap: 1.3rem;
+    margin: 0 calc(var(--gutter) * -1) 3rem;
+    padding: 1rem var(--gutter) 1.2rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent);
+  }
+
+  .showcase__tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .showcase__tab {
+    --edge: 3px;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 0.65rem;
+    min-height: 7.4rem;
+    padding: 1.05rem 0.7rem 0.95rem;
+    border: 0;
+    color: var(--fg);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    letter-spacing: 0.07em;
+    text-align: center;
+    text-transform: uppercase;
+    scroll-snap-align: start;
+    cursor: pointer;
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.55s var(--ease),
+      color 0.3s var(--ease);
+  }
+
+  .showcase__tab-label {
+    text-wrap: balance;
+    text-shadow: 0 1px 0 oklch(0.08 0.04 290 / 0.9);
+  }
+
+  .showcase__tab :global(.showcase__tab-emblem) {
+    width: 2.3rem;
+    height: 2.3rem;
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 0.4s var(--ease);
+  }
+
+  .showcase__tab:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 30px -6px oklch(0.84 0.16 86 / 0.5),
+      0 22px 40px -22px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .showcase__tab:hover :global(.showcase__tab-emblem) {
+    transform: scale(1.1) rotate(-4deg);
+  }
+
+  .showcase__tab[aria-selected='true'] {
+    --frame-hi: oklch(0.36 0.13 302);
+    --frame-lo: oklch(0.22 0.09 296);
+    --frame-glow: oklch(0.84 0.16 86 / 0.28);
+    color: var(--gild-hi);
+    transform: translateY(-4px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 0 3px oklch(0.84 0.16 86 / 0.18),
+      0 0 38px -4px oklch(0.84 0.16 86 / 0.6),
+      0 24px 44px -22px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .showcase__tab[aria-selected='true'] :global(.showcase__tab-emblem) {
+    transform: scale(1.14);
+    filter: drop-shadow(0 1px 0 oklch(0.28 0.08 56)) drop-shadow(0 0 10px oklch(0.84 0.16 86 / 0.75));
+  }
+
+  .showcase__tab:focus-visible {
+    outline: 2px solid var(--gild-hi);
+    outline-offset: 4px;
+  }
+
+  @media (min-width: 1080px) {
+    .showcase__tabs {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      margin-inline: 0;
+      padding-inline: 0;
+      overflow: visible;
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+  }
+
+  .showcase__panel {
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.25rem);
+    animation: fade 0.6s var(--ease);
+  }
+
+  .showcase__panel[hidden] {
+    display: none;
+  }
+
+  .showcase__caption {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(1rem, 2.5vw, 1.75rem);
+    max-width: 58rem;
+    margin-inline: auto;
+  }
+
+  .showcase__medal {
+    --medal: clamp(4.4rem, 7vw, 5.6rem);
+    width: var(--medal);
+    height: var(--medal);
+  }
+
+  .showcase__medal :global(.emblem) {
+    width: 52%;
+    height: 52%;
+  }
+
+  .showcase__words {
+    min-width: 0;
+  }
+
+  .showcase__count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    margin: 0 0 0.35rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.24em;
+    color: var(--gild-hi);
+  }
+
+  .showcase__count span:first-child {
+    font-size: 1.25rem;
+  }
+
+  .showcase__count span:not(:first-child) {
+    color: var(--gild);
+  }
+
+  .showcase__caption h3 {
+    margin: 0 0 0.55rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.6rem, 3.2vw, 2.45rem);
+    line-height: 1.12;
+    text-wrap: balance;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9)) drop-shadow(0 0 18px oklch(0.84 0.16 86 / 0.25));
+  }
+
+  .showcase__text {
+    margin: 0;
+    max-width: 46rem;
+    color: var(--fg);
+    font-size: clamp(1.05rem, 1.5vw, 1.2rem);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .showcase__frame {
+    margin: 0;
+    padding: clamp(0.9rem, 1.8vw, 1.5rem);
+  }
+
+  .showcase__frame img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    background: var(--bg-raised);
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56),
+      0 0 0 3px oklch(0.84 0.14 86 / 0.55),
+      0 0 0 4px oklch(0.3 0.08 56),
+      0 24px 50px -24px oklch(0.04 0.04 290 / 0.95);
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+      translate: 0 10px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .showcase__caption {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      text-align: center;
+    }
+  }
+</style>

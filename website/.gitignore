@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.astro/
+public/covers/
+public/backs/
+public/art/
+public/brand/
+src/assets/ornate/
+public/screens/
+src/data/expansions.en.json

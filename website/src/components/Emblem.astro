@@ -1,0 +1,188 @@
+---
+const ART = {
+  quill: `
+    <path class="g" d="M50 6C33 9 20 21 15 39l-3 12 4 2 5-10c4-1 8-3 11-6l-6-1 9-3c3-3 6-7 8-11l-7 0 8-4C48 15 50 11 50 6Z"/>
+    <path class="d" d="M47 9 14 50" />
+    <path class="d" d="M38 16l-4 9M31 23l-2 8M25 30l-1 7" />
+    <path class="m" d="M10 57l4-7 3 2-5 7Z"/>
+    <circle class="gem" cx="11" cy="58" r="3.2"/>`,
+  crown: `
+    <path class="g" d="M8 46 5 18l14 11 13-19 13 19 14-11-3 28Z"/>
+    <rect class="g" x="8" y="45" width="48" height="9" rx="2"/>
+    <path class="d" d="M8 45h48M10 50h44" />
+    <circle class="gem" cx="32" cy="49.5" r="3.4"/>
+    <circle class="gem" cx="19" cy="49.5" r="2.4"/>
+    <circle class="gem" cx="45" cy="49.5" r="2.4"/>
+    <circle class="gem" cx="5" cy="17" r="2.6"/>
+    <circle class="gem" cx="32" cy="9" r="3"/>
+    <circle class="gem" cx="59" cy="17" r="2.6"/>`,
+  orb: `
+    <path class="g" d="M20 50h24l4 8H16Z"/>
+    <path class="g" d="M23 44c3 4 15 4 18 0l2 6H21Z"/>
+    <circle class="gem" cx="32" cy="27" r="18"/>
+    <path class="hi" d="M22 20c3-5 9-8 15-7" />
+    <path class="spark" d="M38 30l1.5 3 3 1.5-3 1.5-1.5 3-1.5-3-3-1.5 3-1.5Z"/>`,
+  scroll: `
+    <path class="p" d="M14 14h32c4 0 6 3 6 6v28c0 3 2 6 6 6H22c-4 0-6-3-6-6V20Z"/>
+    <path class="d" d="M24 24h20M24 31h20M24 38h14" />
+    <rect class="g" x="8" y="10" width="12" height="10" rx="5"/>
+    <rect class="g" x="44" y="46" width="14" height="10" rx="5"/>
+    <circle class="gem" cx="14" cy="15" r="2.4"/>
+    <circle class="gem" cx="51" cy="51" r="2.4"/>`,
+  book: `
+    <path class="p" d="M32 16C25 11 15 10 6 12v38c9-2 19-1 26 4 7-5 17-6 26-4V12c-9-2-19-1-26 4Z"/>
+    <path class="g" d="M32 16v38" />
+    <path class="d" d="M11 20c6-1 12 0 17 3M11 28c6-1 12 0 17 3M36 23c5-3 11-4 17-3M36 31c5-3 11-4 17-3" />
+    <path class="g" d="M4 50c10-3 20-1 28 5 8-6 18-8 28-5v4c-10-2-20 0-28 5-8-5-18-7-28-5Z"/>
+    <path class="spark" d="M44 36l1.6 3.4 3.4 1.6-3.4 1.6L44 46l-1.6-3.4L39 41l3.4-1.6Z"/>`,
+  chest: `
+    <path class="g" d="M8 30h48v24H8Z"/>
+    <path class="g" d="M8 30c0-12 10-18 24-18s24 6 24 18Z"/>
+    <path class="d" d="M8 30h48M20 13v41M44 13v41" />
+    <rect class="m" x="27" y="27" width="10" height="13" rx="2"/>
+    <circle class="gem" cx="32" cy="33" r="3"/>`,
+  key: `
+    <g transform="rotate(42 32 32)">
+      <circle class="g" cx="21.5" cy="13" r="4.2"/>
+      <circle class="g" cx="42.5" cy="13" r="4.2"/>
+      <circle class="g" cx="32" cy="3.5" r="3.4"/>
+      <circle class="g" cx="32" cy="13" r="9.5"/>
+      <circle class="m" cx="32" cy="13" r="5.6"/>
+      <circle class="gem" cx="32" cy="13" r="3.8"/>
+      <rect class="g" x="27.5" y="22" width="9" height="3.6" rx="1.6"/>
+      <rect class="g" x="28.5" y="27" width="7" height="2.8" rx="1.2"/>
+      <rect class="g" x="30.2" y="24" width="3.6" height="36" rx="1.6"/>
+      <path class="g" d="M33.6 46h9v4.2h-4v3h4v4.6h-9Z"/>
+      <path class="d" d="M32 31v26" />
+    </g>`,
+  planet: `
+    <ellipse class="g" cx="32" cy="34" rx="29" ry="9" transform="rotate(-18 32 34)"/>
+    <circle class="gem" cx="32" cy="32" r="15"/>
+    <path class="ring" d="M6 42c8 6 36-3 52-18" />
+    <path class="hi" d="M24 24c3-4 8-6 13-5" />`,
+  tower: `
+    <path class="g" d="M20 58V26h24v32Z"/>
+    <path class="g" d="M17 26h30v-8h-5v4h-5v-4h-5v4h-5v-4h-5v4h-5Z"/>
+    <path class="m" d="M28 58V46c0-3 2-5 4-5s4 2 4 5v12Z"/>
+    <path class="d" d="M20 34h24" />
+    <circle class="gem" cx="32" cy="31" r="3"/>
+    <path class="g" d="M31 18V5l12 4-12 4"/>`,
+  anvil: `
+    <path class="g" d="M6 20h40c8 0 12 4 12 8H42c-2 5-6 8-10 9v7h8v8H16v-8h8v-7c-6-1-12-5-14-10l-4-2Z"/>
+    <path class="d" d="M10 26h34" />
+    <circle class="gem" cx="32" cy="48" r="2.8"/>`,
+  tome: `
+    <path class="g" d="M14 10h32a4 4 0 0 1 4 4v38H18a4 4 0 0 0-4 4Z"/>
+    <path class="p" d="M14 56a4 4 0 0 1 4-4h32v6H18a4 4 0 0 1-4-2Z"/>
+    <path class="d" d="M22 10v42" />
+    <path class="m" d="M30 22h12v14H30Z"/>
+    <circle class="gem" cx="36" cy="29" r="3.4"/>`,
+  map: `
+    <path class="p" d="M6 14 22 8l20 6 16-6v42l-16 6-20-6-16 6Z"/>
+    <path class="m" d="M22 8l20 6v42l-20-6Z"/>
+    <path class="d" d="M12 42c5-3 7-10 13-11s9 6 15 4 8-8 12-10" />
+    <path class="g" d="M46 18c-4 0-7 3-7 7 0 5 7 12 7 12s7-7 7-12c0-4-3-7-7-7Z"/>
+    <circle class="gem" cx="46" cy="25" r="3"/>`,
+  network: `
+    <path class="ring" d="M14 46 32 15 50 46Z" />
+    <path class="ring" d="M32 34 32 15M32 34 14 46M32 34 50 46" />
+    <circle class="g" cx="32" cy="15" r="7.5"/>
+    <circle class="gem" cx="32" cy="15" r="4.2"/>
+    <circle class="g" cx="14" cy="46" r="7.5"/>
+    <circle class="gem" cx="14" cy="46" r="4.2"/>
+    <circle class="g" cx="50" cy="46" r="7.5"/>
+    <circle class="gem" cx="50" cy="46" r="4.2"/>
+    <circle class="g" cx="32" cy="34" r="5"/>
+    <circle class="gem" cx="32" cy="34" r="2.6"/>`,
+} as const
+
+const VIEW: Record<keyof typeof ART, string> = {
+  chest: '5.20 6.25 53.60 53.60',
+  quill: '-1.30 3.30 60.50 60.50',
+  book: '1.30 4.30 61.40 61.40',
+  orb: '4.85 6.40 54.30 54.30',
+  crown: '-0.20 -2.15 64.40 64.40',
+  planet: '1.20 3.20 61.60 61.60',
+  scroll: '5.30 5.30 55.40 55.40',
+  tome: '5.25 7.20 53.50 53.50',
+  key: '5.55 1.80 59.20 59.20',
+  tower: '2.80 2.30 58.40 58.40',
+  anvil: '3.30 7.30 57.40 57.40',
+  map: '3.20 3.20 57.60 57.60',
+  network: '3.70 2.20 56.60 56.60',
+}
+
+export type EmblemName = keyof typeof ART
+
+interface Props {
+  name: EmblemName
+  class?: string
+}
+
+const { name, class: className } = Astro.props
+---
+
+<svg class:list={['emblem', className]} viewBox={VIEW[name]} data-emblem={name} aria-hidden="true" focusable="false" set:html={ART[name]} />
+
+<style is:global>
+  .emblem {
+    width: 1.9rem;
+    height: 1.9rem;
+    flex: none;
+    overflow: visible;
+    filter: drop-shadow(0 1px 0 oklch(0.28 0.08 56)) drop-shadow(0 2px 6px oklch(0.05 0.04 290 / 0.6));
+  }
+
+  .emblem .g {
+    fill: url(#wov-gold);
+    stroke: #6b4812;
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+  }
+
+  .emblem .m {
+    fill: url(#wov-gold-deep);
+    stroke: #5a3b0c;
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+  }
+
+  .emblem .p {
+    fill: url(#wov-parchment);
+    stroke: #6b4812;
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+  }
+
+  .emblem .d {
+    fill: none;
+    stroke: #7a5418;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    opacity: 0.75;
+  }
+
+  .emblem .gem {
+    fill: url(#wov-gem);
+    stroke: #f6d98a;
+    stroke-width: 1.2;
+  }
+
+  .emblem .hi {
+    fill: none;
+    stroke: oklch(1 0 0 / 0.75);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+  }
+
+  .emblem .ring {
+    fill: none;
+    stroke: url(#wov-gold);
+    stroke-width: 3.2;
+    stroke-linecap: round;
+  }
+
+  .emblem .spark {
+    fill: #fff6d2;
+  }
+</style>

@@ -1,0 +1,96 @@
+---
+import Emblem, { type EmblemName } from './Emblem.astro'
+import Frame from './Frame.astro'
+import { copyFor, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const numbers = copyFor(locale).numbers
+const emblems: EmblemName[] = ['chest', 'quill', 'book', 'orb']
+---
+
+<section class="numbers" aria-label="Weavers of the Void">
+  <div class="wrap">
+    <Frame as="ul" size="card" class="numbers__band">
+      {
+        numbers.map((item, index) => (
+          <li class="reveal" style={`--delay: ${0.08 * index}s`}>
+            <span class="medallion">
+              <Emblem name={emblems[index]} />
+            </span>
+            <strong class="gilded">{item.value}</strong>
+            <span class="numbers__label">{item.label}</span>
+          </li>
+        ))
+      }
+    </Frame>
+  </div>
+</section>
+
+<style>
+  .numbers {
+    position: relative;
+    margin-top: calc(-1 * clamp(1rem, 3vw, 2rem));
+    padding-block: 0 clamp(1rem, 3vw, 2rem);
+  }
+
+  .numbers__band {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background:
+      linear-gradient(90deg, oklch(0.6 0.23 302 / 0.14), transparent 30%, transparent 70%, oklch(0.84 0.16 86 / 0.1)),
+      linear-gradient(180deg, var(--frame-hi), var(--frame-lo));
+  }
+
+  .numbers__band li {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: 0.35rem;
+    padding: clamp(1.4rem, 3vw, 2rem) 1rem;
+    text-align: center;
+  }
+
+  .numbers__band strong {
+    margin-top: 0.4rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.45rem, 2.4vw, 1.95rem);
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .numbers__label {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .numbers__band li + li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 22%;
+    bottom: 22%;
+    width: 1px;
+    background: linear-gradient(180deg, transparent, oklch(0.84 0.16 86 / 0.35), transparent);
+  }
+
+  @media (max-width: 859px) {
+    .numbers__band li:nth-child(3)::before {
+      display: none;
+    }
+  }
+
+  @media (min-width: 860px) {
+    .numbers__band {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>

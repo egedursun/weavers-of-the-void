@@ -1,0 +1,186 @@
+---
+import Emblem, { type EmblemName } from './Emblem.astro'
+import Frame from './Frame.astro'
+import Icon from './Icon.astro'
+import { REPOSITORY, copyFor, type Locale } from '../i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const copy = copyFor(locale).free
+const emblems: EmblemName[] = ['chest', 'crown', 'key', 'orb']
+---
+
+<section class="section free" id="free" aria-labelledby="free-title">
+  <Frame size="panel" gem class="wrap free__panel">
+    <div class="free__copy">
+      <p class="eyebrow reveal">{copy.eyebrow}</p>
+      <h2 class="title free__title reveal" id="free-title" style="--delay: 0.08s">
+        {
+          copy.title.map((line, index) => (
+            <span class:list={['free__line', { gilded: index === copy.title.length - 1 }]}>{line}</span>
+          ))
+        }
+      </h2>
+      <p class="free__price reveal" style="--delay: 0.12s">
+        <span class="free__amount gilded">{copy.price}</span>
+        <span class="free__note">{copy.priceNote}</span>
+      </p>
+      <p class="lead free__lead reveal" style="--delay: 0.16s">{copy.lead}</p>
+      <div class="free__actions reveal" style="--delay: 0.2s">
+        <a class="button button--gold" href={REPOSITORY} target="_blank" rel="noopener noreferrer">
+          <Icon name="github" />
+          {copy.cta}
+        </a>
+        <a class="button button--ghost" href={REPOSITORY} target="_blank" rel="noopener noreferrer">
+          <Icon name="star" />
+          {copy.star}
+        </a>
+      </div>
+    </div>
+    <ul class="free__list">
+      {
+        copy.items.map((item, index) => (
+          <Frame as="li" size="tile" class="free__item reveal" style={`--delay: ${0.08 * index}s`}>
+            <span class="medallion free__medal">
+              <Emblem name={emblems[index]} />
+            </span>
+            <h3>{item.title}</h3>
+            <p>{item.text}</p>
+          </Frame>
+        ))
+      }
+    </ul>
+  </Frame>
+</section>
+
+<style>
+  .free__panel {
+    display: grid;
+    gap: clamp(2rem, 5vw, 3.5rem);
+    padding: clamp(2rem, 5vw, 3.75rem);
+    background:
+      radial-gradient(40rem 20rem at 0% 0%, oklch(0.6 0.23 302 / 0.24), transparent 70%),
+      radial-gradient(30rem 18rem at 100% 100%, oklch(0.84 0.16 86 / 0.12), transparent 70%),
+      linear-gradient(180deg, var(--frame-hi), var(--frame-lo));
+  }
+
+  .free__title {
+    display: grid;
+    gap: 0.1em;
+  }
+
+  .free__line {
+    display: block;
+  }
+
+  .free__line.gilded {
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9)) drop-shadow(0 0 20px oklch(0.84 0.16 86 / 0.3));
+  }
+
+  .free__price {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.6rem 0 0;
+    padding: 0.55rem 1.4rem 0.55rem 1.1rem;
+    border-radius: 999px;
+    background:
+      linear-gradient(180deg, oklch(0.24 0.08 298), oklch(0.16 0.06 294)) padding-box,
+      linear-gradient(135deg, #fff1b8, var(--gild) 30%, var(--gild-lo) 55%, #f7dc8a 78%, var(--gild)) border-box;
+    border: 2px solid transparent;
+    box-shadow:
+      0 0 0 1px oklch(0.36 0.09 56 / 0.7),
+      0 0 30px -8px oklch(0.84 0.16 86 / 0.5),
+      inset 0 1px 0 oklch(1 0 0 / 0.12);
+  }
+
+  .free__amount {
+    font-family: var(--font-decorative);
+    font-weight: 700;
+    font-size: clamp(2rem, 3.6vw, 2.6rem);
+    line-height: 1;
+    filter: drop-shadow(0 2px 0 oklch(0.25 0.07 56 / 0.9));
+  }
+
+  .free__note {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.86rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gild-hi);
+  }
+
+  .free__lead {
+    color: var(--fg);
+    opacity: 0.9;
+  }
+
+  .free__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    margin-top: 2rem;
+  }
+
+  .free__list {
+    display: grid;
+    gap: 1.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .free__item {
+    display: grid;
+    align-content: start;
+    gap: 0.55rem;
+    padding: 1.4rem 1.3rem 1.5rem;
+    transition:
+      transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.55s var(--ease);
+  }
+
+  .free__item:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 0 0 1px var(--gild-deep),
+      0 0 30px -6px oklch(0.84 0.16 86 / 0.5),
+      0 22px 40px -22px oklch(0.05 0.04 290 / 0.95);
+  }
+
+  .free__medal {
+    margin-bottom: 0.3rem;
+  }
+
+  .free__item h3 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.14rem;
+    line-height: 1.25;
+    color: var(--gild-hi);
+  }
+
+  .free__item p {
+    margin: 0;
+    color: var(--fg);
+    opacity: 0.82;
+    font-size: 0.97rem;
+  }
+
+  @media (min-width: 640px) {
+    .free__list {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (min-width: 1080px) {
+    .free__panel {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      align-items: center;
+    }
+  }
+</style>

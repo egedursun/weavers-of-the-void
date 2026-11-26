@@ -1,0 +1,866 @@
+[
+ {
+  "number": 20,
+  "tagline": "Tek bir şehir. Bu on yıl inanca, gelecek on yıl sınıfa göre bölünmüş.",
+  "intro": [
+   "Bir boyacı aynı anda hem nehir halkındandır, hem şehrin koruyucu tanrısının inancını taşır, hem bir lonca koltuğuna sahiptir, hem şehrin yurttaşıdır, hem de bir gazinin çocuğudur. Kutsal savaş yılında boyacı inançla birlikte yürür. Kıtlık yılında ise sınıfıyla. Herkesin hangi sancağın ardından gittiği, dünyanızda kimin kiminle savaşacağını belirler."
+  ],
+  "features": [
+   {
+    "title": "Benliğin On Dört Katmanı",
+    "text": "halk, inanç, sınıf, yöre, hane ya da klan, meslek, kuşak, diyar, çevre, dil, tür, dava, yetenek ve çağrı. Her ölümlü, her yerleşim ve her halk bunların hepsini taşır; her birinin kendi gücü vardır."
+   },
+   {
+    "title": "Belirginlik",
+    "text": "kutsal savaşlar inancı, kıtlıklar sınıfı, istilalar halkı ve diyarı, grevler loncayı öne çıkarır; zulüm ise zulme uğrayan katmanı kuşaklar boyunca canlı tutar. Anma günleri, seçimler, kasabalar arası maçlar, felaketler ve yeni gelenlerin varışı her biri kendi katmanlarını yükseltir. Vaazlar ve propaganda bunu körükler, ayrılmış mahalleler keskinleştirir; karma birliktelikler ve karma loncalar ise aştıkları çizgileri yumuşatır."
+   },
+   {
+    "title": "Dil, Tür ve Dava",
+    "text": "yasaklanan ya da yeniden canlandırılan bir dil, konuşanlarını halkların ve diyarların ötesinde birbirine bağlar. Doğmuş ve yapılmış varlıkların ya da farklı bedenlere sahip halkların yan yana yaşadığı yerlerde tür bir kimliğe dönüşür; türlere farklı davranan yasaların altında en keskin hâlini alır. Bir hareketin üyeleri, kalabalık evine döndükten çok sonra da davalarını sürdürür."
+   },
+   {
+    "title": "Kırılma Hatları",
+    "text": "hizipler, isyanlar, ayaklanmalar ve iç savaşlar, hangi kimlik en parlak yanıyorsa onun boyunca bölünür. Ortak bir diyar kimliği devleti ayakta tutar; güçlü bir alt kimlik ayrılıkçılığı besler. Her grup kendi tarihini anlatır."
+   },
+   {
+    "title": "On Üç İlke",
+    "text": "hukukçuluk, eşitlikçilik, ilahi hak, merkantilizm, militarizm, akılcılık, kozmopolitlik ve daha fazlası; âlimler, kitaplar, okullar ve ticaret yolları aracılığıyla yayılır, her biri farklı bir sınıfa seslenir. Birini benimseyen bir diyar yönetme biçimini değiştirir."
+   },
+   {
+    "title": "Zihin Devrimleri",
+    "text": "eşitlikçi bir öğreti, mutsuz bir sınıf ve zayıf bir diyar bir araya gelince, hedefi doğrudan yönetimin kendisi olan bir isyan doğar. Matbaa ve üniversiteler yeni ideolojileri daha hızlı üretir ve devrimler anayasalar yazabilir."
+   },
+   {
+    "title": "Tanrılara Karşı Öğretiler",
+    "text": "tanrı karşıtı hareketler oğullardan inancı çeker ve böylece varlıklarının ta kendisini zayıflatır. Tanrılar mucizelerle ya da zulümle karşılık verir. Başka öğretiler ise yalnızca Yaratıcı'ya yönelir."
+   },
+   {
+    "title": "Diriliş'in Altı Yolu",
+    "text": "yabancı yönetim altındaki bir halk eski yolları geri getirebilir, eskiyle yeniyi birleştiren bir peygamberin etrafında toplanabilir, yönetenin kültürünü topyekûn benimseyebilir, önceden bildirilmiş bir işareti bekleyip geldiğinde hep birlikte ayaklanabilir, kendi yerleşimlerine çekilebilir ya da yeni bir toprağa göç edebilir. Her diriliş bir dili canlandırmayı, eski bir tanrıyı geri getirmeyi, yabancıları kovmayı, toprağı geri almayı, kendi yönetimini ya da örf hukukunu yeniden kurmayı hedefler."
+   },
+   {
+    "title": "On Dört Dava",
+    "text": "köleliğin kaldırılması, bağımsızlık, diriliş, toprak reformu, oy hakkı, barış, doğanın korunması, emek, inanç reformu, ölçülülük, yapılmış zihinlerin hakları, eşit statü, öğrenim ve sağlık için hareketler; yasaları için baskı yapar, işçi örgütlerini destekler ya da bir inancı böler."
+   }
+  ],
+  "story": "Uzak bir imparatorluk geleneklerini nehir halkına dayattı. Eski tanrının dönüşünü vaat eden bir peygamber çıktı, diriliş aşağılananları kendine çekti ve bir kuşak içinde şehrin ayaklanmaları sınıf yerine halk ve inanç çizgileri boyunca ilerler oldu."
+ },
+ {
+  "number": 21,
+  "tagline": "Her şey ekmek kuyruğuna atılan tek bir taşla başladı.",
+  "intro": [
+   "Ekmeğin fiyatı ikiye katlanır. Birkaç çırak taş atar ve kimse onları durdurmaz. Onların cesareti liman işçilerinin korkusunu azaltır, liman işçilerinin öfkesi boyacıları harekete geçirir ve gece çöktüğünde bir mahalle alevler içindedir. Dünyanızdaki her kalabalık, kendi kırılma noktaları olan insanlardan oluşur ve bir şehrin kaderi ilk kimin harekete geçtiğine bağlıdır."
+  ],
+  "features": [
+   {
+    "title": "Herkesin Bir Eşiği Var",
+    "text": "öfke, kaygı, uyum, açlık ve dostluk; her ölümlünün ve kalabalığın her diliminin ne zaman bir ayaklanmaya, linçe, greve, alaya, boykota ya da isyana katılacağını belirler."
+   },
+   {
+    "title": "Zar Değil, Zincirleme Tepki",
+    "text": "on sekiz tür kıvılcım bunu başlatır: fiyat sıçraması, idam, vaaz, alamet, tutuklama, ödenmeyen ücretler, kaybedilen maç, zafer, büyük bir cenaze, seçim ve daha fazlası. Bir sonraki grubu harekete geçirecek kadar kişi katılırsa, mahalle mahalle yayılır. Büyüklüğü ve şiddeti kendiliğinden ortaya çıkar; asla zarla belirlenmez."
+   },
+   {
+    "title": "Yedi Kalabalık Duygusu",
+    "text": "öfke, korku, coşku, keder, umut, sevinç ve dayanışma her kasabada yükselip alçalır. Keder toplu ölümlerin ve sevilen bir hükümdarın vefatının ardından gelir, yas alaylarını yürütür; umut gösteri eşiğini düşürür ve ihanete uğradığında öfkeye dönüşür; dayanışma ise grevleri ve boykotları kolaylaştırır."
+   },
+   {
+    "title": "Birlikte Davranmanın On Beş Yolu",
+    "text": "kalabalıklar ayaklanma, panik ve linçin yanı sıra zaferin ardından sevinç gösterileri yapar, şiddetsiz gösteriler düzenler, bir loncayı geliri düşene dek boykot eder, nöbet tutar, bir meydanı ya da atölyeyi işi durana dek işgal eder, yanıtı hükümdarın meşruiyetini sarsan dilekçeler taşır ve yolları yerinden edilmişlerle dolduran toplu bir göçle birlikte ayrılır."
+   },
+   {
+    "title": "Bekçi ve Kışkırtıcı",
+    "text": "bekçiler ve garnizonlar caydırıcılıkla her eşiği yükseltir, karizmatik bir kışkırtıcı ise düşürür. Aynı kıvılcım bir şehirde söner, bir başkasını yakıp yıkar."
+   },
+   {
+    "title": "Güruhlar",
+    "text": "büyüklüğü, hedefi, öfkesi ve önderleri olan kalabalıklar. Mahalleleri yakar, tahıl ambarına, tapınağa ya da saraya saldırır, hiç işlemediği bir suç için bir günah keçisini linç eder ya da kapıyı kuşatanlara açar; sonra yorgunluk, zor ya da verilen tavizle dağılır."
+   },
+   {
+    "title": "Panik",
+    "text": "yangın, veba söylentisi, sokaklarda bir canavar ya da ani bir tutulma binlerce kişiyi kaçışa sürükler. Kalabalık mahalleler kendi insanlarını ezer, mülteciler yolları doldurur ve istifçiler pazarları tamtakır bırakır."
+   },
+   {
+    "title": "Coşku",
+    "text": "mucizeler, vaazlar ve veba yılları; bir şehri herhangi bir ayaklanma kadar hızlı saran uyanışları, kendini kırbaçlayanların alaylarını ve toplu din değiştirmeleri ateşler."
+   }
+  ],
+  "story": "Kuşatma sırasında valinin tahıl istiflediğine dair bir söylenti yayıldı. Açlar eşiklerini mahalle mahalle aştı, güruh bir fırıncıyı günah keçisi olarak linç etti, ardından garnizon engel olamadan kapıyı kuşatanlara açtı."
+ },
+ {
+  "number": 22,
+  "tagline": "Her düğün bir savaş alanı. Her cenaze bir pazarlık.",
+  "intro": [
+   "Bir düğün sofrasında üç hane oturuyor. Çiftin bir kuzeni turnuvadan diz kapağı parçalanmış olarak ayrılacak, bir kâhya ahırların arkasında bir rakibin ajanıyla buluşacak ve birinin yasak ilişkisi yanlış bir akrabanın gözüne çarpacak. Toplantılar, dünyanızın hikâyelerinin çarpıştığı yerlerdir; onları çağıran gelenekler de o gelenekleri yaşatan insanların hayatlarını biçimlendirir."
+  ],
+  "features": [
+   {
+    "title": "Yirmi Üç Tür Gelenek",
+    "text": "bayramlar, oruçlar, geçiş törenleri, tabular, adaklar, hac yolculukları, misafirlik yasaları, savaş gösterileri, beden işaretleme, ata törenleri, panayırlar, karşılamalar, barışma törenleri, şükran günleri ve daha fazlası; her birinin kendi mevsimi, kendi bedeli ve onu yaşatanlar üzerinde gerçek bir etkisi vardır: birlik, dindarlık ve güvenlikten sağlığa ve katılanlar arasındaki bağlara kadar."
+   },
+   {
+    "title": "Hayatları Biçimlendiren Âdetler",
+    "text": "domuz eti tabusu ağılları boşaltır, kışın savaşma tabusu sefer yılını biçimlendirir, bir misafirlik yasası yolları daha güvenli kılar ve misafir öldürmeyi ağır bir rezalete dönüştürür. Büyük zaferler, vebalar ve mucizeler yeni âdetler doğurur."
+   },
+   {
+    "title": "Geçiş Törenleri",
+    "text": "doğum, ad koyma, erginlik, birleşme, yaşlılık ve ölüm; bunlara bir tarikata kabul ve evden ayrılanın uğurlanması da eklenir. Karşılama törenleri yabancıları misafire dönüştürür, barışma törenleri iki taraf da uyduğunda bir kan davasını sona erdirir, şükran günleri ise bolluğun, barışın ve iyileşmenin ardından gelir."
+   },
+   {
+    "title": "Otuz Sekiz Tür Toplantı",
+    "text": "ziyafetler, düğünler, taç giyme törenleri, turnuvalar, avlar, zirveler, panayırlar, açık yargılamalar, idamlar, ölü başında tutulan nöbetler, sefer öncesi toplanmalar, anma günleri, dağılmış akrabaların buluşmaları, hediye alışverişleri ve daha fazlası. Konuklar bağ, yükümlülük ve uzaklığa göre gelir; aşklar, entrikalar, yeminler ve firarlar tek bir akşama sığar."
+   },
+   {
+    "title": "Sofrada Ölüm",
+    "text": "her toplantı bir katliama dönüşebilir ve haberi duyanların misafirlik yasalarına göre yargılanır. Kalabalık bayramlar hastalık yayar, bir töreni karşılayamayan yoksul haneler itibar kaybeder."
+   },
+   {
+    "title": "İşaretli Bedenler",
+    "text": "dövmeler, yara izleri, piercingler, kafatası biçimlendirme, törpülenmiş dişler, saç, boya, lekeler, damgalar ve implantlar on üç anlam taşır: statü, klan, kahramanlıklar ve evlilikten inanca, mesleğe, güzelliğe, şifaya ve bağlı emeğe kadar. Bir savaşçının dövmeleri öldürdüklerini sayar; bir sürgünün damgası suçunu söyler."
+   },
+   {
+    "title": "Güç Taşıyan Adlar",
+    "text": "bir ebeveynden, bir klandan, bir çocuktan, bir doğum yerinden, bir zanaattan, bir atadan ya da doğumdaki bir olaydan gelen adlar; herkese açık olanın ardındaki gizli bir ad; kabul, evlilik, yemin ya da evlat edinmede verilen yeni adlar; başkalarının bir işe karşılık taktığı lakaplar ve cenazede verilen, ardından yaşarkenki adı anmanın tabu sayılabileceği ölüm sonrası bir ad."
+   },
+   {
+    "title": "Yaş Grupları",
+    "text": "birlikte kabul edilenler adı olan bir grup oluşturur ve çocukluktan gençliğe, genç yetişkinliğe, küçük ve büyük yaşlılara ve en sonunda kadimlere doğru yükselir. Her kültür her basamağın ne yapacağını belirler: savaş, çobanlık, emek ya da meclis; bu yüzden savaş görevi olmayan bir halk hiçbir basamağı savaşa göndermez. Terfi ziyafetini geciktirirseniz gençler huzursuzlanır."
+   },
+   {
+    "title": "Ölülere Bakmak",
+    "text": "ölüleri yıkayan, hazırlayan, taşıyan ve koruyanlardan mezar yapanlara kadar sekiz rol ve onların statüsü; bir kültürün kalıntılara davranmasının on yolu ve her birinin sağlığa, toprağa ve kutsal emanetlere etkisi."
+   }
+  ],
+  "story": "Bir reis, bir düğün ziyafetinde rakibini öldürdü. Reisin kendi halkı misafir öldürmeyi akla bile getirilemez sayıyordu; rezalet zaferden hızlı yayıldı ve katliam, kırgınlığı kuşaklar boyunca canlı tutan yıllık bir yas gününe dönüştü."
+ },
+ {
+  "number": 23,
+  "tagline": "Karşılıksız kalan hediye bir borçtur. Ödenmeyen borç bir savaştır.",
+  "intro": [
+   "Doğu adalarının reisi, kurutulmuş balıkla tepeleme dolu kanolarla gelir ve adaların bundan vazgeçebileceğini kanıtlamak için yarısını kumsalda yakar. Şimdi ya daha fazlasını vermelisiniz ya da boyun eğmelisiniz. Dünyanızdaki her hediye, alanın neyi sevdiğine göre tartılır, kaydedilir ve aynı şekilde karşılık bulur; ya da bir gün birinin tahsil edeceği bir borç olarak hatırlanır."
+  ],
+  "features": [
+   {
+    "title": "Hediye Defteri",
+    "text": "her hediye alanın kendi zevkine göre değer bulur ve asla unutulmaz. Reddetmek hakarettir, geç karşılık vermek bir statü borcudur, daha fazlasını vermek ise yükselmenin yoludur."
+   },
+   {
+    "title": "On Altı Vesile",
+    "text": "nezaket, ziyafetler, adaklar, birleşmeler, ittifaklar, yardım, doğumlar, cenazeler, bir haksızlığın telafisi, himaye, misafirlik, vedalar, eve dönüşler, kabul törenleri ve daha fazlası; her birinin beklenen karşılığı, doğurduğu borç ve tehlikeye attığı itibarı vardır. Bir ziyafette kabul edilen telafi bir kan davasını bitirir; reddedilen telafi onu derinleştirir."
+   },
+   {
+    "title": "Ocaktan Göğe",
+    "text": "haneler, soylu evler, diyarlar, kültler ve tanrılar aynı yükümlülük yasasıyla hediye alışverişi yapar; böylece bir köy ile bir tanrı birbirine aynı akçeyle borçlu olabilir."
+   },
+   {
+    "title": "Rekabetçi Verme",
+    "text": "reisler ziyafetlerde servetlerini dağıtarak ya da yok ederek rütbe iddia eder. Daha fazlasıyla karşılanan bir hediye ilk vereni borca sokar; birbirini geçmeye devam eden iki hane, itibarları yükselirken hazinelerini tüketir, ta ki taraflardan biri çökene dek."
+   },
+   {
+    "title": "Kutsal Döngüler",
+    "text": "ünlü hazineler, toplulukların oluşturduğu sabit bir halka boyunca sonsuza dek dolaşır. Birine sahip olmak bir süreliğine prestij getirir ve döngü uzak adaları barışla ve misafirlik göreviyle birbirine bağlar. Hazineyi devretmek yerine elinde tutan, devretmenin beklendiği yerde itibar kaybeder, elde tutmanın onurlandırıldığı yerde ise itibar kazanır."
+   },
+   {
+    "title": "Lütuf ve Himaye",
+    "text": "veren, bir borcu lütufla bağışlayarak hem kendi itibarını hem de alanın sadakatini artırabilir. Hamilerin hediyeleri aşağıya, himayesindekilere, sanatçılara ve takipçilere akar ve aynı türden değil, hizmet ve övgüyle ödenir; yaslılara verilen hediyeler ise verenin kendi kayıplarında geri ödenir."
+   },
+   {
+    "title": "Tanrılara Hediyeler",
+    "text": "her kurban bir tanrıyı borca sokar. Cömertçe karşılık veren tanrılar itibar kazanır, adaklarını görmezden gelenler daha hızlı kaybeder ve her oğul halklara olan borçlarını açıkça önünde görür."
+   },
+   {
+    "title": "Birleşme Ödemeleri",
+    "text": "bir aileye, bir aileden, iki yönlü ya da emekle yapılan ödemeler aynı yasaya uyar ve iki eşin akrabalarını düğünden çok sonra da birbirine bağlar."
+   }
+  ],
+  "story": "İki ada reisi ziyafet üstüne ziyafette birbirini geçmeye çalıştı, ta ki ikinci reisin hazinesi çöküp rütbesi düşene dek. İkinci reisin halkı bu süre boyunca şans için kendi tanrısına adaklar sunmuştu ve alıp karşılığında hiçbir şey vermeyen tanrı onların gözünde hızla itibar kaybetti."
+ },
+ {
+  "number": 24,
+  "tagline": "Bir halkı harekete geçiren sanat. Bir kralı kandıran sahteler.",
+  "intro": [
+   "Bir şairin düşenler için yaktığı ağıt her salonda söylenir ve bir kuşak sonra halkın savaş iştahı soğumuştur. Şehrin öbür ucunda hacılar hâlâ bir sahtekârın bodrumda yaptığı bir aziz emanetinin önünde diz çöker. Burada sanatın bir grameri, bir soyu, bir fiyatı ve bir mesajı vardır; bir halkın neye inanacağına klasikler karar verir."
+  ],
+  "features": [
+   {
+    "title": "Gramerli On Dokuz Sanat Biçimi",
+    "text": "söz sanatı, müzik, dans, gösteri, düz ve katı imgeler, yapı, dokuma, giyilen sanat ve mutfak sanatı, koku, ışık, kayıtlı ve etkileşimli sanat, peyzaj, beden, yapılmış zihinlerin sanatı, dokunmaya yönelik sanat ve zihinden zihne aktarılan sanat; her birinin gerçek bir yapısı vardır: diziler, ritimler ve çalgılar, ölçüler ve kıtalar, paletler ve motifler. Şiir kendi dilinin seslerini izler, bu yüzden asla temiz bir şekilde çevrilemez."
+   },
+   {
+    "title": "Biçimler Doğar ve Ölür",
+    "text": "ilham almış bir usta yeni bir biçim icat eder; çoğu zaman kültürlerin buluştuğu yerde ikisini kaynaştırarak ya da bir vebanın ardından bir ağıtla. Hiçbir notası kalmamışsa bir biçim son icracısıyla birlikte ölür ve bir halkın biçimlerini yasaklamak, o halkın direndiği bir aşağılamadır."
+   },
+   {
+    "title": "Tartışan Sanat",
+    "text": "her eser bir mesaj taşır. Savaşta ölenlere yakılan bir şiir halkın savaş hevesini soğutur; bir fatihin heykeli fatihlerin gururunu kabartır ve fethedilenleri direnişte tutar."
+   },
+   {
+    "title": "Yollardaki Kumpanyalar",
+    "text": "gezgin oyuncular şarkıları, efsaneleri ve söylentileri ticaret yolları boyunca taşır, ziyafetlerde ve panayırlarda sahne alır, bazen de casusluk yapar. Kâtipler kitapları kopyalar, matbaa onları çoğaltır ve diyarlar propaganda ısmarlar."
+   },
+   {
+    "title": "Koleksiyoncular, Eleştirmenler ve Küratörler",
+    "text": "fiyatlar şöhreti, kökeni ve zevki izler. Koleksiyoncular mezatçıların yönettiği açık artırmalarda pey sürer, eleştirmenler bir akımı ve fiyatlarını yükseltir ya da batırır, küratörler bir şehrin neyi sergileyeceğini seçer, restoratörler eski eserleri onarır ve bazen bir sahteyi gizler. Saraylar sanatçılar için yarışır ve manifestoları olan sanat akımları bir sonraki ortodoksi olmak için kanon savaşları verir."
+   },
+   {
+    "title": "Sekiz Tür Sahtecilik",
+    "text": "sanat eserleri, kutsal emanetler, belgeler, markalar, sikkeler, soy kütükleri, mühürler ve koca kimlikler. Her birini kendi uzmanı ortaya çıkarır: darphaneciler sahte sikkeyi, soy bilimciler sahte soyu, kâtipler sahte mührü yakalar; ortaya çıkmamış bir sahte ise kanona girebilir."
+   },
+   {
+    "title": "Bir Şarkının ya da Tarifin Hakları",
+    "text": "şarkılar, danslar, hikâyeler ve törenlerden tasarımlara, adlara, unvanlara, ticari markalara, pazar ayrıcalıklarına, tariflere, tekniklere, icralara ve suretlere kadar on üç tür kültürel hak yaratılır, miras kalır, satın alınır, lisanslanır, çalınır, bahşedilir, yarışmalarda kazanılır, bir birleşmeyle devredilir ya da ortak tutulur. Diyarın bir sicil tuttuğu yerde bir teknik hakkı patent olarak kaydedilir."
+   },
+   {
+    "title": "Moda Döngüleri",
+    "text": "biçimler, giyim, mutfak ve adlar öncülerle yükselir, doygunluğa ulaşır, sıradanlaşır ve gözden düşer; eski olan ise yeniden canlanarak geri döner. Her kültür kendi görünür üslup dönemlerini kazanır."
+   },
+   {
+    "title": "Beceri ve Şans Oyunları",
+    "text": "masa oyunları subayları stratejide eğitir, zarlar hane keselerini borca ve suça sürükler, top oyunları spora dönüşür. Oyunlar göçmenlerle yolculuk eder ve sevildikleri yere yerleşir."
+   }
+  ],
+  "story": "Bir vebanın ardından yaslı bir şarkıcı yeni bir ağıt biçimi icat etti. Kumpanyalar onu ticaret yolu boyunca taşıdı, komşu bir saray dinlemek için para ödedi ve bir kuşak içinde ağıt iki halkın da kanonuna girip savaş iştahlarını soğuttu."
+ },
+ {
+  "number": 25,
+  "tagline": "Yarış kaybedildi. Vergi artırıldı. Başkent yandı.",
+  "intro": [
+   "Başkentin yarısı mavi, yarısı yeşil giyiyor ve mesele çoktan arabalarla ilgili olmaktan çıktı. Maviler bir tapınağı ve bir mahalleyi dolduruyor; Yeşiller bir başkasını. Yeşiller tartışmalı bir kararla yeni bir verginin ilan edildiği gün kaybedince tribünler sokaklara boşalıyor ve artık kimse sporun nerede bitip siyasetin nerede başladığını söyleyemiyor."
+  ],
+  "features": [
+   {
+    "title": "Sekiz Tür Kulüp",
+    "text": "takım oyunları, yarışlar, dövüş, atletizm, hayvan yarışmaları, zihin oyunları, su sporları ve avlar; rakip kulüplerden oluşan liglerde mevsim mevsim arenalarda ve bayramlarda oynanır. Hayvan yarışması kulüpleri hayvanlarını besler ve yetiştirir, zihin oyunu kulüpleri oyuncu yetiştirir ve hamiler çeker."
+   },
+   {
+    "title": "Taraftarlar",
+    "text": "her kulüp, kuşak kuşak ve mahalle mahalle sayılan şehrin kalbinden bir pay tutar."
+   },
+   {
+    "title": "Bahis Salonu",
+    "text": "her yarışa yatırılan bahisler hane servetini yükseltir ya da düşürür. Şanslı bir mevsim bir aileyi yukarı taşır; kötü bir mevsim onu borca batırır."
+   },
+   {
+    "title": "Satılmış Yarışlar ve Uyarıcılı Şampiyonlar",
+    "text": "bir bahis ya da bir hami için yarışmaya şike yapmak ve yarışmacıları uyarıcıyla güçlendirmek, her kültürün kendince yargıladığı eylemlerdir ve yasanın öyle saydığı her yerde suçtur. Ortaya çıkması kulübü ve oyuncularını batırır, bahisleri geçersiz kılar ve tribünleri sokaklara boşaltabilir; güçlendirmeyi yasaklayan ligler bunu test eder ve men eder."
+   },
+   {
+    "title": "Hipodrom Hizipleri",
+    "text": "renkler sınıfla, mahalleyle ya da inançla örtüştüğünde bir kulüp, kamuoyu üzerinde gerçek gücü olan siyasi bir hizbe dönüşür. Hükümdarlar bir kulübü, onunla birlikte de kalabalıklarının sesini satın alabilir."
+   },
+   {
+    "title": "Hipodrom Ayaklanmaları",
+    "text": "bir kulübün kalabalığı kıvılcımını bekleyen bir ayaklanmadır. Kaybedilen bir şampiyonluk ile bir vergi artışı, bir başkenti yakacak kadar eşiği aşmaya yeter."
+   }
+  ],
+  "story": "Tartışmalı bir yarış sonucu yeni bir verginin ilan edildiği güne denk geldi. Yeşillerin taraftarları ayaklanma eşiğini aştı ve hipodrom mahallesi yandı. Sarayın gözdesi Maviler tasfiye istedi, Yeşillerin hamisi olan senatör ise özel bir orduyla başkente yürüdü."
+ },
+ {
+  "number": 26,
+  "tagline": "Her adın bir anlamı var. Her kelimenin bir geçmişi.",
+  "intro": [
+   "Bir âlim, iki yazıyla oyulmuş bir taşın önünde diz çöker: biri çağlardır ölü, öbürü hâlâ pazarda konuşuluyor. Mevsimler sonra âlim unutulmuş bir hükümdarın adını okur, onunla birlikte kayıp bir tekniği ve bir gün efsaneye dönüşecek bir hatayı da. Dünyanızın dilleri gerçek ses yasalarıyla değişir; böylece akraba kelimeler, lehçeler ve ölü diller tarihinden doğar."
+  ],
+  "features": [
+   {
+    "title": "Ses Değişimi",
+    "text": "her dil temas, prestij, göç ya da kendiliğinden kayma yoluyla sıralı ses yasaları biriktirir. Kız diller ayrılır, akraba kelimeler ortaya çıkar, yer adları eski biçimleri fosilleştirir ve âlimler ana dili yeniden kurabilir."
+   },
+   {
+    "title": "Gramerin Önemi",
+    "text": "sözcük dizimi, yalınlaşandan çok bireşimliye uzanan biçimbilim, haller, cinsiyetler, kanıtsallık ve saygı düzeyleri; çevirinin ne kadar zor olduğunu ve bir antlaşma maddesinin ne kadar kolay yanlış okunacağını belirler. Korkulan kelimeler yerini örtmecelere bırakır."
+   },
+   {
+    "title": "Onluk, On İkilik ya da Altmışlık Sayma",
+    "text": "onluk, yirmilik, on ikilik ve altmışlıktan sekizlik, beşlik, ikilik ve beden boyunca saymaya kadar sekiz sayı tabanı. Çok böleni olan tabanlar ticarette, gökbilimde ve takvimde kesirleri kolaylaştırır, beden sayımı yazı gelişene dek büyük toplamları geride tutar ve temas bir tabanı bir dilden ötekine taşır."
+   },
+   {
+    "title": "Anlamı Olan Adlar",
+    "text": "her ad, kayıtlı bir anlamı olan gerçek köklerden kurulur; lakaplar \"Gümüş Elli\" gibi işlerden türetilir ve her yabancı dil bir yere kendi adını verir."
+   },
+   {
+    "title": "Sesin Ötesinde Konuşma",
+    "text": "on iki kip: ses, işaret, koku, renk, zihinden zihne, veri, kimya, karanlıkta işleyen dokunma, toprak ya da su yoluyla taşınan ve onu algılayanlarca kulak misafiri olunan titreşim, su altındaki elektrik alanları ve vadileri herhangi bir ulaktan hızlı aşan ıslıklı ve davullu konuşma. Kipler arasındaki boşluğu yalnızca tercümanlar kapatır."
+   },
+   {
+    "title": "Kayan Kelimeler",
+    "text": "anlamlar genişler, daralır, kötüleşir, iyileşir, benzerlik ya da yakınlık yoluyla yayılır ya da kuşaklar boyunca karşıtına döner; böylece yeni kelimelerle okunan eski bir antlaşma bozulabilir. Dokuz üslup düzeyi kelimelerin nasıl kullanılacağını belirler: kutsal, şiirsel ve arkaik dilden dolambaçlı ifadelerle değiştirilen tabu kelimelere, bir zanaatın terimlerine, yanlış kullanımı hakaret sayılan saygı sözlerine, hızla değişen argoya ve mahkemede kazanan hukuk diline kadar."
+   },
+   {
+    "title": "Evrilen Yazılar",
+    "text": "resim yazılarından logogramlara, hece yazılarına, abjadlara ve alfabelere, bunlara ek olarak düğümler ve çentikler; icat edilir, düzeltilir, sadeleştirilir, ödünç alınır, bir fatih tarafından dayatılır, bir tanrı tarafından vahyedilir ya da matbaa ve makinelerle yeniden biçimlenir. Zor yazılar okuryazarlığı düşük tutar ve bir kâtip kastını güçlendirir; bir alfabe onların tekelini kırar. Kayıtlar, kil ve taştan ipeğe, ahşap levhalara, kumaşa, çanak çömlek kırıklarına ve bir kesintinin yok edebileceği elektronik kayıtlara kadar on altı ortamın izin verdiği sürece dayanır."
+   },
+   {
+    "title": "Ölüleri Çöz",
+    "text": "iki dilli taşlar, yaşayan akraba diller ve sabırlı âlimler kayıp yazıların kilidini mevsimler içinde açar. Kısmi okumalar kısmi bilgi verir, yanlış çeviriler ise kuramlar ve efsaneler olarak yaşamaya devam eder."
+   },
+   {
+    "title": "Engeller ve Köprüler",
+    "text": "her antlaşma, satış, vaaz ve savaş emri anlaşılabilirlikten geçer. Tercümanlar boşluğu kapatır, ortak diller ticaret yollarında yol alır, pidginler kreollere dönüşür. İşaret dilleri sağırlar, susturulanlar, çok dilli sınır boylarındaki tüccarlar ve gürültülü değirmenlerdeki işçiler arasında gelişir; hırsız argosundan gençlerin, askerlerin, din adamlarının ve âlimlerin diline kadar on toplumsal lehçe konuşanlarını belli eder."
+   },
+   {
+    "title": "Gücün Dilleri",
+    "text": "diyarlar bir dili resmî, ayin dili, bastırılmış, korunan, standartlaştırılmış ya da iki resmî dilden biri yapar. Âlimler ve hükümdarlar yeni diller kurar, ölü diller güçlü bir kimlikle dirilişe döner ve tehlikedeki bir dil son konuşanı ölene dek diriliş hareketlerini kendine çeker. Büyük bir edebiyatı olan fethedilmiş bir halk, fatihlerini fethedebilir ve her oğulun sözleri ayin olan kutsal bir dili vardır."
+   }
+  ],
+  "story": "Acımasız bir yasa sapkınların dillerini kestirdi. O kadar çok kişi dilsiz kaldı ki köyleri kendi işaret dilini geliştirdi ve sapkınlık, yargıçlarının anlayamadığı bir dilde yayılmaya devam etti."
+ },
+ {
+  "number": 27,
+  "tagline": "Tarihi kazananlar yazar. Ta ki biri eski taşı bulana dek.",
+  "intro": [
+   "Yeni hanedanın kroniği, kurucusunun bir tanrıdan doğduğunu söyler. Vadinin türküleri, kurucunun efendisini zehirleyen bir seyis olduğunu anlatır. Denizin öte yakasından bir tüccarın kaydı ise ikisinin de yanıldığını söyler. Burada her olayın tek bir gerçeği ve pek çok anlatısı vardır ve onları yan yana koyabilen yalnızca sizsiniz."
+  ],
+  "features": [
+   {
+    "title": "Anlatılar ve Gerçek",
+    "text": "resmî kroniklerden, halk belleğinden, yabancı kayıtlardan, kutsal metinlerden, destanlardan ve yazıtlardan soy kütüklerine, şarkılara, seyahatnamelere ve hukuk kayıtlarına kadar on dört tür anlatı; kitaplara, taşa, şarkıya, gösteriye ya da bedendeki işaretlere kaydedilir. Her biri yüceltir, kötüler, atlar, haklı çıkarır, ağıt yakar, alay eder ya da uyarır ve her biri gerçekte olanla ölçülür."
+   },
+   {
+    "title": "Alay Eden Şarkılar",
+    "text": "bir şarkı her söyleyenle değişir ve bastırılmaya rağmen hayatta kalır. Budalalık olarak anlatılan bir iş, yapanlarının itibarını düşürür; kayıp olarak anlatılan, kederi ve hatırayı yükseltir; gerekçeleriyle anlatılan ise itibara verdiği zararı yumuşatır. Soy kütükleri iddiaları destekler, sahteleri ise bir soy bilimci onları ifşa edene dek sahte iddiaları dayatır."
+   },
+   {
+    "title": "Damnatio Memoriae",
+    "text": "bir adı kayıtlardan silin, her yazıtı kazıyın, her heykeli parçalayın. Kişi birkaç kuşak içinde silikleşir; meğer ki halk belleği ya da yabancı bir kronik adı yaşatsın."
+   },
+   {
+    "title": "Revizyonizm",
+    "text": "yeni hükümdarlar kroniği kendi iddialarına uyacak şekilde yeniden yazar. Daha eski metinler hayatta kalır ve birini bulan âlim tehlikeli bir sır taşır: gerçek tarih."
+   },
+   {
+    "title": "Kuruluş Mitleri",
+    "text": "her halkın ve her diyarın bir kuruluş hikâyesi vardır. Ona olan inanç halkı bir arada, tahtı ayakta tutar ve onunla çelişen tek bir yazıt ikisine de pahalıya patlar."
+   },
+   {
+    "title": "Uzak Yerler ve Eski Yasalar",
+    "text": "seyahatnameler uzak diyarların bilgisini taşır ve onlarla teması artırır, hukuk kayıtları örf hukukunu sabitler ve mahkemeleri ve onu yeniden kurmaya çalışan hareketleri destekler, uyarı anlatıları ise uyardıkları şeyin korkusunu büyütür."
+   },
+   {
+    "title": "Kayıp Topraklar",
+    "text": "eski sınırların hatırası yüzyıllar sonra iddialar ve hareketler doğurur; pek çok savaşın gizli kökü budur."
+   },
+   {
+    "title": "Anma Günleri",
+    "text": "zaferler, katliamlar ve kuruluşlar her yıl dönümünde gelenekler ve toplantılarla yeniden yaşanır, gururu ve kırgınlığı canlı tutar. İhmal edilirlerse hatıra solar."
+   }
+  ],
+  "story": "Bir gaspçının kroniği ilahi soy iddia ediyordu. Kuşaklar sonra bir çiftçi, gaspçının gerçek ebeveynini anan bir yazıtı sabanıyla gün yüzüne çıkardı, bir âlim skandalı herkese duyurdu, hanedanın meşruiyeti çatladı ve bir zamanlar teslim ettiği eski sınır yeni bir savaşın toplanma çağrısı oldu."
+ },
+ {
+  "number": 28,
+  "tagline": "Orman yoksa kömür yok. Kömür yoksa demir yok. Demir yoksa ordu yok.",
+  "intro": [
+   "Bir savaşın bir ormanda kaybedilişini izliyorsunuz. Oduncular son tepeleri de temizler, kömür olmadığı için demir ocakları söner, demirciler kılıç dövmeyi bırakır ve ordu yarı silahlı yola çıkar. Dünyanızdaki her mızrağın bir tedarik zinciri vardır ve her zincirin hiç beklemediğiniz bir yere uzanan zayıf bir halkası: demire uygulanan bir abluka çiftliğe kırık bir saban olarak ulaşır."
+  ],
+  "features": [
+   {
+    "title": "Gerçek Fiziği Olan Malzemeler",
+    "text": "sertliği, keskinliği, ağırlığı, çürümesi, kutsallığı ve bozulmuşluğu olan kırk sekiz malzeme: çakmaktaşı, kil ve ipekten kauçuğa, laka, polimerlere, büyük canavarların dokusuna, düşen kuyruklu yıldızlardan gelen yıldız metaline ve ölü tanrıların dokusuna kadar. On bir köken her birinin nereden geldiğini anlatır: canlı zanaatla yetiştirilmiş, fosil yataklarından çıkarılmış, bulanların kendi becerisini aşan kalıntılardan ve enkazlardan kurtarılmış ya da dış varlıkların kalıntılarından ve pazarlıklarından, riskleriyle birlikte alınmış. Her dünya kendi egzotik maddelerini ekler."
+   },
+   {
+    "title": "Dört Ailede Kırk Yedi Mal",
+    "text": "geçim, sanayi, stratejik, lüks ve kutsal mallar: tahıl, yem ve kaya tuzundan yağa, şekere, baharata, bala, balmumuna, çömlekçiliğe, kitaplara, kâğıda, cam eşyaya, sabuna, mürekkebe, kuşatma malzemesine, tütsüye ve büyü malzemelerine kadar. İnsanlar kişi başına tüketir ve bir kasabanın ne kadar depolayabileceği inşa ettiği ambarlara bağlıdır."
+   },
+   {
+    "title": "Bir Şeyi Yapmanın Pek Çok Yolu",
+    "text": "yirmi dokuz süreç yirmi yedi tür atölyede işler, her sürecin çağa göre sıralanmış ona kadar yöntemi vardır. Demir bir odun kömürü ocağından, kok kömürlü bir yüksek fırından, bir elektrik arkından ya da ilahi bir demirhaneden gelir. Doğaya saygı duyan bir kültür kirli yöntemi reddeder, erken benimseyenler ise eski zanaatkârları işsiz bırakır."
+   },
+   {
+    "title": "Kâğıt, Matbaa ve Halat",
+    "text": "kâğıt değirmenleri, matbaalar ve halathaneler çömlekhanelere, camhanelere, boyahanelere, yazıhanelere ve buharlaştırma tesislerine katılır. Matbaa oyma kalıplardan hareketli harfe ve döner baskı makinesine geçer, kitapların ve hesapların maliyetini düşürür, fikirlerin ve hareketlerin yayılmasını hızlandırır; halathaneler ise gemileri ve tesisleri besler."
+   },
+   {
+    "title": "Yedi Kalite Derecesi",
+    "text": "kötüden ustalık eserine, oradan esere; beceri, yöntem ve malzemeyle belirlenir. Güzel yemekler ve güzel giysiler ruh hâlini yükseltir ve soyluların talep ettiği şeylerdir; et, balık ve süt ise kurutulmadıkça, tütsülenmedikçe, buzla ya da büyüyle saklanmadıkça çürür."
+   },
+   {
+    "title": "Önce Nehirler Sanayileşir",
+    "text": "kas, su ve rüzgârdan ısıya, yakıta, elektriğe, fisyona, büyüye, inanca ve ilahi ayinlere kadar on dokuz enerji kaynağı üretimi besler; böylece sanayinin nerede yükseleceğine coğrafya karar verir. Donmuş dünyalarda ısı hayatta kalmak demektir ve yakıt kıtlığı koca toplulukların soğuktan ölmesi anlamına gelir."
+   },
+   {
+    "title": "Yukarıda Kopan Zincirler",
+    "text": "cevherden metale, metalden silaha; deriden meşine, meşinden zırha; tahıldan una, undan ekmeğe. On yedi iş tehlikesi işçileri vurur: bazen canavarlarla dolu mağaralara açılan göçüklerden iskelelerden düşmelere, ocak ve fırın başındaki yanıklara ve madencilerle değirmencileri nefessiz bırakan toza kadar. Kıt demir ya da atlar savaş hedefine dönüşür."
+   },
+   {
+    "title": "Duman, Cüruf ve Boya",
+    "text": "yedi kirletici: hava, su ve toprak; nehirleri ısıtıp balıkları kaçıran ısı; stresi artıran gürültü; sönük yıldızları bir şehrin gökbilimcilerinden gizleyen ışık ve bedenleri hasta eden, toprağa iz bırakan radyasyon. Boyalardan, sabundan ve gübreden mürekkebe, sıra, koruyuculara, asitlere, çözücülere, yapıştırıcılara ve patlayıcılara kadar on dört kimyasal ürünün her biri kendi tehlikelerini taşır."
+   }
+  ],
+  "story": "Bir nehir kasabası kok kömürlü yüksek fırını benimsedi. Ucuz demiri nehrin yukarısındaki tüm ocakları batırdı, boşta kalan demirciler radikal hizipleri büyüttü, nehir kirlendi ve balıklar tükendi; aşağıdaki doğaya saygılı köyler de diyarı silahlandıran kasabaya sırt çevirdi."
+ },
+ {
+  "number": 29,
+  "tagline": "Sikkenin ayarını düşür, hazineyi doldur ve tüccarların çekip gidişini izle.",
+  "intro": [
+   "Bir ejderhanın hazinesi zaferle eve getirilir ve kısa süre sonra lüks pazarları gümüşle dolar, fiyatı çakılır. Gerçek bir ekonomiyi izliyorsunuz. Her pazar kasabası kırk yedi mal için fiyat ilan eder, her sikke kendi ayarını ve arkasındaki güveni taşır, bankerler savaş beylerine sicillerine göre belirlenen faizlerle borç verir. Bu patlamayı kimse kurgulamadı. Açgözlü tüccarlar tahmin yürüttü, istifledi ve battı."
+  ],
+  "features": [
+   {
+    "title": "Hareket Eden Fiyatlar",
+    "text": "her pazar kırk yedi malın hepsi için fiyat tutar; fiyatlar stoklar, tüketim, uzaklık, tehlike ve gümrüklerle oynar. Ekmek fiyata pek boyun eğmez, lüks mallar sert dalgalanır ve mallar her yol boyunca ucuzdan pahalıya akar."
+   },
+   {
+    "title": "Sikke ve Güven",
+    "text": "her paranın bir metali, bir ayarı ve bir güven ölçüsü vardır. Ayarını düşürün; hazine bugün dolar, sonra enflasyon ısırır, tüccarlar küser ve o sikkeyle ticaret kurur. Altın ve gümüş rezervleri onu ayakta tutar."
+   },
+   {
+    "title": "Bankerler ve İflas",
+    "text": "tüccar loncaları, faizi borçlunun kredisine göre belirlenen savaş kredileri verir. Bir diyar sıkışıklıktan temerrüde, oradan yeniden yapılandırmaya kayar. Başka bir güç onu kurtarıp bütçesini kendi şartlarıyla yönetebilir ya da diyar borcu düpedüz reddedip borç verenleri batırabilir, devirler boyunca tüm kredisini yitirebilir ve borç verenlerin diyarlarını kendine düşman edebilir. Yaptırımlar bir diyarın yurt dışındaki kredisini kaldırılana dek dondurur."
+   },
+   {
+    "title": "El Değiştiren Krediler",
+    "text": "krediler anlaşmayla yeniden yapılandırılır, onları tahsil eden yeni bir borç verene iskontoyla satılır, toprak, mal ya da bağlı emeğin yasal olduğu yerlerde bir kişi teminat gösterilerek alınır ve temerrütte el konulur; varislere geçer ve varisler onları ödemekle yükümlü olabilir."
+   },
+   {
+    "title": "Kimsenin Planlamadığı Patlamalar",
+    "text": "açgözlü tüccarlar yükseleceğine inandıklarını satın alır ve kıtlık boyunca tahıl istifler. Yetkililer darlıkta istiflere el koyabilir, depolanan istifler bozulur ve tüccarlar bir pazarı köşeye sıkıştırır, bir rakibin pazarına mal yığar, bir düşüşten kazanmak için açığa satış yapar ya da gerçek gelene dek kayıp bir filo hakkında sahte bir haber yayar. Fiyat sıçramaları huzursuzluğu körükler, çöküş spekülatörleri batırır ve döngüler bir senaryodan değil davranıştan doğar."
+   },
+   {
+    "title": "Gümrükler, Ambargolar ve Karaborsalar",
+    "text": "gümrüklerden, sübvansiyonlardan, kotalardan ve ambargolardan yol ve köprü geçiş ücretlerine ve geçen malların önce bir kasabanın pazarında satışa sunulmasını zorunlu kılan istif haklarına kadar on bir ticaret politikası. Kaçakçılık fiyat farkıyla birlikte büyür; uyuşturucular, boşluk malzemeleri ve yasak kitaplar kaçakçılar aracılığıyla fahiş fiyatlara el değiştirir."
+   },
+   {
+    "title": "Sigorta ve Ayartmaları",
+    "text": "loncalar, bankalar ve yardımlaşma dernekleri yükleri, evleri, hayatları, mahsulleri, tekneleri, hayvanları, tedaviyi ve fidyeyi kendi inandıklarına göre belirlenen primlerle sigortalar. Sigortalı tüccarlar daha riskli yollara sapar ve tek bir büyük kayıp, uzun bir kış ya da sürülerde bir salgın bir sigortacıyı, onunla birlikte de bankaları çökertebilir."
+   },
+   {
+    "title": "Gömüler, Sarraflar ve Poliçeler",
+    "text": "birikimler altı biçim alır: gömülü hazineler, mevduatlar, yatırımlar, kira getiren ve ayar düşürmeye dayanan toprak, darlıkta değer kazanan depolanmış mallar ve üreyerek büyüyen sürüler. Güvensiz haneler sikke gömer; bu sikkeler sahipleri ölünce kaybolur ve sonraki kazıcılar tarafından bulunur. Sarraflar ayarı ve güveni izleyen kurlardan kâr eder, poliçeler ise sikke taşımadan kredi taşır."
+   }
+  ],
+  "story": "Bir hükümdar bir savaşı finanse etmek için diyarın gümüşünün ayarını düşürdü. Yabancı sarraflar sikkenin değerini kırdı, diyarın kendi tüccarları onunla ticareti bıraktı, savaş kredisinin vadesi hazinenin artık sahip olmadığı halis gümüşle doldu ve temerrüt başlı başına bir savaşa dönüştü."
+ },
+ {
+  "number": 30,
+  "tagline": "Mallar, tanrılar ve vebalar aynı yollarda yolculuk eder.",
+  "intro": [
+   "İki pazar yeterince uzun ticaret yaparsa bir yol doğar; bir adı, bir geçiş ücreti ve bir ünü olur. Bir dağ geçidinden geçen bir kervanı takip edersiniz: katırlar ve arabalar, ipek ve baharat, bir hacı, bir misyoner ve henüz kimsenin fark etmediği bir ateşi taşıyan bir yün tüccarı. Yolun öbür ucunda kervan malları, haberleri, şarkıları ve vebayı boşaltır. Geçidi tutan geçiş ücretini alır, kaybeden bir savaş başlatır."
+  ],
+  "features": [
+   {
+    "title": "Kendini Adlandıran Yollar",
+    "text": "iki pazar arasındaki istikrarlı ticaret; karayolu, nehir, deniz, gök, derinlerden geçen tüneller, uzay, yarıklar ya da ağlar üzerinden adı olan bir güzergâh oluşturur. Köprüler, limanlar ve kervansaraylar kapasitesini artırır, ihmal onu söndürür ve ünlü bir yol efsaneye dönüşür."
+   },
+   {
+    "title": "Kervanlar ve Konvoylar",
+    "text": "her güzergâh; sahipleri, yükü, muhafızları ve yolcuları olan gerçek konvoylarla, hamallardan, yük hayvanlarından, arabalardan ve kar üstündeki kızaklardan gemilere, raylara, boru hatlarına ve yörünge asansörlerine kadar on altı tür taşıyıcıyla işletilir. Haydutlar, korsanlar, canavarlar ve düşman orduları onlara baskın yapar, fırtınalar batırır ve bir tüccar hanesinin yaşlanan filosu stratejik bir varlıktır."
+   },
+   {
+    "title": "Açık, Çekişmeli, Mevsimlik",
+    "text": "bir güzergâh oluşur, açılır, geçiş ücretine bağlanır, taraflar onun için savaşırken daha ağır kayıplarla çekişilir, abluka altına alınır, kapanır ya da çürümeye terk edilir veya yalnızca kendi mevsimlerinde açılır; böylece geçitler kışın kapanır ve muson yolları rüzgârı bekler. Kapalı bir geçitte mahsur kalan konvoylar erzaklarını tüketir, veba limanında karantinaya alınan konvoylar erken salınırsa hastalık taşıyabilir ve bazıları geri döner."
+   },
+   {
+    "title": "Doğru Taşımanın Yolu",
+    "text": "on iki tür kapta on iki yük sınıfı: bozulabilir mallar hız ve saklama ister, sıvılar tulumlarda ve tanklarda, kumaş balyalarda, ürün sepetlerde, canlı hayvanlar kafeslerde gider; aşırı büyük yükler özel taşıyıcılar gerektirir ve konvoyu yavaşlatır. Hayvanlar yolda yürür ve otlar; tahıl, taş ve kereste mümkün olan her yerde su yoluyla gider, bu yüzden dökme ticarete nehirler ve denizler hükmeder."
+   },
+   {
+    "title": "Bir Yükü Kaybetmenin Dokuz Yolu",
+    "text": "haydutlar, korsanlar, canavarlar, deniz, hava, payını alan memurlar, bozulma, muhafızların ve mürettebatın aşırması ve kırılma. Pusulalardan, haritalardan, iskandillerden ve şamandıralardan yıldızları, dalgaları ve kuşları okuyan kılavuzlara, kıyı fenerlerine, yerel kılavuz kaptanlara ve bir ağdan alınan konum bilgilerine kadar on seyir yardımcısı denizdeki kayıpları azaltır."
+   },
+   {
+    "title": "Geçiş Ücretleri, Boğazlar ve Ablukalar",
+    "text": "boğaz noktalarını tutan geçiş ücretlerini belirler ve yüksek ücretler trafiği başka bir yola saptırır. Bir geçitteki filolar ve ordular akışı boğar, tüccar hizipleri ise güzergâhları kayıp verdiğinde barış için bastırır."
+   },
+   {
+    "title": "Limanlar, Depolar ve Köşeye Sıkıştırılan Pazarlar",
+    "text": "rıhtımlar, vinçler ve derinlik bir limanı sınırlar. Depoları dolu bir hane bir malı köşeye sıkıştırabilir ya da bir rakibin pazarına mal yığabilir; ta ki lonca tekelleri ve karaborsacılığa karşı yasalar onu durdurana dek."
+   },
+   {
+    "title": "Ticaret Karakolları ve Bütün Zincirler",
+    "text": "tüccar haneleri antlaşma ya da beratla yabancı şehirlerde ticaret karakolları kurar; pazara erişim, muhbirler ve bir diaspora kazanır. Madenden pazara her adımı satın alır ve fabrikalar ortaya çıkmadan önce iplik eğirmeyi kırsaldaki kulübelere verir."
+   },
+   {
+    "title": "Amforalar ve Keyif Arayanlar",
+    "text": "mallar amforalarda, fıçılarda, çuvallarda ve mühürlü kavanozlarda yolculuk eder; çömlekçi damgaları sonraki kazıcıların okuması için hayatta kalır. Varlıklılar harikaları, hamamları ve eski savaş alanlarını gezer, hanlarda para harcar, şöhret ve hastalık yayar."
+   }
+  ],
+  "story": "Rakip bir diyar geçidi ele geçirip geçiş ücretlerini artırınca kervanlar güneye, haydut topraklarına saptı. Sigortacılar primlerini yükseltti, kayıplar arttı ve son savaşın parasını ödeyen tüccar loncası bir sonrakinin parasını ödemeye başladı."
+ },
+ {
+  "number": 31,
+  "tagline": "Tarlaları kim işliyor? Kimin malı? Kim özgür?",
+  "intro": [
+   "Nehir kenarında su gücüyle çalışan bir iplik fabrikası açılır ve el tezgâhı dokumacılarının yaşadığı bir sokak kış gelmeden işsiz kalır. Kimi çalar, kimi göç eder, kimi askere yazılır, kimi meyhanede radikallere katılır. Artık emeğin bir fiyatı, bazen de bir zinciri vardır: her iş bir ücret öder, her sınıfın karşıladığı ya da karşılayamadığı bir ihtiyaç sepeti vardır ve her savaş bir köle pazarını doldurabilir."
+  ],
+  "features": [
+   {
+    "title": "Ücretler ve Geçim Maliyeti",
+    "text": "bir çiftlikte, değirmende, orduda ya da devlet dairesinde yapılan her iş, iş yerinin kazancından bir pay öder. Bir sınıfın ihtiyaçlarının yerel fiyatlarıyla karşılaştırıldığında bu, göçü, sadakati, doğurganlığı ve radikalliği yönlendiren bir yaşam standardına dönüşür."
+   },
+   {
+    "title": "On Üç Tür İhtiyaç",
+    "text": "her sınıfın yiyeceğe, yeme, yakıta ve kumaşa, ilaca, aletlere, silaha, tütsüye, lüks mallara ve büyü malzemelerine, mallardan öte ise suya, bir çatıya, erişilebilir bir okula ve mahkemeye ihtiyacı vardır. Susuzluk açlıktan hızlı öldürür, kaybedilen bir çatı hastalık ve soğuk getirir, eksik bir okul gençleri becerisiz bırakır, eksik bir mahkeme ise kan davalarının ve kendi adaletini sağlama şiddetinin büyümesine yol açar. Bir sınıfın ihtiyaçlarını yeterince uzun karşılayın, bir kısmı yükselir; karşılayamayın, düşer."
+   },
+   {
+    "title": "İnsanlar Neden Oldukları Yerde Çalışır",
+    "text": "sınıf, fiyat, eldeki tesisler ve kaynaklar ve angarya işçileri yerleştirir; aynı şekilde bir kastı ya da loncayı kendi zanaatına bağlayan yasalar, işçileri en iyi yaptıkları işe çeken beceriler, borçluları alacaklının işine gönderen borçlar ve işi hane içindeki role göre dağıtan, cinsiyete göre hiçbir varsayılanı olmayan akrabalık görevleri de."
+   },
+   {
+    "title": "Çiftçilerden Zanaatkârlara, Tüccarlara",
+    "text": "yükselme merdiveni tırmanır ya da eğitimle din adamlığına ve âlimliğe döner; bunların hepsi diyarın hareketlilik yasası içinde olur. Düşüş dışlanmışlara ya da borç yoluyla serfliğe iner; bir savaş kahramanı ise soyluluğa yükseltilir ve bir hane kurar."
+   },
+   {
+    "title": "Boşta Kalan Eller",
+    "text": "yeni yöntemler ve fazla işçi işsizler yaratır; işsizler de suçu, göçü, askere alımı ve radikal hizipleri büyütür. Çiftliklerde kışın boş kalmak mevsimi zanaatlarla, bayramlarla ve eşkıyalıkla doldurur."
+   },
+   {
+    "title": "İşte Memnuniyet",
+    "text": "memnun bir sınıf daha çok çalışır, küskün bir savaşçı sınıfı ise firar eder. Eşitsizlik suç ve isyan doğurur; yine de hiyerarşiye değer veren kültürler ona çok daha fazla katlanır."
+   },
+   {
+    "title": "Angarya ve Ödenemez Borç",
+    "text": "diyarlar surlar, yollar ve harikalar için hasat ve iyi niyet pahasına emek günleri toplar; halk masalları acı içinde inşa edilen harikaları hatırlar. Sözleşmeli kulluk borçluları, bazı işverenlerin bitirilmesini imkânsız kıldığı şartlara bağlar."
+   },
+   {
+    "title": "Köle Pazarları ve Azat",
+    "text": "yasanın izin verdiği yerlerde esirler, borçlular ve mahkûmlar beceriye, yaşa ve kökene göre satılır; böylece köleci ekonomiler savaşa aç hâle gelir. Özgürlük satın almayla, bir sahibin vasiyetiyle, hizmetle, köleliğin kaldırılmasıyla ya da isyanla gelir."
+   }
+  ],
+  "story": "Bir sınır savaşı köle pazarını esirlerle doldurdu. Onları satın alan madenler özgür madencileri piyasadan sildi; ücretlerini kaybeden madenciler kölelik karşıtı harekete kaydı ve köleler ayaklandığında hareketin örgütleyicileri çoktan hazırdı."
+ },
+ {
+  "number": 32,
+  "tagline": "Her şehir kendi yolunda büyür. Her şehir kendi yolunda yanar.",
+  "intro": [
+   "Kuru, rüzgârlı bir gecede bir kıvılcım itfaiyesi olmayan ahşap bir mahalleye düşer. Sabaha eski şehir yok olmuştur. Şimdi şehir neyin yükseleceğini seçmeli: hazine ve bir planlamacı izin verirse taştan, geniş caddeli planlı bir ızgara, eski mahallenin olduğu gibi onarılması ya da yine yanacak olan aynı eğri büğrü ahşap sokaklar. Bu arada seçkinler sessizce yanmış toprakları sahipleniyor."
+  ],
+  "features": [
+   {
+    "title": "Yirmi Yedi Tür Mahalle",
+    "text": "tarım arazilerinden, pazarlardan, zanaat ve tapınak mahallelerinden, limanlardan, iç kalelerden, saraylardan ve nekropollerden üniversitelere, arkolojilere, hacı mahallelerine, şehrin kenarındaki kervan mahallelerine ve sellerle birlikte yükselen sallar üzerindeki yüzen mahallelere kadar; bir mezra köye, kasabaya, şehre, metropole, megalopole ve dünya şehrine büyüdükçe açılır. Su ve ambar olmadan hiçbir şehir yükselmez."
+   },
+   {
+    "title": "Kamplar ve Lazaretler",
+    "text": "yerinden edilmişlerin aceleyle kurulan kampları hizmetlerden yoksundur, hastalık, suç ve yangın doğurur; uzun sürerlerse gecekondu bölgelerine ya da yerleşik mahallelere dönüşür. Lazaretler hastaları ve yeni gelenleri ayrı tutar, vebanın yayılmasını keser ama korku ve damga çeker."
+   },
+   {
+    "title": "Kiralar ve Dışarı İtilen Yoksullar",
+    "text": "tapınaklar, çeşmeler ve parklar arazi değerini yükseltir; tabakhaneler, hapishaneler, suç ve lanetli hatıralar düşürür. Kiralar sınıfları sokak sokak ayırır ve yükselen değer yoksulları dışarı iter."
+   },
+   {
+    "title": "Erişime Göre Hizmetler",
+    "text": "kuyulardan, karakollardan, şifacılardan, okullardan ve hamamlardan mahkemelere, kütüphanelere, geceleri suçu azaltan sokak aydınlatmasına ve haşereleri depolardan uzak tutan zararlı mücadelesine kadar yirmi üç hizmet çevrelerindeki sokakları kapsar. Erişimlerinin ötesinde susuzluk, suç, hastalık, dinsizlik ve cehalet başlar; konutlardan çok uzaktaki bir maden ise işçi bulamaz."
+   },
+   {
+    "title": "Büyüyen Evler",
+    "text": "hizmetler ve mallar geldiğinde barakalar kulübelere, kır evlerine, evlere, konaklara ve malikânelere dönüşür; kalabalık şehirlerde apartmanlar ve kuleler yükselir, hükümdarlar saraylarda oturur. Hizmetler kesildiğinde evler çöker. Göçmenlerin konut arzını geçtiği her yerde gecekondular yayılır ve ateşi, suçu ve güruhu besler."
+   },
+   {
+    "title": "Izgaralar, Halkalar ve Eski Mahalleler",
+    "text": "bir şehir kendiliğinden, planlı, iç içe sur halkalarıyla, ızgara düzeninde, yukarı doğru ya da yayılarak büyür ve bu biçim yangının nasıl yayılacağına, malların nasıl hareket edeceğine ve iç surların dayanıp dayanmayacağına karar verir. Uzun bir kışta karne düzeni yaşlıları ve hastaları gözden çıkarmak anlamına gelebilir."
+   },
+   {
+    "title": "Yeniden Kur, Taşı ya da Terk Et",
+    "text": "yangın, sel, deprem, fırtına, yağma, yanardağ patlaması, deniz dalgası, heyelan, obruk ya da vebanın ardından bir kasaba bir plana göre yeniden kurulur, geldiği gibi yeniden kurulur, hatırasını ve anıtlarını korumak için daha yüksek bir bedelle olduğu gibi onarılır, ardında bir harabe bırakılarak daha güvenli bir yere taşınır ya da terk edilir ve halkı yerinden edilmiş olarak yollara düşer."
+   },
+   {
+    "title": "Sefalete Karşı Hayırseverlik",
+    "text": "ambarlardan, sadakalardan, darülacezelerden ve cemaatlerden yetimler için koruyucu aileye, hastanelere, gazilere, sakatlara ve yaşlılara bağlanan maaşlara, aşevlerine ve barınaklara kadar dokuz tür yardım. Darülacezeler, yetimhaneler ve cüzamhaneler terk edilmişleri kabul eder, hamileri de dindarlık kazanır; bunlar olmadan sokaklar dilencilerle, çeteler çocuklarla dolar."
+   },
+   {
+    "title": "En Kötüsüne Hazır",
+    "text": "setlerden, yangın şeritlerinden, dalgakıranlardan, tatbikatlardan ve stoklardan karantina ve bağışıklama planlarına ve depreme dayanıklı yapılara kadar on dört önlem bir felaketin bir yıkıma dönüşmesini engeller. Ardından rakip diyarlar mal, şifacı, emek, para, asker ya da ulaşım olarak yardım gönderir ve bu yardım şükran borçları bırakır; bir rakibin yardımını reddetmek ise itibara mal olur."
+   }
+  ],
+  "story": "Büyük bir yangın ahşap liman mahallesini kül etti. Şehir onu ızgara düzeninde taştan yeniden kurdu, arazi değerleri fırladı ve kiraları artık ödeyemeyen liman işçileri tabakhanelerin yanındaki gecekondulara itildi; bir sonraki ateşli hastalık da orada başladı."
+ },
+ {
+  "number": 33,
+  "tagline": "Kuşaklar boyu emek. Tek bir harika. Önce bitiren tek bir rakip.",
+  "intro": [
+   "Büyük kubbeye bir büyükanne ya da büyükbabanın zamanında başlandı ve torunun zamanında hâlâ gökyüzüne açık. Duvarcılar ölür, veba kâtipleri alır, hazine iki kez tükenir ve denizin öte yakasında rakip bir diyar önce bitirmek için yarışır. Kazanırsanız harika şehrinizin prestijini besler ve her kıyıdan yolcu çeker. Kaybederseniz taşın bir kısmını kurtarırsınız, yarım kalmış bir harabe ise efsaneler biriktirir."
+  ],
+  "features": [
+   {
+    "title": "Yüz Kırk İki Yapı Türü",
+    "text": "tapınaklar, kütüphaneler, gözlemevleri, iç kaleler, bankalar, tersaneler, su kemerleri, kanallar, barajlar, arenalar, elçilikler, deniz fenerleri ve mezarlar; her birinin gerçek bir işlevi vardır. Ambarlar kuşatmaları besler, hastaneler yaralardan ölümleri azaltır, gözlemevleri bir tutulmanın dehşetini yumuşatır."
+   },
+   {
+    "title": "El Olmadan Hiçbir Şey İşlemez",
+    "text": "her binanın personele ve bakıma ihtiyacı vardır ve durumu kötüleştikçe işlevi de onunla birlikte düşer. Veba kâtipleri öldürdüğünde kütüphane hâlâ ayaktadır ama bilgisi kilit altındadır."
+   },
+   {
+    "title": "Kerpiçten Hidrolik Betona",
+    "text": "her birinin kendi dayanıklılığı, aşınması, ateşe ve suya direnci olan on bir yapı malzemesi. Beton limanlar, su kemerleri ve kubbeler için su altında donar ve bu tekniği yitiren bir uygarlık eski limanlarını onaramaz."
+   },
+   {
+    "title": "Biçimler, Bölümler ve Yapanlar",
+    "text": "geniş depoları örten salonlar, kubbeler ve tonozlardan sellerde ayakta kalan kazık üstü biçimlere kadar yirmi dokuz yapı biçimi ve kuşatma ile kuraklık boyunca su tutan sarnıçlardan bir odanın dumanını tahliye eden bacalara kadar kırk beş bölüm. Haneler kendi evlerini ve türbelerini diyarların, kültlerin, şirketlerin, hamilerin ve tanrıların eserlerinin yanı başında yükseltir."
+   },
+   {
+    "title": "Başlanmış, Terk Edilmiş, Onarılmış",
+    "text": "bir eser planlanır, inşa edilir, tamamlanır, hasar görür ya da harabeye döner. Yarım bırakılırsa çürür, efsaneler ve hazine avcıları toplar; sökülürse taşını yeni yapılara verir ve geride pek bir şey bırakmaz; onarılırsa bir bedel karşılığında işlevini ve ününü geri kazanır."
+   },
+   {
+    "title": "Harika Yarışı",
+    "text": "harikalar ve kozmik eserler bir dünyaya ya da tüm kozmosa özgüdür. Birkaç diyar aynı anda inşa eder, önce bitiren kazanır ve kıskançlık kaybedenleri her elçilikte izler."
+   },
+   {
+    "title": "Megayapılar",
+    "text": "bir güneşin özünü hasat edip onu güneş kültlerinin öfkesine rağmen karartan yıldız kafesleri, yörünge halkaları, dünya köprüleri, güvenli geçiş için boşluk fenerleri ve bir dünyanın yörüngesini değiştiren gezegen motorları."
+   },
+   {
+    "title": "Müzeler, Kütüphaneler ve Ganimet Salonları",
+    "text": "altı tür koleksiyon on tür parça barındırır: sanat, kutsal emanetler ve fosillerden âlimleri çeken el yazmalarına, haritalara, aletlere ve kaybı bir diyarı utandıran saltanat nişanlarına kadar. Kraliyet koleksiyonları her yağmada ganimete dönüşür; sancaklar ve silahlarla dolu bir ganimet salonu, parçaları bir barış maddesiyle eve dönene dek kaybedenlerin kırgınlığını besler."
+   },
+   {
+    "title": "On Bir Bahçe",
+    "text": "şifa bahçeleri şifacıları besler, botanik bahçeleri bitkileri doğal yayılış alanlarının dışında yaşatır, hayvan koleksiyonları ziyaretçi çeker ve bir türü kurtarabilir ya da yayabilir, mutfak ve çatı bahçeleri haneleri ve kalabalık şehirleri besler, av parkları av hayvanlarını barındırır, kutsal korular ise doğa tanrılarını çeker."
+   },
+   {
+    "title": "Suyu Yükseltmek",
+    "text": "şadoflar, su çarkları, burgular, zincirli pompalar ve hayvanla çevrilen çarklar, ardından rüzgâr pompaları, buhar pompaları ve elektrik pompaları suyu teraslara yükseltir ve derin madenleri kurutur. Pompasız bir maden, su katmanına ulaştığı gün sular altında kalır."
+   }
+  ],
+  "story": "İki diyar dünyanın tek büyük harikasını bitirmek için yarıştı. Kaybeden, taşından küçük bir parça kurtardı ve kıskançlığını kuşaklar boyunca besledi; kazanan ise harikayı koruyucu tanrısına adadı ve tanrının şöhreti onu görmeye gelen her yolcuyla birlikte büyüdü."
+ },
+ {
+  "number": 34,
+  "tagline": "Üç kralı öldüren kılıç. Dördüncüyü kral yapan taç.",
+  "intro": [
+   "Dünyanızda adı olan herhangi bir kılıcı elinize alın ve hayatını okuyun: onu kimin dövdüğü, hangi hanenin taşıdığı, kazandığı savaşlar, çalındığı gece, gömüldüğü höyük. Onunla yeterince kişi öldürün, orduların peşinden gittiği bir simgeye dönüşür. Bir tacı kaybedin, hükümdarın meşruiyeti yeni bir taç kendi adını kazanana dek erir gider."
+  ],
+  "features": [
+   {
+    "title": "Köken",
+    "text": "zanaatla yapılmış her eşya bir yapıcı damgası, sahiplerinin ve olayların bir geçmişini taşır: öldürmeler, savaşlar, taç giymeler, hırsızlıklar, gömülmeler, kırılmalar, onarımlar, büyülenmeler, hediyeler ve ele geçirilmeler. Her biriyle ünü büyür ve yeterince ünlü bir nesne, ele geçirilmesi bir savaş hedefi olan bir simgeye dönüşür."
+   },
+   {
+    "title": "Hatırlayan Süslemeler",
+    "text": "çivili, kakmalı, oymalı, runlu ya da tehditkâr dikenlerle donatılmış. Oyma imgeler gerçek olayları tasvir eder; böylece Varn zaferini gösteren bir kalkan o savaşı kültürde canlı tutar."
+   },
+   {
+    "title": "Saplantı Eserleri",
+    "text": "bir zanaatkâr bir yaratma humması içine düştüğünde doğan eserler eşsiz bir ad, en yüksek kaliteyi ve çoğu zaman bir büyüyü taşır. Açgözlü soylular onları talep eder, hırsızlar ve maceracı kahramanlar planlarını onlara göre yapar."
+   },
+   {
+    "title": "Saltanat Nişanları",
+    "text": "taçlar, asalar, mühürler, yüzükler ve sancaklar. Diyarın saltanat nişanlarını elinizde tutun, meşruiyet de peşinizden gelir. Gaspçılar tacın peşine düşer ve onu kaybetmek bütün diyarın hissettiği bir aşağılanmadır."
+   },
+   {
+    "title": "Kutsal Emanetler ve Lanetler",
+    "text": "bir halk kutsal emanetlerini kutsal sayar, onları alet olarak kullanır, yasaklar, miras olarak saklar, kötüye kullanılma riskine rağmen kayıp teknikler için inceler ya da ünüyle birlikte yükselen fiyatlarla pazarlarda alıp satar. Azizlerin kalıntıları ve ölü tanrıların parçaları rastgele iyileştirir, hacıları çeker ve emanet baskınlarına davetiye çıkarır; kana susamışlık, ihanet, eriyip gitme ve delilikten sonsuz uykuya, unutmaya, ani yaşlanmaya, herkesi uzaklaştıran yalnızlığa ve güçsüzlüğe kadar yirmi tür lanet, lanetli bir kılıcı taşıyan kim olursa onu izler."
+   },
+   {
+    "title": "Mercekler, Yardımcılar ve Saatler",
+    "text": "gözlükler yaşla yitirilen görmeyi geri verir ve âlimlerin kariyerini uzatır, teleskoplar tutulmaları öngörür, mikroskoplar şifacıların hastalık etkenlerini görüp tedavilerini seçmesini sağlar, işitme cihazları ağır işitenlere yardım eder ve dokunarak okunan yazılar körlerin okumasını sağlar. Güneş saatleri, su saatleri ve ateş saatlerinden denizde boylamı belirleyen kronometrelere ve elektronik saatlere kadar dokuz tür saat emeği disipline eder, orduları eşzamanlar ve gemileri kayalardan uzak tutar."
+   },
+   {
+    "title": "Kilitler, Kasalar ve Çürüyen Arşivler",
+    "text": "hırsızlar becerilerini sekiz tür kilide, mühürlere ve muhafızlara karşı sınar. İşlenmiş kilitler yalnızca kendi ayinlerine, denk bir güce ya da bir bozma büyüsüne açılır; elektronik kilitler sızmaya boyun eğer ve bir kesintide çöker; canlı kilitler ise yalnızca yapanlarının soyuna açılır. Papirüs nemli topraklarda çürür, kil ise yangından sağ çıkar ve yangında pişip sertleşir; böylece tarihin neyi hatırlayacağı, neyin üzerine yazıldığına bağlıdır."
+   }
+  ],
+  "story": "Bir gaspçı tahtı aldı ama tacı alamadı; sadıklar onu gizlice bir dağ manastırına kaçırdı. Gaspçının meşruiyeti asla toparlanamadı, tacın dönüşü isyancıların savaş hedefi oldu ve onu saklayan başrahip tacın kökeninde dört kralın yanına kaydedildi."
+ },
+ {
+  "number": 35,
+  "tagline": "Her şehrin iki efendisi var. Yalnızca birinin tacı var.",
+  "intro": [
+   "Bekçi yüzbaşısı limandaki meyhanede bedava içiyor ve herkes nedenini biliyor. Taç giymiş her şehrin altında rütbeleri, geliri ve bir yemin gibi edilen bir sessizlik yasası olan ikinci bir yönetim işler. Sokak sokak haraç toplar, bir iki yargıcı cebinde taşır ve sınırlarını kanla çizer. Diyarın onu ezmesine izin verebilir, onu kiralayabilir ya da limanı yönetmeye devam etmesine göz yumabilirsiniz."
+  ],
+  "features": [
+   {
+    "title": "Sekiz Tür Aile",
+    "text": "suç aileleri, hırsızlar loncaları, kaçakçılık şebekeleri, korsan kardeşlikleri, tek bir sokak için savaşan ve gecekondulardan ve kamplardan adam toplayan sokak çeteleri, güzergâhlarda ve sınırlarda çalışan insan ticareti şebekeleri, çalıntı mal ağları ve sahtecilik şebekeleri; her birinin kendi rütbe merdiveni ve kendi hazinesi vardır."
+   },
+   {
+    "title": "On Beş Kirli İş",
+    "text": "haraç, kaçakçılık, kumar, çalıntı mal ticareti, adam kaçırma, sahtecilik, dolandırıcılık, şantaj, insan ticareti, keyif verici maddeler, veri hırsızlığı, tefecilik, silah, sahte kimlikler ve kaçak avcılık; her birinin kendi geliri ve kendi kurbanları vardır."
+   },
+   {
+    "title": "Bölge Savaşları",
+    "text": "aileler şehri mahalle mahalle tutar. Bir sokak için savaştıklarında sakat bırakmaları, cinayetleri ve çöken düzeni orada yaşayan herkes hisseder."
+   },
+   {
+    "title": "Maaş Bordrosundaki Memurlar",
+    "text": "rüşvetler bekçileri satın alır, sırlardan ve borçlardan örülen kancalar ise yargıcı. Gizli bir borcu olan yargıç, ailenin dediği gibi hüküm verir."
+   },
+   {
+    "title": "Sessizlik Yasası",
+    "text": "üyelik bir yemin gibi edilir ve aile hainlerini cezalandırır. Bir muhbirin aileden darağacından çok korkması gerekir."
+   },
+   {
+    "title": "Suça Beş Yanıt",
+    "text": "diyarlar aileleri haydut avcıları, bekçiler ve tasfiyelerle bastırır, muhbir olarak saflarına katar, yolsuzluk büyür ve bir kamuoyu tepkisi beklerken rüşvet karşılığında göz yumar, korsanlardan kumarhanelere kadar bir işi şartlara bağlayarak lisanslar ve vergilendirir ya da suçluları affederek bekçilere, orduya ve devlet dairelerine alır. Yasası esareti yasaklayan bir diyar insan ticareti şebekelerinin peşine en sert biçimde düşer."
+   },
+   {
+    "title": "Kanun Kaçakları ve Ödüller",
+    "text": "kanun kaçağı yasanın korumasını yitirir; böylece herkes onu suç işlemeden soyabilir ya da öldürebilir. Ödüller para için avcıları çeker, yoksullara dokunmayan bir kanun kaçağı ise onların halk kahramanı olabilir."
+   },
+   {
+    "title": "Kaçaklar ve Sığınaklar",
+    "text": "kanun kaçakları, sanıklar, sığınmacılar, esaretten kaçanlar, asker kaçakları, sapkınlar, kaçmış esirler ve kaçan borçlular tapınaklarda, misafir hakkı altında, iltica yoluyla, vahşi doğada, gemilerde, lonca salonlarında, çiğnenmesi bütün bir diyarı küstüren elçiliklerde ve beratı, süresini dolduran bir kaçağı özgür kılan özgür şehirlerde sığınak arar."
+   }
+  ],
+  "story": "Bir kaçakçılık şebekesi liman reisini kumar borçları üzerinden satın aldı. Taç şebekenin kaptanını kanun kaçağı ilan edip başına ödül koyduğunda liman mahalleleri kaptanı sakladı, haydut avcıları eli boş döndü ve kaptanın efsanesi şebekenin dokunmadığı her sokakta büyüdü."
+ },
+ {
+  "number": 36,
+  "tagline": "Tacı tak. Meclisten kork. Varisini seç.",
+  "intro": [
+   "Yaşlı hükümdar gece ölür ve veraset yasası dokuz yaşındaki bir torunu işaret eder. Şafak söktüğünde bir naibin hırsla yemini tarttığını, bir mareşalin birlikleri saydığını ve daha güçlü bir hakka sahip bir kuzenin kendisini destekleyecek soyluları saydığını izliyorsunuz. Dünyanızdaki her diyar işleyen bir devlettir; makamları, meclisi, sarayı, hazinesi, veraset yasası ve eriyip gidebilecek bir meşruiyeti vardır."
+  ],
+  "features": [
+   {
+    "title": "On Yedi Tür Yönetim",
+    "text": "beylikler, monarşiler, teokrasiler, oligarşiler, cumhuriyetler, kabile konfederasyonları, imparatorluklar, kovan meclisleri, bir oğulun doğrudan yönettiği tanrı diyarları, askerî işgaller, cuntalar, şirket devletleri, teknokrasiler, federasyonlar, komünler, makine yönetimi ve sömürge idareleri. Her biri kendi kuralıyla karar verir: hükümdarın iradesi, bir meclis oylaması, bir kurultay ya da bir tanrının iradesi."
+   },
+   {
+    "title": "Yapacak İşi Olan Bir Meclis",
+    "text": "şansölye, mareşal, haznedar, casus başı, saray rahibi, baş yargıç, muhafız ve diğer meclis üyeleri her devirde on bir görevden birini üstlenir: bir komşuya kur yapmak, orduları talim ettirmek, vergi toplamak, entrikaları bozmak, bir eyaleti din değiştirmeye ikna etmek, yolsuzluğu temizlemek, inşaatları denetlemek, ticareti geliştirmek, bilimi ilerletmek, halkı sağlıklı tutmak ve sınırları korumak. Becerileri sonucu, sadakatleri gayretlerini belirler ve sadakatsiz bir casus başı sır sızdırır."
+   },
+   {
+    "title": "Yirmi Üç Makam",
+    "text": "hükümdar, naip ve veliahttan valilere, elçilere, amirallere, bakanlara, bir baş bilim insanına ve vergilerin, askere almanın ve israf yasalarının daha uzağa ulaşması için insanları ve mülkleri sayan sansöre kadar. Her makam kendi yetkilerini taşır; toplamda on dört yetki vardır."
+   },
+   {
+    "title": "Meşruiyet ve Soy",
+    "text": "yasal veraset, kültürün talep ettiği yerde sağlam bir beden, onur, kilisenin kutsaması, zaferler, refah ve yaş. Çocuk bir varis bir naiplik getirir, rakip hak iddia edenler desteklerini tartar ve bir önizleme, hükümdar bu gece ölürse kimin hükmedeceğini gösterir."
+   },
+   {
+    "title": "Diyar Kâtiplerini Aşar",
+    "text": "yönetim; okuryazarlık, kâtipler, yazı ve yollardır. Onun ötesine genişleyin; valiler başına buyruk olur, vergiler sızar ve eyaletler ayrılık hayal eder; yönetici kültürün dışındaki halklar da kendi ayrılıkçı hareketlerini büyütür."
+   },
+   {
+    "title": "On Sekiz Vergi ve Sızıntı",
+    "text": "toprak, baş, ticaret, tüketim ve öşür; gelir, mülk, miras ve servet; özel tüketim ve ruhsatlar; emek yükümlülükleri ve ayni vergiler; yol ve köprü geçiş ücretleri, her ocağa konan bir vergi ve daha fazlası; her biri farklı sınıflara düşer. İltizam geliri artırır, onunla birlikte yolsuzluğu da; açgözlü memurlar adil bir baş yargıç onları denetleyene dek kaymak yer."
+   },
+   {
+    "title": "On İki Ferman",
+    "text": "hükümdarlar üretim emreder, ihracatı yasaklar, inşa eder, ambarları açar, sokağa çıkma yasağı koyar, gecekonduları temizler, tehlikeye hazırlanır, ortak arazileri çitle çevirir, bir kuşatma ya da uzun bir kış boyunca yiyecek ve yakıtı karneye bağlar, angarya emeği çağırır, mahalleleri ve limanları karantinaya alır ya da asker toplar. Karne düzeni ölümleri azaltır ve ne kadar adil paylaştırıldığına göre kırgınlık doğurur, angarya hızlı inşa eder ve öfke biriktirir; her ferman aynı anda birkaç sınıfa dokunur."
+   },
+   {
+    "title": "Saray ve Anayasa",
+    "text": "on saray mevkii: kâhya, şampiyon, hekim, lala, vakanüvis, eğlence ustası, izinli soytarı, kâhin, çeşnici ve tercüman. Göz yumulan bir soytarı kalabalığı yatıştırır, bir kâhin hükümdarın seçimlerini etkiler, bir çeşnici hükümdarın kadehini korur, bir tercüman elçilere söz hakkı kazandırır. Ziyafetlerden, sanattan ve güzel mallardan gelen ihtişam yetenekleri çeker ve elçileri etkiler; anayasa ise yalnızca yüksek bir eşikle ya da devrimle değişir."
+   }
+  ],
+  "story": "Bir kraliçe bir savaşı finanse etmek için vergilerini toplama hakkını sattı. Gelir arttı, yolsuzluk peşinden geldi, eyaletlerin onayı çöktü ve kraliçe öldüğünde en zengin eyaletin valisi varisin önünde diz çökmek yerine tacı aldı."
+ },
+ {
+  "number": 37,
+  "tagline": "Taht, tahtın memnun etmek zorunda olduğu kimse onun elindedir.",
+  "intro": [
+   "İmparatoru gerçekte kimin seçtiğini sorun. Halk değil: muhafız yüzbaşıları, büyük toprak sahipleri ve bir avuç rahip. Onları zengin tutun, hükmedersiniz. İhmal edin, kendi ordusu ve kendi himayesindekileri olan bir general düşünmeye başlar. Dünyanız her hükümdarı iktidarda tutan çevreyi hesaplar ve hazinenin yol mu yapacağına yoksa sadakat mi satın alacağına o çevre karar verir."
+  ],
+  "features": [
+   {
+    "title": "Kazanan Koalisyon",
+    "text": "her diyar, hükümdarın seçiminde kimin söz sahibi olduğunu ve kimin desteğinin onu orada tuttuğunu bilir. Küçük çevreler hediyeler ve makamlarla satın alınır, büyükleri yollar ve ambarlar ister; kısa bir saltanat bekleyen bir hükümdar yağmalar, güvende olan ise yatırım yapar."
+   },
+   {
+    "title": "Yedi Tür Meşruiyet",
+    "text": "geleneksel, karizmatik, yasal-akılcı, ilahi bir yetki, halkın rızası, başarı ve fetih. Gelenek verasetle kırılır, karizma yenilgi ve ölümle söner, yasal yönetim yolsuzlukla çürür ve bir fatihin hakkı başka bir hakla birleşmedikçe zamanla solar. Karizmatik bir kurucu öldüğünde diyar karizmayı bir hanedana ya da bir kuruma dönüştürmeli ya da bölünmelidir."
+   },
+   {
+    "title": "Hamiler, Himayedekiler ve Satın Alınan Makamlar",
+    "text": "sekiz tür himayedeki kendini güçlülere bağlar: haneler, maiyet, memurlar, komutanlar, aracılar, sanatçılar, muhbirler ve âlimler. Bir aracı bir hami ile daha küçük himayedekiler arasında bir pay karşılığında iyilik taşır ve hamisinden zengin olabilir, sanatçılar ve âlimler haminin ününü yükseltir, muhbirler haminin entrikalarını besler. Makamlar satılır, alıcılar bedeli geri çıkarır ve yeni makamlar huzursuz seçkinleri bir bedel karşılığında kendine çeker."
+   },
+   {
+    "title": "Fazla Güçlü Tebaa",
+    "text": "valiler ve generaller mülklerden, kendilerine bağlı komutanlardan, servetten ve popülerlikten güç üsleri kurar. Hükümdarlar komutanlıkları döndürür, orduları böler, paralel muhafızlar kurar ve rehineler tutar; güvenliği askerî kalite pahasına satın alır."
+   },
+   {
+    "title": "Hasadı Paylaşmanın Sekiz Yolu",
+    "text": "pazarlar, yeniden dağıtan saray ve tapınak depoları, emir ekonomileri, yükümlülükle borçlanılan haraçlar, hediye ekonomileri, ihtiyaca göre paylaşım, bolluk ve kura. Bir saray ekonomisinin merkezini yağmalayın, bütün ekonomi onunla birlikte çöker."
+   },
+   {
+    "title": "Yurttaşlar ve Yabancılar",
+    "text": "yurttaşlar, tebaa, yerleşik yabancılar, korunan azınlıklar, bağlılar ve vatansızlar yasaya göre on hakka sahiptir ya da onlardan yoksundur: makam, evlilik, silah, mahkemeler, mülk, seyahat, oy, ibadet, toplanma ve eğitim. Bir haktan yoksun olmak mülkü, seyahati, oyu ya da açık ayinleri engeller ve onu kazanmak için hareketler doğar."
+   },
+   {
+    "title": "Bizden Biri Olmak",
+    "text": "üyelik soy, doğum yeri, ikamet, din değiştirme, hizmet, satın alma, bahşiş, birleşme ya da evlat edinmeyle gelir. Vatansızları koruyacak bir mahkeme yoktur ve kolayca bağlanırlar; geçiş belgeleri ve güvenli geçiş izinleri kimin seyahat edeceğine karar verir, sahteleri karaborsada satılır ve kıtlıkta kimin yiyeceğine sosyal yardım karar verir."
+   },
+   {
+    "title": "İzinli Soytarı",
+    "text": "soytarılar ve hicivciler bir izinle hükümdarla alay eder. Göz yumulan hiciv güruhu soğutur, bastırılan hiciv kırgınlığa dönüşüp irinlenir ve soytarı hiçbir meclis üyesinin cesaret edemediğini söyleyebilir."
+   }
+  ],
+  "story": "Üç savaş kazanmış bir general tacın sahip olduğundan fazla toprağa sahipti. Tedirgin imparator generali uzak bir sınıra kaydırdı, lejyonları böldü ve generalin en büyük çocuğunu sarayda misafir olarak tuttu. Ordu bir sonraki savaşını kaybetti ve general yine de eve yürüdü."
+ },
+ {
+  "number": 38,
+  "tagline": "Krallık üç yüzyıl önce düştü. Tacı hâlâ bekliyor.",
+  "intro": [
+   "Eski krallığın üç yüz yıldır hükümdarı yok, ama unvanı uykuda ve sahiplenilebilir hâlde yaşıyor. Önemsiz bir kont, krallığın iki eyaletini ve bir büyükanne üzerinden zayıf bir hakkı elinde tutuyor. Eski toprakların yeterince büyük bir kısmını toplayın, kont kaybedileni yeniden kurabilir ve kaybolmuş hükümdarların efsaneleri onun etrafında kıpırdanır. Dünyanızdaki her hane bu uzun oyunu oynar."
+  ],
+  "features": [
+   {
+    "title": "Soylu Haneler",
+    "text": "prestij, aile yadigârları, malikâneler, kan davaları ve uzun ömürlü, dev kanlı, kâhinlik yetenekli, lanetli ya da tanrı kanından gelen soylar. Haneler ittifak ve hak için akraba evliliği riskine rağmen evlenir ve büyük kola karşı hak iddiaları taşıyan küçük kollara ayrılır."
+   },
+   {
+    "title": "On Bir Kademe Unvan",
+    "text": "yerel ve bölgesel beylikler, bölge unvanları, diyarlar ve imparatorluklar, üç kademe inanç makamı, askerî kaptanlıklar, lonca başkanlıkları ve birliklerin ve konfederasyonların başkanlıkları; her unvan kendi kültürünün dilinde adlandırılır. Topraklarının çoğunu tutarak bir unvan yaratın ya da başkentini ve topraklarının çoğunluğunu tutarak birini gasp edin."
+   },
+   {
+    "title": "Güce Karşı Hak",
+    "text": "başka bir unvan altında yeterince uzun tutulan toprak hak yoluyla ona geçer. İki harita arasındaki boşluk, hak iddialarının ve savaşların doğduğu yerdir."
+   },
+   {
+    "title": "Hak İddiaları, Birleşmeler ve Bölünmeler",
+    "text": "dokuz hak temeli: miras, evlilik, fetih, ilahi lütuf, sahtecilik, eski hak, seçim, evlat edinme ve kehanet. Hak iddiaları dile getirilmezse solar, seçilmiş bir hak sahibi soydan gelenlerle karşı karşıya gelir, evlat edinilmiş bir varis kan akrabalarıyla yüzleşir ve bir kehanetin hakkı inançla birlikte yükselip alçalır. İki taç taşıyan tek bir hükümdar iki diyarı da yönetir ve bölünme yasaları bir krallığı kuşaktan kuşağa varisler arasında paylaştırır."
+   },
+   {
+    "title": "On Veraset Yasası",
+    "text": "büyük çocuğun veraseti, yaşça büyüklük, seçim, tanistri, ikinci bir soy üzerinden veraset, düello, ilahi seçim, küçük çocuğun veraseti, sahibin serbestçe atadığı varis ve haneler arasında sırayla dönüşüm. Atanmış bir varise akrabalar ve soylular itiraz edebilir; dönüşüm ise rakip haneleri iç savaştan uzak tutar."
+   },
+   {
+    "title": "Tarihten Doğan Armalar",
+    "text": "her hane, diyar, unvan, ordu ve lonca; işlerinden, kurucusunun yaralarından, totemlerinden ve koruyucu tanrısından çıkan armalar taşır; küçük kollar için farklılaştırılır ve evlilikle dörde bölünür."
+   },
+   {
+    "title": "Kardeşler Kuzenlere Karşı",
+    "text": "soylar klanların, klanlar kabilelerin içinde yuvalanır. Kardeşler kuzenlerle savaşır, ikisi yabancılara karşı birleşir ve bütün kabile ecnebilere karşı birleşir; bu da devletsiz halklara bir hükümdar olmadan düzen sağlar."
+   },
+   {
+    "title": "Uzun Plan",
+    "text": "gizli tarikatlar ve haneler evlilikleri kuşaklar boyunca ilahi kana, bir kâhinlik yeteneğine ya da hakların birleşmesine doğru yönlendirir; koca halklar düşmüş bir diyarı, başkentini ve yasasını yeniden kurmak için yüzyıllar boyunca toplanır; ta ki bir aşk evliliği ya da kısır bir evlilik bir asırlık emeği boşa çıkarana dek."
+   }
+  ],
+  "story": "İki kardeş ebeveynlerinin krallığını bölünme yasasıyla paylaştı. Torunları bir sınır kontluğu için savaştı ve büyük kol kaybetti; ama kuşaklar sonra onun küçük kolu evlilikle yeniden genç kola katıldı, iki armayı dörde bölerek birleştirdi ve eski krallığın uykudaki unvanını talep etti."
+ },
+ {
+  "number": 39,
+  "tagline": "Bir yasa, onu uygulayan el kadar güçlüdür.",
+  "intro": [
+   "Sisli bir sokakta bir tüccar ölü yatıyor. Şerifin elinde sanığa borçlu korkmuş bir tanık, ancak eğri bir bıçağın açabileceği bir yara, sahte bir mektup ve her geçen gün soğuyan bir iz var. Hüküm delilleri, ailenin parasının yettiği avukatı ve ülkenin yasasını izleyecek; böylece masum biri asılabilir ve bir şehide dönüşebilir."
+  ],
+  "features": [
+   {
+    "title": "On Dört Hukuk Alanı",
+    "text": "veraset, mülkiyet, mali, ceza, askerî, sosyal, halk sağlığı, büyü, anayasa, ticaret, inanç, iş, aile ve çevre. Yasalar varislere, cezalara, vergilere, sözleşmelere, öşürlere, ücretlere, velayete, korunan doğaya ve büyünün yasaklanıp yasaklanmayacağına ya da lisansa bağlanacağına karar verir; bir halkın değerleriyle çatışan bir yasa, alanının ağırlığı oranında huzursuzluğu artırır."
+   },
+   {
+    "title": "Bir Yasayı Geçirmek",
+    "text": "teklifler destekçilerle muhaliflerin dengesine göre ilerler. Zümreler ayrıcalıklarıyla engel çıkarır, tartışmalar ayaklanmalara ya da uzlaşmalara taşar ve fazla uzun süre takılan bir tasarı düşer ve savunucusunu utandırır."
+   },
+   {
+    "title": "Beş Hukuk Sistemi ve Karışımları",
+    "text": "yaşlıların belleğinde tutulan örf, yazılı kanunlar, kutsal metinler, bağlayıcı içtihat ve kâhinler. Bir kâhin düzeninde mahkemeye bir tanrı yanıt verir; oğul doğruyu söyleyebilir, yalan söyleyebilir ya da susabilir."
+   },
+   {
+    "title": "Karar Delilindir",
+    "text": "on tür: belleği zayıflayan ya da gizli bağlılıkları olan tanıklar; yaralar, ayak izleri ve zehir belirtileri gibi izler; belgeler; itiraflar; kehanet; ayinlerin kalıntıları; hekimler ve bilirkişiler gibi uzmanlar; kulaktan dolma bilgiler; yazılı kayıtlar ve yaralar, izler ve kalıntılar için okunan bedenin kendisi. Deliller bozulur, kayıtlar ve bedenler ancak okuryazarlığın ve tıbbın izin verdiği yerde konuşur ve haksız hükümler zarlardan değil, kötü delillerden ve önyargıdan doğar."
+   },
+   {
+    "title": "Sekiz Mahkeme ve İçtihat",
+    "text": "yerel, eyalet, yüksek ve dinî mahkemeler; üyeler için lonca mahkemeleri, askerler için askerî mahkemeler, bir antlaşmanın yabancıların kendi yasalarıyla yargılanmasına izin verdiği konsolosluk mahkemeleri ve zaman pahasına hataları yakalayan istinaf mahkemeleri. Çatışan yargı yetkileri yüksek mahkemeye çıkar ya da anlaşmazlığa dönüşür, yetenekli avukatlar dava kazanır ve böylece zenginler daha iyi adalet bulur; içtihat düzeninde her karar bir sonrakini bağlar."
+   },
+   {
+    "title": "Hapishaneler, Aflar ve Yeniden Biçimlendirme",
+    "text": "hapishaneler çeteler, hastalıklar ve yeni beceriler doğurur; salıverilen mahkûmlar bir damga taşır. Hükümdarlar yolsuzluk pahasına dostlarını affeder ve iç savaşların ardından genel af ilan eder. Büyünün acımasız bir ceza kanunuyla buluştuğu yerde cezalar mahkûmun bedenini yeniden biçimlendirir."
+   },
+   {
+    "title": "Tanrılar Önünde Yeminler",
+    "text": "biat, intikam, sessizlik, hac ve kan kardeşliğinden memurları bağlayan görev yeminlerine ve mahkemede daha ağır basan yeminli tanıklığa kadar on dört yemin. Birini bozun; dünyanın yasalarının izin verdiği yerde tanrının gazabı peşinizden gelebilir, yalan yere yemin edenin davası yeniden görülür, yeminlere bağlı kalmak yemin tanrılarını güçlendirir ve bir geas misafirperverliği asla reddetmemenizi buyurabilir."
+   },
+   {
+    "title": "On Beş Sicil",
+    "text": "tapular, borçlar, satışlar, her iki yöndeki birleşme ödemeleri, kulluk sözleşmeleri, patentler, desenler, zihin durumları, soylar, şirketler, doğumlar, ölümler, yurttaşlık, vasiyetler ve ruhsatlar kayıt altında tutulur ve bir sicille oynayan bir casus bir hak iddiasını yerinden oynatabilir ya da bir borcu silebilir."
+   }
+  ],
+  "story": "Bir entrikacının sahte mektubu dürüst bir kâhyayı vatana ihanetten mahkûm ettirdi. Kâhyanın köyü onu bir şehit olarak andı ve köyün taca olan onayı çöktü; bir müfettiş el yazısının sahte olduğunu kanıtladığında köylüler çoktan isyancılara katılmıştı."
+ }
+]

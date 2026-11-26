@@ -1,0 +1,26 @@
+---
+import type { HTMLAttributes } from 'astro/types'
+import cornerLarge from '../assets/ornate/corner.webp'
+import cornerSmall from '../assets/ornate/corner-small.webp'
+import crest from '../assets/ornate/crest.webp'
+
+type Tag = 'div' | 'li' | 'ul' | 'article' | 'figure' | 'form' | 'details' | 'button' | 'section'
+
+interface Props extends HTMLAttributes<'div'> {
+  as?: Tag
+  size?: 'panel' | 'card' | 'tile'
+  gem?: boolean
+  [key: string]: unknown
+}
+
+const { as = 'div', size = 'card', gem = false, class: className, ...rest } = Astro.props
+const Element = as
+const corner = size === 'tile' ? cornerSmall : cornerLarge
+const corners = ['tl', 'tr', 'bl', 'br'] as const
+---
+
+<Element class:list={['frame', className]} data-frame={size} {...rest}>
+  {corners.map((place) => <img class="frame__corner" data-corner={place} src={corner.src} alt="" aria-hidden="true" width="96" height="96" />)}
+  {gem && <img class="frame__crest" src={crest.src} alt="" aria-hidden="true" width="480" height="97" />}
+  <slot />
+</Element>

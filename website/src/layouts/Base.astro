@@ -1,0 +1,223 @@
+---
+import '../styles/global.css'
+import '../styles/layout.css'
+import Icon from '../components/Icon.astro'
+import crest from '../assets/ornate/crest.webp'
+import wing from '../assets/ornate/wing.webp'
+import {
+  LOCALES,
+  LOCALE_NAMES,
+  LOCALE_TAGS,
+  REPOSITORY,
+  asset,
+  copyFor,
+  page,
+  repositoryFile,
+  type Locale,
+} from '../i18n'
+
+interface Props {
+  locale: Locale
+  path?: string
+  title: string
+  description: string
+}
+
+const { locale, path = '', title, description } = Astro.props
+const copy = copyFor(locale)
+const home = page(locale)
+const anchor = (id: string) => `${home}#${id}`
+const site = Astro.site?.toString().replace(/\/$/, '') ?? ''
+const canonical = `${site}${page(locale, path)}`
+const image = `${site}${asset('art/collectors-edition.webp')}`
+const year = new Date().getFullYear()
+const links = [
+  { href: anchor('how'), label: copy.nav.how },
+  { href: page(locale, 'expansions'), label: copy.nav.expansions },
+  { href: page(locale, 'services'), label: copy.nav.services },
+  { href: anchor('free'), label: copy.nav.free },
+]
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#110b1f" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {LOCALES.map((other) => <link rel="alternate" hreflang={other} href={`${site}${page(other, path)}`} />)}
+    <link rel="alternate" hreflang="x-default" href={`${site}${page('en', path)}`} />
+    <link rel="icon" href={asset('brand/favicon.ico')} sizes="any" />
+    <link rel="icon" type="image/png" href={asset('brand/logo-192.png')} />
+    <link rel="apple-touch-icon" href={asset('brand/apple-touch-icon.png')} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Weavers of the Void" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={image} />
+    <meta property="og:locale" content={LOCALE_TAGS[locale]} />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <a class="skip" href="#content">{copy.nav.skip}</a>
+    <div class="sky" aria-hidden="true"><canvas data-stars></canvas></div>
+    <svg class="visually-hidden" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="wov-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff6d2" />
+          <stop offset="0.45" stop-color="#f1cc68" />
+          <stop offset="1" stop-color="#b9862a" />
+        </linearGradient>
+        <linearGradient id="wov-gold-deep" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#d9a640" />
+          <stop offset="1" stop-color="#7c5413" />
+        </linearGradient>
+        <linearGradient id="wov-parchment" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fbf0d2" />
+          <stop offset="1" stop-color="#d9c08a" />
+        </linearGradient>
+        <radialGradient id="wov-gem" cx="0.35" cy="0.3" r="0.85">
+          <stop offset="0" stop-color="#f5ddff" />
+          <stop offset="0.35" stop-color="#b86ef4" />
+          <stop offset="0.75" stop-color="#5b1b9c" />
+          <stop offset="1" stop-color="#2c0a55" />
+        </radialGradient>
+      </defs>
+    </svg>
+
+    <header class="masthead" data-masthead>
+      <div class="wrap wrap--wide masthead__bar">
+        <a class="brand" href={home} aria-label="Weavers of the Void">
+          <span class="brand__crest">
+            <img src={asset('brand/logo-256.webp')} alt="" width="56" height="56" />
+          </span>
+          <span class="brand__words" lang="en">
+            <span class="brand__name">Weavers <em>of the</em> Void</span>
+            <span class="brand__tag">Worldbuilding Studio</span>
+          </span>
+        </a>
+        <nav class="nav" aria-label={copy.nav.menu} data-nav>
+          <ul class="nav__links">
+            {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+          </ul>
+          <div class="nav__tools">
+            <div class="lang" role="group" aria-label={copy.nav.language}>
+              {
+                LOCALES.map((other) => (
+                  <a
+                    href={page(other, path)}
+                    hreflang={other}
+                    lang={other}
+                    aria-current={other === locale ? 'true' : undefined}
+                    aria-label={LOCALE_NAMES[other]}
+                    data-lang-link={other}
+                  >
+                    {other.toUpperCase()}
+                  </a>
+                ))
+              }
+            </div>
+            <a class="button button--gold nav__cta" href={REPOSITORY} target="_blank" rel="noopener noreferrer">
+              <Icon name="github" />
+              {copy.nav.getIt}
+            </a>
+          </div>
+        </nav>
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle>
+          <Icon name="menu" class="menu-toggle__open" />
+          <Icon name="close" class="menu-toggle__close" />
+          <span class="visually-hidden" data-menu-label data-open={copy.nav.menu} data-close={copy.nav.close}>{copy.nav.menu}</span>
+        </button>
+      </div>
+      <div class="mobile-menu" id="mobile-menu" hidden data-mobile-menu>
+        <ul>
+          {links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}
+        </ul>
+        <div class="mobile-menu__tools">
+          <div class="lang" role="group" aria-label={copy.nav.language}>
+            {
+              LOCALES.map((other) => (
+                <a href={page(other, path)} hreflang={other} lang={other} aria-current={other === locale ? 'true' : undefined} data-lang-link={other}>
+                  {LOCALE_NAMES[other]}
+                </a>
+              ))
+            }
+          </div>
+          <a class="button button--gold button--block" href={REPOSITORY} target="_blank" rel="noopener noreferrer">
+            <Icon name="github" />
+            {copy.nav.getIt}
+          </a>
+        </div>
+      </div>
+      <span class="masthead__rule" aria-hidden="true"></span>
+    </header>
+
+    <main id="content">
+      <slot />
+    </main>
+
+    <footer class="footer">
+      <div class="footer__ornament" aria-hidden="true">
+        <span class="footer__rule"></span>
+        <img class="footer__arm footer__arm--start" src={wing.src} alt="" width="480" height="97" loading="lazy" />
+        <img class="footer__crest" src={crest.src} alt="" width="480" height="97" loading="lazy" />
+        <img class="footer__arm" src={wing.src} alt="" width="480" height="97" loading="lazy" />
+      </div>
+      <div class="wrap footer__grid">
+        <div class="footer__brand">
+          <a class="footer__badge" href={home} aria-label="Weavers of the Void">
+            <span class="footer__seal">
+              <img src={asset('brand/logo-256.webp')} alt="" width="96" height="96" loading="lazy" />
+            </span>
+            <span class="brand__words" lang="en">
+              <span class="brand__name">Weavers <em>of the</em> Void</span>
+              <span class="brand__tag">Worldbuilding Studio</span>
+            </span>
+          </a>
+          <p class="footer__tagline">{copy.footer.tagline}</p>
+        </div>
+        <nav class="footer__column" aria-labelledby="footer-product">
+          <h2 id="footer-product">{copy.footer.product}</h2>
+          <ul>
+            <li><a href={anchor('how')}>{copy.nav.how}</a></li>
+            <li><a href={page(locale, 'expansions')}>{copy.nav.expansions}</a></li>
+            <li><a href={page(locale, 'services')}>{copy.nav.services}</a></li>
+            <li><a href={anchor('free')}>{copy.nav.free}</a></li>
+          </ul>
+        </nav>
+        <nav class="footer__column" aria-labelledby="footer-project">
+          <h2 id="footer-project">{copy.footer.company}</h2>
+          <ul>
+            <li><a href={REPOSITORY} target="_blank" rel="noopener noreferrer">{copy.footer.github}</a></li>
+            <li><a href={repositoryFile('LICENSING.md')} target="_blank" rel="noopener noreferrer">{copy.footer.license}</a></li>
+            <li><a href={repositoryFile('TRADEMARKS.md')} target="_blank" rel="noopener noreferrer">{copy.footer.trademarks}</a></li>
+            <li><a href={repositoryFile('CONTRIBUTING.md')} target="_blank" rel="noopener noreferrer">{copy.footer.contribute}</a></li>
+            <li><a href={repositoryFile('SECURITY.md')} target="_blank" rel="noopener noreferrer">{copy.footer.security}</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="wrap footer__base">
+        <p>© {year} Weavers of the Void. {copy.footer.rights}</p>
+        <a class="footer__top" href="#content">
+          <span class="medallion footer__medal">
+            <svg class="emblem footer__ascend" viewBox="3.4 2.4 25.2 28.2" aria-hidden="true" focusable="false">
+              <path class="g" d="M16 4 27 15h-4.6L16 8.6 9.6 15H5Z" />
+              <path class="g" d="M16 13.5 27 24.5h-4.6L16 18.1l-6.4 6.4H5Z" />
+              <circle class="gem" cx="16" cy="28" r="2" />
+            </svg>
+          </span>
+          <span class="footer__top-label">{copy.footer.top}</span>
+        </a>
+      </div>
+    </footer>
+
+    <script>
+      import { startSite } from '../scripts/site'
+      startSite()
+    </script>
+  </body>
+</html>
