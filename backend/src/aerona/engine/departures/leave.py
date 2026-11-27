@@ -1,15 +1,18 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.departures import DepartureRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.polity import PolityMemberRow
+from aerona.db.tables.governance import OrgGovernanceRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.departures import DepartureCondition, DepartureKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.context import TickContext
 from aerona.engine.departures.book import Seat, seat_name
 from aerona.engine.polity.book import RealmBook
@@ -18,7 +21,9 @@ from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.offices import succession_line
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import record
+from aerona.engine.recording.scope import phase_moment
 
 KIND_RECORDS = {
     DepartureKind.ABDICATION: "office.abdicated",
@@ -77,11 +82,43 @@ async def relieve(ctx: TickContext, holder: EntityRow) -> None:
         town.unrest = clamp_int(town.unrest - ctx.rules.departures.scandal_unrest_relief, 0, PERCENT)
 
 
+def seat_key(seat: Seat) -> tuple[str, str, str] | None:
+    if seat.office is not None and seat.office.id is not None:
+        return OfficeRow.__tablename__, f'{{"id": {seat.office.id}}}', "holder_entity_id"
+    if seat.org is not None:
+        return OrgGovernanceRow.__tablename__, f'{{"org_node_id": {seat.org.org_node_id}}}', "head_node_id"
+    return None
+
+
+async def tenure_years(ctx: TickContext, seat: Seat) -> int:
+    years = ctx.rules.time.years_per_epoch
+    now = phase_moment(ctx.environment).year or epoch_start_year(ctx.epoch, years)
+    key = seat_key(seat)
+    taken = (
+        await ctx.session.scalar(
+            select(StateChangeRow.year)
+            .where(
+                StateChangeRow.table_name == key[0],
+                StateChangeRow.row_key == key[1],
+                StateChangeRow.field == key[2],
+                StateChangeRow.after_node_id == seat.holder.id,
+                StateChangeRow.year.is_not(None),
+            )
+            .order_by(StateChangeRow.id.desc())
+            .limit(1)
+        )
+        if key is not None
+        else None
+    )
+    held_for = now - taken if taken is not None else max(0, ctx.epoch - seat.since) * years
+    return max(0, min(held_for, stat_or(seat.holder, "age", held_for)))
+
+
 async def leave(ctx: TickContext, seat: Seat, kind: DepartureKind, *, heir: int | None, conditions: list[DepartureCondition], why: str) -> DepartureRow:
     holder = seat.holder
     living_heir = await living_entity(ctx.session, heir) if heir is not None else None
     chosen = living_heir.id if living_heir is not None and living_heir.id != holder.id else None
-    years = max(0, ctx.epoch - seat.since) * ctx.rules.time.years_per_epoch
+    years = await tenure_years(ctx, seat)
     successor = await hand_rule(ctx, seat, chosen, why) if seat.office is not None else await hand_headship(seat, chosen, ctx.epoch)
     row = DepartureRow(
         holder_node_id=holder.id,

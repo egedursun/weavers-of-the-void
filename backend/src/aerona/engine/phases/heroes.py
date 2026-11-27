@@ -27,6 +27,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import apply_hits, fatal_injury
+from aerona.engine.mortal.life import biology_of, folk_lifespan
 from aerona.engine.operations.expeditions import quest_expedition
 from aerona.engine.phase import Phase
 from aerona.engine.phases.heroism import encounter
@@ -579,9 +580,10 @@ async def heroes(ctx: TickContext) -> None:
     ctx.count("apprentices", counters.apprentices)
 
 
-def hero_stats(ctx: TickContext, community: EntityRow) -> MortalStats:
+async def hero_stats(ctx: TickContext, community: EntityRow) -> MortalStats:
     settings = ctx.rules.heroes
     rng = ctx.rng(f"hero_birth.{community.id}")
+    biology = await biology_of(ctx.session, community)
     return MortalStats(
         hp=settings.birth_hp,
         strength=clamp_int(settings.birth_strength_base + rng.die(settings.birth_strength_die), 0, PERCENT),
@@ -589,7 +591,7 @@ def hero_stats(ctx: TickContext, community: EntityRow) -> MortalStats:
         intellect=clamp_int(settings.birth_intellect_base + rng.die(settings.birth_intellect_die), 0, PERCENT),
         charisma=clamp_int(settings.birth_charisma_base + rng.die(settings.birth_charisma_die), 0, PERCENT),
         age=settings.birth_age_base + rng.die(settings.birth_age_die),
-        lifespan=settings.birth_lifespan_base + rng.die(settings.birth_lifespan_die),
+        lifespan=folk_lifespan(biology, settings.birth_lifespan_base, rng.die(settings.birth_lifespan_die), settings.birth_lifespan_die),
     )
 
 
@@ -621,7 +623,7 @@ async def shape_mortal(ctx: TickContext, community_id: int, shape: MortalShape) 
         raise NotFoundError("A mortal is born among a people or a settlement.")
     if community.status is not EntityStatus.CANON:
         raise ValidationFailedError(f"{community.name} is no longer part of the world.")
-    rolled = hero_stats(ctx, community).model_dump(exclude_none=True)
+    rolled = (await hero_stats(ctx, community)).model_dump(exclude_none=True)
     stats = MortalStats.model_validate({**rolled, **{key: value for key, value in shape.stats.items() if value is not None}})
     given = (shape.name or "").strip()
     named = given or await Namer(ctx.session, ctx.rules).person([community], seed_of(community.id, ctx.epoch, "shaped"), community.world_id)
@@ -653,7 +655,7 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
         RecordSpec(
             name=name or f"{community.name} Hero",
             entity_type=EntityType.MORTAL,
-            stats=hero_stats(ctx, community),
+            stats=await hero_stats(ctx, community),
             body=f"From among {community.name}, a hero arose.",
             power=ctx.rules.heroes.birth_power,
             world_id=community.world_id,

@@ -137,9 +137,9 @@ async def test_a_pressing_prophecy_strains_foretold_enemies_and_doomed_towns(ses
     _, _, town, _ = await realm(session, world)
     prophecy = await foretold(session, world)
     other = await settlement(session, "Fernwick", world, world.regions[0])
-    assert await press(ctx, prophecy, condition(P.WAR_BETWEEN, {"first": town.id, "second": other.id})) == "the foretold enemies eye each other"
+    assert await press(ctx, prophecy, condition(P.WAR_BETWEEN, {"first": town.id, "second": other.id})) == "the foretold enemies grew colder to each other"
     set_stats(town, defense=50)
-    assert await press(ctx, prophecy, condition(P.FALLS, {"settlement": town.id})) == f"{town.name} loses heart"
+    assert await press(ctx, prophecy, condition(P.FALLS, {"settlement": town.id})) == f"the defence of {town.name} weakened"
     assert (stat(town, "defense") or 0) < 50
     doubtful = await foretold(session, world, certainty=0)
     assert await press(ctx, doubtful, condition(P.FALLS, {"settlement": town.id})) is None

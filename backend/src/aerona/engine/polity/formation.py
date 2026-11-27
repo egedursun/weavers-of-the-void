@@ -292,6 +292,30 @@ async def dissolve(ctx: TickContext, book: RealmBook, live: set[int]) -> int:
     return dissolved
 
 
+async def close_landless_realms(ctx: TickContext) -> int:
+    closed = 0
+    for realm in list(
+        await ctx.session.scalars(
+            select(EntityRow).where(EntityRow.entity_type == EntityType.POLITY, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+        )
+    ):
+        rows = list(
+            await ctx.session.scalars(select(PolityMemberRow).where(PolityMemberRow.polity_entity_id == realm.id).order_by(PolityMemberRow.member_entity_id))
+        )
+        if held(realm.id, *(row.member_entity_id for row in rows)):
+            continue
+        standing = [
+            row for row in rows if (member := await ctx.session.get(EntityRow, row.member_entity_id)) is not None and member.status is EntityStatus.CANON
+        ]
+        if standing or not rows:
+            continue
+        await retire_in(ctx, realm, "the last of its lands was left empty", status=EntityStatus.DESTROYED)
+        for row in rows:
+            await ctx.session.delete(row)
+        closed += 1
+    return closed
+
+
 async def refresh_realms(ctx: TickContext, book: RealmBook) -> dict[str, int]:
     table = ctx.rules.government
     community_lord, mortal_rules, kin_root = await lords(ctx)

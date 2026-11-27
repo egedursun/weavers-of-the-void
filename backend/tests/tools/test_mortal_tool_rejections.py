@@ -2,6 +2,7 @@ from aerona.db.session import Database
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.bond import BondKind
 from tests.engine.core.factories import tuned_rules
+from tests.tools.every_setup_orders import seated_member
 from tests.tools.factories import connect, mortal_toolkit, seed_realm
 from tests.tools.test_mortal_tools import bonds_between, ok, rejected
 
@@ -51,3 +52,15 @@ async def test_bartering_away_what_one_does_not_own_lists_what_one_does(database
         await connect(session, realm.people_id, realm.resource_id, BondKind.OWNS)
     owned = await rejected(toolkit, "barter", {"target_id": realm.settlement_id, "give_ids": [realm.species_id], "terms": "goods for goods"})
     assert f"#{realm.resource_id}" in owned
+
+
+async def test_one_whom_custom_retired_for_their_age_cannot_seek_a_headship(database: Database) -> None:
+    realm = await seed_realm(database)
+    async with database.write() as session:
+        org = (await seated_member(session, realm))["org"]
+        seeker = await session.get(EntityRow, realm.mortal_id)
+        assert seeker is not None
+        seeker.stats = seeker.stats.model_copy(update={"age": 99, "lifespan": 100})
+    toolkit = await mortal_toolkit(database, realm.mortal_id)
+    text = await rejected(toolkit, "seek_headship", {"org_id": org})
+    assert "custom retires those of your age" in text

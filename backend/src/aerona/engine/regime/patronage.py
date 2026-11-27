@@ -47,7 +47,7 @@ from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.offices import adult, appoint, powers_of, subjects
 from aerona.engine.polity.revenue import mean_justice
-from aerona.engine.primitives.maturity import away_among
+from aerona.engine.primitives.maturity import acting_for, away_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
@@ -270,7 +270,11 @@ async def sell_seat(
     await record(
         ctx,
         "venality.sold",
-        roles={IncidentRole.BUYER: buyer.id, IncidentRole.SELLER: realm.entity.id, IncidentRole.AUTHORITY: realm.ruler_id},
+        roles={
+            IncidentRole.BUYER: buyer.id,
+            IncidentRole.SELLER: realm.entity.id,
+            IncidentRole.AUTHORITY: await acting_for(ctx.session, realm.entity.id, realm.ruler_id),
+        },
         facts={"office": seat.kind, "price": price},
         place=realm.profile.capital_entity_id,
     )

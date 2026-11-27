@@ -232,7 +232,7 @@ async def sourceless_materials(session: AsyncSession) -> list[int]:
 async def gift_material(session: AsyncSession, key: int) -> None:
     row = await session.get(WorldMaterialRow, key)
     if row is not None and row.source_node_id is None:
-        row.origin = MaterialOrigin.GOD_GIFT
+        row.origin = MaterialOrigin.CATALOG
 
 
 async def stray_methods(session: AsyncSession) -> list[int]:

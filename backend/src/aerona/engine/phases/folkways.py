@@ -259,6 +259,7 @@ async def mishaps(ctx: TickContext) -> None:
     "table.castings",
     "table.chronicle_entities",
     "table.creator",
+    "table.crime_cases",
     "table.cult_doctrines",
     "table.cult_tenets",
     "table.dimensions",

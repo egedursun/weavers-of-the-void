@@ -10,6 +10,16 @@ from aerona.rules.registry import Rules
 from aerona.rules.snapshot import apply_overrides, catalog, coerce, constraint_violations, is_default, with_value
 
 RuleChange = tuple[str, str, float | None]
+RULE_KEY_SEPARATOR = "."
+RULES_TITLE = "Change the rules: {keys}"
+RESET_TITLE = "Reset every rule"
+
+
+def rules_title(rules: Rules, changes: Sequence[str], *, reset_all: bool = False) -> str:
+    if reset_all:
+        return RESET_TITLE
+    labels = {f"{item.namespace}{RULE_KEY_SEPARATOR}{item.key}": item.label for item in catalog(rules)}
+    return RULES_TITLE.format(keys="; ".join(sorted(labels.get(key, key).lower() for key in changes)))
 
 
 class RulesService:

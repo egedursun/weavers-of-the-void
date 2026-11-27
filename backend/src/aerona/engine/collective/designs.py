@@ -30,6 +30,7 @@ from aerona.engine.equipment.models import mount_model
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.made_names import made_name
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 from aerona.engine.vehicles.sections import strike_vessel
 from aerona.rules.registry import Rules
@@ -519,7 +520,7 @@ async def refit(ctx: TickContext, tally: DesignTally, frame_for: FrameChoice | N
     table = ctx.rules.designs
     knowledge = await KnowledgeMap.load(ctx.session)
     for design in list(await ctx.session.scalars(select(DesignRow).where(DesignRow.obsolete.is_(False)).order_by(DesignRow.id))):
-        owner = await ctx.session.get(EntityRow, design.owner_entity_id) if design.owner_entity_id is not None else None
+        owner = await living_entity(ctx.session, design.owner_entity_id)
         if owner is None or held(owner.id) or design.epoch >= ctx.epoch or "obsolete" in design.locked or design.frame is None:
             continue
         if not ctx.rng(f"refit.{design.id}.{ctx.epoch}").chance(table.refit_pct):

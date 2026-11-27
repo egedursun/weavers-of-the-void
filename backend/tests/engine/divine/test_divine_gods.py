@@ -22,7 +22,7 @@ from aerona.engine.divine.avatars import avatar_cycles, manifest
 from aerona.engine.divine.goals import pursue_goals
 from aerona.engine.divine.lineage import inherited_domains, inherited_stats
 from aerona.engine.divine.standing import mean_neglect, tally_epoch, tend_standing
-from aerona.engine.divine.wounds import avatar_slain, heal_wounds, inflict, name_exposure, sanity_ceiling, strike, worst
+from aerona.engine.divine.wounds import avatar_slain, heal_wounds, inflict, name_exposure, sanity_ceiling, strike, worship_wounds, worst
 from aerona.engine.primitives.faith import has_unlocked_power
 from aerona.rules.registry import Rules
 from tests.engine.divine.pantheon import god, worship
@@ -120,7 +120,25 @@ async def test_a_beaten_god_may_be_wounded_and_its_wounds_bite(realm: Realm) -> 
     assert await sanity_ceiling(realm.session, sea.id, 60) == 70
     before = name.healed
     await heal_wounds(context(realm.session))
+    assert name.healed == before
+    await heal_wounds(context(realm.session, epoch=4))
     assert name.healed > before
+
+
+async def test_worship_splits_only_among_living_churches_and_names_the_one_that_split_it(realm: Realm) -> None:
+    sea = await god(realm, "Ondra", Domain.SEA, Domain.STORM)
+    ctx = context(realm.session, tuned(divine_wounds={"split_cults": 3, "worship_wound_pct": 100}))
+    towns = [await settlement(realm, name) for name in ("Ashel", "Bresk", "Corvan")]
+    for town in towns:
+        await worship(realm, town, sea.id)
+    towns[0].status, towns[0].end_epoch = EntityStatus.DEAD, ctx.epoch - 1
+    await realm.session.flush()
+    assert await worship_wounds(ctx) == 0
+    fourth = await settlement(realm, "Dunmere")
+    await worship(realm, fourth, sea.id)
+    assert await worship_wounds(ctx) == 1
+    wound = await realm.session.scalar(select(DivineWoundRow).where(DivineWoundRow.god_node_id == sea.id, DivineWoundRow.kind == DivineWoundKind.SPLIT_WORSHIP))
+    assert wound is not None and wound.cause_node_id == fourth.id
 
 
 async def test_severed_domains_take_power_slots(realm: Realm) -> None:

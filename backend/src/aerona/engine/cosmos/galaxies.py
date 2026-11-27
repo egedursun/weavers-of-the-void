@@ -29,6 +29,7 @@ from aerona.engine.cosmos.placement import Cosmography
 from aerona.engine.cosmos.stars import StarSpec, create_star
 from aerona.engine.cosmos.stellar import physics_of_stars
 from aerona.engine.cosmos.systems import join_system
+from aerona.engine.gods.essence import endow
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.numbers import clamp_percent
 from aerona.engine.primitives.queries import canon, flags_by_entity
@@ -488,8 +489,7 @@ async def patrons(ctx: TickContext, cosmography: Cosmography) -> int:
         worlds = sum(1 for world in cosmography.worlds_in_galaxy(galaxy.id) if world.patron_son_id == son.id)
         gain = worlds * ctx.rules.galaxies.patron_essence
         if gain:
-            son.essence += gain
-            paid += gain
+            paid += endow(ctx.rules, son, gain)
     return paid
 
 

@@ -76,7 +76,7 @@ AGRARIAN: tuple[IncidentKindSpec, ...] = (
     happening(
         "perennials.felled",
         N,
-        "In {place}, {felled:planting|plantings} were cut back by {share} percent of their growth.",
+        "In {place}, {felled:planting was|plantings were} cut back by {share} percent of their growth.",
         roles=(one(R.PLACE),),
         facts=(amount("felled", U.COUNT), amount("share", U.PERCENT)),
         place=P.REQUIRED,
@@ -161,7 +161,7 @@ AGRARIAN: tuple[IncidentKindSpec, ...] = (
     happening(
         "relief.refused",
         N,
-        "{subject} turned away the aid of {giver}, not wanting to owe it.",
+        "{subject} turned away the aid of {giver}, and {giver} took it as a slight.",
         roles=(one(R.SUBJECT), one(R.GIVER)),
         facts=(amount("face", U.STANDING),),
         place=P.REQUIRED,
@@ -197,7 +197,7 @@ AGRARIAN: tuple[IncidentKindSpec, ...] = (
     happening(
         "reconstruction.planned",
         N,
-        "{subject} was rebuilt on a new plan, sturdier and with wider streets, for {cost:coin|coins}.",
+        "{subject} was rebuilt on a new plan for {cost:coin|coins}.",
         roles=(one(R.SUBJECT), maybe(R.MAKER)),
         facts=(amount("cost", U.COIN),),
         place=P.REQUIRED,
@@ -262,7 +262,7 @@ AGRARIAN: tuple[IncidentKindSpec, ...] = (
     happening(
         "keystone.designated",
         N,
-        "{name}, which only {subject} of {origin} gives, is held sacred by {cult}; every realm of the world now wants it.",
+        "{name}, which only {subject} of {origin} gives, is held sacred by {cult}.",
         roles=(one(R.SUBJECT), one(R.ORIGIN)),
         facts=(named("name"), node("cult"), chosen("use", KeystoneUse), chosen("commodity", CommodityKind, required=False)),
         clock=C.YEAR,
@@ -671,7 +671,7 @@ LAND: tuple[IncidentKindSpec, ...] = (
     happening(
         "seasons.irregular",
         N,
-        "The seasons of {subject} lost their measure; its summers and winters now run for years of no set length.",
+        "The seasons of {subject} became irregular; its summers and winters now run for years of no set length.",
         roles=(one(R.SUBJECT), maybe(R.ACTOR)),
         facts=(chosen("cause", SeasonCause), amount("length", U.COUNT), amount("severity", U.PERCENT)),
         clock=C.YEAR,
@@ -695,7 +695,7 @@ LAND: tuple[IncidentKindSpec, ...] = (
     happening(
         "seasons.settled",
         N,
-        "The seasons of {subject} found their measure again.",
+        "The seasons of {subject} became regular again.",
         roles=(one(R.SUBJECT),),
         facts=(chosen("cause", SeasonCause),),
         clock=C.YEAR,
@@ -781,7 +781,7 @@ CREATURES: tuple[IncidentKindSpec, ...] = (
     happening(
         "creatures.soul_eaten",
         N,
-        "{actor} swallowed {victim}; in those lands no dead return anymore.",
+        "{actor} swallowed the spirit {victim}.",
         roles=(one(R.ACTOR), one(R.VICTIM), maybe(R.PLACE)),
         clock=C.INSTANT,
     ),
@@ -994,7 +994,7 @@ SPECIES: tuple[IncidentKindSpec, ...] = (
     happening(
         "beast.hoard_robbed",
         N,
-        "The bold of {actor} stole {taken} from the hoard of {subject} while it slept.",
+        "Folk of {actor} stole {taken} from the hoard of {subject} while it slept.",
         roles=(one(R.SUBJECT), one(R.ACTOR)),
         facts=(amount("taken", U.COUNT),),
         clock=C.SEASON,
@@ -1159,7 +1159,7 @@ SPECIES: tuple[IncidentKindSpec, ...] = (
     happening(
         "life.message_carried",
         N,
-        "The beasts kept by {origin} carried a letter to {receiver}; it was {fate}.",
+        "The beasts kept by {origin} carried a message to {receiver}; it was {fate}.",
         roles=(one(R.ORIGIN), one(R.RECEIVER)),
         facts=(chosen("fate", DispatchState),),
         clock=C.SEASON,
@@ -1242,7 +1242,7 @@ SPECIES: tuple[IncidentKindSpec, ...] = (
     happening(
         "ecology.rewound",
         N,
-        "{subject} turned back time in the epoch it would have died out; its herds are seen again.",
+        "{subject} did not die out in the epoch it would have; its herds are seen again.",
         roles=(one(R.SUBJECT),),
         facts=(amount("abundance", U.PERCENT),),
         clock=C.INSTANT,
@@ -1264,7 +1264,7 @@ YEARS: tuple[IncidentKindSpec, ...] = (
     happening(
         "year.hunger",
         N,
-        "In the year {year} the harvest of {place} failed under {weather} at {harvest} percent: {name} was never forgotten.",
+        "In the year {year} the harvest of {place} failed under {weather} at {harvest} percent, and the year was named {name}.",
         roles=(one(R.PLACE),),
         facts=YEAR_FACTS,
         place=P.REQUIRED,
@@ -1948,6 +1948,15 @@ GROUND: tuple[IncidentKindSpec, ...] = (
         "world.air_thinned",
         N,
         "The air of {subject} thinned to {oxygen:%} oxygen; its store of breathable air stands at {stock:%}.",
+        roles=(one(R.SUBJECT),),
+        facts=(amount("oxygen", U.PERCENT), amount("stock", U.PERCENT)),
+        clock=C.YEAR,
+        kind=K.CLIMATE,
+    ),
+    happening(
+        "world.air_freshened",
+        N,
+        "The air of {subject} grew richer to {oxygen:%} oxygen; its store of breathable air stands at {stock:%}.",
         roles=(one(R.SUBJECT),),
         facts=(amount("oxygen", U.PERCENT), amount("stock", U.PERCENT)),
         clock=C.YEAR,

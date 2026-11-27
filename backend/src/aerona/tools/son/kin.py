@@ -4,7 +4,6 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from aerona.catalog.gates import Gate
-from aerona.catalog.stats import max_essence
 from aerona.constants.tool_inputs import ESSENCE_GIFT_MAX, INSPIRATION_MAX, INSPIRATION_MIN, MESSAGE_MAX, MESSAGE_MIN, REASON_MAX, REASON_MIN
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.lore import MessageRow
@@ -17,6 +16,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus, Stat
 from aerona.engine.cosmos.duels import son_duel
 from aerona.engine.cycles.gifts import divine_gift
+from aerona.engine.gods.essence import endow, son_room
 from aerona.engine.primitives.stats import stat
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -193,15 +193,18 @@ async def give_gift(call: SonCall, args: GiftInput) -> str:
     if args.essence > call.son.essence - tools.gift_min_remaining:
         fail(SonResult.GIFT_CANNOT_AFFORD, have=call.son.essence)
     call.target(sibling.id)
-    if args.essence > 0:
-        call.spend_essence(args.essence)
-        sibling.essence = max(sibling.essence, min(max_essence(call.rules, sibling.might), sibling.essence + args.essence))
-        call.note(result(SonResult.GIFT_ESSENCE_NOTE, amount=args.essence))
+    essence = min(args.essence, son_room(call.rules, sibling))
+    if args.essence > 0 and essence <= 0 and args.worshipper_id is None:
+        fail(SonResult.GIFT_NO_ROOM, name=sibling.name)
+    if essence > 0:
+        call.spend_essence(essence)
+        endow(call.rules, sibling, essence)
+        call.note(result(SonResult.GIFT_ESSENCE_NOTE, amount=essence))
     accepted = await _transfer(call, sibling, args.worshipper_id) if args.worshipper_id is not None else False
-    await divine_gift(call.tick, call.son.id, sibling.id, args.essence)
+    await divine_gift(call.tick, call.son.id, sibling.id, essence)
     call.waive_actions()
     await call.bump(TurnCounter.GIFTS)
-    delta = tools.gift_relation_base + rounded(args.essence / tools.gift_relation_essence_divisor) + (tools.gift_worshipper_relation if accepted else 0)
+    delta = tools.gift_relation_base + rounded(essence / tools.gift_relation_essence_divisor) + (tools.gift_worshipper_relation if accepted else 0)
     bond = await shift_relation(call, sibling.id, delta)
     notes = NOTE_SEPARATOR.join(call.log.detail)
     await call.record(

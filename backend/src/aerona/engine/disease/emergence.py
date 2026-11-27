@@ -7,6 +7,7 @@ from aerona.catalog.diseases import VECTOR_FUNCTIONS, VECTOR_LABELS, VECTOR_STIG
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.disease import DiseaseProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -32,6 +33,8 @@ WET = 40
 DRY = 20
 MAGIC = 60
 VOID_SCARS = ("void", "void_wound", "unmade")
+
+FIRST_STRAIN = 2
 
 
 def affinity_of(ground: RegionEnvironmentRow | None) -> tuple[ClimateWarmth, ClimateMoisture]:
@@ -113,7 +116,7 @@ ORIGIN_KEYS = {
 }
 
 
-STRAIN_SUFFIX = re.compile(r"(?:, strain \d+)+$")
+STRAIN_SUFFIX = re.compile(r"(?:, strain \d+(?: [IVXLC]+)?)+$")
 
 
 async def mark_origin(ctx: TickContext, profile: DiseaseProfileRow, entity: EntityRow, region: EntityRow, *, path: SpreadPath, son_id: int | None) -> None:
@@ -205,8 +208,15 @@ async def new_strain(ctx: TickContext, book: DiseaseBook, parent: EntityRow, reg
     child = strain_profile(ctx, rng, profile)
     root = root_of(book, parent.id)
     kin = sum(1 for disease_id in book.profiles if disease_id != root and root_of(book, disease_id) == root)
-    name = f"{plain(parent.name)}, strain {kin + 2}"
+    name = await strain_name(NameRepository(ctx.session), plain(parent.name), kin + 2)
     return await birth_disease(ctx, book, child, region=region, path=SpreadPath.MUTATION, name=name, son_id=parent.creator_son_id, quiet=True)
+
+
+async def strain_name(names: NameRepository, base: str, start: int, ignore_node_id: int | None = None) -> str:
+    number = max(FIRST_STRAIN, start)
+    while await names.is_taken(f"{base}, strain {number}", ignore_node_id=ignore_node_id):
+        number += 1
+    return f"{base}, strain {number}"
 
 
 def plain(name: str) -> str:

@@ -18,6 +18,8 @@ class SonToolId(StrEnum):
     CHALLENGE = "challenge"
     REBEL = "rebel"
     PRAY_TO_CREATOR = "pray_to_creator"
+    SEND_ESSENCE = "send_essence"
+    END_REBELLION = "end_rebellion"
     MAKE_BOND = "make_bond"
     HARVEST_RESOURCE = "harvest_resource"
     CREATE_REGION = "create_region"

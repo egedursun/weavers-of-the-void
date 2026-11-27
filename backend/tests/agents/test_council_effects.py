@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+from dataclasses import replace
 
 import pytest
 from sqlalchemy import select
@@ -97,11 +98,12 @@ async def test_same_votes_bring_sons_closer_and_opposite_votes_push_apart(sessio
 async def test_a_passed_anti_doomsday_motion_pushes_the_clock_back(session: AsyncSession, gods: GodsWorld, rules: Rules) -> None:
     sons = [await make_son(session, name, gods.world.id) for name in ("Velkar", "Iolen")]
     gods.cosmos.doom_clock = 80
-    scope = await load_scope(session, rules)
+    full_speed = replace(rules, balance=replace(rules.balance, apocalypse_speed=100))
+    scope = await load_scope(session, full_speed)
     output = _output([_vote(son.id, CouncilVote.YES) for son in sons], CouncilMotion.AGAINST_DOOMSDAY)
     result = await apply_council(scope, sons, output, "topic", caller=CouncilCaller.FATE, god_asked=False)
     assert result.passed
-    assert gods.cosmos.doom_clock == 80 - rules.council.apocalypse_motion_push
+    assert gods.cosmos.doom_clock == 80 - full_speed.council.apocalypse_motion_push
 
 
 async def test_a_rejected_motion_changes_nothing(session: AsyncSession, gods: GodsWorld, rules: Rules) -> None:

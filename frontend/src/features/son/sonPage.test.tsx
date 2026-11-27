@@ -152,7 +152,7 @@ describe('dead son', () => {
       .element(screen.getByText(/resurrection cult that gathers devotion/))
       .toBeVisible()
     await screen
-      .getByRole('button', { name: /Resurrect by your own hand/ })
+      .getByRole('button', { name: /Resurrect them yourself/ })
       .click()
     await expect
       .poll(() => server.callsTo('POST /api/sons/10/resurrect').length)

@@ -58,6 +58,7 @@ import { STATS } from '@/features/pantheon/labels'
 import { RARITY_ORDER, statValue } from '@/features/pantheon/sonFacts'
 
 const PERCENT = 100
+const CREATOR_KEY = 'creator'
 const REASON_MAX = 300
 
 function Row({
@@ -116,6 +117,8 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
   const [duelStat, setDuelStat] = useState<StatKey>('strength')
   const [godId, setGodId] = useState('')
   const [sanity, setSanity] = useState(String(son.sanity ?? ''))
+  const [essenceTo, setEssenceTo] = useState(CREATOR_KEY)
+  const [essenceAmount, setEssenceAmount] = useState('')
   const running = useRunningJob(
     (job) => job.kind === 'son_turn' && paramEquals(job, 'son_id', sonId)
   )
@@ -248,6 +251,20 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
         })
       ),
   })
+  const sendEssence = useGodAction({
+    writes: [{ lever: 'son:send_essence' }],
+    run: () =>
+      unwrap(
+        api.POST('/api/actions/son:send_essence', {
+          body: {
+            son_id: sonId,
+            to_son_id: essenceTo === CREATOR_KEY ? null : Number(essenceTo),
+            amount: Number(essenceAmount),
+          },
+        })
+      ),
+    success: 'Essence sent',
+  })
   const setSanityAction = useGodAction({
     writes: [{ lever: 'son:sanity' }],
     run: (value: number) =>
@@ -258,6 +275,18 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
   })
 
   const deadReason = dead ? 'The dead take no orders.' : null
+  const keepEssence = rule('son_tools.gift_min_remaining')
+  const giftCap = rule('son_tools.gift_max_essence')
+  const essenceBlock = (() => {
+    const amount = Number(essenceAmount)
+    if (essenceAmount === '' || !Number.isInteger(amount) || amount < 1)
+      return 'Enter how much essence to send.'
+    if (giftCap !== undefined && amount > giftCap)
+      return `At most ${giftCap} essence at once.`
+    if (keepEssence !== undefined && son.essence - keepEssence < 1)
+      return `${son.name} must keep ${keepEssence} essence and has ${son.essence}.`
+    return null
+  })()
   const absoluteCost = rule('god_power.absolute_command_cost')
   const essenceCost = rule('costs.bless_essence')
   const hpCost = rule('costs.bless_hp')
@@ -845,6 +874,44 @@ export function HandOfGodPanel({ view, ready, killCost }: HandOfGodPanelProps) {
                 description: 'The loser is wounded and both remember it.',
               }}
               onRun={() => duel.mutate()}
+            />
+          </Row>
+          <Row
+            title='Pass on essence'
+            note={`Moves essence from ${son.name} to a sibling or to you. A sibling takes only what they can still hold${keepEssence !== undefined ? `, and ${son.name} keeps at least ${keepEssence}` : ''}. Sons may also do this of their own will.`}
+          >
+            <Select value={essenceTo} onValueChange={setEssenceTo}>
+              <SelectTrigger
+                aria-label='Who receives the essence'
+                className='w-48'
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={CREATOR_KEY}>The Creator</SelectItem>
+                {otherSons.map((other) => (
+                  <SelectItem key={other.son.id} value={String(other.son.id)}>
+                    {other.son.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              aria-label='Essence to send'
+              type='number'
+              min={1}
+              max={giftCap}
+              value={essenceAmount}
+              className='w-32'
+              onChange={(event) => setEssenceAmount(event.target.value)}
+            />
+            <ActionButton
+              act={sendEssence}
+              label='Send essence'
+              icon={Droplet}
+              blocked={reason() ?? essenceBlock}
+              pending={sendEssence.isPending}
+              onRun={() => sendEssence.mutate()}
             />
           </Row>
           {(foreignGods.data ?? []).length > 0 && (

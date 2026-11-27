@@ -306,26 +306,62 @@ async def close_wars_over_caps(ctx: TickContext) -> int:
     return closed
 
 
-async def close_stale_wars(ctx: TickContext) -> int:
-    seen: set[frozenset[int]] = set()
+async def tell_closing(ctx: TickContext, war: WarRow, ending: WarEnding, actor_id: int, opponent_id: int) -> None:
+    event = await war_event(ctx.session, war)
+    await record(
+        ctx, f"war.ended_{ending.value}", roles={IncidentRole.ACTOR: actor_id, IncidentRole.OPPONENT: opponent_id}, facts={"war": event.id, "ending": ending}
+    )
+
+
+async def close_fallen(ctx: TickContext, war: WarRow, sides: tuple[int, int]) -> bool:
+    first, second = await living_entity(ctx.session, sides[0]), await living_entity(ctx.session, sides[1])
+    if is_community(first) and is_community(second):
+        return False
+    await close_war(ctx, war, WarEnding.NO_SIDE_LEFT)
+    if not is_community(first) and not is_community(second):
+        event = await war_event(ctx.session, war)
+        await record(
+            ctx,
+            f"war.ended_{WarEnding.NO_SIDE_LEFT.value}",
+            roles={IncidentRole.ACTOR: event.id, IncidentRole.OPPONENT: sides[1]},
+            facts={"war": event.id, "ending": WarEnding.NO_SIDE_LEFT},
+        )
+        return True
+    standing, fallen = (sides[0], sides[1]) if is_community(first) else (sides[1], sides[0])
+    await tell_closing(ctx, war, WarEnding.NO_SIDE_LEFT, standing, fallen)
+    return True
+
+
+async def close_fallen_wars(ctx: TickContext) -> int:
     closed = 0
-    bonds = BondRepository(ctx.session)
     for war in list(await ctx.session.scalars(select(WarRow).where(WarRow.status.in_(ACTIVE_WAR_STATUSES)).order_by(WarRow.id))):
         sides = await sides_of(ctx.session, war)
         if sides is None:
             await close_war(ctx, war, WarEnding.NO_SIDE_LEFT)
             closed += 1
+        elif await close_fallen(ctx, war, sides):
+            closed += 1
+    return closed
+
+
+async def close_stale_wars(ctx: TickContext) -> int:
+    seen: set[frozenset[int]] = set()
+    closed = await close_fallen_wars(ctx)
+    bonds = BondRepository(ctx.session)
+    for war in list(await ctx.session.scalars(select(WarRow).where(WarRow.status.in_(ACTIVE_WAR_STATUSES)).order_by(WarRow.id))):
+        sides = await sides_of(ctx.session, war)
+        if sides is None:
             continue
         pair = unordered(*sides)
         if pair in seen:
             await close_war(ctx, war, WarEnding.SAME_FRONT)
+            await tell_closing(ctx, war, WarEnding.SAME_FRONT, *sides)
             closed += 1
             continue
         seen.add(pair)
-        first, second = await living_entity(ctx.session, sides[0]), await living_entity(ctx.session, sides[1])
-        both_alive = is_community(first) and is_community(second)
-        if both_alive and await bonds.exists_between(sides[0], sides[1], BondKind.ENEMY):
+        if await bonds.exists_between(sides[0], sides[1], BondKind.ENEMY):
             continue
-        await close_war(ctx, war, WarEnding.PEACE if both_alive else WarEnding.NO_SIDE_LEFT)
+        await close_war(ctx, war, WarEnding.PEACE)
+        await tell_closing(ctx, war, WarEnding.PEACE, *sides)
         closed += 1
     return closed + await close_wars_over_caps(ctx)

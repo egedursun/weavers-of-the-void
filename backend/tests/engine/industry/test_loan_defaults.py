@@ -3,8 +3,9 @@ from sqlalchemy import select
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgGovernanceRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.economy import LoanStatus
-from aerona.domain.enums.entity import EngineKind, EntityType
+from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.governance import OrgStrategy
 from aerona.domain.enums.polity import LawKind
 from aerona.domain.models.entity_stats import FactionStats
@@ -69,3 +70,27 @@ async def test_a_poor_organisation_set_on_research_borrows_and_its_unpaid_loan_l
     await collect(ctx, await EconomyBook.load(ctx), MoneyTally())
     case = await realm.session.scalar(select(InsolvencyCaseRow).where(InsolvencyCaseRow.debtor_node_id == org.id))
     assert loan.status is LoanStatus.OPEN and case is not None and case.creditors == [bank.id]
+
+
+async def test_a_bank_collapses_once_ends_and_its_other_loans_are_written_off(realm: Realm) -> None:
+    ctx = context(realm.session, tuned(banking={"collapse_wealth": 100, "repay_wealth_floor": 0}))
+    loan, _borrower, bank = await overdue(realm, bank_wealth=10)
+    second_borrower = await people(realm, "Fen Folk", wealth=0, prosperity=0)
+    second = LoanRow(
+        lender_entity_id=bank.id,
+        borrower_entity_id=second_borrower.id,
+        principal=40,
+        interest_pct=10,
+        repaid=0,
+        issued_epoch=1,
+        due_epoch=1,
+        status=LoanStatus.OPEN,
+        purpose="trade",
+    )
+    realm.session.add(second)
+    await realm.session.flush()
+    tally = MoneyTally()
+    await collect(ctx, await EconomyBook.load(ctx), tally)
+    told = list(await realm.session.scalars(select(ChronicleRow).where(ChronicleRow.template_key == "banking.collapse")))
+    assert tally.collapsed == 1 and len(told) == 1
+    assert bank.status is EntityStatus.DEAD and loan.status is LoanStatus.DEFAULTED and second.status is LoanStatus.FORGIVEN

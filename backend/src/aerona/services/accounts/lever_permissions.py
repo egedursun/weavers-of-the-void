@@ -2221,6 +2221,7 @@ LEVER_PERMISSIONS: dict[str, Permission] = {
     "son:power": Permission.EDIT_WORLD,
     "son:protection": Permission.EDIT_WORLD,
     "son:relation": Permission.EDIT_WORLD,
+    "son:send_essence": Permission.EDIT_WORLD,
     "son:reset_counters": Permission.EDIT_WORLD,
     "son:sanity": Permission.EDIT_WORLD,
     "son:star": Permission.EDIT_WORLD,

@@ -95,7 +95,7 @@ class GenesisOutput(OutputModel):
     world: GenesisWorldOutput = Field(description="The first world itself: its kind, gravity, air, surface, climate age and age")
     star: GenesisStarOutput = Field(description="The sun the first world circles; the first world and its sun begin the cosmos as one system")
     regions: list[GenesisRegionOutput] = Field(
-        description="The first regions the god founded by their own hand, neighbouring one another; land or water as the world's kind and the seed call for"
+        description="The first regions the god founded, neighbouring one another; land or water as the world's kind and the seed call for"
     )
     first_celestial: FirstCelestialOutput = Field(description="The most prominent body in the world's sky besides its sun, whatever that sky holds")
     cosmic_resource: GenesisCosmicResourceOutput = Field(

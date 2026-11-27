@@ -20,7 +20,7 @@ from aerona.domain.enums.transform import TransformKind
 from aerona.engine.context import TickContext
 from aerona.engine.lore.kinds import ArchetypeParams, kind_of, params_of
 from aerona.engine.lore.language import standardisation_of
-from aerona.engine.mind.book import stored_values, values_for, write_values
+from aerona.engine.mind.book import Values, stored_values, values_for, write_values
 from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -186,6 +186,18 @@ async def drift_step(ctx: TickContext, row: LegendProfileRow, communities: list[
     return clamp_int(max(row.distortion, measured), 0, PERCENT)
 
 
+def drift_target(ctx: TickContext, legend: EntityRow, values: Values, current: LegendArchetype) -> LegendArchetype | None:
+    leanings = sorted((DISTORTED[axis], weight) for axis, weight in values.items() if axis in DISTORTED and weight > 0)
+    if not leanings or current in {archetype for archetype, _ in leanings}:
+        return None
+    roll = ctx.rng(f"legend.drift.{legend.id}.{ctx.epoch}").below(sum(weight for _, weight in leanings))
+    for archetype, weight in leanings:
+        roll -= weight
+        if roll < 0:
+            return archetype
+    return leanings[-1][0]
+
+
 async def tell(ctx: TickContext, legend: EntityRow, row: LegendProfileRow) -> bool:
     table = ctx.rules.belief
     await resolve_kind(ctx, row)
@@ -209,14 +221,12 @@ async def tell(ctx: TickContext, legend: EntityRow, row: LegendProfileRow) -> bo
     drifted = False
     if communities and "archetype" not in row.locked and row.custom_archetype_id is None and row.distortion >= PERCENT // 2:
         values = await values_for(ctx.session, communities[0])
-        if values:
-            axis = max(values, key=lambda key: values[key])
-            target = DISTORTED.get(axis)
-            if target is not None and target is not row.archetype:
-                row.archetype = target
-                if "moral" not in row.locked:
-                    row.moral = {key.value: value for key, value in LEGEND_MORALS[target].items()}
-                drifted = True
+        target = drift_target(ctx, legend, values, row.archetype)
+        if target is not None and target is not row.archetype:
+            row.archetype = target
+            if "moral" not in row.locked:
+                row.moral = {key.value: value for key, value in LEGEND_MORALS[target].items()}
+            drifted = True
     row.updated_epoch = ctx.epoch
     return drifted
 

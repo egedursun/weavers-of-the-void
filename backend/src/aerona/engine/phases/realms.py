@@ -139,6 +139,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
     "table.nodes",
     "table.oaths",
     "table.offices",
+    "table.org_governance",
     "table.outbreaks",
     "table.passions",
     "table.patronage_ties",

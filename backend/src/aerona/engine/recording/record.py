@@ -2,6 +2,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 
+from sqlalchemy import select
+
 from aerona.catalog.incident_kinds.amounts import NEVER_ZERO
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec
@@ -33,8 +35,9 @@ from aerona.domain.enums.records import (
 from aerona.domain.models.moment import Moment, latest
 from aerona.engine.context import TickContext
 from aerona.engine.recording.births import born_floor, mark_born
-from aerona.engine.recording.deaths import death_floor
-from aerona.engine.recording.moments import incident_moment, moment_for, step_moments
+from aerona.engine.recording.chains import anchored, followed, happening_clock, principals
+from aerona.engine.recording.deaths import death_floor, mortal_floor
+from aerona.engine.recording.moments import incident_moment, moment_for, next_after, step_moments
 from aerona.engine.recording.render import indexed, render_incident
 from aerona.events.kinds import EventKind
 
@@ -223,17 +226,56 @@ def dated_year(spec: IncidentKindSpec, facts: Mapping[str, FactInput]) -> int | 
     return int(value)
 
 
-async def moment_of(ctx: TickContext, spec: IncidentKindSpec, nodes: Sequence[int], cause: int | None, world_id: int | None) -> Moment:
+async def lift_followers(ctx: TickContext, cause_id: int, floor: Moment) -> None:
+    for follower in await ctx.session.scalars(select(IncidentRow).where(IncidentRow.cause_incident_id == cause_id).order_by(IncidentRow.id)):
+        own = Moment(follower.year, follower.season, follower.day, follower.hour) if follower.year is not None else None
+        if own is None or not own.before(floor):
+            continue
+        follower.year, follower.season, follower.day, follower.hour = floor.year, floor.season, floor.day, floor.hour
+        line = await ctx.session.get(ChronicleRow, follower.chronicle_id) if follower.chronicle_id is not None else None
+        if line is not None:
+            line.year = floor.year
+        await lift_followers(ctx, follower.id, floor)
+
+
+async def moment_of(
+    ctx: TickContext, spec: IncidentKindSpec, nodes: Sequence[int], cause: int | None, world_id: int | None, *, principal: Sequence[int] = ()
+) -> Moment:
     scope = current_scope()
     if scope is not None and scope.key == spec.key and scope.incident_id is not None and scope.moment is not None:
-        floor = latest(await born_floor(ctx.session, nodes), await death_floor(ctx.session, nodes))
+        floor = latest(await born_floor(ctx.session, nodes), await mortal_floor(ctx.session, nodes))
         if floor is not None and scope.moment.before(floor):
             scope.moment = floor
             incident = await ctx.session.get(IncidentRow, scope.incident_id)
             if incident is not None:
                 incident.year, incident.season, incident.day, incident.hour = floor.year, floor.season, floor.day, floor.hour
+                await lift_followers(ctx, incident.id, floor)
         return scope.moment
-    return await moment_for(ctx, spec.clock, key=spec.key, participants=nodes, cause_moment=await incident_moment(ctx.session, cause), world_id=world_id)
+    clock = happening_clock(spec)
+    floor = latest(await incident_moment(ctx.session, cause), await followed(ctx, spec.key, principal))
+    prior = anchored(ctx, principal)
+    if prior is not None:
+        return await next_after(ctx, clock, latest(prior, floor) or prior, participants=nodes, world_id=world_id)
+    return await moment_for(ctx, clock, key=spec.key, participants=nodes, cause_moment=floor, world_id=world_id)
+
+
+async def happening_moment(
+    ctx: TickContext,
+    spec: IncidentKindSpec,
+    participants: Sequence[tuple[int, IncidentRole]],
+    named: Sequence[int],
+    cause_id: int | None,
+    *,
+    world_id: int | None,
+    at_moment: Moment | None,
+    dated: int | None,
+    place: int | None,
+) -> Moment:
+    principal = principals(participants)
+    moment = at_moment if at_moment is not None else await moment_of(ctx, spec, named, cause_id, world_id, principal=principal)
+    if dated is None:
+        moment = await lifted_to_births(ctx, moment, named if at_moment is not None else [], place)
+    return moment
 
 
 async def lifted_to_births(ctx: TickContext, moment: Moment, named: Sequence[int], place: int | None) -> Moment:
@@ -304,9 +346,7 @@ async def record(
     if at_moment is not None and dated is not None and at_moment.year != dated:
         raise ValidationFailedError(f"A happening of kind {key} told as of year {dated} cannot stand in year {at_moment.year}.")
     named = [node for node, _ in participants] or list(ids)
-    moment = at_moment if at_moment is not None else await moment_of(ctx, spec, named, cause_id, world_id)
-    if dated is None:
-        moment = await lifted_to_births(ctx, moment, named if at_moment is not None else [], place)
+    moment = await happening_moment(ctx, spec, participants, named, cause_id, world_id=world_id, at_moment=at_moment, dated=dated, place=place)
     cause_moment = await incident_moment(ctx.session, cause_id)
     if at_moment is not None and cause_moment is not None and at_moment.before(cause_moment):
         raise ValidationFailedError(f"A happening of kind {key} cannot come before what caused it.")
@@ -342,7 +382,7 @@ async def record(
     ctx.session.add_all(fact_rows_found)
     ctx.session.add_all(term_rows(incident_id, terms if terms is not None else untold_terms()))
     if steps:
-        await write_steps(ctx, incident_id, steps, moment, spec.clock, world_id=world_id)
+        await write_steps(ctx, incident_id, steps, moment, happening_clock(spec), world_id=world_id)
     await mark_born(ctx.session, [*participants, *([(place, IncidentRole.PLACE)] if place is not None else [])], moment, epoch, known)
     ctx.count("records")
     ctx.publish(

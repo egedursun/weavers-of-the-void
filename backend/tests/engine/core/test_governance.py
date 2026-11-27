@@ -31,7 +31,7 @@ from aerona.engine.governance.insolvency import InsolvencyTally, advance_case, f
 from aerona.engine.governance.mergers import advance_merger, open_bid
 from aerona.engine.governance.research import advance_research, begin_research, spread_secrets
 from aerona.engine.governance.seats import LEGACY_FIXUP, seed_governance, sync_seats
-from aerona.engine.governance.strategy import courses_open, set_course
+from aerona.engine.governance.strategy import bid_target, courses_open, follow_strategy, set_course
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
@@ -306,3 +306,15 @@ async def test_a_revolt_or_a_movement_never_takes_a_market_course(session: Async
     market = {OrgStrategy.SPECIALISE, OrgStrategy.DIVERSIFY, OrgStrategy.EXPAND_ABROAD, OrgStrategy.INTEGRATE_UP, OrgStrategy.INTEGRATE_DOWN}
     assert not market & set(await courses_open(ctx, rebels, rebel_profile))
     assert market <= set(await courses_open(ctx, guild, guild_profile))
+
+
+async def test_only_a_trading_body_bids_and_only_for_another_trading_body(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "bids", tuned_rules(governance={"strategy_bid_chance_pct": 100}))
+    rebels = await organisation(session, world, "The Ash Rising", FactionKind.REBELS, await folk(session, world, 3, "Ash"), treasury=50)
+    guild = await organisation(session, world, "The Salt Guild", FactionKind.MERCHANT_GUILD, await folk(session, world, 3, "Salt"), treasury=5000)
+    guild_profile = await session.get(FactionProfileRow, guild.id)
+    rebel_profile = await session.get(FactionProfileRow, rebels.id)
+    assert guild_profile is not None and rebel_profile is not None
+    assert await bid_target(ctx, guild, guild_profile, OrgStrategy.INTEGRATE_DOWN) is None
+    body = OrgGovernanceRow(org_node_id=rebels.id, strategy=OrgStrategy.EXPAND_ABROAD, locked=[])
+    assert await follow_strategy(ctx, body, rebels) is None

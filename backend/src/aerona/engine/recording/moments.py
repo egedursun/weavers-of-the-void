@@ -13,14 +13,15 @@ from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.made import MadeRealmRow
 from aerona.domain.enums.records import ProcessClock
 from aerona.domain.models.calendar import YearWindow, epoch_start_year
-from aerona.domain.models.moment import Moment
+from aerona.domain.models.moment import Moment, latest
 from aerona.engine.context import TickContext
 from aerona.engine.environment.season_shape import position_at_fraction
-from aerona.engine.recording.births import born_floor
-from aerona.engine.recording.deaths import death_floor
+from aerona.engine.recording.births import birth_moments, born_floor
+from aerona.engine.recording.deaths import death_floor, ended_floor, mortal_floor
 from aerona.rules.registry.records import RecordsRules
 
 CALENDARS = "record_calendars"
+DRAWS = "record_moment_draws"
 
 
 @dataclass(frozen=True)
@@ -123,6 +124,13 @@ def stream_of(key: str, participants: Iterable[int]) -> str:
     return ".".join(["records", "moment", key, *(str(node) for node in sorted(set(participants)))])
 
 
+def drawn_stream(ctx: TickContext, stream: str) -> str:
+    drawn: dict[tuple[int, str], int] = ctx.session.sync_session.info.setdefault(DRAWS, {})
+    count = drawn.get((ctx.epoch, stream), 0)
+    drawn[(ctx.epoch, stream)] = count + 1
+    return stream if count == 0 else f"{stream}.{count}"
+
+
 async def moment_for(
     ctx: TickContext,
     clock: ProcessClock,
@@ -142,13 +150,29 @@ async def moment_for(
     elif clock is ProcessClock.PHASE and ctx.environment.step is not None:
         position = min(max(ctx.environment.step, 0.0), 1.0) * span
     else:
-        position = ctx.environment.rng(stream_of(key, participants)).random() * span * spread_of(ctx, clock) / PERCENT
+        position = ctx.environment.rng(drawn_stream(ctx, stream_of(key, participants))).random() * span * spread_of(ctx, clock) / PERCENT
     year = start + min(span - 1, int(position))
     moment = calendar.place(year, position - int(position))
-    for floor in (cause_moment, await born_floor(ctx.session, participants), await death_floor(ctx.session, participants)):
+    after_this = latest(cause_moment, await ended_floor(ctx.session, participants))
+    if after_this is not None and moment.before(after_this) and after_this.year < start + span - 1:
+        rest = start + span - after_this.year
+        after = after_this.year + 1 + int(ctx.environment.rng(drawn_stream(ctx, f"{stream_of(key, participants)}.after")).random() * (rest - 1))
+        moment = calendar.place(min(start + span - 1, after), position - int(position))
+    for floor in (after_this, await born_floor(ctx.session, participants), await mortal_floor(ctx.session, participants)):
         if floor is not None and moment.before(floor):
             years, days, hours = STEP_UNITS[clock]
             moment = calendar.advance(floor, years=years, days=days, hours=hours if (years or days or hours) else 0).at_least(floor)
+    return moment
+
+
+async def next_after(ctx: TickContext, clock: ProcessClock, after: Moment, *, participants: Iterable[int] = (), world_id: int | None = None) -> Moment:
+    calendar = await calendar_of(ctx.session, world_id)
+    years, days, hours = STEP_UNITS[clock]
+    moment = calendar.advance(after, years=years, days=days, hours=hours if (years or days or hours) else 1).at_least(after)
+    present = tuple(participants)
+    for floor in (await born_floor(ctx.session, present), await death_floor(ctx.session, present)):
+        if floor is not None and moment.before(floor):
+            moment = calendar.advance(floor, years=years, days=days, hours=hours if (years or days or hours) else 1).at_least(floor)
     return moment
 
 
@@ -209,4 +233,5 @@ async def told_no_earlier(session: AsyncSession, year: int, nodes: list[int | No
         .group_by(IncidentParticipantRow.node_id)
     )
     years = [found for found in await session.scalars(first) if found is not None]
-    return max([year, *years])
+    born = [moment.year for moment in (await birth_moments(session, known)).values() if moment is not None]
+    return max([year, *years, *born])

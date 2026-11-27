@@ -9,6 +9,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.standing import ended_ids
 from aerona.engine.primitives.stats import stat, stat_or
 
 
@@ -52,7 +53,12 @@ async def realm_of_town(ctx: TickContext, town_id: int) -> PolityProfileRow | No
 async def ruler_id(ctx: TickContext, polity_id: int) -> int | None:
     return await ctx.session.scalar(
         select(OfficeRow.holder_entity_id)
-        .where(OfficeRow.polity_entity_id == polity_id, OfficeRow.kind == OfficeKind.RULER, OfficeRow.holder_entity_id.is_not(None))
+        .where(
+            OfficeRow.polity_entity_id == polity_id,
+            OfficeRow.kind == OfficeKind.RULER,
+            OfficeRow.holder_entity_id.is_not(None),
+            OfficeRow.holder_entity_id.not_in(ended_ids()),
+        )
         .order_by(OfficeRow.id)
         .limit(1)
     )

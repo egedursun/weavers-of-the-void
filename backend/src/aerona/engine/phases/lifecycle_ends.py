@@ -5,7 +5,9 @@ from aerona.engine.lifecycle.affairs import AffairTally, close_affairs
 from aerona.engine.lifecycle.ends import EndTally, keep_ends
 from aerona.engine.phase import Phase
 from aerona.engine.phases.dominion import count
-from aerona.engine.polity.houses import settle_house_stats
+from aerona.engine.polity.formation import close_landless_realms
+from aerona.engine.polity.houses import close_emptied_houses, settle_house_stats
+from aerona.engine.services.war_resolution import close_fallen_wars
 
 
 @reads(
@@ -67,7 +69,9 @@ async def world_ends(ctx: TickContext) -> None:
 
 
 @reads(
+    "table.armies",
     "table.bonds",
+    "table.claims",
     "table.creator",
     "table.dimensions",
     "table.entities",
@@ -78,12 +82,15 @@ async def world_ends(ctx: TickContext) -> None:
     "table.galaxy_clusters",
     "table.gatherings",
     "table.gifts",
+    "table.heirlooms",
     "table.hero_quests",
     "table.house_members",
     "table.house_profiles",
     "table.household_members",
     "table.incidents",
     "table.incubating_ideas",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.mandates",
     "table.messages",
     "table.node_births",
@@ -92,37 +99,55 @@ async def world_ends(ctx: TickContext) -> None:
     "table.org_governance",
     "table.org_seats",
     "table.patronage_ties",
+    "table.polity_members",
+    "table.sieges",
     "table.sons",
     "table.stars",
+    "table.war_sides",
+    "table.wars",
     "table.worlds",
 )
 @writes(
     "house.members",
     "house.prestige",
     "house.wealth",
+    "table.armies",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.claims",
     "table.entities",
+    "table.entity_flags",
     "table.faction_memberships",
     "table.faction_profiles",
     "table.gifts",
+    "table.heirlooms",
     "table.hero_quests",
+    "table.house_profiles",
     "table.household_members",
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.incubating_ideas",
     "table.mandates",
+    "table.node_births",
     "table.offices",
     "table.org_governance",
     "table.org_seats",
     "table.patronage_ties",
+    "table.polity_members",
+    "table.sieges",
+    "table.sons",
+    "table.war_sides",
+    "table.wars",
 )
 async def affairs_of_the_ended(ctx: TickContext) -> None:
     closed = AffairTally()
     await close_affairs(ctx, closed)
+    ctx.count("houses_died_out", await close_emptied_houses(ctx))
+    ctx.count("landless_realms_closed", await close_landless_realms(ctx))
     ctx.count("house_stats_settled", await settle_house_stats(ctx))
+    ctx.count("fallen_wars_closed", await close_fallen_wars(ctx))
     ctx.count("affairs_closed", closed.affairs)
     ctx.count("ties_closed", closed.ties)
 

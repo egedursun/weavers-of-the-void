@@ -368,20 +368,35 @@ FACTION_KIND_TRAIT = total(
         FactionKindTrait.HERALDRY_GUILDS: Defined(
             "Heraldry guilds", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.collective.heraldry.GUILDS")
         ),
-        FactionKindTrait.MOVEMENTS: Defined("Movements", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.youth.groups.MOVEMENTS")),
+        FactionKindTrait.MOVEMENTS: Defined(
+            "Movements",
+            checked_by=(),
+            used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.services.war.RISING_KIND_TRAITS", "engine.youth.groups.MOVEMENTS"),
+        ),
         FactionKindTrait.ORDERS: Defined(
             "Orders",
             checked_by=(),
-            used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.collective.heraldry.ORDERS", "engine.honours.persons.ORDER_KINDS"),
+            used_by=(
+                "catalog.life_traits.FACTION_KIND_TRAITS",
+                "engine.collective.heraldry.ORDERS",
+                "engine.honours.persons.ORDER_KINDS",
+                "engine.services.war.ARMED_KIND_TRAITS",
+            ),
         ),
         FactionKindTrait.TRADES: Defined("Trades", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.governance.strategy.TRADERS")),
         FactionKindTrait.TREASON_KINDS: Defined(
-            "Treason kinds", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.polity.justice.TREASON_KINDS")
+            "Treason kinds",
+            checked_by=(),
+            used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.polity.justice.TREASON_KINDS", "engine.services.war.RISING_KIND_TRAITS"),
         ),
         FactionKindTrait.UNDERWRITES: Defined(
             "Underwrites", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.crafts.insurance.UNDERWRITERS")
         ),
-        FactionKindTrait.WARLIKE: Defined("Warlike", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.relations.book.WARLIKE")),
+        FactionKindTrait.WARLIKE: Defined(
+            "Warlike",
+            checked_by=(),
+            used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.relations.book.WARLIKE", "engine.services.war.ARMED_KIND_TRAITS"),
+        ),
     },
 )
 

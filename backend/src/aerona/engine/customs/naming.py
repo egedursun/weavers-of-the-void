@@ -6,6 +6,7 @@ from sqlalchemy import select
 from aerona.catalog.naming import NAMING_PATTERNS
 from aerona.core.grammar import spoken
 from aerona.core.total import total
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.customs import NameFormRow, NamingCustomRow
 from aerona.db.tables.entities import EntityRow
@@ -220,7 +221,7 @@ async def name_the_dead(ctx: TickContext, namer: Namer, people: EntityRow, custo
             await give(ctx, mortal, NameForm.BIRTH, mortal.name, tally)
         await give(ctx, mortal, NameForm.POSTHUMOUS, name, tally)
         living = mortal.name
-        mortal.name = name
+        name = await NameRepository(ctx.session).rename(mortal.id, name, free=True)
         await record(ctx, "death.named", roles={IncidentRole.SUBJECT: mortal.id}, facts={"name": name, "living": living, "taboo": custom.taboo_epochs})
 
 

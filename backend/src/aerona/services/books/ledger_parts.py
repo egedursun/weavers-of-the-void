@@ -63,7 +63,7 @@ WRITING_SUFFIX = ".writing"
 KEY_PART = "\x1f"
 RANGE = '"{column}" > :after AND "{column}" <= :last'
 STEPS_IN_RANGE = '"step_id" IN (SELECT "id" FROM "incident_steps" WHERE "incident_id" > :after AND "incident_id" <= :last)'
-FieldKey = tuple[str, str]
+FieldKey = tuple[str, str, str]
 
 
 @dataclass(frozen=True)
@@ -88,6 +88,8 @@ class ChangesTold:
     first_seen: dict[int, dict[FieldKey, ChangeLine]]
     last_seen: dict[int, dict[FieldKey, ChangeLine]]
     incidents: dict[int, array[int]]
+    row_of_table: dict[tuple[int, str], str]
+    mixed: set[tuple[int, str]]
 
 
 @dataclass
@@ -273,6 +275,8 @@ async def tell_changes_in(session: AsyncSession, job: Slice) -> ChangesTold:
         {node: dict(seen) for node, seen in ledger.first_seen.items()},
         {node: dict(seen) for node, seen in ledger.last_seen.items()},
         dict(ledger.incident_changes),
+        dict(ledger.row_of_table),
+        set(ledger.mixed),
     )
     return keep_told(folder, stem, told)
 
@@ -452,6 +456,13 @@ def then_and_now(names: dict[int, str], told: list[ChangesTold], node_id: int) -
         for key, change in part.first_seen.get(node_id, {}).items():
             ledger.first_seen[node_id].setdefault(key, change)
         ledger.last_seen[node_id].update(part.last_seen.get(node_id, {}))
+        ledger.mixed.update(pair for pair in part.mixed if pair[0] == node_id)
+        for (node, table), row in part.row_of_table.items():
+            if node != node_id:
+                continue
+            first_row = ledger.row_of_table.setdefault((node, table), row)
+            if first_row != row:
+                ledger.mixed.add((node, table))
     return [f"{label}: {text}" for label, text in ledger.then_and_now(node_id)]
 
 

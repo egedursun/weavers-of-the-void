@@ -35,6 +35,7 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.services.war import declare_war, uprising_target
 
 BOOTSTRAP_EXCLUDED_FLAGS = (EntityFlag.GODLESS, EntityFlag.WORSHIPS_PLANET)
@@ -160,6 +161,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
+    "table.faction_profiles",
     "table.foreign_gods",
     "table.galactic_structures",
     "table.galaxies",
@@ -288,12 +290,22 @@ async def uprisings(ctx: TickContext) -> None:
     "table.people_culture",
     "table.people_reproduction",
     "table.purity",
+    "table.relationships",
     "table.sons",
     "table.stars",
     "table.union_customs",
     "table.worlds",
 )
-@writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.entities", "table.incident_participants", "table.incidents")
+@writes(
+    "table.bonds",
+    "table.chronicle",
+    "table.chronicle_entities",
+    "table.entities",
+    "table.incident_participants",
+    "table.incidents",
+    "table.node_births",
+    "table.relationships",
+)
 async def love_and_rivalry(ctx: TickContext) -> None:
     settings = ctx.rules.society
     session = ctx.session
@@ -315,9 +327,14 @@ async def love_and_rivalry(ctx: TickContext) -> None:
                     continue
                 if not rng.chance(settings.over_epoch(settings.love_rivalry_chance)):
                     continue
+                ties = [await ensure_relation(session, holder.id, other.id, ctx.epoch) for holder, other in ((first, second), (second, first))]
+                fondness = sum(tie.friendship for tie in ties if tie is not None)
                 love = rng.chance(settings.love_share_pct)
-                if love and not await may_wed(session, ctx.rules, first, second):
+                if (love and (fondness < 0 or not await may_wed(session, ctx.rules, first, second))) or (not love and fondness > 0):
                     continue
+                for tie in ties:
+                    if love and tie is not None:
+                        shift(ctx.rules, tie, ctx.epoch, romance=settings.love_romance)
                 await bonds.connect(
                     BondDraft(
                         first.id,

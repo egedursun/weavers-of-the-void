@@ -30,6 +30,7 @@ from aerona.services.integrity.ages_links import mend_ages_links
 from aerona.services.integrity.agrarian_links import mend_agrarian_links
 from aerona.services.integrity.arts_links import mend_arts_links
 from aerona.services.integrity.biology import seed_missing_biology
+from aerona.services.integrity.chronicle_retell import retell_old_lines
 from aerona.services.integrity.collective_links import mend_collective_links
 from aerona.services.integrity.containment import close_market_trade, close_mismatched_inside
 from aerona.services.integrity.context_budgets import raise_context_budgets
@@ -180,6 +181,7 @@ class DataRepairs:
             ("value_axes", lambda session, rules, epoch: complete_value_axes(session)),
             ("retuned_rules", lambda session, rules, epoch: move_retuned_rules(session)),
             (SCHEMA_STEP, lambda session, rules, epoch: schema_repairs(session)),
+            ("told_lines", lambda session, rules, epoch: retell_old_lines(session)),
         ]
 
     async def run(self, session: AsyncSession, rules: Rules, on_step: StepReport | None = None, *, skip: frozenset[str] = frozenset()) -> dict[str, int]:
@@ -225,7 +227,8 @@ class DataRepairs:
         return sum((await self.run(session, rules, skip=frozenset({SCHEMA_STEP}))).values())
 
     async def schema(self, session: AsyncSession, rules: Rules, epoch: int) -> int:
-        return await schema_repairs(session)
+        repaired = await schema_repairs(session)
+        return repaired + (await retell_old_lines(session) if repaired else 0)
 
     async def graph_ends(self, session: AsyncSession, rules: Rules, epoch: int) -> int:
         return (await repair_graph_ends(session, rules, epoch, self._log)).total

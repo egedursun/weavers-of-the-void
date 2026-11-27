@@ -31,6 +31,7 @@ from aerona.engine.record_keepers.legacy import recover_keepers
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.record_keepers",
 )
 async def record_keepers(ctx: TickContext) -> None:

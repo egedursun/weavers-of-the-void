@@ -48,6 +48,7 @@ from aerona.engine.divine.council_order import (
 )
 from aerona.engine.divine.decrees import active_rulings, assigned_world
 from aerona.engine.divine.motions import Motion
+from aerona.engine.gods.essence import endow
 from aerona.engine.mind.book import stored_values
 from aerona.engine.mythic.offices import appoint, vacant_office
 from aerona.engine.primitives.doom import step_doom
@@ -190,7 +191,7 @@ async def fine_essence(ctx: TickContext, son: SonRow, members: list[SonRow]) -> 
     son.essence -= fine
     takers = [member for member in members if member.id != son.id and not held(member.id)]
     for member in takers:
-        member.essence += fine // len(takers)
+        endow(ctx.rules, member, fine // len(takers))
     return f"{son.name} paid {fine} essence to the council"
 
 

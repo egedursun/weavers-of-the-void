@@ -58,6 +58,7 @@ async def deepened_towns(ctx: TickContext) -> None:
     "table.confederations",
     "table.cosmos",
     "table.crime_cases",
+    "table.culture_honour",
     "table.deep_passages",
     "table.dimensional_events",
     "table.dimensions",

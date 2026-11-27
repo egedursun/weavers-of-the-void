@@ -156,7 +156,7 @@ WAR_ENDINGS = {
     WarEnding.WHITE_PEACE: "{war} ended with no victor; {actor} and {opponent} were both exhausted.",
     WarEnding.BETRAYAL: "{war} ended in betrayal between {actor} and {opponent}.",
     WarEnding.SAME_FRONT: "{war} ended as {actor} and {opponent} came to stand on the same side.",
-    WarEnding.NO_SIDE_LEFT: "{war} ended: neither {actor} nor {opponent} was left to fight it.",
+    WarEnding.NO_SIDE_LEFT: "{war} ended: {opponent} was no longer there to fight it.",
     WarEnding.MIRACLE: "{war} ended by a miracle between {actor} and {opponent}.",
     WarEnding.MEDIATED: "{war} ended between {actor} and {opponent} through a mediator.",
 }
@@ -412,6 +412,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     kind(
         "war.battle.refused",
         "{opponent} saw {actor} coming in {war} and would not give battle.",
+        (role(R.ACTOR), role(R.OPPONENT), role(R.MEMBER, required=False, many=True, accepts=ARMY)),
+        (node("war"), number("margin", U.PERCENT)),
+        clock=ProcessClock.MARCH,
+        terms=True,
+    ),
+    kind(
+        "war.battle.withheld",
+        "{opponent} marched on {actor} in {war} but drew back without giving battle.",
         (role(R.ACTOR), role(R.OPPONENT), role(R.MEMBER, required=False, many=True, accepts=ARMY)),
         (node("war"), number("margin", U.PERCENT)),
         clock=ProcessClock.MARCH,

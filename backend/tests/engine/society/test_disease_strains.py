@@ -33,3 +33,15 @@ def test_a_sickness_is_named_by_how_it_spreads_and_where_it_rose_and_nothing_els
     assert set(diseases.VECTOR_LABELS) == set(Transmission)
     lists = [name for name, value in vars(diseases).items() if name.isupper() and isinstance(value, tuple) and all(isinstance(item, str) for item in value)]
     assert lists == []
+
+
+async def test_a_strain_never_takes_a_number_an_ended_strain_still_holds(realm: Realm) -> None:
+    ctx = context(realm.session)
+    parent = await forge(realm)
+    book = await book_of(realm)
+    first = await new_strain(ctx, book, parent, realm.region)
+    assert first is not None
+    book.profiles.pop(first.id)
+    second = await new_strain(ctx, book, parent, realm.region)
+    assert second is not None
+    assert second.name == f"{plain(parent.name)}, strain 3"

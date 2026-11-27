@@ -22,6 +22,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.dominion.curses import curse_desecrator
 from aerona.engine.economy.loot import loot_temple
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.hooks import desecrated
 from aerona.engine.mythic.servitors import turned_back
 from aerona.engine.phase import Phase
@@ -68,6 +69,8 @@ async def turn_to_ruin(ctx: TickContext, settlement: EntityRow, sentence: str) -
     await add_flag(ctx.session, settlement.id, EntityFlag.ABANDONED, ctx.epoch)
     await add_flag(ctx.session, settlement.id, EntityFlag.RUIN, ctx.epoch)
     await retire(ctx.session, settlement, ctx.epoch, f"Epoch {ctx.epoch}: {sentence}; it turned to ruin.", append=True, close_bonds=True)
+    with flowing(FlowCategory.TRANSFORMATION):
+        set_stats(settlement, population=0)
     return remains
 
 

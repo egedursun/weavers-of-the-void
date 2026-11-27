@@ -163,15 +163,15 @@ async def target_for(ctx: TickContext, passion: CreatorPassion) -> EntityRow | N
     return None
 
 
-async def passion_sign(ctx: TickContext, creator: CreatorRow) -> CreatorPassion | None:
+async def passion_sign(ctx: TickContext, creator: CreatorRow, *, signed: bool = False) -> CreatorPassion | None:
     table = ctx.rules.creator
     rng = ctx.rng("passion_sign")
     if not creator.passions or not rng.chance(table.passion_sign_chance):
         return None
     passion = rng.pick(list(creator.passions))
     if passion is P.SILENCE:
-        await silence(ctx, creator, True)
-        return passion
+        await silence(ctx, creator, not signed)
+        return None
     target = await (freed_or_kept(ctx, passion) if passion in KEPT_OR_FREED_PASSIONS else target_for(ctx, passion))
     if target is None:
         return None

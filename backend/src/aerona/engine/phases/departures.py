@@ -27,6 +27,7 @@ from aerona.engine.phase import Phase
     "table.polity_members",
     "table.polity_profiles",
     "table.polity_territories",
+    "table.state_changes",
     "table.vassalages",
 )
 @writes(

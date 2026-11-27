@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from sqlalchemy import or_, select
+from sqlalchemy import Select, or_, select
 
 from aerona.agents.context.recent_chronicle import prompt_text
 from aerona.agents.context.scope import Scope
@@ -12,7 +12,7 @@ from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.ages import ArcFigureRow, ArcRow, SetupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import GodConflictRow
-from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow
 from aerona.db.tables.node import NodeRow
@@ -370,11 +370,19 @@ async def payoff_facts(scope: Scope, epoch: int) -> list[FactPayoff]:
     return found
 
 
+def lived_in(epoch: int) -> Select[int]:
+    return select(CollectionIncidentRow.collection_id).join(IncidentRow, IncidentRow.id == CollectionIncidentRow.incident_id).where(IncidentRow.epoch == epoch)
+
+
 async def history_facts(scope: Scope, epoch: int) -> list[FactHistory]:
     rows = list(
         await scope.session.scalars(
             select(CollectionRow)
-            .where(CollectionRow.start_epoch <= epoch, or_(CollectionRow.end_epoch.is_(None), CollectionRow.end_epoch >= epoch))
+            .where(
+                CollectionRow.start_epoch <= epoch,
+                or_(CollectionRow.end_epoch.is_(None), CollectionRow.end_epoch >= epoch),
+                or_(CollectionRow.start_epoch == epoch, CollectionRow.end_epoch == epoch, CollectionRow.id.in_(lived_in(epoch))),
+            )
             .order_by(CollectionRow.start_epoch, CollectionRow.id)
             .limit(scope.rules.chronicle_audit.major_events)
         )

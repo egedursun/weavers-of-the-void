@@ -17,6 +17,8 @@ from aerona.engine.speech.seed import seed_humour
     "table.galaxies",
     "table.galaxy_clusters",
     "table.humour_styles",
+    "table.incident_participants",
+    "table.incidents",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.media_outlets",

@@ -647,6 +647,18 @@ async def test_goods_sent_as_aid_carry_grain_from_the_capital(session: AsyncSess
     assert await units_of(ctx, capital.id, CommodityKind.GRAIN) == 1000 - sent
 
 
+async def test_a_giver_with_an_empty_purse_sends_no_aid_worth_nothing(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    stricken = await town(session, world, "Brack", 1, BIG)
+    capital = await town(session, world, "Hollin", 3, BIG)
+    giver = await realm(session, world, [capital], None)
+    book = await RealmBook.load(session)
+    book.realms[giver.id].profile.treasury = 0
+    sent = await aid_from(ctx, giver, book.realms[giver.id], event=None, town=stricken, receiver=None, tally=ResilienceTally(), kind=AidKind.SHELTER)
+    assert sent is None
+    assert await session.scalar(select(ReliefAidRow)) is None
+
+
 async def test_fodder_crops_return_the_fixed_element_and_root_crops_draw_minerals(session: AsyncSession, world: CoreWorld) -> None:
     ctx = await surveyed(session)
     ground = await land(session, world, 0)

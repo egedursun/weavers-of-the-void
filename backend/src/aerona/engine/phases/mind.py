@@ -950,11 +950,13 @@ async def mind_ideas(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.age",
     "mortal.agility",
     "mortal.charisma",
     "mortal.creativity",
     "mortal.endurance",
     "mortal.intellect",
+    "mortal.lifespan",
     "mortal.perception",
     "mortal.strength",
     "mortal.willpower",
@@ -1318,6 +1320,8 @@ async def split_already(ctx: TickContext, people: EntityRow) -> bool:
 
 
 @reads(
+    "mortal.age",
+    "mortal.lifespan",
     "table.aim_kinds",
     "table.bonds",
     "table.conditions",
@@ -1467,8 +1471,9 @@ async def famine_aid(ctx: TickContext) -> None:
         for community in unheld(await canon(ctx.session, list(AID_TYPES)))
         if (await pressures_of(ctx.session, community.id)).get(PressureKind.HUNGER, 0) >= table.famine_aid_hunger
     ]
+    starving = {community.id for community in hungry}
     for community in hungry:
-        donor = await best_donor(ctx, atlas, community)
+        donor = await best_donor(ctx, atlas, community, starving)
         if donor is None:
             continue
         kindness = max(0.0, 1 + value_reading(await values_for(ctx.session, donor.id), ActKind.HOSPITALITY) / PERCENT)
@@ -1493,7 +1498,7 @@ async def famine_aid(ctx: TickContext) -> None:
     ctx.count("famine_aid", given)
 
 
-async def best_donor(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) -> EntityRow | None:
+async def best_donor(ctx: TickContext, atlas: RegionAtlas, community: EntityRow, starving: set[int]) -> EntityRow | None:
     table = ctx.rules.needs
     home = atlas.top_region(community.id)
     if home is None:
@@ -1503,7 +1508,7 @@ async def best_donor(ctx: TickContext, atlas: RegionAtlas, community: EntityRow)
     for region_id in sorted(nearby):
         for other_id in atlas.communities_in(region_id):
             other = await living_entity(ctx.session, other_id)
-            if other is None or other.id == community.id or other.entity_type not in AID_TYPES or held(other.id):
+            if other is None or other.id in starving or other.entity_type not in AID_TYPES or held(other.id):
                 continue
             if await BondRepository(ctx.session).exists_between(community.id, other.id, BondKind.ENEMY):
                 continue

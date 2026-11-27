@@ -901,6 +901,7 @@ PANTHEON_ACTIONS = (
     _sync(Meta("foreign_god:raid_temple", "Let a foreign god raze a temple", G.FOREIGN_GODS), pantheon.raid_temple, pantheon.TempleRaid, free, ()),
     _job(Meta("foreign_god:wake", "Wake a foreign god", G.FOREIGN_GODS), creation.wake_foreign_god, pantheon.ForeignGodTarget, free, ("ACT-173",)),
     _sync(Meta("son:relation", "Set two sons' relation", G.SONS), pantheon.relation, pantheon.SonRelation, free, ()),
+    _sync(Meta("son:send_essence", "Have a son send essence on", G.SONS), pantheon.send_essence_lever, pantheon.SonEssence, free, ()),
     _sync(Meta("son:outer_bargain", "Force or forbid a son's outer bargain", G.SONS), pantheon.outer_bargain, pantheon.OuterBargainOrder, free, ("PAN-022",)),
 )
 
@@ -1566,7 +1567,7 @@ MIND_ACTIONS = (
     _sync(Meta("body:consciousness", "Set or hold how awake a bearer is", G.ENTITIES), body.set_consciousness, body.SetConsciousness, free, ("F23",)),
     _sync(Meta("body:digit", "Take or give back a finger or toe", G.ENTITIES), body.set_digit, body.SetDigit, free, ("F23",)),
     _sync(Meta("body:handedness", "Set which hand a bearer leads with", G.ENTITIES), body.set_handedness, body.SetHandedness, free, ("F23",)),
-    _sync(Meta("affliction:give", "Lay a venom, curse, blessing or trauma", G.ENTITIES), afflictions.give, afflictions.GiveAffliction, free, ("F30",)),
+    _sync(Meta("affliction:give", "Lay an affliction of any kind", G.ENTITIES), afflictions.give, afflictions.GiveAffliction, free, ("F30",)),
     _sync(Meta("affliction:edit", "Move an affliction's stage, source or onset", G.ENTITIES), afflictions.edit, afflictions.EditAffliction, free, ("F30",)),
     _sync(Meta("affliction:hold", "Hold an affliction at its stage or let it run", G.ENTITIES), afflictions.hold, afflictions.HoldAffliction, free, ("F30",)),
     _sync(Meta("affliction:cure", "Cure an affliction", G.ENTITIES), afflictions.cure_action, afflictions.CureAffliction, free, ("F30",)),
@@ -1741,7 +1742,7 @@ ECONOMY_ACTIONS = (
     ),
     _sync(Meta("gathering_guest:remove", "Send a guest away from a gathering", G.SOCIETY), gatherings.remove_guest, gatherings.GuestTarget, free, ("F25",)),
     _sync(
-        Meta("collection:create", "Set down a history: a war, a plague, a wedding or any other", G.MEMORY),
+        Meta("collection:create", "Set down a history of any kind", G.MEMORY),
         gatherings.create_collection,
         gatherings.CollectionDraft,
         free,
@@ -3148,7 +3149,7 @@ LORE_ACTIONS = (
         Meta("discovery:incident", "Strike a community with a research incident", G.SOCIETY), discovery.cause_incident, discovery.CauseIncident, free, ("S8.4",)
     ),
     _sync(
-        Meta("discovery:design", "Grant a design of a ship, engine, building or pattern", G.SOCIETY),
+        Meta("discovery:design", "Grant a design of any kind", G.SOCIETY),
         discovery.grant_design,
         discovery.GrantDesign,
         free,
@@ -3773,7 +3774,7 @@ MADE_ACTIONS = (
     _sync(Meta("art:canonise", "Set an artwork among the classics, or strike it out", G.SOCIETY), made_things.canonise, made_things.Canonise, free, ("S7.4",)),
 )
 FOUNDATION_ACTIONS = (
-    _sync(Meta("war:incite", "Lay a war at a god's feet, or clear the blame", G.WARFARE), foundations.set_incitement, foundations.WarIncitement, free, ("W0",)),
+    _sync(Meta("war:incite", "Blame a god for a war, or clear the blame", G.WARFARE), foundations.set_incitement, foundations.WarIncitement, free, ("W0",)),
     _sync(
         Meta("world:date_golden_age", "Set when a world's golden age began", G.WORLDS),
         foundations.set_golden_age_date,

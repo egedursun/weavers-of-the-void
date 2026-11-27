@@ -4,6 +4,7 @@ from sys import maxsize
 
 from sqlalchemy import select
 
+from aerona.catalog.lore import REMEMBRANCE_DAY
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an, spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -247,7 +248,7 @@ async def war_lament(ctx: TickContext, scene: WarScene) -> EntityRow:
         MemorialForm.LAMENT,
         f"{scene.name} Lament",
         "lament",
-        f"{mourner.name if mourner is not None else 'The defeated'} mourned the defeat of {scene.name} and all it lost.",
+        f"{mourner.name if mourner is not None else 'The defeated'} mourned the defeat of {scene.name}.",
         location_id=seat_of(mourner),
         world_id=scene.event.world_id,
     )
@@ -344,7 +345,7 @@ async def remember_disaster(ctx: TickContext, event: EntityRow, form: MemorialFo
             ctx,
             MemorialForm.TRADITION,
             f"{name} Remembrance",
-            "day of remembrance",
+            REMEMBRANCE_DAY,
             f"Each year on the day of {name}, {keeper.name} marks what befell it.",
             location_id=None,
             world_id=event.world_id,
@@ -358,7 +359,7 @@ async def remember_disaster(ctx: TickContext, event: EntityRow, form: MemorialFo
         MemorialForm.TALE,
         f"{name} Tale",
         "disaster tale",
-        f"{name} was told and retold: what happened, who was saved and who was not.",
+        f"{name} was told and retold.",
         location_id=None,
         world_id=event.world_id,
     )

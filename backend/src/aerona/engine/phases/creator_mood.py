@@ -61,16 +61,18 @@ async def creator_mood(ctx: TickContext) -> None:
     update = compute_mood_update(ctx.rules, mood_of(creator), inputs)
     store_mood(creator, update.state)
     await store_breakdown(ctx.session, ctx.epoch, update.breakdown)
+    signed = False
     if creator.mood_anger >= rules.wrath_threshold and rng.chance(rules.wrath_sign_chance):
-        await wrath_sign(ctx, creator)
+        signed = await wrath_sign(ctx, creator) is not None
     if creator.mood_contentment >= rules.content_threshold and rng.chance(rules.content_sign_chance) and await grace_sign(ctx, creator) is not None:
         creator.mood_contentment = clamp_percent(creator.mood_contentment - rules.content_discharge)
-    if creator.mood_interest <= rules.indifferent_threshold:
-        await silence(ctx, creator, rng.chance(rules.silence_sign_chance))
+        signed = True
     if creator.mood_loneliness >= rules.lonely_threshold and rng.chance(rules.loneliness_sign_chance):
-        await lonely_dream(ctx, creator)
+        signed = await lonely_dream(ctx, creator) is not None or signed
+    signed = await passion_sign(ctx, creator, signed=signed) is not None or signed
+    if creator.mood_interest <= rules.indifferent_threshold:
+        await silence(ctx, creator, rng.chance(rules.silence_sign_chance) and not signed)
     await estranged_turn(ctx, creator)
-    await passion_sign(ctx, creator)
     await taboo_wrath(ctx, creator)
     await ctx.session.flush()
 

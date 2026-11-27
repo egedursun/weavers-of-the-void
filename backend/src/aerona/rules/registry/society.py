@@ -163,4 +163,5 @@ class SocietyRules(Spanned):
     love_rivalry_chance: float = rule(0.5, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Love or rivalry between two mortals in the same place (% per year)")
     love_share_pct: int = rule(55, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Share of these that are love (%)")
     love_min_age: int = rule(16, 0, 200, RuleGroup.HEROES_AND_MORTALS, "Minimum age of a mortal able to enter love or rivalry")
+    love_romance: int = rule(30, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Romance each of two mortals feels for the other when love grows between them")
     sat_justice_midpoint: int = rule(50, 0, 100, RuleGroup.ECONOMY, "Justice of laws that neither raises nor lowers class satisfaction")

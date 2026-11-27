@@ -181,7 +181,9 @@ async def left_by(ctx: TickContext, atlas: RegionAtlas, war: WarRow, tally: Arse
 async def after_wars(ctx: TickContext, tally: ArsenalTally) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     legacy = await fixup_due(ctx.session, LEGACY_FIXUP)
-    query = select(WarRow).where(WarRow.ended_epoch.is_not(None)) if legacy else select(WarRow).where(WarRow.ended_epoch == ctx.epoch)
+    left = select(WarRemnantRow.war_id).where(WarRemnantRow.war_id.is_not(None))
+    lately = select(WarRow).where(WarRow.ended_epoch.in_((ctx.epoch - 1, ctx.epoch)), WarRow.id.not_in(left))
+    query = select(WarRow).where(WarRow.ended_epoch.is_not(None)) if legacy else lately
     for war in list(await ctx.session.scalars(query.order_by(WarRow.id))):
         await left_by(ctx, atlas, war, tally)
     if legacy:

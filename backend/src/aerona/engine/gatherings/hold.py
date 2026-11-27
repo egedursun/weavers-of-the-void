@@ -776,7 +776,9 @@ def collection_role(holding: Holding, node: int) -> CollectionRole:
 async def rites_already_kept(ctx: TickContext, row: GatheringRow) -> CollectionRow | None:
     if row.kind not in FOR_THE_DEAD or row.honoured_node_id is None:
         return None
-    mourned = select(CollectionMemberRow.collection_id).where(CollectionMemberRow.node_id == row.honoured_node_id)
+    mourned = select(CollectionMemberRow.collection_id).where(
+        CollectionMemberRow.node_id == row.honoured_node_id, CollectionMemberRow.role == GUEST_ROLES[GuestRole.MOURNED]
+    )
     return await ctx.session.scalar(
         select(CollectionRow).where(CollectionRow.kind == GATHERING_COLLECTIONS[row.kind], CollectionRow.id.in_(mourned)).order_by(CollectionRow.id).limit(1)
     )

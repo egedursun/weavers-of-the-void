@@ -9,9 +9,11 @@ from aerona.db.tables.belonging import FugitiveRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.law_depth import PrisonerRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mortal import StressBreak
+from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.rules.registry import Rules
 
@@ -39,15 +41,15 @@ async def of_age_among(session: AsyncSession, mortals: Sequence[EntityRow]) -> l
     return [mortal for mortal in mortals if mortal.id not in young]
 
 
-def office_age_share(rules: Rules, mortal: EntityRow) -> int:
+def office_age_share(rules: Rules, mortal: EntityRow, ahead: int = 0) -> int:
     table = rules.peoples
     span = getattr(mortal.stats, "lifespan", None) or table.maturity_years + table.adult_years + table.elder_years
-    age = getattr(mortal.stats, "age", None) or 0
+    age = (getattr(mortal.stats, "age", None) or 0) + ahead
     return max(0, min(PERCENT, age * PERCENT // max(1, span)))
 
 
-def past_office_age(rules: Rules, mortal: EntityRow) -> bool:
-    return office_age_share(rules, mortal) >= rules.departures.retirement_age_share_pct
+def past_office_age(rules: Rules, mortal: EntityRow, ahead: int = 0) -> bool:
+    return office_age_share(rules, mortal, ahead) >= rules.departures.retirement_age_share_pct
 
 
 async def withdrawn_among(session: AsyncSession, ids: Iterable[int | None]) -> set[int]:
@@ -73,3 +75,14 @@ async def away_among(session: AsyncSession, ids: Iterable[int | None]) -> set[in
     for statement in (hiding, jailed, taken):
         away |= set(await session.scalars(statement))
     return away
+
+
+async def acting_for(session: AsyncSession, realm_id: int, ruler_id: int | None) -> int | None:
+    if ruler_id is None or await of_age(session, ruler_id):
+        return ruler_id
+    return await session.scalar(
+        select(OfficeRow.holder_entity_id)
+        .where(OfficeRow.polity_entity_id == realm_id, OfficeRow.kind == OfficeKind.REGENT, OfficeRow.holder_entity_id.is_not(None))
+        .order_by(OfficeRow.id)
+        .limit(1)
+    )

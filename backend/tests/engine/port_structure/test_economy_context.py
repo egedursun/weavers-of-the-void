@@ -112,7 +112,7 @@ async def test_inspection_and_mortal_context_carry_the_whole_economy(session: As
         "8% to Tinhollow",
         "Settlement: a town",
         "; treasury 120",
-        "market level 2",
+        "market quarter level 2",
         "310 adult bearing farmer (sick)",
         "farming 800 hands at 90%",
         "Grey Cough",

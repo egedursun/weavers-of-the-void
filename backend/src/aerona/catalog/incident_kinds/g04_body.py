@@ -172,7 +172,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "births.child",
         "{child} was born to {parent}.",
         roles=(role(R.CHILD), role(R.PARENT, many=True), role(R.HEALER, required=False)),
-        facts=(chosen("sex", SexKind), number("twin", U.COUNT), number("lifespan", U.YEARS), *BIRTH_FACTS),
+        facts=(chosen("sex", SexKind), number("twin", U.COUNT, required=False), number("lifespan", U.YEARS), *BIRTH_FACTS),
         steps=BIRTH_STEPS,
         clock=ProcessClock.INSTANT,
         feed=F.LIFE,
@@ -461,7 +461,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "healing.amputated",
-        "{patient} lost a festering {part} to surgery and lived.",
+        "{patient} lost the festering {part} to surgery and lived.",
         roles=(role(R.PATIENT), role(R.HEALER, required=False)),
         facts=(chosen("part", BodyPart), number("infected_epochs", U.COUNT), chosen("medicine", MedicineTier)),
         steps=frozenset({A.AMPUTATE}),

@@ -17,6 +17,8 @@ from aerona.domain.enums.mind import ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause, LifeStage
 from aerona.domain.enums.structure import StructureKind
+from aerona.domain.models.calendar import epoch_end_year, epoch_start_year
+from aerona.domain.models.moment import Moment
 from aerona.engine.body.customs import people_of
 from aerona.engine.childhood.standing import age_of, crossed, standing_of
 from aerona.engine.context import TickContext
@@ -24,6 +26,7 @@ from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import shift_stat
+from aerona.engine.recording.births import birth_year
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
@@ -85,6 +88,15 @@ def survival_of(ctx: TickContext, care: InfantCareRow | None) -> int:
     return clamp_int(table.infant_survival_pct + steps * table.feeding_survival_shift, 0, PERCENT)
 
 
+async def at_age(ctx: TickContext, child: EntityRow, age: int) -> Moment | None:
+    born = await birth_year(ctx.session, child.id)
+    if born is None:
+        return None
+    years = ctx.rules.time.years_per_epoch
+    start = epoch_start_year(ctx.epoch, years)
+    return Moment(min(max(born + age, start, born), epoch_end_year(ctx.epoch, years) - 1))
+
+
 async def keep_infants(ctx: TickContext, child: EntityRow, folk_id: int | None, tally: ChildhoodTally) -> None:
     care = await ctx.session.get(InfantCareRow, folk_id) if folk_id is not None else None
     survival = survival_of(ctx, care)
@@ -93,7 +105,13 @@ async def keep_infants(ctx: TickContext, child: EntityRow, folk_id: int | None, 
         tally.infants_lost += 1
         return
     if care is not None and crossed(child, care.weaning_age, ctx.rules.time.years_per_epoch):
-        await record(ctx, "childhood.weaned", roles={IncidentRole.SUBJECT: child.id}, facts={"feeding": care.feeding, "age": care.weaning_age})
+        await record(
+            ctx,
+            "childhood.weaned",
+            roles={IncidentRole.SUBJECT: child.id},
+            facts={"feeding": care.feeding, "age": care.weaning_age},
+            at_moment=await at_age(ctx, child, care.weaning_age),
+        )
         tally.weaned += 1
 
 
@@ -103,12 +121,24 @@ async def keep_standing(ctx: TickContext, child: EntityRow, profile: MortalProfi
         return
     span = ctx.rules.time.years_per_epoch
     if crossed(child, standing.naming_age, span):
-        await record(ctx, "childhood.named", roles={IncidentRole.SUBJECT: child.id}, facts={"name": child.name, "age": standing.naming_age})
+        await record(
+            ctx,
+            "childhood.named",
+            roles={IncidentRole.SUBJECT: child.id},
+            facts={"name": child.name, "age": standing.naming_age},
+            at_moment=await at_age(ctx, child, standing.naming_age),
+        )
         tally.named += 1
     if profile.life_stage not in GROWING or standing.labour_share <= 0 or age_of(child) < standing.work_age:
         return
     if crossed(child, standing.work_age, span):
-        await record(ctx, "childhood.put_to_work", roles={IncidentRole.SUBJECT: child.id}, facts={"age": standing.work_age})
+        await record(
+            ctx,
+            "childhood.put_to_work",
+            roles={IncidentRole.SUBJECT: child.id},
+            facts={"age": standing.work_age},
+            at_moment=await at_age(ctx, child, standing.work_age),
+        )
     table = ctx.rules.childhood
     loss = round_half_up(table.labour_schooling_loss_pct * standing.labour_share / (PERCENT * TEN))
     if loss and "education" not in (profile.locked or []):

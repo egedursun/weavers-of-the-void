@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.cosmos import AIR
 from aerona.catalog.planetary_cycles import CYCLES, cycles_moving
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.evolution import WorldCycleRow
@@ -8,7 +9,7 @@ from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.domain.enums.evolution import CycleEffect
 from aerona.engine.context import TickContext
-from aerona.engine.cosmos.cycles import BALANCE, CycleTally, WorldState, first_stock, note_band, thin_air, turn_cycles
+from aerona.engine.cosmos.cycles import BALANCE, CycleTally, WorldState, breathable_target, first_stock, note_band, thin_air, turn_cycles
 from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.manual import manual_context
 from aerona.rules.registry import Rules
@@ -68,16 +69,23 @@ async def test_a_cycle_crossing_a_band_is_told_and_thin_air_thins_the_world(sess
     told = list(await session.scalars(select(IncidentRow.kind).where(IncidentRow.kind == "world.cycle_shifted")))
     assert len(told) == 1
     physics = await physics_of(session, world)
-    physics.oxygen = 21
+    base = AIR[world.world.atmosphere][1]["oxygen"]
+    physics.oxygen = base
     row.stock = RULES.cycles.oxygen_breath_floor - 1
-    await thin_air(ctx, world.world.id, physics, {air_cycle: row})
-    assert physics.oxygen == 21 - RULES.cycles.air_thin_step
+    await thin_air(ctx, world.world, physics, {air_cycle: row})
+    assert physics.oxygen == base - RULES.cycles.air_thin_step
     row.stock = RULES.cycles.oxygen_breath_floor + 1
-    await thin_air(ctx, world.world.id, physics, {air_cycle: row})
-    assert physics.oxygen == 21 - RULES.cycles.air_thin_step
+    await thin_air(ctx, world.world, physics, {air_cycle: row})
+    assert physics.oxygen == base
+    row.stock = RULES.cycles.oxygen_breath_floor // 2
+    for _ in range(base * 3):
+        await thin_air(ctx, world.world, physics, {air_cycle: row})
+    assert physics.oxygen == breathable_target(RULES, world.world, row.stock) > 0
     physics.locked = ["oxygen"]
     row.stock = 0
-    await thin_air(ctx, world.world.id, physics, {air_cycle: row})
-    assert physics.oxygen == 21 - RULES.cycles.air_thin_step
+    held = physics.oxygen
+    await thin_air(ctx, world.world, physics, {air_cycle: row})
+    assert physics.oxygen == held
     await session.flush()
-    assert "world.air_thinned" in set(await session.scalars(select(IncidentRow.kind)))
+    kinds = set(await session.scalars(select(IncidentRow.kind)))
+    assert {"world.air_thinned", "world.air_freshened"} <= kinds

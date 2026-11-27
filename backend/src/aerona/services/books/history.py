@@ -4,19 +4,22 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.grammar import an, spoken
+from aerona.core.grammar import an, several, spoken
 from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow, GodConflictRow
 from aerona.db.tables.ledger import LedgerEntryRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
+from aerona.domain.enums.entity import ENDED_STATUSES
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import GodConflictOutcome
 from aerona.services.narrative import clean_lore
+from aerona.services.player.catalog import ACTIONS_BY_ID
 
 CREATOR_HAND_KINDS = (ChronicleKind.CREATOR_HAND, ChronicleKind.DIVINE_SIGN, ChronicleKind.ORDER)
 SON_FATE_KINDS = (
@@ -49,7 +52,8 @@ async def creator_hand(session: AsyncSession) -> list[HandEpoch]:
     for entry in await session.scalars(
         select(LedgerEntryRow).where(LedgerEntryRow.actor_kind == ActorKind.CREATOR).order_by(LedgerEntryRow.epoch, LedgerEntryRow.id)
     ):
-        label = entry.tool.replace("_", " ").replace(":", " ")
+        spec = ACTIONS_BY_ID.get(entry.tool)
+        label = spec.title if spec is not None else spoken(entry.tool.replace(":", "_"))
         text = f"{label}: {entry.input_summary}" if entry.input_summary else label
         epochs.setdefault(entry.epoch, HandEpoch(entry.epoch)).deeds.append(HandDeed(text, undone=entry.undone))
     lines = await session.scalars(
@@ -76,14 +80,17 @@ async def son_fate(session: AsyncSession, son: SonRow, names: dict[int, str]) ->
     if son.reputation_label is not None:
         lines.append(f"Sees the Creator as: {an(spoken(son.reputation_label))} god")
     if son.anchor_entity_id is not None:
-        lines.append(f"Anchor: {names.get(son.anchor_entity_id, '?')}")
-    if son.current_world_id is not None:
-        lines.append(f"World: {names.get(son.current_world_id, '?')}")
+        anchor = await session.get(EntityRow, son.anchor_entity_id)
+        lost = f" (perished in Epoch {anchor.end_epoch})" if anchor is not None and anchor.status in ENDED_STATUSES and anchor.end_epoch is not None else ""
+        if son.anchor_entity_id in names:
+            lines.append(f"Anchor: {names[son.anchor_entity_id]}{lost}")
+    if son.current_world_id in names:
+        lines.append(f"World: {names[son.current_world_id]}")
     worshippers = await session.scalar(
         select(func.count()).select_from(BondRow).where(BondRow.kind == BondKind.WORSHIPS, BondRow.target_node_id == son.id, BondRow.state == BondState.ACTIVE)
     )
     if worshippers:
-        lines.append(f"Worshipped by {worshippers}")
+        lines.append(f"Worshipped by {several(worshippers, 'follower', 'followers')}")
     rows = await session.scalars(
         select(ChronicleRow).where(ChronicleRow.son_id == son.id, ChronicleRow.kind.in_(SON_FATE_KINDS), shown_lines()).order_by(ChronicleRow.id)
     )

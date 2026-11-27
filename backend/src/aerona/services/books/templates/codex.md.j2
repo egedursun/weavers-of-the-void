@@ -196,6 +196,9 @@
 
 {% if article.description %}
 {{ article.description | prose }}
+{% if article.written_in %}
+*As written in epoch {{ article.written_in }}.*
+{% endif %}
 
 {% endif %}
 {% if article.stats %}
@@ -764,7 +767,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 |---|---|
 | {{ war.attackers | join(", ") | cell }} | {{ war.defenders | join(", ") | cell }} |
 
-Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.war.violence is not none %} · Violence **{{ war.war.violence }}**{% endif %}{% if war.victor %} · Victor **{{ war.victor }}**{% endif %}
+Battles **{{ war.fought }}** · Momentum **{{ war.war.score }}**{% if war.war.violence is not none %} · Violence **{{ war.war.violence }}**{% endif %}{% if war.victor %} · Victor **{{ war.victor }}**{% endif %}
 
 
 {% if war.battles %}

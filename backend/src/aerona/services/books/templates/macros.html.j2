@@ -117,6 +117,7 @@
 {{ thumb(article.cover, article.entity.name, links) }}
 <p class="meta small">{{ article.meta | join(" · ") }}</p>
 {{ article.description | paragraphs }}
+{% if article.written_in %}<p class="meta small">As written in epoch {{ article.written_in }}.</p>{% endif %}
 {{ stats(article.stats) }}
 {% if article.plan %}<figure class="plan"><div class="ground">{{ article.plan.figure }}</div><figcaption>{{ article.plan.caption }}</figcaption></figure>
 <dl class="facts">{% for label, value in article.plan.facts %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif %}

@@ -455,7 +455,7 @@ class ProstheticsRules:
 
 @dataclass(frozen=True)
 class MaimedRules:
-    return_pct: int = rule(30, 0, 100, G, "Share of soldiers lost in battle who come home maimed rather than dead (%)")
+    return_pct: int = rule(30, 0, 100, G, "Share of soldiers wounded in battle who come home maimed (%)")
     one_armed: int = rule(18, 0, 100, G, "Maimed veterans: weight of the one-armed")
     one_legged: int = rule(14, 0, 100, G, "Maimed veterans: weight of the one-legged")
     one_eyed: int = rule(16, 0, 100, G, "Maimed veterans: weight of the one-eyed")

@@ -58,7 +58,9 @@ from aerona.engine.military.causes import press_claim_war
 from aerona.engine.military.support import new_side
 from aerona.engine.mind.book import traits_of
 from aerona.engine.mortal.kin import children_of, siblings_of
+from aerona.engine.mortal.life import years_to_step
 from aerona.engine.polity.book import Realm, RealmBook, sex_of
+from aerona.engine.polity.divided_loyalty import heads_a_foe
 from aerona.engine.polity.formation import set_ruler
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.oaths import break_on, swear
@@ -149,9 +151,11 @@ async def pressed_candidate(ctx: TickContext, realm: Realm, candidates: list[Ent
 async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: EntityRow | None, *, by_id: int | None, reason: str) -> None:
     if holder is not None and ctx.rules.citizenship.rightless_office and not await has_right(ctx.session, holder.id, MemberRight.OFFICE, realm.entity.id):
         return
-    if holder is not None and office.kind is not OfficeKind.RULER and past_office_age(ctx.rules, holder):
+    if holder is not None and office.kind is not OfficeKind.RULER and past_office_age(ctx.rules, holder, years_to_step(ctx.environment)):
         return
     if holder is not None and holder.id in await away_among(ctx.session, [holder.id]):
+        return
+    if holder is not None and await heads_a_foe(ctx.session, holder.id, realm.entity.id):
         return
     kept = await reserved_class(ctx.session, realm.entity.id)
     if holder is not None and kept is not None and holder.social_class is not kept and office.kind not in KEPT_OFFICES:

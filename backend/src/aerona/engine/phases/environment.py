@@ -296,7 +296,7 @@ def refresh_climate(
         deltas=around.deltas,
         current=env.current,
     )
-    fresh = {mode: clamp_int(value + around.pass_shift, 0, PERCENT) for mode, value in passability_of(rules, ground).items()}
+    fresh = {mode: clamp_int(value + around.pass_shift, 0, PERCENT) if value > 0 else 0 for mode, value in passability_of(rules, ground).items()}
     env.passability = {**fresh, **{mode: value for mode, value in held.items() if value is not None}}
     if "defensibility" not in locked:
         env.defensibility = defensibility_of(rules, roughness=env.roughness, forest=env.forest_cover, river=env.river_class, chokepoints=around.chokepoints)

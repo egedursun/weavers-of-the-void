@@ -222,12 +222,12 @@ async def test_long_job_success_and_refund(database: Database) -> None:
     async with database.write() as session:
         son = await session.get(SonRow, realm.son_id)
         assert son is not None
-        son.essence = 300
+        son.essence = rules.costs.bear_child + 1
     retry = await son_toolkit(database, realm.son_id, action_points=4, ports=ToolPorts(child_birth=FakeBirth("the womb of stars closed")))
     outcome = await retry.runtime.call("birth_child", {"inspiration": "Again, from the salt of my tears a child"})
     assert outcome.is_error
     assert "womb of stars closed" in outcome.text
-    assert (await son_row(database, realm.son_id)).essence == 300
+    assert (await son_row(database, realm.son_id)).essence == rules.costs.bear_child + 1
     await retry.settle_long_jobs()
 
 

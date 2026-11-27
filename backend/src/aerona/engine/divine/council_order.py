@@ -189,7 +189,7 @@ async def duel(ctx: TickContext, god_id: int) -> None:
         select(SonRow).where(SonRow.id != god_id, SonRow.status == SonStatus.ACTIVE).order_by(SonRow.level.desc(), SonRow.id).limit(1)
     )
     if champion is not None and await ctx.session.get(SonRow, god_id) is not None:
-        await SonRepository(ctx.session).change_relation(champion.id, god_id, -ctx.rules.council.duel_relation, "called out before the council")
+        await SonRepository(ctx.session).change_relation(champion.id, god_id, -ctx.rules.council.duel_relation)
 
 
 async def divine_war(ctx: TickContext, god_id: int) -> None:

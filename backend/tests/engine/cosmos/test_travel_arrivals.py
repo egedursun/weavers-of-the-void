@@ -11,6 +11,7 @@ from aerona.db.tables.records import IncidentStepRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import StepAction, StepOutcome
 from aerona.domain.enums.society import KnowledgeBranch
@@ -19,7 +20,8 @@ from aerona.domain.models.entity_stats import ItemStats, MortalStats, PeopleStat
 from aerona.engine.cosmos.routes import JourneySpec, start_journey
 from aerona.engine.phases import travel as travel_module
 from aerona.engine.phases.travel import journeys
-from aerona.engine.services.community_relations import relation
+from aerona.engine.services.community_relations import change_relation, relation
+from aerona.engine.services.war import hostility_reason
 from aerona.rules.registry import Rules
 from tests.engine.cosmos.factories import Cosmos, make_entity, make_region, make_route, make_world, teach, tick, tuned
 
@@ -145,6 +147,7 @@ async def test_conquest_is_seen_as_invasion_and_opens_a_war(session: AsyncSessio
     assert await BondRepository(session).exists_between(outpost.id, folk.id, BondKind.ENEMY)
     assert await relation(session, ctx.rules, people.id, folk.id) < 0
     assert await meeting(session, folk.id) is StepOutcome.REFUSED
+    assert await hostility_reason(session, outpost.id, folk.id) == "first contact: invasion"
 
 
 async def test_uneasy_first_contact_lowers_the_relation_slightly(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
@@ -175,3 +178,13 @@ async def test_friendly_first_contact_exchanges_culture_both_ways(session: Async
     assert await bonds.exists_between(folk.id, brought.id, BondKind.KNOWS)
     assert await bonds.exists_between(people.id, native_lore.id, BondKind.KNOWS)
     assert people.id in await role_holders(session, "culture.contact", IncidentRole.ACTOR, IncidentRole.TARGET)
+
+
+async def test_an_invasion_is_a_first_contact_only_between_peoples_who_never_met(session: AsyncSession, cosmos: Cosmos, rules: Rules) -> None:
+    people, folk, _, ctx = await voyage(session, cosmos, rules, JourneyIntent.CONQUEST)
+    assert folk is not None
+    await change_relation(ctx, people.id, folk.id, -1, MemoryKind.ILL_WILL, note="uneasy first contact")
+    await journeys(ctx)
+    journey = await session.scalar(select(JourneyRow))
+    assert journey is not None and journey.result_entity_id is not None
+    assert await hostility_reason(session, journey.result_entity_id, folk.id) == "invasion from beyond the world"

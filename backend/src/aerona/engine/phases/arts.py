@@ -169,6 +169,7 @@ async def monster_contracts(ctx: TickContext) -> None:
     "celestial.cycle",
     "celestial.influence",
     "celestial.visibility",
+    "mortal.age",
     "mortal.perception",
     "mortal.willpower",
     "settlement.population",

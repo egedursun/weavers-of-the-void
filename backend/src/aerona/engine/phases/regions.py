@@ -13,6 +13,7 @@ from aerona.engine.environment.memory_effects import answer_memories
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.standing import ended_ids
 from aerona.engine.recording.record import record
 
 BACKFILL_FIXUP = "region.terrain_backfill"
@@ -175,7 +176,12 @@ async def region_survey(ctx: TickContext) -> None:
 )
 async def danger_harm(ctx: TickContext) -> None:
     scene = await _scene(ctx)
-    perilous = await dangers.dangers_by_region(ctx.session)
+    gone = set(await ctx.session.scalars(ended_ids()))
+    perilous = {
+        region: kept
+        for region, rows in (await dangers.dangers_by_region(ctx.session)).items()
+        if (kept := [row for row in rows if row.source_node_id not in gone])
+    }
     tally = await perils.harm_settlers(ctx, scene.atlas, perilous, scene.regions)
     works = await perils.harm_works(ctx, perilous, scene.grounds)
     ctx.count("danger_fields", works.fields)
@@ -208,6 +214,8 @@ async def danger_harm(ctx: TickContext) -> None:
     "settlement.population",
     "spirit.unrest",
     "table.afflictions",
+    "table.armies",
+    "table.army_officers",
     "table.army_profiles",
     "table.army_units",
     "table.assistive_aids",

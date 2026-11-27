@@ -46,16 +46,16 @@ DIED = "{dead:no one|one person|# people} died"
 RESEARCH_INCIDENT_LINES = total(
     ResearchIncident,
     {
-        ResearchIncident.LEAK: "The secret{technique:? of #} leaked from the scholars of {subject}.",
-        ResearchIncident.RELEASED_BEAST: "A beast got loose from the work of the scholars of {subject}.",
-        ResearchIncident.PLAGUE: "A sickness got loose from the work of the scholars of {subject}.",
-        ResearchIncident.BACKLASH: "A working turned back on the scholars of {subject}.",
-        ResearchIncident.FIRE: f"A fire broke out in the workshops of the scholars of {{subject}}; {DIED}.",
-        ResearchIncident.EXPLOSION: f"An explosion struck the scholars of {{subject}}; {DIED}.",
-        ResearchIncident.POISONING: f"A poisoning struck the scholars of {{subject}}; {DIED}.",
-        ResearchIncident.SUMMONING_GONE_WRONG: f"A summoning by the scholars of {{subject}} went wrong; {DIED}.",
-        ResearchIncident.STOLEN: "A rival stole the work{technique:? on #} of the scholars of {subject}.",
-        ResearchIncident.CHANCE_FIND: "The scholars of {subject} made a find by chance{technique:? toward #}.",
+        ResearchIncident.LEAK: "The secret{technique:? of #} leaked from {subject}.",
+        ResearchIncident.RELEASED_BEAST: "A beast got loose from the work of {subject}.",
+        ResearchIncident.PLAGUE: "A sickness got loose from the work of {subject}.",
+        ResearchIncident.BACKLASH: "A working turned back on {subject}.",
+        ResearchIncident.FIRE: f"A fire broke out in the workshops of {{subject}}; {DIED}.",
+        ResearchIncident.EXPLOSION: f"An explosion struck the work of {{subject}}; {DIED}.",
+        ResearchIncident.POISONING: f"A poisoning struck the work of {{subject}}; {DIED}.",
+        ResearchIncident.SUMMONING_GONE_WRONG: f"A summoning by {{subject}} went wrong; {DIED}.",
+        ResearchIncident.STOLEN: "The work{technique:? on #} of {subject} was stolen.",
+        ResearchIncident.CHANCE_FIND: "{subject} made a find by chance{technique:? toward #}.",
     },
 )
 
@@ -184,7 +184,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "discovery.incident_",
             G.KNOWLEDGE,
-            "{incident:An} struck the scholars of {subject}; {dead:person|people} died.",
+            "{incident:An} struck the work of {subject}; {dead:person|people} died.",
             roles=(RoleSpec(R.SUBJECT),),
             facts=(
                 FactSpec("incident", FactValue.ENUM, enum=ResearchIncident),
@@ -493,7 +493,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "learning.migrated",
         G.KNOWLEDGE,
-        "{actor} left {origin}, where learning was restricted, for a freer house in {destination}.",
+        "{actor} left {origin} for the freer house of learning in {destination}, carrying {techniques_carried:no technique|one technique|# techniques}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.ORIGIN), RoleSpec(R.DESTINATION)),
         facts=(
             FactSpec("techniques_carried", FactValue.NUMBER, FactUnit.COUNT),
@@ -590,7 +590,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.awakened",
         G.KNOWLEDGE,
-        "Something woke in {subject}: it began to want.",
+        "A will of its own emerged in {subject}, at a capacity of {capacity}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("capacity", FactValue.NUMBER, FactUnit.PERCENT),),
     ),
@@ -692,7 +692,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.movement",
         G.KNOWLEDGE,
-        "{actor} rose against {target} with the made minds who sought a higher standing.",
+        "{actor} rose against {target}, held at a lower standing than it sought.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
         facts=(FactSpec("bond_loss", FactValue.NUMBER, FactUnit.STANDING), FactSpec("wanted", FactValue.NUMBER, FactUnit.NONE)),
     ),
@@ -851,7 +851,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "rumour.alarm",
         G.KNOWLEDGE,
-        "Word reached {receiver} that the host of {opponent} was near; they made ready and called on their friends.",
+        "Word reached {receiver} that the host of {opponent} was near.",
         roles=(RoleSpec(R.RECEIVER), RoleSpec(R.OPPONENT)),
         facts=(),
     ),
@@ -1184,7 +1184,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.keep_secret_of",
         G.KNOWLEDGE,
-        "{actor} took up the keeping of a hidden truth.",
+        "{actor} became a keeper of a truth.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(),
         chronicle_kind=K.FATE,

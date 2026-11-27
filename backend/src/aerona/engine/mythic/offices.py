@@ -25,6 +25,7 @@ from aerona.domain.enums.mythic import CosmicOffice, OfficeChoice
 from aerona.domain.enums.nature_kinds import OfficeDuty
 from aerona.domain.enums.son import SonStatus
 from aerona.engine.context import TickContext
+from aerona.engine.gods.essence import endow
 from aerona.engine.kinds.nature import office_duty
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import canon
@@ -76,8 +77,7 @@ async def office_power(ctx: TickContext, god_id: int | None, form: SpellForm) ->
 async def give_essence(ctx: TickContext, god_id: int, amount: int) -> int:
     son = await ctx.session.get(SonRow, god_id)
     if son is not None:
-        son.essence += amount
-        return amount
+        return endow(ctx.rules, son, amount)
     creator = await ctx.session.get(CreatorRow, god_id)
     if creator is not None:
         creator.essence += amount

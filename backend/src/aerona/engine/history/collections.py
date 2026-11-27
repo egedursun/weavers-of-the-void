@@ -20,6 +20,7 @@ from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.node import NodeRow
 from aerona.db.tables.records import IncidentFactRow
 from aerona.db.write_guard import held
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.intrigue import SchemePhase
 from aerona.domain.enums.modifier import IncidentRole
@@ -31,6 +32,7 @@ TEN_THOUSAND = 10000
 TITLED_NAMES = 2
 NAMED_BY_FACT: Mapping[CollectionKind, str] = MappingProxyType({CollectionKind.WAR: "war"})
 BY_PRODUCT = frozenset({CollectionKind.FOUNDING})
+NAMED_BY_AFFLICTION = frozenset({CollectionKind.PLAGUE})
 
 
 @dataclass
@@ -144,6 +146,51 @@ async def members_of(ctx: TickContext, collection_id: int) -> set[int]:
     return set(await ctx.session.scalars(select(CollectionMemberRow.node_id).where(CollectionMemberRow.collection_id == collection_id)))
 
 
+async def roles_of(ctx: TickContext, collection_id: int) -> dict[int, CollectionRole]:
+    rows = await ctx.session.execute(select(CollectionMemberRow.node_id, CollectionMemberRow.role).where(CollectionMemberRow.collection_id == collection_id))
+    return {node: role for node, role in rows}
+
+
+async def last_year(ctx: TickContext, collection_id: int) -> int | None:
+    return await ctx.session.scalar(
+        select(IncidentRow.year)
+        .join(CollectionIncidentRow, CollectionIncidentRow.incident_id == IncidentRow.id)
+        .where(CollectionIncidentRow.collection_id == collection_id, IncidentRow.year.is_not(None))
+        .order_by(IncidentRow.year.desc())
+        .limit(1)
+    )
+
+
+async def same_history(ctx: TickContext, kind: CollectionKind, found: CollectionRow, members: Mapping[int, CollectionRole], name: str | None) -> bool:
+    if name is not None:
+        return found.name == name
+    present = await roles_of(ctx, found.id)
+    if kind in BY_PRODUCT:
+        products = {node for node, role in members.items() if role is CollectionRole.PRODUCT}
+        return bool(products & set(present))
+    titled, kept = set(titled_nodes(kind, members)), set(titled_nodes(kind, present))
+    if titled and kept:
+        return bool(titled & kept)
+    return bool(set(members) & set(present))
+
+
+async def lived_this_epoch(ctx: TickContext, collection_id: int) -> bool:
+    found = await ctx.session.scalar(
+        select(CollectionIncidentRow.incident_id)
+        .join(IncidentRow, IncidentRow.id == CollectionIncidentRow.incident_id)
+        .where(CollectionIncidentRow.collection_id == collection_id, IncidentRow.epoch == ctx.epoch)
+        .limit(1)
+    )
+    return found is not None
+
+
+async def within_window(ctx: TickContext, found: CollectionRow, year: int | None) -> bool:
+    if year is None or found.start_epoch == ctx.epoch or await lived_this_epoch(ctx, found.id):
+        return True
+    last = await last_year(ctx, found.id)
+    return last is None or abs(year - last) <= ctx.rules.collections.join_window_years
+
+
 async def nest(ctx: TickContext, row: CollectionRow, members: set[int]) -> bool:
     if row.parent_id is not None or "parent_id" in row.locked:
         return False
@@ -165,13 +212,13 @@ async def join_or_open(
     source_key: str,
     tally: CollectionTally,
     name: str | None = None,
+    year: int | None = None,
 ) -> CollectionRow | None:
     since = ctx.epoch - ctx.rules.collections.join_window
-    wanted = {node for node, role in members.items() if role is CollectionRole.PRODUCT} if kind in BY_PRODUCT else set(members)
     for found in await open_of(ctx, [kind], world_id, since):
         if found.locked and "members" in found.locked:
             continue
-        if (found.name == name) if name is not None else bool(wanted & await members_of(ctx, found.id)):
+        if await same_history(ctx, kind, found, members, name) and await within_window(ctx, found, year):
             await add_members(ctx, found, members)
             await add_places(ctx, found, places)
             tally.joined += 1
@@ -197,6 +244,15 @@ async def participants(ctx: TickContext, incident_ids: list[int]) -> dict[int, d
 
 
 async def own_name(ctx: TickContext, kind: CollectionKind, incident: IncidentRow) -> str | None:
+    if kind in NAMED_BY_AFFLICTION:
+        sickness = await ctx.session.scalar(
+            select(EntityRow.name)
+            .join(IncidentParticipantRow, IncidentParticipantRow.node_id == EntityRow.id)
+            .where(IncidentParticipantRow.incident_id == incident.id, EntityRow.entity_type == EntityType.DISEASE)
+            .order_by(EntityRow.id)
+            .limit(1)
+        )
+        return f"{spoken(kind).capitalize()} of {sickness}" if sickness is not None else None
     if kind not in NAMED_BY_FACT:
         return None
     named = await ctx.session.scalar(
@@ -229,6 +285,7 @@ async def gather_incidents(ctx: TickContext, tally: CollectionTally) -> None:
             source_key=incident.kind,
             tally=tally,
             name=await own_name(ctx, kind, incident),
+            year=incident.year,
         )
         if found is not None:
             ctx.session.add(CollectionIncidentRow(collection_id=found.id, incident_id=incident.id))

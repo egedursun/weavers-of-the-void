@@ -27,6 +27,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import God, domains_of, faithful_communities, god_of, living_gods
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
+from aerona.engine.primitives.standing import ended_ids
 from aerona.engine.recording.record import record
 
 W = DivineWoundKind
@@ -205,7 +206,7 @@ async def heal_wounds(ctx: TickContext) -> int:
         if drained:
             drain(god, drained * table.drain_pct // PERCENT)
         for row in wounds:
-            if "healed" in row.locked:
+            if "healed" in row.locked or row.epoch == ctx.epoch:
                 continue
             row.healed = clamp_int(row.healed + gain * PERCENT / max(1, row.severity), 0, PERCENT)
             if row.healed >= PERCENT:
@@ -266,11 +267,20 @@ async def worship_wounds(ctx: TickContext) -> int:
     for god in await living_gods(ctx.session):
         if held(god.id):
             continue
-        cults = list(
+        worship = list(
             await ctx.session.scalars(
-                select(BondRow.source_node_id).where(BondRow.target_node_id == god.id, BondRow.kind == BondKind.WORSHIPS).order_by(BondRow.source_node_id)
+                select(BondRow)
+                .where(
+                    BondRow.target_node_id == god.id,
+                    BondRow.kind == BondKind.WORSHIPS,
+                    BondRow.state == BondState.ACTIVE,
+                    BondRow.source_node_id.not_in(ended_ids()),
+                )
+                .order_by(BondRow.id)
             )
         )
+        cults = sorted({bond.source_node_id for bond in worship})
+        splitter = worship[-1].source_node_id if worship else None
         temples = select(CultHoldingRow.holding_entity_id).where(CultHoldingRow.cult_entity_id.in_(cults), CultHoldingRow.kind == HoldingKind.TEMPLE)
         ruined = await ctx.session.scalar(
             select(EntityRow.id).where(EntityRow.id.in_(temples), EntityRow.status != EntityStatus.CANON, EntityRow.end_epoch == ctx.epoch).limit(1)
@@ -285,7 +295,7 @@ async def worship_wounds(ctx: TickContext) -> int:
             if not ctx.rng(f"divine_wound.{kind.value}.{god.id}.{ctx.epoch}").chance(table.worship_wound_pct):
                 continue
             if (
-                await inflict(ctx, god, kind, cause, severity=table.worship_wound_severity, cause_node_id=ruined if kind is W.DESECRATED_SEAT else None)
+                await inflict(ctx, god, kind, cause, severity=table.worship_wound_severity, cause_node_id=ruined if kind is W.DESECRATED_SEAT else splitter)
                 is not None
             ):
                 wounded += 1

@@ -7,10 +7,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.domain import REVOLT_CAUSES
-from aerona.catalog.life_traits import CAPTIVE_STATUS_TRAITS, having
+from aerona.catalog.life_traits import CAPTIVE_STATUS_TRAITS, FACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.constants.warfare import ARMY_NAME_TEMPLATE, LOG_FLOOR, WAR_NAME_TEMPLATE
 from aerona.core.errors import ConflictError, NotFoundError, ValidationFailedError
+from aerona.db.faction_kinds import kind_of
 from aerona.db.read_memo import memoized
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
@@ -24,7 +25,7 @@ from aerona.domain.enums.body import Capacity
 from aerona.domain.enums.bond import BondKind, BondRole, BondState
 from aerona.domain.enums.customs import GradeDuty
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityFlag, EntityType
-from aerona.domain.enums.life_traits import CaptiveStatusTrait
+from aerona.domain.enums.life_traits import CaptiveStatusTrait, FactionKindTrait
 from aerona.domain.enums.limits import PERCENT_MAX
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.society import Commodity, KnowledgeBranch
@@ -69,6 +70,11 @@ SUBJECT_BOND_KINDS = (BondKind.RULES, BondKind.PAYS_TRIBUTE)
 PAIR_SIZE = 2
 
 
+ARMED_KIND_TRAITS = frozenset({FactionKindTrait.WARLIKE, FactionKindTrait.ORDERS})
+RISING_KIND_TRAITS = frozenset({FactionKindTrait.MOVEMENTS, FactionKindTrait.TREASON_KINDS})
+RISING_CAUSES = REVOLT_CAUSES | {WarCause.SUCCESSION}
+
+
 class WarBlock(StrEnum):
     SAME_PARTY = "same_party"
     NOT_LIVING = "not_living"
@@ -78,6 +84,7 @@ class WarBlock(StrEnum):
     SUBJECT = "subject"
     WORLD_CAP = "world_cap"
     COMMUNITY_CAP = "community_cap"
+    UNARMED = "unarmed"
 
 
 @dataclass(frozen=True)
@@ -311,7 +318,7 @@ async def hostile_pair_count(session: AsyncSession) -> int:
     return len(await hostile_pairs(session))
 
 
-async def _party_block(session: AsyncSession, first_id: int, second_id: int) -> WarBlock | None:
+async def _party_block(session: AsyncSession, first_id: int, second_id: int, cause: WarCause | None) -> WarBlock | None:
     if first_id == second_id:
         return WarBlock.SAME_PARTY
     first, second = await living_entity(session, first_id), await living_entity(session, second_id)
@@ -319,7 +326,17 @@ async def _party_block(session: AsyncSession, first_id: int, second_id: int) -> 
         return WarBlock.NOT_LIVING
     if first.world_id != second.world_id and not await WorldRepository(session).connected(first.world_id, second.world_id):
         return WarBlock.OUT_OF_REACH
+    if not await bears_arms(session, first, cause):
+        return WarBlock.UNARMED
     return None
+
+
+async def bears_arms(session: AsyncSession, party: EntityRow, cause: WarCause | None) -> bool:
+    if party.entity_type is not EntityType.FACTION:
+        return True
+    kind = await kind_of(session, party.id)
+    armed = ARMED_KIND_TRAITS | RISING_KIND_TRAITS if cause in RISING_CAUSES else ARMED_KIND_TRAITS
+    return kind is not None and bool(FACTION_KIND_TRAITS[kind] & armed)
 
 
 async def _bond_block(session: AsyncSession, rules: Rules, first_id: int, second_id: int, epoch: int, *, cause: WarCause | None) -> WarBlock | None:
@@ -364,7 +381,7 @@ async def can_open_war(
     cause: WarCause | None = None,
 ) -> WarBlock | None:
     return (
-        await _party_block(session, first_id, second_id)
+        await _party_block(session, first_id, second_id, cause)
         or await _bond_block(session, rules, first_id, second_id, epoch, cause=cause)
         or await _cap_block(session, rules, first_id, second_id, world_cap=world_cap, community_cap=community_cap)
     )
@@ -459,6 +476,7 @@ async def open_war(
             world_id=defender.world_id,
             location_id=location,
             engine_kind=EngineKind.WAR,
+            pending=False,
         ),
     )
     status = WarStatus.MOBILIZING if campaigns.mobilization else WarStatus.ONGOING

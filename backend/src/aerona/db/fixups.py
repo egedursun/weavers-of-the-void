@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -24,6 +24,8 @@ MARKER_PREFIXES = (
     "state_enterprises.order.",
     "protected_areas.reserve.",
     "protected_areas.grove.",
+    "chronicle.told.",
+    "chronicle.renamed.",
 )
 
 
@@ -58,6 +60,10 @@ async def marked(session: AsyncSession, prefix: str) -> set[str]:
 async def settle(session: AsyncSession, key: str, result: dict[str, Any]) -> None:
     if await session.get(AppliedFixupRow, key) is None:
         session.add(AppliedFixupRow(key=key, result=result))
+
+
+async def unmark(session: AsyncSession, prefix: str) -> None:
+    await session.execute(delete(AppliedFixupRow).where(AppliedFixupRow.key.like(f"{marker_key(prefix)}%")))
 
 
 async def mark_born_current(database_url: str) -> None:

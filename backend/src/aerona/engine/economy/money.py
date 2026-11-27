@@ -45,7 +45,7 @@ from aerona.engine.polity.law_effects import may_coin
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.prosperity import add_prosperity
 from aerona.engine.primitives.queries import active_bonds
-from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
@@ -346,6 +346,7 @@ async def banks(ctx: TickContext, book: EconomyBook) -> list[EntityRow]:
         entity
         for entity in book.entities.values()
         if entity.entity_type is EntityType.FACTION
+        and entity.status is EntityStatus.CANON
         and kinds.get(entity.id) in LENDER_KINDS
         and riches(entity) >= table.bank_wealth
         and not book.lacks(entity.location_id or 0, Technique.BANKING)
@@ -452,7 +453,7 @@ async def collect(ctx: TickContext, book: EconomyBook, tally: MoneyTally) -> Non
         lender = book.entities.get(loan.lender_entity_id)
         if borrower is not None and borrower.entity_type is EntityType.POLITY:
             continue
-        if borrower is None or lender is None:
+        if borrower is None or lender is None or lender.status is not EntityStatus.CANON:
             loan.status = LoanStatus.FORGIVEN
             continue
         if held(borrower.id) or held(lender.id):
@@ -515,6 +516,7 @@ async def default(ctx: TickContext, book: EconomyBook, loan: LoanRow, borrower: 
 async def collapse(ctx: TickContext, book: EconomyBook, bank: EntityRow) -> None:
     table = ctx.rules.banking
     set_stats(bank, wealth=0)
+    await retire_in(ctx, bank, "collapsed under its bad loans", close_bonds=True)
     home = bank.affiliated_entity_id or bank.location_id
     row = book.societies.get(home) if home is not None else None
     if row is not None:

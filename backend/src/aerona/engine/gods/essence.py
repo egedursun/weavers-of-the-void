@@ -1,5 +1,10 @@
+from typing import Protocol
+
+from aerona.catalog.stats import max_essence
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.sons import SonRow
+from aerona.rules.registry import Rules
 
 
 def gain(creator: CreatorRow, amount: float) -> int:
@@ -21,3 +26,19 @@ def refund(creator: CreatorRow, amount: int) -> int:
     returned = max(0, amount)
     creator.essence += returned
     return returned
+
+
+def son_room(rules: Rules, son: SonRow) -> int:
+    return max(0, max_essence(rules, son.might) - son.essence)
+
+
+class Purse(Protocol):
+    essence: int
+
+
+def endow(rules: Rules, god: Purse, amount: float) -> int:
+    gained = max(0, round(amount))
+    if isinstance(god, SonRow):
+        gained = min(gained, son_room(rules, god))
+    god.essence += gained
+    return gained

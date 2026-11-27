@@ -109,7 +109,9 @@ async def cast_lost_heir(ctx: TickContext, world_id: int) -> Cast | None:
         if ruler is None or profile.capital_entity_id is None:
             continue
         dynasty = await house_of(ctx, ruler)
-        strangers = [row for row in await mortals_at(ctx, profile.capital_entity_id) if row.id != ruler and await house_of(ctx, row.id) != dynasty]
+        strangers = [
+            row for row in await mortals_at(ctx, profile.capital_entity_id) if row.id != ruler and (dynasty is None or await house_of(ctx, row.id) != dynasty)
+        ]
         if strangers:
             claimant = max(strangers, key=lambda row: (stat_or(row, "charisma", 0), -row.id))
             return {R.REALM: realm.id, R.RULER: ruler, R.CLAIMANT: claimant.id}

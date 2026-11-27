@@ -129,7 +129,7 @@ class ReciprocityRules(Spanned):
     return_regard: int = rule(5, 0, 100, M, "Regard a giver feels when its gift is returned in kind")
     lapse_prestige: int = rule(20, 0, 200, M, "Standing a receiver loses and a giver gains for each hundred of an unreturned gift's value (%)")
     courtesy_pct: int = rule(10, 0, 100, M, "Chance each epoch an ally sends a gift to its ally (%)")
-    courtesy_value: int = rule(10, 0, 100000, M, "Coin a gift between allies is worth")
+    courtesy_value: int = rule(40, 0, 100000, M, "Most coin a gift between allies is worth")
 
     @property
     def return_epochs(self) -> int:

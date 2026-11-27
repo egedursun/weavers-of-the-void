@@ -39,9 +39,17 @@ def test_borrowed_textile_imagery_in_model_text_is_caught() -> None:
 
 def test_a_power_given_a_body_is_caught() -> None:
     module = checker()
-    for text in ("a stronger hand holds that realm", "An unseen hand keeps the ledger.", "the greater hands of heaven"):
+    for text in (
+        "a stronger hand holds that realm",
+        "An unseen hand keeps the ledger.",
+        "the greater hands of heaven",
+        "life taken by the hand of {killer}",
+        "{authority}'s hand: rewrote the lore of {subject}.",
+        "You cannot destroy what was made by their own hand.",
+    ):
         assert "a power given a body" in rules_hit(module, PROMPT, text), text
     assert "a power given a body" not in rules_hit(module, PROMPT, "that realm is held")
+    assert "a power given a body" not in rules_hit(module, PROMPT, "Your hand does not reach that land.")
     assert "a power given a body" not in rules_hit(module, PROMPT, "a one-handed smith")
 
 

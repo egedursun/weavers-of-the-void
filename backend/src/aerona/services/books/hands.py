@@ -8,8 +8,10 @@ from aerona.core.grammar import several
 from aerona.db.tables.ledger import LedgerEntryRow
 from aerona.db.tables.team import CanonProposalRow, QueuedActRow
 from aerona.domain.enums.node import ActorKind
-from aerona.domain.enums.team import ProposalStatus, QueuedActStatus
+from aerona.domain.enums.team import ProposalStatus, QueuedActSource, QueuedActStatus
+from aerona.rules.registry import Rules
 from aerona.services.ledger import action_label
+from aerona.services.rules import rules_title
 from aerona.services.team.legacy import account_remains, legacy_name
 
 BEFORE_NAMES = "Before the team kept names"
@@ -26,6 +28,13 @@ PROPOSAL_LABELS: dict[ProposalStatus, str] = {
     ProposalStatus.REJECTED: "Rejected",
     ProposalStatus.WITHDRAWN: "Withdrawn by its author",
 }
+
+
+def queued_title(row: QueuedActRow) -> str:
+    changes = row.payload.get("changes") if row.source is QueuedActSource.RULES and isinstance(row.payload, dict) else None
+    if not isinstance(changes, dict):
+        return row.title
+    return rules_title(Rules(), list(changes), reset_all=bool(row.payload.get("reset_all")))
 
 
 @dataclass(frozen=True)
@@ -125,7 +134,7 @@ async def team_record(session: AsyncSession) -> TeamRecord:
     for waited in await session.scalars(select(QueuedActRow).order_by(QueuedActRow.id)):
         name = waited.author_name or legacy
         hands.setdefault(name, Hand(name, waited.author_account_id)).queued += 1
-        queue.append(QueueLine(waited.title, name, QUEUE_LABELS[waited.status], waited.queued_epoch, waited.reason or "", waited.result))
+        queue.append(QueueLine(queued_title(waited), name, QUEUE_LABELS[waited.status], waited.queued_epoch, waited.reason or "", waited.result))
     proposals: list[ProposalLine] = []
     for row in await session.scalars(select(CanonProposalRow).order_by(CanonProposalRow.id)):
         name = row.author_name or legacy

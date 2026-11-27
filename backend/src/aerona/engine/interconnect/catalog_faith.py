@@ -197,7 +197,7 @@ FAITH_MECHANICS = (
     Mechanic(
         key="rebirth_paths",
         spec_item="S3.3",
-        title="A reborn soul comes back to its people, its house or by merit, as its doctrine teaches; a god may open the gate by its own hand",
+        title="A reborn soul comes back to its people, its house or by merit, as its doctrine teaches; a god may open the gate itself",
         subsystem=Subsystem.DEMOGRAPHY,
         phases=SOULS,
         surface=Surface(drawer=DOCTRINE),

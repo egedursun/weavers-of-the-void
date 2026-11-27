@@ -74,12 +74,25 @@ async def test_wealthy_community_lends_to_a_poor_neighbour_on_its_own(session: A
     lender = await folk(session, "Goldfolk", world.world.id, world.regions[0].id, wealth=90)
     borrower = await folk(session, "Pennyfolk", world.world.id, world.regions[1].id, wealth=10)
     await spontaneous_loans(ctx)
-    amount = ctx.rules.civilization.loan_amount
+    civ = ctx.rules.civilization
+    amount = min(civ.loan_amount, 90 - civ.loan_lender_min, civ.loan_borrower_max - 10)
     assert stat(lender, "wealth") == 90 - amount and stat(borrower, "wealth") == 10 + amount
     debt = await session.scalar(select(BondRow).where(BondRow.kind == BondKind.OWES))
     assert debt is not None and debt.debt_status is DebtStatus.OPEN and debt.debt_amount == amount
     recorded = await keys(session)
     assert "civilization.loan" in recorded
+
+
+async def test_a_loan_is_what_the_lender_spares_or_the_borrower_lacks(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "loan", tuned_rules(civilization={"loan_chance": 100}))
+    civ = ctx.rules.civilization
+    lender = await folk(session, "Thinfolk", world.world.id, world.regions[0].id, wealth=civ.loan_lender_min + 7)
+    borrower = await folk(session, "Nearfolk", world.world.id, world.regions[1].id, wealth=civ.loan_borrower_max - 5)
+    await spontaneous_loans(ctx)
+    debt = await session.scalar(select(BondRow).where(BondRow.kind == BondKind.OWES))
+    assert debt is not None and debt.debt_amount == 5
+    assert stat(borrower, "wealth") == civ.loan_borrower_max
+    assert stat(lender, "wealth") == civ.loan_lender_min + 2
 
 
 async def test_a_second_loan_to_a_debtor_adds_to_the_open_debt(session: AsyncSession, world: CoreWorld) -> None:

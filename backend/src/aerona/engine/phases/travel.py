@@ -102,7 +102,7 @@ from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import headcount, move_stat, put_stat, shift_bounded, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.recording.terms import explaining
-from aerona.engine.services.community_relations import change_relation
+from aerona.engine.services.community_relations import change_relation, have_met
 from aerona.engine.services.war import declare_war, ongoing_war_count
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
@@ -908,6 +908,7 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> Ste
     travel = ctx.rules.travel
     rng = ctx.rng(seed_of("contact", arrival.journey.id, native.id))
     traveller, journey = arrival.traveller, arrival.journey
+    known = await have_met(ctx.session, traveller.id, native.id) or (arrival.colony is not None and await have_met(ctx.session, arrival.colony.id, native.id))
     if journey.intent is JourneyIntent.CONQUEST and arrival.colony is not None and not arrival.subjugated:
         bonds = BondRepository(ctx.session)
         chance = travel.subjugation_chance - stat_or(native, "defense", 0) * PERCENT / travel.subjugation_defense_divisor
@@ -921,7 +922,8 @@ async def _contact(ctx: TickContext, arrival: Arrival, native: EntityRow) -> Ste
     invasion = journey.intent is JourneyIntent.CONQUEST or (journey.intent is JourneyIntent.COLONY and rng.chance(travel.colony_invasion_chance))
     if invasion:
         invader = arrival.colony or traveller
-        declared = await declare_war(ctx, invader.id, native.id, "first contact: invasion", cause=WarCause.CONQUEST_JOURNEY)
+        reason = "invasion from beyond the world" if known else "first contact: invasion"
+        declared = await declare_war(ctx, invader.id, native.id, reason, cause=WarCause.CONQUEST_JOURNEY)
         await change_relation(ctx, traveller.id, native.id, -travel.invasion_relation_loss, MemoryKind.FOUGHT_US, note="invasion")
         return StepDraft(StepAction.MEET, actor=traveller.id, target=native.id, outcome=StepOutcome.REFUSED if declared else StepOutcome.PARTIAL)
     alive = traveller.status is EntityStatus.CANON

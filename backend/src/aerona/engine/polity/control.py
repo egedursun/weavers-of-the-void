@@ -8,6 +8,7 @@ from aerona.catalog.life.polity import DEFAULT_POWERS
 from aerona.catalog.pacts import BREAKABLE_STATES, PRINCIPAL_ROLES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.economy import LoanRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
@@ -78,6 +79,13 @@ PROFILE_SCALARS = ("administration", "overextension", "tier", "tier_strain")
 EMBLEM_PARTS = ("emblem_field", "emblem_charge", "emblem_tincture", "emblem_motto")
 
 
+async def rename_realm(ctx: TickContext, realm_id: int, name: str) -> None:
+    names = NameRepository(ctx.session)
+    if await names.is_taken(name, realm_id):
+        raise ValidationFailedError(f"Another record already bears the name {name}.")
+    await names.rename(realm_id, name)
+
+
 async def realm(ctx: TickContext, polity_id: int) -> tuple[RealmBook, Realm]:
     book = await RealmBook.load(ctx.session)
     found = book.realms.get(polity_id)
@@ -123,7 +131,7 @@ async def set_polity_value(ctx: TickContext, found: Realm, key: str, value: int 
     elif key in PROFILE_LINKS:
         setattr(profile, PROFILE_LINKS[key], int(value) if isinstance(value, int) else None)
     elif key == "name" and isinstance(value, str) and value.strip():
-        found.entity.name = value.strip()
+        await rename_realm(ctx, found.entity.id, value.strip())
     elif key == "heir":
         await set_heir(ctx, found, int(value) if isinstance(value, int) else None)
     elif key == "core":
@@ -642,7 +650,7 @@ async def found_realm(ctx: TickContext, core_id: int, *, name: str | None, gover
     await add_flag(ctx.session, core.id, EntityFlag.INDEPENDENT, ctx.epoch)
     found = await found_polity(ctx, book, core)
     if name and name.strip():
-        found.entity.name = name.strip()
+        await rename_realm(ctx, found.entity.id, name.strip())
         found.profile.locked = lock(found.profile.locked, "name")
     if government is not None:
         found.profile.government = government

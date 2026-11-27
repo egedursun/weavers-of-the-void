@@ -39,7 +39,7 @@ from aerona.engine.law.outlawry import declare_outlaw
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.polity.laws import LawBook
-from aerona.engine.polity.trials import judge_for, trial_for
+from aerona.engine.polity.trials import judge_for, pending_case, trial_for
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -144,6 +144,9 @@ async def townsfolk(ctx: TickContext, town: EntityRow, besides: set[int]) -> lis
 
 
 async def open_case(ctx: TickContext, town: EntityRow, accused: EntityRow, guilty: bool, true_caster: int | None) -> CrimeCaseRow:
+    pending = await pending_case(ctx.session, accused.id, CrimeKind.WITCHCRAFT)
+    if pending is not None:
+        return pending
     laws = await LawBook.load(ctx.session)
     place = town.id
     polity = laws.member_of.get(place)

@@ -3,10 +3,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.warfare import CasusBelliRow, TributeRow, WarSideRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.war import CasusBelliKind, TributeStatus, WarEnding, WarSide, WarStatus
+from aerona.domain.enums.faction import FactionKind
+from aerona.domain.enums.war import CasusBelliKind, TributeStatus, WarCause, WarEnding, WarSide, WarStatus
 from aerona.engine.primitives.strength import MilitaryStrength
 from aerona.engine.services.sides import SideIndex
 from aerona.engine.services.war import (
@@ -151,3 +153,19 @@ async def test_war_caps_close_quietest_wars(session: AsyncSession, world_id: int
     assert await close_wars_over_caps(ctx) == 2
     assert [war.status for war in wars] == [WarStatus.ENDED, WarStatus.ENDED, WarStatus.MOBILIZING]
     assert all(entity.status is EntityStatus.CANON for entity in rims)
+
+
+async def test_a_faction_that_bears_no_arms_never_goes_to_war(session: AsyncSession, world_id: int) -> None:
+    rules = Rules()
+    people, _ = await two_peoples(session, world_id)
+    parties = {}
+    for name, kind in (("Reading Circle", FactionKind.SOCIAL_CIRCLE), ("Free Band", FactionKind.REBELS)):
+        party = await make(session, name, EntityType.FACTION, world_id)
+        session.add(FactionProfileRow(faction_entity_id=party.id, kind=kind, treasury=0, influence_over={}, cohort_share={}, locked=[]))
+        parties[kind] = party
+    await session.flush()
+    assert await can_open_war(session, rules, parties[FactionKind.SOCIAL_CIRCLE].id, people.id, 1, cause=WarCause.DIVINE_GRUDGE) is WarBlock.UNARMED
+    assert await can_open_war(session, rules, parties[FactionKind.SOCIAL_CIRCLE].id, people.id, 1, cause=WarCause.UPRISING) is WarBlock.UNARMED
+    assert await can_open_war(session, rules, parties[FactionKind.REBELS].id, people.id, 1, cause=WarCause.DIVINE_GRUDGE) is WarBlock.UNARMED
+    assert await can_open_war(session, rules, people.id, parties[FactionKind.SOCIAL_CIRCLE].id, 1, cause=WarCause.RESOURCE) is not WarBlock.UNARMED
+    assert await can_open_war(session, rules, parties[FactionKind.REBELS].id, people.id, 1, cause=WarCause.UPRISING) is None

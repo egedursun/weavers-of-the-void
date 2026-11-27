@@ -2,7 +2,7 @@ from sqlalchemy import select
 
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import HookRow
-from aerona.db.tables.justice import CaseWitnessRow
+from aerona.db.tables.justice import CaseWitnessRow, CrimeCaseRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, SentenceRow
 from aerona.db.tables.settlement import SettlementInfrastructureRow, SettlementProfileRow
 from aerona.domain.enums.entity import EntityType
@@ -116,3 +116,30 @@ async def test_a_framing_scheme_forges_a_case_and_a_hooked_witness_turns(realm: 
     assert witness is not None and witness.testimony is Deposition.SHIELDS
     assert case.verdict is Verdict.ACQUITTED and judge.id == case.judge_entity_id
     assert Rules().trials.standard == 50
+
+
+async def test_one_accused_is_tried_once_for_one_crime_even_with_a_second_case_left_open(realm: Realm) -> None:
+    rules = tuned(trials=OPEN)
+    town, judge, polity = await court(realm, "Twinmere")
+    accused = await thief(realm, town, "Ove")
+    cases = [
+        CrimeCaseRow(
+            settlement_entity_id=town.entity.id,
+            polity_entity_id=polity.id,
+            crime=CrimeKind.WITCHCRAFT,
+            accused_entity_id=accused.id,
+            judge_entity_id=judge.id,
+            stage=CaseStage.TRIAL,
+            trial=TrialKind.JUDGE,
+            evidence=0,
+            opened_epoch=2,
+            locked=[],
+        )
+        for _ in range(2)
+    ]
+    realm.session.add_all(cases)
+    await realm.session.flush()
+    tally = TrialTally()
+    await tend_cases(context(realm.session, rules, epoch=4), tally)
+    assert tally.tried == 1
+    assert all(case.stage is CaseStage.CLOSED for case in cases) and cases[0].verdict is cases[1].verdict

@@ -9,6 +9,7 @@ from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.node import NodeBirthRow, NodeRow
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.moment import Moment, latest
 
@@ -64,7 +65,14 @@ async def mark_born(session: AsyncSession, participants: Iterable[tuple[int, Inc
     births = await birth_moments(session, [node for node, _ in named])
     for node in sorted(births):
         if births[node] is None and born_now(known.get(node), node in created, epoch):
-            date_born(session, node, moment)
+            date_born(session, node, moment if node in created else lived_since(known.get(node), moment))
+
+
+def lived_since(row: NodeRow | None, moment: Moment) -> Moment:
+    if not isinstance(row, EntityRow) or row.entity_type is not EntityType.MORTAL:
+        return moment
+    age = getattr(row.stats, "age", None)
+    return Moment(moment.year - age) if isinstance(age, int) and age > 0 else moment
 
 
 async def birth_year(session: AsyncSession, node: int) -> int | None:

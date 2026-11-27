@@ -18,6 +18,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import stored_values
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.standing import still_standing
 from aerona.engine.recording.record import record
 
 R = KinRole
@@ -136,7 +137,8 @@ async def seed_houses(ctx: TickContext, tally: KinSeedTally) -> None:
         folk = await people_of(ctx.session, founder) if founder is not None else None
         if folk is None:
             continue
-        group = await found_group(ctx, folk.id, house.name, KinGroupForm.HOUSE, house_id=house.id, head_id=profile.head_entity_id)
+        head = profile.head_entity_id if await still_standing(ctx.session, profile.head_entity_id) else None
+        group = await found_group(ctx, folk.id, house.name, KinGroupForm.HOUSE, house_id=house.id, head_id=head)
         for member in await ctx.session.scalars(
             select(HouseMemberRow).where(HouseMemberRow.house_entity_id == house.id).order_by(HouseMemberRow.mortal_entity_id)
         ):

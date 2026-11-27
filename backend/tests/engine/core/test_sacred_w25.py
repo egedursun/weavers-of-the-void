@@ -116,7 +116,7 @@ from aerona.engine.sacred.mysteries import (
 )
 from aerona.engine.sacred.omens import battle_omen, war_forbidden
 from aerona.engine.sacred.rites import RiteTally, keep_afterlife_belief, keep_climates, keep_sacraments, weigh_town
-from aerona.engine.sacred.spirits import SpiritTally, bring_offerings, keep_place_spirits
+from aerona.engine.sacred.spirits import SpiritTally, bind_spirit, bring_offerings, keep_place_spirits
 from aerona.engine.services.war import declare_war
 from aerona.services.integrity.sacred_links import mend_sacred_links
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
@@ -181,6 +181,18 @@ async def test_a_place_spirit_rises_takes_offerings_and_favours_its_town_until_p
     await keep_place_spirits(ctx, SpiritTally())
     assert row.offended is SpiritOffence.POLLUTION
     assert stat_or(town, "population", 0) < before
+
+
+async def test_new_place_spirits_each_begin_with_a_contentment_of_their_own(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 3)
+    moods = set()
+    for index in range(8):
+        place = await entity(session, f"Spring {index}", EntityType.PLACE, PlaceStats(), world_id=world.world.id, location_id=world.regions[0].id)
+        row = await bind_spirit(ctx, place, GeniusLocusKind.SPRING, None)
+        spread = ctx.rules.genius_loci.born_mood_spread
+        assert abs(row.contentment - ctx.rules.genius_loci.content_at) <= spread
+        moods.add(row.contentment)
+    assert len(moods) > 1
 
 
 async def test_a_town_shares_its_offerings_among_the_spirits_it_keeps_instead_of_giving_each_the_whole(session: AsyncSession, world: CoreWorld) -> None:

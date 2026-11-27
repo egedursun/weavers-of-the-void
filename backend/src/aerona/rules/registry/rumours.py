@@ -36,7 +36,9 @@ class RumoursRules(Spanned):
     cap: int = rule(600, 0, 10000000, C, "Most rumours passed on in one epoch, before the number of communities adds more")
     cap_per_community: int = rule(20, 0, 100000, C, "Further rumours passed on in one epoch for each living community")
     renown_spread_pct: int = rule(20, 0, 100, C, "Extra chance, at the full renown of the doer, that word of a deed is passed on (%)")
-    contradiction_trust_loss: int = rule(3, 0, 100, C, "Trust in what is told that a community loses on hearing a happening told otherwise than it knew it")
+    contradiction_trust_loss: int = rule(
+        4, 0, 100, C, "Trust in what is told a community loses for each way a wholly faithful teller tells a happening otherwise than it knew it"
+    )
 
     @property
     def legend_epochs(self) -> int:

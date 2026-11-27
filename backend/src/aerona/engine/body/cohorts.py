@@ -47,11 +47,11 @@ async def helmet_cover(ctx: TickContext, community_id: int) -> int:
     return min(ctx.rules.armour.coverage_cap, levels.get(KnowledgeBranch.METALLURGY, 0) * ctx.rules.armour.metallurgy_head_per_level)
 
 
-async def return_maimed(ctx: TickContext, community: EntityRow, lost: int) -> int:
+async def return_maimed(ctx: TickContext, community: EntityRow, wounded: int) -> int:
     table = ctx.rules.maimed
     if blocked(community.id, COHORT_KEY):
         return 0
-    maimed = round_half_up(max(0, lost) * table.return_pct / PERCENT)
+    maimed = round_half_up(max(0, wounded) * table.return_pct / PERCENT)
     if maimed <= 0:
         return 0
     weights = kind_weights(table, await helmet_cover(ctx, community.id))

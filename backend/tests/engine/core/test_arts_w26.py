@@ -550,3 +550,12 @@ async def test_a_skilled_maker_of_the_town_renews_a_construct_whose_maker_is_dea
     await session.flush()
     await keep_constructs(await at(session, 4), OrderTally())
     assert renewed > row.power
+
+
+async def test_a_grown_arrival_is_signed_for_the_epoch_its_age_gives(session: AsyncSession, world: CoreWorld) -> None:
+    elder = await mortal(session, "Old Wren", world, None, age=120)
+    elder.birth_epoch = 4
+    await session.flush()
+    ctx = await at(session, 4)
+    row = await sign_birth(ctx, elder, SignTally())
+    assert row.born_epoch == 1

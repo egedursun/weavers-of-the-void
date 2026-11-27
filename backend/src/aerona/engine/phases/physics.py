@@ -151,7 +151,7 @@ async def derive_all(ctx: TickContext, *, quiet: bool) -> int:
         parent = rows.get(world.parent_world_id) if world.parent_world_id is not None else None
         was_locked = row.tidally_locked
         circling = counted_moons(ctx.rules, world, row, moons.get(world.id, []))
-        derive(ctx.rules, world, row, sky=sky, moons=circling, parent=parent, rogue=rogue, orbit=root.orbit, shards=world.id in shards)
+        derive(ctx.rules, world, row, sky=sky, moons=circling, parent=parent, rogue=rogue, shards=world.id in shards)
         if not quiet and lose_air(ctx.rules, row):
             ctx.count("air_lost")
         seasons = (await view_of(ctx.session, ctx.rules, world.id)).seasons

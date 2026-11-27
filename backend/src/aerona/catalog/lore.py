@@ -79,6 +79,21 @@ class TraditionSpec:
     values: dict[ValueAxis, int] = field(default_factory=dict)
 
 
+MOURNING_RITE = "mourning rite"
+REMEMBRANCE_DAY = "day of remembrance"
+SUBTYPE_KINDS: Mapping[str, TraditionFunction] = MappingProxyType(
+    {
+        MOURNING_RITE: TraditionFunction.MOURNING,
+        REMEMBRANCE_DAY: TraditionFunction.COMMEMORATION,
+        "offering rite": TraditionFunction.OFFERING,
+        "trial of age": TraditionFunction.RITE_OF_PASSAGE,
+        "vigil": TraditionFunction.VIGIL,
+        "fair": TraditionFunction.FAIR,
+        "games of skill": TraditionFunction.COMPETITION,
+    }
+)
+
+
 TRADITIONS = MappingProxyType(
     {
         spec.kind: spec

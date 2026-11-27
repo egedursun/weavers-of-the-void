@@ -227,8 +227,24 @@ def append_ending(description: str, sentence: str) -> str:
     return f"{description.rstrip()} {cleaned}".strip()
 
 
+def epoch_mention(epoch: int) -> re.Pattern[str]:
+    return re.compile(rf"\b[Ee]poch {epoch}\b")
+
+
 def mentions_epoch(description: str, epoch: int) -> bool:
-    return EPOCH_MENTION.format(epoch=epoch) in description
+    return epoch_mention(epoch).search(description) is not None
+
+
+def ending_told_once(description: str, epoch: int) -> str:
+    parts = sentences(description)
+    dated = [part for part in parts if part.startswith(f"{EPOCH_MENTION.format(epoch=epoch)}, world year ")]
+    rest = [part for part in parts if part not in dated]
+    if not dated or not mentions_epoch(" ".join(rest), epoch):
+        return description
+    kept = description
+    for part in dated:
+        kept = kept.replace(part, "")
+    return collapse_spaces(kept)
 
 
 def mortal_description(text: str) -> str:
@@ -330,7 +346,13 @@ async def backfill_endings(session: AsyncSession) -> int:
     written = 0
     for entity in await session.scalars(statement):
         epoch = entity.end_epoch
-        if epoch is None or mentions_epoch(entity.description, epoch) or entity.id in holding or "description" in records.get(entity.id, set()):
+        if epoch is None or entity.id in holding or "description" in records.get(entity.id, set()):
+            continue
+        once = ending_told_once(entity.description, epoch)
+        if once != entity.description:
+            entity.description = once
+            written += 1
+        if mentions_epoch(entity.description, epoch):
             continue
         sentence = fate_note_ending(entity.fate_note, epoch) or default_ending(entity.entity_type, entity.status is EntityStatus.DESTROYED, epoch)
         written += await write_ending(session, entity, sentence)

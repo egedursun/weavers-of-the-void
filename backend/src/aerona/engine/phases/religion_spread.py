@@ -492,8 +492,6 @@ def god_name(faith: FaithIndex, god_id: int | None) -> str:
 
 
 async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, old: int | None, chosen: ConversionSource, *, syncretic: bool) -> None:
-    if not syncretic:
-        await god_grudge(ctx, old, chosen.god_id, MemoryKind.STOLE_FAITHFUL, f"took {community.name}")
     son_id = chosen.god_id if chosen.god_id in faith.sons else None
     await record(
         ctx,
@@ -503,12 +501,14 @@ async def _announce(ctx: TickContext, community: EntityRow, faith: FaithIndex, o
             "new_faith": god_name(faith, chosen.god_id),
             "old_faith": god_name(faith, old),
             "reason": chosen.reason,
-            "cold": f"; the altars of {god_name(faith, old)} grew cold" if old is not None else "",
+            **({"forsaken": god_name(faith, old)} if old is not None and not syncretic else {}),
         },
         son_id=son_id,
         feed=FeedCategory.WORLD,
         kind=ChronicleKind.WORSHIP,
     )
+    if not syncretic:
+        await god_grudge(ctx, old, chosen.god_id, MemoryKind.STOLE_FAITHFUL, f"took {community.name} from {god_name(faith, old)}")
 
 
 @reads(

@@ -1,12 +1,15 @@
 from enum import StrEnum
 
 from aerona.core.errors import ValidationFailedError
+from aerona.db.tables.cosmos import CreatorRow
+from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.divine import BargainGain, BargainPrice
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.son import Stat
 from aerona.engine.cosmos.actions import BargainTerms, bargain_with_outer
+from aerona.engine.gods.essence_flow import send_essence
 from aerona.engine.phases.pantheon import order_god_war, order_temple_raid, provoke_duel, wake_foreign_god
 from aerona.engine.phases.sons import set_son_relation
 from aerona.services.player import guards
@@ -48,6 +51,12 @@ class OuterBargainOrder(Command):
     price: BargainPrice = BargainPrice.WORLD_SANITY
     price_domain: Domain | None = None
     price_world_id: int | None = None
+
+
+class SonEssence(Command):
+    son_id: int
+    to_son_id: int | None = None
+    amount: int
 
 
 class SonRelation(Command):
@@ -103,3 +112,11 @@ async def outer_bargain(scope: PlayerScope, command: OuterBargainOrder) -> Effec
     terms = BargainTerms(command.gain, command.price, command.price_domain, command.price_world_id)
     gain = await bargain_with_outer(await scope.context("outer_bargain"), son.id, command.outer_id, command.request, terms)
     return Effect(f"{son.name} bargained with the outer being by command.", son.id, values={"gain": gain})
+
+
+@player_action("son:send_essence", ActionKind.GIFT)
+async def send_essence_lever(scope: PlayerScope, command: SonEssence) -> Effect:
+    giver = await guards.living_son(scope.session, command.son_id)
+    receiver: SonRow | CreatorRow = await guards.living_son(scope.session, command.to_son_id) if command.to_son_id is not None else await scope.creator()
+    sent = await send_essence(await scope.context("send_essence"), giver, receiver, command.amount)
+    return Effect(f"{giver.name} sent {sent} essence to {receiver.name}.", giver.id, values={"sent": sent})

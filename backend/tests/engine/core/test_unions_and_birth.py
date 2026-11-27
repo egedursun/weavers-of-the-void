@@ -13,6 +13,7 @@ from aerona.db.tables.polity import HouseProfileRow, OathRow
 from aerona.db.tables.relations import RelationshipRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.collective import RoleKind
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityType, MortalRole
 from aerona.domain.enums.intimacy import (
     BirthAttendant,
@@ -32,7 +33,7 @@ from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.relations import RelationType
 from aerona.domain.models.entity_stats import HouseStats
 from aerona.engine.collective.roles import career_open
-from aerona.engine.context import TickContext
+from aerona.engine.context import AgingState, TickContext
 from aerona.engine.intimacy.course import birth_course
 from aerona.engine.intimacy.legitimacy import legitimacy_of, legitimate_heirs, parent_union
 from aerona.engine.intimacy.norms import NormTally, keep_norms, lover_pairs, outside_union_weight
@@ -40,8 +41,9 @@ from aerona.engine.intimacy.recognition import recognise_heirs
 from aerona.engine.intimacy.restraint import RestraintTally, break_vows, vow_customs
 from aerona.engine.intimacy.seed import seed_intimacy
 from aerona.engine.mortal.kin import partners_of
-from aerona.engine.phases.births import wed_within_the_community
+from aerona.engine.phases.births import couple_chance, fertile_after, wed_within_the_community
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.stats import set_stats
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
 
 
@@ -195,3 +197,62 @@ async def test_an_unwed_head_of_a_house_with_no_lover_weds_someone_of_its_own_co
     marriages = await session.scalar(select(func.count()).select_from(IncidentRow).where(IncidentRow.kind == "kin.marriage"))
     assert marriages == wed
     assert await wed_within_the_community(ctx) <= len(heads) - wed
+
+
+async def test_an_unwed_grown_mortal_who_heads_nothing_also_weds_within_its_community(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "community_wed_grown", tuned_rules(kinship={"community_marriage_chance": 100}))
+    grown = [await folk(session, world, name, life_stage=LifeStage.ADULT) for name in ("Ivo Larch", "Mira Sel", "Tobin Ash", "Edda Fenn")]
+    await session.flush()
+    wed = await wed_within_the_community(ctx)
+    assert wed >= 1
+    married = [being for being in grown if await partners_of(session, being.id)]
+    assert len(married) >= 2
+
+
+async def test_once_the_epoch_has_aged_its_mortals_a_birth_slot_counts_their_age_at_that_year(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "fertile_slot", tuned_rules(kinship={"community_marriage_chance": 100}))
+    young = await folk(session, world, "Ivo Larch", life_stage=LifeStage.ADULT)
+    set_stats(young, age=30)
+    slot = ctx.rules.time.years_per_epoch - 1 - 5
+    aged = TickContext(replace(ctx.environment, aging=AgingState(done=True)), session, ctx.phase)
+    unaged = TickContext(replace(ctx.environment, aging=AgingState(done=False)), session, ctx.phase)
+    assert await fertile_after(aged, young, slot)
+    assert not await fertile_after(unaged, young, slot)
+
+
+async def test_a_mortal_weds_someone_near_its_own_age_before_an_elder(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "community_wed_age", tuned_rules(kinship={"community_marriage_chance": 100}))
+    elders = [await folk(session, world, name, life_stage=LifeStage.ADULT) for name in ("Ivo Larch", "Mira Sel", "Tobin Ash", "Edda Fenn")]
+    for elder in elders:
+        set_stats(elder, age=90)
+    young = [await folk(session, world, name, life_stage=LifeStage.ADULT) for name in ("Pia Rook", "Alon Drey")]
+    for youth in young:
+        set_stats(youth, age=24)
+    await session.flush()
+    await wed_within_the_community(ctx)
+    first, second = young
+    assert await partners_of(session, first.id) == [second.id]
+
+
+async def test_a_mortal_alone_in_its_town_weds_someone_of_its_people_from_another_town(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "community_wed_people", tuned_rules(kinship={"community_marriage_chance": 100}))
+    lone = await folk(session, world, "Pia Rook", life_stage=LifeStage.ADULT)
+    far_town = await settlement(session, "Brin", world, world.regions[1])
+    await bond(session, far_town.id, world.people.id, BondKind.DESCENDS_FROM)
+    far = await mortal(session, "Alon Drey", world, far_town.id)
+    session.add(MortalProfileRow(entity_id=far.id, locked=[], life_stage=LifeStage.ADULT))
+    for being in (lone, far):
+        set_stats(being, age=24)
+    await session.flush()
+    await wed_within_the_community(ctx)
+    assert await partners_of(session, lone.id) == [far.id]
+
+
+async def test_a_couple_bears_by_the_bodies_they_have_now_not_by_a_stale_mark_of_fertility(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "fertility_now", tuned_rules())
+    bearer = await folk(session, world, "Pia Rook", life_stage=LifeStage.ADULT, fertility=0)
+    begetter = await folk(session, world, "Alon Drey", life_stage=LifeStage.ADULT, fertility=0)
+    set_stats(bearer, age=24, sex=SexKind.BEARER)
+    set_stats(begetter, age=26, sex=SexKind.BEGETTER)
+    await session.flush()
+    assert await couple_chance(ctx, bearer, begetter, BondKind.SPOUSE_OF) > 0

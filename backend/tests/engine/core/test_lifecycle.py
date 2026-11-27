@@ -18,6 +18,7 @@ from aerona.engine.lifecycle.aging import effective_lifespan, is_notable, life_i
 from aerona.engine.lifecycle.mortal_death import die, force_death
 from aerona.engine.lifecycle.succession import designate_heir, dynasty_root
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
+from aerona.engine.mortal.life import sex_of_stats, window_end_pct
 from aerona.engine.phases.mortals import mortal_aging, mortal_wounds
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
@@ -195,3 +196,13 @@ async def test_an_heir_raised_for_a_young_ruler_is_never_older_than_the_ruler_co
     assert result is not None and result.heir is not None
     youngest_parent = (stat(king, "lifespan") or ctx.rules.world_effects.default_lifespan) * ctx.rules.fertility.window_start_pct // 100
     assert (stat(result.heir, "age") or 0) <= max(0, 20 - youngest_parent)
+
+
+async def test_an_heir_raised_for_an_old_ruler_was_born_within_the_ruler_s_fertile_years(ctx: TickContext, world: CoreWorld, session: AsyncSession) -> None:
+    town = await settlement(session, "Oldmoor", world, world.regions[1])
+    king = await mortal(session, "Orgun", world, town.id, age=168, lifespan=192)
+    await bond(session, king.id, town.id, BondKind.RULES)
+    result = await die(ctx, king, cause="was slain by a rival", killer_id=world.species.id)
+    assert result is not None and result.heir is not None
+    oldest_parent = 192 * window_end_pct(ctx.rules, sex_of_stats(king)) // 100
+    assert (stat(result.heir, "age") or 0) >= 168 - oldest_parent

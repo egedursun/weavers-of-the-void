@@ -9,15 +9,19 @@ from array import array
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
+from functools import cache
 from itertools import batched
 from pathlib import Path
 from typing import overload
 
+from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.core.grammar import an, fact_word, several, spoken
 from aerona.core.total import total
+from aerona.db.base import Base
 from aerona.db.ledger_capture import PRESENT_EPOCH
 from aerona.db.tables.ages import AgeRow
 from aerona.db.tables.changes import StateChangeRow, StateChangeTermRow
@@ -88,6 +92,14 @@ def part_taken(row: IncidentParticipantRow) -> str:
     return f"as {spoken(row.role)}"
 
 
+@cache
+def enum_of(table: str, column_name: str | None) -> str | None:
+    found = Base.metadata.tables.get(table)
+    column = found.columns.get(column_name) if found is not None and column_name else None
+    kind = getattr(column.type, "enum_class", None) if column is not None and isinstance(column.type, SqlEnum) else None
+    return kind.__name__ if kind is not None else None
+
+
 @dataclass(frozen=True, slots=True)
 class ChangeLine:
     id: int
@@ -110,6 +122,7 @@ class ChangeLine:
     actor_kind: ActorKind
     actor_node_id: int | None
     phase: str | None
+    row_key: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,6 +132,7 @@ class ToldChange:
     tail: str
     shift: tuple[str, str] | None = None
     rewrote: str = ""
+    row: str = ""
 
     def text(self) -> str:
         return f"{self.when}: {self.head}{self.body()}{self.tail}"
@@ -133,7 +147,7 @@ class ToldChange:
     def packed(self) -> str:
         kind = REWROTE if self.rewrote else SHIFTED if self.shift is not None else MADE
         before, after = self.shift if self.shift is not None else ("", self.rewrote)
-        return PACK.join(part.replace(PACK, " ") for part in (kind, self.when, self.head, self.tail, before, after))
+        return PACK.join(part.replace(PACK, " ") for part in (kind, self.when, self.head, self.tail, before, after, self.row))
 
     def bound(self, bind: Callable[[str], str]) -> "ToldChange":
         shift = (bind(self.shift[0]), bind(self.shift[1])) if self.shift is not None else None
@@ -141,10 +155,37 @@ class ToldChange:
 
     @classmethod
     def unpacked(cls, text: str) -> "ToldChange":
-        kind, when, head, tail, before, after = text.split(PACK)
+        kind, when, head, tail, before, after, row = text.split(PACK)
         if kind == SHIFTED:
-            return cls(when, head, tail, (before, after))
-        return cls(when, head, tail, rewrote=after if kind == REWROTE else "")
+            return cls(when, head, tail, (before, after), row=row)
+        return cls(when, head, tail, rewrote=after if kind == REWROTE else "", row=row)
+
+
+def row_parts(row_key: str, node_id: int | None) -> dict[str, object] | None:
+    try:
+        found = json.loads(row_key)
+    except ValueError:
+        return None
+    if not isinstance(found, dict):
+        return None
+    return {key: value for key, value in found.items() if value != node_id}
+
+
+def row_words(row_key: str, node_id: int | None) -> str:
+    parts = row_parts(row_key, node_id)
+    if not parts or set(parts) == {SURROGATE_KEY}:
+        return ""
+    return ", ".join(f"{words(key.removesuffix('_id')).lower()} {value}" for key, value in sorted(parts.items()))
+
+
+def own_row(row_key: str, node_id: int | None) -> bool:
+    return row_parts(row_key, node_id) == {}
+
+
+def kind_phrase(kind: str) -> str:
+    spec = INCIDENT_KINDS.get(kind)
+    head = words(kind.rsplit(".", 1)[-1])
+    return f"{head} ({spoken(spec.group)})" if spec is not None else head
 
 
 def counted_moment(when: str, times: int) -> str:
@@ -178,9 +219,9 @@ def told_together(group: list[ToldChange]) -> str:
 
 
 def grouped_changes(changes: Iterable[ToldChange]) -> list[str]:
-    groups: dict[tuple[bool, str, str], list[ToldChange]] = {}
+    groups: dict[tuple[bool, str, str, str], list[ToldChange]] = {}
     for told in changes:
-        groups.setdefault((told.shift is not None or bool(told.rewrote), told.head, told.tail), []).append(told)
+        groups.setdefault((told.shift is not None or bool(told.rewrote), told.head, told.tail, told.row), []).append(told)
     return [told_together(group) for group in groups.values()]
 
 
@@ -265,6 +306,7 @@ CHANGE_COLUMNS = tuple(StateChangeRow.__table__.c[name] for name in ChangeLine._
 CHANGE_CHUNK = 50_000
 NAME_FIELD = "name"
 NAMED_TABLES = frozenset({"nodes", "entities"})
+SURROGATE_KEY = "id"
 LOOKUP_BATCH = 500
 LENGTH = struct.Struct("<I")
 KEPT_MODE = 0o644
@@ -383,8 +425,10 @@ class Ledger:
     states: dict[int, list[IncidentStepStateRow]] = field(default_factory=lambda: defaultdict(list))
     terms: dict[int, list[IncidentTermRow]] = field(default_factory=lambda: defaultdict(list))
     store: RowStore = field(default_factory=RowStore)
-    first_seen: dict[int, dict[tuple[str, str], ChangeLine]] = field(default_factory=lambda: defaultdict(dict))
-    last_seen: dict[int, dict[tuple[str, str], ChangeLine]] = field(default_factory=lambda: defaultdict(dict))
+    first_seen: dict[int, dict[tuple[str, str, str], ChangeLine]] = field(default_factory=lambda: defaultdict(dict))
+    last_seen: dict[int, dict[tuple[str, str, str], ChangeLine]] = field(default_factory=lambda: defaultdict(dict))
+    row_of_table: dict[tuple[int, str], str] = field(default_factory=dict)
+    mixed: set[tuple[int, str]] = field(default_factory=set)
     named: dict[int, IncidentNameRow] = field(default_factory=dict)
     rumours: dict[int, list[RumourRow]] = field(default_factory=lambda: defaultdict(list))
     distortions: dict[int, list[RumourDistortionRow]] = field(default_factory=lambda: defaultdict(list))
@@ -527,7 +571,7 @@ class Ledger:
 
     def line_of(self, incident: IncidentRow) -> str:
         found = self.lines.get(incident.chronicle_id) if incident.chronicle_id is not None else None
-        return found or (incident.note or words(incident.kind))
+        return found or incident.note or kind_phrase(incident.kind)
 
     def when(self, incident: IncidentRow) -> str:
         return moment_text(incident.epoch, incident.year, incident.season, incident.day, incident.hour)
@@ -586,7 +630,10 @@ class Ledger:
         if number is not None:
             return number_text(number)
         text = change.before_text if before else change.after_text
-        return text if text is not None else "none"
+        if text is None:
+            return "none"
+        kind = enum_of(change.table_name, change.field)
+        return fact_word(kind, text) if kind is not None else text
 
     def told_change(self, change: ChangeLine, terms: list[TermLine]) -> ToldChange:
         record = title_of(change.table_name).lower()
@@ -595,11 +642,13 @@ class Ledger:
         tail = self.change_tail(change, terms)
         if change.operation is not LedgerOperation.UPDATE:
             return ToldChange(when, f"{'created' if change.operation is LedgerOperation.INSERT else 'removed'} {an(record)} record{owner}", tail)
-        head = f"{words(change.field or '').lower()} of {record}{owner}"
+        told_row = row_words(change.row_key, change.node_id)
+        head = f"{words(change.field or '').lower()} of {record}{f' ({told_row})' if told_row else ''}{owner}"
+        row = "" if told_row or own_row(change.row_key, change.node_id) else change.row_key
         rewritten = rewritten_parts(change.before_text, change.after_text)
         if rewritten is not None:
-            return ToldChange(when, head, tail, rewrote=f"rewrote {rewritten}")
-        return ToldChange(when, head, tail, (self.value_text(change, True), self.value_text(change, False)))
+            return ToldChange(when, head, tail, rewrote=f"rewrote {rewritten}", row=row)
+        return ToldChange(when, head, tail, (self.value_text(change, True), self.value_text(change, False)), row=row)
 
     def change_text(self, change: ChangeLine, terms: list[TermLine]) -> str:
         return self.told_change(change, terms).text()
@@ -663,15 +712,29 @@ class Ledger:
         self.tails[incident.id] = parts
         return parts
 
+    def note_seen(self, change: ChangeLine) -> None:
+        if change.node_id is None or change.field is None:
+            return
+        told_row = row_words(change.row_key, change.node_id)
+        if not told_row and not own_row(change.row_key, change.node_id):
+            first_row = self.row_of_table.setdefault((change.node_id, change.table_name), change.row_key)
+            if first_row != change.row_key:
+                self.mixed.add((change.node_id, change.table_name))
+        key = (change.table_name, change.field, told_row)
+        self.first_seen[change.node_id].setdefault(key, change)
+        self.last_seen[change.node_id][key] = change
+
     def then_and_now(self, node_id: int) -> list[tuple[str, str]]:
         first = self.first_seen.get(node_id, {})
         last = self.last_seen.get(node_id, {})
         found: list[tuple[str, str]] = []
         for key, earliest in first.items():
+            if (node_id, key[0]) in self.mixed:
+                continue
             latest = last[key]
             then, now = self.value_text(earliest, True), self.value_text(latest, False)
             if then != now:
-                label = f"{words(key[1])} ({title_of(key[0]).lower()})"
+                label = f"{words(key[1])} ({title_of(key[0]).lower()}{f', {key[2]}' if key[2] else ''})"
                 rewritten = rewritten_parts(earliest.before_text, latest.after_text)
                 found.append(
                     (label, f"since epoch {earliest.epoch}: rewrote {rewritten}" if rewritten is not None else f"epoch {earliest.epoch}: {then} → now: {now}")
@@ -739,9 +802,7 @@ class LateLedger(Ledger):
         if change.incident_id is not None:
             self.incident_changes[change.incident_id].append(offset)
         if change.node_id is not None and change.operation is LedgerOperation.UPDATE and change.field is not None:
-            key = (change.table_name, change.field)
-            self.first_seen[change.node_id].setdefault(key, change)
-            self.last_seen[change.node_id][key] = change
+            self.note_seen(change)
 
 
 def composite(text: str | None) -> dict[str, object] | list[object] | None:

@@ -22,6 +22,7 @@ from aerona.domain.enums.structure import StructureKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.divine.gods import god_of
+from aerona.engine.gods.essence import endow
 from aerona.engine.lore.style import axis_of
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.primitives.folk import present_among
@@ -98,8 +99,7 @@ async def prayer_essence(ctx: TickContext, tally: WorshipTally) -> None:
         spec = PRAYER_TONES[tone]
         son = await ctx.session.get(SonRow, god_id)
         if son is not None:
-            son.essence = son.essence + spec.essence(ctx.rules)
-            tally.essence += spec.essence(ctx.rules)
+            tally.essence += endow(ctx.rules, son, spec.essence(ctx.rules))
         sender = await ctx.session.get(EntityRow, sender_id)
         community = sender.location_id if sender is not None else None
         standing = await ctx.session.get(DivineStandingRow, (community, god_id)) if community is not None and spec.praises else None

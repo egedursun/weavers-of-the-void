@@ -200,7 +200,9 @@ class ChronicleRepository(Repository):
         if draft.participants:
             linked = [node for node, _ in draft.participants]
         if draft.son_id is not None and draft.son_id not in linked:
-            participants.append(IncidentParticipantRow(incident_id=incident.id, node_id=draft.son_id, role=IncidentRole.ACTOR, position=0))
+            acted = any(row.role is IncidentRole.ACTOR for row in participants)
+            role = IncidentRole.ALLY if acted else IncidentRole.ACTOR
+            participants.append(IncidentParticipantRow(incident_id=incident.id, node_id=draft.son_id, role=role, position=0))
         if draft.place_entity_id is not None and draft.place_entity_id not in linked and draft.place_entity_id in existing:
             participants.append(IncidentParticipantRow(incident_id=incident.id, node_id=draft.place_entity_id, role=IncidentRole.PLACE, position=len(linked)))
         self.session.add_all(participants)

@@ -18,6 +18,7 @@ from aerona.engine.body.marks import marked
 from aerona.engine.context import TickContext
 from aerona.engine.departures.book import DepartureTally, Seat
 from aerona.engine.departures.leave import leave
+from aerona.engine.mortal.life import years_to_step
 from aerona.engine.primitives.maturity import office_age_share
 from aerona.engine.primitives.numbers import clamp_int
 
@@ -62,7 +63,7 @@ async def devout(ctx: TickContext, holder: EntityRow) -> bool:
 
 async def weigh(ctx: TickContext, seat: Seat) -> tuple[int, DepartureKind, bool]:
     table = ctx.rules.departures
-    share = office_age_share(ctx.rules, seat.holder)
+    share = office_age_share(ctx.rules, seat.holder, years_to_step(ctx.environment))
     scandal = await scandalous(ctx, seat.holder.id)
     hurt = await wounded(ctx, seat.holder.id)
     failed = await failing(ctx, seat)
@@ -132,6 +133,6 @@ async def weigh_seats(ctx: TickContext, tally: DepartureTally) -> None:
         key = f"departures.leave.{seat.holder.id}.{seat.office.id if seat.office else seat.org.org_node_id if seat.org else 0}.{ctx.epoch}"
         if not customary and not ctx.rng(key).chance(weight * table.leave_chance_pct // PERCENT):
             continue
-        reason = "custom retires those of that age" if customary else await trouble_of(ctx, seat)
+        reason = "custom retires those of that age" if customary and kind is DepartureKind.RETIREMENT else await trouble_of(ctx, seat)
         await leave(ctx, seat, kind, heir=None, conditions=terms_for(kind), why=reason)
         tally.left += 1

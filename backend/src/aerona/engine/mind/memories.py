@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import delete, or_, select
+from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.mind import MEMORIES
@@ -9,6 +9,7 @@ from aerona.db.key_index import index_spec, keyed_rows
 from aerona.db.record_context import current_scope
 from aerona.db.repositories.chronicle import incident_for
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentParticipantRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.write_guard import held, write_blocked
@@ -100,6 +101,7 @@ async def remember(
             existing.event_entity_id = event_id
         return existing
     decay = decay_pct if decay_pct is not None else await default_decay(session, rules, holder_id, kind)
+    cause = await cause_of(session, holder_id, subject_id, epoch) if inherited_from is None else None
     row = MemoryRow(
         holder_node_id=holder_id,
         subject_node_id=subject_id,
@@ -109,15 +111,23 @@ async def remember(
         epoch=epoch,
         note=note,
         event_entity_id=event_id,
-        incident_id=remembered_incident() or incident_for(session, holder_id, epoch) or incident_for(session, subject_id, epoch)
-        if inherited_from is None
-        else None,
-        step_id=step_id if step_id is not None else remembered_step() if inherited_from is None else None,
+        incident_id=cause,
+        step_id=step_id if step_id is not None else remembered_step() if cause is not None and cause == remembered_incident() else None,
         inherited_from_node_id=inherited_from,
     )
     session.add(row)
     await session.flush()
     return row
+
+
+async def cause_of(session: AsyncSession, holder_id: int, subject_id: int, epoch: int) -> int | None:
+    for incident_id in dict.fromkeys(found for found in (remembered_incident(), incident_for(session, subject_id, epoch)) if found is not None):
+        named = select(func.count(func.distinct(IncidentParticipantRow.node_id))).where(
+            IncidentParticipantRow.incident_id == incident_id, IncidentParticipantRow.node_id.in_((holder_id, subject_id))
+        )
+        if await session.scalar(named) == len({holder_id, subject_id}):
+            return incident_id
+    return None
 
 
 def remembered_incident() -> int | None:

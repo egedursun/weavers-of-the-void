@@ -7,17 +7,15 @@ from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityType
+from aerona.engine.disease.emergence import FIRST_STRAIN, strain_name
 
-STACKED = re.compile(r"(?:, strain \d+){2,}$")
-LAST = re.compile(r", strain \d+$")
+STACKED = re.compile(r"(?:, strain \d+(?: [IVXLC]+)?){2,}$|, strain \d+ [IVXLC]+$")
+FIRST = re.compile(r", strain (\d+)")
 
 
-def once_named(name: str) -> str:
-    found = STACKED.search(name)
-    if found is None:
-        return name
-    last = LAST.search(found.group(0))
-    return name[: found.start()] + (last.group(0) if last is not None else "")
+def strain_base(name: str) -> tuple[str, int]:
+    found = FIRST.search(name)
+    return (name[: found.start()], int(found.group(1))) if found is not None else (name, FIRST_STRAIN)
 
 
 async def stacked_strains(session: AsyncSession) -> list[int]:
@@ -28,4 +26,6 @@ async def stacked_strains(session: AsyncSession) -> list[int]:
 async def name_strain_once(session: AsyncSession, disease_id: int) -> None:
     row = await session.get(EntityRow, disease_id)
     if row is not None and STACKED.search(row.name) is not None:
-        await NameRepository(session).rename(disease_id, once_named(row.name), free=True)
+        names = NameRepository(session)
+        base, number = strain_base(row.name)
+        await names.rename(disease_id, await strain_name(names, base, number, ignore_node_id=disease_id), free=True)

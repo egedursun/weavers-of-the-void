@@ -35,7 +35,7 @@ async def bid_target(ctx: TickContext, org: EntityRow, profile: FactionProfileRo
     pending = set(await ctx.session.scalars(select(OrgMergerRow.target_node_id).where(OrgMergerRow.stage.in_(sorted(OPEN_MERGER_STAGES)))))
     fits: list[EntityRow] = []
     for other, other_profile in rows:
-        if held(other.id) or other.id in pending or await worth(ctx, other) >= own_worth:
+        if held(other.id) or other.id in pending or other_profile.kind not in TRADERS or await worth(ctx, other) >= own_worth:
             continue
         abroad = await realm_of(ctx, other_profile.home_entity_id or other.location_id) != home
         same_kind = other_profile.kind is profile.kind
@@ -60,7 +60,12 @@ async def follow_strategy(ctx: TickContext, row: OrgGovernanceRow, org: EntityRo
             return "lobbied"
     if strategy is OrgStrategy.RESEARCH:
         return "research" if await research_for_strategy(ctx, org) is not None else None
-    if strategy in BIDDING and profile is not None and ctx.rng(f"governance.bid.{org.id}.{ctx.epoch}").chance(table.strategy_bid_chance_pct):
+    if (
+        strategy in BIDDING
+        and profile is not None
+        and profile.kind in TRADERS
+        and ctx.rng(f"governance.bid.{org.id}.{ctx.epoch}").chance(table.strategy_bid_chance_pct)
+    ):
         target = await bid_target(ctx, org, profile, strategy)
         if target is not None:
             target_body = await ctx.session.get(OrgGovernanceRow, target.id)

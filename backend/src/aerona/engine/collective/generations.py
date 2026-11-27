@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.collective import COLLECTION_FORMATIVE, FORMATIVE_SHIFTS
 from aerona.catalog.life.demography import MINOR_BANDS
@@ -165,6 +166,22 @@ async def pass_on(ctx: TickContext, town: EntityRow, profile: SettlementProfileR
             row.alive = round_half_up(row.alive * remaining / (remaining + 1))
 
 
+async def living_generations(session: AsyncSession, town_id: int) -> list[GenerationRow]:
+    statement = select(GenerationRow).where(GenerationRow.community_entity_id == town_id, GenerationRow.passed_epoch.is_(None), GenerationRow.alive > 0)
+    return list(await session.scalars(statement.order_by(GenerationRow.generation_epoch)))
+
+
+async def fit_to_people(session: AsyncSession, town: EntityRow) -> bool:
+    rows = [row for row in await living_generations(session, town.id) if "alive" not in (row.locked or [])]
+    alive = sum(row.alive for row in rows)
+    people = population_of(town)
+    if alive <= people or not rows:
+        return False
+    for row in rows:
+        row.alive = row.alive * people // alive
+    return True
+
+
 GENERATIONS_FIXUP = "generations.w52"
 
 
@@ -193,4 +210,5 @@ async def keep_generations(ctx: TickContext, tally: GenerationTally) -> None:
         await shape_youth(ctx, town, tally)
         await come_of_age(ctx, town, tally)
         await pass_on(ctx, town, profile, tally)
+        await fit_to_people(ctx.session, town)
     await ctx.session.flush()

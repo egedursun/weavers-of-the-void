@@ -45,6 +45,7 @@ async def test_bargain_with_outer(ctx: TickContext, cosmos: Cosmos) -> None:
     son = await make_son(ctx.session, "Velan", cosmos.home.id)
     sibling = await make_son(ctx.session, "Morak", cosmos.home.id)
     being = await make_entity(ctx.session, "Unspoken", EntityType.OUTER_BEING, OuterBeingStats(influence=40), world_id=cosmos.home.id)
+    son.essence = 0
     gain = await bargain_with_outer(ctx, son.id, being.id, "a key to every gate")
     pantheon = ctx.rules.pantheon
     assert gain == pantheon.bargain_essence_base + round(40 / pantheon.bargain_influence_divisor)

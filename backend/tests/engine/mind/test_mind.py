@@ -3,6 +3,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.mind import MindRow
 from aerona.db.tables.society import CommunityRelationRow
@@ -382,6 +383,19 @@ async def test_a_full_granary_feeds_a_starving_neighbour(realm: Realm) -> None:
     assert await stock(realm.session, rules, poor.id, Commodity.FOOD) > 0
     assert [row.kind for row in await memories_about(realm.session, poor.id, rich.id)] == [MemoryKind.FAMINE_AID]
     assert ctx.rules.needs.famine_aid_share_pct
+
+
+async def test_a_starving_town_sends_no_food_to_another_starving_town(realm: Realm) -> None:
+    rules = tuned(needs={"famine_aid_chance": 100})
+    first = await settlement(realm, "Jofrun")
+    second = await settlement(realm, "Gunjar")
+    for town in (first, second):
+        await set_stock(realm.session, town.id, Commodity.FOOD, 400)
+        await write_pressures(realm.session, town.id, {PressureKind.HUNGER: 90})
+    before = [await stock(realm.session, rules, town.id, Commodity.FOOD) for town in (first, second)]
+    await famine_aid(context(realm.session, rules))
+    assert [await stock(realm.session, rules, town.id, Commodity.FOOD) for town in (first, second)] == before
+    assert await realm.session.scalar(select(IncidentRow).where(IncidentRow.kind == "mind.famine_aid")) is None
 
 
 async def test_a_ruler_who_hates_the_neighbour_sours_the_relation(realm: Realm) -> None:

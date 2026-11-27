@@ -401,8 +401,8 @@ def passability_of(rules: Rules, ground: Ground) -> dict[str, int]:
         crossing = bridged if spec.takes(MovementWork.BRIDGES) else 1.0
         features = (ground.roughness, ground.forest, ground.wetland, river_pct * crossing, cold)
         loss = sum(weight * value / PERCENT for weight, value in zip(spec.sensitivity(rules), features, strict=True))
-        roads = min(settings.road_cap_pct, works.roads * settings.road_step_pct) if spec.takes(MovementWork.ROADS) else 0
-        values[mode.value] = clamp_int(((PERCENT - loss) * share + roads) * (PERCENT - scarred) / PERCENT, settings.floor, PERCENT)
+        roads = min(settings.road_cap_pct, works.roads * settings.road_step_pct) if spec.takes(MovementWork.ROADS) and share > 0 else 0
+        values[mode.value] = clamp_int(((PERCENT - loss) * share + roads) * (PERCENT - scarred) / PERCENT, settings.floor if share > 0 else 0, PERCENT)
     return values
 
 

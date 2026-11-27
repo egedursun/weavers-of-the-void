@@ -75,6 +75,10 @@ async def _row(session: AsyncSession, first: int, second: int) -> CommunityRelat
     return await session.get(CommunityRelationRow, pair_key(first, second))
 
 
+async def have_met(session: AsyncSession, first: int, second: int) -> bool:
+    return first != second and await _row(session, first, second) is not None
+
+
 async def between_entities(session: AsyncSession, first: int, second: int) -> bool:
     return await session.get(EntityRow, first) is not None and await session.get(EntityRow, second) is not None
 
@@ -146,7 +150,15 @@ async def change_relation(
     await _ensure_row(session, rules, first, second)
     await remember(session, rules, holder_id=first, subject_id=second, kind=kind, magnitude=delta, epoch=epoch, note=note, event_id=event_id)
     await remember(
-        session, rules, holder_id=second, subject_id=first, kind=reverse or kind, magnitude=delta, epoch=epoch, note=reverse_note or note, event_id=event_id
+        session,
+        rules,
+        holder_id=second,
+        subject_id=first,
+        kind=reverse or kind,
+        magnitude=delta,
+        epoch=epoch,
+        note=reverse_note or note,
+        event_id=event_id,
     )
     act = MEMORIES[kind].act
     if act is not None:

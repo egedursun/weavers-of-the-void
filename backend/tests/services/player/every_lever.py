@@ -1740,6 +1740,7 @@ LEVERS: dict[str, Lever] = {
     "son:edit": given(title="of the Long Road"),
     "son:duel": given(challenger_id=Pick("son"), defender_id=Pick("son", 1)),
     "son:relation": given(first_id=Pick("son"), second_id=Pick("son", 1), value=10),
+    "son:send_essence": given(son_id=Pick("son"), amount=3),
     "son:god_war": setup_then(foreign_god, god_id=Pick("foreign_god")),
     "soul:raise": given(mortal_id=DEAD),
     **{name: after(("soul:raise", {"mortal_id": DEAD}), spirit_id=Newest(EntityType.SPIRIT)) for name in ("soul:reread_deeds",)},

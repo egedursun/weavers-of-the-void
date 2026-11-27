@@ -7,11 +7,13 @@ from aerona.engine.phase import Phase
 
 
 @reads(
+    "mortal.age",
     "mortal.agility",
     "mortal.charisma",
     "mortal.creativity",
     "mortal.endurance",
     "mortal.intellect",
+    "mortal.lifespan",
     "mortal.perception",
     "mortal.strength",
     "mortal.willpower",

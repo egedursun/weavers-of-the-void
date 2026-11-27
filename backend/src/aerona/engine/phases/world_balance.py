@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.lore import REMEMBRANCE_DAY
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
@@ -58,7 +59,7 @@ TRADITIONS: dict[SocialClass, str] = {
     SocialClass.MERCHANT: "fair",
     SocialClass.PRIEST: "offering rite",
     SocialClass.WARRIOR: "trial of age",
-    SocialClass.SCRIBE: "day of remembrance",
+    SocialClass.SCRIBE: REMEMBRANCE_DAY,
     SocialClass.NOBLE: "games of skill",
     SocialClass.SERF_OR_SLAVE: "day of release",
     SocialClass.OUTCAST: "feast of alms",

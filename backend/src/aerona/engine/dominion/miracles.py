@@ -109,7 +109,7 @@ async def offend_ruler(ctx: TickContext, god_id: int, region: int | None, book: 
         return
     offence = round_half_up(ctx.rules.dominion.rival_miracle_offence * share)
     if offence:
-        await SonRepository(ctx.session).change_relation(god_id, ruler, -offence, "worked a miracle in its land")
+        await SonRepository(ctx.session).change_relation(god_id, ruler, -offence)
 
 
 async def impress(ctx: TickContext, god_id: int, target: EntityRow, *, kind: str, magnitude: int, witnesses: int) -> MiracleRecordRow:

@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from sqlalchemy import select
 
 from aerona.catalog.conditions import AGE_CONDITIONS, OPEN_INJURY_STATES
@@ -31,6 +33,8 @@ from aerona.domain.enums.polity import OathKind
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.unions import UnionForm, UnionPurpose
+from aerona.domain.models.calendar import epoch_end_year, epoch_start_year
+from aerona.domain.models.moment import Moment
 from aerona.engine.body.bands import banded
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.customs import people_of
@@ -51,7 +55,7 @@ from aerona.engine.mind.space import blend
 from aerona.engine.mind.split import seed_split, stored_attribute
 from aerona.engine.mortal.kin import betrothed_of, children_of, parents_of, partners_of, siblings_of
 from aerona.engine.mortal.kinship import betroth, end_marriage, foster, marriage_between, marriages_of, marry
-from aerona.engine.mortal.life import CHILD_SUBTYPE, adult, assign_sex, refresh_life, stage_rank, young
+from aerona.engine.mortal.life import CHILD_SUBTYPE, StageBounds, adult, assign_sex, biology_of, refresh_life, stage_bounds, stage_rank, young
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.polity.oaths import swear
@@ -61,6 +65,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
+from aerona.engine.recording.births import birth_year
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.unions.axes import spousing_of
 from aerona.engine.unions.customs import divorce_rule
@@ -212,18 +217,42 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
             kind = rng.pick(AGE_CONDITIONS)
             await gain_condition(ctx, mortal, kind, HarmCause.AGE, severity=banded(ctx, ctx.rules.harm_bands.old_age, mortal.id))
     await update_health(ctx, mortal, profile, stage)
-    await tell_stage(ctx, mortal, profile, before, stage)
+    await tell_stage(ctx, mortal, profile, before, stage, aged=False)
     return stage
 
 
-async def tell_stage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, before: LifeStage, stage: LifeStage) -> None:
+STAGE_ENTRY: dict[LifeStage, Callable[[StageBounds], float]] = {
+    LifeStage.ADULT: lambda bounds: bounds.youth,
+    LifeStage.MATURE: lambda bounds: bounds.mature,
+    LifeStage.ELDER: lambda bounds: bounds.elder,
+    LifeStage.ANCIENT: lambda bounds: bounds.ancient,
+}
+
+
+async def reached_at(ctx: TickContext, mortal: EntityRow, stage: LifeStage, *, aged: bool) -> tuple[int, int]:
+    years = ctx.rules.time.years_per_epoch
+    start = epoch_start_year(ctx.epoch, years)
+    reference = epoch_end_year(ctx.epoch, years) - 1 if aged else start
+    age = stat_or(mortal, "age", 0)
+    entry = STAGE_ENTRY.get(stage)
+    if entry is None:
+        return reference, age
+    bounds = stage_bounds(ctx.rules, await biology_of(ctx.session, mortal), stat_or(mortal, "lifespan", ctx.rules.world_effects.default_lifespan))
+    born = await birth_year(ctx.session, mortal.id)
+    year = max(start, reference - max(0, age - round_half_up(entry(bounds))), born if born is not None else start)
+    return min(year, reference), age - (reference - min(year, reference))
+
+
+async def tell_stage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, before: LifeStage, stage: LifeStage, *, aged: bool) -> None:
     key = LIFE_KEYS.get(stage)
     if stage is not before and stage_rank(stage) > stage_rank(before) and key is not None:
+        year, age = await reached_at(ctx, mortal, stage, aged=aged)
         await record(
             ctx,
             key,
             roles={IncidentRole.SUBJECT: mortal.id},
-            facts={"stage": stage, "age": stat_or(mortal, "age", 0), "health": profile.health},
+            facts={"stage": stage, "age": age, "health": profile.health},
+            at_moment=Moment(year),
         )
 
 
@@ -233,7 +262,7 @@ async def grow_into_stage(ctx: TickContext, mortal: EntityRow) -> LifeStage:
     stage = await refresh_life(ctx.session, ctx.rules, mortal, profile)
     if mortal.subtype == CHILD_SUBTYPE and adult(stage):
         mortal.subtype = None
-    await tell_stage(ctx, mortal, profile, before, stage)
+    await tell_stage(ctx, mortal, profile, before, stage, aged=True)
     return stage
 
 

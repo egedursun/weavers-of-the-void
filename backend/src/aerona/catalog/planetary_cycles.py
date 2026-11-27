@@ -25,6 +25,7 @@ class CycleSpec:
     seeded_by: frozenset[CycleSource] = frozenset()
     cools: bool = False
     inverse: bool = False
+    drawn_as_held: bool = False
 
 
 CYCLES: Mapping[PlanetaryCycle, CycleSpec] = total(
@@ -79,6 +80,7 @@ CYCLES: Mapping[PlanetaryCycle, CycleSpec] = total(
             ),
             frozenset({CycleEffect.BREATH}),
             frozenset({S.FORESTS, S.OCEANS}),
+            drawn_as_held=True,
         ),
         PlanetaryCycle.ROCK: CycleSpec(
             "Rock",

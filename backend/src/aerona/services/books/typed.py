@@ -99,6 +99,8 @@ SKIPPED_TABLES = frozenset(
 )
 SKIPPED_COLUMNS = frozenset({"id", LOCK_COLUMN, "created_at", "updated_at", "undo"})
 ID_SUFFIXES = ("_entity_id", "_node_id", "_id")
+KIND_WORD = "kind"
+ARTICLE = re.compile(r"^(?:the|an?) ", re.IGNORECASE)
 NODE_SUFFIXES = ("_entity_id", "_node_id")
 INDEXED_LISTS: dict[str, list[str]] = {"biome_mix": [biome.name.lower().replace("_", " ") for biome in Biome]}
 ID_LISTS = frozenset(
@@ -263,7 +265,14 @@ def words(key: str) -> str:
 def column_labels(columns: list[KeyedColumnElement[Any]]) -> dict[str, str]:
     labels = {column.key: words(column.key) for column in columns}
     shared = Counter(labels.values())
-    return {key: f"{label} kind" if shared[label] > 1 and words(key) == key.replace("_", " ").capitalize() else label for key, label in labels.items()}
+    return {key: shared_label(key, label) if shared[label] > 1 else label for key, label in labels.items()}
+
+
+def shared_label(key: str, label: str) -> str:
+    plain = words(key) == key.replace("_", " ").capitalize()
+    if label.lower().endswith(KIND_WORD):
+        return label if plain else f"{label} record"
+    return f"{label} {KIND_WORD}" if plain else label
 
 
 PROPERTY_KEYS: dict[tuple[Mapper[Any], str, str], str] = {}
@@ -310,10 +319,16 @@ def _named_label(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str] | 
     if key is None:
         return None
 
-    def label(row: Any, _names: dict[int, str]) -> str:
-        return str(getattr(row, key) or "")
+    described = _described_label(mapper)
+
+    def label(row: Any, names: dict[int, str]) -> str:
+        return str(getattr(row, key) or "") or described(row, names)
 
     return label
+
+
+def bare(phrase: str) -> str:
+    return ARTICLE.sub("", phrase)
 
 
 def _described_label(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str]:
@@ -324,7 +339,7 @@ def _described_label(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str
 
     def label(row: Any, names: dict[int, str]) -> str:
         sort = getattr(row, kind, None) if kind is not None else None
-        head = f"the {spoken(sort)} {noun}" if sort is not None and hasattr(sort, "value") else f"the {noun}"
+        head = f"the {bare(spoken(sort))} {noun}" if sort is not None and hasattr(sort, "value") else f"the {noun}"
         whose = next((names[node] for node in (getattr(row, owner) for owner in owners) if isinstance(node, int) and node in names), "")
         epoch = getattr(row, dated, None) if dated is not None else None
         return head + (f" of {whose}" if whose else "") + (f" from epoch {epoch}" if isinstance(epoch, int) else "")
@@ -334,6 +349,10 @@ def _described_label(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str
 
 def label_of(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str]:
     return REFERENCE_LABELS.get(table_name(mapper)) or _named_label(mapper) or _described_label(mapper)
+
+
+def told_in_entries(table: str) -> bool:
+    return table not in SKIPPED_TABLES and table not in KIND_TABLES and table not in BOOKKEEPING_TABLES
 
 
 async def shown_ids(session: AsyncSession, target: str) -> list[int]:
@@ -373,15 +392,22 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
         f"the crisis of epoch {row.opened_epoch} between {_named(names, row.demander_entity_id)} and {_named(names, row.target_entity_id)}"
     ),
     "resolutions": lambda row, names: f"the {words(str(row.kind.value)).lower()} resolution of epoch {row.proposed_epoch}",
-    "crime_cases": lambda row, names: f"the {spoken(row.crime)} case of epoch {row.opened_epoch} against {_named(names, row.accused_entity_id) or 'no one'}",
+    "crime_cases": lambda row, names: (
+        f"the {spoken(row.crime)} case of epoch {row.opened_epoch}"
+        + (f" against {_named(names, row.accused_entity_id)}" if _named(names, row.accused_entity_id) else ", with no one accused")
+    ),
     "accounts": lambda row, names: f"the {words(row.kind.value).lower()} of {_named(names, row.holder_entity_id) or 'someone'} from epoch {row.epoch}",
-    "designs": lambda row, names: f"{row.name} of {_named(names, row.owner_entity_id) or 'no one'}",
+    "designs": lambda row, names: row.name + (f" of {_named(names, row.owner_entity_id)}" if _named(names, row.owner_entity_id) else ""),
     "cascades": lambda row, names: f"the {spoken(row.act)} of epoch {row.epoch} at {_named(names, row.settlement_entity_id)}",
     "storylet_runs": lambda row, names: f"the {words(row.storylet.value).lower()} storylet of epoch {row.opened_epoch}",
-    "vehicle_groups": lambda row, names: f"the group of {row.count} held by {_named(names, row.holder_node_id) or 'no one'}",
+    "vehicle_groups": lambda row, names: (
+        f"the group of {row.count}" + (f" held by {_named(names, row.holder_node_id)}" if _named(names, row.holder_node_id) else ", held by none")
+    ),
     "army_units": lambda row, names: f"the {words(row.kind.value).lower()} of {_named(names, row.army_entity_id) or 'an army'}",
     "gatherings": lambda row, names: (
-        f"the {spoken(row.kind)} of {_named(names, row.host_node_id) or 'no one'} in epoch {row.epoch}"
+        f"the {spoken(row.kind)}"
+        + (f" of {_named(names, row.host_node_id)}" if _named(names, row.host_node_id) else "")
+        + f" in epoch {row.epoch}"
         + (f" for {_named(names, row.honoured_node_id)}" if _named(names, row.honoured_node_id) else "")
     ),
     "battles": lambda row, names: (
@@ -407,9 +433,7 @@ ROW_FILTERS: dict[str, ColumnElement[bool]] = {"messages": MessageRow.intent == 
 
 
 def typed_mappers() -> list[Mapper[Any]]:
-    return [
-        mapper for mapper in sorted(Base.registry.mappers, key=table_name) if table_name(mapper) not in SKIPPED_TABLES and table_name(mapper) not in KIND_TABLES
-    ]
+    return [mapper for mapper in sorted(Base.registry.mappers, key=table_name) if told_in_entries(table_name(mapper))]
 
 
 def _rows(mapper: Mapper[Any], table: str) -> Select[Any]:
@@ -555,7 +579,7 @@ class TypedIndex:
         found: list[tuple[str, list[KeyedColumnElement[Any]], list[Any], bool]] = []
         for mapper in sorted(Base.registry.mappers, key=table_name):
             table = table_name(mapper)
-            owner = _owner(mapper) if table not in SKIPPED_TABLES and table not in KIND_TABLES else None
+            owner = _owner(mapper) if told_in_entries(table) else None
             if owner is None:
                 continue
             columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS and column.key != owner]

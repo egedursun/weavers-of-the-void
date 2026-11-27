@@ -12,6 +12,7 @@ from aerona.domain.enums.agent import AgentKind, TurnCounter
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.engine.gods.devotion import SchemeKind, hinder_return, resurrection_state, scheme_cost, sibling_scheme
+from aerona.engine.gods.essence import endow
 from aerona.engine.gods.mortality import Killer, attempt_kill, failed_kill_refund, kill_cost
 from aerona.prompts import SonToolId
 from aerona.prompts.tools.results import SonResult, result
@@ -60,7 +61,7 @@ async def take_life(call: SonCall, args: TakeLifeInput) -> str:
     outcome = await attempt_kill(call.tick, victim, killer, creator.name, how=args.how)
     refund = 0 if outcome.success else failed_kill_refund(call.rules, cost)
     if refund > 0:
-        call.son.essence += refund
+        endow(call.rules, call.son, refund)
         call.log.essence_spent -= refund
     return result(SonResult.TAKE_LIFE_DONE, text=outcome.text, chance=outcome.percent, cost=cost, refund=refund)
 

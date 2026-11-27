@@ -27,6 +27,7 @@ from aerona.engine.happenings.effects import onset
 from aerona.engine.happenings.profile import Happening, happen, record_casualties, region_of
 from aerona.engine.interconnect.flows import FlowCategory
 from aerona.engine.primitives.distance import RegionAtlas
+from aerona.engine.primitives.maturity import acting_for
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.stats import stat_or
 
@@ -132,6 +133,13 @@ async def festivals(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     return made
 
 
+async def crowning_cast(ctx: TickContext, ruler_id: int, realm_id: int) -> dict[int, IncidentRole]:
+    hand = await acting_for(ctx.session, realm_id, ruler_id)
+    if hand == ruler_id:
+        return {ruler_id: IncidentRole.ACTOR, realm_id: IncidentRole.TARGET}
+    return {**({hand: IncidentRole.ACTOR} if hand is not None else {}), ruler_id: IncidentRole.TARGET, realm_id: IncidentRole.TARGET}
+
+
 async def coronations(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
     table = ctx.rules.events
     bonds = await ctx.session.scalars(
@@ -157,7 +165,7 @@ async def coronations(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
                 f"The crowning of {ruler.name} as ruler of {realm.name}.",
                 realm,
                 35,
-                {ruler.id: IncidentRole.ACTOR, realm.id: IncidentRole.TARGET},
+                await crowning_cast(ctx, ruler.id, realm.id),
             ),
             atlas,
         )

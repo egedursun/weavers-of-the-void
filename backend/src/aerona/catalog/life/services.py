@@ -42,7 +42,7 @@ ENDING_LABELS: dict[WarEnding, str] = {
     WarEnding.WHITE_PEACE: "white peace",
     WarEnding.BETRAYAL: "betrayal",
     WarEnding.SAME_FRONT: "front of the same war",
-    WarEnding.NO_SIDE_LEFT: "no side left",
+    WarEnding.NO_SIDE_LEFT: "a side gone",
     WarEnding.MIRACLE: "peace miracle",
     WarEnding.MEDIATED: "mediated peace",
 }

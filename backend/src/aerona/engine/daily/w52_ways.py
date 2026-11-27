@@ -34,6 +34,7 @@ from aerona.engine.mind.skills import practise_any
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
@@ -92,13 +93,15 @@ async def keep_household_duties(ctx: TickContext, tally: WaysTally) -> None:
         if not duties & set(KEPT_HOUSE_DUTIES):
             continue
         household = await ctx.session.get(HouseholdRow, household_id)
-        if household is None or held(household.head_node_id):
+        if household is None or held(household.head_node_id) or await living_entity(ctx.session, household.head_node_id) is None:
             continue
         members = list(
             await ctx.session.scalars(
                 select(HouseholdMemberRow).where(HouseholdMemberRow.household_id == household_id).order_by(HouseholdMemberRow.member_node_id)
             )
         )
+        if not members:
+            continue
         load = await household_load(ctx, household, rows, members)
         lapsed = load >= heavy
         if HouseDuty.SICKCARE in duties:

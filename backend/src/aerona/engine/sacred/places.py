@@ -13,6 +13,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.enums.war import WarStatus
 from aerona.engine.context import TickContext
+from aerona.engine.primitives.standing import ended_ids
 from aerona.engine.primitives.stats import stat_or
 
 LIVE_OUTBREAKS = (OutbreakStatus.ACTIVE, OutbreakStatus.WANING)
@@ -99,7 +100,10 @@ async def ruler_of(session: AsyncSession, realm_id: int | None) -> int | None:
     if realm_id is None:
         return None
     found = await session.scalar(
-        select(OfficeRow.holder_entity_id).where(OfficeRow.polity_entity_id == realm_id, OfficeRow.kind == OfficeKind.RULER).order_by(OfficeRow.id).limit(1)
+        select(OfficeRow.holder_entity_id)
+        .where(OfficeRow.polity_entity_id == realm_id, OfficeRow.kind == OfficeKind.RULER, OfficeRow.holder_entity_id.not_in(ended_ids()))
+        .order_by(OfficeRow.id)
+        .limit(1)
     )
     return int(found) if found is not None else None
 

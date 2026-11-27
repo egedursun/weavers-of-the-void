@@ -75,4 +75,4 @@ def test_a_right_used_without_leave_is_told_with_its_kind() -> None:
         {IncidentRole.ACTOR: ["Fonju"], IncidentRole.VICTIM: ["House Anrar"]},
         {"right": "House Anrar", "kind": RightKind.NAME, "opinion": -10},
     )
-    assert line.startswith("Fonju used the name House Anrar without leave")
+    assert line.startswith("Fonju used the name House Anrar without the leave of")

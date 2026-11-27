@@ -19,7 +19,7 @@ from aerona.engine.departures.leave import leave
 from aerona.engine.departures.returns import return_to, tend_departed
 from aerona.engine.departures.weigh import weigh, weigh_seats
 from aerona.engine.primitives.manual import manual_context
-from aerona.engine.primitives.stats import set_stats
+from aerona.engine.primitives.stats import set_stats, stat_or
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
 
 
@@ -121,5 +121,5 @@ async def test_years_held_count_the_holders_own_tenure_not_the_successors(ctx: T
     _realm, office, holder = await realm_with(session, world, OfficeKind.RULER)
     heir = await mortal(session, "Wren Venn", world, holder.location_id)
     row = await leave(ctx, Seat(holder, office, None), DepartureKind.ABDICATION, heir=heir.id, conditions=[], why="by choice")
-    assert row.years_held == ctx.epoch * ctx.rules.time.years_per_epoch > 0
+    assert row.years_held == min(ctx.epoch * ctx.rules.time.years_per_epoch, stat_or(holder, "age", 0)) > 0
     assert office.holder_entity_id == heir.id and office.since_epoch == ctx.epoch

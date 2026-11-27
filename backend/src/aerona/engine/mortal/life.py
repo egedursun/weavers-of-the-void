@@ -14,12 +14,16 @@ from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.demography import SexKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mortal import LifeStage
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.engine.body.customs import people_of
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.context import TickEnvironment
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.recording.scope import phase_moment
 from aerona.rules.registry import Rules
 from aerona.rules.registry.mortal_life import AgingRules
 
@@ -100,8 +104,21 @@ def window_end_pct(rules: Rules, sex: SexKind) -> int:
     return window(rules) if window is not None else 0
 
 
+def folk_span(biology: PeopleBiologyRow | None, lifespan: int) -> int:
+    if biology is None:
+        return max(1, lifespan)
+    return max(1, biology.maturity_years + biology.adult_years + biology.elder_years)
+
+
+def folk_lifespan(biology: PeopleBiologyRow | None, base: int, roll: int, die: int) -> int:
+    typical = base + (die + 1) / 2
+    if biology is None:
+        return base + roll
+    return max(1, round_half_up((base + roll) * folk_span(biology, round_half_up(typical)) / typical))
+
+
 def fertility_window(rules: Rules, biology: PeopleBiologyRow | None, sex: SexKind, lifespan: int) -> tuple[float, float]:
-    span = max(1, lifespan)
+    span = folk_span(biology, lifespan)
     start = float(biology.maturity_years) if biology is not None else span * rules.fertility.window_start_pct / PERCENT
     end = span * window_end_pct(rules, sex) / PERCENT
     return start, max(start + 1, end)
@@ -171,3 +188,30 @@ def adult(stage: LifeStage) -> bool:
 
 def young(stage: LifeStage) -> bool:
     return bool(LIFE_STAGE_TRAITS[stage] & YOUNG_TRAITS)
+
+
+async def young_through(session: AsyncSession, rules: Rules, epoch: int, mortals: list[EntityRow], *, aged: bool) -> set[int]:
+    years = rules.time.years_per_epoch
+    start = epoch_start_year(epoch, years)
+    found: set[int] = set()
+    for mortal in mortals:
+        age = stat(mortal, "age")
+        if mortal.entity_type is not EntityType.MORTAL or age is None:
+            continue
+        born = (start + years if aged else start) - age
+        bounds = stage_bounds(rules, await biology_of(session, mortal), stat_or(mortal, "lifespan", rules.world_effects.default_lifespan))
+        if born + bounds.child > start:
+            found.add(mortal.id)
+    return found
+
+
+def years_to_step(environment: TickEnvironment) -> int:
+    years = environment.rules.time.years_per_epoch
+    start = epoch_start_year(environment.epoch, years)
+    aged = environment.aging is not None and environment.aging.done
+    return (phase_moment(environment).year or start) - (start + years - 1 if aged else start)
+
+
+async def stage_now(session: AsyncSession, rules: Rules, mortal: EntityRow) -> LifeStage:
+    bounds = stage_bounds(rules, await biology_of(session, mortal), stat_or(mortal, "lifespan", rules.world_effects.default_lifespan))
+    return stage_for(bounds, stat(mortal, "age") or 0)

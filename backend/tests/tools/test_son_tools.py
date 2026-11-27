@@ -108,6 +108,10 @@ async def test_kin_tools(database: Database) -> None:
     covenant = await toolkit.runtime.call("swear_covenant", {"son_id": realm.sibling_id, "terms": "salt and fire forever"})
     if covenant.is_error:
         assert "does not trust you enough" in covenant.text
+    async with database.write() as session:
+        sibling = await session.get(SonRow, realm.sibling_id)
+        assert sibling is not None
+        sibling.essence = 10
     gift = await ok(toolkit, "give_gift", {"son_id": realm.sibling_id, "essence": 10, "words": "take this salt"})
     assert "10 essence" in gift
     duel = await ok(toolkit, "challenge", {"son_id": realm.sibling_id, "stat": "cunning", "reason": "to test her wits"})

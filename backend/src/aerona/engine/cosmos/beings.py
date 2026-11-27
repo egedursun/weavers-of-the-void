@@ -41,6 +41,7 @@ from aerona.engine.cosmos.kinds import BEING_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography, Placement
 from aerona.engine.cosmos.rifts import tear_toward
 from aerona.engine.cosmos.star_types import star_mechanics
+from aerona.engine.gods.essence import endow
 from aerona.engine.interconnect.annotations import reads
 from aerona.engine.intrigue.identities import assume
 from aerona.engine.lore.research import raise_holder
@@ -574,7 +575,7 @@ async def serve(ctx: TickContext, cosmography: Cosmography, being: EntityRow, pr
     son = await ctx.session.get(SonRow, binder_id)
     god = await ctx.session.get(ForeignGodRow, binder_id) if son is None else None
     if son is not None:
-        son.essence += gain
+        endow(ctx.rules, son, gain)
     elif god is not None:
         god.power = clamp_percent(god.power + gain)
     world = cosmography.worlds.get(being.world_id)
@@ -810,8 +811,7 @@ async def ruler_gains(ctx: TickContext, dimension: DimensionRow) -> int:
     gain = ctx.rules.dimensions.ruler_essence
     son = await ctx.session.get(SonRow, dimension.ruler_node_id)
     if son is not None:
-        son.essence += gain
-        return gain
+        return endow(ctx.rules, son, gain)
     god = await ctx.session.get(ForeignGodRow, dimension.ruler_node_id)
     if god is not None:
         god.power = clamp_percent(god.power + gain)

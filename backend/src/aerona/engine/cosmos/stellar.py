@@ -10,13 +10,13 @@ from aerona.db.tables.cosmography import GalaxyRow
 from aerona.db.tables.physics import StarPhysicsRow
 from aerona.db.tables.transform import StarModifierRow
 from aerona.domain.enums.cosmography import StarAge
-from aerona.domain.enums.world import DARK_STAR_TYPES, StarType
+from aerona.domain.enums.world import EXTINGUISHED_STAR_TYPES, StarType
 from aerona.engine.cosmos.star_types import brightness_band, star_mechanics
 from aerona.engine.primitives.numbers import clamp_int, clamp_percent, round_half_up
 from aerona.rules.registry import Rules
 
 HUNDRED = 100.0
-REMNANTS = frozenset({StarType.WHITE_DWARF, StarType.NEUTRON_STAR, StarType.MAGNETAR, StarType.PULSAR, StarType.BLACK_HOLE, *DARK_STAR_TYPES})
+REMNANTS = frozenset({StarType.WHITE_DWARF, StarType.NEUTRON_STAR, StarType.MAGNETAR, StarType.PULSAR, StarType.BLACK_HOLE, *EXTINGUISHED_STAR_TYPES})
 GIANTS = frozenset({StarType.RED_GIANT, StarType.YELLOW_GIANT, StarType.RED_SUPERGIANT, StarType.BLUE_SUPERGIANT, StarType.HYPERGIANT})
 STAGE_LIGHT: dict[StarAge, float] = {
     StarAge.YOUNG: 0.7,
@@ -63,6 +63,20 @@ def stage_length(rules: Rules, mass: float, stage: StarAge) -> int | None:
         return None
     share = int(getattr(table, spec.length_rule)) if spec.length_rule is not None else PERCENT
     return clamp_int(round_half_up(life * share / PERCENT), 1, table.life_cap_epochs)
+
+
+def stage_start(rules: Rules, mass: float, stage: StarAge) -> int:
+    young = stage_length(rules, mass, StarAge.YOUNG) or 0
+    main = stage_length(rules, mass, StarAge.MAIN) or 0
+    old = stage_length(rules, mass, StarAge.OLD) or 0
+    return {
+        StarAge.YOUNG: 0,
+        StarAge.MAIN: young,
+        StarAge.OLD: young + main,
+        StarAge.DYING: young + main + old,
+        StarAge.DEAD: young + main + old + (stage_length(rules, mass, StarAge.DYING) or 0),
+        StarAge.REBORN: 0,
+    }[stage]
 
 
 def band_of_light(rules: Rules, luminosity: float) -> tuple[float, float]:

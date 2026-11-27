@@ -219,9 +219,14 @@ async def declare_rebellion(ctx: TickContext, creator: CreatorRow, son: SonRow, 
     ctx.count("rebellions")
 
 
-async def end_rebellion(ctx: TickContext, creator: CreatorRow, son: SonRow) -> None:
+async def end_rebellion(ctx: TickContext, creator: CreatorRow, son: SonRow, words: str = "") -> None:
     son.rebel = False
     await record(
-        ctx, "gods.power.rebellion_ended", roles={IncidentRole.ACTOR: son.id, IncidentRole.AUTHORITY: creator.id}, kind=ChronicleKind.REBELLION, son_id=son.id
+        ctx,
+        "gods.power.rebellion_ended",
+        roles={IncidentRole.ACTOR: son.id, IncidentRole.AUTHORITY: creator.id},
+        facts={"words": str(words)} if words else None,
+        kind=ChronicleKind.REBELLION,
+        son_id=son.id,
     )
     ctx.count("rebellions_ended")

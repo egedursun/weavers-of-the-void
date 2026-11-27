@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.chronicle import EPOCH_CLOSE, record_line
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.gatherings import GatheringRow
+from aerona.db.tables.gatherings import CollectionMemberRow, CollectionRow, GatheringRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.mind import GriefRow
@@ -15,7 +15,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.epoch import EpochPhase
-from aerona.domain.enums.gathering import GatheringKind, GatheringStatus
+from aerona.domain.enums.gathering import CollectionKind, CollectionRole, GatheringKind, GatheringStatus
 from aerona.domain.enums.mind import GriefStage
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
@@ -23,11 +23,11 @@ from aerona.domain.models.calendar import epoch_end_year
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import AgingState, TickContext
 from aerona.engine.cycles.lineage import breeds
-from aerona.engine.gatherings.hold import rite_floor
+from aerona.engine.gatherings.hold import rite_floor, rites_already_kept
 from aerona.engine.lifecycle.mortal_death import age_at_death, death_moment
 from aerona.engine.phases.births import bear_child
 from aerona.engine.phases.mortals import mortal_aging, years_lived
-from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import CoreWorld, entity, mortal
@@ -69,7 +69,7 @@ async def test_a_child_is_born_before_anything_is_told_of_it(ctx: TickContext, w
     assert ("births.child", birth.year) in rows
 
 
-async def test_the_first_record_of_a_new_thing_dates_its_coming_into_being(ctx: TickContext, world: CoreWorld) -> None:
+async def test_the_first_record_of_a_new_thing_dates_its_coming_into_being_a_grown_one_by_its_age(ctx: TickContext, world: CoreWorld) -> None:
     newcomer = await mortal(ctx.session, "Newcomer", world, world.regions[0].id)
     await record(ctx, "lifecycle.affairs_closed", roles={IncidentRole.SUBJECT: newcomer.id}, facts={"affairs": 1, "ties": 0})
     await ctx.session.flush()
@@ -79,8 +79,8 @@ async def test_the_first_record_of_a_new_thing_dates_its_coming_into_being(ctx: 
         .where(IncidentParticipantRow.node_id == newcomer.id)
     )
     birth = await ctx.session.get(NodeBirthRow, newcomer.id)
-    assert first is not None and birth is not None
-    assert birth.year == first.year
+    assert first is not None and birth is not None and first.year is not None
+    assert birth.year == first.year - (stat(newcomer, "age") or 0)
 
 
 async def test_a_child_dead_in_its_birth_year_dies_at_no_age(ctx: TickContext, world: CoreWorld) -> None:
@@ -212,3 +212,27 @@ async def test_one_who_grieved_a_death_of_the_age_dies_no_earlier_than_it(ctx: T
     await ctx.session.flush()
     moment = await death_moment(ctx, mourner, None, None, end - 30)
     assert moment.year == end - 10
+
+
+async def test_a_mourning_joins_only_the_rites_of_its_own_dead(ctx: TickContext, world: CoreWorld) -> None:
+    first = await mortal(ctx.session, "First Mourned", world, world.regions[0].id, death_year=40)
+    second = await mortal(ctx.session, "Second Mourned", world, world.regions[0].id, death_year=41)
+    funeral = CollectionRow(kind=CollectionKind.FUNERAL, name="Funeral of First Mourned", start_epoch=ctx.epoch, locked=[])
+    ctx.session.add(funeral)
+    await ctx.session.flush()
+    ctx.session.add_all(
+        [
+            CollectionMemberRow(collection_id=funeral.id, node_id=first.id, role=CollectionRole.VICTIM),
+            CollectionMemberRow(collection_id=funeral.id, node_id=second.id, role=CollectionRole.GUEST),
+        ]
+    )
+    rites = [
+        GatheringRow(
+            host_node_id=world.regions[0].id, kind=GatheringKind.MOURNING, status=GatheringStatus.PLANNED, honoured_node_id=node.id, epoch=ctx.epoch, locked=[]
+        )
+        for node in (first, second)
+    ]
+    ctx.session.add_all(rites)
+    await ctx.session.flush()
+    assert await rites_already_kept(ctx, rites[0]) is funeral
+    assert await rites_already_kept(ctx, rites[1]) is None

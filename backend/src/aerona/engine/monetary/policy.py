@@ -18,6 +18,7 @@ from aerona.engine.monetary.authorities import MonetaryTally, align, authority_o
 from aerona.engine.monetary.pegs import defend_peg
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.standing import still_standing
 from aerona.engine.recording.record import record
 from aerona.engine.services.community_relations import change_relation
 
@@ -118,6 +119,8 @@ async def print_for_state(
 async def tend_authority(ctx: TickContext, authority: MonetaryAuthorityRow, tally: MonetaryTally) -> None:
     currency = await ctx.session.get(CurrencyRow, authority.currency_id)
     if currency is None or (authority.holder_node_id is not None and held(authority.holder_node_id)) or held(currency.issuer_entity_id):
+        return
+    if authority.holder_node_id is not None and not await still_standing(ctx.session, authority.holder_node_id):
         return
     locked = authority.locked or []
     align(authority, currency)

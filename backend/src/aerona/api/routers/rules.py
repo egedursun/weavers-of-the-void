@@ -14,13 +14,12 @@ from aerona.domain.enums.team import QueuedActSource
 from aerona.rules.model import RuleDescriptor
 from aerona.services.container import Services
 from aerona.services.rule_changes import rule_desk
+from aerona.services.rules import RULE_KEY_SEPARATOR, rules_title
 from aerona.services.team.execute import world_busy
 from aerona.services.team.queue import QueueDraft, enqueue
 
-KEY_SEPARATOR = "."
+KEY_SEPARATOR = RULE_KEY_SEPARATOR
 RULES_ACTION = "rules:change"
-RULES_TITLE = "Change the rules: {keys}"
-RESET_TITLE = "Reset every rule"
 QUEUED_RESPONSES: dict[int | str, dict[str, Any]] = {202: {"model": QueuedActView}}
 
 router = APIRouter(prefix=RULES_PATH, tags=["rules"])
@@ -54,8 +53,7 @@ async def rule_values(services: ServicesDep) -> RuleValuesResponse:
 async def queued_rules(services: Services, changes: dict[str, float | None], *, reset_all: bool = False) -> JSONResponse | None:
     if not world_busy(services):
         return None
-    labels = {f"{item.namespace}{KEY_SEPARATOR}{item.key}": item.label for item in services.rules.catalog()}
-    title = RESET_TITLE if reset_all else RULES_TITLE.format(keys="; ".join(sorted(labels.get(key, key).lower() for key in changes)))
+    title = rules_title(services.rules.current, list(changes), reset_all=reset_all)
     payload: dict[str, Any] = {"changes": changes, "reset_all": reset_all}
     queued = await enqueue(services, QueueDraft(QueuedActSource.RULES, RULES_ACTION, title, payload, current_note().reason))
     return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content=queued_view(queued).model_dump(mode="json"))

@@ -8,6 +8,7 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.session import Database
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.epochs import DeferredStepRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.routes import HorizonIntuitionRow
 from aerona.db.tables.society import ResurrectionOrderRow
@@ -15,6 +16,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.db.tables.warfare import ArmyRow, CaptiveRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.enums.war import CaptiveStatus
@@ -57,6 +59,16 @@ async def test_confiscating_a_resource_sets_its_owner_against_the_claimant(datab
     async with database.write() as session:
         await connect(session, realm.faction_id, realm.resource_id, BondKind.OWNS)
         await weaken(session, realm.faction_id)
+        session.add(
+            FactionProfileRow(
+                faction_entity_id=realm.faction_id,
+                kind=FactionKind.MERCENARY_COMPANY,
+                home_entity_id=realm.settlement_id,
+                influence_over={},
+                cohort_share={},
+                locked=[],
+            )
+        )
     sure = replace(Rules(), mortal_tools=replace(Rules().mortal_tools, seize_defense=0, seize_die=1, seizure_relation_loss=200))
     toolkit = await mortal_toolkit(database, realm.people_id, action_points=3, rules=sure)
     claimed = await ok(toolkit, "claim_resource", {"resource_id": realm.resource_id})

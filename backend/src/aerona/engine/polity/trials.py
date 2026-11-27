@@ -2,6 +2,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.anatomy import MUTILATIONS
 from aerona.catalog.crimes import CRIMES
@@ -64,6 +65,7 @@ from aerona.engine.powers.sources import polity_of
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.standing import still_standing
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import relation
@@ -88,6 +90,9 @@ class TrialTally:
     acquitted: int = 0
     wrongful: int = 0
     fled: int = 0
+
+
+JUDGE = "judge_entity_id"
 
 
 async def judge_for(ctx: TickContext, polity_id: int | None, town_id: int) -> EntityRow | None:
@@ -591,6 +596,9 @@ async def try_case(ctx: TickContext, case: CrimeCaseRow, laws: LawBook, tally: T
         if accused is not None:
             await declare_outlaw(ctx, accused, case.polity_entity_id)
         return
+    if case.judge_entity_id is not None and JUDGE not in (case.locked or []) and not await still_standing(ctx.session, case.judge_entity_id):
+        judge = await judge_for(ctx, case.polity_entity_id, accused.location_id) if accused.location_id is not None else None
+        case.judge_entity_id = judge.id if judge is not None else None
     if await immune(ctx.session, accused.id, case.polity_entity_id):
         close(ctx, case, Verdict.DROPPED)
         ctx.count("case_immune")
@@ -650,15 +658,31 @@ def case_held(case: CrimeCaseRow) -> bool:
     return any(node is not None and held(node) for node in (case.settlement_entity_id, case.accused_entity_id, case.judge_entity_id, case.polity_entity_id))
 
 
+async def pending_case(session: AsyncSession, accused_id: int, crime: CrimeKind) -> CrimeCaseRow | None:
+    return await session.scalar(
+        select(CrimeCaseRow)
+        .where(CrimeCaseRow.accused_entity_id == accused_id, CrimeCaseRow.crime == crime, CrimeCaseRow.stage != CaseStage.CLOSED)
+        .order_by(CrimeCaseRow.id)
+        .limit(1)
+    )
+
+
 async def tend_cases(ctx: TickContext, tally: TrialTally) -> None:
     rows = await ctx.session.scalars(
         select(CrimeCaseRow).where(CrimeCaseRow.stage == CaseStage.TRIAL, CrimeCaseRow.opened_epoch < ctx.epoch).order_by(CrimeCaseRow.id)
     )
     laws = await LawBook.load(ctx.session)
+    tried: dict[tuple[int, CrimeKind], CrimeCaseRow] = {}
     for case in list(rows):
         if VERDICT in (case.locked or []) or case_held(case) or case.opened_epoch + TRIAL_SPECS[case.trial or TrialKind.JUDGE].delay >= ctx.epoch:
             continue
+        first = tried.get((case.accused_entity_id, case.crime)) if case.accused_entity_id is not None else None
+        if first is not None and first.verdict is not None:
+            close(ctx, case, first.verdict)
+            continue
         await try_case(ctx, case, laws, tally)
+        if case.accused_entity_id is not None:
+            tried[(case.accused_entity_id, case.crime)] = case
 
 
 async def injustices(ctx: TickContext, member_id: int) -> int:

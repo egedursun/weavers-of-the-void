@@ -6,24 +6,31 @@ from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.queries import add_flag, canon, flags_by_entity, living_entity, remove_flag
 from aerona.engine.primitives.records import retire
-from aerona.engine.primitives.stats import stat, stat_or
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import record
 
 LEFT_BEHIND_TYPES = frozenset({EntityType.STRUCTURE, EntityType.ITEM})
 
 
-async def abandon(ctx: TickContext, settlement: EntityRow) -> EntityRow:
+async def abandon(ctx: TickContext, settlement: EntityRow, *, tell: bool = True) -> EntityRow:
     await retire(ctx.session, settlement, ctx.epoch, f"Epoch {ctx.epoch}: abandoned, turned into a ruin.", append=True, close_bonds=True)
     await add_flag(ctx.session, settlement.id, EntityFlag.RUIN, ctx.epoch)
     remains = [item for item in await EntityRepository(ctx.session).contents(settlement.id) if item.entity_type in LEFT_BEHIND_TYPES]
+    left = stat_or(settlement, "population", 0)
+    with flowing(FlowCategory.TRANSFORMATION):
+        set_stats(settlement, population=0)
+    if not tell:
+        ctx.count("abandoned")
+        return settlement
     await record(
         ctx,
         "ruins.abandoned",
         roles={IncidentRole.SUBJECT: settlement.id, IncidentRole.PRODUCT: [item.id for item in remains]},
-        facts={"population": stat_or(settlement, "population", 0), "left_behind": len(remains)},
+        facts={"population": left, "left_behind": len(remains)},
         place=settlement.id,
     )
     ctx.count("abandoned")

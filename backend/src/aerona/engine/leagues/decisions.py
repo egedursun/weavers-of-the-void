@@ -1,6 +1,7 @@
 from sqlalchemy import delete, select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import definite
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.finance import TradePolicyRow
 from aerona.db.tables.leagues import LeagueDecisionRow, LeagueMemberRow, PolityLeagueRow
@@ -156,7 +157,7 @@ async def call_to_arms(ctx: TickContext, league: EntityRow, enemy: int, tally: L
         core = await core_of(ctx.session, member.polity_entity_id)
         if core is None or core == enemy or held(core) or not await obeys(ctx, league, member, f"force.{enemy}"):
             continue
-        if await declare_war(ctx, core, enemy, f"the league of {league.name} called its members to arms", world_cap=False):
+        if await declare_war(ctx, core, enemy, f"{definite(league.name)} called its members to arms", world_cap=False):
             tally.calls += 1
 
 

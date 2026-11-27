@@ -165,12 +165,12 @@ async def mortal_dies(ctx: TickContext, victim: EntityRow, reason: str, killer_n
         ctx.count("mortal_deaths")
 
 
-async def _sour_relation(ctx: TickContext, killer_id: int, other_id: int | None, note: str) -> None:
+async def _sour_relation(ctx: TickContext, killer_id: int, other_id: int | None) -> None:
     if other_id is None or other_id == killer_id:
         return
     other = await ctx.session.get(SonRow, other_id)
     if other is not None:
-        await SonRepository(ctx.session).change_relation(killer_id, other_id, -ctx.rules.death.take_life_relation_loss, note)
+        await SonRepository(ctx.session).change_relation(killer_id, other_id, -ctx.rules.death.take_life_relation_loss)
 
 
 async def attempt_kill(ctx: TickContext, victim: EntityRow, killer: Killer, creator_name: str, *, certain: bool = False, how: str = "") -> KillOutcome:
@@ -192,10 +192,9 @@ async def attempt_kill(ctx: TickContext, victim: EntityRow, killer: Killer, crea
             harm=HarmCause.PLAYER if killer.kind is ActorKind.CREATOR else HarmCause.GOD,
         )
         if killer_son is not None:
-            note = god_lines.KILL_RELATION_NOTE.format(victim=victim.name)
-            await _sour_relation(ctx, killer_son.id, victim.creator_son_id, note)
+            await _sour_relation(ctx, killer_son.id, victim.creator_son_id)
             if patron is not None and patron.id != victim.creator_son_id:
-                await _sour_relation(ctx, killer_son.id, patron.id, note)
+                await _sour_relation(ctx, killer_son.id, patron.id)
         return KillOutcome(True, god_lines.KILL_DIED.format(victim=victim.name, reason=reason), chance.percent)
     story = survival_story(rng, victim.name, killer.name, creator_name, chance)
     add_trait(victim, Trait.CHARISMA, ctx.rules.death.survivor_charisma_gain)
@@ -219,7 +218,7 @@ async def attempt_kill(ctx: TickContext, victim: EntityRow, killer: Killer, crea
     await BondRepository(ctx.session).connect(BondDraft(legend.id, victim.id, BondKind.TELLS_OF, ctx.epoch))
     patron_protector = next((protector for protector in chance.protectors if protector.kind is ProtectorKind.PATRON), None)
     if killer_son is not None and patron_protector is not None:
-        await _sour_relation(ctx, killer_son.id, patron_protector.node_id, god_lines.KILL_PROTECT_NOTE.format(victim=victim.name))
+        await _sour_relation(ctx, killer_son.id, patron_protector.node_id)
     text = (
         await record(
             ctx,

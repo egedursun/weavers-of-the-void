@@ -16,11 +16,14 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.governance import CliqueAim, HeadSelection, InsolvencyPath, MergerKind, OrgStrategy, VoteChoice
 from aerona.engine.economy.purse import take_coin
 from aerona.engine.governance.cliques import split_away
-from aerona.engine.governance.heads import chosen_head, cliques_of, install_head, set_strategy, strategy_vote
+from aerona.engine.governance.heads import busy_heads, candidates, chosen_head, cliques_of, install_head, set_strategy, strategy_vote
 from aerona.engine.governance.insolvency import InsolvencyTally, case_of, file_case
 from aerona.engine.governance.mergers import open_bid, worth
 from aerona.engine.governance.research import begin_research, open_research, reachable
 from aerona.engine.governance.seats import members_of, shares_of, sync_seats
+from aerona.engine.mortal.life import years_to_step
+from aerona.engine.polity.divided_loyalty import serves_a_foe
+from aerona.engine.primitives.maturity import away_among, of_age_among, past_office_age
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.prompts import MortalToolId
 from aerona.prompts.tools.results import MortalResult, result
@@ -67,6 +70,22 @@ class FundResearchInput(ToolInput):
 class FileInsolvencyInput(ToolInput):
     org_id: int
     path: InsolvencyPath
+
+
+async def may_head(call: MortalCall, row: OrgGovernanceRow, org: EntityRow) -> None:
+    ctx, me = call.tick, call.me
+    if me.id in await away_among(ctx.session, [me.id]):
+        fail(MortalResult.ORG_REFUSED, why=f"you stand away from {org.name} now")
+    if me.id in await busy_heads(ctx, row.org_node_id, [me.id]):
+        fail(MortalResult.ORG_REFUSED, why=f"you already head as many bodies as one may, {ctx.rules.governance.headships_max}")
+    if me.id in await serves_a_foe(ctx.session, [me.id], row.org_node_id):
+        fail(MortalResult.ORG_REFUSED, why=f"you serve a foe of {org.name}")
+    if row.head_selection is not HeadSelection.INHERITED and not await of_age_among(ctx.session, [me]):
+        fail(MortalResult.ORG_REFUSED, why="you have not yet come of age")
+    if row.head_selection is not HeadSelection.INHERITED and past_office_age(ctx.rules, me, years_to_step(ctx.environment)):
+        fail(MortalResult.ORG_REFUSED, why="custom retires those of your age from office")
+    if me.id not in {entity.id for entity in await candidates(ctx, row)}:
+        fail(MortalResult.ORG_REFUSED, why=f"{org.name} does not count you among those who may head it")
 
 
 async def body_of(call: MortalCall, org_id: int) -> tuple[EntityRow, OrgGovernanceRow]:
@@ -132,6 +151,7 @@ async def seek_headship(call: MortalCall, args: SeekHeadshipInput) -> str:
     if "head_node_id" in (body.locked or []):
         fail(MortalResult.ORG_REFUSED, why="its head is held as it is")
     call.target(org.id)
+    await may_head(call, body, org)
     if body.head_selection is HeadSelection.PURCHASE:
         price = await worth(call.tick, org) // max(1, call.rules.governance.term_epochs)
         if not await take_coin(call.session, call.rules, call.me, price):
@@ -192,7 +212,7 @@ async def bid_for_org(call: MortalCall, args: BidForOrgInput) -> str:
     if held(acquirer.id):
         fail(MortalResult.ORG_REFUSED, why="a god holds the bidder as it is")
     if await case_of(call.tick, target.id) is not None:
-        fail(MortalResult.ORG_REFUSED, why=f"{target.name} is before the court for its debts")
+        fail(MortalResult.ORG_REFUSED, why=f"{target.name} has an open insolvency case")
     merger = await open_bid(call.tick, acquirer.id, target, args.kind, args.price)
     call.target(target.id)
     return result(MortalResult.ORG_BID, acquirer=acquirer.name, target=target.name, kind=spoken(args.kind), price=merger.price)
@@ -227,7 +247,7 @@ async def file_insolvency(call: MortalCall, args: FileInsolvencyInput) -> str:
     org, _body = await headed_by_me(call, args.org_id)
     case = await file_case(call.tick, org, args.path, InsolvencyTally())
     if case is None:
-        fail(MortalResult.ORG_REFUSED, why=f"{org.name} is already before the court")
+        fail(MortalResult.ORG_REFUSED, why=f"{org.name} already has an open insolvency case")
     call.target(org.id)
     return result(MortalResult.ORG_INSOLVENT, org=org.name, path=spoken(args.path), owed=case.owed)
 

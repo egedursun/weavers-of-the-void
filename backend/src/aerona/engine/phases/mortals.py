@@ -180,6 +180,8 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "settlement.population",
     "spirit.unrest",
     "table.afflictions",
+    "table.armies",
+    "table.army_officers",
     "table.avatars",
     "table.bonds",
     "table.community_societies",
@@ -254,6 +256,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
 @writes(
     "mortal.age",
     "mortal.death_year",
+    "mortal.hp",
     "mortal.lifespan",
     "table.bonds",
     "table.chronicle",

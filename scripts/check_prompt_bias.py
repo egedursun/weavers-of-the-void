@@ -205,7 +205,10 @@ PATTERNS = (
     ),
     Pattern(
         "a power given a body",
-        re.compile(r"\b(?:stronger|greater|higher|unseen|divine|mightier) hands?\b", re.IGNORECASE),
+        re.compile(
+            r"\b(?:stronger|greater|higher|unseen|divine|mightier) hands?\b|\bby the hand of\b|\bby (?:their|its|your|our) own hand\b|\{[a-z_]+\}'s hand\b",
+            re.IGNORECASE,
+        ),
         prose_only=True,
     ),
     Pattern(

@@ -14,6 +14,7 @@ from aerona.domain.enums.agent import AgentKind, PendingJobKind
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.turn import PendingJob
+from aerona.engine.gods.essence import endow
 from aerona.rules.registry import Rules
 
 JOB_NOUNS = {PendingJobKind.WORLD_BIRTH: "world birth", PendingJobKind.CHILD_BIRTH: "child birth"}
@@ -70,7 +71,7 @@ async def resolve_pending_job(session: AsyncSession, rules: Rules, son: SonRow, 
     row.context = row.context.with_pending_job(None)
     if await job_completed(session, son.id, job):
         return LongJobResult.DONE
-    son.essence += job.essence
+    endow(rules, son, job.essence)
     if is_resumable(row, epoch) and son.last_acted_epoch < epoch and row.action_points_left is not None:
         row.action_points_left += job.action_points
     await record_line(

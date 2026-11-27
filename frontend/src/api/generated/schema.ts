@@ -33343,6 +33343,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/actions/son:send_essence': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['action_son_send_essence_api_actions_son_send_essence_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/actions/son:outer_bargain': {
     parameters: {
       query?: never
@@ -89973,6 +89989,11 @@ export interface components {
       son_id: number
       value: number
     }
+    SonSendEssenceInput: {
+      son_id: number
+      to_son_id?: number | null
+      amount: number
+    }
     SonStatus: 'active' | 'asleep' | 'exiled' | 'fallen' | 'dead'
     SonToolId:
       | 'world_summary'
@@ -89991,6 +90012,8 @@ export interface components {
       | 'challenge'
       | 'rebel'
       | 'pray_to_creator'
+      | 'send_essence'
+      | 'end_rebellion'
       | 'make_bond'
       | 'harvest_resource'
       | 'create_region'
@@ -169791,6 +169814,40 @@ export interface operations {
       }
     }
   }
+  action_son_send_essence_api_actions_son_send_essence_post: {
+    parameters: {
+      query?: {
+        reason?: string | null
+        expected_revision?: number | null
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SonSendEssenceInput']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ActionResponse']
+        }
+      }
+      default: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ErrorResponse']
+        }
+      }
+    }
+  }
   action_son_outer_bargain_api_actions_son_outer_bargain_post: {
     parameters: {
       query?: {
@@ -218853,6 +218910,8 @@ export const sonToolIdValues: ReadonlyArray<
   'challenge',
   'rebel',
   'pray_to_creator',
+  'send_essence',
+  'end_rebellion',
   'make_bond',
   'harvest_resource',
   'create_region',

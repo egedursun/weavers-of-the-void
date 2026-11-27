@@ -301,6 +301,37 @@ def calibrate(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, star: 
     physics.albedo = best
 
 
+def livable(rules: Rules, physics: WorldPhysicsRow) -> bool:
+    table = rules.orbits
+    return physics.pressure >= hundredths(table.no_air_hundredths) and table.livable_low_kelvin <= physics.surface_temperature <= table.livable_high_kelvin
+
+
+def nearest_livable(rules: Rules, temperature: float) -> float:
+    table = rules.orbits
+    return float(min(max(temperature, table.livable_low_kelvin), table.livable_high_kelvin))
+
+
+def ground_fit(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, sky: Sky, parent: WorldPhysicsRow | None, target: float) -> None:
+    if "albedo" in physics.locked:
+        return
+    physics.albedo = min(range(0, 96), key=lambda albedo: abs(temperature_with(rules, world, physics, sky=sky, parent=parent, albedo=albedo) - target))
+
+
+def bring_into_livable(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, sky: Sky, parent: WorldPhysicsRow | None) -> None:
+    table = rules.orbits
+    target = nearest_livable(rules, surface_temperature(rules, world, physics, sky.insolation, parent))
+    ground_fit(rules, world, physics, sky=sky, parent=parent, target=target)
+    while (
+        surface_temperature(rules, world, physics, sky.insolation, parent) < table.livable_low_kelvin
+        and "water_vapour" not in physics.locked
+        and physics.water_vapour < table.warming_vapour_most
+        and physics.nitrogen > 0
+    ):
+        physics.water_vapour += 1
+        physics.nitrogen -= 1
+        ground_fit(rules, world, physics, sky=sky, parent=parent, target=target)
+
+
 def temperature_with(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, sky: Sky, parent: WorldPhysicsRow | None, albedo: int) -> float:
     held_albedo = physics.albedo
     physics.albedo = albedo
@@ -322,7 +353,6 @@ def derive(
     moons: list[Moon],
     parent: WorldPhysicsRow | None,
     rogue: set[int],
-    orbit: float,
     shards: bool,
 ) -> None:
     def put(key: str, value: object) -> None:
@@ -341,8 +371,7 @@ def derive(
     put("aurora", clamp_percent(round_half_up(world.magnetism * sky.flare * rules.orbits.aurora_per_magnetism_pct / PERCENT / PERCENT)))
     put("eclipse_years", eclipse_years(rules, moons, len(sky.lights), physics.circumbinary))
     put("heat_shift", heat_of(rules, temperature) if governed(world, sky, rogue) else 0)
-    inner, outer = sky.band
-    put("habitable", bool(sky.lights) and inner <= orbit <= outer)
+    put("habitable", livable(rules, physics))
 
 
 def lose_air(rules: Rules, physics: WorldPhysicsRow) -> bool:

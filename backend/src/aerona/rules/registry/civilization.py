@@ -84,7 +84,9 @@ class CivilizationRules(Spanned):
     loan_chance: int = rule(70, 0, 100, RuleGroup.ECONOMY, "A wealthy community lends to its poor neighbour on its own (% per epoch)")
     loan_lender_min: int = rule(55, 0, 100, RuleGroup.ECONOMY, "Minimum wealth or prosperity of a community able to lend")
     loan_borrower_max: int = rule(35, 0, 100, RuleGroup.ECONOMY, "Maximum wealth or prosperity of a community asking for a loan")
-    loan_amount: int = rule(10, 1, 100, RuleGroup.ECONOMY, "Amount of a spontaneous loan")
+    loan_amount: int = rule(
+        25, 1, 100, RuleGroup.ECONOMY, "Most a spontaneous loan can be; each loan is what the lender can spare or what the borrower lacks, whichever is less"
+    )
     loan_term_years: int = span(5, 1, 1250, RuleGroup.ECONOMY, "Term of a spontaneous loan (years)")
     loan_distance: int = rule(6, 0, 99, RuleGroup.ECONOMY, "Farthest distance between borrowing communities (steps)")
     loan_repay_chance: int = rule(40, 0, 100, RuleGroup.ECONOMY, "A debtor able to pay repays on its own (% per epoch)")

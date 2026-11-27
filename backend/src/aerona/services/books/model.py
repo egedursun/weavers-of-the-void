@@ -30,6 +30,7 @@ from aerona.catalog.stats import PASSIONS, STATS
 from aerona.catalog.tongues import BASES
 from aerona.catalog.worlds import ATMOSPHERE_LABELS, DISCOVERY_LABELS, GRAVITY_LABELS, WORLD_TYPES
 from aerona.core.grammar import several, spoken
+from aerona.db.described import described_in
 from aerona.db.repositories.chronicle import kept_lines, told_kind
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
@@ -60,9 +61,12 @@ from aerona.domain.models.profiles import EntityDepth
 from aerona.domain.models.records import EpochStatsData
 from aerona.engine.cosmos.kinds import CLUSTER_KIND_MECHANICS, DIMENSION_KIND_MECHANICS, GALAXY_TYPE_MECHANICS
 from aerona.engine.cosmos.placement import Cosmography
+from aerona.engine.lifecycle.aging import effective_lifespan, medicine_regions
 from aerona.engine.military.records import battle_field
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.knowledge import laws_of_dimension
 from aerona.engine.primitives.queries import canon, flags_by_entity
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.rules.registry import Rules
 from aerona.services.books.armssvg import arms_plan
 from aerona.services.books.citysvg import Plan, city_plan, land_plan, type_tables
@@ -103,6 +107,8 @@ ENCYCLOPEDIA_ORDER: tuple[EntityType, ...] = (
     EntityType.TRADE_ROUTE,
     EntityType.DISEASE,
     EntityType.POLITY,
+    EntityType.LEAGUE,
+    EntityType.NETWORK,
     EntityType.HOUSE,
     EntityType.TREATY,
     EntityType.TITLE,
@@ -131,11 +137,13 @@ ENCYCLOPEDIA_ORDER: tuple[EntityType, ...] = (
     EntityType.EVENT,
 )
 NESTING_TYPES = frozenset({EntityType.REGION, EntityType.PLACE, EntityType.SETTLEMENT})
+OWN_SECTIONS = frozenset({EntityType.LANGUAGE})
 HIDDEN_BOND_KINDS = frozenset({BondKind.INSIDE})
 MAX_HEADING_DEPTH = 6
 UNKNOWN_WORLD = "World unknown"
 CREATED_BY_GOD = "the god created"
 WORLD_COURSE = "from the world's course"
+LIFESPAN_WITH_CARE = "Lifespan with healing and renown"
 ROMAN_STEPS = (
     (1000, "M"),
     (900, "CM"),
@@ -192,6 +200,7 @@ class EntityArticle:
     festivals: Plan | None = None
     made: KindArticle | None = None
     audiences: SpeakerAudiences = field(default_factory=SpeakerAudiences)
+    written_in: int | None = None
 
 
 @dataclass
@@ -356,6 +365,7 @@ class WarArticle:
     instigator: str | None
     battles: list[BattleLine]
     sieges: list[SiegeLine]
+    fought: int = 0
 
 
 @dataclass
@@ -497,6 +507,25 @@ class BookBuilder:
         self.wheels: dict[int, Markup] = {}
         self.kin: set[int] = set()
         self.audiences: dict[int, SpeakerAudiences] = {}
+        self.healers: tuple[RegionAtlas, set[int], dict[int, int]] | None = None
+        self.epoch: int | None = None
+
+    async def reached_lifespan(self, entity: EntityRow) -> Labelled | None:
+        age = stat(entity, "age")
+        if entity.entity_type is not EntityType.MORTAL or age is None or age <= stat_or(entity, "lifespan", age):
+            return None
+        if self.healers is None:
+            atlas = await RegionAtlas.load(self.session)
+            self.healers = (atlas, await medicine_regions(self.session, atlas), {})
+        atlas, medicine, healing = self.healers
+        info = await effective_lifespan(self.session, self.rules, entity, atlas, medicine, healing=healing)
+        return Labelled(LIFESPAN_WITH_CARE, str(info.effective)) if info.effective != info.base else None
+
+    async def current_epoch(self) -> int:
+        if self.epoch is None:
+            cosmos = await CosmosRepository(self.session).get()
+            self.epoch = cosmos.epoch if cosmos is not None else 0
+        return self.epoch
 
     async def load_common(self) -> None:
         rows = await self.session.execute(select(EntityRow.id, EntityRow.name))
@@ -560,7 +589,11 @@ class BookBuilder:
         if entity.status is not EntityStatus.CANON:
             meta.append(entity.status.value)
         stats = [Labelled(field_spec.label, str(value)) for field_spec in spec.stats if (value := getattr(entity.stats, field_spec.key, None)) is not None]
+        if (reached := await self.reached_lifespan(entity)) is not None:
+            stats.append(reached)
         active, past = self.bond_lines(entity.id)
+        written = await described_in(self.session, entity)
+        lived_until = entity.end_epoch if entity.end_epoch is not None else await self.current_epoch()
         return EntityArticle(
             entity=entity,
             anchor=entity_anchor(entity.id),
@@ -581,6 +614,7 @@ class BookBuilder:
             festivals=await festival_plan(self.session, entity) if entity.entity_type is EntityType.PEOPLE else None,
             made=self.made.get(entity.id),
             audiences=self.audiences.get(entity.id, SpeakerAudiences()),
+            written_in=written if entity.description and written < lived_until else None,
         )
 
     async def plan_of(self, entity: EntityRow) -> Plan | None:
@@ -953,7 +987,7 @@ class BookBuilder:
     async def encyclopedia(self, multi_world: bool) -> list[WorldGroup]:
         entities = list(
             await self.session.scalars(
-                select(EntityRow).where(EntityRow.status != EntityStatus.REJECTED, EntityRow.entity_type != EntityType.LANGUAGE).order_by(EntityRow.id)
+                select(EntityRow).where(EntityRow.status != EntityStatus.REJECTED, EntityRow.entity_type.not_in(sorted(OWN_SECTIONS))).order_by(EntityRow.id)
             )
         )
         by_parent: dict[int | None, list[EntityRow]] = defaultdict(list)
@@ -1051,6 +1085,7 @@ class BookBuilder:
                     loser=named(war.loser_entity_id),
                     instigator=self.son_names.get(war.incited_by_son_id) if war.incited_by_son_id is not None else None,
                     battles=[battle_line(battle, self.names) for battle in battles[war.id]],
+                    fought=sum(1 for battle in battles[war.id] if battle.outcome is not BattleOutcome.REFUSED),
                     sieges=[
                         SiegeLine(
                             self.names.get(siege.besieger_entity_id, "?"),

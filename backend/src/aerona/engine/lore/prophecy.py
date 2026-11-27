@@ -317,7 +317,7 @@ async def omen(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | 
         if values:
             values[ValueAxis.SUPERSTITION] = values.get(ValueAxis.SUPERSTITION, 0) + ctx.rules.prophecy.omen_superstition
             await write_values(ctx.session, ValueHolder.CULTURE, member, values)
-    return "the people grow more fearful of signs" if row.audience else None
+    return "its hearers grew more superstitious" if row.audience else None
 
 
 async def rule(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
@@ -334,14 +334,14 @@ async def fall(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | 
     if target is None or stat(target, "defense") is None:
         return None
     shift_stat(target, "defense", -ctx.rules.prophecy.consequence_unrest)
-    return f"{target.name} braces for the fall it was promised"
+    return f"the defence of {target.name} weakened before its foretold fall"
 
 
 async def death(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
     if target is None or target.entity_type is not EntityType.MORTAL:
         return None
     await apply_hits(ctx, target, Harm(damage=ctx.rules.prophecy.consequence_harm, cause=HarmCause.CURSE, death_cause="died as was foretold"))
-    return f"doom closes on {target.name}"
+    return f"{target.name} was harmed as was foretold"
 
 
 async def war(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
@@ -349,7 +349,7 @@ async def war(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | N
         return None
     for member in row.audience:
         await change_relation(ctx, member, target.id, -ctx.rules.prophecy.consequence_unrest, MemoryKind.ILL_WILL, note="foretold enemies")
-    return f"its hearers turn against {target.name}"
+    return f"its hearers grew hostile to {target.name}"
 
 
 async def birth(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow | None) -> str | None:
@@ -360,7 +360,7 @@ async def birth(ctx: TickContext, row: ProphecyConditionRow, target: EntityRow |
     if house is None:
         return None
     house.prestige = clamp_int(house.prestige + ctx.rules.prophecy.consequence_claim, 0, PERCENT)
-    return "a house rises on the strength of a foretold birth"
+    return "a house gained prestige from a foretold birth"
 
 
 OUTCOMES: dict[ProphecyConsequence, Callable[[TickContext, ProphecyConditionRow, EntityRow | None], Awaitable[str | None]]] = {
@@ -493,17 +493,17 @@ async def press(ctx: TickContext, prophecy: EntityRow, row: ProphecyConditionRow
         claims = await ctx.session.scalars(select(ClaimRow).where(ClaimRow.house_entity_id == arg(row.args, "house"), ClaimRow.ended_epoch.is_(None)))
         for claim in claims:
             claim.strength = clamp_int(claim.strength + round_half_up(table.claim_strength * weight), 0, PERCENT)
-        return await threatened_ruler(ctx, row) or "the named house's claim swells"
+        return await threatened_ruler(ctx, row) or "the named house's claim grew stronger"
     if row.predicate is P.WAR_BETWEEN:
         first, second = arg(row.args, "first"), arg(row.args, "second")
         if first is not None and second is not None:
             await change_relation(ctx, first, second, -round_half_up(table.pressure_gain * weight), MemoryKind.ILL_WILL, note="a prophecy of war")
-            return "the foretold enemies eye each other"
+            return "the foretold enemies grew colder to each other"
     if row.predicate is P.FALLS:
         town = await living_entity(ctx.session, arg(row.args, "settlement"))
         if town is not None and stat(town, "defense") is not None:
             set_stats(town, defense=clamp_int((stat(town, "defense") or 0) - round_half_up(table.pressure_gain * weight), 0, PERCENT))
-            return f"{town.name} loses heart"
+            return f"the defence of {town.name} weakened"
     return None
 
 

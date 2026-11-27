@@ -280,7 +280,7 @@ async def maim(scope: PlayerScope, command: Maim) -> Effect:
     harm = Harm(
         command.severity * ctx.rules.injury.severity_step,
         command.cause,
-        "was struck down by the hand of the creator",
+        "was struck down by the Creator",
         damage_type=command.damage_type,
         part=command.part,
         kind=command.kind,

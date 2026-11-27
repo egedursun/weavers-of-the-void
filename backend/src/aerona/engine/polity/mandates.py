@@ -37,9 +37,11 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy
+from aerona.engine.primitives.maturity import acting_for
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.standing import still_standing
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
@@ -99,9 +101,10 @@ async def issue(
         return None
     if any(row.kind is kind and row.settlement_entity_id == settlement_id for row in await active(ctx, realm)):
         return None
+    issuer = await acting_for(ctx.session, realm.entity.id, realm.ruler_id) if await still_standing(ctx.session, realm.ruler_id) else None
     row = MandateRow(
         polity_entity_id=realm.entity.id,
-        issuer_node_id=realm.ruler_id,
+        issuer_node_id=issuer,
         kind=kind,
         settlement_entity_id=settlement_id,
         commodity=commodity,
@@ -116,7 +119,7 @@ async def issue(
     await record(
         ctx,
         "mandate.issued",
-        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.SUBJECT: settlement_id, IncidentRole.ACTOR: realm.ruler_id},
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.SUBJECT: settlement_id, IncidentRole.ACTOR: issuer},
         facts={"mandate": kind, "until": row.until_epoch},
         place=settlement_id,
     )

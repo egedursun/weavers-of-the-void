@@ -24,7 +24,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, IncidentTier, RumourDistortion, StepOutcome
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
 from aerona.engine.recording.render import render_incident
 from aerona.engine.recording.terms import explaining, term
@@ -468,7 +468,8 @@ async def heard_again(
         )
         return CORRECTED
     trust = await trust_row(ctx, holder.carrier_entity_id)
-    loss = ctx.rules.rumours.contradiction_trust_loss
+    differences = len(ahead ^ known)
+    loss = max(1, round_half_up(ctx.rules.rumours.contradiction_trust_loss * differences * arriving.fidelity / PERCENT))
     with explaining():
         term("rules.rumours.contradiction_trust_loss", -loss, source_node_id=teller, source_incident_id=holder.incident_id)
         if HELD_TRUST not in trust.locked:
@@ -478,7 +479,7 @@ async def heard_again(
             ctx,
             "information.contradicted",
             roles={IncidentRole.SUBJECT: holder.carrier_entity_id, IncidentRole.TELLER: teller},
-            facts={"happening": await happening_label(ctx.session, holder.incident_id), "differences": len(ahead ^ known), "trust_lost": loss},
+            facts={"happening": await happening_label(ctx.session, holder.incident_id), "differences": differences, "trust_lost": loss},
             cause=holder.incident_id,
         )
     return CONTRADICTED

@@ -58,6 +58,8 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
     "table.org_seats",
     "table.polity_members",
     "table.prisoners",
+    "table.war_sides",
+    "table.wars",
 )
 @writes(
     "faction.strength",

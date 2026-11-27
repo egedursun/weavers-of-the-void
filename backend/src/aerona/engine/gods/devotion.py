@@ -257,7 +257,7 @@ async def sibling_scheme(ctx: TickContext, sibling: SonRow, son: SonRow, kind: S
     order = await add_devotion(ctx, son, contribution, None) if contribution else None
     devotion = trait_or(order, Trait.DEVOTION, 0) if order is not None else 0
     if contribution:
-        await SonRepository(ctx.session).change_relation(sibling.id, son.id, death.sibling_scheme_relation_gain, god_lines.SCHEME_RELATION_NOTE)
+        await SonRepository(ctx.session).change_relation(sibling.id, son.id, death.sibling_scheme_relation_gain)
     text = (
         await record(
             ctx,
@@ -296,7 +296,7 @@ async def hinder_return(ctx: TickContext, sibling: SonRow, son: SonRow) -> Devot
             await bonds.connect(
                 BondDraft(order.id, sibling.id, BondKind.ENEMY, ctx.epoch, god_lines.HINDERED_ENEMY.format(son=son.name), war_cause=WarCause.SCHISM)
             )
-    await SonRepository(ctx.session).change_relation(sibling.id, son.id, -death.hinder_return_devotion_loss / 2, god_lines.HINDERED_NOTE)
+    await SonRepository(ctx.session).change_relation(sibling.id, son.id, -death.hinder_return_devotion_loss / 2)
     text = (
         await record(
             ctx,

@@ -27,9 +27,12 @@ from aerona.engine.customs.time_budgets import sleeps_of
 from aerona.engine.daily.service import engage_servant
 from aerona.engine.economy.purse import coin_of, give_coin, held_coin, take_coin
 from aerona.engine.loops.delay import lagged
+from aerona.engine.mortal.life import young_through
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.maturity import UNDER_AGE
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.standing import ended_ids
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
@@ -48,6 +51,7 @@ WASTE_KEEPING = {
 }
 WASH_PLACE_KEEPING = {WashPlace.HOME: 1, WashPlace.BATH_HOUSE: 1, WashPlace.RIVER: 0, WashPlace.RITE: 0}
 KEEPING_STEPS = 7
+DOER = "doer_node_id"
 
 
 @dataclass
@@ -160,10 +164,20 @@ async def shame_the_poor(ctx: TickContext, tally: DailyTally) -> None:
         .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
         .order_by(EntityRow.id)
     )
-    for mortal, profile in list(rows):
+    found = list(rows)
+    aged = ctx.environment.aging is not None and ctx.environment.aging.done
+    young = await young_through(ctx.session, ctx.rules, ctx.epoch, [mortal for mortal, _ in found], aged=aged)
+    for mortal, profile in found:
         folk = await people_of(ctx.session, mortal)
         standard = standards.get(folk.id) if folk is not None else None
-        if standard is None or held(mortal.id) or profile.life_stage in UNDER_AGE or profile.wealth >= standard or "honour" in (profile.locked or []):
+        if (
+            standard is None
+            or held(mortal.id)
+            or mortal.id in young
+            or profile.life_stage in UNDER_AGE
+            or profile.wealth >= standard
+            or "honour" in (profile.locked or [])
+        ):
             continue
         loss = table.cleanliness_honour_loss
         if not loss:
@@ -209,6 +223,17 @@ async def take_help(ctx: TickContext, household: HouseholdRow, load: int, tally:
     tally.helped += 1
 
 
+async def hand_on_duties(ctx: TickContext, rows: list[HouseworkRow], head: EntityRow, present: set[int], tally: DailyTally) -> None:
+    for row in rows:
+        if row.doer_node_id in present or row.doer_role is HouseholdRole.SERVANT:
+            continue
+        if DOER not in (row.locked or []):
+            row.doer_node_id = head.id if head.id in present else min(present)
+            continue
+        await record(ctx, "daily.duty_breached", roles={IncidentRole.TARGET: head.id}, facts={"duty": row.duty})
+        tally.breached_duties += 1
+
+
 async def keep_houses(ctx: TickContext, tally: DailyTally) -> None:
     table = ctx.rules.daily_life
     duties: dict[int, list[HouseworkRow]] = defaultdict(list)
@@ -225,13 +250,13 @@ async def keep_houses(ctx: TickContext, tally: DailyTally) -> None:
         household = await ctx.session.get(HouseholdRow, household_id)
         if household is None or held(household.head_node_id):
             continue
+        present = {member.member_node_id for member in members[household_id]}
+        head = await living_entity(ctx.session, household.head_node_id)
+        if head is None or not present:
+            continue
         load = await household_load(ctx, household, duties[household_id], members[household_id])
         tally.households += 1
-        present = {member.member_node_id for member in members[household_id]}
-        for row in duties[household_id]:
-            if row.doer_node_id not in present and row.doer_role is not HouseholdRole.SERVANT and household.head_node_id is not None:
-                await record(ctx, "daily.duty_breached", roles={IncidentRole.TARGET: household.head_node_id}, facts={"duty": row.duty})
-                tally.breached_duties += 1
+        await hand_on_duties(ctx, duties[household_id], head, present, tally)
         await take_help(ctx, household, load, tally)
         if load < table.heavy_load:
             continue
@@ -311,7 +336,8 @@ def differences(first: SpaceNormRow, second: SpaceNormRow) -> list[NormKind]:
 
 async def mind_space(ctx: TickContext, tally: DailyTally) -> None:
     table = ctx.rules.daily_life
-    norms = {row.people_entity_id: row for row in await ctx.session.scalars(select(SpaceNormRow).order_by(SpaceNormRow.people_entity_id))}
+    standing = select(SpaceNormRow).where(SpaceNormRow.people_entity_id.not_in(ended_ids())).order_by(SpaceNormRow.people_entity_id)
+    norms = {row.people_entity_id: row for row in await ctx.session.scalars(standing)}
     if len(norms) < 2 or not table.space_breach_trust_loss:
         return
     rows = await ctx.session.scalars(

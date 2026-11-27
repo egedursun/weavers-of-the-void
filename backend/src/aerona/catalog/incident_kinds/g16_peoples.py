@@ -661,7 +661,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "institutions.repealed",
         G.PEOPLES,
-        "The law {subject} was repealed for {reason}.",
+        "{subject} was repealed for {reason}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("reason", FactValue.ENUM, enum=RepealReason), FactSpec("chance", FactValue.NUMBER, FactUnit.PERCENT)),
         chronicle_kind=K.WORLD,

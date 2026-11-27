@@ -9,6 +9,7 @@ from aerona.db.tables.culture import TraditionEffectRow, TraditionParticipationR
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import NotableYearRow, WorldSeasonRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.domain.enums.body import HarmCause, InjuryState
 from aerona.domain.enums.bond import BondKind
@@ -160,3 +161,21 @@ def test_ritual_scars_lend_presence_where_ordinary_scars_cost_it() -> None:
     plain = presence_pct(rules, None, [cast(InjuryRow, wound)], [], role=None, patron_id=None)
     assert ritual == 100 + rules.traditions.ritual_presence_pct
     assert ritual > plain
+
+
+async def test_a_custom_kept_out_of_its_time_is_kept_after_the_note_that_its_time_did_not_come(realm: Realm) -> None:
+    session = realm.session
+    folk = await people(realm, "Ossians")
+    await culture(session, folk.id)
+    feast = await custom(realm, "Midwinter Fires", TraditionFunction.FESTIVAL, calendar_slot=CalendarSlot.MIDWINTER)
+    await link(session, folk.id, feast.id, BondKind.CELEBRATES)
+    ctx = context(session, epoch=4)
+    participation = await traditions.participate(ctx, feast, folk)
+    participation.participation, participation.locked = 100, ["participation"]
+    await traditions.celebrate(ctx, feast, folk, await RegionAtlas.load(session))
+    closed = await session.scalar(select(IncidentRow).where(IncidentRow.kind == "tradition.slot_closed"))
+    kept = await session.scalar(select(IncidentRow).where(IncidentRow.kind == "tradition.kept_untimely"))
+    assert closed is not None and kept is not None
+    assert await session.scalar(select(IncidentRow).where(IncidentRow.kind == "tradition.kept")) is None
+    assert kept.cause_incident_id == closed.id
+    assert (kept.year or 0, kept.season or 0) >= (closed.year or 0, closed.season or 0)

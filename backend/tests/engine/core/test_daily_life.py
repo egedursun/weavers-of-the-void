@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.customs import TimeBudgetRow
 from aerona.db.tables.daily_life import CareCustomRow, DomesticServiceRow, HouseworkRow, LeisurePursuitRow, SpaceNormRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -21,7 +22,7 @@ from aerona.domain.enums.daily_life import (
     WashPlace,
     WasteHandling,
 )
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.settlement import SizeTier
@@ -191,3 +192,26 @@ async def test_a_household_weighed_down_by_its_housework_takes_on_help_when_it_c
     await keep_daily_life(ctx)
     assert household.servants == 1
     assert "daily.help_taken" in await kinds_of(session, "daily.")
+
+
+async def test_a_gone_doer_hands_the_duty_on_and_the_household_of_the_dead_tells_nothing(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    town = await folk_town(session, world)
+    head = await folk_mortal(session, world, town, "Maren")
+    gone = await folk_mortal(session, world, town, "Tobin")
+    dead_head = await folk_mortal(session, world, town, "Ulla")
+    living = HouseholdRow(name="House of Maren", head_node_id=head, settlement_node_id=town, locked=[])
+    mourned = HouseholdRow(name="House of Ulla", head_node_id=dead_head, settlement_node_id=town, locked=[])
+    session.add_all([living, mourned])
+    await session.flush()
+    session.add(HouseholdMemberRow(member_node_id=head, household_id=living.id, role=HouseholdRole.HEAD))
+    session.add(HouseholdMemberRow(member_node_id=dead_head, household_id=mourned.id, role=HouseholdRole.HEAD))
+    handed = HouseworkRow(household_id=living.id, duty=HouseDuty.FOOD, doer_node_id=gone, doer_role=HouseholdRole.DEPENDENT, load=20, locked=[])
+    left = HouseworkRow(household_id=mourned.id, duty=HouseDuty.FOOD, doer_node_id=dead_head, doer_role=HouseholdRole.HEAD, load=20, locked=[])
+    session.add_all([handed, left])
+    ulla = await session.get(EntityRow, dead_head)
+    assert ulla is not None
+    ulla.status, ulla.end_epoch = EntityStatus.DEAD, ctx.epoch
+    await session.flush()
+    await keep_daily_life(ctx)
+    assert handed.doer_node_id == head
+    assert "daily.duty_breached" not in await kinds_of(session, "daily.")

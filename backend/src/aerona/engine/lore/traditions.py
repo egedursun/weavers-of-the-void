@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.calendar_slots import SLOTS
-from aerona.catalog.lore import ABSORBABLE, FUNCTIONS, SLOT_NAMED, TRADITIONS, slot_fit, tradition_spec
+from aerona.catalog.lore import ABSORBABLE, FUNCTIONS, SLOT_NAMED, SUBTYPE_KINDS, TRADITIONS, slot_fit, tradition_spec
 from aerona.catalog.named_years import NAMED_YEARS
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
@@ -181,10 +181,15 @@ async def taboo_good(ctx: TickContext, tradition: EntityRow) -> str | None:
     return ctx.rng(f"taboo.{tradition.id}").pick(goods) if goods else None
 
 
-async def profile_of(ctx: TickContext, tradition: EntityRow, kind: TraditionFunction = K.FESTIVAL) -> TraditionProfileRow:
+def kind_of_subtype(tradition: EntityRow) -> TraditionFunction:
+    return SUBTYPE_KINDS.get(tradition.subtype or "", K.FESTIVAL)
+
+
+async def profile_of(ctx: TickContext, tradition: EntityRow, kind: TraditionFunction | None = None) -> TraditionProfileRow:
     row = await ctx.session.get(TraditionProfileRow, tradition.id)
     if row is not None:
         return row
+    kind = kind or kind_of_subtype(tradition)
     spec = TRADITIONS[kind]
     row = TraditionProfileRow(
         tradition_entity_id=tradition.id,
@@ -438,19 +443,24 @@ async def synchronised(ctx: TickContext, row: TraditionProfileRow) -> int:
     return min(ctx.rules.traditions.sync_max, max(0, int(keepers or 0) - 1))
 
 
+def closed_notes(ctx: TickContext) -> dict[tuple[int, int], int]:
+    notes: dict[tuple[int, int], int] = ctx.session.sync_session.info.setdefault(CLOSED_SLOTS, {})
+    return notes
+
+
 async def note_closed(ctx: TickContext, row: TraditionProfileRow, community: EntityRow, reason: str | None) -> None:
-    noted: set[tuple[int, int]] = ctx.session.sync_session.info.setdefault(CLOSED_SLOTS, set())
+    noted = closed_notes(ctx)
     key = (row.tradition_entity_id, community.id)
     if key in noted:
         return
-    noted.add(key)
-    await record(
+    write = await record(
         ctx,
         "tradition.slot_closed",
         roles={IncidentRole.SUBJECT: row.tradition_entity_id, IncidentRole.ACTOR: community.id},
         facts={"reason": reason or "its time does not come"},
         place=community.id,
     )
+    noted[key] = write.incident_id
 
 
 async def slot_weight(ctx: TickContext, row: TraditionProfileRow, community: EntityRow, effect: TraditionEffectKind) -> float:
@@ -530,6 +540,9 @@ async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow
         part.skipped += 1
         return "skipped"
     part.last_celebrated_epoch = ctx.epoch
+    closed = row.calendar_slot is not None and not (state := await slot_open(ctx, community.world_id, row.calendar_slot, community.id, row)).open
+    if closed:
+        await note_closed(ctx, row, community, state.reason)
     for effect in await effects_of(ctx, row):
         if await apply_effect(ctx, community, effect, share * await slot_weight(ctx, row, community, effect.effect), atlas):
             ctx.count(f"tradition_effect_{effect.effect.value}")
@@ -541,12 +554,14 @@ async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow
         await scar_youths(ctx, community, tradition)
     if row.kind is K.COMMEMORATION:
         await observe_commemorations(ctx, community)
+    untimely = closed_notes(ctx).get((tradition.id, community.id)) if closed else None
     await record(
         ctx,
-        "tradition.kept",
+        "tradition.kept_untimely" if closed else "tradition.kept",
         roles={IncidentRole.PRODUCT: tradition.id, IncidentRole.PLACE: community.id},
         facts={"function": row.kind, "share": round_half_up(taking * PERCENT)},
         place=community.id,
+        cause=untimely,
     )
     return row.kind.value
 

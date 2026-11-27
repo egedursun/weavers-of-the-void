@@ -10,6 +10,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.context import TickContext
 from aerona.engine.departures.book import DepartureTally, conditions_of, open_departures, seat_name
 from aerona.engine.economy.purse import give_coin, take_coin
+from aerona.engine.mortal.life import years_to_step
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import set_ruler
 from aerona.engine.primitives.maturity import past_office_age
@@ -35,7 +36,7 @@ async def weak_seat(ctx: TickContext, row: DepartureRow) -> bool:
 async def return_to(ctx: TickContext, row: DepartureRow, holder: EntityRow) -> bool:
     office = await ctx.session.get(OfficeRow, row.office_id) if row.office_id is not None else None
     why = f"{holder.name} came back to the office they had left"
-    if (office is None or office.kind is not OfficeKind.RULER) and past_office_age(ctx.rules, holder):
+    if (office is None or office.kind is not OfficeKind.RULER) and past_office_age(ctx.rules, holder, years_to_step(ctx.environment)):
         return False
     if office is not None and office.kind is OfficeKind.RULER:
         realm = (await RealmBook.load(ctx.session)).realms.get(office.polity_entity_id)

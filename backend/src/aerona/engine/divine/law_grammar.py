@@ -287,7 +287,7 @@ async def feud(ctx: TickContext, first: NaturalLawProfileRow, second: NaturalLaw
         return
     one, other = await ctx.session.get(SonRow, first.author_node_id), await ctx.session.get(SonRow, second.author_node_id)
     if one is not None and other is not None and not held(one.id, other.id):
-        await SonRepository(ctx.session).change_relation(one.id, other.id, -ctx.rules.natural_laws.feud_relation, "their laws contested")
+        await SonRepository(ctx.session).change_relation(one.id, other.id, -ctx.rules.natural_laws.feud_relation)
 
 
 async def contest_grammar(ctx: TickContext, rows: list[NaturalLawProfileRow], reaches: Mapping[int, set[int]]) -> int:

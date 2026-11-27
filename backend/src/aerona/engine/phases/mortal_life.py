@@ -64,6 +64,7 @@ async def living_mortals(ctx: TickContext) -> list[EntityRow]:
     "table.applied_fixups",
     "table.bodies",
     "table.bonds",
+    "table.cosmos",
     "table.entities",
     "table.entity_flags",
     "table.injuries",

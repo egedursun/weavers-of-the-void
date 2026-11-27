@@ -18,7 +18,7 @@ class DeparturesRules(Spanned):
     pension: int = rule(5, 0, 100000, S, "Coin a realm pays each epoch to one who left office with a pension")
     rally_standing: int = rule(60, 0, 100, S, "Standing from which one who abdicated is a rallying point against the ruler after them")
     rally_stability_loss: int = rule(2, 0, 100, S, "Stability a realm loses in an epoch while one who abdicated stands as a rallying point")
-    standing_per_year: int = rule(1, 0, 100, S, "Standing one who left office keeps for each year held, before the conditions add theirs")
+    standing_per_year: int = rule(1, 0, 100, S, "Standing one who left office keeps for every year they sat in the seat, before the conditions add theirs")
     standing_decay: int = rule(3, 0, 100, S, "Standing one who left office loses in an epoch")
     scandal_unrest_relief: int = rule(10, 0, 100, S, "Unrest a resignation under scandal takes from the holder's seat")
     call_heed_pct: int = rule(70, 0, 100, S, "Chance a holder heeds a son's call to step aside (%)")

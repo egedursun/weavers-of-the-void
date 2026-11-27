@@ -42,6 +42,7 @@ from aerona.engine.cosmos.worldlife import hot_regions
 from aerona.engine.divine.outer import breach_pressure, found_outer_cult, open_breaches, outer_profile
 from aerona.engine.divine.wounds import sanity_ceiling
 from aerona.engine.environment.book import scar_region
+from aerona.engine.gods.essence import endow
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.doom import doom_share
@@ -262,7 +263,7 @@ async def feed_madness_sons(ctx: TickContext) -> int:
     for son in await ctx.session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD).order_by(SonRow.id)):
         if not set(son.domains) & MADNESS_DOMAINS:
             continue
-        son.essence += gain
+        endow(ctx.rules, son, gain)
         son.existence = min(PERCENT_MAX, son.existence + horror.madness_son_existence_gain)
         fed += 1
     return fed

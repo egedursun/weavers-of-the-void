@@ -187,7 +187,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     values = {key: clamp_int(settings.place_stat + rng.integer(-half, half), 0, 100) for key in ("danger", "fertility", "mystery")}
     if nature.shifted is not None:
         values[nature.shifted] = clamp_int(values[nature.shifted] + settings.stat_shift, 0, 100)
-    hand = f" by the hand of {by}" if by is not None else ""
+    hand = f" by {by}" if by is not None else ""
     place = await create_record(
         ctx,
         RecordSpec(

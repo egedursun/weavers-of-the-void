@@ -166,7 +166,9 @@ async def test_wizard_wards_a_home_with_protection_or_plenty(session: AsyncSessi
 
 
 async def test_doom_clock_chronicles_the_first_and_final_omens(session: AsyncSession, world: CoreWorld) -> None:
-    rules = tuned_rules(apocalypse={"cursed": 50, "cursed_cap": 1000, "peace": 0, "faith_cap": 0, "warning_1_pct": 10, "warning_2_pct": 20})
+    rules = tuned_rules(
+        apocalypse={"cursed": 50, "cursed_cap": 1000, "peace": 0, "faith_cap": 0, "warning_1_pct": 10, "warning_2_pct": 20}, balance={"apocalypse_speed": 100}
+    )
     ctx = await manual_context(session, "doom", rules)
     await add_flag(session, world.people.id, EntityFlag.CURSED)
     world.cosmos.doom_clock = 0

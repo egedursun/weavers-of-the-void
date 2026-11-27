@@ -131,7 +131,7 @@ CREATION_EXTRA_FIELDS: dict[EntityType, dict[str, str]] = {
         "calendar_slot": "When it is kept, if at a set time: " + CALENDAR_SLOTS + "; a feast in its season is stronger",
         "taboo_target": "For a taboo: the good its keepers will not touch",
         "taboo_act": "For a taboo: the deed its keepers will not do (" + TABOO_ACTS + "); breakers are held in infamy",
-        "funeral_rite": "If it is a funeral custom, how its people send off the dead: {{ funeral_rites | join(', ') }}; nameless seals the soul",
+        "funeral_rite": "If it is a funeral custom, how its people send off the dead: {{ funeral_rites | join(', ') }}; a nameless rite seals the soul",
     },
     EntityType.ITEM: {
         "item_class": "What kind of thing it is; this decides how it is used and what it does in the world: " + ITEM_CLASSES,
@@ -433,7 +433,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.CREATE_GALAXY: ToolText(
         "You make a new galaxy inside a cluster, or loose in a dimension, that holds a world you reach; with neither it lies in the prime dimension. "
-        "You become its patron. It starts without stars and bears them in its nurseries over the epochs. A great work: "
+        "You become its patron. It starts without stars and forms them over the epochs. A great work: "
         "{{ rules.galaxies.create_essence }} essence, {{ rules.son_tools.create_galaxy_ap | several('action', 'actions') }}.",
         {
             "name": "The galaxy's name",
@@ -708,7 +708,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         {"son_id": "The sibling's id", "stat": "The stat of the trial: strength, wisdom, cunning, charisma or will", "reason": "Why you challenge"},
     ),
     T.REBEL: ToolText(
-        "You rebel against the Creator: you no longer recognize the Creator's commands and every age you steal from the Creator's essence. Your loyal siblings become your "
+        "You rebel against the Creator: you no longer recognize the Creator's commands and every age you take from the Creator's essence, until you end it with end_rebellion. Your loyal siblings become your "
         "enemies; the Creator may try to crush the rebellion. Only if your loyalty is below {{ rules.son_tools.rebel_loyalty }}. Does not spend an action.",
         {"proclamation": "The word of the rebellion: why and for what"},
     ),
@@ -716,6 +716,21 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "You pray to the Creator who made you. You may have a request; the answer appears among words in coming ages. Does not spend an action, "
         "{{ rules.son_tools.prayer_per_epoch }} per age.",
         {"message": "Your prayer", "request": "essence, blessing, permission, vengeance, forgiveness, wish or none"},
+    ),
+    T.SEND_ESSENCE: ToolText(
+        "You send some of your own essence to the Creator or to a sibling. It leaves you and goes to them whole; nothing is lost on the way. "
+        "You keep at least {{ rules.son_tools.gift_min_remaining }}, and a sibling takes only what they can still hold. Unlike a gift it asks nothing in return "
+        "and does not count as a gift. Does not spend an action.",
+        {
+            "son_id": "The sibling's id; leave it out to send the essence to the Creator",
+            "essence": "Essence to send (at most " + ESSENCE_GIFT_CAP + ")",
+            "words": "What you say as you send it",
+        },
+    ),
+    T.END_REBELLION: ToolText(
+        "You end your rebellion of your own will: you follow the Creator's commands again, and from now on you take nothing from the Creator's essence. "
+        "Only while you are in rebellion. Does not spend an action.",
+        {"words": "What you say to the Creator as you end it"},
     ),
     T.MAKE_BOND: ToolText(
         "You declare a narrative bond between two existing things ({{ weavable_bonds | join(', ') }}). It adds a connection to the world. Worship, enmity, knowledge, ownership, "
@@ -1131,7 +1146,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         "bring the grass back to a desert (green), make its soil saline (make_saline), make its soil rich (enrich_soil), raise or lower "
         "the land (raise_land, lower_land), carve a valley or fill one (carve_valley, fill_valley), open a spring (open_spring), call up "
         "lava (call_lava), sink a coast under the sea (sink_coast), raise an island from the sea (raise_island) or open the ground to the strata "
-        "beneath (open_underground). Each reshaping bows only to gods of these domains: {{ land_domains }}. Wells and fields follow the "
+        "beneath (open_underground). Only gods of these domains can work each reshaping: {{ land_domains }}. Wells and fields follow the "
         "river, deserts lose their rain and harvests, saline soil bears little, a raised or lowered land keeps the height you give it, lava "
         "burns the woods and raises the world's volcanism, a sunken coast floods. The folk of the land hold you in more awe when you water, "
         "raise or enrich it and in less when you drown, burn, parch or make it saline. {{ rules.son_tools.reshape_land_essence }} essence, "
@@ -1256,7 +1271,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.EXTINGUISH_STAR: ToolText(
-        "You extinguish a star: the worlds around it lose their light and warmth, leakage rises and doom advances. "
+        "You extinguish a star: the worlds around it lose their light and warmth, leakage rises and the doom clock advances. "
         "{{ rules.cosmic_costs.ignite_star | share_of(rules.son_tools.cosmic_extinguish_pct) }} essence, {{ rules.son_tools.extinguish_star_ap | several('action', 'actions') }}.",
         {"star_id": "The star's id", "reason": "Why you put it out"},
     ),
@@ -1343,7 +1358,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.OPEN_REBIRTH_GATE: ToolText(
-        "By your own hand you open the gate of rebirth for a soul: it is born again as a newborn in a community, carrying some of its old traits and faint memories. "
+        "You open the gate of rebirth for a soul yourself: it is born again as a newborn in a community, carrying some of its old traits and faint memories. "
         "Only for souls of your own faith, or any soul if you are a god of death; a sealed soul cannot return. "
         "{{ rules.necromancy.rebirth_gate_cost }} essence, 1 action.",
         {"spirit_id": "The soul (a spirit) to send back", "community_id": "Optional: the community it is born into; otherwise its doctrine decides"},
@@ -1525,7 +1540,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
         },
     ),
     T.FURTHER_PLAN: ToolText(
-        "You take one of your long plans forward by a step. {{ rules.long_plans.steps_per_epoch | several('step', 'steps') }} an epoch is its own pace. 1 action.",
+        "You take one of your long plans forward by a step. A plan moves at its own pace, up to {{ rules.long_plans.steps_per_epoch | several('step', 'steps') }} an epoch. 1 action.",
         {"plan_id": "Your long plan", "reason": "Why you further it"},
     ),
     T.SHAPE_KINSHIP: ToolText(
@@ -1620,7 +1635,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     ),
     T.TEND_SOIL_STOCK: ToolText(
         "You raise or lower a hidden stock of the soil of a land in your reach ({{ nutrient_kinds }}): what the crops draw on, the seeds "
-        "lying in it that heal its scars, the life in it that turns the dead back into soil, or the salt that spoils it. 1 action.",
+        "in it from which cleared or scarred land grows back, the life in it that breaks down dead matter, or the salt that lowers its yield. 1 action.",
         {
             "region_id": "The land whose soil you tend",
             "stock": "Which stock of the soil",
@@ -1843,7 +1858,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
             "shape": "cycling (summers and winters turn while it holds) or single (one spell that ends)",
             "spell": "summer or winter: the spell it begins with",
             "length": "Epochs the spell lasts, 1 to 20",
-            "severity": "How hard it bites, 0 to 100",
+            "severity": "How severe it is, 0 to 100",
             "reason": "Why you unsettle them",
         },
     ),
@@ -2203,7 +2218,7 @@ SON_TOOL_TEXTS: dict[SonToolId, ToolText] = {
     T.STIR_IDENTITY: ToolText(
         "You make one of the identities of a town or people within your reach matter more to it, or quiet it. The identity that matters most "
         "decides whom its folk trust, how loyal they stay to their realm and along which line it divides. Layers: {{ identity_layers | join(', ') }}. "
-        "You may work through a driver ({{ salience_drivers }}); each stirs only the layers it reaches, and god is your own hand on any layer. 1 action.",
+        "You may work through a driver ({{ salience_drivers }}); each stirs only the layers it reaches, and god means you work on any layer yourself. 1 action.",
         {
             "community_id": "The town or people",
             "layer": "Which identity",

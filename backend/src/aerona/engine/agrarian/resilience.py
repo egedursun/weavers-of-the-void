@@ -43,7 +43,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cycles.gifts import give
 from aerona.engine.cycles.standing import regard
 from aerona.engine.divine.standing import standing_row
-from aerona.engine.economy.purse import give_coin, held_coin
+from aerona.engine.economy.purse import coin_of, give_coin, held_coin, take_coin
 from aerona.engine.economy.stocks import goods_of
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.intrigue.favours import owe
@@ -408,10 +408,13 @@ async def aid_from(
     coin = realm is not None and realm.profile.treasury > 0
     kind = kind or aid_kind(event, rebuild is not None, coin=coin)
     most = per_thousand(table.cap, town)
-    amount = amount if amount is not None else min(most, held_coin(realm.profile.treasury) * table.share_pct // PERCENT) if realm is not None else 0
+    purse = held_coin(realm.profile.treasury) if realm is not None else held_coin(await coin_of(ctx.session, ctx.rules, giver))
+    amount = amount if amount is not None else min(most, purse * table.share_pct // PERCENT)
+    if amount <= 0:
+        return None
     target = receiver.entity if receiver is not None else town
     rival = await relation(ctx.session, ctx.rules, target.id, giver.id) <= table.refuse_below
-    gift = None if rival else await give(ctx, giver.id, target.id, max(1, amount), GiftOccasion.RELIEF, pay=False)
+    gift = None if rival else await give(ctx, giver.id, target.id, amount, GiftOccasion.RELIEF, pay=False)
     refused = rival or gift is None or gift.state is GiftState.REFUSED
     god = await patron_node(ctx.session, giver)
     row = ReliefAidRow(
@@ -431,8 +434,10 @@ async def aid_from(
         tally.refused += 1
         await refuse_aid(ctx, giver, town, receiver)
         return row
-    if realm is not None and amount > 0:
+    if realm is not None:
         spend(ctx, realm, -amount, TreasuryEntry.RELIEF, f"aid to {town.name}")
+    elif not await take_coin(ctx.session, ctx.rules, giver, amount):
+        return row
     await AID_EFFECTS[kind](ctx, Aid(giver, town, amount, rebuild, realm.profile.capital_entity_id if realm is not None else None))
     debtor = receiver.ruler_id if receiver is not None and receiver.ruler_id is not None else town.id
     await owe(ctx, debtor, giver.id, FavourOrigin.RELIEF, table.favour)

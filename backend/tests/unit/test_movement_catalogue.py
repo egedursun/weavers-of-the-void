@@ -67,3 +67,22 @@ def test_a_special_case_of_a_mode_is_caught() -> None:
 
 def test_the_source_has_no_special_case_of_a_mode() -> None:
     assert checker().main() == 0
+
+
+def test_no_one_walks_climbs_rides_or_digs_across_open_sea() -> None:
+    rules = Rules()
+    sea = Ground(roughness=0, forest=0, wetland=0, river=RiverClass.NONE, temperature=20, coast=CoastKind.NONE, terrain=TerrainKind.SEA)
+    values = passability_of(rules, sea)
+    grounded = [mode for mode, spec in MOVEMENT.items() if spec.medium is MovementMedium.GROUND]
+    assert grounded
+    assert {mode.value: values[mode.value] for mode in grounded} == {mode.value: 0 for mode in grounded}
+    assert values[MovementMode.SWIMMING.value] > 0
+
+
+def test_a_mode_a_terrain_gives_no_passage_is_not_lifted_by_the_floor_of_land() -> None:
+    rules = Rules()
+    for kind, spec in TERRAIN.items():
+        closed = [mode for mode, value in spec.passage(rules).items() if value == 0 and MOVEMENT[mode].medium is MovementMedium.GROUND]
+        ground = replace(GROUND, terrain=kind)
+        values = passability_of(rules, ground)
+        assert all(values[mode.value] == 0 for mode in closed), kind

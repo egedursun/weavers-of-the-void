@@ -134,7 +134,9 @@ async def bind_spirit(ctx: TickContext, place: EntityRow, kind: GeniusLocusKind,
         community_entity_id=community.id if community is not None else None,
         kind=kind,
         temperament=rng.below(PERCENT + 1),
-        contentment=ctx.rules.genius_loci.content_at,
+        contentment=clamp_int(
+            ctx.rules.genius_loci.content_at + rng.integer(-ctx.rules.genius_loci.born_mood_spread, ctx.rules.genius_loci.born_mood_spread), 0, PERCENT
+        ),
         bound_epoch=ctx.epoch,
         locked=[],
     )

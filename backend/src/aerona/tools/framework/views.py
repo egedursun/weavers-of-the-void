@@ -7,6 +7,7 @@ from aerona.catalog.bonds import BOND_KINDS
 from aerona.catalog.civilization import TIER_LABELS
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES
+from aerona.db.described import described_in
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
@@ -194,6 +195,7 @@ async def entity_detail(session: AsyncSession, rules: Rules, entity: EntityRow) 
         tags=tags,
         stats=_stats(entity),
         description=entity.description,
+        described=await described_in(session, entity),
         fate_note=entity.fate_note,
         outgoing=await _bond_lines(session, outgoing, entity.id),
         incoming=await _bond_lines(session, incoming, entity.id),

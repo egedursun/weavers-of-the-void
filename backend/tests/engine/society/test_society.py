@@ -8,6 +8,7 @@ from aerona.domain.models.entity_stats import LanguageStats
 from aerona.engine.phases.society import language_and_faith, love_and_rivalry, uprisings
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.stats import stat
+from aerona.engine.relations.book import ensure_relation, relation
 from tests.engine.society.factories import Realm, active_bonds, bonded, chronicle_keys, context, link, make, mortal, named, people, settlement, son, tuned
 
 
@@ -62,3 +63,19 @@ async def test_co_located_adults_fall_in_love_or_rivalry(realm: Realm) -> None:
     assert await bonded(realm.session, first.id, second.id, BondKind.LOVES)
     assert ctx.environment.stats.counters["test.pairs"] == 1
     assert not await active_bonds(realm.session, second.id, BondKind.ENEMY)
+    for holder, other in ((first, second), (second, first)):
+        tie = await relation(realm.session, holder.id, other.id)
+        assert tie is not None and tie.romance > 0
+
+
+async def test_love_does_not_grow_between_mortals_who_dislike_each_other(realm: Realm) -> None:
+    town = await settlement(realm, "Meeting")
+    first = await mortal(realm, "Oral", location_id=town.id)
+    second = await mortal(realm, "Otzat", location_id=town.id)
+    ctx = context(realm.session, tuned(society={"love_rivalry_chance": 100, "love_share_pct": 100}))
+    for holder, other in ((first, second), (second, first)):
+        tie = await ensure_relation(realm.session, holder.id, other.id, ctx.epoch)
+        assert tie is not None
+        tie.friendship = -11
+    await love_and_rivalry(ctx)
+    assert not await bonded(realm.session, first.id, second.id, BondKind.LOVES)

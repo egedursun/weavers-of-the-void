@@ -90,6 +90,7 @@ from aerona.engine.collective.accounts import (
     rewrite_reigns,
     write_accounts,
 )
+from aerona.engine.collective.book import population_of
 from aerona.engine.collective.control import edit_arms, set_norm
 from aerona.engine.collective.crowds import CrowdTally, cascade, crowd_for, mood_of, rage_mobs, ready_to_arm, spark, state_triggers
 from aerona.engine.collective.dating import render_date
@@ -691,3 +692,17 @@ async def test_a_storylet_whose_cast_died_meanwhile_lapses_instead_of_telling_th
     tally = StoryletTally()
     await settle_due(ctx, tally)
     assert run.status is StoryletStatus.EXPIRED and tally.expired == 1 and tally.by_personality == 0
+
+
+async def test_living_generations_never_outnumber_their_town(session: AsyncSession, world: CoreWorld) -> None:
+    world.cosmos.epoch = 6
+    await session.flush()
+    ctx = await context(session, generations={"youth_years": 50, "lifespan_years": 200})
+    town = await town_of(session, world)
+    people = population_of(town)
+    for born, alive in ((2, people), (3, people), (4, people // 2)):
+        session.add(GenerationRow(community_entity_id=town.id, generation_epoch=born, formative=[], value_shifts={}, alive=alive, locked=[]))
+    await session.flush()
+    await keep_generations(ctx, GenerationTally())
+    living = await session.scalars(select(GenerationRow).where(GenerationRow.community_entity_id == town.id, GenerationRow.passed_epoch.is_(None)))
+    assert sum(row.alive for row in living) <= people

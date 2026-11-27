@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.creator import ACTION_PASSIONS, CREATOR_PASSIONS, polarity_of
@@ -9,6 +9,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.lore import MessageRow
+from aerona.db.tables.presence import PresenceExchangeRow, PresenceSessionRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind, ActionPolarity
 from aerona.domain.enums.agent import MessageIntent
@@ -16,6 +17,7 @@ from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.creator import CreatorPassion
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
+from aerona.domain.enums.presence import PresenceExchangeStatus, PresenceGuise, PresenceRecord
 from aerona.domain.enums.son import ReputationLabel, SonStatus
 from aerona.engine.context import TickContext
 from aerona.engine.divine.prayer_window import last_run, overdue_in_run, still_awaiting
@@ -83,6 +85,21 @@ def event_polarity(kind: ActionKind) -> ActionPolarity:
     return polarity_of(kind)
 
 
+async def last_audience(session: AsyncSession, son_id: int, horizon: int) -> int:
+    statement = (
+        select(func.max(PresenceExchangeRow.epoch))
+        .join(PresenceSessionRow, PresenceSessionRow.id == PresenceExchangeRow.session_id)
+        .where(
+            PresenceSessionRow.node_id == son_id,
+            PresenceSessionRow.guise == PresenceGuise.CREATOR,
+            PresenceSessionRow.record == PresenceRecord.ON_RECORD,
+            PresenceExchangeRow.status == PresenceExchangeStatus.DONE,
+            PresenceExchangeRow.epoch > horizon,
+        )
+    )
+    return int(await session.scalar(statement) or 0)
+
+
 async def compute_reputation(session: AsyncSession, rules: Rules, son: SonRow, epoch: int, creator: CreatorRow | None) -> Reputation:
     table = rules.reputation
     horizon = epoch - table.window_epochs
@@ -116,6 +133,7 @@ async def compute_reputation(session: AsyncSession, rules: Rules, son: SonRow, e
             else:
                 love += table.love_per_message * weight
             last_contact = max(last_contact, sent)
+    last_contact = max(last_contact, await last_audience(session, son.id, horizon))
     if son.standing_order:
         last_contact = epoch
     unanswered = 0

@@ -43,6 +43,7 @@ class SonWorldState:
     phenomenon: bool = False
     dimensions: int = 0
     pending_impact: bool = False
+    rebel: bool = False
     spent: Mapping[TurnCounter, int] = field(default_factory=dict)
 
 
@@ -62,6 +63,7 @@ async def world_state(session: AsyncSession, son: SonRow) -> SonWorldState:
     return SonWorldState(
         world_count=worlds,
         automatic_distribution=cosmos is None or cosmos.son_distribution is SonDistribution.AUTO,
+        rebel=son.rebel,
         dead_sibling=dead_sibling,
         dead_star=dead_star,
         free_spirit=spirit is not None,
@@ -111,6 +113,7 @@ CONDITIONS: dict[SonToolId, Condition] = {
     T.CALL_SIBLING: lambda rules, _state: rules.son_tools.sibling_message_per_epoch > 0,
     T.GIVE_GIFT: lambda rules, _state: rules.son_tools.gift_per_epoch > 0,
     T.PRAY_TO_CREATOR: lambda rules, _state: rules.son_tools.prayer_per_epoch > 0,
+    T.END_REBELLION: lambda _rules, state: state.rebel,
     T.MAKE_BOND: lambda rules, _state: rules.son_tools.link_per_epoch > 0,
     T.TAKE_LIFE: lambda rules, _state: rules.death.take_life_per_epoch > 0,
     T.RESURRECT_SIBLING: lambda rules, state: rules.death.sibling_intrigues_per_epoch > 0 and state.dead_sibling,

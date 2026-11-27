@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.society import CommunityRelationRow
 from aerona.domain.enums.mind import MemoryKind
 from aerona.engine.primitives.manual import manual_context
@@ -24,3 +25,16 @@ async def test_two_communities_still_keep_their_relation(session: AsyncSession, 
     before = await change_relation(ctx, world.people.id, town.id, 0, MemoryKind.GOODWILL)
     after = await change_relation(ctx, world.people.id, town.id, 30, MemoryKind.GOODWILL)
     assert after > before
+
+
+async def test_the_doer_never_remembers_its_own_deed_as_done_to_it(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "test")
+    wronged = await settlement(session, "Wrongedholm", world, world.regions[0])
+    partner = await settlement(session, "Partnerholm", world, world.regions[0])
+    await change_relation(ctx, wronged.id, world.people.id, -20, MemoryKind.BETRAYED_ME, note="broke the treaty")
+    await change_relation(ctx, partner.id, world.people.id, 15, MemoryKind.TRADED_WITH)
+    await session.flush()
+    held = {(row.holder_node_id, row.subject_node_id): row.kind for row in await session.scalars(select(MemoryRow))}
+    assert held[(wronged.id, world.people.id)] is MemoryKind.BETRAYED_ME
+    assert held[(world.people.id, wronged.id)] is not MemoryKind.BETRAYED_ME
+    assert held[(world.people.id, partner.id)] is MemoryKind.TRADED_WITH

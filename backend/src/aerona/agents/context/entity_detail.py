@@ -11,6 +11,7 @@ from aerona.agents.context.wilds import nature_lines
 from aerona.catalog.domains import DOMAIN_LABELS
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.core.grammar import spoken
+from aerona.db.described import described_in
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -82,6 +83,7 @@ async def entity_detail_context(scope: Scope, entity: EntityRow, *, private: boo
         name_kept=entity.pending_name and await keeps_name(session, entity.id),
         stats=stat_values(entity),
         description=entity.description,
+        described=await described_in(session, entity),
         history=entity.depth.history or None if entity.depth is not None else None,
         fate_note=entity.fate_note,
         outgoing=outgoing,

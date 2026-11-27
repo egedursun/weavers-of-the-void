@@ -1078,7 +1078,7 @@ AGES: tuple[IncidentKindSpec, ...] = (
     happening(
         "world_age.epoch_turning",
         S,
-        "Epoch turning: {subject} entered epoch {epoch}.",
+        "{subject} stood at the turning into epoch {epoch}.",
         roles=(some(R.SUBJECT),),
         facts=(amount("epoch", U.COUNT),),
         clock=C.INSTANT,

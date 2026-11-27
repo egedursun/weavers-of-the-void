@@ -26,6 +26,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import OrderKindTrait
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.mortal.readings import mend_death_cause, mismatched_deaths
+from aerona.services.integrity.adult_births import adults_born_at_first_sight, date_adult_birth
 from aerona.services.integrity.agent_d_links import (
     clear_identity_target,
     lone_disputes,
@@ -53,6 +54,7 @@ from aerona.services.integrity.arsenal_links import (
     unskilled_weapons,
     widen_posture,
 )
+from aerona.services.integrity.birth_sign_epochs import date_birth_sign, signs_born_too_late
 from aerona.services.integrity.chronology import close_judgment, early_judgments, early_rites, follow_rite, heard_later, overaged, set_age, unborn_witnesses
 from aerona.services.integrity.city_links import mend_conurbation, odd_conurbations, stray_rules, widen_rule
 from aerona.services.integrity.cohort_sexes import resplit_cohort_sexes, stray_cohort_sexes
@@ -72,7 +74,17 @@ from aerona.services.integrity.departure_links import align_office, clear_succes
 from aerona.services.integrity.derived_names import follow_old_names, stale_derived_names
 from aerona.services.integrity.dwelling_places import mortals_in_no_place, settle_in_place
 from aerona.services.integrity.ended_rebuilds import close_rebuild, rebuilds_of_the_ended
+from aerona.services.integrity.ended_remains import (
+    armies_led_by_the_dead,
+    dead_with_health,
+    empty_the_ruin,
+    release_their_commands,
+    ruins_still_peopled,
+    still_the_dead,
+)
+from aerona.services.integrity.fact_keys import drop_undeclared_facts, facts_beyond_their_kind
 from aerona.services.integrity.fertility_links import barren_means, strike_barren_means, strike_unknown_use, unknown_uses
+from aerona.services.integrity.generation_counts import fit_generations, generations_beyond_people
 from aerona.services.integrity.genome_alleles import mend_alleles, stray_alleles
 from aerona.services.integrity.governance_links import (
     claimless_creditors,
@@ -86,8 +98,17 @@ from aerona.services.integrity.governance_links import (
 )
 from aerona.services.integrity.grave_links import gather_grave_goods, loose_grave_goods
 from aerona.services.integrity.group_links import foreign_leaders, unseat_leader
-from aerona.services.integrity.habitable_homes import homes_outside_their_band, move_home_into_band
+from aerona.services.integrity.habitable_homes import (
+    homes_moved_off_their_orbit,
+    homes_too_harsh,
+    light_star_by_its_kind,
+    return_home_to_its_orbit,
+    settle_home_climate,
+    stars_lit_astray,
+)
+from aerona.services.integrity.history_splits import name_plague_by_its_sickness, occasions_joined_in_one, plagues_named_otherwise, split_occasions
 from aerona.services.integrity.honour_links import lapse_honour, mend_privileges, odd_privileges, overfull_honours
+from aerona.services.integrity.injury_years import date_injury_in_its_time, injuries_out_of_their_time
 from aerona.services.integrity.interpretation_links import unseat_reader, unskilled_readers
 from aerona.services.integrity.interworld_links import astray_campaigns, astray_migrations, end_migration, stranded_landings, withdraw_campaign
 from aerona.services.integrity.kin_dynamic_links import (
@@ -109,7 +130,9 @@ from aerona.services.integrity.labour_links import (
     trim_out,
     unknown_trades,
 )
+from aerona.services.integrity.law_names import laws_named_twice, name_law_once
 from aerona.services.integrity.league_links import back_union, give_organ, non_polity_members, organless_decisions, strike_member, unbacked_unions
+from aerona.services.integrity.league_names import leagues_without_article, name_league_properly, name_offshoot_after_its_leader, offshoots_named_after_a_clique
 from aerona.services.integrity.life_labels import drop_child_label, grown_children
 from aerona.services.integrity.life_links import (
     adopt_stranger,
@@ -152,6 +175,7 @@ from aerona.services.integrity.life_links import (
     void_lease,
 )
 from aerona.services.integrity.market_links import beastless_clubs, bind_right, loose_fixings, settle_fixing, unbeast_club, unbound_rights
+from aerona.services.integrity.memory_causes import causes_without_their_subject, unlink_cause
 from aerona.services.integrity.monetary_links import align_issuer, bad_pegs, clear_peg, stray_issuers
 from aerona.services.integrity.money_links import clear_metal, clear_source, metal_paper, stray_sources
 from aerona.services.integrity.mood_links import mend_mood, odd_moods, retell_mood_line, stray_mood_lines
@@ -223,13 +247,28 @@ from aerona.services.integrity.referendum_links import aimless_votes, align_fran
 from aerona.services.integrity.restoration_links import end_living_fallen, link_restored, living_fallen, unlinked_restored
 from aerona.services.integrity.restoration_links import mend_end as mend_restoration_end
 from aerona.services.integrity.restoration_links import mismatched_ends as restoration_ends
+from aerona.services.integrity.rite_collections import file_rite_under_its_dead, rites_in_another_dead
 from aerona.services.integrity.route_waters import roads_over_water, sail_road
 from aerona.services.integrity.season_names import rename_twin_season, twin_season_names
 from aerona.services.integrity.season_shares import even_year, follow_forecast, mend_spell, strayed_forecasts, strayed_spells, uneven_years
 from aerona.services.integrity.securities_links import align_price, delist, issuerless, overheld, scale_holdings, stray_prices
+from aerona.services.integrity.son_contact import count_divine_mind_epochs, divine_minds_behind, remember_the_audience, sons_unaware_of_an_audience
+from aerona.services.integrity.son_essence import fit_son_essence, sons_over_their_cap
+from aerona.services.integrity.son_relation_notes import (
+    bonds_described_by_a_fragment,
+    covenants_between_enemies,
+    end_covenant_of_enemies,
+    name_both_in_grudges,
+    nameless_grudges,
+    restore_bond_description,
+)
+from aerona.services.integrity.star_clocks import clocks_past_their_age, wind_clock_to_age
 from aerona.services.integrity.strain_names import name_strain_once, stacked_strains
+from aerona.services.integrity.tenures import bound_tenure, tenures_beyond_presence
 from aerona.services.integrity.title_names import rank_worded_titles, rename_by_rank
+from aerona.services.integrity.tradition_kinds import give_tradition_its_kind, traditions_unlike_their_kind
 from aerona.services.integrity.tradition_slots import misfit_traditions, refit_tradition
+from aerona.services.integrity.untimely_keepings import keepings_told_as_timely, tell_keeping_out_of_time
 from aerona.services.integrity.w52_agent_a import (
     command_by_word,
     drop_hand_over,
@@ -343,6 +382,7 @@ from aerona.services.integrity.w52_agent_j import (
     unbound_passages,
     wrong_passage_states,
 )
+from aerona.services.integrity.war_names import name_war_by_its_parties, wars_named_after_strangers
 from aerona.services.integrity.wave_links import stray_coasts, strike_stray_coast
 
 LOCKED = "locked"
@@ -702,8 +742,36 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "season_names_distinct": (twin_season_names, rename_twin_season),
     "tradition_slot_fits_kind": (misfit_traditions, refit_tradition),
     "strain_named_once": (stacked_strains, name_strain_once),
-    "peopled_world_habitable": (homes_outside_their_band, move_home_into_band),
+    "injury_dated_in_its_time": (injuries_out_of_their_time, date_injury_in_its_time),
+    "tenure_within_presence": (tenures_beyond_presence, bound_tenure),
+    "law_named_once": (laws_named_twice, name_law_once),
+    "birth_sign_by_age": (signs_born_too_late, date_birth_sign),
+    "generations_within_people": (generations_beyond_people, fit_generations),
+    "son_essence_within_cap": (sons_over_their_cap, fit_son_essence),
+    "son_knows_its_audience": (sons_unaware_of_an_audience, remember_the_audience),
+    "son_bond_described_plainly": (bonds_described_by_a_fragment, restore_bond_description),
+    "god_grudge_names_both": (nameless_grudges, name_both_in_grudges),
+    "son_covenant_between_friends": (covenants_between_enemies, end_covenant_of_enemies),
+    "divine_mind_counts_its_epochs": (divine_minds_behind, count_divine_mind_epochs),
+    "adult_born_before_first_sight": (adults_born_at_first_sight, date_adult_birth),
+    "star_lit_by_its_kind": (stars_lit_astray, light_star_by_its_kind),
+    "star_clock_follows_its_age": (clocks_past_their_age, wind_clock_to_age),
+    "home_on_its_lived_orbit": (homes_moved_off_their_orbit, return_home_to_its_orbit),
+    "peopled_world_habitable": (homes_too_harsh, settle_home_climate),
     "rebuild_of_a_standing_town": (rebuilds_of_the_ended, close_rebuild),
+    "dead_without_health": (dead_with_health, still_the_dead),
+    "army_led_by_the_living": (armies_led_by_the_dead, release_their_commands),
+    "ruin_without_people": (ruins_still_peopled, empty_the_ruin),
+    "war_named_by_its_parties": (wars_named_after_strangers, name_war_by_its_parties),
+    "rite_filed_under_its_dead": (rites_in_another_dead, file_rite_under_its_dead),
+    "occasion_holds_one_occasion": (occasions_joined_in_one, split_occasions),
+    "league_named_with_article": (leagues_without_article, name_league_properly),
+    "offshoot_named_after_a_person": (offshoots_named_after_a_clique, name_offshoot_after_its_leader),
+    "plague_named_by_its_sickness": (plagues_named_otherwise, name_plague_by_its_sickness),
+    "memory_cause_names_its_subject": (causes_without_their_subject, unlink_cause),
+    "incident_facts_declared": (facts_beyond_their_kind, drop_undeclared_facts),
+    "tradition_kind_fits_subtype": (traditions_unlike_their_kind, give_tradition_its_kind),
+    "untimely_keeping_told": (keepings_told_as_timely, tell_keeping_out_of_time),
     "derived_names_follow": (stale_derived_names, follow_old_names),
     "plant_product_part": (unsourced_products, strike_unsourced_products),
     "will_shares_whole": (unbalanced_wills, balance_will),

@@ -95,6 +95,8 @@ async def magic_sites(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.age",
+    "mortal.lifespan",
     "people.population",
     "settlement.population",
     "table.action_records",

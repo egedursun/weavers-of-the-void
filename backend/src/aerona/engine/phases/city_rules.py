@@ -11,6 +11,8 @@ from aerona.engine.phase import Phase
     "table.conurbations",
     "table.districts",
     "table.entities",
+    "table.incident_participants",
+    "table.incidents",
     "table.land_use_rules",
     "table.municipal_services",
     "table.node_births",

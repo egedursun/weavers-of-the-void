@@ -14,6 +14,7 @@ from aerona.engine.divine.politics import god_grudge
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.divine.wounds import bound_factor, name_exposure
 from aerona.engine.faith.book import patron_node
+from aerona.engine.gods.essence import endow
 from aerona.engine.military.battle import Side
 from aerona.engine.mythic.offices import conquer_offices
 from aerona.engine.mythic.servitors import host_of, shake_host
@@ -98,23 +99,58 @@ async def awe(ctx: TickContext, hand: Hand) -> None:
     row.epoch = ctx.epoch
 
 
-async def intervene(ctx: TickContext, war_id: int, sequence: int, first: Side, second: Side) -> int:
+@dataclass
+class Intervention:
+    first: Side
+    second: Side
+    hands: list[Hand]
+    winner: Hand | None
+    loser: Hand | None
+    son: int | None
+    stream: str
+
+
+def refund(ctx: TickContext, god: God) -> None:
+    table = ctx.rules.domains
+    if isinstance(god, SonRow):
+        endow(ctx.rules, god, table.battle_essence)
+    else:
+        god.power += table.battle_foreign_power
+
+
+async def prepare(ctx: TickContext, war_id: int, sequence: int, first: Side, second: Side) -> Intervention | None:
     stream = f"battle_god.{war_id}.{sequence}"
     patrons = [await god_of(ctx.session, await patron_node(ctx.session, side.entity.id)) for side in (first, second)]
     if patrons[0] is not None and patrons[1] is not None and patrons[0].id == patrons[1].id:
-        return 0
+        return None
     found = [await hand_of(ctx, side, god, f"{stream}.{side.entity.id}") for side, god in zip((first, second), patrons, strict=True)]
     hands = [hand for hand in found if hand is not None]
     if not hands:
-        return 0
+        return None
     son = next((hand.god.id for hand in hands if isinstance(hand.god, SonRow)), None)
     if len(hands) == 2:
         winner, loser = await contest(ctx, hands[0], hands[1], stream)
         lay(ctx, winner)
         loser.side.divine_spurned = ctx.rules.domains.battle_spurned_morale
+        return Intervention(first, second, hands, winner, loser, son, stream)
+    for hand in hands:
+        lay(ctx, hand)
+    return Intervention(first, second, hands, None, None, son, stream)
+
+
+def withdraw(ctx: TickContext, plan: Intervention | None) -> None:
+    for hand in plan.hands if plan is not None else []:
+        refund(ctx, hand.god)
+
+
+async def honour(ctx: TickContext, plan: Intervention | None) -> int:
+    if plan is None:
+        return 0
+    if plan.winner is not None and plan.loser is not None:
+        winner, loser = plan.winner, plan.loser
         await awe(ctx, winner)
-        await god_grudge(ctx, loser.god.id, winner.god.id, MemoryKind.HUMILIATED_ME, f"overcame it in the battle for {loser.side.entity.name}")
-        await conquer_offices(ctx, winner.god.id, loser.god.id, stream)
+        await god_grudge(ctx, loser.god.id, winner.god.id, MemoryKind.HUMILIATED_ME, f"overcame {loser.god.name} in the battle for {loser.side.entity.name}")
+        await conquer_offices(ctx, winner.god.id, loser.god.id, plan.stream)
         await shake_host(ctx, loser.god.id)
         await record(
             ctx,
@@ -122,16 +158,15 @@ async def intervene(ctx: TickContext, war_id: int, sequence: int, first: Side, s
             roles={
                 IncidentRole.ACTOR: winner.god.id,
                 IncidentRole.OPPONENT: loser.god.id,
-                IncidentRole.SUBJECT: [first.entity.id, second.entity.id],
+                IncidentRole.SUBJECT: [plan.first.entity.id, plan.second.entity.id],
                 IncidentRole.VICTIM: loser.side.entity.id,
             },
             kind=ChronicleKind.CHALLENGE,
-            son_id=son,
-            world_id=first.entity.world_id,
+            son_id=plan.son,
+            world_id=plan.first.entity.world_id,
         )
         return 2
-    for hand in hands:
-        lay(ctx, hand)
+    for hand in plan.hands:
         await awe(ctx, hand)
         await record(
             ctx,
@@ -142,4 +177,4 @@ async def intervene(ctx: TickContext, war_id: int, sequence: int, first: Side, s
             kind=ChronicleKind.CHALLENGE,
             world_id=hand.side.entity.world_id,
         )
-    return len(hands)
+    return len(plan.hands)

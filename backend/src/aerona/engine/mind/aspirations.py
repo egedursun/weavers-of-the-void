@@ -55,7 +55,7 @@ from aerona.engine.mind.ethics import at_war
 from aerona.engine.mind.split import facets_of
 from aerona.engine.mind.thoughts import need_importance, think
 from aerona.engine.mortal.kin import children_of, partners_of, spouses_of
-from aerona.engine.mortal.life import adult
+from aerona.engine.mortal.life import adult, young_through
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
@@ -767,7 +767,8 @@ async def set_out(ctx: TickContext, mortal: EntityRow) -> bool:
     want = await ctx.session.scalar(
         select(WantRow).where(WantRow.holder_node_id == mortal.id, WantRow.kind == WantKind.TRAVEL, WantRow.fulfilled_epoch.is_(None)).limit(1)
     )
-    if want is None or not await of_age(ctx.session, mortal.id):
+    aged = ctx.environment.aging is not None and ctx.environment.aging.done
+    if want is None or not await of_age(ctx.session, mortal.id) or await young_through(ctx.session, ctx.rules, ctx.epoch, [mortal], aged=aged):
         return False
     if not ctx.rng(seed_of("wanderlust", mortal.id, ctx.epoch)).chance(ctx.rules.aspirations.want_travel_pct):
         return False

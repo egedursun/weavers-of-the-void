@@ -55,7 +55,8 @@ async def test_an_abandoned_town_sends_its_people_away_as_displaced(realm: Realm
     await abandon_town(context(realm.session, RULES), row, town)
     assert town.status is not EntityStatus.CANON and row.finished_epoch is not None
     assert stat(host, "population") == 1600
-    assert "settlement.left_after_ruin" in await chronicle_keys(realm.session)
+    keys = await chronicle_keys(realm.session)
+    assert "settlement.left_after_ruin" in keys and "ruins.abandoned" not in keys
 
 
 async def test_a_town_already_turned_to_ruin_is_never_rebuilt(realm: Realm) -> None:

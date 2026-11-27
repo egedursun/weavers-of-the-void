@@ -1,3 +1,4 @@
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -157,6 +158,23 @@ async def unique_age_name(scope: Scope, name: str, epoch: int) -> str:
     return f"{name} (Age {epoch})"
 
 
+def renamed_age(text: str | None, told: str, kept: str) -> str:
+    core = told[4:] if told.lower().startswith("the ") else told
+    if not text or kept in (told, core):
+        return text or ""
+    pattern = re.compile(rf"(?<![^\W\d_])(?:{re.escape(kept)}|(?:(?i:the) )?{re.escape(core)})(?![^\W\d_])")
+    return pattern.sub(kept, text)
+
+
+def apply_age_name(chronicle: Chronicle, told: str, kept: str) -> None:
+    chronicle.narrative = renamed_age(chronicle.narrative, told, kept)
+    chronicle.summary = renamed_age(chronicle.summary, told, kept)
+    for world_id, section in list(chronicle.worlds.items()):
+        chronicle.worlds[world_id] = section.model_copy(
+            update={"narrative": renamed_age(section.narrative, told, kept), "summary": renamed_age(section.summary, told, kept)}
+        )
+
+
 def apply_renames(chronicle: Chronicle, renames: Sequence[tuple[str, str]]) -> None:
     for old, new in renames:
         chronicle.narrative = replace_name(chronicle.narrative, old, new)
@@ -174,10 +192,9 @@ async def record_age(scope: Scope, chronicle: Chronicle, epoch: int) -> EpochRow
     if row is None:
         row = EpochRow(epoch=epoch)
         scope.session.add(row)
-    if row.name and chronicle.age_name:
-        apply_renames(chronicle, [(chronicle.age_name, row.name)])
-    elif chronicle.age_name:
-        row.name = await unique_age_name(scope, chronicle.age_name, epoch)
+    if chronicle.age_name:
+        row.name = row.name or await unique_age_name(scope, chronicle.age_name, epoch)
+        apply_age_name(chronicle, chronicle.age_name, row.name)
     row.narrative = chronicle.narrative or row.narrative
     row.summary = chronicle.summary or row.summary
     row.year_start = epoch_start_year(epoch, years)

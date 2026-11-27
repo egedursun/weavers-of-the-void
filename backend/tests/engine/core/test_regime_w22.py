@@ -38,7 +38,7 @@ from aerona.db.tables.society import CommunitySocietyRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.domain.enums.bond import BondKind, BondRole
 from aerona.domain.enums.culture import Technique
-from aerona.domain.enums.cycles import CyclePhase, GiftOccasion, GiftState, LongPlanKind, LongPlanStatus
+from aerona.domain.enums.cycles import CyclePhase, GiftOccasion, GiftState, LongPlanKind, LongPlanStatus, PlanOutcome
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.gathering import GatheringKind
@@ -55,6 +55,7 @@ from aerona.domain.models.entity_stats import FactionStats, HouseStats, PeopleSt
 from aerona.engine.collective.roles import career_open
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import AsabiyyaTally, keep_asabiyya
+from aerona.engine.cycles.plans import fulfil_bloodline
 from aerona.engine.cycles.stress import StressTally, read_stress
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.mind.book import add_trait
@@ -411,6 +412,33 @@ async def test_a_breeding_design_marries_the_house_to_carriers(session: AsyncSes
     ctx = await context(session, breeding_plans={"love_pct": 100})
     plan_two = await session.get(BreedingPlanRow, design.id)
     assert plan_two is not None and design.status is LongPlanStatus.ACTIVE
+
+
+async def test_a_breeding_design_that_made_no_match_breeds_no_line(session: AsyncSession, world: CoreWorld) -> None:
+    town = await town_of(session, world, "Ashby")
+    outcomes = []
+    for matches in (0, 1):
+        house = await entity(session, f"House Line {matches}", EntityType.HOUSE, HouseStats(), world_id=world.world.id)
+        heir = await mortal(session, f"Heir {matches}", world, town.id, age=20)
+        session.add(HouseProfileRow(house_entity_id=house.id, founder_entity_id=heir.id, head_entity_id=heir.id, emblem={}, traits=[], seats=[], locked=[]))
+        design = LongPlanRow(
+            holder_node_id=house.id,
+            target_node_id=house.id,
+            kind=LongPlanKind.BLOODLINE,
+            name=f"The Tall Line {matches}",
+            steps=4,
+            progress=4,
+            step_cost=0,
+            secrecy=50,
+            locked=[],
+        )
+        session.add(design)
+        await session.flush()
+        session.add(BreedingPlanRow(plan_id=design.id, house_entity_id=house.id, locus="height", allele="tall", target_share=50, matches=matches, locked=[]))
+        await session.flush()
+        outcome, _ = await fulfil_bloodline(await context(session), design, None)
+        outcomes.append(outcome)
+    assert outcomes == [PlanOutcome.BRED_NOTHING, PlanOutcome.LINE_BRED]
 
 
 async def test_a_house_whose_head_claims_a_foreign_throne_plans_to_keep_the_claim_in_its_blood(session: AsyncSession, world: CoreWorld) -> None:

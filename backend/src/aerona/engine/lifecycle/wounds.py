@@ -31,7 +31,6 @@ from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.domain.enums.records import StepState
-from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level, metallurgy_of
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.digits import lose
@@ -60,7 +59,9 @@ from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import set_stats, stat
+from aerona.engine.recording.births import birth_year
 from aerona.engine.recording.record import FactInput, RoleValue, record
+from aerona.engine.recording.scope import phase_moment
 
 
 class WoundOutcome(StrEnum):
@@ -184,7 +185,7 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
             cause_node_id=harm.source_node_id or harm.killer_id,
             event_entity_id=harm.event_entity_id,
             epoch=ctx.epoch,
-            year=await injury_year(ctx, cause_incident),
+            year=await injury_year(ctx, cause_incident, bearer.id),
             visible=hit.part.visible,
             incident_id=cause_incident,
             digits=taken,
@@ -202,12 +203,12 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
     return rows
 
 
-async def injury_year(ctx: TickContext, incident_id: int | None) -> int:
+async def injury_year(ctx: TickContext, incident_id: int | None, bearer_id: int) -> int:
     told = await ctx.session.scalar(select(IncidentRow.year).where(IncidentRow.id == incident_id)) if incident_id is not None else None
     if told is not None:
         return int(told)
-    window = ctx.environment.window
-    return epoch_start_year(ctx.epoch, ctx.rules.time.years_per_epoch) + (window.start if window is not None else 0)
+    born = await birth_year(ctx.session, bearer_id)
+    return max(phase_moment(ctx.environment).year or 0, born if born is not None else 0)
 
 
 MEMBER_SEVERITY = 3

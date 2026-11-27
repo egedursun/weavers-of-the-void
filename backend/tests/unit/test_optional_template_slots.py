@@ -10,7 +10,7 @@ from aerona.engine.recording.render import indexed, render_incident
 FIELDS = Formatter()
 LEFT_BEHIND = re.compile(
     r"\b(of|to|toward|towards|for|against|from|with|by|at|in|into|onto|on|upon|between|among|as|under|through|via|about|after|before"
-    r"|within|without|beside|near|across|behind|beyond|than|amid|unto|its|their|the|a|an|this|that|whose)\{[^}:]+:\?"
+    r"|within|without|beside|near|across|behind|beyond|than|amid|unto|its|their|the|a|an|this|that|whose)\{[^}:]+:\?(?![,;:])"
 )
 CUT_CLAUSE = re.compile(r"[,;:]\{[^}:]+:\?[^}]*\}\s*[a-z]|\{[^}:]+:\?[,;][^}]*[^,;]\}\s*[a-z]")
 BROKEN = re.compile(r"\s[,.;:!?]|,\s*[,.;:!?]|\(\s*\)|^[,.;:]")

@@ -950,7 +950,22 @@ async def settle_house_stats(ctx: TickContext) -> int:
     settled = 0
     for profile in list(await ctx.session.scalars(select(HouseProfileRow).order_by(HouseProfileRow.house_entity_id))):
         house = await ctx.session.get(EntityRow, profile.house_entity_id)
-        if house is None or held(house.id) or house.status is not EntityStatus.CANON:
+        if house is None or held(house.id):
+            continue
+        if house.status is not EntityStatus.CANON:
+            settled += set_stats(house, members=0)
             continue
         settled += set_stats(house, prestige=profile.prestige, members=int(alive.get(house.id, 0)), wealth=clamp_int(profile.wealth, 0, PERCENT))
     return settled
+
+
+async def close_emptied_houses(ctx: TickContext) -> int:
+    book = await HouseBook.load(ctx)
+    closed = 0
+    for house_id in sorted(book.houses):
+        if held(house_id) or house_id not in book.profiles:
+            continue
+        if not await living(ctx, {member for member in book.members[house_id] if book.house_of.get(member) == house_id}):
+            await extinguish(ctx, book, house_id, HouseEnd.LAST_MEMBER_DIED)
+            closed += 1
+    return closed

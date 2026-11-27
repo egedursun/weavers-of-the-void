@@ -135,6 +135,7 @@ async def divine_standing(ctx: TickContext) -> None:
 @writes(
     "table.applied_fixups",
     "table.chronicle",
+    "table.chronicle_entities",
     "table.community_stocks",
     "table.culture_values",
     "table.divine_powers",

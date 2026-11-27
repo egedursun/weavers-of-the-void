@@ -44,6 +44,7 @@ TITLES = (
     "Coup",
 )
 BARE_TITLE = re.compile(r"(?<=[a-z,;:] )(?<!the )(?<!its )(?<!their )(?<!an )(?<! a )(" + "|".join(TITLES) + r") of (?=[A-Z])")
+INNER_THE = re.compile(r"(?<=[a-z,;:] )The (?=[a-z])")
 EMPTY_REMARK = re.compile(r"\s*\(\s*\)|:\s*(?=[.!?]?$)")
 CLOSED = re.compile(r"[.!?»”\"')\]]$")
 DOUBLED_STOP = re.compile(r"(\.\.\.|[!?])\.+|(?<!\.)(\.)\.(?!\.)")
@@ -108,6 +109,7 @@ def render_incident(spec: IncidentKindSpec, names: Mapping[IncidentRole, Sequenc
         raise ValidationFailedError(f"The happening {spec.key} cannot be told without {', '.join(missing)}.")
     text = DOUBLED_STOP.sub(lambda found: found.group(1) or found.group(2), " ".join(ARTICLES.format(spec.template, **fields).split()))
     text = BARE_TITLE.sub(r"the \1 of ", text)
+    text = INNER_THE.sub("the ", text)
     text = DOUBLED_ARTICLE.sub(lambda found: "The" if found.group(1)[:1].isupper() else "the", text)
     text = " ".join(EMPTY_REMARK.sub("", text).split())
     if text and not CLOSED.search(text):

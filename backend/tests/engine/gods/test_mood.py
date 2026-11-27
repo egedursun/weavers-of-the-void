@@ -180,3 +180,17 @@ async def test_answer_mortal_prayer(session: AsyncSession, world: GodsWorld, rul
     assert people.stats.model_dump()["piety"] == 60 + rules.creator.prayer_faith_gain
     assert people.stats.model_dump()["prosperity"] == 50 + 3
     assert people.id in {entity.id for entity in await creator_worshippers(session)}
+
+
+async def test_a_creator_that_gave_a_sign_is_never_told_as_giving_none(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:
+    creator_rules = replace(
+        rules.creator, content_sign_chance=100, silence_sign_chance=100, content_keep_pct=100, indifferent_threshold=100, mood_opposition_pct=0
+    )
+    tuned = replace(rules, creator=creator_rules)
+    world.creator.mood_contentment, world.creator.mood_interest = 95, 0
+    devout = await make_entity(session, "Devout", EntityType.PEOPLE, world_id=world.world.id, location_id=world.region.id)
+    await bond(session, devout.id, world.creator.id, BondKind.WORSHIPS)
+    await creator_mood(make_context(session, tuned, epoch=3, phase="creator_mood"))
+    keys = await chronicle_keys(session)
+    assert "gods.mood.grace" in keys
+    assert "gods.mood.silence" not in keys

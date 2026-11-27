@@ -14,6 +14,7 @@ from aerona.domain.enums.polity import OfficeKind
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.ruler_roles import ruler_role
+from aerona.engine.mortal.life import sex_of_stats, window_end_pct
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int
@@ -110,8 +111,11 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
 def heir_age(rules: Rules, parent: EntityRow, wanted: int) -> int:
     lifespan = stat_or(parent, "lifespan", rules.world_effects.default_lifespan)
     youngest_parent = lifespan * rules.fertility.window_start_pct // PERCENT
-    oldest_child = int(stat_or(parent, "age", wanted + youngest_parent)) - youngest_parent
-    return max(0, min(wanted, oldest_child))
+    oldest_parent = max(youngest_parent, lifespan * window_end_pct(rules, sex_of_stats(parent)) // PERCENT)
+    age = int(stat_or(parent, "age", wanted + youngest_parent))
+    oldest_child = age - youngest_parent
+    youngest_child = age - oldest_parent
+    return max(0, min(oldest_child, max(wanted, youngest_child)))
 
 
 async def pass_rule(ctx: TickContext, dead: EntityRow) -> EntityRow | None:

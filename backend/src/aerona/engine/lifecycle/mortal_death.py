@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.onlookers import ONLOOKER_ROLES
+from aerona.catalog.lore import MOURNING_RITE
 from aerona.catalog.stats import max_essence
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.schema import SINGLETON_ID
@@ -51,6 +52,7 @@ from aerona.engine.interconnect.causes import killing_incident
 from aerona.engine.lifecycle.aging import aging_rate, immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
 from aerona.engine.lore.history import record
+from aerona.engine.military.command_ends import lay_down_command
 from aerona.engine.mind.ethics import killing_act
 from aerona.engine.mind.grief import bereave
 from aerona.engine.mind.hooks import judged
@@ -76,7 +78,7 @@ from aerona.engine.transform.record import blocked, record_transformation
 LIVING_DEATH_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
 RESTLESS_SPIRIT_SUBTYPE = "restless spirit"
 ANCESTOR_SPIRIT_SUBTYPE = "ancestor spirit"
-MOURNING_SUBTYPE = "mourning rite"
+MOURNING_SUBTYPE = MOURNING_RITE
 SPIRIT_SUBTYPES = (RESTLESS_SPIRIT_SUBTYPE, ANCESTOR_SPIRIT_SUBTYPE)
 MOURNING_HOME_TYPES = frozenset({EntityType.SETTLEMENT, EntityType.PEOPLE})
 DEFAULT_CAUSE = "died"
@@ -247,6 +249,7 @@ async def die(
     written = await record_happening(ctx, key, roles=roles, facts=facts, steps=steps, son_id=son_id, cause=cause_id, place=mortal.location_id, at_moment=moment)
     text = written.text
     await after_death(ctx, mortal)
+    await leave_the_living(ctx, mortal)
     await fallen_body_died(ctx, mortal)
     await sweep_dead_bonds(session, ctx.epoch, mortal.id)
     if await raise_lifespan_to_death_age(session, ctx.rules, mortal):
@@ -463,6 +466,11 @@ async def _start_mourning(ctx: TickContext, mortal: EntityRow) -> None:
         await connect(session, place.id, tradition.id, BondKind.CELEBRATES, ctx.epoch)
     roles: dict[IncidentRole, RoleValue] = {IncidentRole.ACTOR: place.id, IncidentRole.SUBJECT: mortal.id, IncidentRole.PRODUCT: tradition.id}
     await record_happening(ctx, "mortal.mourning", roles=roles, facts={"spread": effects.mourning_spread}, place=place.id)
+
+
+async def leave_the_living(ctx: TickContext, mortal: EntityRow) -> None:
+    set_stats(mortal, hp=0)
+    ctx.count("commands_laid_down", await lay_down_command(ctx.session, mortal.id, ctx.epoch))
 
 
 async def after_death(ctx: TickContext, mortal: EntityRow) -> None:

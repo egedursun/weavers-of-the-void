@@ -93,16 +93,28 @@ async def test_a_son_keeps_its_body_and_mind_in_step_with_itself(session: AsyncS
     session.add(BodyRow(node_id=world.son.id, plan=BodyPlan.HUMANOID, fingers=10, hp_max=1, locked=[]))
     session.add(MindProfileRow(node_id=world.son.id, stability=100, run_epochs=0, updated_epoch=0, locked=[]))
     world.son.sanity = 40
+    world.son.birth_epoch = ctx.epoch - 7
     await session.flush()
     await wake_or_heal(ctx, world.son)
     await keep_divine_mind(ctx, world.son)
     body = await session.get(BodyRow, world.son.id)
     mind = await session.get(MindProfileRow, world.son.id)
     assert body is not None and body.hp_max > 1 and world.son.hp <= body.hp_max
-    assert mind is not None and mind.stability == 40 and mind.run_epochs == 1 and mind.updated_epoch == ctx.epoch
+    assert mind is not None and mind.stability == 40 and mind.run_epochs == 8 and mind.updated_epoch == ctx.epoch
+    await keep_divine_mind(ctx, world.son)
+    assert mind.run_epochs == 8
 
 
 async def test_fate_tells_how_the_son_sees_the_creator(session: AsyncSession, world: CoreWorld) -> None:
     world.son.reputation_label = ReputationLabel.FORGOTTEN
     lines = await son_fate(session, world.son, {})
     assert "Sees the Creator as: a forgotten god" in lines
+
+
+async def test_fate_tells_when_the_anchor_perished(session: AsyncSession, world: CoreWorld) -> None:
+    anchor = await entity(session, "Quayside", EntityType.EVENT, EventStats(), world_id=world.world.id)
+    anchor.status, anchor.end_epoch = EntityStatus.DESTROYED, 4
+    world.son.anchor_entity_id = anchor.id
+    await session.flush()
+    lines = await son_fate(session, world.son, {anchor.id: anchor.name})
+    assert "Anchor: Quayside (perished in Epoch 4)" in lines

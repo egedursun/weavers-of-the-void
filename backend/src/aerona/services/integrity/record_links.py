@@ -21,7 +21,8 @@ from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.records import FactValue, IncidentTier, WitnessMode
-from aerona.engine.recording.births import CREATION_ROLES
+from aerona.domain.models.moment import Moment
+from aerona.engine.recording.births import CREATION_ROLES, lived_since
 from aerona.engine.recording.checkpoints import digest_of, kept_columns, present_rows, take_checkpoint
 from aerona.engine.recording.legacy import retire_one
 from aerona.engine.recording.past import state_at
@@ -420,7 +421,8 @@ async def births_unknown(session: AsyncSession) -> list[int]:
 async def date_birth(session: AsyncSession, node_id: int) -> None:
     first = (await due_births(session, node_id)).get(node_id)
     if first is not None and first.year is not None and await session.get(NodeBirthRow, node_id) is None:
-        session.add(NodeBirthRow(node_id=node_id, year=first.year, season=first.season, day=first.day, hour=first.hour, locked=[]))
+        born = lived_since(await session.get(EntityRow, node_id), Moment(first.year, first.season, first.day, first.hour))
+        session.add(NodeBirthRow(node_id=node_id, year=born.year, season=born.season, day=born.day, hour=born.hour, locked=[]))
 
 
 async def births_after_sighting(session: AsyncSession) -> list[int]:

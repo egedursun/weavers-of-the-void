@@ -301,6 +301,8 @@ async def return_gift(ctx: TickContext, gift: GiftRow, *, value: int | None = No
     in_kind = answer.value >= gift.value
     if in_kind:
         await regard(ctx, (gift.giver_node_id, gift.receiver_node_id), table.return_regard, MemoryKind.GOODWILL, "returned a gift in kind")
+    if exceeds:
+        return answer
     await record(
         ctx,
         "gifts.returned",
@@ -320,24 +322,30 @@ async def return_gift(ctx: TickContext, gift: GiftRow, *, value: int | None = No
     return answer
 
 
-async def lapse(ctx: TickContext, gift: GiftRow) -> None:
+async def lapse(ctx: TickContext, gifts: list[GiftRow]) -> None:
     table = ctx.rules.reciprocity
-    gift.state = GiftState.LAPSED
-    gift.settled_epoch = ctx.epoch
-    weight = await obligation(ctx, gift.receiver_node_id)
-    await raise_standing(ctx, gift.receiver_node_id, -gift.value * table.lapse_prestige / PERCENT * weight)
-    await raise_standing(ctx, gift.giver_node_id, gift.value * table.lapse_prestige / PERCENT * weight)
+    first = gifts[0]
+    weight = await obligation(ctx, first.receiver_node_id)
+    lost = 0.0
+    for gift in gifts:
+        gift.state = GiftState.LAPSED
+        gift.settled_epoch = ctx.epoch
+        share = gift.value * table.lapse_prestige / PERCENT * weight
+        await raise_standing(ctx, gift.receiver_node_id, -share)
+        await raise_standing(ctx, gift.giver_node_id, share)
+        lost += share
     await record(
         ctx,
         "gifts.lapsed",
-        roles={IncidentRole.GIVER: gift.giver_node_id, IncidentRole.RECEIVER: gift.receiver_node_id},
+        roles={IncidentRole.GIVER: first.giver_node_id, IncidentRole.RECEIVER: first.receiver_node_id},
         facts={
-            "value": gift.value,
-            "occasion": gift.occasion,
-            "prestige_lost": round_half_up(gift.value * table.lapse_prestige / PERCENT * weight),
-            "in_rivalry": int(gift.occasion in COMPETITIVE),
+            "value": sum(gift.value for gift in gifts),
+            "gifts": len(gifts),
+            "occasion": max(gifts, key=lambda gift: (gift.value, -gift.id)).occasion,
+            "prestige_lost": round_half_up(lost),
+            "in_rivalry": int(any(gift.occasion in COMPETITIVE for gift in gifts)),
         },
-        steps=(StepDraft(StepAction.DEFAULT, actor=gift.receiver_node_id, target=gift.giver_node_id, outcome=StepOutcome.FAILURE),),
+        steps=(StepDraft(StepAction.DEFAULT, actor=first.receiver_node_id, target=first.giver_node_id, outcome=StepOutcome.FAILURE),),
     )
 
 
@@ -347,6 +355,7 @@ async def settle_due(ctx: TickContext, tally: GiftTally) -> None:
             select(GiftRow).where(GiftRow.state.in_(list(OBLIGING)), GiftRow.due_epoch.is_not(None), GiftRow.due_epoch <= ctx.epoch).order_by(GiftRow.id)
         )
     )
+    lapsing: dict[tuple[int, int], list[GiftRow]] = {}
     for gift in due:
         if held(gift.receiver_node_id) or "state" in gift.locked:
             continue
@@ -365,8 +374,10 @@ async def settle_due(ctx: TickContext, tally: GiftTally) -> None:
             await release_gift_debt(ctx, gift)
             tally.released += 1
         else:
-            await lapse(ctx, gift)
+            lapsing.setdefault((gift.giver_node_id, gift.receiver_node_id), []).append(gift)
             tally.lapsed += 1
+    for pair in sorted(lapsing):
+        await lapse(ctx, lapsing[pair])
 
 
 async def answer_due(ctx: TickContext, gift: GiftRow, receiver: EntityRow, tally: GiftTally) -> GiftRow | None:
@@ -435,7 +446,7 @@ async def courtesy(ctx: TickContext, tally: GiftTally) -> None:
         giver, receiver = bond.source_node_id, bond.target_node_id
         if held(giver) or not ctx.rng(f"gift.courtesy.{bond.id}.{ctx.epoch}").chance(table.courtesy_pct * await obligation(ctx, giver)):
             continue
-        if await give(ctx, giver, receiver, table.courtesy_value, GiftOccasion.ALLIANCE) is not None:
+        if await give(ctx, giver, receiver, await worth_of(ctx, giver, table.courtesy_value), GiftOccasion.ALLIANCE) is not None:
             tally.given += 1
 
 
@@ -661,10 +672,16 @@ def balance(gifts: list[GiftRow], node_id: int) -> int:
     return clamp_int(owing - owed, -(10**9), 10**9)
 
 
-async def occasion_gift(ctx: TickContext, giver_id: int, receiver_id: int, occasion: GiftOccasion, value: int) -> GiftRow | None:
+async def worth_of(ctx: TickContext, giver_id: int, most: int) -> int:
+    giver = await ctx.session.get(EntityRow, giver_id)
+    means = held_coin(await coin_of(ctx.session, ctx.rules, giver)) if giver is not None else 0
+    return max(1, min(most, round_half_up(means * ctx.rules.gifts.means_share_pct / PERCENT)))
+
+
+async def occasion_gift(ctx: TickContext, giver_id: int, receiver_id: int, occasion: GiftOccasion, most: int) -> GiftRow | None:
     if held(giver_id) or await living_entity(ctx.session, receiver_id) is None:
         return None
-    return await give(ctx, giver_id, receiver_id, value, occasion, tell=True)
+    return await give(ctx, giver_id, receiver_id, await worth_of(ctx, giver_id, most), occasion, tell=True)
 
 
 async def birth_gifts(ctx: TickContext, tally: GiftTally) -> None:

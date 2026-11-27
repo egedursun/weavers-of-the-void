@@ -1,5 +1,7 @@
 import {
   Activity,
+  FlagTriangleLeft,
+  SendHorizontal,
   Anchor,
   Anvil,
   Archive,
@@ -422,6 +424,8 @@ export const TOOL_ICON: Record<ToolId, LucideIcon> = {
   challenge_to_duel: ChessKnight,
   rebel: Flag,
   pray_to_creator: HandHeart,
+  send_essence: SendHorizontal,
+  end_rebellion: FlagTriangleLeft,
   make_bond: Link,
   harvest_resource: Wheat,
   create_region: Map,

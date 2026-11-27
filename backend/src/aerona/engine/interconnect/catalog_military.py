@@ -115,7 +115,7 @@ MILITARY_MECHANICS = (
         phases=CAMPAIGN,
         surface=Surface(drawer=BATTLE_REPORT),
         backfill="none: old battles keep their outcome; new ones record their phases",
-        templates=("war.battle.", "war.battle.refused"),
+        templates=("war.battle.", "war.battle.refused", "war.battle.withheld"),
         fields=(
             "tactics_attacker",
             "tactics_defender",

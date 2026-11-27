@@ -1790,7 +1790,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-passability-sea_submerged_pct"></a>Passability of sea beneath the water before features (%) | 90% | 0% to 100% | — |
 | <a id="r-passability-sea_incorporeal_pct"></a>Passability of sea through matter before features (%) | 100% | 0% to 100% | — |
 | <a id="r-passability-sea_swimming_pct"></a>Passability of sea swimming before features (%) | 80% | 0% to 100% | — |
-| <a id="r-passability-sea_climbing_pct"></a>Passability of sea climbing before features (%) | 100% | 0% to 100% | — |
+| <a id="r-passability-sea_climbing_pct"></a>Passability of sea climbing before features (%) | 0% | 0% to 100% | — |
 | <a id="r-passability-taiga_on_foot_pct"></a>Passability of taiga on foot before features (%) | 95% | 0% to 100% | — |
 | <a id="r-passability-taiga_mounted_pct"></a>Passability of taiga mounted before features (%) | 95% | 0% to 100% | — |
 | <a id="r-passability-taiga_wheeled_pct"></a>Passability of taiga wheeled before features (%) | 95% | 0% to 100% | — |
@@ -2048,12 +2048,12 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-passability-urban_boat_pct"></a>Passability of a city by boat before features (%) | 100% | 0% to 100% | — |
 | <a id="r-passability-urban_flying_pct"></a>Passability of a city flying before features (%) | 100% | 0% to 100% | — |
 | <a id="r-passability-urban_burrowing_pct"></a>Passability of a city burrowing before features (%) | 100% | 0% to 100% | — |
-| <a id="r-passability-sea_on_foot_pct"></a>Passability of the sea on foot before features (%) | 100% | 0% to 100% | — |
-| <a id="r-passability-sea_mounted_pct"></a>Passability of the sea mounted before features (%) | 100% | 0% to 100% | — |
-| <a id="r-passability-sea_wheeled_pct"></a>Passability of the sea wheeled before features (%) | 100% | 0% to 100% | — |
+| <a id="r-passability-sea_on_foot_pct"></a>Passability of the sea on foot before features (%) | 0% | 0% to 100% | — |
+| <a id="r-passability-sea_mounted_pct"></a>Passability of the sea mounted before features (%) | 0% | 0% to 100% | — |
+| <a id="r-passability-sea_wheeled_pct"></a>Passability of the sea wheeled before features (%) | 0% | 0% to 100% | — |
 | <a id="r-passability-sea_boat_pct"></a>Passability of the sea by boat before features (%) | 100% | 0% to 100% | — |
 | <a id="r-passability-sea_flying_pct"></a>Passability of the sea flying before features (%) | 100% | 0% to 100% | — |
-| <a id="r-passability-sea_burrowing_pct"></a>Passability of the sea burrowing before features (%) | 100% | 0% to 100% | — |
+| <a id="r-passability-sea_burrowing_pct"></a>Passability of the sea burrowing before features (%) | 0% | 0% to 100% | — |
 | <a id="r-passability-road_step_pct"></a>Ground passability each road-building settlement adds to its region (%) | 8% | 0% to 100% | — |
 | <a id="r-passability-road_cap_pct"></a>Most ground passability roads add to a region (%) | 60% | 0% to 100% | — |
 | <a id="r-passability-bridge_crossing_pct"></a>Share of the river's hindrance each bridge removes (%) | 50% | 0% to 100% | Irrigation works and bridges feed fertility and passability; cleared forest dries the rains |
@@ -10146,7 +10146,7 @@ The rules counted in years here follow your world's epoch length.
 
 | Rule | Starts at | Range | Tied to |
 |---|---:|---|---|
-| <a id="r-maimed-return_pct"></a>Share of soldiers lost in battle who come home maimed rather than dead (%) | 30% | 0% to 100% | Battles in phases: scouting, plans, volleys, charges, melee, rites, pursuit and aftermath |
+| <a id="r-maimed-return_pct"></a>Share of soldiers wounded in battle who come home maimed (%) | 30% | 0% to 100% | Battles in phases: scouting, plans, volleys, charges, melee, rites, pursuit and aftermath |
 | <a id="r-maimed-one_armed"></a>Maimed veterans: weight of the one-armed | 18 | 0 to 100 | — |
 | <a id="r-maimed-one_legged"></a>Maimed veterans: weight of the one-legged | 14 | 0 to 100 | — |
 | <a id="r-maimed-one_eyed"></a>Maimed veterans: weight of the one-eyed | 16 | 0 to 100 | — |

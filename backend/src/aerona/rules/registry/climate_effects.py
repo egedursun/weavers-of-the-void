@@ -46,6 +46,13 @@ class ClimateEffectsRules:
     ice_age_population_loss: int = rule(3, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Ice age: population loss per epoch (%)")
     scorching_age_plague_freq: int = rule(150, 0, 1000, RuleGroup.POPULATION_AND_GROWTH, "Scorching age: plague frequency (%)")
     first_duration: int = rule(3, 1, 100, RuleGroup.POPULATION_AND_GROWTH, "Base duration of the first climate age (epochs)")
+    compounding_damping_pct: int = rule(
+        200,
+        0,
+        1000,
+        RuleGroup.POPULATION_AND_GROWTH,
+        "How strongly a world already pushed cold or hot by its sky resists an age that pushes it further the same way (%)",
+    )
     first_die: int = rule(3, 1, 100, RuleGroup.POPULATION_AND_GROWTH, "Die added to the first climate age (epochs)")
     duration: int = rule(3, 1, 100, RuleGroup.POPULATION_AND_GROWTH, "Base duration of a climate age (epochs)")
     duration_die: int = rule(4, 1, 100, RuleGroup.POPULATION_AND_GROWTH, "Die added to a climate age (epochs)")

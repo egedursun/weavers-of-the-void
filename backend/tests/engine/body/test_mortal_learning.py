@@ -12,6 +12,7 @@ from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EngineKind, EntityType
 from aerona.domain.enums.mind import KindFamily, MemoryKind, Profession, SkillKind, SkillSource, TraitEffect, TraitKind, TraitSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.models.entity_stats import ItemStats, KnowledgeStats, LanguageStats, LegendStats, MortalStats, StructureStats
 from aerona.engine.body.conditions import gain_condition
@@ -24,6 +25,7 @@ from aerona.engine.mortal.course import seed_mortal
 from aerona.engine.mortal.learning import attend_lectures, best_profession, read_books, speak_tongues, tongue_level, watch_masters
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.primitives.queries import connect
+from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, make, mortal, settlement, tuned
 
@@ -183,3 +185,16 @@ async def test_other_sex_is_never_seeded_unless_the_world_allows_it(realm: Realm
     assert born_sex(RULES, ReproductiveSystem.AMBISEXUAL, rng) is SexKind.BOTH
     profiles = list(await realm.session.scalars(select(MortalProfileRow)))
     assert len(profiles) == len(mortals)
+
+
+async def test_a_memory_points_only_to_a_happening_that_names_the_one_remembered(realm: Realm) -> None:
+    ctx = context(realm.session)
+    holder, bystander, remembered = [await mortal(realm, name) for name in ("Ines", "Bram", "Cato")]
+    await record(ctx, "society.rivalry", roles={IncidentRole.ACTOR: holder.id, IncidentRole.CO_ACTOR: bystander.id})
+    unrelated = await remember(
+        realm.session, RULES, holder_id=holder.id, subject_id=remembered.id, kind=MemoryKind.HUMILIATED_ME, magnitude=-10, epoch=ctx.epoch
+    )
+    shared = await record(ctx, "society.rivalry", roles={IncidentRole.ACTOR: holder.id, IncidentRole.CO_ACTOR: remembered.id})
+    related = await remember(realm.session, RULES, holder_id=holder.id, subject_id=remembered.id, kind=MemoryKind.GOODWILL, magnitude=10, epoch=ctx.epoch)
+    assert unrelated is not None and unrelated.incident_id is None
+    assert related is not None and related.incident_id == shared.incident_id

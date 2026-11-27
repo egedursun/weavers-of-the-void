@@ -141,7 +141,7 @@ TREATY_ENDINGS = {
 NO_TREATY = {
     WarEnding.BETRAYAL: "the war ended in betrayal; no one sat down to sign",
     WarEnding.SAME_FRONT: "the war was folded into another front of the same war",
-    WarEnding.NO_SIDE_LEFT: "no side was left standing to sign a peace",
+    WarEnding.NO_SIDE_LEFT: "a side was no longer there to sign a peace",
 }
 
 

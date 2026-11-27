@@ -1,5 +1,5 @@
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken
+from aerona.core.grammar import definite, spoken
 from aerona.core.total import total
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.leagues import LeagueMemberRow, PolityLeagueRow
@@ -56,7 +56,7 @@ async def found_league(
         ctx,
         RecordSpec(
             entity_type=EntityType.LEAGUE,
-            name=f"the league of {first.name.removeprefix('the ')}",
+            name=f"the league of {definite(first.name)}",
             body=f"A league of {', '.join(polity.name for polity in polities)}.",
             stats=LeagueStats(strength=clamp_int(ctx.rules.leagues.strength_per_member * len(polities), 0, PERCENT), cohesion=50, members=len(polities)),
             power=max(polity.power_level for polity in polities),

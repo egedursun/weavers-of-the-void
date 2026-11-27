@@ -218,7 +218,7 @@
 <span class="vs">vs</span>
 <div class="side"><span class="label">Defenders</span>{% for name in war.defenders %}<div{% if name == war.victor %} class="victor"{% endif %}>{{ name }}</div>{% else %}<div class="meta">no one</div>{% endfor %}</div>
 </div>
-<ul class="stats"><li>Battles<b>{{ war.war.battles }}</b></li><li>Momentum<b>{{ war.war.score }}</b></li>{% if war.war.violence is not none %}<li>Violence<b>{{ war.war.violence }}</b></li>{% endif %}{% if war.victor %}<li>Victor<b>{{ war.victor }}</b></li>{% endif %}</ul>
+<ul class="stats"><li>Battles<b>{{ war.fought }}</b></li><li>Momentum<b>{{ war.war.score }}</b></li>{% if war.war.violence is not none %}<li>Violence<b>{{ war.war.violence }}</b></li>{% endif %}{% if war.victor %}<li>Victor<b>{{ war.victor }}</b></li>{% endif %}</ul>
 {% if war.battles %}<table><thead><tr><th>Epoch</th><th>Battle</th><th>Victor</th><th>Defeated</th><th>Outcome</th><th>The field</th></tr></thead><tbody>{% for battle in war.battles %}<tr><td>{{ battle.epoch }}</td><td>{{ battle.name or ("Battle " ~ battle.sequence) }}{% if battle.place %}<br><span class="meta small">at {{ battle.place }}</span>{% endif %}</td><td>{{ battle.winner }}</td><td>{{ battle.loser }}</td><td>{{ battle.outcome }}</td><td>{{ battle.field or "—" }}</td></tr>{% endfor %}</tbody></table>{% endif %}
 {% if war.sieges %}<p class="sublabel">Sieges</p><ul class="timeline">{% for siege in war.sieges %}<li><span class="when">Epoch {{ siege.started_epoch }}{% if siege.ended_epoch is not none and siege.ended_epoch != siege.started_epoch %}–{{ siege.ended_epoch }}{% endif %}</span>{{ siege.besieger }} besieged {{ siege.besieged }} · {{ siege.status }}, {{ counted(siege.rounds, "round", "rounds") }}</li>{% endfor %}</ul>{% endif %}
 </article>

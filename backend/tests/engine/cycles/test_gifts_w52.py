@@ -1,3 +1,4 @@
+import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,7 +8,8 @@ from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.military import FeudRow
 from aerona.domain.enums.cycles import GiftOccasion, GiftState
 from aerona.domain.enums.military import FeudStatus
-from aerona.engine.cycles.gifts import GiftTally, amends, give, owed_back, pass_circuit, release_gift_debt, return_gift
+from aerona.engine.cycles import gifts as gifts_module
+from aerona.engine.cycles.gifts import GiftTally, amends, give, owed_back, pass_circuit, release_gift_debt, return_gift, settle_due
 from aerona.engine.economy.purse import coin_of
 from aerona.engine.lore.taboos import guest_killed
 from aerona.rules.registry import Rules
@@ -60,6 +62,7 @@ async def test_an_answer_of_far_more_exceeds_the_gift_and_outgiving_drains_both_
     assert await coin_of(session, ctx.rules, first) < before
     rivalry = await session.scalars(select(IncidentRow).where(IncidentRow.kind == "gift.exceeded"))
     assert len(list(rivalry)) == 2
+    assert list(await session.scalars(select(IncidentRow).where(IncidentRow.kind == "gifts.returned"))) == []
 
 
 async def test_a_giver_may_release_a_debt_by_grace(session: AsyncSession, world: CoreWorld) -> None:
@@ -107,3 +110,37 @@ async def test_killing_after_guest_gifts_breaks_guest_right(session: AsyncSessio
     assert await give(ctx, host.id, guest.id, 0, GiftOccasion.HOSPITALITY, pay=False) is not None
     await guest_killed(ctx, host.id, guest)
     assert "lore.guest_killing" in await kinds(session)
+
+
+async def test_gifts_one_house_cannot_answer_are_told_once_with_their_sum(session: AsyncSession, world: CoreWorld, monkeypatch: pytest.MonkeyPatch) -> None:
+    first = await realm_of(session, world, await town_of(session, world, "Ashby"), treasury=1000)
+    second = await realm_of(session, world, await town_of(session, world, "Farside", region=1), treasury=1000)
+    ctx = await context(session, reciprocity=OPEN_HANDED, gifts={"release_pct": 0, "exceed_pct": 0})
+    sent = [await give(ctx, first.id, second.id, value, GiftOccasion.COURTESY) for value in (15, 14, 13)]
+    for gift in sent:
+        assert gift is not None
+        gift.due_epoch = ctx.epoch
+    await session.flush()
+
+    async def unanswered(*_args: object, **_kwargs: object) -> None:
+        return None
+
+    monkeypatch.setattr(gifts_module, "return_gift", unanswered)
+    await settle_due(ctx, GiftTally())
+    lapsed = list(await session.scalars(select(IncidentRow).where(IncidentRow.kind == "gifts.lapsed")))
+    assert len(lapsed) == 1
+    assert all(gift is not None and gift.state is GiftState.LAPSED for gift in sent)
+
+
+async def test_a_gift_at_an_occasion_is_worth_a_share_of_what_its_giver_holds(session: AsyncSession, world: CoreWorld) -> None:
+    rich = await realm_of(session, world, await town_of(session, world, "Ashby"), treasury=4000)
+    poor = await realm_of(session, world, await town_of(session, world, "Farside", region=1), treasury=150)
+    guest = await realm_of(session, world, await town_of(session, world, "Midmere", region=2), treasury=500)
+    ctx = await context(session)
+    most = ctx.rules.gifts.occasion_value
+    handsome = await gifts_module.occasion_gift(ctx, rich.id, guest.id, GiftOccasion.HOSPITALITY, most)
+    modest = await gifts_module.occasion_gift(ctx, poor.id, guest.id, GiftOccasion.HOSPITALITY, most)
+    assert handsome is not None and modest is not None
+    assert handsome.value == most
+    assert modest.value == max(1, round(await coin_of(session, ctx.rules, poor) * ctx.rules.gifts.means_share_pct / 100))
+    assert modest.value < handsome.value

@@ -197,9 +197,12 @@ async def test_chronicler_writes_and_records_a_unique_age(runtime: AgentRuntime,
     model.script(ChronicleOutput, chronicle())
     written = await write_chronicle(runtime, 1, [])
     await complete_chronicle(runtime, written, 1)
+    told = written.age_name.removeprefix("The ")
+    written.narrative = f"In the {told} the wells ran low. {written.age_name} ended."
     async with database.write() as session:
         row = await record_age(await load_scope(session, rules), written, 1)
     assert row.name == "Second Age of Dry Wells"
+    assert row.narrative == "In Second Age of Dry Wells the wells ran low. Second Age of Dry Wells ended."
     assert row.chronicler_name == "Ehmel"
     assert (row.year_start, row.year_end) == (0, rules.time.years_per_epoch - 1)
 

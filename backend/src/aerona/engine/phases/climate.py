@@ -72,8 +72,16 @@ async def chill_peoples(ctx: TickContext, world: WorldRow, loss: int) -> int:
     return changed
 
 
-def pick_next_era(ctx: TickContext, world: WorldRow, current: ClimateEra) -> ClimateEra:
-    weights = climate_weights(ctx.rules, world.world_type)
+def compounding(rules: Rules, era: ClimateEra, heat_shift: int) -> float:
+    push = climate_profile(rules, era).temperature_shift
+    if push == 0 or heat_shift == 0 or (push > 0) != (heat_shift > 0):
+        return 1.0
+    lean = abs(heat_shift) / max(1, rules.orbits.heat_cap)
+    return max(0.0, 1 - lean * rules.climate_effects.compounding_damping_pct / PERCENT)
+
+
+def pick_next_era(ctx: TickContext, world: WorldRow, current: ClimateEra, heat_shift: int = 0) -> ClimateEra:
+    weights = {era: weight * compounding(ctx.rules, era, heat_shift) for era, weight in climate_weights(ctx.rules, world.world_type).items()}
     eras = [era for era in ClimateEra if era is not current and weights[era] > 0]
     if not eras:
         return current
@@ -125,7 +133,7 @@ async def advance_world(ctx: TickContext, world: WorldRow) -> None:
         left = 0
     if left <= 0:
         settings = ctx.rules.climate_effects
-        era = emergent if emergent is not None else pick_next_era(ctx, world, era)
+        era = emergent if emergent is not None else pick_next_era(ctx, world, era, physics.heat_shift if physics is not None else 0)
         world.climate_era = era
         world.climate_since_epoch = ctx.epoch
         world.climate_imposed_by_son_id = None

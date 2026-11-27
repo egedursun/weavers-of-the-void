@@ -218,6 +218,7 @@ class EntityDetailContext(PromptContext):
     name_kept: bool = False
     stats: list[LabelValue] = Field(default_factory=list)
     description: str
+    described: int | None = None
     history: str | None = None
     fate_note: str | None = None
     outgoing: list[BondLine] = Field(default_factory=list)

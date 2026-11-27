@@ -30,6 +30,7 @@ from aerona.engine.cosmos.world_types import hidden_route_method
 from aerona.engine.divine.standing import standing_row
 from aerona.engine.dominion.book import DominionBook
 from aerona.engine.faith.book import patron_node
+from aerona.engine.gods.essence import endow
 from aerona.engine.mind.book import skill_level
 from aerona.engine.mythic.servitors import turned_back
 from aerona.engine.primitives.distance import RegionAtlas
@@ -280,8 +281,7 @@ async def give_essence(ctx: TickContext, god_id: int, amount: int) -> int:
     for kind in (SonRow, ForeignGodRow, CreatorRow):
         god = await ctx.session.get(kind, god_id)
         if god is not None and hasattr(god, "essence"):
-            god.essence = god.essence + amount
-            return amount
+            return endow(ctx.rules, god, amount)
     return 0
 
 

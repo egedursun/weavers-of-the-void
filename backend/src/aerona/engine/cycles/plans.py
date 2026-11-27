@@ -265,7 +265,7 @@ async def fulfil_ecology(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow
 
 async def fulfil_bloodline(ctx: TickContext, plan: LongPlanRow, _holder: EntityRow | None) -> Fulfilled:
     design = await ctx.session.get(BreedingPlanRow, plan.id)
-    if design is not None and design.claim_polity_id is not None:
+    if design is not None and (design.claim_polity_id is not None or design.matches == 0):
         return PlanOutcome.BRED_NOTHING, {}
     trait = await breed(ctx, plan)
     if trait is not None:

@@ -144,7 +144,7 @@ export function SonPowers({ view }: { view: SonPublic }) {
                         'param_entity_type',
                         'param_stat',
                       ]}
-                      confirm={`Unmake ${power.name}? Nothing returns to you; tearing it away by the hand of god gives essence back instead.`}
+                      confirm={`Unmake ${power.name}? Nothing returns to you; a god tearing it away gives essence back instead.`}
                     />
                   </div>
                 </li>

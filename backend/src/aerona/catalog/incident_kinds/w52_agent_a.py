@@ -278,7 +278,7 @@ TRAVEL: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "travel.mode_used",
         G.MOVEMENT,
-        "{actor} moved {member} {regions:region|regions} toward {destination}, going {mode}.",
+        "{actor} moved {member} {regions:region|regions} toward {destination}; way of travel: {mode}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.MEMBER, frozenset({E.ARMY})), RoleSpec(R.DESTINATION)),
         facts=(FactSpec("mode", FactValue.ENUM, enum=MovementMode), FactSpec("regions", FactValue.NUMBER, FactUnit.COUNT)),
         place=PlaceRule.REQUIRED,

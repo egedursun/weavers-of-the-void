@@ -42,6 +42,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.cosmos.sanity import shift_sanity
 from aerona.engine.divine.gods import faithful_communities, god_of
 from aerona.engine.divine.wounds import inflict, open_wounds
+from aerona.engine.gods.essence import endow
 from aerona.engine.lifecycle.states import ended_ids
 from aerona.engine.mythic.servitors import bargained_servant
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
@@ -487,7 +488,7 @@ async def bind_line(ctx: TickContext, son: SonRow, being: EntityRow) -> int:
 
 async def gain_essence(ctx: TickContext, deal: Bargain, essence: int) -> str:
     gained = essence * BARGAIN_GAINS[BargainGain.ESSENCE].size(ctx.rules) // PERCENT
-    deal.son.essence += gained
+    gained = endow(ctx.rules, deal.son, gained)
     return f"gained {gained} essence"
 
 

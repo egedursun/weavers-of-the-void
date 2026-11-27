@@ -29,6 +29,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.military.w52_war import resolve_missing, scatter_named
 from aerona.engine.mortal.course import DEATH_FLAGS
+from aerona.engine.mortal.life import biology_of, folk_lifespan
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import DISASTER_KINDS
@@ -179,7 +180,8 @@ async def _killer(ctx: TickContext, clash: Clash, sides: SideIndex, enemy_id: in
     if fighters:
         return ctx.rng(seed_of("killer", clash.event.id, enemy_id)).pick(fighters)
     army = await army_of_side(ctx, clash.war_id, enemy_id)
-    return await ctx.session.get(EntityRow, army) if army is not None else await living_entity(ctx.session, enemy_id)
+    standing_army = await living_entity(ctx.session, army) if army is not None else None
+    return standing_army or await living_entity(ctx.session, enemy_id)
 
 
 async def _side_losses(ctx: TickContext, clash: Clash, sides: SideIndex, side_id: int, *, count: CasualtyCount, marks: Marks) -> int:
@@ -310,7 +312,9 @@ async def raise_commander(ctx: TickContext, army: EntityRow, row: ArmyRow) -> En
         return None
     rng = ctx.rng(seed_of("commander", army.id))
     subtype = HOLY_COMMANDER_SUBTYPE if community.entity_type is EntityType.CULT else rng.pick(COMMANDER_SUBTYPES)
-    lifespan = losses.commander_lifespan + rng.die(losses.commander_lifespan_die)
+    lifespan = folk_lifespan(
+        await biology_of(ctx.session, community), losses.commander_lifespan, rng.die(losses.commander_lifespan_die), losses.commander_lifespan_die
+    )
     stats = {key: clamp_int(losses.commander_stat_base + rng.die(losses.commander_stat_die), 0, 100) for key in STAT_KEYS}
     name = await Namer(ctx.session, ctx.rules).person([community], seed_of(army.id, ctx.epoch, "commander"), community.world_id)
     warfare = (await known_levels(ctx.session, [community.id])).get(community.id, {}).get(KnowledgeBranch.WARFARE, 0)
@@ -395,6 +399,7 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
 
 @reads(
     "army.experience",
+    "cult.zeal",
     "mortal.age",
     "mortal.agility",
     "mortal.charisma",
@@ -404,7 +409,11 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "mortal.lifespan",
     "mortal.strength",
     "mortal.willpower",
+    "settlement.population",
+    "spirit.unrest",
+    "table.afflictions",
     "table.armies",
+    "table.army_officers",
     "table.augment_effects",
     "table.augments",
     "table.avatars",
@@ -420,6 +429,9 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.cosmos",
     "table.creator",
     "table.creator_taboos",
+    "table.crime_cases",
+    "table.cult_doctrines",
+    "table.cult_offices",
     "table.cult_tenets",
     "table.culture_ethics",
     "table.culture_values",
@@ -427,6 +439,7 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.designated_heirs",
     "table.dimensions",
     "table.divine_wounds",
+    "table.doctrine_sacraments",
     "table.entities",
     "table.entity_flags",
     "table.entity_traits",
@@ -448,6 +461,8 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.insurers",
     "table.item_profiles",
     "table.language_profiles",
+    "table.law_jurisdictions",
+    "table.law_profiles",
     "table.lexemes",
     "table.marriages",
     "table.memories",
@@ -457,23 +472,30 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.node_births",
     "table.node_materials",
     "table.nodes",
+    "table.outbreaks",
     "table.passions",
     "table.people_biology",
     "table.people_culture",
     "table.personality_values",
+    "table.polity_members",
     "table.professions_of_value",
     "table.prostheses",
     "table.routes",
+    "table.sacraments",
     "table.skills",
     "table.sons",
     "table.spirit_profiles",
     "table.stars",
+    "table.structure_profiles",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",
+    "table.transform_prospects",
+    "table.war_sides",
     "table.wars",
     "table.world_domain_hooks",
     "table.world_maps",
@@ -481,6 +503,7 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
 )
 @writes(
     "army.experience",
+    "mortal.age",
     "mortal.death_year",
     "mortal.hp",
     "table.armies",
@@ -489,8 +512,11 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
+    "table.community_societies",
+    "table.community_stocks",
     "table.entities",
     "table.entity_flags",
+    "table.goods_flows",
     "table.griefs",
     "table.incident_facts",
     "table.incident_participants",
@@ -503,9 +529,11 @@ async def mark_duel_dead(ctx: TickContext, clashes: list[Clash]) -> int:
     "table.name_registry",
     "table.node_births",
     "table.personality_values",
+    "table.sacraments",
     "table.sons",
     "table.spirit_profiles",
     "table.thoughts",
+    "table.transformations",
 )
 async def war_casualties(ctx: TickContext) -> None:
     clashes = await clashes_of(ctx)
@@ -545,6 +573,8 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "settlement.population",
     "spirit.unrest",
     "table.afflictions",
+    "table.armies",
+    "table.army_officers",
     "table.avatars",
     "table.bodies",
     "table.bonds",
@@ -629,6 +659,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
 @writes(
     "mortal.age",
     "mortal.death_year",
+    "mortal.hp",
     "mortal.lifespan",
     "table.bodies",
     "table.bonds",

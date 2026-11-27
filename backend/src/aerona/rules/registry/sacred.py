@@ -63,6 +63,7 @@ class GeniusLociRules(Spanned):
     pollution_offence: int = rule(45, 0, 100, R, "Pollution of a land that offends the spirits of its places")
     clearing_offence: int = rule(30, 0, 100, R, "Forest cover below which the spirits of groves and forests take offence at the clearing")
     content_at: int = rule(60, 0, 100, R, "Contentment from which a place spirit grants favour")
+    born_mood_spread: int = rule(15, 0, 50, R, "Most a new place spirit's contentment lies above or below the contentment from which it grants favour")
     favour_gain: int = rule(8, 0, 100, R, "Favour a contented place spirit grows each epoch")
     contentment_step: int = rule(10, 0, 100, R, "Contentment a place spirit gains when paid in full, or loses when short or offended")
     favour_food: int = rule(6, 0, 1000, R, "Food a community gains each epoch for every ten points of its place spirit's favour")

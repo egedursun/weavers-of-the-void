@@ -3,9 +3,11 @@ from dataclasses import replace
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.creator import CreatorPassion
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.faction import FactionKind
 from aerona.domain.enums.war import WarCause
 from aerona.domain.models.entity_stats import CelestialStats
 from aerona.engine.gods.mood import MoodInputs, passion_matches
@@ -20,6 +22,8 @@ async def test_a_war_inherits_the_typed_cause_of_its_hostility(session: AsyncSes
     ctx = make_ctx(session, Rules())
     rebels = await make(session, "Ash Rebels", EntityType.FACTION, world_id, strength=50, wealth=20, sway=30)
     city = await make(session, "Stone Gate", EntityType.SETTLEMENT, world_id, population=4000, defense=20)
+    session.add(FactionProfileRow(faction_entity_id=rebels.id, kind=FactionKind.REBELS, home_entity_id=city.id, influence_over={}, cohort_share={}, locked=[]))
+    await session.flush()
     assert await declare_war(ctx, rebels.id, city.id, "uprising", cause=WarCause.UPRISING, world_cap=False)
     war = await open_war(ctx, rebels, city)
     assert war.cause is WarCause.UPRISING

@@ -6,6 +6,7 @@ from aerona.catalog.stats import EXISTENCE_BAND_LABELS, existence_band, max_esse
 from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.celestial import WorldRow
@@ -26,6 +27,8 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.decrees import council_chained
 from aerona.engine.divine.standing import mean_neglect
 from aerona.engine.dominion.book import DominionBook
+from aerona.engine.gods.essence_flow import take_from_creator
+from aerona.engine.gods.queries import creator_row
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.loops.delay import lagged
 from aerona.engine.phase import Phase
@@ -99,7 +102,8 @@ async def keep_divine_mind(ctx: TickContext, son: SonRow) -> None:
         return
     if "stability" not in (mind.locked or []):
         mind.stability = clamp_int(son.sanity or 0, 0, PERCENT)
-    mind.run_epochs += 1
+    if "run_epochs" not in (mind.locked or []):
+        mind.run_epochs = max(mind.run_epochs, ctx.epoch - son.birth_epoch + 1)
     mind.updated_epoch = ctx.epoch
 
 
@@ -225,30 +229,47 @@ async def works_remember_gods(ctx: TickContext) -> None:
             son.existence = min(PERCENT, son.existence + round(transition.dedicated_work_existence * share))
 
 
-@reads("table.nodes", "table.son_relations", "table.sons")
-@writes("table.son_relations")
+@reads("table.bonds", "table.nodes", "table.son_relations", "table.sons")
+@writes("table.bonds", "table.chronicle", "table.incident_participants", "table.incidents", "table.son_relations")
 async def domain_rivalry(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
     repository = SonRepository(ctx.session)
     for first, second in combinations(await living_sons(ctx.session), 2):
         shared = len(set(first.domains) & set(second.domains))
-        if not shared:
-            continue
         relation = await repository.relation(first.id, second.id)
-        if relation > -transition.domain_rivalry_floor:
+        if shared and relation > -transition.domain_rivalry_floor:
             await repository.change_relation(first.id, second.id, -min(transition.domain_rivalry * shared, relation + transition.domain_rivalry_floor))
+            relation = await repository.relation(first.id, second.id)
+        await covenant_lapses(ctx, first, second, relation)
 
 
-@reads("table.nodes", "table.sons")
-@writes("table.chronicle", "table.incident_participants", "table.incidents", "table.sons")
+async def covenant_lapses(ctx: TickContext, first: SonRow, second: SonRow, relation: int) -> None:
+    if relation > -ctx.rules.son_tools.covenant_min_relation or held(first.id, second.id):
+        return
+    if not await BondRepository(ctx.session).close_between(first.id, second.id, [BondKind.ALLY], ctx.epoch, "enmity"):
+        return
+    await record_incident(
+        ctx,
+        "sons.covenant_lapsed",
+        roles={IncidentRole.ACTOR: first.id, IncidentRole.RECEIVER: second.id},
+        facts={"relation": relation},
+        kind=ChronicleKind.COVENANT,
+        son_id=first.id,
+    )
+
+
+@reads("table.creator", "table.nodes", "table.sons")
+@writes("table.chronicle", "table.creator", "table.incident_participants", "table.incidents", "table.sons")
 async def rebel_theft(ctx: TickContext) -> None:
     transition = ctx.rules.world_epoch_transition
+    creator = await creator_row(ctx.session)
     stolen = 0
     for son in await living_sons(ctx.session):
-        if not son.rebel or son.status is not SonStatus.ACTIVE:
+        if creator is None or not son.rebel or son.status is not SonStatus.ACTIVE or held(son.id):
             continue
-        amount = transition.rebel_steal_base + son.level * transition.rebel_steal_per_level
-        son.essence += amount
+        amount = await take_from_creator(ctx, son, creator, transition.rebel_steal_base + son.level * transition.rebel_steal_per_level)
+        if amount <= 0:
+            continue
         stolen += amount
         await record_incident(
             ctx, "sons.rebel_theft", roles={IncidentRole.ACTOR: son.id}, facts={"amount": amount}, kind=ChronicleKind.REBELLION, son_id=son.id
@@ -263,7 +284,7 @@ async def set_son_relation(ctx: TickContext, first_id: int, second_id: int, valu
         raise ValidationFailedError(f"A relation lies between {RELATION_MIN} and {RELATION_MAX}.")
     repository = SonRepository(ctx.session)
     current = await repository.relation(first_id, second_id)
-    return await repository.change_relation(first_id, second_id, value - current, "set by the Creator")
+    return await repository.change_relation(first_id, second_id, value - current)
 
 
 RENEWAL_PHASES = (Phase("sons_renewal", sons_renewal),)

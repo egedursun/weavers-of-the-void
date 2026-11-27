@@ -20523,6 +20523,80 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 ---
 
+## Part 114. What the epoch-10 Codex showed
+
+### 52.670 Sons pass essence on
+
+**What it is.** A son may send essence of its own will to a sibling or to the Creator. The sibling takes only what its cap holds, the giver keeps the rule's minimum, and both purses change in one move.
+
+**Engine.** `engine/gods/essence_flow.py` (`send_essence`) records `gods.essence_sent`. Every gain of a son's essence stops at its cap through `endow()`; a rebel's theft is taken from the Creator's purse.
+
+**Rules.** `son_tools.gift_min_remaining`: what a giver keeps.
+
+**Tools and lever.** Son tools `send_essence` (to the Creator when no son is named) and `end_rebellion`; god lever `son:send_essence`.
+
+**Screen.** "Pass on essence" in the son's Hand of God panel.
+
+**Codex and book.** Told through the chronicle in the giver's and receiver's entries.
+
+**Proving tests.** `tests/engine/gods/test_essence_flow.py`; the cases in `tests/tools/every_son_tool.py` and `tests/services/player/every_lever.py`.
+
+### 52.671 A happening never stands before what it follows
+
+**What it is.** Told happenings spread over the years of their window instead of standing on their step's single moment, and every happening that follows another stands after it.
+
+**Engine.** `engine/recording/chains.py`: a told kind of the phase clock spreads like a single happening; `catalog/incident_kinds/sequence.py` lists which kinds follow which, matched on a shared principal node; a battle's aftermath is anchored at the battle; an effect floored by its cause takes a moment between the cause and the end of the window; repeated happenings draw their own moments; an open happening dated later carries what it set off along.
+
+**Rules.** None new.
+
+**Levers and surfaces.** None of its own: the moments show wherever a record is shown.
+
+**Proving tests.** `tests/engine/core/test_record_chains.py`; `tests/engine/core/test_moments.py` (no chain reversed, no kind on one year).
+
+### 52.672 Worlds keep the orbits they lived by
+
+**What it is.** A peopled planet is habitable when its surface temperature lies in the livable band and it holds air; a repair never moves a planet. A planet an old repair moved goes back to its orbit with its own year, days and seasons; a harsh home is brought to the nearest livable temperature through its ground and the water vapour of its air. A broken star sheds the light of its mass, and a star counts its age from the years it has lived.
+
+**Rules.** `orbits.livable_low_kelvin`, `orbits.livable_high_kelvin`, `orbits.warming_vapour_most`.
+
+**Repairs.** `star_lit_by_its_kind`, `star_clock_follows_its_age`, `home_on_its_lived_orbit`, `peopled_world_habitable`, `adult_born_before_first_sight`.
+
+**Proving tests.** `tests/engine/cosmos/test_lived_orbits.py`; the cases in `tests/services/integrity/test_every_invariant.py`.
+
+### 52.673 Breathable air settles instead of running out
+
+**What it is.** The sinks of breathable air draw only as much as the store holds, and a world's oxygen moves toward the share its store supports, down or back up, one step an epoch.
+
+**Engine.** `engine/cosmos/cycles.py` (`held_draw`, `breathable_target`, `thin_air`); new kind `world.air_freshened`.
+
+**Rules.** `cycles.oxygen_breath_floor`, `cycles.air_thin_step`.
+
+**Levers and surfaces.** `world_physics:edit` sets a world's oxygen; the world's physics panel shows it.
+
+**Proving tests.** `tests/engine/core/test_cycles_w52.py`.
+
+### 52.674 A climate age does not pile onto the sky
+
+**What it is.** A world its sky already pushes cold or hot is less likely to draw an age that pushes it further the same way.
+
+**Rules.** `climate_effects.compounding_damping_pct`.
+
+**Levers and surfaces.** The god lever `climate` sets an age from the world's climate panel.
+
+**Proving tests.** `tests/engine/core/test_climate_ages_w47.py`.
+
+### 52.675 Every grown mortal may wed
+
+**What it is.** Any unwed grown mortal with no lover or promise may wed within its community, a suitor near its own age first, and among the other towns of its people when its own holds none. A birth slot counts each parent's age in the year of that slot, and a parent's fertility is read from its body and people at the birth, not from a mark left by an earlier step.
+
+**Rules.** `kinship.community_marriage_chance`.
+
+**Levers and surfaces.** `kin:marry`; the Kin section of the entry window.
+
+**Proving tests.** `tests/engine/core/test_unions_and_birth.py`.
+
+---
+
 ## Appendix 17.A Every value this spec adds
 
 This is the list integration works from. Withdrawn sections (52.254, 52.417) add nothing; values renamed by D30 and by the closing audit (17.C) appear under their final names. No value here is held by spec 13 or 16 (`check_spec_duplicates.py`).

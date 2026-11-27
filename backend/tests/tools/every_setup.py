@@ -1004,6 +1004,22 @@ async def rich_son(session: AsyncSession, realm: Realm) -> Ids:
     return {}
 
 
+async def sibling_with_room(session: AsyncSession, realm: Realm) -> Ids:
+    sibling = await session.get(SonRow, realm.sibling_id)
+    assert sibling is not None
+    sibling.essence = 10
+    await session.flush()
+    return {}
+
+
+async def rebel_son(session: AsyncSession, realm: Realm) -> Ids:
+    son = await session.get(SonRow, realm.son_id)
+    assert son is not None
+    son.rebel = True
+    await session.flush()
+    return {}
+
+
 async def son_creature(session: AsyncSession, realm: Realm) -> Ids:
     await rich_son(session, realm)
     beast = await make_entity(session, "Grey Warden", EntityType.BEAST, world_id=realm.cosmos.world_id, location_id=realm.cosmos.region_id, stats=BeastStats())

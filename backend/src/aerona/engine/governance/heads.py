@@ -21,6 +21,8 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of
 from aerona.engine.governance.seats import members_of, seats_of, shares_of, sync_seats
+from aerona.engine.mortal.life import years_to_step
+from aerona.engine.polity.divided_loyalty import serves_a_foe
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.maturity import away_among, of_age, of_age_among, of_age_query, past_office_age
 from aerona.engine.primitives.numbers import clamp_int
@@ -43,10 +45,11 @@ async def candidates(ctx: TickContext, row: OrgGovernanceRow) -> list[EntityRow]
     if row.decision_body is GoverningBody.SHAREHOLDERS_MEETING:
         ids += [holder for holder in await shares_of(ctx, row.org_node_id) if holder not in ids]
     found = [entity for entity in [await living(ctx, node) for node in ids] if entity is not None]
-    away = await away_among(ctx.session, [entity.id for entity in found]) | await busy_heads(ctx, row.org_node_id, [entity.id for entity in found])
+    ids = [entity.id for entity in found]
+    away = await away_among(ctx.session, ids) | await busy_heads(ctx, row.org_node_id, ids) | await serves_a_foe(ctx.session, ids, row.org_node_id)
     pool = [entity for entity in found if not held(entity.id) and entity.id not in away]
     if row.head_selection is not HeadSelection.INHERITED:
-        pool = [entity for entity in await of_age_among(ctx.session, pool) if not past_office_age(ctx.rules, entity)]
+        pool = [entity for entity in await of_age_among(ctx.session, pool) if not past_office_age(ctx.rules, entity, years_to_step(ctx.environment))]
     return pool or await home_folk(ctx, row.org_node_id)
 
 
@@ -74,7 +77,7 @@ async def home_folk(ctx: TickContext, org_id: int) -> list[EntityRow]:
             .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [home]), of_age_query())
             .order_by(EntityRow.id)
         )
-        if not held(mortal.id) and not past_office_age(ctx.rules, mortal)
+        if not held(mortal.id) and not past_office_age(ctx.rules, mortal, years_to_step(ctx.environment))
     ]
     busy = await busy_heads(ctx, org_id, [mortal.id for mortal in folk]) | await away_among(ctx.session, [mortal.id for mortal in folk])
     folk = [mortal for mortal in folk if mortal.id not in busy]
@@ -182,7 +185,9 @@ async def chosen_head(ctx: TickContext, row: OrgGovernanceRow) -> EntityRow | No
     return await CHOOSERS[row.head_selection](ctx, row, pool) if pool else None
 
 
-async def install_head(ctx: TickContext, row: OrgGovernanceRow, head: EntityRow, why: str) -> None:
+async def install_head(ctx: TickContext, row: OrgGovernanceRow, head: EntityRow, why: str) -> bool:
+    if head.id not in {entity.id for entity in await candidates(ctx, row)}:
+        return False
     row.head_node_id = head.id
     row.since_epoch = ctx.epoch
     row.term_ends_epoch = ctx.epoch + max(1, row.term_epochs)
@@ -204,6 +209,7 @@ async def install_head(ctx: TickContext, row: OrgGovernanceRow, head: EntityRow,
         roles={IncidentRole.SUBJECT: row.org_node_id, IncidentRole.ACTOR: head.id},
         facts={"selection": row.head_selection, "why": why},
     )
+    return True
 
 
 async def renew_head(ctx: TickContext, row: OrgGovernanceRow) -> bool:
@@ -223,8 +229,7 @@ async def renew_head(ctx: TickContext, row: OrgGovernanceRow) -> bool:
     if head.id == row.head_node_id:
         row.term_ends_epoch = ctx.epoch + max(1, row.term_epochs)
         return False
-    await install_head(ctx, row, head, why)
-    return True
+    return await install_head(ctx, row, head, why)
 
 
 async def strategy_vote(ctx: TickContext, row: OrgGovernanceRow) -> OrgStrategy | None:

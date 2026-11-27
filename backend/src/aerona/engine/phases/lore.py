@@ -3,7 +3,6 @@ from sqlalchemy import select
 from aerona.catalog.lore import CREED_DEFIES, DEFIED_BY
 from aerona.catalog.tongues import STAGES
 from aerona.constants.units import PERCENT
-from aerona.core.grammar import spoken as spoken_word
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import (
     IdeologyAdherentRow,
@@ -386,7 +385,7 @@ async def legend_cycles(ctx: TickContext) -> None:
                 ctx,
                 "lore.legend_drift",
                 roles={IncidentRole.SUBJECT: legend.id},
-                facts={"legend": str(legend.name), "spoken_word": str(spoken_word(row.archetype))},
+                facts={"legend": str(legend.name), "archetype": row.archetype},
             )
         if "credence" not in row.locked and await legends.confirmed(ctx, legend, row):
             row.credence = clamp_int(row.credence + table.confirmation, 0, PERCENT)

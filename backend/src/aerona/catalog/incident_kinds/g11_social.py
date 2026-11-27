@@ -621,7 +621,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "households.furnished",
         G.SOCIAL,
-        "{household}, the household of {actor}, set {subject} in its home.",
+        "{household} set {subject} in its home.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("household", FactValue.NAME),),
         place=PlaceRule.WHEN_KNOWN,
@@ -630,7 +630,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "households.abandon",
         G.SOCIAL,
-        "In want, {household}, the household of {actor}, left {victim} to fend alone.",
+        "In want, {household} left {victim} to fend alone.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM)),
         facts=(FactSpec("household", FactValue.NAME),),
         steps=frozenset({A.ABANDON}),
@@ -829,7 +829,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "remembrance.hero",
         G.SOCIAL,
-        "{subject} was not forgotten{product:?: # remember them}.",
+        "{subject} was not forgotten{product:?, remembered in #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PRODUCT, required=False, many=True)),
         steps=frozenset({A.HONOUR}),
         place=PlaceRule.WHEN_KNOWN,

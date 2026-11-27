@@ -1,6 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.schema import SINGLETON_ID
+from aerona.db.repositories.cosmos import rules_from_snapshot
+from aerona.db.tables.cosmos import CosmosRow
+from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalEquipmentRow, MortalProfileRow
+from aerona.domain.enums.entity import EntityType
+from aerona.engine.mortal.life import stage_now
+from aerona.engine.primitives.stats import stat
+from aerona.rules.registry import Rules
 
 
 async def profile_of(session: AsyncSession, mortal_id: int) -> MortalProfileRow | None:
@@ -11,7 +19,13 @@ async def ensure_profile(session: AsyncSession, mortal_id: int, epoch: int) -> t
     row = await session.get(MortalProfileRow, mortal_id)
     if row is not None:
         return row, False
-    row = MortalProfileRow(entity_id=mortal_id, updated_epoch=max(0, epoch), locked=[])
+    mortal = await session.get(EntityRow, mortal_id)
+    cosmos = await session.get(CosmosRow, SINGLETON_ID)
+    rules = rules_from_snapshot(cosmos.rules_snapshot) if cosmos is not None else Rules()
+    stage = (
+        await stage_now(session, rules, mortal) if mortal is not None and mortal.entity_type is EntityType.MORTAL and stat(mortal, "age") is not None else None
+    )
+    row = MortalProfileRow(entity_id=mortal_id, updated_epoch=max(0, epoch), locked=[], **({"life_stage": stage} if stage is not None else {}))
     session.add(row)
     await session.flush()
     return row, True

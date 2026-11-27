@@ -59,6 +59,7 @@ from aerona.engine.polity.offices import KEPT_OFFICES, appoint, seize_throne
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import living_entity
+from aerona.engine.primitives.standing import ended_ids
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import StepDraft
 from aerona.engine.recording.record import record as record_incident
@@ -252,12 +253,13 @@ async def pursue(ctx: TickContext, factions: FactionBook, realms: RealmBook, law
     table = ctx.rules.factions
     acts = 0
     limit = scaled_cap(table.act_cap, table.act_cap_faction_divisor, len(factions.profiles))
+    gone = set(await ctx.session.scalars(ended_ids()))
     for faction_id, profile in ctx.rng("faction_act.order").shuffled(sorted(factions.profiles.items())):
         if acts >= limit:
             break
-        if frozen(faction_id):
+        if frozen(faction_id) or faction_id in gone:
             continue
-        goals = sorted(factions.goals[faction_id], key=lambda goal: (-goal.priority, goal.id))
+        goals = sorted((goal for goal in factions.goals[faction_id] if goal.target_node_id not in gone), key=lambda goal: (-goal.priority, goal.id))
         realm = await realm_for(realms, profile)
         suppress, press = await restraint(ctx, realm.entity.id if realm is not None else None)
         if not goals or not ctx.rng(f"faction_act.{faction_id}.{ctx.epoch}").chance(table.act_chance * press):

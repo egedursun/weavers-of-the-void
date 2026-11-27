@@ -217,7 +217,10 @@ export const COMMODITIES = valueTable(commodityKindValues)
 export const DISTRICTS = valueTable(districtKindValues)
 export const CLASSES = valueTable(socialClassValues)
 export const TECHNIQUE_WORDS = valueTable(techniqueValues)
-export const WAR_ENDING_WORDS = valueTable(warEndingValues)
+export const WAR_ENDING_WORDS: Record<string, string> = {
+  ...valueTable(warEndingValues),
+  no_side_left: 'A side gone',
+}
 export const RESOURCE_MECHANIC_WORDS = valueTable(resourceMechanicValues)
 export const NEED_WORDS = valueTable(needKindValues)
 export const BOND_ROLE_WORDS = valueTable(bondRoleValues)

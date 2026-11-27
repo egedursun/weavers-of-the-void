@@ -49,7 +49,7 @@ from aerona.engine.body.variants import fear_of, folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.phenomena import form_phenomenon
 from aerona.engine.demography.biology import battle_edge, profiles_of
-from aerona.engine.divine.battles import intervene
+from aerona.engine.divine.battles import honour, prepare, withdraw
 from aerona.engine.ecology.beasts import beast_dread, mounted_edge
 from aerona.engine.economy.materials import MaterialBook
 from aerona.engine.economy.sanctity import holy_strike
@@ -405,8 +405,12 @@ async def clash(
     second = await side_of(ctx, defender, armies[defender.id], edge=edges[1], defending=True, enemy=attacker, knowledge=knowledge, ground=ground)
     for side in (first, second):
         ctx.count("items_flared", await flaring_items(ctx, ground.weather, side, await leaders_of(ctx, armies[side.entity.id])))
-    ctx.count("battle_gods", await intervene(ctx, war_id, sequence, first, second))
+    plan = await prepare(ctx, war_id, sequence, first, second)
     result = resolve(ctx.rules, streams_for(ctx, war_id, sequence), first, second, ground)
+    if result.refused:
+        withdraw(ctx, plan)
+    else:
+        ctx.count("battle_gods", await honour(ctx, plan))
     await battlefield_scar(ctx, first.army.location_id, sum(phase.attacker_losses + phase.defender_losses for phase in result.phases))
     for side in (first, second):
         for army, _ in armies[side.entity.id]:

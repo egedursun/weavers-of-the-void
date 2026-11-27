@@ -1,11 +1,17 @@
+from sqlalchemy import select
+
 from aerona.db.tables.customs import TIME_FIELDS, TimeBudgetRow
-from aerona.db.tables.households import HouseholdMemberRow
+from aerona.db.tables.daily_life import HouseworkRow
+from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.daily_life import HouseDuty, LeisureKind
+from aerona.domain.enums.entity import EntityStatus
+from aerona.domain.enums.genetics import HouseholdRole
 from aerona.domain.enums.mind import ValueAxis
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.customs.time_budgets import shares_for
-from aerona.engine.daily.w52_ways import WaysTally, give_time, tend_sick
+from aerona.engine.daily.w52_ways import WaysTally, give_time, keep_household_duties, tend_sick
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm, context, mortal
 
@@ -56,3 +62,20 @@ async def test_care_of_the_sick_mends_them(realm: Realm) -> None:
     tally = WaysTally()
     await tend_sick(context(realm.session), [HouseholdMemberRow(household_id=1, member_node_id=sick.id)], tally)
     assert profile.health > 20 and tally.tended == 1
+
+
+async def test_a_household_whose_head_died_lets_no_duty_lapse(realm: Realm) -> None:
+    living = await mortal(realm, "Living Head")
+    dead = await mortal(realm, "Dead Head")
+    dead.status, dead.end_epoch = EntityStatus.DEAD, 3
+    tally = WaysTally()
+    for head in (living, dead):
+        household = HouseholdRow(name=f"Household of {head.name}", head_node_id=head.id, locked=[])
+        realm.session.add(household)
+        await realm.session.flush()
+        realm.session.add(HouseholdMemberRow(household_id=household.id, member_node_id=head.id, role=HouseholdRole.HEAD))
+        realm.session.add(HouseworkRow(household_id=household.id, duty=HouseDuty.SICKCARE, doer_node_id=head.id, load=90))
+    await realm.session.flush()
+    await keep_household_duties(context(realm.session), tally)
+    lapsed = list(await realm.session.scalars(select(IncidentParticipantRow.node_id).join(IncidentRow).where(IncidentRow.kind == "household.duty_neglected")))
+    assert lapsed == [living.id] and tally.neglected == 1

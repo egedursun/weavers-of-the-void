@@ -10,8 +10,8 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | enum | 1645 |
 | step | 505 |
 | incident | 5 |
-| tool | 775 |
-| lever | 2297 |
+| tool | 777 |
+| lever | 2298 |
 | screen | 1555 |
 | text | 206 |
 
@@ -3731,6 +3731,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:echo_life | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:end_enchantment | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:end_long_season | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:end_rebellion | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:expose_forgery | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:extinguish_star | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:feed_on | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -3868,6 +3869,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | tool | son:seize_construct | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:send_disaster | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:send_dream | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
+| tool | son:send_essence | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:send_expedition | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:send_misfortune | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
 | tool | son:send_teacher | test_every_tool.py; test_catalogue.py; test_tool_enum_lists.py | none |
@@ -5868,6 +5870,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | lever | son:relation | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | son:reset_counters | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | son:sanity | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
+| lever | son:send_essence | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | son:star | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | son:turn_rank | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |
 | lever | son:world | test_every_lever.py; test_unique_levers.py; check_wiring.py | revert of any change: 49.5 |

@@ -1570,7 +1570,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.goods_placed",
         G.FAITH,
-        "{subject} was laid{place:? in #} with {items:item|items} and goods worth {value}, the guard of the grave set to {guard}.",
+        "{subject} was laid{place:? in #} with {items:item|items} and goods worth {value}; the grave was left {guard}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False), RoleSpec(R.INSTRUMENT, required=False, many=True)),
         facts=(
             FactSpec("items", FactValue.NUMBER, FactUnit.COUNT),
@@ -1583,7 +1583,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.grave_robbed",
         G.LAW,
-        "The grave of {subject}{place:? in #} was robbed{actor:? by #} of goods worth {value} and {items:item|items}, its guard set to {guard}.",
+        "The grave of {subject}{place:? in #}, left {guard}, was robbed{actor:? by #} of goods worth {value} and {items:item|items}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False), RoleSpec(R.INSTRUMENT, required=False, many=True)),
         facts=(
             FactSpec("value", FactValue.NUMBER, FactUnit.WEALTH_POINTS),
@@ -1596,7 +1596,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.robber_caught",
         G.LAW,
-        "{actor} was caught at the grave of {subject}{place:? in #}, its guard set to {guard}.",
+        "{actor} was caught at the grave of {subject}{place:? in #}, which was left {guard}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("guard", FactValue.ENUM, enum=GraveGuard),),
         place=PlaceRule.NONE,
@@ -1614,7 +1614,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.grave_guarded",
         G.FAITH,
-        "The guard of the grave of {subject}{place:? in #} was set to {guard}{actor:? by #}.",
+        "The grave of {subject}{place:? in #} was left {guard}{actor:? by #}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("guard", FactValue.ENUM, enum=GraveGuard),),
         place=PlaceRule.NONE,

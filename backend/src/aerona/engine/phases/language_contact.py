@@ -255,7 +255,7 @@ async def birth_creole(ctx: TickContext, community: EntityRow, first: EntityRow,
     table = ctx.rules.language_contact
     complexity = min(stat_or(first, "complexity", table.complexity_base), stat_or(second, "complexity", table.complexity_base))
     spread = round((stat_or(first, "spread", 0) + stat_or(second, "spread", 0)) / MINIMUM_BILINGUAL / MINIMUM_BILINGUAL)
-    how = f"by the hand of {by}" if by else "over the generations"
+    how = f"by {by}" if by else "over the generations"
     creole = await open_record(
         ctx.session,
         ctx.epoch,

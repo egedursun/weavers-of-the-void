@@ -101,7 +101,7 @@ async def effective_lifespan(
             level = (await known_levels(session, [home.id])).get(home.id, {}).get(KnowledgeBranch.MEDICINE, 0)
             if healing is not None:
                 healing[home.id] = level
-        medicine_bonus += round(base * MEDICINE[tier_of(rules.healing, level, 0, False)].lifespan_pct / PERCENT)
+        medicine_bonus = max(medicine_bonus, round(base * MEDICINE[tier_of(rules.healing, level, 0, False)].lifespan_pct / PERCENT))
         medicine_bonus += round(base * await tech_bonus(session, rules, home.id, EraChannel.HEALTH) / PERCENT)
     flags = await EntityRepository(session).flags(entity.id)
     notable_bonus = rules.world_engine.notable_lifespan_bonus if is_notable(rules, entity, flags) else 0

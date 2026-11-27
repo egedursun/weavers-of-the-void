@@ -23,6 +23,14 @@ def test_a_win_is_great_only_when_the_beaten_side_lost_a_real_share_of_its_soldi
     assert not crushing(rules, None)
 
 
+def test_a_win_where_the_victor_bled_more_than_the_beaten_is_never_great() -> None:
+    rules = Rules()
+    assert not crushing(rules, beaten(30, 23), beaten(1200, 897))
+    assert not crushing(rules, beaten(60, 42), beaten(1500, 915))
+    assert not crushing(rules, beaten(20, 11), beaten(12, 7))
+    assert crushing(rules, beaten(60, 41), beaten(900, 3))
+
+
 def army(size: int, morale: int) -> tuple[EntityRow, ArmyRow]:
     return EntityRow(entity_type=EntityType.ARMY, stats=ArmyStats(size=size, morale=morale)), cast(ArmyRow, None)
 

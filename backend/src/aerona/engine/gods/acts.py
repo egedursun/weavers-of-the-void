@@ -397,5 +397,5 @@ async def kill_mortal_by_creator(ctx: TickContext, creator: CreatorRow, mortal: 
         Killer(ActorKind.CREATOR, creator.name, creator.id),
         creator.name,
         certain=True,
-        how=how or god_lines.GOD_KILL_MORTAL_HOW.format(creator=creator.name),
+        how=how or god_lines.GOD_KILL_MORTAL_HOW,
     )

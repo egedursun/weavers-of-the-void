@@ -164,14 +164,15 @@ async def _scarce(ctx: TickContext, community: EntityRow) -> list[CommodityKind]
     return short
 
 
-async def _yields(ctx: TickContext, resource_ids: set[int], wanted: list[CommodityKind]) -> EntityRow | None:
+async def _yields(ctx: TickContext, resource_ids: set[int], wanted: list[CommodityKind], world_id: int | None) -> EntityRow | None:
     for resource_id in sorted(resource_ids):
         profile = await ctx.session.get(ResourceProfileRow, resource_id)
-        if profile is None:
+        resource = await ctx.session.get(EntityRow, resource_id)
+        if profile is None or resource is None or resource.world_id != world_id:
             continue
         feeds = STRATEGIC_INPUTS.get(profile.commodity, ())
         if profile.commodity in wanted or any(kind in wanted for kind in feeds) or profile.material in STRATEGIC_MATERIALS:
-            return await ctx.session.get(EntityRow, resource_id)
+            return resource
     return None
 
 
@@ -233,7 +234,7 @@ async def _seize_from_neighbours(
             continue
         if bonds.between(first.id, second.id, BondKind.TRADES_WITH) or not atlas.near(first.id, second.id, ctx.rules.trade_routes.contact_hops):
             continue
-        target = await _yields(ctx, holdings[second.id], wanted)
+        target = await _yields(ctx, holdings[second.id], wanted, first.world_id)
         if target is None or await strength_of(ctx, first, strengths) <= await strength_of(ctx, second, strengths):
             continue
         if await _seize(ctx, first, second, target):

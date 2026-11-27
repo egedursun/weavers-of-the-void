@@ -872,7 +872,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "sanctuary.claimed",
         G.LAW,
-        "{actor} claimed sanctuary in {host} ({refuge}), out of reach{opponent:? of #}.",
+        "{actor} claimed sanctuary in {host}, out of reach{opponent:? of #}; the refuge: {refuge}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.HOST), RoleSpec(R.OPPONENT, required=False)),
         facts=(
             FactSpec("refuge", FactValue.ENUM, enum=SanctuaryKind),

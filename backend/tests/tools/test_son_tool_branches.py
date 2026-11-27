@@ -500,7 +500,7 @@ async def test_extinguishing_a_star_darkens_its_worlds_and_chills_the_siblings(d
         cosmos = await CosmosRepository(session).require_cosmos()
         relation = await SonRepository(session).relation(realm.son_id, realm.sibling_id)
     assert darkened is not None and darkened.leakage == 10 + pantheon.extinguish_leak
-    assert cosmos.doom_clock > doom_before
+    assert cosmos.doom_clock + (cosmos.doom_fraction or 0.0) > doom_before
     assert after.fame == before.fame + tools.extinguish_star_renown
     assert relation == -tools.extinguish_star_relation
     assert "sky.star_extinguished" in await keys(database)

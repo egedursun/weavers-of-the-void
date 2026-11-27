@@ -459,6 +459,13 @@ def may_lend(rules: Rules, lender: EntityRow) -> bool:
     return (wealth_of(lender) or 0) >= rules.civilization.loan_lender_min and may(rules, lender, TierCapability.LOAN)
 
 
+def loan_size(rules: Rules, lender: EntityRow, borrower: EntityRow) -> int:
+    civ = rules.civilization
+    spare = (wealth_of(lender) or 0) - civ.loan_lender_min
+    wanted = civ.loan_borrower_max - (wealth_of(borrower) or 0)
+    return max(1, min(civ.loan_amount, spare, wanted))
+
+
 def may_borrow(rules: Rules, borrower: EntityRow) -> bool:
     return (wealth_of(borrower) or 0) <= rules.civilization.loan_borrower_max
 
@@ -495,7 +502,7 @@ async def spontaneous_loans(ctx: TickContext) -> int:
             continue
         if not ctx.rng(f"loan.{lender.id}.{borrower.id}").chance(civ.loan_chance):
             continue
-        await lend(ctx, lender, borrower, civ.loan_amount)
+        await lend(ctx, lender, borrower, loan_size(ctx.rules, lender, borrower))
         helped.add(borrower.id)
     return len(helped)
 

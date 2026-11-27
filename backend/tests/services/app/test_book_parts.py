@@ -17,7 +17,7 @@ from aerona.services.books.render import ScreenLinks, render_book
 from tests.services.app.factories import Cosmos
 from tests.services.app.test_books import enrich
 
-SMALL_PART = 6000
+SMALL_PART = 3000
 OUTLINE = re.compile(r'<script type="application/json" id="book-outline">')
 HOLDER = re.compile(r'<div class="book-part" data-part="(\d+)"')
 TAG = re.compile(r"<[^>]+>")

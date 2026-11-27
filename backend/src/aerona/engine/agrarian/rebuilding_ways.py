@@ -111,7 +111,7 @@ async def abandon_town(ctx: TickContext, row: ReconstructionRow, town: EntityRow
     people = stat_or(town, "population", 0)
     host = await nearest_host(ctx, town)
     sent = 0
-    await abandon(ctx, town)
+    await abandon(ctx, town, tell=False)
     if host is not None and people > 0:
         with flowing(FlowCategory.MIGRATION):
             set_stats(host, population=stat_or(host, "population", 0) + people)

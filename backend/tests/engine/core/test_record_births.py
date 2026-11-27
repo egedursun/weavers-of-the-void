@@ -20,6 +20,7 @@ from tests.engine.core.factories import CoreWorld, mortal
 
 async def test_nothing_happens_to_a_thing_before_it_first_appears(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
     maker = await mortal(session, "Orun", world, world.regions[0].id)
+    maker.birth_epoch = ctx.epoch - 1
     being = await mortal(session, "Ilse", world, world.regions[0].id)
     being.birth_epoch = ctx.epoch
     first = await record(ctx, "tools.mortal.build_network", roles={IncidentRole.ACTOR: maker.id, IncidentRole.PRODUCT: being.id}, at_moment=Moment(31))

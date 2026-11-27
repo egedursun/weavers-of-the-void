@@ -12,8 +12,11 @@ from aerona.catalog.market_kinds import ANIMAL_CLUBS, CLUBS
 from aerona.catalog.methods import METHODS
 from aerona.catalog.plants import PARTS
 from aerona.catalog.revivals import REVIVAL_WAYS
+from aerona.catalog.stats import max_essence
 from aerona.db.record_context import RecordScope, scoped
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.repositories.sons import SonRepository
 from aerona.db.session import Database
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.agentless_conditions import AgentlessConditionRow
@@ -25,10 +28,11 @@ from aerona.db.tables.belonging import HeldIdentityRow, SanctuaryRow
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow
 from aerona.db.tables.body_systems import BodySystemRow
+from aerona.db.tables.celestial import StarRow
 from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.childhood import ChildStandingRow, SocializationRow
 from aerona.db.tables.city_rules import ConurbationRow, LandUseRuleRow
-from aerona.db.tables.collective import AccountRow
+from aerona.db.tables.collective import AccountRow, GenerationRow
 from aerona.db.tables.commerce import LeaseRow
 from aerona.db.tables.competition import CartelRow, MarketStructureRow, PriceWarRow
 from aerona.db.tables.constructs import ConstructRow, InstructionOrderRow, InstructionSetRow
@@ -49,7 +53,7 @@ from aerona.db.tables.divine_conceptions import GodReadingRow
 from aerona.db.tables.ecology import BeastProfileRow, SpeciesProductRow, SpeciesRangeRow
 from aerona.db.tables.economy import CurrencyRow, TradeRouteProfileRow, WorldMaterialRow
 from aerona.db.tables.endowments import EndowmentRow
-from aerona.db.tables.entities import EntityRow, LanguageProfileRow
+from aerona.db.tables.entities import EntityFlagRow, EntityRow, LanguageProfileRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
 from aerona.db.tables.estates import MovementProfileRow
 from aerona.db.tables.facets import FacetPracticeRow
@@ -59,7 +63,7 @@ from aerona.db.tables.feeling_spread import FeelingSpreadRow
 from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.db.tables.folk_knowledge import FolkClassRow
 from aerona.db.tables.folkways import LuckBeliefRow
-from aerona.db.tables.gatherings import CollectionMemberRow, CollectionRow, GatheringRow
+from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberRow, CollectionRow, GatheringRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.geology import DeepPassageRow, RegionStratumRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgGovernanceRow, OrgMergerRow, OrgSeatRow
@@ -81,6 +85,7 @@ from aerona.db.tables.mass_weapons import DeterrencePostureRow, MassWeaponRow, W
 from aerona.db.tables.means import NavigationKitRow, SecurityRow, WaterLiftRow, WrittenWorkRow
 from aerona.db.tables.media import MediaItemRow, MediaOutletRow
 from aerona.db.tables.military import OccupationRow, SpyNetworkRow
+from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.monetary import MonetaryAuthorityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
@@ -90,11 +95,12 @@ from aerona.db.tables.occupation_regimes import CollaborationRow, OccupationMeas
 from aerona.db.tables.operations import ExpeditionRow, ShipCrewRow
 from aerona.db.tables.orders import EconomicOrderRow, OrderTransitionRow
 from aerona.db.tables.pantheon import PantheonTieRow, SyncretismRow
-from aerona.db.tables.physics import ImpactEventRow, WorldLifeRow, WorldPhysicsRow
+from aerona.db.tables.physics import ImpactEventRow, StarPhysicsRow, WorldLifeRow, WorldPhysicsRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.plants import PlantPartRow
 from aerona.db.tables.polity import ClaimRow, OfficeRow, PolityProfileRow, TreatyPartyRow
 from aerona.db.tables.population import PopulationInstrumentRow, PopulationPolicyRow
+from aerona.db.tables.presence import PresenceExchangeRow, PresenceSessionRow
 from aerona.db.tables.protected_nature import ConservationMovementRow, ProtectedAreaRow, SpeciesProtectionRow
 from aerona.db.tables.reckoning import ReckoningCaseRow, ReckoningMeasureRow, ReckoningRow
 from aerona.db.tables.record_keepers import RecordKeeperRow
@@ -104,16 +110,17 @@ from aerona.db.tables.relations import ContestRow
 from aerona.db.tables.renown import DeedClaimRow, DeedRow, LoreTradeRow
 from aerona.db.tables.restoration import RestorationRow
 from aerona.db.tables.routes import RouteRow
-from aerona.db.tables.sacred import GeniusLocusRow, PetitionRow
+from aerona.db.tables.sacred import BirthSignRow, GeniusLocusRow, PetitionRow
 from aerona.db.tables.sea_waves import SeaWaveCoastRow, SeaWaveRow
 from aerona.db.tables.securities import IssuedSecurityRow, SecurityHoldingRow, SecurityPriceRow
 from aerona.db.tables.settlement import DistrictRow, SettlementProfileRow
 from aerona.db.tables.sites import BattlefieldFeatureRow
+from aerona.db.tables.sons import SonRelationRow, SonRow
 from aerona.db.tables.speech import SpeechRow
 from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.technology import TechnologyProfileRow
 from aerona.db.tables.titles import TitleProfileRow
-from aerona.db.tables.warfare import BattleRow, CaptiveRow, SiegeRow, WarRow
+from aerona.db.tables.warfare import ArmyRow, BattleRow, CaptiveRow, SiegeRow, WarRow, WarSideRow
 from aerona.db.tables.works import PublicWorksRow, PublicWorkStageRow
 from aerona.db.tables.world_ends import WorldEndRow
 from aerona.db.tables.youth import YouthGroupMemberRow, YouthGroupRow, YouthStandingRow
@@ -145,7 +152,7 @@ from aerona.domain.enums.divine_conceptions import GodReading
 from aerona.domain.enums.ecology import Biochemistry, YieldProduct
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin, MoneyForm, TradeMode, TradeRouteStatus
 from aerona.domain.enums.endowments import EndowmentState
-from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.facets import FacetKind
@@ -169,6 +176,7 @@ from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.means import LockKind, NavigationAid, WaterLift, WritingMedium
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.military import DefenderAction
+from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.museum import HoardKind, PieceKind
@@ -182,6 +190,7 @@ from aerona.domain.enums.physics import AirNeed, ImpactBody, ImpactOutcome, Life
 from aerona.domain.enums.place import PlaceKind
 from aerona.domain.enums.polity import ClaimBasis, DecisionRule, GovernmentKind, OfficeKind, PartyRole
 from aerona.domain.enums.population import PopulationInstrument
+from aerona.domain.enums.presence import PresenceExchangeStatus, PresenceGuise, PresenceRecord
 from aerona.domain.enums.reckoning import ReckoningMeasure
 from aerona.domain.enums.record_keepers import RecordKeeperKind
 from aerona.domain.enums.records import FactUnit, StepAction, WitnessMode
@@ -189,7 +198,7 @@ from aerona.domain.enums.referendums import Franchise, ReferendumResult, Referen
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake
 from aerona.domain.enums.renown import ClaimKind, ClaimStatus, LorePrice, ReputationAxis
 from aerona.domain.enums.restoration import RestorationStage
-from aerona.domain.enums.sacred import GeniusLocusKind, PetitionKind
+from aerona.domain.enums.sacred import GeniusLocusKind, PetitionKind, SignInfluence
 from aerona.domain.enums.sea_waves import WaveOrigin
 from aerona.domain.enums.settlement import DistrictKind, SizeTier
 from aerona.domain.enums.site import BattlefieldFeature
@@ -199,7 +208,7 @@ from aerona.domain.enums.statecraft import CrisisDemand, CrisisState
 from aerona.domain.enums.titles import TitleTier
 from aerona.domain.enums.tongues import LanguageModality, LanguageStage
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
-from aerona.domain.enums.war import BattleOutcome, CaptiveStatus, WarCause
+from aerona.domain.enums.war import BattleOutcome, CaptiveStatus, WarCause, WarSide, WarStatus
 from aerona.domain.enums.world import Gravity
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 from aerona.domain.enums.world_view import SettleMode, WarTerrain
@@ -214,7 +223,9 @@ from aerona.domain.models.entity_stats import (
     FactionStats,
     HouseStats,
     LanguageStats,
+    LawStats,
     LeagueStats,
+    MortalStats,
     NaturalLawStats,
     PeopleStats,
     PlaceStats,
@@ -231,15 +242,18 @@ from aerona.domain.models.entity_stats import (
     VesselStats,
 )
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
+from aerona.engine.cosmos.orbits import infer
+from aerona.engine.cosmos.stellar import new_physics
 from aerona.engine.demography.peoples import ensure_profiles
 from aerona.engine.households.dwelling_kinds import built_in_dwelling
+from aerona.engine.minds.profiles import profile_of
 from aerona.engine.primitives.language_profile import DEFAULT_PHONOLOGY
 from aerona.engine.recording.checkpoints import take_checkpoint
 from aerona.rules.registry import Rules
 from aerona.services.integrity.invariants import CHECKS, findings, resolve, sweep
 from aerona.services.integrity.record_links import absent_witnesses
 from tests.conftest import OpenDatabase
-from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, seed_core_world, settlement
+from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, seed_core_world, settlement, son_draft
 from tests.engine.core.test_arcana_w15 import foreign_caster
 
 
@@ -272,6 +286,7 @@ async def service_with_no_task(session: AsyncSession, world: CoreWorld) -> None:
 Breaker = Callable[[AsyncSession, CoreWorld], Awaitable[None]]
 PHASE_KIND = "phase.statecraft"
 FAR_ORBIT = 60.0
+COLD_ORBIT = 1.6
 
 
 @pytest.fixture
@@ -738,6 +753,108 @@ async def tribute_named_for_an_old_name(session: AsyncSession, world: CoreWorld)
     )
 
 
+async def memory_of_a_stranger_happening(session: AsyncSession, world: CoreWorld) -> None:
+    holder = await mortal(session, "Holds A Memory", world, world.regions[0].id)
+    remembered = await mortal(session, "Is Remembered", world, world.regions[0].id)
+    elsewhere = IncidentRow(kind="society.rivalry", epoch=1)
+    session.add(elsewhere)
+    await session.flush()
+    session.add(IncidentParticipantRow(incident_id=elsewhere.id, node_id=holder.id, role=IncidentRole.ACTOR, position=0))
+    session.add(
+        MemoryRow(
+            holder_node_id=holder.id,
+            subject_node_id=remembered.id,
+            kind=MemoryKind.HUMILIATED_ME,
+            magnitude=-10,
+            decay_pct=10,
+            epoch=1,
+            incident_id=elsewhere.id,
+        )
+    )
+
+
+async def fact_the_kind_no_longer_tells(session: AsyncSession, world: CoreWorld) -> None:
+    town = await entity(session, "Altar Town", EntityType.SETTLEMENT, SettlementStats(), world_id=world.world.id)
+    incident = IncidentRow(kind="religion.syncretism", epoch=1)
+    session.add(incident)
+    await session.flush()
+    session.add(IncidentParticipantRow(incident_id=incident.id, node_id=town.id, role=IncidentRole.SUBJECT, position=0))
+    session.add(IncidentFactRow(incident_id=incident.id, key="cold", position=0, name="; the altars grew cold"))
+
+
+async def mourning_kept_as_festival(session: AsyncSession, world: CoreWorld) -> None:
+    rite = await entity(session, "Mourning of Ash", EntityType.TRADITION, TraditionStats(), world_id=world.world.id, origin=EntityOrigin.ENGINE)
+    rite.subtype = "mourning rite"
+    session.add(TraditionProfileRow(tradition_entity_id=rite.id, kind=TraditionFunction.FESTIVAL, calendar_slot=CalendarSlot.HARVEST, locked=[]))
+
+
+async def kept_after_its_time_did_not_come(session: AsyncSession, world: CoreWorld) -> None:
+    town = await entity(session, "Late Feast Town", EntityType.SETTLEMENT, SettlementStats(), world_id=world.world.id)
+    feast = await entity(session, "Late Fires", EntityType.TRADITION, TraditionStats(), world_id=world.world.id)
+    for kind, roles in (("tradition.slot_closed", (IncidentRole.SUBJECT, IncidentRole.ACTOR)), ("tradition.kept", (IncidentRole.PRODUCT, IncidentRole.PLACE))):
+        told = IncidentRow(kind=kind, epoch=1)
+        session.add(told)
+        await session.flush()
+        session.add(IncidentParticipantRow(incident_id=told.id, node_id=feast.id, role=roles[0], position=0))
+        session.add(IncidentParticipantRow(incident_id=told.id, node_id=town.id, role=roles[1], position=0))
+
+
+async def mourning_under_another_dead(session: AsyncSession, world: CoreWorld) -> None:
+    dead = await mortal(session, "Mourned Here", world, world.regions[0].id)
+    other = await mortal(session, "Mourned Elsewhere", world, world.regions[0].id)
+    funeral = CollectionRow(kind=CollectionKind.FUNERAL, name="Funeral of Mourned Elsewhere", start_epoch=1, locked=[])
+    session.add(funeral)
+    await session.flush()
+    session.add(CollectionMemberRow(collection_id=funeral.id, node_id=other.id, role=CollectionRole.VICTIM))
+    session.add(CollectionMemberRow(collection_id=funeral.id, node_id=dead.id, role=CollectionRole.GUEST))
+    session.add(
+        GatheringRow(
+            host_node_id=world.regions[0].id,
+            kind=GatheringKind.MOURNING,
+            status=GatheringStatus.HELD,
+            honoured_node_id=dead.id,
+            collection_id=funeral.id,
+            epoch=1,
+            locked=[],
+        )
+    )
+
+
+async def dead_still_hale(session: AsyncSession, world: CoreWorld) -> None:
+    fallen = await mortal(session, "Fallen Hale", world, world.regions[0].id, hp=60)
+    fallen.status, fallen.end_epoch = EntityStatus.DEAD, 1
+
+
+async def host_led_by_the_dead(session: AsyncSession, world: CoreWorld) -> None:
+    fallen = await mortal(session, "Fallen Marshal", world, world.regions[0].id)
+    host = await entity(session, "Leaderless Host", EntityType.ARMY, ArmyStats(size=100), world_id=world.world.id)
+    session.add(ArmyRow(entity_id=host.id, owner_entity_id=world.regions[0].id, commander_entity_id=fallen.id, raised_epoch=1))
+    fallen.status, fallen.end_epoch = EntityStatus.DEAD, 1
+
+
+async def war_titled_after_strangers(session: AsyncSession, world: CoreWorld) -> None:
+    first = await entity(session, "Red Folk", EntityType.PEOPLE, PeopleStats(), world_id=world.world.id)
+    second = await entity(session, "Blue Folk", EntityType.PEOPLE, PeopleStats(), world_id=world.world.id)
+    event = await entity(session, "War of Nobody and Noone", EntityType.EVENT, EventStats(), world_id=world.world.id)
+    war = WarRow(
+        event_entity_id=event.id, world_id=world.world.id, status=WarStatus.ONGOING, cause=WarCause.HOSTILITY, started_epoch=1, battles=0, score=0, locked=[]
+    )
+    session.add(war)
+    await session.flush()
+    session.add_all(
+        [
+            WarSideRow(war_id=war.id, entity_id=first.id, side=WarSide.ATTACKER, joined_epoch=1),
+            WarSideRow(war_id=war.id, entity_id=second.id, side=WarSide.DEFENDER, joined_epoch=1),
+        ]
+    )
+
+
+async def ruin_still_peopled(session: AsyncSession, world: CoreWorld) -> None:
+    town = await entity(session, "Empty Hamlet", EntityType.SETTLEMENT, SettlementStats(population=60), world_id=world.world.id)
+    session.add(EntityFlagRow(entity_id=town.id, flag=EntityFlag.RUIN, epoch=1))
+    town.status, town.end_epoch = EntityStatus.DEAD, 1
+
+
 async def rebuilding_a_ruin(session: AsyncSession, world: CoreWorld) -> None:
     town = await settlement(session, "Emptied Quay", world, world.regions[0])
     town.status, town.end_epoch = EntityStatus.DESTROYED, 1
@@ -762,13 +879,195 @@ async def two_seasons_one_name(session: AsyncSession, world: CoreWorld) -> None:
         )
 
 
+async def offshoot_named_after_a_clique(session: AsyncSession, world: CoreWorld) -> None:
+    await entity(session, "Greystead under those around Varr", EntityType.FACTION, FactionStats(), world_id=world.world.id)
+
+
+async def plague_named_after_its_carrier(session: AsyncSession, world: CoreWorld) -> None:
+    carrier = await mortal(session, "Mamda", world, world.regions[0].id)
+    sickness = await entity(session, "Grey cough", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id)
+    plague = CollectionRow(kind=CollectionKind.PLAGUE, name="Plague of Grey cough and Mamda", world_id=world.world.id, start_epoch=1, locked=[])
+    session.add(plague)
+    spread = IncidentRow(kind="disease.army_carried", epoch=1, year=20, world_id=world.world.id)
+    session.add(spread)
+    await session.flush()
+    session.add(IncidentParticipantRow(incident_id=spread.id, node_id=carrier.id, role=IncidentRole.SUBJECT, position=0))
+    session.add(IncidentParticipantRow(incident_id=spread.id, node_id=sickness.id, role=IncidentRole.INSTRUMENT, position=1))
+    session.add(CollectionIncidentRow(collection_id=plague.id, incident_id=spread.id))
+
+
+async def league_named_bare(session: AsyncSession, world: CoreWorld) -> None:
+    await entity(session, "the league of Empire of Greystead", EntityType.LEAGUE, LeagueStats(), world_id=world.world.id)
+
+
+async def two_duels_in_one_history(session: AsyncSession, world: CoreWorld) -> None:
+    first, shared, later = [await mortal(session, name, world, world.regions[0].id) for name in ("Parar", "Wapnar", "Onur")]
+    duel = CollectionRow(kind=CollectionKind.DUEL, name="Duel of Parar and Wapnar", world_id=world.world.id, start_epoch=1, locked=[])
+    session.add(duel)
+    await session.flush()
+    for year, pair in ((41, (first, shared)), (85, (shared, later))):
+        fought = IncidentRow(kind="duel.honour", epoch=1 if year < 50 else 2, year=year, world_id=world.world.id)
+        session.add(fought)
+        await session.flush()
+        session.add(IncidentParticipantRow(incident_id=fought.id, node_id=pair[0].id, role=IncidentRole.ACTOR, position=0))
+        session.add(IncidentParticipantRow(incident_id=fought.id, node_id=pair[1].id, role=IncidentRole.OPPONENT, position=1))
+        session.add(CollectionIncidentRow(collection_id=duel.id, incident_id=fought.id))
+
+
+async def lit_home(session: AsyncSession, world: CoreWorld) -> WorldPhysicsRow:
+    rules = await CosmosRepository(session).rules()
+    star = await session.get(StarRow, world.world.star_id)
+    assert star is not None
+    if await session.get(StarPhysicsRow, star.id) is None:
+        session.add(new_physics(rules, star, None))
+    physics = await session.get(WorldPhysicsRow, world.world.id)
+    if physics is None:
+        physics = infer(rules, world.world, star)
+        session.add(physics)
+    await session.flush()
+    return physics
+
+
 async def planet_far_from_its_star(session: AsyncSession, world: CoreWorld) -> None:
-    del session
+    await lit_home(session, world)
+    world.world.orbit = COLD_ORBIT
+
+
+async def divine_mind_left_behind(session: AsyncSession, world: CoreWorld) -> None:
+    world.cosmos.epoch = 6
+    mind = await profile_of(session, await CosmosRepository(session).rules(), world.son.id, 1)
+    mind.run_epochs = 1
+
+
+async def covenant_of_enemies(session: AsyncSession, world: CoreWorld) -> None:
+    sibling = await SonRepository(session).create(son_draft("Varra", world.world.id))
+    await BondRepository(session).connect(BondDraft(world.son.id, sibling.id, BondKind.ALLY, 1, "A covenant sworn before the council."))
+    await SonRepository(session).change_relation(world.son.id, sibling.id, -98)
+
+
+async def grudge_with_no_names(session: AsyncSession, world: CoreWorld) -> None:
+    sibling = await SonRepository(session).create(son_draft("Varra", world.world.id))
+    session.add(
+        MemoryRow(
+            holder_node_id=world.son.id,
+            subject_node_id=sibling.id,
+            kind=MemoryKind.HUMILIATED_ME,
+            magnitude=-25,
+            decay_pct=3,
+            epoch=1,
+            note="overcame it in the battle for Greystead",
+        )
+    )
+
+
+async def bond_note_overwritten(session: AsyncSession, world: CoreWorld) -> None:
+    sibling = await SonRepository(session).create(son_draft("Varra", world.world.id))
+    first, second = sorted((world.son.id, sibling.id))
+    session.add(SonRelationRow(son_a_id=first, son_b_id=second, value=-20, note="overcame it in the battle for Greystead"))
+
+
+async def son_met_the_creator(session: AsyncSession, world: CoreWorld) -> None:
+    son = await session.get(SonRow, world.son.id)
+    assert son is not None
+    son.reputation_epoch, son.reputation_last_contact_epoch = world.cosmos.epoch, 0
+    meeting = PresenceSessionRow(node_id=son.id, guise=PresenceGuise.CREATOR, record=PresenceRecord.ON_RECORD, opened_epoch=world.cosmos.epoch)
+    session.add(meeting)
+    await session.flush()
+    session.add(PresenceExchangeRow(session_id=meeting.id, ordinal=1, epoch=world.cosmos.epoch, player_text="Speak.", status=PresenceExchangeStatus.DONE))
+
+
+async def son_overfilled(session: AsyncSession, world: CoreWorld) -> None:
+    son = await session.get(SonRow, world.son.id)
+    assert son is not None
+    son.essence = max_essence(await CosmosRepository(session).rules(), son.might) + 14
+
+
+async def star_left_dim(session: AsyncSession, world: CoreWorld) -> None:
+    await lit_home(session, world)
+    own = await session.get(StarPhysicsRow, world.world.star_id)
+    assert own is not None
+    own.luminosity = 0.001
+
+
+async def grown_mortal_born_at_first_sight(session: AsyncSession, world: CoreWorld) -> None:
+    world.cosmos.epoch = 10
+    grown = await entity(session, "Grey Captain", EntityType.MORTAL, MortalStats(age=44), world_id=world.world.id)
+    session.add(NodeBirthRow(node_id=grown.id, year=481, season=None, day=None, hour=None, locked=[]))
+
+
+async def star_clock_set_from_birth(session: AsyncSession, world: CoreWorld) -> None:
+    await lit_home(session, world)
+    star = await session.get(StarRow, world.world.star_id)
+    own = await session.get(StarPhysicsRow, world.world.star_id)
+    assert star is not None and own is not None
+    own.age_epochs = own.lifetime_epochs
+    star.lifecycle_clock = own.lifetime_epochs * 2
+
+
+async def planet_moved_by_an_old_repair(session: AsyncSession, world: CoreWorld) -> None:
+    await lit_home(session, world)
+    lived = world.world.orbit
     world.world.orbit = FAR_ORBIT
+    world.world.calendar_locked = ["year_length_days"]
+    for field, before, after in (("orbit", lived, FAR_ORBIT), ("calendar_locked", None, None)):
+        session.add(
+            StateChangeRow(
+                epoch=1,
+                table_name="worlds",
+                row_key=f'{{"id": {world.world.id}}}',
+                node_id=world.world.id,
+                operation=LedgerOperation.UPDATE,
+                field=field,
+                before_number=before,
+                after_number=after,
+                before_text="[]" if field == "calendar_locked" else None,
+                after_text='["year_length_days"]' if field == "calendar_locked" else None,
+                actor_kind=ActorKind.SYSTEM,
+            )
+        )
 
 
 async def strain_named_twice(session: AsyncSession, world: CoreWorld) -> None:
     await entity(session, "Grey cough, strain 2, strain 2", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id)
+
+
+async def generations_outnumber_their_town(session: AsyncSession, world: CoreWorld) -> None:
+    town = await entity(session, "Thin Hamlet", EntityType.SETTLEMENT, SettlementStats(population=40), world_id=world.world.id)
+    session.add(GenerationRow(community_entity_id=town.id, generation_epoch=1, formative=[], value_shifts={}, alive=400, locked=[]))
+
+
+async def grown_mortal_signed_at_arrival(session: AsyncSession, world: CoreWorld) -> None:
+    world.cosmos.epoch = 4
+    grown = await entity(session, "Grey Elder", EntityType.MORTAL, MortalStats(age=120), world_id=world.world.id)
+    session.add(BirthSignRow(mortal_entity_id=grown.id, season=0, dreaded=False, influence=SignInfluence.BELIEVED, fortune=0, born_epoch=4, locked=[]))
+
+
+async def wound_dated_outside_its_epoch(session: AsyncSession, world: CoreWorld) -> None:
+    bearer = await mortal(session, "Old Scar", world, world.regions[0].id)
+    session.add(
+        InjuryRow(
+            bearer_node_id=bearer.id,
+            part=BodyPart.LEFT_ARM,
+            kind=InjuryKind.CUT,
+            damage_type=DamageType.CUT,
+            severity=2,
+            state=InjuryState.HEALED_SCAR,
+            function_loss=0,
+            cause_kind=HarmCause.ACCIDENT,
+            epoch=7,
+            year=30,
+        )
+    )
+
+
+async def seat_held_before_its_holder_came(session: AsyncSession, world: CoreWorld) -> None:
+    holder = await mortal(session, "Short Stay", world, world.regions[0].id)
+    session.add(NodeBirthRow(node_id=holder.id, year=330, locked=[]))
+    session.add(DepartureRow(holder_node_id=holder.id, kind=DepartureKind.RETIREMENT, epoch=8, years_held=300, locked=[]))
+
+
+async def law_named_twice(session: AsyncSession, world: CoreWorld) -> None:
+    await entity(session, "The burial law law of Greystead", EntityType.LAW, LawStats(), world_id=world.world.id)
 
 
 async def vigil_kept_at_harvest(session: AsyncSession, world: CoreWorld) -> None:
@@ -2144,8 +2443,36 @@ BREAKERS: dict[str, Breaker] = {
     "season_names_distinct": two_seasons_one_name,
     "tradition_slot_fits_kind": vigil_kept_at_harvest,
     "strain_named_once": strain_named_twice,
+    "injury_dated_in_its_time": wound_dated_outside_its_epoch,
+    "tenure_within_presence": seat_held_before_its_holder_came,
+    "law_named_once": law_named_twice,
+    "birth_sign_by_age": grown_mortal_signed_at_arrival,
+    "generations_within_people": generations_outnumber_their_town,
+    "son_essence_within_cap": son_overfilled,
+    "son_knows_its_audience": son_met_the_creator,
+    "son_bond_described_plainly": bond_note_overwritten,
+    "god_grudge_names_both": grudge_with_no_names,
+    "son_covenant_between_friends": covenant_of_enemies,
+    "divine_mind_counts_its_epochs": divine_mind_left_behind,
+    "star_lit_by_its_kind": star_left_dim,
+    "star_clock_follows_its_age": star_clock_set_from_birth,
+    "adult_born_before_first_sight": grown_mortal_born_at_first_sight,
+    "home_on_its_lived_orbit": planet_moved_by_an_old_repair,
     "peopled_world_habitable": planet_far_from_its_star,
     "rebuild_of_a_standing_town": rebuilding_a_ruin,
+    "dead_without_health": dead_still_hale,
+    "army_led_by_the_living": host_led_by_the_dead,
+    "ruin_without_people": ruin_still_peopled,
+    "war_named_by_its_parties": war_titled_after_strangers,
+    "rite_filed_under_its_dead": mourning_under_another_dead,
+    "occasion_holds_one_occasion": two_duels_in_one_history,
+    "league_named_with_article": league_named_bare,
+    "offshoot_named_after_a_person": offshoot_named_after_a_clique,
+    "plague_named_by_its_sickness": plague_named_after_its_carrier,
+    "memory_cause_names_its_subject": memory_of_a_stranger_happening,
+    "incident_facts_declared": fact_the_kind_no_longer_tells,
+    "tradition_kind_fits_subtype": mourning_kept_as_festival,
+    "untimely_keeping_told": kept_after_its_time_did_not_come,
     "derived_names_follow": tribute_named_for_an_old_name,
     "kin_dynamic_scope": dynamic_of_nothing,
     "kin_favour_other": favour_for_oneself,

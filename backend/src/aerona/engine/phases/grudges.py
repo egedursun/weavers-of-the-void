@@ -15,7 +15,7 @@ from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import canon, count_communities, living_entity
 from aerona.engine.recording.record import RoleValue, record
-from aerona.engine.services.war import declare_war
+from aerona.engine.services.war import bears_arms, declare_war
 
 
 @dataclass(frozen=True)
@@ -55,13 +55,13 @@ async def worshippers_by_patron(ctx: TickContext) -> tuple[dict[int, list[Entity
     names: dict[int, str] = {}
     for community in await canon(ctx.session, COMMUNITY_TYPES):
         patron = await living_patron(ctx.session, community)
-        if patron is not None:
+        if patron is not None and await bears_arms(ctx.session, community, WarCause.DIVINE_GRUDGE):
             by_patron[patron.id].append(community)
             names[patron.id] = patron.name
     return by_patron, names
 
 
-@reads("table.bonds", "table.entities", "table.nodes", "table.son_relations", "table.war_sides", "table.wars", "table.world_maps")
+@reads("table.bonds", "table.entities", "table.faction_profiles", "table.nodes", "table.son_relations", "table.war_sides", "table.wars", "table.world_maps")
 @writes("table.bonds", "table.chronicle", "table.chronicle_entities", "table.incident_participants", "table.incidents")
 async def divine_grudges(ctx: TickContext) -> None:
     effects = ctx.rules.world_effects

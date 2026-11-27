@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.life.cosmos import AIR
 from aerona.catalog.planetary_cycles import CYCLES, SCALES, CycleFlow, cycles_moving
 from aerona.constants.units import PERCENT
 from aerona.db.tables.celestial import WorldRow
@@ -200,13 +201,30 @@ async def cool_core(ctx: TickContext, world_id: int, physics: WorldPhysicsRow | 
         )
 
 
-async def thin_air(ctx: TickContext, world_id: int, physics: WorldPhysicsRow | None, cycles: WorldCycles) -> None:
+def held_draw(drawn: int, stock: int) -> int:
+    return round_half_up(drawn * min(stock, BALANCE) / BALANCE)
+
+
+def breathable_target(rules: Rules, world: WorldRow, stock: int) -> int:
+    base = AIR[world.atmosphere][1]["oxygen"]
+    floor = max(1, rules.cycles.oxygen_breath_floor)
+    return round_half_up(base * min(stock, floor) / floor)
+
+
+async def thin_air(ctx: TickContext, world: WorldRow, physics: WorldPhysicsRow | None, cycles: WorldCycles) -> None:
     air = next((row for cycle in cycles_moving(CycleEffect.BREATH) if (row := cycles.get(cycle)) is not None), None)
-    table = ctx.rules.cycles
-    if air is None or physics is None or physics.oxygen <= 0 or air.stock >= table.oxygen_breath_floor or "oxygen" in physics.locked:
+    if air is None or physics is None or "oxygen" in physics.locked:
         return
-    physics.oxygen = clamp_int(physics.oxygen - table.air_thin_step, 0, PERCENT)
-    await record(ctx, "world.air_thinned", roles={IncidentRole.SUBJECT: world_id}, facts={"oxygen": physics.oxygen, "stock": air.stock}, world_id=world_id)
+    target = breathable_target(ctx.rules, world, air.stock)
+    step = ctx.rules.cycles.air_thin_step
+    if physics.oxygen > target:
+        physics.oxygen = max(target, physics.oxygen - step)
+        await record(ctx, "world.air_thinned", roles={IncidentRole.SUBJECT: world.id}, facts={"oxygen": physics.oxygen, "stock": air.stock}, world_id=world.id)
+    elif physics.oxygen < target:
+        physics.oxygen = min(target, physics.oxygen + step)
+        await record(
+            ctx, "world.air_freshened", roles={IncidentRole.SUBJECT: world.id}, facts={"oxygen": physics.oxygen, "stock": air.stock}, world_id=world.id
+        )
 
 
 async def foul_air(session: AsyncSession) -> dict[int, float]:
@@ -241,14 +259,13 @@ async def turn_cycles(ctx: TickContext, tally: CycleTally) -> None:
                 ctx.session.add(row)
             before = row.stock
             gain, loss = SCALES[cycle]
-            settle_pool(
-                row, flowed(ctx.rules, spec.sources, state) * gain(ctx.rules) // PERCENT, flowed(ctx.rules, spec.sinks, state) * loss(ctx.rules) // PERCENT
-            )
+            drawn = flowed(ctx.rules, spec.sinks, state) * loss(ctx.rules) // PERCENT
+            settle_pool(row, flowed(ctx.rules, spec.sources, state) * gain(ctx.rules) // PERCENT, held_draw(drawn, row.stock) if spec.drawn_as_held else drawn)
             row.updated_epoch = ctx.epoch
             await note_band(ctx, world_id, row, before)
         tally.turned += 1
         await raise_seas(ctx, world_id, physics, cycles, tally)
-        await thin_air(ctx, world_id, physics, cycles)
+        await thin_air(ctx, world, physics, cycles)
         await cool_core(ctx, world_id, physics, cycles)
         carbon = cycles.get(PlanetaryCycle.CARBON)
         if carbon is not None and carbon.stock >= ctx.rules.long_seasons.made_threshold:

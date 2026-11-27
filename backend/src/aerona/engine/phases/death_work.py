@@ -19,6 +19,8 @@ from aerona.engine.phase import Phase
     "table.galaxies",
     "table.galaxy_clusters",
     "table.holder_levels",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.mind_profiles",
     "table.mortal_profiles",

@@ -138,7 +138,7 @@ export function DeadSonPanel({ son }: { son: SonRecord }) {
       <div>
         <ActionButton
           act={resurrect}
-          label='Resurrect by your own hand'
+          label='Resurrect them yourself'
           icon={Sunrise}
           variant='default'
           cost={cost}

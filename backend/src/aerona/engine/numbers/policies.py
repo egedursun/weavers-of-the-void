@@ -22,6 +22,7 @@ from aerona.engine.loops.delay import lagged
 from aerona.engine.mind.book import pressures_of
 from aerona.engine.numbers.book import AIM_DIRECTION, force, instruments_of, scope_of, towns_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.standing import ended_ids
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
@@ -269,7 +270,8 @@ async def adopt(ctx: TickContext, realm: EntityRow, tally: NumbersTally) -> None
 
 async def keep_numbers(ctx: TickContext) -> NumbersTally:
     tally = NumbersTally()
-    for policy in list(await ctx.session.scalars(select(PopulationPolicyRow).order_by(PopulationPolicyRow.id))):
+    standing = select(PopulationPolicyRow).where(PopulationPolicyRow.holder_node_id.not_in(ended_ids())).order_by(PopulationPolicyRow.id)
+    for policy in list(await ctx.session.scalars(standing)):
         if not held(policy.holder_node_id):
             await keep_policy(ctx, policy, tally)
     holders = set(await ctx.session.scalars(select(PopulationPolicyRow.holder_node_id)))

@@ -400,7 +400,7 @@ async def revolution(ctx: TickContext, creed: EntityRow) -> str | None:
         if against is None or held(against) or not await declare_war_for(ctx, from_id, against, creed.name):
             continue
         rebels = await living_entity(ctx.session, from_id)
-        return f"Moved by {creed.name}, {rebels.name if rebels else 'the people'} rose against their rulers to overturn the government."
+        return f"{rebels.name if rebels else 'the people'} rose against their rulers to overturn the government"
     return None
 
 

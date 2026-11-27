@@ -33,6 +33,12 @@ def an(noun: object, *, capital: bool = False) -> str:
     return f"{article.capitalize() if capital else article} {word}"
 
 
+def definite(name: str) -> str:
+    if name.lower().startswith("the ") or " of " not in name:
+        return name
+    return f"the {name[0].lower()}{name[1:]}" if name.split(" ", 1)[0].islower() else f"the {name}"
+
+
 UNCHANGED_PLURALS = frozenset({"species", "series", "news", "means", "remains", "arms", "goods", "thanks", "data", "kin", "folk", "cosmos", "chaos"})
 IRREGULAR_ENDINGS = (
     ("lives", "life"),
@@ -153,6 +159,30 @@ def ordinal_word(number: int) -> str:
 
 
 AGE_NEUTRAL: dict[tuple[str, str], str] = {
+    ("FormativeKind", "great_war"): "a great war",
+    ("FormativeKind", "golden_age"): "a golden age",
+    ("FormativeKind", "long_season"): "a long season",
+    ("LegendArchetype", "hero_quest"): "a hero's quest",
+    ("LegendArchetype", "monster"): "a monster",
+    ("LegendArchetype", "trickster"): "a trickster",
+    ("LegendArchetype", "world_disaster"): "a world's disaster",
+    ("LegendArchetype", "lost_golden_age"): "a lost golden age",
+    ("LegendArchetype", "chosen_one"): "a chosen one",
+    ("LegendArchetype", "cursed_line"): "a cursed line",
+    ("LegendArchetype", "return_of_a_ruler"): "a ruler's return",
+    ("LegendArchetype", "haunted_place"): "a haunted place",
+    ("LegendArchetype", "bargain"): "a bargain",
+    ("RepealReason", "settlement_gone"): "the loss of its settlement",
+    ("ArcTemplate", "quest"): "a quest",
+    ("ArcTemplate", "mentor_and_heir"): "a mentor and an heir",
+    ("ArcTemplate", "fall_of_a_house"): "a house's fall",
+    ("ArcOutcome", "open"): "an open end",
+    ("ArcOutcome", "fulfilled"): "fulfilment",
+    ("ArcOutcome", "failed"): "failure",
+    ("ArcOutcome", "twisted"): "a twist",
+    ("ArcOutcome", "ironic"): "irony",
+    ("GraveGuard", "none"): "unguarded",
+    ("GraveGuard", "guarded"): "under watch",
     ("VeteranGrant", "none"): "no grant",
     ("MortalRole", "scribe"): "clerk",
     ("DangerSource", "volcanic"): "volcanic ground",

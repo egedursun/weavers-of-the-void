@@ -59,7 +59,7 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.attraction import drawn, pull
 from aerona.engine.mortal.kin import children_of, parents_of, partners_of, siblings_of
 from aerona.engine.mortal.kinship import betroth, marriage_between
-from aerona.engine.mortal.life import adult
+from aerona.engine.mortal.life import adult, young_through
 from aerona.engine.mortal.standing import add_renown, add_stress
 from aerona.engine.polity.book import sex_of
 from aerona.engine.primitives.naming import seed_of
@@ -596,6 +596,9 @@ async def interact(scene: Scene, actor: int, target: int, kind: InteractionKind,
 
 
 async def socialise(ctx: TickContext, place_id: int, mortals: list[EntityRow], tally: SocialTally) -> Scene | None:
+    aged = ctx.environment.aging is not None and ctx.environment.aging.done
+    young = await young_through(ctx.session, ctx.rules, ctx.epoch, mortals, aged=aged)
+    mortals = [mortal for mortal in mortals if mortal.id not in young]
     if len(mortals) < 2:
         return None
     scene = await load_scene(ctx, place_id, mortals)

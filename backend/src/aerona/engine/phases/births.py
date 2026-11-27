@@ -2,7 +2,7 @@ import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from aerona.catalog.reproduction import BEARING_KINDS, kind_of_sex
 from aerona.catalog.society import SOCIAL_CLASSES
@@ -12,6 +12,7 @@ from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.chronicle import scoped_cause
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.tables.body import BodyRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -41,7 +42,7 @@ from aerona.engine.agrarian.book import gap_site
 from aerona.engine.body.afflictions import afflict, inherit
 from aerona.engine.body.cohorts import healer_demand
 from aerona.engine.body.conditions import condition_of
-from aerona.engine.body.customs import culture_of
+from aerona.engine.body.customs import culture_of, people_of
 from aerona.engine.body.healing import Care, HealingWorld, tier_index
 from aerona.engine.body.hits import Harm, weighted
 from aerona.engine.context import TickContext
@@ -69,7 +70,17 @@ from aerona.engine.mind.needs import sustenance_need
 from aerona.engine.mind.space import value_distance
 from aerona.engine.mortal.kin import betrothed_of, children_of, partners_of
 from aerona.engine.mortal.kinship import add_parent, marry
-from aerona.engine.mortal.life import CHILD_SUBTYPE, adult, biology_of, fertility_window, inherited_summaries, refresh_life, sex_of_stats
+from aerona.engine.mortal.life import (
+    CHILD_SUBTYPE,
+    adult,
+    biology_of,
+    fertility_window,
+    folk_lifespan,
+    folk_span,
+    inherited_summaries,
+    refresh_life,
+    sex_of_stats,
+)
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.mythic.geasa import birth_geas, inherit_geasa
 from aerona.engine.numbers.book import PolicyBook
@@ -331,7 +342,10 @@ async def born_mortal(ctx: TickContext, community: EntityRow, plan: BirthPlan, n
     language_name = await (namer or Namer(ctx.session, ctx.rules)).person(
         [community], seed_of(community.id, ctx.epoch, plan.subtype, rng.below(PERCENT * PERCENT))
     )
-    lifespan = life.birth_lifespan_base + rng.die(life.birth_lifespan_die) + plan.extra_lifespan
+    lifespan = (
+        folk_lifespan(await biology_of(ctx.session, community), life.birth_lifespan_base, rng.die(life.birth_lifespan_die), life.birth_lifespan_die)
+        + plan.extra_lifespan
+    )
     age = round_half_up(lifespan * (life.birth_age_min_pct / PERCENT + rng.random() * life.birth_age_range_pct / PERCENT))
     flags = plan.flags + ((EntityFlag.NAME_FROM_LANGUAGE,) if language_name else ())
     mortal = await open_record(
@@ -868,10 +882,10 @@ def child_class(first: EntityRow, second: EntityRow) -> SocialClass | None:
     return min(classes, key=lambda item: CLASS_RANK.get(item, len(CLASS_RANK)))
 
 
-async def birth_moment(ctx: TickContext, child: EntityRow, first: EntityRow, second: EntityRow) -> Moment:
+async def birth_moment(ctx: TickContext, child: EntityRow, first: EntityRow, second: EntityRow, progress: float | None = None) -> Moment:
     cause = await incident_moment(ctx.session, scoped_cause())
     clock = kind_of(BIRTH_KEY).clock
-    return await moment_for(ctx, clock, key=BIRTH_KEY, participants=[first.id, second.id], cause_moment=cause, world_id=child.world_id)
+    return await moment_for(ctx, clock, key=BIRTH_KEY, participants=[first.id, second.id], cause_moment=cause, progress=progress, world_id=child.world_id)
 
 
 async def bear_child(
@@ -880,13 +894,15 @@ async def bear_child(
     second: EntityRow,
     namer: Namer | None = None,
     *,
-    twin: int = 0,
+    twin: int | None = None,
     bearer: EntityRow | None = None,
     attendant: int | None = None,
     birth: Mapping[str, FactInput] | None = None,
+    progress: float | None = None,
 ) -> EntityRow:
     effects = ctx.rules.world_effects
-    rng = ctx.rng(seed_of("child", first.id, second.id, twin))
+    order = twin or 0
+    rng = ctx.rng(seed_of("child", first.id, second.id, order))
     deviation = effects.inheritance_deviation
 
     def averaged(key: str) -> int:
@@ -895,8 +911,8 @@ async def bear_child(
 
     lifespans = (stat_or(first, "lifespan", effects.default_lifespan)) + (stat_or(second, "lifespan", effects.default_lifespan))
     child_namer = namer or Namer(ctx.session, ctx.rules)
-    name = await child_namer.person([first], seed_of(first.id, second.id, ctx.epoch, CHILD_SUBTYPE, twin)) or await child_namer.person(
-        [second], seed_of(second.id, first.id, ctx.epoch, CHILD_SUBTYPE, twin)
+    name = await child_namer.person([first], seed_of(first.id, second.id, ctx.epoch, CHILD_SUBTYPE, order)) or await child_namer.person(
+        [second], seed_of(second.id, first.id, ctx.epoch, CHILD_SUBTYPE, order)
     )
     sex = born_sex(ctx.rules, await system_of(ctx.session, first), rng)
     child = await open_record(
@@ -913,7 +929,11 @@ async def bear_child(
                 intellect=averaged("intellect"),
                 charisma=averaged("charisma"),
                 age=0,
-                lifespan=clamp_int(lifespans / 2 + rng.integer(-deviation, deviation), effects.child_min_lifespan, ctx.rules.deep_life.lifespan_cap),
+                lifespan=clamp_int(
+                    (lifespans / 2 + folk_span(await biology_of(ctx.session, first), round_half_up(lifespans / 2))) / 2 + rng.integer(-deviation, deviation),
+                    effects.child_min_lifespan,
+                    ctx.rules.deep_life.lifespan_cap,
+                ),
                 sex=sex.value,
                 **inherited_summaries(ctx.rules, first, second, rng),
             ),
@@ -925,7 +945,7 @@ async def bear_child(
             flags=(EntityFlag.NAME_FROM_LANGUAGE,) if name else (),
         ),
     )
-    moment = await birth_moment(ctx, child, first, second)
+    moment = await birth_moment(ctx, child, first, second, progress)
     date_born(ctx.session, child.id, moment)
     child.social_class = child_class(first, second)
     await assign_caste(ctx.session, child, first, rng, ctx.epoch)
@@ -950,7 +970,7 @@ async def bear_child(
         IncidentRole.PARENT: [first.id] if first.id == second.id else [first.id, second.id],
         IncidentRole.HEALER: attendant,
     }
-    facts: dict[str, FactInput] = {"sex": sex, "twin": twin, "lifespan": stat_or(child, "lifespan", 0), **(birth or {})}
+    facts: dict[str, FactInput] = {"sex": sex, "lifespan": stat_or(child, "lifespan", 0), **({"twin": twin + 1} if twin is not None else {}), **(birth or {})}
     steps = (
         StepDraft(StepAction.GO_INTO_LABOUR, actor=mother.id),
         StepDraft(StepAction.GIVE_BIRTH, actor=mother.id, target=child.id, outcome=StepOutcome.SUCCESS),
@@ -994,7 +1014,7 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
             return 0.0
         if await condition_of(ctx, parent.id, ConditionKind.INFERTILITY) is not None:
             return 0.0
-        chance *= profile.fertility / PERCENT
+        chance *= await fertility_now(ctx, parent, profile) / PERCENT
         chance *= max(0.0, 1 - profile.stress / table.stress_divisor)
         chance *= await sustenance_need(ctx.session, parent.id)
         chance *= scaled_by(await effect_of(ctx.session, parent.id, TraitEffect.FERTILITY, rules.traits.effect_scale_pct))
@@ -1005,6 +1025,16 @@ async def couple_chance(ctx: TickContext, first: EntityRow, second: EntityRow, k
     culture = await culture_of(ctx.session, first.location_id) if first.location_id is not None else {}
     chance *= max(0.0, 1 + culture.get(ValueAxis.KINSHIP, 0) * table.kinship_pct / PERCENT / PERCENT)
     return chance if await breeds(ctx.session, first, second) else 0.0
+
+
+async def fertility_now(ctx: TickContext, parent: EntityRow, profile: MortalProfileRow) -> int:
+    if "fertility" in (profile.locked or []):
+        return profile.fertility
+    biology = await biology_of(ctx.session, parent)
+    body = await ctx.session.get(BodyRow, parent.id)
+    people = (biology.fertility_pct if biology is not None else PERCENT) / PERCENT
+    capacity = (body.fertility if body is not None else PERCENT) / PERCENT
+    return clamp_int(PERCENT * min(1.0, people) * capacity, 0, PERCENT)
 
 
 async def concubinage_allowed(ctx: TickContext, mortal: EntityRow) -> bool:
@@ -1039,7 +1069,7 @@ async def hunger_of(ctx: TickContext, mortal: EntityRow) -> int:
     return (await pressures_of(ctx.session, community.id)).get(PressureKind.HUNGER, 0) if community is not None else 0
 
 
-async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: Namer) -> list[EntityRow]:
+async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: Namer, progress: float | None = None) -> list[EntityRow]:
     table = ctx.rules.fertility
     rng = ctx.rng(seed_of("delivery", first.id, second.id, ctx.epoch))
     bearer = await bearer_among(ctx.session, first, second, rng, bearer_of(first, second))
@@ -1069,7 +1099,8 @@ async def deliver(ctx: TickContext, first: EntityRow, second: EntityRow, namer: 
         while 1 < count < table.twin_cap and rng.chance(twins_pct):
             count += 1
         for twin in range(count):
-            born.append(await bear_child(ctx, first, second, namer, twin=twin, bearer=bearer, attendant=attendant, birth=facts))
+            order = twin if count > 1 else None
+            born.append(await bear_child(ctx, first, second, namer, twin=order, bearer=bearer, attendant=attendant, birth=facts, progress=progress))
         if count > 1:
             roles = {IncidentRole.PARENT: [first.id, second.id], IncidentRole.CHILD: [child.id for child in born], IncidentRole.HEALER: attendant}
             await record(ctx, "births.twins", roles=roles, facts={"children": count, **facts}, place=bearer.location_id)
@@ -1120,23 +1151,47 @@ async def unwed_heads(ctx: TickContext) -> list[int]:
     return sorted(head for head in found if head is not None)
 
 
+async def grown_to_wed(ctx: TickContext) -> list[int]:
+    heads = await unwed_heads(ctx)
+    grown = select(MortalProfileRow.entity_id).where(MortalProfileRow.life_stage.in_(sorted(stage for stage in LifeStage if adult(stage))))
+    others = await ctx.session.scalars(
+        select(EntityRow.id)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, EntityRow.id.in_(grown))
+        .order_by(EntityRow.id)
+    )
+    known = set(heads)
+    return [*heads, *(found for found in others if found not in known)]
+
+
 SUITORS = 5
+AGE_PATH = "$.age"
 
 
 async def neighbour_to_wed(ctx: TickContext, head: EntityRow, community: EntityRow) -> EntityRow | None:
+    people = await people_of(ctx.session, community)
+    circles = [community.id, *([people.id] if people is not None and people.id != community.id else [])]
+    for circle in circles:
+        found = await suitor_among(ctx, head, circle)
+        if found is not None:
+            return found
+    return None
+
+
+async def suitor_among(ctx: TickContext, head: EntityRow, circle: int) -> EntityRow | None:
     wed = select(BondRow.source_node_id).where(BondRow.kind == BondKind.SPOUSE_OF, BondRow.state == BondState.ACTIVE)
     wed_too = select(BondRow.target_node_id).where(BondRow.kind == BondKind.SPOUSE_OF, BondRow.state == BondState.ACTIVE)
     grown = select(MortalProfileRow.entity_id).where(MortalProfileRow.life_stage.in_(sorted(stage for stage in LifeStage if adult(stage))))
     query = select(EntityRow).where(
         EntityRow.entity_type == EntityType.MORTAL,
         EntityRow.status == EntityStatus.CANON,
-        await present_among(ctx.session, [community.id]),
+        await present_among(ctx.session, [circle]),
         EntityRow.id != head.id,
         EntityRow.id.not_in(wed),
         EntityRow.id.not_in(wed_too),
         EntityRow.id.in_(grown),
     )
-    for other in list(await ctx.session.scalars(query.order_by(EntityRow.id).limit(SUITORS))):
+    near_in_age = func.abs(func.coalesce(func.json_extract(EntityRow.stats, AGE_PATH), 0) - (stat(head, "age") or 0))
+    for other in list(await ctx.session.scalars(query.order_by(near_in_age, EntityRow.id).limit(SUITORS))):
         profile, _created = await ensure_profile(ctx.session, other.id, ctx.epoch)
         if held(other.id) or not adult(profile.life_stage) or await partners_of(ctx.session, other.id):
             continue
@@ -1148,7 +1203,7 @@ async def neighbour_to_wed(ctx: TickContext, head: EntityRow, community: EntityR
 async def wed_within_the_community(ctx: TickContext) -> int:
     table = ctx.rules.kinship
     wed = 0
-    for head_id in await unwed_heads(ctx):
+    for head_id in await grown_to_wed(ctx):
         head = await living_entity(ctx.session, head_id)
         community = await living_entity(ctx.session, head.location_id) if head is not None and head.location_id is not None else None
         if head is None or community is None or community.entity_type not in SOCIETY_TYPES or held(head.id) or held(community.id):
@@ -1325,10 +1380,14 @@ async def couples_bear_children(ctx: TickContext) -> None:
             continue
         chance = await couple_chance(ctx, first, second, bond.kind) * fertile * numbers.birth_factor(first.location_id)
         births = 0
-        for _spacing in range(max(1, rules.fertility.years_per_epoch // rules.fertility.birth_spacing_years)):
-            if births >= rules.fertility.births_per_epoch_cap or not rng.chance(chance):
+        slots = max(1, rules.fertility.years_per_epoch // rules.fertility.birth_spacing_years)
+        for slot in range(slots):
+            years = slot * rules.fertility.birth_spacing_years
+            if births >= rules.fertility.births_per_epoch_cap or not await fertile_after(ctx, first, years) or not await fertile_after(ctx, second, years):
                 continue
-            children = await deliver(ctx, first, second, namer)
+            if not rng.chance(chance):
+                continue
+            children = await deliver(ctx, first, second, namer, (slot + rng.random()) / slots)
             births += 1
             if bond.kind is BondKind.LOVES:
                 await hidden_birth(ctx, first, second, children)
@@ -1336,6 +1395,14 @@ async def couples_bear_children(ctx: TickContext) -> None:
                 break
             if limit is not None and len(await children_of(ctx.session, first.id)) >= limit:
                 break
+
+
+async def fertile_after(ctx: TickContext, mortal: EntityRow, years: int) -> bool:
+    lifespan = stat_or(mortal, "lifespan", ctx.rules.world_effects.default_lifespan)
+    start, end = fertility_window(ctx.rules, await biology_of(ctx.session, mortal), sex_of_stats(mortal), lifespan)
+    aged = ctx.environment.aging is not None and ctx.environment.aging.done
+    age = (stat(mortal, "age") or 0) - (ctx.rules.time.years_per_epoch - 1 if aged else 0) + years
+    return start <= age < end
 
 
 async def require_living(ctx: TickContext, entity_id: int, types: frozenset[EntityType], label: str) -> EntityRow:

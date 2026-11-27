@@ -160,7 +160,13 @@ async def test_a_truer_telling_corrects_a_garbled_one_and_a_contrary_one_costs_t
     await session.flush()
     assert await heard_again(ctx, truer, held, [contrary], []) == "information.contradicted"
     trust = await session.get(InformationTrustRow, town.id)
-    assert trust is not None and trust.information_trust == 60 - ctx.rules.rumours.contradiction_trust_loss
+    assert trust is not None and trust.information_trust == 60 - round(ctx.rules.rumours.contradiction_trust_loss * 1 * truer.fidelity / 100)
+    wider = RumourDistortionRow(rumour_id=truer.id, position=1, distortion=RumourDistortion.MOMENT_CHANGED, told_year=99, epoch=1, locked=[])
+    session.add(wider)
+    await session.flush()
+    before = trust.information_trust
+    assert await heard_again(ctx, truer, held, [contrary, wider], []) == "information.contradicted"
+    assert before - trust.information_trust == round(ctx.rules.rumours.contradiction_trust_loss * 2 * truer.fidelity / 100)
 
 
 async def test_folding_groups_lines_as_a_view_and_hides_none_of_them(session: AsyncSession, world: CoreWorld, rules: Rules) -> None:

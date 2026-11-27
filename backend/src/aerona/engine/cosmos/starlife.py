@@ -33,9 +33,11 @@ from aerona.engine.cosmos.stellar import (
     refresh,
     remnant_for,
     stage_length,
+    stage_start,
     typical_mass,
 )
 from aerona.engine.environment.long_seasons import stellar_spells
+from aerona.engine.gods.essence import endow
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.primitives.numbers import clamp_percent, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity
@@ -51,6 +53,13 @@ BRIGHT_SKY = PERCENT * 4 // 5
 def stage_epochs(rules: Rules, star: StarRow, stage: StarAge, physics: StarPhysicsRow | None = None) -> int | None:
     mass = physics.mass if physics is not None else typical_mass(rules, star.star_type)
     return stage_length(rules, mass, stage)
+
+
+def stage_left(rules: Rules, star: StarRow, stage: StarAge, physics: StarPhysicsRow | None = None) -> int | None:
+    length = stage_epochs(rules, star, stage, physics)
+    if length is None or physics is None:
+        return length
+    return max(1, length - max(0, physics.age_epochs - stage_start(rules, physics.mass, stage)))
 
 
 def stage_radiation(rules: Rules, stage: StarAge) -> int:
@@ -98,7 +107,7 @@ async def pass_stage(ctx: TickContext, star: StarRow, physics: StarPhysicsRow | 
         star.lifecycle_clock = None
         return
     star.age_stage = following
-    star.lifecycle_clock = stage_epochs(ctx.rules, star, following, physics)
+    star.lifecycle_clock = stage_left(ctx.rules, star, following, physics)
     await record(ctx, f"star.stage.{following.value}", roles={IncidentRole.SUBJECT: star.id}, facts={"stage": following, "epochs": star.lifecycle_clock or 0})
     if following is StarAge.OLD:
         await swell(ctx, star, physics)
@@ -140,7 +149,7 @@ async def age_star(ctx: TickContext, star: StarRow, pace_pct: int = PERCENT, phy
             star.lifecycle_clock = max(0, star.lifecycle_clock - shift.age_epochs)
         shift.aged = True
     if star.lifecycle_clock is None:
-        star.lifecycle_clock = stage_epochs(ctx.rules, star, star.age_stage, physics)
+        star.lifecycle_clock = stage_left(ctx.rules, star, star.age_stage, physics)
         return
     hurried = 1 if pace_pct < PERCENT and ctx.rng(f"star_pace.{star.id}").chance(PERCENT - pace_pct) else 0
     star.lifecycle_clock = max(0, star.lifecycle_clock - 1 - hurried)
@@ -286,7 +295,7 @@ async def star_lives(ctx: TickContext) -> None:
         if star.patron_son_id is not None and worshippers[star.id] and not held(star.patron_son_id):
             son = await ctx.session.get(SonRow, star.patron_son_id)
             if son is not None:
-                son.essence += worshippers[star.id] * table.patron_essence
+                endow(ctx.rules, son, worshippers[star.id] * table.patron_essence)
     await ctx.session.flush()
 
 

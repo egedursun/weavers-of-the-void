@@ -722,6 +722,7 @@ async def pursuit_of_immortality(ctx: TickContext) -> int:
     "table.entities",
     "table.entity_flags",
     "table.holder_levels",
+    "table.incidents",
     "table.journeys",
     "table.legendary_quests",
     "table.name_registry",

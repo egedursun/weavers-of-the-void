@@ -1,3 +1,4 @@
+from aerona.constants.schema import KEY_MAX_LENGTH
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.sons import SonRow
@@ -8,17 +9,18 @@ from aerona.engine.mind.memories import remember
 from aerona.engine.relations.book import ensure_relation, shift
 
 
-async def god_grudge(ctx: TickContext, wronged_id: int | None, wronger_id: int | None, kind: MemoryKind, note: str) -> bool:
+async def god_grudge(ctx: TickContext, wronged_id: int | None, wronger_id: int | None, kind: MemoryKind, deed: str) -> bool:
     if wronged_id is None or wronger_id is None or wronged_id == wronger_id:
         return False
     wronged, wronger = await god_of(ctx.session, wronged_id), await god_of(ctx.session, wronger_id)
     if wronged is None or wronger is None:
         return False
+    note = f"{wronger.name} {deed}"[:KEY_MAX_LENGTH]
     table = ctx.rules.god_relations
     size = table.aid_memory if kind is MemoryKind.AIDED_CHOSEN else -table.theft_memory
     await remember(ctx.session, ctx.rules, holder_id=wronged.id, subject_id=wronger.id, kind=kind, magnitude=size, epoch=ctx.epoch, note=note)
     if isinstance(wronged, SonRow) and isinstance(wronger, SonRow):
-        await SonRepository(ctx.session).change_relation(wronged.id, wronger.id, round(size * table.son_relation_pct / PERCENT), note)
+        await SonRepository(ctx.session).change_relation(wronged.id, wronger.id, round(size * table.son_relation_pct / PERCENT))
     else:
         row = await ensure_relation(ctx.session, wronged.id, wronger.id, ctx.epoch)
         if row is not None:

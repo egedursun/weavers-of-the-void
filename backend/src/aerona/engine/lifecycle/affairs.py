@@ -116,6 +116,21 @@ async def open_ties(ctx: TickContext) -> dict[int, list[BondRow]]:
     return found
 
 
+async def ended_lately(ctx: TickContext, holder: int) -> bool:
+    end = await ctx.session.scalar(select(EntityRow.end_epoch).where(EntityRow.id == holder))
+    return end is None or end >= ctx.epoch - 1
+
+
+async def settle_affairs(ctx: TickContext, bonds: BondRepository, affairs: list[tuple[object, str, object]], ties: list[BondRow]) -> None:
+    for row, state, closed in affairs:
+        if state:
+            setattr(row, state, closed)
+        else:
+            await ctx.session.delete(row)
+    for tie in ties:
+        await bonds.deactivate(tie, ctx.epoch, "the end of one bound by it")
+
+
 async def close_affairs(ctx: TickContext, tally: AffairTally) -> None:
     bonds = BondRepository(ctx.session)
     affairs_of = await open_affairs(ctx)
@@ -127,15 +142,12 @@ async def close_affairs(ctx: TickContext, tally: AffairTally) -> None:
         ties = [tie for tie in ties_of.get(holder, []) if not held(tie.source_node_id, tie.target_node_id)]
         if not affairs and not ties:
             continue
-        async with recording(ctx, "lifecycle.affairs_closed", participants=[holder]):
-            for row, state, closed in affairs:
-                if state:
-                    setattr(row, state, closed)
-                else:
-                    await ctx.session.delete(row)
-            for tie in ties:
-                await bonds.deactivate(tie, ctx.epoch, "the end of one bound by it")
-            await record(ctx, "lifecycle.affairs_closed", roles={IncidentRole.SUBJECT: holder}, facts={"affairs": len(affairs), "ties": len(ties)})
+        if await ended_lately(ctx, holder):
+            async with recording(ctx, "lifecycle.affairs_closed", participants=[holder]):
+                await settle_affairs(ctx, bonds, affairs, ties)
+                await record(ctx, "lifecycle.affairs_closed", roles={IncidentRole.SUBJECT: holder}, facts={"affairs": len(affairs), "ties": len(ties)})
+        else:
+            await settle_affairs(ctx, bonds, affairs, ties)
         tally.affairs += len(affairs)
         tally.ties += len(ties)
         tally.holders += 1

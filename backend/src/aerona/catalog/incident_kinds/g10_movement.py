@@ -338,7 +338,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "expedition.set_out",
         G.MOVEMENT,
-        "{leader} set out with {companions:companion|companions} toward {destination} ({ground}), going {mode}.",
+        "{leader} set out with {companions:companion|companions} toward {destination}; ground: {ground}; way of travel: {mode}.",
         roles=(RoleSpec(R.LEADER), RoleSpec(R.DESTINATION), RoleSpec(R.MEMBER, required=False, many=True), RoleSpec(R.PATRON, required=False)),
         facts=(
             FactSpec("ground", FactValue.ENUM, enum=ExpeditionGround),
@@ -436,7 +436,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "migration.famine",
         G.MOVEMENT,
-        "Famine drove {migrants:person|people} from {actor} to the lands of {destination}, where they settled {product}; they went {mode}.",
+        "Famine drove {migrants:person|people} from {actor} to the lands of {destination}, where they settled {product}; way of travel: {mode}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.PEOPLE, E.SETTLEMENT, E.POLITY})), RoleSpec(R.DESTINATION), RoleSpec(R.PRODUCT)),
         facts=(
             FactSpec("migrants", FactValue.NUMBER, FactUnit.PEOPLE),
@@ -462,7 +462,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "nomads.camp",
         G.MOVEMENT,
-        "{actor} took to the move with its herds, {mode}, over {pastures:pasture|pastures}.",
+        "{actor} took to the move with its herds over {pastures:pasture|pastures}; way of travel: {mode}.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(
             FactSpec("mode", FactValue.ENUM, enum=MobilityMode),
@@ -786,7 +786,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.lead_expedition",
         G.MOVEMENT,
-        "{leader} set out on an expedition to {destination} with {party:member|members}, going {mode}.",
+        "{leader} set out on an expedition to {destination} with {party:member|members}; way of travel: {mode}.",
         roles=(RoleSpec(R.LEADER), RoleSpec(R.DESTINATION), RoleSpec(R.MEMBER, required=False, many=True)),
         facts=(
             FactSpec("party", FactValue.NUMBER, FactUnit.PEOPLE),

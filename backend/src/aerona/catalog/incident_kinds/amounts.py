@@ -20,6 +20,7 @@ NEVER_ZERO: frozenset[tuple[str, str]] = frozenset(
         ("disease.expelled", "expelled"),
         ("economy.holding_transferred", "moved"),
         ("endowment.paid", "amount"),
+        ("gods.essence_sent", "amount"),
         ("land.fossil_traded", "units"),
         ("market.credit", "moved"),
         ("market.credit", "owed"),

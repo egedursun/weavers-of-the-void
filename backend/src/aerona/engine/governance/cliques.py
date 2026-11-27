@@ -4,6 +4,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
 from aerona.db.tables.governance import OrgCliqueRow, OrgGovernanceRow, OrgMergerRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.governance import OPEN_MERGER_STAGES, CliqueAim, MergerKind, OrgStrategy
 from aerona.domain.enums.modifier import IncidentRole
@@ -91,12 +92,14 @@ async def split_away(ctx: TickContext, row: OrgGovernanceRow, clique: OrgCliqueR
         return None
     gone = {member.mortal_entity_id for member in leaving}
     leader = await living(ctx, clique.leader_node_id if clique.leader_node_id in gone else leaving[0].mortal_entity_id)
+    first = await ctx.session.get(NodeRow, leaving[0].mortal_entity_id)
+    founder = leader.name if leader is not None else (first.name if first is not None else parent.name)
     child = await found_offshoot(
         ctx,
         parent,
         profile,
-        name=name or f"{parent.name.removeprefix('the ')} under {leader.name if leader is not None else clique.name}",
-        body=f"Those of {parent.name} who followed {clique.name} and left it.",
+        name=name or f"{parent.name.removeprefix('the ')} under {founder}",
+        body=f"Those of {parent.name} who followed {founder} and left it.",
         share_pct=clique.strength,
         leaving=leaving,
     )

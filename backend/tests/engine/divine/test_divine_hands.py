@@ -6,6 +6,7 @@ from aerona.agents.mortal import candidates
 from aerona.db.repositories.cosmos import CosmosDraft, CosmosRepository, CreatorDraft
 from aerona.db.tables.divine import DivineStandingRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.military import ArmyProfileRow, ArmyUnitRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.write_guard import HELD_SCOPE, HeldScope
@@ -21,7 +22,7 @@ from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.entity_stats import SpiritStats
 from aerona.domain.models.profiles import ExistenceProfile
 from aerona.engine.divine import control
-from aerona.engine.divine.battles import intervene
+from aerona.engine.divine.battles import honour, prepare, withdraw
 from aerona.engine.divine.wounds import heal_wounds, inflict
 from aerona.engine.military.battle import Side, divine_hand, make_stacks
 from aerona.rules.registry import Rules
@@ -74,7 +75,7 @@ async def test_a_patron_god_strikes_for_its_faithful_and_pays_essence(realm: Rea
     await worship(realm, town, war.id)
     ctx = context(realm.session, tuned(domains=CERTAIN))
     first, second = side_for(town), side_for(foe)
-    assert await intervene(ctx, 1, 1, first, second) == 1
+    assert await honour(ctx, await prepare(ctx, 1, 1, first, second)) == 1
     assert first.divine_strike_pct == ctx.rules.domains.battle_strike_pct and war.essence == 50 - ctx.rules.domains.battle_essence
     standing = await realm.session.get(DivineStandingRow, (town.id, war.id))
     assert standing is not None and standing.awe > 0
@@ -89,7 +90,7 @@ async def test_a_merciful_god_steadies_its_faithful_instead(realm: Realm) -> Non
     await worship(realm, town, kind.id)
     ctx = context(realm.session, tuned(domains=CERTAIN))
     first, second = side_for(town), side_for(await settlement(realm, "Dryhollow"))
-    await intervene(ctx, 1, 2, first, second)
+    await honour(ctx, await prepare(ctx, 1, 2, first, second))
     assert first.divine_strike_pct == 0 and first.divine_shield == ctx.rules.domains.battle_shield_morale
     assert first.morale_parts["god_shield"] == ctx.rules.domains.battle_shield_morale
 
@@ -103,7 +104,7 @@ async def test_rival_patrons_contest_the_battle_and_the_loser_turns_on_its_own(r
     await worship(realm, foe, weak.id)
     ctx = context(realm.session, tuned(domains=CERTAIN))
     first, second = side_for(town), side_for(foe)
-    assert await intervene(ctx, 1, 3, first, second) == 2
+    assert await honour(ctx, await prepare(ctx, 1, 3, first, second)) == 2
     assert first.divine_strike_pct > 0 and second.divine_spurned == ctx.rules.domains.battle_spurned_morale and second.divine_strike_pct == 0
     assert weak.power == 10 - ctx.rules.domains.battle_foreign_power
     grudge = await realm.session.scalar(select(MemoryRow).where(MemoryRow.holder_node_id == weak.id, MemoryRow.subject_node_id == strong.id))
@@ -116,15 +117,15 @@ async def test_a_held_or_poor_god_and_a_shared_patron_stay_out(realm: Realm) -> 
     town, foe = await settlement(realm, "Embercourt"), await settlement(realm, "Timberfold")
     await worship(realm, town, war.id)
     ctx = context(realm.session, tuned(domains=CERTAIN))
-    assert await intervene(ctx, 1, 4, side_for(town), side_for(foe)) == 0
+    assert await honour(ctx, await prepare(ctx, 1, 4, side_for(town), side_for(foe))) == 0
     war.essence = 50
     token = HELD_SCOPE.set(HeldScope(None, frozenset({war.id})))
     try:
-        assert await intervene(ctx, 1, 5, side_for(town), side_for(foe)) == 0
+        assert await honour(ctx, await prepare(ctx, 1, 5, side_for(town), side_for(foe))) == 0
     finally:
         HELD_SCOPE.reset(token)
     await worship(realm, foe, war.id)
-    assert await intervene(ctx, 1, 6, side_for(town), side_for(foe)) == 0 and war.essence == 50
+    assert await honour(ctx, await prepare(ctx, 1, 6, side_for(town), side_for(foe))) == 0 and war.essence == 50
 
 
 async def test_a_shattered_manifestation_scatters_the_form_until_it_heals(realm: Realm) -> None:
@@ -135,7 +136,7 @@ async def test_a_shattered_manifestation_scatters_the_form_until_it_heals(realm:
     second = await inflict(ctx, sea, DivineWoundKind.SHATTERED_MANIFESTATION, WoundCause.CREATOR, severity=90)
     assert first is not None and second is not None
     assert sea.existence_profile.mode is ExistenceMode.SCATTERED and first.prior_mode is second.prior_mode is ExistenceMode.CONCRETE
-    await heal_wounds(context(realm.session, tuned(divine_wounds={"base_heal": 20})))
+    await heal_wounds(context(realm.session, tuned(divine_wounds={"base_heal": 20}), epoch=4))
     assert first.healed == 100 and second.healed < 100 and sea.existence_profile.mode is ExistenceMode.SCATTERED
     await control.edit_wound(ctx, second.id, {"prior_mode": ExistenceMode.CONCEPTUAL.value}, [])
     await control.remove_wound(ctx, second.id)
@@ -159,3 +160,17 @@ async def test_where_the_dead_speak_spirits_take_turns_with_a_spirit_s_tools(rea
     await realm.session.flush()
     assert spirit.id in {candidate.entity.id for candidate in await candidates(await scoped(realm))}
     assert {tool.value for tool in SPIRIT_TOOLS} == {"look_at_world", "inspect_entity", "search_entities", "prophesy", "send_dispatch", "pray_to_creator"}
+
+
+async def test_a_battle_not_given_takes_no_divine_hand_and_returns_its_cost(realm: Realm) -> None:
+    war = await god(realm, "Kerr", Domain.WAR, Domain.BLOOD)
+    war.essence, war.wrath, war.mercy = 50, 80, 10
+    town = await settlement(realm, "Embercourt")
+    foe = await settlement(realm, "Timberfold")
+    await worship(realm, town, war.id)
+    ctx = context(realm.session, tuned(domains=CERTAIN))
+    plan = await prepare(ctx, 1, 7, side_for(town), side_for(foe))
+    assert plan is not None and war.essence == 50 - ctx.rules.domains.battle_essence
+    withdraw(ctx, plan)
+    told = await realm.session.scalar(select(IncidentRow.id).where(IncidentRow.kind == "divine.battle_hand"))
+    assert war.essence == 50 and told is None

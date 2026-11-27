@@ -13,6 +13,7 @@ from aerona.engine.labour.founding import maybe_found
 from aerona.engine.labour.hirers import hirer_of, own_side
 from aerona.engine.labour.legacy import apply_legacy
 from aerona.engine.labour.spread import spread_from
+from aerona.engine.primitives.standing import ended_ids
 
 SETTLED_STATUSES = frozenset({ContractStatus.AGREED})
 
@@ -35,7 +36,8 @@ async def tend_labour(ctx: TickContext) -> LabourTally:
     tally = LabourTally()
     await apply_legacy(ctx)
     await ensure_rows(ctx)
-    bodies = list(await ctx.session.scalars(select(WorkerBodyRow).order_by(WorkerBodyRow.faction_node_id)))
+    standing = select(WorkerBodyRow).where(WorkerBodyRow.faction_node_id.not_in(ended_ids())).order_by(WorkerBodyRow.faction_node_id)
+    bodies = list(await ctx.session.scalars(standing))
     for body in bodies:
         await tend_body(ctx, body, tally)
         await tend_works(ctx, body, tally)

@@ -213,7 +213,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "circuits.guest_killing",
         G.EXCHANGE,
-        "{actor} slew {victim}, a guest come along the ceremonial circuit: the stops of the circuit named it infamy.",
+        "{actor} slew {victim}, a guest on the ceremonial circuit.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.VICTIM),
@@ -533,7 +533,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "economy.transition_failed",
         G.EXCHANGE,
-        "The change of economic order in {authority} broke against those who lost by it, at a resistance of {resistance}.",
+        "The change of economic order in {authority} failed, at a resistance of {resistance}.",
         roles=(RoleSpec(R.AUTHORITY),),
         facts=(
             FactSpec("transition", FactValue.ENUM, enum=TransitionKind),
@@ -546,7 +546,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "economy.transition_resisted",
         G.EXCHANGE,
-        "Those who lost holdings in {authority} resisted its change of order, at a resistance of {resistance}.",
+        "The change of economic order in {authority} was resisted, at a resistance of {resistance}.",
         roles=(RoleSpec(R.AUTHORITY),),
         facts=(
             FactSpec("transition", FactValue.ENUM, enum=TransitionKind),
@@ -585,13 +585,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gifts.lapsed",
         G.EXCHANGE,
-        "{receiver} could not answer the gift of {giver}, worth {value}, and lost face.",
+        "{receiver} could not answer {gifts:no gift|the gift|the # gifts} of {giver}, worth {value}{gifts:|| in all}, and lost {prestige_lost} standing.",
         roles=(
             RoleSpec(R.GIVER),
             RoleSpec(R.RECEIVER),
         ),
         facts=(
             FactSpec("value", FactValue.NUMBER, unit=FactUnit.COIN),
+            FactSpec("gifts", FactValue.NUMBER, unit=FactUnit.COUNT),
             FactSpec("occasion", FactValue.ENUM, enum=GiftOccasion),
             FactSpec("prestige_lost", FactValue.NUMBER, unit=FactUnit.STANDING),
             FactSpec("in_rivalry", FactValue.NUMBER, unit=FactUnit.COUNT),
@@ -620,7 +621,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "indenture.bound",
         G.EXCHANGE,
-        "{count} of the poor of {victim} were bound into {regime}.",
+        "{count:No one|One|#} of the poor of {victim} {count:was|was|were} bound into {regime}.",
         roles=(RoleSpec(R.VICTIM),),
         facts=(
             FactSpec("count", FactValue.NUMBER, unit=FactUnit.PEOPLE),
@@ -664,7 +665,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "insurance.founded",
         G.EXCHANGE,
-        "{actor} began to insure cargoes, houses and lives with a pool of {pool}.",
+        "{actor} began to sell insurance, with a pool of {pool}.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(
             FactSpec("pool", FactValue.NUMBER, unit=FactUnit.COIN),
@@ -712,7 +713,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "manumission.equal",
         G.EXCHANGE,
-        "The {count} freed of {subject} now stand as equals among the freeborn.",
+        "{count:None|The one|The #} freed of {subject} now {count:stand|stands|stand} as equals among the freeborn.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("count", FactValue.NUMBER, unit=FactUnit.PEOPLE),
@@ -724,7 +725,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "manumission.freed",
         G.EXCHANGE,
-        "In {subject}, {freed} of the bound were set free by {path}.",
+        "In {subject}, {freed:no one|one|#} of the bound {freed:was|was|were} set free by {path}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("freed", FactValue.NUMBER, unit=FactUnit.PEOPLE),
@@ -1181,7 +1182,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "rights.infringed",
         G.EXCHANGE,
-        "{actor} used the {kind} {right} without leave, to the anger of {victim}.",
+        "{actor} used the {kind} {right} without the leave of {victim}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.VICTIM),
@@ -1219,7 +1220,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "slave_markets.sold",
         G.EXCHANGE,
-        "The market of {seller} sold {count} bound folk to {buyer} at {price} each.",
+        "The market of {seller} sold {count:no one|one bound person|# bound people} to {buyer} at {price} each.",
         roles=(
             RoleSpec(R.SELLER),
             RoleSpec(R.BUYER),
@@ -1337,7 +1338,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.buy_shares",
         G.EXCHANGE,
-        "{buyer} bought {share} parts in {subject}.",
+        "{buyer} bought {share:no part|one part|# parts} in {subject}.",
         roles=(
             RoleSpec(R.BUYER),
             RoleSpec(R.SUBJECT),
@@ -1939,7 +1940,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "trade_route.beast_raid",
         G.EXCHANGE,
-        "{actor} fell on the traffic of {subject} and dragged {units} {good} to its lair.",
+        "{actor} fell on the traffic of {subject} and carried off {units} {good}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.SUBJECT),
@@ -2027,7 +2028,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "trade_route.shipwreck",
         G.EXCHANGE,
-        "A storm broke the ships of {victim} on {subject}; {drowned:sailor|sailors} drowned with their cargo.",
+        "Ships of {victim} were lost at sea on {subject}; {drowned:no one|one sailor|# sailors} drowned with their cargo.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.VICTIM),

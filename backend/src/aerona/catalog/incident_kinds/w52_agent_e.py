@@ -468,7 +468,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "settle_modes.unfit",
         G.MOVEMENT,
-        "{subject} keeps a way of settling, {mode}, that its people or its ground cannot bear; its folk grew restless.",
+        "{subject} keeps to a way of settling ({mode}) that its people or its ground cannot bear; its folk grew restless.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("mode", FactValue.ENUM, enum=SettleMode),),
         steps=frozenset({StepAction.LOSE}),

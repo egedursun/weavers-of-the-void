@@ -7,6 +7,7 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.son import SonStatus
+from aerona.engine.gods.essence import endow
 from aerona.engine.services.war import held_captive
 from aerona.prompts import MortalToolId, PromptId, render
 from aerona.prompts.contexts.agent import CaptiveGateContext, MortalGateContext, SleepNoticeContext, SonGateContext
@@ -64,7 +65,7 @@ class SonToolRuntime(ToolRuntime[SonCall]):
         await attribute_lines(call.session, marker, call.son.id)
 
     async def refund_essence(self, call: SonCall, amount: int) -> None:
-        call.son.essence += max(0, amount)
+        endow(call.rules, call.son, max(0, amount))
 
 
 class MortalToolRuntime(ToolRuntime[MortalCall]):

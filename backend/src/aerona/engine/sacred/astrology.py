@@ -13,6 +13,7 @@ from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import DivinationKind, SignInfluence
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.omens import BRIGHT, influence_share, returns_now
@@ -96,6 +97,12 @@ async def read_by_folk(ctx: TickContext, mortal: EntityRow, row: BirthSignRow) -
         profile.renown = clamp_int(profile.renown + row.fortune, 0, PERCENT)
 
 
+def epoch_born_in(mortal: EntityRow, epoch: int, years_per_epoch: int) -> int:
+    age = stat_or(mortal, "age", 0)
+    born = epoch_start_year(epoch, years_per_epoch) - max(0, age)
+    return max(1, born // max(1, years_per_epoch) + 1)
+
+
 async def birth_season(ctx: TickContext, mortal: EntityRow) -> int:
     born = await ctx.session.get(NodeBirthRow, mortal.id)
     if born is not None and born.season is not None:
@@ -121,7 +128,7 @@ async def sign_birth(ctx: TickContext, mortal: EntityRow, tally: SignTally) -> B
         dreaded=dreaded,
         influence=influence,
         fortune=fortune,
-        born_epoch=mortal.birth_epoch or ctx.epoch,
+        born_epoch=min(mortal.birth_epoch or ctx.epoch, epoch_born_in(mortal, ctx.epoch, ctx.rules.time.years_per_epoch)),
         locked=[],
     )
     ctx.session.add(row)
