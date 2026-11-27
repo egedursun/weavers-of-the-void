@@ -94,7 +94,7 @@ async def refit_pending_names(session: AsyncSession, rules: Rules, epoch: int) -
         if not fresh or fresh == entity.name or dialect_letters(first_word(fresh), world.phonology):
             continue
         old = entity.name
-        await repository.rename(entity, fresh)
+        await repository.rename(entity, fresh, free=True)
         await rewrite_name(session, entity.id, old, entity.name, epoch)
         changed += 1
     return changed

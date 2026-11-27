@@ -104,7 +104,7 @@ async def mirror(session: AsyncSession, row: KindRow) -> None:
         await embody(session, row)
         return
     if entity.name != row.name:
-        row.name = (await NameRepository(session).rename(entity.id, row.name)) if row.name.strip() else entity.name
+        row.name = (await NameRepository(session).rename(entity.id, row.name, free=True)) if row.name.strip() else entity.name
     if entity.status in {EntityStatus.CANON, EntityStatus.DEAD}:
         await mark(session, entity, made_status(row))
     if row.description and entity.description != row.description:

@@ -195,12 +195,12 @@ class EntityRepository(Repository):
         await self.flush()
         return entity
 
-    async def rename(self, entity: EntityRow, new_name: str) -> str:
+    async def rename(self, entity: EntityRow, new_name: str, *, free: bool = False) -> str:
         if entity.status is EntityStatus.REJECTED:
             entity.name = clean_display(new_name)
             await self.flush()
             return entity.name
-        return await NameRepository(self.session).rename(entity.id, new_name)
+        return await NameRepository(self.session).rename(entity.id, new_name, free=free)
 
     async def flags(self, entity_id: int) -> set[EntityFlag]:
         rows = await self.session.scalars(select(EntityFlagRow.flag).where(EntityFlagRow.entity_id == entity_id))

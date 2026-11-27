@@ -418,7 +418,7 @@ async def _rename_misfits(ctx: TickContext, state: BirthState, language: EntityR
         kind = NameKind.PLACE if entity.entity_type is EntityType.REGION else NameKind.GENERAL
         derived = await namer.from_language(language, f"birth:{state.world.id}:{entity.id}", kind)
         if derived is not None:
-            await repository.rename(entity, derived)
+            await repository.rename(entity, derived, free=True)
             await repository.add_flag(entity.id, EntityFlag.NAME_FROM_LANGUAGE, ctx.epoch)
 
 

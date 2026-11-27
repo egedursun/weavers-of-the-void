@@ -28,4 +28,4 @@ async def stacked_strains(session: AsyncSession) -> list[int]:
 async def name_strain_once(session: AsyncSession, disease_id: int) -> None:
     row = await session.get(EntityRow, disease_id)
     if row is not None and STACKED.search(row.name) is not None:
-        await NameRepository(session).rename(disease_id, once_named(row.name))
+        await NameRepository(session).rename(disease_id, once_named(row.name), free=True)

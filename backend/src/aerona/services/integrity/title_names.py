@@ -31,4 +31,4 @@ async def rename_by_rank(session: AsyncSession, entity_id: int) -> None:
         return
     holder = old_holder(entity.name, RANK_WORDS[profile.rank])
     if holder is not None:
-        await NameRepository(session).rename(entity_id, title_name(profile.rank, holder))
+        await NameRepository(session).rename(entity_id, title_name(profile.rank, holder), free=True)

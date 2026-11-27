@@ -148,7 +148,7 @@ async def follow_derived(session: AsyncSession, node_id: int, old: str, new: str
         renamed = name_in_text(name, old, new)
         if renamed == name:
             continue
-        display = await NameRepository(session).rename(found, renamed)
+        display = await NameRepository(session).rename(found, renamed, free=True)
         changed += 1 + await replace_texts(session, name, display, await protected_names(session, found, name), from_epoch)
     return changed
 
@@ -167,7 +167,7 @@ async def rename_everywhere(session: AsyncSession, node_id: int, new_name: str, 
     if not normalize_name(display) or display == old:
         return RenameResult(old=old, new=old, changed=0)
     if free:
-        display = await NameRepository(session).unique_name(display)
+        display = await NameRepository(session).free_name(node_id, display)
         if display == old:
             return RenameResult(old=old, new=old, changed=0)
     protected = await protected_names(session, node_id, old)

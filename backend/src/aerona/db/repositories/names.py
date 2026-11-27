@@ -105,10 +105,16 @@ class NameRepository(Repository):
             await self.session.delete(current)
             await self.session.flush()
 
-    async def rename(self, node_id: int, new_name: str) -> str:
+    async def free_name(self, node_id: int, wanted: str) -> str:
+        display = clean_display(wanted)
+        if not await self.is_taken(display, ignore_node_id=node_id):
+            return display
+        return await self.unique_name(display, ignore_node_id=node_id)
+
+    async def rename(self, node_id: int, new_name: str, *, free: bool = False) -> str:
         node = await self.require(NodeRow, node_id, "record")
         before = node.name
-        display = await self.claim(node_id, new_name)
+        display = await self.claim(node_id, await self.free_name(node_id, new_name) if free else new_name)
         node.name = display
         if before and before != display:
             await self.retitle_histories(node_id, before, display)
@@ -123,14 +129,14 @@ class NameRepository(Repository):
             if TITLE_LOCK not in (row.locked or []):
                 row.name = row.name.replace(before, after)
 
-    async def unique_name(self, base: str) -> str:
+    async def unique_name(self, base: str, ignore_node_id: int | None = None) -> str:
         root = clean_display(base)
         if not normalize_name(root):
             raise ValidationFailedError("A name cannot be empty.")
-        if not await self.is_taken(root):
+        if not await self.is_taken(root, ignore_node_id):
             return root
         suffix = FIRST_SUFFIX
-        while await self.is_taken(f"{root} {roman(suffix)}"):
+        while await self.is_taken(f"{root} {roman(suffix)}", ignore_node_id):
             suffix += 1
         return f"{root} {roman(suffix)}"
 

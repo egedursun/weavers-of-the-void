@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ConflictError
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.polity import TreatyPartyRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
@@ -83,3 +84,21 @@ async def test_an_engine_rename_to_a_name_already_held_takes_the_next_free_one(s
         await rename_everywhere(session, second.id, first.name)
     result = await rename_everywhere(session, second.id, first.name, free=True)
     assert result.new == f"{first.name} II" and second.name == result.new
+
+
+async def test_a_name_derived_from_a_renamed_party_takes_the_next_free_one_when_its_new_form_is_held(session: AsyncSession, world: Cosmos) -> None:
+    tribute = await make_entity(session, "the Tribute of Amberreach", EntityType.TREATY, world_id=world.world.id, stats=TreatyStats())
+    held = await make_entity(session, "the Tribute of Goldreach", EntityType.TREATY, world_id=world.world.id, stats=TreatyStats())
+    session.add(TreatyPartyRow(treaty_entity_id=tribute.id, party_node_id=world.region.id, role=PartyRole.SIGNATORY))
+    await session.flush()
+    result = await rename_everywhere(session, world.region.id, "Goldreach")
+    assert result.new == "Goldreach"
+    assert held.name == "the Tribute of Goldreach"
+    assert tribute.name == "the Tribute of Goldreach II"
+
+
+async def test_a_free_rename_keeps_a_name_the_record_already_holds_out_of_the_count(session: AsyncSession, world: Cosmos) -> None:
+    first = await make_entity(session, "Weavers Hall", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    second = await make_entity(session, "Weavers Hall II", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    assert await NameRepository(session).rename(second.id, first.name, free=True) == "Weavers Hall II"
+    assert first.name == "Weavers Hall"
