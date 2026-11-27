@@ -1,13 +1,17 @@
 import { godResponse } from '../../e2e/godMocks'
 import { type MockRequest, type MockRoutes, failure } from './mockServer'
+import { RULE_VALUES_PATH, ruleValuesOf } from './ruleValues'
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const
 const DEPTHS = ['{a}', '{a}/{b}', '{a}/{b}/{c}', '{a}/{b}/{c}/{d}']
 
 function fromGodMocks(request: MockRequest) {
-  const url = new URL(`http://mock${request.path}?${request.query.toString()}`)
+  const values = request.method === 'GET' && request.path === RULE_VALUES_PATH
+  const path = values ? '/api/rules' : request.path
+  const url = new URL(`http://mock${path}?${request.query.toString()}`)
   const reply = godResponse(request.method, url)
-  return reply === undefined ? failure(404, 'Not found') : reply
+  if (reply === undefined) return failure(404, 'Not found')
+  return values ? ruleValuesOf(reply) : reply
 }
 
 export function godRoutes(overrides: MockRoutes = {}): MockRoutes {
@@ -22,5 +26,8 @@ export function godRoutes(overrides: MockRoutes = {}): MockRoutes {
 }
 
 export function godData(path: string): Record<string, unknown> {
-  return godResponse('GET', new URL(`http://mock${path}`)) as Record<string, unknown>
+  return godResponse('GET', new URL(`http://mock${path}`)) as Record<
+    string,
+    unknown
+  >
 }

@@ -78,6 +78,21 @@ describe('domain components', () => {
     await expect.element(screen.getByText('IU')).toBeInTheDocument()
   })
 
+  it('spins while a portrait image loads and falls back to initials when it fails', async () => {
+    const screen = await render(
+      <Portrait
+        name='Ithren Unbowed'
+        size='lg'
+        src='/media/slow-portrait.webp'
+      />
+    )
+    const portrait = screen.getByLabelText('Ithren Unbowed')
+    await expect.element(portrait).toHaveAttribute('aria-busy', 'true')
+    expect(portrait.element().querySelector('.animate-spin')).not.toBeNull()
+    await expect.element(screen.getByText('IU')).toBeInTheDocument()
+    await expect.element(portrait).not.toHaveAttribute('aria-busy')
+  })
+
   it('falls back to a sigil when a rarity portrait has no image', async () => {
     const screen = await render(
       <Portrait name='Ithren Unbowed' size='lg' rarity='epic' />

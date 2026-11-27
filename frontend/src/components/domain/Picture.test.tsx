@@ -36,3 +36,38 @@ describe('Picture with no file', () => {
     expect(screen.container.textContent).toBe('')
   })
 })
+
+const DOT =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
+
+describe('Picture while its file loads', () => {
+  it('shows a moving placeholder in the room it was given until the file arrives', async () => {
+    await page.viewport(1280, 900)
+    const screen = await render(
+      <div className='w-full max-w-lg'>
+        <Picture
+          src='/media/slow-file.webp'
+          alt='A likeness'
+          missingClassName='aspect-video w-full'
+          className='max-h-lightbox w-auto max-w-full object-contain'
+        />
+      </div>
+    )
+    const loading = screen.getByRole('status', { name: 'Loading image' })
+    await expect.element(loading).toHaveAttribute('aria-busy', 'true')
+    const box = loading.element().getBoundingClientRect()
+    expect(box.width).toBeGreaterThan(400)
+    expect(box.height).toBeGreaterThan(200)
+    expect(loading.element().querySelector('.animate-spin')).not.toBeNull()
+  })
+
+  it('swaps the placeholder for the picture once it has loaded', async () => {
+    const screen = await render(
+      <Picture src={DOT} alt='A likeness' className='size-8' />
+    )
+    await expect
+      .element(screen.getByRole('img', { name: 'A likeness' }))
+      .toHaveAttribute('data-domain', 'picture')
+    expect(document.querySelector('[data-domain=picture-loading]')).toBeNull()
+  })
+})

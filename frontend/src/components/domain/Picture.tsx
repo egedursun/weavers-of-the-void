@@ -1,5 +1,5 @@
 import { type ComponentProps, type ReactNode, useState } from 'react'
-import { ImageOff } from 'lucide-react'
+import { ImageOff, LoaderCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/typography'
 import { Medallion } from './KpiTile'
@@ -18,9 +18,16 @@ export function Picture({
   compact = false,
   className,
   alt = '',
+  onLoad,
+  onError,
   ...props
 }: PictureProps) {
   const [broken, setBroken] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState<string | null>(null)
+  const fail: ComponentProps<'img'>['onError'] = (event) => {
+    setBroken(src ?? null)
+    onError?.(event)
+  }
   if (!src || broken === src)
     return (
       fallback ?? (
@@ -50,13 +57,54 @@ export function Picture({
         </span>
       )
     )
+  if (loaded !== src)
+    return (
+      <span
+        role='status'
+        aria-label='Loading image'
+        aria-busy='true'
+        data-domain='picture-loading'
+        className={cn(
+          'relative flex min-w-0 animate-skeleton flex-col items-center justify-center gap-2 overflow-hidden rounded-md bg-accent p-2 text-center',
+          missingClassName ?? className
+        )}
+      >
+        <LoaderCircle
+          aria-hidden='true'
+          className={cn(
+            'animate-spin text-primary',
+            compact ? 'size-icon-sm' : 'size-icon-lg'
+          )}
+        />
+        {!compact && (
+          <Label truncate className='max-w-full'>
+            Loading image
+          </Label>
+        )}
+        <img
+          {...props}
+          ref={(node) => {
+            if (node?.complete && node.naturalWidth > 0) setLoaded(src)
+          }}
+          src={src}
+          alt={alt}
+          className='absolute inset-0 size-full opacity-0'
+          onLoad={(event) => {
+            setLoaded(src)
+            onLoad?.(event)
+          }}
+          onError={fail}
+        />
+      </span>
+    )
   return (
     <img
       src={src}
       alt={alt}
       data-domain='picture'
       className={className}
-      onError={() => setBroken(src)}
+      onLoad={onLoad}
+      onError={fail}
       {...props}
     />
   )

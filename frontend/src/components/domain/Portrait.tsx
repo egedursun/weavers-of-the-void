@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LoaderCircle } from 'lucide-react'
 import { cn, getDisplayNameInitials } from '@/lib/utils'
 import { type Rarity } from '@/constants/rarity'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -16,6 +17,16 @@ const SIZE_CLASS: Record<PortraitSize, string> = {
 }
 
 const COMPACT = new Set<PortraitSize>(['xs', 'sm'])
+
+const SPINNER_CLASS: Record<PortraitSize, string> = {
+  xs: 'size-icon-xs',
+  sm: 'size-icon-sm',
+  md: 'size-icon-sm',
+  lg: 'size-icon-lg',
+  xl: 'size-icon-lg',
+}
+
+type LoadingStatus = 'idle' | 'loading' | 'loaded' | 'error'
 
 const INITIALS_CLASS: Record<PortraitSize, string> = {
   xs: 'text-overline font-semibold',
@@ -40,7 +51,13 @@ export function Portrait({
   shape = 'circle',
   rarity,
 }: PortraitProps) {
-  const [failed, setFailed] = useState(false)
+  const [status, setStatus] = useState<{
+    src: string
+    value: LoadingStatus
+  } | null>(null)
+  const current = src && status?.src === src ? status.value : 'loading'
+  const failed = current === 'error'
+  const loading = Boolean(src) && !failed && current !== 'loaded'
   const rounded = shape === 'circle' ? 'rounded-full' : 'rounded-lg'
   return (
     <Avatar
@@ -60,7 +77,7 @@ export function Portrait({
           src={src}
           alt={name}
           className={cn(rounded, 'object-cover')}
-          onLoadingStatusChange={(status) => setFailed(status === 'error')}
+          onLoadingStatusChange={(value) => setStatus({ src, value })}
         />
       )}
       <AvatarFallback
@@ -68,11 +85,19 @@ export function Portrait({
           rounded,
           'bg-muted text-muted-foreground select-none',
           INITIALS_CLASS[size],
-          !rarity && !COMPACT.has(size) && 'font-display'
+          !rarity && !COMPACT.has(size) && 'font-display',
+          loading && 'animate-skeleton'
         )}
         aria-label={name}
+        aria-busy={loading || undefined}
+        data-portrait-loading={loading || undefined}
       >
-        {rarity ? (
+        {loading ? (
+          <LoaderCircle
+            aria-hidden='true'
+            className={cn('animate-spin text-primary', SPINNER_CLASS[size])}
+          />
+        ) : rarity ? (
           <Sigil seed={name} rarity={rarity} />
         ) : (
           <span className='text-gilded'>

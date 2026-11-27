@@ -11,6 +11,7 @@ import { mapGraphResponse } from './mapGraphMocks'
 import { promptResponse } from './promptMocks'
 import { warsResponse } from './warsMocks'
 import { type RunWorldVariant, runWorldResponse } from './runWorldMocks'
+import { RULE_VALUES_PATH, ruleValuesOf } from '../src/test-utils/ruleValues'
 
 const NOW = '2026-01-01T12:00:00+00:00'
 
@@ -85,6 +86,33 @@ function json(route: Route, body: unknown, status = 200) {
   return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
 }
 
+function mockedReply(route: Route, url: URL): unknown {
+  const method = route.request().method()
+  const referer = route.request().headers().referer
+  if (method === 'GET' && url.pathname === RULE_VALUES_PATH) {
+    const rows = mockedReply(route, new URL(`${url.origin}/api/rules${url.search}`))
+    return rows === undefined ? undefined : ruleValuesOf(rows)
+  }
+  const sources: (() => unknown)[] = [
+    () => fateResponse(method, url, referer),
+    () => promptResponse(method, url),
+    () => maintenanceResponse(method, url),
+    () => warsResponse(method, url),
+    () => controlsResponse(method, url),
+    () => loreResponse(method, url, referer),
+    () => cosmosResponse(method, url, referer),
+    () => runWorldResponse(method, url, mockVariant(route)),
+    () => godResponse(method, url),
+    () => mechanicsResponse(method, url),
+    () => mapGraphResponse(method, url),
+  ]
+  for (const source of sources) {
+    const reply = source()
+    if (reply !== undefined) return reply
+  }
+  return undefined
+}
+
 export async function mockApi(page: Page): Promise<void> {
   await page.route('**/api/**', async (route) => {
     const url = new URL(route.request().url())
@@ -102,24 +130,8 @@ export async function mockApi(page: Page): Promise<void> {
     if (job) return json(route, job)
     if (path.startsWith('/api/media/'))
       return route.fulfill({ status: 200, contentType: 'image/png', body: LORE_PIXEL })
-    const operator = fateResponse(route.request().method(), url, route.request().headers().referer) ?? promptResponse(route.request().method(), url) ?? maintenanceResponse(route.request().method(), url)
-    if (operator !== undefined) return json(route, operator)
-    const wars = warsResponse(route.request().method(), url)
-    if (wars !== undefined) return json(route, wars)
-    const controls = controlsResponse(route.request().method(), url)
-    if (controls !== undefined) return json(route, controls)
-    const lore = loreResponse(route.request().method(), url, route.request().headers().referer)
-    if (lore !== undefined) return json(route, lore)
-    const cosmos = cosmosResponse(route.request().method(), url, route.request().headers().referer)
-    if (cosmos !== undefined) return json(route, cosmos)
-    const runWorld = runWorldResponse(route.request().method(), url, mockVariant(route))
-    if (runWorld !== undefined) return json(route, runWorld)
-    const god = godResponse(route.request().method(), url)
-    if (god !== undefined) return json(route, god)
-    const mechanics = mechanicsResponse(route.request().method(), url)
-    if (mechanics !== undefined) return json(route, mechanics)
-    const mapGraph = mapGraphResponse(route.request().method(), url)
-    if (mapGraph !== undefined) return json(route, mapGraph)
+    const reply = mockedReply(route, url)
+    if (reply !== undefined) return json(route, reply)
     return json(route, { detail: 'Not found' }, 404)
   })
 }
