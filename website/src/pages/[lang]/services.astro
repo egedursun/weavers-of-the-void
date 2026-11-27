@@ -13,6 +13,7 @@ import Contact from '../../components/Contact.astro'
 import Faq from '../../components/Faq.astro'
 import { LOCALES, copyFor, type Locale } from '../../i18n'
 import { studioCopy } from '../../i18n/studio'
+import { breadcrumbGraph, faqGraph, siteUrl } from '../../seo'
 
 export function getStaticPaths() {
   return LOCALES.map((lang) => ({ params: { lang } }))
@@ -21,9 +22,10 @@ export function getStaticPaths() {
 const locale = Astro.params.lang as Locale
 const copy = copyFor(locale)
 const studio = studioCopy(locale)
+const graph = [breadcrumbGraph(siteUrl(Astro.site), locale, [{ name: copy.nav.services, path: 'services' }]), faqGraph(studio.faq.items)]
 ---
 
-<Base locale={locale} path="services" title={copy.meta.servicesTitle} description={copy.meta.servicesDescription}>
+<Base locale={locale} path="services" title={copy.meta.servicesTitle} description={copy.meta.servicesDescription} graph={graph}>
   <StudioHero locale={locale} />
   <StudioPromise locale={locale} />
   <StudioJourney locale={locale} />

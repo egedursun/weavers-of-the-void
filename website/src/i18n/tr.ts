@@ -11,6 +11,10 @@ export const tr: Copy = {
     servicesTitle: 'Senin için kurulan evrenler · Weavers of the Void',
     servicesDescription:
       'Baştan sona simüle edilmiş bir evren, dünyana özel yeni mekanikler, kanon bakımı, eğitim ya da sana ayrılmış bir bulut sunucusu sipariş et.',
+    keywords:
+      'evren simülatörü, dünya kurma, dünya yaratma aracı, yapay zekâ ile dünya kurma, dünya üretici, lore üretici, tanrı simülasyonu, tarih simülasyonu, yaşayan dünya simülasyonu, açık kaynak, ücretsiz, FRP kampanyası, roman için dünya kurma, oyun tasarımı',
+    imageAlt: 'Weavers of the Void: kendi tarihini yazan evren simülatörü. Açık kaynak ve sonsuza dek ücretsiz.',
+    coverAlt: 'Ön ve arka kapak: {name}, bir Weavers of the Void genişlemesi',
   },
   nav: {
     how: 'Nasıl çalışır',

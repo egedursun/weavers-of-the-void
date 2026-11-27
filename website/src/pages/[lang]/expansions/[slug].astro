@@ -6,6 +6,7 @@ import DepthBlock from '../../../components/expansions/DepthBlock.astro'
 import crest from '../../../assets/ornate/crest.webp'
 import corner from '../../../assets/ornate/corner.webp'
 import { LOCALES, REPOSITORY, asset, copyFor, page, type Locale } from '../../../i18n'
+import { breadcrumbGraph, expansionCardOf, siteUrl } from '../../../seo'
 import { backOf, coverOf, expansionBySlug, expansionsFor, isList, neighbours, type Expansion } from '../../../data/expansions'
 
 export function getStaticPaths() {
@@ -26,9 +27,16 @@ const kicker =
   item.cover === null ? text.core : item.cover === 0 ? text.loom : `${text.part} ${String(item.cover).padStart(2, '0')} / ${total}`
 const description = item.intro.length > 180 ? `${item.intro.slice(0, 177).trimEnd()}...` : item.intro
 const title = `${item.name} · Weavers of the Void`
+const image = item.cover === null ? undefined : { path: expansionCardOf(item.cover), alt: copy.meta.coverAlt.replace('{name}', item.name) }
+const graph = [
+  breadcrumbGraph(siteUrl(Astro.site), locale, [
+    { name: copy.nav.expansions, path: 'expansions' },
+    { name: item.name, path: `expansions/${item.slug}` },
+  ]),
+]
 ---
 
-<Base locale={locale} path={`expansions/${item.slug}`} title={title} description={description}>
+<Base locale={locale} path={`expansions/${item.slug}`} title={title} description={description} keywords={`${item.name}, ${copy.meta.keywords}`} image={image} graph={graph}>
   <section class="section xdetail">
     <div class="wrap wrap--wide">
       <a class="xdetail__crumb" href={page(locale, 'expansions')}>

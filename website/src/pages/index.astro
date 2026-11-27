@@ -1,8 +1,12 @@
 ---
-import { asset, page } from '../i18n'
+import { asset, copyFor, page } from '../i18n'
+import { APP_NAME, SHARE_CARD, THEME_COLOR, shareCardOf, siteUrl } from '../seo'
 
 const english = page('en')
 const turkish = page('tr')
+const copy = copyFor('en')
+const origin = siteUrl(Astro.site)
+const share = `${origin}${asset(shareCardOf('en'))}`
 ---
 
 <!doctype html>
@@ -10,10 +14,31 @@ const turkish = page('tr')
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Weavers of the Void</title>
-    <meta name="robots" content="noindex" />
-    <link rel="canonical" href={english} />
+    <meta name="theme-color" content={THEME_COLOR} />
+    <title>{copy.meta.title}</title>
+    <meta name="description" content={copy.meta.description} />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href={`${origin}${english}`} />
     <link rel="icon" href={asset('brand/favicon.ico')} sizes="any" />
+    <link rel="apple-touch-icon" href={asset('brand/apple-touch-icon.png')} />
+    <link rel="manifest" href={asset('site.webmanifest')} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={APP_NAME} />
+    <meta property="og:title" content={copy.meta.title} />
+    <meta property="og:description" content={copy.meta.description} />
+    <meta property="og:url" content={`${origin}${asset('')}`} />
+    <meta property="og:image" content={share} />
+    <meta property="og:image:type" content={SHARE_CARD.type} />
+    <meta property="og:image:width" content={String(SHARE_CARD.width)} />
+    <meta property="og:image:height" content={String(SHARE_CARD.height)} />
+    <meta property="og:image:alt" content={copy.meta.imageAlt} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={copy.meta.title} />
+    <meta name="twitter:description" content={copy.meta.description} />
+    <meta name="twitter:image" content={share} />
+    <meta name="twitter:image:alt" content={copy.meta.imageAlt} />
     <meta http-equiv="refresh" content={`2; url=${english}`} />
     <style>
       body {

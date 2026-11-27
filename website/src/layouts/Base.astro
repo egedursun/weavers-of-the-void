@@ -18,21 +18,38 @@ import {
   repositoryFile,
   type Locale,
 } from '../i18n'
+import {
+  APP_NAME,
+  SHARE_CARD,
+  THEME_COLOR,
+  baseGraph,
+  shareCardOf,
+  siteUrl,
+  structuredData,
+  type ShareImage,
+} from '../seo'
 
 interface Props {
   locale: Locale
   path?: string
   title: string
   description: string
+  keywords?: string
+  image?: ShareImage
+  graph?: Record<string, unknown>[]
+  indexed?: boolean
 }
 
-const { locale, path = '', title, description } = Astro.props
+const { locale, path = '', title, description, keywords, image, graph = [], indexed = true } = Astro.props
 const copy = copyFor(locale)
 const home = page(locale)
 const anchor = (id: string) => `${home}#${id}`
-const site = Astro.site?.toString().replace(/\/$/, '') ?? ''
+const site = siteUrl(Astro.site)
 const canonical = `${site}${page(locale, path)}`
-const image = `${site}${asset('art/collectors-edition.webp')}`
+const share = image ?? { path: shareCardOf(locale), alt: copy.meta.imageAlt }
+const shareUrl = `${site}${asset(share.path)}`
+const others = LOCALES.filter((other) => other !== locale)
+const data = structuredData([...baseGraph(site, locale), ...graph])
 const year = new Date().getFullYear()
 const links: { href: string; label: string; emblem: EmblemName; current: boolean }[] = [
   { href: anchor('how'), label: copy.nav.how, emblem: 'orb', current: false },
@@ -47,23 +64,38 @@ const links: { href: string; label: string; emblem: EmblemName; current: boolean
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#110b1f" />
+    <meta name="theme-color" content={THEME_COLOR} />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
-    {LOCALES.map((other) => <link rel="alternate" hreflang={other} href={`${site}${page(other, path)}`} />)}
-    <link rel="alternate" hreflang="x-default" href={`${site}${page('en', path)}`} />
+    <meta name="keywords" content={keywords ?? copy.meta.keywords} />
+    <meta name="application-name" content={APP_NAME} />
+    {indexed ? <meta name="robots" content="index, follow, max-image-preview:large" /> : <meta name="robots" content="noindex, follow" />}
+    {indexed && <link rel="canonical" href={canonical} />}
+    {indexed && LOCALES.map((other) => <link rel="alternate" hreflang={other} href={`${site}${page(other, path)}`} />)}
+    {indexed && <link rel="alternate" hreflang="x-default" href={`${site}${page('en', path)}`} />}
+    <link rel="sitemap" type="application/xml" href={asset('sitemap.xml')} />
+    <link rel="manifest" href={asset('site.webmanifest')} />
     <link rel="icon" href={asset('brand/favicon.ico')} sizes="any" />
     <link rel="icon" type="image/png" href={asset('brand/logo-192.png')} />
     <link rel="apple-touch-icon" href={asset('brand/apple-touch-icon.png')} />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Weavers of the Void" />
+    <meta property="og:site_name" content={APP_NAME} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={image} />
+    <meta property="og:image" content={shareUrl} />
+    <meta property="og:image:type" content={SHARE_CARD.type} />
+    <meta property="og:image:width" content={String(SHARE_CARD.width)} />
+    <meta property="og:image:height" content={String(SHARE_CARD.height)} />
+    <meta property="og:image:alt" content={share.alt} />
     <meta property="og:locale" content={LOCALE_TAGS[locale]} />
+    {others.map((other) => <meta property="og:locale:alternate" content={LOCALE_TAGS[other]} />)}
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={shareUrl} />
+    <meta name="twitter:image:alt" content={share.alt} />
+    <script type="application/ld+json" set:html={data} />
   </head>
   <body>
     <a class="skip" href="#content">{copy.nav.skip}</a>

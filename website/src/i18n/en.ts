@@ -9,6 +9,10 @@ export const en = {
     servicesTitle: 'Worlds built for you · Weavers of the Void',
     servicesDescription:
       'Commission a fully simulated universe, new mechanics, canon care, training or a managed cloud server for Weavers of the Void.',
+    keywords:
+      'universe simulator, worldbuilding, worldbuilding tool, AI worldbuilding, world generator, lore generator, god simulator, history simulator, living world simulation, open source, free, tabletop RPG campaign, novel worldbuilding, game design',
+    imageAlt: 'Weavers of the Void: the universe simulator that writes its own history. Open source and free forever.',
+    coverAlt: 'Front and back cover of {name}, an expansion of Weavers of the Void',
   },
   nav: {
     how: 'How it works',

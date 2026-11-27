@@ -7,6 +7,7 @@ import Frame from '../../../components/Frame.astro'
 import Emblem, { type EmblemName } from '../../../components/Emblem.astro'
 import { LOCALES, REPOSITORY, asset, copyFor, type Locale } from '../../../i18n'
 import { coverOf, expansionsFor, tallyOf } from '../../../data/expansions'
+import { breadcrumbGraph, itemListGraph, siteUrl } from '../../../seo'
 
 export function getStaticPaths() {
   return LOCALES.map((lang) => ({ params: { lang } }))
@@ -18,6 +19,11 @@ const text = copy.expansionsPage
 const all = expansionsFor(locale)
 const [core, loom, ...rest] = all
 const tally = tallyOf(all)
+const origin = siteUrl(Astro.site)
+const graph = [
+  breadcrumbGraph(origin, locale, [{ name: copy.nav.expansions, path: 'expansions' }]),
+  itemListGraph(origin, locale, all.map((item) => ({ name: item.name, path: `expansions/${item.slug}` }))),
+]
 const figures: { value: number; label: string; emblem: EmblemName }[] = [
   { value: tally.parts, label: text.stats.parts, emblem: 'planet' },
   { value: tally.governs, label: text.stats.governs, emblem: 'network' },
@@ -26,7 +32,7 @@ const figures: { value: number; label: string; emblem: EmblemName }[] = [
 const fan = [loom, rest[6], rest[22], rest[40], rest[61], rest[78], rest[95]].filter(Boolean)
 ---
 
-<Base locale={locale} path="expansions" title={copy.meta.expansionsTitle} description={copy.meta.expansionsDescription}>
+<Base locale={locale} path="expansions" title={copy.meta.expansionsTitle} description={copy.meta.expansionsDescription} graph={graph}>
   <section class="section xindex">
     <div class="wrap wrap--wide">
       <div class="xindex__hero">
