@@ -130,14 +130,12 @@ async def backfill_vessels(ctx: TickContext) -> int:
     knowledge = await KnowledgeMap.load(ctx.session)
     made = 0
     profiled = select(VesselProfileRow.entity_id)
-    bare = await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.VESSEL, EntityRow.id.not_in(profiled)))
-    for bare_vessel in list(bare):
-        ctx.session.add(VesselProfileRow(entity_id=bare_vessel.id, kind=VehicleKind.SHIP, locked=[]))
-    await ctx.session.flush()
-    for row in list(await ctx.session.scalars(select(VesselProfileRow).where(VesselProfileRow.kind == VehicleKind.SHIP))):
-        vessel = await ctx.session.get(EntityRow, row.entity_id)
-        if vessel is None:
-            continue
+    bare = list(
+        await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.VESSEL, EntityRow.id.not_in(profiled)).order_by(EntityRow.id))
+    )
+    for vessel in bare:
+        row = VesselProfileRow(entity_id=vessel.id, kind=VehicleKind.SHIP, locked=[])
+        ctx.session.add(row)
         owner = await owner_of(ctx, vessel.id)
         strangeness = stat(vessel, "strangeness") or 0
         hull = best_hull(knowledge, owner.id if owner is not None else None, strangeness)
@@ -151,7 +149,6 @@ async def backfill_vessels(ctx: TickContext) -> int:
         row.crew = stat_or(vessel, "crew", base.crew)
         row.condition = clamp_int(stat_or(vessel, "armor", PERCENT), 0, PERCENT)
         row.status = VesselStatus.DOCKED if vessel.status is EntityStatus.CANON else VesselStatus.WRECKED
-        row.locked = []
         made += 1
     ctx.session.add(AppliedFixupRow(key=BACKFILL_FIXUP, result={"vessels": made}))
     await ctx.session.flush()

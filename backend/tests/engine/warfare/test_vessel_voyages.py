@@ -9,7 +9,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.environment import WeatherKind
 from aerona.domain.enums.military import VesselStatus
-from aerona.domain.enums.travel import TravelMethod
+from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.domain.enums.vehicles import VehicleFrame
 from aerona.engine.context import TickContext
 from aerona.engine.military.vessels import (
@@ -122,3 +122,28 @@ async def test_a_hull_with_no_armour_left_is_backfilled_as_broken_not_whole(sess
     whole = await session.get(VesselProfileRow, sound.id)
     assert broken is not None and broken.condition == 0 and broken.crew == 0
     assert whole is not None and whole.condition == PERCENT and whole.crew > 0
+
+
+async def test_the_backfill_never_resets_a_ship_that_already_has_its_profile(session: AsyncSession, world_id: int) -> None:
+    ctx = make_ctx(session)
+    built = await make(session, "Long Keel", EntityType.VESSEL, world_id)
+    session.add(
+        VesselProfileRow(
+            entity_id=built.id,
+            kind=VehicleKind.SHIP,
+            frame=VehicleFrame.GALLEY,
+            seaworthiness=91,
+            cargo_capacity=77,
+            crew=33,
+            condition=64,
+            locked=["seaworthiness"],
+        )
+    )
+    await session.flush()
+    bare = await make(session, "Bare Hull", EntityType.VESSEL, world_id)
+    assert await backfill_vessels(ctx) == 1
+    kept = await session.get(VesselProfileRow, built.id)
+    assert kept is not None
+    assert (kept.frame, kept.seaworthiness, kept.cargo_capacity, kept.crew, kept.condition) == (VehicleFrame.GALLEY, 91, 77, 33, 64)
+    assert kept.locked == ["seaworthiness"]
+    assert await session.get(VesselProfileRow, bare.id) is not None

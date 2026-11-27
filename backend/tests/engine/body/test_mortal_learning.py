@@ -114,7 +114,23 @@ async def test_a_legend_swells_a_true_memory(realm: Realm) -> None:
     realm.session.add(row)
     await realm.session.flush()
     await remember_legend(context(realm.session), legend, row)
-    assert held is not None and held.magnitude > 20
+    await remember_legend(context(realm.session), legend, row)
+    memories = list(await realm.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == town.id, MemoryRow.subject_node_id == hero.id)))
+    assert held is not None and held.magnitude == 20 and held.note is None and held.event_entity_id is None
+    told = [memory for memory in memories if memory.event_entity_id == legend.id]
+    assert len(told) == 1 and told[0].note == LEGEND_NOTE and told[0].kind is MemoryKind.SAVED_ME
+    assert sum(memory.magnitude for memory in memories) > 20
+
+
+async def test_a_merged_memory_keeps_the_reason_it_was_first_remembered_for(realm: Realm) -> None:
+    town = await settlement(realm, "Wexford")
+    courtier = await mortal(realm, "Ilse")
+    first = await remember(
+        realm.session, RULES, holder_id=town.id, subject_id=courtier.id, kind=MemoryKind.GOODWILL, magnitude=10, epoch=1, note="first reason"
+    )
+    again = await remember(realm.session, RULES, holder_id=town.id, subject_id=courtier.id, kind=MemoryKind.GOODWILL, magnitude=5, epoch=1, note="later reason")
+    assert first is not None and again is first
+    assert first.note == "first reason" and first.magnitude == 15
 
 
 async def test_a_world_made_trait_kind_scales_its_effects(realm: Realm) -> None:

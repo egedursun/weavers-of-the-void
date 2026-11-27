@@ -95,8 +95,9 @@ async def remember(
     existing = await same_memory(session, holder_id, subject_id, kind, epoch=epoch, inherited_from=inherited_from) if merge else None
     if existing is not None:
         existing.magnitude = clamp_int(existing.magnitude + size, RELATION_MIN, RELATION_MAX)
-        if note:
+        if existing.note is None and existing.event_entity_id is None:
             existing.note = note
+            existing.event_entity_id = event_id
         return existing
     decay = decay_pct if decay_pct is not None else await default_decay(session, rules, holder_id, kind)
     row = MemoryRow(

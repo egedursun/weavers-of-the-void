@@ -14,7 +14,6 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import CustomCatalog, LegendArchetype
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType, LegendCategory
-from aerona.domain.enums.limits import RELATION_MAX, RELATION_MIN
 from aerona.domain.enums.mind import MemoryKind, ValueAxis, ValueHolder
 from aerona.domain.enums.society import NaturalLaw
 from aerona.domain.enums.transform import TransformKind
@@ -354,14 +353,28 @@ async def remember_legend(ctx: TickContext, legend: EntityRow, row: LegendProfil
     for teller in row.tellers:
         if teller == subject:
             continue
-        held = list(await ctx.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == teller, MemoryRow.subject_node_id == subject)))
+        held = list(
+            await ctx.session.scalars(select(MemoryRow).where(MemoryRow.holder_node_id == teller, MemoryRow.subject_node_id == subject).order_by(MemoryRow.id))
+        )
+        told = {memory.kind for memory in held if memory.event_entity_id == legend.id}
+        lived: dict[MemoryKind, int] = {}
         for memory in held:
-            if memory.event_entity_id == legend.id or memory.note == LEGEND_NOTE:
-                continue
-            memory.magnitude = clamp_int(memory.magnitude * swell, RELATION_MIN, RELATION_MAX)
-            memory.note = LEGEND_NOTE
-            memory.event_entity_id = legend.id
-            changed += 1
+            if memory.event_entity_id != legend.id and memory.kind not in told:
+                lived[memory.kind] = lived.get(memory.kind, 0) + memory.magnitude
+        for kind, total in lived.items():
+            swollen = await remember(
+                ctx.session,
+                ctx.rules,
+                holder_id=teller,
+                subject_id=subject,
+                kind=kind,
+                magnitude=total * (swell - 1),
+                epoch=ctx.epoch,
+                note=LEGEND_NOTE,
+                event_id=legend.id,
+                merge=False,
+            )
+            changed += swollen is not None
         if planted is None or row.credence < table.false_memory_credence or row.distortion < table.false_memory_distortion:
             continue
         kind, sign = planted
