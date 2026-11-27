@@ -12,7 +12,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow
 from aerona.db.tables.relations import GroupRankRow, PassionRow, PersuasionRow
 from aerona.db.write_guard import write_blocked
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import Attribute, Facet, SkillKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
@@ -26,6 +26,7 @@ from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.kin import close_kin_of
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
 from aerona.rules.registry import Rules
@@ -136,6 +137,8 @@ async def persuade(
     session = ctx.session
     speaker = await voice_of(session, speaker_id)
     listener = await voice_of(session, target_id)
+    if await living_entity(session, speaker) is None:
+        return Argument(0, False, None)
     oratory = await skill_level(session, speaker, SkillKind.ORATORY)
     fit = await appeal_fit(session, ctx.rules, speaker, listener, appeal, axis=axis, toward=toward)
     stubborn = await stubbornness(session, listener)
@@ -182,7 +185,8 @@ def lift(rules_pct: int, argument: Argument) -> float:
 async def office_holder(session: AsyncSession, polity_id: int, *kinds: OfficeKind) -> int | None:
     found = await session.scalar(
         select(OfficeRow.holder_entity_id)
-        .where(OfficeRow.polity_entity_id == polity_id, OfficeRow.kind.in_(list(kinds)), OfficeRow.holder_entity_id.is_not(None))
+        .join(EntityRow, EntityRow.id == OfficeRow.holder_entity_id)
+        .where(OfficeRow.polity_entity_id == polity_id, OfficeRow.kind.in_(list(kinds)), EntityRow.status == EntityStatus.CANON)
         .order_by(OfficeRow.id)
         .limit(1)
     )

@@ -388,6 +388,12 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     kind("unit_types.drawn", "{actor} raised a new kind of soldier: {product}.", (role(R.ACTOR), role(R.PRODUCT))),
     kind("veterans.association", "The veterans of {actor} banded into {product}.", (role(R.ACTOR), role(R.PRODUCT)), chronicle=K.WORLD, feed=None),
     kind(
+        "veterans.unrewarded",
+        "{actor} gave its {veterans:veteran|veterans} nothing.",
+        (role(R.ACTOR),),
+        (number("veterans", U.PEOPLE),),
+    ),
+    kind(
         "veterans.granted",
         "{actor} gave its {veterans:veteran|veterans} the grant of {grant}.",
         (role(R.ACTOR), role(R.PRODUCT, required=False)),

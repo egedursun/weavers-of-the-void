@@ -560,7 +560,8 @@ async def heard(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow, guilty
 
 
 async def seek_confession(ctx: TickContext, case: CrimeCaseRow, accused: EntityRow) -> bool:
-    asker = case.investigator_entity_id or case.judge_entity_id
+    askers = [await living_entity(ctx.session, node) for node in (case.investigator_entity_id, case.judge_entity_id) if node is not None]
+    asker = next((found.id for found in askers if found is not None), None)
     if asker is None or asker == accused.id or accused.entity_type is not EntityType.MORTAL:
         return False
     won = await already_won(ctx.session, PersuasionAim.CONFESSION, target_id=accused.id, subject_id=None, since=case.opened_epoch)

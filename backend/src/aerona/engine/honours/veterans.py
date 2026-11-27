@@ -133,6 +133,9 @@ async def grant(ctx: TickContext, war: WarRow, realm: EntityRow, tally: VeteranT
     )
     tally.granted += 1
     tally.colonies += colony is not None
+    if kind is VeteranGrant.NONE:
+        await record(ctx, "veterans.unrewarded", roles={IncidentRole.ACTOR: realm.id}, facts={"veterans": veterans}, place=realm.id)
+        return
     roles = {IncidentRole.ACTOR: realm.id, **({IncidentRole.PRODUCT: colony.id} if colony is not None else {})}
     facts: dict[str, FactInput] = {"grant": kind, "veterans": veterans}
     if region is not None:
