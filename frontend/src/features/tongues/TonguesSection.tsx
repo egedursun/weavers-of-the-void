@@ -523,7 +523,7 @@ function ScriptCard({
           title={script.name}
           caption={`${SYSTEMS[script.system].label} · ${plural(script.signs, 'sign', 'signs')} · ${SCRIPT_CAUSES[script.cause].label.toLowerCase()} in epoch ${script.epoch}`}
           aside={
-            <div className='flex shrink-0 flex-wrap items-center gap-1'>
+            <div className='flex min-w-0 flex-wrap items-center gap-1'>
               <Button
                 act={assign}
                 size='sm'

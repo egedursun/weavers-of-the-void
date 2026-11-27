@@ -14,6 +14,7 @@ from aerona.constants.maintenance import SQLITE_CACHE_KIB, SQLITE_MMAP_BYTES
 from aerona.constants.timeouts import SQLITE_BUSY_TIMEOUT_MS
 from aerona.db.activity import install_activity_capture
 from aerona.db.bond_index import drop_lookup
+from aerona.db.book_marks import BookMarks
 from aerona.db.cascades import install_cascade_following
 from aerona.db.fast_session import FastSession
 from aerona.db.flush_batch import install_flush_batching
@@ -31,11 +32,12 @@ class SharedGate:
     wanting: Any
     generation: Any
     stop: Any
+    book_generation: Any
 
 
 def shared_gate() -> SharedGate:
     context = multiprocessing.get_context("spawn")
-    return SharedGate(context.Lock(), context.Value("i", 0), context.Value("q", 0), context.Event())
+    return SharedGate(context.Lock(), context.Value("i", 0), context.Value("q", 0), context.Event(), context.Value("q", 0))
 
 
 SHARED_PAUSE = 0.002
@@ -47,6 +49,7 @@ class WriteGate:
         self._held = False
         self._waiters: deque[tuple[asyncio.AbstractEventLoop, asyncio.Future[None]]] = deque()
         self._generation = 0
+        self._book_generation = 0
         self._shared_taken = False
         self.shared = shared
         self.yielding = yielding
@@ -61,8 +64,19 @@ class WriteGate:
         if self.shared is not None:
             self.shared.generation.value = value
 
+    @property
+    def book_generation(self) -> int:
+        return int(self.shared.book_generation.value) if self.shared is not None else self._book_generation
+
+    @book_generation.setter
+    def book_generation(self, value: int) -> None:
+        self._book_generation = value
+        if self.shared is not None:
+            self.shared.book_generation.value = value
+
     def share(self, shared: SharedGate) -> None:
         shared.generation.value = self._generation
+        shared.book_generation.value = self._book_generation
         self.shared = shared
 
     async def acquire(self) -> None:
@@ -160,9 +174,11 @@ class Database:
         self.threaded: AsyncEngine = threaded_engine(url, self.engine)
         self._threaded_sessions = async_sessionmaker(self.threaded, expire_on_commit=False, class_=FastSession)
         self.gate = gate or WriteGate()
+        self.book_marks = BookMarks()
         for engine in {self.engine, self.threaded}:
             event.listen(engine.sync_engine, "connect", self._configure_connection)
             event.listen(engine.sync_engine, "begin", self._begin)
+            event.listen(engine.sync_engine, "before_cursor_execute", self.book_marks.note)
         install_activity_capture()
         install_flush_batching()
         install_ordered_reads()
@@ -178,6 +194,15 @@ class Database:
     @generation.setter
     def generation(self, value: int) -> None:
         self.gate.generation = value
+
+    @property
+    def book_generation(self) -> int:
+        return self.gate.book_generation
+
+    def committed(self) -> None:
+        self.generation += 1
+        if self.book_marks.taken():
+            self.gate.book_generation += 1
 
     def sibling(self) -> "Database":
         return Database(self.url, self.gate)
@@ -220,7 +245,7 @@ class Database:
         async with self.gate.held():
             async with self._sessions() as session, session.begin():
                 yield session
-            self.generation += 1
+            self.committed()
 
     @asynccontextmanager
     async def steps(self) -> AsyncIterator["Steps"]:
@@ -231,6 +256,7 @@ class Database:
         await self.threaded.dispose()
         await self.engine.dispose()
         self.generation += 1
+        self.gate.book_generation += 1
 
     async def replace_file(self, swap: Callable[[], None]) -> None:
         async with self.gate.held():
@@ -256,5 +282,5 @@ class Steps:
                 self.session.sync_session.info[KEEP_KEY] = []
             async with self.session.begin():
                 yield self.session
-            self.database.generation += 1
+            self.database.committed()
             self.seen = self.database.generation

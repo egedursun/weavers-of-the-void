@@ -140,7 +140,8 @@ async def test_enum_columns_reject_unknown_values(session: AsyncSession, world_i
 
 async def test_enum_columns_validate_on_bind(session: AsyncSession, world_id: int) -> None:
     son = await make_son(session, "Morun", world_id)
-    son.status = "wandering"
+    column = "status"
+    setattr(son, column, "wandering")
     with pytest.raises(StatementError):
         await session.flush()
 

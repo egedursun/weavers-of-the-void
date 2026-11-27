@@ -290,7 +290,7 @@ export function WorldHeader() {
         </div>
       )}
       {shown && (
-        <div className='ms-auto flex shrink-0 flex-wrap items-center justify-end gap-2'>
+        <div className='ms-auto flex min-w-0 flex-wrap items-center justify-end gap-2'>
           <RevelationDialog triggerLabel='Reveal' triggerSize='sm' />
           <CreateHub />
           <SummonButton size='sm' />

@@ -9,6 +9,8 @@ from typing import Any
 from weakref import WeakKeyDictionary
 
 from aerona.core.errors import AeronaError
+from aerona.db import record_edits
+from aerona.db.record_edits import Edit
 from aerona.db.session import Database, SharedGate, WriteGate, shared_gate
 from aerona.domain.enums.epoch import EngineStage
 from aerona.engine.context import Publisher, TickEnvironment
@@ -43,6 +45,26 @@ class StageOutcome:
     stats: TickStats
     failure: str | None = None
     phase: str | None = None
+    edits: frozenset[Edit] = frozenset()
+
+
+@dataclass(frozen=True)
+class JobOutcome[T]:
+    result: T
+    edits: frozenset[Edit]
+
+
+def edits_of(database: Database) -> frozenset[Edit]:
+    return frozenset(record_edits.drain(database.engine.url.render_as_string(hide_password=False)))
+
+
+def watched(database: Database) -> Database:
+    record_edits.watch(database.engine.url.render_as_string(hide_password=False))
+    return database
+
+
+def take_edits(database: Database, edits: frozenset[Edit]) -> None:
+    record_edits.merge(database.engine.url.render_as_string(hide_password=False), edits)
 
 
 def portable(phases: tuple[Phase, ...]) -> tuple[str | Phase, ...]:
@@ -81,30 +103,31 @@ def stage_in_child(order: StageOrder) -> StageOutcome:
     shared: SharedGate = CHILD["shared"]
 
     async def run() -> StageOutcome:
-        database = Database(order.url, WriteGate(shared, yielding=True))
+        database = watched(Database(order.url, WriteGate(shared, yielding=True)))
         environment = replace(order.environment, publish=child_publish)
         try:
             await engine_stage(database, StageRun(order.epoch, order.stage, resolved(order.phases), environment, order.tolerant, child_report, shared.stop))
         except EnginePhaseError as error:
-            return StageOutcome(environment.stats, str(error.__cause__ or error.message), error.phase)
+            return StageOutcome(environment.stats, str(error.__cause__ or error.message), error.phase, edits_of(database))
         except AeronaError as error:
-            return StageOutcome(environment.stats, error.message)
+            return StageOutcome(environment.stats, error.message, edits=edits_of(database))
         finally:
             await database.close()
-        return StageOutcome(environment.stats)
+        return StageOutcome(environment.stats, edits=edits_of(database))
 
     return asyncio.run(run())
 
 
-def job_in_child[T](url: str, job: Callable[[Database, Publisher], Awaitable[T]]) -> T:
+def job_in_child[T](url: str, job: Callable[[Database, Publisher], Awaitable[T]]) -> JobOutcome[T]:
     shared: SharedGate = CHILD["shared"]
 
-    async def run() -> T:
-        database = Database(url, WriteGate(shared, yielding=True))
+    async def run() -> JobOutcome[T]:
+        database = watched(Database(url, WriteGate(shared, yielding=True)))
         try:
-            return await job(database, child_publish)
+            result = await job(database, child_publish)
         finally:
             await database.close()
+        return JobOutcome(result, edits_of(database))
 
     return asyncio.run(run())
 
@@ -191,12 +214,15 @@ def close_engine_process(database: Database) -> None:
 
 
 async def job_in_process[T](database: Database, job: Callable[[Database, Publisher], Awaitable[T]], publish: Publisher) -> T:
-    return await engine_process_of(database).call(publish, lambda _message: None, job_in_child, database.url, job)
+    outcome: JobOutcome[T] = await engine_process_of(database).call(publish, lambda _message: None, job_in_child, database.url, job)
+    take_edits(database, outcome.edits)
+    return outcome.result
 
 
 async def stage_in_process(database: Database, order: StageOrder, environment: TickEnvironment, report: Callable[[str], None]) -> None:
     outcome = await engine_process_of(database).run(replace(order, environment=replace(environment, publish=silent)), environment.publish, report)
     absorb(environment.stats, outcome.stats)
+    take_edits(database, outcome.edits)
     if outcome.failure is not None:
         if outcome.phase is not None:
             raise EnginePhaseError(outcome.phase, RuntimeError(outcome.failure))

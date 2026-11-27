@@ -75,10 +75,10 @@ from aerona.services.books.hands import TeamRecord, team_record
 from aerona.services.books.heavensvg import cluster_figure, dimension_figure, galaxy_figure
 from aerona.services.books.history import HandEpoch, creator_hand, ending_line, god_fate, son_fate
 from aerona.services.books.kinds import add_kind_sections
+from aerona.services.books.ledger_parts import LedgerBook, add_history_sections, record_tables, start_ledger, start_typed, typed_index
 from aerona.services.books.made import KindArticle, made_kinds
 from aerona.services.books.mapsvg import MapPicture, map_picture
 from aerona.services.books.presence import SpeakerAudiences, audiences_by_speaker
-from aerona.services.books.records import Ledger, add_history_sections, record_tables
 from aerona.services.books.seasons import add_season_sections, festival_plan
 from aerona.services.books.typed import LedgerChange, RecordTable, TypedIndex, TypedSection, title_of
 from aerona.services.codex import CosmicEpoch, TravellerGuide, cosmic_chronicle, traveller_guide
@@ -493,7 +493,7 @@ class BookBuilder:
         self.son_names: dict[int, str] = {}
         self.typed = TypedIndex({})
         self.made: dict[int, KindArticle] = {}
-        self.ledger = Ledger({})
+        self.ledger = LedgerBook()
         self.wheels: dict[int, Markup] = {}
         self.kin: set[int] = set()
         self.audiences: dict[int, SpeakerAudiences] = {}
@@ -522,12 +522,14 @@ class BookBuilder:
                 self.kin.update((bond.source_node_id, bond.target_node_id))
         for first, second in await self.session.execute(select(MarriageRow.first_id, MarriageRow.second_id)):
             self.kin.update((first, second))
-        self.typed = await TypedIndex.load(self.session, self.names)
+        tables = await start_typed(self.session, self.names)
+        work = await start_ledger(self.session, self.names)
+        self.typed = await typed_index(self.session, self.names, tables)
         self.made = await made_kinds(self.session, self.names)
         await add_command_areas(self.session, self.typed)
         self.wheels = await add_season_sections(self.session, self.typed)
         await add_kind_sections(self.session, self.typed)
-        self.ledger = await add_history_sections(self.session, self.typed)
+        self.ledger = await add_history_sections(self.session, self.typed, work)
         self.audiences = await audiences_by_speaker(self.session, self.names)
 
     def bond_lines(self, node_id: int) -> tuple[list[str], list[str]]:

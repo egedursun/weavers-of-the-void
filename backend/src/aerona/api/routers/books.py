@@ -137,7 +137,7 @@ async def book_outline_read(services: ServicesDep) -> JSONResponse:
 
 
 @router.get(f"{BOOK_PATH}/part", response_class=HTMLResponse, include_in_schema=False)
-async def book_part_read(services: ServicesDep, number: int = Query(ge=0), generation: int | None = Query(default=None, ge=0)) -> HTMLResponse:
+async def book_part_read(services: ServicesDep, number: int = Query(ge=0), generation: int | None = Query(default=None, ge=-1)) -> HTMLResponse:
     async with reader(services) as session:
         rules = await world_rules(services, session)
         links = ScreenLinks(universe=services.settings.universe_id or None)

@@ -37,6 +37,10 @@ main{max-width:780px;margin:0 auto;padding:32px 22px 120px}
 .book-part{display:flow-root}
 html:has(#book-parts){overflow-anchor:none}
 [id]{scroll-margin-top:84px}
+.book-newer{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 18px}
+.book-newer .label{flex-basis:100%}
+.book-newer .tool{display:inline-flex;align-items:center;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--accent-deep);background:linear-gradient(180deg,#8b3fd8,var(--accent-deep));color:#fff;font:inherit;font-size:.9em;cursor:pointer}
+.book-newer .tool:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .part-wait{color:var(--faint);font-style:italic;text-align:center;padding:2.4em 0;margin:0}
 .part-wait::before{content:"";display:block;width:120px;height:1px;margin:0 auto 14px;background:var(--gilded);animation:book-breathe 1.8s ease-in-out infinite}
 @keyframes book-breathe{50%{opacity:.35}}

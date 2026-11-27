@@ -114,7 +114,7 @@ export function ToolCallCard({ trace }: { trace: ToolTrace }) {
             </Muted>
           )}
         </div>
-        <div className='flex shrink-0 flex-wrap items-center justify-end gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center justify-end gap-1'>
           {trace.essence > 0 && (
             <Badge size='sm' variant='default'>
               <Sparkles />

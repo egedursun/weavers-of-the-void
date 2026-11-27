@@ -183,7 +183,7 @@ function QuestCard({
       title={<Ref node={quest.quester} empty='a lost quester' />}
       caption={`${state.label} · ${realm.label} · since epoch ${quest.start_epoch}${quest.end_epoch !== null ? `, ended in epoch ${quest.end_epoch}` : ''}`}
       aside={
-        <div className='flex shrink-0 flex-wrap items-center gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1'>
           <Button
             act={advance}
             size='sm'
@@ -756,7 +756,7 @@ function GeasCard({
       title={`${mode.label}: ${wordOf(actKindValues, geas.act)}`}
       caption={`${state.label} · laid in epoch ${geas.laid_epoch}${geas.broken_epoch !== null ? `, broken in epoch ${geas.broken_epoch}` : ''}`}
       aside={
-        <div className='flex shrink-0 flex-wrap items-center gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1'>
           <Button
             act={breakIt}
             size='sm'

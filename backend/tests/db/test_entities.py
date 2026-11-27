@@ -101,7 +101,7 @@ async def test_rejection_hides_bonds_and_moves_contents(session: AsyncSession, w
     assert settlement.location_id == region.id
     assert await bonds.exists_between(settlement.id, region.id, BondKind.INSIDE)
     await repository.set_status(place, EntityStatus.CANON, epoch=3)
-    assert related.state is BondState.ACTIVE
+    assert BondState(related.state) is BondState.ACTIVE
 
 
 async def test_death_records_the_end_epoch(session: AsyncSession, world_id: int) -> None:

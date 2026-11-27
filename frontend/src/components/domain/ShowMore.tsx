@@ -30,7 +30,7 @@ export function ShowMore<T>({
       <Muted as='span' variant='caption'>
         {`Showing ${formatInteger(shown)} of ${counted(state.total, noun)}`}
       </Muted>
-      <div className='flex shrink-0 flex-wrap items-center gap-1'>
+      <div className='flex min-w-0 flex-wrap items-center gap-1'>
         {state.hidden > 0 && (
           <Button variant='ghost' size='sm' onClick={state.more}>
             <ChevronDown />

@@ -88,7 +88,7 @@ export function BeingCard({
       }
       caption={`${catalogLabel(catalog?.being_kinds, being.being_kind)} · ${BEING_SCALES[being.scale]} scale · ${phase.label} · aim: ${BEING_AGENDAS[being.agenda].toLowerCase()}`}
       aside={
-        <div className='flex shrink-0 flex-wrap items-center gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1'>
           <Button
             act={bind}
             size='sm'

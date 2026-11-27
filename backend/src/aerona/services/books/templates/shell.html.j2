@@ -2,7 +2,8 @@
 {% set lazy = true %}
 {% block title %}{{ title }}{% endblock %}
 {% block body %}
-<div id="book-parts" data-whole-limit="{{ whole_limit }}" data-part-url="{{ links.api('/api/book/part') }}" data-outline-url="{{ links.api('/api/book/outline') }}"{% if outline %} data-generation="{{ outline.generation }}"{% endif %}>
+{% if stale %}<div class="box book-newer" id="book-newer" role="status" aria-live="polite"><span class="label">An older copy</span><span id="book-newer-text">The world has changed since this copy of the book was written. The newer book is being written now; keep reading this one meanwhile.</span> <button type="button" class="tool" id="book-newer-open" hidden>Open the newer book</button></div>{% endif %}
+<div id="book-parts" data-stale="{{ 'true' if stale else 'false' }}" data-whole-limit="{{ whole_limit }}" data-part-url="{{ links.api('/api/book/part') }}" data-outline-url="{{ links.api('/api/book/outline') }}"{% if outline %} data-generation="{{ outline.generation }}"{% endif %}>
 {% if outline %}
 <div class="book-part" data-part="0" data-loaded="true">{{ first | safe }}</div>
 {% for size in outline.sizes[1:] %}<div class="book-part" data-part="{{ loop.index }}" data-bytes="{{ size }}" aria-busy="true"><p class="part-wait">Turning to this part of the book…</p></div>
@@ -178,8 +179,22 @@
     arm();
     if (window.location.hash) reveal(decodeURIComponent(window.location.hash.slice(1)));
   }
+  function newer() {
+    var text = document.getElementById("book-newer-text");
+    var open = document.getElementById("book-newer-open");
+    fetch(root.dataset.outlineUrl, { headers: { accept: "application/json" } })
+      .then(function (response) { if (!response.ok) throw new Error("failed"); return response.json(); })
+      .then(function (found) {
+        if (!found || String(found.generation) === generation) return;
+        text.textContent = "A newer copy of the book is ready.";
+        open.hidden = false;
+      })
+      .catch(function () { text.textContent = "The newer book could not be written just now; this copy stays readable. Reload the page later to try again."; });
+    open.addEventListener("click", function () { window.location.reload(); });
+  }
   if (generation !== undefined) {
     anchors = JSON.parse(document.getElementById("book-outline").textContent);
+    if (root.dataset.stale === "true") newer();
     begin(holders().map(function (holder) { return holder.dataset.bytes || 0; }).concat([{{ outline.sizes[0] if outline else 0 }}]));
     return;
   }

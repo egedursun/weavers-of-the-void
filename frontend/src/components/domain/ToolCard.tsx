@@ -42,7 +42,7 @@ export function ToolCard({ tool }: { tool: ToolCardData }) {
             {tool.name}
           </Muted>
         </div>
-        <div className='flex shrink-0 flex-wrap items-center justify-end gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center justify-end gap-1'>
           {tool.actionCost > 0 && (
             <Badge size='sm' variant='secondary'>
               <Zap />

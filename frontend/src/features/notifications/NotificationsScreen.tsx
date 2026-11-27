@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { navItem } from '@/config/navigation'
 import {
@@ -11,6 +11,7 @@ import {
   Eye,
   EyeOff,
   Layers,
+  LoaderCircle,
   TriangleAlert,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -19,6 +20,7 @@ import { fetchJob } from '@/api/system'
 import { formatInteger } from '@/lib/format'
 import { plural } from '@/lib/units'
 import { cn } from '@/lib/utils'
+import { useAutoLoad } from '@/hooks/useAutoLoad'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -135,23 +137,6 @@ function WorkDetails({ jobId }: { jobId: string }) {
       {open && job.data && <JobItems items={job.data.items} />}
     </div>
   )
-}
-
-function useAutoLoad(enabled: boolean, load: () => void) {
-  const sentinel = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const element = sentinel.current
-    if (!element || !enabled) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) load()
-      },
-      { rootMargin: AUTO_LOAD_MARGIN }
-    )
-    observer.observe(element)
-    return () => observer.disconnect()
-  }, [enabled, load])
-  return sentinel
 }
 
 function SingleCard({
@@ -318,7 +303,7 @@ export function NotificationsScreen() {
     if (hasNextPage && !isFetchingNextPage)
       void fetchNextPage({ cancelRefetch: false })
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
-  const sentinel = useAutoLoad(Boolean(hasNextPage), loadMore)
+  const sentinel = useAutoLoad(Boolean(hasNextPage), loadMore, AUTO_LOAD_MARGIN)
   const mark = useMarkRead()
   const index = useNodeIndex()
   const list = summary.data
@@ -642,14 +627,19 @@ export function NotificationsScreen() {
             </section>
           ))}
           <div ref={sentinel} aria-hidden='true' />
-          {pages.isFetchingNextPage && <Skeleton className='h-24 w-full' />}
-          {hasNextPage && !isFetchingNextPage && (
+          {hasNextPage && (
             <Button
               variant='outline'
               className='self-center'
               onClick={loadMore}
+              disabled={isFetchingNextPage}
+              disabledReason='Older notifications are loading'
             >
-              <ChevronDown />
+              {isFetchingNextPage ? (
+                <LoaderCircle className='animate-spin' />
+              ) : (
+                <ChevronDown />
+              )}
               Show older notifications
             </Button>
           )}

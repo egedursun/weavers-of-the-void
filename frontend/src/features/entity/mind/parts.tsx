@@ -265,7 +265,7 @@ export function ItemRow({
           </div>
           {meta && <Muted variant='caption'>{meta}</Muted>}
         </div>
-        <div className='flex shrink-0 flex-wrap items-center justify-end gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center justify-end gap-1'>
           {actions}
           {editor && (
             <Button

@@ -406,6 +406,12 @@ NAMED_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "forei
 ROW_FILTERS: dict[str, ColumnElement[bool]] = {"messages": MessageRow.intent == MessageIntent.DISPATCH}
 
 
+def typed_mappers() -> list[Mapper[Any]]:
+    return [
+        mapper for mapper in sorted(Base.registry.mappers, key=table_name) if table_name(mapper) not in SKIPPED_TABLES and table_name(mapper) not in KIND_TABLES
+    ]
+
+
 def _rows(mapper: Mapper[Any], table: str) -> Select[Any]:
     statement = select(mapper.class_).order_by(*_order(mapper))
     found = ROW_FILTERS.get(table)
@@ -516,30 +522,31 @@ class TypedIndex:
         index = cls(names)
         await index.load_references(session)
         await index.load_seasons(session)
-        for mapper in sorted(Base.registry.mappers, key=table_name):
-            table = table_name(mapper)
-            if table in SKIPPED_TABLES or table in KIND_TABLES:
-                continue
-            owner = _owner(mapper)
-            if owner is None:
-                await index.load_records(session, mapper)
-                continue
-            columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS and column.key != owner]
-            if not columns:
-                continue
-            grouped: dict[int, list[Any]] = defaultdict(list)
-            ownerless: list[Any] = []
-            for row in await session.scalars(_rows(mapper, table)):
-                key = getattr(row, owner)
-                if isinstance(key, int):
-                    grouped[key].append(row)
-                else:
-                    ownerless.append(row)
-            index.add_records(mapper, ownerless)
-            single = shape_of_table(table) is not None
-            for node_id, rows in grouped.items():
-                index.sections[node_id].append(index._section(table, columns, rows, single))
+        for mapper in typed_mappers():
+            await index.load_table(session, mapper)
         return index
+
+    async def load_table(self, session: AsyncSession, mapper: Mapper[Any]) -> None:
+        table = table_name(mapper)
+        owner = _owner(mapper)
+        if owner is None:
+            await self.load_records(session, mapper)
+            return
+        columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS and column.key != owner]
+        if not columns:
+            return
+        grouped: dict[int, list[Any]] = defaultdict(list)
+        ownerless: list[Any] = []
+        for row in await session.scalars(_rows(mapper, table)):
+            key = getattr(row, owner)
+            if isinstance(key, int):
+                grouped[key].append(row)
+            else:
+                ownerless.append(row)
+        self.add_records(mapper, ownerless)
+        single = shape_of_table(table) is not None
+        for node_id, rows in grouped.items():
+            self.sections[node_id].append(self._section(table, columns, rows, single))
 
     @classmethod
     async def load_node(cls, session: AsyncSession, names: dict[int, str], node_id: int) -> "TypedIndex":

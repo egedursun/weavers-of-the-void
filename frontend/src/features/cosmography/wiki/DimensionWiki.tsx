@@ -364,7 +364,7 @@ export function DimensionView({ dimensionId }: { dimensionId: number }) {
                 <EntityLink kind='world' id={String(row.world_id)}>
                   {ladder.data.world_names[String(row.world_id)] ?? 'A world'}
                 </EntityLink>
-                <span className='flex shrink-0 flex-wrap gap-1.5'>
+                <span className='flex min-w-0 flex-wrap gap-1.5'>
                   <Chip icon={Hourglass}>{`×${row.pull.time.toFixed(2)}`}</Chip>
                   <Chip icon={Sparkles}>{`+${row.pull.magic}`}</Chip>
                 </span>

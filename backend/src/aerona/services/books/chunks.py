@@ -58,9 +58,13 @@ class Splitter:
             heading = re.search(r"<h2[^>]*>(.*?)</h2>", source[source.rfind("<header", 0, end) : end], re.S)
             self.chapter = html.unescape(MARKUP.sub("", heading.group(1))).strip() if heading else self.chapter
 
-    def feed(self, source: str) -> list[str]:
-        for match in TAG.finditer(source):
+    def scan(self, source: str, begin: int, end: int, *, final: bool = True) -> int:
+        reached = begin
+        for match in TAG.finditer(source, begin, end):
             closing, name, rest = match.group(1), match.group(2).lower(), match.group(3)
+            if not final and name == "thead" and not closing and source.find("</thead>", match.end()) < 0:
+                return match.start()
+            reached = match.end()
             if closing:
                 self.close(name, source, match.start())
                 continue
@@ -73,8 +77,48 @@ class Splitter:
                 self.stack[-1].carried = source[match.start() : source.find("</thead>", match.end()) + len("</thead>")]
             self.stack.append(Opened(name, match.group(0), frozenset(found.group(1).split()) if found else frozenset()))
             self.previous = None
+        return reached
+
+    def feed(self, source: str) -> list[str]:
+        self.scan(source, 0, len(source))
         self.chunks.append(self.prefix + source[self.start :])
         return self.chunks
+
+
+@dataclass
+class StreamSplitter:
+    splitter: Splitter
+    head: str = ""
+    pending: str = ""
+    resume: int = 0
+    opened: bool = False
+    closed: bool = False
+
+    def push(self, text: str) -> list[str]:
+        if self.closed:
+            return []
+        if not self.opened:
+            self.head += text
+            at = self.head.find(MAIN_OPEN)
+            if at < 0:
+                return []
+            text, self.head, self.opened = self.head[at + len(MAIN_OPEN) :], "", True
+        known = len(self.pending)
+        self.pending += text
+        close = self.pending.find(MAIN_CLOSE, max(0, known - len(MAIN_CLOSE)))
+        if close >= 0:
+            self.pending, self.closed = self.pending[:close], True
+        splitter = self.splitter
+        reached = splitter.scan(self.pending, self.resume, len(self.pending), final=self.closed)
+        if self.closed:
+            splitter.chunks.append(splitter.prefix + self.pending[splitter.start :])
+            self.pending = ""
+        else:
+            self.resume = reached - splitter.start
+            self.pending = self.pending[splitter.start :]
+            splitter.start = 0
+        finished, splitter.chunks = splitter.chunks, []
+        return finished
 
 
 @dataclass(frozen=True)

@@ -13,6 +13,7 @@ import { render } from 'vitest-browser-react'
 import { type paths } from '@/api/generated/schema'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { validateEntrySearch } from '@/components/layout/entry/entryStack'
+import { worldState } from './fixtures'
 import { RULE_LIST_ROUTE, RULE_VALUES_PATH, ruleValuesOf } from './ruleValues'
 
 const TEST_TOASTS = {
@@ -55,12 +56,32 @@ function isReply(value: unknown): value is Reply {
   )
 }
 
+const STATE_ROUTE = 'GET /api/state'
+
+function completedState(value: unknown): unknown {
+  if (typeof value !== 'object' || value === null || Array.isArray(value))
+    return value
+  if (isReply(value)) return value
+  return { ...worldState(), ...value }
+}
+
 export function onApi(
   method: string,
   path: string,
   responder: Responder
 ): void {
-  responders.set(`${method.toUpperCase()} ${path}`, responder)
+  const key = `${method.toUpperCase()} ${path}`
+  if (key !== STATE_ROUTE) {
+    responders.set(key, responder)
+    return
+  }
+  responders.set(
+    key,
+    typeof responder === 'function'
+      ? (call: ApiCall) =>
+          completedState((responder as (call: ApiCall) => unknown)(call))
+      : completedState(responder)
+  )
 }
 
 export function resetApi(): void {

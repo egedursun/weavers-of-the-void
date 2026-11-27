@@ -78,7 +78,7 @@ async def test_building_the_book_never_holds_the_server_loop(database: Database,
     heap = [[object() for _ in range(HEAP_WIDTH)] for _ in range(HEAP_ROWS)]
     try:
         first = await heaviest_wait(lambda: in_books(database, warm, order_for(database, rules, ""), ScreenLinks()))
-        database.generation += 1
+        database.gate.book_generation += 1
         again = await heaviest_wait(lambda: in_books(database, page, order_for(database, rules, ""), None, None, None, None))
     finally:
         close_books(database)

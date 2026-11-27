@@ -249,7 +249,7 @@ function CurrencyCard({
             </Badge>
           </div>
         </div>
-        <div className='flex shrink-0 flex-wrap justify-end gap-1.5'>
+        <div className='flex min-w-0 flex-wrap justify-end gap-1.5'>
           <HeldBadge held={currency.held} />
           {debased ? (
             <Badge variant='destructive'>
@@ -693,7 +693,7 @@ export function LoanCard({ loan }: { loan: Loan }) {
             {`Lent ${PURPOSE[loan.purpose] ?? plainWords(loan.purpose)} in epoch ${loan.issued_epoch}${loan.currency_name ? `, in ${loan.currency_name}` : ''}`}
           </Muted>
         </div>
-        <div className='flex shrink-0 flex-wrap justify-end gap-1.5'>
+        <div className='flex min-w-0 flex-wrap justify-end gap-1.5'>
           <HeldBadge held={loan.held} />
           {realm && (
             <Badge size='sm' variant='info'>

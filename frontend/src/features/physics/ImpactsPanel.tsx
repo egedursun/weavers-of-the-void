@@ -122,7 +122,7 @@ export function ImpactsPanel({
                 </>
               }
               aside={
-                <div className='flex shrink-0 flex-wrap gap-1'>
+                <div className='flex min-w-0 flex-wrap gap-1'>
                   {row.outcome === 'pending' && (
                     <Button
                       act={deflect}

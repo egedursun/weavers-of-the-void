@@ -429,7 +429,7 @@ function StandingCard({ view, blocked, hold }: Props) {
             {silenced && (
               <Badge variant='secondary'>{`Dissent silenced until epoch ${standing.silenced_until}`}</Badge>
             )}
-            <div className='ml-auto flex shrink-0 flex-wrap items-center gap-2'>
+            <div className='ml-auto flex min-w-0 flex-wrap items-center gap-2'>
               <Button
                 act={silence}
                 size='sm'

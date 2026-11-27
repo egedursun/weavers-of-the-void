@@ -26,8 +26,9 @@ from aerona.engine.recording.accounts import account_of, history_of
 from aerona.engine.recording.legacy import LEGACY_FIXUP, upgrade_records
 from aerona.engine.recording.moments import told_no_earlier
 from aerona.engine.recording.search import RecordQuery, search_records
-from aerona.services.books import records as book_records
-from aerona.services.books.records import add_history_sections
+from aerona.services.books import ledger_parts
+from aerona.services.books.ledger_parts import add_history_sections, record_tables
+from aerona.services.books.records import Ledger
 from aerona.services.books.typed import TypedIndex
 from tests.engine.core.factories import CoreWorld, mortal
 
@@ -47,7 +48,7 @@ KINDS = {DUEL: DUEL_KIND}
 
 @pytest.fixture(autouse=True)
 def kinds(monkeypatch: pytest.MonkeyPatch) -> None:
-    for module in (accounts, legacy, book_records):
+    for module in (accounts, legacy, ledger_parts):
         monkeypatch.setattr(module, "INCIDENT_KINDS", KINDS)
 
 
@@ -213,7 +214,7 @@ async def test_the_book_tells_every_tier_of_a_happening_in_each_entry(session: A
     assert "Bessa prone" in told and "power level of entities of Bessa: 3 → 2" not in told
     changes = next(section for section in index.of(second) if section.title == "Changes")
     assert any("power level of entities of Bessa: 3 → 2" in row and "during: Arem fought Bessa for honour." in row for row in changes.lines)
-    tables = await book_records.record_tables(session, ledger)
+    tables = await record_tables(session, ledger)
     ages = [table for table in tables if table.title.startswith("Happenings")]
     rows = [row for table in ages for row in table.rows if row[2] == "Arem fought Bessa for honour."]
     assert len(rows) == 1 and "stake honour" in rows[0][6] and "power level of entities of Bessa: 3 → 2" in rows[0][8]
@@ -237,11 +238,14 @@ async def test_a_crowded_happening_is_told_once_and_its_witnesses_only_named_the
     assert f"{CROWD - 1} witnesses" in taker and "1 teller" in taker and "stake honour" in taker
     assert not any(names[onlooker] in taker for onlooker in crowd)
     seen = [next(section for section in index.of(onlooker) if section.title == "History").lines[0] for onlooker in crowd]
-    head = ledger.account_head(incident)
+    reader = Ledger(names)
+    await reader.load_incidents(session)
+    await reader.load_happening_records(session, incident.id, incident.id)
+    head = reader.account_head(incident)
     assert head.endswith("Arem fought Bessa for honour. · named The Honour Fight (in an unnamed record)")
     assert seen[0] == f"{head} · as teller · at {world.regions[0].name}"
     assert set(seen[1:]) == {f"{head} · as witness · at {world.regions[0].name}"}
-    tables = await book_records.record_tables(session, ledger)
+    tables = await record_tables(session, ledger)
     told = [row[5] for table in tables if table.title.startswith("Happenings") for row in table.rows if row[2] == "Arem fought Bessa for honour."]
     assert len(told) == 1 and all(names[onlooker] in told[0] for onlooker in crowd)
 
@@ -269,7 +273,8 @@ async def test_a_renamed_one_is_named_in_a_line_as_it_was_called_when_the_line_w
     dead = await mortal(session, "Dorar", world, world.regions[0].id)
     session.add(NameFormRow(holder_node_id=dead.id, form=NameForm.BIRTH, name="Sordir", given_epoch=1, locked=[]))
     await session.flush()
-    ledger = await book_records.Ledger.load(session, {dead.id: "Dorar"})
+    ledger = Ledger({dead.id: "Dorar"})
+    await ledger.load_former_names(session)
     assert ledger.name_in(dead.id, "Ilsaren gave Sordir a gift worth 10.") == "Dorar (then Sordir)"
     assert ledger.name_in(dead.id, "Dorar was laid to rest.") == "Dorar"
     assert ledger.name_in(dead.id, "A storm came.") == "Dorar"

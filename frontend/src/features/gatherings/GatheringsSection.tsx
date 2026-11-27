@@ -305,7 +305,7 @@ function GatheringCard({
       }
       caption={`${status.label}${outcome ? ` · ${outcome.label}` : ''} · epoch ${gathering.epoch}${gathering.year !== null ? `, year ${gathering.year}` : ''}${gathering.season_name ? `, ${gathering.season_name}` : ''}${gathering.by_player ? ' · by your hand' : ''}`}
       aside={
-        <div className='flex shrink-0 flex-wrap items-center gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1'>
           <Button
             act={hold}
             size='sm'

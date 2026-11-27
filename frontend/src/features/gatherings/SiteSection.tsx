@@ -596,7 +596,7 @@ function DigCard({ dig, blocked }: { dig: DigView; blocked: string | null }) {
       title={`Dig of epoch ${dig.started_epoch}`}
       caption={`${status.label} · at the ${stage.label.toLowerCase()}${dig.ended_epoch !== null ? ` · ended in epoch ${dig.ended_epoch}` : ''}${dig.idle_epochs > 0 ? ` · idle ${plural(dig.idle_epochs, 'epoch', 'epochs')}` : ''}`}
       aside={
-        <div className='flex shrink-0 flex-wrap items-center gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1'>
           <Button
             act={advance}
             size='sm'

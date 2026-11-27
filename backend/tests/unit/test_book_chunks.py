@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pypdf import PdfReader
 
-from aerona.services.books.chunks import split_book
+from aerona.services.books.chunks import Splitter, StreamSplitter, split_book
 from aerona.services.books.typeset import Laid, Typesetter, bind, numbering, printable
 
 MARKUP = re.compile(r"<[^>]+>")
@@ -71,3 +71,15 @@ async def test_a_book_set_in_parts_binds_into_one_pdf_with_running_numbers_links
     destinations = [annotation.get_object() for page in reader.pages for annotation in page.get("/Annots", []) or []]
     assert destinations and all("/Dest" in item and "/A" not in item for item in destinations)
     assert [item.title for item in reader.outline if not isinstance(item, list)][:2] == ["First", "Second"]
+
+
+def test_a_book_streamed_in_small_pieces_splits_exactly_as_the_whole_document() -> None:
+    rows = "".join(f"<li>line {number} " + "word " * (number % 7) + "</li>" for number in range(400))
+    table = "<table><thead><tr><th>Moment</th></tr></thead><tbody>" + "".join(f"<tr><td>row {n}</td></tr>" for n in range(300)) + "</tbody></table>"
+    body = f'<section class="chapter" id="one"><header class="chapter-head"><h2>One</h2></header><ul class="changes">{rows}</ul>{table}</section>'
+    document = f"<html><head></head><body><main>{body}</main></body></html>"
+    whole = split_book(document, 900, keep_ids=False).bodies
+    for piece in (1, 7, 64, 500):
+        streamer = StreamSplitter(Splitter(900, keep_ids=False))
+        streamed = [chunk for start in range(0, len(document), piece) for chunk in streamer.push(document[start : start + piece])]
+        assert streamed == whole

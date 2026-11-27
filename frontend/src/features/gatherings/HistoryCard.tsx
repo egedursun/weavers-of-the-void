@@ -459,7 +459,7 @@ export function HistoryCard({
       title={collection.name}
       caption={`${look.label} · ${spanOf(collection)}${role ? ` · ${COLLECTION_ROLES[role].label.toLowerCase()}` : ''}`}
       aside={
-        <div className='flex shrink-0 flex-wrap items-center gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1'>
           <Button
             size='sm'
             variant='outline'

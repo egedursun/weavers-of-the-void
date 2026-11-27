@@ -8,17 +8,17 @@ from collections import Counter, defaultdict
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from itertools import batched
+from pathlib import Path
 from typing import overload
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.core.grammar import an, fact_word, several, spoken
 from aerona.core.total import total
 from aerona.db.ledger_capture import PRESENT_EPOCH
 from aerona.db.tables.ages import AgeRow
-from aerona.db.tables.changes import StateChangeRow, StateChangeTermRow, StateCheckpointRow
+from aerona.db.tables.changes import StateChangeRow, StateChangeTermRow
 from aerona.db.tables.culture import RumourRow
 from aerona.db.tables.customs import NameFormRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -30,7 +30,7 @@ from aerona.domain.enums.modifier import IncidentRole, ModifierOp
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.records import FactUnit, InstrumentKind, ProcessGroup, StepLocus, WitnessMode
 from aerona.engine.recording.record import KNOWERS
-from aerona.services.books.typed import RecordTable, TypedIndex, TypedSection, title_of, words
+from aerona.services.books.typed import RecordTable, title_of, words
 
 PHASE_PREFIX = "phase."
 HISTORY_TITLE = "History"
@@ -188,21 +188,36 @@ class TermLine:
 
 
 class RowStore:
-    def __init__(self) -> None:
-        handle, path = tempfile.mkstemp(prefix="aerona-book-")
-        os.unlink(path)
+    def __init__(self, path: Path | None = None) -> None:
+        if path is None:
+            handle, name = tempfile.mkstemp(prefix="aerona-book-")
+            os.unlink(name)
+        else:
+            handle = os.open(path, os.O_RDWR | os.O_CREAT, KEPT_MODE)
         self.handle = handle
-        self.end = 0
+        self.written = os.fstat(handle).st_size
+        self.end = self.written
+        self.buffer = bytearray()
         weakref.finalize(self, os.close, handle)
 
     def append(self, text: str) -> int:
         data = text.encode()
         offset = self.end
-        os.pwrite(self.handle, LENGTH.pack(len(data)) + data, offset)
+        self.buffer += LENGTH.pack(len(data))
+        self.buffer += data
         self.end = offset + LENGTH.size + len(data)
+        if len(self.buffer) >= STORE_BUFFER:
+            self.flush()
         return offset
 
+    def flush(self) -> None:
+        if self.buffer:
+            os.pwrite(self.handle, self.buffer, self.written)
+            self.written += len(self.buffer)
+            self.buffer = bytearray()
+
     def read(self, offset: int) -> str:
+        self.flush()
         (size,) = LENGTH.unpack(os.pread(self.handle, LENGTH.size, offset))
         return os.pread(self.handle, size, offset + LENGTH.size).decode()
 
@@ -237,6 +252,8 @@ NAME_FIELD = "name"
 NAMED_TABLES = frozenset({"nodes", "entities"})
 LOOKUP_BATCH = 500
 LENGTH = struct.Struct("<I")
+KEPT_MODE = 0o644
+STORE_BUFFER = 4_194_304
 PACK = "\x1f"
 MADE = "m"
 SHIFTED = "s"
@@ -266,28 +283,44 @@ class Ledger:
     distortions: dict[int, list[RumourDistortionRow]] = field(default_factory=lambda: defaultdict(list))
     former: dict[int, list[str]] = field(default_factory=lambda: defaultdict(list))
 
-    @classmethod
-    async def load(cls, session: AsyncSession, names: dict[int, str]) -> "Ledger":
-        ledger = cls(names)
+    async def load_incidents(self, session: AsyncSession) -> None:
         for row in await session.scalars(select(IncidentRow).order_by(IncidentRow.epoch, IncidentRow.id)):
-            ledger.incidents[row.id] = row
+            self.incidents[row.id] = row
         for chronicle_id, text in await session.execute(select(ChronicleRow.id, ChronicleRow.text).order_by(ChronicleRow.id)):
-            ledger.lines[chronicle_id] = text
-        for participant in await session.scalars(select(IncidentParticipantRow).order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.position)):
-            ledger.participants[participant.incident_id].append(participant)
-        for fact in await session.scalars(select(IncidentFactRow).order_by(IncidentFactRow.incident_id, IncidentFactRow.key, IncidentFactRow.position)):
-            ledger.facts[fact.incident_id].append(fact)
-        for step in await session.scalars(select(IncidentStepRow).order_by(IncidentStepRow.incident_id, IncidentStepRow.position, IncidentStepRow.id)):
-            ledger.steps[step.incident_id].append(step)
-        for state in await session.scalars(select(IncidentStepStateRow).order_by(IncidentStepStateRow.step_id, IncidentStepStateRow.node_id)):
-            ledger.states[state.step_id].append(state)
-        for term in await session.scalars(select(IncidentTermRow).order_by(IncidentTermRow.incident_id, IncidentTermRow.position)):
-            ledger.terms[term.incident_id].append(term)
+            self.lines[chronicle_id] = text
+
+    async def load_happening_records(self, session: AsyncSession, first: int, last: int) -> None:
+        span = (IncidentParticipantRow.incident_id >= first, IncidentParticipantRow.incident_id <= last)
+        for participant in await session.scalars(
+            select(IncidentParticipantRow).where(*span).order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.position)
+        ):
+            self.participants[participant.incident_id].append(participant)
+        facts = select(IncidentFactRow).where(IncidentFactRow.incident_id >= first, IncidentFactRow.incident_id <= last)
+        for fact in await session.scalars(facts.order_by(IncidentFactRow.incident_id, IncidentFactRow.key, IncidentFactRow.position)):
+            self.facts[fact.incident_id].append(fact)
+        steps = select(IncidentStepRow).where(IncidentStepRow.incident_id >= first, IncidentStepRow.incident_id <= last)
+        for step in await session.scalars(steps.order_by(IncidentStepRow.incident_id, IncidentStepRow.position, IncidentStepRow.id)):
+            self.steps[step.incident_id].append(step)
+        stepped = select(IncidentStepRow.id).where(IncidentStepRow.incident_id >= first, IncidentStepRow.incident_id <= last)
+        states = select(IncidentStepStateRow).where(IncidentStepStateRow.step_id.in_(stepped))
+        for state in await session.scalars(states.order_by(IncidentStepStateRow.step_id, IncidentStepStateRow.node_id)):
+            self.states[state.step_id].append(state)
+        terms = select(IncidentTermRow).where(IncidentTermRow.incident_id >= first, IncidentTermRow.incident_id <= last)
+        for term in await session.scalars(terms.order_by(IncidentTermRow.incident_id, IncidentTermRow.position)):
+            self.terms[term.incident_id].append(term)
+        await self.load_tellings(session, first, last)
+
+    async def load_former_names(self, session: AsyncSession) -> None:
         for holder, name in await session.execute(select(NameFormRow.holder_node_id, NameFormRow.name).order_by(NameFormRow.holder_node_id, NameFormRow.form)):
-            ledger.remember_name(holder, name)
-        await ledger.load_tellings(session)
-        await ledger.load_changes(session)
-        return ledger
+            self.remember_name(holder, name)
+        renamed = (
+            select(StateChangeRow.node_id, StateChangeRow.before_text)
+            .where(StateChangeRow.field == NAME_FIELD, StateChangeRow.table_name.in_(NAMED_TABLES), StateChangeRow.node_id.is_not(None))
+            .order_by(StateChangeRow.id)
+        )
+        for node_id, before in await session.execute(renamed):
+            if node_id is not None:
+                self.remember_name(node_id, before)
 
     def remember_name(self, node_id: int, name: str | None) -> None:
         if name and name != self.names.get(node_id) and name not in self.former[node_id]:
@@ -300,10 +333,9 @@ class Ledger:
         then = next((name for name in sorted(self.former.get(node_id, []), key=len, reverse=True) if name in text), None)
         return f"{current} (then {then})" if then is not None else current
 
-    async def load_changes(self, session: AsyncSession) -> None:
-        last = int(await session.scalar(select(func.coalesce(func.max(StateChangeRow.id), 0))) or 0)
-        for start in range(0, last, CHANGE_CHUNK):
-            end = start + CHANGE_CHUNK
+    async def load_changes(self, session: AsyncSession, after: int, last: int) -> None:
+        for start in range(after, last, CHANGE_CHUNK):
+            end = min(start + CHANGE_CHUNK, last)
             terms: dict[int, list[TermLine]] = defaultdict(list)
             term_rows = await session.execute(
                 select(
@@ -339,12 +371,16 @@ class Ledger:
             self.first_seen[change.node_id].setdefault(key, change)
             self.last_seen[change.node_id][key] = change
 
-    async def load_tellings(self, session: AsyncSession) -> None:
-        for name in await session.scalars(select(IncidentNameRow).order_by(IncidentNameRow.incident_id)):
+    async def load_tellings(self, session: AsyncSession, first: int, last: int) -> None:
+        named = select(IncidentNameRow).where(IncidentNameRow.incident_id >= first, IncidentNameRow.incident_id <= last)
+        for name in await session.scalars(named.order_by(IncidentNameRow.incident_id)):
             self.named[name.incident_id] = name
-        for rumour in await session.scalars(select(RumourRow).order_by(RumourRow.incident_id, RumourRow.epoch, RumourRow.id)):
+        rumours = select(RumourRow).where(RumourRow.incident_id >= first, RumourRow.incident_id <= last)
+        for rumour in await session.scalars(rumours.order_by(RumourRow.incident_id, RumourRow.epoch, RumourRow.id)):
             self.rumours[rumour.incident_id].append(rumour)
-        for distortion in await session.scalars(select(RumourDistortionRow).order_by(RumourDistortionRow.rumour_id, RumourDistortionRow.position)):
+        told = select(RumourRow.id).where(RumourRow.incident_id >= first, RumourRow.incident_id <= last)
+        distortions = select(RumourDistortionRow).where(RumourDistortionRow.rumour_id.in_(told))
+        for distortion in await session.scalars(distortions.order_by(RumourDistortionRow.rumour_id, RumourDistortionRow.position)):
             self.distortions[distortion.rumour_id].append(distortion)
 
     def name(self, node_id: int | None) -> str:
@@ -477,9 +513,6 @@ class Ledger:
         cause = f" (during: {self.line_of(happening)})" if happening is not None and not happening.kind.startswith(PHASE_PREFIX) else ""
         return f"{actor}{phase}{why}{cause}"
 
-    def changes_of(self, node_id: int | None) -> list[str]:
-        return grouped_changes(ToldChange.unpacked(text) for text in SpilledRows(self.store, self.changes.get(node_id, array("Q"))))
-
     def account_text(self, incident: IncidentRow, node_id: int | None) -> str:
         roles = self.participants.get(incident.id, [])
         mine = [row for row in roles if row.node_id == node_id]
@@ -583,34 +616,6 @@ def rewritten_parts(before: str | None, after: str | None) -> str | None:
     return "its list"
 
 
-def node_ids_of(ledger: Ledger) -> set[int]:
-    nodes = {participant.node_id for rows in ledger.participants.values() for participant in rows}
-    nodes.update(node for node in ledger.changes if node is not None)
-    return nodes
-
-
-async def add_history_sections(session: AsyncSession, index: TypedIndex) -> Ledger:
-    ledger = await Ledger.load(session, index.names)
-    taking_part: dict[int, list[int]] = defaultdict(list)
-    for incident_id, rows in ledger.participants.items():
-        for node_id in sorted({row.node_id for row in rows}):
-            taking_part[node_id].append(incident_id)
-    for node_id in sorted(node_ids_of(ledger)):
-        incidents = sorted((ledger.incidents[item] for item in taking_part.get(node_id, []) if item in ledger.incidents), key=lambda row: (row.epoch, row.id))
-        if incidents:
-            told = array("Q", (ledger.store.append(ledger.account_text(row, node_id)) for row in incidents))
-            index.sections[node_id].append(TypedSection(HISTORY_TITLE, spilled=SpilledRows(ledger.store, told)))
-        if ledger.changes.get(node_id):
-            merged = array("Q", (ledger.store.append(text) for text in ledger.changes_of(node_id)))
-            index.sections[node_id].append(TypedSection(CHANGES_TITLE, spilled=SpilledRows(ledger.store, merged)))
-        then = ledger.then_and_now(node_id)
-        if then:
-            section = TypedSection(THEN_TITLE)
-            section.rows = [f"{label}: {text}" for label, text in then]
-            index.sections[node_id].append(section)
-    return ledger
-
-
 async def node_change_lines(session: AsyncSession, names: dict[int, str], node_id: int) -> list[str]:
     ledger = Ledger(names)
     rows = [ChangeLine(*row) for row in await session.execute(select(*CHANGE_COLUMNS).where(StateChangeRow.node_id == node_id).order_by(StateChangeRow.id))]
@@ -672,50 +677,3 @@ def report_table(ledger: Ledger, incident: IncidentRow, title: str) -> RecordTab
             ]
         )
     return table
-
-
-async def record_tables(session: AsyncSession, ledger: Ledger) -> list[RecordTable]:
-    tables: list[RecordTable] = []
-    ages = list(await session.scalars(select(AgeRow).order_by(AgeRow.began_epoch, AgeRow.number)))
-    spans = age_spans(ages)
-    for position, (title, began, ended) in enumerate(spans):
-        until = ended if ended is not None else (spans[position + 1][1] - 1 if position + 1 < len(spans) else None)
-        table = RecordTable(title, ["Moment", "Kind", "Line", "Name", "Place", "Taking part", "Account", "Steps", "Changes", "Rumours", "Cause"])
-        for incident in ledger.incidents.values():
-            if incident.epoch < began or (until is not None and incident.epoch > until):
-                continue
-            cause = ledger.incidents.get(incident.cause_incident_id) if incident.cause_incident_id is not None else None
-            table.rows.append(
-                [
-                    ledger.when(incident),
-                    words(incident.kind),
-                    ledger.line_of(incident),
-                    ledger.name_of(incident),
-                    ledger.name(incident.place_entity_id),
-                    ", ".join(
-                        f"{spoken(row.role)} {ledger.name_in(row.node_id, ledger.line_of(incident))}" for row in ledger.participants.get(incident.id, [])
-                    ),
-                    "; ".join(ledger.fact_text(fact) for fact in ledger.facts.get(incident.id, [])),
-                    " ".join(ledger.step_text(step, ledger.line_of(incident)) for step in ledger.steps.get(incident.id, [])),
-                    ledger.changes_cell(incident),
-                    "; ".join(ledger.rumour_text(rumour) for rumour in ledger.rumours.get(incident.id, [])),
-                    ledger.line_of(cause) if cause is not None else "",
-                ]
-            )
-        if table.rows:
-            tables.append(table)
-    for incident in ledger.incidents.values():
-        spec = INCIDENT_KINDS.get(incident.kind)
-        report = REPORT_GROUPS.get(spec.group) if spec is not None else None
-        if report is not None and ledger.steps.get(incident.id):
-            tables.append(report_table(ledger, incident, report))
-    loose = RecordTable("Changes to records of no single node", ["Change"])
-    loose.rows = [[text] for text in ledger.changes_of(None)]
-    if loose.rows:
-        tables.append(loose)
-    checkpoints = RecordTable("Checkpoints of the past", ["Epoch", "Table", "Rows", "Digest", "Last change"])
-    for row in await session.scalars(select(StateCheckpointRow).order_by(StateCheckpointRow.epoch, StateCheckpointRow.table_name)):
-        checkpoints.rows.append([str(row.epoch), title_of(row.table_name), str(row.row_count), row.digest, str(row.last_change_id)])
-    if checkpoints.rows:
-        tables.append(checkpoints)
-    return tables

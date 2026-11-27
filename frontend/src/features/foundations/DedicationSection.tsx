@@ -105,7 +105,7 @@ export function DedicationSection({
                   : 'Dedicate it and its god gains fame, existence and a possible anchor.'}
               </Muted>
             </div>
-            <div className='flex shrink-0 flex-wrap gap-1.5'>
+            <div className='flex min-w-0 flex-wrap gap-1.5'>
               {data.anchors_son && (
                 <Badge size='sm' variant='default'>
                   <Anchor aria-hidden='true' />

@@ -1,4 +1,6 @@
 import asyncio
+import hashlib
+import json
 import multiprocessing
 import os
 import re
@@ -10,13 +12,16 @@ from functools import partial
 from pathlib import Path
 from weakref import WeakKeyDictionary
 
+from sqlalchemy.engine import make_url
+
 from aerona.constants.books import BOOK_PART_BYTES, BOOK_PARTS_KEPT
 from aerona.core.errors import ConflictError, NotFoundError
 from aerona.db.off_loop import BOOK_THREADS
 from aerona.db.session import Database
 from aerona.engine.parallel.pool import exit_with_parent
 from aerona.rules.registry import Rules
-from aerona.services.books.chunks import split_book
+from aerona.services.books.chunks import Splitter, StreamSplitter
+from aerona.services.books.ledger_parts import SLICES
 from aerona.services.books.model import BookModel, ChronicleLine, build_book, entry_chronicle
 from aerona.services.books.records import RowStore
 from aerona.services.books.render import (
@@ -26,6 +31,7 @@ from aerona.services.books.render import (
     PdfState,
     RenderedBook,
     ScreenLinks,
+    book_pieces,
     codex_chunks,
     find_entity,
     find_son,
@@ -38,6 +44,12 @@ NO_WORLD = "There is no world yet."
 NO_ENTRY = "No such entry in the book."
 NO_PART = "The book has no such part."
 BOOK_CHANGED = "The book has changed since this page opened. Reload the page to read the newest book."
+KEPT_FOLDER = "book-parts"
+SLICES_LEAST = 2
+SLICES_MOST = 8
+SPARE_CORES = 2
+KEY_LENGTH = 16
+KEPT_GENERATION = -1
 ANCHOR = re.compile(r"""\sid=["']([^"']+)["']""")
 
 
@@ -92,19 +104,52 @@ def model_of(order: BookOrder) -> BookModel | None:
     return replace(model, title=order.title) if model is not None and order.title else model
 
 
+def kept_paths(order: BookOrder, links: ScreenLinks) -> tuple[Path, Path]:
+    folder = Path(make_url(order.url).database or tempfile.gettempdir()).parent / KEPT_FOLDER
+    key = hashlib.sha256(f"{links.universe}|{order.title}".encode()).hexdigest()[:KEY_LENGTH]
+    return folder / f"{key}.parts", folder / f"{key}.json"
+
+
 def written_parts(model: BookModel, order: BookOrder, links: ScreenLinks) -> BookParts:
-    split = split_book(render_book(model, order.rules, links=links).html, BOOK_PART_BYTES, keep_ids=False)
-    store = RowStore()
+    body_path, outline_path = kept_paths(order, links)
+    body_path.parent.mkdir(parents=True, exist_ok=True)
+    writing = body_path.with_suffix(".writing")
+    writing.unlink(missing_ok=True)
+    store = RowStore(writing)
     anchors: dict[str, int] = {}
-    for number, body in enumerate(split.bodies):
-        for anchor in ANCHOR.findall(body):
-            anchors.setdefault(anchor, number)
-    offsets = tuple(store.append(body) for body in split.bodies)
-    return BookParts(model.title, BookOutline(order.generation, tuple(len(body.encode()) for body in split.bodies), anchors), store, offsets)
+    offsets: list[int] = []
+    sizes: list[int] = []
+    streamer = StreamSplitter(Splitter(BOOK_PART_BYTES, keep_ids=False))
+    for piece in book_pieces(model, order.rules, links):
+        for body in streamer.push(piece):
+            for anchor in ANCHOR.findall(body):
+                anchors.setdefault(anchor, len(offsets))
+            offsets.append(store.append(body))
+            sizes.append(len(body.encode()))
+    store.flush()
+    os.replace(writing, body_path)
+    outline = BookOutline(order.generation, tuple(sizes), anchors)
+    outline_path.write_text(json.dumps({"title": model.title, "sizes": sizes, "anchors": anchors, "offsets": offsets}), encoding="utf-8")
+    return BookParts(model.title, outline, store, tuple(offsets))
+
+
+def kept_parts(order: BookOrder, links: ScreenLinks) -> BookParts | None:
+    body_path, outline_path = kept_paths(order, links)
+    if not body_path.exists() or not outline_path.exists():
+        return None
+    try:
+        kept = json.loads(outline_path.read_text(encoding="utf-8"))
+        return BookParts(kept["title"], BookOutline(KEPT_GENERATION, tuple(kept["sizes"]), dict(kept["anchors"])), RowStore(body_path), tuple(kept["offsets"]))
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
 
 
 def parts_of(order: BookOrder, links: ScreenLinks, generation: int | None = None) -> BookParts | None:
     kept = PARTS.setdefault((order.url, links.universe, order.title), {})
+    if generation == KEPT_GENERATION and KEPT_GENERATION not in kept:
+        saved = kept_parts(order, links)
+        if saved is not None:
+            kept[KEPT_GENERATION] = saved
     if generation is not None:
         found = kept.get(generation)
         if found is None:
@@ -116,6 +161,7 @@ def parts_of(order: BookOrder, links: ScreenLinks, generation: int | None = None
         if model is None:
             return None
         found = kept[order.generation] = written_parts(model, order, links)
+        kept.pop(KEPT_GENERATION, None)
         while len(kept) > BOOK_PARTS_KEPT:
             kept.pop(min(kept))
     return found
@@ -135,6 +181,19 @@ def part(order: BookOrder, links: ScreenLinks, number: int, generation: int | No
     if parts is None:
         raise NotFoundError(NO_WORLD)
     return parts.body(number)
+
+
+def written_page(order: BookOrder, links: ScreenLinks, pdf: PdfState | None, generation: int | None) -> RenderedBook | None:
+    kept = PARTS.setdefault((order.url, links.universe, order.title), {})
+    if generation is None:
+        saved = kept.get(KEPT_GENERATION) or kept_parts(order, links)
+        if saved is None:
+            return None
+        generation = kept.setdefault(KEPT_GENERATION, saved).outline.generation
+    found = kept.get(generation)
+    if found is None:
+        return None
+    return render_shell(found.title, links, pdf, found.body(0), found.outline, stale=True)
 
 
 def page(order: BookOrder, son_id: int | None, entity_id: int | None, pdf: PdfState | None, links: ScreenLinks | None) -> RenderedBook:
@@ -175,9 +234,21 @@ def print_html[L: BookLinks](order: BookOrder, links: L) -> tuple[RenderedBook, 
     return render_book(model_of(order), order.rules, links=links), links
 
 
+def slice_count() -> int:
+    return max(SLICES_LEAST, min(SLICES_MOST, (os.cpu_count() or SLICES_LEAST) - SPARE_CORES))
+
+
+def book_start(parent: int) -> None:
+    exit_with_parent(parent)
+    count = slice_count()
+    SLICES.use(
+        ProcessPoolExecutor(max_workers=count, mp_context=multiprocessing.get_context("spawn"), initializer=exit_with_parent, initargs=(os.getpid(),)), count
+    )
+
+
 class BookProcess:
     def __init__(self) -> None:
-        self.pool = ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context("spawn"), initializer=exit_with_parent, initargs=(os.getpid(),))
+        self.pool = ProcessPoolExecutor(max_workers=1, mp_context=multiprocessing.get_context("spawn"), initializer=book_start, initargs=(os.getpid(),))
 
     def close(self) -> None:
         self.pool.shutdown(wait=False, cancel_futures=True)
@@ -206,4 +277,4 @@ async def in_books[T](database: Database, call: Callable[..., T], *args: object)
 
 
 def order_for(database: Database, rules: Rules, title: str) -> BookOrder:
-    return BookOrder(database.url, database.generation, rules, title)
+    return BookOrder(database.url, database.book_generation, rules, title)

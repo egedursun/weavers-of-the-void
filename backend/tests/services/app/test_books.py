@@ -115,7 +115,7 @@ async def test_the_book_is_built_once_per_generation_of_the_world(database: Data
     await session.commit()
     first = await asyncio.to_thread(model_of, order_for(database, rules, ""))
     assert first is not None and await asyncio.to_thread(model_of, order_for(database, rules, "")) is first
-    database.generation += 1
+    database.gate.book_generation += 1
     rebuilt = await asyncio.to_thread(model_of, order_for(database, rules, ""))
     assert rebuilt is not first
     assert await asyncio.to_thread(model_of, order_for(database, rules, "")) is rebuilt

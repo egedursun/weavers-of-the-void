@@ -9,7 +9,7 @@ from aerona.rules.registry import Rules
 from aerona.services.books.model import build_book
 from aerona.services.books.render import BookOutline, CodexLinks, PdfState, RenderedBook, ScreenLinks, render_codex, render_shell
 from aerona.services.books.title import universe_title
-from aerona.services.books.worker import BookOrder, codex, in_books, order_for, outline, page, part, warm
+from aerona.services.books.worker import BookOrder, codex, in_books, order_for, outline, page, part, warm, written_page
 from aerona.settings import Settings
 
 
@@ -24,8 +24,8 @@ def mark_written(database: Database, order: BookOrder, links: ScreenLinks) -> No
     WRITTEN.setdefault(database, {})[(links.universe, order.title)] = order.generation
 
 
-def written(database: Database, order: BookOrder, links: ScreenLinks) -> bool:
-    return WRITTEN.get(database, {}).get((links.universe, order.title)) == order.generation
+def last_written(database: Database, order: BookOrder, links: ScreenLinks) -> int | None:
+    return WRITTEN.get(database, {}).get((links.universe, order.title))
 
 
 async def book_page(
@@ -43,8 +43,10 @@ async def book_page(
     screen = links or ScreenLinks()
     order = order_for(database, rules, await book_title(session, settings))
     whole = son_id is None and entity_id is None
-    if whole and not wait and not written(database, order, screen):
-        return render_shell(order.title, screen, pdf, None, None)
+    known = last_written(database, order, screen)
+    if whole and not wait and known != order.generation:
+        older = await in_books(database, written_page, order, screen, pdf, known)
+        return older or render_shell(order.title, screen, pdf, None, None)
     rendered = await in_books(database, page, order, son_id, entity_id, pdf, screen)
     if whole:
         mark_written(database, order, screen)

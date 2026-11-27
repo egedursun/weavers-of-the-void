@@ -42,6 +42,7 @@ ENTRY_TEMPLATE = "entry.html.j2"
 CODEX_TEMPLATE = "codex.md.j2"
 EMPTY_TEMPLATE = "empty.html.j2"
 SHELL_TEMPLATE = "shell.html.j2"
+PIECE_CHARACTERS = 262_144
 MEDIA_PREFIX = "/api/media/"
 BOOK_ASSET_PREFIX = "/api/book/"
 FONT_DIRECTORY = Path(__file__).resolve().parent / "fonts"
@@ -320,12 +321,25 @@ class BookOutline:
     anchors: dict[str, int]
 
 
-def render_shell(title: str, links: ScreenLinks, pdf: PdfState | None, first: str | None, outline: BookOutline | None) -> RenderedBook:
+def render_shell(title: str, links: ScreenLinks, pdf: PdfState | None, first: str | None, outline: BookOutline | None, *, stale: bool = False) -> RenderedBook:
     nonce = new_nonce()
     html = HTML.get_template(SHELL_TEMPLATE).render(
-        title=title, links=links, pdf=pdf, nonce=nonce, single=False, first=first, outline=outline, whole_limit=BOOK_WHOLE_PAGE_BYTES
+        title=title, links=links, pdf=pdf, nonce=nonce, single=False, first=first, outline=outline, whole_limit=BOOK_WHOLE_PAGE_BYTES, stale=stale
     )
     return RenderedBook(html, nonce)
+
+
+def book_pieces(model: BookModel, rules: Rules, links: BookLinks) -> Iterator[str]:
+    batch: list[str] = []
+    size = 0
+    for piece in HTML.get_template(BOOK_TEMPLATE).generate(book=model, rules=rules, nonce=new_nonce(), single=False, links=links, pdf=None):
+        batch.append(piece)
+        size += len(piece)
+        if size >= PIECE_CHARACTERS:
+            yield "".join(batch)
+            batch, size = [], 0
+    if batch:
+        yield "".join(batch)
 
 
 def render_entry(

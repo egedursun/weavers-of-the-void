@@ -1310,11 +1310,12 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/heavensvg.py` | 10 | 2026-11-16 | `de42b0ccf7803b11` |
 | `backend/src/aerona/services/books/history.py` | 6 | 2026-11-27 | `3c3789b22ef7f1d9` |
 | `backend/src/aerona/services/books/kinds.py` | 3 | 2026-11-16 | `8e26312c8c3b7c11` |
+| `backend/src/aerona/services/books/ledger_parts.py` | 3 | 2026-11-27 | `c698229394980777` |
 | `backend/src/aerona/services/books/made.py` | 35 | 2026-11-17 | `30f2961b2164a4c7` |
 | `backend/src/aerona/services/books/model.py` | 39 | 2026-11-27 | `a26c7125c9edc2bd` |
 | `backend/src/aerona/services/books/pdf.py` | 1 | 2026-11-19 | `0b5308f38d5c6d22` |
 | `backend/src/aerona/services/books/presence.py` | 11 | 2026-11-25 | `4359c3e06a71fa5c` |
-| `backend/src/aerona/services/books/records.py` | 12 | 2026-11-27 | `43f547959e2d29e6` |
+| `backend/src/aerona/services/books/records.py` | 10 | 2026-11-27 | `f4d60f74243c040e` |
 | `backend/src/aerona/services/books/seasons.py` | 14 | 2026-11-23 | `807a497e46a49a58` |
 | `backend/src/aerona/services/books/templates/book.html.j2` | 228 | 2026-11-27 | `82105b9fbba7cf7c` |
 | `backend/src/aerona/services/books/templates/codex.md.j2` | 427 | 2026-11-27 | `1732460f7ef2922b` |
@@ -1322,11 +1323,11 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/templates/divine_will.md.j2` | 68 | 2026-11-27 | `61d58168a4536c35` |
 | `backend/src/aerona/services/books/templates/empty.html.j2` | 3 | 2026-11-16 | `fb62253fdc00812e` |
 | `backend/src/aerona/services/books/templates/entry.html.j2` | 6 | 2026-11-27 | `b9ec5395f601af4b` |
-| `backend/src/aerona/services/books/templates/layout.html.j2` | 368 | 2026-11-27 | `5519c1e11d0337d7` |
+| `backend/src/aerona/services/books/templates/layout.html.j2` | 372 | 2026-11-27 | `d0ea6a6f0cebeb0f` |
 | `backend/src/aerona/services/books/templates/macros.html.j2` | 131 | 2026-11-25 | `b37dd37604a2ae5a` |
 | `backend/src/aerona/services/books/templates/presence.html.j2` | 19 | 2026-11-25 | `26372aae7d9e8695` |
 | `backend/src/aerona/services/books/templates/presence.md.j2` | 25 | 2026-11-25 | `45ee700b2390b6c5` |
-| `backend/src/aerona/services/books/templates/shell.html.j2` | 154 | 2026-11-27 | `de295fe8a2228396` |
+| `backend/src/aerona/services/books/templates/shell.html.j2` | 166 | 2026-11-27 | `618012a92e2b6d84` |
 | `backend/src/aerona/services/books/templates/team.html.j2` | 11 | 2026-11-25 | `53749fd217405c84` |
 | `backend/src/aerona/services/books/templates/team.md.j2` | 23 | 2026-11-26 | `b85c8a0cd22020d7` |
 | `backend/src/aerona/services/books/typed.py` | 15 | 2026-11-27 | `37d80780f9efc463` |

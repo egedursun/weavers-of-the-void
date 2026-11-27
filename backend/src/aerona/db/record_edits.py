@@ -49,6 +49,13 @@ def drain(url: str) -> set[Edit]:
         return found
 
 
+def merge(url: str, edits: frozenset[Edit]) -> None:
+    with _LOCK:
+        found = _WATCHED.get(url)
+        if found is not None:
+            found.update(edits)
+
+
 def hold(session: Session, url: str, edits: set[Edit]) -> None:
     if edits:
         session.info.setdefault(PENDING, {}).setdefault(url, set()).update(edits)

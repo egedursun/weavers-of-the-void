@@ -58,7 +58,7 @@ function RiftRow({
       title={`${worldNames[String(rift.world_id)] ?? 'A world'} into ${ladder.names.get(rift.dimension_id) ?? 'another dimension'}`}
       caption={`${state.label} · ${RIFT_CAUSES[rift.cause]} · opened in epoch ${rift.opened_epoch}${rift.opened_by_node_id !== null ? ` by ${ladder.names.get(rift.opened_by_node_id) ?? 'a god'}` : ''}${rift.sealed_epoch !== null ? ` · closed in epoch ${rift.sealed_epoch}` : ''}`}
       aside={
-        <div className='flex shrink-0 flex-wrap items-center gap-1'>
+        <div className='flex min-w-0 flex-wrap items-center gap-1'>
           <Button
             act={seal}
             size='sm'
