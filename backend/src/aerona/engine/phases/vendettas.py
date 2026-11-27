@@ -2,7 +2,6 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 
-from aerona.engine.primitives.maturity import of_age
 from aerona.catalog.life.military import STIRRING_FEUDS
 from aerona.catalog.life.phases import GRIEF, INSULTS
 from aerona.core.random import SeededRandom
@@ -38,6 +37,7 @@ from aerona.engine.phases.warfare import Theatre, duel
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import of_age
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import move_stat, shift_stat, stat
