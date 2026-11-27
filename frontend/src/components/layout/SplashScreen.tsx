@@ -24,7 +24,7 @@ export function SplashScreen({
           aria-hidden='true'
           className='absolute inset-0 animate-breathe rounded-full bg-primary/20 blur-xl motion-reduce:animate-none'
         />
-        <Logo size='md' className='relative size-full' title={APP_NAME} />
+        <Logo size='boot' className='relative size-full' title={APP_NAME} />
       </span>
       <span className='flex flex-col items-center gap-2'>
         <PageTitle className='text-gilded font-brand'>{title}</PageTitle>

@@ -3,10 +3,14 @@ import { cn } from '@/lib/utils'
 type LogoProps = {
   className?: string
   title?: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'boot'
 }
 
 const SOURCES = {
+  boot: {
+    src: '/brand/logo-256.webp',
+    srcSet: undefined,
+  },
   sm: {
     src: '/brand/logo-64.webp',
     srcSet: '/brand/logo-64.webp 1x, /brand/logo-128.webp 2x',
