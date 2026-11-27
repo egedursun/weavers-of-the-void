@@ -12,7 +12,7 @@ from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.session import Database, Steps
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.engine import records, snapshot, transition
-from aerona.engine.context import AgingState, Publisher, TickContext, TickEnvironment, phase_window
+from aerona.engine.context import AgingState, Publisher, TickContext, TickEnvironment, at_step, phase_window
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.notes import FoldResult, fold_tick_lines, last_chronicle_id
 from aerona.engine.phase import Phase
@@ -1034,7 +1034,7 @@ async def run_phases(
                 tick_environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
                 continue
             try:
-                await run_phase(replace(tick_environment, step=index / max(1, len(phases))), database, phase, steps)
+                await run_phase(at_step(tick_environment, index, len(phases)), database, phase, steps)
             except EnginePhaseError as error:
                 if phase.name not in tolerant:
                     raise

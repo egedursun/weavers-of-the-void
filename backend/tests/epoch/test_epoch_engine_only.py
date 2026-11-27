@@ -2,13 +2,16 @@ from sqlalchemy import func, select
 
 from aerona.agents.ports import bus_publisher
 from aerona.agents.runtime import AgentRuntime
+from aerona.db.record_context import PHASE_FAMILY
 from aerona.db.repositories.cosmos import snapshot_rules
 from aerona.db.session import Database
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import CreationVerdictRow
 from aerona.db.tables.epochs import EpochEnginePhaseRow, EpochRunRow, EpochStepRow
-from aerona.domain.enums.epoch import EngineStage, EpochStepKind, EpochStepStatus
+from aerona.db.tables.interconnect import IncidentRow
+from aerona.domain.enums.epoch import EngineStage, EpochPhase, EpochStepKind, EpochStepStatus
 from aerona.domain.enums.world import FateMode
+from aerona.engine.context import phase_window
 from aerona.epoch.eta import estimate
 from aerona.epoch.orchestrator import EpochOrchestrator
 from aerona.epoch.ports import EpochHooks
@@ -19,6 +22,8 @@ from aerona.rules.registry import Rules
 from aerona.rules.snapshot import with_value
 from tests.agents.fakes import FakeModel
 from tests.agents.world import AgentWorld
+
+MIN_STEP_YEARS = 5
 
 
 async def cosmos_epoch(database: Database) -> int:
@@ -109,3 +114,16 @@ async def test_after_tick_hook_runs_right_after_the_engine_tick(database: Databa
     runtime = AgentRuntime(database=database, model=FakeModel(enabled=False))
     await EpochOrchestrator(runtime, hooks=EpochHooks(after_tick=after_tick)).run()
     assert [epoch for epoch, _ in calls] == [1]
+
+
+async def test_an_epoch_run_spreads_its_engine_steps_over_the_years_in_step_order(database: Database, world: AgentWorld) -> None:
+    runtime = AgentRuntime(database=database, model=FakeModel(enabled=False))
+    await EpochOrchestrator(runtime, hooks=EpochHooks()).run()
+    engine = phase_window(Rules(), EpochPhase.ENGINE)
+    async with database.read() as session:
+        steps = select(IncidentRow.year).where(
+            IncidentRow.epoch == 1, IncidentRow.kind.like(f"{PHASE_FAMILY}.%"), IncidentRow.year >= engine.start, IncidentRow.year < engine.end
+        )
+        years = [year for year in await session.scalars(steps.order_by(IncidentRow.id)) if year is not None]
+    assert years == sorted(years)
+    assert len(set(years)) >= min(MIN_STEP_YEARS, engine.end - engine.start)

@@ -11,7 +11,7 @@ from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.epoch import EngineStage, EpochPhase
 from aerona.domain.enums.foreign_god import ForeignGodStatus
-from aerona.engine.context import TickContext, TickEnvironment
+from aerona.engine.context import TickContext, TickEnvironment, at_step
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.notes import fold_tick_lines, last_chronicle_id
 from aerona.engine.phase import Phase
@@ -42,14 +42,14 @@ async def run_engine_stage(
         done = await engine_phases_done(session, ec.epoch, stage)
     disabled = disabled_by_rules(environment.rules)
     async with ec.database.steps() as steps:
-        for phase in phases:
+        for index, phase in enumerate(phases):
             if phase.name in done:
                 continue
             if phase.name in disabled:
                 environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
                 continue
             try:
-                await run_engine_phase(ec, stage, phase, environment, steps)
+                await run_engine_phase(ec, stage, phase, at_step(environment, index, len(phases)), steps)
             except AeronaError as error:
                 if phase.name not in tolerant:
                     raise

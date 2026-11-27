@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -54,6 +54,10 @@ class TickEnvironment:
 
     def rng(self, stream: str) -> SeededRandom:
         return SeededRandom.for_epoch(self.world_seed, self.epoch, stream)
+
+
+def at_step(environment: TickEnvironment, index: int, total: int) -> TickEnvironment:
+    return replace(environment, step=index / max(1, total))
 
 
 @dataclass
