@@ -44,6 +44,7 @@ from aerona.engine.operations.expedition_record import log_entry
 from aerona.engine.operations.fields import keep
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
 from aerona.engine.sites.rooms import Walk, delve, layout_of, rooms_of
@@ -645,12 +646,14 @@ async def finish(ctx: TickContext, party: Party, tally: ExpeditionTally) -> None
         if member.resolve in AFFLICTIONS and "resolve" not in member.locked:
             member.resolve = ResolveKind.STEADY
     await maybe_quirk(ctx, party, E.RETURN, tally)
+    living = [member.mortal_entity_id for member in party.alive if await living_entity(ctx.session, member.mortal_entity_id) is not None]
+    leader = party.row.leader_entity_id if party.row.leader_entity_id in living else None
     await record(
         ctx,
         "expedition.returned",
         roles={
-            IncidentRole.LEADER: party.row.leader_entity_id,
-            IncidentRole.MEMBER: [member.mortal_entity_id for member in party.alive if member.mortal_entity_id != party.row.leader_entity_id],
+            IncidentRole.LEADER: leader,
+            IncidentRole.MEMBER: [member for member in living if member != leader],
             IncidentRole.DESTINATION: party.row.target_entity_id,
         },
         facts={"finds": party.row.found, "returned": len(party.alive), "members": len(party.members), "renown": ctx.rules.sites.delve_renown},

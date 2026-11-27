@@ -13,6 +13,7 @@ from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import fact_word
 from aerona.core.random import SeededRandom
 from aerona.db.tables.culture import RumourRow
+from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.made import InformationTrustRow
 from aerona.db.tables.node import NodeRow
@@ -477,10 +478,26 @@ async def heard_again(
             ctx,
             "information.contradicted",
             roles={IncidentRole.SUBJECT: holder.carrier_entity_id, IncidentRole.TELLER: teller},
-            facts={"differences": len(ahead ^ known), "trust_lost": loss},
+            facts={"happening": await happening_label(ctx.session, holder.incident_id), "differences": len(ahead ^ known), "trust_lost": loss},
             cause=holder.incident_id,
         )
     return CONTRADICTED
+
+
+async def happening_label(session: AsyncSession, incident_id: int | None) -> str:
+    if incident_id is None:
+        return "an earlier happening"
+    collection = await session.scalar(
+        select(CollectionRow.name)
+        .join(CollectionIncidentRow, CollectionIncidentRow.collection_id == CollectionRow.id)
+        .where(CollectionIncidentRow.incident_id == incident_id)
+        .order_by(CollectionRow.id)
+        .limit(1)
+    )
+    if collection is not None:
+        return f"the {collection}"
+    incident = await session.get(IncidentRow, incident_id)
+    return f"what happened in year {incident.year}" if incident is not None and incident.year is not None else "an earlier happening"
 
 
 async def node_names(session: AsyncSession, ids: Iterable[int | None]) -> dict[int, str]:

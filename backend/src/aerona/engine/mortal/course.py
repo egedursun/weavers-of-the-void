@@ -210,6 +210,11 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
             kind = rng.pick(AGE_CONDITIONS)
             await gain_condition(ctx, mortal, kind, HarmCause.AGE, severity=banded(ctx, ctx.rules.harm_bands.old_age, mortal.id))
     await update_health(ctx, mortal, profile, stage)
+    await tell_stage(ctx, mortal, profile, before, stage)
+    return stage
+
+
+async def tell_stage(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow, before: LifeStage, stage: LifeStage) -> None:
     key = LIFE_KEYS.get(stage)
     if stage is not before and stage_rank(stage) > stage_rank(before) and key is not None:
         await record(
@@ -218,6 +223,13 @@ async def live_one_epoch(ctx: TickContext, mortal: EntityRow) -> LifeStage:
             roles={IncidentRole.SUBJECT: mortal.id},
             facts={"stage": stage, "age": stat_or(mortal, "age", 0), "health": profile.health},
         )
+
+
+async def grow_into_stage(ctx: TickContext, mortal: EntityRow) -> LifeStage:
+    profile, _ = await ensure_profile(ctx.session, mortal.id, ctx.epoch)
+    before = profile.life_stage
+    stage = await refresh_life(ctx.session, ctx.rules, mortal, profile)
+    await tell_stage(ctx, mortal, profile, before, stage)
     return stage
 
 

@@ -22,6 +22,7 @@ from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import aging_rate, effective_lifespan, immortal, medicine_regions
 from aerona.engine.lifecycle.mortal_death import AgeTrack, die, world_year
 from aerona.engine.lifecycle.wounds import fatal_injury
+from aerona.engine.mortal.course import grow_into_stage
 from aerona.engine.mortal.life import hazard_chance
 from aerona.engine.mortal.profile import profile_of
 from aerona.engine.phase import Phase
@@ -125,6 +126,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     health = profile.health if profile is not None else PERCENT
     if (first and aged < limit) or not rng.chance(hazard_chance(rules, aged, limit, health, medicine=info.medicine > 0)):
         set_stats(mortal, age=aged)
+        await grow_into_stage(ctx, mortal)
         return
     years = rules.time.years_per_epoch
     offset = years - lived if first else 0

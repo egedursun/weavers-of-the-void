@@ -2,6 +2,7 @@ from collections.abc import Awaitable, Callable, Mapping
 
 from sqlalchemy import func, select
 
+from aerona.engine.primitives.maturity import of_age
 from aerona.catalog.life.military import STIRRING_FEUDS
 from aerona.catalog.life.phases import GRIEF, INSULTS
 from aerona.core.random import SeededRandom
@@ -337,6 +338,8 @@ async def honour_duels(ctx: TickContext) -> int:
         if holder is None or subject is None or holder.entity_type is not EntityType.MORTAL or subject.entity_type is not EntityType.MORTAL:
             continue
         if holder.status is not EntityStatus.CANON or frozen(holder_id, subject_id):
+            continue
+        if not await of_age(ctx.session, holder.id) or not await of_age(ctx.session, subject.id):
             continue
         customary = holder.location_id is not None and await keeps(ctx, holder.location_id, TraditionFunction.DUEL_CUSTOM)
         wrathful = TraitKind.WRATHFUL in await traits_of(ctx.session, holder.id)

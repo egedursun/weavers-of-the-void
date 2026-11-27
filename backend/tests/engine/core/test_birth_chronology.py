@@ -8,6 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.node import NodeBirthRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.demography import SexKind
@@ -15,6 +16,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.gathering import GatheringKind, GatheringStatus
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.models.calendar import epoch_end_year
 from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import AgingState, TickContext
@@ -158,3 +160,18 @@ async def test_the_fate_judgment_is_told_at_the_close_of_the_age(session: AsyncS
     line = await session.scalar(select(ChronicleRow).where(ChronicleRow.template_key == "fate.reward"))
     assert line is not None
     assert line.year == epoch_end_year(world.cosmos.epoch, rules.time.years_per_epoch) - 1
+
+
+async def test_a_child_who_grows_up_over_the_age_is_no_longer_a_child_once_aged(ctx: TickContext, world: CoreWorld) -> None:
+    grower = await mortal(ctx.session, "Quick Grower", world, world.regions[0].id, age=5)
+    grower.birth_epoch = ctx.epoch - 1
+    set_stats(grower, lifespan=300)
+    profile = await ctx.session.get(MortalProfileRow, grower.id)
+    if profile is None:
+        profile = MortalProfileRow(entity_id=grower.id)
+        ctx.session.add(profile)
+    profile.life_stage = LifeStage.CHILD
+    await ctx.session.flush()
+    await mortal_aging(in_phase(ctx, EpochPhase.ENGINE, AgingState()))
+    assert stat_or(grower, "age", 0) == 5 + ctx.rules.time.years_per_epoch
+    assert profile.life_stage is not LifeStage.CHILD

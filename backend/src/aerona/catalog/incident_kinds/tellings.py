@@ -38,10 +38,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         CONTRADICTED,
         ProcessGroup.KNOWLEDGE,
-        "{subject} heard {teller} tell an earlier happening otherwise than it knew it: "
+        "{subject} heard {teller} tell {happening} otherwise than it knew it: "
         "{differences:difference|differences} between the accounts, and trust in what is told fell by {trust_lost}.",
         roles=(RoleSpec(IncidentRole.SUBJECT), RoleSpec(IncidentRole.TELLER)),
-        facts=(FactSpec("differences", FactValue.NUMBER, FactUnit.COUNT), FactSpec("trust_lost", FactValue.NUMBER, FactUnit.PERCENT)),
+        facts=(
+            FactSpec("happening", FactValue.NAME),
+            FactSpec("differences", FactValue.NUMBER, FactUnit.COUNT),
+            FactSpec("trust_lost", FactValue.NUMBER, FactUnit.PERCENT),
+        ),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.INSTANT,
         terms=True,
