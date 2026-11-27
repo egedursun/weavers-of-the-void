@@ -663,6 +663,8 @@ def record_flush(session: Session, _context: UOWTransaction) -> None:
         state = instance_state(instance)
         capture_deleted(session, state)
         flushed.append(state)
+    for fallout in session.info.pop(FALLOUT, []):
+        record_fallout(session, session.connection(), fallout)
     write_pending(session, session.connection())
     for state in flushed:
         if state.info:
@@ -800,6 +802,158 @@ def finish_rebuilds(session: Session) -> None:
     write_pending(session, session.connection())
 
 
+CASCADING = frozenset({"CASCADE", "SET NULL"})
+SET_NULL = "SET NULL"
+FALLOUT = "aerona.fallout"
+
+
+@dataclass(frozen=True)
+class Dependent:
+    table: Table
+    columns: tuple[str, ...]
+    referred: tuple[str, ...]
+    ondelete: str
+
+
+@dataclass
+class Fallout:
+    found: Stamp | None
+    deleted: dict[str, dict[str, RowValues]] = field(default_factory=dict)
+    nulled: dict[str, dict[str, tuple[RowValues, frozenset[str]]]] = field(default_factory=dict)
+
+
+DEPENDENTS: dict[str, tuple[Dependent, ...]] = {}
+
+
+def dependents_of(name: str) -> tuple[Dependent, ...]:
+    found = DEPENDENTS.get(name)
+    if found is None:
+        found = DEPENDENTS[name] = tuple(
+            Dependent(table, tuple(column.name for column in constraint.columns), tuple(element.column.name for element in constraint.elements), rule)
+            for table in Base.metadata.sorted_tables
+            for constraint in sorted(table.foreign_key_constraints, key=lambda item: tuple(column.name for column in item.columns))
+            if constraint.referred_table.name == name and (rule := (constraint.ondelete or "").upper()) in CASCADING
+        )
+    return found
+
+
+def referring_rows(connection: Connection, dependent: Dependent, values: list[tuple[Any, ...]]) -> list[RowValues]:
+    columns = [dependent.table.c[name] for name in dependent.columns]
+    found: list[RowValues] = []
+    for start in range(0, len(values), KEY_BATCH):
+        chunk = values[start : start + KEY_BATCH]
+        where = columns[0].in_([value[0] for value in chunk]) if len(columns) == 1 else tuple_(*columns).in_(chunk)
+        found.extend(dict(row._mapping) for row in connection.execute(select(dependent.table).where(where)))
+    return found
+
+
+def fallout_of(connection: Connection, table: Table, rows: list[RowValues], skipped: set[tuple[str, str]], found: Stamp | None) -> Fallout:
+    fallout = Fallout(found)
+    queue: list[tuple[str, list[RowValues]]] = [(table.name, rows)]
+    while queue:
+        name, parents = queue.pop()
+        for dependent in dependents_of(name):
+            values = sorted(
+                {
+                    tuple(row.get(column) for column in dependent.referred)
+                    for row in parents
+                    if all(row.get(column) is not None for column in dependent.referred)
+                },
+                key=repr,
+            )
+            if not values:
+                continue
+            child = dependent.table.name
+            fresh: list[RowValues] = []
+            for row in referring_rows(connection, dependent, values):
+                key = key_text(_pk_values(dependent.table, row))
+                if (child, key) in skipped or key in fallout.deleted.get(child, {}):
+                    continue
+                if dependent.ondelete == SET_NULL:
+                    held, columns = fallout.nulled.setdefault(child, {}).get(key, (row, frozenset()))
+                    fallout.nulled[child][key] = (held, columns | set(dependent.columns))
+                    continue
+                fallout.deleted.setdefault(child, {})[key] = row
+                fallout.nulled.get(child, {}).pop(key, None)
+                fresh.append(row)
+            if fresh:
+                queue.append((child, fresh))
+    return fallout
+
+
+def record_fallout(session: Session, connection: Connection, fallout: Fallout) -> None:
+    for name, rows in sorted(fallout.deleted.items()):
+        if name in UNCAPTURED_TABLES:
+            continue
+        table = _table(name)
+        plan = table_plan(table)
+        remaining = rows_by_keys(connection, table, [_pk_values(table, row) for row in rows.values()])
+        for key, row in sorted(rows.items()):
+            if key not in remaining:
+                pending(session).append(
+                    change(plan, _pk_values(table, row), LedgerOperation.DELETE, fallout.found, before=whole_row(row), owner=owner_of(plan, row))
+                )
+    for name, items in sorted(fallout.nulled.items()):
+        if name in UNCAPTURED_TABLES:
+            continue
+        table = _table(name)
+        plan = table_plan(table)
+        remaining = rows_by_keys(connection, table, [_pk_values(table, row) for row, _columns in items.values()])
+        for key, (row, columns) in sorted(items.items()):
+            after = remaining.get(key)
+            if after is None:
+                continue
+            for name_of_column in sorted(columns):
+                column = plan.column(name_of_column)
+                if column is not None and row.get(name_of_column) is not None and after.get(name_of_column) is None:
+                    pending(session).append(
+                        change(
+                            plan,
+                            _pk_values(table, row),
+                            LedgerOperation.UPDATE,
+                            fallout.found,
+                            column=column,
+                            before=row[name_of_column],
+                            after=None,
+                            owner=owner_of(plan, row),
+                        )
+                    )
+
+
+def deleted_rows(session: Session) -> tuple[dict[str, list[RowValues]], set[tuple[str, str]]]:
+    wanted: dict[str, list[RowValues]] = {}
+    skipped: set[tuple[str, str]] = set()
+    for instance in session.deleted:
+        state = instance_state(instance)
+        identity = state.identity
+        if identity is None:
+            continue
+        value_of = dict(zip(state.mapper.primary_key, identity, strict=True))
+        for table in state.mapper.tables:
+            if not isinstance(table, Table):
+                continue
+            key = {column.name: value_of.get(column, identity[0]) for column in table.primary_key.columns}
+            skipped.add((table.name, key_text(key)))
+            if dependents_of(table.name):
+                wanted.setdefault(table.name, []).append(key)
+    return wanted, skipped
+
+
+def foresee_fallout(session: Session, _context: UOWTransaction, _instances: object) -> None:
+    if session.info.get(UNCAPTURED) or not session.deleted:
+        return
+    wanted, skipped = deleted_rows(session)
+    if not wanted:
+        return
+    connection = session.connection()
+    found = stamp()
+    for name, keys in sorted(wanted.items()):
+        table = _table(name)
+        rows = list(rows_by_keys(connection, table, keys).values())
+        if rows:
+            session.info.setdefault(FALLOUT, []).append(fallout_of(connection, table, rows, skipped, found))
+
+
 def statement_rows(connection: Connection, table: Table, where: Any) -> list[RowValues]:
     query = select(table)
     if where is not None:
@@ -820,7 +974,11 @@ def bulk_insert(state: ORMExecuteState, connection: Connection, plan: TablePlan,
 
 def bulk_wipe(state: ORMExecuteState, connection: Connection, plan: TablePlan, target: Table) -> Any:
     before_rows = statement_rows(connection, target, None)
+    fallout = fallout_of(connection, target, before_rows, set(), stamp()) if dependents_of(target.name) else None
     result = state.invoke_statement()
+    if fallout is not None:
+        record_fallout(state.session, connection, fallout)
+        write_pending(state.session, connection)
     baseline: dict[str, dict[str, dict[str, Any]]] = state.session.info.setdefault(REBUILDS, {})
     kept = baseline.setdefault(target.name, {})
     for row in before_rows:
@@ -883,7 +1041,10 @@ def given_values(state: ORMExecuteState, plan: TablePlan, target: Table) -> dict
 def bulk_change(state: ORMExecuteState, connection: Connection, plan: TablePlan, target: Table, found: Stamp | None) -> Any:
     session = state.session
     before_rows = touched_rows(state, connection, plan, target)
+    fallout = fallout_of(connection, target, before_rows, set(), found) if state.is_delete and dependents_of(target.name) else None
     result = state.invoke_statement()
+    if fallout is not None:
+        record_fallout(session, connection, fallout)
     given = None if state.is_delete else given_values(state, plan, target)
     after_rows = {} if state.is_delete or given is not None else rows_by_keys(connection, target, [_pk_values(target, before) for before in before_rows])
     for before in before_rows:
@@ -903,12 +1064,24 @@ def bulk_change(state: ORMExecuteState, connection: Connection, plan: TablePlan,
     return result
 
 
+def uncaptured_delete(state: ORMExecuteState, target: Table) -> Any:
+    connection = state.session.connection()
+    rows = statement_rows(connection, target, getattr(state.statement, "whereclause", None))
+    fallout = fallout_of(connection, target, rows, set(), stamp())
+    result = state.invoke_statement()
+    record_fallout(state.session, connection, fallout)
+    write_pending(state.session, connection)
+    return result
+
+
 def capture_bulk(state: ORMExecuteState) -> Any:
     if not (state.is_insert or state.is_update or state.is_delete) or state.session.info.get(UNCAPTURED):
         return None
     target = getattr(state.statement, "table", None)
-    if not isinstance(target, Table) or target.name in UNCAPTURED_TABLES:
+    if not isinstance(target, Table):
         return None
+    if target.name in UNCAPTURED_TABLES:
+        return uncaptured_delete(state, target) if state.is_delete and dependents_of(target.name) else None
     connection = state.session.connection()
     plan = table_plan(target)
     if state.is_insert:
@@ -954,6 +1127,7 @@ def install_change_capture() -> None:
             if attribute is not None and not event.contains(attribute, "set", remember_set):
                 event.listen(attribute, "set", remember_set, raw=True)
     event.listen(Session, "before_flush", load_former)
+    event.listen(Session, "before_flush", foresee_fallout)
     event.listen(Session, "after_flush", record_flush)
     event.listen(Session, "transient_to_pending", remember_insert)
     event.listen(Session, "do_orm_execute", capture_bulk)

@@ -281,4 +281,4 @@ The design of sections 10–12 is integrated in `services/divine_will/` (`store.
 
 ### Found outside the index
 
-`state_changes` does not record rows that SQLite deletes or sets to null by `ON DELETE CASCADE` / `SET NULL`. In epoch 10, 38 spy agents were deleted with their networks and left no record.
+`state_changes` does not record rows that SQLite deletes or sets to null by `ON DELETE CASCADE` / `SET NULL`. In epoch 10, 38 spy agents were deleted with their networks and left no record. Closed in the following commit: the capture now records every row a delete takes with it and every column it empties (spec 16 F58.5, `tests/engine/core/test_every_cascade_recorded.py`).

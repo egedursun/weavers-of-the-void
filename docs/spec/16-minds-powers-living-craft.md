@@ -3153,7 +3153,7 @@ Every value the engine, a god, a son, a mortal or Fate changes is recorded at fl
 
 `state_change_terms`: `change_id`, `position`, `term` (a rules key, modifier source, factor name or catalogue key), `source_node_id`, `source_incident_id`, `op` (`ModifierOp`), `amount` (F58.7).
 
-Every table except `BOOKKEEPING_TABLES` and the record tables themselves is captured. Tables the engine rebuilds wholesale are derived from recorded state; each rebuild records one change per row whose values differ from the last build, so no value is unrecorded. `ledger_changes` stays as the undo store of actor calls (bookkeeping); both are written by the same capture pass.
+Every table except `BOOKKEEPING_TABLES` and the record tables themselves is captured. What the database does on its own is captured as well. Before a row is deleted, through the ORM or by a statement, and also when the deleted row is in a record table, the capture reads every row that `ON DELETE CASCADE` will delete and every column that `ON DELETE SET NULL` will empty, following the cascade to the end. After the delete it records each of those rows as deleted and each emptied column as changed to nothing, under the same happening; it records only what really happened (`tests/engine/core/test_every_cascade_recorded.py`). Tables the engine rebuilds wholesale are derived from recorded state; each rebuild records one change per row whose values differ from the last build, so no value is unrecorded. `ledger_changes` stays as the undo store of actor calls (bookkeeping); both are written by the same capture pass.
 
 #### F58.6 Moments and places
 
