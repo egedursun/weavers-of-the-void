@@ -175,7 +175,7 @@ async def record_age(scope: Scope, chronicle: Chronicle, epoch: int) -> EpochRow
     row.narrative = chronicle.narrative or row.narrative
     row.summary = chronicle.summary or row.summary
     row.year_start = epoch_start_year(epoch, years)
-    row.year_end = epoch_end_year(epoch, years)
+    row.year_end = epoch_end_year(epoch, years) - 1
     row.closed_at = datetime.now(UTC)
     row.chronicler_name = chronicle.chronicler_name or row.chronicler_name
     row.chronicler_identity = chronicle.chronicler_identity or row.chronicler_identity

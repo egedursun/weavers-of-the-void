@@ -120,6 +120,7 @@ HONOURED_ROLES = MappingProxyType(
         G.INITIATION: GuestRole.HONOURED,
     }
 )
+FOR_THE_DEAD = frozenset(kind for kind, role in HONOURED_ROLES.items() if role is GuestRole.MOURNED)
 
 CONTEST_KINDS = frozenset({G.TOURNAMENT, G.GAMES, G.SPORT_MATCH})
 HOSTED_FEASTS = frozenset({G.FEAST, G.WEDDING, G.CORONATION, G.FESTIVAL})

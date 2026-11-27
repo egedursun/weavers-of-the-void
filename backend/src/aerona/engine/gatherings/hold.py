@@ -4,7 +4,16 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.commodities import FOOD_KINDS
-from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATHERING_THOUGHTS, GUEST_ROLES, HONOURED_ROLES, HOST_ROLES, HOSTED_FEASTS
+from aerona.catalog.gatherings import (
+    CONTEST_KINDS,
+    FOR_THE_DEAD,
+    GATHERING_COLLECTIONS,
+    GATHERING_THOUGHTS,
+    GUEST_ROLES,
+    HONOURED_ROLES,
+    HOST_ROLES,
+    HOSTED_FEASTS,
+)
 from aerona.catalog.kinds.gathering_outcomes import GATHERING_RESULTS
 from aerona.catalog.life.gatherings import HOLD_GATHERING_KINDS
 from aerona.constants.units import PERCENT
@@ -152,7 +161,7 @@ async def death_moment_of(ctx: TickContext, node: int | None) -> Moment | None:
 
 async def rite_floor(ctx: TickContext, row: GatheringRow) -> Moment | None:
     births = await born_floor(ctx.session, [node for node in (row.host_node_id, row.honoured_node_id, row.place_entity_id) if node is not None])
-    return latest(births, await death_moment_of(ctx, row.honoured_node_id))
+    return latest(births, await death_moment_of(ctx, row.honoured_node_id) if row.kind in FOR_THE_DEAD else None)
 
 
 async def season_of(ctx: TickContext, row: GatheringRow) -> int | None:

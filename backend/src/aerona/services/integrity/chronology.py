@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.gatherings import FOR_THE_DEAD
 from aerona.catalog.incident_kinds.newborns import NEWBORN_KINDS
 from aerona.catalog.life.services import PRESENT_MODES
 from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
@@ -141,7 +142,7 @@ async def set_age(session: AsyncSession, mortal_id: int) -> None:
 async def gathering_floor(session: AsyncSession, row: GatheringRow) -> int | None:
     nodes = [node for node in (row.host_node_id, row.honoured_node_id, row.place_entity_id) if node is not None]
     years = list(await session.scalars(select(NodeBirthRow.year).where(NodeBirthRow.node_id.in_(nodes)).order_by(NodeBirthRow.year)))
-    honoured = await session.get(EntityRow, row.honoured_node_id) if row.honoured_node_id is not None else None
+    honoured = await session.get(EntityRow, row.honoured_node_id) if row.honoured_node_id is not None and row.kind in FOR_THE_DEAD else None
     death = stat(honoured, "death_year") if honoured is not None and honoured.status is EntityStatus.DEAD else None
     if death is not None:
         years.append(int(death))
@@ -164,6 +165,11 @@ async def gathering_incidents(session: AsyncSession, row: GatheringRow) -> list[
     return list(await session.scalars(statement.order_by(IncidentRow.id)))
 
 
+async def last_year_of(session: AsyncSession, epoch: int) -> int:
+    rules, _ = await rules_of(session)
+    return epoch_end_year(epoch, rules.time.years_per_epoch) - 1
+
+
 async def early_rites(session: AsyncSession) -> list[int]:
     found: list[int] = []
     for row in await session.scalars(select(GatheringRow).order_by(GatheringRow.id)):
@@ -171,7 +177,8 @@ async def early_rites(session: AsyncSession) -> list[int]:
         if floor is None:
             continue
         told = [incident.year for incident in await gathering_incidents(session, row) if incident.year is not None]
-        if (row.year is not None and row.year < floor) or any(year < floor for year in told):
+        last = await last_year_of(session, row.epoch)
+        if (row.year is not None and not floor <= row.year <= max(floor, last)) or any(not floor <= year <= max(floor, last) for year in told):
             found.append(row.id)
     return found
 
@@ -181,11 +188,12 @@ async def follow_rite(session: AsyncSession, gathering_id: int) -> None:
     floor = await gathering_floor(session, row) if row is not None else None
     if row is None or floor is None:
         return
-    if row.year is not None and row.year < floor and "year" not in (row.locked or []):
-        row.year = floor
+    last = max(floor, await last_year_of(session, row.epoch))
+    if row.year is not None and not floor <= row.year <= last and "year" not in (row.locked or []):
+        row.year = min(last, max(floor, row.year))
     for incident in await gathering_incidents(session, row):
-        if incident.year is not None and incident.year < floor and "year" not in (incident.locked or []):
-            await move_incident(session, incident, floor)
+        if incident.year is not None and not floor <= incident.year <= last and "year" not in (incident.locked or []):
+            await move_incident(session, incident, min(last, max(floor, incident.year)))
 
 
 async def unborn_witnesses(session: AsyncSession) -> list[int]:

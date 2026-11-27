@@ -145,6 +145,19 @@ async def test_a_wake_is_never_held_before_the_death_it_honours(ctx: TickContext
     assert floor.year >= 40
 
 
+async def test_a_wedding_of_one_who_died_later_keeps_its_own_year(ctx: TickContext, world: CoreWorld) -> None:
+    host = await mortal(ctx.session, "Wedding Host", world, world.regions[0].id)
+    honoured = await mortal(ctx.session, "Wed Then Gone", world, world.regions[0].id, death_year=40)
+    honoured.status, honoured.end_epoch = EntityStatus.DEAD, ctx.epoch
+    row = GatheringRow(
+        host_node_id=host.id, kind=GatheringKind.WEDDING, status=GatheringStatus.PLANNED, honoured_node_id=honoured.id, epoch=ctx.epoch, locked=[]
+    )
+    ctx.session.add(row)
+    await ctx.session.flush()
+    floor = await rite_floor(ctx, row)
+    assert floor is None or floor.year < 40
+
+
 async def test_the_fate_judgment_is_told_at_the_close_of_the_age(session: AsyncSession, world: CoreWorld) -> None:
     rules = Rules()
     await record_line(

@@ -197,6 +197,7 @@ async def test_chronicler_writes_and_records_a_unique_age(runtime: AgentRuntime,
         row = await record_age(await load_scope(session, rules), written, 1)
     assert row.name == "Second Age of Dry Wells"
     assert row.chronicler_name == "Ehmel"
+    assert (row.year_start, row.year_end) == (0, rules.time.years_per_epoch - 1)
 
 
 async def test_rejection_rollback_undoes_the_creating_ledger_entry(database: Database, world: AgentWorld) -> None:
