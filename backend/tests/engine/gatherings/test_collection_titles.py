@@ -1,5 +1,6 @@
-from aerona.catalog.gatherings import HOST_ROLES, TITLE_ROLES
+from aerona.catalog.gatherings import HOST_ROLES, INCIDENT_ROLES, TITLE_ROLES
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole, GatheringKind
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.history.collections import title_text
 
 HOST, MOURNED, GUEST = 1, 2, 3
@@ -29,3 +30,8 @@ def test_two_names_joined_in_a_title_always_share_one_standing() -> None:
 
 def test_a_history_with_no_named_member_is_named_for_its_place() -> None:
     assert title_text(CollectionKind.RIOT, {GUEST: CollectionRole.WITNESS}, [MOURNED], NAMES) == "Riot at Riron"
+
+
+def test_a_founding_is_named_for_what_was_founded_not_for_whom() -> None:
+    members = {HOST: INCIDENT_ROLES[IncidentRole.SUBJECT], MOURNED: INCIDENT_ROLES[IncidentRole.PRODUCT]}
+    assert title_text(CollectionKind.FOUNDING, members, [], NAMES) == "Founding of Riron"

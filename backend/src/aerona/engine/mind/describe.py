@@ -8,6 +8,7 @@ from aerona.catalog.aspirations import FEARS, GOALS, INSPIRATION_LABELS, WANTS
 from aerona.catalog.careers import CAREERS
 from aerona.catalog.effect_packages import PACKAGES
 from aerona.catalog.ethics import ACT_LABELS, HONOUR_MODELS, STANCE_LABELS, STANCE_READINGS
+from aerona.catalog.incident_kinds.onlookers import NOT_PARTY_ROLES
 from aerona.catalog.life.mind import OPEN_GRIEF
 from aerona.catalog.mind import MEMORIES, NEED_LABELS, PRESSURE_LABELS, SKILLS, TRAITS, VALUE_LABELS
 from aerona.catalog.mind_split import ATTRIBUTES, FACETS, IDEAS
@@ -250,7 +251,14 @@ async def recent_meetings(session: AsyncSession, node_id: int) -> list[str]:
     for incident in incidents:
         kind = await session.scalar(select(IncidentFactRow.enum_value).where(IncidentFactRow.incident_id == incident.id, IncidentFactRow.key == "interaction"))
         other = await session.scalar(
-            select(IncidentParticipantRow.node_id).where(IncidentParticipantRow.incident_id == incident.id, IncidentParticipantRow.node_id != node_id).limit(1)
+            select(IncidentParticipantRow.node_id)
+            .where(
+                IncidentParticipantRow.incident_id == incident.id,
+                IncidentParticipantRow.node_id != node_id,
+                IncidentParticipantRow.role.not_in(sorted(NOT_PARTY_ROLES)),
+            )
+            .order_by(IncidentParticipantRow.role, IncidentParticipantRow.position)
+            .limit(1)
         )
         if kind is not None and kind in InteractionKind._value2member_map_ and other is not None:
             told.append(f"{INTERACTIONS[InteractionKind(kind)].label.lower()} with {await name_of(session, other)} in epoch {incident.epoch}")

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.incident_kinds.onlookers import ONLOOKER_ROLES
 from aerona.catalog.stats import max_essence
 from aerona.catalog.worlds import WORLD_TYPES
 from aerona.constants.schema import SINGLETON_ID
@@ -87,7 +88,7 @@ class DeathResult:
     text: str
 
 
-HEARSAY_ROLES = frozenset({IncidentRole.WITNESS, IncidentRole.TELLER})
+HEARSAY_ROLES = ONLOOKER_ROLES
 
 
 async def last_deed(session: AsyncSession, mortal_id: int, epoch: int) -> Moment | None:
@@ -105,12 +106,25 @@ async def last_deed(session: AsyncSession, mortal_id: int, epoch: int) -> Moment
 async def death_moment(ctx: TickContext, mortal: EntityRow, killer_id: int | None, cause_id: int | None, year: int | None) -> Moment:
     participants = [node for node in (mortal.id, killer_id) if node is not None]
     cause = await incident_moment(ctx.session, cause_id if cause_id is not None else CAUSE_SCOPE.get())
+    floor = await last_deed(ctx.session, mortal.id, ctx.epoch)
+    if year is not None:
+        given = Moment(year)
+        return given.at_least(cause).at_least(floor)
     chosen = await moment_for(ctx, ProcessClock.INSTANT, key=f"death.{mortal.id}", participants=participants, cause_moment=cause)
-    chosen = chosen.at_least(await last_deed(ctx.session, mortal.id, ctx.epoch))
-    return chosen if year is None or chosen.year >= year else Moment(year)
+    return chosen.at_least(floor)
 
 
 AGED_PHASES = frozenset({EpochPhase.FATE, EpochPhase.TRANSITION})
+
+
+@dataclass(frozen=True)
+class AgeTrack:
+    age: int
+    since: int
+    rate: float
+
+    def at(self, year: int) -> int:
+        return self.age + round_half_up(max(0, year - self.since) * self.rate)
 
 
 async def aged_this_epoch(ctx: TickContext) -> bool | None:
@@ -139,8 +153,8 @@ async def age_at_death(ctx: TickContext, mortal: EntityRow, death_year: int) -> 
     return age + round_half_up(max(0, death_year - since) * rate)
 
 
-async def dated_death(ctx: TickContext, mortal: EntityRow, death_year: int, given: int | None) -> int | None:
-    age = await age_at_death(ctx, mortal, death_year) if given is None else stat(mortal, "age")
+async def dated_death(ctx: TickContext, mortal: EntityRow, death_year: int, track: AgeTrack | None) -> int | None:
+    age = track.at(death_year) if track is not None else await age_at_death(ctx, mortal, death_year)
     set_stats(mortal, death_year=death_year)
     if age is not None and age != stat(mortal, "age"):
         set_stats(mortal, age=age)
@@ -167,6 +181,7 @@ async def die(
     natural: bool = False,
     forced: bool = False,
     event_id: int | None = None,
+    track: AgeTrack | None = None,
 ) -> DeathResult | None:
     session = ctx.session
     if mortal.entity_type is not EntityType.MORTAL or mortal.status not in LIVING_DEATH_STATUSES or held(mortal.id):
@@ -179,7 +194,7 @@ async def die(
     cause_id = None if natural or killer_id is None or CAUSE_SCOPE.get() is not None else await killing_incident(ctx.session, mortal.id, killer_id)
     moment = await death_moment(ctx, mortal, killer_id, cause_id, year)
     death_year = moment.year
-    age = await dated_death(ctx, mortal, death_year, year)
+    age = await dated_death(ctx, mortal, death_year, track)
     age_text = str(age) if age is not None else "unknown"
     fate = (
         f"Epoch {ctx.epoch}, world year {death_year}: died at age {age_text}."

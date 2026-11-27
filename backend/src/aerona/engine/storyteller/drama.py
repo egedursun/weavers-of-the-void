@@ -257,6 +257,7 @@ async def pay_setups(ctx: TickContext, tally: DramaTally) -> None:
                     "setup": row.kind,
                     "payoff": found[0],
                     "opened_epoch": row.opened_epoch,
+                    "how": found[1],
                 },
             )
 

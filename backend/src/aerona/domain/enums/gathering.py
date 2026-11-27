@@ -145,3 +145,4 @@ class CollectionRole(StrEnum):
     ACCUSED = "accused"
     FINDER = "finder"
     PLACE = "place"
+    PRODUCT = "product"

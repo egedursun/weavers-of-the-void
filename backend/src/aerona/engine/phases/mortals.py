@@ -20,7 +20,7 @@ from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.aging import aging_rate, effective_lifespan, immortal, medicine_regions
-from aerona.engine.lifecycle.mortal_death import die, world_year
+from aerona.engine.lifecycle.mortal_death import AgeTrack, die, world_year
 from aerona.engine.lifecycle.wounds import fatal_injury
 from aerona.engine.mortal.life import hazard_chance
 from aerona.engine.mortal.profile import profile_of
@@ -131,8 +131,8 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     reached = rng.integer(0, max(0, lived - 1))
     death_age = age + round_half_up(reached * multiplier)
     death_year = world.start_year + offset + reached
-    set_stats(mortal, age=death_age)
     if laws.has(NaturalLaw.DEAD_RETURN, mortal.world_id) and rng.chance(rules.world_engine.ghost_chance):
+        set_stats(mortal, age=death_age)
         await add_flag(ctx.session, mortal.id, EntityFlag.GHOST, ctx.epoch)
         mortal.fate_note = append_sentence(mortal.fate_note, f"Epoch {ctx.epoch}, world year {death_year}: died at age {death_age} and returned as a ghost.")
         steps = (
@@ -149,7 +149,8 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
             son_id=mortal.creator_son_id,
         )
         return
-    await die(ctx, mortal, natural=True, year=death_year, manner=DeathCause.OLD_AGE)
+    track = AgeTrack(age, world.start_year + offset, multiplier)
+    await die(ctx, mortal, natural=True, year=death_year, manner=DeathCause.OLD_AGE, track=track)
 
 
 @reads(

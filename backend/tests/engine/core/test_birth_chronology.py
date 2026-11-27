@@ -20,7 +20,7 @@ from aerona.domain.models.entity_stats import MortalStats
 from aerona.engine.context import AgingState, TickContext
 from aerona.engine.cycles.lineage import breeds
 from aerona.engine.gatherings.hold import rite_floor
-from aerona.engine.lifecycle.mortal_death import age_at_death
+from aerona.engine.lifecycle.mortal_death import age_at_death, death_moment
 from aerona.engine.phases.births import bear_child
 from aerona.engine.phases.mortals import mortal_aging, years_lived
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -111,14 +111,24 @@ async def test_one_who_dies_after_the_years_were_added_dies_at_the_age_reached_t
 
 async def test_deaths_of_old_age_spread_over_the_age_instead_of_its_last_year(ctx: TickContext, world: CoreWorld) -> None:
     years: set[int] = set()
+    start = epoch_end_year(ctx.epoch, ctx.rules.time.years_per_epoch) - ctx.rules.time.years_per_epoch
     for index in range(12):
         elder = await mortal(ctx.session, f"Spent Elder {index}", world, world.regions[0].id, age=95)
         elder.birth_epoch = ctx.epoch - 1
         set_stats(elder, lifespan=30)
         await mortal_aging(in_phase(ctx, EpochPhase.ENGINE, AgingState()))
         if elder.status is EntityStatus.DEAD:
-            years.add(stat_or(elder, "death_year", 0))
+            died = stat_or(elder, "death_year", 0)
+            years.add(died)
+            assert stat_or(elder, "age", 0) == 95 + died - start
     assert len(years) > 1
+
+
+async def test_a_death_given_a_year_happens_in_that_year(ctx: TickContext, world: CoreWorld) -> None:
+    elder = await mortal(ctx.session, "Dated Elder", world, world.regions[0].id, age=60)
+    end = epoch_end_year(ctx.epoch, ctx.rules.time.years_per_epoch)
+    moment = await death_moment(ctx, elder, None, None, end - 30)
+    assert moment.year == end - 30
 
 
 async def test_a_wake_is_never_held_before_the_death_it_honours(ctx: TickContext, world: CoreWorld) -> None:

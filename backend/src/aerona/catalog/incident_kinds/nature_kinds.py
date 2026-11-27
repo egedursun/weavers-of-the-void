@@ -1754,8 +1754,8 @@ GROUND: tuple[IncidentKindSpec, ...] = (
     happening(
         "memory.written",
         N,
-        "{place} now remembers {memory:an}, at magnitude {magnitude:%}.",
-        roles=(one(R.PLACE), maybe(R.ACTOR)),
+        "{place} now remembers {memory:an}{subject:? of #}, at magnitude {magnitude:%}.",
+        roles=(one(R.PLACE), maybe(R.ACTOR), maybe(R.SUBJECT)),
         facts=(chosen("memory", RegionMemoryKind), amount("magnitude", U.PERCENT)),
         place=P.REQUIRED,
         clock=C.YEAR,

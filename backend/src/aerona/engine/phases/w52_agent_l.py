@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.catalog.incident_kinds.onlookers import ONLOOKER_ROLES
 from aerona.catalog.world_thoughts import WORLD_THOUGHTS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.customs import TimeBudgetRow
@@ -37,7 +38,9 @@ class ShareTally:
 async def witnesses(ctx: TickContext, incident: IncidentRow) -> list[int]:
     actors = list(
         await ctx.session.scalars(
-            select(IncidentParticipantRow.node_id).where(IncidentParticipantRow.incident_id == incident.id).order_by(IncidentParticipantRow.node_id)
+            select(IncidentParticipantRow.node_id)
+            .where(IncidentParticipantRow.incident_id == incident.id, IncidentParticipantRow.role.not_in(sorted(ONLOOKER_ROLES)))
+            .order_by(IncidentParticipantRow.node_id)
         )
     )
     statement = select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)

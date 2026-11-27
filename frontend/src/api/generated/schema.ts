@@ -56739,6 +56739,7 @@ export interface components {
       | 'accused'
       | 'finder'
       | 'place'
+      | 'product'
     CollectionView: {
       id: number
       kind: components['schemas']['CollectionKind']
@@ -208532,6 +208533,7 @@ export const collectionRoleValues: ReadonlyArray<
   'accused',
   'finder',
   'place',
+  'product',
 ]
 export const collectiveActKindValues: ReadonlyArray<
   FlattenedDeepRequired<components>['schemas']['CollectiveActKind']

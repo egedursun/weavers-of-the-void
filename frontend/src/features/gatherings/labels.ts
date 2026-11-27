@@ -261,6 +261,7 @@ export const COLLECTION_ROLES: Record<Schema['CollectionRole'], Named> = {
   accused: { label: 'Accused', icon: Gavel, tone: 'danger' },
   finder: { label: 'Finder', icon: Search, tone: 'verdigris' },
   place: { label: 'Place', icon: MapPin, tone: 'verdigris' },
+  product: { label: 'What was made', icon: Sparkles, tone: 'gold' },
 }
 
 export const STORYTELLER_PROFILES: Record<

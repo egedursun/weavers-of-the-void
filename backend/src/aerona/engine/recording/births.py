@@ -3,6 +3,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.incident_kinds.onlookers import ONLOOKER_ROLES
 from aerona.db.fast_session import rows_by_id
 from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.entities import EntityRow
@@ -12,7 +13,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.moment import Moment, latest
 
 CREATION_ROLES = frozenset({IncidentRole.PRODUCT, IncidentRole.CHILD})
-HEARSAY_ROLES = frozenset({IncidentRole.WITNESS, IncidentRole.TELLER})
+HEARSAY_ROLES = ONLOOKER_ROLES
 
 
 BIRTHS_MEMO = "aerona.recording.births"

@@ -4,6 +4,7 @@ from types import MappingProxyType
 from sqlalchemy import select
 
 from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
+from aerona.catalog.incident_kinds.onlookers import NOT_PARTY_ROLES
 from aerona.catalog.needs import SERVE_ORDER
 from aerona.constants.units import PERCENT
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -67,7 +68,9 @@ async def backfill_events(ctx: TickContext) -> int:
     for incident in await ctx.session.scalars(select(IncidentRow).where(IncidentRow.kind.in_(list(EVENT_KEYS))).order_by(IncidentRow.id)):
         nodes = list(
             await ctx.session.scalars(
-                select(IncidentParticipantRow.node_id).where(IncidentParticipantRow.incident_id == incident.id).order_by(IncidentParticipantRow.position)
+                select(IncidentParticipantRow.node_id)
+                .where(IncidentParticipantRow.incident_id == incident.id, IncidentParticipantRow.role.not_in(sorted(NOT_PARTY_ROLES)))
+                .order_by(IncidentParticipantRow.position)
             )
         )
         mortal = await ctx.session.get(EntityRow, nodes[0]) if nodes else None

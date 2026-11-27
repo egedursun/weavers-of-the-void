@@ -4,6 +4,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.newborns import NEWBORN_KINDS
+from aerona.catalog.incident_kinds.onlookers import ONLOOKER_ROLES
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import FactSpec
 from aerona.catalog.life.services import PRESENT_MODES
@@ -149,7 +150,7 @@ async def follow_step(session: AsyncSession, step_id: int) -> None:
 
 
 FAR = 2**62
-KNOWING_ROLES = frozenset({IncidentRole.WITNESS, IncidentRole.TELLER})
+KNOWING_ROLES = ONLOOKER_ROLES
 GENESIS_PREFIX = "genesis."
 
 

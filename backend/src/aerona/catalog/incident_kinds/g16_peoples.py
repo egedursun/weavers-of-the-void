@@ -68,12 +68,13 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "arcs.payoff",
         G.PEOPLES,
-        "What was set up in epoch {opened_epoch} as {setup} came to {payoff}.",
+        "{setup:An} set up in epoch {opened_epoch}{subject:? about #} was {payoff}{how:?: #}.",
         roles=(RoleSpec(R.SUBJECT, required=False),),
         facts=(
             FactSpec("setup", FactValue.ENUM, enum=SetupKind),
             FactSpec("payoff", FactValue.ENUM, enum=PayoffKind),
             FactSpec("opened_epoch", FactValue.NUMBER, FactUnit.NONE),
+            FactSpec("how", FactValue.NAME, required=False),
         ),
         chronicle_kind=K.CULTURE,
     ),

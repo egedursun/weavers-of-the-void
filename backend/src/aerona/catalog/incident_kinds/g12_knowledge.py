@@ -41,6 +41,24 @@ PROGRAMME_STEPS: Mapping[ProgrammeStage, str] = total(
     },
 )
 
+
+DIED = "{dead:no one|one person|# people} died"
+RESEARCH_INCIDENT_LINES = total(
+    ResearchIncident,
+    {
+        ResearchIncident.LEAK: "The secret{technique:? of #} leaked from the scholars of {subject}.",
+        ResearchIncident.RELEASED_BEAST: "A beast got loose from the work of the scholars of {subject}.",
+        ResearchIncident.PLAGUE: "A sickness got loose from the work of the scholars of {subject}.",
+        ResearchIncident.BACKLASH: "A working turned back on the scholars of {subject}.",
+        ResearchIncident.FIRE: f"A fire broke out in the workshops of the scholars of {{subject}}; {DIED}.",
+        ResearchIncident.EXPLOSION: f"An explosion struck the scholars of {{subject}}; {DIED}.",
+        ResearchIncident.POISONING: f"A poisoning struck the scholars of {{subject}}; {DIED}.",
+        ResearchIncident.SUMMONING_GONE_WRONG: f"A summoning by the scholars of {{subject}} went wrong; {DIED}.",
+        ResearchIncident.STOLEN: "A rival stole the work{technique:? on #} of the scholars of {subject}.",
+        ResearchIncident.CHANCE_FIND: "The scholars of {subject} made a find by chance{technique:? toward #}.",
+    },
+)
+
 KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "communication.cipher_broken",
@@ -179,6 +197,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             terms=True,
             chronicle_kind=K.KNOWLEDGE,
         ),
+        RESEARCH_INCIDENT_LINES,
     ),
     IncidentKindSpec(
         "discovery.refitted",

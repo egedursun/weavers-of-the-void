@@ -23,6 +23,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole, Milestone
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage, PunishmentKind
 from aerona.domain.enums.polity import DecisionRule, LawKind, OfficeKind
 from aerona.domain.enums.society import SocialClass
@@ -80,7 +81,9 @@ async def weddings(ctx: TickContext) -> list[Occasion]:
     for incident in await ctx.session.scalars(select(IncidentRow).where(IncidentRow.epoch == ctx.epoch, IncidentRow.kind == "kin.marriage")):
         couple = list(
             await ctx.session.scalars(
-                select(IncidentParticipantRow.node_id).where(IncidentParticipantRow.incident_id == incident.id).order_by(IncidentParticipantRow.position)
+                select(IncidentParticipantRow.node_id)
+                .where(IncidentParticipantRow.incident_id == incident.id, IncidentParticipantRow.role == IncidentRole.SPOUSE)
+                .order_by(IncidentParticipantRow.position)
             )
         )
         first = await living(ctx, couple[0] if couple else None)

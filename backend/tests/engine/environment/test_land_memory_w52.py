@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.land_memory import LAND_MEMORIES
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.mind import MemoryRow
 from aerona.db.tables.region import RegionMemoryRow
 from aerona.domain.enums.mind import MemoryKind
@@ -71,3 +72,22 @@ async def test_a_treaty_binds_its_signers_and_an_expulsion_leaves_a_grievance(se
     before = rows[0].magnitude
     await fade_memories(session, RULES, 5)
     assert rows[0].magnitude < before
+
+
+async def test_a_witness_is_no_party_to_what_the_land_remembers_and_the_line_names_what_was_remembered(session: AsyncSession) -> None:
+    world = await seed_core_world(session)
+    ctx = await manual_context(session, "test", RULES)
+    first, second = await mortal(session, "Signer", world, world.regions[0].id), await mortal(session, "Other", world, world.regions[0].id)
+    onlooker = await mortal(session, "Onlooker", world, world.regions[0].id)
+    treaty = await happened(session, world, "diplomacy.peace", [first.id, second.id])
+    session.add(IncidentParticipantRow(incident_id=treaty.id, node_id=onlooker.id, role=IncidentRole.WITNESS, position=0))
+    row = RegionMemoryRow(
+        world_id=world.world.id, region_entity_id=world.regions[0].id, kind=K.TREATY, magnitude=30, epoch=1, source_key="c", incident_id=treaty.id
+    )
+    session.add(row)
+    await session.flush()
+    await answer_memories(ctx, [row])
+    holders = {memory.holder_node_id for memory in await session.scalars(select(MemoryRow).where(MemoryRow.kind == MemoryKind.MADE_PEACE))}
+    assert holders == {first.id, second.id}
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "memory.written"))
+    assert told is not None and "of Signer" in told

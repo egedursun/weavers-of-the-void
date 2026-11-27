@@ -410,6 +410,8 @@ async def test_a_gods_portent_presses_the_tale_of_its_subject_and_is_paid_by_its
     tally = DramaTally()
     await pay_setups(await at(session, 5), tally)
     assert setup.payoff is PayoffKind.FULFILLED and setup.payoff_text == "Ysa and Brann met at the market." and tally.fulfilled == 1
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "arcs.payoff"))
+    assert told == "A portent set up in epoch 2 about Ysa was fulfilled: Ysa and Brann met at the market."
 
 
 async def test_a_stalled_tale_presses_only_the_storylets_that_would_bring_its_next_beat(session: AsyncSession, world: CoreWorld) -> None:

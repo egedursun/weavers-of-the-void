@@ -134,7 +134,8 @@ async def test_mortal_phase_kills_wounded_and_ages(world: CoreWorld, session: As
     assert broken.status is EntityStatus.DEAD
     await mortal_aging(ctx)
     assert old.status is EntityStatus.DEAD
-    assert (stat(old, "age") or 0) >= 70
+    start = world.cosmos.epoch_start_year
+    assert stat(old, "age") == 65 + (stat(old, "death_year") or 0) - start
     assert stat(young, "age") == 10 + ctx.rules.time.years_per_epoch
 
 
