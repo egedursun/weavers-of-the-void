@@ -434,15 +434,16 @@ class TypedIndex:
             if table not in targets:
                 continue
             label = REFERENCE_LABELS.get(table) or _named_label(mapper)
+            key = mapper.get_property_by_column(mapper.primary_key[0]).key
             if label is not None:
-                self.references[table] = {row.id: label(row, self.names) for row in await session.scalars(select(mapper.class_))}
+                self.references[table] = {getattr(row, key): label(row, self.names) for row in await session.scalars(select(mapper.class_))}
                 continue
             described = _described_label(mapper)
             wanted = await shown_ids(session, table)
             self.references[table] = {}
             for start in range(0, len(wanted), ID_CHUNK):
                 rows = await session.scalars(select(mapper.class_).where(mapper.primary_key[0].in_(wanted[start : start + ID_CHUNK])))
-                self.references[table].update({row.id: described(row, self.names) for row in rows})
+                self.references[table].update({getattr(row, key): described(row, self.names) for row in rows})
         await self.tell_accounts(session)
         await self.tell_incidents(session)
 
@@ -565,8 +566,9 @@ class TypedIndex:
             if mapper is None or label is None or not ids:
                 continue
             key = mapper.primary_key[0]
+            attribute = mapper.get_property_by_column(key).key
             known = self.references.setdefault(target, {})
-            known.update({row.id: label(row, self.names) for row in await session.scalars(select(mapper.class_).where(key.in_(sorted(ids))))})
+            known.update({getattr(row, attribute): label(row, self.names) for row in await session.scalars(select(mapper.class_).where(key.in_(sorted(ids))))})
 
     async def load_records(self, session: AsyncSession, mapper: Mapper[Any]) -> None:
         self.add_records(mapper, list(await session.scalars(_rows(mapper, table_name(mapper)))))
