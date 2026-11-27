@@ -48,7 +48,6 @@ SKIPPED_TABLES = frozenset(
         "divine_will_artifact_versions",
         "divine_will_artifacts",
         "divine_will_attachments",
-        "divine_will_chunks",
         "divine_will_confirmations",
         "divine_will_cycles",
         "divine_will_events",

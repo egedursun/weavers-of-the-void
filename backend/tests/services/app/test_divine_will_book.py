@@ -8,7 +8,6 @@ from aerona.db.tables.divine_will import (
     DivineWillArtifactRow,
     DivineWillArtifactVersionRow,
     DivineWillAttachmentRow,
-    DivineWillChunkRow,
     DivineWillConfirmationRow,
     DivineWillCycleRow,
     DivineWillEventRow,
@@ -24,7 +23,6 @@ from aerona.domain.enums.divine_will import (
     ArtifactStatus,
     AttachmentKind,
     AttachmentStatus,
-    ChunkSource,
     ConfirmationReason,
     ConfirmationStatus,
     CycleEventKind,
@@ -184,9 +182,6 @@ async def stirred(session: AsyncSession, world: Cosmos) -> dict[str, int]:
                 status=AttachmentStatus.INDEXED,
                 seen_by_model=True,
             ),
-            DivineWillChunkRow(
-                source=ChunkSource.ENTITY, source_id=str(world.people.id), node_id=world.people.id, text="Velari", tokens=3, vector=b"", digest=HANDLE
-            ),
         ]
     )
     await session.flush()
@@ -210,7 +205,6 @@ async def test_the_book_and_the_codex_hold_every_divine_will_record_in_full(data
         assert "The Long Account" in text and "Written out in full" in text and "First draft" in text
         assert "Paragraph 1200 of the long account" in text and "The last line of the account." in text
         assert "folk-notes.pdf" in text and "Converted and indexed" in text
-        assert "1 passage" in text
         assert sorted(set(SNAKE_WORD.findall(MARKUP.sub(" ", text))) & enum_keys()) == []
     assert "&lt;h1&gt;The Velari almanac&lt;/h1&gt;" in page.html
     assert PAGE_BODY in codex

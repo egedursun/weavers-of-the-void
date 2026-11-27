@@ -61945,6 +61945,7 @@ export interface components {
       passages: number
       embedded: number
       pending: number
+      share: number
       sources: components['schemas']['DivineWillIndexSource'][]
       built_at: string | null
       model: string

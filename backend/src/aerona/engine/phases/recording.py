@@ -255,7 +255,6 @@ from aerona.engine.recording.checkpoints import due, take_checkpoint
     "table.divine_will_artifact_versions",
     "table.divine_will_artifacts",
     "table.divine_will_attachments",
-    "table.divine_will_chunks",
     "table.divine_will_confirmations",
     "table.divine_will_cycles",
     "table.divine_will_events",

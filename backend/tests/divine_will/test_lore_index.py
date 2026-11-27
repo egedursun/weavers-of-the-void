@@ -1,5 +1,4 @@
 import asyncio
-import itertools
 import json
 import threading
 from collections.abc import Sequence
@@ -10,22 +9,24 @@ from typing import Any, cast
 
 import numpy as np
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import delete, select
+from sqlalchemy import inspect as table_inspect
 
 from aerona.db.session import Database
 from aerona.db.tables.changes import StateChangeRow
-from aerona.db.tables.divine_will import DivineWillAttachmentRow, DivineWillChunkRow, DivineWillCycleRow, DivineWillSessionRow
+from aerona.db.tables.culture import RumourRow
+from aerona.db.tables.divine_will import DivineWillAttachmentRow, DivineWillCycleRow, DivineWillSessionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.military import SpyAgentRow, SpyNetworkRow
 from aerona.db.tables.records import IncidentStepRow
+from aerona.db.tables.routes import RouteRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.divine_will import AttachmentKind, AttachmentStatus, ChunkSource, CycleStatus, DivineWillMode, IndexStatus
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.job import JobKind
-from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.records import StepAction
 from aerona.epoch.concurrency import WORLD_GROUP
 from aerona.events.bus import EventBus
@@ -39,10 +40,12 @@ from aerona.services.books.records import LEDGER_TITLES
 from aerona.services.divine_will import index as index_module
 from aerona.services.divine_will.embedding import TextRole, Vector
 from aerona.services.divine_will.index import RRF_K, SMALL_SAMPLE, LoreIndex, fuse, relevant
+from aerona.services.divine_will.store import WORDS_FOLDER
 from aerona.tools.divine_will.catalogue import tool_by_name
 from aerona.tools.divine_will.framework import PlayerPort, WillCall, WillResult, invoke
 from tests.conftest import OpenDatabase
 from tests.divine_will.embedder_fixtures import CountingEmbedder, model_folder
+from tests.divine_will.index_documents import documents
 from tests.polling import until
 from tests.tools.factories import EPOCH, Realm, make_entity, seed_realm
 
@@ -101,15 +104,22 @@ async def run(call: WillCall, tool: DivineWillToolId, arguments: dict[str, Any])
     return await invoke(call, found, arguments)
 
 
+async def describe(database: Database, entity_id: int, text: str) -> None:
+    async with database.write() as session:
+        entity = await session.get(EntityRow, entity_id)
+        assert entity is not None
+        entity.description = text
+
+
 def test_reciprocal_rank_fusion_rewards_agreement() -> None:
-    a, b, c = (0, 1), (0, 2), (1, 3)
+    a, b, c = ("entity", "1", 0), ("entity", "2", 0), ("son", "3", 0)
     fused = fuse([[a, b, c], [c, a]])
     assert [key for key, _ in fused] == [a, c, b]
     assert fused[0][1] == 1 / (RRF_K + 1) + 1 / (RRF_K + 2)
 
 
 def test_fusion_breaks_ties_by_best_rank_then_key() -> None:
-    first, second, third = (0, 5), (0, 2), (1, 1)
+    first, second, third = ("entity", "5", 0), ("entity", "2", 0), ("son", "1", 0)
     assert [key for key, _ in fuse([[first, third], [second]])] == [second, first, third]
     assert [key for key, _ in fuse([[second], [first]])] == [second, first]
 
@@ -127,123 +137,118 @@ def test_a_few_allowed_passages_are_judged_against_the_whole_corpus() -> None:
     assert relevant(allowed, corpus).tolist() == [False, False, True]
 
 
-async def test_only_changed_passages_are_embedded_again(tmp_path: Path, open_database: OpenDatabase) -> None:
+async def test_a_change_is_read_alone_and_a_restart_reads_nothing(tmp_path: Path, open_database: OpenDatabase) -> None:
     database, realm = await open_world(open_database, tmp_path)
     embedder = CountingEmbedder()
     index = LoreIndex(database, Rules, embedder=embedder)
     first = await index.refresh()
     embedded = len(embedder.passages)
-    assert first["passages"] == first["embedded"] > 0
+    assert first["passages"] > first["embedded"] > 0
     assert embedded == len(set(embedder.passages))
-    async with database.read() as session:
-        assert await session.scalar(select(func.count()).select_from(DivineWillChunkRow)) == first["passages"]
-    await index.refresh()
-    assert len(embedder.passages) == embedded
-    async with database.write() as session:
-        town = await session.get(EntityRow, realm.settlement_id)
-        assert town is not None
-        town.description = "Brinewatch keeps a lighthouse on the northern cliff and a ferry across the bay."
-    await index.refresh()
-    again = embedder.passages[embedded:]
-    assert again
-    assert any("lighthouse" in text for text in again)
-    assert len(again) < first["passages"] / 4
-    async with database.read() as session:
-        owners = set(await session.scalars(select(DivineWillChunkRow.node_id).where(DivineWillChunkRow.text.in_(again))))
-    assert owners <= {realm.settlement_id, None}
-    fresh = CountingEmbedder()
-    reopened = LoreIndex(database, Rules, embedder=fresh)
-    await reopened.load()
-    await reopened.refresh()
-    assert fresh.passages == []
+    again = await index.refresh()
+    assert again["written"] == 0 and len(embedder.passages) == embedded
+    await describe(database, realm.settlement_id, "Brinewatch keeps a lighthouse on the northern cliff and a ferry across the bay.")
+    changed = await index.refresh()
+    fresh = embedder.passages[embedded:]
+    assert fresh and all("lighthouse" in text for text in fresh)
+    assert 0 < changed["written"] < first["passages"] / 4
+    found = await index.search("lighthouse cliff")
+    assert found.hits[0].node_id == realm.settlement_id
+    await index.stop()
+    reopened_embedder = CountingEmbedder()
+    reopened = LoreIndex(database, Rules, embedder=reopened_embedder)
+    restarted = await reopened.refresh()
+    assert restarted["written"] == 0 and reopened_embedder.passages == []
+    assert restarted["passages"] == changed["passages"]
+    await reopened.stop()
     await database.dispose()
 
 
-async def test_a_built_index_refreshes_quietly_and_skips_an_unchanged_world(
-    tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    database, realm = await open_world(open_database, tmp_path)
-    index = LoreIndex(database, Rules, embedder=CountingEmbedder())
-    await index.refresh()
-    assert index.state().status is IndexStatus.READY
-    shown: list[IndexStatus] = []
-    original = index._set
-
-    def watched(status: IndexStatus, note: str, *, force: bool = False) -> None:
-        shown.append(status)
-        original(status, note, force=force)
-
-    monkeypatch.setattr(index, "_set", watched)
-    reads: list[str] = []
-    gather = index_module.gathered
-
-    def counted(url: str, rules: Rules) -> Any:
-        reads.append(url)
-        return gather(url, rules)
-
-    monkeypatch.setattr(index_module, "gathered", counted)
-    await index.refresh()
-    assert reads == []
+async def plant_spies(database: Database, realm: Realm) -> None:
     async with database.write() as session:
-        town = await session.get(EntityRow, realm.settlement_id)
-        assert town is not None
-        town.description = "A new harbour wall stands where the old one fell."
-    await index.refresh()
-    assert len(reads) == 1
-    assert IndexStatus.BUILDING not in shown
-    assert index.state().status is IndexStatus.READY
+        network = SpyNetworkRow(owner_entity_id=realm.faction_id, target_entity_id=realm.settlement_id, since_epoch=EPOCH)
+        session.add(network)
+        await session.flush()
+        session.add(SpyAgentRow(network_id=network.id))
+
+
+async def stir(database: Database, realm: Realm) -> None:
+    async with database.write() as session:
+        await session.execute(delete(SpyNetworkRow).where(SpyNetworkRow.target_entity_id == realm.settlement_id))
+        people = await session.get(EntityRow, realm.people_id)
+        assert people is not None
+        people.name = "Kessar Clans"
+        mortal = await session.get(EntityRow, realm.mortal_id)
+        assert mortal is not None
+        mortal.status = EntityStatus.REJECTED
+        route = await session.get(RouteRow, realm.route_id)
+        assert route is not None
+        await session.delete(route)
+        line = ChronicleRow(epoch=EPOCH, year=70, kind=ChronicleKind.WORLD, world_id=realm.cosmos.world_id, text="The Kessar Clans raised a harbour wall.")
+        session.add(line)
+        await session.flush()
+        happening = IncidentRow(
+            kind="player.history",
+            epoch=EPOCH,
+            year=70,
+            world_id=realm.cosmos.world_id,
+            place_entity_id=realm.settlement_id,
+            chronicle_id=line.id,
+            magnitude=4,
+            locked=[],
+        )
+        session.add(happening)
+        await session.flush()
+        session.add(IncidentParticipantRow(incident_id=happening.id, node_id=realm.people_id, role=IncidentRole.ACTOR, position=0))
+        session.add(
+            IncidentStepRow(incident_id=happening.id, position=0, actor_node_id=realm.people_id, action=StepAction.GIVE, target_node_id=realm.settlement_id)
+        )
+        session.add(RumourRow(incident_id=happening.id, carrier_entity_id=realm.faction_id, epoch=EPOCH, hops=0, fidelity=80))
+        await make_entity(session, "Gull Rock", EntityType.REGION, world_id=realm.cosmos.world_id)
+    async with database.write() as session:
+        rumour = await session.scalar(select(RumourRow).order_by(RumourRow.id.desc()))
+        assert rumour is not None
+        rumour.fidelity = 61
+
+
+async def test_following_the_changes_matches_a_fresh_build(tmp_path: Path, open_database: OpenDatabase) -> None:
+    database, realm = await open_world(open_database, tmp_path)
+    await plant_spies(database, realm)
+    followed = LoreIndex(database, Rules, embedder=CountingEmbedder(), folder=tmp_path / "followed")
+    await followed.refresh()
+    before = documents(followed)
+    assert any(key[0] == ChunkSource.TYPED_SECTION.value and key[1].startswith(f"{SpyAgentRow.__tablename__}:") for key in before)
+    await stir(database, realm)
+    await followed.refresh()
+    after = documents(followed)
+    fresh = LoreIndex(database, Rules, embedder=CountingEmbedder(), folder=tmp_path / "fresh")
+    await fresh.refresh()
+    built = documents(fresh)
+    assert after == built
+    renamed = [key for key in after if key not in before or before[key] != after[key]]
+    assert any(key[0] == ChunkSource.TYPED_SECTION.value for key in renamed)
+    assert any(key[0] == ChunkSource.INCIDENT.value for key in renamed)
+    assert not any(key[0] == ChunkSource.ENTITY.value and key[1] == str(realm.mortal_id) for key in after)
+    assert not any(key[0] == ChunkSource.TYPED_SECTION.value and key[1].startswith(f"{RouteRow.__tablename__}:") for key in after)
+    assert not any(key[0] == ChunkSource.TYPED_SECTION.value and key[1].startswith(f"{SpyAgentRow.__tablename__}:") for key in after)
+    assert any(key[0] == ChunkSource.TYPED_SECTION.value and key[1].startswith(f"{RouteRow.__tablename__}:") for key in before)
+    told = await followed.search("Kessar Clans harbour wall")
+    assert told.hits and "Kessar Clans" in told.hits[0].text
+    named = await followed.search("Kessar", sources=frozenset({ChunkSource.ENTITY}))
+    assert any(hit.record == str(realm.people_id) and hit.text.startswith("Kessar Clans") for hit in named.hits)
+    await followed.stop()
+    await fresh.stop()
     await database.dispose()
 
 
-async def test_an_index_that_waited_for_an_epoch_shows_it_reads_again_at_once(
-    tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_a_natural_question_finds_its_record_by_words(tmp_path: Path, open_database: OpenDatabase) -> None:
     database, realm = await open_world(open_database, tmp_path)
-    index = LoreIndex(database, Rules, embedder=CountingEmbedder())
-    await index.refresh()
-    index._set(IndexStatus.WAITING, index_module.EPOCH_RUNNING)
-    shown: list[IndexStatus] = []
-    original = index._set
-
-    def watched(status: IndexStatus, note: str, *, force: bool = False) -> None:
-        shown.append(status)
-        original(status, note, force=force)
-
-    monkeypatch.setattr(index, "_set", watched)
-    async with database.write() as session:
-        town = await session.get(EntityRow, realm.settlement_id)
-        assert town is not None
-        town.description = "The ferry runs again."
-    await index.refresh()
-    assert shown[0] is IndexStatus.BUILDING
-    assert index.state().status is IndexStatus.READY
-    await database.dispose()
-
-
-async def test_a_restarted_index_leaves_an_unchanged_world_unread(tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch) -> None:
-    database, realm = await open_world(open_database, tmp_path)
-    await LoreIndex(database, Rules, embedder=CountingEmbedder()).refresh()
-    reads: list[str] = []
-    gather = index_module.gathered
-
-    def counted(url: str, rules: Rules) -> Any:
-        reads.append(url)
-        return gather(url, rules)
-
-    monkeypatch.setattr(index_module, "gathered", counted)
-    restarted = LoreIndex(database, Rules, embedder=CountingEmbedder())
-    await restarted.load()
-    await restarted.refresh()
-    assert reads == []
-    assert restarted.state().status is IndexStatus.READY
-    async with database.write() as session:
-        town = await session.get(EntityRow, realm.settlement_id)
-        assert town is not None
-        town.description = "A bridge now spans the river."
-    again = LoreIndex(database, Rules, embedder=CountingEmbedder())
-    await again.load()
-    await again.refresh()
-    assert len(reads) == 1
+    fair, _onlookers = await crowded_fair(database, realm)
+    index = LoreIndex(database, Rules, directory=tmp_path / "no-model")
+    found = await index.search("When did the Kessar Folk share their grain with the town?")
+    assert not found.semantic
+    assert any(hit.source is ChunkSource.INCIDENT and hit.record == str(fair) for hit in found.hits[:3])
+    await index.stop()
     await database.dispose()
 
 
@@ -267,6 +272,7 @@ async def test_paging_reaches_every_hit(tmp_path: Path, open_database: OpenDatab
     assert ranks == list(range(1, head["total"] + 1))
     past = await run(call, W.SEARCH_LORE, {"handle": head["handle"], "page": page + 5})
     assert head_of(past)["shown"] == 0
+    await index.stop()
     await database.dispose()
 
 
@@ -278,9 +284,9 @@ async def test_search_falls_back_to_words_when_the_model_is_missing(tmp_path: Pa
     assert found.hits and not found.semantic
     assert all(hit.similarity is None and hit.lexical_rank is not None for hit in found.hits)
     assert "words only" in found.note
-    assert index.state().status is IndexStatus.UNAVAILABLE
-    async with database.read() as session:
-        assert await session.scalar(select(func.count()).select_from(DivineWillChunkRow)) == 0
+    state = index.state()
+    assert state.status is IndexStatus.UNAVAILABLE and state.embedded == 0 and state.passages > 0
+    await index.stop()
     await database.dispose()
 
 
@@ -289,12 +295,13 @@ async def test_hybrid_search_fuses_words_and_meaning(tmp_path: Path, open_databa
     index = LoreIndex(database, Rules, directory=model_folder(), threads=2)
     found = await index.search("Brinewatch")
     assert found.semantic and found.note == ""
-    assert found.embedded == found.passages
     best = found.hits[0]
     assert best.node_id == realm.settlement_id and best.lexical_rank is not None and best.similarity is not None
     meaning_only = await index.search("a settlement by the sea", sources=frozenset({ChunkSource.ENTITY}))
     assert meaning_only.hits and all(hit.source is ChunkSource.ENTITY for hit in meaning_only.hits)
+    assert all(hit.similarity is not None for hit in meaning_only.hits[:3])
     assert index.state().status is IndexStatus.READY
+    await index.stop()
     await database.dispose()
 
 
@@ -333,10 +340,10 @@ async def test_attachment_passages_leave_retrieval_with_their_cycle(tmp_path: Pa
     assert '"source": "attachment"' in found.text and "ferry of Brinewatch" in found.text
     lore = await run(kept, W.SEARCH_LORE, {"query": "ferry", "sources": ["attachment"]})
     assert f'"record": "{attachment_id}"' in lore.text
+    assert any(key[0] == ChunkSource.ATTACHMENT.value for key in documents(index))
     async with database.read() as session:
-        rows = await session.scalar(select(func.count()).select_from(DivineWillChunkRow).where(DivineWillChunkRow.source == ChunkSource.ATTACHMENT))
         status = await session.scalar(select(DivineWillAttachmentRow.status).where(DivineWillAttachmentRow.id == attachment_id))
-    assert rows and status is AttachmentStatus.INDEXED
+    assert status is AttachmentStatus.INDEXED
     gone = await run(lost, W.ATTACHMENT_SEARCH, {"query": "ferry crossing"})
     assert head_of(gone)["total"] == 0
     hidden = await run(lost, W.SEARCH_LORE, {"query": "ferry"})
@@ -345,12 +352,13 @@ async def test_attachment_passages_leave_retrieval_with_their_cycle(tmp_path: Pa
     assert unread.is_error
     listed = await run(lost, W.ATTACHMENT_LIST, {})
     assert "field-notes.md" not in listed.text
+    await index.stop()
     await database.dispose()
 
 
-async def test_the_indexer_follows_world_changes_and_waits_for_epochs(tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_the_index_follows_the_world_while_an_epoch_runs(tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(index_module, "QUIET_SECONDS", 0.01)
-    monkeypatch.setattr(index_module, "POLL_SECONDS", 0.01)
+    monkeypatch.setattr(index_module, "FOLLOW_SECONDS", 0.05)
     database, realm = await open_world(open_database, tmp_path)
     bus = EventBus()
     jobs = JobManager(database, bus)
@@ -361,8 +369,7 @@ async def test_the_indexer_follows_world_changes_and_waits_for_epochs(tmp_path: 
     bus.add_listener(lambda event: progress.append(event.payload["status"]) if event.kind is EventKind.DIVINE_WILL_INDEX_PROGRESS else None)
     index.start(jobs)
     assert await until(lambda: index.state().status is IndexStatus.READY and jobs.busy_group(index_module.INDEX_GROUP) is None, seconds=60)
-    built = len(embedder.passages)
-    assert built > 0 and IndexStatus.READY.value in progress
+    assert IndexStatus.BUILDING.value in progress and IndexStatus.READY.value in progress
     epoch_done = asyncio.Event()
 
     async def epoch(_context: JobContext) -> dict[str, int]:
@@ -370,17 +377,13 @@ async def test_the_indexer_follows_world_changes_and_waits_for_epochs(tmp_path: 
         return {}
 
     await jobs.submit(JobKind.EPOCH, epoch, exclusive_group=WORLD_GROUP)
-    async with database.write() as session:
-        town = await session.get(EntityRow, realm.settlement_id)
-        assert town is not None
-        town.description = "Brinewatch keeps a lighthouse on the northern cliff."
-    bus.publish(EventKind.WORLD_CHANGED, {"action": "entity:edit"})
-    assert await until(lambda: index.state().status is IndexStatus.WAITING, seconds=30)
-    await asyncio.sleep(0.2)
-    assert len(embedder.passages) == built
-    epoch_done.set()
+    await describe(database, realm.settlement_id, "Brinewatch keeps a lighthouse on the northern cliff.")
+    bus.publish(EventKind.ENGINE_PHASE, {"phase": "settlements"})
     assert await until(lambda: any("lighthouse" in text for text in embedder.passages), seconds=60)
-    assert await until(lambda: index.state().status is IndexStatus.READY, seconds=60)
+    assert jobs.busy_group(WORLD_GROUP) is not None
+    found = await index.search("lighthouse")
+    assert found.hits and found.hits[0].node_id == realm.settlement_id
+    epoch_done.set()
     await index.stop()
     await jobs.shutdown()
     await database.dispose()
@@ -414,21 +417,6 @@ async def crowded_fair(database: Database, realm: Realm) -> tuple[int, list[int]
             (await make_entity(session, f"Onlooker {number:02d}", EntityType.MORTAL, world_id=realm.cosmos.world_id, location_id=realm.settlement_id)).id
             for number in range(CROWD)
         ]
-        session.add(
-            StateChangeRow(
-                epoch=2,
-                year=61,
-                table_name="entities",
-                row_key=f'{{"id": {realm.people_id}}}',
-                node_id=realm.people_id,
-                operation=LedgerOperation.UPDATE,
-                field="power_level",
-                before_number=4.0,
-                after_number=5.0,
-                actor_kind=ActorKind.ENGINE,
-                incident_id=fair.id,
-            )
-        )
         return fair.id, onlookers
 
 
@@ -443,36 +431,19 @@ async def test_the_index_reads_each_happening_once_and_no_view_of_the_ledger(tmp
             for number, onlooker in enumerate(onlookers)
         )
     after = await index.refresh()
-    async with database.read() as session:
-        chunks = list(await session.scalars(select(DivineWillChunkRow).order_by(DivineWillChunkRow.id)))
-    viewed = [chunk.source_id for chunk in chunks if chunk.source is ChunkSource.TYPED_SECTION and chunk.source_id.rsplit(":", 1)[-1] in LEDGER_TITLES]
-    told = " ".join(chunk.text for chunk in chunks if chunk.source is ChunkSource.INCIDENT and chunk.source_id == str(fair))
-    assert viewed == []
+    held = documents(index)
+    assert not any(key[0] == ChunkSource.TYPED_SECTION.value and key[1].split(":", 1)[0] in LEDGER_TITLES for key in held)
+    assert not any(key[0] == ChunkSource.TYPED_SECTION.value and key[1].startswith(StateChangeRow.__tablename__) for key in held)
     assert after["passages"] - before["passages"] <= 2
+    told = " ".join(hit.text for hit in (await index.search("Kessar Folk shared grain")).hits if hit.source is ChunkSource.INCIDENT and hit.record == str(fair))
     assert "The Kessar Folk shared their grain." in told and "Cause: A drought emptied the granaries." in told and "Steps: 1." in told
     async with database.read() as session:
         named = [entity.name for entity in await session.scalars(select(EntityRow).where(EntityRow.id.in_(onlookers)).order_by(EntityRow.id))]
-    assert all(name in told for name in named)
+    assert any(key[0] == ChunkSource.INCIDENT.value and key[1] == str(fair) for key in held)
+    shown = " ".join(hit.text for hit in (await index.search(" ".join(named))).hits if hit.record == str(fair))
+    assert all(name in shown for name in named)
+    await index.stop()
     await database.dispose()
-
-
-class GatedEmbedder(CountingEmbedder):
-    def __init__(self) -> None:
-        super().__init__()
-        self.closed = threading.Event()
-        self.held = threading.Event()
-        self.opened = threading.Event()
-        self.finished = threading.Event()
-        self.opened.set()
-
-    def embed(self, texts: Sequence[str], role: TextRole) -> Vector:
-        if not (self.closed.is_set() and role is TextRole.PASSAGE):
-            return super().embed(texts, role)
-        self.held.set()
-        self.opened.wait()
-        found = super().embed(texts, role)
-        self.finished.set()
-        return found
 
 
 @dataclass
@@ -485,60 +456,75 @@ class WatchedContext(JobContext):
         super().report(progress, stage)
 
 
-async def test_the_index_job_reports_its_share_by_tokens_read(tmp_path: Path, open_database: OpenDatabase) -> None:
+async def test_the_build_reports_its_share_of_the_world_read(tmp_path: Path, open_database: OpenDatabase) -> None:
     database, _realm = await open_world(open_database, tmp_path)
-    rules = replace(Rules(), divine_will=replace(Rules().divine_will, index_batch=1))
-    index = LoreIndex(database, lambda: rules, embedder=CountingEmbedder())
+    index = LoreIndex(database, Rules, embedder=CountingEmbedder())
     context = WatchedContext(job_id="index", kind=JobKind.DIVINE_WILL_INDEX, params={}, bus=EventBus())
     await index.refresh(context)
-    assert index._world is not None
-    tokens = sorted(chunk.tokens for chunk in index._world.chunks)
-    expected = list(itertools.accumulate(tokens))
-    assert context.shares == pytest.approx([read / expected[-1] for read in expected])
-    assert len(set(tokens)) > 1
+    assert context.shares and context.shares == sorted(context.shares) and context.shares[-1] == pytest.approx(1.0)
+    await index.stop()
     await database.dispose()
 
 
-async def test_a_cancelled_index_job_stays_stopped_until_the_world_changes(
-    tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch
-) -> None:
+class GatedEmbedder(CountingEmbedder):
+    def __init__(self) -> None:
+        super().__init__()
+        self.held = threading.Event()
+        self.opened = threading.Event()
+        self.finished = threading.Event()
+        self.opened.set()
+
+    def embed(self, texts: Sequence[str], role: TextRole) -> Vector:
+        if role is not TextRole.PASSAGE or self.opened.is_set():
+            return super().embed(texts, role)
+        self.held.set()
+        self.opened.wait()
+        found = super().embed(texts, role)
+        self.finished.set()
+        return found
+
+
+async def test_a_cancelled_build_stays_stopped_until_the_world_changes(tmp_path: Path, open_database: OpenDatabase, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(index_module, "QUIET_SECONDS", 0.01)
-    monkeypatch.setattr(index_module, "POLL_SECONDS", 0.01)
+    monkeypatch.setattr(index_module, "FOLLOW_SECONDS", 0.05)
     database, realm = await open_world(open_database, tmp_path)
     bus = EventBus()
     jobs = JobManager(database, bus)
     embedder = GatedEmbedder()
+    embedder.opened.clear()
     index = LoreIndex(database, Rules, embedder=embedder)
     index.attach(bus)
     index.start(jobs)
-    assert await until(lambda: index.state().status is IndexStatus.READY and jobs.busy_group(index_module.INDEX_GROUP) is None, seconds=60)
-    embedder.closed.set()
-    embedder.opened.clear()
-    async with database.write() as session:
-        town = await session.get(EntityRow, realm.settlement_id)
-        assert town is not None
-        town.description = "Brinewatch keeps a lighthouse on the northern cliff."
-    bus.publish(EventKind.WORLD_CHANGED, {"action": "entity:edit"})
     assert await until(embedder.held.is_set, seconds=60)
     running = jobs.busy_group(index_module.INDEX_GROUP)
     assert running is not None
     await jobs.cancel(running)
     assert await until(lambda: jobs.busy_group(index_module.INDEX_GROUP) is None, seconds=30)
-    embedder.closed.clear()
     embedder.opened.set()
-    assert await until(embedder.finished.is_set, seconds=30)
-    read = len(embedder.passages)
     bus.publish(EventKind.CHANGES_AVAILABLE, {"version": 1})
     await asyncio.sleep(0.3)
-    assert jobs.busy_group(index_module.INDEX_GROUP) is None and len(embedder.passages) == read
+    assert jobs.busy_group(index_module.INDEX_GROUP) is None
     assert index.state().status is IndexStatus.WAITING and index.state().note == index_module.STOPPED
-    async with database.write() as session:
-        town = await session.get(EntityRow, realm.settlement_id)
-        assert town is not None
-        town.description = "Brinewatch keeps a ferry across the bay."
+    await describe(database, realm.settlement_id, "Brinewatch keeps a ferry across the bay.")
     bus.publish(EventKind.WORLD_CHANGED, {"action": "entity:edit"})
     assert await until(lambda: any("ferry across the bay" in text for text in embedder.passages), seconds=60)
     assert await until(lambda: index.state().status is IndexStatus.READY, seconds=60)
     await index.stop()
     await jobs.shutdown()
+    await database.dispose()
+
+
+async def test_the_store_lives_beside_the_world_and_writes_nothing_into_it(tmp_path: Path, open_database: OpenDatabase) -> None:
+    database, _realm = await open_world(open_database, tmp_path)
+    async with database.read() as session:
+        changes = await session.scalar(select(StateChangeRow.id).order_by(StateChangeRow.id.desc()).limit(1))
+        tables = await session.run_sync(lambda sync: set(table_inspect(sync.connection()).get_table_names()))
+    assert "divine_will_chunks" not in tables
+    index = LoreIndex(database, Rules, embedder=CountingEmbedder())
+    await index.refresh()
+    assert index.folder == (tmp_path / index_module.STORE_FOLDER).resolve()
+    assert (index.folder / WORDS_FOLDER).is_dir()
+    async with database.read() as session:
+        assert await session.scalar(select(StateChangeRow.id).order_by(StateChangeRow.id.desc()).limit(1)) == changes
+    await index.stop()
     await database.dispose()

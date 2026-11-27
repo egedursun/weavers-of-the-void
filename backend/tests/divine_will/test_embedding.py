@@ -22,7 +22,6 @@ from aerona.services.divine_will.embedding import (
     model_directory,
     token_counter,
 )
-from aerona.services.divine_will.index import LoreIndex
 from aerona.settings import Settings
 from tests.divine_will.embedder_fixtures import REFERENCE_TOKENIZER, model_folder
 
@@ -125,16 +124,14 @@ def test_the_model_folder_defaults_under_the_data_folder(tmp_path: Path) -> None
     assert model_directory(Settings(data_dir=tmp_path, embed_model_dir=tmp_path / "elsewhere")) == tmp_path / "elsewhere"
 
 
-def test_cutting_passages_across_processes_gives_the_same_chunks(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cutting_passages_in_a_worker_process_gives_the_same_chunks() -> None:
     directory = model_folder()
-    count = token_counter(directory)
     passages = [
         Passage(ChunkSource.ENTITY, str(number), f"Town {number}", " ".join(SAMPLES[number % len(SAMPLES)] for _ in range(1 + number % 5)))
         for number in range(40)
     ]
-    monkeypatch.setattr(index_module, "PARALLEL_PASSAGES", 10)
-    alone = LoreIndex._chunked(passages, count, {})
-    spread = LoreIndex._chunked(passages, count, {}, directory, 2)
-    assert [(chunk.source_id, chunk.ordinal, chunk.digest, chunk.tokens) for chunk in spread] == [
-        (chunk.source_id, chunk.ordinal, chunk.digest, chunk.tokens) for chunk in alone
+    alone = index_module.cut(passages, token_counter(directory))
+    spread = index_module.cut(passages, index_module.worker_counter(str(directory)))
+    assert [(chunk.source_id, chunk.ordinal, chunk.digest, chunk.tokens) for item in spread for chunk in item.chunks] == [
+        (chunk.source_id, chunk.ordinal, chunk.digest, chunk.tokens) for item in alone for chunk in item.chunks
     ]

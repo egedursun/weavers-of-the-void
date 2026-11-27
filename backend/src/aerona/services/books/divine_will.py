@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.grammar import several
@@ -16,7 +16,6 @@ from aerona.db.tables.divine_will import (
     DivineWillArtifactRow,
     DivineWillArtifactVersionRow,
     DivineWillAttachmentRow,
-    DivineWillChunkRow,
     DivineWillConfirmationRow,
     DivineWillCycleRow,
     DivineWillEventRow,
@@ -33,7 +32,6 @@ from aerona.domain.enums.divine_will import (
     ArtifactStatus,
     AttachmentKind,
     AttachmentStatus,
-    ChunkSource,
     ConfirmationReason,
     ConfirmationStatus,
     CycleEventKind,
@@ -139,24 +137,6 @@ ATTACHMENT_LABELS: dict[AttachmentStatus, str] = {
     AttachmentStatus.CONVERTED: "Converted to text",
     AttachmentStatus.INDEXED: "Converted and indexed",
     AttachmentStatus.UNREADABLE: "Unreadable",
-}
-SOURCE_LABELS: dict[ChunkSource, str] = {
-    ChunkSource.ENTITY: "Entities",
-    ChunkSource.TYPED_SECTION: "Typed sections",
-    ChunkSource.CHRONICLE: "Chronicle lines",
-    ChunkSource.INCIDENT: "Incidents",
-    ChunkSource.SON: "Sons",
-    ChunkSource.FOREIGN_GOD: "Foreign gods",
-    ChunkSource.WORLD: "Worlds",
-    ChunkSource.STAR: "Stars",
-    ChunkSource.CREATOR: "The Creator",
-    ChunkSource.WORD: "Words",
-    ChunkSource.EPOCH: "Epochs",
-    ChunkSource.NOTE: "Notes",
-    ChunkSource.MESSAGE: "Messages",
-    ChunkSource.COUNCIL: "Councils",
-    ChunkSource.ARTIFACT: "Writings",
-    ChunkSource.ATTACHMENT: "Attachments",
 }
 
 
@@ -283,14 +263,6 @@ class WillAttachment:
     note: str
 
 
-@dataclass(frozen=True)
-class WillIndexLine:
-    source: str
-    passages: str
-    tokens: str
-    updated: str
-
-
 @dataclass
 class DivineWillRecord:
     sessions: list[WillSession] = field(default_factory=list)
@@ -311,11 +283,10 @@ class DivineWillRecord:
 class DivineWillWritings:
     writings: list[WillWriting] = field(default_factory=list)
     attachments: list[WillAttachment] = field(default_factory=list)
-    index: list[WillIndexLine] = field(default_factory=list)
 
     @property
     def shown(self) -> bool:
-        return bool(self.writings or self.attachments or self.index)
+        return bool(self.writings or self.attachments)
 
     @property
     def tally(self) -> str:
@@ -604,19 +575,6 @@ class WillReader:
             for row in await self.session.scalars(select(DivineWillAttachmentRow).order_by(DivineWillAttachmentRow.id))
         ]
 
-    async def index(self) -> list[WillIndexLine]:
-        counted = await self.session.execute(
-            select(DivineWillChunkRow.source, func.count(), func.sum(DivineWillChunkRow.tokens), func.max(DivineWillChunkRow.updated_epoch))
-            .group_by(DivineWillChunkRow.source)
-            .order_by(DivineWillChunkRow.source)
-        )
-        return [
-            WillIndexLine(
-                SOURCE_LABELS[source], several(int(passages), "passage", "passages"), several(int(tokens or 0), "token", "tokens"), f"epoch {latest or 0}"
-            )
-            for source, passages, tokens, latest in counted
-        ]
-
 
 async def divine_will_record(session: AsyncSession, names: dict[int, str]) -> DivineWillRecord:
     reader = WillReader(session, names)
@@ -626,4 +584,4 @@ async def divine_will_record(session: AsyncSession, names: dict[int, str]) -> Di
 
 async def divine_will_writings(session: AsyncSession, names: dict[int, str]) -> DivineWillWritings:
     reader = WillReader(session, names)
-    return DivineWillWritings(await reader.writings(), await reader.attachments(), await reader.index())
+    return DivineWillWritings(await reader.writings(), await reader.attachments())

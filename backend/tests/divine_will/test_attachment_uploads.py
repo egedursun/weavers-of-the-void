@@ -94,7 +94,7 @@ async def test_uploads_are_stored_converted_and_indexed(uploads: ApiWorld) -> No
     original = await uploads.http.get(f"{UPLOAD}/{stored[1]['id']}/file")
     assert original.content.startswith(b"%PDF") and original.headers["content-disposition"].startswith("attachment")
     index = uploads.services.application.lore_index
-    await index.refresh_attachments(embed=False)
+    await index.refresh_attachments()
     counts = {item.source: item.passages for item in index.state().sources}
     assert counts[ChunkSource.ATTACHMENT] >= 2
     state = await uploads.http.get("/api/divine-will/index")

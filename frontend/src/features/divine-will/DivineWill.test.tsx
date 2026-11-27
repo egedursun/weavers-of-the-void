@@ -43,6 +43,7 @@ function routes(cycles = [DONE]) {
       passages: 10,
       embedded: 10,
       pending: 0,
+      share: 1,
       sources: [],
       built_at: null,
       model: 'multilingual-e5-small',

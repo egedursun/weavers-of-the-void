@@ -11,7 +11,8 @@ describe('the notice while the Divine Will reads the world', () => {
         semantic: true,
         passages: 110864,
         embedded: 30832,
-        pending: 80032,
+        pending: 72,
+        share: 0.28,
         sources: [],
         built_at: null,
         model: 'model',
@@ -22,19 +23,23 @@ describe('the notice while the Divine Will reads the world', () => {
       .toBeVisible()
     await expect.element(screen.getByText('28%')).toBeVisible()
     await expect
-      .element(screen.getByText('30,832 of 110,864 read'))
+      .element(screen.getByText('110,864 passages read'))
+      .toBeVisible()
+    await expect
+      .element(screen.getByText(/72 parts of the world still to read/))
       .toBeVisible()
   })
 
-  it('shows no finished share while it gathers and cuts the world before reading', async () => {
+  it('shows no share before the first passage is written', async () => {
     const { screen } = await renderScreen(<IndexNotice />, {
       'GET /api/divine-will/index': {
         status: 'building',
-        note: 'Cutting what it gathered into passages.',
+        note: 'Reading the whole world once; later changes are read as they happen.',
         semantic: true,
-        passages: 763333,
-        embedded: 763333,
-        pending: 0,
+        passages: 0,
+        embedded: 0,
+        pending: 640,
+        share: 0,
         sources: [],
         built_at: null,
         model: 'model',
@@ -45,7 +50,7 @@ describe('the notice while the Divine Will reads the world', () => {
         screen.getByText('The Divine Will is preparing what it will read')
       )
       .toBeVisible()
-    expect(screen.getByText('100%').query()).toBeNull()
-    expect(screen.getByText('763,333 of 763,333 read').query()).toBeNull()
+    expect(screen.getByText('0%').query()).toBeNull()
+    expect(screen.getByText('0 passages read').query()).toBeNull()
   })
 })

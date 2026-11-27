@@ -11,7 +11,7 @@ from aerona.media.store import read_all
 from aerona.prompts.tools.divine_will_ids import DivineWillToolId
 from aerona.tools.divine_will.framework import PagedInput, Toolset, WillCall, WillResult, WillTool, envelope, page_text
 from aerona.tools.divine_will.paging import arguments_of, beyond, failed, paged, remembered
-from aerona.tools.divine_will.retrieval import HANDLE_MAX_LENGTH, NO_QUERY, QUERY_MAX_LENGTH, found_page, restored, window_attachments
+from aerona.tools.divine_will.retrieval import HANDLE_MAX_LENGTH, NO_QUERY, QUERY_MAX_LENGTH, found_page, reach_of, restored, window_attachments
 from aerona.tools.divine_will.retrieval_ports import attachment_store_of, lore_index_of
 
 W = DivineWillToolId
@@ -118,7 +118,7 @@ async def attachment_search(call: WillCall, query: AttachmentSearchInput) -> Wil
     if not text:
         return failed(NO_QUERY)
     allowed = await window_attachments(call)
-    outcome = await lore_index_of(call).search(text, sources=frozenset({ChunkSource.ATTACHMENT}), attachments=allowed)
+    outcome = await lore_index_of(call).search(text, sources=frozenset({ChunkSource.ATTACHMENT}), attachments=allowed, reach=reach_of(call, query.page))
     return await found_page(call, W.ATTACHMENT_SEARCH, {"query": text}, query.page, outcome)
 
 

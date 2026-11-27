@@ -27,10 +27,11 @@ class LoreSearch:
     passages: int
     embedded: int
     note: str
+    total: int = 0
 
 
 class LoreIndexPort(Protocol):
-    async def search(self, query: str, *, sources: frozenset[ChunkSource] | None, attachments: frozenset[int]) -> LoreSearch: ...
+    async def search(self, query: str, *, sources: frozenset[ChunkSource] | None, attachments: frozenset[int], reach: int = 0) -> LoreSearch: ...
 
 
 class RetrievalHost(Protocol):

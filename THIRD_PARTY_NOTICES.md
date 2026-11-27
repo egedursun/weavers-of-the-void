@@ -582,6 +582,7 @@ The Debian and Ubuntu base images contain operating system packages under their 
 | sqlalchemy | 2.1.6 | MIT |
 | sse-starlette | 3.6.0 | BSD-3-Clause |
 | starlette | 1.10.0 | BSD-3-Clause |
+| tantivy | 0.27.0 | MIT |
 | tiktoken | 0.14.0 | MIT (declared in the project repository) |
 | tinycss2 | 1.5.1 | BSD |
 | tinyhtml5 | 2.1.0 | MIT |

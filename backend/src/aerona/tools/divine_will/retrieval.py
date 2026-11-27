@@ -98,12 +98,17 @@ def page_bounds(blocks: Sequence[str], per_page: int, budget: int, wanted: int) 
     return 1, 0, 0, False
 
 
+def reach_of(call: WillCall, page: int) -> int:
+    return max(1, page) * call.rules.divine_will.search_page
+
+
 async def found_page(call: WillCall, tool: DivineWillToolId, arguments: dict[str, Any], page: int, outcome: LoreSearch) -> WillResult:
     names = await node_names(call, outcome.hits)
     blocks = [hit_block(rank, hit, names) for rank, hit in enumerate(outcome.hits, start=1)]
     rules = call.rules.divine_will
     shown_page, start, end, has_next = page_bounds(blocks, rules.search_page, rules.page_tokens, max(1, page))
-    total = len(blocks)
+    total = max(outcome.total, len(blocks))
+    has_next = has_next or (bool(blocks) and end >= len(blocks) and total > len(blocks))
     handle = await remembered(call, tool, {**arguments, "page": shown_page}, total) if total else ""
     past = page > shown_page and total > 0
     chosen = [] if past else blocks[start:end]
@@ -126,7 +131,9 @@ async def search_lore(call: WillCall, query: SearchLoreInput) -> WillResult:
     if not arguments["query"]:
         return failed(NO_QUERY)
     sources = frozenset(ChunkSource(value) for value in arguments["sources"]) or None
-    outcome = await lore_index_of(call).search(arguments["query"], sources=sources, attachments=await window_attachments(call))
+    outcome = await lore_index_of(call).search(
+        arguments["query"], sources=sources, attachments=await window_attachments(call), reach=reach_of(call, query.page)
+    )
     return await found_page(call, W.SEARCH_LORE, arguments, query.page, outcome)
 
 

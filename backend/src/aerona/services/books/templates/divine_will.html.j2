@@ -40,5 +40,5 @@
 </article>
 {% endfor %}
 {% if writings.attachments %}<h3 class="bm2">What the player brought</h3>{% for attachment in writings.attachments %}<section class="typed"><p class="sublabel">{{ attachment.filename }}</p>{{ will_facts(attachment.facts) }}{% if attachment.note %}<p class="small">{{ attachment.note }}</p>{% endif %}</section>{% endfor %}{% endif %}
-{% if writings.index %}<h3 class="bm2">The Divine Will's index</h3><table><thead><tr><th>Source</th><th>Passages</th><th>Tokens</th><th>Last indexed</th></tr></thead><tbody>{% for line in writings.index %}<tr><td>{{ line.source }}</td><td>{{ line.passages }}</td><td>{{ line.tokens }}</td><td>{{ line.updated }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+
 {%- endmacro %}

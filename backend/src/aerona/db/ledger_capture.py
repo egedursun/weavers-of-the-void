@@ -308,7 +308,6 @@ RECORD_TABLES = frozenset(
         "presence_sessions",
         "presence_exchanges",
         "presence_events",
-        "divine_will_chunks",
         LedgerEntryRow.__tablename__,
         LedgerChangeRow.__tablename__,
     }

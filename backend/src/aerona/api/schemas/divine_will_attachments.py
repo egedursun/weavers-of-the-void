@@ -38,6 +38,7 @@ class DivineWillIndexView(ApiModel):
     passages: int
     embedded: int
     pending: int
+    share: float
     sources: list[DivineWillIndexSource]
     built_at: datetime | None
     model: str

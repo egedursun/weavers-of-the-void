@@ -164,13 +164,4 @@
 
 {% endfor %}
 {% endif %}
-{% if writings.index %}
-### The Divine Will's index
-
-| Source | Passages | Tokens | Last indexed |
-|---|---|---|---|
-{% for line in writings.index %}
-| {{ line.source }} | {{ line.passages }} | {{ line.tokens }} | {{ line.updated }} |
-{% endfor %}
-{% endif %}
 {%- endmacro %}

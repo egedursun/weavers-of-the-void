@@ -27,6 +27,7 @@ class Passage:
     body: str
     node_id: int | None = None
     cycle_id: int | None = None
+    refs: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)

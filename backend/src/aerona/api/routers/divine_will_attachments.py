@@ -94,6 +94,7 @@ async def index_state(services: ServicesDep) -> DivineWillIndexView:
         passages=state.passages,
         embedded=state.embedded,
         pending=state.pending,
+        share=state.share,
         sources=[DivineWillIndexSource(source=item.source, passages=item.passages, embedded=item.embedded) for item in state.sources],
         built_at=state.built_at,
         model=state.model,

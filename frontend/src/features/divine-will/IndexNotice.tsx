@@ -54,8 +54,8 @@ export function IndexNotice() {
   const data = index.data
   if (!data || data.status === 'ready') return null
   const look = STATUS_LOOK[data.status]
-  const share = data.passages > 0 ? data.embedded / data.passages : 0
-  const preparing = data.status === 'building' && data.pending === 0
+  const share = data.share
+  const preparing = data.status === 'building' && data.passages === 0
   const Icon = look.icon
   return (
     <div
@@ -87,7 +87,7 @@ export function IndexNotice() {
               {formatPercent(share)}
             </Text>
             <Muted as='span' variant='caption' className='tabular-nums'>
-              {`${formatInteger(data.embedded)} of ${formatInteger(data.passages)} read`}
+              {`${plural(data.passages, 'passage')} read`}
             </Muted>
           </>
         )}
@@ -102,9 +102,13 @@ export function IndexNotice() {
         {[
           data.note,
           data.semantic
-            ? 'It already answers; its searches grow sharper as it reads.'
+            ? 'It already answers from what it has read and weighs every search by meaning.'
             : 'It answers by searching words until it can search by meaning.',
-          data.pending > 0 ? `${plural(data.pending, 'passage')} wait` : '',
+          data.pending > 0
+            ? data.status === 'building'
+              ? `${plural(data.pending, 'part')} of the world still to read`
+              : `${plural(data.pending, 'change')} still to read`
+            : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -135,7 +139,9 @@ export function IndexNotice() {
                 {wordOf(chunkSourceValues, source.source)}
               </Text>
               <Muted as='span' variant='caption' className='tabular-nums'>
-                {`${String(source.embedded)} / ${String(source.passages)}`}
+                {source.embedded > 0
+                  ? `${formatInteger(source.passages)} · ${formatInteger(source.embedded)} by meaning`
+                  : formatInteger(source.passages)}
               </Muted>
             </div>
           ))}

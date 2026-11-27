@@ -11,7 +11,7 @@ from aerona.domain.enums.son import SonStatus
 from aerona.services.divine_will.player import CatalogPlayer
 from tests.api.conftest import ApiWorld, seeded
 
-BACKGROUND_TABLES = ("jobs", "divine_will_chunks")
+BACKGROUND_TABLES = ("jobs",)
 
 
 @dataclass(frozen=True)

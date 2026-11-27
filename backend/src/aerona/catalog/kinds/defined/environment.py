@@ -430,7 +430,11 @@ WORLD_LINK = total(
     {
         WorldLink.WORLD: Defined(
             "World",
-            checked_by=("engine.environment.season_remap.of_world", "services.books.typed.TypedIndex.season_name"),
+            checked_by=(
+                "engine.environment.season_remap.of_world",
+                "services.books.typed.TypedIndex.season_name",
+                "services.divine_will.passages.TracedTypedIndex.season_name",
+            ),
             used_by=("catalog.season_positions.SEASON_POSITIONS",),
         ),
         WorldLink.ENTITY: Defined("Entity", checked_by=("engine.environment.season_remap.of_world",), used_by=("catalog.season_positions.SEASON_POSITIONS",)),

@@ -1,44 +1,28 @@
 import asyncio
 import logging
-import sqlite3
+import tempfile
 import time
-from collections import Counter
-from collections.abc import AsyncIterator, Callable, Iterable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Iterable, Mapping, Sequence
 from concurrent.futures import ProcessPoolExecutor
-from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import lru_cache
-from itertools import batched, repeat
+from itertools import batched
 from multiprocessing import get_context
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
-from sqlalchemy import delete, func, insert, select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, text, update
+from sqlalchemy.exc import OperationalError
 
 from aerona.core.account_scope import current_account, detached
-from aerona.core.grammar import several
+from aerona.db import record_edits
 from aerona.db.authorship import visible
-from aerona.db.record_context import UNCAPTURED
 from aerona.db.repositories.divine_will import active_session
 from aerona.db.session import Database
-from aerona.db.tables.changes import StateChangeRow
-from aerona.db.tables.cosmos import AppliedFixupRow
-from aerona.db.tables.divine_will import (
-    DivineWillArtifactRow,
-    DivineWillArtifactVersionRow,
-    DivineWillAttachmentRow,
-    DivineWillChunkRow,
-    DivineWillCycleRow,
-    DivineWillSessionRow,
-)
-from aerona.db.tables.interconnect import IncidentRow
-from aerona.db.tables.lore import ChronicleRow
-from aerona.db.tables.node import NodeRow
-from aerona.db.tables.records import IncidentFactRow
+from aerona.db.tables.divine_will import DivineWillArtifactRow, DivineWillAttachmentRow, DivineWillCycleRow, DivineWillSessionRow
 from aerona.domain.enums.divine_will import AttachmentStatus, ChunkSource, IndexStatus
 from aerona.domain.enums.job import JobKind
 from aerona.epoch.concurrency import WORLD_GROUP
@@ -49,6 +33,7 @@ from aerona.jobs.manager import JobManager
 from aerona.llm.token_count import count_tokens
 from aerona.media.store import MediaStore, read_all
 from aerona.rules.registry import Rules
+from aerona.services.divine_will import follow
 from aerona.services.divine_will.chunking import Chunk, Passage, chunk_passage
 from aerona.services.divine_will.embedding import (
     DIMENSIONS,
@@ -69,70 +54,81 @@ from aerona.services.divine_will.embedding import (
 from aerona.services.divine_will.embedding import (
     Counter as TokenCounter,
 )
-from aerona.services.divine_will.passages import SOURCE_ORDER, UNREAD_TABLES, heading, world_passages
-from aerona.services.search import TOKENIZER, fold, match_expression
+from aerona.services.divine_will.passages import PassageKey, build_units, heading, keyed_passages, line_ref, unit_passages
+from aerona.services.divine_will.store import ChunkKey, Exclusions, Found, Rendered, WordStore, chunk_key
+from aerona.services.divine_will.vectors import Vector16, VectorStore
 from aerona.tools.divine_will.retrieval_ports import LoreHit, LoreSearch
 
 logger = logging.getLogger(__name__)
 
 INDEX_GROUP = "divine_will_index"
+STORE_FOLDER = "divine-will-index"
 RRF_K = 60
 RELEVANCE_SIGMAS = 2.0
 SMALL_SAMPLE = 24
 SCORE_BLOCK = 8192
-PERSIST_BATCH = 500
-LOOKUP_BATCH = 500
-QUIET_SECONDS = 3.0
-POLL_SECONDS = 2.0
+LEXICAL_DEPTH = 1000
+RERANK_CANDIDATES = 300
+FOLLOW_BATCH = 20000
+FOLLOW_SECONDS = 3.0
+QUIET_SECONDS = 1.0
 RETRY_SECONDS = 900.0
-PARALLEL_PASSAGES = 2000
-INDEX_MARK = "divine_will_index_mark"
-MARKS = (
-    (StateChangeRow.__tablename__, select(func.max(StateChangeRow.id)).where(StateChangeRow.table_name.not_in(sorted(UNREAD_TABLES)))),
-    (IncidentRow.__tablename__, select(func.max(IncidentRow.id))),
-    (IncidentFactRow.__tablename__, select(func.max(IncidentFactRow.id))),
-    (ChronicleRow.__tablename__, select(func.max(ChronicleRow.id))),
-    (DivineWillArtifactVersionRow.__tablename__, select(func.count()).select_from(DivineWillArtifactVersionRow)),
-)
+SWEPT_EPOCHS = 2
+BUILD_SHARES = 4
+MOST_PROCESSES = 4
 COUNT_MEMORY = 1 << 18
-PARALLEL_SHARES = 4
 PROGRESS_SECONDS = 1.0
-PERSIST_SECONDS = 60.0
-REFRESH_KINDS = frozenset(
+MEANING_SOURCES = frozenset(
+    {
+        ChunkSource.ENTITY,
+        ChunkSource.SON,
+        ChunkSource.FOREIGN_GOD,
+        ChunkSource.WORLD,
+        ChunkSource.STAR,
+        ChunkSource.CREATOR,
+        ChunkSource.EPOCH,
+        ChunkSource.WORD,
+        ChunkSource.COUNCIL,
+        ChunkSource.ARTIFACT,
+        ChunkSource.NOTE,
+        ChunkSource.ATTACHMENT,
+    }
+)
+WAKE_KINDS = frozenset(
     {
         EventKind.EPOCH_FINISHED,
+        EventKind.ENGINE_FINISHED,
+        EventKind.ENGINE_PHASE,
         EventKind.WORLD_CHANGED,
         EventKind.WORLD_REPLACED,
         EventKind.CHANGES_AVAILABLE,
         EventKind.DIVINE_WILL_ARTIFACT_CHANGED,
     }
 )
+SWEEP_KINDS = frozenset({EventKind.ENGINE_FINISHED, EventKind.EPOCH_FINISHED, EventKind.WORLD_CHANGED})
 INDEXABLE_ATTACHMENTS = frozenset({AttachmentStatus.CONVERTED, AttachmentStatus.INDEXED})
 NO_DIRECTORY = "No folder is set for the embedding model."
-EPOCH_RUNNING = "An epoch is running; the index waits for it to end."
-GATHERING = "Gathering everything the world holds to read."
-CUTTING = "Cutting what it gathered into passages."
+BUILDING_NOTE = "Reading the whole world once; later changes are read as they happen."
 ON_DEMAND = "The index is built when the Divine Will first searches."
-OTHER_WORK = "Other work is waiting for its turn; the index goes on after it."
 STOPPED = "The reading was stopped; it goes on when the world next changes."
-REFRESH_FAILED = "The last refresh of the index failed and the next change of the world tries again: {reason}"
+REFRESH_FAILED = "The last reading of the world's changes failed and the next change tries again: {reason}"
 MISSING_MODEL = "The embedding model files {names} are missing from {directory}."
-WORDS_ONLY = "Passages are matched by their words only, because the meaning index is unavailable. {reason}"
-PARTLY = "The meaning index holds {embedded} of {passages} so far; the rest are matched by their words only."
+WORDS_ONLY = "Passages are matched by their words only, because the meaning model is unavailable. {reason}"
+UNBUILT = "The index is still being built; what is not read yet is not found."
 ATTACHMENT_LABEL = "attachment"
-WORLD_LAYER = 0
 NO_RECORD = -1
 SOURCE_CODES = {source: code for code, source in enumerate(ChunkSource)}
-ATTACHMENT_LAYER = 1
 
 Matrix = NDArray[np.float16]
 Mask = NDArray[np.bool_]
-Key = tuple[int, int]
-Cached = tuple[Passage, TokenCounter, list[Chunk]]
 
 
 def never() -> bool:
     return False
+
+
+def index_processes(threads: int) -> int:
+    return max(1, min(threads, MOST_PROCESSES))
 
 
 def first_state(directory: Path | None, fetch: Fetcher | None, embedder: TextEmbedder | None) -> tuple[IndexStatus, str]:
@@ -146,78 +142,9 @@ def first_state(directory: Path | None, fetch: Fetcher | None, embedder: TextEmb
     return IndexStatus.WAITING, ON_DEMAND
 
 
-class Lexical:
-    def __init__(self, texts: Iterable[str]) -> None:
-        self._connection = sqlite3.connect(":memory:", check_same_thread=False)
-        self._connection.execute(f"CREATE VIRTUAL TABLE passages USING fts5(body, tokenize='{TOKENIZER}')")
-        self._connection.executemany("INSERT INTO passages(rowid, body) VALUES (?, ?)", ((position, fold(text)) for position, text in enumerate(texts)))
-        self._connection.commit()
-
-    def ranked(self, query: str) -> list[int]:
-        expression = match_expression(query)
-        if not expression:
-            return []
-        try:
-            rows = self._connection.execute("SELECT rowid FROM passages WHERE passages MATCH ? ORDER BY bm25(passages), rowid", (expression,)).fetchall()
-        except sqlite3.OperationalError:
-            return []
-        return [int(row[0]) for row in rows]
-
-
-@dataclass(frozen=True)
-class Hidden:
-    artifacts: frozenset[str]
-    cycles: frozenset[int]
-
-
-@dataclass(frozen=True)
-class Layer:
-    chunks: tuple[Chunk, ...]
-    vectors: Matrix
-    embedded: Mask
-    lexical: Lexical
-    parts: Mapping[tuple[ChunkSource, str], int]
-    codes: NDArray[np.int64]
-    records: NDArray[np.int64]
-
-    @property
-    def embedded_count(self) -> int:
-        return int(self.embedded.sum())
-
-    def tally(self) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
-        size = len(SOURCE_CODES)
-        passages = np.bincount(self.codes, minlength=size)
-        embedded = np.bincount(self.codes, weights=self.embedded.astype(np.int64), minlength=size)
-        return passages.astype(np.int64), embedded.astype(np.int64)
-
-
-def build_layer(chunks: Sequence[Chunk], known: Mapping[str, Matrix]) -> Layer:
-    vectors = np.zeros((len(chunks), DIMENSIONS), dtype=np.float16)
-    embedded = np.zeros(len(chunks), dtype=np.bool_)
-    for position, chunk in enumerate(chunks):
-        found = known.get(chunk.digest)
-        if found is not None:
-            vectors[position] = found
-            embedded[position] = True
-    parts = Counter((chunk.source, chunk.source_id) for chunk in chunks)
-    codes = np.asarray([SOURCE_CODES[chunk.source] for chunk in chunks], dtype=np.int64)
-    records = np.asarray([int(chunk.source_id) if chunk.source_id.isdigit() else NO_RECORD for chunk in chunks], dtype=np.int64)
-    return Layer(tuple(chunks), vectors, embedded, Lexical(chunk.text for chunk in chunks), dict(parts), codes, records)
-
-
-def empty_layer() -> Layer:
-    return build_layer([], {})
-
-
-def known_vectors(layer: Layer | None) -> dict[str, Matrix]:
-    if layer is None:
-        return {}
-    return {chunk.digest: layer.vectors[position] for position, chunk in enumerate(layer.chunks) if layer.embedded[position]}
-
-
-def fuse(rankings: Sequence[Sequence[Key]], k: int = RRF_K) -> list[tuple[Key, float]]:
-    scores: dict[Key, float] = {}
-    best: dict[Key, int] = {}
+def fuse(rankings: Sequence[Sequence[ChunkKey]], k: int = RRF_K) -> list[tuple[ChunkKey, float]]:
+    scores: dict[ChunkKey, float] = {}
+    best: dict[ChunkKey, int] = {}
     for ranking in rankings:
         for rank, key in enumerate(ranking, start=1):
             scores[key] = scores.get(key, 0.0) + 1.0 / (k + rank)
@@ -233,63 +160,60 @@ def relevant(scores: NDArray[np.float32], background: NDArray[np.float32]) -> ND
     return np.asarray(scores >= floor, dtype=np.bool_)
 
 
-def similarities(layer: Layer, query: NDArray[np.float32]) -> NDArray[np.float32]:
-    found = np.zeros(len(layer.chunks), dtype=np.float32)
-    for start in range(0, len(layer.chunks), SCORE_BLOCK):
-        block = layer.vectors[start : start + SCORE_BLOCK].astype(np.float32)
-        found[start : start + SCORE_BLOCK] = block @ query
-    return found
+def store_folder(database: Database) -> Path:
+    path = database.engine.url.database
+    if path and path != ":memory:":
+        return Path(path).resolve().parent / STORE_FOLDER
+    return Path(tempfile.mkdtemp(prefix="divine-will-index-"))
 
 
 WORKER_COUNTERS: dict[str, TokenCounter] = {}
-
-
-def chunked_in_worker(passages: list[Passage], directory: str) -> list[list[Chunk]]:
-    count = WORKER_COUNTERS.get(directory)
-    if count is None:
-        count = WORKER_COUNTERS[directory] = remembered(token_counter(Path(directory)))
-    return [chunk_passage(passage, count, EMBEDDER_KEY) for passage in passages]
 
 
 def remembered(count: TokenCounter) -> TokenCounter:
     return lru_cache(maxsize=COUNT_MEMORY)(count)
 
 
-def chunk_order(chunk: Chunk) -> tuple[int, str, int]:
-    return SOURCE_ORDER[chunk.source], chunk.source_id, chunk.ordinal
+def cut(passages: Iterable[Passage], count: TokenCounter) -> list[Rendered]:
+    return [Rendered((passage.source, passage.source_id), passage.refs, tuple(chunk_passage(passage, count, EMBEDDER_KEY))) for passage in passages]
 
 
-def gathered(url: str, rules: Rules) -> list[Passage]:
+def worker_counter(directory: str | None) -> TokenCounter:
+    key = directory or ""
+    found = WORKER_COUNTERS.get(key)
+    if found is None:
+        found = WORKER_COUNTERS[key] = remembered(token_counter(Path(directory)) if directory else count_tokens)
+    return found
+
+
+def rendered_in_worker(url: str, keys: list[PassageKey] | None, units: list[str] | None, directory: str | None) -> list[Rendered]:
     async def run() -> list[Passage]:
         database = Database(url)
         try:
             async with database.read() as session:
-                return await world_passages(session, rules)
+                if units is not None:
+                    return await unit_passages(session, units)
+                return await keyed_passages(session, keys or [])
         finally:
             await database.dispose()
 
-    return asyncio.run(run())
+    return cut(asyncio.run(run()), worker_counter(directory))
 
 
-def stored(url: str) -> list[tuple[Chunk, bytes]]:
-    async def run() -> list[tuple[Chunk, bytes]]:
-        database = Database(url)
-        row = DivineWillChunkRow
-        try:
-            async with database.read() as session:
-                rows = await session.execute(
-                    select(row.source, row.source_id, row.ordinal, row.node_id, row.cycle_id, row.text, row.tokens, row.digest, row.vector).order_by(
-                        row.source, row.source_id, row.ordinal
-                    )
-                )
-                return [
-                    (Chunk(source, source_id, ordinal, node_id, cycle_id, text, tokens, digest), vector)
-                    for source, source_id, ordinal, node_id, cycle_id, text, tokens, digest, vector in rows
-                ]
-        finally:
-            await database.dispose()
+@dataclass(frozen=True)
+class MeaningChunk:
+    key: ChunkKey
+    passage: PassageKey
+    digest: str
+    code: int
+    record: int
+    cycle: int
 
-    return asyncio.run(run())
+
+@dataclass(frozen=True)
+class Hidden:
+    artifacts: frozenset[str]
+    cycles: frozenset[int]
 
 
 @dataclass(frozen=True)
@@ -307,9 +231,30 @@ class IndexState:
     passages: int
     embedded: int
     pending: int
+    share: float
     sources: tuple[SourceCount, ...]
     built_at: datetime | None
     model: str
+
+
+@dataclass
+class MeaningLayer:
+    keys: list[ChunkKey]
+    vectors: Matrix
+    codes: NDArray[np.int64]
+    records: NDArray[np.int64]
+    cycles: NDArray[np.int64]
+
+
+def meaning_chunk(chunk: Chunk) -> MeaningChunk:
+    return MeaningChunk(
+        key=chunk_key(chunk),
+        passage=(chunk.source, chunk.source_id),
+        digest=chunk.digest,
+        code=SOURCE_CODES[chunk.source],
+        record=int(chunk.source_id) if chunk.source_id.isdigit() else NO_RECORD,
+        cycle=NO_RECORD if chunk.cycle_id is None else chunk.cycle_id,
+    )
 
 
 class LoreIndex:
@@ -320,40 +265,48 @@ class LoreIndex:
         *,
         directory: Path | None = None,
         threads: int = 1,
+        processes: int = 0,
         fetch: Fetcher | None = None,
         embedder: TextEmbedder | None = None,
         media: MediaStore | None = None,
         bus: EventBus | None = None,
         read_only: Callable[[], bool] = never,
+        folder: Path | None = None,
     ) -> None:
         self._database = database
         self._rules = rules
         self._directory = directory
         self._threads = threads
+        self._processes = processes
         self._fetch = fetch
         self._embedder = embedder
         self._media = media
         self._bus = bus
         self._read_only = read_only
-        self._world: Layer | None = None
-        self._attached: Layer | None = None
-        self._world_cache: dict[tuple[ChunkSource, str], Cached] = {}
-        self._attached_cache: dict[tuple[ChunkSource, str], Cached] = {}
+        self._folder = folder or store_folder(database)
+        self._store = WordStore(self._folder)
+        self._vectors = VectorStore(self._folder)
+        self._known: dict[str, Vector16] = {}
+        self._meaning: dict[PassageKey, list[MeaningChunk]] = {}
+        self._layer: MeaningLayer | None = None
+        self._counts: dict[ChunkSource, int] = {}
+        self._opened = False
+        self._built = False
+        self._reset = False
+        self._sweep = True
+        self._background = False
         self._counter: TokenCounter | None = None
-        self._world_lock = asyncio.Lock()
-        self._attach_lock = asyncio.Lock()
+        self._pool: ProcessPoolExecutor | None = None
+        self._lock = asyncio.Lock()
         self._wanted = asyncio.Event()
         self._loaded = asyncio.Event()
-        self._reset = False
-        self._background = False
-        self._built_generation: int | None = None
-        self._own_writes = 0
-        self._reading_mark: dict[str, int] | None = None
-        self._stopped_mark: dict[str, int] | None = None
-        self._attached_generation: int | None = None
+        self._stopped_at: int | None = None
+        self._build_head = 0
+        self._words_note = ""
         self._failed_at: float | None = None
         self._status, self._note = first_state(directory, fetch, embedder)
         self._pending = 0
+        self._share = 0.0
         self._built_at: datetime | None = None
         self._published_at = 0.0
         self._loop: asyncio.AbstractEventLoop | None = None
@@ -361,24 +314,27 @@ class LoreIndex:
         self._jobs: JobManager | None = None
         self._tasks: set[asyncio.Task[None]] = set()
 
+    @property
+    def folder(self) -> Path:
+        return self._folder
+
     def state(self) -> IndexState:
-        layers = [layer for layer in (self._world, self._attached) if layer is not None]
-        counted = np.zeros(len(SOURCE_CODES), dtype=np.int64)
-        vectored = np.zeros(len(SOURCE_CODES), dtype=np.int64)
-        for layer in layers:
-            found, held = layer.tally()
-            counted += found
-            vectored += held
-        passages = int(counted.sum())
-        embedded = int(vectored.sum())
+        held: dict[ChunkSource, int] = dict.fromkeys(ChunkSource, 0)
+        for chunks in self._meaning.values():
+            for chunk in chunks:
+                if chunk.digest in self._known:
+                    held[ChunkSource(chunk.key[0])] += 1
+        counts = self._counts or dict.fromkeys(ChunkSource, 0)
+        embedded = sum(held.values())
         return IndexState(
             status=self._status,
             note=self._note,
-            semantic=self._embedder is not None and embedded > 0,
-            passages=passages,
+            semantic=self._embedder is not None,
+            passages=sum(counts.values()),
             embedded=embedded,
             pending=self._pending,
-            sources=tuple(SourceCount(source, int(counted[code]), int(vectored[code])) for source, code in SOURCE_CODES.items()),
+            share=self._share,
+            sources=tuple(SourceCount(source, counts.get(source, 0), held[source]) for source in ChunkSource),
             built_at=self._built_at,
             model=MODEL_NAME,
         )
@@ -393,10 +349,12 @@ class LoreIndex:
         if event.kind is EventKind.DIVINE_WILL_CYCLE_STARTED:
             self._loop.call_soon_threadsafe(self.schedule_attachments)
             return
-        if event.kind not in REFRESH_KINDS:
+        if event.kind not in WAKE_KINDS:
             return
         if event.kind is EventKind.WORLD_REPLACED:
             self._reset = True
+        if event.kind in SWEEP_KINDS:
+            self._sweep = True
         self._loop.call_soon_threadsafe(self._wanted.set)
 
     def schedule_attachments(self) -> None:
@@ -406,7 +364,7 @@ class LoreIndex:
 
     async def _attachments_now(self) -> None:
         try:
-            await self.refresh_attachments(embed=self._background)
+            await self.refresh_attachments()
         except Exception:
             logger.exception("the attached documents could not be indexed")
 
@@ -414,8 +372,6 @@ class LoreIndex:
         self._jobs = jobs
         self._background = True
         self._loop = asyncio.get_running_loop()
-        if self._status is IndexStatus.WAITING:
-            self._set(IndexStatus.BUILDING, "")
         self._task = self._loop.create_task(self._run(jobs))
 
     async def stop(self) -> None:
@@ -425,6 +381,12 @@ class LoreIndex:
             self._task.cancel()
             await asyncio.gather(self._task, return_exceptions=True)
             self._task = None
+        if self._pool is not None:
+            self._pool.shutdown(wait=False, cancel_futures=True)
+            self._pool = None
+        record_edits.unwatch(self._url())
+        await asyncio.to_thread(self._store.close)
+        await asyncio.to_thread(self._vectors.close)
 
     async def _run(self, jobs: JobManager) -> None:
         try:
@@ -433,27 +395,41 @@ class LoreIndex:
             self._loaded.set()
         self._wanted.set()
         while True:
-            await self._wanted.wait()
-            while self._wanted.is_set():
-                self._wanted.clear()
-                await asyncio.sleep(QUIET_SECONDS)
-            while jobs.busy_group(INDEX_GROUP) is not None or jobs.busy_group(WORLD_GROUP) is not None or self._read_only():
-                if jobs.busy_group(WORLD_GROUP) is not None:
-                    self._set(IndexStatus.WAITING, EPOCH_RUNNING)
-                await asyncio.sleep(POLL_SECONDS)
+            await self._wait()
+            if self._read_only():
+                continue
             if await self._still_stopped():
                 continue
+            if self._reset or not self._built:
+                if jobs.busy_group(INDEX_GROUP) is None:
+                    try:
+                        await jobs.submit(JobKind.DIVINE_WILL_INDEX, self._job, exclusive_group=INDEX_GROUP)
+                    except Exception:
+                        logger.exception("the divine will index could not be scheduled")
+                continue
             try:
-                await jobs.submit(JobKind.DIVINE_WILL_INDEX, self._job, exclusive_group=INDEX_GROUP)
-            except Exception:
-                logger.exception("the divine will index could not be scheduled")
+                await self.follow()
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                logger.exception("the divine will index could not read the world's changes")
+                self._set(IndexStatus.WAITING, REFRESH_FAILED.format(reason=str(error) or type(error).__name__), force=True)
+
+    async def _wait(self) -> None:
+        epoch_running = self._jobs is not None and self._jobs.busy_group(WORLD_GROUP) is not None
+        try:
+            await asyncio.wait_for(self._wanted.wait(), timeout=FOLLOW_SECONDS if epoch_running or self._pending else None)
+        except TimeoutError:
+            return
+        await asyncio.sleep(QUIET_SECONDS)
+        self._wanted.clear()
 
     async def _job(self, context: JobContext) -> dict[str, Any]:
         try:
             counts = await self.refresh(context)
             counts.update(await self.refresh_attachments())
         except asyncio.CancelledError:
-            self._stopped_mark = self._reading_mark
+            self._stopped_at = self._build_head
             self._set(IndexStatus.WAITING, STOPPED, force=True)
             raise
         except Exception as error:
@@ -461,36 +437,39 @@ class LoreIndex:
             raise
         return counts
 
+    async def _head(self) -> int:
+        async with self._database.read() as session:
+            return await follow.world_head(session)
+
+    async def _still_stopped(self) -> bool:
+        if self._stopped_at is None:
+            return False
+        if await self._head() == self._stopped_at:
+            return True
+        self._stopped_at = None
+        return False
+
+    async def _schema_mark(self) -> str:
+        async with self._database.read() as session:
+            try:
+                return str(await session.scalar(text("SELECT version_num FROM alembic_version")) or "")
+            except OperationalError:
+                return ""
+
     async def load(self) -> None:
-        rows = await asyncio.to_thread(stored, self._url())
-        world: list[Chunk] = []
-        attached: list[Chunk] = []
-        known: dict[str, Matrix] = {}
-        for chunk, blob in rows:
-            vector = np.frombuffer(blob, dtype=np.float16)
-            if vector.size != DIMENSIONS:
-                continue
-            known[chunk.digest] = vector
-            (attached if chunk.source is ChunkSource.ATTACHMENT else world).append(chunk)
-        world.sort(key=chunk_order)
-        attached.sort(key=chunk_order)
-        self._world = await asyncio.to_thread(build_layer, world, known) if world else None
-        self._attached = await asyncio.to_thread(build_layer, attached, known) if attached else None
-        self._world_cache.clear()
-        self._attached_cache.clear()
-
-    @asynccontextmanager
-    async def _own_write(self) -> AsyncIterator[AsyncSession]:
-        async with self._database.write() as session:
-            yield session
-        self._own_writes += 1
-
-    def _quiet_since(self, generation: int, writes: int) -> int:
-        current = self._database.generation
-        return current if current - generation == self._own_writes - writes else generation
-
-    def _url(self) -> str:
-        return self._database.engine.url.render_as_string(hide_password=False)
+        record_edits.watch(self._url())
+        schema = await self._schema_mark()
+        self._built = await asyncio.to_thread(self._store.open, schema)
+        self._known = await asyncio.to_thread(self._vectors.load)
+        chunks = await asyncio.to_thread(self._store.chunks_of, MEANING_SOURCES)
+        self._meaning = {}
+        for chunk in chunks:
+            self._meaning.setdefault((chunk.source, chunk.source_id), []).append(meaning_chunk(chunk))
+        self._layer = None
+        self._counts = await asyncio.to_thread(self._store.counts)
+        self._built_at = datetime.fromisoformat(self._store.meta.built_at) if self._store.meta.built_at else None
+        self._share = 1.0 if self._built else 0.0
+        self._opened = True
 
     def _set(self, status: IndexStatus, note: str, *, force: bool = False) -> None:
         changed = status is not self._status or note != self._note
@@ -503,7 +482,7 @@ class LoreIndex:
         state = self.state()
         self._bus.publish(
             EventKind.DIVINE_WILL_INDEX_PROGRESS,
-            {"indexed": state.embedded, "total": state.passages, "finished": status is IndexStatus.READY, "status": status.value, "note": note},
+            {"indexed": state.passages, "total": state.passages + state.pending, "finished": status is IndexStatus.READY, "status": status.value, "note": note},
         )
 
     async def ready_embedder(self) -> TextEmbedder | None:
@@ -522,15 +501,16 @@ class LoreIndex:
             self._embedder = await asyncio.to_thread(load_embedder, directory, self._threads)
         except (EmbedderUnavailableError, OSError, RuntimeError, ValueError) as error:
             self._failed_at = time.monotonic()
-            self._set(IndexStatus.UNAVAILABLE, WORDS_ONLY.format(reason=error))
+            self._words_note = WORDS_ONLY.format(reason=error)
+            self._set(IndexStatus.UNAVAILABLE, self._words_note)
             return None
         self._counter = None
         return self._embedder
 
-    def _shared_directory(self) -> Path | None:
+    def _shared_directory(self) -> str | None:
         directory = self._directory
         portable = isinstance(self._embedder, Embedder) or (self._embedder is None and self._counter is not count_tokens)
-        return directory if directory is not None and portable and holds(directory, VOCABULARY_FILE) else None
+        return str(directory) if directory is not None and portable and holds(directory, VOCABULARY_FILE) else None
 
     async def token_count(self) -> TokenCounter:
         if self._embedder is not None:
@@ -540,239 +520,184 @@ class LoreIndex:
             self._counter = await asyncio.to_thread(token_counter, directory) if directory is not None else count_tokens
         return self._counter
 
-    def _yield_reason(self) -> str:
-        jobs = self._jobs
-        if jobs is None:
-            return ""
-        if jobs.busy_group(WORLD_GROUP) is not None:
-            return EPOCH_RUNNING
-        return OTHER_WORK if jobs.queued_count > 0 else ""
+    def _worker_pool(self) -> ProcessPoolExecutor:
+        if self._pool is None:
+            self._pool = ProcessPoolExecutor(max_workers=self._processes, mp_context=get_context("spawn"))
+        return self._pool
+
+    def _url(self) -> str:
+        return self._database.engine.url.render_as_string(hide_password=False)
+
+    async def _render_keys(self, keys: set[PassageKey]) -> list[Rendered]:
+        ordered = sorted(keys, key=lambda key: (key[0].value, key[1]))
+        if self._processes > 0:
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(self._worker_pool(), rendered_in_worker, self._url(), ordered, None, self._shared_directory())
+        async with self._database.read() as session:
+            passages = await keyed_passages(session, ordered)
+        return cut(passages, remembered(await self.token_count()))
+
+    async def _render_units(self, units: list[str]) -> list[Rendered]:
+        if self._processes > 0:
+            loop = asyncio.get_running_loop()
+            return await loop.run_in_executor(self._worker_pool(), rendered_in_worker, self._url(), None, units, self._shared_directory())
+        async with self._database.read() as session:
+            passages = await unit_passages(session, units)
+        return cut(passages, remembered(await self.token_count()))
+
+    async def _render_group(self, group: list[str]) -> tuple[int, list[Rendered]]:
+        return len(group), await self._render_units(group)
 
     async def refresh(self, context: JobContext | None = None) -> dict[str, int]:
-        async with self._world_lock:
-            if self._reset:
-                self._reset = False
+        async with self._lock:
+            if not self._opened:
                 await self.load()
-            generation = self._database.generation
-            writes = self._own_writes
-            if self._world is not None and self._built_generation == generation:
-                return {"passages": len(self._world.chunks), "embedded": self._world.embedded_count, "written": 0}
-            mark = await self._world_mark()
-            self._reading_mark = mark
-            if (
-                self._world is not None
-                and self._built_generation is None
-                and self._world.embedded_count == len(self._world.chunks)
-                and await self._marked() == mark
-            ):
-                self._built_generation = generation
-                self._finish("")
-                return {"passages": len(self._world.chunks), "embedded": self._world.embedded_count, "written": 0}
-            quiet = self._status is IndexStatus.READY
-            self._stage(context, quiet, GATHERING)
-            passages = await asyncio.to_thread(gathered, self._url(), self._rules())
-            embedder = await self.ready_embedder()
-            count = await self.token_count()
-            self._stage(context, quiet, CUTTING)
-            chunks = await asyncio.to_thread(self._chunked, passages, count, self._world_cache, self._shared_directory(), self._threads)
-            known = known_vectors(self._world)
-            layer = await asyncio.to_thread(build_layer, chunks, known)
-            self._stage(context, quiet, "")
-            self._world = layer
-            paused = ""
             written = 0
-            if embedder is not None:
-                paused = await self._embed(embedder, layer, known, context, yielding=True)
-                written = await self._persist(layer.chunks, known, None)
-            if embedder is not None and not paused:
-                await self._remember_mark(mark)
-            self._built_generation = self._quiet_since(generation, writes)
-            self._built_at = datetime.now(UTC)
-            self._finish(paused)
-            return {"passages": len(layer.chunks), "embedded": layer.embedded_count, "written": written}
+            if self._reset or not self._built:
+                written += await self._build(context)
+            written += await self._follow_now()
+            await self._finish()
+            return {"passages": sum(self._counts.values()), "embedded": self.state().embedded, "written": written}
 
-    async def _still_stopped(self) -> bool:
-        if self._stopped_mark is None:
-            return False
-        if await self._world_mark() == self._stopped_mark:
-            return True
-        self._stopped_mark = None
-        return False
+    async def follow(self) -> int:
+        async with self._lock:
+            if not self._opened:
+                await self.load()
+            if self._reset or not self._built:
+                return 0
+            written = await self._follow_now()
+            await self._finish()
+            return written
 
-    async def _world_mark(self) -> dict[str, int]:
+    async def _build(self, context: JobContext | None) -> int:
+        self._reset = False
+        self._set(IndexStatus.BUILDING, BUILDING_NOTE, force=True)
+        schema = await self._schema_mark()
+        await asyncio.to_thread(self._store.reset, schema)
+        self._meaning = {}
+        self._layer = None
+        self._counts = {}
         async with self._database.read() as session:
-            return {name: int(await session.scalar(statement) or 0) for name, statement in MARKS}
-
-    async def _marked(self) -> dict[str, int] | None:
-        async with self._database.read() as session:
-            row = await session.get(AppliedFixupRow, INDEX_MARK)
-        return row.result if row is not None else None
-
-    async def _remember_mark(self, mark: dict[str, int]) -> None:
-        async with self._own_write() as session:
-            await session.merge(AppliedFixupRow(key=INDEX_MARK, result=mark))
-
-    def _stage(self, context: JobContext | None, quiet: bool, note: str) -> None:
-        if context is not None:
-            context.report(context.progress, note or None)
-        if not quiet:
-            self._set(IndexStatus.BUILDING, note, force=True)
-
-    def _finish(self, paused: str) -> None:
-        if self._embedder is None:
-            self._set(IndexStatus.UNAVAILABLE, self._note or NO_DIRECTORY, force=True)
-        elif not paused:
-            self._set(IndexStatus.READY, "", force=True)
-        else:
-            self._set(IndexStatus.WAITING, paused, force=True)
-            if self._loop is not None:
-                self._loop.call_soon_threadsafe(self._wanted.set)
-
-    @staticmethod
-    def _chunked(
-        passages: Sequence[Passage],
-        count: TokenCounter,
-        cache: dict[tuple[ChunkSource, str], Cached],
-        directory: Path | None = None,
-        workers: int = 1,
-    ) -> list[Chunk]:
-        fresh: dict[tuple[ChunkSource, str], Cached] = {}
-        made: dict[tuple[ChunkSource, str], list[Chunk]] = {}
-        missing: list[Passage] = []
-        for passage in passages:
-            key = (passage.source, passage.source_id)
-            cached = cache.get(key)
-            if cached is not None and cached[0] == passage and cached[1] == count:
-                made[key] = cached[2]
-            else:
-                missing.append(passage)
-        if directory is not None and workers > 1 and len(missing) >= PARALLEL_PASSAGES:
-            groups = [list(group) for group in batched(missing, max(1, -(-len(missing) // (workers * PARALLEL_SHARES))), strict=False)]
-            with ProcessPoolExecutor(max_workers=workers, mp_context=get_context("spawn")) as pool:
-                for group, chunked in zip(groups, pool.map(chunked_in_worker, groups, repeat(str(directory))), strict=True):
-                    for passage, chunks in zip(group, chunked, strict=True):
-                        made[(passage.source, passage.source_id)] = chunks
-        else:
-            counting = remembered(count)
-            for passage in missing:
-                made[(passage.source, passage.source_id)] = chunk_passage(passage, counting, EMBEDDER_KEY)
-        found: list[Chunk] = []
-        for passage in passages:
-            key = (passage.source, passage.source_id)
-            fresh[key] = (passage, count, made[key])
-            found.extend(made[key])
-        cache.clear()
-        cache.update(fresh)
-        return found
-
-    async def _embed(self, embedder: TextEmbedder, layer: Layer, known: dict[str, Matrix], context: JobContext | None, *, yielding: bool) -> str:
-        places: dict[str, list[int]] = {}
-        for position, chunk in enumerate(layer.chunks):
-            if chunk.digest not in known:
-                places.setdefault(chunk.digest, []).append(position)
-        order = sorted(places, key=lambda digest: (layer.chunks[places[digest][0]].tokens, digest))
-        total = len(order)
-        weight = max(1, sum(layer.chunks[places[digest][0]].tokens for digest in order))
-        self._pending = total
+            start = await follow.heads(session)
+            self._build_head = await follow.world_head(session)
+        units = build_units()
+        shares = max(1, self._processes * BUILD_SHARES) if self._processes > 0 else 1
+        groups = [list(group) for group in batched(units, max(1, -(-len(units) // shares)), strict=False)]
+        self._pending = len(units)
+        self._share = 0.0
+        written = 0
         done = 0
-        read = 0
-        quiet = self._status is IndexStatus.READY
-        persisted_at = time.monotonic()
-        for batch in batched(order, max(1, self._rules().divine_will.index_batch), strict=False):
-            reason = self._yield_reason() if yielding else ""
-            if reason:
-                return reason
-            texts = [layer.chunks[places[digest][0]].text for digest in batch]
-            vectors = await asyncio.to_thread(embedder.embed, texts, TextRole.PASSAGE)
-            for digest, vector in zip(batch, vectors, strict=True):
-                stored_vector = vector.astype(np.float16)
-                known[digest] = stored_vector
-                for position in places[digest]:
-                    layer.vectors[position] = stored_vector
-                    layer.embedded[position] = True
-            done += len(batch)
-            read += sum(layer.chunks[places[digest][0]].tokens for digest in batch)
-            self._pending = total - done
+        if self._processes > 0:
+            finishing: Iterable[Awaitable[tuple[int, list[Rendered]]]] = asyncio.as_completed(
+                [asyncio.ensure_future(self._render_group(group)) for group in groups]
+            )
+        else:
+            finishing = (self._render_group(group) for group in groups)
+        for finished in finishing:
+            size, rendered = await finished
+            written += await self._apply(rendered, ())
+            done += size
+            self._pending = len(units) - done
+            self._share = done / len(units)
             if context is not None:
-                context.report(read / weight, f"{done}/{total}")
-            if not quiet:
-                self._set(IndexStatus.BUILDING, "")
-            if yielding and time.monotonic() - persisted_at >= PERSIST_SECONDS:
-                await self._persist(layer.chunks, known, None)
-                persisted_at = time.monotonic()
-        self._pending = 0
-        return ""
+                context.report(done / len(units), f"{done}/{len(units)}")
+            self._set(IndexStatus.BUILDING, BUILDING_NOTE)
+        self._store.meta.cursors = start
+        self._store.meta.built = True
+        self._built_at = datetime.now(UTC)
+        self._store.meta.built_at = self._built_at.isoformat()
+        await asyncio.to_thread(self._store.save_meta)
+        await asyncio.to_thread(self._vectors.keep, {chunk.digest for chunks in self._meaning.values() for chunk in chunks})
+        self._built = True
+        self._sweep = True
+        self._share = 1.0
+        return written
 
-    async def _present(self, column: Any, wanted: set[int]) -> set[int]:
-        found: set[int] = set()
+    async def _follow_now(self) -> int:
+        written = 0
+        while True:
+            edits = record_edits.drain(self._url())
+            async with self._database.read() as session:
+                affected = await follow.affected_since(session, self._store.meta.cursors, FOLLOW_BATCH, edits)
+                sweep = await follow.latest_lines(session, SWEPT_EPOCHS) if self._sweep else None
+            keys = set(affected.keys)
+            refs = set(affected.refs)
+            if sweep is not None:
+                self._sweep = False
+                every, shown = sweep
+                held_keys = [(ChunkSource.CHRONICLE.value, str(line), 0) for line in every]
+                held = {int(key[1]) for key in await asyncio.to_thread(self._store.chunks, held_keys)}
+                for line in follow.flipped(every, shown, held):
+                    keys.add((ChunkSource.CHRONICLE, str(line)))
+                    refs.add(line_ref(line))
+            written += await self._settle(keys, refs)
+            self._store.meta.cursors = affected.cursors
+            await asyncio.to_thread(self._store.save_meta)
+            if not affected.more:
+                break
         async with self._database.read() as session:
-            for batch in batched(sorted(wanted), LOOKUP_BATCH, strict=False):
-                found.update(await session.scalars(select(column).where(column.in_(batch))))
-        return found
+            now = await follow.heads(session)
+        self._pending = max(0, now[follow.STATE_CURSOR] - self._store.meta.cursors.get(follow.STATE_CURSOR, 0))
+        return written
 
-    async def _persist(self, chunks: Sequence[Chunk], known: Mapping[str, Matrix], attachments: frozenset[str] | None) -> int:
-        row = DivineWillChunkRow
-        statement = select(row.id, row.source, row.source_id, row.ordinal, row.digest, row.node_id, row.cycle_id)
-        statement = statement.where(row.source != ChunkSource.ATTACHMENT if attachments is None else row.source == ChunkSource.ATTACHMENT)
-        async with self._database.read() as session:
-            existing = {
-                (source, source_id, ordinal): (identity, digest, node_id, cycle_id)
-                for identity, source, source_id, ordinal, digest, node_id, cycle_id in await session.execute(statement)
-                if attachments is None or source_id in attachments
-            }
-        nodes = await self._present(NodeRow.id, {chunk.node_id for chunk in chunks if chunk.node_id is not None})
-        cycles = await self._present(DivineWillCycleRow.id, {chunk.cycle_id for chunk in chunks if chunk.cycle_id is not None})
-        wanted: dict[tuple[ChunkSource, str, int], Chunk] = {}
+    async def _settle(self, keys: set[PassageKey], refs: set[str]) -> int:
+        written = 0
+        told: set[str] = set()
+        while refs or keys:
+            told |= refs
+            if refs:
+                keys |= await asyncio.to_thread(self._store.dependents, refs)
+            if not keys:
+                break
+            rendered = await self._render_keys(keys)
+            removed = keys - {item.key for item in rendered}
+            written += await self._apply(rendered, removed)
+            refs = follow.removed_refs(removed) - told
+            keys = set()
+        return written
+
+    async def _apply(self, rendered: Sequence[Rendered], removed: Iterable[PassageKey]) -> int:
+        gone = list(removed)
+        await asyncio.to_thread(self._store.apply, rendered, gone)
+        for key in gone:
+            self._meaning.pop(key, None)
+        for item in rendered:
+            self._meaning.pop(item.key, None)
+            if item.key[0] in MEANING_SOURCES and item.chunks:
+                self._meaning[item.key] = [meaning_chunk(chunk) for chunk in item.chunks]
+        self._layer = None
+        self._counts = await asyncio.to_thread(self._store.counts)
+        await self._embed_meaning(chunk for item in rendered if item.key[0] in MEANING_SOURCES for chunk in item.chunks)
+        return sum(len(item.chunks) for item in rendered)
+
+    async def _embed_meaning(self, chunks: Iterable[Chunk]) -> None:
+        missing: dict[str, str] = {}
         for chunk in chunks:
-            if chunk.digest in known:
-                wanted[chunk.key] = Chunk(
-                    chunk.source,
-                    chunk.source_id,
-                    chunk.ordinal,
-                    chunk.node_id if chunk.node_id in nodes else None,
-                    chunk.cycle_id if chunk.cycle_id in cycles else None,
-                    chunk.text,
-                    chunk.tokens,
-                    chunk.digest,
-                )
-        stale = [
-            identity
-            for key, (identity, digest, node_id, cycle_id) in existing.items()
-            if key not in wanted or (wanted[key].digest, wanted[key].node_id, wanted[key].cycle_id) != (digest, node_id, cycle_id)
-        ]
-        dropped = set(stale)
-        fresh = [chunk for key, chunk in wanted.items() if key not in existing or existing[key][0] in dropped]
-        epoch = self._database_epoch()
-        for batch in batched(stale, PERSIST_BATCH, strict=False):
-            async with self._own_write() as session:
-                session.info[UNCAPTURED] = True
-                await session.execute(delete(row).where(row.id.in_(batch)))
-        for part in batched(fresh, PERSIST_BATCH, strict=False):
-            async with self._own_write() as session:
-                session.info[UNCAPTURED] = True
-                await session.execute(
-                    insert(row),
-                    [
-                        {
-                            "source": chunk.source,
-                            "source_id": chunk.source_id,
-                            "node_id": chunk.node_id,
-                            "cycle_id": chunk.cycle_id,
-                            "ordinal": chunk.ordinal,
-                            "text": chunk.text,
-                            "tokens": chunk.tokens,
-                            "vector": known[chunk.digest].astype(np.float16).tobytes(),
-                            "digest": chunk.digest,
-                            "updated_epoch": epoch,
-                        }
-                        for chunk in part
-                    ],
-                )
-        return len(fresh)
+            if chunk.digest not in self._known:
+                missing.setdefault(chunk.digest, chunk.text)
+        if not missing:
+            return
+        embedder = await self.ready_embedder()
+        if embedder is None:
+            return
+        await self._embed_texts(embedder, missing)
 
-    def _database_epoch(self) -> int:
-        epoch = self._bus.epoch if self._bus is not None else None
-        return max(0, epoch or 0)
+    async def _embed_texts(self, embedder: TextEmbedder, texts: Mapping[str, str]) -> None:
+        order = sorted(texts)
+        fresh: dict[str, Vector16] = {}
+        for batch in batched(order, max(1, self._rules().divine_will.index_batch), strict=False):
+            vectors = await asyncio.to_thread(embedder.embed, [texts[digest] for digest in batch], TextRole.PASSAGE)
+            for digest, vector in zip(batch, vectors, strict=True):
+                fresh[digest] = vector.astype(np.float16)
+        self._known.update(fresh)
+        self._layer = None
+        await asyncio.to_thread(self._vectors.add, fresh)
+
+    async def _finish(self) -> None:
+        if await self.ready_embedder() is None:
+            self._set(IndexStatus.UNAVAILABLE, self._words_note or NO_DIRECTORY, force=True)
+            return
+        self._set(IndexStatus.READY, "", force=self._status is not IndexStatus.READY)
 
     async def _attachment_passages(self) -> tuple[list[Passage], frozenset[str]]:
         async with self._database.read() as session:
@@ -797,101 +722,140 @@ class LoreIndex:
             passages.append(Passage(ChunkSource.ATTACHMENT, str(row.id), title, data.decode("utf-8", errors="replace"), cycle_id=row.cycle_id))
         return passages, frozenset(str(row.id) for row in chosen)
 
-    async def refresh_attachments(self, *, embed: bool = True) -> dict[str, int]:
-        async with self._attach_lock:
-            generation = self._database.generation
+    async def refresh_attachments(self) -> dict[str, int]:
+        async with self._lock:
+            if not self._opened:
+                await self.load()
             passages, chosen = await self._attachment_passages()
-            embedder = await self.ready_embedder() if embed else None
-            count = await self.token_count()
-            chunks = await asyncio.to_thread(self._chunked, passages, count, self._attached_cache)
-            known = known_vectors(self._attached)
-            layer = await asyncio.to_thread(build_layer, chunks, known)
-            self._attached = layer
-            written = 0
-            if embedder is not None:
-                await self._embed(embedder, layer, known, None, yielding=False)
-                written = await self._persist(layer.chunks, known, chosen)
-                await self._mark_indexed(layer)
-            self._attached_generation = generation
-            return {"attachment_passages": len(layer.chunks), "attachment_written": written}
+            count = remembered(await self.token_count())
+            rendered = cut(passages, count)
+            held = {key: chunks for key, chunks in self._meaning.items() if key[0] is ChunkSource.ATTACHMENT}
+            fresh = [item for item in rendered if [chunk.digest for chunk in held.get(item.key, [])] != [chunk.digest for chunk in item.chunks]]
+            removed = [key for key in held if key[1] not in chosen]
+            written = await self._apply(fresh, removed) if fresh or removed else 0
+            await self._embed_meaning(chunk for item in rendered for chunk in item.chunks)
+            await self._mark_indexed(rendered)
+            return {"attachment_passages": sum(len(item.chunks) for item in rendered), "attachment_written": written}
 
-    async def _mark_indexed(self, layer: Layer) -> None:
-        complete: dict[str, bool] = {}
-        for position, chunk in enumerate(layer.chunks):
-            complete[chunk.source_id] = complete.get(chunk.source_id, True) and bool(layer.embedded[position])
-        ready = sorted(int(source_id) for source_id, whole in complete.items() if whole)
-        if not ready:
+    async def _mark_indexed(self, rendered: Sequence[Rendered]) -> None:
+        ready = sorted(int(item.key[1]) for item in rendered if item.chunks and all(chunk.digest in self._known for chunk in item.chunks))
+        if not ready or self._read_only():
             return
-        async with self._own_write() as session:
+        async with self._database.write() as session:
             await session.execute(
                 update(DivineWillAttachmentRow)
                 .where(DivineWillAttachmentRow.id.in_(ready), DivineWillAttachmentRow.status == AttachmentStatus.CONVERTED)
                 .values(status=AttachmentStatus.INDEXED)
             )
 
-    async def _lexical_world(self) -> None:
-        passages = await asyncio.to_thread(gathered, self._url(), self._rules())
-        count = await self.token_count()
-        chunks = await asyncio.to_thread(lambda: [chunk for passage in passages for chunk in chunk_passage(passage, count, EMBEDDER_KEY)])
-        layer = await asyncio.to_thread(build_layer, chunks, known_vectors(self._world))
-        if self._world is None:
-            self._world = layer
-
-    async def _ensure_layers(self) -> None:
+    async def _ensure_ready(self) -> None:
         if self._background:
             await self._loaded.wait()
-            if self._world is None:
-                await self._lexical_world()
-            if self._attached is None:
-                await self.refresh_attachments(embed=False)
             return
-        if self._world is None or self._built_generation != self._database.generation:
-            await self.refresh()
-        if self._attached is None or self._attached_generation != self._database.generation:
-            await self.refresh_attachments()
+        await self.refresh()
+        await self.refresh_attachments()
 
-    async def search(self, query: str, *, sources: frozenset[ChunkSource] | None = None, attachments: frozenset[int] = frozenset()) -> LoreSearch:
-        await self._ensure_layers()
+    def _meaning_layer(self) -> MeaningLayer:
+        if self._layer is not None:
+            return self._layer
+        chunks = [
+            chunk
+            for passage in sorted(self._meaning, key=lambda key: (key[0].value, key[1]))
+            for chunk in self._meaning[passage]
+            if chunk.digest in self._known
+        ]
+        vectors = np.zeros((len(chunks), DIMENSIONS), dtype=np.float16)
+        for position, chunk in enumerate(chunks):
+            vectors[position] = self._known[chunk.digest]
+        self._layer = MeaningLayer(
+            keys=[chunk.key for chunk in chunks],
+            vectors=vectors,
+            codes=np.asarray([chunk.code for chunk in chunks], dtype=np.int64),
+            records=np.asarray([chunk.record for chunk in chunks], dtype=np.int64),
+            cycles=np.asarray([chunk.cycle for chunk in chunks], dtype=np.int64),
+        )
+        return self._layer
+
+    @staticmethod
+    def _allowed(layer: MeaningLayer, exclusions: Exclusions) -> Mask:
+        mask = np.ones(len(layer.keys), dtype=np.bool_)
+        attachment = SOURCE_CODES[ChunkSource.ATTACHMENT]
+        artifact = SOURCE_CODES[ChunkSource.ARTIFACT]
+        if exclusions.sources is not None:
+            mask &= np.isin(layer.codes, [SOURCE_CODES[source] for source in exclusions.sources])
+        if exclusions.attachments is not None:
+            kept = [int(record) for record in exclusions.attachments if record.isdigit()]
+            mask &= (layer.codes != attachment) | np.isin(layer.records, kept)
+        if exclusions.artifacts:
+            hidden = [int(record) for record in exclusions.artifacts if record.isdigit()]
+            mask &= ~((layer.codes == artifact) & np.isin(layer.records, hidden))
+        if exclusions.cycles:
+            mask &= ~np.isin(layer.cycles, sorted(exclusions.cycles))
+        return mask
+
+    def _dense(self, probe: NDArray[np.float32], exclusions: Exclusions) -> list[tuple[ChunkKey, float]]:
+        layer = self._meaning_layer()
+        if not layer.keys:
+            return []
+        scores = np.zeros(len(layer.keys), dtype=np.float32)
+        for start in range(0, len(layer.keys), SCORE_BLOCK):
+            scores[start : start + SCORE_BLOCK] = layer.vectors[start : start + SCORE_BLOCK].astype(np.float32) @ probe
+        allowed = self._allowed(layer, exclusions)
+        kept = relevant(scores[allowed], scores)
+        positions = np.flatnonzero(allowed)[kept]
+        ordered = sorted(positions.tolist(), key=lambda position: (-float(scores[position]), layer.keys[position]))
+        return [(layer.keys[position], float(scores[position])) for position in ordered]
+
+    async def _reranked(self, embedder: TextEmbedder, probe: NDArray[np.float32], found: Sequence[Found]) -> list[tuple[ChunkKey, float]]:
+        candidates = found[:RERANK_CANDIDATES]
+        missing = {item.chunk.digest: item.chunk.text for item in candidates if item.chunk.digest not in self._known}
+        if missing:
+            await self._embed_texts(embedder, missing)
+        scored = [(chunk_key(item.chunk), float(self._known[item.chunk.digest].astype(np.float32) @ probe)) for item in candidates]
+        return sorted(scored, key=lambda pair: (-pair[1], pair[0]))
+
+    async def search(
+        self, query: str, *, sources: frozenset[ChunkSource] | None = None, attachments: frozenset[int] = frozenset(), reach: int = 0
+    ) -> LoreSearch:
+        await self._ensure_ready()
         embedder = self._embedder if self._background else await self.ready_embedder()
-        layers = (self._world or empty_layer(), self._attached or empty_layer())
         hidden = await self._hidden()
-        allowed = [
-            self._allowed(layers[WORLD_LAYER], sources, None) & self._visible(layers[WORLD_LAYER], hidden),
-            self._allowed(layers[ATTACHMENT_LAYER], sources, attachments) & self._visible(layers[ATTACHMENT_LAYER], hidden),
-        ]
-        text = query.strip()
-        rankings: list[list[Key]] = [
-            [(number, position) for position in layer.lexical.ranked(text) if allowed[number][position]] for number, layer in enumerate(layers)
-        ]
-        similarity: dict[Key, float] = {}
+        exclusions = Exclusions(sources=sources, attachments=frozenset(str(item) for item in attachments), artifacts=hidden.artifacts, cycles=hidden.cycles)
+        words = query.strip()
+        found, total = await asyncio.to_thread(self._store.search, words, exclusions, max(LEXICAL_DEPTH, reach))
+        held: dict[ChunkKey, tuple[Chunk, int]] = {chunk_key(item.chunk): (item.chunk, item.parts) for item in found}
+        lexical = [chunk_key(item.chunk) for item in found]
+        rankings: list[list[ChunkKey]] = [lexical]
+        similarity: dict[ChunkKey, float] = {}
         semantic = False
-        if embedder is not None and text and any((mask & layer.embedded).any() for mask, layer in zip(allowed, layers, strict=True)):
+        if embedder is not None and words:
             semantic = True
-            probe = np.asarray(embedder.embed([text], TextRole.QUERY)[0], dtype=np.float32)
-            keys: list[Key] = []
-            values: list[float] = []
-            backdrop: list[NDArray[np.float32]] = []
-            for number, layer in enumerate(layers):
-                scores = similarities(layer, probe)
-                backdrop.append(scores[layer.embedded])
-                for position in np.flatnonzero(allowed[number] & layer.embedded):
-                    keys.append((number, int(position)))
-                    values.append(float(scores[position]))
-            sample = np.asarray(values, dtype=np.float32)
-            kept = relevant(sample, np.concatenate(backdrop))
-            chosen = sorted((index for index in range(len(keys)) if kept[index]), key=lambda index: (-values[index], keys[index]))
-            rankings.append([keys[index] for index in chosen])
-            similarity = {keys[index]: values[index] for index in range(len(keys))}
-        lexical_rank = {key: rank for ranking in rankings[:2] for rank, key in enumerate(ranking, start=1)}
-        hits = tuple(self._hit(layers, key, lexical_rank.get(key), similarity.get(key)) for key, _ in fuse(rankings))
-        passages = sum(len(layer.chunks) for layer in layers)
-        embedded = sum(layer.embedded_count for layer in layers)
-        return LoreSearch(hits=hits, semantic=semantic, passages=passages, embedded=embedded, note=self._search_note(semantic, passages, embedded))
+            probe = np.asarray((await asyncio.to_thread(embedder.embed, [words], TextRole.QUERY))[0], dtype=np.float32)
+            dense = self._dense(probe, exclusions)
+            reranked = await self._reranked(embedder, probe, found)
+            rankings.extend([[key for key, _ in dense], [key for key, _ in reranked]])
+            similarity = {**dict(dense), **dict(reranked)}
+        fused = fuse(rankings)
+        missing = [key for key, _ in fused if key not in held]
+        if missing:
+            held.update(await asyncio.to_thread(self._store.chunks, missing))
+        lexical_rank = {key: rank for rank, key in enumerate(lexical, start=1)}
+        hits = tuple(self._hit(held[key], lexical_rank.get(key), similarity.get(key)) for key, _ in fused if key in held)
+        extra = sum(1 for key, _ in fused if key not in lexical_rank and key in held)
+        state = self.state()
+        return LoreSearch(
+            hits=hits,
+            semantic=semantic,
+            passages=state.passages,
+            embedded=state.embedded,
+            note=self._search_note(semantic),
+            total=max(len(hits), total + extra),
+        )
 
-    def _search_note(self, semantic: bool, passages: int, embedded: int) -> str:
+    def _search_note(self, semantic: bool) -> str:
         if not semantic:
-            return WORDS_ONLY.format(reason=self._note or NO_DIRECTORY) if self._embedder is None else ""
-        return PARTLY.format(embedded=embedded, passages=several(passages, "passage", "passages")) if embedded < passages else ""
+            return (self._words_note or WORDS_ONLY.format(reason=NO_DIRECTORY)) if self._embedder is None else ""
+        return UNBUILT if not self._built else ""
 
     async def _hidden(self) -> Hidden:
         if current_account() is None:
@@ -908,38 +872,13 @@ class LoreIndex:
             return Hidden(frozenset(str(found) for found in artifacts), frozenset(int(found) for found in cycles))
 
     @staticmethod
-    def _visible(layer: Layer, hidden: Hidden) -> Mask:
-        if not hidden.artifacts and not hidden.cycles:
-            return np.ones(len(layer.chunks), dtype=np.bool_)
-        return np.asarray(
-            [
-                not (
-                    (chunk.source is ChunkSource.ARTIFACT and chunk.source_id in hidden.artifacts)
-                    or (chunk.cycle_id is not None and chunk.cycle_id in hidden.cycles)
-                )
-                for chunk in layer.chunks
-            ],
-            dtype=np.bool_,
-        )
-
-    @staticmethod
-    def _allowed(layer: Layer, sources: frozenset[ChunkSource] | None, attachments: frozenset[int] | None) -> Mask:
-        mask = np.ones(len(layer.chunks), dtype=np.bool_)
-        if sources is not None:
-            mask &= np.isin(layer.codes, [SOURCE_CODES[source] for source in sources])
-        if attachments is not None:
-            mask &= np.isin(layer.records, sorted(attachments))
-        return mask
-
-    @staticmethod
-    def _hit(layers: Sequence[Layer], key: Key, lexical_rank: int | None, similarity: float | None) -> LoreHit:
-        layer = layers[key[0]]
-        chunk = layer.chunks[key[1]]
+    def _hit(held: tuple[Chunk, int], lexical_rank: int | None, similarity: float | None) -> LoreHit:
+        chunk, parts = held
         return LoreHit(
             source=chunk.source,
             record=chunk.source_id,
             ordinal=chunk.ordinal,
-            parts=layer.parts.get((chunk.source, chunk.source_id), 1),
+            parts=parts,
             node_id=chunk.node_id,
             cycle_id=chunk.cycle_id,
             text=chunk.text,

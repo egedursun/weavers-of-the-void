@@ -27,8 +27,9 @@ LIBRARY_MODULES = (
     "starlette.responses",
     "httpx",
     "alembic.op",
+    "tantivy",
 )
-DEPRECATION_MARKERS = (".. deprecated::",)
+DEPRECATION_MARKERS = (".. deprecated::", "deprecated alias of")
 
 
 @dataclass(frozen=True)

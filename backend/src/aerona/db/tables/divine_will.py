@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Index, LargeBinary, Text, UniqueConstraint, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from aerona.db.authorship import OwnedByAccount
@@ -13,7 +13,6 @@ from aerona.domain.enums.divine_will import (
     ArtifactStatus,
     AttachmentKind,
     AttachmentStatus,
-    ChunkSource,
     ConfirmationReason,
     ConfirmationStatus,
     CycleEventKind,
@@ -127,28 +126,6 @@ class DivineWillAttachmentRow(Base):
     seen_by_model: Mapped[bool] = mapped_column(default=False)
     note: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = created()
-
-
-class DivineWillChunkRow(Base):
-    __tablename__ = "divine_will_chunks"
-    __table_args__ = (
-        Index("ix_divine_will_chunks_source", "source", "source_id"),
-        at_least("ordinal", 0),
-        at_least("tokens", 0),
-        at_least("updated_epoch", 0),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    source: Mapped[ChunkSource] = mapped_column(enum_type(ChunkSource, "source"))
-    source_id: Mapped[str]
-    node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), index=True)
-    cycle_id: Mapped[int | None] = mapped_column(ForeignKey("divine_will_cycles.id", ondelete="CASCADE"), index=True)
-    ordinal: Mapped[int] = mapped_column(default=0)
-    text: Mapped[str] = mapped_column(Text)
-    tokens: Mapped[int] = mapped_column(default=0)
-    vector: Mapped[bytes] = mapped_column(LargeBinary)
-    digest: Mapped[str]
-    updated_epoch: Mapped[int] = mapped_column(default=0)
 
 
 class DivineWillArtifactRow(OwnedByAccount, Base):

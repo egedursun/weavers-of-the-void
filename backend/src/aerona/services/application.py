@@ -40,7 +40,7 @@ from aerona.services.bulk_deepen import BulkDeepening
 from aerona.services.chronicle import ChronicleWriter
 from aerona.services.discovery import DiscoveryService
 from aerona.services.divine_will.embedding import download, model_directory
-from aerona.services.divine_will.index import LoreIndex
+from aerona.services.divine_will.index import LoreIndex, index_processes
 from aerona.services.exchange import ExchangeService, WorldChangedHook
 from aerona.services.images.media import Thumbnailer
 from aerona.services.images.queue import ImageQueue
@@ -248,6 +248,7 @@ async def build_application(
         current,
         directory=model_directory(settings),
         threads=settings.embed_threads,
+        processes=index_processes(settings.embed_threads),
         fetch=download if settings.llm_enabled else None,
         media=store,
         read_only=lambda: discovery.active,
