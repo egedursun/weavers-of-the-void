@@ -28,9 +28,9 @@ from aerona.events.kinds import EventKind
 from aerona.media.file_store import FileMediaStore
 from aerona.media.store import list_keys, read_all
 from aerona.rules.registry import Rules
-from aerona.services.backups import BackupService, backup_file_name, label_of
+from aerona.services.backups import BackupService, backup_file_name, is_safe_image_name, label_of
 from aerona.services.discovery import DiscoveryService
-from aerona.services.exchange import ExchangeService, ImportMode, WorldChangedHook, is_safe_image_name, package_file_name
+from aerona.services.exchange import ExchangeService, ImportMode, WorldChangedHook, package_file_name
 from aerona.services.images.collection import MediaCollector
 from aerona.services.world_merge import WorldMerger
 from aerona.services.world_package import read_package
@@ -211,8 +211,8 @@ async def test_export_import_and_discovery(settings: Settings, live: Database, s
         assert guest.name == "Aerona"
     restarted = DiscoveryService(settings)
     assert restarted.guest() is not None
-    guest = await exchange.end_discovery()
-    assert guest is not None
+    ended = await exchange.end_discovery()
+    assert ended is not None
     assert not discovery.active
     assert await store.exists(FOLK_KEY)
 

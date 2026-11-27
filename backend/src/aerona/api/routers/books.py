@@ -5,7 +5,7 @@ from typing import Any
 
 from anyio import to_thread
 from fastapi import APIRouter, Path, Query, Request, status
-from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response, StreamingResponse
 
 from aerona.api.background import submit
 from aerona.api.dependencies import ServicesDep, reader, world_rules
@@ -35,7 +35,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.domain.enums.job import JobKind
 from aerona.jobs.context import JobContext
-from aerona.services.books import book_page, codex_file
+from aerona.services.books import book_outline, book_page, book_part, codex_file
 from aerona.services.books.codex_archive import build_codex_archive
 from aerona.services.books.mapsvg import load_map
 from aerona.services.books.pdf import build_pdf, pdf_path, pdf_state, read_manifest
@@ -121,8 +121,28 @@ async def book(services: ServicesDep, son_id: int | None = Query(default=None, g
         cosmos = await CosmosRepository(session).get()
         state = pdf_state(services, cosmos.epoch) if cosmos else None
         links = ScreenLinks(universe=services.settings.universe_id or None)
-        rendered = await book_page(services.database, session, rules, son_id=son_id, entity_id=entity_id, pdf=state, links=links, settings=services.settings)
+        rendered = await book_page(
+            services.database, session, rules, son_id=son_id, entity_id=entity_id, pdf=state, links=links, settings=services.settings, wait=False
+        )
     return HTMLResponse(rendered.html, headers={"content-security-policy": BOOK_CSP.format(nonce=rendered.nonce), "x-content-type-options": "nosniff"})
+
+
+@router.get(f"{BOOK_PATH}/outline", response_class=JSONResponse, include_in_schema=False)
+async def book_outline_read(services: ServicesDep) -> JSONResponse:
+    async with reader(services) as session:
+        rules = await world_rules(services, session)
+        found = await book_outline(services.database, session, rules, ScreenLinks(universe=services.settings.universe_id or None), services.settings)
+    body = None if found is None else {"generation": found.generation, "sizes": list(found.sizes), "anchors": found.anchors}
+    return JSONResponse(body, headers={"cache-control": "no-store", "x-content-type-options": "nosniff"})
+
+
+@router.get(f"{BOOK_PATH}/part", response_class=HTMLResponse, include_in_schema=False)
+async def book_part_read(services: ServicesDep, number: int = Query(ge=0), generation: int | None = Query(default=None, ge=0)) -> HTMLResponse:
+    async with reader(services) as session:
+        rules = await world_rules(services, session)
+        links = ScreenLinks(universe=services.settings.universe_id or None)
+        body = await book_part(services.database, session, rules, links, number=number, generation=generation, settings=services.settings)
+    return HTMLResponse(body, headers={"cache-control": "no-store", "x-content-type-options": "nosniff"})
 
 
 @router.get(f"{BOOK_PATH}/maps/{{world_id}}.jpg", response_class=Response, responses={200: {"content": {TERRAIN_MEDIA_TYPE: {}}}})

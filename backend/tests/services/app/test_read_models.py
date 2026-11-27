@@ -14,6 +14,7 @@ from aerona.db.telemetry.tables import LiveEventRow, LlmCallRow
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.meta import HealthStatus
 from aerona.domain.enums.node import NodeKind
 from aerona.domain.enums.telemetry import LlmCallKind, LlmCallStatus
 from aerona.domain.models.entity_stats import FactionStats, SettlementStats
@@ -21,7 +22,7 @@ from aerona.domain.models.records import EpochStatsData, SonEpochStats
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
 from aerona.services import search, son_relations, state, statistics, wiki
-from aerona.services.metrics import ErrorRing, HealthStatus, MetricsService, health, step_group
+from aerona.services.metrics import ErrorRing, MetricsService, health, step_group
 from tests.engine.core.factories import region_record
 from tests.services.app.factories import Cosmos, bond, make_entity, make_son, make_world
 

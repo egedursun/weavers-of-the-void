@@ -13,6 +13,7 @@ from aerona.catalog.life.divine import MOTION_LABELS
 from aerona.catalog.tongues import PART_OF_SPEECH_LABELS
 from aerona.constants.books import (
     ARTICLE_WIDTH,
+    BOOK_WHOLE_PAGE_BYTES,
     CODEX_IMAGE_WIDTH,
     COVER_WIDTH,
     PLATE_WIDTH,
@@ -40,6 +41,7 @@ BOOK_TEMPLATE = "book.html.j2"
 ENTRY_TEMPLATE = "entry.html.j2"
 CODEX_TEMPLATE = "codex.md.j2"
 EMPTY_TEMPLATE = "empty.html.j2"
+SHELL_TEMPLATE = "shell.html.j2"
 MEDIA_PREFIX = "/api/media/"
 BOOK_ASSET_PREFIX = "/api/book/"
 FONT_DIRECTORY = Path(__file__).resolve().parent / "fonts"
@@ -308,6 +310,21 @@ def render_book(model: BookModel | None, rules: Rules, *, links: BookLinks | Non
     if model is None:
         return RenderedBook(HTML.get_template(EMPTY_TEMPLATE).render(nonce=nonce, links=chosen, pdf=None), nonce)
     html = HTML.get_template(BOOK_TEMPLATE).render(book=model, rules=rules, nonce=nonce, single=False, links=chosen, pdf=pdf)
+    return RenderedBook(html, nonce)
+
+
+@dataclass(frozen=True)
+class BookOutline:
+    generation: int
+    sizes: tuple[int, ...]
+    anchors: dict[str, int]
+
+
+def render_shell(title: str, links: ScreenLinks, pdf: PdfState | None, first: str | None, outline: BookOutline | None) -> RenderedBook:
+    nonce = new_nonce()
+    html = HTML.get_template(SHELL_TEMPLATE).render(
+        title=title, links=links, pdf=pdf, nonce=nonce, single=False, first=first, outline=outline, whole_limit=BOOK_WHOLE_PAGE_BYTES
+    )
     return RenderedBook(html, nonce)
 
 

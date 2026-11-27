@@ -156,6 +156,10 @@ class Notifier:
     def __init__(self, bus: EventBus | None = None) -> None:
         self._bus = bus
 
+    def publish(self, kind: EventKind, payload: dict[str, Any]) -> None:
+        if self._bus is not None:
+            self._bus.publish(kind, payload)
+
     async def notify(self, session: AsyncSession, rules: Rules, request: NotificationRequest) -> NotificationRow | None:
         spec = NOTIFICATION_CATEGORIES[request.category]
         title, body = normalized_texts(request.category, request.title, request.body)

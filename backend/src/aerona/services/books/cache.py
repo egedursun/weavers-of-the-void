@@ -10,7 +10,9 @@ from aerona.db.session import Database
 from aerona.events.bus import Event, EventBus
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
-from aerona.services.books.worker import in_books, order_for, warm
+from aerona.services.books import write_book_parts
+from aerona.services.books.render import ScreenLinks
+from aerona.settings import Settings
 
 
 async def book_rules(session: AsyncSession, current: Rules) -> Rules:
@@ -19,7 +21,8 @@ async def book_rules(session: AsyncSession, current: Rules) -> Rules:
 
 
 class BookWarmer:
-    def __init__(self, bus: EventBus, database: Database, current: Callable[[], Rules], read_only: Callable[[], bool]) -> None:
+    def __init__(self, bus: EventBus, database: Database, current: Callable[[], Rules], read_only: Callable[[], bool], settings: Settings) -> None:
+        self._settings = settings
         self._bus = bus
         self._database = database
         self._current = current
@@ -45,4 +48,4 @@ class BookWarmer:
     async def warm(self) -> None:
         async with self._database.read() as session:
             rules = await book_rules(session, self._current())
-        await in_books(self._database, warm, order_for(self._database, rules, ""))
+            await write_book_parts(self._database, session, rules, ScreenLinks(universe=self._settings.universe_id or None), self._settings)

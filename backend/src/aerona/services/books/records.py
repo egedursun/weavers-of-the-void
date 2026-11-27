@@ -111,6 +111,74 @@ class ChangeLine:
 
 
 @dataclass(frozen=True, slots=True)
+class ToldChange:
+    when: str
+    head: str
+    tail: str
+    shift: tuple[str, str] | None = None
+    rewrote: str = ""
+
+    def text(self) -> str:
+        return f"{self.when}: {self.head}{self.body()}{self.tail}"
+
+    def body(self) -> str:
+        if self.rewrote:
+            return f": {self.rewrote}"
+        if self.shift is not None:
+            return f": {self.shift[0]} → {self.shift[1]}"
+        return ""
+
+    def packed(self) -> str:
+        kind = REWROTE if self.rewrote else SHIFTED if self.shift is not None else MADE
+        before, after = self.shift if self.shift is not None else ("", self.rewrote)
+        return PACK.join(part.replace(PACK, " ") for part in (kind, self.when, self.head, self.tail, before, after))
+
+    @classmethod
+    def unpacked(cls, text: str) -> "ToldChange":
+        kind, when, head, tail, before, after = text.split(PACK)
+        if kind == SHIFTED:
+            return cls(when, head, tail, (before, after))
+        return cls(when, head, tail, rewrote=after if kind == REWROTE else "")
+
+
+def counted_moment(when: str, times: int) -> str:
+    return when if times == 1 else f"{when} ({several(times, 'time', 'times')})"
+
+
+def told_together(group: list[ToldChange]) -> str:
+    first = group[0]
+    if len(group) == 1:
+        return first.text()
+    runs: list[tuple[ToldChange, int]] = []
+    for told in group:
+        if runs and runs[-1][0] == told:
+            runs[-1] = (told, runs[-1][1] + 1)
+        else:
+            runs.append((told, 1))
+    if first.shift is None and not first.rewrote:
+        return f"{first.head}{first.tail}: {'; '.join(counted_moment(told.when, times) for told, times in runs)}"
+    pieces: list[str] = []
+    previous: ToldChange | None = None
+    for told, times in runs:
+        moment = counted_moment(told.when, times)
+        if told.shift is None:
+            pieces.append(f"; {told.rewrote} ({moment})")
+        elif previous is not None and previous.shift is not None and previous.shift[1] == told.shift[0]:
+            pieces.append(f" → {told.shift[1]} ({moment})")
+        else:
+            pieces.append(f"; {told.shift[0]} → {told.shift[1]} ({moment})")
+        previous = told
+    return f"{first.head}{first.tail}: {''.join(pieces)[2:]}"
+
+
+def grouped_changes(changes: Iterable[ToldChange]) -> list[str]:
+    groups: dict[tuple[bool, str, str], list[ToldChange]] = {}
+    for told in changes:
+        groups.setdefault((told.shift is not None or bool(told.rewrote), told.head, told.tail), []).append(told)
+    return [told_together(group) for group in groups.values()]
+
+
+@dataclass(frozen=True, slots=True)
 class TermLine:
     op: ModifierOp
     term: str
@@ -169,6 +237,10 @@ NAME_FIELD = "name"
 NAMED_TABLES = frozenset({"nodes", "entities"})
 LOOKUP_BATCH = 500
 LENGTH = struct.Struct("<I")
+PACK = "\x1f"
+MADE = "m"
+SHIFTED = "s"
+REWROTE = "r"
 
 
 @dataclass
@@ -252,8 +324,9 @@ class Ledger:
                 self.take_change(ChangeLine(*row), terms.get(row[0], []))
 
     def take_change(self, change: ChangeLine, terms: list[TermLine]) -> None:
-        text = self.change_text(change, terms)
-        self.changes[change.node_id].append(self.store.append(text))
+        told = self.told_change(change, terms)
+        text = told.text()
+        self.changes[change.node_id].append(self.store.append(told.packed()))
         happening = self.incidents.get(change.incident_id) if change.incident_id is not None else None
         if happening is not None and happening.kind.startswith(PHASE_PREFIX):
             self.phase_counts[happening.id] += 1
@@ -379,27 +452,33 @@ class Ledger:
         text = change.before_text if before else change.after_text
         return text if text is not None else "none"
 
-    def shift_text(self, before: ChangeLine, after: ChangeLine) -> str:
-        rewritten = rewritten_parts(before.before_text, after.after_text)
-        if rewritten is not None:
-            return f"rewrote {rewritten}"
-        return f"{self.value_text(before, True)} → {self.value_text(after, False)}"
-
-    def change_text(self, change: ChangeLine, terms: list[TermLine]) -> str:
+    def told_change(self, change: ChangeLine, terms: list[TermLine]) -> ToldChange:
         record = title_of(change.table_name).lower()
         owner = f" of {self.name(change.node_id)}" if change.node_id is not None else ""
-        if change.operation is LedgerOperation.UPDATE:
-            body = f"{words(change.field or '').lower()} of {record}{owner}: {self.shift_text(change, change)}"
-        else:
-            body = f"{'created' if change.operation is LedgerOperation.INSERT else 'removed'} {an(record)} record{owner}"
+        when = moment_text(change.epoch, change.year, change.season, change.day, change.hour)
+        tail = self.change_tail(change, terms)
+        if change.operation is not LedgerOperation.UPDATE:
+            return ToldChange(when, f"{'created' if change.operation is LedgerOperation.INSERT else 'removed'} {an(record)} record{owner}", tail)
+        head = f"{words(change.field or '').lower()} of {record}{owner}"
+        rewritten = rewritten_parts(change.before_text, change.after_text)
+        if rewritten is not None:
+            return ToldChange(when, head, tail, rewrote=f"rewrote {rewritten}")
+        return ToldChange(when, head, tail, (self.value_text(change, True), self.value_text(change, False)))
+
+    def change_text(self, change: ChangeLine, terms: list[TermLine]) -> str:
+        return self.told_change(change, terms).text()
+
+    def change_tail(self, change: ChangeLine, terms: list[TermLine]) -> str:
         actor = f" by {self.name(change.actor_node_id)}" if change.actor_node_id is not None else f" by the {spoken(change.actor_kind)}"
         phase = f" in {spoken(change.phase)}" if change.phase else ""
         reasons = [self.term_text(term.op, term.term, term.amount, term.source_node_id, term.source_incident_id) for term in terms]
         why = f" because {'; '.join(reasons)}" if reasons else ""
         happening = self.incidents.get(change.incident_id) if change.incident_id is not None else None
         cause = f" (during: {self.line_of(happening)})" if happening is not None and not happening.kind.startswith(PHASE_PREFIX) else ""
-        when = moment_text(change.epoch, change.year, change.season, change.day, change.hour)
-        return f"{when}: {body}{actor}{phase}{why}{cause}"
+        return f"{actor}{phase}{why}{cause}"
+
+    def changes_of(self, node_id: int | None) -> list[str]:
+        return grouped_changes(ToldChange.unpacked(text) for text in SpilledRows(self.store, self.changes.get(node_id, array("Q"))))
 
     def account_text(self, incident: IncidentRow, node_id: int | None) -> str:
         roles = self.participants.get(incident.id, [])
@@ -521,9 +600,9 @@ async def add_history_sections(session: AsyncSession, index: TypedIndex) -> Ledg
         if incidents:
             told = array("Q", (ledger.store.append(ledger.account_text(row, node_id)) for row in incidents))
             index.sections[node_id].append(TypedSection(HISTORY_TITLE, spilled=SpilledRows(ledger.store, told)))
-        changes = ledger.changes.get(node_id)
-        if changes:
-            index.sections[node_id].append(TypedSection(CHANGES_TITLE, spilled=SpilledRows(ledger.store, changes)))
+        if ledger.changes.get(node_id):
+            merged = array("Q", (ledger.store.append(text) for text in ledger.changes_of(node_id)))
+            index.sections[node_id].append(TypedSection(CHANGES_TITLE, spilled=SpilledRows(ledger.store, merged)))
         then = ledger.then_and_now(node_id)
         if then:
             section = TypedSection(THEN_TITLE)
@@ -631,7 +710,7 @@ async def record_tables(session: AsyncSession, ledger: Ledger) -> list[RecordTab
         if report is not None and ledger.steps.get(incident.id):
             tables.append(report_table(ledger, incident, report))
     loose = RecordTable("Changes to records of no single node", ["Change"])
-    loose.rows = [[text] for text in SpilledRows(ledger.store, ledger.changes.get(None, array("Q")))]
+    loose.rows = [[text] for text in ledger.changes_of(None)]
     if loose.rows:
         tables.append(loose)
     checkpoints = RecordTable("Checkpoints of the past", ["Epoch", "Table", "Rows", "Digest", "Last change"])

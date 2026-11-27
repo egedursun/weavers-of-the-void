@@ -2,7 +2,7 @@ import asyncio
 import multiprocessing
 import os
 import threading
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, replace
 from typing import Any
@@ -96,6 +96,19 @@ def stage_in_child(order: StageOrder) -> StageOutcome:
     return asyncio.run(run())
 
 
+def job_in_child[T](url: str, job: Callable[[Database, Publisher], Awaitable[T]]) -> T:
+    shared: SharedGate = CHILD["shared"]
+
+    async def run() -> T:
+        database = Database(url, WriteGate(shared, yielding=True))
+        try:
+            return await job(database, child_publish)
+        finally:
+            await database.close()
+
+    return asyncio.run(run())
+
+
 class EngineProcess:
     def __init__(self, database: Database) -> None:
         context = multiprocessing.get_context("spawn")
@@ -129,6 +142,9 @@ class EngineProcess:
         self._shared = True
 
     async def run(self, order: StageOrder, publish: Publisher, report: Callable[[str], None]) -> StageOutcome:
+        return await self.call(publish, report, stage_in_child, order)
+
+    async def call[T](self, publish: Publisher, report: Callable[[str], None], work: Callable[..., T], *args: object) -> T:
         async with self._lock:
             await self._share()
             loop = asyncio.get_running_loop()
@@ -145,7 +161,7 @@ class EngineProcess:
 
             self._deliver = deliver
             self.shared.stop.clear()
-            future = loop.run_in_executor(self.pool, stage_in_child, order)
+            future = loop.run_in_executor(self.pool, work, *args)
             try:
                 return await asyncio.shield(future)
             except asyncio.CancelledError:
@@ -172,6 +188,10 @@ def close_engine_process(database: Database) -> None:
     found = PROCESSES.pop(database, None)
     if found is not None:
         found.close()
+
+
+async def job_in_process[T](database: Database, job: Callable[[Database, Publisher], Awaitable[T]], publish: Publisher) -> T:
+    return await engine_process_of(database).call(publish, lambda _message: None, job_in_child, database.url, job)
 
 
 async def stage_in_process(database: Database, order: StageOrder, environment: TickEnvironment, report: Callable[[str], None]) -> None:

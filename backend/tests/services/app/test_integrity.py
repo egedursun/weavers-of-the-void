@@ -3,6 +3,7 @@ from dataclasses import replace
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.constants.bond_texts import MENTIONED_IN_FATE
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
@@ -203,7 +204,7 @@ async def test_repair_covers_every_derivable_bond(session: AsyncSession, rules: 
     witness = await make_entity(session, "Corra Dune", EntityType.MORTAL, world_id=world.world.id, location_id=world.region.id)
     witness.fate_note = "Corra Dune survived the Great Flood."
     await bonds.connect(BondDraft(flood.id, witness.id, BondKind.CAUSED, 1, "swept away"))
-    duplicate = await bonds.connect(BondDraft(witness.id, flood.id, BondKind.RELATED, 1, network.MENTIONED, role=BondRole.MENTIONED_IN_FATE))
+    duplicate = await bonds.connect(BondDraft(witness.id, flood.id, BondKind.RELATED, 1, MENTIONED_IN_FATE, role=BondRole.MENTIONED_IN_FATE))
     legacy = await bonds.connect(BondDraft(world.people.id, world.son.id, BondKind.RELATED, 1, "tapar"))
     await session.flush()
     counters = await network.repair_dangling_ends(session, rules, 2, network.RepairLog())

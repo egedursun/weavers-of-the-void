@@ -56,6 +56,15 @@ The fonts are installed from npm and bundled into the built frontend. The SIL Op
 | Cinzel | `@fontsource/cinzel` | OFL-1.1 |
 | Cinzel Decorative | `@fontsource/cinzel-decorative` | OFL-1.1 |
 
+The book of the world and its PDF carry their own copies of these fonts in `backend/src/aerona/services/books/fonts/`, served with the book and embedded in the PDF:
+
+| Font | Files | License |
+|---|---|---|
+| Alegreya | `alegreya-*.ttf` | OFL-1.1 |
+| Alegreya SC | `alegreya-sc-medium.ttf` | OFL-1.1 |
+| Cormorant | `cormorant-*.ttf` | OFL-1.1 |
+| Cinzel | `cinzel-latin-*.ttf`, converted from `@fontsource/cinzel` 5.3.0 | OFL-1.1 |
+
 ## 4. Models downloaded at first use
 
 No model weights are stored in this repository or in the Docker images. The application downloads them from Hugging Face the first time they are needed, and they stay under the license on their model cards.

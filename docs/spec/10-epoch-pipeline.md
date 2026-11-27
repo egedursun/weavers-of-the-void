@@ -1222,6 +1222,14 @@ quota or NULL).
    event loop), concurrent content jobs and HTTP god actions write into the same SQLite transaction and are rolled
    back if the engine fails (and god-action `SAVEPOINT`s nest inside it). → Run the engine on a dedicated connection /
    worker, or block world writes from other jobs during engine/transition, or make background jobs queue their writes.
+   *Rewrite:* each engine stage runs in a process of its own (`epoch/engine_process.py`, on by `AERONA_WORK_IN_PROCESSES`)
+   with its own connection. One fair write gate is shared across threads and processes: a server write waits its turn
+   asynchronously, and the engine yields between steps while a write is waiting. The generation that marks stale state
+   is shared too. Events and step errors come back through a queue, and stats come back with the stage. The startup
+   and background repairs run in the same process (`services/integrity/maintenance.py`), with their repair log and
+   events sent back. The book is built, kept and rendered in a process of its own (`services/books/worker.py`). The
+   server's loop therefore never waits on the engine, the repairs or the book. `tests/epoch/test_the_loop_stays_free.py`
+   fails when any of them holds the loop longer than 0.3 s (measured on an epoch-8 world: up to 8.7 s before, 8 ms after).
 5. **Global mutable year range** (`yilAraligi`): background jobs that write chronicle lines during a phase get that
    phase's year range; after the transition the range is reset only for the new epoch. → Pass the year (or phase)
    explicitly with each chronicle write.

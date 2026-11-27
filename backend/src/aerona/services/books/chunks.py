@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 TAG = re.compile(r"<(/?)([a-zA-Z][a-zA-Z0-9-]*)((?:\"[^\"]*\"|'[^']*'|[^'\">])*)>")
 CLASS = re.compile(r"""class=["']([^"']*)["']""")
 MARKUP = re.compile(r"<[^>]+>")
+ID_ATTRIBUTE = re.compile(r"""\sid=(?:"[^"]*"|'[^']*')""")
 VOID = frozenset({"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"})
 CONTAINERS = frozenset({"section", "li", "table", "tbody"})
 OPEN_LISTS = frozenset({"timeline", "log", "index-list", "changes"})
@@ -33,6 +34,7 @@ class Splitter:
     prefix: str = ""
     chapter: str = ""
     previous: Opened | None = None
+    keep_ids: bool = True
 
     def splittable(self) -> bool:
         if self.previous is not None and (self.previous.name in HEADINGS or HEADING_GROUP in self.previous.classes):
@@ -42,7 +44,8 @@ class Splitter:
     def cut(self, source: str, at: int) -> None:
         self.chunks.append(self.prefix + source[self.start : at] + "".join(f"</{item.name}>" for item in reversed(self.stack)))
         carried = f'<span style="string-set:chapter &quot;{html.escape(self.chapter, quote=True)}&quot;"></span>' if self.chapter else ""
-        self.prefix = "".join(item.tag + item.carried for item in self.stack) + carried
+        reopened = "".join(item.tag + item.carried for item in self.stack)
+        self.prefix = (reopened if self.keep_ids else ID_ATTRIBUTE.sub("", reopened)) + carried
         self.start = at
 
     def close(self, name: str, source: str, end: int) -> None:
@@ -85,7 +88,7 @@ class SplitBook:
         return head + (self.bodies[number] if body is None else body) + self.tail
 
 
-def split_book(document: str, target: int) -> SplitBook:
+def split_book(document: str, target: int, *, keep_ids: bool = True) -> SplitBook:
     opening = document.index(MAIN_OPEN) + len(MAIN_OPEN)
     closing = document.rindex(MAIN_CLOSE)
-    return SplitBook(document[:opening], Splitter(target).feed(document[opening:closing]), document[closing:])
+    return SplitBook(document[:opening], Splitter(target, keep_ids=keep_ids).feed(document[opening:closing]), document[closing:])

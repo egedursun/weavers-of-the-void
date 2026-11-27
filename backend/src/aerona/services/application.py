@@ -1,6 +1,8 @@
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from typing import Any
 from weakref import WeakKeyDictionary
@@ -21,6 +23,7 @@ from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.session import Database
 from aerona.db.telemetry.setup import TelemetryDatabase, setup_telemetry, telemetry_url
 from aerona.domain.enums.job import JobKind
+from aerona.epoch.engine_process import job_in_process
 from aerona.events.bus import EventBus
 from aerona.events.change_feed import TRACKED_TABLE_NAMES, ChangeFeed, ChangeOperation
 from aerona.events.kinds import EventKind
@@ -52,11 +55,10 @@ from aerona.services.integrity.data_repairs import (
     SCHEMA_STEP,
     DataRepairs,
     checkpoint,
-    history_signed,
     refresh_planner_statistics,
-    sign_history,
 )
 from aerona.services.integrity.graph_ends import repair_at_epoch_end
+from aerona.services.integrity.maintenance import Maintained, background_repairs, graph_ends, repair_steps, schema, startup_repairs
 from aerona.services.integrity.network import RepairLog
 from aerona.services.ledger import Ledger
 from aerona.services.live_log import LiveLog
@@ -230,7 +232,7 @@ async def build_application(
     live_log.attach()
     notification_stream = NotificationStream(bus, database, notifier, current, lambda: discovery.active)
     notification_stream.attach()
-    BookWarmer(bus, database, current, lambda: discovery.active).attach()
+    BookWarmer(bus, database, current, lambda: discovery.active, settings).attach()
     search = SearchIndex()
     motifs = MotifCache()
     repair_log = RepairLog()
@@ -313,24 +315,20 @@ def _spawn(application: ApplicationServices, work: Any) -> None:
 
 
 async def run_repair_steps(application: ApplicationServices, database: Database, rules: Rules, *, force_history: bool = False) -> dict[str, int]:
-    async with database.read() as session:
-        cosmos = await CosmosRepository(session).get()
-        if cosmos is None:
-            return {}
-        epoch = cosmos.epoch
-        history = force_history or not await history_signed(session)
-    repairs = application.repairs
-    steps = [step for step in repairs.startup_steps() if step[0] != GRAPH_ENDS_STEP] + (repairs.history_steps() if history else [])
-    counters: dict[str, int] = {}
-    for name, step in steps:
-        async with database.write() as session:
-            counters[name] = await step(session, rules, epoch)
-        await asyncio.sleep(0)
-    if history:
-        async with database.write() as session:
-            await sign_history(session)
-        counters["history_repairs"] = 1
-    return counters
+    return await repair_steps(application.repairs, database, rules, force_history=force_history)
+
+
+def take_maintained(application: ApplicationServices, rules: Rules, maintained: Maintained) -> dict[str, int]:
+    for entry in reversed(maintained.log):
+        application.repair_log.add(entry, rules.link_graph.summary_list)
+    for name, failure in maintained.failures.items():
+        logger.error("background repair %s failed: %s", name, failure)
+    return maintained.counters
+
+
+async def maintained_off_loop(application: ApplicationServices, database: Database, rules: Rules, job: Callable[..., Awaitable[Maintained]]) -> dict[str, int]:
+    found = await job_in_process(database, partial(job, rules=rules), application.notifier.publish)
+    return take_maintained(application, rules, found)
 
 
 async def run_maintenance(application: ApplicationServices, database: Database, rules: RulesService) -> dict[str, int]:
@@ -338,13 +336,22 @@ async def run_maintenance(application: ApplicationServices, database: Database, 
         return {}
     application.repairs_ready.clear()
     try:
-        counters = await run_repair_steps(application, database, rules.current)
+        if database.work_in_processes:
+            counters = await maintained_off_loop(application, database, rules.current, startup_repairs)
+        else:
+            counters = await run_repair_steps(application, database, rules.current)
         await application.metrics.prune()
     except Exception:
         logger.exception("startup maintenance failed")
         return {}
     finally:
         application.repairs_ready.set()
+    if database.work_in_processes:
+        try:
+            counters.update(await maintained_off_loop(application, database, rules.current, background_repairs))
+        except Exception:
+            logger.exception("background repairs failed")
+        return counters
     counters[GRAPH_ENDS_STEP] = await repair_graph_in_background(application, database, rules)
     counters[SCHEMA_STEP] = await repair_schema_in_background(application, database, rules)
     return counters
@@ -352,12 +359,7 @@ async def run_maintenance(application: ApplicationServices, database: Database, 
 
 async def repair_graph_in_background(application: ApplicationServices, database: Database, rules: RulesService) -> int:
     try:
-        async with database.read() as session:
-            cosmos = await CosmosRepository(session).get()
-        if cosmos is None:
-            return 0
-        async with database.write() as session:
-            return await application.repairs.graph_ends(session, rules.current, cosmos.epoch)
+        return await graph_ends(application.repairs, database, rules.current)
     except Exception:
         logger.exception("background graph repair failed")
         return 0
@@ -365,8 +367,7 @@ async def repair_graph_in_background(application: ApplicationServices, database:
 
 async def repair_schema_in_background(application: ApplicationServices, database: Database, rules: RulesService) -> int:
     try:
-        async with database.write() as session:
-            return await application.repairs.schema(session, rules.current, 0)
+        return await schema(application.repairs, database, rules.current)
     except Exception:
         logger.exception("background schema repair failed")
         return 0

@@ -1,0 +1,213 @@
+{% extends "layout.html.j2" %}
+{% set lazy = true %}
+{% block title %}{{ title }}{% endblock %}
+{% block body %}
+<div id="book-parts" data-whole-limit="{{ whole_limit }}" data-part-url="{{ links.api('/api/book/part') }}" data-outline-url="{{ links.api('/api/book/outline') }}"{% if outline %} data-generation="{{ outline.generation }}"{% endif %}>
+{% if outline %}
+<div class="book-part" data-part="0" data-loaded="true">{{ first | safe }}</div>
+{% for size in outline.sizes[1:] %}<div class="book-part" data-part="{{ loop.index }}" data-bytes="{{ size }}" aria-busy="true"><p class="part-wait">Turning to this part of the book…</p></div>
+{% endfor %}
+{% else %}
+<section class="cover" id="book-preparing" aria-busy="true"><div class="frame"><p class="overline">The book of</p><h1>{{ title }}</h1><p class="subtitle" role="status">The book is being written out from the world's records. You can make or download the PDF from the bar above meanwhile.</p><span class="ornament">&#10087;</span></div></section>
+{% endif %}
+</div>
+{% if outline %}<script type="application/json" id="book-outline">{{ outline.anchors | tojson }}</script>{% endif %}
+<script nonce="{{ nonce }}">
+(function () {
+  var root = document.getElementById("book-parts");
+  var partUrl = root.dataset.partUrl;
+  var generation = root.dataset.generation;
+  var anchors = {};
+  var pending = {};
+  var whole = document.getElementById("book-whole");
+  var wholeLabel = document.getElementById("book-whole-label");
+  function address(base, params) {
+    var url = new URL(base, window.location.href);
+    Object.keys(params).forEach(function (key) { url.searchParams.set(key, params[key]); });
+    return url.toString();
+  }
+  function changed() {
+    var note = document.getElementById("book-changed");
+    if (note) return;
+    note = document.createElement("div");
+    note.id = "book-changed";
+    note.className = "box";
+    note.setAttribute("role", "alert");
+    note.textContent = "The book has changed since this page opened. Reload the page to read the newest book.";
+    root.insertBefore(note, root.firstChild);
+  }
+  function failed(holder, number) {
+    holder.removeAttribute("aria-busy");
+    holder.innerHTML = "";
+    var line = document.createElement("p");
+    line.className = "part-wait";
+    line.textContent = "This part of the book could not be loaded. ";
+    var again = document.createElement("button");
+    again.type = "button";
+    again.className = "tool";
+    again.textContent = "Try again";
+    again.addEventListener("click", function () { delete pending[number]; holder.setAttribute("aria-busy", "true"); load(holder); });
+    line.appendChild(again);
+    holder.appendChild(line);
+  }
+  var keepAll = false;
+  var WAITING = '<p class="part-wait">Turning to this part of the book…</p>';
+  function load(holder) {
+    var number = holder.dataset.part;
+    if (holder.dataset.loaded) return Promise.resolve();
+    if (pending[number]) return pending[number];
+    pending[number] = fetch(address(partUrl, { number: number, generation: generation }), { headers: { accept: "text/html" } })
+      .then(function (response) {
+        if (response.status === 409) { changed(); throw new Error("changed"); }
+        if (!response.ok) throw new Error("failed");
+        return response.text();
+      })
+      .then(function (body) {
+        delete pending[number];
+        var before = holder.getBoundingClientRect();
+        holder.innerHTML = body;
+        holder.dataset.loaded = "true";
+        holder.style.minHeight = "";
+        if (before.bottom <= 0) window.scrollBy(0, holder.getBoundingClientRect().height - before.height);
+        holder.removeAttribute("aria-busy");
+        if (loader) loader.unobserve(holder);
+        if (keeper) keeper.observe(holder);
+      })
+      .catch(function (error) { delete pending[number]; if (error.message !== "changed") failed(holder, number); throw error; });
+    return pending[number];
+  }
+  function release(holder) {
+    if (keepAll || !holder.dataset.loaded) return;
+    var box = holder.getBoundingClientRect();
+    if (box.bottom > -window.innerHeight && box.top < 2 * window.innerHeight) return;
+    var height = Math.round(box.height);
+    if (keeper) keeper.unobserve(holder);
+    delete holder.dataset.loaded;
+    holder.dataset.height = String(height);
+    holder.style.minHeight = height + "px";
+    holder.setAttribute("aria-busy", "true");
+    holder.innerHTML = WAITING;
+    if (loader) loader.observe(holder);
+  }
+  function holders() { return Array.prototype.slice.call(root.querySelectorAll(".book-part")); }
+  var watching = "IntersectionObserver" in window;
+  var loader = watching ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) { if (entry.isIntersecting) load(entry.target).catch(function () {}); });
+  }, { rootMargin: "2400px 0px" }) : null;
+  var keeper = watching ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) { if (!entry.isIntersecting) release(entry.target); });
+  }, { rootMargin: "16000px 0px" }) : null;
+  function arm() {
+    holders().forEach(function (holder) {
+      if (holder.dataset.loaded) { if (keeper) keeper.observe(holder); return; }
+      holder.style.minHeight = (holder.dataset.height || "1200") + "px";
+      if (loader) loader.observe(holder); else load(holder).catch(function () {});
+    });
+  }
+  function settle(id, tries) {
+    var target = document.getElementById(id);
+    if (!target) return;
+    target.scrollIntoView();
+    var landed = target.getBoundingClientRect().top;
+    window.setTimeout(function () {
+      if (tries > 0 && Math.abs(target.getBoundingClientRect().top - landed) > 2) settle(id, tries - 1);
+    }, 120);
+  }
+  function reveal(id) {
+    if (document.getElementById(id)) { settle(id, 24); return true; }
+    var number = anchors[id];
+    if (number === undefined) return false;
+    var holder = root.querySelector('.book-part[data-part="' + number + '"]');
+    if (!holder) return false;
+    load(holder).then(function () { settle(id, 24); }).catch(function () {});
+    return true;
+  }
+  document.addEventListener("click", function (event) {
+    var link = event.target.closest ? event.target.closest('a[href^="#"]') : null;
+    if (!link) return;
+    var id = decodeURIComponent(link.getAttribute("href").slice(1));
+    if (id && reveal(id)) {
+      event.preventDefault();
+      history.pushState(null, "", "#" + encodeURIComponent(id));
+    }
+  });
+  window.addEventListener("popstate", function () { if (window.location.hash) reveal(decodeURIComponent(window.location.hash.slice(1))); });
+  window.loadWholeBook = function () {
+    keepAll = true;
+    var all = holders();
+    var done = all.filter(function (holder) { return holder.dataset.loaded; }).length;
+    if (whole) whole.setAttribute("aria-disabled", "true");
+    function next(index) {
+      if (index >= all.length) {
+        if (wholeLabel) wholeLabel.textContent = "Whole book loaded";
+        if (whole) whole.dataset.tip = "Every part of the book is on this page; the browser's search finds anything in it";
+        return Promise.resolve();
+      }
+      var holder = all[index];
+      var wasLoaded = Boolean(holder.dataset.loaded);
+      return load(holder).then(function () {
+        if (!wasLoaded) done += 1;
+        if (wholeLabel) wholeLabel.textContent = "Loading " + Math.round((100 * done) / all.length) + "%";
+        return next(index + 1);
+      });
+    }
+    return next(0).catch(function (error) {
+      keepAll = false;
+      if (whole) whole.removeAttribute("aria-disabled");
+      if (wholeLabel) wholeLabel.textContent = "Load the whole book";
+      throw error;
+    });
+  };
+  if (whole) whole.addEventListener("click", function () {
+    if (whole.dataset.tip === TOO_LARGE) return;
+    if (whole.getAttribute("aria-disabled") === "true") return;
+    window.loadWholeBook().catch(function () {});
+  });
+  var TOO_LARGE = "This book is too large to show on one page in a browser. Download the PDF to read, search or print all of it.";
+  function fits(sizes) {
+    var total = sizes.reduce(function (sum, size) { return sum + Number(size); }, 0);
+    if (total <= Number(root.dataset.wholeLimit)) return;
+    [whole, document.getElementById("print-book")].forEach(function (control) {
+      if (!control) return;
+      control.setAttribute("aria-disabled", "true");
+      control.dataset.tip = TOO_LARGE;
+    });
+  }
+  function begin(sizes) {
+    fits(sizes);
+    arm();
+    if (window.location.hash) reveal(decodeURIComponent(window.location.hash.slice(1)));
+  }
+  if (generation !== undefined) {
+    anchors = JSON.parse(document.getElementById("book-outline").textContent);
+    begin(holders().map(function (holder) { return holder.dataset.bytes || 0; }).concat([{{ outline.sizes[0] if outline else 0 }}]));
+    return;
+  }
+  if (whole) whole.setAttribute("aria-disabled", "true");
+  fetch(root.dataset.outlineUrl, { headers: { accept: "application/json" } })
+    .then(function (response) { if (!response.ok) throw new Error("failed"); return response.json(); })
+    .then(function (found) {
+      if (!found) { window.location.reload(); return; }
+      generation = String(found.generation);
+      anchors = found.anchors;
+      root.innerHTML = "";
+      found.sizes.forEach(function (size, number) {
+        var holder = document.createElement("div");
+        holder.className = "book-part";
+        holder.dataset.part = String(number);
+        holder.dataset.bytes = String(size);
+        holder.setAttribute("aria-busy", "true");
+        holder.innerHTML = WAITING;
+        root.appendChild(holder);
+      });
+      if (whole) whole.removeAttribute("aria-disabled");
+      load(root.firstChild).catch(function () {});
+      begin(found.sizes);
+    })
+    .catch(function () {
+      var waiting = document.querySelector("#book-preparing .subtitle");
+      if (waiting) waiting.textContent = "The book could not be written out just now. Reload the page to try again; the PDF controls above still work.";
+    });
+})();
+</script>
+{% endblock %}
