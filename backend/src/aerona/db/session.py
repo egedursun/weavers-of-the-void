@@ -1,6 +1,10 @@
 import asyncio
+import multiprocessing
+import threading
+from collections import deque
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import event
@@ -21,14 +25,141 @@ from aerona.db.read_memo import KEEP_KEY, forget_all
 from aerona.db.read_only import install_read_only_guard, mark_read_only
 
 
+@dataclass(frozen=True)
+class SharedGate:
+    lock: Any
+    wanting: Any
+    generation: Any
+    stop: Any
+
+
+def shared_gate() -> SharedGate:
+    context = multiprocessing.get_context("spawn")
+    return SharedGate(context.Lock(), context.Value("i", 0), context.Value("q", 0), context.Event())
+
+
+SHARED_PAUSE = 0.002
+
+
+class WriteGate:
+    def __init__(self, shared: SharedGate | None = None, *, yielding: bool = False) -> None:
+        self._mutex = threading.Lock()
+        self._held = False
+        self._waiters: deque[tuple[asyncio.AbstractEventLoop, asyncio.Future[None]]] = deque()
+        self._generation = 0
+        self._shared_taken = False
+        self.shared = shared
+        self.yielding = yielding
+
+    @property
+    def generation(self) -> int:
+        return int(self.shared.generation.value) if self.shared is not None else self._generation
+
+    @generation.setter
+    def generation(self, value: int) -> None:
+        self._generation = value
+        if self.shared is not None:
+            self.shared.generation.value = value
+
+    def share(self, shared: SharedGate) -> None:
+        shared.generation.value = self._generation
+        self.shared = shared
+
+    async def acquire(self) -> None:
+        await self._acquire_here()
+        try:
+            await self._acquire_shared()
+        except BaseException:
+            self._release_here()
+            raise
+
+    async def _acquire_shared(self) -> None:
+        shared = self.shared
+        if shared is None:
+            return
+        if not self.yielding:
+            with shared.wanting.get_lock():
+                shared.wanting.value += 1
+        try:
+            while True:
+                if self._try_shared(shared):
+                    break
+                await asyncio.sleep(SHARED_PAUSE)
+        finally:
+            if not self.yielding:
+                with shared.wanting.get_lock():
+                    shared.wanting.value -= 1
+        self._shared_taken = True
+
+    def _try_shared(self, shared: SharedGate) -> bool:
+        if self.yielding and shared.wanting.value > 0:
+            return False
+        if not shared.lock.acquire(False):
+            return False
+        if self.yielding and shared.wanting.value > 0:
+            shared.lock.release()
+            return False
+        return True
+
+    async def _acquire_here(self) -> None:
+        loop = asyncio.get_running_loop()
+        with self._mutex:
+            if not self._held and not self._waiters:
+                self._held = True
+                return
+            waiter: asyncio.Future[None] = loop.create_future()
+            self._waiters.append((loop, waiter))
+        try:
+            await waiter
+        except asyncio.CancelledError:
+            with self._mutex:
+                queued = (loop, waiter) in self._waiters
+                if queued:
+                    self._waiters.remove((loop, waiter))
+            if not queued and waiter.done() and not waiter.cancelled():
+                self._release_here()
+            raise
+
+    def release(self) -> None:
+        if self._shared_taken and self.shared is not None:
+            self._shared_taken = False
+            self.shared.lock.release()
+        self._release_here()
+
+    def _release_here(self) -> None:
+        with self._mutex:
+            while self._waiters:
+                loop, waiter = self._waiters.popleft()
+                if loop.is_closed():
+                    continue
+                loop.call_soon_threadsafe(self._hand, waiter)
+                return
+            self._held = False
+
+    def _hand(self, waiter: asyncio.Future[None]) -> None:
+        if waiter.done():
+            self._release_here()
+            return
+        waiter.set_result(None)
+
+    @asynccontextmanager
+    async def held(self) -> AsyncIterator[None]:
+        await self.acquire()
+        try:
+            yield
+        finally:
+            self.release()
+
+
 class Database:
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, gate: WriteGate | None = None) -> None:
+        self.url = url
+        self.work_in_processes = False
         self.engine: AsyncEngine = inline_engine(url)
         self._sessions = async_sessionmaker(self.engine, expire_on_commit=False, class_=FastSession)
         self.threaded: AsyncEngine = threaded_engine(url, self.engine)
         self._threaded_sessions = async_sessionmaker(self.threaded, expire_on_commit=False, class_=FastSession)
-        self._write_lock = asyncio.Lock()
-        self.generation = 0
+        self.gate = gate or WriteGate()
         for engine in {self.engine, self.threaded}:
             event.listen(engine.sync_engine, "connect", self._configure_connection)
             event.listen(engine.sync_engine, "begin", self._begin)
@@ -39,6 +170,21 @@ class Database:
         install_change_capture()
         install_cascade_following()
         install_key_guard()
+
+    @property
+    def generation(self) -> int:
+        return self.gate.generation
+
+    @generation.setter
+    def generation(self, value: int) -> None:
+        self.gate.generation = value
+
+    def sibling(self) -> "Database":
+        return Database(self.url, self.gate)
+
+    async def close(self) -> None:
+        await self.threaded.dispose()
+        await self.engine.dispose()
 
     @staticmethod
     def _configure_connection(connection: Any, _record: Any) -> None:
@@ -71,7 +217,7 @@ class Database:
 
     @asynccontextmanager
     async def write(self) -> AsyncIterator[AsyncSession]:
-        async with self._write_lock:
+        async with self.gate.held():
             async with self._sessions() as session, session.begin():
                 yield session
             self.generation += 1
@@ -87,7 +233,7 @@ class Database:
         self.generation += 1
 
     async def replace_file(self, swap: Callable[[], None]) -> None:
-        async with self._write_lock:
+        async with self.gate.held():
             await self.dispose()
             swap()
             await self.dispose()
@@ -102,7 +248,7 @@ class Steps:
 
     @asynccontextmanager
     async def step(self) -> AsyncIterator[AsyncSession]:
-        async with self.database._write_lock:
+        async with self.database.gate.held():
             if self.database.generation != self.seen:
                 self.session.expire_all()
                 forget_all(self.session.sync_session)

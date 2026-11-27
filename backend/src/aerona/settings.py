@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     divine_will_upload_max_mb: int = 50
     divine_will_upload_max_files: int = 10
     embed_threads: int = Field(default_factory=embedding_threads)
+    work_in_processes: bool = True
     embed_model_dir: Path | None = None
     secondary_backup_dir: Path | None = None
     static_dir: Path | None = None

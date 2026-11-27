@@ -1,8 +1,6 @@
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from typing import Any
-from weakref import WeakKeyDictionary
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,34 +10,7 @@ from aerona.db.session import Database
 from aerona.events.bus import Event, EventBus
 from aerona.events.kinds import EventKind
 from aerona.rules.registry import Rules
-from aerona.services.books.model import BookModel, build_book
-
-
-@dataclass
-class BookCache:
-    generation: int | None = None
-    model: BookModel | None = None
-    lock: asyncio.Lock = field(default_factory=asyncio.Lock)
-
-
-CACHES: WeakKeyDictionary[Database, BookCache] = WeakKeyDictionary()
-
-
-def cache_of(database: Database) -> BookCache:
-    found = CACHES.get(database)
-    if found is None:
-        found = CACHES[database] = BookCache()
-    return found
-
-
-async def cached_book(database: Database, session: AsyncSession, rules: Rules) -> BookModel | None:
-    cache = cache_of(database)
-    async with cache.lock:
-        seen = database.generation
-        if cache.generation != seen:
-            cache.model = await build_book(session, rules)
-            cache.generation = seen
-        return cache.model
+from aerona.services.books.worker import in_books, order_for, warm
 
 
 async def book_rules(session: AsyncSession, current: Rules) -> Rules:
@@ -73,4 +44,5 @@ class BookWarmer:
 
     async def warm(self) -> None:
         async with self._database.read() as session:
-            await cached_book(self._database, session, await book_rules(session, self._current()))
+            rules = await book_rules(session, self._current())
+        await in_books(self._database, warm, order_for(self._database, rules, ""))

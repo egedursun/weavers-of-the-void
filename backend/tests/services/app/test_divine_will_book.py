@@ -190,6 +190,7 @@ async def stirred(session: AsyncSession, world: Cosmos) -> dict[str, int]:
 
 async def test_the_book_and_the_codex_hold_every_divine_will_record_in_full(database: Database, session: AsyncSession, rules: Rules, world: Cosmos) -> None:
     ids = await stirred(session, world)
+    await session.commit()
     page = await book_page(database, session, rules)
     codex = await codex_markdown(session, rules, CodexLinks())
     for text in (page.html, codex):

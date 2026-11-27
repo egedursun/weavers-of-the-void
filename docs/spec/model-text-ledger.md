@@ -1043,11 +1043,12 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/youth/groups.py` | 1 | 2026-11-19 | `851a31c6c1b53322` |
 | `backend/src/aerona/epoch/concurrency.py` | 1 | 2026-11-16 | `21f2c1e4263f0e20` |
 | `backend/src/aerona/epoch/context.py` | 5 | 2026-11-16 | `aac57cd6d6880e83` |
+| `backend/src/aerona/epoch/engine_stage.py` | 1 | 2026-11-27 | `d9d61941219e8ad8` |
 | `backend/src/aerona/epoch/orchestrator.py` | 8 | 2026-11-16 | `fa0d16387a1306ae` |
 | `backend/src/aerona/epoch/phases/backup.py` | 2 | 2026-11-16 | `4da82612ac437f15` |
 | `backend/src/aerona/epoch/phases/deferred.py` | 4 | 2026-11-16 | `5d4e78b9cf136b17` |
 | `backend/src/aerona/epoch/phases/distribution.py` | 4 | 2026-11-17 | `04c0807d6da0f257` |
-| `backend/src/aerona/epoch/phases/engine_tick.py` | 6 | 2026-11-16 | `aa4df72abb926fdc` |
+| `backend/src/aerona/epoch/phases/engine_tick.py` | 5 | 2026-11-27 | `3b670da555ecb51c` |
 | `backend/src/aerona/epoch/phases/fate.py` | 4 | 2026-11-16 | `99dab7fe28395046` |
 | `backend/src/aerona/epoch/phases/finalize.py` | 1 | 2026-11-16 | `43ff23d4cbc97aea` |
 | `backend/src/aerona/epoch/phases/mortal_turns.py` | 1 | 2026-11-16 | `d18722b3d7b2798f` |
@@ -1297,7 +1298,6 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/application.py` | 4 | 2026-11-26 | `6b1a108aa4e805d4` |
 | `backend/src/aerona/services/backups.py` | 14 | 2026-11-16 | `6a699aaba0847312` |
 | `backend/src/aerona/services/bonds.py` | 3 | 2026-11-17 | `5829a3d9c0239444` |
-| `backend/src/aerona/services/books/__init__.py` | 2 | 2026-11-16 | `799c7916f64b2225` |
 | `backend/src/aerona/services/books/armssvg.py` | 7 | 2026-11-16 | `81a23f4a12bc9f57` |
 | `backend/src/aerona/services/books/chunks.py` | 1 | 2026-11-19 | `fbafc3a47d8b2063` |
 | `backend/src/aerona/services/books/citysvg.py` | 10 | 2026-11-27 | `21ff41e318757219` |
@@ -1330,6 +1330,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/services/books/templates/team.md.j2` | 23 | 2026-11-26 | `b85c8a0cd22020d7` |
 | `backend/src/aerona/services/books/typed.py` | 15 | 2026-11-27 | `37d80780f9efc463` |
 | `backend/src/aerona/services/books/typeset.py` | 2 | 2026-11-19 | `80b6661985e24ab0` |
+| `backend/src/aerona/services/books/worker.py` | 2 | 2026-11-27 | `799c7916f64b2225` |
 | `backend/src/aerona/services/bulk_deepen.py` | 15 | 2026-11-16 | `e6ba12e5fc751475` |
 | `backend/src/aerona/services/chronicle.py` | 1 | 2026-11-17 | `467a876e63825a82` |
 | `backend/src/aerona/services/codex.py` | 4 | 2026-11-16 | `80b686daec2f41d0` |

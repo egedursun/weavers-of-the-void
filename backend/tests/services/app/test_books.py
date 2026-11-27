@@ -1,3 +1,4 @@
+import asyncio
 import importlib
 import pkgutil
 import re
@@ -44,10 +45,10 @@ from aerona.rules.registry import Rules
 from aerona.services.books import book_page, codex_markdown
 from aerona.services.books import records as book_records
 from aerona.services.books import render as book_render
-from aerona.services.books.cache import cached_book
 from aerona.services.books.model import build_book, roman
 from aerona.services.books.render import CodexLinks, render_book
 from aerona.services.books.typed import TypedSection
+from aerona.services.books.worker import model_of, order_for
 from aerona.services.codex import cosmic_chronicle, guide_markdown, traveller_guide
 from aerona.services.search import SearchCategory, SearchIndex, search
 from tests.services.app.factories import Cosmos, bond, make_entity, make_world
@@ -75,6 +76,7 @@ async def test_full_book_and_codex(database: Database, session: AsyncSession, ru
     await enrich(session, world)
     other = await make_world(session, "Dusk")
     await make_entity(session, "Ashfield", EntityType.REGION, world_id=other.id)
+    await session.commit()
     page = await book_page(database, session, rules)
     assert page.nonce in page.html
     assert "Velari Folk" in page.html
@@ -92,9 +94,11 @@ async def test_full_book_and_codex(database: Database, session: AsyncSession, ru
 
 async def test_single_entry_page(database: Database, session: AsyncSession, rules: Rules, world: Cosmos) -> None:
     await enrich(session, world)
+    await session.commit()
     page = await book_page(database, session, rules, entity_id=world.people.id)
     assert "In the chronicle" in page.html
     assert 'href="?entity=' in page.html or "Velari Folk" in page.html
+    await session.commit()
     son_page = await book_page(database, session, rules, son_id=world.son.id)
     assert world.son.name in son_page.html
     with pytest.raises(NotFoundError):
@@ -108,13 +112,13 @@ async def test_empty_book(session: AsyncSession, rules: Rules) -> None:
 
 
 async def test_the_book_is_built_once_per_generation_of_the_world(database: Database, session: AsyncSession, rules: Rules, world: Cosmos) -> None:
-    first = await cached_book(database, session, rules)
-    assert first is not None and await cached_book(database, session, rules) is first
+    await session.commit()
+    first = await asyncio.to_thread(model_of, order_for(database, rules, ""))
+    assert first is not None and await asyncio.to_thread(model_of, order_for(database, rules, "")) is first
     database.generation += 1
-    assert await cached_book(database, session, rules) is not first
-    rebuilt = await cached_book(database, session, rules)
-    await database.dispose()
-    assert await cached_book(database, session, rules) is not rebuilt
+    rebuilt = await asyncio.to_thread(model_of, order_for(database, rules, ""))
+    assert rebuilt is not first
+    assert await asyncio.to_thread(model_of, order_for(database, rules, "")) is rebuilt
 
 
 async def test_traveller_guide_and_cosmic(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
@@ -144,6 +148,7 @@ async def test_book_and_codex_write_the_creators_hand_and_fates(database: Databa
     )
     await ChronicleRepository(session).append(ChronicleDraft(epoch=1, kind=ChronicleKind.CREATOR_HAND, text="The sky dimmed over the salt."))
     await session.flush()
+    await session.commit()
     page = await book_page(database, session, rules)
     assert "The Creator&#39;s hand" in page.html or "The Creator's hand" in page.html
     assert "healed the Velari Folk" in page.html
@@ -171,6 +176,7 @@ async def test_book_and_codex_tell_how_the_world_was_made(database: Database, se
         tone="restless",
     )
     await session.flush()
+    await session.commit()
     page = await book_page(database, session, rules)
     codex = await codex_markdown(session, rules, CodexLinks())
     for text in ("How the world was made", "Drowned world", "Danger", "35/100", "Layered", "Astral plane", "Ocean world", "85%", "Rain age", "Old"):
@@ -185,6 +191,7 @@ async def test_a_world_made_before_its_genesis_settings_were_kept_says_so_in_the
 ) -> None:
     world.cosmos.genesis_settings = None
     await session.flush()
+    await session.commit()
     page = await book_page(database, session, rules)
     codex = await codex_markdown(session, rules, CodexLinks())
     for text in ("How the world was made", "Not kept: this world was made before they were recorded"):
@@ -230,6 +237,7 @@ async def test_folded_lines_still_reach_the_codex_the_entry_and_search(database:
     folded = await fold_tick_lines(session, rules, 1, since)
     assert folded.folded_groups == 1
     codex = await codex_markdown(session, rules, CodexLinks())
+    await session.commit()
     entry = (await book_page(database, session, rules, entity_id=world.people.id)).html
     hits = await search(session, rules, SearchIndex(), "west granary", "folded")
     drawer, total = await mentioning(session, world.people.id, offset=0, limit=len(texts) + 1)
@@ -249,6 +257,7 @@ async def test_every_record_reaches_the_book_and_the_codex(database: Database, s
     session.add(FacetRow(node_id=world.son.id, facet=Facet.CURIOSITY, value=33))
     session.add(RuleOverrideRow(namespace="ideas", key="slots", value=3))
     await session.flush()
+    await session.commit()
     page = await book_page(database, session, rules)
     codex = await codex_markdown(session, rules, CodexLinks())
     for text in (page.html, codex):
@@ -329,6 +338,7 @@ async def test_every_node_reference_in_the_book_is_named(database: Database, ses
     unnamed = sorted(node_id for node_id in nodes if node_id not in book.names)
     assert unnamed == []
     codex = await codex_markdown(session, rules, CodexLinks())
+    await session.commit()
     page = await book_page(database, session, rules)
     raw = sorted(set(re.findall(r"(?<![\w&])#\d+\b", codex)) | set(re.findall(r"(?<![\w&])#\d+\b", page.html)))
     assert raw == []
@@ -361,6 +371,7 @@ async def test_the_book_and_the_codex_never_show_a_raw_enum_key(database: Databa
     session.add(CouncilRow(epoch=1, topic="The flood", minutes=minutes, passed=True))
     await ChronicleRepository(session).append(ChronicleDraft(epoch=1, kind=ChronicleKind.CREATOR_HAND, text="The sky dimmed.", world_id=world.world.id))
     await session.flush()
+    await session.commit()
     page = await book_page(database, session, rules)
     codex = await codex_markdown(session, rules, CodexLinks())
     keys = enum_keys()

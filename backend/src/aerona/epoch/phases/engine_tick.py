@@ -1,31 +1,25 @@
 import asyncio
 import logging
-import time
+import threading
 from collections.abc import Sequence
+from dataclasses import replace
 
 from sqlalchemy import select
 
-from aerona.core.errors import AeronaError
-from aerona.db.session import Steps
+from aerona.db.off_loop import ENGINE_THREADS, off_loop, threadsafe
+from aerona.db.session import Database
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.enums.epoch import EngineStage, EpochPhase
 from aerona.domain.enums.foreign_god import ForeignGodStatus
-from aerona.engine.context import TickContext, TickEnvironment, at_step
-from aerona.engine.interconnect.guards import run_guarded
+from aerona.engine.context import TickEnvironment
 from aerona.engine.notes import fold_tick_lines, last_chronicle_id
 from aerona.engine.phase import Phase
-from aerona.engine.pipeline import (
-    DISABLED_COUNTER,
-    FAILED_COUNTER,
-    TICK_ORDER,
-    EnginePhaseError,
-    current_environment,
-    disabled_by_rules,
-    warn_over_budget,
-)
+from aerona.engine.pipeline import TICK_ORDER, current_environment, warn_over_budget
 from aerona.epoch.context import EpochContext
-from aerona.epoch.state import engine_phases_done, mark_engine_phase, raise_phase, require_run
+from aerona.epoch.engine_process import StageOrder, portable, stage_in_process
+from aerona.epoch.engine_stage import StageRun, engine_stage
+from aerona.epoch.state import raise_phase, require_run
 from aerona.events.kinds import EventKind
 
 LOGGER = logging.getLogger(__name__)
@@ -38,40 +32,18 @@ async def run_engine_stage(
     environment: TickEnvironment,
     tolerant: frozenset[str] = frozenset(),
 ) -> None:
-    async with ec.database.read() as session:
-        done = await engine_phases_done(session, ec.epoch, stage)
-    disabled = disabled_by_rules(environment.rules)
-    async with ec.database.steps() as steps:
-        for index, phase in enumerate(phases):
-            if phase.name in done:
-                continue
-            if phase.name in disabled:
-                environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
-                continue
-            try:
-                await run_engine_phase(ec, stage, phase, at_step(environment, index, len(phases)), steps)
-            except AeronaError as error:
-                if phase.name not in tolerant:
-                    raise
-                LOGGER.exception("Engine step %s failed and was skipped", phase.name)
-                environment.stats.count(f"{phase.name}.{FAILED_COUNTER}")
-                ec.runtime.error(f"Engine step {phase.name}: {error.message}")
+    loop = asyncio.get_running_loop()
+    report = threadsafe(loop, ec.runtime.error)
+    if ec.database.work_in_processes:
+        order = StageOrder(ec.database.url, ec.epoch, stage, portable(tuple(phases)), environment, tolerant)
+        await stage_in_process(ec.database, order, environment, report)
+        return
+    threaded = replace(environment, publish=threadsafe(loop, environment.publish))
 
+    async def work(database: Database, stop: threading.Event) -> None:
+        await engine_stage(database, StageRun(ec.epoch, stage, tuple(phases), threaded, tolerant, report, stop))
 
-async def run_engine_phase(ec: EpochContext, stage: EngineStage, phase: Phase, environment: TickEnvironment, steps: Steps) -> None:
-    started = time.perf_counter()
-    try:
-        async with steps.step() as session:
-            await run_guarded(phase, TickContext(environment, session, phase.name))
-            await mark_engine_phase(session, ec.epoch, stage, phase.name, time.perf_counter() - started)
-    except AeronaError:
-        raise
-    except Exception as error:
-        raise EnginePhaseError(phase.name, error) from error
-    seconds = time.perf_counter() - started
-    environment.stats.phase_seconds[phase.name] = environment.stats.phase_seconds.get(phase.name, 0.0) + seconds
-    environment.publish(EventKind.ENGINE_PHASE, {"epoch": ec.epoch, "phase": phase.name, "seconds": seconds})
-    await asyncio.sleep(0)
+    await off_loop(ec.database, work, ENGINE_THREADS)
 
 
 async def engine_tick(ec: EpochContext, phases: Sequence[Phase] | None = None) -> None:

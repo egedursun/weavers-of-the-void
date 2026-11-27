@@ -30,11 +30,11 @@ from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.engine.parallel.pool import workers_for
 from aerona.jobs.context import JobContext
 from aerona.services.books.assets import write_images, write_maps
-from aerona.services.books.cache import cached_book
 from aerona.services.books.chunks import split_book
-from aerona.services.books.render import PdfState, PrintLinks, render_book
-from aerona.services.books.title import titled, universe_title
+from aerona.services.books.render import PdfState, PrintLinks
+from aerona.services.books.title import universe_title
 from aerona.services.books.typeset import Typesetter, bind
+from aerona.services.books.worker import in_books, order_for, print_html
 from aerona.services.container import Services
 
 NO_WORLD = "There is no world to print yet."
@@ -100,13 +100,15 @@ async def build_pdf(services: Services, context: JobContext) -> dict[str, Any]:
             raise ConflictError(NO_WORLD)
         rules = rules_from_snapshot(cosmos.rules_snapshot) if cosmos.rules_snapshot else services.rules.current
         epoch = cosmos.epoch
-        model = titled(await cached_book(services.database, session, rules), services.settings)
+        order = order_for(services.database, rules, universe_title(services.settings, cosmos))
     exports = services.settings.exports_dir
     exports.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=exports) as scratch:
         directory = Path(scratch)
         links = PrintLinks(directory)
-        rendered = await to_thread.run_sync(lambda: render_book(model, rules, links=links))
+        rendered, filled = await in_books(services.database, print_html, order, links)
+        links.images.update(filled.images)
+        links.maps.update(filled.maps)
         context.report(PDF_PROGRESS_IMAGES, PDF_STAGE_IMAGES)
         span = PDF_PROGRESS_LAYOUT - PDF_PROGRESS_IMAGES
         await write_images(services, links.images, lambda share: context.report(PDF_PROGRESS_IMAGES + span * share, PDF_STAGE_IMAGES))

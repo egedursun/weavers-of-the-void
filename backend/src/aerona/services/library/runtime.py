@@ -6,13 +6,16 @@ from dataclasses import dataclass, field
 from aerona.agents.ports import LanguageModel
 from aerona.db.migrations import upgrade_to_head
 from aerona.db.session import Database
+from aerona.db.warm_types import warm_column_types
 from aerona.engine.primitives.map_store import forget_database
 from aerona.engine.startup import prepare_engine
 from aerona.epoch.concurrency import WORLD_GROUP
+from aerona.epoch.engine_process import close_engine_process
 from aerona.events.bus import EventBus
 from aerona.jobs.manager import JobManager
 from aerona.services.agent_ports import player_creative_ports
 from aerona.services.application import build_application, database_path, start_application, stop_application
+from aerona.services.books.worker import close_books
 from aerona.services.container import Services
 from aerona.services.epoch_wiring import build_orchestrator, build_player
 from aerona.services.integrity.data_repairs import checkpoint
@@ -31,6 +34,7 @@ async def open_services(
     settings: Settings, model: LanguageModel | None, *, slots: asyncio.Semaphore | None = None, providers: Providers | None = None
 ) -> Services:
     database = Database(settings.database_url)
+    database.work_in_processes = settings.work_in_processes
     bus = EventBus()
     jobs = JobManager(database, bus)
     await jobs.recover_interrupted()
@@ -38,6 +42,7 @@ async def open_services(
     await rules.load()
     jobs.bind_capacity(lambda: rules.current.agents.concurrent_jobs)
     await prepare_engine(database)
+    await warm_column_types(database)
     application = await build_application(settings, database, bus, rules, model=model, jobs=jobs, providers=providers)
     orchestrator = build_orchestrator(application, database, bus, jobs, rules, slots=slots)
     await orchestrator.recover()
@@ -51,6 +56,8 @@ async def open_services(
 
 async def close_services(services: Services) -> None:
     await stop_application(services.application)
+    close_engine_process(services.database)
+    close_books(services.database)
     await services.jobs.shutdown()
     with contextlib.suppress(Exception):
         await asyncio.to_thread(checkpoint, database_path(services.database))

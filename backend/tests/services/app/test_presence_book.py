@@ -87,6 +87,7 @@ async def test_every_speaker_entry_holds_its_audiences_on_the_record_and_never_o
     database: Database, session: AsyncSession, rules: Rules, world: Cosmos
 ) -> None:
     await summoned(session, world)
+    await session.commit()
     page = await book_page(database, session, rules)
     codex = await codex_markdown(session, rules, CodexLinks())
     for text in (page.html, codex):

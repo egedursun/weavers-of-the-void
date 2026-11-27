@@ -5,12 +5,14 @@ from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import Enum
+from functools import cache
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, Select, Table, inspect, select
+from sqlalchemy import JSON, Boolean, Date, DateTime, Select, Table, select
 from sqlalchemy import column as loose_column
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapper
+from sqlalchemy.orm.base import instance_state
 from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
 
 from aerona.cartography.biomes import Biome
@@ -247,6 +249,7 @@ def _thaw(item: KeyedColumnElement[Any], raw: Any) -> Any:
     return raw
 
 
+@cache
 def words(key: str) -> str:
     text = key
     for suffix in ID_SUFFIXES:
@@ -263,10 +266,19 @@ def column_labels(columns: list[KeyedColumnElement[Any]]) -> dict[str, str]:
     return {key: f"{label} kind" if shared[label] > 1 and words(key) == key.replace("_", " ").capitalize() else label for key, label in labels.items()}
 
 
+PROPERTY_KEYS: dict[tuple[Mapper[Any], str, str], str] = {}
+
+
 def attribute_of(row: Any, column: KeyedColumnElement[Any]) -> Any:
-    return getattr(row, inspect(row).mapper.get_property_by_column(column).key)
+    mapper = instance_state(row).mapper
+    table = column.table.name if isinstance(column.table, Table) else ""
+    found = PROPERTY_KEYS.get((mapper, table, column.key))
+    if found is None:
+        found = PROPERTY_KEYS[(mapper, table, column.key)] = mapper.get_property_by_column(column).key
+    return getattr(row, found)
 
 
+@cache
 def title_of(table: str) -> str:
     for suffix in ("_profiles", "_profile"):
         if table.endswith(suffix):
