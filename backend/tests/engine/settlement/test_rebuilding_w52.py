@@ -5,6 +5,7 @@ from aerona.domain.enums.agrarian import PreparednessKind, RebuildCause, Rebuild
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus
 from aerona.engine.agrarian.rebuilding_ways import abandon_town, learn, relocate
+from aerona.engine.agrarian.resilience import ResilienceTally, rebuild
 from aerona.engine.agrarian.ruin import ruin_towns_in
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
@@ -55,3 +56,14 @@ async def test_an_abandoned_town_sends_its_people_away_as_displaced(realm: Realm
     assert town.status is not EntityStatus.CANON and row.finished_epoch is not None
     assert stat(host, "population") == 1600
     assert "settlement.left_after_ruin" in await chronicle_keys(realm.session)
+
+
+async def test_a_town_already_turned_to_ruin_is_never_rebuilt(realm: Realm) -> None:
+    town = await settlement(realm, "Emptied", population=10)
+    row = ReconstructionRow(settlement_entity_id=town.id, cause=RebuildCause.FLOOD, plan=RebuildPlan.OPPORTUNISTIC, started_epoch=1, locked=[])
+    realm.session.add(row)
+    town.status, town.end_epoch = EntityStatus.DESTROYED, 1
+    await realm.session.flush()
+    await rebuild(context(realm.session, RULES), ResilienceTally())
+    assert row.finished_epoch is not None
+    assert "settlement.rebuilt" not in await chronicle_keys(realm.session)

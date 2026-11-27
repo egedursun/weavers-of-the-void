@@ -672,10 +672,10 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 {% for chapter in book.chapters %}
 <a id="{{ chapter.anchor }}"></a>
 
-### {{ chapter.numeral }}. {% if chapter.row and chapter.row.name %}{{ chapter.row.name }}{% else %}Epoch {{ chapter.epoch }}{% endif %}
+### {{ chapter.numeral }}. {% if chapter.row and chapter.row.name %}{{ chapter.row.name }}{% else %}Epoch {{ chapter.epoch }}{% endif %}{% if chapter.under_way %} · under way{% endif %}
 
 
-*Epoch {{ chapter.epoch }}{% if chapter.row and chapter.row.year_start is not none %} · years {{ chapter.row.year_start }}–{{ chapter.row.year_end }}{% endif %}{% if chapter.row and chapter.row.chronicler_name %} · set down by {% if chapter.row.chronicler_entity_id %}[{{ chapter.row.chronicler_name }}](#entity-{{ chapter.row.chronicler_entity_id }}){% else %}{{ chapter.row.chronicler_name }}{% endif %}{% if chapter.row.chronicler_identity %}, {{ chapter.row.chronicler_identity }}{% endif %}{% endif %}*
+*Epoch {{ chapter.epoch }} · years {{ chapter.year_start }}–{{ chapter.year_end }}{% if chapter.under_way %} · under way, not yet lived to its end{% endif %}{% if chapter.row and chapter.row.chronicler_name %} · set down by {% if chapter.row.chronicler_entity_id %}[{{ chapter.row.chronicler_name }}](#entity-{{ chapter.row.chronicler_entity_id }}){% else %}{{ chapter.row.chronicler_name }}{% endif %}{% if chapter.row.chronicler_identity %}, {{ chapter.row.chronicler_identity }}{% endif %}{% endif %}*
 
 {% if chapter.row and chapter.row.summary %}
 > {{ chapter.row.summary }}
@@ -719,7 +719,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 {% endif %}
 {% if chapter.born %}
-*Born in this epoch: {% for id, name in chapter.born %}[{{ name }}](#entity-{{ id }}){% if not loop.last %}, {% endif %}{% endfor %}*
+*New in this epoch: {% for id, name in chapter.born %}[{{ name }}](#entity-{{ id }}){% if not loop.last %}, {% endif %}{% endfor %}*
 
 {% endif %}
 {% endfor %}
@@ -754,7 +754,7 @@ Contentment **{{ book.creator.mood_contentment }}** · Anger **{{ book.creator.m
 
 ### ⚔ {{ war.name }}
 
-*{{ war.world }} · {{ war.war.cause | spoken }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status.value }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending | spoken }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}*
+*{{ war.world }} · {{ war.war.cause | spoken }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status | spoken }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending | spoken }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}*
 
 {% if war.war.cause_text %}
 {{ war.war.cause_text }}
@@ -776,7 +776,7 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 
 {% endif %}
 {% for siege in war.sieges %}
-- **Siege, epoch {{ siege.started_epoch }}{% if siege.ended_epoch is not none %}–{{ siege.ended_epoch }}{% endif %}.** {{ siege.besieger }} besieged {{ siege.besieged }}: {{ siege.status | lower }}, {{ siege.rounds }} rounds.
+- **Siege, epoch {{ siege.started_epoch }}{% if siege.ended_epoch is not none and siege.ended_epoch != siege.started_epoch %}–{{ siege.ended_epoch }}{% endif %}.** {{ siege.besieger }} besieged {{ siege.besieged }}: {{ siege.status | lower }}, {{ siege.rounds }} {{ "round" if siege.rounds == 1 else "rounds" }}.
 {% endfor %}
 
 {% endfor %}
@@ -823,7 +823,7 @@ Battles **{{ war.war.battles }}** · Momentum **{{ war.war.score }}**{% if war.w
 {% for language in book.languages %}
 {% for article in [language.article] | with_descendants %}{{ codex_entity(article) }}{% endfor %}
 
-*{{ language.words | length }} words · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}*
+*{{ language.words | length }} {{ "word" if language.words | length == 1 else "words" }} · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}*
 
 {% if language.words %}
 | Word | Kind | Meaning | Origin | Example |

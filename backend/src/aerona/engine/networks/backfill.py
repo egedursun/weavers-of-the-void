@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.communication import SignalLinkRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -97,7 +98,7 @@ async def keep_relays(ctx: TickContext) -> int:
 
 
 async def relay_backfill(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, RELAY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, RELAY_FIXUP):
         return 0
     result = {"signal_relays": await signal_relays(ctx), "post_relays": await post_relays(ctx)}
     ctx.session.add(AppliedFixupRow(key=RELAY_FIXUP, result=result))

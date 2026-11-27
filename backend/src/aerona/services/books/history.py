@@ -1,9 +1,10 @@
+import re
 from dataclasses import dataclass, field
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.core.grammar import spoken
+from aerona.core.grammar import an, spoken
 from aerona.db.repositories.chronicle import shown_lines
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.foreign_gods import ForeignGodRow, GodConflictRow
@@ -73,7 +74,7 @@ async def son_fate(session: AsyncSession, son: SonRow, names: dict[int, str]) ->
     if son.standing_order:
         lines.append(f"Standing order{' (absolute)' if son.order_absolute else ''}: {son.standing_order}")
     if son.reputation_label is not None:
-        lines.append(f"Reputation: {spoken(son.reputation_label)}")
+        lines.append(f"Sees the Creator as: {an(spoken(son.reputation_label))} god")
     if son.anchor_entity_id is not None:
         lines.append(f"Anchor: {names.get(son.anchor_entity_id, '?')}")
     if son.current_world_id is not None:
@@ -91,7 +92,7 @@ async def son_fate(session: AsyncSession, son: SonRow, names: dict[int, str]) ->
 
 
 async def god_fate(session: AsyncSession, god: ForeignGodRow, names: dict[int, str]) -> list[str]:
-    lines = [f"Status: {god.status.value}", f"Arose in Epoch {god.created_epoch}"]
+    lines = [f"Status: {spoken(god.status)}", f"Arose in Epoch {god.created_epoch}"]
     if god.defeated_epoch is not None:
         lines.append(f"Defeated in Epoch {god.defeated_epoch}")
     conflicts = list(
@@ -122,4 +123,5 @@ async def god_fate(session: AsyncSession, god: ForeignGodRow, names: dict[int, s
 def ending_line(status: str, end_epoch: int | None, note: str | None) -> str | None:
     if end_epoch is None:
         return None
-    return f"{status.capitalize()} in Epoch {end_epoch}" + (f": {note}" if note else "")
+    told = re.sub(rf"^Epoch {end_epoch}(?:, world year \d+)?:\s*", "", note) if note else note
+    return f"{status.capitalize()} in Epoch {end_epoch}" + (f": {told}" if told else "")

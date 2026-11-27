@@ -13,6 +13,7 @@ class GovernanceRules(Spanned):
     head_defiance_trust_loss: int = rule(15, 0, 100, S, "Trust a head loses with the body when it acts against the body's decision")
     removal_trust: int = rule(30, 0, 100, S, "Trust below which a decision body removes its head")
     new_head_trust: int = rule(60, 0, 100, S, "Trust a newly chosen head starts with")
+    headships_max: int = rule(3, 1, 100, S, "Organisations one person can head at once before members look to someone else")
     clique_min_seats: int = rule(3, 1, 100, S, "Seats a decision body needs before cliques form within it")
     clique_form_chance_pct: int = rule(25, 0, 100, S, "Chance in an epoch that a clique forms in a body with enough seats (%)")
     challenge_margin: int = rule(15, 0, 100, S, "Trust above the removal line under which a new clique aims at the headship")

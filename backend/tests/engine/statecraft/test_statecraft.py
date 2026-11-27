@@ -3,7 +3,7 @@ from sqlalchemy import select
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.intrigue import FavourRow
-from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyProfileRow, VassalageRow
+from aerona.db.tables.polity import OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow, TreatyPartyRow, TreatyProfileRow, VassalageRow
 from aerona.db.tables.statecraft import CrisisBackerRow, CrisisRow, DiplomacyProfileRow, PolityRegardRow, SphereRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -62,6 +62,20 @@ async def test_a_conquest_alarms_its_neighbours_and_the_fearful_band_into_a_coal
     await tend_regard(ctx, RegardTally())
     assert regard.threat == 100 - rules.statecraft.threat_decay
     assert await realm.session.get(DiplomacyProfileRow, second.id) is not None
+
+
+async def test_a_coalition_never_binds_the_power_it_was_formed_against(realm: Realm) -> None:
+    rules = tuned(statecraft={"coalition_war_pct": 0, "coalition_members": 2})
+    ctx = context(realm.session, rules)
+    feared, feared_core = await polity(realm, "Iron Crown")
+    first, _ = await polity(realm, "Reed Throne")
+    second, _ = await polity(realm, "Salt Throne")
+    for holder in (first, second, feared):
+        realm.session.add(PolityRegardRow(holder_entity_id=holder.id, subject_entity_id=feared.id, threat=100, trust=0, epoch=1, locked=[]))
+    await realm.session.flush()
+    await tend_coalitions(ctx, CoalitionTally())
+    bound = set(await realm.session.scalars(select(TreatyPartyRow.party_node_id)))
+    assert bound and feared_core.id not in bound
 
 
 async def test_a_claim_war_opens_a_crisis_and_a_concession_pays_and_rewards_backers(realm: Realm) -> None:

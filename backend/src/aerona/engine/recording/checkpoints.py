@@ -7,6 +7,7 @@ from sqlalchemy import Table, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.base import Base
+from aerona.db.fixups import fixup_due
 from aerona.db.ledger_capture import UNCAPTURED_TABLES, jsonable, key_text, table_plan
 from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -54,7 +55,7 @@ async def take_checkpoint(session: AsyncSession, epoch: int) -> int:
 
 
 async def first_checkpoint(session: AsyncSession, epoch: int) -> int:
-    if await session.get(AppliedFixupRow, FIRST_CHECKPOINT_FIXUP) is not None:
+    if not await fixup_due(session, FIRST_CHECKPOINT_FIXUP):
         return 0
     taken = await take_checkpoint(session, epoch)
     session.add(AppliedFixupRow(key=FIRST_CHECKPOINT_FIXUP, result={"tables": taken, "epoch": epoch}))

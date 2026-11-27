@@ -52,7 +52,15 @@ async def come_to_light(ctx: TickContext, row: InterpretationRow, tally: Interpr
     row.found = True
     tally.found += 1
     victim, other = wronged(row)
-    await change_relation(ctx, victim, other, -ctx.rules.interpreters.found_grievance, MemoryKind.BETRAYED_ME, note="words carried wrongly between us")
+    await change_relation(
+        ctx,
+        victim,
+        other,
+        -ctx.rules.interpreters.found_grievance,
+        MemoryKind.BETRAYED_ME,
+        note="words carried wrongly between us",
+        reverse_note="words carried wrongly between us",
+    )
     if row.fault is InterpretationFault.SLANTED and row.interpreter_node_id is not None:
         reader = await ctx.session.get(EntityRow, row.interpreter_node_id)
         if reader is not None and not held(reader.id):

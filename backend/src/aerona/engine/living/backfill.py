@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.domestication import HOUSED_STAGES
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.cuisine import DishRow
@@ -169,7 +170,7 @@ async def keep_kinds_alive(ctx: TickContext) -> int:
 
 
 async def legacy_backfill(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return 0
     result = {
         "bioships": await bioships(ctx),

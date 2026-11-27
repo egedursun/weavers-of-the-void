@@ -7,6 +7,7 @@ from aerona.catalog.goods_traits import commodities_with, materials_with, worksh
 from aerona.catalog.production import EXTRACTION
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -69,7 +70,7 @@ def guess_material(resource: EntityRow) -> MaterialKind | None:
 
 
 async def profile_resources(ctx: TickContext, book: EconomyBook) -> int:
-    legacy = await ctx.session.get(AppliedFixupRow, PROFILE_FIXUP) is None
+    legacy = await fixup_due(ctx.session, PROFILE_FIXUP)
     made = 0
     for resource in book.resources():
         region = book.ground.region_of(resource.id)
@@ -329,7 +330,7 @@ async def hide_seams(ctx: TickContext, book: EconomyBook) -> int:
 
 
 async def economy_backfill(ctx: TickContext, book: EconomyBook) -> dict[str, int]:
-    if await ctx.session.get(AppliedFixupRow, BACKFILL_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BACKFILL_FIXUP):
         return {}
     result = {
         "workshops": await backfill_workshops(ctx, book),
@@ -356,7 +357,7 @@ async def debt_currencies(ctx: TickContext) -> int:
 
 
 async def depth_backfill(ctx: TickContext) -> dict[str, int]:
-    if await ctx.session.get(AppliedFixupRow, DEPTH_FIXUP) is not None:
+    if not await fixup_due(ctx.session, DEPTH_FIXUP):
         return {}
     result = {"materials": await sweep_materials(ctx.session, ctx.rules), "debt_currencies": await debt_currencies(ctx)}
     ctx.session.add(AppliedFixupRow(key=DEPTH_FIXUP, result=result))

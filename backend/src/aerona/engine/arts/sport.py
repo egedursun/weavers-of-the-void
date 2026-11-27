@@ -34,7 +34,7 @@ from aerona.engine.collective.crowds import CrowdTally, spark
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.gifts import occasion_gift
 from aerona.engine.ecology.domestication import kept_for
-from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
+from aerona.engine.economy.purse import coin_of, held_coin, receive_coin, take_coin
 from aerona.engine.mind.ethics import conscience
 from aerona.engine.phases.factions import found_faction
 from aerona.engine.polity.trials import report_crime
@@ -220,7 +220,7 @@ async def read_line(ctx: TickContext, club: ClubRow, home: EntityRow) -> None:
 
 async def wager(ctx: TickContext, match: MatchRow, club: ClubRow, home: EntityRow) -> BetRow | None:
     table = ctx.rules.sports
-    stake = round_half_up(await coin_of(ctx.session, ctx.rules, home) * table.stake_pct / PERCENT * club.fandom / PERCENT)
+    stake = round_half_up(held_coin(await coin_of(ctx.session, ctx.rules, home)) * table.stake_pct / PERCENT * club.fandom / PERCENT)
     if stake <= 0:
         return None
     row = BetRow(match_id=match.id, settlement_entity_id=home.id, club_entity_id=club.faction_entity_id, stake=stake, locked=[])

@@ -22,6 +22,7 @@ from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.language.titles import holder_title_of
+from aerona.rules.registry import Rules
 
 RULED_PRIMARY_TYPES = (EntityType.SETTLEMENT, EntityType.PEOPLE, EntityType.FACTION, EntityType.CULT, EntityType.REGION, EntityType.PLACE)
 REGNAL_SUFFIX = re.compile(r"\s+[IVXLCDM]+$")
@@ -84,7 +85,7 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
                 agility=inherit("agility"),
                 intellect=inherit("intellect"),
                 charisma=inherit("charisma"),
-                age=effects.heir_age_base + rng.die(effects.heir_age_die),
+                age=heir_age(rules, dead, effects.heir_age_base + rng.die(effects.heir_age_die)),
                 lifespan=lifespan,
             ),
             power=max(1, dead.power_level - 1),
@@ -104,6 +105,13 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
     if patron is not None:
         await connect(ctx.session, heir.id, patron.id, BondKind.WORSHIPS, ctx.epoch)
     return heir
+
+
+def heir_age(rules: Rules, parent: EntityRow, wanted: int) -> int:
+    lifespan = stat_or(parent, "lifespan", rules.world_effects.default_lifespan)
+    youngest_parent = lifespan * rules.fertility.window_start_pct // PERCENT
+    oldest_child = int(stat_or(parent, "age", wanted + youngest_parent)) - youngest_parent
+    return max(0, min(wanted, oldest_child))
 
 
 async def pass_rule(ctx: TickContext, dead: EntityRow) -> EntityRow | None:

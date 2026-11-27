@@ -380,7 +380,13 @@ async def copy_mind_tool(call: MortalCall, args: SeatMindInput) -> str:
     captive = await captive_of(call, target.id)
     if captive is not None and captive.home_entity_id is not None:
         await change_relation(
-            call.tick, captive.home_entity_id, call.me.id, -SPYING, MemoryKind.SPIED_ON_US, note="copied the mind of one of ours held captive"
+            call.tick,
+            captive.home_entity_id,
+            call.me.id,
+            -SPYING,
+            MemoryKind.SPIED_ON_US,
+            note="copied the mind of one of ours held captive",
+            reverse_note="copied the mind of a captive",
         )
     call.target(copy.id)
     await call.record("tools.mortal.copy_mind", roles={IncidentRole.ACTOR: call.me.id, IncidentRole.TARGET: target.id, IncidentRole.PRODUCT: copy.id})

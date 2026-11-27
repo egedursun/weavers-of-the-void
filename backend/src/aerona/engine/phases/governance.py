@@ -34,11 +34,13 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
     "mortal.intellect",
     "mortal.wisdom",
     "table.bonds",
+    "table.captives",
     "table.company_profiles",
     "table.company_shares",
     "table.entities",
     "table.faction_memberships",
     "table.faction_profiles",
+    "table.fugitives",
     "table.holder_levels",
     "table.holder_techniques",
     "table.incident_participants",
@@ -55,6 +57,7 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
     "table.org_research",
     "table.org_seats",
     "table.polity_members",
+    "table.prisoners",
 )
 @writes(
     "faction.strength",

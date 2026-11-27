@@ -16,6 +16,25 @@ RANK_WORDS: dict[TitleTier, str] = {
     TitleTier.GUILD: "Headship of an association",
     TitleTier.LEAGUE: "Headship of a league",
 }
+TITLE_NAMES: dict[TitleTier, str] = {
+    TitleTier.LOCAL: "local title",
+    TitleTier.DISTRICT: "district title",
+    TitleTier.REGIONAL: "regional title",
+    TitleTier.REALM: "title",
+    TitleTier.IMPERIAL: "imperial title",
+    TitleTier.FAITH_LOCAL: "local seat",
+    TitleTier.FAITH_HIGH: "high seat",
+    TitleTier.FAITH_SUPREME: "foremost seat",
+    TitleTier.MILITARY: "command",
+    TitleTier.GUILD: "headship",
+    TitleTier.LEAGUE: "headship",
+}
+
+
+def title_name(rank: TitleTier, holder: str) -> str:
+    return f"the {TITLE_NAMES[rank]} of {holder}"
+
+
 TENURE_LABELS: dict[TitleTenure, str] = {
     TitleTenure.FOUNDED: "Founded",
     TitleTenure.INHERITED: "Inherited",

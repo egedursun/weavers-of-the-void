@@ -36,6 +36,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import shift_stat, stat, stat_or
 from aerona.engine.recording.record import record
+from aerona.engine.recording.repeats import told_this_epoch
 from aerona.engine.records import death_path
 
 
@@ -194,7 +195,7 @@ async def refine_stance(
     elif enemy_profile is None and not attacking and stat_or(army, "morale", PERCENT) <= ctx.rules.campaigns.disband_morale:
         chosen = Stance.DISBAND
     profile.stance = chosen
-    if chosen is not before:
+    if chosen is not before and not await told_this_epoch(ctx, "army.stance", army.id, IncidentRole.SUBJECT, fact="stance", value=chosen.value):
         await record(ctx, "army.stance", roles={IncidentRole.SUBJECT: army.id}, facts={"stance": chosen})
     if chosen is Stance.DISBAND:
         await disband_home(ctx, army)

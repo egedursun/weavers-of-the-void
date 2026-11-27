@@ -244,7 +244,8 @@ async def open_profile(ctx: TickContext, event: EntityRow, *, incident_id: int |
 
 
 async def close_profile(ctx: TickContext, profile: EventProfileRow) -> None:
-    profile.phase = EventPhase.AFTERMATH
+    if profile.phase is not EventPhase.MEMORY:
+        profile.phase = EventPhase.AFTERMATH
     profile.end_epoch = max(profile.start_epoch, ctx.epoch)
     end_year = year_at(ctx, profile.end_epoch, f"event_end.{profile.entity_id}") if profile.end_epoch > profile.start_epoch else profile.start_year
     profile.end_year = max(profile.start_year or 0, end_year or 0)

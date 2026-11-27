@@ -23,6 +23,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import receive_coin, wealth_points
 from aerona.engine.gods.worship import creator_node_id
 from aerona.engine.interconnect.annotations import reads, writes
+from aerona.engine.interconnect.ended import closing_the_ended
 from aerona.engine.intrigue.favours import owe
 from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.lore.taboos import forbidden
@@ -341,10 +342,12 @@ async def prisoners(ctx: TickContext) -> None:
     for row in rows:
         captive, captor = await living_entity(ctx.session, row.captive_entity_id), await living_entity(ctx.session, row.captor_entity_id)
         if captive is None:
-            await release_captive(ctx, row, CaptiveStatus.RELEASED)
+            with closing_the_ended():
+                await release_captive(ctx, row, CaptiveStatus.RELEASED)
             continue
         if captor is None:
-            await release_captive(ctx, row, CaptiveStatus.RELEASED)
+            with closing_the_ended():
+                await release_captive(ctx, row, CaptiveStatus.RELEASED)
             await record(ctx, "prisoner.freed", roles={IncidentRole.SUBJECT: captive.id}, facts={"captor": row.captor_entity_id})
             continue
         if row.taken_epoch == ctx.epoch or frozen(captive.id, captor.id):

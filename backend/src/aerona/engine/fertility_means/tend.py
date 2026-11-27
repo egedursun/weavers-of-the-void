@@ -21,7 +21,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.population import PopulationInstrument
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.engine.context import TickContext
-from aerona.engine.fertility_means.factor import DIRECTION, PREVENTING, conceives, means_of
+from aerona.engine.fertility_means.factor import DIRECTION, PREVENTING, conceives, fits_body, means_of
 from aerona.engine.mortal.kin import partners_of
 from aerona.engine.mortal.life import adult
 from aerona.engine.mortal.standing import shift_standing
@@ -216,7 +216,7 @@ async def expose(ctx: TickContext, tally: MeansTally) -> None:
 
 async def wants(ctx: TickContext, mortal: EntityRow, means: FertilityMeans) -> bool:
     profile = await ctx.session.get(MortalProfileRow, mortal.id)
-    if profile is None or not adult(profile.life_stage):
+    if profile is None or not adult(profile.life_stage) or not fits_body(means, mortal, profile.fertility):
         return False
     if means in PREVENTING:
         return bool(await partners_of(ctx.session, mortal.id))

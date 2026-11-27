@@ -7,6 +7,7 @@ from aerona.catalog.commodities import COMMODITIES, FOOD_KINDS
 from aerona.catalog.incident_kinds.onlookers import NOT_PARTY_ROLES
 from aerona.catalog.needs import SERVE_ORDER
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -93,7 +94,7 @@ async def backfill_events(ctx: TickContext) -> int:
 
 
 async def society_depth_backfill(ctx: TickContext, communities: list[EntityRow]) -> dict[str, int]:
-    if await ctx.session.get(AppliedFixupRow, SOCIETY_DEPTH_FIXUP) is not None:
+    if not await fixup_due(ctx.session, SOCIETY_DEPTH_FIXUP):
         return {}
     filled = 0
     for community in communities:

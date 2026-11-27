@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.governance import STRATEGY_TREASURY_PCT
+from aerona.catalog.life_traits import FACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -8,6 +9,7 @@ from aerona.db.tables.governance import OrgGovernanceRow, OrgMergerRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.governance import OPEN_MERGER_STAGES, MergerKind, OrgStrategy
+from aerona.domain.enums.life_traits import FactionKindTrait
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import held_coin
 from aerona.engine.factions.companies import realm_of
@@ -69,12 +71,15 @@ async def follow_strategy(ctx: TickContext, row: OrgGovernanceRow, org: EntityRo
 
 
 STEADY = (OrgStrategy.HOLD, OrgStrategy.GROW, OrgStrategy.SPECIALISE, OrgStrategy.DIVERSIFY)
+MARKET_COURSES = frozenset({OrgStrategy.SPECIALISE, OrgStrategy.DIVERSIFY, OrgStrategy.EXPAND_ABROAD, OrgStrategy.INTEGRATE_UP, OrgStrategy.INTEGRATE_DOWN})
+TRADERS = having(FACTION_KIND_TRAITS, FactionKindTrait.TRADES)
 
 
 async def courses_open(ctx: TickContext, org: EntityRow, profile: FactionProfileRow) -> list[OrgStrategy]:
     table = ctx.rules.governance
-    found = list(STEADY)
-    if profile.treasury >= table.research_budget:
+    trades = profile.kind in TRADERS
+    found = [course for course in STEADY if trades or course not in MARKET_COURSES]
+    if trades and profile.treasury >= table.research_budget:
         found.extend((OrgStrategy.EXPAND_ABROAD, OrgStrategy.INTEGRATE_UP, OrgStrategy.INTEGRATE_DOWN))
         if await reachable(ctx, org):
             found.append(OrgStrategy.RESEARCH)

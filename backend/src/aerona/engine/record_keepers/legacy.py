@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.names import normalize_name
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -140,7 +141,7 @@ async def recover_historians(ctx: TickContext, historians: dict[int, RecordKeepe
 
 
 async def recover_keepers(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return 0
     rows = await keeper_rows(ctx)
     chronicler = next((row for row in rows if row.kind is RecordKeeperKind.CHRONICLER), None)

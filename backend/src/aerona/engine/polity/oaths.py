@@ -227,6 +227,10 @@ async def lapse(ctx: TickContext) -> tuple[int, int]:
             await keep(ctx, oath, fulfilled=True)
             kept += 1
             continue
+        if await sworn_to_the_dead(ctx, oath):
+            oath.status, oath.ended_epoch = OathStatus.FULFILLED, ctx.epoch
+            kept += 1
+            continue
         if oath.deadline_epoch is not None and ctx.epoch > oath.deadline_epoch and await invoke(ctx, swearer, [oath.recipient_node_id or swearer.id]) > 1:
             oath.deadline_epoch = ctx.epoch + 1
             continue
@@ -239,6 +243,13 @@ async def lapse(ctx: TickContext) -> tuple[int, int]:
         elif oath.kind in LAPSE_OATH_KINDS or oath.kind in BREACHES:
             await reward_witness(ctx, oath)
     return kept, broken
+
+
+async def sworn_to_the_dead(ctx: TickContext, oath: OathRow) -> bool:
+    if oath.recipient_node_id is None or oath.kind is OathKind.VENGEANCE:
+        return False
+    recipient = await ctx.session.get(EntityRow, oath.recipient_node_id)
+    return recipient is not None and recipient.entity_type is EntityType.MORTAL and recipient.status is not EntityStatus.CANON
 
 
 async def avenged(ctx: TickContext, oath: OathRow) -> bool:

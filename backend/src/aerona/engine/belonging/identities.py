@@ -8,6 +8,7 @@ from aerona.catalog.kinds.war_causes import WAR_CAUSES
 from aerona.catalog.life.belonging import CROSSING_PUSHES_IDENTITY_LAYERS, GUILD_PUSHES_IDENTITY_LAYERS
 from aerona.catalog.tongues import POLICIES
 from aerona.db.fast_session import rows_by_prefix
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.arts import MatchRow
 from aerona.db.tables.belonging import HeldIdentityRow
@@ -375,7 +376,7 @@ LAYERS_FIXUP = "identity.w52"
 
 
 async def backfill_layers(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LAYERS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LAYERS_FIXUP):
         return 0
     atlas = await RegionAtlas.load(ctx.session)
     holders = sorted(set(await ctx.session.scalars(select(HeldIdentityRow.holder_entity_id))))

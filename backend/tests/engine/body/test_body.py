@@ -26,6 +26,7 @@ from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.material import MaterialKind
 from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import KnowledgeStats
 from aerona.engine.body import healing
 from aerona.engine.body.book import bedridden, effective, ensure_body, frame_style, legacy_plan_from_words, size_of
@@ -336,3 +337,12 @@ async def test_a_healed_bruise_leaves_no_mark_and_never_counts_a_ruler_as_maimed
     bruise.kind, bruise.visible = InjuryKind.CUT, True
     await realm.session.flush()
     assert leaves_mark(bruise) and not await whole(ctx, ruler)
+
+
+async def test_an_injury_is_dated_by_the_world_year_not_the_year_inside_the_age(realm: Realm) -> None:
+    hunter = await mortal(realm, "Dated Cael", hp=100)
+    ctx = context(realm.session, epoch=4)
+    await apply_hits(ctx, hunter, Harm(5, HarmCause.QUEST, "fell", part="left_arm", kind=InjuryKind.CUT, severity=1), lethal=False)
+    years = set(await realm.session.scalars(select(InjuryRow.year).where(InjuryRow.bearer_node_id == hunter.id)))
+    start = epoch_start_year(4, ctx.rules.time.years_per_epoch)
+    assert years and all(year is not None and start <= year < start + ctx.rules.time.years_per_epoch for year in years)

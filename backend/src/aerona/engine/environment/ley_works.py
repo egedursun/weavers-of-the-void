@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import PlaceEnvironmentRow, StructureLeyRow
@@ -38,7 +39,7 @@ async def ley_row(session: AsyncSession, work: EntityRow, *, attuned: bool | Non
 
 
 async def backfill_attunement(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LEY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEY_FIXUP):
         return 0
     attuned = 0
     for work in await canon(ctx.session, [EntityType.STRUCTURE]):

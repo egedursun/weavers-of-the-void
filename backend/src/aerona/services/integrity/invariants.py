@@ -56,7 +56,7 @@ from aerona.services.integrity.arsenal_links import (
 from aerona.services.integrity.chronology import close_judgment, early_judgments, early_rites, follow_rite, heard_later, overaged, set_age, unborn_witnesses
 from aerona.services.integrity.city_links import mend_conurbation, odd_conurbations, stray_rules, widen_rule
 from aerona.services.integrity.cohort_sexes import resplit_cohort_sexes, stray_cohort_sexes
-from aerona.services.integrity.collection_titles import mixed_collection_titles, retitle_collection
+from aerona.services.integrity.collection_titles import mixed_collection_titles, provisional_collection_titles, retitle_collection, retitle_provisional
 from aerona.services.integrity.competition_links import (
     call_off_war,
     drop_outsiders,
@@ -69,6 +69,9 @@ from aerona.services.integrity.conception_links import false_gods, strike_false_
 from aerona.services.integrity.condition_links import absent_systems, unkind_condition
 from aerona.services.integrity.cult_links import end_godly, godly_cults, keep_promoters, lost_promoters, mend_end, mismatched_ends
 from aerona.services.integrity.departure_links import align_office, clear_successor, early_returns, handed_to_self, mend_return, stray_offices
+from aerona.services.integrity.derived_names import follow_old_names, stale_derived_names
+from aerona.services.integrity.dwelling_places import mortals_in_no_place, settle_in_place
+from aerona.services.integrity.ended_rebuilds import close_rebuild, rebuilds_of_the_ended
 from aerona.services.integrity.fertility_links import barren_means, strike_barren_means, strike_unknown_use, unknown_uses
 from aerona.services.integrity.genome_alleles import mend_alleles, stray_alleles
 from aerona.services.integrity.governance_links import (
@@ -83,6 +86,7 @@ from aerona.services.integrity.governance_links import (
 )
 from aerona.services.integrity.grave_links import gather_grave_goods, loose_grave_goods
 from aerona.services.integrity.group_links import foreign_leaders, unseat_leader
+from aerona.services.integrity.habitable_homes import homes_outside_their_band, move_home_into_band
 from aerona.services.integrity.honour_links import lapse_honour, mend_privileges, odd_privileges, overfull_honours
 from aerona.services.integrity.interpretation_links import unseat_reader, unskilled_readers
 from aerona.services.integrity.interworld_links import astray_campaigns, astray_migrations, end_migration, stranded_landings, withdraw_campaign
@@ -106,6 +110,7 @@ from aerona.services.integrity.labour_links import (
     unknown_trades,
 )
 from aerona.services.integrity.league_links import back_union, give_organ, non_polity_members, organless_decisions, strike_member, unbacked_unions
+from aerona.services.integrity.life_labels import drop_child_label, grown_children
 from aerona.services.integrity.life_links import (
     adopt_stranger,
     clear_head,
@@ -182,6 +187,7 @@ from aerona.services.integrity.occupation_links import (
 )
 from aerona.services.integrity.order_links import bad_axes, clean_axes, doubled_orders, drop_order, fail_transition, orphan_transitions
 from aerona.services.integrity.package_links import aimless_charms, end_aimless_charm, formless_changes, mend_formless_change, sign_fortune, unsigned_fortunes
+from aerona.services.integrity.polity_mirror import mirror_polity_stats, polity_stats_astray
 from aerona.services.integrity.reckoning_links import align_measure, keep_recorded, mend_fall, reckonings_before_the_fall, stray_measures, unrecorded_acts
 from aerona.services.integrity.record_links import (
     absent_witnesses,
@@ -217,8 +223,13 @@ from aerona.services.integrity.referendum_links import aimless_votes, align_fran
 from aerona.services.integrity.restoration_links import end_living_fallen, link_restored, living_fallen, unlinked_restored
 from aerona.services.integrity.restoration_links import mend_end as mend_restoration_end
 from aerona.services.integrity.restoration_links import mismatched_ends as restoration_ends
+from aerona.services.integrity.route_waters import roads_over_water, sail_road
+from aerona.services.integrity.season_names import rename_twin_season, twin_season_names
 from aerona.services.integrity.season_shares import even_year, follow_forecast, mend_spell, strayed_forecasts, strayed_spells, uneven_years
 from aerona.services.integrity.securities_links import align_price, delist, issuerless, overheld, scale_holdings, stray_prices
+from aerona.services.integrity.strain_names import name_strain_once, stacked_strains
+from aerona.services.integrity.title_names import rank_worded_titles, rename_by_rank
+from aerona.services.integrity.tradition_slots import misfit_traditions, refit_tradition
 from aerona.services.integrity.w52_agent_a import (
     command_by_word,
     drop_hand_over,
@@ -681,7 +692,19 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "interpretation_reader": (unskilled_readers, unseat_reader),
     "feeling_spread_values": (odd_moods, mend_mood),
     "mood_told_of_its_own": (stray_mood_lines, retell_mood_line),
+    "mortal_dwells_in_a_place": (mortals_in_no_place, settle_in_place),
+    "grown_out_of_childhood": (grown_children, drop_child_label),
+    "route_mode_fits_water": (roads_over_water, sail_road),
+    "polity_stats_follow_record": (polity_stats_astray, mirror_polity_stats),
     "collection_title_one_standing": (mixed_collection_titles, retitle_collection),
+    "collection_title_current_names": (provisional_collection_titles, retitle_provisional),
+    "title_named_plainly": (rank_worded_titles, rename_by_rank),
+    "season_names_distinct": (twin_season_names, rename_twin_season),
+    "tradition_slot_fits_kind": (misfit_traditions, refit_tradition),
+    "strain_named_once": (stacked_strains, name_strain_once),
+    "peopled_world_habitable": (homes_outside_their_band, move_home_into_band),
+    "rebuild_of_a_standing_town": (rebuilds_of_the_ended, close_rebuild),
+    "derived_names_follow": (stale_derived_names, follow_old_names),
     "plant_product_part": (unsourced_products, strike_unsourced_products),
     "will_shares_whole": (unbalanced_wills, balance_will),
     "dwelling_fits_body": (unfit_dwellings, refit_dwelling),

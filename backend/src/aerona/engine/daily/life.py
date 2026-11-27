@@ -25,7 +25,7 @@ from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.customs.time_budgets import sleeps_of
 from aerona.engine.daily.service import engage_servant
-from aerona.engine.economy.purse import coin_of, give_coin, take_coin
+from aerona.engine.economy.purse import coin_of, give_coin, held_coin, take_coin
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.maturity import UNDER_AGE
@@ -284,7 +284,7 @@ async def go_travelling(ctx: TickContext, tally: DailyTally) -> None:
         place = await ctx.session.get(EntityRow, pursuit.venue_node_id) if pursuit.venue_node_id is not None else None
         if traveller is None or place is None or traveller.status is not EntityStatus.CANON or held(traveller.id, place.id):
             continue
-        spend = await coin_of(ctx.session, ctx.rules, traveller) * table.tourism_spend_pct * pursuit.share // (PERCENT * PERCENT)
+        spend = held_coin(await coin_of(ctx.session, ctx.rules, traveller)) * table.tourism_spend_pct * pursuit.share // (PERCENT * PERCENT)
         if spend < table.tourism_coin_min or not await take_coin(ctx.session, ctx.rules, traveller, spend):
             continue
         await give_coin(ctx.session, ctx.rules, place, spend)
@@ -331,7 +331,7 @@ async def mind_space(ctx: TickContext, tally: DailyTally) -> None:
             relation.value = clamp_int(relation.value - loss, -PERCENT, PERCENT)
         await record(
             ctx,
-            "daily.norm_breach",
+            "daily.norms_clashed",
             roles={IncidentRole.ACTOR: relation.entity_a_id, IncidentRole.TARGET: relation.entity_b_id},
             facts={"norm": broken[0]},
         )

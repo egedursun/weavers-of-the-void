@@ -550,7 +550,7 @@ async def reconcile_sizes(ctx: TickContext) -> dict[str, int]:
     knowledge: KnowledgeMap | None = None
     for row in list(await ctx.session.scalars(select(ArmyRow).order_by(ArmyRow.entity_id))):
         army = await ctx.session.get(EntityRow, row.entity_id)
-        if army is None:
+        if army is None or held(army.id):
             continue
         stacks = await stacks_of(ctx.session, army.id)
         if army.status is not EntityStatus.CANON or row.disbanded_epoch is not None:

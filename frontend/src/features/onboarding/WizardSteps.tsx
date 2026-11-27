@@ -181,7 +181,7 @@ export function TemplateStep({
               size='sm'
             />
             <Text as='span' weight='semibold' truncate className='flex-1'>
-              Blank canvas
+              No template
             </Text>
             {draft.template === null && <ChosenMark />}
           </span>

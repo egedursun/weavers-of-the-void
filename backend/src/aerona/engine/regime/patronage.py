@@ -47,6 +47,7 @@ from aerona.engine.polity.governance import spend
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.offices import adult, appoint, powers_of, subjects
 from aerona.engine.polity.revenue import mean_justice
+from aerona.engine.primitives.maturity import away_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
@@ -76,7 +77,10 @@ class PatronageTally:
 
 
 async def tie(ctx: TickContext, patron_id: int, client_id: int, *, role: ClientRole, strength: int, tally: PatronageTally) -> PatronageTieRow | None:
-    if patron_id == client_id or held(client_id):
+    if patron_id == client_id or held(client_id) or await living_entity(ctx.session, client_id) is None:
+        return None
+    patron = await ctx.session.get(EntityRow, patron_id)
+    if patron is not None and patron.status is not EntityStatus.CANON:
         return None
     row = await ctx.session.scalar(
         select(PatronageTieRow).where(PatronageTieRow.patron_node_id == patron_id, PatronageTieRow.client_entity_id == client_id).limit(1)
@@ -386,7 +390,8 @@ async def contenders(ctx: TickContext, realm: Realm) -> list[EntityRow]:
         mortal = await living_entity(ctx.session, mortal_id)
         if mortal is not None and mortal.entity_type is EntityType.MORTAL:
             found[mortal_id] = mortal
-    return sorted(found.values(), key=lambda mortal: mortal.id)
+    away = await away_among(ctx.session, list(found))
+    return sorted((mortal for mortal in found.values() if mortal.id not in away), key=lambda mortal: mortal.id)
 
 
 async def stance_of(ctx: TickContext, mortal: EntityRow, threat: int, *, armed: bool) -> PowerStance:

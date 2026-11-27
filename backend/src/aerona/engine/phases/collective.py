@@ -324,6 +324,8 @@ async def founding_myths(ctx: TickContext) -> None:
     "table.galaxies",
     "table.galaxy_clusters",
     "table.incident_collections",
+    "table.incident_participants",
+    "table.incidents",
     "table.mortal_profiles",
     "table.node_births",
     "table.nodes",

@@ -11,6 +11,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.population import PopulationPolicyRow
 from aerona.domain.enums.body_systems import BodySystem
 from aerona.domain.enums.bond import BondKind, BondRole
+from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.economy import TradeMode, TradeRouteStatus
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.fertility_means import FertilityMeans, MeansSource
@@ -20,6 +21,7 @@ from aerona.domain.enums.population import PopulationAim
 from aerona.domain.models.entity_stats import PeopleStats, RiteStats, TradeRouteStats
 from aerona.engine.fertility_means.factor import people_factor, user_factor
 from aerona.engine.fertility_means.tend import MeansTally, discover, expose, follow_policies, people_of_towns, peoples, spread, take_up
+from aerona.engine.mortal.life import assign_sex
 from aerona.engine.mortal.standing import standing_of
 from aerona.engine.primitives.manual import manual_context
 from tests.engine.core.factories import CoreWorld, entity, mortal, settlement, tuned_rules
@@ -132,3 +134,19 @@ async def test_wed_folk_take_up_prevention_in_secret_where_it_is_forbidden_and_t
     assert tally.used == 3 and await user_factor(session, ctx.rules, wed) < 1.0
     await take_up(ctx, await peoples(ctx), tally)
     assert tally.used == 3
+
+
+async def test_only_a_wed_body_that_carries_young_and_is_still_fertile_takes_up_ending_a_pregnancy(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "carry", tuned_rules())
+    town = await homeland(session, world, world.people, "Carryby")
+    session.add(known(world.people, F.ENDING_PREGNANCY, use_pct=100))
+    bearer, begetter, spent, mate = [await mortal(session, name, world, town.id) for name in ("Ena Bears", "Fen Begets", "Gil Spent", "Hal Mate")]
+    for one, sex, fertility in ((bearer, SexKind.BEARER, 90), (begetter, SexKind.BEGETTER, 90), (spent, SexKind.BEARER, 0), (mate, SexKind.BEGETTER, 90)):
+        assign_sex(one, sex)
+        session.add(MortalProfileRow(entity_id=one.id, life_stage=LifeStage.ADULT, fertility=fertility))
+        if one is not mate:
+            await BondRepository(session).connect(BondDraft(one.id, mate.id, BondKind.SPOUSE_OF, 0))
+    await session.flush()
+    await take_up(ctx, await peoples(ctx), MeansTally())
+    users = set(await session.scalars(select(FertilityUseRow.user_entity_id).where(FertilityUseRow.means == F.ENDING_PREGNANCY)))
+    assert users == {bearer.id}

@@ -25,6 +25,7 @@ from aerona.engine.mortal.kinship import add_parent, backfill_kin, end_marriage,
 from aerona.engine.mortal.life import fertility_level, hazard_chance, inherited_summaries, stage_bounds, stage_for
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.phases.births import deliver
+from aerona.engine.phases.mortals import fatal_year
 from aerona.engine.primitives.harshness import harshness
 from aerona.engine.primitives.naming import Namer
 from aerona.engine.primitives.stats import stat
@@ -244,3 +245,12 @@ async def test_lasting_injuries_survive_a_bond_close(realm: Realm) -> None:
     await apply_hits(ctx, bearer, Harm(20, HarmCause.EXPOSURE, "froze", damage_type=DamageType.COLD, severity=2), lethal=False)
     rows = list(await realm.session.scalars(select(InjuryRow).where(InjuryRow.bearer_node_id == bearer.id)))
     assert rows and all(row.cause_kind is HarmCause.EXPOSURE and row.state is not InjuryState.LETHAL for row in rows)
+
+
+def test_one_far_past_the_lifespan_does_not_live_out_another_whole_epoch() -> None:
+    survivors = 0
+    for seed in range(200):
+        rng = SeededRandom.for_epoch(seed, 1, "elder")
+        if fatal_year(rng, RULES, 92, multiplier=1.0, sampled_years=50, limit=80, health=100, medicine=False) is None:
+            survivors += 1
+    assert survivors == 0

@@ -95,7 +95,7 @@ SCHEME_LABELS: dict[PlotKind, str] = {kind: spec.label for kind, spec in SCHEMES
 PHASE_LABELS: dict[SchemePhase, str] = {
     SchemePhase.RECRUIT: "Recruiting agents",
     SchemePhase.PREPARE: "Preparing",
-    SchemePhase.EXECUTE: "Striking",
+    SchemePhase.EXECUTE: "Carrying out",
     SchemePhase.SUCCEEDED: "Succeeded",
     SchemePhase.FAILED: "Failed",
     SchemePhase.EXPOSED: "Exposed",
@@ -129,7 +129,7 @@ FAVOUR_LABELS: dict[FavourOrigin, str] = {
     FavourOrigin.SUCCESSION_SUPPORT: "Support in a succession",
     FavourOrigin.SCHEME_AID: "Aid in a scheme",
     FavourOrigin.VOTE: "A vote that carried a law",
-    FavourOrigin.RELIEF: "Aid in a stricken hour",
+    FavourOrigin.RELIEF: "Aid in a time of need",
     FavourOrigin.HOSPITALITY: "Shelter given",
     FavourOrigin.RANSOM: "A ransom paid",
     FavourOrigin.HEALING: "A healing",
@@ -137,7 +137,7 @@ FAVOUR_LABELS: dict[FavourOrigin, str] = {
 }
 IDENTITY_LABELS: dict[IdentityReason, str] = {
     IdentityReason.SPY: "A spy's cover",
-    IdentityReason.BLOOD_CURSE: "A blood-cursed one's mask",
+    IdentityReason.BLOOD_CURSE: "A blood-cursed one's disguise",
     IdentityReason.EXILE: "An exile's new name",
     IdentityReason.IMPOSTOR: "An impostor's guise",
     IdentityReason.HIDDEN_POWER: "A name kept apart from one's powers",

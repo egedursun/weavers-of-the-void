@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.cosmography import BARRED_GALAXIES, SPIRAL_GALAXIES
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
+from aerona.db.fixups import fixup_due, marker
 from aerona.db.repositories.base import Repository
 from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
@@ -304,9 +305,9 @@ def home_galaxy_name(cosmos_name: str) -> str:
 
 
 async def name_home_galaxy(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, HOME_NAME_FIXUP) is not None:
+    if not await fixup_due(session, HOME_NAME_FIXUP):
         return 0
-    ladder = await session.get(AppliedFixupRow, LADDER_FIXUP)
+    ladder = await marker(session, LADDER_FIXUP)
     cosmos = await session.scalar(select(CosmosRow))
     if ladder is None or cosmos is None:
         return 0
@@ -328,7 +329,7 @@ async def name_home_galaxy(session: AsyncSession) -> int:
 
 
 async def ensure_ladder(session: AsyncSession, rules: Rules) -> int:
-    if await session.get(AppliedFixupRow, LADDER_FIXUP) is not None:
+    if not await fixup_due(session, LADDER_FIXUP):
         return 0
     cosmos = await session.scalar(select(CosmosRow))
     if cosmos is None:

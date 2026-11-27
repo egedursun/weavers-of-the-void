@@ -9,6 +9,7 @@ from aerona.catalog.life_traits import ACT_KIND_TRAITS, THOUGHT_KIND_TRAITS, hav
 from aerona.catalog.mind import ACT_READINGS
 from aerona.constants.units import PERCENT
 from aerona.db.fast_session import rows_by_prefix
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.mind import CultureEthicRow, CultureHonourRow, MemoryRow, ThoughtRow
@@ -413,7 +414,7 @@ ACTS_FIXUP = "ethics.w52_acts"
 
 
 async def backfill_acts(ctx: TickContext, cultures: list[EntityRow]) -> int:
-    if await ctx.session.get(AppliedFixupRow, ACTS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ACTS_FIXUP):
         return 0
     added = 0
     for culture in cultures:

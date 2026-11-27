@@ -18,6 +18,7 @@ from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.tables.warfare import ArmyRow, CaptiveRow, SiegeRow
+from aerona.db.write_guard import HELD_SCOPE, HeldScope
 from aerona.domain.enums.affliction import PackageKind
 from aerona.domain.enums.body import BodyPlan, ConditionKind, DamageType, TissueKind
 from aerona.domain.enums.bond import BondKind
@@ -305,6 +306,28 @@ async def test_old_beasts_given_a_human_body_are_given_the_body_of_their_kind_on
     assert await ctx.session.get(AppliedFixupRow, BEAST_BODIES_FIXUP) is not None
     fixed.plan = BodyPlan.HUMANOID
     assert await fit_beast_bodies(ctx.session) == 0
+
+
+async def test_the_beast_body_fixup_runs_once_even_beside_a_held_beast_and_spares_a_plan_the_god_set(ctx: TickContext, cosmos: Cosmos) -> None:
+    region = await make_region(ctx.session, "Still Vale", cosmos.home.id)
+    crab = await make_entity(ctx.session, "Still Crab", EntityType.SPECIES, SpeciesStats(hp=20), world_id=cosmos.home.id, location_id=region.id)
+    await profile_of(ctx, crab, SpeciesSpec(body_plan=BodyPlan.INSECTOID))
+    beasts = []
+    for name, locked in (("Held Crab", []), ("Chosen Crab", ["plan"])):
+        found = await make_entity(ctx.session, name, EntityType.BEAST, BeastStats(hp=60), world_id=cosmos.home.id, location_id=region.id)
+        await profile_beast(ctx, found, crab)
+        ctx.session.add(BodyRow(node_id=found.id, plan=BodyPlan.HUMANOID, traits=[], fingers=10, hp_max=60, updated_epoch=1, locked=locked))
+        beasts.append(found)
+    await ctx.session.flush()
+    token = HELD_SCOPE.set(HeldScope(None, frozenset({beasts[0].id})))
+    try:
+        assert await fit_beast_bodies(ctx.session) == 0
+    finally:
+        HELD_SCOPE.reset(token)
+    assert await ctx.session.get(AppliedFixupRow, BEAST_BODIES_FIXUP) is not None
+    for found in beasts:
+        body = await ctx.session.get(BodyRow, found.id)
+        assert body is not None and body.plan is BodyPlan.HUMANOID
 
 
 async def test_each_gaze_strikes_a_raided_town_its_own_way(ctx: TickContext, cosmos: Cosmos, rules: Rules) -> None:

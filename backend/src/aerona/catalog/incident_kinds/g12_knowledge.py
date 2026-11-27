@@ -167,7 +167,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "discovery.great_person",
         G.KNOWLEDGE,
-        "{actor} rose as a great figure of {field} in {beneficiary}.",
+        "{actor} rose as a great {field} in {beneficiary}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.BENEFICIARY)),
         facts=(
             FactSpec("field", FactValue.ENUM, enum=GreatField),
@@ -250,7 +250,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "examinations.held",
         G.KNOWLEDGE,
-        "{authority} held its examinations: {passed} of {candidates:candidate|candidates} passed.",
+        "{authority} held its examinations: {candidates:no candidate sat|one candidate sat|# candidates sat}, and {passed} passed.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.MEMBER, required=False, many=True)),
         facts=(
             FactSpec("candidates", FactValue.NUMBER, FactUnit.PEOPLE),
@@ -310,7 +310,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "history.struck",
         G.KNOWLEDGE,
-        "{actor} struck {target} from its records and defaced the inscriptions.",
+        "{actor} struck {target} from its records.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
     ),
     IncidentKindSpec(
@@ -330,7 +330,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "intrusion.",
             G.KNOWLEDGE,
-            "An intrusion{actor:? by #} was attempted{target:? on #} to {aim}; it ended {outcome}.",
+            "An intrusion{actor:? by #} was attempted{target:? on #} to {aim}; outcome: {outcome}.",
             roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.TARGET, required=False), RoleSpec(R.ACCUSED, required=False)),
             facts=(
                 FactSpec("outcome", FactValue.ENUM, enum=IntrusionOutcome),
@@ -425,7 +425,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "language_contact.loans",
         G.KNOWLEDGE,
-        "Along the trade roads {words:word|words} passed between {subject}.",
+        "Through trade, {words:word|words} passed between {subject}.",
         roles=(RoleSpec(R.SUBJECT, many=True),),
         facts=(FactSpec("words", FactValue.NUMBER, FactUnit.COUNT),),
         chronicle_kind=K.LANGUAGE,
@@ -513,7 +513,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "memory.gratitude",
         G.KNOWLEDGE,
-        "{actor} repaid an old debt to {beneficiary}: {deed}.",
+        "{actor} repaid an old debt to {beneficiary} ({deed}).",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.BENEFICIARY)),
         facts=(FactSpec("deed", FactValue.ENUM, enum=GratitudeDeed), FactSpec("wealth", FactValue.NUMBER, FactUnit.WEALTH_POINTS)),
     ),
@@ -551,7 +551,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "memory.tradition_forgotten",
         G.KNOWLEDGE,
-        "The {subject} tradition was forgotten; no one celebrates it any more.",
+        "The {subject} tradition was forgotten; no one keeps it any more.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("spread", FactValue.NUMBER, FactUnit.PERCENT),),
         clock=ProcessClock.YEAR,
@@ -559,7 +559,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "memory.vengeance",
         G.KNOWLEDGE,
-        "{actor} swore vengeance on {target} for {memory}.",
+        "{actor} swore vengeance on {target}; the memory behind it: {memory}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
         facts=(FactSpec("memory", FactValue.ENUM, enum=MemoryKind),),
     ),
@@ -612,7 +612,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.departed",
         G.KNOWLEDGE,
-        "{subject} left{maker:? #}, who made it.",
+        "{subject} left{maker:? its maker, #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.MAKER, required=False)),
         facts=(),
     ),
@@ -661,7 +661,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.facet_trait",
         G.KNOWLEDGE,
-        "{subject} has grown {trait}.",
+        "{subject} has come to show a trait: {trait}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("trait", FactValue.ENUM, enum=TraitKind),),
         clock=ProcessClock.YEAR,
@@ -751,7 +751,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.transferred",
         G.KNOWLEDGE,
-        "The mind of {subject} moved to another seat, {seat:an}; its fidelity is now {fidelity}.",
+        "The mind of {subject} moved to another seat ({seat}); its fidelity is now {fidelity}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ORIGIN, required=False), RoleSpec(R.DESTINATION, required=False)),
         facts=(FactSpec("seat", FactValue.ENUM, enum=MindSeat), FactSpec("fidelity", FactValue.NUMBER, FactUnit.PERCENT)),
         terms=True,
@@ -760,14 +760,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.will_grew",
         G.KNOWLEDGE,
-        "The will of {subject} grew to {will}, through {cause}.",
+        "The will of {subject} grew ({will}); the cause: {cause}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("will", FactValue.ENUM, enum=MindWill), FactSpec("cause", FactValue.ENUM, enum=WillCause)),
     ),
     IncidentKindSpec(
         "network.cut",
         G.KNOWLEDGE,
-        "{subject} went down for {epochs:epoch|epochs} through {cause}.",
+        "{subject} went down for {epochs:epoch|epochs} (cause: {cause}).",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("cause", FactValue.ENUM, enum=OutageCause),
@@ -801,7 +801,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "network.outage",
         G.KNOWLEDGE,
-        "{subject} went down for {epochs:epoch|epochs} through {cause}.",
+        "{subject} went down for {epochs:epoch|epochs} (cause: {cause}).",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("cause", FactValue.ENUM, enum=OutageCause),
@@ -876,7 +876,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "teaching.",
             G.KNOWLEDGE,
-            "{teacher} taught {learner} in {teaching} {price:for nothing|for # in wealth|for # in wealth}.",
+            "{teacher} taught {learner} {teaching:an} {price:for nothing|for # in wealth|for # in wealth}.",
             roles=(RoleSpec(R.TEACHER), RoleSpec(R.LEARNER)),
             facts=(FactSpec("teaching", FactValue.ENUM, enum=KnowledgeKind), FactSpec("price", FactValue.NUMBER, FactUnit.WEALTH_POINTS)),
         ),
@@ -884,7 +884,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "knowledge.lost_with_holder",
         G.KNOWLEDGE,
-        "{knowledge} that {subject} never taught died with it.",
+        "{knowledge:An} that {subject} never taught died with it.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("knowledge", FactValue.ENUM, enum=KnowledgeKind),),
     ),
@@ -985,7 +985,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tongues.script_evolved",
         G.KNOWLEDGE,
-        "The script of {subject} became {system:an} through {cause}.",
+        "The script of {subject} changed form ({system}) through {cause}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("system", FactValue.ENUM, enum=WritingSystem), FactSpec("cause", FactValue.ENUM, enum=ScriptChangeCause)),
         clock=ProcessClock.YEAR,
@@ -1016,7 +1016,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.art_form_invented",
         G.KNOWLEDGE,
-        "{actor} invented {product}, a new {discipline}.",
+        "{actor} invented {product}, a new art form ({discipline}).",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.PRODUCT),
@@ -1357,7 +1357,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.reckon_years",
         G.KNOWLEDGE,
-        "{actor} had the years of {authority} counted by {dating}.",
+        "{actor} had the years of {authority} counted (reckoning: {dating}).",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR)),
         facts=(FactSpec("dating", FactValue.ENUM, enum=DatingSystemKind),),
         chronicle_kind=K.CIVILIZATION,
@@ -1559,7 +1559,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "writing.script",
         G.KNOWLEDGE,
-        "The scholars of {maker} developed {system:an} for the {subject} language; its words are now kept in writing.",
+        "The scholars of {maker} developed a writing system ({system}) for the {subject} language; its words are now kept in writing.",
         roles=(RoleSpec(R.MAKER), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("system", FactValue.ENUM, enum=WritingSystem),),
         clock=ProcessClock.YEAR,

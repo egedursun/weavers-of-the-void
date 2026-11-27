@@ -24,7 +24,9 @@ def phase_key(phase: str) -> str:
 def phase_moment(environment: TickEnvironment) -> Moment:
     years = environment.rules.time.years_per_epoch
     window = environment.window or YearWindow(start=0, end=years)
-    return Moment(epoch_start_year(environment.epoch, years) + window.start)
+    span = max(1, window.end - window.start)
+    into = int(min(max(environment.step, 0.0), 1.0) * span) if environment.step is not None else 0
+    return Moment(epoch_start_year(environment.epoch, years) + window.start + min(span - 1, into))
 
 
 @contextmanager

@@ -175,6 +175,13 @@ class RegionAtlas:
             self._communities = {region: sorted(found) for region, found in grouped.items()}
         return list(self._communities.get(region_id, []))
 
+    def settlements_in(self, region_id: int) -> list[int]:
+        return [
+            node
+            for node in self.communities_in(region_id)
+            if (placement := self._placements.get(node)) is not None and placement.entity_type is EntityType.SETTLEMENT
+        ]
+
     def world_of(self, entity_id: int) -> int | None:
         placement = self._placements.get(entity_id)
         return placement.world_id if placement is not None else None

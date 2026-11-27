@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.justice import CrimeCaseRow
@@ -55,7 +56,7 @@ AXES_FIXUP = "renown.w52"
 
 
 async def backfill_axes(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, AXES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, AXES_FIXUP):
         return 0
     seeded = 0
     pardons = await ctx.session.scalars(select(PardonRow).where(PardonRow.corrupt.is_(False), PardonRow.granter_entity_id.is_not(None)).order_by(PardonRow.id))

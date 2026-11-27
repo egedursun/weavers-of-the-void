@@ -8,6 +8,7 @@ from aerona.catalog.vehicles import FRAMES, SEA_LADDER, FrameSpec
 from aerona.catalog.weather import has_trait
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
@@ -125,7 +126,7 @@ async def owner_of(ctx: TickContext, vessel_id: int) -> EntityRow | None:
 
 
 async def backfill_vessels(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, BACKFILL_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BACKFILL_FIXUP):
         return 0
     knowledge = await KnowledgeMap.load(ctx.session)
     made = 0
@@ -156,7 +157,7 @@ async def backfill_vessels(ctx: TickContext) -> int:
 
 
 async def arm_unarmed(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, MOUNTS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, MOUNTS_FIXUP):
         return 0
     knowledge = await KnowledgeMap.load(ctx.session)
     armed = waiting = 0

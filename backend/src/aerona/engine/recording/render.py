@@ -12,6 +12,38 @@ from aerona.domain.enums.modifier import IncidentRole
 FIELDS = Formatter()
 
 DOUBLED_ARTICLE = re.compile(r"\b(the|The|an|An|a|A) the\b")
+TITLES = (
+    "War",
+    "Battle",
+    "Siege",
+    "Competition",
+    "Ceremony",
+    "Procession",
+    "Founding",
+    "Summit",
+    "Famine",
+    "Heroquest",
+    "Funeral",
+    "Accession",
+    "Wedding",
+    "Duel",
+    "Insurrection",
+    "Persecution",
+    "Excavation",
+    "Trial",
+    "Feast",
+    "Hunt",
+    "Tournament",
+    "Migration",
+    "Occupation",
+    "Journey",
+    "Succession crisis",
+    "Beast attack",
+    "Schism",
+    "Riot",
+    "Coup",
+)
+BARE_TITLE = re.compile(r"(?<=[a-z,;:] )(?<!the )(?<!its )(?<!their )(?<!an )(?<! a )(" + "|".join(TITLES) + r") of (?=[A-Z])")
 EMPTY_REMARK = re.compile(r"\s*\(\s*\)|:\s*(?=[.!?]?$)")
 CLOSED = re.compile(r"[.!?»”\"')\]]$")
 DOUBLED_STOP = re.compile(r"(\.\.\.|[!?])\.+|(?<!\.)(\.)\.(?!\.)")
@@ -75,6 +107,7 @@ def render_incident(spec: IncidentKindSpec, names: Mapping[IncidentRole, Sequenc
     if missing:
         raise ValidationFailedError(f"The happening {spec.key} cannot be told without {', '.join(missing)}.")
     text = DOUBLED_STOP.sub(lambda found: found.group(1) or found.group(2), " ".join(ARTICLES.format(spec.template, **fields).split()))
+    text = BARE_TITLE.sub(r"the \1 of ", text)
     text = DOUBLED_ARTICLE.sub(lambda found: "The" if found.group(1)[:1].isupper() else "the", text)
     text = " ".join(EMPTY_REMARK.sub("", text).split())
     if text and not CLOSED.search(text):

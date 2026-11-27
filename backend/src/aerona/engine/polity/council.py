@@ -30,6 +30,7 @@ from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.polity.governance import spend
 from aerona.engine.polity.offices import power_skill, powers_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import record
 from aerona.engine.relations.book import relation
@@ -242,7 +243,7 @@ async def leak(ctx: TickContext, book: RealmBook, realm: Realm, office: OfficeRo
 
 
 async def serve(ctx: TickContext, book: RealmBook, realm: Realm, office: OfficeRow, tally: CouncilTally) -> None:
-    if office.holder_entity_id is None or held(office.holder_entity_id):
+    if office.holder_entity_id is None or held(office.holder_entity_id) or await living_entity(ctx.session, office.holder_entity_id) is None:
         return
     await choose(ctx, book, realm, office)
     if DILIGENCE not in (office.locked or []):

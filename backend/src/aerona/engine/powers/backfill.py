@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.arcana import SCHOOL_GRAMMAR
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.concealment import HiddenTruthRow, TruthKeeperRow, TruthSeekerRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -295,7 +296,7 @@ async def keep_power_kinds(ctx: TickContext) -> int:
 
 
 async def legacy_backfill(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return 0
     result = {
         "sources": await sources(ctx),

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.backfill_words import LOCAL_TRAIT_WORDS
 from aerona.catalog.mind import DEPTH_WORDS, TRAITS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.domain.enums.entity import EntityType
@@ -60,7 +61,7 @@ async def apply_depth(session: AsyncSession, rules: Rules, mortal: EntityRow, ep
 async def backfill_depth(session: AsyncSession, rules: Rules, mortals: list[EntityRow], epoch: int) -> int:
     added = 0
     for key in (DEPTH_FIXUP, LOCAL_DEPTH_FIXUP):
-        if await session.get(AppliedFixupRow, key) is not None:
+        if not await fixup_due(session, key):
             continue
         found = 0
         for mortal in mortals:

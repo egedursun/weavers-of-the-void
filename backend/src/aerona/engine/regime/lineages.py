@@ -277,7 +277,8 @@ async def advance_breeding(ctx: TickContext, tally: LineageTally) -> None:
         carrying = sum([1 for member in members if await carries(ctx, member.id, plan)])
         share = carrying * PERCENT / len(members) if members else 0
         if "progress" not in design.locked:
-            design.progress = clamp_int(round_half_up(design.steps * min(1.0, share / max(1, plan.target_share))), 0, design.steps)
+            reached = round_half_up(design.steps * min(1.0, share / max(1, plan.target_share)))
+            design.progress = clamp_int(min(reached, ctx.epoch - design.started_epoch), 0, design.steps)
         if design.progress >= design.steps:
             holder = await living_entity(ctx.session, design.holder_node_id)
             await complete(ctx, design, holder, PlanTally())

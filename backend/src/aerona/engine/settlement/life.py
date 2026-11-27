@@ -999,7 +999,10 @@ async def prestige(ctx: TickContext, town: Town) -> None:
     table = ctx.rules.urban
     if "prestige" in town.profile.locked:
         return
-    local = await ctx.session.scalars(select(EntityRow).where(EntityRow.location_id == town.entity.id, EntityRow.status == EntityStatus.CANON))
+    ruins = select(StructureProfileRow.structure_entity_id).where(StructureProfileRow.construction_state == ConstructionState.RUINED)
+    local = await ctx.session.scalars(
+        select(EntityRow).where(EntityRow.location_id == town.entity.id, EntityRow.status == EntityStatus.CANON, EntityRow.id.not_in(ruins))
+    )
     splendour = artworks = renowned = 0
     for item in local:
         if item.entity_type is EntityType.STRUCTURE:

@@ -34,7 +34,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "facets.took_root",
         G.SOCIAL,
-        "The practice of {facet} took root in {subject}, held at {level}.",
+        "The practice of {facet} spread in {subject}, held at {level}.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.PEOPLE, E.SETTLEMENT})),),
         facts=(FactSpec("facet", FactValue.ENUM, enum=FacetKind), FactSpec("level", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.NONE,
@@ -52,7 +52,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "death_work.remains_treated",
         G.FAITH,
-        "The remains of {subject} were given {treatment} by the custom of {member}, at a cost of {cost}.",
+        "The remains of {subject} were treated by the custom of {member} ({treatment}), at a cost of {cost}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.MEMBER, frozenset({E.PEOPLE}))),
         facts=(FactSpec("treatment", FactValue.ENUM, enum=RemainsTreatment), FactSpec("cost", FactValue.NUMBER, FactUnit.WEALTH_POINTS)),
         place=PlaceRule.WHEN_KNOWN,
@@ -61,7 +61,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "death_work.exception",
         G.FAITH,
-        "The remains of {subject} were given {treatment} rather than the {custom} of {member}.",
+        "The remains of {subject} were treated otherwise ({treatment}) than by the custom of {member} ({custom}).",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.MEMBER, frozenset({E.PEOPLE}))),
         facts=(FactSpec("treatment", FactValue.ENUM, enum=RemainsTreatment), FactSpec("custom", FactValue.ENUM, enum=RemainsTreatment)),
         place=PlaceRule.WHEN_KNOWN,
@@ -79,7 +79,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "death_work.role_shunned",
         G.SOCIAL,
-        "No one among {subject} would any longer be {role}; the work stood {standing}.",
+        "No one among {subject} would any longer be {role:an}; the work stood {standing}.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.PEOPLE})),),
         facts=(FactSpec("role", FactValue.ENUM, enum=DeathRole), FactSpec("standing", FactValue.ENUM, enum=DeathStanding)),
         clock=C.SEASON,
@@ -151,7 +151,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "endowment.ended",
         G.EXCHANGE,
-        "The endowment {maker} made for {beneficiary} came to its end by its terms, {terms}.",
+        "The endowment {maker} made for {beneficiary} came to its end under its terms ({terms}).",
         roles=(RoleSpec(R.MAKER), RoleSpec(R.BENEFICIARY)),
         facts=(FactSpec("terms", FactValue.ENUM, enum=EndowmentTerms),),
         clock=C.SEASON,
@@ -167,7 +167,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "folk.class_learned",
         G.KNOWLEDGE,
-        "{subject} named {name} in its knowledge of {domain}, taking it for {taken_as}.",
+        "{subject} named {name} in its knowledge of {domain} (taken as {taken_as}).",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.PEOPLE})),),
         facts=(FactSpec("name", FactValue.NAME), FactSpec("domain", FactValue.ENUM, enum=FolkDomain), FactSpec("taken_as", FactValue.ENUM, enum=FolkTaking)),
         clock=C.SEASON,
@@ -175,7 +175,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "folk.class_corrected",
         G.KNOWLEDGE,
-        "{subject} learned that {name} in its knowledge of {domain} is {taken_as}.",
+        "{subject} learned the truth of {name} in its knowledge of {domain}: {taken_as}.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.PEOPLE})),),
         facts=(FactSpec("name", FactValue.NAME), FactSpec("domain", FactValue.ENUM, enum=FolkDomain), FactSpec("taken_as", FactValue.ENUM, enum=FolkTaking)),
         clock=C.SEASON,
@@ -183,7 +183,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "folk.misclassification_harm",
         G.KNOWLEDGE,
-        "{subject} took {name} for {taken_as} in its knowledge of {domain}, and it did harm.",
+        "{subject} misjudged {name} in its knowledge of {domain} (taken as {taken_as}), and it did harm.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.PEOPLE})), RoleSpec(R.VICTIM, required=False), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("name", FactValue.NAME), FactSpec("domain", FactValue.ENUM, enum=FolkDomain), FactSpec("taken_as", FactValue.ENUM, enum=FolkTaking)),
         place=PlaceRule.WHEN_KNOWN,
@@ -274,7 +274,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "media.item_published",
         G.KNOWLEDGE,
-        "{outlet} of {actor} put out {kind:an} at {place}.",
+        "{outlet} of {actor} put out an item ({kind}) at {place}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE)),
         facts=(FactSpec("kind", FactValue.ENUM, enum=MediaItemKind), FactSpec("outlet", FactValue.NAME)),
         place=PlaceRule.WHEN_KNOWN,
@@ -297,7 +297,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "media.outlet_censored",
         G.LAW,
-        "{outlet} of {target} at {place} met {measure}.",
+        "{outlet} of {target} at {place} faced a measure against it: {measure}.",
         roles=(RoleSpec(R.TARGET), RoleSpec(R.PLACE), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("outlet", FactValue.NAME), FactSpec("measure", FactValue.ENUM, enum=CensorMeasure)),
         steps=frozenset({A.PUNISH}),
@@ -354,7 +354,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "works.begun",
         G.MAKING,
-        "{actor} began {kind:an} at {place}, built by {labour} labour.",
+        "{actor} began works at {place} ({kind}; labour: {labour}).",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE)),
         facts=(FactSpec("kind", FactValue.ENUM, enum=WorksKind), FactSpec("labour", FactValue.ENUM, enum=LabourRegime)),
         steps=frozenset({A.FOUND}),
@@ -514,7 +514,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "population.policy_adopted",
         G.PEOPLES,
-        "{subject} took up a policy on its numbers, aiming to {aim}.",
+        "{subject} took up a policy on its numbers; its aim: {aim}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("aim", FactValue.ENUM, enum=PopulationAim), FactSpec("reason", FactValue.NAME, required=False)),
         steps=frozenset({A.DECREE}),
@@ -524,7 +524,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "population.policy_repealed",
         G.PEOPLES,
-        "{subject} gave up its policy to {aim}.",
+        "{subject} gave up its policy on its numbers (aim: {aim}).",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("aim", FactValue.ENUM, enum=PopulationAim),),
         place=PlaceRule.NONE,
@@ -569,7 +569,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "population.target_met",
         G.PEOPLES,
-        "The numbers under {subject} moved {change} in a hundred, meeting its aim to {aim}.",
+        "The numbers under {subject} moved {change} in a hundred, meeting its aim ({aim}).",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("aim", FactValue.ENUM, enum=PopulationAim), FactSpec("change", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.NONE,
@@ -597,7 +597,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "youth.delinquency",
         G.LAW,
-        "{group}, a youth group of {place} for {purpose}, made trouble in the town.",
+        "{group}, a youth group of {place} for {purpose}, made trouble there.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.ACTOR, frozenset({E.MORTAL}), required=False)),
         facts=(FactSpec("group", FactValue.NAME), FactSpec("purpose", FactValue.ENUM, enum=YouthPurpose)),
         place=PlaceRule.WHEN_KNOWN,
@@ -606,7 +606,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "youth.recruited",
         G.SOCIAL,
-        "{actor} drew{target:? #} of {group} into {purpose}.",
+        "{actor} drew {target:?# of }{group} into {purpose}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("group", FactValue.NAME), FactSpec("purpose", FactValue.ENUM, enum=YouthPurpose)),
         place=PlaceRule.WHEN_KNOWN,
@@ -669,7 +669,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "unions.sanction",
         G.LAW,
-        "{actor} and {target} met {sanction} from {enforcer} for their relation {context}.",
+        "{actor} and {target} faced a sanction ({sanction}, by {enforcer}) for their relation {context}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.TARGET)),
         facts=(
             FactSpec("sanction", FactValue.ENUM, enum=NormSanction),
@@ -703,7 +703,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "birth.complication",
         G.BODY,
-        "{patient} came through a birth with {complication}.",
+        "{patient} came through a birth; complication: {complication}.",
         roles=(RoleSpec(R.PATIENT, frozenset({E.MORTAL})), RoleSpec(R.CHILD, required=False), RoleSpec(R.HEALER, required=False)),
         facts=(FactSpec("complication", FactValue.ENUM, enum=BirthComplication), FactSpec("risk", FactValue.NUMBER, FactUnit.PERCENT)),
         steps=frozenset({A.GIVE_BIRTH}),
@@ -713,7 +713,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "birth.recovered",
         G.BODY,
-        "{patient} recovered after the birth by {postnatal}.",
+        "{patient} recovered after the birth (custom: {postnatal}).",
         roles=(RoleSpec(R.PATIENT, frozenset({E.MORTAL})),),
         facts=(FactSpec("postnatal", FactValue.ENUM, enum=PostnatalCustom), FactSpec("rest_months", FactValue.NUMBER, FactUnit.COUNT)),
         steps=frozenset({A.RECOVER}),
@@ -723,7 +723,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "birth.recognition",
         G.SOCIAL,
-        "{actor} had {subject} recognised by {path}.",
+        "{actor} had {subject} recognised (way: {path}).",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.SUBJECT, frozenset({E.MORTAL}))),
         facts=(FactSpec("path", FactValue.ENUM, enum=LegitimacyPath),),
         steps=frozenset({A.ADOPT}),
@@ -743,7 +743,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "childhood.weaned",
         G.SOCIAL,
-        "{subject} was weaned from {feeding}.",
+        "{subject} was weaned (feeding: {feeding}).",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})),),
         facts=(FactSpec("feeding", FactValue.ENUM, enum=InfantFeeding), FactSpec("age", FactValue.NUMBER, FactUnit.YEARS)),
         place=PlaceRule.WHEN_KNOWN,
@@ -802,7 +802,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "kin.duty_kept",
         G.SOCIAL,
-        "{actor} kept the duty to {duty} owed to {target}.",
+        "{actor} kept a duty owed to {target} ({duty}).",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
         facts=(FactSpec("duty", FactValue.ENUM, enum=KinDuty), FactSpec("role", FactValue.ENUM, enum=KinRole)),
         steps=frozenset({A.GIVE, A.ADOPT, A.MOURN, A.AVENGE}),
@@ -812,7 +812,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "kin.duty_breached",
         G.SOCIAL,
-        "{actor} did not keep the duty to {duty} owed to {target}.",
+        "{actor} did not keep a duty owed to {target} ({duty}).",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
         facts=(FactSpec("duty", FactValue.ENUM, enum=KinDuty), FactSpec("role", FactValue.ENUM, enum=KinRole)),
         place=PlaceRule.WHEN_KNOWN,
@@ -821,7 +821,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "kin.group_founded",
         G.SOCIAL,
-        "The {form} {group} was founded among {subject}.",
+        "{group}, {form:an} of {subject}, was founded.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.PEOPLE})), RoleSpec(R.LEADER, required=False)),
         facts=(FactSpec("group", FactValue.NAME), FactSpec("form", FactValue.ENUM, enum=KinGroupForm)),
         steps=frozenset({A.FOUND}),
@@ -861,7 +861,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "kin.group_convened",
         G.SOCIAL,
-        "{actor} convened the kin group {group} on {agenda}.",
+        "{actor} convened the kin group {group} (agenda: {agenda}).",
         roles=(RoleSpec(R.ACTOR),),
         facts=(FactSpec("group", FactValue.NAME), FactSpec("agenda", FactValue.ENUM, enum=KinAgenda)),
         steps=frozenset({A.GATHER}),
@@ -880,7 +880,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.house_duties_set",
         G.SOCIAL,
-        "{actor} set the duties of the household {household} anew.",
+        "{actor} set the duties of {household} anew.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(FactSpec("household", FactValue.NAME), FactSpec("duties", FactValue.NUMBER, FactUnit.COUNT)),
         place=PlaceRule.WHEN_KNOWN,
@@ -909,7 +909,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "daily.duty_breached",
         G.SOCIAL,
-        "No one in the household of {target} kept the {duty}.",
+        "No one in the household of {target} saw to a duty: {duty}.",
         roles=(RoleSpec(R.TARGET),),
         facts=(FactSpec("duty", FactValue.ENUM, enum=HouseDuty),),
         place=PlaceRule.WHEN_KNOWN,
@@ -942,6 +942,15 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         facts=(FactSpec("norm", FactValue.ENUM, enum=NormKind),),
         steps=frozenset({A.INSULT}),
         place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "daily.norms_clashed",
+        G.SOCIAL,
+        "The ways of {actor} and {target} differ over {norm}, and trust between them fell.",
+        roles=(RoleSpec(R.ACTOR, frozenset({E.PEOPLE})), RoleSpec(R.TARGET, frozenset({E.PEOPLE}))),
+        facts=(FactSpec("norm", FactValue.ENUM, enum=NormKind),),
+        place=PlaceRule.NONE,
         clock=C.SEASON,
     ),
 )

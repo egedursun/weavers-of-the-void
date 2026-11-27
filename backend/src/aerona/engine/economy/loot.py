@@ -43,6 +43,8 @@ async def loot_temple(ctx: TickContext, temple: EntityRow, looter: EntityRow, *,
     units, metal = await temple_hoard(ctx, temple, materials)
     added = await inject_hoard(ctx, looter, units, metal)
     await sync_aggregates(ctx.session, ctx.rules, looter)
+    if added <= 0:
+        return 0
     await record(
         ctx,
         "money.temple_loot",

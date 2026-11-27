@@ -13,7 +13,10 @@ from aerona.db.tables.epochs import EpochRow, EpochWorldNarrativeRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.lore import FolkBeliefRow, HistorianViewRow
 from aerona.domain.enums.entity import ENDED_STATUSES, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world import LoreLanguage
+from aerona.engine.interconnect.guards import GuardIndex
+from aerona.engine.recording.hand_edits import FOREIGN_GOD_EDITED_KIND, RECORD_EDITED_KIND, epochs_written_by_hand, written_by_hand
 
 SPACES = re.compile(r"\s+")
 SPACE_BEFORE_PUNCTUATION = re.compile(r"\s+([,.;:!?)])")
@@ -271,18 +274,34 @@ async def _lore_is_english(session: AsyncSession) -> bool:
     return cosmos is None or cosmos.lore_language is LoreLanguage.ENGLISH
 
 
+def unwritten(fields: tuple[str, ...], written: set[str]) -> tuple[str, ...]:
+    return tuple(field for field in fields if field not in written)
+
+
+async def holding_now(session: AsyncSession) -> frozenset[int]:
+    cosmos = await CosmosRepository(session).get()
+    return (await GuardIndex.load(session, cosmos.epoch)).guarded_nodes if cosmos is not None else frozenset()
+
+
 async def sweep_narratives(session: AsyncSession) -> int:
     if not await _lore_is_english(session):
         return 0
     changed = 0
-    for entity in await session.scalars(select(EntityRow).where(EntityRow.status != EntityStatus.REJECTED)):
-        changed += _sweep_row(entity, ("description",), ("depth",))
-    for epoch in await session.scalars(select(EpochRow)):
-        changed += _sweep_row(epoch, ("narrative", "summary"))
+    holding = await holding_now(session)
+    records = await written_by_hand(session, RECORD_EDITED_KIND, IncidentRole.TARGET)
+    gods = await written_by_hand(session, FOREIGN_GOD_EDITED_KIND, IncidentRole.SUBJECT)
+    ages = await epochs_written_by_hand(session)
+    for entity in await session.scalars(select(EntityRow).where(EntityRow.status != EntityStatus.REJECTED).order_by(EntityRow.id)):
+        if entity.id not in holding:
+            changed += _sweep_row(entity, unwritten(("description",), records.get(entity.id, set())), ("depth",))
+    for epoch in await session.scalars(select(EpochRow).order_by(EpochRow.epoch)):
+        changed += _sweep_row(epoch, unwritten(("narrative", "summary"), ages.get(epoch.epoch, set())))
     for world_narrative in await session.scalars(select(EpochWorldNarrativeRow)):
         changed += _sweep_row(world_narrative, ("narrative", "summary"))
-    for god in await session.scalars(select(ForeignGodRow)):
-        changed += _sweep_row(god, ("description",), ("depth", "personality"))
+    for god in await session.scalars(select(ForeignGodRow).order_by(ForeignGodRow.id)):
+        if god.id not in holding:
+            written = gods.get(god.id, set())
+            changed += _sweep_row(god, unwritten(("description",), written), unwritten(("depth", "personality"), written))
     for view in await session.scalars(select(HistorianViewRow)):
         changed += _sweep_row(view, ("text",))
     for belief in await session.scalars(select(FolkBeliefRow)):
@@ -305,11 +324,13 @@ async def write_ending(session: AsyncSession, entity: EntityRow, sentence: str) 
 async def backfill_endings(session: AsyncSession) -> int:
     if not await _lore_is_english(session):
         return 0
-    statement = select(EntityRow).where(EntityRow.status.in_(list(ENDED_STATUSES)), EntityRow.end_epoch.is_not(None))
+    statement = select(EntityRow).where(EntityRow.status.in_(list(ENDED_STATUSES)), EntityRow.end_epoch.is_not(None)).order_by(EntityRow.id)
+    holding = await holding_now(session)
+    records = await written_by_hand(session, RECORD_EDITED_KIND, IncidentRole.TARGET)
     written = 0
     for entity in await session.scalars(statement):
         epoch = entity.end_epoch
-        if epoch is None or mentions_epoch(entity.description, epoch):
+        if epoch is None or mentions_epoch(entity.description, epoch) or entity.id in holding or "description" in records.get(entity.id, set()):
             continue
         sentence = fate_note_ending(entity.fate_note, epoch) or default_ending(entity.entity_type, entity.status is EntityStatus.DESTROYED, epoch)
         written += await write_ending(session, entity, sentence)

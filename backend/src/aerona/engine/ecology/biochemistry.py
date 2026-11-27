@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.domestication import UNBOUND_BIOCHEMISTRY
 from aerona.catalog.flora import world_life
+from aerona.db.fixups import marked, marker
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import SpeciesProfileRow
@@ -19,7 +20,7 @@ async def tolerated(session: AsyncSession, world_id: int | None) -> tuple[Bioche
         return ()
     statement = select(WorldBiochemistryRow.biochemistry).where(WorldBiochemistryRow.world_id == world_id)
     found = tuple(sorted(await session.scalars(statement), key=ORDER.index))
-    if found or await session.get(AppliedFixupRow, f"{LIFE_FIXUP}.{world_id}") is not None:
+    if found or await marker(session, f"{LIFE_FIXUP}.{world_id}") is not None:
         return found
     world = await session.get(WorldRow, world_id)
     return world_life(world.world_type, world.atmosphere) if world is not None else ()
@@ -37,7 +38,7 @@ async def can_live_on(session: AsyncSession, species_id: int, world_id: int | No
 
 
 async def seed_world_life(session: AsyncSession) -> int:
-    done = set(await session.scalars(select(AppliedFixupRow.key).where(AppliedFixupRow.key.like(f"{LIFE_FIXUP}.%"))))
+    done = await marked(session, f"{LIFE_FIXUP}.")
     seeded = set(await session.scalars(select(WorldBiochemistryRow.world_id).distinct()))
     added = 0
     for world in list(await session.scalars(select(WorldRow).order_by(WorldRow.id))):

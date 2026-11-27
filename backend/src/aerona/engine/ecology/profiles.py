@@ -13,6 +13,7 @@ from aerona.catalog.life.ecology import LIFESPAN, LITTER, METABOLISM, PLANT_DIET
 from aerona.catalog.life_traits import SIZE_CLASS_TRAITS, having
 from aerona.catalog.terrain import terrains
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.kind_concepts.nature import PRODUCT_PARTS
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import BodyRow
@@ -22,6 +23,7 @@ from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.flora import PlantProfileRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.ecology import SIZE_ORDER, AnimalRole, Biochemistry, Diet, GrowthCycle, PlantYield, SizeClass, Sociality, SpeciesClass, YieldProduct
@@ -512,12 +514,12 @@ NATURE_FIXUP = "wilds.typed_nature"
 
 
 async def typed_nature_backfill(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, NATURE_FIXUP) is not None:
+    if not await fixup_due(ctx.session, NATURE_FIXUP):
         return 0
     changed = 0
     for row in list(await ctx.session.scalars(select(SpeciesProfileRow).order_by(SpeciesProfileRow.species_entity_id))):
         body = await ctx.session.get(BodyRow, row.species_entity_id)
-        if body is None or "body_plan" in row.locked or body.plan is row.body_plan:
+        if body is None or "body_plan" in row.locked or body.plan is row.body_plan or held(row.species_entity_id):
             continue
         row.body_plan = body.plan
         changed += 1

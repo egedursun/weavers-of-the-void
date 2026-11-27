@@ -145,16 +145,18 @@ async def grant(ctx: TickContext, war: WarRow, realm: EntityRow, tally: VeteranT
 
 async def grant_after_wars(ctx: TickContext, tally: VeteranTally) -> None:
     granted = set(await ctx.session.scalars(select(VeteranGrantRow.war_entity_id).where(VeteranGrantRow.war_entity_id.is_not(None))))
+    rewarded = set(await ctx.session.scalars(select(VeteranGrantRow.polity_entity_id).where(VeteranGrantRow.epoch == ctx.epoch)))
     for war in list(await ctx.session.scalars(select(WarRow).where(WarRow.ended_epoch.in_([ctx.epoch - 1, ctx.epoch])).order_by(WarRow.id))):
         if war.event_entity_id in granted:
             continue
         realms: set[int] = set()
         for side in await every_side(ctx.session, war.id):
             realms |= await realms_of_side(ctx.session, side.entity_id)
-        for realm_id in sorted(realms):
+        for realm_id in sorted(realms - rewarded):
             realm = await ctx.session.get(EntityRow, realm_id)
             if realm is not None and realm.status is EntityStatus.CANON and not held(realm_id):
                 await grant(ctx, war, realm, tally)
+                rewarded.add(realm_id)
 
 
 async def pay_pensions(ctx: TickContext, tally: VeteranTally) -> None:

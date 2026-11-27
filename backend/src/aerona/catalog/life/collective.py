@@ -91,7 +91,7 @@ ACCOUNT_KINDS = total(
         K.OFFICIAL_CHRONICLE: AccountKindSpec("Official chronicle", 100, False),
         K.FOLK_MEMORY: AccountKindSpec("Folk memory", 120, True),
         K.FOREIGN_ACCOUNT: AccountKindSpec("Foreign account", 100, True),
-        K.GOSPEL: AccountKindSpec("Gospel", 60, False),
+        K.GOSPEL: AccountKindSpec("Sacred account", 60, False),
         K.EPIC: AccountKindSpec("Epic", 80, True),
         K.INSCRIPTION: AccountKindSpec("Inscription", 30, False),
         K.FOUNDING_MYTH: AccountKindSpec("Founding myth", 50, False),

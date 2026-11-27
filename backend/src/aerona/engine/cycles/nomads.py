@@ -8,6 +8,7 @@ from aerona.db.tables.demography import LabourRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.settlement import SettlementProfileRow
+from aerona.db.tables.warfare import TributeRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.cycles import MobilityMode
 from aerona.domain.enums.demography import Job
@@ -17,11 +18,12 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.nature import PlantDefence
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.settlement import SizeTier
+from aerona.domain.enums.war import TributeStatus
 from aerona.engine.body.customs import people_of
 from aerona.engine.collective.book import population_of, shift
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.asabiyya import asabiyya_row
-from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
+from aerona.engine.economy.purse import coin_of, held_coin, receive_coin, take_coin
 from aerona.engine.nature.cover import cover_of, grazing
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
@@ -30,7 +32,7 @@ from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
-from aerona.engine.services.war import active_tribute, impose_tribute
+from aerona.engine.services.war import impose_tribute
 
 SMALL = frozenset({SizeTier.HAMLET, SizeTier.VILLAGE})
 MOVING = frozenset({MobilityMode.NOMADIC, MobilityMode.TRANSHUMANT})
@@ -227,6 +229,16 @@ async def strength_of(ctx: TickContext, town: EntityRow, camp: CampRow, league: 
     return total
 
 
+async def pays_herders(ctx: TickContext, payer_id: int) -> bool:
+    camps = select(CampRow.settlement_entity_id).where(CampRow.mode != MobilityMode.SEDENTARY)
+    found = await ctx.session.scalar(
+        select(TributeRow.id)
+        .where(TributeRow.payer_entity_id == payer_id, TributeRow.status == TributeStatus.ACTIVE, TributeRow.receiver_entity_id.in_(camps))
+        .limit(1)
+    )
+    return found is not None
+
+
 async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: CampRow, *, league: ConfederationRow | None, tally: NomadTally) -> None:
     table = ctx.rules.nomadism
     might = await strength_of(ctx, town, camp, league)
@@ -234,7 +246,7 @@ async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: Cam
         if held(other.id) or (league is not None and other.id in league.members):
             continue
         guard = profile.militia + 1
-        if might >= guard * table.tribute_ratio and await active_tribute(ctx.session, other.id, town.id) is None:
+        if might >= guard * table.tribute_ratio and not await pays_herders(ctx, other.id):
             await impose_tribute(ctx, other, town, None, "tribute to the herders of the pastures")
             tally.tributes += 1
             await record(
@@ -246,8 +258,10 @@ async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: Cam
             )
             continue
         if might >= guard and ctx.rng(f"nomads.raid.{town.id}.{other.id}.{ctx.epoch}").chance(table.raid_pct):
-            taken = min(await coin_of(ctx.session, ctx.rules, other), round_half_up(might * table.raid_take / PERCENT))
-            if taken > 0 and await take_coin(ctx.session, ctx.rules, other, taken):
+            taken = min(held_coin(await coin_of(ctx.session, ctx.rules, other)), round_half_up(might * table.raid_take / PERCENT))
+            if taken > 0 and not await take_coin(ctx.session, ctx.rules, other, taken):
+                taken = 0
+            if taken > 0:
                 await receive_coin(ctx.session, ctx.rules, town, taken)
             await change_relation(ctx, other.id, town.id, -table.raid_relation, MemoryKind.HARMED_ME, note="raided by herders")
             tally.raids += 1
@@ -265,7 +279,7 @@ async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: Cam
 
 async def trade(ctx: TickContext, town: EntityRow, camp: CampRow, other: EntityRow, tally: NomadTally) -> None:
     table = ctx.rules.nomadism
-    worth = min(await coin_of(ctx.session, ctx.rules, other), round_half_up(camp.herd * table.trade_per_herd / PERCENT))
+    worth = min(held_coin(await coin_of(ctx.session, ctx.rules, other)), round_half_up(camp.herd * table.trade_per_herd / PERCENT))
     if worth <= 0 or not await take_coin(ctx.session, ctx.rules, other, worth):
         return
     await receive_coin(ctx.session, ctx.rules, town, worth)

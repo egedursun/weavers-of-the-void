@@ -55,7 +55,14 @@ class BattleGround:
 
 
 def war_ground(default: WarTerrain, terrain: TerrainKind | None) -> WarTerrain:
-    return WarTerrain.UNDERGROUND if terrain_has(terrain, TerrainTrait.UNDERGROUND) else default
+    if terrain_has(terrain, TerrainTrait.UNDERGROUND):
+        return WarTerrain.UNDERGROUND
+    watery = terrain_has(terrain, TerrainTrait.WATERY)
+    if watery and default is WarTerrain.LAND:
+        return WarTerrain.NAVAL
+    if not watery and terrain is not None and default is WarTerrain.NAVAL:
+        return WarTerrain.LAND
+    return default
 
 
 def night_chance(rules: Rules, nights: bool, day_length_hours: int | None) -> float:

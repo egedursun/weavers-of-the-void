@@ -1,5 +1,6 @@
 from dataclasses import replace
 
+import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -46,7 +47,8 @@ async def test_decay_fixed_and_depletion(session: AsyncSession, world: GodsWorld
     entities = EntityRepository(session)
     assert await entities.has_flag(cursed.id, EntityFlag.DEPLETED)
     assert await entities.has_flag(world.region.id, EntityFlag.CURSED)
-    assert world.cosmos.doom_clock == rules.economy.depletion_apocalypse
+    advanced = world.cosmos.doom_clock + (world.cosmos.doom_fraction or 0.0)
+    assert advanced == pytest.approx(rules.economy.depletion_apocalypse * rules.balance.apocalypse_speed / 100)
 
 
 async def test_addiction_and_withdrawal_recovery(session: AsyncSession, world: GodsWorld, rules: Rules) -> None:

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.anatomy import TEETH, TOOTH_COUNT, Anatomy, anatomy_of
 from aerona.catalog.tissues import DIGIT_LIMBS, SIDES, digit_keys, digit_part, intact_share
 from aerona.core.random import RandomKey, SeededRandom
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.write_guard import held
@@ -93,16 +94,18 @@ DIGITS_FIXUP = "body.named_digits"
 
 
 async def backfill_digits(session: AsyncSession, rules: Rules) -> int:
-    if await session.get(AppliedFixupRow, DIGITS_FIXUP) is not None:
+    if not await fixup_due(session, DIGITS_FIXUP):
         return 0
-    bodies = list(await session.scalars(select(BodyRow)))
+    bodies = [body for body in await session.scalars(select(BodyRow).order_by(BodyRow.node_id)) if not held(body.node_id)]
     for body in bodies:
-        body.handedness = handedness_for(rules, body.node_id)
+        kept = set(body.locked or [])
+        if body.handedness is Handedness.RIGHT and "handedness" not in kept:
+            body.handedness = handedness_for(rules, body.node_id)
         anatomy = plan_anatomy(body)
         owed = {
             part: anatomy.full_count(part) - int(getattr(body, part) or 0) - sum(1 for key in body.lost_digits if digit_part(key) == part)
             for part in DIGIT_LIMBS
-            if anatomy.part(part) is not None
+            if anatomy.part(part) is not None and part not in kept and "lost_digits" not in kept
         }
         for part, missing in owed.items():
             if missing > 0:
@@ -116,7 +119,7 @@ PLAN_COUNTS_FIXUP = "body.plan_counts"
 
 
 async def backfill_plan_counts(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, PLAN_COUNTS_FIXUP) is not None:
+    if not await fixup_due(session, PLAN_COUNTS_FIXUP):
         return 0
     refitted = 0
     for body in await session.scalars(select(BodyRow)):

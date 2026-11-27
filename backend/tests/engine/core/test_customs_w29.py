@@ -51,6 +51,7 @@ from aerona.domain.enums.customs import (
     MemberRight,
     Membership,
     NamingPattern,
+    Naturalisation,
     ReliefKind,
     RevivalGoal,
     RevivalStage,
@@ -439,3 +440,19 @@ async def test_a_house_of_welfare_unpaid_turns_its_poor_away_and_cooperative_due
     paid = await session.get(MortalProfileRow, member.id)
     assert welfare is not None and welfare.inmates == 0
     assert pool is not None and pool.pool > 0 and paid is not None and paid.wealth < 50
+
+
+async def test_a_ruler_is_a_citizen_of_the_realm_and_a_foreigner_waits_on_a_real_path(session: AsyncSession, world: CoreWorld) -> None:
+    town, _folk = await home(session, world, "Crownmere")
+    ruler = await mortal(session, "Ruler Ena", world, town.id)
+    stranger = await mortal(session, "Stranger Oth", world, town.id)
+    realm = await realm_of(session, world, "Crownmere Realm", town.id)
+    session.add(OfficeRow(polity_entity_id=realm.id, kind=OfficeKind.RULER, holder_entity_id=ruler.id))
+    session.add_all([profile(ruler.id, polity_id=realm.id), profile(stranger.id, polity_id=realm.id)])
+    ruler.social_class = stranger.social_class = SocialClass.SERF_OR_SLAVE
+    await session.flush()
+    await keep_civics(await at(session, 3), CivicsTally())
+    crowned = await session.get(MembershipRow, ruler.id)
+    foreign = await session.get(MembershipRow, stranger.id)
+    assert crowned is not None and crowned.category is Membership.CITIZEN
+    assert foreign is not None and foreign.category is Membership.BOUND and foreign.path is not Naturalisation.BIRTHPLACE

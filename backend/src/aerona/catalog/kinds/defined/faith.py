@@ -109,7 +109,7 @@ REBIRTH_PATH = total(
     {
         RebirthPath.PEOPLE: Defined(
             "People",
-            checked_by=(),
+            checked_by=("engine.faith.backfill.doctrine_fields",),
             used_by=(
                 "api.routers.faith.doctrine",
                 "db.tables.faith.CultDoctrineRow",

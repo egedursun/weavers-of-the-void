@@ -8,6 +8,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.mind import GriefRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.node import NodeBirthRow
 from aerona.domain.enums.chronicle import ChronicleKind
@@ -15,6 +16,7 @@ from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.gathering import GatheringKind, GatheringStatus
+from aerona.domain.enums.mind import GriefStage
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.models.calendar import epoch_end_year
@@ -115,14 +117,14 @@ async def test_deaths_of_old_age_spread_over_the_age_instead_of_its_last_year(ct
     years: set[int] = set()
     start = epoch_end_year(ctx.epoch, ctx.rules.time.years_per_epoch) - ctx.rules.time.years_per_epoch
     for index in range(12):
-        elder = await mortal(ctx.session, f"Spent Elder {index}", world, world.regions[0].id, age=95)
+        elder = await mortal(ctx.session, f"Spent Elder {index}", world, world.regions[0].id, age=26)
         elder.birth_epoch = ctx.epoch - 1
         set_stats(elder, lifespan=30)
         await mortal_aging(in_phase(ctx, EpochPhase.ENGINE, AgingState()))
         if elder.status is EntityStatus.DEAD:
             died = stat_or(elder, "death_year", 0)
             years.add(died)
-            assert stat_or(elder, "age", 0) == 95 + died - start
+            assert stat_or(elder, "age", 0) == 26 + died - start
     assert len(years) > 1
 
 
@@ -188,3 +190,25 @@ async def test_a_child_who_grows_up_over_the_age_is_no_longer_a_child_once_aged(
     await mortal_aging(in_phase(ctx, EpochPhase.ENGINE, AgingState()))
     assert stat_or(grower, "age", 0) == 5 + ctx.rules.time.years_per_epoch
     assert profile.life_stage is not LifeStage.CHILD
+
+
+async def test_one_who_grieved_a_death_of_the_age_dies_no_earlier_than_it(ctx: TickContext, world: CoreWorld) -> None:
+    end = epoch_end_year(ctx.epoch, ctx.rules.time.years_per_epoch)
+    mourner = await mortal(ctx.session, "Grieving Kin", world, world.regions[0].id, age=60)
+    lost = await mortal(ctx.session, "Lost Kin", world, world.regions[0].id, age=60)
+    lost.status, lost.end_epoch = EntityStatus.DEAD, ctx.epoch
+    set_stats(lost, death_year=end - 10)
+    ctx.session.add(
+        GriefRow(
+            mourner_node_id=mourner.id,
+            deceased_node_id=lost.id,
+            stage=GriefStage.SHOCK,
+            strength=50,
+            started_epoch=ctx.epoch,
+            stage_epoch=ctx.epoch,
+            length_epochs=1,
+        )
+    )
+    await ctx.session.flush()
+    moment = await death_moment(ctx, mourner, None, None, end - 30)
+    assert moment.year == end - 10

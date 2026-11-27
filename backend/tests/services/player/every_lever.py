@@ -160,6 +160,7 @@ from aerona.engine.cosmos.rifts import open_rift
 from aerona.engine.economy.route_control import route_of
 from aerona.engine.economy.routes import load_routes
 from aerona.engine.economy.stocks import GoodsLedger
+from aerona.engine.mortal.kinship import marriage_between
 from aerona.engine.phases.heroes import load_hero_world
 from aerona.engine.phases.society_support.quests import quest_options
 from aerona.engine.primitives.manual import manual_context
@@ -852,15 +853,53 @@ async def soul_eating(session: AsyncSession) -> None:
     await EntityRepository(session).add_trait(kind, CreatureTrait.SOUL_EATER)
 
 
+async def world_of_first_dead(session: AsyncSession) -> int | None:
+    dead = await session.scalar(
+        select(EntityRow.world_id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.DEAD).order_by(EntityRow.id).limit(1)
+    )
+    assert dead is not None
+    return dead
+
+
 async def underworld(session: AsyncSession) -> None:
-    region = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.REGION).order_by(EntityRow.id).limit(1))
+    home = await world_of_first_dead(session)
+    region = await session.scalar(
+        select(EntityRow).where(EntityRow.entity_type == EntityType.REGION, EntityRow.world_id == home).order_by(EntityRow.id).limit(1)
+    )
     assert region is not None
     region.is_underworld = True
 
 
 async def mirrored(session: AsyncSession) -> None:
-    worlds = list(await session.scalars(select(WorldRow).order_by(WorldRow.id).limit(2)))
-    worlds[1].mirror_twin_id = worlds[0].id
+    home = await world_of_first_dead(session)
+    lands = select(EntityRow.world_id).where(EntityRow.entity_type == EntityType.REGION, EntityRow.status == EntityStatus.CANON)
+    other = await session.scalar(select(WorldRow).where(WorldRow.id != home, WorldRow.id.in_(lands)).order_by(WorldRow.id).limit(1))
+    assert other is not None
+    other.mirror_twin_id = home
+
+
+async def unwed_pair(session: AsyncSession) -> tuple[int, int]:
+    living = list(
+        await session.scalars(
+            select(EntityRow.id).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+        )
+    )
+    for index, first in enumerate(living):
+        for second in living[index + 1 :]:
+            if await marriage_between(session, first, second) is None:
+                return first, second
+    raise AssertionError("no two living mortals are free to wed")
+
+
+async def first_unwed(session: AsyncSession) -> int:
+    return (await unwed_pair(session))[0]
+
+
+async def second_unwed(session: AsyncSession) -> int:
+    return (await unwed_pair(session))[1]
+
+
+UNWED = {"first_id": Computed(first_unwed), "second_id": Computed(second_unwed)}
 
 
 async def far_town(session: AsyncSession) -> int | None:
@@ -1467,7 +1506,7 @@ LEVERS: dict[str, Lever] = {
     "industry:set": given(community_id=Pick(TOWN), muscle=40),
     "intervene": given(miracle="healing"),
     "kin:betroth": given(first_id=Pick(MORTAL), second_id=Pick(MORTAL, 1)),
-    "kin:marry": given(first_id=Pick(MORTAL), second_id=Pick(MORTAL, 1)),
+    "kin:marry": given(**UNWED),
     "kind:create": given(catalog="technique", base="phalanx_drill"),
     **{name: after(CUSTOM_KIND, kind_id=Newest("custom_kind")) for name in ("kind:delete", "kind:edit")},
     "knowledge:set": given(entity_id=Computed(knower), knowledge_id=Computed(known_lore), known=False),
@@ -1959,7 +1998,7 @@ LEVERS: dict[str, Lever] = {
     "incident_name:set": after(WRITTEN, incident_id=Newest("incident"), name="Kerovan", hold=True),
     "incident_name:delete": after(WRITTEN, ("incident_name:set", {"incident_id": Newest("incident"), "name": "Kerovan"}), incident_id=Newest("incident")),
     "item:transfer": given(receiver_id=Pick(MORTAL, 1)),
-    "kin:end_marriage": after(("kin:marry", {"first_id": Pick(MORTAL), "second_id": Pick(MORTAL, 1)}), marriage_id=Newest("marriage")),
+    "kin:end_marriage": after(("kin:marry", UNWED), marriage_id=Newest("marriage")),
     "kin:unbond": after(("kin:bond", {"source_id": Pick(MORTAL), "target_id": Pick(MORTAL, 1), "kind": "parent_of"}), bond_id=Newest("bond")),
     "market:write_off": after(LOANED, bond_id=Computed(town_debt)),
     **{

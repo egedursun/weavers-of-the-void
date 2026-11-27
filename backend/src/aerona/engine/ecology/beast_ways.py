@@ -4,6 +4,7 @@ from sqlalchemy.orm import aliased
 from aerona.catalog.beast_tempers import GATHERING, GUARDING, REMEMBERING
 from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.anatomy import CreatureAnatomyRow
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -180,7 +181,7 @@ async def wrongs_against(ctx: TickContext, beast_id: int) -> list[tuple[int, int
 
 
 async def backfill_grudges(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, GRUDGES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, GRUDGES_FIXUP):
         return 0
     sworn = 0
     for anatomy in list(

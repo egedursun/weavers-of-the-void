@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.place_terrain import height_of, kind_spec
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.environment import PlaceEnvironmentRow
 from aerona.db.tables.place import PlaceProfileRow
@@ -156,7 +157,7 @@ def new_profile(ctx: TickContext, place_id: int, kind: PlaceKind) -> PlaceProfil
 
 
 async def ensure_profiles(ctx: TickContext, book: EnvironmentBook) -> dict[int, PlaceKind]:
-    recording = await ctx.session.get(AppliedFixupRow, KIND_FIXUP) is None
+    recording = await fixup_due(ctx.session, KIND_FIXUP)
     clues = await KindClues.load(ctx.session)
     known = {row.entity_id: row.kind for row in await ctx.session.scalars(select(PlaceProfileRow))}
     made: dict[int, PlaceKind] = {}

@@ -48,6 +48,7 @@ BEAUTY = "beauty"
 RECOGNISABILITY = "recognisability"
 GENES = "genes"
 MARKS = "marks"
+LIKENESS = "likeness"
 TRAIT_ALLELES = HOUSE_TRAIT_ALLELES
 COLD_BANDS = frozenset({TemperatureBand.FROZEN, TemperatureBand.COLD})
 HOT_BANDS = frozenset({TemperatureBand.HOT, TemperatureBand.SEARING})
@@ -237,10 +238,11 @@ async def refresh_genome(ctx: TickContext, mortal: EntityRow, genome: GenomeRow,
     if RECOGNISABILITY not in locked:
         rare = rare_visible(ctx.rules, genome.genes, pool.frequencies if pool is not None else None)
         genome.recognisability = clamp_int(table.recognisable_base + rare * table.recognisable_rare + (scars + missing) * table.recognisable_scar, 0, PERCENT)
-    resemblance: dict[str, int] = {}
-    for parent_id in await parents_of(ctx.session, mortal.id):
-        other = await genome_of(ctx.session, parent_id)
-        if other is not None:
-            resemblance[str(parent_id)] = likeness(genome.genes, other.genes)
-    genome.likeness = resemblance
+    if LIKENESS not in locked:
+        resemblance: dict[str, int] = {}
+        for parent_id in await parents_of(ctx.session, mortal.id):
+            other = await genome_of(ctx.session, parent_id)
+            if other is not None:
+                resemblance[str(parent_id)] = likeness(genome.genes, other.genes)
+        genome.likeness = resemblance
     genome.epoch = ctx.epoch

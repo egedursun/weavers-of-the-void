@@ -3,8 +3,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ConflictError
 from aerona.db.repositories.chronicle import ChronicleDraft, ChronicleRepository
+from aerona.db.tables.polity import TreatyPartyRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.polity import PartyRole
+from aerona.domain.models.entity_stats import TreatyStats
 from aerona.engine.primitives.renames import name_in_text, rename_everywhere
 from aerona.rules.registry import Rules
 from aerona.services import names
@@ -60,3 +63,23 @@ async def test_epithet_split_and_named_records(session: AsyncSession, rules: Rul
     assert [row.name for row in found] == ["Velari Folk", "Amberreach"]
     none = await names.find_named_records(session, rules, "Amberreachian roads.")
     assert none == []
+
+
+async def test_a_treaty_named_after_a_party_follows_the_partys_new_name(session: AsyncSession, world: Cosmos) -> None:
+    tribute = await make_entity(session, "the Tribute of Amberreach", EntityType.TREATY, world_id=world.world.id, stats=TreatyStats())
+    session.add(TreatyPartyRow(treaty_entity_id=tribute.id, party_node_id=world.region.id, role=PartyRole.SIGNATORY))
+    await ChronicleRepository(session).append(ChronicleDraft(epoch=1, kind=ChronicleKind.WORLD, text="Ash broke the Tribute of Amberreach."))
+    await session.flush()
+    await rename_everywhere(session, world.region.id, "Goldreach")
+    assert tribute.name == "the Tribute of Goldreach"
+    rows = await ChronicleRepository(session).recent(10)
+    assert rows[0].text == "Ash broke the Tribute of Goldreach."
+
+
+async def test_an_engine_rename_to_a_name_already_held_takes_the_next_free_one(session: AsyncSession, world: Cosmos) -> None:
+    first = await make_entity(session, "Weavers Hall", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    second = await make_entity(session, "Second Hall", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    with pytest.raises(ConflictError):
+        await rename_everywhere(session, second.id, first.name)
+    result = await rename_everywhere(session, second.id, first.name, free=True)
+    assert result.new == f"{first.name} II" and second.name == result.new

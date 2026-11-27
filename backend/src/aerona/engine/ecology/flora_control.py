@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.catalog.life.domain import GROWN
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.fixups import marker
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.flora import CropPestRow, PlantProfileRow, RegionCropRow, WorldBiochemistryRow
@@ -86,7 +87,7 @@ async def set_world_life(ctx: TickContext, world_id: int, biochemistry: Biochemi
     if world is None:
         raise NotFoundError("No such world.")
     key = f"{LIFE_FIXUP}.{world_id}"
-    if await ctx.session.get(AppliedFixupRow, key) is None:
+    if await marker(ctx.session, key) is None:
         for kind in await tolerated(ctx.session, world_id):
             ctx.session.add(WorldBiochemistryRow(world_id=world_id, biochemistry=kind))
         ctx.session.add(AppliedFixupRow(key=key, result={"by_hand": True}))

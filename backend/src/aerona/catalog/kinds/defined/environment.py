@@ -64,10 +64,10 @@ PLACE_COVER = total(
 SEASON_DATING = total(
     SeasonDating,
     {
-        SeasonDating.POSITION: Defined("Position", checked_by=("services.books.typed.SEASON_COLUMNS",), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
+        SeasonDating.POSITION: Defined("Position", checked_by=(), used_by=("catalog.season_positions.SEASON_POSITIONS",)),
         SeasonDating.DAY: Defined(
             "Day",
-            checked_by=("engine.environment.season_remap.Move.of", "engine.environment.season_remap.remap_positions"),
+            checked_by=("engine.environment.season_remap.Move.of", "engine.environment.season_remap.remap_positions", "services.books.typed.MOMENT_DAYS"),
             used_by=("catalog.season_positions.SEASON_POSITIONS",),
         ),
     },
@@ -213,17 +213,25 @@ TERRAIN_TRAIT = total(
         ),
         TerrainTrait.WATERY: Defined(
             "Watery",
-            checked_by=("engine.couplings.carrion.taken_rest", "engine.ecology.beast_ways.habitat_ways", "engine.nature.senses.in_water"),
+            checked_by=(
+                "engine.couplings.carrion.taken_rest",
+                "engine.ecology.beast_ways.habitat_ways",
+                "engine.nature.senses.in_water",
+                "engine.settlement.modes.fits",
+            ),
             used_by=(
                 "catalog.settle_modes.SETTLE_MODES",
                 "catalog.terrain.TERRAIN",
                 "engine.demography.biology.WATERS",
+                "engine.economy.routes.over_water",
+                "engine.environment.battleground.war_ground",
                 "engine.environment.glaze.SURGED",
                 "engine.environment.profile.afloat",
                 "engine.environment.weather.warm_sea_draw",
                 "engine.operations.expeditions.ground_of",
                 "engine.operations.expeditions.wreck_ground",
                 "engine.water.ice.WET_LANDS",
+                "services.integrity.route_waters.over_water",
                 "services.integrity.w52_agent_h.ground_fits",
             ),
         ),

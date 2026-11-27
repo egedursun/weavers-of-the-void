@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -19,7 +20,7 @@ PLAN_LOCK = "plan"
 
 
 async def backfill_plans(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, PLANS_FIXUP) is not None:
+    if not await fixup_due(session, PLANS_FIXUP):
         return 0
     moved = 0
     found = await session.execute(
@@ -41,7 +42,7 @@ DROWNED_FIXUP = "damage.w52"
 
 
 async def backfill_drowned(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, DROWNED_FIXUP) is not None:
+    if not await fixup_due(session, DROWNED_FIXUP):
         return 0
     drowned = select(IncidentFactRow.incident_id).where(IncidentFactRow.name.ilike("%drown%"))
     rows = await session.scalars(select(InjuryRow).where(InjuryRow.state == InjuryState.LETHAL, InjuryRow.incident_id.in_(drowned)).order_by(InjuryRow.id))
@@ -60,7 +61,7 @@ BIRTH_FIXUP = "harm.w52"
 
 
 async def backfill_birth_harm(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, BIRTH_FIXUP) is not None:
+    if not await fixup_due(session, BIRTH_FIXUP):
         return 0
     births = select(IncidentFactRow.incident_id).where(IncidentFactRow.name.ilike("%childbirth%"))
     rows = await session.scalars(select(InjuryRow).where(InjuryRow.incident_id.in_(births)).order_by(InjuryRow.id))
@@ -79,7 +80,7 @@ CAPACITIES_FIXUP = "capacities.w52"
 
 
 async def backfill_capacities(session: AsyncSession, rules: Rules) -> int:
-    if await session.get(AppliedFixupRow, CAPACITIES_FIXUP) is not None:
+    if not await fixup_due(session, CAPACITIES_FIXUP):
         return 0
     filled = 0
     for body in await session.scalars(select(BodyRow).order_by(BodyRow.node_id)):

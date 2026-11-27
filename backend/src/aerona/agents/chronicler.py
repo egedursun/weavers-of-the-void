@@ -18,12 +18,15 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.domain.models.calendar import epoch_end_year, epoch_start_year
 from aerona.domain.models.records import ChronicleAuditReport, ChronicleCoverage
 from aerona.engine.record_keepers.keepers import chronicler_now, identity_of
+from aerona.engine.recording.hand_edits import epochs_written_by_hand
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.chronicler import ChroniclerSystemContext, ChroniclerUserContext
 from aerona.prompts.contexts.common import WorldItem
 from aerona.prompts.schemas.constraints import ArrayBounds, Constraint, EnumValues, OmitField, RequireField
 from aerona.prompts.schemas.fate import ChronicleOutput, WorldSectionOutput, WorldSectionsOutput
 from aerona.rules.registry import Rules
+
+NARRATIVE_FIELD = "narrative"
 
 ITEMS = "[]"
 
@@ -171,7 +174,10 @@ async def record_age(scope: Scope, chronicle: Chronicle, epoch: int) -> EpochRow
     if row is None:
         row = EpochRow(epoch=epoch)
         scope.session.add(row)
-    row.name = await unique_age_name(scope, chronicle.age_name, epoch) if chronicle.age_name else row.name
+    if row.name and chronicle.age_name:
+        apply_renames(chronicle, [(chronicle.age_name, row.name)])
+    elif chronicle.age_name:
+        row.name = await unique_age_name(scope, chronicle.age_name, epoch)
     row.narrative = chronicle.narrative or row.narrative
     row.summary = chronicle.summary or row.summary
     row.year_start = epoch_start_year(epoch, years)
@@ -194,11 +200,16 @@ async def record_age(scope: Scope, chronicle: Chronicle, epoch: int) -> EpochRow
     return row
 
 
+async def cleared_by_the_god(scope: Scope) -> set[int]:
+    return {epoch for epoch, fields in (await epochs_written_by_hand(scope.session)).items() if NARRATIVE_FIELD in fields}
+
+
 async def lost_chronicle_epochs(scope: Scope, limit: int) -> list[int]:
     written = select(EpochRow.epoch).where(EpochRow.narrative.is_not(None))
+    cleared = await cleared_by_the_god(scope)
     rows = await scope.session.scalars(
         select(ChronicleRow.epoch)
-        .where(ChronicleRow.epoch < scope.epoch, ChronicleRow.epoch.not_in(written))
+        .where(ChronicleRow.epoch < scope.epoch, ChronicleRow.epoch.not_in(written), ChronicleRow.epoch.not_in(cleared))
         .distinct()
         .order_by(ChronicleRow.epoch)
         .limit(limit)

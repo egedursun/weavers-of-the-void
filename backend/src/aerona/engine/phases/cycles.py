@@ -223,7 +223,7 @@ async def challenge_response(ctx: TickContext) -> None:
     count(ctx, "challenge", tally)
 
 
-@reads("table.house_profiles", "table.long_plans", "table.offices", "table.polity_profiles")
+@reads("table.house_profiles", "table.long_plans", "table.node_births", "table.offices", "table.polity_profiles")
 @writes(
     "table.bonds",
     "table.chronicle",

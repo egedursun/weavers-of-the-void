@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -21,7 +22,7 @@ from aerona.engine.mind.ethics import conscience
 from aerona.engine.mind.memories import remember
 from aerona.engine.mortal.kin import fosterers_of
 from aerona.engine.mortal.kinship import close_between, foster
-from aerona.engine.mortal.life import adult
+from aerona.engine.mortal.life import young
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.recording.record import record
 from aerona.engine.relations.book import ensure_relation, relation, shift
@@ -128,7 +129,7 @@ async def keep_ties(ctx: TickContext) -> TieTally:
 
 async def foster_hostage(session: AsyncSession, hostage: EntityRow, house_id: int, epoch: int) -> bool:
     profile = await session.get(MortalProfileRow, hostage.id)
-    if profile is None or adult(profile.life_stage) or held(hostage.id):
+    if profile is None or not young(profile.life_stage) or held(hostage.id):
         return False
     rulers = await active_bonds(session, [BondKind.RULES], targets=[house_id])
     fosterer = rulers[0].source_node_id if rulers else None
@@ -142,7 +143,7 @@ FOSTER_FIXUP = "relations.w52"
 
 
 async def backfill_fosterage(session: AsyncSession, epoch: int) -> int:
-    if await session.get(AppliedFixupRow, FOSTER_FIXUP) is not None:
+    if not await fixup_due(session, FOSTER_FIXUP):
         return 0
     fostered = 0
     clauses = await session.scalars(select(TreatyClauseRow).where(TreatyClauseRow.kind == ClauseKind.HOSTAGE).order_by(TreatyClauseRow.id))

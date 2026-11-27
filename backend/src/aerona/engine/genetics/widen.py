@@ -3,6 +3,7 @@ from collections.abc import Mapping
 from sqlalchemy import select
 
 from aerona.catalog.genetics import LOCI
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
@@ -60,7 +61,7 @@ async def widen_genome(ctx: TickContext, mortal: EntityRow, genome: GenomeRow) -
 
 
 async def widen_loci(ctx: TickContext, key: str = WIDEN_FIXUP) -> tuple[int, int]:
-    if await ctx.session.get(AppliedFixupRow, key) is not None:
+    if not await fixup_due(ctx.session, key):
         return 0, 0
     pools = 0
     for pool in list(await ctx.session.scalars(select(AllelePoolRow).order_by(AllelePoolRow.people_node_id))):

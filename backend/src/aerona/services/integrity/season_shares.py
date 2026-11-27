@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.calendar_slots import SLOTS
 from aerona.catalog.long_seasons import CAUSES
 from aerona.constants.calendar import SHARE_TOTAL
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.ages import IrregularSeasonRow, WinterForecastRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -51,7 +52,7 @@ def even_shares(seasons: list[WorldSeasonRow]) -> dict[int, int]:
 
 
 async def share_the_year(session: AsyncSession, rules: Rules) -> int:
-    if await session.get(AppliedFixupRow, SHARES_FIXUP) is not None:
+    if not await fixup_due(session, SHARES_FIXUP):
         return 0
     rows = list(await session.scalars(select(WorldSeasonRow).order_by(WorldSeasonRow.world_id, WorldSeasonRow.position)))
     shared = renamed = 0
@@ -65,7 +66,7 @@ async def share_the_year(session: AsyncSession, rules: Rules) -> int:
             shared += 1
         for season in seasons:
             if world is not None and not season.edited and season.name in FIXED_NAMES:
-                season.name = await name_for_season(session, rules, world, season.position)
+                season.name = await name_for_season(session, rules, world, season.position, {other.name for other in seasons if other is not season})
                 renamed += 1
     session.add(AppliedFixupRow(key=SHARES_FIXUP, result={"worlds": shared, "renamed": renamed}))
     await session.flush()
@@ -126,7 +127,7 @@ async def follow_forecast(session: AsyncSession, key: int) -> None:
 
 
 async def impact_winters(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, SOURCES_FIXUP) is not None:
+    if not await fixup_due(session, SOURCES_FIXUP):
         return 0
     known = set(await session.scalars(select(IrregularSeasonRow.source_impact_id).where(IrregularSeasonRow.source_impact_id.is_not(None))))
     made = 0
@@ -156,7 +157,7 @@ async def impact_winters(session: AsyncSession) -> int:
 
 
 async def remembrance_slots(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, REMEMBRANCE_FIXUP) is not None:
+    if not await fixup_due(session, REMEMBRANCE_FIXUP):
         return 0
     rows = await session.scalars(
         select(TraditionProfileRow).where(TraditionProfileRow.notable_year_id.is_not(None)).order_by(TraditionProfileRow.tradition_entity_id)

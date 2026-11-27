@@ -52,11 +52,14 @@ from aerona.engine.polity.accords import parties_of
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.standing import still_standing
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.renown.currencies import bump, purse_of, ruler_of_realm
 from aerona.engine.structures.readers import working
 from aerona.rules.registry import Rules
+
+INSTITUTION_HOLDERS = COMMUNITY_TYPES - {EntityType.FACTION}
 
 TRADE_KINDS = (BondKind.TRADES_WITH, BondKind.ALLY)
 FIELD_SKILL_FLOOR = 0
@@ -149,6 +152,8 @@ async def capabilities_of(session: AsyncSession, holder_id: int) -> list[Capabil
 
 
 async def add_progress(ctx: TickContext, holder_id: int, technique: Technique, amount: int) -> int:
+    if not await still_standing(ctx.session, holder_id):
+        return 0
     row = await ctx.session.get(ResearchProgressRow, (holder_id, technique))
     if row is None:
         row = ResearchProgressRow(holder_entity_id=holder_id, technique=technique, progress=0, updated_epoch=ctx.epoch)
@@ -315,7 +320,7 @@ async def scholars_choose(ctx: TickContext, holder_id: int, options: list[Techni
 async def set_focus(ctx: TickContext, tally: DepthTally) -> None:
     levels = await holder_levels(ctx.session)
     for holder_id in sorted(levels):
-        if held(holder_id):
+        if held(holder_id) or not await still_standing(ctx.session, holder_id):
             continue
         row = await ctx.session.get(ResearchFocusRow, holder_id)
         known = await techniques_of(ctx.session, holder_id)
@@ -404,7 +409,7 @@ async def kin(session: AsyncSession, first: EntityRow, second: EntityRow) -> boo
 async def institutions_round(ctx: TickContext, tally: DepthTally) -> None:
     table = ctx.rules.research_depth
     atlas = await RegionAtlas.load(ctx.session)
-    communities = [item for item in await living_researchers(ctx.session) if item.entity_type in COMMUNITY_TYPES]
+    communities = [item for item in await living_researchers(ctx.session) if item.entity_type in INSTITUTION_HOLDERS]
     present = {(row.technique, row.community_entity_id): row for row in await ctx.session.scalars(select(InstitutionRow))}
     for technique in sorted(INSTITUTIONS):
         if any(key[0] is technique for key in present):
@@ -421,11 +426,11 @@ async def institutions_round(ctx: TickContext, tally: DepthTally) -> None:
                 break
     for (technique, holder_id), row in sorted(present.items(), key=lambda item: (item[0][0].value, item[0][1])):
         source = await ctx.session.get(EntityRow, holder_id)
-        if source is None or source.status is not EntityStatus.CANON:
+        if source is None or source.status is not EntityStatus.CANON or source.entity_type not in INSTITUTION_HOLDERS:
             continue
         for other in sorted(await neighbours(ctx.session, atlas, holder_id)):
             target = await ctx.session.get(EntityRow, other)
-            if target is None or target.entity_type not in COMMUNITY_TYPES or (technique, other) in present or held(other):
+            if target is None or target.entity_type not in INSTITUTION_HOLDERS or (technique, other) in present or held(other):
                 continue
             chance = table.spread_pct * (1 + (table.kin_spread_pct / PERCENT if await kin(ctx.session, source, target) else 0))
             if ctx.rng(f"institution.{technique.value}.{holder_id}.{other}.{ctx.epoch}").chance(round_half_up(chance)):

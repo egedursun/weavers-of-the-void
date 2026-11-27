@@ -301,7 +301,7 @@ class VendettaRules(Spanned):
     grievance: int = rule(35, 0, 100, W, "Grief for slain kin at which a house or people acts on a feud")
     raid_chance: int = rule(30, 0, 100, W, "An aggrieved side raids in an epoch (%)")
     assassinate_chance: int = rule(10, 0, 100, W, "An aggrieved side sends an assassin (%)")
-    wergild_chance: int = rule(25, 0, 100, W, "An aggrieved side demands wergild where custom allows (%)")
+    wergild_chance: int = rule(25, 0, 100, W, "An aggrieved side demands a payment for its dead where custom allows (%)")
     escalate_chance: int = rule(8, 0, 100, W, "A feud escalates to war (%)")
     mediation_chance: int = rule(20, 0, 100, W, "A peace-minded priest mediates a feud (%)")
     raid_hp: int = rule(25, 0, 1000, W, "Harm a feud raid deals")

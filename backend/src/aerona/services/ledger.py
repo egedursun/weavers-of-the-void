@@ -7,7 +7,6 @@ from typing import Any
 from sqlalchemy import Select, case, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
 from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
 from aerona.core.account_scope import current_account
 from aerona.core.act_note import current_note
@@ -36,7 +35,7 @@ SUMMARY_FIELDS = ("name", "type", "target_name", "text", "description", "reason"
 SUMMARY_FIELD_LIMIT = 80
 SUMMARY_SEPARATOR = " · "
 NARRATED_ROWS = 30
-EPOCH_RUNNING_MESSAGE = "A page cannot be torn from the ledger while an epoch is running."
+EPOCH_RUNNING_MESSAGE = "A ledger page cannot be undone while an epoch is running."
 
 
 @dataclass
@@ -92,16 +91,22 @@ class UndoResult:
     conflicts: list[str] = field(default_factory=list)
 
 
+UPKEEP_FAMILY = "maintenance"
+
+
 def summarize_inputs(inputs: Mapping[str, Any] | None) -> str | None:
     if not inputs:
         return None
     parts = [str(inputs[key])[:SUMMARY_FIELD_LIMIT] for key in SUMMARY_FIELDS if inputs.get(key) not in (None, "")]
     joined = SUMMARY_SEPARATOR.join(parts)
-    return joined[:LEDGER_SUMMARY_MAX_LENGTH] or None
+    return joined or None
 
 
 def action_label(tool: str, kind: ActionKind | None = None) -> str:
     raw = tool or (kind.value if kind is not None else "")
+    family, _, task = raw.partition(":")
+    if family == UPKEEP_FAMILY and task:
+        return f"ran the upkeep of {' '.join(task.replace('_', ' ').split())}"
     return " ".join(raw.replace(":", " ").replace("_", " ").split())
 
 
@@ -253,7 +258,7 @@ class Ledger:
                     actor_kind=ActorKind.CREATOR,
                     actor_node_id=creator.id,
                     kind=ActionKind.LEDGER_UNDO,
-                    summary=written.text[:LEDGER_SUMMARY_MAX_LENGTH],
+                    summary=written.text,
                     reason=current_note().reason,
                     author_account_id=undoer.id if undoer is not None else None,
                     author_name=undoer.name[:AUTHOR_NAME_MAX_LENGTH] if undoer is not None else None,

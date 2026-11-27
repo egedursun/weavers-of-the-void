@@ -11,6 +11,7 @@ from aerona.catalog.mythic import GEAS_ACTS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an, several, spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.arcana import RiteGrammarRow
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.bonds import BondRow
@@ -1527,7 +1528,7 @@ async def school_of(ctx: TickContext, rite: EntityRow) -> MagicSchool:
 
 
 async def backfill(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, ROW_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ROW_FIXUP):
         return 0
     made = 0
     profiled = select(RiteProfileRow.rite_entity_id)

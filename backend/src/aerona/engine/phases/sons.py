@@ -7,9 +7,11 @@ from aerona.constants.schema import SINGLETON_ID
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.sons import SonRepository
+from aerona.db.tables.body import BodyRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
@@ -78,6 +80,9 @@ def star_bonus(rules: Rules, star: EntityRow) -> int:
 async def wake_or_heal(ctx: TickContext, son: SonRow) -> None:
     transition = ctx.rules.world_epoch_transition
     ceiling = max_hp(ctx.rules, son.endurance)
+    body = await ctx.session.get(BodyRow, son.id)
+    if body is not None and "hp_max" not in (body.locked or []):
+        body.hp_max = ceiling
     if son.status is SonStatus.ASLEEP:
         son.sleep_epochs_left = max(0, son.sleep_epochs_left - 1)
         if son.sleep_epochs_left == 0:
@@ -86,6 +91,16 @@ async def wake_or_heal(ctx: TickContext, son: SonRow) -> None:
             await record_incident(ctx, "sons.woke", roles={IncidentRole.ACTOR: son.id}, kind=ChronicleKind.SYSTEM, son_id=son.id)
         return
     son.hp = min(ceiling, son.hp + transition.heal_base + round_half_up(son.endurance / transition.heal_endurance_divisor))
+
+
+async def keep_divine_mind(ctx: TickContext, son: SonRow) -> None:
+    mind = await ctx.session.get(MindProfileRow, son.id)
+    if mind is None:
+        return
+    if "stability" not in (mind.locked or []):
+        mind.stability = clamp_int(son.sanity or 0, 0, PERCENT)
+    mind.run_epochs += 1
+    mind.updated_epoch = ctx.epoch
 
 
 async def renew_existence(ctx: TickContext, son: SonRow, faith: int) -> ExistenceBand:
@@ -97,11 +112,12 @@ async def renew_existence(ctx: TickContext, son: SonRow, faith: int) -> Existenc
     target = clamp_int(target - neglect * rules.divine_standing.neglect_existence_pct / PERCENT, 0, PERCENT)
     ruled = len((await DominionBook.load(ctx.session)).ruled_regions(rules, son.id))
     target = clamp_int(target + min(rules.dominion.existence_cap, ruled * rules.dominion.existence_per_region), 0, PERCENT)
-    before = existence_band(rules, son.existence)
+    previous = son.existence
+    before = existence_band(rules, previous)
     son.existence = step_toward(son.existence, target, rules.world_epoch_transition.existence_step)
     after = existence_band(rules, son.existence)
     if after is not before:
-        tail = " Because their anchor perished, they began to fade." if not anchor_alive else ""
+        tail = " Because their anchor perished, they began to fade." if not anchor_alive and son.existence < previous else ""
         await record_incident(
             ctx,
             "sons.existence",
@@ -141,6 +157,7 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "people.population",
     "settlement.piety",
     "settlement.population",
+    "table.bodies",
     "table.bonds",
     "table.cosmos",
     "table.council_rulings",
@@ -166,7 +183,7 @@ async def regenerate_essence(ctx: TickContext, son: SonRow, faith: int, band: Ex
     "table.stars",
     "table.worlds",
 )
-@writes("table.chronicle", "table.incident_facts", "table.incident_participants", "table.incidents", "table.sons")
+@writes("table.bodies", "table.chronicle", "table.incident_facts", "table.incident_participants", "table.incidents", "table.mind_profiles", "table.sons")
 async def sons_renewal(ctx: TickContext) -> None:
     total = 0
     for son in await living_sons(ctx.session):
@@ -175,6 +192,7 @@ async def sons_renewal(ctx: TickContext) -> None:
             continue
         son.chained = await council_chained(ctx, son.id)
         await wake_or_heal(ctx, son)
+        await keep_divine_mind(ctx, son)
         faith = await son_faith(ctx.session, ctx.rules, son)
         son.faith = faith
         total += faith

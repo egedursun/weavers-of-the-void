@@ -3,6 +3,7 @@ from collections import defaultdict
 from sqlalchemy import func, select
 
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import TradeFlowRow, TradeRouteTollRow
 from aerona.db.tables.military import WarAimRow
@@ -63,7 +64,7 @@ async def aim_route_wars(ctx: TickContext) -> int:
 
 
 async def route_backfill(ctx: TickContext, realms: Realms) -> dict[str, int]:
-    if await ctx.session.get(AppliedFixupRow, ROUTE_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ROUTE_FIXUP):
         return {}
     result = {"polity_tolls": await ledger_past_tolls(ctx, realms), "route_aims": await aim_route_wars(ctx)}
     ctx.session.add(AppliedFixupRow(key=ROUTE_FIXUP, result=result))

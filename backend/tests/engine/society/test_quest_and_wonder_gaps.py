@@ -1,4 +1,5 @@
 from aerona.core.errors import ValidationFailedError
+from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.lore import ThreadLinkRow, ThreadRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import ThreadLinkRole, ThreadStatus
@@ -97,3 +98,15 @@ async def test_envy_without_the_war_chance_only_sours_relations(realm: Realm) ->
     await wonders(context(realm.session, tuned(wonders={"envy_war_chance": 0})))
     assert not await bonded(realm.session, rival, owner, BondKind.ENEMY)
     assert "wonders.envy_war" not in await chronicle_keys(realm.session)
+
+
+async def test_a_treasure_two_heroes_sought_is_found_once_and_the_later_seeker_gives_up(realm: Realm) -> None:
+    first = await mortal(realm, "First Finder", role=MortalRole.HERO)
+    second = await mortal(realm, "Late Finder", role=MortalRole.HERO)
+    relic = await make(realm.session, "Single Crown", EntityType.ITEM, ItemStats(damage=10, might=20), world_id=realm.world.id, location_id=realm.region.id)
+    await send_on_quest(context(realm.session, epoch=3), first.id, aim=QuestAim.FIND)
+    await send_on_quest(context(realm.session, epoch=3), second.id, aim=QuestAim.FIND)
+    assert await resolve_quest(context(realm.session, epoch=4), first.id, succeed=True) is HeroQuestStatus.SUCCEEDED
+    assert await resolve_quest(context(realm.session, epoch=4), second.id, succeed=True) is HeroQuestStatus.ABANDONED
+    owners = await BondRepository(realm.session).incoming(relic.id, BondKind.OWNS)
+    assert [bond.source_node_id for bond in owners] == [first.id]

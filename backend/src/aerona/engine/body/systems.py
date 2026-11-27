@@ -159,7 +159,9 @@ async def eased(ctx: TickContext, people: EntityRow, town: EntityRow, worst: int
     return worst * (PERCENT - ease) // PERCENT
 
 
-async def strain(ctx: TickContext, folk: tuple[EntityRow, list[BodySystemRow]], town: EntityRow, ground: Ground, tally: BodySystemTally) -> None:
+async def strain(
+    ctx: TickContext, folk: tuple[EntityRow, list[BodySystemRow]], town: EntityRow, ground: Ground, tally: BodySystemTally
+) -> dict[int, tuple[int, int]]:
     people, rows = folk
     table = ctx.rules.body_systems
     worst = await eased(ctx, people, town, max((excess(row, ground) for row in rows if BODY_SYSTEMS[row.system].worn), default=0))
@@ -171,27 +173,43 @@ async def strain(ctx: TickContext, folk: tuple[EntityRow, list[BodySystemRow]], 
             with explaining_alone():
                 term("body_systems.strain", -loss, source_node_id=people.id)
                 shift_stat(town, "prosperity", -loss, low=0, high=PERCENT)
+    found: dict[int, tuple[int, int]] = {}
     for row in rows:
         if not BODY_SYSTEMS[row.system].worn or held(people.id):
             continue
-        over = excess(row, ground)
-        roles = {IncidentRole.SUBJECT: people.id, IncidentRole.PLACE: town.id}
+        found[row.id] = (excess(row, ground), town.id)
+        if people.world_id == town.world_id and adapt(ctx.rules, row, ground):
+            tally.adapted += 1
+    return found
+
+
+def harsher(felt: dict[int, tuple[int, int]], found: dict[int, tuple[int, int]]) -> None:
+    for row_id, (over, town_id) in found.items():
+        if row_id not in felt or over > felt[row_id][0]:
+            felt[row_id] = (over, town_id)
+
+
+async def settle_systems(ctx: TickContext, people: EntityRow, rows: list[BodySystemRow], worst: dict[int, tuple[int, int]], tally: BodySystemTally) -> None:
+    table = ctx.rules.body_systems
+    for row in rows:
+        if row.id not in worst:
+            continue
+        over, town_id = worst[row.id]
+        roles = {IncidentRole.SUBJECT: people.id, IncidentRole.PLACE: town_id}
         if over > 0 and not row.strained:
             row.strained = True
             tally.strained += 1
-            await record(ctx, "body.tolerance_exceeded", roles=roles, facts={"system": row.system, "excess": over}, place=town.id)
+            await record(ctx, "body.tolerance_exceeded", roles=roles, facts={"system": row.system, "excess": over}, place=town_id)
         if over >= table.system_loss_capacity_pct and not row.failed:
             row.failed = True
             tally.failed += 1
-            await record(ctx, "body.system_failed", roles=roles, facts={"system": row.system, "excess": over}, place=town.id)
+            await record(ctx, "body.system_failed", roles=roles, facts={"system": row.system, "excess": over}, place=town_id)
         if over == 0 and row.strained:
             row.strained = False
             key = "body.system_recovered" if row.failed else "body.adapted"
             row.failed = False
             tally.recovered += 1
-            await record(ctx, key, roles=roles, facts={"system": row.system, "excess": over}, place=town.id)
-        if people.world_id == town.world_id and adapt(ctx.rules, row, ground):
-            tally.adapted += 1
+            await record(ctx, key, roles=roles, facts={"system": row.system, "excess": over}, place=town_id)
 
 
 async def react(ctx: TickContext, tally: BodySystemTally) -> None:
@@ -233,6 +251,7 @@ async def keep_body_systems(ctx: TickContext, tally: BodySystemTally) -> None:
     towns = await ctx.session.scalars(
         select(EntityRow).where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
     )
+    worst: dict[int, tuple[EntityRow, list[BodySystemRow], dict[int, tuple[int, int]]]] = {}
     for town in list(towns):
         people = await people_of(ctx.session, town)
         rows = holders.get(people.id, []) if people is not None else []
@@ -243,6 +262,10 @@ async def keep_body_systems(ctx: TickContext, tally: BodySystemTally) -> None:
         land = await ctx.session.get(RegionEnvironmentRow, region) if region is not None else None
         field = await ctx.session.get(WorldFieldRow, world.id)
         light = light_pct(ctx.rules, (await view_of(ctx.session, ctx.rules, world.id)).light)
-        await strain(ctx, (people, rows), town, ground_of(world, land, radiation=field.surface_dose if field is not None else 0, light=light), tally)
+        ground = ground_of(world, land, radiation=field.surface_dose if field is not None else 0, light=light)
+        felt = worst.setdefault(people.id, (people, rows, {}))[2]
+        harsher(felt, await strain(ctx, (people, rows), town, ground, tally))
+    for people_row, people_rows, felt_rows in worst.values():
+        await settle_systems(ctx, people_row, people_rows, felt_rows, tally)
     await react(ctx, tally)
     await ctx.session.flush()

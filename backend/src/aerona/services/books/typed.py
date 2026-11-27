@@ -1,6 +1,6 @@
 import json
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -15,13 +15,17 @@ from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
 
 from aerona.cartography.biomes import Biome
 from aerona.catalog.season_positions import SEASON_POSITIONS, SeasonPosition
-from aerona.core.grammar import singular, spoken
+from aerona.constants.control import BOOKKEEPING_TABLES
+from aerona.core.grammar import an, singular, spoken
 from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
+from aerona.db.tables.collective import AccountRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import WorldSeasonRow
+from aerona.db.tables.gatherings import CollectionRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.ledger import LedgerChangeRow
-from aerona.db.tables.lore import MessageRow
+from aerona.db.tables.lore import ChronicleRow, MessageRow
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.climes import DIRECTIONS
 from aerona.domain.enums.environment import SeasonDating, WorldLink
@@ -150,6 +154,9 @@ PAIRED_LISTS = {"martial_record": ("won", "lost")}
 ORDINAL_LISTS = {"depends_on": "step"}
 PERCENT_SIGN = "%"
 NOTHING = "none"
+UNKEPT = "a record no longer kept"
+NODE_VALUE_DICTS = frozenset({"cast", "args"})
+NODE_KEY_SUFFIXES = ("_ids", "_id")
 
 
 def _shares(value: dict[str, Any]) -> str:
@@ -180,7 +187,7 @@ def _identifier(value: str) -> str:
 
 FORMATS: tuple[tuple[type, Callable[[Any], str]], ...] = (
     (bool, lambda value: "yes" if value else "no"),
-    (Enum, lambda value: str(value.value).replace("_", " ")),
+    (Enum, spoken),
     (float, lambda value: f"{value:.2f}".rstrip("0").rstrip(".")),
     (datetime, lambda _value: ""),
     (date, lambda _value: ""),
@@ -250,6 +257,12 @@ def words(key: str) -> str:
     return text[:1].upper() + text[1:]
 
 
+def column_labels(columns: list[KeyedColumnElement[Any]]) -> dict[str, str]:
+    labels = {column.key: words(column.key) for column in columns}
+    shared = Counter(labels.values())
+    return {key: f"{label} kind" if shared[label] > 1 and words(key) == key.replace("_", " ").capitalize() else label for key, label in labels.items()}
+
+
 def attribute_of(row: Any, column: KeyedColumnElement[Any]) -> Any:
     return getattr(row, inspect(row).mapper.get_property_by_column(column).key)
 
@@ -281,7 +294,7 @@ def _order(mapper: Mapper[Any]) -> list[Any]:
 
 
 def _named_label(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str] | None:
-    key = next((column for column in ("name", "title", "label") if column in mapper.columns), None)
+    key = next((column for column in LABEL_COLUMNS if column in mapper.columns), None)
     if key is None:
         return None
 
@@ -289,6 +302,37 @@ def _named_label(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str] | 
         return str(getattr(row, key) or "")
 
     return label
+
+
+def _described_label(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str]:
+    noun = singular(words(table_name(mapper)).lower())
+    kind = next((column for column in KIND_COLUMNS if column in mapper.columns), None)
+    owners = [column.key for column in mapper.local_table.columns if column.key.endswith(NODE_SUFFIXES)]
+    dated = next((column for column in EPOCH_COLUMNS if column in mapper.columns), None)
+
+    def label(row: Any, names: dict[int, str]) -> str:
+        sort = getattr(row, kind, None) if kind is not None else None
+        head = f"the {spoken(sort)} {noun}" if sort is not None and hasattr(sort, "value") else f"the {noun}"
+        whose = next((names[node] for node in (getattr(row, owner) for owner in owners) if isinstance(node, int) and node in names), "")
+        epoch = getattr(row, dated, None) if dated is not None else None
+        return head + (f" of {whose}" if whose else "") + (f" from epoch {epoch}" if isinstance(epoch, int) else "")
+
+    return label
+
+
+def label_of(mapper: Mapper[Any]) -> Callable[[Any, dict[int, str]], str]:
+    return REFERENCE_LABELS.get(table_name(mapper)) or _named_label(mapper) or _described_label(mapper)
+
+
+async def shown_ids(session: AsyncSession, target: str) -> list[int]:
+    found: set[int] = set()
+    for mapper in Base.registry.mappers:
+        if table_name(mapper) in SKIPPED_TABLES:
+            continue
+        for column in mapper.local_table.columns:
+            if any(foreign.column.table.name == target for foreign in column.foreign_keys):
+                found.update(value for value in await session.scalars(select(column).where(column.is_not(None)).distinct()) if isinstance(value, int))
+    return sorted(found)
 
 
 def _incident(row: Any, names: dict[int, str]) -> str:
@@ -324,11 +368,26 @@ REFERENCE_LABELS: dict[str, Callable[[Any, dict[int, str]], str]] = {
     "storylet_runs": lambda row, names: f"the {words(row.storylet.value).lower()} storylet of epoch {row.opened_epoch}",
     "vehicle_groups": lambda row, names: f"the group of {row.count} held by {_named(names, row.holder_node_id) or 'no one'}",
     "army_units": lambda row, names: f"the {words(row.kind.value).lower()} of {_named(names, row.army_entity_id) or 'an army'}",
+    "gatherings": lambda row, names: (
+        f"the {spoken(row.kind)} of {_named(names, row.host_node_id) or 'no one'} in epoch {row.epoch}"
+        + (f" for {_named(names, row.honoured_node_id)}" if _named(names, row.honoured_node_id) else "")
+    ),
+    "battles": lambda row, names: (
+        f"the battle of epoch {row.epoch} at {_named(names, row.place_entity_id) or 'an unknown field'}"
+        + (f" won by {_named(names, row.winner_entity_id)}" if _named(names, row.winner_entity_id) else "")
+    ),
     "gifts": lambda row, names: (
         f"the {words(row.occasion.value).lower()} gift of {_named(names, row.giver_node_id) or 'someone'} to {_named(names, row.receiver_node_id) or 'someone'}"
         f" in epoch {row.epoch}"
     ),
 }
+LABEL_COLUMNS = ("name", "title", "label", "word", "text")
+KIND_COLUMNS = ("kind", "type", "category", "subject_kind", "stage")
+EPOCH_COLUMNS = ("epoch", "since_epoch", "started_epoch", "start_epoch", "opened_epoch", "created_epoch", "founded_epoch", "made_epoch")
+ID_CHUNK = 900
+SOURCE_COLUMN = "source_key"
+SOURCE_KEY = re.compile(r"([a-z_]+)[.:](\d+)")
+SOURCE_NODES = frozenset({"event", "entity", "node"})
 NAMED_TABLES = frozenset({"entities", "nodes", "sons", "worlds", "stars", "foreign_gods", "creator", "galaxies", "galaxy_clusters", "dimensions"})
 
 
@@ -348,9 +407,8 @@ def marked_items(key: str, items: list[Any]) -> str | None:
     return ", ".join(f"{ordinal} {item}" for item in items) if ordinal is not None else None
 
 
-SEASON_COLUMNS: dict[tuple[str, str], SeasonPosition] = {
-    (position.table, position.column): position for position in SEASON_POSITIONS if position.dating is SeasonDating.POSITION
-}
+SEASON_COLUMNS: dict[tuple[str, str], SeasonPosition] = {(position.table, position.column): position for position in SEASON_POSITIONS}
+MOMENT_DAYS = frozenset((position.table, "day") for position in SEASON_POSITIONS if position.dating is SeasonDating.DAY)
 
 
 class TypedIndex:
@@ -376,9 +434,38 @@ class TypedIndex:
             if table not in targets:
                 continue
             label = REFERENCE_LABELS.get(table) or _named_label(mapper)
-            if label is None:
+            if label is not None:
+                self.references[table] = {row.id: label(row, self.names) for row in await session.scalars(select(mapper.class_))}
                 continue
-            self.references[table] = {row.id: label(row, self.names) for row in await session.scalars(select(mapper.class_))}
+            described = _described_label(mapper)
+            wanted = await shown_ids(session, table)
+            self.references[table] = {}
+            for start in range(0, len(wanted), ID_CHUNK):
+                rows = await session.scalars(select(mapper.class_).where(mapper.primary_key[0].in_(wanted[start : start + ID_CHUNK])))
+                self.references[table].update({row.id: described(row, self.names) for row in rows})
+        await self.tell_accounts(session)
+        await self.tell_incidents(session)
+
+    async def tell_incidents(self, session: AsyncSession) -> None:
+        told = self.references.get(IncidentRow.__tablename__)
+        if not told:
+            return
+        lines = await session.execute(
+            select(IncidentRow.id, ChronicleRow.text).join(ChronicleRow, ChronicleRow.id == IncidentRow.chronicle_id).order_by(IncidentRow.id)
+        )
+        for incident_id, text in lines:
+            if text and incident_id in told:
+                told[incident_id] = text.rstrip(".")
+
+    async def tell_accounts(self, session: AsyncSession) -> None:
+        histories = self.references.get(CollectionRow.__tablename__, {})
+        told = self.references.get(AccountRow.__tablename__)
+        if told is None:
+            return
+        for row in await session.scalars(select(AccountRow).order_by(AccountRow.id)):
+            about = _named(self.names, row.subject_node_id) or (histories.get(row.collection_id, "") if row.collection_id is not None else "")
+            if about and row.id in told:
+                told[row.id] = f"{told[row.id]}, telling of {about}"
 
     async def load_seasons(self, session: AsyncSession) -> None:
         for season in await session.scalars(select(WorldSeasonRow).order_by(WorldSeasonRow.world_id, WorldSeasonRow.position)):
@@ -392,11 +479,24 @@ class TypedIndex:
         named = self.seasons.get(world, {}).get(value) if isinstance(world, int) else None
         return named or f"season {value + 1}"
 
+    def source(self, key: str) -> str:
+        found = SOURCE_KEY.fullmatch(key)
+        if found is None:
+            return words(key).lower()
+        family, number = found.group(1), int(found.group(2))
+        if family in SOURCE_NODES:
+            return self.names.get(number, words(family).lower())
+        for table in (f"{family}s", family):
+            label = self.references.get(table, {}).get(number)
+            if label:
+                return label
+        return words(family).lower()
+
     def reference(self, column: KeyedColumnElement[Any], value: int) -> str:
         target = next((foreign.column.table.name for foreign in column.foreign_keys), None)
         if target is None or target in NAMED_TABLES:
             return self.names.get(value, f"#{value}")
-        return self.references.get(target, {}).get(value) or singular(words(target).lower()) + f" {value}"
+        return self.references.get(target, {}).get(value) or f"{an(singular(words(target).lower()))} no longer on record"
 
     @classmethod
     async def load(cls, session: AsyncSession, names: dict[int, str]) -> "TypedIndex":
@@ -472,8 +572,11 @@ class TypedIndex:
         self.add_records(mapper, list(await session.scalars(_rows(mapper, table_name(mapper)))))
 
     def add_records(self, mapper: Mapper[Any], rows: list[Any]) -> None:
+        if table_name(mapper) in BOOKKEEPING_TABLES:
+            return
         columns = [column for column in mapper.local_table.columns if column.key not in SKIPPED_COLUMNS or column.primary_key]
-        table = RecordTable(title_of(table_name(mapper)), [words(column.key) for column in columns])
+        labels = column_labels(columns)
+        table = RecordTable(title_of(table_name(mapper)), [labels[column.key] for column in columns])
         for row in rows:
             table.rows.append([self.value(column, attribute_of(row, column), row) for column in columns])
         filled = [index for index in range(len(columns)) if any(row[index] for row in table.rows)]
@@ -484,23 +587,41 @@ class TypedIndex:
 
     def _section(self, table: str, columns: list[KeyedColumnElement[Any]], rows: list[Any], single: bool) -> TypedSection:
         section = TypedSection(title_of(table))
+        labels = column_labels(columns)
         if single and len(rows) == 1:
-            section.facts = [TypedFact(words(column.key), text) for column in columns if (text := self.value(column, attribute_of(rows[0], column), rows[0]))]
+            section.facts = [TypedFact(labels[column.key], text) for column in columns if (text := self.value(column, attribute_of(rows[0], column), rows[0]))]
             return section
         for row in rows:
-            parts = [f"{words(column.key)}: {text}" for column in columns if (text := self.value(column, attribute_of(row, column), row))]
+            parts = [f"{labels[column.key]}: {text}" for column in columns if (text := self.value(column, attribute_of(row, column), row))]
             if parts:
                 section.rows.append(" · ".join(parts))
         return section
 
+    def calendar_value(self, column: KeyedColumnElement[Any], value: Any, row: Any) -> str | None:
+        if not isinstance(column.table, Table) or not isinstance(value, int) or isinstance(value, bool):
+            return None
+        key = (column.table.name, column.key)
+        season = SEASON_COLUMNS.get(key)
+        if season is not None and row is not None:
+            return self.season_name(season, row, value)
+        return str(value + 1) if key in MOMENT_DAYS else None
+
+    def linked(self, column: KeyedColumnElement[Any], value: Any) -> str | None:
+        if isinstance(value, int) and not isinstance(value, bool) and (column.foreign_keys or column.key.endswith(NODE_SUFFIXES)):
+            return self.reference(column, value)
+        if column.key == SOURCE_COLUMN and isinstance(value, str):
+            return self.source(value)
+        return None
+
     def value(self, column: KeyedColumnElement[Any], value: Any, row: Any = None) -> str:
         if value is None:
             return ""
-        season = SEASON_COLUMNS.get((column.table.name, column.key)) if isinstance(column.table, Table) else None
-        if season is not None and row is not None and isinstance(value, int) and not isinstance(value, bool):
-            return self.season_name(season, row, value)
-        if isinstance(value, int) and not isinstance(value, bool) and (column.foreign_keys or column.key.endswith(NODE_SUFFIXES)):
-            return self.reference(column, value)
+        dated = self.calendar_value(column, value, row)
+        if dated is not None:
+            return dated
+        linked = self.linked(column, value)
+        if linked is not None:
+            return linked
         named = NAMED_NUMBERS.get(column.key)
         if named is not None and isinstance(value, int) and not isinstance(value, bool):
             return named[value % len(named)]
@@ -526,10 +647,21 @@ class TypedIndex:
         if isinstance(value, list | tuple | set | frozenset):
             return self.sequence(column, list(value))
         if isinstance(value, dict):
-            return ", ".join(f"{self.key_text(str(key))} {self.value(column, item) or NOTHING}" for key, item in value.items())
+            return ", ".join(self.entry_text(column, str(key), item) for key, item in value.items())
         if hasattr(value, "model_dump"):
             return self.value(column, value.model_dump(exclude_none=True))
         return None
+
+    def entry_text(self, column: KeyedColumnElement[Any], key: str, item: Any) -> str:
+        nodes = item if isinstance(item, list) else [item]
+        if (
+            (column.key in NODE_VALUE_DICTS or key.endswith(NODE_KEY_SUFFIXES))
+            and nodes
+            and all(isinstance(node, int) and not isinstance(node, bool) for node in nodes)
+        ):
+            label = words(key.removesuffix("_ids").removesuffix("_id"))
+            return f"{label} {', '.join(self.names.get(node, UNKEPT) for node in nodes)}"
+        return f"{self.key_text(key)} {self.value(column, item) or NOTHING}"
 
     def sequence(self, column: KeyedColumnElement[Any], items: list[Any]) -> str:
         labels = INDEXED_LISTS.get(column.key)

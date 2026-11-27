@@ -8,6 +8,7 @@ from aerona.db.tables.culture import HolderTechniqueRow, IdeologyAdherentRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.fortune import FortuneProfileRow
 from aerona.db.tables.law_depth import RegistryRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.db.tables.thin_sections import ConstitutionRow
 from aerona.domain.enums.culture import IdeologyTenet, Technique
@@ -70,6 +71,8 @@ async def test_a_realm_takes_the_creed_its_towns_hold_and_writes_a_constitution(
     assert profile is not None and profile.ideology_entity_id == creed.id
     assert await keep_constitutions(ctx) == 1
     assert await session.get(ConstitutionRow, polity.id) is not None
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "lore.constitution_written"))
+    assert told is not None and polity.name in told and creed.name in told
 
 
 async def test_a_realm_whose_seat_writes_its_law_keeps_a_register_of_births(session: AsyncSession, world: CoreWorld) -> None:

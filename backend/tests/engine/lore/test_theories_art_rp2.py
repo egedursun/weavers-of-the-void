@@ -24,7 +24,7 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.culture import ArtMode, ItemClass
 from aerona.domain.enums.discovery import AnomalyKind, TheoryDomain
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.polity import ClauseKind, PartyRole, TreatyKind
 from aerona.domain.enums.renown import ReputationAxis
@@ -33,6 +33,7 @@ from aerona.domain.models.entity_stats import ArtworkStats, ItemStats, LanguageS
 from aerona.engine.lore import art_forms, names, theories, theory_control
 from aerona.engine.lore.truth import branch_factor, ruling, theory_factor, truth_factor
 from aerona.engine.polity.accords import Clause, sign
+from aerona.engine.primitives.queries import add_flag
 from aerona.rules.registry import Rules
 from tests.engine.society.factories import Realm
 from tests.engine.warfare.factories import bond, make, make_ctx
@@ -201,3 +202,41 @@ async def test_a_theory_passes_with_its_founding_book_and_is_dropped_when_no_one
     held_row.strength = 0
     assert await theories.abandon(ctx) == 1
     assert await session.get(TheoryAdherentRow, (theory.id, reader.id)) is None
+
+
+async def test_a_name_given_outside_the_tongue_coins_no_word_of_it(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    home = await make(session, "Bellwatch", EntityType.SETTLEMENT, realm.world.id, location_id=realm.region.id, population=400)
+    made = await make(session, "Quorvan", EntityType.SETTLEMENT, realm.world.id, location_id=realm.region.id, population=400)
+    language = await tongue(session, realm, "Ul", home, {"zu": "water"})
+    await bond(session, made.id, language.id, BondKind.SPEAKS)
+    await add_flag(session, made.id, EntityFlag.NAME_FROM_LANGUAGE, 1)
+    await names.give_meanings(ctx)
+    words = set(await session.scalars(select(LexemeRow.word).where(LexemeRow.language_entity_id == language.id)))
+    assert not any(word.lower() in "bellwatch" for word in words - {"zu"})
+    assert "".join(sorted(words - {"zu"}, key=lambda word: "quorvan".index(word.lower()))).lower() == "quorvan"
+
+
+async def test_words_once_coined_from_borrowed_names_leave_the_dictionary_and_tongue_names_keep_theirs(session: AsyncSession, realm: Realm) -> None:
+    ctx = make_ctx(session)
+    home = await make(session, "Bellwatch", EntityType.SETTLEMENT, realm.world.id, location_id=realm.region.id, population=400)
+    made = await make(session, "Quorvan", EntityType.SETTLEMENT, realm.world.id, location_id=realm.region.id, population=400)
+    language = await tongue(session, realm, "Ul", home, {"zu": "water"})
+    await add_flag(session, made.id, EntityFlag.NAME_FROM_LANGUAGE, 1)
+    for node, word in ((home.id, "Bellwatch"), (made.id, "Quorvan")):
+        session.add(
+            LexemeRow(
+                language_entity_id=language.id,
+                word=word,
+                meaning="town",
+                part_of_speech=PartOfSpeech.NOUN,
+                added_by_kind=ActorKind.ENGINE,
+                epoch=1,
+            )
+        )
+        session.add(NameMeaningRow(node_id=node, language_entity_id=language.id, name=word, gloss="town", morphemes=[word], epoch=1, locked=[]))
+    await session.flush()
+    assert await names.unwind_borrowed_words(ctx) == 1
+    words = set(await session.scalars(select(LexemeRow.word).where(LexemeRow.language_entity_id == language.id)))
+    assert words == {"zu", "Quorvan"}
+    assert await names.unwind_borrowed_words(ctx) == 0

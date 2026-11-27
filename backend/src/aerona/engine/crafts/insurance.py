@@ -3,18 +3,20 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 
 from aerona.catalog.finance import COVERS, TOWN_COVERS
-from aerona.catalog.life_traits import COOP_PURPOSE_TRAITS, having
+from aerona.catalog.life_traits import COOP_PURPOSE_TRAITS, FACTION_KIND_TRAITS, having
 from aerona.constants.units import PERCENT
+from aerona.db.faction_kinds import kind_of
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.crafts import InsurancePolicyRow, InsurerRow
 from aerona.db.tables.customs import CooperativeRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionMembershipRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.culture import Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.life_traits import CoopPurposeTrait
+from aerona.domain.enums.life_traits import CoopPurposeTrait, FactionKindTrait
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.body.customs import people_of
@@ -37,6 +39,9 @@ class InsuranceTally:
     ruined: int = 0
 
 
+UNDERWRITERS = having(FACTION_KIND_TRAITS, FactionKindTrait.UNDERWRITES)
+
+
 async def knows_insurance(ctx: TickContext, faction: EntityRow) -> bool:
     town = await ctx.session.get(EntityRow, faction.location_id) if faction.location_id is not None else None
     if town is None:
@@ -57,12 +62,12 @@ async def found_insurers(ctx: TickContext, tally: InsuranceTally) -> None:
     for faction in list(factions):
         if faction.id in known or held(faction.id):
             continue
+        if faction.id not in pooling and await kind_of(ctx.session, faction.id) not in UNDERWRITERS:
+            continue
         rolled = ctx.rng(seed_of("insurer", faction.id, ctx.epoch)).chance(table.found_chance)
         if faction.id not in pooling and not (rolled and await knows_insurance(ctx, faction)):
             continue
-        members = await ctx.session.scalar(
-            select(func.count(BondRow.id)).where(BondRow.target_node_id == faction.id, BondRow.kind == BondKind.MEMBER_OF, BondRow.state == BondState.ACTIVE)
-        )
+        members = await ctx.session.scalar(select(func.count()).where(FactionMembershipRow.faction_entity_id == faction.id))
         pool = table.seed_pool + table.seed_pool_per_member * (members or 0)
         ctx.session.add(InsurerRow(insurer_entity_id=faction.id, pool=pool, locked=[]))
         tally.founded += 1

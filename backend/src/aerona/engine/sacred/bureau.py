@@ -33,6 +33,7 @@ from aerona.engine.primitives.maturity import of_age_query
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.society import shift_stock, stock
+from aerona.engine.primitives.standing import still_standing
 from aerona.engine.primitives.stats import set_stats, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.sacred.guards import guarded
@@ -380,6 +381,9 @@ async def read_petitions(ctx: TickContext, tally: BureauTally) -> None:
     )
     for petition in list(rows):
         if held(petition.petitioner_node_id) or "status" in petition.locked:
+            continue
+        if not await still_standing(ctx.session, petition.petitioner_node_id):
+            petition.status = PetitionStatus.DISMISSED
             continue
         await decide(ctx, petition, tally)
 

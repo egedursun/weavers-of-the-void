@@ -113,6 +113,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.armies",
     "table.artwork_profiles",
     "table.bonds",
+    "table.captives",
     "table.coalition_members",
     "table.cosmos",
     "table.creator_taboos",
@@ -123,6 +124,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.estate_privileges",
     "table.estate_profiles",
     "table.favours",
+    "table.fugitives",
     "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
@@ -147,6 +149,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.polity_profiles",
     "table.polity_territories",
     "table.power_bases",
+    "table.prisoners",
     "table.professions_of_value",
     "table.regimes",
     "table.relationships",
@@ -180,6 +183,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.power_bases",
     "table.professions_of_value",
     "table.regimes",
+    "table.secrets",
     "table.venal_offices",
 )
 async def patronage(ctx: TickContext) -> None:

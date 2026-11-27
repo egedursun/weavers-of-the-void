@@ -48,11 +48,6 @@ def seat_name(kind: OfficeKind | None) -> str:
     return spoken(kind) if kind is not None else "head"
 
 
-def lifespan(ctx: TickContext) -> int:
-    table = ctx.rules.peoples
-    return table.maturity_years + table.adult_years + table.elder_years
-
-
 async def open_departures(session: AsyncSession) -> list[DepartureRow]:
     return list(await session.scalars(select(DepartureRow).where(DepartureRow.returned_epoch.is_(None)).order_by(DepartureRow.id)))
 

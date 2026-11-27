@@ -259,7 +259,7 @@ async def keep_constitutions(ctx: TickContext) -> int:
         if row is None or (row.ideology_entity_id != realm.ideology_entity_id and "ideology_entity_id" not in row.locked):
             row = await write_constitution(ctx, realm.polity_entity_id, realm.ideology_entity_id)
             written += 1
-            await record(ctx, "lore.constitution_written", roles={IncidentRole.SUBJECT: realm.polity_entity_id})
+            await record(ctx, "lore.constitution_written", roles={IncidentRole.SUBJECT: realm.polity_entity_id}, facts={"creed": realm.ideology_entity_id})
     for row in list(await ctx.session.scalars(select(ConstitutionRow))):
         regime = await ctx.session.get(RegimeRow, row.polity_entity_id)
         if regime is None or held(row.polity_entity_id):

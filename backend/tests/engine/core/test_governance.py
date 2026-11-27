@@ -169,6 +169,22 @@ async def test_a_strong_clique_splits_away_with_its_members_and_its_share(sessio
     assert parent is not None and offshoot is not None and offshoot.treasury > 0 and parent.treasury + offshoot.treasury == 1000
 
 
+async def test_a_clique_led_by_the_head_never_splits_from_its_own_body(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "split.head", tuned_rules(governance={"split_clique_threshold": 30, "clique_form_chance_pct": 0}))
+    people = await folk(session, world, 6)
+    guild = await organisation(session, world, "The Kept Order", FactionKind.HOLY_ORDER, people, treasury=1000)
+    await seed_governance(ctx)
+    body = await body_of(session, guild)
+    body.decision_body, body.vote_basis = GoverningBody.ASSEMBLY_OF_MEMBERS, VoteBasis.ONE_MEMBER_ONE_VOTE
+    body.head_node_id = people[0].id
+    await sync_seats(ctx, body)
+    members = [people[0].id, *(person.id for person in people[3:])]
+    session.add(OrgCliqueRow(org_node_id=guild.id, name="those around the head", leader_node_id=people[0].id, members=members, aim=CliqueAim.SPLIT, locked=[]))
+    await session.flush()
+    _formed, split = await tend_cliques(ctx, body)
+    assert split == 0
+
+
 async def test_a_friendly_merger_joins_members_and_debts_and_pays_the_owners(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
     people = await folk(session, world, 4)
     acquirer = await organisation(session, world, "The Great House", FactionKind.MERCHANT_GUILD, people[:2], treasury=500)
@@ -278,3 +294,15 @@ async def test_a_head_sets_a_new_course_among_those_its_treasury_allows(session:
     assert poor_profile is not None and rich_profile is not None
     assert OrgStrategy.WITHDRAW in await courses_open(ctx, poor, poor_profile)
     assert OrgStrategy.EXPAND_ABROAD in await courses_open(ctx, rich, rich_profile) and OrgStrategy.WITHDRAW not in await courses_open(ctx, rich, rich_profile)
+
+
+async def test_a_revolt_or_a_movement_never_takes_a_market_course(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "unmarket", tuned_rules(governance={"course_change_pct": 100}))
+    rebels = await organisation(session, world, "The Ash Rising", FactionKind.REBELS, await folk(session, world, 3, "Ash"), treasury=5000)
+    guild = await organisation(session, world, "The Salt Guild", FactionKind.MERCHANT_GUILD, await folk(session, world, 3, "Salt"), treasury=5000)
+    rebel_profile = await session.get(FactionProfileRow, rebels.id)
+    guild_profile = await session.get(FactionProfileRow, guild.id)
+    assert rebel_profile is not None and guild_profile is not None
+    market = {OrgStrategy.SPECIALISE, OrgStrategy.DIVERSIFY, OrgStrategy.EXPAND_ABROAD, OrgStrategy.INTEGRATE_UP, OrgStrategy.INTEGRATE_DOWN}
+    assert not market & set(await courses_open(ctx, rebels, rebel_profile))
+    assert market <= set(await courses_open(ctx, guild, guild_profile))

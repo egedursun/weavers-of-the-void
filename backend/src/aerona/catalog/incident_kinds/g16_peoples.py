@@ -20,7 +20,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "ages.echo",
         G.PEOPLES,
-        "{subject} was born to echo a great life of the age before, a tale of {template}.",
+        "{subject} was born to live again a great life of the age before, a tale of {template}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PREDECESSOR, required=False)),
         facts=(FactSpec("template", FactValue.ENUM, enum=ArcTemplate),),
         chronicle_kind=K.BIRTH,
@@ -30,7 +30,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         G.PEOPLES,
         (
             "The age turned and age {age} began; {tales:tale was|tales were} half-remembered, "
-            "{arts_lost:art was|arts were} lost and {echoes:great life|great lives} will echo."
+            "{arts_lost:art was|arts were} lost and {echoes:great life|great lives} will be lived again."
         ),
         roles=(RoleSpec(R.SUBJECT, required=False, many=True),),
         facts=(
@@ -653,7 +653,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "institutions.place_absorbed",
         G.PEOPLES,
-        "{target} was swallowed and is no more; {scattered:thing was|things were} scattered.",
+        "{target} was lost{actor:? to #} and is no more; {scattered:thing was|things were} scattered.",
         roles=(RoleSpec(R.TARGET), RoleSpec(R.ACTOR, required=False), RoleSpec(R.DESTINATION, required=False)),
         facts=(FactSpec("scattered", FactValue.NUMBER, FactUnit.COUNT),),
         chronicle_kind=K.WORLD,
@@ -688,7 +688,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "life_cycles.collapse",
         G.PEOPLES,
-        "{subject} collapsed; {broke_away:subject broke|subjects broke} away from its rule.",
+        "The rule of {subject} collapsed; {broke_away:no subject broke|one subject broke|# subjects broke} away from it.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.SUCCESSOR, required=False, many=True), RoleSpec(R.GIVER, required=False, many=True)),
         facts=(
             FactSpec("broke_away", FactValue.NUMBER, FactUnit.COUNT),

@@ -116,19 +116,20 @@ class CauseSpec:
     label: str
     severity: Callable[[Rules], int] | None = None
     by_mortal: bool = False
+    dealt: bool = False
 
 
 WOUND_CAUSES: Mapping[WoundCause, CauseSpec] = total(
     WoundCause,
     {
-        WoundCause.DUEL: CauseSpec("a duel of the gods"),
-        WoundCause.GOD_WAR: CauseSpec("a war of gods"),
+        WoundCause.DUEL: CauseSpec("a duel of the gods", dealt=True),
+        WoundCause.GOD_WAR: CauseSpec("a war of gods", dealt=True),
         WoundCause.CREATOR: CauseSpec("the Creator"),
-        WoundCause.AVATAR_SLAIN: CauseSpec("the death of its mortal form", lambda rules: rules.divine_wounds.avatar_severity),
+        WoundCause.AVATAR_SLAIN: CauseSpec("the death of its mortal form", lambda rules: rules.divine_wounds.avatar_severity, dealt=True),
         WoundCause.OUTER_BARGAIN: CauseSpec("a bargain with an outer being"),
         WoundCause.NEGLECT: CauseSpec("neglect", lambda rules: rules.divine_wounds.neglect_severity),
-        WoundCause.BETRAYAL: CauseSpec("betrayal by one in its service", lambda rules: rules.divine_wounds.betrayal_severity),
-        WoundCause.MORTAL_SLAYER: CauseSpec("a mortal's deed", lambda rules: rules.divine_wounds.mortal_slayer_severity, by_mortal=True),
+        WoundCause.BETRAYAL: CauseSpec("betrayal by one in its service", lambda rules: rules.divine_wounds.betrayal_severity, dealt=True),
+        WoundCause.MORTAL_SLAYER: CauseSpec("a mortal's deed", lambda rules: rules.divine_wounds.mortal_slayer_severity, by_mortal=True, dealt=True),
         WoundCause.SCHISM: CauseSpec("a split among its worshippers", lambda rules: rules.divine_wounds.schism_severity),
         WoundCause.OUTER_BEING: CauseSpec("a being from outside the cosmos", lambda rules: rules.divine_wounds.outer_being_severity),
     },

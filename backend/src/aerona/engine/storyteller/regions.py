@@ -106,8 +106,9 @@ async def measure_parts(ctx: TickContext, world_id: int) -> int:
             await record_incident(ctx, "storyteller.region_crisis", roles={IncidentRole.SUBJECT: region_id}, facts={"tension": row.tension}, place=region_id)
         crises += row.crisis
     known = {row.subsystem: row for row in await ctx.session.scalars(select(SubsystemTensionRow).where(SubsystemTensionRow.world_id == world_id))}
+    busiest = max(by_subsystem.values(), default=0)
     for subsystem in sorted(set(known) | set(by_subsystem)):
-        weight = by_subsystem[subsystem]
+        weight = by_subsystem[subsystem] * scale // busiest if busiest else 0
         part = known.get(subsystem)
         if part is None:
             part = SubsystemTensionRow(world_id=world_id, subsystem=subsystem, locked=[])

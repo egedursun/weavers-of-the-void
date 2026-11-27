@@ -69,6 +69,7 @@ run css_overrides "$PYTHON" scripts/check_css_overrides.py
 run root_overflow "$PYTHON" scripts/check_root_overflow.py
 run fixed_backgrounds "$PYTHON" scripts/check_fixed_backgrounds.py
 run pending_reads "$PYTHON" scripts/check_pending_reads.py
+run fixup_keys "$PYTHON" scripts/check_fixup_keys.py
 run universe_title "$PYTHON" scripts/check_universe_title.py
 run raw_api_urls "$PYTHON" scripts/check_raw_api_urls.py
 run route_access "$PYTHON" scripts/check_route_access.py

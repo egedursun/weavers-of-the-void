@@ -71,7 +71,7 @@ async def maybe_found(ctx: TickContext, tally: LabourTally) -> None:
 
 
 async def found_body(ctx: TickContext, community: EntityRow, trades: list[Job], form: WorkerBodyForm, *, founder: int | None = None) -> WorkerBodyRow:
-    faction = await found_faction(ctx, community, FactionKind.WORKER_BODY)
+    faction = await found_faction(ctx, community, FactionKind.WORKER_BODY, tell=False)
     body = new_body(ctx, faction.id, form, trades, await standing_at(ctx.session, community.id))
     if founder is not None:
         ctx.session.add(

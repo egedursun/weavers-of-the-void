@@ -48,12 +48,13 @@ from aerona.db.tables.node import NodeRow
 from aerona.db.tables.routes import JourneyRow, RouteRow
 from aerona.db.tables.sons import SonPowerRow, SonRelationRow, SonRow
 from aerona.db.tables.warfare import BattleRow, SiegeRow, WarRow, WarSideRow
-from aerona.domain.enums.bond import KIN_BOND_KINDS, BondKind, BondState
+from aerona.domain.enums.bond import KIN_BOND_KINDS, SYMMETRIC_BOND_KINDS, BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind, ThreadStatus
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import Passion, SonStatus, Stat
-from aerona.domain.enums.war import WarSide, WarStatus
+from aerona.domain.enums.war import BattleOutcome, WarSide, WarStatus
 from aerona.domain.enums.world import CosmosShape
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.genesis import TECH_LEVEL_CEILING, GenesisSettings
 from aerona.domain.models.profiles import EntityDepth
 from aerona.domain.models.records import EpochStatsData
@@ -304,6 +305,9 @@ class GodArticle:
     audiences: SpeakerAudiences = field(default_factory=SpeakerAudiences)
 
 
+NO_BATTLE = "—"
+
+
 @dataclass
 class BattleLine:
     epoch: int
@@ -314,6 +318,18 @@ class BattleLine:
     outcome: str
     place: str | None
     field: str = ""
+
+
+def battle_line(battle: BattleRow, names: dict[int, str]) -> BattleLine:
+    winner, loser = names.get(battle.winner_entity_id, "?"), names.get(battle.loser_entity_id, "?")
+    name = names.get(battle.record_entity_id) if battle.record_entity_id is not None else None
+    place = names.get(battle.place_entity_id) if battle.place_entity_id is not None else None
+    if battle.outcome is BattleOutcome.REFUSED:
+        return BattleLine(
+            battle.epoch, battle.sequence, name, NO_BATTLE, NO_BATTLE, f"{loser} would not give battle to {winner}", place, battle_field(battle, names)
+        )
+    lost = f"{humanize(battle.outcome.value)} · {several(battle.winner_losses, 'soldier', 'soldiers')} lost against {battle.loser_losses}"
+    return BattleLine(battle.epoch, battle.sequence, name, winner, loser, lost, place, battle_field(battle, names))
 
 
 @dataclass
@@ -364,6 +380,9 @@ class EpochChapter:
     lines: list[ChronicleLine]
     born: list[tuple[int, str]]
     raw_lines: list[str]
+    year_start: int
+    year_end: int
+    under_way: bool
 
 
 @dataclass
@@ -497,6 +516,8 @@ class BookBuilder:
             self.tags[entity_id].append(tag)
         for bond in await self.session.scalars(select(BondRow).where(BondRow.state.in_([BondState.ACTIVE, BondState.PAST])).order_by(BondRow.id)):
             self.bonds[bond.source_node_id].append(bond)
+            if bond.kind in SYMMETRIC_BOND_KINDS and bond.target_node_id != bond.source_node_id:
+                self.bonds[bond.target_node_id].append(bond)
             if bond.kind in KIN_BOND_KINDS:
                 self.kin.update((bond.source_node_id, bond.target_node_id))
         for first, second in await self.session.execute(select(MarriageRow.first_id, MarriageRow.second_id)):
@@ -512,10 +533,13 @@ class BookBuilder:
     def bond_lines(self, node_id: int) -> tuple[list[str], list[str]]:
         active: list[str] = []
         past: list[str] = []
+        shown: set[tuple[BondKind, int, BondState]] = set()
         for bond in self.bonds.get(node_id, []):
-            if bond.kind in HIDDEN_BOND_KINDS:
+            other = bond.source_node_id if bond.target_node_id == node_id and bond.kind in SYMMETRIC_BOND_KINDS else bond.target_node_id
+            if bond.kind in HIDDEN_BOND_KINDS or (bond.kind, other, bond.state) in shown:
                 continue
-            text = f"{spoken(bond.kind)} {self.names.get(bond.target_node_id, '?')}"
+            shown.add((bond.kind, other, bond.state))
+            text = f"{spoken(bond.kind)} {self.names.get(other, '?')}"
             if bond.description:
                 text += f" ({clean_lore(bond.description)})"
             (active if bond.state is BondState.ACTIVE else past).append(text)
@@ -882,6 +906,8 @@ class BookBuilder:
     async def chapters(self) -> list[EpochChapter]:
         epochs = sorted(set(await self.session.scalars(select(EpochRow.epoch))) | set(await self.session.scalars(select(ChronicleRow.epoch).distinct())))
         stats = {row.epoch: row.data for row in await self.session.scalars(select(EpochStatsRow))}
+        present = (await CosmosRepository(self.session).require_cosmos()).epoch
+        years = self.rules.time.years_per_epoch
         chapters: list[EpochChapter] = []
         for epoch in epochs:
             lines = list(await self.session.scalars(select(ChronicleRow).where(ChronicleRow.epoch == epoch).order_by(ChronicleRow.id)))
@@ -915,6 +941,9 @@ class BookBuilder:
                     lines=[ChronicleLine(spoken(line.kind), line.year, clean_lore(line.text), line.son_id) for line in lines if line.visible],
                     born=[(entity.id, entity.name) for entity in born],
                     raw_lines=[clean_lore(line.text) for line in lines if line.kind is ChronicleKind.ENGINE_RAW],
+                    year_start=epoch_start_year(epoch, years),
+                    year_end=epoch_start_year(epoch + 1, years) - 1,
+                    under_way=epoch >= present,
                 )
             )
         return chapters
@@ -926,9 +955,9 @@ class BookBuilder:
             )
         )
         by_parent: dict[int | None, list[EntityRow]] = defaultdict(list)
-        ids = {entity.id for entity in entities}
+        nests = {entity.id for entity in entities if entity.entity_type in NESTING_TYPES}
         for entity in entities:
-            by_parent[entity.location_id if entity.location_id in ids else None].append(entity)
+            by_parent[entity.location_id if entity.location_id in nests else None].append(entity)
         written: set[int] = set()
 
         async def article(entity: EntityRow, level: int) -> EntityArticle:
@@ -1019,19 +1048,7 @@ class BookBuilder:
                     victor=named(war.victor_entity_id),
                     loser=named(war.loser_entity_id),
                     instigator=self.son_names.get(war.incited_by_son_id) if war.incited_by_son_id is not None else None,
-                    battles=[
-                        BattleLine(
-                            battle.epoch,
-                            battle.sequence,
-                            named(battle.record_entity_id),
-                            self.names.get(battle.winner_entity_id, "?"),
-                            self.names.get(battle.loser_entity_id, "?"),
-                            humanize(battle.outcome.value),
-                            named(battle.place_entity_id),
-                            battle_field(battle, self.names),
-                        )
-                        for battle in battles[war.id]
-                    ],
+                    battles=[battle_line(battle, self.names) for battle in battles[war.id]],
                     sieges=[
                         SiegeLine(
                             self.names.get(siege.besieger_entity_id, "?"),
@@ -1073,7 +1090,7 @@ class BookBuilder:
 
 
 SEED_CHOOSES = "Chosen by the seed"
-BLANK_CANVAS = "Blank canvas"
+NO_TEMPLATE = "No template"
 NO_LAYER = "None"
 MOISTURE_SCALE = " (from -100 parched to 100 soaked)"
 
@@ -1096,7 +1113,7 @@ def family_levels(settings: GenesisSettings) -> str:
 
 def settings_facts(settings: GenesisSettings) -> list[Labelled]:
     return [
-        Labelled("Template", TEMPLATES[settings.template].name if settings.template is not None else BLANK_CANVAS),
+        Labelled("Template", TEMPLATES[settings.template].name if settings.template is not None else NO_TEMPLATE),
         Labelled("Magic", f"{settings.magic}/100"),
         Labelled("Danger", f"{settings.danger}/100"),
         Labelled("Technology", TECHNOLOGY_LABELS[settings.technology]),
@@ -1188,8 +1205,8 @@ async def build_book(session: AsyncSession, rules: Rules) -> BookModel | None:
         title=cosmos.name,
         creator=creator,
         cover=(await cover_of(session, world.id) if world else None) or (await cover_of(session, creator.id) if creator else None),
-        epochs_count=cosmos.epoch,
-        world_year=cosmos.epoch * rules.time.years_per_epoch,
+        epochs_count=max(0, cosmos.epoch - 1),
+        world_year=max(0, cosmos.epoch - 1) * rules.time.years_per_epoch,
         record_count=record_count,
         laws=laws,
         creator_cover=await cover_of(session, creator.id) if creator else None,

@@ -84,7 +84,31 @@ async def seed_worlds(ctx: TickContext) -> int:
     return seeded
 
 
+async def keep_worlds(ctx: TickContext) -> int:
+    frontier: dict[tuple[int, TechFamily], int] = {}
+    rows = await ctx.session.execute(
+        select(EntityRow.world_id, TechnologyProfileRow.family, TechnologyProfileRow.level)
+        .join(EntityRow, EntityRow.id == TechnologyProfileRow.holder_node_id)
+        .where(EntityRow.entity_type == EntityType.PEOPLE, EntityRow.status == EntityStatus.CANON)
+    )
+    for world_id, family, known in rows:
+        if world_id is not None:
+            frontier[(world_id, family)] = max(known, frontier.get((world_id, family), known))
+    moved = 0
+    for row in list(await ctx.session.scalars(select(TechnologyProfileRow).join(WorldRow, WorldRow.id == TechnologyProfileRow.holder_node_id))):
+        reached = frontier.get((row.holder_node_id, row.family))
+        if reached is None or reached == row.level or "level" in row.locked or held(row.holder_node_id):
+            continue
+        with explaining_alone():
+            term("technology.known_level", reached, source_node_id=row.holder_node_id)
+            row.level, row.updated_epoch = reached, ctx.epoch
+        moved += 1
+    return moved
+
+
 async def keep_technology(ctx: TickContext) -> None:
     ctx.count("technology_worlds_seeded", await seed_worlds(ctx))
     ctx.count("technology_profiles_moved", await keep_peoples(ctx))
+    await ctx.session.flush()
+    ctx.count("technology_worlds_moved", await keep_worlds(ctx))
     await ctx.session.flush()

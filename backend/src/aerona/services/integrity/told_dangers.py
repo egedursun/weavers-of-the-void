@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.records import IncidentFactRow
@@ -11,7 +12,7 @@ RETOLD = (("hazard", "hazard.struck", TerrainHazard), ("danger", "danger.harm", 
 
 
 async def retell_dangers(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, TOLD_FIXUP) is not None:
+    if not await fixup_due(session, TOLD_FIXUP):
         return 0
     changed = 0
     for family, kind, enum in RETOLD:

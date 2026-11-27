@@ -533,9 +533,22 @@ async def apply_bond(ctx: TickContext, effect: Effect, target: EntityRow, other:
         return
 
 
+async def cast_alive(ctx: TickContext, run: StoryletRunRow) -> bool:
+    rows = [await ctx.session.get(EntityRow, node) for node in cast_of(run).values()]
+    return all(row is None or row.status is EntityStatus.CANON for row in rows)
+
+
+def expire(run: StoryletRunRow, epoch: int, tally: StoryletTally) -> None:
+    run.status, run.resolved_epoch = StoryletStatus.EXPIRED, epoch
+    tally.expired += 1
+
+
 async def resolve(ctx: TickContext, run: StoryletRunRow, choice_index: int, tally: StoryletTally, *, by: str) -> Choice | None:
     choices = STORYLETS[run.storylet].steps[run.step].choices
     if run.status is not StoryletStatus.OPEN or not 0 <= choice_index < len(choices):
+        return None
+    if not await cast_alive(ctx, run):
+        expire(run, ctx.epoch, tally)
         return None
     choice = choices[choice_index]
     cast = cast_of(run)
@@ -564,7 +577,10 @@ async def announce(ctx: TickContext, tally: StoryletTally) -> None:
             StoryletRunRow.status == StoryletStatus.OPEN, StoryletRunRow.opened_epoch == ctx.epoch, StoryletRunRow.follows_run_id.is_not(None)
         )
     )
-    for run in rows:
+    for run in list(rows):
+        if not await cast_alive(ctx, run):
+            expire(run, ctx.epoch, tally)
+            continue
         await tell_situation(ctx, run)
 
 
@@ -575,10 +591,8 @@ async def settle_due(ctx: TickContext, tally: StoryletTally) -> None:
     for run in list(rows):
         if held(run.world_id) or "status" in run.locked:
             continue
-        chooser = await living_entity(ctx.session, run.chooser_node_id) if run.chooser_node_id is not None else None
-        if chooser is None:
-            run.status, run.resolved_epoch = StoryletStatus.EXPIRED, ctx.epoch
-            tally.expired += 1
+        if run.chooser_node_id is None or not await cast_alive(ctx, run):
+            expire(run, ctx.epoch, tally)
             continue
         if await resolve(ctx, run, await by_personality(ctx, run), tally, by="personality") is not None:
             tally.by_personality += 1

@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.fortune import FortuneSourceRow
@@ -44,7 +45,7 @@ async def keep_judgements(ctx: TickContext) -> int:
 
 
 async def legacy_backfill(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return 0
     result = {"judgements": await divine_judgements(ctx)}
     ctx.session.add(AppliedFixupRow(key=LEGACY_FIXUP, result=result))

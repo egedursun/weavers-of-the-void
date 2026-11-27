@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.body import ProsthesisRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -153,7 +154,7 @@ async def cores(ctx: TickContext) -> int:
         if held(core.id):
             continue
         mind = await profile_of(ctx.session, ctx.rules, core.id, ctx.epoch)
-        if mind.seat is not MindSeat.NONE:
+        if mind.seat is not MindSeat.NONE or "seat" in mind.locked:
             continue
         mind.seat, mind.seat_node_id, mind.origin = MindSeat.STRUCTURE, core.id, MindOrigin.MADE
         mind.will, mind.affect, mind.upkeep = MindWill.INSTRUCTED, MindAffect.MODELLED, MindUpkeep.ENERGY
@@ -221,7 +222,7 @@ async def keep_made_kinds(ctx: TickContext) -> int:
 
 
 async def legacy_backfill(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return 0
     result = {
         "prostheses": await prostheses(ctx),

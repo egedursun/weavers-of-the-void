@@ -20,7 +20,6 @@ from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.body import BodyRow, InjuryRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
-from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.military import ArmyProfileRow, OccupationRow
 from aerona.db.tables.mind import VALUE_MAX
@@ -96,7 +95,7 @@ from aerona.engine.military.aftermath import (
 )
 from aerona.engine.military.aims import REGION_AIMS, advance, set_aims
 from aerona.engine.military.alliance import allied_armies, allies_on_side, march_with
-from aerona.engine.military.battle import BattleResult, Field
+from aerona.engine.military.battle import BattleResult, Field, Side
 from aerona.engine.military.battle_record import battle_steps
 from aerona.engine.military.campaign import bridged, home_news
 from aerona.engine.military.causes import raiders
@@ -177,8 +176,8 @@ from aerona.engine.settlement.modes import defence_pct
 from aerona.engine.urban.morphology import siege_of
 from aerona.language.generator import NameKind
 from aerona.rules.registry import Rules
+from aerona.rules.registry.campaigns import CampaignsRules
 
-ARMY_SIZE_FIXUP = "military.army_size_matches_stacks"
 PAIR = 2
 POPULATION_CAPS = {EntityType.SETTLEMENT: "settlement_population_cap", EntityType.PEOPLE: "people_population_cap"}
 
@@ -358,10 +357,7 @@ async def idle_armies(ctx: TickContext) -> int:
 
 
 async def backfill_army_sizes(ctx: TickContext) -> int:
-    found = await reconcile_sizes(ctx)
-    if await ctx.session.get(AppliedFixupRow, ARMY_SIZE_FIXUP) is None:
-        ctx.session.add(AppliedFixupRow(key=ARMY_SIZE_FIXUP, result=found))
-    return sum(found.values())
+    return sum((await reconcile_sizes(ctx)).values())
 
 
 async def campaign_upkeep(ctx: TickContext) -> None:
@@ -1074,10 +1070,18 @@ HUNGRY = having(STARVATION_STAGE_TRAITS, StarvationStageTrait.HUNGRY)
 GREAT_CLASSES = frozenset({OutcomeClass.DECISIVE, OutcomeClass.MASSACRE, OutcomeClass.ROUT})
 
 
+def crushing(rules: Rules, loser: Side | None) -> bool:
+    if loser is None:
+        return False
+    fielded = sum(stack.start for stack in loser.stacks)
+    lost = sum(stack.lost for stack in loser.stacks) + loser.captives
+    return fielded > 0 and lost * PERCENT >= fielded * rules.campaigns.great_victory_loss_pct
+
+
 def _battle_score(war: WarRow, rules: Rules, result: BattleResult, *, attacker_id: int, gap: float) -> BattleOutcome:
     assert result.winner is not None
     sign = 1 if result.winner.entity.id == attacker_id else -1
-    great = result.outcome in GREAT_CLASSES or gap >= rules.campaigns.great_victory_diff
+    great = (result.outcome in GREAT_CLASSES or gap >= rules.campaigns.great_victory_diff) and crushing(rules, result.loser)
     if result.outcome is not OutcomeClass.STALEMATE:
         war.score += sign * (rules.campaigns.great_victory_score if great else 1)
     return BattleOutcome.GREAT_VICTORY if great else BattleOutcome.FIELD_VICTORY
@@ -1221,7 +1225,8 @@ async def _announce(
 async def battle_moment(ctx: TickContext, ground: BattleGround | None, cause: int | None) -> Moment | None:
     if ground is None or ground.year is None or ground.season is None:
         return None
-    return Moment(ground.year, ground.season.position).at_least(await incident_moment(ctx.session, cause))
+    found = Moment(ground.year, ground.season.position).at_least(await incident_moment(ctx.session, cause))
+    return found if found.season is not None else Moment(found.year, ground.season.position)
 
 
 async def _powers(
@@ -1424,19 +1429,26 @@ async def _salt_earth(ctx: TickContext, war: WarRow, settlement: WarSettlement, 
     )
 
 
+def routed_side(campaigns: CampaignsRules, score: int, sides: tuple[int, int], armies: Mapping[int, tuple[EntityRow, ArmyRow]]) -> int | None:
+    attacker_id, defender_id = sides
+    leading = attacker_id if score > 0 else defender_id if score < 0 else None
+    return next(
+        (
+            side
+            for side in sides
+            if side != leading
+            and ((stat(armies[side][0], "morale") or 0) <= campaigns.disband_morale or (stat(armies[side][0], "size") or 0) < campaigns.disband_soldiers)
+        ),
+        None,
+    )
+
+
 async def check_war_end(
     ctx: TickContext, item: OngoingWar, attacker: EntityRow, defender: EntityRow, armies: dict[int, tuple[EntityRow, ArmyRow]]
 ) -> WarSettlement | None:
     campaigns = ctx.rules.campaigns
     war = item.war
-    routed = next(
-        (
-            side
-            for side in (attacker.id, defender.id)
-            if (stat(armies[side][0], "morale") or 0) <= campaigns.disband_morale or (stat(armies[side][0], "size") or 0) < campaigns.disband_soldiers
-        ),
-        None,
-    )
+    routed = routed_side(campaigns, war.score, (attacker.id, defender.id), armies)
     tired = war.battles >= campaigns.exhaustion_min_battles and ctx.rng("war_end").chance(campaigns.four_battle_exhaustion_chance)
     score = war.score
     if abs(score) < campaigns.decisive_score and routed is None and not tired:

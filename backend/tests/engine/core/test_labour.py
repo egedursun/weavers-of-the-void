@@ -25,6 +25,7 @@ from aerona.engine.labour.disputes import open_dispute, tend_dispute
 from aerona.engine.labour.founding import found_body, maybe_found
 from aerona.engine.labour.legacy import apply_legacy
 from aerona.engine.labour.stoppage import stoppage
+from aerona.engine.labour.tend import bargain_round
 from aerona.engine.polity.laws import enact
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import set_stats
@@ -230,3 +231,17 @@ async def test_a_bitter_trade_draws_its_body_together_and_a_content_one_lets_it_
     await tend_body(ctx, body, tally)
     await tend_body(ctx, body, tally)
     assert body.solidarity < 50
+
+
+async def test_a_body_never_bargains_with_a_hirer_who_heads_it(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "self", tuned_rules())
+    town = await works_town(session, world)
+    hirer = await owner(session, world, town, wealth=0)
+    body = await found_body(ctx, town, [CRAFT], WorkerBodyForm.CRAFT_UNION)
+    body.members = 200
+    profile = await session.get(FactionProfileRow, body.faction_node_id)
+    assert profile is not None
+    profile.leader_entity_id = hirer.id
+    await session.flush()
+    await bargain_round(ctx, body, LabourTally())
+    assert await session.scalar(select(LabourContractRow).where(LabourContractRow.body_node_id == body.faction_node_id)) is None

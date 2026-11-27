@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from sqlalchemy import ColumnElement, delete, func, select
+from sqlalchemy import ColumnElement, func, select
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.cosmos import CosmosRepository
@@ -172,11 +172,19 @@ async def souls_of(ctx: TickContext, row: PrehistoryRow, world: WorldRow) -> int
     return await borrow(ctx, row, found, PrehistorySource.DERIVED)
 
 
-async def dreams_of(ctx: TickContext, row: PrehistoryRow, world: WorldRow) -> int:
-    await ctx.session.execute(delete(PrehistoryEventRow).where(PrehistoryEventRow.world_id == world.id, PrehistoryEventRow.source == PrehistorySource.DREAMT))
+async def dreams_of(ctx: TickContext, row: PrehistoryRow, world: WorldRow, *, this_epoch: bool = False) -> int:
+    dreamt = (PrehistoryEventRow.world_id == world.id, PrehistoryEventRow.source == PrehistorySource.DREAMT)
+    told = select(PrehistoryEventRow.incident_id).where(*dreamt, PrehistoryEventRow.incident_id.is_not(None))
     dreams = select(ChronicleRow.id).where(ChronicleRow.kind == ChronicleKind.DREAM, ChronicleRow.world_id != world.id)
-    found = await strongest(ctx, (IncidentRow.chronicle_id.in_(dreams),), ctx.rules.prehistory.digest_size)
-    return await borrow(ctx, row, found, PrehistorySource.DREAMT)
+    window = IncidentRow.epoch == ctx.epoch if this_epoch else IncidentRow.epoch < ctx.epoch
+    size = ctx.rules.prehistory.digest_size
+    found = await strongest(ctx, (IncidentRow.chronicle_id.in_(dreams), window, IncidentRow.id.not_in(told)), size)
+    added = await borrow(ctx, row, found, PrehistorySource.DREAMT)
+    kept = list(await ctx.session.scalars(select(PrehistoryEventRow).where(*dreamt).order_by(PrehistoryEventRow.magnitude.desc(), PrehistoryEventRow.id)))
+    for event in [event for event in kept[size:] if not event.locked]:
+        await ctx.session.delete(event)
+    await ctx.session.flush()
+    return added
 
 
 async def mirror_of(ctx: TickContext, row: PrehistoryRow, world: WorldRow) -> int:

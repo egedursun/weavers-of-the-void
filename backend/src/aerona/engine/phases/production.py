@@ -56,6 +56,7 @@ CORRUPT_FROM = PERCENT // 2
     "table.blueprints",
     "table.bonds",
     "table.calendars",
+    "table.chemical_works",
     "table.community_industry",
     "table.community_labour",
     "table.community_methods",

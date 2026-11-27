@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.kinds.life_stages import LIFE_STAGES
+from aerona.catalog.life_traits import LIFE_STAGE_TRAITS
 from aerona.catalog.mind_split import INHERITED_SUMMARIES
 from aerona.catalog.reproduction import SEX_KINDS
 from aerona.constants.units import PERCENT
@@ -13,6 +14,7 @@ from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.domain.enums.demography import SexKind
+from aerona.domain.enums.life_traits import LifeStageTrait
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.models.entity_stats import MortalStats, revised
 from aerona.engine.body.customs import people_of
@@ -20,6 +22,8 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.rules.registry import Rules
 from aerona.rules.registry.mortal_life import AgingRules
+
+YOUNG_TRAITS = frozenset({LifeStageTrait.YOUNG, LifeStageTrait.UNDER_AGE})
 
 SEXES = (SexKind.BEARER, SexKind.BEGETTER)
 SEX_HASH = 2654435761
@@ -158,5 +162,12 @@ def stage_rank(stage: LifeStage) -> int:
     return STAGE_ORDER.index(stage)
 
 
+CHILD_SUBTYPE = "child"
+
+
 def adult(stage: LifeStage) -> bool:
     return LIFE_STAGES[stage].counts_as_adult
+
+
+def young(stage: LifeStage) -> bool:
+    return bool(LIFE_STAGE_TRAITS[stage] & YOUNG_TRAITS)

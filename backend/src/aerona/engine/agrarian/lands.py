@@ -324,8 +324,9 @@ async def city_for(ctx: TickContext, lands: Holdings, row: CommonsRow, book: Rea
 
 
 async def drive_off(ctx: TickContext, lands: Holdings, town: EntityRow, city: EntityRow | None) -> int:
-    lost = round_half_up(stat_or(town, "population", 0) * ctx.rules.commons.dispossess_pct / PERCENT)
     profile = lands.profiles.get(town.id)
+    housed = max(0, stat_or(town, "population", 0) - (profile.homeless if profile is not None else 0))
+    lost = round_half_up(housed * ctx.rules.commons.dispossess_pct / PERCENT)
     if city is None:
         if profile is not None:
             shift(profile, "homeless", lost, high=10**9)

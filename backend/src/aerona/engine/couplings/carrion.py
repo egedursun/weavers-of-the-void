@@ -284,6 +284,7 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
     "table.incident_participants",
     "table.incidents",
     "table.name_registry",
+    "table.node_births",
     "table.region_environment",
     "table.species_ranges",
 )

@@ -8,6 +8,7 @@ from aerona.catalog.life.polity import INHERIT_CLAIMS_CLAIM_BASISS
 from aerona.catalog.reproduction import kind_of_sex, sex_rule_fit
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -827,7 +828,7 @@ ANCESTOR_DEPTH = 6
 
 
 async def dynasty_backfill(ctx: TickContext, book: HouseBook) -> int:
-    if await ctx.session.get(AppliedFixupRow, DYNASTY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, DYNASTY_FIXUP):
         return 0
     added = 0
     for house_id, house in list(book.houses.items()):
@@ -933,3 +934,23 @@ async def fabricate_claims(ctx: TickContext, realms: RealmBook) -> int:
         )
         made += 1
     return made
+
+
+async def settle_house_stats(ctx: TickContext) -> int:
+    alive = dict(
+        (
+            await ctx.session.execute(
+                select(HouseMemberRow.house_entity_id, func.count())
+                .join(EntityRow, EntityRow.id == HouseMemberRow.mortal_entity_id)
+                .where(EntityRow.status == EntityStatus.CANON)
+                .group_by(HouseMemberRow.house_entity_id)
+            )
+        ).all()
+    )
+    settled = 0
+    for profile in list(await ctx.session.scalars(select(HouseProfileRow).order_by(HouseProfileRow.house_entity_id))):
+        house = await ctx.session.get(EntityRow, profile.house_entity_id)
+        if house is None or held(house.id) or house.status is not EntityStatus.CANON:
+            continue
+        settled += set_stats(house, prestige=profile.prestige, members=int(alive.get(house.id, 0)), wealth=clamp_int(profile.wealth, 0, PERCENT))
+    return settled

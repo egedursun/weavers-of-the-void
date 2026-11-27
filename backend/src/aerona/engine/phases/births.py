@@ -69,7 +69,7 @@ from aerona.engine.mind.needs import sustenance_need
 from aerona.engine.mind.space import value_distance
 from aerona.engine.mortal.kin import betrothed_of, children_of, partners_of
 from aerona.engine.mortal.kinship import add_parent, marry
-from aerona.engine.mortal.life import adult, biology_of, fertility_window, inherited_summaries, refresh_life, sex_of_stats
+from aerona.engine.mortal.life import CHILD_SUBTYPE, adult, biology_of, fertility_window, inherited_summaries, refresh_life, sex_of_stats
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.mythic.geasa import birth_geas, inherit_geasa
 from aerona.engine.numbers.book import PolicyBook
@@ -129,7 +129,6 @@ CLASS_RANK = {
         )
     )
 }
-CHILD_SUBTYPE = "child"
 BIRTH_KEY = "births.child"
 VILLAGE_SUBTYPE = "village"
 HOMELAND_SUBTYPE = "homeland"

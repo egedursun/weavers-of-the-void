@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.fate.naming import requeue_engine_drafts
 from aerona.catalog.bonds import EVENT_BOND_KINDS
+from aerona.db.fixups import marker
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.bonds import BondRow
@@ -259,12 +260,12 @@ def history_signature() -> str:
 
 
 async def history_signed(session: AsyncSession) -> bool:
-    row = await session.get(AppliedFixupRow, HISTORY_REPAIRS_KEY)
+    row = await marker(session, HISTORY_REPAIRS_KEY)
     return row is not None and (row.result or {}).get(SIGNATURE_FIELD) == history_signature()
 
 
 async def sign_history(session: AsyncSession) -> None:
-    row = await session.get(AppliedFixupRow, HISTORY_REPAIRS_KEY)
+    row = await marker(session, HISTORY_REPAIRS_KEY)
     if row is None:
         session.add(AppliedFixupRow(key=HISTORY_REPAIRS_KEY, result={SIGNATURE_FIELD: history_signature()}))
     else:

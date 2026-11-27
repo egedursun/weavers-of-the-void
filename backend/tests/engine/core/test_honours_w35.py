@@ -177,3 +177,29 @@ async def test_veterans_are_granted_after_a_war_whose_sides_all_left_it_at_the_p
     await keep_veterans(await at(session, 2), tally)
     grant = await session.scalar(select(VeteranGrantRow).where(VeteranGrantRow.polity_entity_id == realm.id))
     assert grant is not None and grant.veterans == 40 and tally.granted == 1
+
+
+async def test_a_realm_that_ended_two_wars_rewards_its_veterans_once(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Twicewar", world, world.regions[0])
+    realm = await crown(session, world, town)
+    session.add(
+        CohortRow(
+            community_entity_id=town.id,
+            age_band=AgeBand.ADULT,
+            sex_kind=SexKind.BEGETTER,
+            social_class=SocialClass.WARRIOR,
+            condition=CohortCondition.VETERAN,
+            count=50,
+        )
+    )
+    for title in ("The First War", "The Second War"):
+        event = await entity(session, title, EntityType.EVENT, EventStats(), world_id=world.world.id)
+        war = WarRow(event_entity_id=event.id, world_id=world.world.id, cause=WarCause.HOLY_WAR, started_epoch=1, ended_epoch=2)
+        session.add(war)
+        await session.flush()
+        session.add(WarSideRow(war_id=war.id, entity_id=realm.id, side=WarSide.ATTACKER, joined_epoch=1))
+    await session.flush()
+    tally = VeteranTally()
+    await keep_veterans(await at(session, 2), tally)
+    grants = list(await session.scalars(select(VeteranGrantRow).where(VeteranGrantRow.polity_entity_id == realm.id)))
+    assert len(grants) == 1 and tally.granted == 1

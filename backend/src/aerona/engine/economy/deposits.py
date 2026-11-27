@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.goods_tables import BYPRODUCTS, DIFFICULTY, ORIGIN_BASE, ORIGIN_WORDS
 from aerona.catalog.materials import MATERIALS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import PHYSICS_COLUMNS, PROPERTY_COLUMNS, ResourceProfileRow, WorldMaterialRow
 from aerona.db.tables.entities import EntityRow
@@ -37,9 +38,9 @@ def physics_base(row: WorldMaterialRow) -> MaterialKind:
 
 
 async def backfill_physics(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, PHYSICS_FIXUP) is not None:
+    if not await fixup_due(session, PHYSICS_FIXUP):
         return 0
-    rows = list(await session.scalars(select(WorldMaterialRow)))
+    rows = [row for row in await session.scalars(select(WorldMaterialRow).order_by(WorldMaterialRow.id)) if physics_unset(row)]
     for row in rows:
         spec = MATERIALS[physics_base(row)]
         for column in PHYSICS_COLUMNS:
@@ -47,6 +48,11 @@ async def backfill_physics(session: AsyncSession) -> int:
     session.add(AppliedFixupRow(key=PHYSICS_FIXUP, result={"materials": len(rows)}))
     await session.flush()
     return len(rows)
+
+
+def physics_unset(row: WorldMaterialRow) -> bool:
+    table = WorldMaterialRow.__table__
+    return all(getattr(row, column) == getattr(table.c[column].default, "arg", None) for column in PHYSICS_COLUMNS)
 
 
 @dataclass(frozen=True)

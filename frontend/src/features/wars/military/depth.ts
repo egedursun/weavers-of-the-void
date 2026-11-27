@@ -211,7 +211,11 @@ export const FEUD_ACTIONS: Record<string, Named> = {
   mediated: { label: 'Mediated', icon: HeartHandshake, tone: 'success' },
   raid: { label: 'A raid', icon: Swords, tone: 'danger' },
   assassinate: { label: 'An assassination', icon: Skull, tone: 'danger' },
-  demand_wergild: { label: 'Wergild demanded', icon: Coins, tone: 'gold' },
+  demand_wergild: {
+    label: 'Payment for the dead demanded',
+    icon: Coins,
+    tone: 'gold',
+  },
   escalate: { label: 'Open war', icon: Flame, tone: 'danger' },
   rest: { label: 'A quiet epoch', icon: Leaf, tone: 'muted' },
   ambush: { label: 'An ambush', icon: Eye, tone: 'danger' },

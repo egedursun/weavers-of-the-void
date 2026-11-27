@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.catalog.life_traits import WAR_ENDING_TRAITS, having
 from aerona.catalog.named_years import year_name
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.ages import IrregularSeasonRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -158,7 +159,7 @@ async def founding_years(ctx: TickContext, atlas: RegionAtlas) -> int:
 
 
 async def backfill_notable_years(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, BACKFILL_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BACKFILL_FIXUP):
         return 0
     atlas = await RegionAtlas.load(ctx.session)
     known = {(row.world_id, row.region_entity_id, row.epoch, row.kind) for row in await ctx.session.scalars(select(NotableYearRow))}

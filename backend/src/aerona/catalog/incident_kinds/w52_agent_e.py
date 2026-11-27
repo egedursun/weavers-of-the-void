@@ -329,7 +329,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gift.released",
         G.EXCHANGE,
-        "{giver} released {receiver} from the return owed for a gift worth {value}, given for {occasion}; {receiver} gained {loyalty} regard for it.",
+        "{giver} released {receiver} from the return owed for a gift worth {value}, given for {occasion}; {receiver}'s regard for {giver} rose by {loyalty}.",
         roles=GIFT_SIDES,
         facts=(
             FactSpec("value", FactValue.NUMBER, unit=FactUnit.COIN),
@@ -372,7 +372,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "right.made",
         G.EXCHANGE,
-        "{owner} claimed the right to {right}, a right of kind {kind}.",
+        "{owner} claimed the right to {right}, {kind:an} right.",
         roles=(RoleSpec(R.OWNER),),
         facts=(FactSpec("right", FactValue.NAME), FactSpec("kind", FactValue.ENUM, enum=RightKind)),
         steps=frozenset({StepAction.PROCLAIM}),
@@ -382,7 +382,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "right.stolen",
         G.EXCHANGE,
-        "{actor} took the right to {right} from {victim}, a right of kind {kind}.",
+        "{actor} took the right to {right} from {victim}, {kind:an} right.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM)),
         facts=(FactSpec("right", FactValue.NAME), FactSpec("kind", FactValue.ENUM, enum=RightKind)),
         steps=frozenset({StepAction.COPY}),
@@ -392,7 +392,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "right.passed",
         G.EXCHANGE,
-        "The right to {right}, of kind {kind}, passed from {giver} to {receiver} by {way}.",
+        "The right to {right}, {kind:an} right, passed from {giver} to {receiver} by {way}.",
         roles=GIFT_SIDES,
         facts=(FactSpec("right", FactValue.NAME), FactSpec("kind", FactValue.ENUM, enum=RightKind), FactSpec("way", FactValue.ENUM, enum=RightAcquired)),
         steps=frozenset({StepAction.GIVE}),
@@ -411,7 +411,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.claim_right",
         G.FAITH,
-        "{owner} claimed the right to {right}, of kind {kind}, by {way}.",
+        "{owner} claimed the right to {right}, {kind:an} right, by {way}.",
         roles=(RoleSpec(R.OWNER),),
         facts=(FactSpec("right", FactValue.NAME), FactSpec("kind", FactValue.ENUM, enum=RightKind), FactSpec("way", FactValue.ENUM, enum=RightAcquired)),
         place=PlaceRule.WHEN_KNOWN,

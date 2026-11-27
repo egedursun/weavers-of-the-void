@@ -369,7 +369,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "contraband.books",
         G.EXCHANGE,
-        "Smugglers of {actor} passed {carried:forbidden book|forbidden books} from hand to hand in {place}.",
+        "Smugglers of {actor} moved {carried:forbidden book|forbidden books} in secret around {place}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.PLACE),
@@ -911,7 +911,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "market.depleting",
         G.EXCHANGE,
-        "{subject} hit bottom; its owners take what little is left.",
+        "{subject} is nearly spent; its owners take what little is left.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("abundance", FactValue.NUMBER, unit=FactUnit.PERCENT),
@@ -1037,7 +1037,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "money.issued",
         G.EXCHANGE,
-        "{maker} began to issue its own money as {form}: {product}.",
+        "{maker} began to issue its own money ({form}): {product}.",
         roles=(
             RoleSpec(R.MAKER),
             RoleSpec(R.PRODUCT),
@@ -1072,7 +1072,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "money.reformed",
         G.EXCHANGE,
-        "{actor} moved its money to {form}, backed{backing:? by #}.",
+        "{actor} moved its money to a new form ({form}){backing:?, backed by #}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.SUBJECT, required=False),
@@ -1181,7 +1181,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "rights.infringed",
         G.EXCHANGE,
-        "{actor} took up {right} without leave, to the anger of {victim}.",
+        "{actor} used the {kind} {right} without leave, to the anger of {victim}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.VICTIM),
@@ -1432,7 +1432,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.law_laid",
         G.EXCHANGE,
-        "{authority} laid down {product}, a law of {law}, for {owner}.",
+        "{authority} laid down {product}, {law:an}, for {owner}.",
         roles=(
             RoleSpec(R.AUTHORITY),
             RoleSpec(R.PRODUCT),
@@ -1652,7 +1652,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.set_levy",
         G.EXCHANGE,
-        "{authority} set the {tax} of {subject} at {rate} in a hundred.",
+        "{authority} set a tax ({tax}) on {subject} at {rate} in a hundred.",
         roles=(
             RoleSpec(R.AUTHORITY),
             RoleSpec(R.SUBJECT),
@@ -1767,7 +1767,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "trade.convoy_lost",
         G.EXCHANGE,
-        "A convoy on {subject} was lost with {cargo_lost} loads.",
+        "A convoy on {subject} was lost with {cargo_lost:load|loads}.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.OWNER, required=False),
@@ -1806,7 +1806,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "trade.convoy_raided",
         G.EXCHANGE,
-        "A convoy on {subject} was raided and {cargo_lost} loads taken.",
+        "A convoy on {subject} was raided and {cargo_lost:load|loads} taken.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.OWNER, required=False),
@@ -1893,7 +1893,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "trade.product_first_traded",
         G.EXCHANGE,
-        "{subject} first brought {product} of its own fields to market.",
+        "{subject} first brought {product} of its own growing to market.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("product", FactValue.ENUM, enum=PlantYield),),
         place=PlaceRule.NONE,
@@ -1985,7 +1985,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "trade_route.formed",
         G.EXCHANGE,
-        "The way between {origin} and {destination} became a road merchants know by name: {subject}.",
+        "The way between {origin} and {destination} became a route merchants know by name: {subject}.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.ORIGIN),

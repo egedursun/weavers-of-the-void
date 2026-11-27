@@ -1161,7 +1161,7 @@ rendered "as of that age": epoch/year set to that age, no climate, no age star, 
 | rumours (soylentiler) | string[], counts `narrative.rumours_*` | Rumours circulating among mortals, some true, some false |
 | sayings (sozler) | array {kind (tur) enum [proverb, lullaby, prayer, malediction, folk song, oath, tongue-twister], text}, counts `narrative.sayings_*` | Mortals' sayings about it; may contain words from the naming language |
 | details (ayrintilar) | string[], counts `narrative.details_*` | Strange, concrete details; each of a different kind (a habit, a material, a non-numeric measure, a ban, a sound, a texture, a colour…) and specific to this entity; never use the same sense twice |
-| hidden_truth (gizli_gercek) | string | A truth nobody knows, connected to the entity's own history or to the laws of the world |
+| hidden_truth (gizli_gercek) | string | Anything about it not yet known to anyone, if there is any; empty otherwise |
 | special (ozel) — only for types with a special table | object, all fields required | {special.description} |
 
   required: only `history` (Haiku used to dump everything into `history` and fail the schema when all six were

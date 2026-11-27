@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 
 from aerona.catalog.life.sacred import LATER_SACRAMENTS, SHARED_MEAL_AFTER
 from aerona.catalog.sacred import SACRAMENT_GUARDS, STATE_MODELS, STRATUM_MODELS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -13,6 +14,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, CultOfficeRow, CultTenetRow, ReincarnationRow, SoulJudgementRow, SpiritProfileRow
 from aerona.db.tables.folkways import PurityRow
 from aerona.db.tables.mind import DreamRow
+from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.renown import DeedRow
 from aerona.db.tables.sacred import DoctrineAfterlifeRow, DoctrineSacramentRow, FaithClimateRow, SacramentRow
 from aerona.db.write_guard import held
@@ -23,10 +25,12 @@ from aerona.domain.enums.faith import AfterlifeState, BindingKind, JudgementDoct
 from aerona.domain.enums.folkways import PurityState
 from aerona.domain.enums.mind import DreamKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.sacred import AfterlifeModel, SacramentKind
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.eras.effects import tech_factor
+from aerona.engine.mortal.life import young as young_stage
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import add_flag, has_flag, living_entity, remove_flag
 from aerona.engine.primitives.stats import set_stats, stat_or
@@ -87,11 +91,17 @@ async def teach_sacraments(ctx: TickContext, cult_id: int, tally: RiteTally, *, 
         tally.taught += 1
 
 
+def newborn_ids() -> Select[int]:
+    young = sorted(stage for stage in LifeStage if young_stage(stage))
+    return select(MortalProfileRow.entity_id).where(MortalProfileRow.life_stage.in_(young))
+
+
 async def due_rites(ctx: TickContext) -> list[tuple[EntityRow, SacramentKind]]:
     table = ctx.rules.sacraments
     mortals = select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
     found: list[tuple[EntityRow, SacramentKind]] = [
-        (row, SacramentKind.BIRTH_BLESSING) for row in await ctx.session.scalars(mortals.where(EntityRow.birth_epoch == ctx.epoch).order_by(EntityRow.id))
+        (row, SacramentKind.BIRTH_BLESSING)
+        for row in await ctx.session.scalars(mortals.where(EntityRow.birth_epoch == ctx.epoch, EntityRow.id.in_(newborn_ids())).order_by(EntityRow.id))
     ]
     wed = select(BondRow.source_node_id).where(BondRow.kind == BondKind.SPOUSE_OF, BondRow.epoch == ctx.epoch)
     married = select(SacramentRow.mortal_entity_id).where(SacramentRow.kind == SacramentKind.MARRIAGE, SacramentRow.epoch == ctx.epoch)
@@ -126,7 +136,7 @@ async def due_rites(ctx: TickContext) -> list[tuple[EntityRow, SacramentKind]]:
 
 
 async def keep_sacraments(ctx: TickContext, tally: RiteTally) -> None:
-    later = frozenset() if await ctx.session.get(AppliedFixupRow, LATER_SACRAMENTS_FIXUP) is not None else LATER_SACRAMENTS
+    later = frozenset() if not await fixup_due(ctx.session, LATER_SACRAMENTS_FIXUP) else LATER_SACRAMENTS
     for cult_id in await churches(ctx):
         if not held(cult_id):
             await teach_sacraments(ctx, cult_id, tally, later=later)

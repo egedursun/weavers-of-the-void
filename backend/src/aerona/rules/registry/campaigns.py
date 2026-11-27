@@ -70,6 +70,9 @@ class CampaignsRules(Spanned):
     siege_default_supplies: int = rule(50, 0, 100000, RuleGroup.WAR_AND_DIPLOMACY, "Supplies assumed for a besieged city with no granary record")
     siege_default_population: int = rule(100, 0, 10000000, RuleGroup.WAR_AND_DIPLOMACY, "Population assumed for a besieged city with no population record")
     great_victory_diff: int = rule(35, 0, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Strength difference counted as a great victory")
+    great_victory_loss_pct: int = rule(
+        20, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Share of the beaten side's fielded soldiers it must lose or see taken for a win to count as great (%)"
+    )
     great_victory_score: int = rule(2, 0, 20, RuleGroup.WAR_AND_DIPLOMACY, "Contribution of a great victory to the war score")
     loser_morale_loss: int = rule(10, 0, 100, RuleGroup.WAR_AND_DIPLOMACY, "Morale loss of the defeated army")
     loser_morale_diff_divisor: int = rule(8, 1, 1000, RuleGroup.WAR_AND_DIPLOMACY, "Defeated extra morale loss: strength difference / this number")

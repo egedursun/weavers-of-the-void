@@ -1,7 +1,6 @@
-from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
 from aerona.db.authorship import HandAuthored
 from aerona.db.base import Base, CreatedAtMixin, TimestampMixin
 from aerona.db.columns import at_least, enum_type
@@ -59,7 +58,7 @@ class ActionRecordRow(HandAuthored, CreatedAtMixin, Base):
     target_node_id: Mapped[int | None] = mapped_column(ForeignKey("nodes.id", ondelete="SET NULL"))
     ledger_entry_id: Mapped[int | None] = mapped_column(ForeignKey("ledger_entries.id", ondelete="SET NULL"))
     essence_spent: Mapped[int] = mapped_column(default=0)
-    summary: Mapped[str | None] = mapped_column(String(LEDGER_SUMMARY_MAX_LENGTH))
+    summary: Mapped[str | None] = mapped_column(Text)
     detail: Mapped[str | None] = mapped_column(Text)
     reason: Mapped[str | None] = mapped_column(Text)
 
@@ -91,4 +90,4 @@ class CreationRewardRow(Base):
     partner_renown: Mapped[int] = mapped_column(default=0)
     partner_cost: Mapped[int] = mapped_column(default=0)
     taken_back_pct: Mapped[int] = mapped_column(default=0)
-    reason: Mapped[str | None] = mapped_column(String(LEDGER_SUMMARY_MAX_LENGTH))
+    reason: Mapped[str | None] = mapped_column(Text)

@@ -4,6 +4,7 @@ from enum import StrEnum
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.core.grammar import spoken
 from aerona.core.total import total
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.divine_conceptions import DivineConceptionRow, GodReadingRow
@@ -65,7 +66,7 @@ async def set_axis(ctx: TickContext, row: DivineConceptionRow, axis: ConceptionA
     if axis is A.COUNT:
         await read_gods(ctx, row)
     roles = {IncidentRole.SUBJECT: row.cult_entity_id, IncidentRole.ACTOR: by}
-    await record(ctx, "faith.conception_changed", roles=roles, facts={"axis": axis, "value": value.value})
+    await record(ctx, "faith.conception_changed", roles=roles, facts={"axis": axis, "value": spoken(value)})
     return True
 
 

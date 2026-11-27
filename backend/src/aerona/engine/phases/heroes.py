@@ -204,6 +204,12 @@ async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, 
     await record(ctx, key, roles={IncidentRole.ACTOR: hero.id, IncidentRole.TARGET: quest.target_node_id}, facts=facts, at_moment=when)
 
 
+async def taken_by_another(ctx: TickContext, quest: HeroQuestRow, target: EntityRow, hero: EntityRow) -> bool:
+    if quest.aim is not QuestAim.FIND:
+        return False
+    return any(bond.source_node_id != hero.id for bond in await BondRepository(ctx.session).incoming(target.id, BondKind.OWNS))
+
+
 async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, world: HeroWorld, forced: bool | None = None) -> HeroQuestStatus:
     target = await ctx.session.get(EntityRow, quest.target_node_id) if quest.target_node_id is not None else None
     if target is not None and target.entity_type is EntityType.SPECIES:
@@ -211,7 +217,7 @@ async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestR
         if target.status is EntityStatus.CANON:
             await encounter(ctx, hero, target, "at the end of a long hunt")
         return quest.status
-    if target is None or target.status is not EntityStatus.CANON:
+    if target is None or target.status is not EntityStatus.CANON or await taken_by_another(ctx, quest, target, hero):
         await close_quest(ctx, quest, HeroQuestStatus.ABANDONED)
         return quest.status
     companions = await companions_of(ctx, hero)
@@ -382,6 +388,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
 @reads(
     "cult.zeal",
     "item.damage",
+    "item.might",
     "item.protection",
     "knowledge.spread",
     "mortal.age",
@@ -541,6 +548,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.incidents",
     "table.incorporeal_rights",
     "table.injuries",
+    "table.item_history",
     "table.language_profiles",
     "table.marriages",
     "table.memories",

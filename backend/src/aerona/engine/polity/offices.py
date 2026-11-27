@@ -65,6 +65,7 @@ from aerona.engine.polity.oaths import break_on, swear
 from aerona.engine.polity.repute import shift_infamy
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.knowledge import BranchLevels
+from aerona.engine.primitives.maturity import away_among, past_office_age
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, bond_exists, close, connect, has_flag, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -147,6 +148,10 @@ async def pressed_candidate(ctx: TickContext, realm: Realm, candidates: list[Ent
 
 async def appoint(ctx: TickContext, realm: Realm, office: OfficeRow, holder: EntityRow | None, *, by_id: int | None, reason: str) -> None:
     if holder is not None and ctx.rules.citizenship.rightless_office and not await has_right(ctx.session, holder.id, MemberRight.OFFICE, realm.entity.id):
+        return
+    if holder is not None and office.kind is not OfficeKind.RULER and past_office_age(ctx.rules, holder):
+        return
+    if holder is not None and holder.id in await away_among(ctx.session, [holder.id]):
         return
     kept = await reserved_class(ctx.session, realm.entity.id)
     if holder is not None and kept is not None and holder.social_class is not kept and office.kind not in KEPT_OFFICES:

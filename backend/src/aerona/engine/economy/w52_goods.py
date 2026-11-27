@@ -1,4 +1,5 @@
 from aerona.catalog.methods import PROCESS_OUTPUT, PROCESS_WORKSHOP, SEEDED_PROCESSES
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.economy import GoodsFlow
@@ -12,7 +13,7 @@ HALF = 2
 
 
 async def seed_new_goods(ctx: TickContext, book: EconomyBook) -> int:
-    if await ctx.session.get(AppliedFixupRow, GOODS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, GOODS_FIXUP):
         return 0
     seeded = 0
     ledger = goods_of(ctx.session, ctx.epoch)

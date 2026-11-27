@@ -312,7 +312,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "industry.energy_short",
         G.MAKING,
-        "The works of {subject} slowed for want of {energy} power; {unmet} in a hundred of the need went unmet.",
+        "The works of {subject} went short of {energy} power; {unmet} in a hundred of the need went unmet.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("energy", FactValue.ENUM, enum=EnergyKind),
@@ -502,7 +502,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "mining.",
             G.MAKING,
-            "{hazard} at {subject} killed {killed:worker|workers} of {owner} and maimed {maimed}.",
+            "{hazard} at {subject} killed {killed:worker|workers} of {owner} and maimed {maimed:no one|one|#}.",
             roles=(RoleSpec(R.SUBJECT), RoleSpec(R.OWNER), RoleSpec(R.VICTIM, required=False, many=True), RoleSpec(R.PRODUCT, required=False)),
             facts=(
                 FactSpec("hazard", FactValue.ENUM, enum=HazardKind),

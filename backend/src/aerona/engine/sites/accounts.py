@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.catalog.rocks import GASSY_ROCKS, ROCKS
 from aerona.catalog.theories import ANOMALY_DOMAINS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.discovery import TheoryAnomalyRow
 from aerona.db.tables.entities import EntityRow
@@ -110,7 +111,7 @@ async def remnant_near(ctx: TickContext, place: EntityRow) -> WarRemnantRow | No
 
 
 async def mark_ordnance(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, SITES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, SITES_FIXUP):
         return 0
     marked = 0
     fields = await ctx.session.execute(

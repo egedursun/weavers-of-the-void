@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.backfill_words import STRUCTURE_WORDS
 from aerona.catalog.life.domain import GONE_STATES
 from aerona.catalog.structures import ENGINE_KIND_STRUCTURES, WORKSHOP_STRUCTURES
+from aerona.db.fixups import fixup_due, marker
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import WorkshopRow
@@ -108,11 +109,12 @@ async def untyped(ctx: TickContext) -> list[EntityRow]:
 
 async def backfill_structures(ctx: TickContext) -> dict[str, int]:
     pending = await untyped(ctx)
-    applied = await ctx.session.get(AppliedFixupRow, BACKFILL_FIXUP)
+    applied = await marker(ctx.session, BACKFILL_FIXUP)
+    legacy = applied is None and await fixup_due(ctx.session, BACKFILL_FIXUP)
     if not pending and applied is not None:
         return {}
     ruins = await flags_by_entity(ctx.session, EntityFlag.RUIN)
-    profiles = [await type_structure(ctx, structure, structure.id in ruins, legacy=applied is None) for structure in pending]
+    profiles = [await type_structure(ctx, structure, structure.id in ruins, legacy=legacy) for structure in pending]
     result = {"typed": len(profiles), "workshops": await link_workshops(ctx, profiles)}
     if applied is None:
         ctx.session.add(AppliedFixupRow(key=BACKFILL_FIXUP, result=result))
@@ -124,7 +126,7 @@ async def backfill_structures(ctx: TickContext) -> dict[str, int]:
 
 
 async def snapshot_styles(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, STYLE_FIXUP) is not None:
+    if not await fixup_due(ctx.session, STYLE_FIXUP):
         return 0
     taken = 0
     for profile in list(await ctx.session.scalars(select(StructureProfileRow).where(StructureProfileRow.style_ornament.is_(None)))):

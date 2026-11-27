@@ -23,6 +23,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.mind.book import Values, skill_level, values_for
 from aerona.engine.polity.book import Realm, RealmBook
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.standing import ended_ids, still_standing
 from aerona.engine.services.community_relations import change_relation
 
 THREAT = "threat"
@@ -70,7 +71,7 @@ async def core_values(ctx: TickContext, realm: Realm) -> Values:
 
 
 async def shift_regard(ctx: TickContext, holder_id: int, subject_id: int, *, threat: int = 0, trust: int = 0) -> None:
-    if holder_id == subject_id or held(holder_id):
+    if holder_id == subject_id or held(holder_id) or not await still_standing(ctx.session, holder_id):
         return
     row = await regard_of(ctx, holder_id, subject_id)
     if threat and THREAT not in row.locked:
@@ -168,7 +169,7 @@ async def on_marriage(ctx: TickContext, first: int, second: int) -> None:
 
 async def fade(ctx: TickContext) -> None:
     table = ctx.rules.statecraft
-    for row in await ctx.session.scalars(select(PolityRegardRow)):
+    for row in await ctx.session.scalars(select(PolityRegardRow).where(PolityRegardRow.holder_entity_id.not_in(ended_ids()))):
         if held(row.holder_entity_id) or held(row.subject_entity_id):
             continue
         if THREAT not in row.locked:

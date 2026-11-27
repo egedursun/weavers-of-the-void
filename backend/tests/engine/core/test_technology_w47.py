@@ -30,3 +30,14 @@ async def test_worlds_take_their_starting_era_and_a_held_level_stays(session: As
     row.level, row.locked = 9, ["level"]
     await keep_technology(ctx)
     assert await family_level(session, world.world.id, TechFamily.SPACE) == 9
+
+
+async def test_a_world_carries_the_furthest_level_its_peoples_reached(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await at(session, 2)
+    await keep_technology(ctx)
+    ahead = await session.get(TechnologyProfileRow, (world.people.id, TechFamily.MEDICINE))
+    assert ahead is not None
+    ahead.level, ahead.locked = 9, ["level"]
+    await keep_technology(await at(session, 3))
+    row = await session.get(TechnologyProfileRow, (world.world.id, TechFamily.MEDICINE))
+    assert row is not None and row.level == 9 and row.updated_epoch == 3

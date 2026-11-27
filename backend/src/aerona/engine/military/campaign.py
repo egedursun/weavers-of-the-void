@@ -50,6 +50,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.repeats import told_this_epoch
 from aerona.rules.registry import Rules
 
 MOUNTED = frozenset({UnitFamily.MOUNTED, UnitFamily.BEAST})
@@ -262,9 +263,10 @@ async def mutiny(ctx: TickContext, army: EntityRow, row: ArmyRow, profile: ArmyP
     profile.mutiny = clamp_int(profile.mutiny - ctx.rules.campaign_depth.mutiny_threshold // 2, 0, PERCENT)
     sync(army, rows, ctx.rules)
     roles = {IncidentRole.SUBJECT: army.id, **({IncidentRole.OWNER: owner.id} if owner is not None else {})}
-    await record(
-        ctx, f"war.mutiny.{outcome.value}", roles=roles, facts={"outcome": outcome, "mutiny": profile.mutiny}, place=profile.region_entity_id, steps=steps
-    )
+    if not await told_this_epoch(ctx, f"war.mutiny.{outcome.value}", army.id, IncidentRole.SUBJECT):
+        await record(
+            ctx, f"war.mutiny.{outcome.value}", roles=roles, facts={"outcome": outcome, "mutiny": profile.mutiny}, place=profile.region_entity_id, steps=steps
+        )
     ctx.count(f"mutiny_{outcome.value}")
     return outcome
 

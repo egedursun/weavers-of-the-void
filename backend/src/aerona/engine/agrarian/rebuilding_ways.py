@@ -152,4 +152,4 @@ async def rebuilt(ctx: TickContext, row: ReconstructionRow, town: EntityRow) -> 
     if REBUILD_PLANS[row.plan].moves:
         await relocate(ctx, row, town)
     await learn(ctx, row, town)
-    await record(ctx, "settlement.rebuilt", roles={IncidentRole.SUBJECT: town.id}, facts={"cause": row.cause, "plan": row.plan}, place=town.id)
+    await record(ctx, "settlement.rebuilt", roles={IncidentRole.SUBJECT: town.id}, facts={"cause": row.cause}, place=town.id)

@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.life.leagues import APPLY_LEGACY_TREATY_KINDS, BINDING_TREATIES, TREATY_AIMS
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.leagues import LeagueMemberRow, PolityLeagueRow
@@ -46,7 +47,7 @@ async def from_treaty(ctx: TickContext, treaty: TreatyProfileRow, tally: LeagueT
 
 
 async def apply_legacy(ctx: TickContext, tally: LeagueTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return
     query = select(TreatyProfileRow).where(TreatyProfileRow.kind.in_(APPLY_LEGACY_TREATY_KINDS), TreatyProfileRow.status == TreatyStatus.IN_FORCE)
     made = 0

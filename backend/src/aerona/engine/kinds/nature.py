@@ -7,6 +7,7 @@ from aerona.catalog.materials import BUILD_MATERIALS, MATERIALS
 from aerona.catalog.methods import METHODS, MethodSpec
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.kind_concepts.nature import FUNCTION_DANGER, FUNCTION_STEPS, LEGACY_TRAITS, OFFICE_DUTY, REALM_FUNCTION, TRAIT_STATS
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -198,7 +199,7 @@ TRAIT_FIXUP = "kinds.legacy_traits"
 
 
 async def legacy_traits(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, TRAIT_FIXUP) is not None:
+    if not await fixup_due(ctx.session, TRAIT_FIXUP):
         return 0
     built = {row.built_in_key: row.id for row in await ctx.session.scalars(select(TraitKindRow).where(TraitKindRow.built_in.is_(True)))}
     pairs: list[tuple[int, str]] = []

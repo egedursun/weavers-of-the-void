@@ -18,7 +18,7 @@ from aerona.domain.enums.finance import CreditState
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import coin_of, give_coin, take_coin
+from aerona.engine.economy.purse import coin_of, give_coin, held_coin, take_coin
 from aerona.engine.finance.credit import credit_row, owed, realm_of
 from aerona.engine.polity.signatories import realm_of_party, signatories_of
 from aerona.engine.primitives.queries import close, connect
@@ -121,7 +121,7 @@ async def pay_rescuers(ctx: TickContext, tally: DebtTally) -> None:
         rescuer = await ctx.session.get(EntityRow, row.rescuer_node_id) if row.rescuer_node_id is not None else None
         if debtor is None or rescuer is None or held(debtor.id):
             continue
-        due = await coin_of(ctx.session, ctx.rules, debtor) * row.rescue_terms // PERCENT
+        due = held_coin(await coin_of(ctx.session, ctx.rules, debtor)) * row.rescue_terms // PERCENT
         if due > 0 and await take_coin(ctx.session, ctx.rules, debtor, due):
             await give_coin(ctx.session, ctx.rules, rescuer, due)
             tally.paid += due

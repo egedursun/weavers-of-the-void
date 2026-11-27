@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.departures import DepartureRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -17,7 +18,7 @@ PRESSED = "tools.mortal.leverage_pressed"
 
 
 async def apply_legacy(ctx: TickContext, tally: DepartureTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return
     query = (
         select(IncidentRow.epoch, IncidentParticipantRow.node_id)

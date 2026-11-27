@@ -179,6 +179,7 @@ async def test_a_famine_deepens_kills_at_its_height_and_leaves_sickness_behind(r
     assert profile.phase is EventPhase.AFTERMATH and ground.scars.get(ScarKind.PLAGUE_GROUND.value, 0) > 0
     await advance(context(realm.session, epoch=6), atlas)
     assert profile.end_epoch == 6 and profile.end_year is not None and profile.end_year >= (profile.start_year or 0)
+    assert profile.phase is EventPhase.MEMORY
 
 
 async def test_a_held_phase_does_not_turn(realm: Realm) -> None:

@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.catalog.powers import unlocked_power_slots
 from aerona.core.random import SeededRandom
 from aerona.db.tables.divine import AvatarRow, DivineStandingRow, DivineWoundRow, DomainActivityRow, GodGoalRow
+from aerona.db.tables.economy import GoodsFlowRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.sons import SonPowerRow, SonRow
@@ -10,6 +11,7 @@ from aerona.db.write_guard import HELD_SCOPE, HeldScope
 from aerona.domain.enums.agent import MessageIntent
 from aerona.domain.enums.divine import DivineWoundKind, DomainActivity, GoalSource, GoalState, GodGoalKind, WoundCause
 from aerona.domain.enums.domain import Domain
+from aerona.domain.enums.economy import CommodityKind, GoodsFlow
 from aerona.domain.enums.entity import EngineKind, EntityStatus, EntityType
 from aerona.domain.enums.son import PowerEffect, Stat
 from aerona.domain.models.entity_stats import EventStats
@@ -169,3 +171,27 @@ def test_a_child_of_two_sons_takes_the_mean_of_their_stats_and_a_domain_from_eac
     assert all(60 - spread <= stats.get(stat) <= 60 + spread for stat in Stat)
     one, two = inherited_domains(SeededRandom.for_epoch(1, 1, "child"), (Domain.LOVE, Domain.LIFE), [first, second])
     assert one in first.domains and two in second.domains
+
+
+async def test_an_aim_already_reached_is_set_ahead_of_where_the_god_stands(realm: Realm) -> None:
+    sea = await god(realm, "Marrow", Domain.SEA, Domain.STORM)
+    await worship(realm, await settlement(realm, "Brinehold"), sea.id)
+    ctx = context(realm.session)
+    zero = await control.set_goal(ctx, sea.id, GodGoalKind.BE_WORSHIPPED, amount=0)
+    spread = await control.set_goal(ctx, sea.id, GodGoalKind.SPREAD_DOMAIN, domain=Domain.SEA, amount=0)
+    await pursue_goals(context(realm.session, tuned(son_goals={"choose_chance": 0})))
+    assert zero.amount > 1 and zero.state is GoalState.ACTIVE
+    assert spread.amount > 1 and spread.state is GoalState.ACTIVE
+
+
+async def test_a_trade_god_counts_the_trade_its_worlds_make_whatever_way_it_moves(realm: Realm) -> None:
+    trader = await god(realm, "Tollis", Domain.TRADE, Domain.ROAD)
+    town = await settlement(realm, "Coinford")
+    await worship(realm, town, trader.id)
+    for commodity in (CommodityKind.GRAIN, CommodityKind.TIMBER, CommodityKind.TOOLS):
+        realm.session.add(GoodsFlowRow(epoch=3, community_entity_id=town.id, commodity=commodity, flow=GoodsFlow.TRADE, quantity=12))
+    await realm.session.flush()
+    await tend_domain_economy(context(realm.session, epoch=3))
+    rows = list(await realm.session.scalars(select(DomainActivityRow).where(DomainActivityRow.god_node_id == trader.id)))
+    traded = next(row for row in rows if row.activity is DomainActivity.TRADE)
+    assert traded.count == 3 and traded.essence > 0

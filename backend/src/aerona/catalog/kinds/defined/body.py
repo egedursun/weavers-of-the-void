@@ -566,7 +566,7 @@ HANDEDNESS = total(
     {
         Handedness.RIGHT: Defined(
             "Right",
-            checked_by=("engine.body.describe._bearer_lines",),
+            checked_by=("engine.body.describe._bearer_lines", "engine.body.digits.backfill_digits"),
             used_by=("db.tables.body.BodyRow", "engine.body.capacities.BodyState", "engine.body.digits.handedness_for", "engine.body.functions.weapon_grasp"),
         ),
         Handedness.LEFT: Defined("Left", checked_by=("engine.body.functions.weapon_grasp",), used_by=("engine.body.digits.handedness_for",)),

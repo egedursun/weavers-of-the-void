@@ -40,7 +40,7 @@ SACRED_MECHANICS = (
         phases=("folk_spirits",),
         surface=Surface(drawer=DRAWER, chart=FAVOUR),
         backfill="folk_spirits: notable places, large towns and houses gain their spirits over the epochs after the upgrade",
-        templates=("sacred.spirit_bound",),
+        templates=("spirit.appeared",),
         tables=(GeniusLocusRow.__tablename__,),
         exposure=Exposure.TOOL,
         tools=("bind_genius_locus", "offer_to_spirit"),

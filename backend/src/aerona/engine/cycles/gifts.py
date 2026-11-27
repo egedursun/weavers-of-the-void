@@ -13,7 +13,7 @@ from aerona.db.tables.economy import NodeMaterialRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
 from aerona.db.tables.military import FeudRow
-from aerona.db.tables.mortal import MarriageRow
+from aerona.db.tables.mortal import MarriageRow, MortalProfileRow
 from aerona.db.tables.polity import HouseMemberRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
@@ -39,9 +39,10 @@ from aerona.engine.cycles.standing import name_of, raise_standing, regard
 from aerona.engine.divine.gods import divine_of
 from aerona.engine.divine.standing import standing_row, tally_epoch
 from aerona.engine.ecology.beasts import hand_over
-from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
+from aerona.engine.economy.purse import coin_of, held_coin, receive_coin, take_coin
 from aerona.engine.lore.items import material_key
 from aerona.engine.mind.preferences import fit, prefs_of
+from aerona.engine.mortal.life import young
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import stat_or
@@ -201,7 +202,7 @@ async def drain_rivals(ctx: TickContext, gift: GiftRow) -> None:
         entity = await ctx.session.get(EntityRow, side)
         if entity is None or held(side):
             continue
-        cost = round_half_up(await coin_of(ctx.session, ctx.rules, entity) * table.rivalry_drain_pct / PERCENT)
+        cost = round_half_up(held_coin(await coin_of(ctx.session, ctx.rules, entity)) * table.rivalry_drain_pct / PERCENT)
         if cost > 0 and await take_coin(ctx.session, ctx.rules, entity, cost):
             await raise_standing(ctx, side, cost * ctx.rules.reciprocity.give_prestige / PERCENT)
 
@@ -350,8 +351,10 @@ async def settle_due(ctx: TickContext, tally: GiftTally) -> None:
         if held(gift.receiver_node_id) or "state" in gift.locked:
             continue
         receiver = await living_entity(ctx.session, gift.receiver_node_id)
-        if receiver is None:
-            await lapse(ctx, gift)
+        giver = await ctx.session.get(EntityRow, gift.giver_node_id)
+        if receiver is None or (giver is not None and giver.status is not EntityStatus.CANON):
+            gift.state = GiftState.LAPSED
+            gift.settled_epoch = ctx.epoch
             tally.lapsed += 1
             continue
         if await answer_due(ctx, gift, receiver, tally) is not None:
@@ -409,7 +412,7 @@ async def potlatch(ctx: TickContext, tally: GiftTally) -> None:
         host = await ctx.session.get(EntityRow, feast.host_node_id)
         if rival is None or host is None or not ctx.rng(f"potlatch.{feast.id}").chance(table.claim_pct * await obligation(ctx, host.id)):
             continue
-        base = max(table.minimum, round_half_up(await coin_of(ctx.session, ctx.rules, host) * table.stake_pct / PERCENT))
+        base = max(table.minimum, round_half_up(held_coin(await coin_of(ctx.session, ctx.rules, host)) * table.stake_pct / PERCENT))
         destroyed = ctx.rng(f"potlatch.destroy.{feast.id}").chance(table.destroy_pct)
         gift = await give(ctx, host.id, rival, base, GiftOccasion.FEAST, destroyed=destroyed)
         if gift is None:
@@ -667,12 +670,17 @@ async def occasion_gift(ctx: TickContext, giver_id: int, receiver_id: int, occas
 async def birth_gifts(ctx: TickContext, tally: GiftTally) -> None:
     table = ctx.rules.gifts
     births = await ctx.session.execute(
-        select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.PARENT_OF, BondRow.epoch == ctx.epoch - 1).order_by(BondRow.id)
+        select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.kind == BondKind.PARENT_OF, BondRow.epoch >= ctx.epoch - 1).order_by(BondRow.id)
     )
+    given = set(await ctx.session.scalars(select(GiftRow.receiver_node_id).where(GiftRow.occasion == GiftOccasion.BIRTH)))
     for parent, child in births.all():
+        profile = await ctx.session.get(MortalProfileRow, child)
+        if child in given or profile is None or not young(profile.life_stage):
+            continue
         line = await kin_line(ctx, parent)
         if line in {parent, child} or not ctx.rng(f"gift.birth.{child}.{line}").chance(table.birth_gift_pct):
             continue
+        given.add(child)
         if await occasion_gift(ctx, line, child, GiftOccasion.BIRTH, table.occasion_value) is not None:
             await regard(ctx, (child, line), table.patronage_loyalty, MemoryKind.GIFTED_ME, "a gift at birth")
             tally.births += 1
@@ -754,6 +762,12 @@ async def hospitality(ctx: TickContext, tally: GiftTally) -> None:
     gatherings = await ctx.session.scalars(
         select(GatheringRow).where(GatheringRow.epoch == ctx.epoch, GatheringRow.status == GatheringStatus.HELD).order_by(GatheringRow.id)
     )
+    hosted = {
+        (giver, receiver)
+        for giver, receiver in await ctx.session.execute(
+            select(GiftRow.giver_node_id, GiftRow.receiver_node_id).where(GiftRow.occasion == GiftOccasion.HOSPITALITY, GiftRow.epoch == ctx.epoch)
+        )
+    }
     for gathering in list(gatherings):
         guests = await ctx.session.scalars(
             select(GatheringGuestRow.node_id)
@@ -766,9 +780,11 @@ async def hospitality(ctx: TickContext, tally: GiftTally) -> None:
             .limit(table.gifts_per_occasion)
         )
         for guest in list(guests):
-            if not ctx.rng(f"gift.guest.{gathering.id}.{guest}").chance(table.hospitality_pct):
+            pair = (gathering.host_node_id, guest)
+            if pair in hosted or not ctx.rng(f"gift.guest.{gathering.id}.{guest}").chance(table.hospitality_pct):
                 continue
             if await occasion_gift(ctx, gathering.host_node_id, guest, GiftOccasion.HOSPITALITY, table.occasion_value) is not None:
+                hosted.add(pair)
                 tally.hospitality += 1
 
 

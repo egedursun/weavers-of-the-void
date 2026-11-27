@@ -9,6 +9,7 @@ from aerona.catalog.life.intrigue import FALSE_CAMPFIRES_SKILL_KINDS
 from aerona.catalog.life_traits import PACKAGE_KIND_TRAITS, having
 from aerona.catalog.pacts import WILLLESS_LAWS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.belonging import FugitiveRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -321,7 +322,7 @@ SECRETS_FIXUP = "secrets.w52"
 
 
 async def backfill_power_secrets(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, SECRETS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, SECRETS_FIXUP):
         return 0
     kept = 0
     masks = (

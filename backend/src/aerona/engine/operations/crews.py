@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.operations import CLASSIC_STATIONS, CREW_STATIONS, FIGHTING_STATIONS, STORM_CARE
 from aerona.catalog.vehicles import FRAMES
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.operations import ShipCrewRow
@@ -68,7 +69,7 @@ def lives_saved(rules: Rules, row: VesselProfileRow, crews: dict[CrewStation, Sh
 
 
 async def backfill_crews(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, CREWS_FIXUP) is not None:
+    if not await fixup_due(session, CREWS_FIXUP):
         return 0
     added = 0
     for row in list(await session.scalars(select(VesselProfileRow).order_by(VesselProfileRow.entity_id))):

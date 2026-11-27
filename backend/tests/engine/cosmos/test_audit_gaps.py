@@ -319,8 +319,12 @@ async def test_seams_already_laid_follow_the_make_of_their_world_once(session: A
     region = await make_region(session, "Hills", cosmos.home.id)
     land = ground(region.id, cosmos.home.id, mineral_layers={"iron": 20, "stone": 30})
     session.add(land)
-    await session.execute(AppliedFixupRow.__table__.delete().where(AppliedFixupRow.key.like("world_make.%")))
+    await session.execute(AppliedFixupRow.__table__.delete().where(AppliedFixupRow.key.like("world_make%")))
     await session.flush()
     assert await rescale_seams(session, rules) >= 1
     assert land.mineral_layers["iron"] == 40 and land.mineral_layers["stone"] == round(30 * physics.rock / rules.orbits.rock_reference)
     assert await rescale_seams(session, rules) == 0
+    await session.execute(AppliedFixupRow.__table__.delete().where(AppliedFixupRow.key == f"world_make.{cosmos.home.id}"))
+    await session.flush()
+    assert await rescale_seams(session, rules) == 0
+    assert land.mineral_layers["iron"] == 40

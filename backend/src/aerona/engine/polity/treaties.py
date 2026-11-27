@@ -7,6 +7,7 @@ from aerona.catalog.life_traits import CLAUSE_KIND_TRAITS, TREATY_KIND_TRAITS, h
 from aerona.catalog.pacts import BINDING_STATES, PARTY_ROLES, PRINCIPAL_ROLES, TERM_CLAUSES
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.belonging import FugitiveRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -79,7 +80,7 @@ DEFENSIVE = having(TREATY_KIND_TRAITS, TreatyKindTrait.DEFENSIVE)
 
 
 async def adopt_bonds(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, ADOPT_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ADOPT_FIXUP):
         return 0
     linked = set(await ctx.session.scalars(select(TreatyProfileRow.source_bond_id).where(TreatyProfileRow.source_bond_id.is_not(None))))
     made = 0

@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -22,7 +23,7 @@ def lives_in(description: str | None) -> int:
 
 
 async def backfill_casualties(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, CASUALTIES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, CASUALTIES_FIXUP):
         return 0
     counted = set(await ctx.session.scalars(select(EventCasualtyRow.event_entity_id).distinct()))
     bonds = await ctx.session.scalars(

@@ -2,6 +2,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -107,7 +108,7 @@ async def mortal_ids(session: AsyncSession, ids: set[int]) -> set[int]:
 
 
 async def backfill_kin(session: AsyncSession, epoch: int) -> dict[str, int]:
-    if await session.get(AppliedFixupRow, KIN_FIXUP) is not None:
+    if not await fixup_due(session, KIN_FIXUP):
         return {}
     repository = BondRepository(session)
     descent = list(await session.scalars(select(BondRow).where(BondRow.kind == BondKind.DESCENDS_FROM).order_by(BondRow.id)))

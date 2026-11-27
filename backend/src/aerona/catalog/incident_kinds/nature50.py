@@ -19,7 +19,7 @@ from aerona.domain.enums.records import StepAction as A
 SPACE_WEATHER_TEMPLATES: dict[str, str] = {
     "particle_storm": "A storm of particles from its star reached {subject}, at strength {strength}; {dose} of it came through to the ground.",
     "field_storm": "A storm shook the magnetic field of {subject}, at strength {strength}; {dose} of it came through to the ground.",
-    "field_reversal": "The magnetic field of {subject} turned over; while it turns its shield is weaker, and {dose} came through to the ground.",
+    "field_reversal": "The magnetic field of {subject} turned over; while it turns it holds back less, and {dose} came through to the ground.",
     "cosmic_ray_burst": "A burst of rays from far away reached {subject}, at strength {strength}; {dose} of it came through to the ground.",
     "wind_surge": "The wind of its star surged against {subject}, at strength {strength}; {dose} of it came through to the ground.",
     "meteor_shower": "A shower of falling stars crossed the sky of {subject}, at strength {strength}; {dose} of it came through to the ground.",
@@ -45,7 +45,7 @@ LAND_TEMPLATES: dict[str, tuple[str, str, U]] = {
     "ice_road": ("The ice over {place} grew thick enough to walk on, for {months:month|months} of the year.", "months", U.COUNT),
     "thaw_collapse": ("The frozen ground of {place} thawed by {fall} and the works on it gave way.", "fall", U.PERCENT),
     "thaw_release": ("The thaw of {place} gave up what the ice had kept, a bed of remains of richness {richness}.", "richness", U.PERCENT),
-    "snow_drought": ("Little snow lay on {place}, only {snowpack} of it, and the lands below went dry in summer.", "snowpack", U.PERCENT),
+    "snow_drought": ("Little snow lay on {place}, only {snowpack} of it, and the lands below went dry.", "snowpack", U.PERCENT),
     "silted": ("Sediment filled the harbour of {place} until ships could no longer come in.", "silting", U.PERCENT),
     "coast_lost": ("The sea took the fields of {place}, and its towns lost {loss} of their prosperity.", "loss", U.PERCENT),
     "delta_grew": ("The delta of {place} grew out into the water, and its soil rose to {fertility}.", "fertility", U.PERCENT),
@@ -107,7 +107,7 @@ DISEASE: tuple[IncidentKindSpec, ...] = (
     happening(
         "disease.cure_worked",
         G.NATURE,
-        "{actor} treated {subject} by {cure}, which works on it; its outbreak eased to {severity}.",
+        "{actor} treated {subject} with the {cure} cure, which works on it; its outbreak eased to {severity}.",
         roles=(one(R.SUBJECT), one(R.ACTOR)),
         facts=(chosen("cure", CureClass), amount("severity", U.PERCENT)),
         steps=(A.TREAT, A.EASE),
@@ -200,7 +200,7 @@ PLANTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "life.plant_spread",
         G.NATURE,
-        "{subject} took root in {place}, carried there by wind or beast, at an abundance of {abundance}.",
+        "{subject} spread to {place} and took root there, at an abundance of {abundance}.",
         roles=(one(R.SUBJECT), one(R.PLACE)),
         facts=(amount("abundance", U.PERCENT),),
         steps=(A.SPREAD,),
@@ -374,7 +374,7 @@ STANDING: tuple[IncidentKindSpec, ...] = (
     happening(
         "standing.hypocrisy_forgiven",
         G.SOCIAL,
-        "The gap between what {subject} professes of {axis} and what it does closed to {gap}, and the world forgave it.",
+        "The gap between what {subject} professes of {axis} and what it does closed to {gap}, and it is no longer held against it.",
         roles=(one(R.SUBJECT),),
         facts=(chosen("axis", ValueAxis), amount("gap", U.PERCENT)),
         steps=(A.RECONCILE,),

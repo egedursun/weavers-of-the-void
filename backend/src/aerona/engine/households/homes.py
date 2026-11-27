@@ -5,6 +5,7 @@ from aerona.catalog.genetics import DWELLINGS, dwelling_spec
 from aerona.catalog.life.households import CLASS_DISTRICTS, RULES_REALM_OFFICE_KINDS
 from aerona.catalog.movement import breathes_under_water
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.dwelling_kinds import DwellingKindRow
@@ -215,8 +216,19 @@ DWELLINGS_FIXUP = "dwellings.w52"
 W52_DWELLINGS = frozenset(kind for kind, spec in DWELLINGS.items() if spec.since_w52)
 
 
+async def legacy_dwelling(ctx: TickContext, dwelling: DwellingRow) -> bool:
+    current = await ctx.session.get(DwellingKindRow, dwelling.dwelling_kind_id) if dwelling.dwelling_kind_id is not None else None
+    if current is None:
+        return True
+    source = (
+        await ctx.session.get(DwellingKindRow, current.derived_from_id) if current.built_in_key is None and current.derived_from_id is not None else current
+    )
+    key = source.built_in_key if source is not None else None
+    return key is not None and key not in W52_DWELLINGS
+
+
 async def backfill_dwellings(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, DWELLINGS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, DWELLINGS_FIXUP):
         return 0
     moved = 0
     rows = await ctx.session.execute(select(DwellingRow, HouseholdRow).join(HouseholdRow, HouseholdRow.id == DwellingRow.household_id).order_by(DwellingRow.id))
@@ -225,7 +237,7 @@ async def backfill_dwellings(ctx: TickContext) -> int:
         if head is None or held(head.id) or "dwelling_kind_id" in (dwelling.locked or []):
             continue
         wanted = await dwelling_key_for(ctx.session, ctx.rules, head)
-        if wanted not in W52_DWELLINGS:
+        if wanted not in W52_DWELLINGS or not await legacy_dwelling(ctx, dwelling):
             continue
         people = await people_of(ctx.session, head)
         kind = await dwelling_of_people(ctx.session, people.id if people is not None else None, wanted)

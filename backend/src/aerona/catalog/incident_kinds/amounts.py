@@ -9,12 +9,14 @@ MOVING_VERBS = (
 )
 VERB_AMOUNT = re.compile(rf"\b(?:{MOVING_VERBS})\s+\{{(\w+)(?::[^}}]*)?\}}")
 AMOUNT_NOUN = re.compile(r"\{(\w+)(?::[^}]*)?\}\s+(?:loads|dead)\b")
+COUNTED_NOUN = re.compile(r"\{(\w+):[^}|]*\|(?:loads|dead)\}")
 
 NEVER_ZERO: frozenset[tuple[str, str]] = frozenset(
     {
         ("being.traded", "moved"),
         ("carrion.laid", "dead"),
         ("casualties.disaster_dead", "dead"),
+        ("contraband.books", "carried"),
         ("disease.expelled", "expelled"),
         ("economy.holding_transferred", "moved"),
         ("endowment.paid", "amount"),
@@ -23,13 +25,16 @@ NEVER_ZERO: frozenset[tuple[str, str]] = frozenset(
         ("market.credit", "owed"),
         ("market.famine_grain", "delivered"),
         ("relief.given", "helped"),
+        ("money.temple_loot", "loads"),
         ("trade.convoy_lost", "cargo_lost"),
         ("trade.convoy_raided", "cargo_lost"),
+        ("trade_policy.smuggled", "loads"),
     }
 )
 
 ZERO_TOLD: frozenset[tuple[str, str]] = frozenset(
     {
+        ("tools.mortal.appeal", "fee"),
         ("admiralty.commissioned", "cost"),
         ("affairs.election", "share"),
         ("affliction.aged", "years"),
@@ -76,7 +81,7 @@ ZERO_TOLD: frozenset[tuple[str, str]] = frozenset(
 
 def moved_amounts(spec: IncidentKindSpec) -> list[str]:
     numbers = {fact.key for fact in spec.facts if fact.value is FactValue.NUMBER}
-    found = [match.group(1) for pattern in (VERB_AMOUNT, AMOUNT_NOUN) for match in pattern.finditer(spec.template)]
+    found = [match.group(1) for pattern in (VERB_AMOUNT, AMOUNT_NOUN, COUNTED_NOUN) for match in pattern.finditer(spec.template)]
     return sorted({key for key in found if key in numbers})
 
 

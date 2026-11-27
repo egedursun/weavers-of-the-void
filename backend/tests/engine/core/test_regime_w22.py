@@ -429,6 +429,8 @@ async def test_a_house_whose_head_claims_a_foreign_throne_plans_to_keep_the_clai
     plans = list(await session.scalars(select(BreedingPlanRow).where(BreedingPlanRow.house_entity_id == house.id)))
     assert tally.begun == 1 and [plan.claim_polity_id for plan in plans] == [realm.id]
     assert plans[0].target_share == ctx.rules.breeding_plans.claim_share
+    design = await session.get(LongPlanRow, plans[0].plan_id)
+    assert design is not None and design.status is LongPlanStatus.ACTIVE and design.progress <= ctx.epoch - design.started_epoch
 
 
 async def test_examinations_grant_credentials_that_open_office_and_swell_the_aspirants(session: AsyncSession, world: CoreWorld) -> None:

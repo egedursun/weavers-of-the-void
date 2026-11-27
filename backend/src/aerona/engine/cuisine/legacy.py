@@ -1,12 +1,13 @@
 from sqlalchemy import select
 
 from aerona.catalog.life.cuisine import CATEGORY_ROLES, COURSE_SLOTS
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.cuisine import DishIngredientRow, DishRow, DishStepRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.kinds import KindHoldingRow
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.kinds import KindConcept, KindSpread, KindStance
+from aerona.domain.enums.kinds import IngredientRole, KindConcept, KindSpread, KindStance
 from aerona.engine.context import TickContext
 from aerona.engine.economy.good_kinds import GoodBook, ensure_built_in_goods
 
@@ -32,7 +33,8 @@ async def ingredient_goods(ctx: TickContext) -> int:
         good = goods.rows.get(item.commodity)
         if good is not None:
             item.good_kind_id = good.id
-            item.role = CATEGORY_ROLES[good.category]
+            if item.role is IngredientRole.BASE:
+                item.role = CATEGORY_ROLES[good.category]
             linked += 1
     return linked
 
@@ -63,7 +65,7 @@ async def makers_hold(ctx: TickContext) -> int:
 
 
 async def foodways_backfill(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, FOODWAYS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, FOODWAYS_FIXUP):
         return 0
     result = {"built_in_goods": await ensure_built_in_goods(ctx.session)}
     result["first_steps"] = await first_steps(ctx)

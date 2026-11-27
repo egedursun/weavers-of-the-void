@@ -391,11 +391,12 @@ ENTITY_FLAG = total(
         ),
         EntityFlag.NAME_FROM_LANGUAGE: Defined(
             "Name from language",
-            checked_by=("epoch.phases.transition.add_epoch_words", "services.name_report.refit_pending_names"),
+            checked_by=("engine.lore.names.unwind_borrowed_words", "epoch.phases.transition.add_epoch_words", "services.name_report.refit_pending_names"),
             used_by=(
                 "agents.context.kept_names.KEPT_NAME_FLAGS",
                 "engine.cosmos.birth._rename_misfits",
                 "engine.lifecycle.succession._spawn_heir",
+                "engine.lore.names.give_meanings",
                 "engine.phases.births.bear_child",
                 "engine.phases.births.born_mortal",
                 "engine.phases.births.ethnogenesis",
@@ -410,7 +411,6 @@ ENTITY_FLAG = total(
                 "engine.phases.migration.migrate",
                 "engine.phases.travel._found_colony",
                 "engine.phases.warfare._record",
-                "engine.services.war.open_war",
                 "engine.services.war.raise_army",
             ),
         ),

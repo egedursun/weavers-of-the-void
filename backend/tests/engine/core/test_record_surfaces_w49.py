@@ -10,11 +10,13 @@ from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleS
 from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import RumourRow
+from aerona.db.tables.customs import NameFormRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow, IncidentStepStateRow
 from aerona.db.tables.tellings import IncidentNameRow, RumourDistortionRow
 from aerona.domain.enums.chronicle import ChronicleKind, ChronicleScope
+from aerona.domain.enums.customs import NameForm
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
@@ -261,3 +263,13 @@ async def test_a_happening_is_told_no_earlier_than_the_first_record_of_what_it_n
     assert await told_no_earlier(session, 5, [first_id, None]) == incident.year
     assert await told_no_earlier(session, 30, [first_id, second_id]) == 30
     assert await told_no_earlier(session, 5, []) == 5
+
+
+async def test_a_renamed_one_is_named_in_a_line_as_it_was_called_when_the_line_was_told(session: AsyncSession, world: CoreWorld) -> None:
+    dead = await mortal(session, "Dorar", world, world.regions[0].id)
+    session.add(NameFormRow(holder_node_id=dead.id, form=NameForm.BIRTH, name="Sordir", given_epoch=1, locked=[]))
+    await session.flush()
+    ledger = await book_records.Ledger.load(session, {dead.id: "Dorar"})
+    assert ledger.name_in(dead.id, "Ilsaren gave Sordir a gift worth 10.") == "Dorar (then Sordir)"
+    assert ledger.name_in(dead.id, "Dorar was laid to rest.") == "Dorar"
+    assert ledger.name_in(dead.id, "A storm came.") == "Dorar"

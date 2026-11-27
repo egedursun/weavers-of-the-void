@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -30,12 +31,12 @@ async def _scene(ctx: TickContext) -> dangers.DangerScene:
 
 async def survey_regions(ctx: TickContext) -> dict[str, int]:
     atlas = await RegionAtlas.load(ctx.session)
-    backfilled = await ctx.session.get(AppliedFixupRow, BACKFILL_FIXUP) is None
+    backfilled = await fixup_due(ctx.session, BACKFILL_FIXUP)
     ctx.count("columns_laid", await lay_columns(ctx))
     made = await memory.remember(ctx.session, ctx.rules, atlas, 0 if backfilled else ctx.epoch - 1)
     remembered = len(made)
     await answer_memories(ctx, made)
-    if await ctx.session.get(AppliedFixupRow, MEMORY_BACKFILL) is None:
+    if await fixup_due(ctx.session, MEMORY_BACKFILL):
         backfill = await memory.remember(ctx.session, ctx.rules, atlas, 0)
         ctx.session.add(AppliedFixupRow(key=MEMORY_BACKFILL, result={"memories": len(backfill)}))
     gone = await memory.fade_memories(ctx.session, ctx.rules, ctx.epoch)

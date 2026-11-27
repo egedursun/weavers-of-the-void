@@ -176,7 +176,15 @@ async def infringe(ctx: TickContext, row: IncorporealRightRow, tally: RightsTall
     if not others:
         return
     culprit = rng.pick(others)
-    await change_relation(ctx, row.holder_node_id, culprit.id, -table.insult_opinion, MemoryKind.ILL_WILL, note=f"took {row.name} that is ours")
+    await change_relation(
+        ctx,
+        row.holder_node_id,
+        culprit.id,
+        -table.insult_opinion,
+        MemoryKind.ILL_WILL,
+        note=f"took our {row.name}",
+        reverse_note=f"was said to have taken {row.name}",
+    )
     tally.infringed += 1
     if row.kind in COPIED:
         await report_crime(ctx, town, culprit.id, CrimeKind.THEFT)

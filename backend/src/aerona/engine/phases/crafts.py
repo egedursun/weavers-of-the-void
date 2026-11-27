@@ -56,6 +56,8 @@ from aerona.engine.phases.dominion import count
     "table.entities",
     "table.entity_flags",
     "table.entity_tags",
+    "table.faction_memberships",
+    "table.faction_profiles",
     "table.foreign_gods",
     "table.galaxies",
     "table.galaxy_clusters",

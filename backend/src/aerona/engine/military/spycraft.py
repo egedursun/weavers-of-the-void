@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.military import BLACKMAIL_OFFICE_OFFICE_KINDS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -271,7 +272,7 @@ async def blackmail_office(ctx: TickContext, owner: EntityRow, target: EntityRow
 
 
 async def migrate_bonds(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, BOND_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BOND_FIXUP):
         return 0
     moved = 0
     bonds = list(await ctx.session.scalars(select(BondRow).where(BondRow.kind == BondKind.SPY_NETWORK, BondRow.state == BondState.ACTIVE)))
@@ -292,19 +293,25 @@ async def migrate_bonds(ctx: TickContext) -> int:
                 exposure=0,
                 cover=await cover_for(ctx.session, owner),
                 since_epoch=bond.epoch,
+                owner_kind=await owner_kind(ctx.session, owner),
+                side_entity_id=await side_for(ctx, owner),
             )
             ctx.session.add(row)
-        row.owner_kind = await owner_kind(ctx.session, owner)
-        row.side_entity_id = await side_for(ctx, owner)
         row.bond_id = None
         await BondRepository(ctx.session).deactivate(bond, ctx.epoch, "kept as a typed spy network")
         moved += 1
-    for row in list(await ctx.session.scalars(select(SpyNetworkRow))):
+    seated = {(network, mortal) for network, mortal in await ctx.session.execute(select(SpyAgentRow.network_id, SpyAgentRow.mortal_entity_id))}
+    for row in list(await ctx.session.scalars(select(SpyNetworkRow).order_by(SpyNetworkRow.id))):
+        if held(row.owner_entity_id):
+            continue
         owner = await living_entity(ctx.session, row.owner_entity_id)
-        if owner is not None:
-            row.owner_kind = await owner_kind(ctx.session, owner)
-            row.side_entity_id = row.side_entity_id or await side_for(ctx, owner)
-        for mortal_id in row.agent_ids:
+        kept = set(row.locked or [])
+        if owner is not None and row.side_entity_id is None and "side_entity_id" not in kept:
+            row.side_entity_id = await side_for(ctx, owner)
+        for mortal_id in sorted(set(row.agent_ids)):
+            if (row.id, mortal_id) in seated:
+                continue
+            seated.add((row.id, mortal_id))
             ctx.session.add(
                 SpyAgentRow(network_id=row.id, mortal_entity_id=mortal_id, cover=row.cover, skill=PERCENT // 3, since_epoch=row.since_epoch, locked=[])
             )

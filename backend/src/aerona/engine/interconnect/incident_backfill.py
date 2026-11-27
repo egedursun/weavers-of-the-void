@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.incident_roles import INCIDENT_ROLES, positional_role
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.warfare import WarRow, WarSideRow
@@ -39,7 +40,7 @@ async def _war_roles(ctx: TickContext, incident: IncidentRow, participants: list
 
 
 async def backfill_incident_roles(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, ROLES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ROLES_FIXUP):
         return 0
     kinds = [*INCIDENT_ROLES, WAR_OUTBREAK]
     changed = 0

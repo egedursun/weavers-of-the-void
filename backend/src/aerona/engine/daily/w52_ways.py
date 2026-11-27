@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from aerona.catalog.life.customs import KEPT_HOUSE_DUTIES
 from aerona.catalog.mind import COMBAT_SKILLS, CRAFT_SKILLS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.customs import TimeBudgetRow
 from aerona.db.tables.daily_life import HouseworkRow, LeisurePursuitRow
@@ -252,7 +253,7 @@ GATHERED_RULE = frozenset({DecisionRule.ASSEMBLY, DecisionRule.COUNCIL})
 
 
 def give_time(row: TimeBudgetRow, field: str, share: int) -> bool:
-    if field in (row.locked or []) or getattr(row, field) >= share:
+    if {field, "work", "rest"} & set(row.locked or []) or getattr(row, field) != 0:
         return False
     need = share - getattr(row, field)
     taken = min(need, row.work)
@@ -277,7 +278,7 @@ async def gathered_peoples(ctx: TickContext) -> set[int]:
 
 
 async def backfill_budgets(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, BUDGET_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BUDGET_FIXUP):
         return 0
     gathered = await gathered_peoples(ctx)
     moved = 0

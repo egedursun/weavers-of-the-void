@@ -107,6 +107,7 @@ class DiseaseBook:
     routes: dict[int, list[tuple[Transmission, int]]] = field(default_factory=dict)
     camps: dict[int, int] = field(default_factory=dict)
     lazarettos: dict[int, int] = field(default_factory=dict)
+    ended: set[int] = field(default_factory=set)
 
     def drink_guard(self, target_id: int) -> float:
         safety = self.safe_drink.get(target_id, 0)
@@ -133,6 +134,10 @@ class DiseaseBook:
         quarantines = {row.region_entity_id: row for row in await session.scalars(select(QuarantineRow).where(QuarantineRow.until_epoch >= epoch))}
         hospitals = await hospital_regions(session, atlas)
         book = cls(rules, epoch, atlas, diseases, profiles, outbreaks, immunity, endemic, cures, quarantines, hospitals)
+        holders = sorted({community for community, _ in immunity})
+        book.ended = (
+            set(await session.scalars(select(EntityRow.id).where(EntityRow.id.in_(holders), EntityRow.status != EntityStatus.CANON))) if holders else set()
+        )
         book.hospital_strength = await hospital_strengths(session, atlas)
         for community_id, band, count in await session.execute(select(CohortRow.community_entity_id, CohortRow.age_band, CohortRow.count)):
             book.bands.setdefault(community_id, defaultdict(int))[band] += count

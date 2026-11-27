@@ -93,7 +93,7 @@ from aerona.db.tables.pantheon import PantheonTieRow, SyncretismRow
 from aerona.db.tables.physics import ImpactEventRow, WorldLifeRow, WorldPhysicsRow
 from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.plants import PlantPartRow
-from aerona.db.tables.polity import ClaimRow, OfficeRow
+from aerona.db.tables.polity import ClaimRow, OfficeRow, PolityProfileRow, TreatyPartyRow
 from aerona.db.tables.population import PopulationInstrumentRow, PopulationPolicyRow
 from aerona.db.tables.protected_nature import ConservationMovementRow, ProtectedAreaRow, SpeciesProtectionRow
 from aerona.db.tables.reckoning import ReckoningCaseRow, ReckoningMeasureRow, ReckoningRow
@@ -112,6 +112,7 @@ from aerona.db.tables.sites import BattlefieldFeatureRow
 from aerona.db.tables.speech import SpeechRow
 from aerona.db.tables.statecraft import CrisisRow
 from aerona.db.tables.technology import TechnologyProfileRow
+from aerona.db.tables.titles import TitleProfileRow
 from aerona.db.tables.warfare import BattleRow, CaptiveRow, SiegeRow, WarRow
 from aerona.db.tables.works import PublicWorksRow, PublicWorkStageRow
 from aerona.db.tables.world_ends import WorldEndRow
@@ -132,7 +133,7 @@ from aerona.domain.enums.cosmography import BeingAgenda, BeingKind, BeingPhase, 
 from aerona.domain.enums.crafts import AssistiveAid, LinkToken, RightKind
 from aerona.domain.enums.creator import CovenantDuty, CreatorPromise
 from aerona.domain.enums.creature_groups import GroupForm
-from aerona.domain.enums.culture import Technique, TraditionFunction
+from aerona.domain.enums.culture import CalendarSlot, Technique, TraditionFunction
 from aerona.domain.enums.customs import Intoxicant, MarkKind, MarkMeaning, Membership, Naturalisation, RevivalGoal
 from aerona.domain.enums.cycles import ReproductiveSystem
 from aerona.domain.enums.death_work import RemainsTreatment
@@ -144,8 +145,8 @@ from aerona.domain.enums.divine_conceptions import GodReading
 from aerona.domain.enums.ecology import Biochemistry, YieldProduct
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin, MoneyForm, TradeMode, TradeRouteStatus
 from aerona.domain.enums.endowments import EndowmentState
-from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import RiverClass, TemperatureBand, TerrainKind
+from aerona.domain.enums.entity import EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.faction import FactionKind, MovementCause
@@ -179,7 +180,7 @@ from aerona.domain.enums.operations import CarrierKind, CrewStation, ExpeditionG
 from aerona.domain.enums.orders import TransitionKind
 from aerona.domain.enums.physics import AirNeed, ImpactBody, ImpactOutcome, LifeEnvironment
 from aerona.domain.enums.place import PlaceKind
-from aerona.domain.enums.polity import ClaimBasis, OfficeKind
+from aerona.domain.enums.polity import ClaimBasis, DecisionRule, GovernmentKind, OfficeKind, PartyRole
 from aerona.domain.enums.population import PopulationInstrument
 from aerona.domain.enums.reckoning import ReckoningMeasure
 from aerona.domain.enums.record_keepers import RecordKeeperKind
@@ -195,6 +196,7 @@ from aerona.domain.enums.site import BattlefieldFeature
 from aerona.domain.enums.society import NaturalLaw, SocialClass
 from aerona.domain.enums.speech import SpeechVenue
 from aerona.domain.enums.statecraft import CrisisDemand, CrisisState
+from aerona.domain.enums.titles import TitleTier
 from aerona.domain.enums.tongues import LanguageModality, LanguageStage
 from aerona.domain.enums.travel import TravelMethod, VehicleKind
 from aerona.domain.enums.war import BattleOutcome, CaptiveStatus, WarCause
@@ -222,8 +224,10 @@ from aerona.domain.models.entity_stats import (
     SpeciesStats,
     SpiritStats,
     StructureStats,
+    TitleStats,
     TradeRouteStats,
     TraditionStats,
+    TreatyStats,
     VesselStats,
 )
 from aerona.engine.cosmos.ladder import DimensionDraft, create_dimension, ensure_ladder
@@ -267,6 +271,7 @@ async def service_with_no_task(session: AsyncSession, world: CoreWorld) -> None:
 
 Breaker = Callable[[AsyncSession, CoreWorld], Awaitable[None]]
 PHASE_KIND = "phase.statecraft"
+FAR_ORBIT = 60.0
 
 
 @pytest.fixture
@@ -680,6 +685,18 @@ async def household_mood_told_as_a_place(session: AsyncSession, world: CoreWorld
     session.add(IncidentFactRow(incident_id=told.id, key="strength", number=60.0, unit=FactUnit.PERCENT))
 
 
+async def grown_one_still_called_a_child(session: AsyncSession, world: CoreWorld) -> None:
+    grown = await mortal(session, "Long Grown", world, world.regions[0].id)
+    grown.subtype = "child"
+    session.add(MortalProfileRow(entity_id=grown.id, life_stage=LifeStage.ADULT))
+
+
+async def mortal_standing_inside_a_guild(session: AsyncSession, world: CoreWorld) -> None:
+    guild = await entity(session, "Rivet Guild", EntityType.FACTION, FactionStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    hand = await mortal(session, "Guild Hand", world, world.regions[0].id)
+    hand.location_id = guild.id
+
+
 async def funeral_named_after_its_host(session: AsyncSession, world: CoreWorld) -> None:
     host = await mortal(session, "Keel Host", world, None)
     mourned = await mortal(session, "Mourned One", world, None)
@@ -688,6 +705,75 @@ async def funeral_named_after_its_host(session: AsyncSession, world: CoreWorld) 
     await session.flush()
     session.add(CollectionMemberRow(collection_id=row.id, node_id=host.id, role=CollectionRole.HOST, since_epoch=1))
     session.add(CollectionMemberRow(collection_id=row.id, node_id=mourned.id, role=CollectionRole.VICTIM, since_epoch=1))
+
+
+async def plague_named_before_its_naming(session: AsyncSession, world: CoreWorld) -> None:
+    plague = await entity(session, "Upcegin", EntityType.EVENT, EventStats(), world_id=world.world.id)
+    row = CollectionRow(kind=CollectionKind.PLAGUE, name="Plague of Ofjur Plague (Epoch 8)", world_id=world.world.id, start_epoch=1, locked=[])
+    session.add(row)
+    await session.flush()
+    session.add(CollectionMemberRow(collection_id=row.id, node_id=plague.id, role=CollectionRole.LEADER, since_epoch=1))
+
+
+async def headship_named_by_its_label(session: AsyncSession, world: CoreWorld) -> None:
+    title = await entity(session, "the Headship of an association of Ormedal", EntityType.TITLE, TitleStats(), world_id=world.world.id)
+    session.add(TitleProfileRow(title_entity_id=title.id, rank=TitleTier.GUILD, locked=[]))
+
+
+async def tribute_named_for_an_old_name(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Dasmir Quay", world, world.regions[0])
+    tribute = await entity(session, "the Tribute of Vorkel Quay", EntityType.TREATY, TreatyStats(), world_id=world.world.id)
+    session.add(TreatyPartyRow(treaty_entity_id=tribute.id, party_node_id=town.id, role=PartyRole.SIGNATORY))
+    session.add(
+        StateChangeRow(
+            epoch=1,
+            table_name="nodes",
+            row_key=f'{{"id": {town.id}}}',
+            node_id=town.id,
+            operation=LedgerOperation.UPDATE,
+            field="name",
+            before_text="Vorkel Quay",
+            actor_kind=ActorKind.SYSTEM,
+        )
+    )
+
+
+async def rebuilding_a_ruin(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Emptied Quay", world, world.regions[0])
+    town.status, town.end_epoch = EntityStatus.DESTROYED, 1
+    session.add(ReconstructionRow(settlement_entity_id=town.id, cause=RebuildCause.FLOOD, started_epoch=1, locked=[]))
+
+
+async def two_seasons_one_name(session: AsyncSession, world: CoreWorld) -> None:
+    for position in (0, 1):
+        session.add(
+            WorldSeasonRow(
+                world_id=world.world.id,
+                position=position + 7,
+                name="Ovmin",
+                temperature_shift=0,
+                rain_shift=0,
+                growth=50,
+                travel=50,
+                campaign=50,
+                share_pct=50,
+                edited=False,
+            )
+        )
+
+
+async def planet_far_from_its_star(session: AsyncSession, world: CoreWorld) -> None:
+    del session
+    world.world.orbit = FAR_ORBIT
+
+
+async def strain_named_twice(session: AsyncSession, world: CoreWorld) -> None:
+    await entity(session, "Grey cough, strain 2, strain 2", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id)
+
+
+async def vigil_kept_at_harvest(session: AsyncSession, world: CoreWorld) -> None:
+    vigil = await entity(session, "Long Watch", EntityType.TRADITION, TraditionStats(), world_id=world.world.id, origin=EntityOrigin.ENGINE)
+    session.add(TraditionProfileRow(tradition_entity_id=vigil.id, kind=TraditionFunction.VIGIL, calendar_slot=CalendarSlot.HARVEST, locked=[]))
 
 
 async def dynamic_of_nothing(session: AsyncSession, world: CoreWorld) -> None:
@@ -1800,6 +1886,46 @@ async def route(session: AsyncSession, world: CoreWorld, name: str, **values: ob
     return road.id
 
 
+async def realm_header_behind_its_record(session: AsyncSession, world: CoreWorld) -> None:
+    crown = await entity(session, "Stale Crown", EntityType.POLITY, PolityStats(legitimacy=40, stability=16), world_id=world.world.id)
+    session.add(
+        PolityProfileRow(polity_entity_id=crown.id, government=next(iter(GovernmentKind)), decision_rule=next(iter(DecisionRule)), legitimacy=30, stability=18)
+    )
+
+
+async def road_across_open_water(session: AsyncSession, world: CoreWorld) -> None:
+    await route(session, world, "Road of Swell and Spray")
+    for region in world.regions[:2]:
+        session.add(
+            RegionEnvironmentRow(
+                entity_id=region.id,
+                world_id=world.world.id,
+                dominant_terrain=TerrainKind.SEA,
+                elevation_mean=0,
+                roughness=0,
+                latitude=10,
+                moisture=90,
+                base_forest=0,
+                forest_cover=0,
+                base_wetland=0,
+                wetland=0,
+                river_class=RiverClass.NONE,
+                coast_kind=CoastKind.NONE,
+                soil=next(iter(SoilKind)),
+                soil_fertility=0,
+                soil_base=0,
+                temperature=50,
+                temperature_band=TemperatureBand.TEMPERATE,
+                rainfall=50,
+                seasonality=10,
+                disease_load=0,
+                magic_density=0,
+                defensibility=10,
+                locked=[],
+            )
+        )
+
+
 async def seasonal_route_with_no_season(session: AsyncSession, world: CoreWorld) -> None:
     await route(session, world, "Snow Road", status=TradeRouteStatus.SEASONAL, closed_season=None)
 
@@ -2008,7 +2134,19 @@ BREAKERS: dict[str, Breaker] = {
     "interpretation_reader": exchange_with_itself,
     "feeling_spread_values": mood_with_a_stray_feeling,
     "mood_told_of_its_own": household_mood_told_as_a_place,
+    "mortal_dwells_in_a_place": mortal_standing_inside_a_guild,
+    "grown_out_of_childhood": grown_one_still_called_a_child,
+    "route_mode_fits_water": road_across_open_water,
+    "polity_stats_follow_record": realm_header_behind_its_record,
     "collection_title_one_standing": funeral_named_after_its_host,
+    "collection_title_current_names": plague_named_before_its_naming,
+    "title_named_plainly": headship_named_by_its_label,
+    "season_names_distinct": two_seasons_one_name,
+    "tradition_slot_fits_kind": vigil_kept_at_harvest,
+    "strain_named_once": strain_named_twice,
+    "peopled_world_habitable": planet_far_from_its_star,
+    "rebuild_of_a_standing_town": rebuilding_a_ruin,
+    "derived_names_follow": tribute_named_for_an_old_name,
     "kin_dynamic_scope": dynamic_of_nothing,
     "kin_favour_other": favour_for_oneself,
     "kin_rivalry_pair": rivalry_backwards,

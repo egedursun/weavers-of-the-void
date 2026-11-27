@@ -389,3 +389,20 @@ async def test_history_and_changes_rows_wait_on_disk_until_they_are_written(sess
     assert list(rows) == ["first line", "second\\nline", ""] and len(rows) == 3 and rows[1] == "second\\nline" and rows[0:2] == ["first line", "second\\nline"]
     section = TypedSection("History", spilled=rows)
     assert list(section.lines) == list(rows) and section.rows == []
+
+
+EN_DASH = "\u2013"
+
+
+async def test_the_running_epoch_reads_as_under_way_and_the_header_counts_lived_epochs(session: AsyncSession, rules: Rules, world: Cosmos) -> None:
+    world.cosmos.epoch = 3
+    for epoch in (2, 3):
+        await ChronicleRepository(session).append(ChronicleDraft(epoch=epoch, kind=ChronicleKind.WORLD, text=f"The tide turned in age {epoch}."))
+    await session.flush()
+    codex = await codex_markdown(session, rules, CodexLinks())
+    years = rules.time.years_per_epoch
+    lived = next(line for line in codex.splitlines() if line.startswith("### II."))
+    running = next(line for line in codex.splitlines() if line.startswith("### III."))
+    assert "under way" not in lived and "under way" in running
+    assert f"| 2 | {2 * years} |" in codex
+    assert f"years {2 * years}{EN_DASH}{3 * years - 1} · under way" in codex

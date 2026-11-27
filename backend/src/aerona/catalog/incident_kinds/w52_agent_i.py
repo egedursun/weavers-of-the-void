@@ -14,7 +14,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "being.woke",
         G.COSMOS,
-        "{subject} woke from its slumber on {place}, stirred by {trigger}.",
+        "{subject} woke from its sleep on {place}; the cause: {trigger}.",
         roles=(RoleSpec(R.SUBJECT, BEING), RoleSpec(R.PLACE)),
         facts=(FactSpec("trigger", FactValue.ENUM, enum=AwakeningTrigger), FactSpec("might", FactValue.NUMBER, U.STRENGTH)),
         place=PlaceRule.NONE,
@@ -89,7 +89,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "line.crossed_wild",
         G.NATURE,
-        "{line} crossed with its wild kin, {subject}, moving their fit by {fit} across {ranges} lands.",
+        "{line} crossed with its wild kin, {subject}, changing their fitness by {fit} across {ranges:land|lands}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(FactSpec("line", FactValue.NAME), FactSpec("fit", FactValue.NUMBER, U.PERCENT), FactSpec("ranges", FactValue.NUMBER, U.COUNT)),
         place=PlaceRule.NONE,

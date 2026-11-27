@@ -217,7 +217,7 @@ export const OCCASIONS: Record<Schema['GiftOccasion'], Named> = {
   return: { label: 'A return gift', icon: Undo2, tone: 'success' },
   alliance: { label: 'Between allies', icon: Handshake, tone: 'info' },
   relief: {
-    label: 'Aid in a stricken hour',
+    label: 'Aid in a time of need',
     icon: HeartHandshake,
     tone: 'success',
   },

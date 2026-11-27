@@ -228,7 +228,7 @@ async def settlement_life(ctx: TickContext) -> None:
         ctx.count("invested", await invest(ctx, town))
         await administer(ctx, town, knowledge, await literacy_of(ctx, town))
         ctx.count("taxed", await collect_taxes(ctx, town))
-        if not await pay_soldiers(ctx, town):
+        if not await pay_soldiers(ctx, town) and "public_order" not in town.profile.locked:
             town.profile.public_order = max(0, town.profile.public_order - 5)
         await keep_walls(ctx, town)
         await wear(ctx, town)

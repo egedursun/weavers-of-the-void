@@ -20,7 +20,7 @@ async def dreamt_pasts(ctx: TickContext) -> None:
         world = await ctx.session.get(WorldRow, row.world_id)
         if world is None or held(world.id):
             continue
-        ctx.count("dreamt_events", await dreams_of(ctx, row, world))
+        ctx.count("dreamt_events", await dreams_of(ctx, row, world, this_epoch=True))
 
 
 PHASES = (Phase("dreamt_pasts", dreamt_pasts),)

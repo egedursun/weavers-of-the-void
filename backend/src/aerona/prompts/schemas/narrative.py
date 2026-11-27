@@ -47,7 +47,7 @@ class DeepenOutput(OutputModel):
         default_factory=list,
         description="Concrete details of its own, each of a different kind and specific to this entity; no two details of the same kind",
     )
-    hidden_truth: str = Field(default="", description="A truth nobody knows, if it has one, connected to the entity's own history or to the laws of the world")
+    hidden_truth: str = Field(default="", description="Anything about it not yet known to anyone, if there is any; empty otherwise")
     special: dict[str, str] | None = None
     kinds: list[DeepenedKind] = Field(
         default_factory=list,
@@ -84,7 +84,7 @@ class CreatorDepthOutput(OutputModel):
     desire: str = Field(description="What the god wants from creation")
     sayings: list[SayingOutput] = Field(default_factory=list)
     rumours: list[str] = Field(default_factory=list)
-    hidden_truth: str = Field(default="", description="A truth about the god that nobody knows, if there is one")
+    hidden_truth: str = Field(default="", description="Anything about the god not yet known to anyone, if there is any; empty otherwise")
 
 
 class ForeignPersonalityOutput(OutputModel):
@@ -114,7 +114,7 @@ class ForeignGodDepthOutput(OutputModel):
     desire: str = Field(description="What it wants")
     view_of_pantheon: str = Field(default="", description="How it looks on the newly arrived pantheon and its sons; consistent with its attitude")
     worship: str = Field(default="", description="How its worshippers worship it")
-    hidden_truth: str = Field(default="", description="The truth about it that nobody knows, if there is one")
+    hidden_truth: str = Field(default="", description="Anything about it not yet known to anyone, if there is any; empty otherwise")
     image_prompt: str = Field(description="English portrait image prompt of this god. {{ image_prompt_rules }}")
 
 

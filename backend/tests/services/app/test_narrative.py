@@ -1,8 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.entities import EntityRepository
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.subtypes import normalize_subtype
+from aerona.engine.recording.record import record
 from aerona.services import narrative
 from tests.services.app.factories import Cosmos, make_entity
 
@@ -65,3 +69,20 @@ async def test_backfill_endings_and_sweep(session: AsyncSession, world: Cosmos) 
     world.people.description = "The folk (#12) of son#3 Ithren."
     assert await narrative.sweep_narratives(session) == 1
     assert world.people.description == "The folk of Ithren."
+
+
+async def test_the_sweeps_leave_words_the_god_wrote(session: AsyncSession, world: Cosmos) -> None:
+    written = "The folk (#12) of son#3 Ithren, as the god wrote it."
+    world.people.description = written
+    ctx = await manual_context(session, "test_narrative")
+    roles = {IncidentRole.TARGET: world.people.id, IncidentRole.AUTHORITY: world.creator.id}
+    await record(ctx, "player.canon.edited", roles=roles, facts={"fields": "description"}, kind=ChronicleKind.CREATOR_HAND)
+    fallen = await make_entity(session, "Ilse", EntityType.MORTAL, world_id=world.world.id, location_id=world.region.id)
+    fallen.description = "Ilse kept the ford."
+    roles = {IncidentRole.TARGET: fallen.id, IncidentRole.AUTHORITY: world.creator.id}
+    await record(ctx, "player.canon.edited", roles=roles, facts={"fields": "description"}, kind=ChronicleKind.CREATOR_HAND)
+    await EntityRepository(session).set_status(fallen, EntityStatus.DEAD, 3)
+    await narrative.sweep_narratives(session)
+    await narrative.backfill_endings(session)
+    assert world.people.description == written
+    assert fallen.description == "Ilse kept the ford."

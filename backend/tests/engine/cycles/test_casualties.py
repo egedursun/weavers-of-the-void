@@ -1,10 +1,15 @@
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.random import SeededRandom
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.tables.interconnect import IncidentParticipantRow
+from aerona.db.tables.records import IncidentFactRow
 from aerona.db.tables.warfare import ArmyRow, BattleRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EngineKind, EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.travel import JourneyEventKind, JourneyIntent
 from aerona.domain.enums.war import BattleOutcome
@@ -74,6 +79,12 @@ async def test_plague_takes_named_mortals_of_the_struck_people(session: AsyncSes
     await disaster_casualties(context(session, world, tune(Rules(), casualties={"plague_death": 100}), 10))
     assert healer.status is EntityStatus.DEAD
     assert EntityFlag.DIED_OF_PLAGUE.value in await flags(session, healer.id)
+    manner = await session.scalar(
+        select(IncidentFactRow.enum_value)
+        .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentFactRow.incident_id)
+        .where(IncidentParticipantRow.node_id == healer.id, IncidentParticipantRow.role == IncidentRole.VICTIM, IncidentFactRow.key == "manner")
+    )
+    assert manner == DeathCause.DISEASE.value
 
 
 async def test_ruler_role_follows_the_dominant_class(session: AsyncSession, world: CoreWorld) -> None:

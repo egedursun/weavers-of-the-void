@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.vehicles import FRAMES, frame_layout, section_swap
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.collective import DesignRow
 from aerona.db.tables.cosmic_state import VesselProfileRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -71,7 +72,7 @@ async def crew_armies(ctx: TickContext, knowledge: KnowledgeMap) -> int:
 
 
 async def rearm(ctx: TickContext, knowledge: KnowledgeMap) -> dict[str, int]:
-    tally = {"armed": 0, "seated": 0, "aimed": 0, "struck": 0}
+    tally = {"armed": 0, "seated": 0, "aimed": 0, "waiting": 0}
     for row in list(await ctx.session.scalars(select(DesignMountRow).order_by(DesignMountRow.id))):
         found = await ctx.session.get(DesignRow, row.design_id)
         if found is None or found.frame is None:
@@ -83,11 +84,10 @@ async def rearm(ctx: TickContext, knowledge: KnowledgeMap) -> dict[str, int]:
         if row.model_id is None and "model_id" not in locked:
             model = await mount_model(ctx, owner, row.mount, knowledge)
             if model is None:
-                await ctx.session.delete(row)
-                tally["struck"] += 1
-                continue
-            row.model_id = model.id
-            tally["armed"] += 1
+                tally["waiting"] += 1
+            else:
+                row.model_id = model.id
+                tally["armed"] += 1
         if row.section is None and "section" not in locked:
             row.section = home_section(row.mount, {part.section for part in frame_layout(found.frame)})
             tally["seated"] += row.section is not None
@@ -104,16 +104,22 @@ async def reseat_sections(ctx: TickContext) -> int:
     moved = 0
     for design in list(await ctx.session.scalars(select(DesignRow).where(DesignRow.frame.is_not(None)).order_by(DesignRow.id))):
         swap = section_swap(design.frame) if design.frame is not None else {}
-        rows = list(await ctx.session.scalars(select(DesignSectionRow).where(DesignSectionRow.design_id == design.id)))
+        if design.owner_entity_id is not None and held(design.owner_entity_id):
+            continue
+        rows = list(await ctx.session.scalars(select(DesignSectionRow).where(DesignSectionRow.design_id == design.id).order_by(DesignSectionRow.section)))
         present = {row.section for row in rows}
         for row in rows:
-            row.neighbours = [str(found) for item in row.neighbours if (found := swap.get(VehicleSection(item), VehicleSection(item))) is not None]
+            renamed = [str(found) for item in row.neighbours if (found := swap.get(VehicleSection(item), VehicleSection(item))) is not None]
+            if renamed != row.neighbours and "neighbours" not in (row.locked or []):
+                row.neighbours = renamed
             if row.section not in swap:
                 continue
             target = swap[row.section]
             await ctx.session.delete(row)
             if target is not None and target not in present:
-                ctx.session.add(DesignSectionRow(**{**{key: getattr(row, key) for key in DESIGN_SECTION_FIELDS}, "section": target}))
+                ctx.session.add(
+                    DesignSectionRow(**{**{key: getattr(row, key) for key in DESIGN_SECTION_FIELDS}, "section": target, "locked": list(row.locked or [])})
+                )
             moved += 1
     for vessel in list(await ctx.session.scalars(select(VesselProfileRow).order_by(VesselProfileRow.entity_id))):
         swap = section_swap(vessel.frame)
@@ -138,14 +144,14 @@ async def reseat_sections(ctx: TickContext) -> int:
 async def made_kinds_fixup(ctx: TickContext) -> dict[str, int]:
     result: dict[str, int] = {}
     knowledge = await KnowledgeMap.load(ctx.session)
-    if await ctx.session.get(AppliedFixupRow, FIXUP) is None:
+    if await fixup_due(ctx.session, FIXUP):
         result = {"designs": await complete_designs(ctx, knowledge), "vehicles": await crew_armies(ctx, knowledge)}
         ctx.session.add(AppliedFixupRow(key=FIXUP, result=result))
-    if await ctx.session.get(AppliedFixupRow, REARM) is None:
+    if await fixup_due(ctx.session, REARM):
         seated = await rearm(ctx, knowledge)
         ctx.session.add(AppliedFixupRow(key=REARM, result=seated))
         result |= seated
-    if await ctx.session.get(AppliedFixupRow, RESEAT) is None:
+    if await fixup_due(ctx.session, RESEAT):
         reseated = {"reseated": await reseat_sections(ctx)}
         ctx.session.add(AppliedFixupRow(key=RESEAT, result=reseated))
         result |= reseated

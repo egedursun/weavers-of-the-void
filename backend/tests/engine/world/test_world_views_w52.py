@@ -81,7 +81,7 @@ async def town_of_folk(session: AsyncSession, world: CoreWorld, name: str = "Hol
         (BodyPlan.AQUATIC, TerrainKind.SEA, 0, SettleMode.SUBMERGED),
         (BodyPlan.AQUATIC, TerrainKind.PLAIN, 0, SettleMode.GROUND),
         (BodyPlan.INSECTOID, TerrainKind.PLAIN, 0, SettleMode.BURROW),
-        (BodyPlan.INSECTOID, TerrainKind.MARSH, 0, SettleMode.GROUND),
+        (BodyPlan.INSECTOID, TerrainKind.MARSH, 0, SettleMode.STILT),
         (BodyPlan.ARBOREAL, TerrainKind.JUNGLE, 80, SettleMode.CANOPY),
         (BodyPlan.ARBOREAL, TerrainKind.JUNGLE, 10, SettleMode.GROUND),
         (BodyPlan.HUMANOID, TerrainKind.FOREST, 90, SettleMode.GROUND),

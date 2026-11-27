@@ -7,6 +7,7 @@ from aerona.catalog.battle_depth import BASE_DISCIPLINE, formation_for
 from aerona.catalog.equipment import ROLE_ARMS, UNIT_SLOTS
 from aerona.catalog.techniques import UNIT_TECHNIQUES
 from aerona.catalog.units import ROLE_STYLES, UNITS, weapon_of
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleCultureRow
@@ -276,7 +277,7 @@ async def spread_types(ctx: TickContext, tally: TypeTally) -> None:
 async def run_unit_types(ctx: TickContext) -> TypeTally:
     tally = TypeTally()
     knowledge = await KnowledgeMap.load(ctx.session)
-    first = await ctx.session.get(AppliedFixupRow, BACKFILL) is None
+    first = await fixup_due(ctx.session, BACKFILL)
     await marshal_types(ctx, knowledge, tally, every=first)
     await spread_types(ctx, tally)
     await link_stacks(ctx, knowledge, tally)

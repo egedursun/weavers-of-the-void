@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.conditions import OPEN_INJURY_STATES
 from aerona.constants.units import PERCENT
+from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
@@ -36,6 +37,7 @@ from aerona.engine.primitives.records import append_sentence
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.births import birth_year
 from aerona.engine.recording.record import StepDraft, record
+from aerona.rules.registry import Rules
 
 WOUND_DEATH = "succumbed to their wounds"
 
@@ -105,6 +107,13 @@ class AgingWorld:
     healing: dict[int, int] = field(default_factory=dict)
 
 
+def fatal_year(rng: SeededRandom, rules: Rules, age: int, *, multiplier: float, sampled_years: int, limit: int, health: int, medicine: bool) -> int | None:
+    for year in range(sampled_years):
+        if rng.chance(hazard_chance(rules, age + round_half_up(year * multiplier), limit, health, medicine=medicine)):
+            return year
+    return None
+
+
 async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> None:
     laws = world.laws
     rules = ctx.rules
@@ -124,13 +133,18 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     limit = info.effective
     profile = await profile_of(ctx.session, mortal.id)
     health = profile.health if profile is not None else PERCENT
-    if (first and aged < limit) or not rng.chance(hazard_chance(rules, aged, limit, health, medicine=info.medicine > 0)):
+    fatal = (
+        None
+        if first and aged < limit
+        else fatal_year(rng, rules, age, multiplier=multiplier, sampled_years=lived, limit=limit, health=health, medicine=info.medicine > 0)
+    )
+    if fatal is None:
         set_stats(mortal, age=aged)
         await grow_into_stage(ctx, mortal)
         return
     years = rules.time.years_per_epoch
     offset = years - lived if first else 0
-    reached = rng.integer(0, max(0, lived - 1))
+    reached = fatal
     death_age = age + round_half_up(reached * multiplier)
     death_year = world.start_year + offset + reached
     if laws.has(NaturalLaw.DEAD_RETURN, mortal.world_id) and rng.chance(rules.world_engine.ghost_chance):

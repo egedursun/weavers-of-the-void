@@ -260,7 +260,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "beyond.soul_harvest",
         G.MOVEMENT,
-        "{actor} harvested {subject}, and its following grew.",
+        "{actor} drew power from {subject}, and its following grew.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.CULT})), RoleSpec(R.SUBJECT, frozenset({E.SPIRIT}))),
         facts=(FactSpec("follower_pct", FactValue.NUMBER, FactUnit.PERCENT), FactSpec("influence_gain", FactValue.NUMBER, FactUnit.STANDING)),
         steps=frozenset({A.DRAW_POWER}),
@@ -338,7 +338,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "expedition.set_out",
         G.MOVEMENT,
-        "{leader} set out with {companions:companion|companions} into the {ground} of {destination}, going {mode}.",
+        "{leader} set out with {companions:companion|companions} toward {destination} ({ground}), going {mode}.",
         roles=(RoleSpec(R.LEADER), RoleSpec(R.DESTINATION), RoleSpec(R.MEMBER, required=False, many=True), RoleSpec(R.PATRON, required=False)),
         facts=(
             FactSpec("ground", FactValue.ENUM, enum=ExpeditionGround),
@@ -371,7 +371,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "exploration.route_search.route",
         G.MOVEMENT,
-        "{actor} searched the sky and found a way to {destination} by {method}.",
+        "{actor} searched for a way between worlds and found one to {destination} by {method}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.DESTINATION, required=True), RoleSpec(R.INSTRUMENT, required=False)),
         facts=(FactSpec("method", FactValue.ENUM, enum=TravelMethod, required=True),),
         steps=frozenset({A.INVESTIGATE}),
@@ -382,7 +382,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "exploration.route_search.intuition",
         G.MOVEMENT,
-        "{actor} searched the sky and sensed a world nobody knew.",
+        "{actor} searched for a way between worlds and sensed a world nobody knew.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.DESTINATION, required=False), RoleSpec(R.INSTRUMENT, required=False)),
         facts=(FactSpec("method", FactValue.ENUM, enum=TravelMethod, required=False),),
         steps=frozenset({A.INVESTIGATE}),
@@ -393,7 +393,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "exploration.route_search.none",
         G.MOVEMENT,
-        "{actor} searched the sky for a way to other worlds and found none.",
+        "{actor} searched for a way to other worlds and found none.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.DESTINATION, required=False), RoleSpec(R.INSTRUMENT, required=False)),
         facts=(FactSpec("method", FactValue.ENUM, enum=TravelMethod, required=False),),
         steps=frozenset({A.INVESTIGATE}),
@@ -452,7 +452,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "navigation.aid",
         G.MOVEMENT,
-        "The pilots of {learner} took up the {aid}.",
+        "The pilots of {learner} took up a new aid to finding their way: {aid}.",
         roles=(RoleSpec(R.LEARNER),),
         facts=(FactSpec("aid", FactValue.ENUM, enum=NavigationAid), FactSpec("quality", FactValue.NUMBER, FactUnit.PERCENT)),
         steps=frozenset({A.LEARN}),
@@ -521,7 +521,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "nomads.settled",
         G.MOVEMENT,
-        "{actor} put down roots and wandered no more.",
+        "{actor} settled in one place and stopped moving.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(FactSpec("herding_share", FactValue.NUMBER, FactUnit.PERCENT),),
         steps=frozenset({A.SETTLE}),
@@ -542,7 +542,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "nomads.tribute",
         G.MOVEMENT,
-        "{giver} bowed to the herders of {receiver} and paid them tribute.",
+        "{giver} yielded to the herders of {receiver} and paid them tribute.",
         roles=(RoleSpec(R.GIVER), RoleSpec(R.RECEIVER)),
         facts=(FactSpec("might", FactValue.NUMBER, FactUnit.STRENGTH), FactSpec("guard", FactValue.NUMBER, FactUnit.STRENGTH)),
         steps=frozenset({A.YIELD, A.PAY}),
@@ -573,7 +573,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "settlement.abandoned",
         G.MOVEMENT,
-        "With its stores empty, {actor} left {left:person|people} of its old and sick outside the walls.",
+        "With its stores empty, {actor} turned out {left:person|people} of its old and sick.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.SETTLEMENT})),),
         facts=(FactSpec("left", FactValue.NUMBER, FactUnit.PEOPLE),),
         steps=frozenset({A.ABANDON}),
@@ -583,7 +583,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "settlement.plan_drawn",
         G.MOVEMENT,
-        "{place}, too crowded for its homes, drew up {plan} to build its {district} districts denser.",
+        "{place}, too crowded for its homes, drew up {plan} to build denser in its {district}.",
         roles=(RoleSpec(R.PLACE, frozenset({E.SETTLEMENT})),),
         facts=(
             FactSpec("plan", FactValue.NAME),
@@ -734,7 +734,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.expedition",
         G.MOVEMENT,
-        "{actor} set out on {intent:an} journey to {destination} with {travellers:person|people}, a way of {epochs:age|ages}.",
+        "{actor} set out on {intent:an} journey to {destination} with {travellers:person|people}, a journey of {epochs:epoch|epochs}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.DESTINATION), RoleSpec(R.INSTRUMENT, required=False)),
         facts=(
             FactSpec("intent", FactValue.ENUM, enum=JourneyIntent),
@@ -837,7 +837,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.route_found",
         G.MOVEMENT,
-        "{actor} found a way to {destination} by {method}, a crossing of {epochs:age|ages}.",
+        "{actor} found a way to {destination} by {method}, a crossing of {epochs:epoch|epochs}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.DESTINATION), RoleSpec(R.INSTRUMENT, required=False)),
         facts=(
             FactSpec("method", FactValue.ENUM, enum=TravelMethod),
@@ -963,7 +963,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "travel.colony_failed",
         G.MOVEMENT,
-        "The colonists of {actor} could not live under the {atmosphere} sky of {destination}, and the colony died out.",
+        "The colonists of {actor} could not live in the air of {destination} ({atmosphere}), and the colony died out.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.PEOPLE, E.SETTLEMENT, E.POLITY, E.MORTAL, E.FACTION, E.CULT})), RoleSpec(R.DESTINATION)),
         facts=(FactSpec("atmosphere", FactValue.ENUM, enum=Atmosphere), FactSpec("colonists", FactValue.NUMBER, FactUnit.PEOPLE)),
         place=PlaceRule.NONE,
@@ -1071,7 +1071,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "travel.journey_recalled",
         G.MOVEMENT,
-        "The journey of {actor} to {destination} was recalled, and {travellers:soul|souls} returned home.",
+        "The journey of {actor} to {destination} was recalled, and {travellers:person|people} returned home.",
         roles=(
             RoleSpec(R.ACTOR, frozenset({E.PEOPLE, E.SETTLEMENT, E.POLITY, E.MORTAL, E.FACTION, E.CULT})),
             RoleSpec(R.DESTINATION),
@@ -1118,7 +1118,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "travel.road.",
             G.MOVEMENT,
-            "The journey of {actor} to {destination} met {event}.",
+            "On the journey of {actor} to {destination}: {event}.",
             roles=(
                 RoleSpec(R.ACTOR, frozenset({E.PEOPLE, E.SETTLEMENT, E.POLITY, E.MORTAL, E.FACTION, E.CULT})),
                 RoleSpec(R.DESTINATION),
@@ -1199,7 +1199,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "travel.stowaway",
         G.MOVEMENT,
-        "The ships of {actor} carried {subject} to {destination}, where it spread.",
+        "The travellers of {actor} carried {subject} to {destination}, where it spread.",
         roles=(
             RoleSpec(R.ACTOR, frozenset({E.PEOPLE, E.SETTLEMENT, E.POLITY, E.MORTAL, E.FACTION, E.CULT})),
             RoleSpec(R.SUBJECT, frozenset({E.SPECIES})),

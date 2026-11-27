@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.dimension_aspects import ELEMENT_PULLS, FORM_PULLS, KIND_FORMS, PERCENT_FIELDS, Pull
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmography import DimensionRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.dimension_aspects import DimensionAspectRow
@@ -63,7 +64,7 @@ async def keep_aspects(ctx: TickContext, dimension: DimensionRow) -> int:
 
 
 async def seed_aspects_once(session: AsyncSession, rules: Rules) -> int:
-    if await session.get(AppliedFixupRow, ASPECTS_FIXUP) is not None:
+    if not await fixup_due(session, ASPECTS_FIXUP):
         return 0
     given = set(await session.scalars(select(DimensionAspectRow.dimension_id)))
     seeded = 0

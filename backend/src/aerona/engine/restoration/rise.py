@@ -25,6 +25,7 @@ from aerona.engine.polity.titles import de_jure_lands
 from aerona.engine.primitives.mirrors import close_legacy, first_sight
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import connect, living_entity, remove_flag
+from aerona.engine.primitives.renames import reclaim_name
 from aerona.engine.reckoning.book import ReckoningTally
 from aerona.engine.reckoning.opening import choose, open_reckoning, victims_pressure
 from aerona.engine.recording.record import record
@@ -188,7 +189,7 @@ async def restore(ctx: TickContext, row: RestorationRow, tally: RestorationTally
     for town in towns[1:]:
         await remove_flag(ctx.session, town.id, EntityFlag.INDEPENDENT)
         await connect(ctx.session, towns[0].id, town.id, BondKind.RULES, ctx.epoch, description=f"taken back for {fallen.name}")
-    realm.entity.name = fallen.name
+    reclaim_name(realm.entity, fallen.name)
     claimant = await living_entity(ctx.session, row.claimant_node_id) if row.claimant_node_id is not None else None
     ruler = claimant.id if claimant is not None and claimant.entity_type is EntityType.MORTAL else None
     if ruler is not None:

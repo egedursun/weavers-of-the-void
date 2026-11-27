@@ -10,7 +10,7 @@ export const UNDO_TOAST_MS = 7000
 export function undoMessage(applied: number, conflicts: number): string {
   if (conflicts > 0)
     return `Undone: ${plural(applied, 'change')} reverted, ${plural(conflicts, 'conflict')} skipped`
-  return `Page torn from the ledger: ${plural(applied, 'change')} undone`
+  return `Ledger page undone: ${plural(applied, 'change')} reversed`
 }
 
 export function toastWithUndo(

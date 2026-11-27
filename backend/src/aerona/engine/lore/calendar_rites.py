@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.lore import SLEEP_CUSTOMS, SLEEP_TEXTS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import fill
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -23,7 +24,7 @@ from aerona.domain.models.entity_stats import TraditionStats
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.world_views import view_of
 from aerona.engine.environment.battleground import ENDLESS_DAY_WORLDS
-from aerona.engine.lore.traditions import Keeping, cost_for, profile_of
+from aerona.engine.lore.traditions import Keeping, cost_for, profile_of, retype
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.queries import connect
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -152,7 +153,7 @@ async def found_fast(ctx: TickContext, calendar: CalendarRow, notable: NotableYe
         ),
     )
     row = await profile_of(ctx, tradition)
-    row.kind = K.FAST
+    retype(row, K.FAST)
     row.cost = cost_for(ctx, K.FAST)
     row.notable_year_id = notable.id
     row.calendar_entity_id = calendar.knowledge_entity_id
@@ -196,7 +197,7 @@ async def hallow_holy_days(ctx: TickContext, calendar: CalendarRow) -> int:
 
 
 async def backfill_holy_days(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, HOLY_DAY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, HOLY_DAY_FIXUP):
         return 0
     founded = 0
     for calendar in list(await ctx.session.scalars(select(CalendarRow).order_by(CalendarRow.knowledge_entity_id))):
@@ -255,7 +256,7 @@ async def found_sleep_customs(ctx: TickContext, atlas: RegionAtlas) -> int:
             ),
         )
         row = await profile_of(ctx, tradition)
-        row.kind = kind
+        retype(row, kind)
         row.cost = cost_for(ctx, kind)
         await connect(ctx.session, community.id, tradition.id, BondKind.CELEBRATES, ctx.epoch, description="through the long day")
         founded += 1

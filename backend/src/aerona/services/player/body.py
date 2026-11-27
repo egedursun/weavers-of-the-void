@@ -350,6 +350,7 @@ async def set_handedness(scope: PlayerScope, command: SetHandedness) -> Effect:
     epoch = await scope.epoch()
     body = await ensure_body(scope.session, scope.rules, bearer, epoch)
     body.handedness = command.handedness
+    body.locked = sorted({*(body.locked or []), "handedness"})
     await refresh(scope.session, scope.rules, bearer, epoch)
     lead = "both hands alike" if command.handedness is Handedness.BOTH else f"the {spoken(command.handedness)} hand"
     return Effect(f"{bearer.name} now leads with {lead}.", target_node_id=bearer.id)
@@ -509,6 +510,7 @@ async def set_plan(scope: PlayerScope, command: SetBodyPlan) -> Effect:
     epoch = await scope.epoch()
     body = await ensure_body(scope.session, scope.rules, bearer, epoch)
     replan(body, command.plan, sorted({trait.value for trait in command.traits}))
+    body.locked = sorted({*(body.locked or []), "plan"})
     if not isinstance(bearer, EntityRow) or bearer.entity_type is EntityType.MORTAL:
         await refresh(scope.session, scope.rules, bearer, epoch)
     return Effect(f"{bearer.name} now has {an(spoken(command.plan))} body.", target_node_id=bearer.id)

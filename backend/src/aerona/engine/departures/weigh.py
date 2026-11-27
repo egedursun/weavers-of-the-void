@@ -16,9 +16,9 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind
 from aerona.engine.body.marks import marked
 from aerona.engine.context import TickContext
-from aerona.engine.cycles.kinship import age_of
-from aerona.engine.departures.book import DepartureTally, Seat, lifespan
+from aerona.engine.departures.book import DepartureTally, Seat
 from aerona.engine.departures.leave import leave
+from aerona.engine.primitives.maturity import office_age_share
 from aerona.engine.primitives.numbers import clamp_int
 
 FAILING_STABILITY = 30
@@ -62,7 +62,7 @@ async def devout(ctx: TickContext, holder: EntityRow) -> bool:
 
 async def weigh(ctx: TickContext, seat: Seat) -> tuple[int, DepartureKind, bool]:
     table = ctx.rules.departures
-    share = clamp_int(age_of(seat.holder) * PERCENT // max(1, lifespan(ctx)), 0, PERCENT)
+    share = office_age_share(ctx.rules, seat.holder)
     scandal = await scandalous(ctx, seat.holder.id)
     hurt = await wounded(ctx, seat.holder.id)
     failed = await failing(ctx, seat)
@@ -85,6 +85,16 @@ async def weigh(ctx: TickContext, seat: Seat) -> tuple[int, DepartureKind, bool]
     else:
         kind = DepartureKind.RETIREMENT
     return clamp_int(weight, 0, TROUBLE_PERCENT), kind, customary
+
+
+async def trouble_of(ctx: TickContext, seat: Seat) -> str:
+    if await scandalous(ctx, seat.holder.id):
+        return "a scandal"
+    if await failing(ctx, seat):
+        return "a failing realm"
+    if await wounded(ctx, seat.holder.id):
+        return "failing health"
+    return "advancing age"
 
 
 def terms_for(kind: DepartureKind) -> list[DepartureCondition]:
@@ -122,6 +132,6 @@ async def weigh_seats(ctx: TickContext, tally: DepartureTally) -> None:
         key = f"departures.leave.{seat.holder.id}.{seat.office.id if seat.office else seat.org.org_node_id if seat.org else 0}.{ctx.epoch}"
         if not customary and not ctx.rng(key).chance(weight * table.leave_chance_pct // PERCENT):
             continue
-        reason = "custom retires those of that age" if customary else "age, health, failure or scandal"
+        reason = "custom retires those of that age" if customary else await trouble_of(ctx, seat)
         await leave(ctx, seat, kind, heir=None, conditions=terms_for(kind), why=reason)
         tally.left += 1

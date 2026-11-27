@@ -166,7 +166,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "diplomacy.wergild",
         G.DIPLOMACY,
-        "{subject} settled their blood feud with wergild instead of war.",
+        "{subject} settled their blood feud with a payment for the dead instead of war.",
         roles=(RoleSpec(R.SUBJECT, many=True),),
         facts=(FactSpec("relation_gained", FactValue.NUMBER, unit=FactUnit.STANDING),),
         place=PlaceRule.WHEN_KNOWN,
@@ -382,7 +382,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "treaty.misread_breach",
         G.DIPLOMACY,
-        "Neither court read the other's tongue: {actor} kept the {clause} clause of {treaty} as less than {beneficiary} meant, and it was counted a breach.",
+        "Neither side read the other's tongue: {actor} kept the {clause} clause of {treaty} as less than {beneficiary} meant, and it was counted a breach.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.BENEFICIARY)),
         facts=(
             FactSpec("treaty", FactValue.NODE),

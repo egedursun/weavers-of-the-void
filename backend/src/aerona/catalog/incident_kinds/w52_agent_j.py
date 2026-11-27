@@ -9,7 +9,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "goods.seed_eaten",
         G.EXCHANGE,
-        "Hunger in {victim} ate {eaten} of the seed and stock held back for sowing and breeding; next year's harvest falls by {cut}.",
+        "In {victim}, hunger drove folk to eat {eaten} of the seed and stock kept back for sowing and breeding; the next harvest falls by {cut}.",
         roles=(RoleSpec(R.VICTIM),),
         facts=(FactSpec("eaten", FactValue.NUMBER, FactUnit.COUNT), FactSpec("cut", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.REQUIRED,
@@ -17,7 +17,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "money.failed",
         G.EXCHANGE,
-        "The {form} of {actor}, backed by {backing}, failed; trust in it fell to {trust}.",
+        "The money of {actor} ({form}, backed by {backing}) failed; trust in it fell to {trust}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False)),
         facts=(
             FactSpec("form", FactValue.ENUM, enum=MoneyForm),
@@ -45,7 +45,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_formed",
         G.NATURE,
-        "{kind:an} opened from {place} to {destination}, {origin}.",
+        "A passage ({kind}, {origin}) opened from {place} to {destination}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),
@@ -58,7 +58,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_dug",
         G.NATURE,
-        "The digging of {kind:an} from {place} to {destination} was finished{actor:? by #}.",
+        "The digging of a passage ({kind}) from {place} to {destination} was finished{actor:? by #}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),
@@ -71,7 +71,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_collapsed",
         G.NATURE,
-        "The {kind} from {place} to {destination} collapsed.",
+        "The passage ({kind}) from {place} to {destination} collapsed.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),
@@ -84,7 +84,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_flooded",
         G.NATURE,
-        "The {kind} from {place} to {destination} flooded.",
+        "The passage ({kind}) from {place} to {destination} flooded.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),
@@ -97,7 +97,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_drained",
         G.NATURE,
-        "The {kind} from {place} to {destination} drained and stands open again.",
+        "The passage ({kind}) from {place} to {destination} drained and stands open again.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),
@@ -110,7 +110,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_cleared",
         G.NATURE,
-        "The fallen {kind} from {place} to {destination} was cleared{actor:? by #}.",
+        "The fallen passage ({kind}) from {place} to {destination} was cleared{actor:? by #}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),
@@ -123,7 +123,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_sealed",
         G.NATURE,
-        "The {kind} from {place} to {destination} was sealed.",
+        "The passage ({kind}) from {place} to {destination} was sealed.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),
@@ -136,7 +136,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.settled",
         G.PEOPLES,
-        "{actor} made a home, {product}, in the {stratum} beneath {place}.",
+        "{actor} made a home, {product}, underground beneath {place} ({stratum}).",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PRODUCT), RoleSpec(R.PLACE)),
         facts=(FactSpec("stratum", FactValue.ENUM, enum=UndergroundStratum),),
         place=PlaceRule.REQUIRED,
@@ -144,7 +144,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.contact",
         G.PEOPLES,
-        "{actor}, of the {stratum}, first met {target}.",
+        "{actor}, living underground ({stratum}), first met {target}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET), RoleSpec(R.PLACE)),
         facts=(FactSpec("stratum", FactValue.ENUM, enum=UndergroundStratum),),
         place=PlaceRule.REQUIRED,
@@ -152,7 +152,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.migrated",
         G.PEOPLES,
-        "{actor} moved to the {stratum} beneath {place}.",
+        "{actor} moved underground beneath {place} ({stratum}).",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE)),
         facts=(FactSpec("stratum", FactValue.ENUM, enum=UndergroundStratum),),
         place=PlaceRule.REQUIRED,
@@ -160,7 +160,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.cell_formed",
         G.NATURE,
-        "{stratum:an} formed beneath {place}.",
+        "An underground layer ({stratum}) formed beneath {place}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("stratum", FactValue.ENUM, enum=UndergroundStratum),),
         place=PlaceRule.REQUIRED,
@@ -168,7 +168,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.cell_lost",
         G.NATURE,
-        "The {stratum} beneath {place} was lost.",
+        "The underground layer ({stratum}) beneath {place} was lost.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("stratum", FactValue.ENUM, enum=UndergroundStratum),),
         place=PlaceRule.REQUIRED,

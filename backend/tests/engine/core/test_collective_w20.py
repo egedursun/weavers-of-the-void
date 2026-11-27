@@ -678,3 +678,16 @@ async def test_a_custom_set_by_the_gods_records_what_it_was_before(session: Asyn
     await set_norm(ctx, people.id, NormSituation.FEAST, NormBehaviour.JEST, EthicalStance.ADMIRABLE)
     changes = list(await session.scalars(select(NormChangeRow).where(NormChangeRow.holder_entity_id == people.id)))
     assert [(row.before, row.after) for row in changes] == [(EthicalStance.ACCEPTABLE, EthicalStance.ADMIRABLE)]
+
+
+async def test_a_storylet_whose_cast_died_meanwhile_lapses_instead_of_telling_the_dead(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await context(session, storylets={"open_epochs": 0})
+    town = await town_of(session, world)
+    ruler = await mortal(session, "Gone", world, town.id)
+    realm = await realm_of(session, world, town, ruler)
+    run = await begin(ctx, StoryletId.HOARDED_STORE, world.world.id, {StoryletRole.TOWN: town.id, StoryletRole.RULER: ruler.id, StoryletRole.REALM: realm.id})
+    ruler.status, ruler.end_epoch = EntityStatus.DEAD, 1
+    await session.flush()
+    tally = StoryletTally()
+    await settle_due(ctx, tally)
+    assert run.status is StoryletStatus.EXPIRED and tally.expired == 1 and tally.by_personality == 0

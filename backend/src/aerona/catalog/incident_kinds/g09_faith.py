@@ -80,7 +80,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "carrion.restless",
         G.FAITH,
-        "The unburied dead of {place} did not rest{spirit:?: # walks there}.",
+        "The unburied dead of {place} did not rest{spirit:?: # lingers there}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("spirit", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,
@@ -148,7 +148,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "horror.route_cooled",
         G.FAITH,
-        "The light-sail route between {origin} and {destination}, scorched by the flare, cooled and opened again.",
+        "The route between {origin} and {destination}, scorched by the flare, cooled and opened again.",
         roles=(RoleSpec(R.ORIGIN), RoleSpec(R.DESTINATION)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
@@ -278,7 +278,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tradition.slot_closed",
         G.FAITH,
-        "The time of {subject} did not come for {actor}: {reason}.",
+        "{actor} could not keep {subject} at its proper time: {reason}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR)),
         facts=(FactSpec("reason", FactValue.NAME),),
         place=PlaceRule.WHEN_KNOWN,
@@ -295,8 +295,9 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "lore.constitution_written",
         G.FAITH,
-        "A realm set down a constitution in the name of its creed.",
-        roles=(RoleSpec(R.SUBJECT, required=False, many=True),),
+        "{subject} set down a constitution in the name of {creed}.",
+        roles=(RoleSpec(R.SUBJECT),),
+        facts=(FactSpec("creed", FactValue.NODE),),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
     ),
@@ -474,7 +475,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "magic.dark_rite",
         G.FAITH,
-        "{actor} worked a rite{school:? of the # school} drawing{source:? on #}, and lost standing for it.",
+        "{actor} worked a rite{school:? of the # school}{source:?, drawing on #}, and lost standing for it.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("school", FactValue.NAME, required=False), FactSpec("source", FactValue.NAME, required=False)),
         place=PlaceRule.WHEN_KNOWN,
@@ -795,7 +796,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "sacred.millenarian",
         G.FAITH,
-        "The faithful of {place} began to await the end, set for epoch{end:? #}.",
+        "The faithful of {place} began to await the end{end:?, set for epoch #}.",
         roles=(RoleSpec(R.PLACE),),
         facts=(FactSpec("end", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,
@@ -842,6 +843,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         roles=(RoleSpec(R.SUBJECT, required=False, many=True),),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
+        legacy=True,
     ),
     IncidentKindSpec(
         "sacred.theodicy",
@@ -931,7 +933,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "spirits.born",
         G.FAITH,
-        "So much{emotion:? #} gathered in {place} that it took the shape of spirits, and folk read it as an omen.",
+        "So much feeling{emotion:? (#)} gathered in {place} that it took the shape of spirits, and folk read it as an omen.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("emotion", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,

@@ -2,6 +2,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import CohortRow
 from aerona.db.tables.entities import EntityRow
@@ -90,7 +91,7 @@ CAMPS_FIXUP = "districts.w52"
 
 
 async def backfill_camps(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, CAMPS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, CAMPS_FIXUP):
         return 0
     statement = (
         select(CohortRow.community_entity_id)

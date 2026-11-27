@@ -19,12 +19,13 @@ from aerona.engine.phases.warfare import incite_uprising
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.formation import found_polity, set_ruler, sync_members
 from aerona.engine.polity.governance import collect
-from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join
+from aerona.engine.polity.houses import HouseBook, extinguish, found_house, join, settle_house_stats
 from aerona.engine.polity.justice import offenders
 from aerona.engine.polity.laws import LawBook
 from aerona.engine.polity.oaths import break_oath, lapse, swear
 from aerona.engine.polity.standing import legitimacy, secede
 from aerona.engine.primitives.queries import connect, has_flag
+from aerona.engine.primitives.stats import stat
 from aerona.engine.services.war import WarBlock, can_open_war
 from tests.engine.society.factories import Realm, context, make, mortal, settlement
 
@@ -142,3 +143,19 @@ async def test_a_subject_may_rise_against_its_ruler_but_not_wage_an_ordinary_war
     for cause in REVOLT_CAUSES:
         assert await can_open_war(realm.session, ctx.rules, subject.id, lord.id, ctx.epoch, world_cap=False, cause=cause) is None
     assert await incite_uprising(ctx, subject.id)
+
+
+async def test_a_house_counts_only_its_living_and_shows_the_standing_its_profile_holds(realm: Realm) -> None:
+    ctx = context(realm.session)
+    founder = await mortal(realm, "Brann Holt")
+    child = await mortal(realm, "Ysa Holt")
+    book = await HouseBook.load(ctx)
+    house = await found_house(ctx, book, founder)
+    await join(ctx, book, house.id, child, by_marriage=False)
+    founder.status, founder.end_epoch = EntityStatus.DEAD, ctx.epoch
+    profile = await realm.session.get(HouseProfileRow, house.id)
+    assert profile is not None
+    profile.prestige, profile.wealth = 47, 13
+    await realm.session.flush()
+    assert await settle_house_stats(ctx) == 1
+    assert (stat(house, "members"), stat(house, "prestige"), stat(house, "wealth")) == (1, 47, 13)

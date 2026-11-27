@@ -18,6 +18,16 @@ class HeldScope:
 
 
 HELD_SCOPE: ContextVar[HeldScope | None] = ContextVar("held_scope", default=None)
+
+
+@dataclass(frozen=True)
+class EndedGuard:
+    ended: frozenset[int]
+    lasting: frozenset[str]
+    restored: list[str]
+
+
+ENDED_GUARD: ContextVar[EndedGuard | None] = ContextVar("ended_guard", default=None)
 RESTORED: ContextVar[list[str] | None] = ContextVar("restored", default=None)
 BOND_DOWNGRADES: ContextVar[list[str] | None] = ContextVar("bond_downgrades", default=None)
 

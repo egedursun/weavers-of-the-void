@@ -22,7 +22,7 @@ class AgingRules:
     elder_health_loss: int = rule(4, 0, 100, G, "Health an elder loses each epoch")
     ancient_health_loss: int = rule(8, 0, 100, G, "Health an ancient loses each epoch")
     health_recovery: int = rule(5, 0, 100, G, "Health a sound adult regains each epoch")
-    hazard_base_pct: int = rule(25, 0, 100, G, "Chance of death each epoch at exactly the lifespan (%)")
+    hazard_base_pct: int = rule(12, 0, 100, G, "Chance of death in a year at exactly the lifespan (%)")
     hazard_steepness: float = rule(4.0, 0.0, 50.0, G, "How steeply the chance of death climbs past the lifespan")
     hazard_start_pct: int = rule(85, 0, 200, G, "Share of the lifespan from which old age can kill (%)")
     hazard_medicine_pct: int = rule(70, 0, 100, G, "Death chance of the old where medicine is known (%)")

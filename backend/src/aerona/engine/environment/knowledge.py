@@ -18,6 +18,7 @@ from aerona.domain.enums.culture import ItemClass, Technique
 from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.standing import ended_ids
 from aerona.rules.registry import Rules
 
 
@@ -191,9 +192,10 @@ async def chart(session: AsyncSession, rules: Rules, atlas: RegionAtlas, epoch: 
         | {(polity_id, region_id) for polity_id, regions in frontier.items() for region_id in regions}
     )
     changed = 0
+    gone = set(await session.scalars(ended_ids()))
     for polity_id, region_id in sorted(pairs):
         row = rows.get((polity_id, region_id))
-        if (row is not None and row.held) or held(polity_id, region_id):
+        if (row is not None and row.held) or held(polity_id, region_id) or polity_id in gone:
             continue
         floor = floors.get(polity_id, {}).get(region_id, 0)
         previous = row.level if row is not None else 0

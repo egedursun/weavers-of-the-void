@@ -71,6 +71,14 @@ def band_of_light(rules: Rules, luminosity: float) -> tuple[float, float]:
     return hundredths(table.habitable_inner_hundredths) * root, hundredths(table.habitable_outer_hundredths) * root
 
 
+def temperate_orbit(rules: Rules, star: StarRow, physics: StarPhysicsRow | None = None) -> float:
+    if physics is not None:
+        inner, outer = physics.band_inner, physics.band_outer
+    else:
+        inner, outer = band_of_light(rules, luminosity_of(rules, inferred_mass(rules, star), star.age_stage, star.star_type))
+    return round((inner + outer) / 2, 4)
+
+
 def target_brightness(rules: Rules, star_type: StarType, luminosity: float) -> int:
     table = rules.stellar_evolution
     value = table.sun_brightness + math.log10(max(luminosity, 1e-6)) * table.brightness_per_decade

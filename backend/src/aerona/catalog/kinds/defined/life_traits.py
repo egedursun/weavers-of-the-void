@@ -374,8 +374,12 @@ FACTION_KIND_TRAIT = total(
             checked_by=(),
             used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.collective.heraldry.ORDERS", "engine.honours.persons.ORDER_KINDS"),
         ),
+        FactionKindTrait.TRADES: Defined("Trades", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.governance.strategy.TRADERS")),
         FactionKindTrait.TREASON_KINDS: Defined(
             "Treason kinds", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.polity.justice.TREASON_KINDS")
+        ),
+        FactionKindTrait.UNDERWRITES: Defined(
+            "Underwrites", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.crafts.insurance.UNDERWRITERS")
         ),
         FactionKindTrait.WARLIKE: Defined("Warlike", checked_by=(), used_by=("catalog.life_traits.FACTION_KIND_TRAITS", "engine.relations.book.WARLIKE")),
     },
@@ -587,12 +591,20 @@ LIFE_STAGE_TRAIT = total(
             "Old", checked_by=(), used_by=("catalog.life_traits.LIFE_STAGE_TRAITS", "engine.households.formation.OLD", "engine.mind.wider_needs.OLD")
         ),
         LifeStageTrait.UNDER_AGE: Defined(
-            "Under age", checked_by=(), used_by=("catalog.life_traits.LIFE_STAGE_TRAITS", "engine.primitives.maturity.UNDER_AGE")
+            "Under age",
+            checked_by=(),
+            used_by=("catalog.life_traits.LIFE_STAGE_TRAITS", "engine.mortal.life.YOUNG_TRAITS", "engine.primitives.maturity.UNDER_AGE"),
         ),
         LifeStageTrait.YOUNG: Defined(
             "Young",
             checked_by=(),
-            used_by=("catalog.life_traits.LIFE_STAGE_TRAITS", "engine.belonging.peers.YOUNG", "engine.childhood.life.GROWING", "engine.storyteller.arcs.YOUNG"),
+            used_by=(
+                "catalog.life_traits.LIFE_STAGE_TRAITS",
+                "engine.belonging.peers.YOUNG",
+                "engine.childhood.life.GROWING",
+                "engine.mortal.life.YOUNG_TRAITS",
+                "engine.storyteller.arcs.YOUNG",
+            ),
         ),
     },
 )

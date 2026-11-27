@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.core.errors import ConflictError, ValidationFailedError
 from aerona.db.repositories.base import Repository
+from aerona.db.tables.gatherings import CollectionMemberRow, CollectionRow
 from aerona.db.tables.node import NameRegistryRow, NodeRow
 from aerona.domain.models.names import NameSimilarityPolicy
 
@@ -67,6 +68,9 @@ def edit_distance_within_one(left: str, right: str) -> bool:
     return shorter[index:] == longer[index + 1 :]
 
 
+TITLE_LOCK = "name"
+
+
 class NameRepository(Repository):
     async def owner(self, name: str) -> int | None:
         row = await self.session.get(NameRegistryRow, normalize_name(name))
@@ -103,10 +107,21 @@ class NameRepository(Repository):
 
     async def rename(self, node_id: int, new_name: str) -> str:
         node = await self.require(NodeRow, node_id, "record")
+        before = node.name
         display = await self.claim(node_id, new_name)
         node.name = display
+        if before and before != display:
+            await self.retitle_histories(node_id, before, display)
         await self.session.flush()
         return display
+
+    async def retitle_histories(self, node_id: int, before: str, after: str) -> None:
+        member = select(CollectionMemberRow.collection_id).where(CollectionMemberRow.node_id == node_id)
+        for row in await self.session.scalars(
+            select(CollectionRow).where(CollectionRow.id.in_(member), CollectionRow.name.contains(before)).order_by(CollectionRow.id)
+        ):
+            if TITLE_LOCK not in (row.locked or []):
+                row.name = row.name.replace(before, after)
 
     async def unique_name(self, base: str) -> str:
         root = clean_display(base)

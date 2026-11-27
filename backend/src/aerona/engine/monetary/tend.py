@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.economy import CurrencyRow
 from aerona.db.tables.monetary import MonetaryAuthorityRow
@@ -12,7 +13,7 @@ LEGACY_FIXUP = "monetary.legacy_authorities"
 
 
 async def apply_legacy(ctx: TickContext, tally: MonetaryTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return
     for currency in await ctx.session.scalars(select(CurrencyRow).order_by(CurrencyRow.id)):
         if held(currency.issuer_entity_id) or await authority_of(ctx.session, currency.id) is not None:

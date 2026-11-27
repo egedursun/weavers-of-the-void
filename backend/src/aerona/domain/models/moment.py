@@ -15,7 +15,9 @@ class Moment:
         return self.key() < other.key()
 
     def at_least(self, other: "Moment | None") -> "Moment":
-        return other if other is not None and self.before(other) else self
+        if other is None or not self.before(other):
+            return self
+        return other if other.season is not None else Moment(other.year, self.season, self.day, self.hour)
 
 
 def latest(*moments: Moment | None) -> Moment | None:

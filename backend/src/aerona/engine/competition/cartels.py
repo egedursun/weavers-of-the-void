@@ -13,7 +13,7 @@ from aerona.domain.enums.loops import BalanceLoop
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.competition.clauses import clause_strength
 from aerona.engine.context import TickContext
-from aerona.engine.economy.purse import coin_of, give_coin, take_coin
+from aerona.engine.economy.purse import coin_of, give_coin, held_coin, take_coin
 from aerona.engine.factions.companies import realm_of
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -92,7 +92,7 @@ async def expose(ctx: TickContext, cartel: CartelRow) -> None:
         member = await ctx.session.get(EntityRow, member_id)
         if member is None or held(member.id):
             continue
-        fine = round_half_up(await coin_of(ctx.session, ctx.rules, member) * table.cartel_fine_pct / PERCENT)
+        fine = round_half_up(held_coin(await coin_of(ctx.session, ctx.rules, member)) * table.cartel_fine_pct / PERCENT)
         if fine and await take_coin(ctx.session, ctx.rules, member, fine):
             fined += fine
             if treasury is not None:

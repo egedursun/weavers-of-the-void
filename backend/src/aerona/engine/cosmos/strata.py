@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.strata import hosts_for
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmography import DimensionRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.faith import AfterlifeStratumRow
@@ -39,7 +40,7 @@ async def host_strata(session: AsyncSession) -> int:
 
 
 async def host_strata_once(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, STRATA_FIXUP) is not None:
+    if not await fixup_due(session, STRATA_FIXUP):
         return 0
     hosted = await host_strata(session)
     session.add(AppliedFixupRow(key=STRATA_FIXUP, result={"hosted": hosted}))

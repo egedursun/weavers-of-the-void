@@ -29,6 +29,7 @@ from aerona.engine.phases.factions import found_faction
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
+from aerona.engine.primitives.renames import rename_everywhere
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation, shift
 from aerona.engine.relations.contests import Bout, ContestTally, hold_contest, pass_wealth
@@ -104,7 +105,7 @@ async def found_circle(ctx: TickContext, place: EntityRow, interest: Interest, m
         return None
     faction = await found_faction(ctx, place, FactionKind.SOCIAL_CIRCLE)
     label = CIRCLES[kind].label
-    faction.name = f"The {label} of {place.name}"
+    await rename_everywhere(ctx.session, faction.id, f"The {label} of {place.name}", ctx.epoch, free=True)
     profile = await ctx.session.get(FactionProfileRow, faction.id)
     if profile is not None:
         profile.leader_entity_id = members[0]

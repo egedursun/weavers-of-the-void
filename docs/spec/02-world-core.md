@@ -1350,7 +1350,7 @@ Returns `{cag: current, caglar:[{cag, n, geri}], kayitlar:[entry + sonuc parsed 
 
 `bagimlilar(grup)` (dependents): later, not-undone ledger entries that touched entities this entry inserted (updates to those entity rows, or bonds whose source or target is one of them) → `[{id, kim_ad, arac}]` (shown as a warning).
 
-### 27.3 Undo (`geriAl(grup)`; `/api/defter/:id/geri-al`, refused while an epoch is running: "A page cannot be torn from the ledger while an epoch is running.")
+### 27.3 Undo (`geriAl(grup)`; `/api/defter/:id/geri-al`, refused while an epoch is running: "A ledger page cannot be undone while an epoch is running.")
 
 Errors: "No such entry in the ledger." / "This entry was already undone."
 

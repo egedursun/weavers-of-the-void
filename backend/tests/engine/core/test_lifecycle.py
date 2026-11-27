@@ -183,3 +183,15 @@ async def test_death_raises_a_lifespan_the_mortal_outlived(ctx: TickContext, wor
     await die(ctx, elder, cause="was struck down", forced=True)
     assert (stat(elder, "lifespan") or 0) >= 400 - ctx.rules.world_engine.notable_lifespan_bonus - ctx.rules.world_engine.medicine_lifespan_bonus
     assert ctx.environment.stats.counters[f"{ctx.phase}.lifespans_raised"] == 1
+
+
+async def test_an_heir_raised_for_a_young_ruler_is_never_older_than_the_ruler_could_have_borne(
+    ctx: TickContext, world: CoreWorld, session: AsyncSession
+) -> None:
+    town = await settlement(session, "Youngmoor", world, world.regions[1])
+    king = await mortal(session, "Etsal", world, town.id, age=20)
+    await bond(session, king.id, town.id, BondKind.RULES)
+    result = await die(ctx, king, cause="was slain by a rival", killer_id=world.species.id)
+    assert result is not None and result.heir is not None
+    youngest_parent = (stat(king, "lifespan") or ctx.rules.world_effects.default_lifespan) * ctx.rules.fertility.window_start_pct // 100
+    assert (stat(result.heir, "age") or 0) <= max(0, 20 - youngest_parent)

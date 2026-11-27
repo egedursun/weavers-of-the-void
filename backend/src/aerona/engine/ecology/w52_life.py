@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.domestication import SOLVENT_BIOCHEMISTRY
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import HerdRow, SpeciesProfileRow, SpeciesUseRow
 from aerona.db.tables.entities import EntityRow, EntityTraitRow
@@ -26,7 +27,7 @@ async def fixed(ctx: TickContext, key: str, result: dict[str, int]) -> None:
 
 
 async def backfill_social(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, SOCIAL_FIXUP) is not None:
+    if not await fixup_due(ctx.session, SOCIAL_FIXUP):
         return 0
     breeders = select(EntityTraitRow.entity_id).where(EntityTraitRow.trait == CreatureTrait.SWARM_BREEDER)
     moved = 0
@@ -41,7 +42,7 @@ async def backfill_social(ctx: TickContext) -> int:
 
 
 async def backfill_biochemistry(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, BIOCHEMISTRY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BIOCHEMISTRY_FIXUP):
         return 0
     moved = 0
     found = await ctx.session.execute(
@@ -69,7 +70,7 @@ async def backfill_biochemistry(ctx: TickContext) -> int:
 
 
 async def backfill_hunting_role(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, ROLES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ROLES_FIXUP):
         return 0
     known = set(await ctx.session.scalars(select(SpeciesUseRow.species_entity_id).where(SpeciesUseRow.use == AnimalRole.HUNTING)))
     trained = await ctx.session.scalars(

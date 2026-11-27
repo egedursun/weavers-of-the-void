@@ -8,6 +8,7 @@ from sqlalchemy.orm import aliased
 from aerona.catalog.movement import FOOT_WAYS
 from aerona.catalog.strata import STRATA
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.biology import BiologyRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -96,11 +97,17 @@ async def underworld_of(ctx: TickContext, world_id: int) -> int | None:
     )
 
 
+def unshaped(row: RegionStratumRow) -> bool:
+    table = RegionStratumRow.__table__
+    blank = all(getattr(row, column) == getattr(table.c[column].default, "arg", None) for column in ("terrain", "extent", "light"))
+    return blank and row.by_node_id is None and row.realm_entity_id is None
+
+
 async def shape_cells(ctx: TickContext, tally: DeepTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, CELLS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, CELLS_FIXUP):
         return
     for row in list(await ctx.session.scalars(select(RegionStratumRow).order_by(RegionStratumRow.id))):
-        if held(row.region_entity_id):
+        if held(row.region_entity_id) or not unshaped(row):
             continue
         ground = await ctx.session.get(RegionEnvironmentRow, row.region_entity_id)
         realm = await underworld_of(ctx, ground.world_id) if ground is not None else None
@@ -170,7 +177,7 @@ def shallowest_dwelling(cells: dict[UndergroundStratum, RegionStratumRow]) -> Re
 
 
 async def lay_natural_passages(ctx: TickContext, tally: DeepTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, PASSAGES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, PASSAGES_FIXUP):
         return
     table = ctx.rules.underground
     atlas = await RegionAtlas.load(ctx.session)
@@ -475,7 +482,7 @@ async def found_below(ctx: TickContext, region: EntityRow, world_id: int, label:
 
 
 async def seed_deep_peoples(ctx: TickContext, tally: DeepTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, PEOPLES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, PEOPLES_FIXUP):
         return
     table = ctx.rules.underground
     atlas = await RegionAtlas.load(ctx.session)

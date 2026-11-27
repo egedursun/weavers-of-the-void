@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.grade_duties import GRADE_DUTIES
 from aerona.catalog.life_traits import AGE_GRADE_TRAITS, having
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.customs import AgeSetMemberRow, AgeSetRow, GradeDutyRow
 from aerona.db.tables.entities import EntityRow
@@ -60,7 +61,7 @@ DUTIES_FIXUP = "grades.w52"
 
 
 async def backfill_duties(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, DUTIES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, DUTIES_FIXUP):
         return 0
     made = 0
     for people_id in sorted(set(await ctx.session.scalars(select(AgeSetRow.people_entity_id)))):

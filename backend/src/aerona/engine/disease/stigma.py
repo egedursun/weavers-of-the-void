@@ -18,7 +18,7 @@ from aerona.engine.disease.course import region_communities
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.numbers import round_half_up
-from aerona.engine.primitives.queries import connect
+from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
 from aerona.engine.recording.record import RoleValue, record
@@ -61,7 +61,32 @@ async def colony_in(ctx: TickContext, region: EntityRow, disease: EntityRow, fou
         ),
     )
     await connect(ctx.session, colony.id, founder.id, BondKind.DESCENDS_FROM, ctx.epoch, description="cast out of it")
+    await connect(ctx.session, founder.id, colony.id, BondKind.RULES, ctx.epoch, description="keeps its sick there")
     return colony
+
+
+async def keep_colonies_under_founders(ctx: TickContext) -> int:
+    colonies = list(
+        await ctx.session.scalars(
+            select(EntityRow)
+            .where(EntityRow.entity_type == EntityType.SETTLEMENT, EntityRow.status == EntityStatus.CANON, EntityRow.subtype == COLONY)
+            .order_by(EntityRow.id)
+        )
+    )
+    placed = 0
+    for colony in colonies:
+        if held(colony.id):
+            continue
+        ruled = await active_bonds(ctx.session, [BondKind.RULES], targets=[colony.id])
+        if any(bond.source_node_id != colony.id for bond in ruled):
+            continue
+        sent = await active_bonds(ctx.session, [BondKind.DESCENDS_FROM], sources=[colony.id])
+        founder = await living_entity(ctx.session, sent[0].target_node_id) if sent else None
+        if founder is None or founder.entity_type is not EntityType.SETTLEMENT:
+            continue
+        await connect(ctx.session, founder.id, colony.id, BondKind.RULES, ctx.epoch, description="keeps its sick there")
+        placed += 1
+    return placed
 
 
 async def expel_sick(ctx: TickContext, book: DiseaseBook) -> int:

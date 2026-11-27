@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.crafts import GameRow
 from aerona.db.tables.entities import EntityRow
@@ -203,7 +204,7 @@ DEFAULT_SHAPE = (30, 0, 1, 10, 20)
 
 
 async def shape_legacy_games(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_SHAPES) is not None:
+    if not await fixup_due(ctx.session, LEGACY_SHAPES):
         return 0
     shaped_count = 0
     for game in list(await ctx.session.scalars(select(GameRow).order_by(GameRow.id))):

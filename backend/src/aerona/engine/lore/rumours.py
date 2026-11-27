@@ -11,6 +11,7 @@ from aerona.catalog.rumours import is_alarm, is_atrocity, is_quiet, legend_arche
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import LanguageStandingRow, LegendProfileRow, RumourRow
@@ -54,6 +55,7 @@ from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
 from aerona.engine.recording.births import mark_born_at
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.recording.repeats import told_this_epoch
 from aerona.engine.recording.terms import explaining_alone, term
 from aerona.engine.renown.book import standing_with
 from aerona.engine.services.community_relations import change_relation
@@ -195,7 +197,7 @@ async def seed(ctx: TickContext, atlas: RegionAtlas, since: int | None = None) -
 
 
 async def backfill(ctx: TickContext, atlas: RegionAtlas) -> int:
-    if await ctx.session.get(AppliedFixupRow, RUMOUR_FIXUP) is not None:
+    if not await fixup_due(ctx.session, RUMOUR_FIXUP):
         return 0
     made = await seed(ctx, atlas, since=max(1, ctx.epoch - ctx.rules.rumours.backfill_epochs))
     ctx.session.add(AppliedFixupRow(key=RUMOUR_FIXUP, result={"rumours": made}))
@@ -514,7 +516,9 @@ async def alarm(ctx: TickContext, atlas: RegionAtlas, rumour: RumourRow, inciden
         if ally == enemy:
             continue
         await change_relation(ctx, ally, rumour.carrier_entity_id, table.ally_call * weight, MemoryKind.GOODWILL, note="called to help against a coming army")
-        await change_relation(ctx, ally, enemy, -table.ally_call * weight, MemoryKind.ILL_WILL, note="marches on our ally")
+        await change_relation(
+            ctx, ally, enemy, -table.ally_call * weight, MemoryKind.ILL_WILL, note="marches on our ally", reverse_note="stands with the one we march on"
+        )
     return enemy
 
 
@@ -532,7 +536,9 @@ async def react(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
         enemy = await alarm(ctx, atlas, rumour, incident)
         if enemy is not None:
             counts["alarms"] += 1
-            await record_incident(ctx, "rumour.alarm", roles={IncidentRole.RECEIVER: rumour.carrier_entity_id, IncidentRole.OPPONENT: enemy}, cause=incident.id)
+            if not await told_this_epoch(ctx, "rumour.alarm", rumour.carrier_entity_id, IncidentRole.RECEIVER, other=(enemy, IncidentRole.OPPONENT)):
+                roles = {IncidentRole.RECEIVER: rumour.carrier_entity_id, IncidentRole.OPPONENT: enemy}
+                await record_incident(ctx, "rumour.alarm", roles=roles, cause=incident.id)
     return counts
 
 

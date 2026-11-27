@@ -51,6 +51,7 @@ class IncidentKindSpec:
     draft: bool = False
     told: bool = True
     legacy: bool = False
+    repeatable: bool = False
     open_facts: bool = False
     enum_suffix: type[StrEnum] | None = field(default=None, compare=False)
 

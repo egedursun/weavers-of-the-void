@@ -8,6 +8,7 @@ from aerona.catalog.life.domain import STANDING_STATES
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.gatherings import GatheringRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.mortal import MortalProfileRow
@@ -33,11 +34,13 @@ from aerona.engine.mortal.kin import children_of, close_kin_of, parents_of, spou
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.maturity import under_age
+from aerona.engine.primitives.maturity import away_among, under_age
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import count_communities
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.renown.currencies import ruler_of_realm
+
+HOSTS_OF_THE_DEAD = frozenset({EntityType.MORTAL, EntityType.SETTLEMENT})
 
 G = GatheringKind
 MARTIAL_ROLES = frozenset({MortalRole.WARRIOR, MortalRole.SWORN_WARRIOR, MortalRole.HERO, MortalRole.HUNTER, MortalRole.OFFICER})
@@ -108,7 +111,7 @@ async def deaths(ctx: TickContext) -> list[Occasion]:
         young = await under_age(ctx.session, [mourner.id for mourner in mourners])
         grown = [mourner for mourner in mourners if mourner.id not in young]
         host = grown[0] if grown else await living(ctx, dead.location_id)
-        if host is None:
+        if host is None or host.entity_type not in HOSTS_OF_THE_DEAD:
             continue
         kind = G.FUNERAL if renown >= ctx.rules.gatherings.funeral_renown else G.WAKE
         guests = [Guest(mourner.id, GuestRole.GUEST, AttendanceReason.KIN) for mourner in mourners if mourner.id != host.id]
@@ -149,9 +152,14 @@ async def milestones(ctx: TickContext) -> list[Occasion]:
 
 async def coronations(ctx: TickContext) -> list[Occasion]:
     found: list[Occasion] = []
-    for holder in await ctx.session.scalars(select(TitleHolderRow).where(TitleHolderRow.since_epoch == ctx.epoch, TitleHolderRow.until_epoch.is_(None))):
+    crowned_before = set(
+        await ctx.session.scalars(select(GatheringRow.honoured_node_id).where(GatheringRow.kind == G.CORONATION, GatheringRow.epoch == ctx.epoch))
+    )
+    statement = select(TitleHolderRow).where(TitleHolderRow.since_epoch == ctx.epoch, TitleHolderRow.until_epoch.is_(None)).order_by(TitleHolderRow.id)
+    for holder in await ctx.session.scalars(statement):
         crowned = await living(ctx, holder.holder_node_id)
-        if crowned is not None and crowned.entity_type is EntityType.MORTAL:
+        if crowned is not None and crowned.entity_type is EntityType.MORTAL and crowned.id not in crowned_before:
+            crowned_before.add(crowned.id)
             found.append(Occasion(G.CORONATION, crowned.id, crowned.world_id, crowned.location_id, crowned.id, tradition_id=None))
     return found
 
@@ -435,8 +443,9 @@ async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
     per_world: dict[int | None, int] = {}
     caps: dict[int | None, int] = {}
     young = await under_age(ctx.session, [occasion.host_id for occasion in found if occasion.kind not in UNDER_AGE_HOSTS])
+    away = await away_among(ctx.session, [occasion.host_id for occasion in found])
     for occasion in ctx.rng(f"gathering.order.{ctx.epoch}").shuffled(found):
-        if occasion.host_id in young and occasion.kind not in UNDER_AGE_HOSTS:
+        if (occasion.host_id in young and occasion.kind not in UNDER_AGE_HOSTS) or occasion.host_id in away:
             continue
         if occasion.world_id not in caps:
             communities = await count_communities(ctx.session, occasion.world_id) if occasion.world_id is not None else 0

@@ -353,7 +353,7 @@ describe('undoing a ledger page', () => {
       .click()
     await expect
       .element(
-        screen.getByText('Page torn from the ledger: 2 changes undone').first()
+        screen.getByText('Ledger page undone: 2 changes reversed').first()
       )
       .toBeInTheDocument()
   })
@@ -414,9 +414,7 @@ describe('undoing a ledger page', () => {
 
 describe('undo message text', () => {
   it('words conflicts and clean undos differently', () => {
-    expect(undoMessage(2, 0)).toBe(
-      'Page torn from the ledger: 2 changes undone'
-    )
+    expect(undoMessage(2, 0)).toBe('Ledger page undone: 2 changes reversed')
     expect(undoMessage(1, 3)).toBe(
       'Undone: 1 change reverted, 3 conflicts skipped'
     )
@@ -448,7 +446,7 @@ describe('undo offer in the success toast', () => {
     await expect.element(screen.getByText('Blessed Ithren')).toBeInTheDocument()
     await screen.getByRole('button', { name: 'Undo' }).click()
     await expect
-      .element(screen.getByText('Page torn from the ledger: 1 change undone'))
+      .element(screen.getByText('Ledger page undone: 1 change reversed'))
       .toBeInTheDocument()
     expect(server.callsTo('POST /api/ledger/12/undo')).toHaveLength(1)
     server.stop()

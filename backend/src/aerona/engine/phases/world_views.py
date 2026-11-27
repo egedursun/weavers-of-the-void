@@ -39,6 +39,7 @@ from aerona.engine.settlement.modes import ModeTally, keep_modes
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.settlement_profiles",
     "table.world_type_profiles",
 )
@@ -58,6 +59,7 @@ async def world_views(ctx: TickContext) -> None:
     "table.entities",
     "table.forced_weather",
     "table.irregular_seasons",
+    "table.node_births",
     "table.nodes",
     "table.people_biology",
     "table.place_environment",

@@ -3,6 +3,7 @@ from sqlalchemy import func, select
 from aerona.catalog.backfill_words import ACT_WORDS
 from aerona.catalog.life.divine import KEPT_OR_FREED_PASSIONS, MEMORY_WORKS, TARGET_FOR_CREATOR_PASSIONS, TARGET_FOR_CREATOR_PASSIONS_2
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.agency import ActionRecordRow
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow, CreatorRow
@@ -52,7 +53,7 @@ async def taboo_wrath(ctx: TickContext, creator: CreatorRow) -> int:
 
 
 async def type_taboos(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, TABOO_FIXUP) is not None:
+    if not await fixup_due(ctx.session, TABOO_FIXUP):
         return 0
     creator = await creator_row(ctx.session)
     if creator is None:

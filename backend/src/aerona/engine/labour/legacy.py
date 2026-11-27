@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -29,7 +30,7 @@ async def past_strikes(ctx: TickContext) -> list[tuple[int, int, int | None]]:
 
 
 async def apply_legacy(ctx: TickContext) -> dict[str, int]:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return {}
     societies = disputes = 0
     for epoch, actor, place in await past_strikes(ctx):

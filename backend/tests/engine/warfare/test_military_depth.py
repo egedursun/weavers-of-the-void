@@ -4,8 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.core.errors import ValidationFailedError
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.tables.cosmic_state import VesselProfileRow
-from aerona.db.tables.military import ArmyUnitRow, FeudRow, PeaceTermRow, SpyNetworkRow, UnitDesignRow
+from aerona.db.tables.military import ArmyUnitRow, FeudRow, PeaceTermRow, SpyAgentRow, SpyNetworkRow, UnitDesignRow
 from aerona.db.tables.warfare import ArmyRow, WarRow
+from aerona.db.write_guard import HELD_SCOPE, HeldScope
 from aerona.domain.enums.body import DamageType
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -32,7 +33,7 @@ from aerona.engine.military.spycraft import cover_access, cover_exposure, migrat
 from aerona.engine.military.units import reconcile_sizes, resize, stacks_of
 from aerona.engine.military.vessels import frame_value, storm_damage, vessel_power
 from aerona.engine.operations.engagement import Weapon
-from aerona.engine.primitives.stats import stat
+from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.services.community_relations import close_feud, feud_between, open_feud, start_blood_feud
 from aerona.engine.services.war import open_war
 from aerona.engine.services.war_resolution import end_war
@@ -51,6 +52,19 @@ async def test_army_size_always_matches_its_stacks(session: AsyncSession, world_
     army.status, army.end_epoch = EntityStatus.DEAD, ctx.epoch
     found = await reconcile_sizes(ctx)
     assert found["retired"] == 1 and sum(row.count for row in await stacks_of(session, army.id)) == 0 and stat(army, "size") == 0
+
+
+async def test_a_held_army_keeps_its_size_and_stacks(session: AsyncSession, world_id: int) -> None:
+    ctx = make_ctx(session)
+    folk = await make(session, "Still Folk", EntityType.PEOPLE, world_id, population=9000, martiality=60)
+    army = await orders.raise_standing_army(ctx, folk.id, 400)
+    set_stats(army, size=999)
+    token = HELD_SCOPE.set(HeldScope(None, frozenset({army.id})))
+    try:
+        found = await reconcile_sizes(ctx)
+    finally:
+        HELD_SCOPE.reset(token)
+    assert found["aligned"] == 0 and stat(army, "size") == 999
 
 
 async def test_military_records_create_edit_hold_release_and_delete(session: AsyncSession, world_id: int) -> None:
@@ -138,6 +152,24 @@ async def test_bond_spy_networks_become_typed_rows_with_owner_kinds(session: Asy
     assert network is not None and network.owner_kind is SpyOwnerKind.FACTION
     assert not await BondRepository(session).exists_between(guild.id, city.id, BondKind.SPY_NETWORK)
     assert cover_access(network, 100) > 0 and cover_exposure(network, 100) > 0
+
+
+async def test_the_spy_migration_never_seats_a_recruited_agent_twice(session: AsyncSession, world_id: int) -> None:
+    ctx = make_ctx(session)
+    guild = await make(session, "Hush Guild", EntityType.FACTION, world_id, sway=80)
+    city = await make(session, "Bright City", EntityType.SETTLEMENT, world_id, population=900)
+    spy = await make(session, "Quiet Hand", EntityType.MORTAL, world_id)
+    network = SpyNetworkRow(
+        owner_entity_id=guild.id, target_entity_id=city.id, agents=1, agent_ids=[spy.id], since_epoch=1, owner_kind=SpyOwnerKind.CULT, locked=[]
+    )
+    session.add(network)
+    await session.flush()
+    session.add(SpyAgentRow(network_id=network.id, mortal_entity_id=spy.id, skill=77, since_epoch=1, locked=[]))
+    await session.flush()
+    await migrate_bonds(ctx)
+    seated = list(await session.scalars(select(SpyAgentRow).where(SpyAgentRow.network_id == network.id)))
+    assert [agent.skill for agent in seated] == [77]
+    assert network.owner_kind is SpyOwnerKind.CULT
 
 
 async def test_vessels_are_laid_down_with_hull_performance(session: AsyncSession, world_id: int) -> None:

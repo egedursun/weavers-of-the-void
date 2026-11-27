@@ -27,6 +27,7 @@ from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.tables.lore import LexemeRow, lexeme_key
+from aerona.db.tables.physics import StarPhysicsRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityType
@@ -45,6 +46,7 @@ from aerona.engine.cosmos.maps import store_world_map
 from aerona.engine.cosmos.resources import DepositSpec, cosmic_deposits, create_cosmic_deposit, set_mechanics
 from aerona.engine.cosmos.routes import connect_world
 from aerona.engine.cosmos.stars import StarSpec, create_star
+from aerona.engine.cosmos.stellar import temperate_orbit
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.cosmos.worlds import assign_mirror_twin
 from aerona.engine.economy.resources import set_resource_yield
@@ -122,11 +124,14 @@ def world_seed(name: str, rng: SeededRandom) -> str:
     return f"{name}:{suffix}"
 
 
-async def _orbit(session: AsyncSession, rng: SeededRandom, star_id: int | None, parent_id: int | None) -> float:
+async def _orbit(session: AsyncSession, rules: Rules, rng: SeededRandom, star_id: int | None, parent_id: int | None) -> float:
     if parent_id is not None:
         moons = int(await session.scalar(select(func.count()).select_from(WorldRow).where(WorldRow.parent_world_id == parent_id)) or 0)
         return MOON_ORBIT_BASE + moons * MOON_ORBIT_STEP
     planets = int(await session.scalar(select(func.count()).select_from(WorldRow).where(WorldRow.star_id == star_id, WorldRow.parent_world_id.is_(None))) or 0)
+    star = await session.get(StarRow, star_id) if star_id is not None else None
+    if planets == 0 and star is not None:
+        return temperate_orbit(rules, star, await session.get(StarPhysicsRow, star.id))
     return PLANET_ORBIT_BASE + planets * PLANET_ORBIT_STEP + rng.random() * PLANET_ORBIT_JITTER
 
 
@@ -191,7 +196,7 @@ async def _insert_world(ctx: TickContext, output: NewWorldOutput, request: Birth
         WorldDraft(
             name=name,
             world_type=world_type,
-            orbit=await _orbit(session, rng, star_id, parent_id),
+            orbit=await _orbit(session, rules, rng, star_id, parent_id),
             terrain_seed=world_seed(name, rng),
             terrain_sea=(terrain.sea_pct or 0) / PERCENT,
             terrain_mountains=(terrain.mountains_pct or 0) / PERCENT,

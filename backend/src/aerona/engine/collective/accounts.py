@@ -43,9 +43,11 @@ from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
+from aerona.engine.primitives.standing import still_standing
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.recording.record import FactInput
 from aerona.engine.recording.record import record as record_incident
+from aerona.engine.recording.repeats import told_this_epoch
 
 C = CollectionKind
 R = CollectionRole
@@ -145,7 +147,7 @@ async def record(
     revised_from: int | None = None,
     credence: int = 60,
 ) -> AccountRow | None:
-    if held(holder.id):
+    if held(holder.id) or holder.status is not EntityStatus.CANON:
         return None
     row = AccountRow(
         holder_entity_id=holder.id,
@@ -796,7 +798,8 @@ async def keep_anniversary(ctx: TickContext, row: CommemorationRow, collection: 
     if "last_observed_epoch" not in row.locked:
         row.last_observed_epoch = ctx.epoch
     tally.anniversaries += 1
-    if await ctx.session.get(EntityRow, row.holder_entity_id) is not None:
+    told = await told_this_epoch(ctx, "history.anniversary", row.holder_entity_id, IncidentRole.SUBJECT, fact="happening", value=collection.name)
+    if not told and await ctx.session.get(EntityRow, row.holder_entity_id) is not None:
         change = table.pride_order if row.pride else table.grievance_unrest
         await record_incident(
             ctx,
@@ -820,6 +823,8 @@ async def relive(ctx: TickContext, tally: HistoryTally) -> None:
         collection = await ctx.session.get(CollectionRow, row.collection_id)
         age = ctx.epoch - collection.start_epoch if collection is not None else 0
         if collection is None or held(row.holder_entity_id) or age <= 0 or age % table.commemorate_every:
+            continue
+        if not await still_standing(ctx.session, row.holder_entity_id):
             continue
         await keep_anniversary(ctx, row, collection, tally)
 

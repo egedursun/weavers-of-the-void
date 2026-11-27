@@ -10,7 +10,7 @@ from aerona.engine.disease.emergence import ensure_profile
 from aerona.engine.disease.history import backfill_plagues
 from aerona.engine.disease.seasons import season_disease
 from aerona.engine.disease.sickness import sicken_cohorts
-from aerona.engine.disease.stigma import build_hospitals, expel_sick
+from aerona.engine.disease.stigma import build_hospitals, expel_sick, keep_colonies_under_founders
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
 
@@ -137,6 +137,7 @@ async def epidemics(ctx: TickContext) -> None:
     ctx.count("journey_carried", await carry_by_journeys(ctx, book))
     ctx.count("camp_dead", await camp_disease(ctx, book))
     ctx.count("expelled", await expel_sick(ctx, book))
+    ctx.count("colonies_placed", await keep_colonies_under_founders(ctx))
     ctx.count("hospitals", await build_hospitals(ctx, book))
     fell, recovered = await sicken_cohorts(ctx, book)
     ctx.count("fell_sick", fell)

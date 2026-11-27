@@ -143,7 +143,7 @@ export function GenesisPreview({
             </Badge>
           ) : (
             <Badge size='sm' variant='outline'>
-              Blank canvas
+              No template
             </Badge>
           )}
           <Badge size='sm' variant='outline'>

@@ -16,7 +16,7 @@ from sqlalchemy.orm.util import identity_key
 from sqlalchemy.sql.elements import ClauseElement
 
 from aerona.constants.control import BOOKKEEPING_TABLES
-from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH, NAME_MAX_LENGTH
+from aerona.constants.schema import NAME_MAX_LENGTH
 from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
 from aerona.db.authorship import hand_of
 from aerona.db.base import Base
@@ -225,7 +225,7 @@ async def write_entry(session: AsyncSession, draft: LedgerDraft, changes: list[R
         actor_name=draft.actor_name[:NAME_MAX_LENGTH],
         tool=draft.tool,
         action_kind=draft.action_kind,
-        input_summary=draft.input_summary[:LEDGER_SUMMARY_MAX_LENGTH] if draft.input_summary else None,
+        input_summary=draft.input_summary or None,
         applied=[],
         conflicts=[],
         reason=draft.reason,

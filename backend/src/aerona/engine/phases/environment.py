@@ -415,7 +415,7 @@ async def write_seasons(ctx: TickContext, world: WorldRow) -> list[WorldSeasonRo
         if kept is not None:
             rows.append(kept)
             continue
-        name = names.get(draft.position) or await season_name(ctx, world, draft.position)
+        name = names.get(draft.position) or await season_name(ctx, world, draft.position, {row.name for row in rows})
         rows.append(
             WorldSeasonRow(
                 world_id=world.id,
@@ -663,10 +663,11 @@ async def environment_survey(ctx: TickContext) -> None:
             created += 1
         elif mapped is not None:
             apply_geography(env, mapped, coast, course_of(shapes, region.id))
-            if not env.surveyed:
-                env.mineral_layers = mineral_layers(
+            if not env.surveyed and "mineral_layers" not in env.locked:
+                surveyed = mineral_layers(
                     ctx.rules, ctx.environment.rng(f"minerals.{region.id}"), mapped, context.world.world_type, env.dominant_terrain, make=context.make
                 )
+                env.mineral_layers = {**surveyed, **env.mineral_layers}
             env.surveyed = True
             synced += 1
     await ctx.session.flush()

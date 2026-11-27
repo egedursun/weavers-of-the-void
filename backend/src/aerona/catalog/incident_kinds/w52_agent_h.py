@@ -66,7 +66,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dig.risk",
         G.KNOWLEDGE,
-        "The dig of {actor} at {place} met {risk} in its {stage}.",
+        "At the {stage} stage of the dig of {actor} at {place}, the diggers met a danger: {risk}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.PLACE), RoleSpec(R.PATRON, required=False)),
         facts=(FactSpec("risk", FactValue.ENUM, enum=ExcavationRisk), FactSpec("stage", FactValue.ENUM, enum=ExcavationStage)),
         place=PlaceRule.REQUIRED,

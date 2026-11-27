@@ -133,6 +133,7 @@ async def change_relation(
     *,
     note: str | None = None,
     reverse: MemoryKind | None = None,
+    reverse_note: str | None = None,
     event_id: int | None = None,
 ) -> int:
     session, rules, epoch = ctx.session, ctx.rules, ctx.epoch
@@ -144,7 +145,9 @@ async def change_relation(
         delta *= await barrier(session, rules, first, second, epoch)
     await _ensure_row(session, rules, first, second)
     await remember(session, rules, holder_id=first, subject_id=second, kind=kind, magnitude=delta, epoch=epoch, note=note, event_id=event_id)
-    await remember(session, rules, holder_id=second, subject_id=first, kind=reverse or kind, magnitude=delta, epoch=epoch, note=note, event_id=event_id)
+    await remember(
+        session, rules, holder_id=second, subject_id=first, kind=reverse or kind, magnitude=delta, epoch=epoch, note=reverse_note or note, event_id=event_id
+    )
     act = MEMORIES[kind].act
     if act is not None:
         await judged(ctx, second, first, act, note=note)

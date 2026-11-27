@@ -8,6 +8,7 @@ from aerona.catalog.kinds.crafts_labels import CLEANSING_FURNISHINGS, WORKING_WE
 from aerona.catalog.life_traits import FURNISHING_CATEGORY_TRAITS, having
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.collective import ArmsRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.crafts import GameRow
@@ -446,7 +447,7 @@ async def heraldry_system(ctx: TickContext) -> EmblemSystemRow | None:
         .order_by(EmblemSystemRow.id)
         .limit(1)
     )
-    if found is not None or await ctx.session.get(AppliedFixupRow, HERALDRY_FIXUP) is not None:
+    if found is not None or not await fixup_due(ctx.session, HERALDRY_FIXUP):
         return found
     made = EmblemSystemRow(
         name="Heraldry",

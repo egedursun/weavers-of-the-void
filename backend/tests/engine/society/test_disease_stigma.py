@@ -1,5 +1,6 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
+from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.disease import DiseaseProfileRow, OutbreakRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import HELD_SCOPE, HeldScope
@@ -7,7 +8,8 @@ from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.disease import OutbreakStatus, SpreadPath
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.mind import ValueAxis, ValueHolder
-from aerona.engine.disease.stigma import COLONY, expel_sick
+from aerona.engine.disease.book import COLONY
+from aerona.engine.disease.stigma import expel_sick, keep_colonies_under_founders
 from aerona.engine.mind.book import write_values
 from aerona.engine.primitives.stats import stat
 from tests.engine.society.factories import Realm, context, link, people, settlement
@@ -70,3 +72,14 @@ async def test_a_town_that_does_not_fear_impurity_or_is_held_keeps_its_sick(real
     finally:
         HELD_SCOPE.reset(token)
     assert await colonies(realm) == []
+
+
+async def test_a_colony_of_the_sick_stays_under_the_town_that_sent_its_sick_and_founds_no_realm_of_its_own(realm: Realm) -> None:
+    _disease, town = await stricken(realm, purity=90)
+    await expel_sick(context(realm.session), await book_of(realm))
+    [colony] = await colonies(realm)
+    lords = set(await realm.session.scalars(select(BondRow.source_node_id).where(BondRow.kind == BondKind.RULES, BondRow.target_node_id == colony.id)))
+    assert lords == {town.id}
+    await realm.session.execute(delete(BondRow).where(BondRow.kind == BondKind.RULES, BondRow.target_node_id == colony.id))
+    assert await keep_colonies_under_founders(context(realm.session)) == 1
+    assert await keep_colonies_under_founders(context(realm.session)) == 0

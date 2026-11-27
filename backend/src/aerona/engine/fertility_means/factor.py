@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.reproduction import SEX_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.read_memo import memoized
@@ -9,10 +10,20 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.domain.enums.body_systems import BodySystem
 from aerona.domain.enums.fertility_means import FertilityMeans
+from aerona.engine.mortal.life import sex_of_stats
 from aerona.rules.registry import Rules
 
 F = FertilityMeans
 PREVENTING = frozenset({F.PREVENTION, F.ENDING_PREGNANCY})
+CARRIED = frozenset({F.ENDING_PREGNANCY})
+
+
+def fits_body(means: FertilityMeans, mortal: EntityRow, fertility: int | None) -> bool:
+    if fertility is not None and fertility <= 0 and means in PREVENTING:
+        return False
+    return means not in CARRIED or SEX_KINDS[sex_of_stats(mortal)].bears
+
+
 DIRECTION = total(
     FertilityMeans,
     {F.PREVENTION: -1, F.ENDING_PREGNANCY: -1, F.REMEDY_FOR_BARRENNESS: 1, F.ASSISTED_CONCEPTION: 1, F.SURROGACY: 1, F.MADE_BIRTH: 1},

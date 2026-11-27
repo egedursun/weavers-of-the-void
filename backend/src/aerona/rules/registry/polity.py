@@ -191,7 +191,7 @@ class LegislationRules(Spanned):
     jubilee_relief: int = rule(10, 0, 100, P, "Satisfaction farmers and the bound gain at a debt jubilee")
     levy_return_pct: int = rule(50, 0, 100, P, "Share of levies kept past their term that go home each epoch (%)")
     standing_upkeep_per_100: int = rule(2, 0, 1000, P, "Treasury a hundred standing soldiers cost each epoch")
-    fine_amount: int = rule(5, 0, 10000, P, "Treasury a fine or wergild sentence brings the city")
+    fine_amount: int = rule(5, 0, 10000, P, "Treasury a fine or blood payment sentence brings the city")
     penal_infamy: int = rule(3, 0, 100, P, "Infamy the ruler gains for a cruel sentence at full cruelty")
     crisis_crime: int = rule(60, 0, 100, P, "Average crime at which a realm hardens its penal code")
     crisis_debt: int = rule(20, 0, 1000000, P, "Realm debt per 1000 subjects at which the realm proclaims a debt jubilee law")

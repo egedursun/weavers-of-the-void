@@ -150,7 +150,7 @@ async def test_peoples_who_do_not_share_norms_of_space_lose_trust(session: Async
     await keep_daily_life(ctx)
     relation = await session.get(CommunityRelationRow, (first, second))
     assert relation is not None and relation.value < 10
-    assert "daily.norm_breach" in await kinds_of(session, "daily.")
+    assert "daily.norms_clashed" in await kinds_of(session, "daily.") and "daily.norm_breach" not in await kinds_of(session, "daily.")
 
 
 async def test_every_people_and_household_gets_its_daily_life_and_sleepless_beings_keep_no_sleep(

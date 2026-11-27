@@ -7,7 +7,6 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
 from aerona.core.action_text import readable_summary
 from aerona.db.tables.cosmos import CreatorRow
 from aerona.db.tables.entities import EntityRow
@@ -19,7 +18,6 @@ from aerona.migration.legacy.source import LegacySource
 from aerona.migration.legacy.timestamps import legacy_time
 
 INDENT = 2
-ELLIPSIS = "…"
 
 TOOLS: MappingProxyType[str, tuple[str, ActionKind]] = MappingProxyType(
     {
@@ -136,7 +134,7 @@ def _summary(text: str | None) -> str | None:
     clean = readable_summary(" ".join(text.split()))
     if not clean:
         return None
-    return clean if len(clean) <= LEDGER_SUMMARY_MAX_LENGTH else clean[: LEDGER_SUMMARY_MAX_LENGTH - 1] + ELLIPSIS
+    return clean
 
 
 async def import_ledger_history(session: AsyncSession, entries: list[dict[str, Any]]) -> int:

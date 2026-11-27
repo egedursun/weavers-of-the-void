@@ -15,9 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.core.grammar import an, fact_word, several, spoken
+from aerona.core.total import total
+from aerona.db.ledger_capture import PRESENT_EPOCH
 from aerona.db.tables.ages import AgeRow
 from aerona.db.tables.changes import StateChangeRow, StateChangeTermRow, StateCheckpointRow
 from aerona.db.tables.culture import RumourRow
+from aerona.db.tables.customs import NameFormRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow, IncidentStepStateRow, IncidentTermRow
@@ -25,7 +28,7 @@ from aerona.db.tables.tellings import IncidentNameRow, RumourDistortionRow
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole, ModifierOp
 from aerona.domain.enums.node import ActorKind
-from aerona.domain.enums.records import FactUnit, InstrumentKind, ProcessGroup, StepLocus
+from aerona.domain.enums.records import FactUnit, InstrumentKind, ProcessGroup, StepLocus, WitnessMode
 from aerona.engine.recording.record import KNOWERS
 from aerona.services.books.typed import RecordTable, TypedIndex, TypedSection, title_of, words
 
@@ -63,6 +66,24 @@ def moment_text(epoch: int, year: int | None, season: int | None, day: int | Non
     if hour is not None:
         parts.append(f"hour {hour}")
     return ", ".join(parts)
+
+
+WITNESS_WORDS = total(
+    WitnessMode,
+    {
+        WitnessMode.SAW: "as witness",
+        WitnessMode.HEARD: "heard of it",
+        WitnessMode.TOOK_PART: "took part in it",
+        WitnessMode.WAS_TOLD: "was told of it",
+        WitnessMode.SENSED: "sensed it from afar",
+    },
+)
+
+
+def part_taken(row: IncidentParticipantRow) -> str:
+    if row.role is IncidentRole.WITNESS and row.witness_mode is not None:
+        return WITNESS_WORDS[row.witness_mode]
+    return f"as {spoken(row.role)}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,6 +165,8 @@ class SpilledRows(Sequence[str]):
 
 CHANGE_COLUMNS = tuple(StateChangeRow.__table__.c[name] for name in ChangeLine.__dataclass_fields__)
 CHANGE_CHUNK = 50_000
+NAME_FIELD = "name"
+NAMED_TABLES = frozenset({"nodes", "entities"})
 LOOKUP_BATCH = 500
 LENGTH = struct.Struct("<I")
 
@@ -169,6 +192,7 @@ class Ledger:
     named: dict[int, IncidentNameRow] = field(default_factory=dict)
     rumours: dict[int, list[RumourRow]] = field(default_factory=lambda: defaultdict(list))
     distortions: dict[int, list[RumourDistortionRow]] = field(default_factory=lambda: defaultdict(list))
+    former: dict[int, list[str]] = field(default_factory=lambda: defaultdict(list))
 
     @classmethod
     async def load(cls, session: AsyncSession, names: dict[int, str]) -> "Ledger":
@@ -187,9 +211,22 @@ class Ledger:
             ledger.states[state.step_id].append(state)
         for term in await session.scalars(select(IncidentTermRow).order_by(IncidentTermRow.incident_id, IncidentTermRow.position)):
             ledger.terms[term.incident_id].append(term)
+        for holder, name in await session.execute(select(NameFormRow.holder_node_id, NameFormRow.name).order_by(NameFormRow.holder_node_id, NameFormRow.form)):
+            ledger.remember_name(holder, name)
         await ledger.load_tellings(session)
         await ledger.load_changes(session)
         return ledger
+
+    def remember_name(self, node_id: int, name: str | None) -> None:
+        if name and name != self.names.get(node_id) and name not in self.former[node_id]:
+            self.former[node_id].append(name)
+
+    def name_in(self, node_id: int | None, text: str) -> str:
+        current = self.name(node_id)
+        if node_id is None or current in text:
+            return current
+        then = next((name for name in sorted(self.former.get(node_id, []), key=len, reverse=True) if name in text), None)
+        return f"{current} (then {then})" if then is not None else current
 
     async def load_changes(self, session: AsyncSession) -> None:
         last = int(await session.scalar(select(func.coalesce(func.max(StateChangeRow.id), 0))) or 0)
@@ -222,6 +259,8 @@ class Ledger:
             self.phase_counts[happening.id] += 1
         elif change.incident_id is not None:
             self.by_incident[change.incident_id].append(text)
+        if change.node_id is not None and change.field == NAME_FIELD and change.table_name in NAMED_TABLES:
+            self.remember_name(change.node_id, change.before_text)
         if change.node_id is not None and change.operation is LedgerOperation.UPDATE and change.field is not None:
             key = (change.table_name, change.field)
             self.first_seen[change.node_id].setdefault(key, change)
@@ -294,6 +333,8 @@ class Ledger:
         return f"{words(fact.key).lower()} {value}".strip()
 
     def term_text(self, op: ModifierOp, term: str, amount: float, source_node_id: int | None, source_incident_id: int | None) -> str:
+        if term == PRESENT_EPOCH:
+            return f"the age is now epoch {number_text(amount)}"
         source = self.name(source_node_id) if source_node_id is not None else ""
         happening = self.incidents.get(source_incident_id) if source_incident_id is not None else None
         origin = f" from {source}" if source else ""
@@ -301,15 +342,15 @@ class Ledger:
             origin += f" ({self.line_of(happening)})"
         return f"{words(term).lower()} {signed(op, amount)}{origin}"
 
-    def step_text(self, step: IncidentStepRow) -> str:
+    def step_text(self, step: IncidentStepRow, line: str) -> str:
         parts = [f"{step.position + 1}."]
         if step.round is not None:
             parts.append(f"round {step.round + 1}:")
         if step.actor_node_id is not None:
-            parts.append(self.name(step.actor_node_id))
+            parts.append(self.name_in(step.actor_node_id, line))
         parts.append(spoken(step.action))
         if step.target_node_id is not None:
-            parts.append(self.name(step.target_node_id))
+            parts.append(self.name_in(step.target_node_id, line))
         if step.instrument_kind is not InstrumentKind.NONE or step.instrument_node_id is not None or step.instrument_key:
             instrument = self.name(step.instrument_node_id) if step.instrument_node_id is not None else spoken(step.instrument_key or step.instrument_kind)
             parts.append(f"with {instrument}")
@@ -362,14 +403,16 @@ class Ledger:
 
     def account_text(self, incident: IncidentRow, node_id: int | None) -> str:
         roles = self.participants.get(incident.id, [])
-        own = [row.role for row in roles if row.node_id == node_id]
+        mine = [row for row in roles if row.node_id == node_id]
+        own = [row.role for row in mine]
         parts = [self.account_head(incident)]
         if own:
-            parts.append(f"as {', '.join(spoken(role) for role in own)}")
+            parts.append(", ".join(part_taken(row) for row in mine))
         parts.extend(self.account_place(incident))
         if own and all(role in KNOWERS for role in own):
             return " · ".join(parts)
-        others = [f"{spoken(row.role)} {self.name(row.node_id)}" for row in roles if row.node_id != node_id and row.role not in UNLISTED_ROLES]
+        line = self.line_of(incident)
+        others = [f"{spoken(row.role)} {self.name_in(row.node_id, line)}" for row in roles if row.node_id != node_id and row.role not in UNLISTED_ROLES]
         knowing = Counter(row.role for row in roles if row.node_id != node_id and row.role in KNOWERS)
         others.extend(several(knowing[role], *words) for role, words in sorted(KNOWER_WORDS.items()) if knowing[role])
         if others:
@@ -405,7 +448,7 @@ class Ledger:
         terms = [self.term_text(term.op, term.term, term.amount, term.source_node_id, term.source_incident_id) for term in self.terms.get(incident.id, [])]
         if terms:
             parts.append("terms: " + "; ".join(terms))
-        steps = [self.step_text(step) for step in self.steps.get(incident.id, [])]
+        steps = [self.step_text(step, self.line_of(incident)) for step in self.steps.get(incident.id, [])]
         if steps:
             parts.append("steps: " + " ".join(steps))
         rumours = [self.rumour_text(rumour) for rumour in self.rumours.get(incident.id, [])]
@@ -570,9 +613,11 @@ async def record_tables(session: AsyncSession, ledger: Ledger) -> list[RecordTab
                     ledger.line_of(incident),
                     ledger.name_of(incident),
                     ledger.name(incident.place_entity_id),
-                    ", ".join(f"{spoken(row.role)} {ledger.name(row.node_id)}" for row in ledger.participants.get(incident.id, [])),
+                    ", ".join(
+                        f"{spoken(row.role)} {ledger.name_in(row.node_id, ledger.line_of(incident))}" for row in ledger.participants.get(incident.id, [])
+                    ),
                     "; ".join(ledger.fact_text(fact) for fact in ledger.facts.get(incident.id, [])),
-                    " ".join(ledger.step_text(step) for step in ledger.steps.get(incident.id, [])),
+                    " ".join(ledger.step_text(step, ledger.line_of(incident)) for step in ledger.steps.get(incident.id, [])),
                     ledger.changes_cell(incident),
                     "; ".join(ledger.rumour_text(rumour) for rumour in ledger.rumours.get(incident.id, [])),
                     ledger.line_of(cause) if cause is not None else "",

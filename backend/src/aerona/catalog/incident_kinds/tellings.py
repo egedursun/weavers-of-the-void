@@ -28,7 +28,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         CORRECTED,
         ProcessGroup.KNOWLEDGE,
-        "{subject} set its account of an earlier happening right after {teller} told it more truly; {dropped:changed detail|changed details} fell away.",
+        "{subject} corrected its account of an earlier happening after {teller} told it more truly; {dropped:changed detail|changed details} fell away.",
         roles=(RoleSpec(IncidentRole.SUBJECT), RoleSpec(IncidentRole.TELLER)),
         facts=(FactSpec("dropped", FactValue.NUMBER, FactUnit.COUNT), FactSpec("fidelity", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.WHEN_KNOWN,

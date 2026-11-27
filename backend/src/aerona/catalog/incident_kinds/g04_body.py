@@ -190,7 +190,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "births.twins",
-        "{parent} were given {children:child|children} at one birth: {child}.",
+        "{children:child was|children were} born to {parent} at one birth: {child}.",
         roles=(role(R.PARENT, many=True), role(R.CHILD, many=True), role(R.HEALER, required=False)),
         facts=(number("children", U.COUNT), *BIRTH_FACTS),
         feed=F.LIFE,
@@ -226,7 +226,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "births.sapience",
-        "A branch of the {origin} learned to speak and became a people: {product}.",
+        "A branch of the {origin} rose to thought and became a people: {product}.",
         roles=(role(R.PRODUCT), role(R.ORIGIN)),
         facts=(number("population", U.PEOPLE),),
     ),
@@ -334,7 +334,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "body.maimed",
-        "{subject} took home {count:veteran|veterans} who came back {maim}.",
+        "{subject} took home {count:veteran|veterans} who came back maimed ({maim}).",
         roles=(role(R.SUBJECT),),
         facts=(chosen("maim", MaimedKind), number("count", U.PEOPLE)),
     ),
@@ -389,7 +389,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "disease.sanitation_ordered",
-        "Against {target}, {actor} spent {cost} on clean water and on carrying away refuse; its towns now keep sanitation of {sanitation}.",
+        "Against {target}, {actor} spent {cost:coin|coins} on clean water and on carrying away refuse; its towns now keep sanitation of {sanitation}.",
         roles=(role(R.ACTOR), role(R.TARGET)),
         facts=(number("cost", U.COIN), number("sanitation", U.PERCENT)),
         collection=C.PLAGUE,
@@ -403,7 +403,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "disease.route_blocked",
-        "{actor} cut the {route} route of {target} by {response}.",
+        "{actor} cut the {route} route of {target}; its answer: {response}.",
         roles=(role(R.ACTOR), role(R.TARGET)),
         facts=(chosen("route", Transmission), chosen("response", PlagueResponse)),
         collection=C.PLAGUE,
@@ -449,13 +449,13 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "genetics.resemblance",
-        "Its kin came to know {subject} by sight; a mark of {locus} ran in the blood.",
+        "The kin of {subject} came to resemble one another, sharing an inherited mark of {locus}.",
         roles=(role(R.SUBJECT),),
         facts=(chosen("locus", Locus), number("share", U.PERCENT)),
     ),
     kind(
         "genetics.order_recruits",
-        "{actor} tested the children of the town and took {learner}, gifted in {school}.",
+        "{actor} tested the young and took {learner}, gifted in {school}.",
         roles=(role(R.ACTOR), role(R.LEARNER)),
         facts=(chosen("school", MagicSchool),),
     ),
@@ -531,14 +531,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "living.contained",
-        "{line} was hunted down and held in again, out of {lands:land|lands}.",
+        "{line} was hunted down and contained again, cleared from {lands:land|lands}.",
         roles=(role(R.SUBJECT, required=False),),
         facts=(LIVING_LINE, number("lands", U.COUNT)),
     ),
     kind("living.cure_cultured", "{maker} cultured a cure for {target}.", roles=(role(R.MAKER), role(R.TARGET)), facts=(named("line", required=False),)),
     kind(
         "living.died",
-        "{subject} died and went back to the land.",
+        "{subject} died.",
         roles=(role(R.SUBJECT),),
         facts=(number("age_seasons", U.SEASONS), number("lifespan", U.YEARS)),
         steps=frozenset({A.DIE}),
@@ -728,13 +728,13 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "necromancy.tower",
-        "{actor} raised a tower to work the rites of death: {product}.",
+        "{actor} built a place to work the rites of death: {product}.",
         roles=(role(R.ACTOR), role(R.PRODUCT)),
         facts=(number("power", U.STRENGTH),),
     ),
     kind(
         "necromancy.host",
-        "{actor} raised {product} from their graves.",
+        "{actor} raised {product} from the dead.",
         roles=(role(R.ACTOR), role(R.PRODUCT)),
         facts=(number("power", U.STRENGTH), number("size", U.COUNT)),
     ),
@@ -775,7 +775,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "stress.elites_fell",
-        "In the strife of crisis {fallen:noble|nobles} of {subject} fell from their station.",
+        "In the strife of crisis, {fallen:member|members} of the elite of {subject} fell from their station.",
         roles=(role(R.SUBJECT),),
         facts=(number("fallen", U.PEOPLE), number("psi", U.PERCENT)),
     ),
@@ -786,7 +786,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     stress_break("rage_at", "{subject} broke under the strain and fell upon {target} in a rage.", (role(R.TARGET),), (number("harm", U.HP),)),
     stress_break("despair", "{subject} sank into despair.", facts=(chosen("condition", ConditionKind),)),
     stress_break(
-        "dissociation", "{subject} broke under the strain and drifted from itself, its memories blurred.", facts=(chosen("condition", ConditionKind),)
+        "dissociation", "{subject} broke under the strain and became detached from itself, its memories blurred.", facts=(chosen("condition", ConditionKind),)
     ),
     stress_break("collapse", "{subject} broke under the strain and its body gave way.", facts=(number("harm", U.PERCENT),)),
     stress_break(
@@ -846,7 +846,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     tool("symbiont_removed", "{actor} had what lived within taken out.", (role(R.ACTOR),), (chosen("relation", HostRelation),)),
     tool(
         "tend_maimed",
-        "{healer} brought one with {maimed} back to work in {place}.",
+        "{healer} brought one maimed ({maimed}) back to work in {place}.",
         (role(R.HEALER), role(R.PLACE)),
         (chosen("maimed", MaimedKind), number("left", U.COUNT)),
     ),

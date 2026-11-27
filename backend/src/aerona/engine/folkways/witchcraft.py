@@ -121,7 +121,8 @@ async def divined(ctx: TickContext, people_id: int | None, true_caster: int | No
     for system in list(systems):
         rng = ctx.rng(seed_of("witch.divined", system.id, true_caster, ctx.epoch))
         if system.validity is not DivinationValidity.NOISE and rng.chance(ctx.rules.divination.valid_truth):
-            return await living_entity(ctx.session, true_caster)
+            caster = await living_entity(ctx.session, true_caster)
+            return caster if caster is not None and caster.entity_type is EntityType.MORTAL else None
     return None
 
 
@@ -144,7 +145,7 @@ async def townsfolk(ctx: TickContext, town: EntityRow, besides: set[int]) -> lis
 
 async def open_case(ctx: TickContext, town: EntityRow, accused: EntityRow, guilty: bool, true_caster: int | None) -> CrimeCaseRow:
     laws = await LawBook.load(ctx.session)
-    place = accused.location_id or town.id
+    place = town.id
     polity = laws.member_of.get(place)
     judge = await judge_for(ctx, polity, place)
     case = CrimeCaseRow(
@@ -176,7 +177,12 @@ async def accuse(
     named: EntityRow | None = None,
 ) -> AccusationRow | None:
     besides = {node for node in (accuser.id if accuser else None, mishap.victim_node_id if mishap else None) if node is not None}
-    suspects = [named] if named is not None else await townsfolk(ctx, town, besides)
+    besides |= set(
+        await ctx.session.scalars(
+            select(AccusationRow.accused_node_id).where(AccusationRow.settlement_entity_id == town.id, AccusationRow.opened_epoch == ctx.epoch)
+        )
+    )
+    suspects = ([named] if named.entity_type is EntityType.MORTAL else []) if named is not None else await townsfolk(ctx, town, besides)
     if not suspects:
         return None
     folk = await people_of(ctx.session, town)

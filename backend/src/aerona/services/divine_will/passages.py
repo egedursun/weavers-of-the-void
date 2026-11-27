@@ -546,8 +546,9 @@ async def incident_ledger(session: AsyncSession, names: TracedNames, ids: list[i
 
 def incident_body(ledger: Ledger, incident: IncidentRow, lines: Mapping[int, str]) -> str:
     grouped: dict[str, list[str]] = defaultdict(list)
+    told = lines.get(incident.chronicle_id, "") if incident.chronicle_id is not None else ""
     for row in ledger.participants.get(incident.id, []):
-        grouped[spoken(row.role)].append(ledger.name(row.node_id))
+        grouped[spoken(row.role)].append(ledger.name_in(row.node_id, told))
     cause = ledger.incidents.get(incident.cause_incident_id) if incident.cause_incident_id is not None else None
     terms = [ledger.term_text(term.op, term.term, term.amount, term.source_node_id, term.source_incident_id) for term in ledger.terms.get(incident.id, [])]
     return body_of(
@@ -557,7 +558,7 @@ def incident_body(ledger: Ledger, incident: IncidentRow, lines: Mapping[int, str
         [FACT_SEPARATOR.join(ledger.fact_text(fact) for fact in ledger.facts.get(incident.id, []))],
         fields(
             ("Terms", LIST_SEPARATOR.join(terms)),
-            ("Steps", " ".join(ledger.step_text(step) for step in ledger.steps.get(incident.id, []))),
+            ("Steps", " ".join(ledger.step_text(step, ledger.line_of(incident)) for step in ledger.steps.get(incident.id, []))),
             ("Rumours", LIST_SEPARATOR.join(ledger.rumour_text(rumour) for rumour in ledger.rumours.get(incident.id, []))),
             ("Cause", ledger.line_of(cause) if cause is not None else None),
             ("From", ledger.name(incident.origin_entity_id)),

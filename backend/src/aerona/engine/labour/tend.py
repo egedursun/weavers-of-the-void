@@ -10,7 +10,7 @@ from aerona.engine.labour.contracts import contract_for, tend_contract
 from aerona.engine.labour.cooperatives import tend_works
 from aerona.engine.labour.disputes import tend_dispute
 from aerona.engine.labour.founding import maybe_found
-from aerona.engine.labour.hirers import hirer_of
+from aerona.engine.labour.hirers import hirer_of, own_side
 from aerona.engine.labour.legacy import apply_legacy
 from aerona.engine.labour.spread import spread_from
 
@@ -23,7 +23,7 @@ async def bargain_round(ctx: TickContext, body: WorkerBodyRow, tally: LabourTall
         return
     for trade in trades_of(body):
         hirer = await hirer_of(ctx.session, home, trade)
-        if hirer.id == body.faction_node_id or held(hirer.id):
+        if held(hirer.id) or await own_side(ctx.session, body.faction_node_id, hirer.id):
             continue
         contract = await contract_for(ctx, body.faction_node_id, hirer.id, trade)
         if contract is not None and contract.status in SETTLED_STATUSES:

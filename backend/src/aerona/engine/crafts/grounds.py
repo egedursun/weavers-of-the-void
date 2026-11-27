@@ -237,7 +237,7 @@ async def hunt_risk(ctx: TickContext, row: CatchGroundRow, workers: list[int], t
     if not hunters:
         return
     hurt = rng.pick(hunters)
-    await apply_hits(ctx, hurt, Harm(damage=table.marine_harm, cause=HarmCause.ACCIDENT, death_cause="was killed on a hunt of great sea beasts"))
+    await apply_hits(ctx, hurt, Harm(damage=table.marine_harm, cause=HarmCause.ACCIDENT, death_cause="was killed hunting large beasts in the water"))
     tally.hurt += 1
 
 
@@ -247,7 +247,15 @@ async def poaching(ctx: TickContext, row: CatchGroundRow, workers: list[int], ta
     for community in workers:
         if community == row.owner_node_id or await owner_of(ctx, community) == row.owner_node_id or held(community):
             continue
-        await change_relation(ctx, row.owner_node_id, community, -ctx.rules.grounds.poach_opinion, MemoryKind.ILL_WILL, note="took from grounds that were ours")
+        await change_relation(
+            ctx,
+            row.owner_node_id,
+            community,
+            -ctx.rules.grounds.poach_opinion,
+            MemoryKind.ILL_WILL,
+            note="took from grounds that were ours",
+            reverse_note="was said to have taken from grounds held by others",
+        )
         tally.poached += 1
         await dispute(ctx, row, community, tally)
 

@@ -19,7 +19,7 @@ from aerona.domain.enums.prehistory import DeepTimeState, PrehistoryKind, Prehis
 from aerona.domain.enums.world import Discovery, WorldType
 from aerona.domain.models.entity_stats import PolityStats
 from aerona.engine.prehistory import run as prerun
-from aerona.engine.prehistory.control import abort, configure, open_run
+from aerona.engine.prehistory.control import abort, configure, edit_event, open_run, remove_event
 from aerona.engine.prehistory.deep_time import fast_forward
 from aerona.engine.prehistory.digest import backfill_world, dreams_of, prehistory_of
 from aerona.engine.prehistory.run import born_prehistories, epoch_points, growth_phases, round_phases, run_prehistory
@@ -151,6 +151,7 @@ async def test_realms_of_the_dead_palaces_and_dream_worlds_borrow_dream_and_tell
         await record(ctx, "player.history", facts={"account": "The god raised a hall."}, kind=ChronicleKind.WORLD, son_id=son.id, magnitude=70)
         for world_id in (dead, palace, dream):
             await configure(ctx, world_id, 1, 1)
+        (await CosmosRepository(session).require_cosmos()).epoch += 1
     for world_id in (dead, palace, dream):
         await run_prehistory(database, world_id)
     async with database.write() as session:
@@ -163,7 +164,39 @@ async def test_realms_of_the_dead_palaces_and_dream_worlds_borrow_dream_and_tell
         row = await session.get(PrehistoryRow, dream)
         assert world is not None and row is not None
         await record(ctx, "player.history", facts={"account": "A fisher dreamt of the same field."}, kind=ChronicleKind.DREAM, world_id=home, magnitude=90)
-        assert await dreams_of(ctx, row, world) >= 2
+        assert await dreams_of(ctx, row, world, this_epoch=True) == 1
+        assert await dreams_of(ctx, row, world, this_epoch=True) == 0
+
+
+async def test_a_dreamt_past_keeps_what_the_god_edited_and_never_brings_back_what_the_god_struck(database: Database) -> None:
+    async with database.write() as session:
+        cosmos = await seed_rich_cosmos(session)
+    dream = await world_of_kind(database, "Night Shore", WorldType.DREAM)
+    async with database.write() as session:
+        ctx = await manual_context(session, "test_prehistory", Rules())
+        home = cosmos.home.world.id
+        for account, magnitude in (("A weaver dreamt of a shore.", 70), ("A child dreamt of a tide.", 60)):
+            await record(ctx, "player.history", facts={"account": account}, kind=ChronicleKind.DREAM, world_id=home, magnitude=magnitude)
+        await configure(ctx, dream, 1, 1)
+        (await CosmosRepository(session).require_cosmos()).epoch += 1
+    await run_prehistory(database, dream)
+    async with database.write() as session:
+        ctx = await manual_context(session, "test_prehistory", Rules())
+        events = list(await session.scalars(select(PrehistoryEventRow).where(PrehistoryEventRow.world_id == dream).order_by(PrehistoryEventRow.id)))
+        assert len(events) == 2
+        edited, struck = events
+        await edit_event(ctx, edited.id, {"magnitude": 5}, [])
+        struck_incident = struck.incident_id
+        await remove_event(ctx, struck.id)
+        world = await session.get(WorldRow, dream)
+        row = await session.get(PrehistoryRow, dream)
+        assert world is not None and row is not None
+        await record(ctx, "player.history", facts={"account": "A sailor dreamt of the shore again."}, kind=ChronicleKind.DREAM, world_id=home, magnitude=40)
+        await dreams_of(ctx, row, world, this_epoch=True)
+        after = list(await session.scalars(select(PrehistoryEventRow).where(PrehistoryEventRow.world_id == dream).order_by(PrehistoryEventRow.id)))
+        assert edited in after and edited.magnitude == 5 and "magnitude" in edited.locked
+        assert struck_incident not in {event.incident_id for event in after}
+        assert len(after) == 2
 
 
 async def test_deep_time_runs_the_cosmos_forward_and_keeps_its_strongest_happenings(database: Database) -> None:

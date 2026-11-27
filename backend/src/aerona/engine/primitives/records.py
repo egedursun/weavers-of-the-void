@@ -162,7 +162,7 @@ def definite(name: str) -> str:
 
 def introduce(name: str, noun: str, location_name: str | None, body: str) -> str:
     place = f" in {location_name}" if location_name else ""
-    return f"{name}, {an(noun)}{place}. {body}".strip()
+    return sentence_case(f"{name}, {an(noun)}{place}. {body}".strip())
 
 
 async def valid_location(session: AsyncSession, entity_type: EntityType, location_id: int | None) -> EntityRow | None:

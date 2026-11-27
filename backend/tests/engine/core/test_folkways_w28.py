@@ -487,3 +487,32 @@ async def test_diviners_name_the_true_caster_and_plague_war_and_zeal_drive_a_hun
     await keep_witchcraft(await at(session, 5, witchcraft={"hunt_fade": 15, "hunt_accusations": 0}), WitchTally())
     remembered = await session.scalar(select(EntityRow).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.subtype == "witch hunt"))
     assert remembered is not None and "3 mortals were accused and 1 mortal was put to death" in remembered.description
+
+
+async def test_a_sickness_that_caused_a_mishap_is_never_itself_accused_of_witchcraft(session: AsyncSession, world: CoreWorld) -> None:
+    town, folk = await home(session, world, "Coughwick", superstition=90)
+    victim = await mortal(session, "Orla", world, town.id)
+    neighbours = [await mortal(session, f"Neighbour {index}", world, town.id) for index in range(3)]
+    for row in (victim, *neighbours):
+        session.add(profile(row.id))
+    plague = await entity(session, "The Grey Cough", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id, location_id=world.regions[0].id)
+    session.add(DivinationSystemRow(people_entity_id=folk.id, kind=DivinationKind.ASTROLOGY, validity=DivinationValidity.GOD_ANSWERS, locked=[]))
+    session.add(
+        MishapRow(
+            settlement_entity_id=town.id,
+            kind=MishapKind.ILLNESS,
+            victim_node_id=victim.id,
+            cause_node_id=plague.id,
+            true_cause="a cough",
+            attribution=MishapAttribution.WITCHCRAFT,
+            response=MishapResponse.ACCUSATION,
+            epoch=3,
+            locked=[],
+        )
+    )
+    await session.flush()
+    await keep_witchcraft(await at(session, 3, witchcraft={"accuse_chance": 100}, divination={"valid_truth": 100}), WitchTally())
+    accused = set(await session.scalars(select(AccusationRow.accused_node_id)))
+    cases = list(await session.scalars(select(CrimeCaseRow).where(CrimeCaseRow.crime == CrimeKind.WITCHCRAFT)))
+    assert accused and plague.id not in accused and accused <= {row.id for row in neighbours}
+    assert all(case.settlement_entity_id == town.id for case in cases)

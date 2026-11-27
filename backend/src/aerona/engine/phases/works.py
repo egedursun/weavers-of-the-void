@@ -6,6 +6,7 @@ from aerona.catalog.structures import ENGINE_KIND_STRUCTURES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
+from aerona.db.fixups import marker
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -146,7 +147,7 @@ async def found_in_age(ctx: TickContext, knowledge: KnowledgeMap, atlas: RegionA
     floors = ERA_FLOORS[await world_start(ctx.session)]
     if not floors:
         return 0
-    row = await ctx.session.get(AppliedFixupRow, FOUNDED_FIXUP)
+    row = await marker(ctx.session, FOUNDED_FIXUP)
     founded = {int(item) for item in (row.result or {}).get("founded", [])} if row is not None else set()
     powered = {int(item) for item in (row.result or {}).get("powered", [])} if row is not None else set()
     raised = 0

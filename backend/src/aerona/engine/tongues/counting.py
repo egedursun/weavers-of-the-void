@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import LanguageStandingRow
 from aerona.db.tables.entities import EntityRow, LanguageProfileRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityOrigin, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.tongues import NumeralBase
 from aerona.engine.context import TickContext
@@ -71,12 +72,12 @@ BASES_FIXUP = "tongues.w52_bases"
 
 
 async def backfill_bases(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, BASES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BASES_FIXUP):
         return 0
     set_count = 0
     for language in await canon(ctx.session, [EntityType.LANGUAGE]):
         profile = await ctx.session.get(LanguageProfileRow, language.id)
-        if profile is None or held(language.id) or profile.numeral_base is not NumeralBase.DECIMAL:
+        if profile is None or held(language.id) or language.origin is not EntityOrigin.ENGINE or profile.numeral_base is not NumeralBase.DECIMAL:
             continue
         base = await derived_base(ctx.session, language, profile)
         if base is not NumeralBase.DECIMAL:

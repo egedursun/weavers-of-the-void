@@ -448,16 +448,10 @@ async def open_war(
     if held:
         incited_by_son_id = kept
     location = defender.id if defender.entity_type is EntityType.SETTLEMENT else defender.location_id
-    namer = Namer(ctx.session, ctx.rules)
-    seed = seed_of(attacker.id, defender.id, ctx.epoch, "war")
-    first = await namer.from_speaker(attacker.id, seed_of(seed, attacker.id), NameKind.PEOPLE) or attacker.name
-    second = await namer.from_speaker(defender.id, seed_of(seed, defender.id), NameKind.PEOPLE) or defender.name
-    derived = (first, second) != (attacker.name, defender.name)
     event = await create_record(
         ctx,
         RecordSpec(
-            name=WAR_NAME_TEMPLATE.format(first=first, second=second),
-            flags=(EntityFlag.NAME_FROM_LANGUAGE,) if derived else (),
+            name=WAR_NAME_TEMPLATE.format(first=attacker.name, second=defender.name),
             entity_type=EntityType.EVENT,
             stats=EventStats(severity=campaigns.war_initial_severity),
             body=f"A war began between {attacker.name} and {defender.name}. Cause: {reason}.",

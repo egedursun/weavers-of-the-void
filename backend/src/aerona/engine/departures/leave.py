@@ -51,10 +51,11 @@ async def hand_rule(ctx: TickContext, seat: Seat, heir: int | None, why: str) ->
     return heir
 
 
-async def hand_headship(seat: Seat, heir: int | None) -> int | None:
+async def hand_headship(seat: Seat, heir: int | None, epoch: int) -> int | None:
     if seat.org is None or HEAD_LOCK in (seat.org.locked or []):
         return None
     seat.org.head_node_id = heir
+    seat.org.since_epoch = epoch
     return heir
 
 
@@ -80,8 +81,8 @@ async def leave(ctx: TickContext, seat: Seat, kind: DepartureKind, *, heir: int 
     holder = seat.holder
     living_heir = await living_entity(ctx.session, heir) if heir is not None else None
     chosen = living_heir.id if living_heir is not None and living_heir.id != holder.id else None
-    successor = await hand_rule(ctx, seat, chosen, why) if seat.office is not None else await hand_headship(seat, chosen)
     years = max(0, ctx.epoch - seat.since) * ctx.rules.time.years_per_epoch
+    successor = await hand_rule(ctx, seat, chosen, why) if seat.office is not None else await hand_headship(seat, chosen, ctx.epoch)
     row = DepartureRow(
         holder_node_id=holder.id,
         office_id=seat.office.id if seat.office is not None else None,

@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.sacred import GREAT_PLACES, OFFENCE_WEIGHTS, PLACE_SPIRITS, SPIRIT_MOODS, SPIRIT_RANKS, WOODLAND_SPIRITS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.crafts import CatchGroundRow
 from aerona.db.tables.economy import ResourceProfileRow
@@ -152,7 +153,6 @@ async def bind_spirit(ctx: TickContext, place: EntityRow, kind: GeniusLocusKind,
         )
     )
     await ctx.session.flush()
-    await record(ctx, "sacred.spirit_bound", roles={IncidentRole.SUBJECT: [place.id, spirit.id]})
     await record(ctx, "spirit.appeared", roles={IncidentRole.SUBJECT: spirit.id, IncidentRole.PLACE: place.id}, facts={"spirit": kind}, place=place.id)
     return row
 
@@ -452,7 +452,7 @@ async def tend_spirit(ctx: TickContext, row: GeniusLocusRow, tally: SpiritTally)
 
 
 async def backfill_spirits(ctx: TickContext, tally: SpiritTally) -> int:
-    if await ctx.session.get(AppliedFixupRow, SPIRITS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, SPIRITS_FIXUP):
         return 0
     raised = 0
     for place, kind, community in await unspirited(ctx):

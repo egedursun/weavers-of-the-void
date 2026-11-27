@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.catalog.goods_tables import WORKSHOP_GOODS
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.agrarian import BrandRow
 from aerona.db.tables.commerce import ShopGoodRow, ShopRow, SupplyTierRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -27,7 +28,7 @@ class CommerceSeedTally:
 
 
 async def free_common_tiers(ctx: TickContext, tally: CommerceSeedTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, COMMON_TIERS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, COMMON_TIERS_FIXUP):
         return
     table = ctx.rules.commerce
     margins = {SupplyTier.RETAIL: table.retail_margin_pct, SupplyTier.WHOLESALE: table.wholesale_margin_pct}

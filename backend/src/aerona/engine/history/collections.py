@@ -1,11 +1,13 @@
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.gatherings import INCIDENT_ROLES, KEY_COLLECTIONS, KEY_PREFIX_COLLECTIONS, NEST_PARENTS, TITLE_ROLES
+from aerona.catalog.incident_kinds.onlookers import ONLOOKER_ROLES
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.life.history import SCHEME_COLLECTIONS
 from aerona.core.grammar import spoken
@@ -16,6 +18,7 @@ from aerona.db.tables.intrigue import SchemeRow
 from aerona.db.tables.justice import CrimeCaseRow
 from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.node import NodeRow
+from aerona.db.tables.records import IncidentFactRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.gathering import CollectionKind, CollectionRole
 from aerona.domain.enums.intrigue import SchemePhase
@@ -26,6 +29,8 @@ from aerona.engine.primitives.stats import stat_or
 
 TEN_THOUSAND = 10000
 TITLED_NAMES = 2
+NAMED_BY_FACT: Mapping[CollectionKind, str] = MappingProxyType({CollectionKind.WAR: "war"})
+BY_PRODUCT = frozenset({CollectionKind.FOUNDING})
 
 
 @dataclass
@@ -159,18 +164,19 @@ async def join_or_open(
     places: list[int],
     source_key: str,
     tally: CollectionTally,
+    name: str | None = None,
 ) -> CollectionRow | None:
     since = ctx.epoch - ctx.rules.collections.join_window
-    wanted = set(members)
+    wanted = {node for node, role in members.items() if role is CollectionRole.PRODUCT} if kind in BY_PRODUCT else set(members)
     for found in await open_of(ctx, [kind], world_id, since):
         if found.locked and "members" in found.locked:
             continue
-        if wanted & await members_of(ctx, found.id):
+        if (found.name == name) if name is not None else bool(wanted & await members_of(ctx, found.id)):
             await add_members(ctx, found, members)
             await add_places(ctx, found, places)
             tally.joined += 1
             return found
-    opened = await open_collection(ctx, kind, world_id=world_id, members=members, places=places, source_key=source_key)
+    opened = await open_collection(ctx, kind, world_id=world_id, members=members, places=places, source_key=source_key, name=name)
     if opened is not None:
         tally.opened += 1
         tally.nested += opened.parent_id is not None
@@ -190,6 +196,16 @@ async def participants(ctx: TickContext, incident_ids: list[int]) -> dict[int, d
     return found
 
 
+async def own_name(ctx: TickContext, kind: CollectionKind, incident: IncidentRow) -> str | None:
+    if kind not in NAMED_BY_FACT:
+        return None
+    named = await ctx.session.scalar(
+        select(IncidentFactRow.node_id).where(IncidentFactRow.incident_id == incident.id, IncidentFactRow.key == NAMED_BY_FACT[kind]).limit(1)
+    )
+    node = await ctx.session.get(NodeRow, named) if named is not None else None
+    return node.name if node is not None else None
+
+
 async def gather_incidents(ctx: TickContext, tally: CollectionTally) -> None:
     incidents = await loose_incidents(ctx)
     roles = await participants(ctx, [row.id for row in incidents])
@@ -198,13 +214,22 @@ async def gather_incidents(ctx: TickContext, tally: CollectionTally) -> None:
         if kind is None:
             continue
         involved = roles.get(incident.id, {})
-        members = {node: INCIDENT_ROLES[role] for node, role in involved.items() if role is not IncidentRole.PLACE}
+        members = {node: INCIDENT_ROLES[role] for node, role in involved.items() if role is not IncidentRole.PLACE and role not in ONLOOKER_ROLES}
         places = [node for node, role in involved.items() if role is IncidentRole.PLACE]
         if incident.place_entity_id is not None:
             places.append(incident.place_entity_id)
         if not members:
             continue
-        found = await join_or_open(ctx, kind, world_id=incident.world_id, members=members, places=places, source_key=incident.kind, tally=tally)
+        found = await join_or_open(
+            ctx,
+            kind,
+            world_id=incident.world_id,
+            members=members,
+            places=places,
+            source_key=incident.kind,
+            tally=tally,
+            name=await own_name(ctx, kind, incident),
+        )
         if found is not None:
             ctx.session.add(CollectionIncidentRow(collection_id=found.id, incident_id=incident.id))
 

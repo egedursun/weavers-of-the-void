@@ -1029,12 +1029,12 @@ async def run_phases(
 ) -> TickStats:
     skipped = disabled | disabled_by_rules(tick_environment.rules)
     async with database.steps() as steps:
-        for phase in phases:
+        for index, phase in enumerate(phases):
             if phase.name in skipped:
                 tick_environment.stats.count(f"{phase.name}.{DISABLED_COUNTER}")
                 continue
             try:
-                await run_phase(tick_environment, database, phase, steps)
+                await run_phase(replace(tick_environment, step=index / max(1, len(phases))), database, phase, steps)
             except EnginePhaseError as error:
                 if phase.name not in tolerant:
                     raise

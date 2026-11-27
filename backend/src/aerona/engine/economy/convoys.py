@@ -38,6 +38,7 @@ from aerona.engine.lore.art_forms import practise
 from aerona.engine.lore.research import has_technique
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.standing import still_standing
 from aerona.engine.primitives.stats import move_stat, shift_bounded, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.renown.currencies import realm_of_community
@@ -252,6 +253,9 @@ async def arrive(ctx: TickContext, convoy: ConvoyRow, profile: TradeRouteProfile
     origin = await ctx.session.get(EntityRow, profile.first_market_id)
     destination = await ctx.session.get(EntityRow, profile.second_market_id)
     if origin is None or destination is None or held(destination.id):
+        return
+    if not await still_standing(ctx.session, origin.id) or not await still_standing(ctx.session, destination.id):
+        convoy.status = ConvoyStatus.STRANDED
         return
     convoy.region_entity_id = atlas.top_region(destination.id)
     move_stat(origin, destination, "population", convoy.passengers.get(MIGRANTS, 0))

@@ -604,7 +604,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             IncidentKindSpec(
                 "households.",
                 G.SOCIAL,
-                "The household {household}{actor:? of #} chose to {decision}.",
+                "{household} chose to {decision}.",
                 roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.TARGET, required=False, many=True), RoleSpec(R.DESTINATION, required=False)),
                 facts=(
                     FactSpec("household", FactValue.NAME),
@@ -621,7 +621,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "households.furnished",
         G.SOCIAL,
-        "The household {household} of {actor} set {subject} in its home.",
+        "{household}, the household of {actor}, set {subject} in its home.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("household", FactValue.NAME),),
         place=PlaceRule.WHEN_KNOWN,
@@ -630,7 +630,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "households.abandon",
         G.SOCIAL,
-        "In want, the household {household} of {actor} left {victim} to fend alone.",
+        "In want, {household}, the household of {actor}, left {victim} to fend alone.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM)),
         facts=(FactSpec("household", FactValue.NAME),),
         steps=frozenset({A.ABANDON}),
@@ -819,7 +819,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "remembrance.disaster",
         G.SOCIAL,
-        "{subject} was not forgotten{product:?: # remember it}.",
+        "{subject} was not forgotten{product:?, kept in memory by #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PRODUCT, required=False, many=True)),
         facts=(FactSpec("toll", FactValue.NUMBER, FactUnit.PEOPLE),),
         steps=frozenset({A.MOURN}),
@@ -877,7 +877,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "remembrance.war",
         G.SOCIAL,
-        "{actor} remembered its victory in {subject}:{product:? #}.",
+        "{actor} remembered its victory in {subject}{product:?: #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR), RoleSpec(R.OPPONENT, required=False), RoleSpec(R.PRODUCT, required=False, many=True)),
         facts=(FactSpec("battles", FactValue.NUMBER, FactUnit.COUNT),),
         steps=frozenset({A.CELEBRATE, A.MOURN}),
@@ -1258,7 +1258,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.home_tended",
         G.SOCIAL,
-        "{actor} decided for the household {household}: {decision}.",
+        "{actor} decided for {household}: {decision}.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(
             FactSpec("household", FactValue.NAME),

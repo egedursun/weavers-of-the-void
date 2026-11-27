@@ -21,6 +21,7 @@ from aerona.domain.enums.world import ClimateEra, CosmosShape, CosmosSize, Gravi
 from aerona.domain.models.genesis import GenesisOutcome, GenesisSettings
 from aerona.prompts import PromptId, output_model
 from aerona.rules.registry import Rules
+from aerona.services.integrity.habitable_homes import band_for
 from tests.agents.fakes import FakeModel
 from tests.conftest import OpenDatabase
 from tests.prompts.payloads import PAYLOADS
@@ -147,3 +148,15 @@ async def test_peoples_awakening_at_creation_read_the_creation_settings(tmp_path
     assert first is not None and "Ocean world" in first and "Danger 20/100" in first
     assert "regions' danger values" not in first
     assert other is None and later is None
+
+
+async def test_the_first_world_lies_in_the_temperate_band_of_its_sun(tmp_path: Path, rules: Rules, open_database: OpenDatabase) -> None:
+    database = open_database(tmp_path / "band.db")
+    outcome = await create(database, rules, scripted(), None)
+    async with database.read() as session:
+        world = await session.get(WorldRow, outcome.world_id)
+        star = await session.get(StarRow, world.star_id if world is not None else 0)
+    await database.dispose()
+    assert world is not None and star is not None
+    inner, outer = band_for(rules, star, None)
+    assert inner <= world.orbit <= outer

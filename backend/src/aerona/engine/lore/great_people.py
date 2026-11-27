@@ -9,6 +9,7 @@ from aerona.catalog.life.lore import CODES, HEALING_BRANCHES, RETITLED, TAKEN_SK
 from aerona.catalog.techniques import TECHNIQUES
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
+from aerona.db.fixups import fixup_due
 from aerona.db.record_context import Term
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -407,7 +408,7 @@ GREAT_FIXUP = "great_persons.w52"
 
 
 async def retitle_scholars(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, GREAT_FIXUP) is not None:
+    if not await fixup_due(ctx.session, GREAT_FIXUP):
         return 0
     moved = 0
     for great in list(

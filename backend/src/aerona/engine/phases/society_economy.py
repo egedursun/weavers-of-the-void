@@ -850,7 +850,7 @@ async def society_economy(ctx: TickContext) -> None:
     session = ctx.session
     world = replace(await EconomyWorld.load(session), ledger=await EconomyBook.load(ctx))
     counters = EconomyCounters()
-    for key, value in (await society_depth_backfill(ctx, list(await canon(session, SOCIETY_TYPES)))).items():
+    for key, value in (await society_depth_backfill(ctx, unheld(await canon(session, SOCIETY_TYPES)))).items():
         ctx.count(f"backfill.{key}", value)
     for entity in unheld(await canon(session, SOCIETY_TYPES)):
         if entity.status is not EntityStatus.CANON:

@@ -18,6 +18,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.mortal.standing import shift_standing
 from aerona.engine.phases.society_support.knowledge import teach
 from aerona.engine.primitives.numbers import clamp_int
+from aerona.engine.primitives.queries import close
 from aerona.engine.primitives.records import retire
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat_or
 from aerona.engine.records import death_path
@@ -34,7 +35,11 @@ class Claim:
 
 
 async def find(ctx: TickContext, claim: Claim) -> ClaimFacts:
-    await BondRepository(ctx.session).connect(BondDraft(claim.hero.id, claim.target.id, BondKind.OWNS, ctx.epoch, "found by quest"))
+    bonds = BondRepository(ctx.session)
+    for held_by in await bonds.incoming(claim.target.id, BondKind.OWNS):
+        if held_by.source_node_id != claim.hero.id:
+            await close(ctx.session, held_by, ctx.epoch, f"taken up by {claim.hero.name}")
+    await bonds.connect(BondDraft(claim.hero.id, claim.target.id, BondKind.OWNS, ctx.epoch, "found by quest"))
     return {}
 
 

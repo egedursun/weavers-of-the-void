@@ -101,6 +101,10 @@ async def rival(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
 async def spread(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
     if goal.domain is None:
         return Reading(goal.progress, GoalState.FAILED)
+    return done_at(await domain_reach(ctx, goal) * PERCENT / max(1, goal.amount))
+
+
+async def domain_reach(ctx: TickContext, goal: GodGoalRow) -> int:
     book = await ctx.divine()
     reached = 0
     for worshipper, gods in book.patrons.items():
@@ -109,7 +113,18 @@ async def spread(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
             continue
         if any(goal.domain in book.gods[god_id].living_domains for god_id in gods if god_id in book.gods):
             reached += 1
-    return done_at(reached * PERCENT / max(1, goal.amount))
+    return reached
+
+
+async def target_ahead(ctx: TickContext, god: God, goal: GodGoalRow) -> int:
+    table = ctx.rules.son_goals
+    if goal.kind is K.BE_WORSHIPPED:
+        now = await worshipper_count(ctx.session, god.id)
+        return goal.amount if goal.amount > now else now + table.worship_gain
+    if goal.kind is K.SPREAD_DOMAIN and goal.domain is not None:
+        now = await domain_reach(ctx, goal)
+        return goal.amount if goal.amount > now else now + table.spread_amount
+    return goal.amount
 
 
 async def war(ctx: TickContext, god: God, goal: GodGoalRow) -> Reading:
@@ -409,6 +424,7 @@ async def pursue_goals(ctx: TickContext) -> int:
         if not current and ctx.rng(f"goal_new.{god.id}").chance(table.choose_chance * await lean(ctx, god.id, BiasedDecision.GOD_GOAL)):
             chosen = await choose(ctx, god)
             if chosen is not None:
+                chosen.amount = await target_ahead(ctx, god, chosen)
                 ctx.session.add(chosen)
                 current.append(chosen)
                 await record(

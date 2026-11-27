@@ -12,6 +12,7 @@ from aerona.engine.military.battle import (
     MISSILE_FAMILIES,
     Field,
     Side,
+    aftermath,
     battle_width,
     classify_losses,
     command,
@@ -205,3 +206,14 @@ def test_a_turned_flank_throws_the_line_into_disorder() -> None:
     before = line.stacks[0].row.organisation
     assert outflank(RULES, riders, line, Field(TerrainKind.PLAIN, None, night=False)) is not None
     assert line.stacks[0].row.organisation < before
+
+
+def test_the_captives_told_are_the_captives_counted_in_the_stacks_and_no_more_come_home_maimed_than_wounded() -> None:
+    winner = side("Winner", [unit(UnitKind.LINE_INFANTRY, 900, ident=1)])
+    loser = side("Loser", [unit(UnitKind.LEVY, 300, ident=2), unit(UnitKind.LEVY, 300, ident=3), unit(UnitKind.LEVY, 300, ident=4)], ident=2)
+    for stack, lost in zip(loser.stacks, (100, 100, 100), strict=True):
+        stack.lost = lost
+    loser.captives = 28
+    wounded, maimed, _ = aftermath(RULES, winner, loser, 50.0)
+    assert loser.captives == sum(stack.captured for stack in loser.stacks)
+    assert all(maimed[side_id] <= wounded[side_id] for side_id in wounded)

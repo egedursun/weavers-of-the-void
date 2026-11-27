@@ -520,7 +520,7 @@ IMPACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "impact.foreseen",
         S,
-        "The astronomers of {actor} foresaw {body:an} that will strike {subject} in {epochs:epoch|epochs}; its peoples prepare.",
+        "{actor} foresaw a body from the sky ({body}) that will strike {subject} in {epochs:epoch|epochs}; its peoples prepare.",
         roles=(one(R.ACTOR), one(R.SUBJECT), some(R.TELLER, required=False)),
         facts=(chosen("body", ImpactBody), amount("size", U.STRENGTH), amount("epochs", U.COUNT), amount("piety", U.PERCENT)),
         steps=(A.FORESEE,),
@@ -530,7 +530,7 @@ IMPACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "impact.struck",
         S,
-        "{body:An} of size {size} struck {place} on {subject} with devastation {severity}.",
+        "A body from the sky ({body}) of size {size} struck {place} on {subject} with devastation {severity}.",
         roles=(one(R.SUBJECT), one(R.PLACE), maybe(R.PRODUCT), maybe(R.AUTHORITY)),
         facts=(chosen("body", ImpactBody), amount("size", U.STRENGTH), amount("severity", U.SEVERITY), amount("winter", U.COUNT), amount("spared", U.PERCENT)),
         steps=(A.COLLIDE, A.SPREAD),
@@ -542,7 +542,7 @@ IMPACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "impact.struck_world",
         S,
-        "{body:An} of size {size} struck {subject} with devastation {severity}.",
+        "A body from the sky ({body}) of size {size} struck {subject} with devastation {severity}.",
         roles=(one(R.SUBJECT), maybe(R.AUTHORITY)),
         facts=(chosen("body", ImpactBody), amount("size", U.STRENGTH), amount("severity", U.SEVERITY), amount("winter", U.COUNT), amount("spared", U.PERCENT)),
         steps=(A.COLLIDE, A.SPREAD),
@@ -553,7 +553,7 @@ IMPACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "impact.missed",
         S,
-        "The {body} passed {subject} by.",
+        "The body from the sky ({body}) passed {subject} by.",
         roles=(one(R.SUBJECT),),
         facts=(chosen("body", ImpactBody), amount("size", U.STRENGTH), amount("chance", U.PERCENT)),
         clock=C.INSTANT,
@@ -562,7 +562,7 @@ IMPACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "impact.captured",
         S,
-        "{subject} took the falling {body} into orbit, where it became a ring.",
+        "{subject} took the falling body ({body}) into orbit, where it became a ring.",
         roles=(one(R.SUBJECT),),
         facts=(chosen("body", ImpactBody), amount("size", U.STRENGTH)),
         clock=C.INSTANT,
@@ -582,7 +582,7 @@ IMPACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "impact.deflected",
         S,
-        "The {body} was turned aside from {subject}.",
+        "The body from the sky ({body}) was turned aside from {subject}.",
         roles=(maybe(R.ACTOR), one(R.SUBJECT)),
         facts=(chosen("body", ImpactBody), amount("size", U.STRENGTH)),
         steps=(A.BLOCK,),
@@ -790,7 +790,7 @@ BIRTHS: tuple[IncidentKindSpec, ...] = (
     happening(
         "cosmos.holy_world_taken",
         S,
-        "{actor} declared {subject} their holy world, trampling the claim of {predecessor}; their bond fell by {relation_loss}.",
+        "{actor} declared {subject} their holy world, overriding the claim of {predecessor}; their bond fell by {relation_loss}.",
         roles=(one(R.ACTOR), one(R.SUBJECT), one(R.PREDECESSOR)),
         facts=(amount("relation_loss", U.STANDING),),
         clock=C.INSTANT,
@@ -814,7 +814,7 @@ ACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "terraform.begun",
         S,
-        "{subject} began to be reshaped toward {aim}{actor:? by #} over {epochs:epoch|epochs}.",
+        "{subject} began to be reshaped{actor:? by #} over {epochs:epoch|epochs}; the aim: {aim}.",
         roles=(maybe(R.ACTOR), one(R.SUBJECT)),
         facts=(chosen("aim", TerraformAim), amount("step", U.PERCENT), amount("epochs", U.COUNT)),
         steps=(A.BEGIN,),
@@ -824,7 +824,7 @@ ACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "terraform.finished",
         S,
-        "The work to reshape {subject} toward {aim} came to its end.",
+        "The work to reshape {subject} came to its end (aim: {aim}).",
         roles=(one(R.SUBJECT), maybe(R.ACTOR)),
         facts=(chosen("aim", TerraformAim), amount("step", U.PERCENT)),
         steps=(A.END,),
@@ -919,7 +919,7 @@ ACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "world_views.short",
         S,
-        "{subject} ran short of the {need} its world requires.",
+        "{subject} fell short of what its world requires of it: {need}.",
         roles=(one(R.SUBJECT),),
         facts=(chosen("need", BindingNeed),),
         place=P.REQUIRED,
@@ -1106,7 +1106,7 @@ AGES: tuple[IncidentKindSpec, ...] = (
     happening(
         "world_balance.faction",
         S,
-        "The first organised power of the world, {product}, was founded in {place} by its {class_}.",
+        "The first organised power of the world, {product}, was founded in {place} by its {class_} class.",
         roles=(one(R.PRODUCT), one(R.PLACE)),
         facts=(chosen("class_", SocialClass), amount("population", U.PEOPLE)),
         steps=(A.FOUND,),
@@ -1124,7 +1124,7 @@ AGES: tuple[IncidentKindSpec, ...] = (
     happening(
         "world_balance.tradition",
         S,
-        "{actor} began a new custom of its {class_}: {product}.",
+        "{actor} began a new custom of its {class_} class: {product}.",
         roles=(one(R.ACTOR), one(R.PRODUCT)),
         facts=(chosen("class_", SocialClass),),
         steps=(A.BEGIN,),
@@ -1193,7 +1193,7 @@ REALMS: tuple[IncidentKindSpec, ...] = (
     happening(
         "realm.made",
         S,
-        "{product} was made as a realm of {purpose}, entered by {entry}, its time running at {time_ratio} percent.",
+        "{product} was made as a realm ({purpose}), entered by {entry}, its time running at {time_ratio} percent.",
         roles=(one(R.PRODUCT), maybe(R.MAKER), maybe(R.OWNER)),
         facts=(chosen("purpose", RealmPurpose), chosen("entry", RealmEntry), chosen("awareness", RealmAwareness), amount("time_ratio", U.PERCENT)),
         steps=(A.APPEAR,),
@@ -1203,7 +1203,7 @@ REALMS: tuple[IncidentKindSpec, ...] = (
     happening(
         "realm.entered",
         S,
-        "{actor} went into {destination}, a realm of {purpose} whose time runs at {time_ratio} percent.",
+        "{actor} went into {destination}, a realm ({purpose}) whose time runs at {time_ratio} percent.",
         roles=(one(R.ACTOR), one(R.DESTINATION)),
         facts=(chosen("purpose", RealmPurpose), amount("time_ratio", U.PERCENT)),
         steps=(A.ENTER,),
@@ -1242,7 +1242,7 @@ REALMS: tuple[IncidentKindSpec, ...] = (
     happening(
         "realm.ended",
         S,
-        "{subject}, a realm of {purpose}, ended with what held it.",
+        "{subject}, a realm ({purpose}), ended with what held it.",
         roles=(one(R.SUBJECT), maybe(R.OWNER)),
         facts=(chosen("purpose", RealmPurpose),),
         steps=(A.CLOSE,),

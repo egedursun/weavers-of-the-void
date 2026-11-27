@@ -3062,7 +3062,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
             "offer_to_spirit",
         ),
         (
-            "sacred.spirit_bound",
+            "spirit.appeared",
             "sacred.office_rogue",
         ),
         ("2d05825fbb5b",),

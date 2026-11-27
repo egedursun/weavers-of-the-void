@@ -15,6 +15,7 @@ from aerona.db.tables.routes import RouteRow
 from aerona.db.tables.structures import StructureProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind, BondState
+from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.structure import StructureKind
@@ -95,8 +96,12 @@ async def beacon(ctx: TickContext, profile: StructureProfileRow, strength: float
     relief = round_half_up(ctx.rules.megastructures.beacon_relief * strength)
     eased = 0
     markets = select(EntityRow.id).where(EntityRow.world_id == world.id)
+    open_routes = select(EntityRow.id).where(EntityRow.status == EntityStatus.CANON)
     for route in await ctx.session.scalars(
-        select(TradeRouteProfileRow).where(or_(TradeRouteProfileRow.first_market_id.in_(markets), TradeRouteProfileRow.second_market_id.in_(markets)))
+        select(TradeRouteProfileRow)
+        .where(or_(TradeRouteProfileRow.first_market_id.in_(markets), TradeRouteProfileRow.second_market_id.in_(markets)))
+        .where(TradeRouteProfileRow.route_entity_id.in_(open_routes))
+        .order_by(TradeRouteProfileRow.route_entity_id)
     ):
         if held(route.route_entity_id):
             continue

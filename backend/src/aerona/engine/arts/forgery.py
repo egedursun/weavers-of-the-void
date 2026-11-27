@@ -457,7 +457,7 @@ async def unmask_forgers(ctx: TickContext, tally: ForgeryTally) -> None:
         judge = await ctx.session.scalar(
             select(CollectorRow.holder_entity_id)
             .join(EntityRow, EntityRow.id == CollectorRow.holder_entity_id)
-            .where(CollectorRow.role.in_(list(JUDGES)), EntityRow.world_id == forger.world_id)
+            .where(CollectorRow.role.in_(list(JUDGES)), EntityRow.world_id == forger.world_id, EntityRow.status == EntityStatus.CANON)
             .order_by(CollectorRow.connoisseurship.desc(), CollectorRow.holder_entity_id)
             .limit(1)
         )

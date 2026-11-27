@@ -79,6 +79,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import LabourReason
 from aerona.domain.enums.structure import ConstructionStatus, StructureKind
 from aerona.domain.enums.unions import UnionExchange, UnionPurpose
+from aerona.domain.enums.war import TributeStatus
 from aerona.domain.models.entity_stats import ArtFormStats, HouseStats, MortalStats, PeopleStats, PolityStats, StructureStats
 from aerona.engine.collective.roles import career_open, combat_sexes, role_rank
 from aerona.engine.context import TickContext
@@ -546,6 +547,21 @@ async def test_a_herding_village_takes_to_the_move_and_its_riders_take_tribute(s
     tally = NomadTally()
     await keep_nomads(ctx, tally)
     assert tally.fragmented == 1 and league.dissolved_epoch is not None
+
+
+async def test_a_settlement_bows_to_one_herder_host_at_a_time(session: AsyncSession, world: CoreWorld) -> None:
+    farm = await town_of(session, world, "Fields", region=1, population=500)
+    for name in ("Tents", "Yurts", "Wagons"):
+        camp_town = await town_of(session, world, name, region=0, population=3000, tier=SizeTier.VILLAGE)
+        session.add(LabourRow(community_entity_id=camp_town.id, job=Job.HERDING, workers=900, output_pct=100, epoch=0, held=False))
+        session.add(CampRow(settlement_entity_id=camp_town.id, mode=MobilityMode.NOMADIC, circuit=[world.regions[0].id], locked=[]))
+    farm_profile = await session.get(SettlementProfileRow, farm.id)
+    assert farm_profile is not None
+    farm_profile.militia = 5
+    await session.flush()
+    await keep_nomads(await context(session, nomadism={"raid_pct": 0, "tribute_ratio": 2, "confederation_min": 9}), NomadTally())
+    paid = list(await session.scalars(select(TributeRow).where(TributeRow.payer_entity_id == farm.id, TributeRow.status == TributeStatus.ACTIVE)))
+    assert len(paid) == 1
 
 
 async def test_a_successor_people_keeps_its_legacies_and_names_its_forebear(session: AsyncSession, world: CoreWorld) -> None:

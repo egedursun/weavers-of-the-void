@@ -1,6 +1,8 @@
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import LegendProfileRow, TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.culture import LegendArchetype, RiteStage, TraditionFunction
 from aerona.domain.enums.entity import EntityType
 from aerona.engine.context import TickContext
@@ -68,7 +70,9 @@ async def backfill_legends(ctx: TickContext) -> dict[str, int]:
             await legends.profile_of(ctx, legend, read_once(legend, LEGEND_WORDS))
             counts["legends_typed"] += 1
             continue
-        if "credence" not in existing.locked:
+        if held(legend.id):
+            continue
+        if "credence" not in existing.locked and existing.credence == getattr(LegendProfileRow.__table__.c.credence.default, "arg", None):
             existing.credence = legends.credence_from(ctx, legend)
             counts["legends_credence"] += 1
         if existing.source_incident_id is None:
@@ -95,7 +99,7 @@ async def backfill_traditions(ctx: TickContext) -> dict[str, int]:
 
 
 async def backfill_typed_kinds(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, TYPED_KINDS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, TYPED_KINDS_FIXUP):
         return 0
     result = {**await backfill_legends(ctx), **await backfill_traditions(ctx)}
     ctx.session.add(AppliedFixupRow(key=TYPED_KINDS_FIXUP, result=result))

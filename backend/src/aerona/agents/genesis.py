@@ -38,6 +38,7 @@ from aerona.engine.cosmos.birth import phonology_from
 from aerona.engine.cosmos.ladder import DimensionDraft, GalaxyDraft, create_dimension, create_galaxy, ensure_ladder
 from aerona.engine.cosmos.resources import DepositSpec, create_cosmic_deposit
 from aerona.engine.cosmos.stars import StarSpec, create_star
+from aerona.engine.cosmos.stellar import temperate_orbit
 from aerona.engine.cosmos.world_types import mechanics_of
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_float, clamp_int
@@ -55,7 +56,6 @@ GENESIS_CLIMATE_STREAM = "agents.genesis.climate"
 GENESIS_STAR_STREAM = "agents.genesis.star"
 SUN_SUFFIX = "Sun"
 FIRST_EPOCH = 1
-FIRST_ORBIT = 1.0
 MOISTURE_FLOOR = -PERCENT
 LAYER_FALLBACK_KIND = DimensionKind.PARALLEL
 LAYER_GALAXY_TYPE = GalaxyType.SPIRAL
@@ -212,7 +212,7 @@ async def write_genesis(session: AsyncSession, rules: Rules, request: GenesisReq
         WorldDraft(
             name=await NameRepository(session).unique_name(output.world_name),
             world_type=shape.world_type,
-            orbit=FIRST_ORBIT,
+            orbit=temperate_orbit(rules, sun),
             terrain_seed=f"{output.world_name}:{request.rng_seed}",
             terrain_sea=shape.sea_pct / PERCENT,
             terrain_mountains=shape.mountains_pct / PERCENT,

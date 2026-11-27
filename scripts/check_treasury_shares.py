@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "backend" / "src" / "aerona"
 FIELD = "treasury"
+PURSE_READS = frozenset({"coin_of"})
 SHARES = (ast.Mult, ast.FloorDiv, ast.Div)
 
 
@@ -17,6 +18,11 @@ class Share:
 
 
 def bare(node: ast.AST) -> bool:
+    if isinstance(node, ast.Await):
+        node = node.value
+    if isinstance(node, ast.Call):
+        name = node.func.id if isinstance(node.func, ast.Name) else node.func.attr if isinstance(node.func, ast.Attribute) else ""
+        return name in PURSE_READS
     return isinstance(node, ast.Attribute) and node.attr == FIELD
 
 

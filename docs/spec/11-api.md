@@ -497,7 +497,7 @@ Categories: `isyan` son rebellion (sev 3), `olum` death (3), `dogum` legendary b
 | Proposed | Old | Input | Output |
 |---|---|---|---|
 | GET `/api/ledger` | GET `/api/defter` | `cag?`, `kim_tip?` (`t` creator / `o` son / `v` entity), `kim_id?`, `limit` (1..300, default 80) | `{cag, caglar: [{cag, n, geri (undone count)}], kayitlar: [{id, cag, kim_tip, kim_id, kim_ad, arac (tool), ozet (summary), zaman, geri_alindi (undone), sonuc, degisiklik (change count), satirlar: [{…row diffs}], bagimli: [ids of later pages depending on this one]}]}` |
-| POST `/api/ledger/{id}/undo` | POST `/api/defter/:id/geri-al` | — | Reverts the page's row writes. 409 "A page can't be torn from the ledger while an epoch runs." |
+| POST `/api/ledger/{id}/undo` | POST `/api/defter/:id/geri-al` | — | Reverts the page's row writes. 409 "A ledger page cannot be undone while an epoch is running." |
 
 Used by: Ledger drawer (`views/defter.js`), son drawer (son's pages), global undo shortcut (`core/yenile.js` fetches the creator's last page and undoes it).
 

@@ -1,3 +1,4 @@
+import re
 from collections.abc import Callable
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -112,6 +113,9 @@ ORIGIN_KEYS = {
 }
 
 
+STRAIN_SUFFIX = re.compile(r"(?:, strain \d+)+$")
+
+
 async def mark_origin(ctx: TickContext, profile: DiseaseProfileRow, entity: EntityRow, region: EntityRow, *, path: SpreadPath, son_id: int | None) -> None:
     host = await ctx.session.get(EntityRow, profile.host_species_id) if profile.host_species_id is not None else None
     key = ORIGIN_KEYS[(path is SpreadPath.LOOSED, host is not None)]
@@ -199,13 +203,27 @@ async def new_strain(ctx: TickContext, book: DiseaseBook, parent: EntityRow, reg
         return None
     rng = ctx.rng(f"disease.strain.{parent.id}.{ctx.epoch}")
     child = strain_profile(ctx, rng, profile)
-    kin = sum(1 for row in book.profiles.values() if row.parent_disease_id == parent.id)
+    root = root_of(book, parent.id)
+    kin = sum(1 for disease_id in book.profiles if disease_id != root and root_of(book, disease_id) == root)
     name = f"{plain(parent.name)}, strain {kin + 2}"
     return await birth_disease(ctx, book, child, region=region, path=SpreadPath.MUTATION, name=name, son_id=parent.creator_son_id, quiet=True)
 
 
 def plain(name: str) -> str:
-    return name[4:] if name.lower().startswith("the ") else name
+    bare = name[4:] if name.lower().startswith("the ") else name
+    return STRAIN_SUFFIX.sub("", bare)
+
+
+def root_of(book: DiseaseBook, disease_id: int) -> int:
+    seen: set[int] = set()
+    current = disease_id
+    while current not in seen:
+        seen.add(current)
+        profile = book.profiles.get(current)
+        if profile is None or profile.parent_disease_id is None:
+            return current
+        current = profile.parent_disease_id
+    return current
 
 
 async def ensure_profile(session: AsyncSession, ctx: TickContext, disease: EntityRow) -> DiseaseProfileRow:

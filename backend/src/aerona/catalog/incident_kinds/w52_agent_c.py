@@ -94,7 +94,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "demography.orphans",
         G.SOCIAL,
-        "{orphans} children of {place} were left without parents.",
+        "In {place}, {orphans:child was|children were} left without parents.",
         roles=(RoleSpec(R.PLACE),),
         facts=(FactSpec("orphans", FactValue.NUMBER, FactUnit.PEOPLE),),
         place=PlaceRule.NONE,
@@ -103,7 +103,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "demography.displaced",
         G.SOCIAL,
-        "{displaced} who had lost their homes came to press on {host}.",
+        "{displaced:person|people} who had lost their homes came to {host}.",
         roles=(RoleSpec(R.HOST),),
         facts=(FactSpec("displaced", FactValue.NUMBER, FactUnit.PEOPLE),),
         place=PlaceRule.NONE,
@@ -121,7 +121,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "community.shortfall",
         G.EXCHANGE,
-        "{victim} went short of {effect}: {short} of the want unmet.",
+        "Want struck {victim} with {effect}: {short} percent of the need went unmet.",
         roles=(RoleSpec(R.VICTIM),),
         facts=(FactSpec("effect", FactValue.ENUM, enum=ShortfallEffect), FactSpec("short", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.REQUIRED,
@@ -130,7 +130,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "consumption.thirst_deaths",
         G.EXCHANGE,
-        "Without water, {dead} of {victim} died of thirst.",
+        "Without water, {dead:person|people} of {victim} died of thirst.",
         roles=(RoleSpec(R.VICTIM),),
         facts=(FactSpec("dead", FactValue.NUMBER, FactUnit.PEOPLE), FactSpec("short", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.REQUIRED,
@@ -186,7 +186,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "settlement.lesson_learned",
         G.PEOPLES,
-        "Rebuilt after {cause:an}, {subject} raised {lesson:an}.",
+        "Rebuilt after {cause:an}, {subject} prepared for the next with {lesson:an}.",
         roles=(RoleSpec(R.SUBJECT),),
         facts=(
             FactSpec("cause", FactValue.ENUM, enum=RebuildCause),
@@ -198,19 +198,16 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "settlement.rebuilt",
         G.PEOPLES,
-        "{subject} was rebuilt after {cause:an}, {plan}.",
+        "{subject} rose again after {cause:an}.",
         roles=(RoleSpec(R.SUBJECT),),
-        facts=(
-            FactSpec("cause", FactValue.ENUM, enum=RebuildCause),
-            FactSpec("plan", FactValue.ENUM, enum=RebuildPlan),
-        ),
+        facts=(FactSpec("cause", FactValue.ENUM, enum=RebuildCause),),
         place=PlaceRule.REQUIRED,
         clock=C.SEASON,
     ),
     IncidentKindSpec(
         "reconstruction.relocated",
         G.PEOPLES,
-        "{subject} finished rising again on its new site, at a cost of {cost}.",
+        "{subject} finished rising again on its new site, at a cost of {cost:coin|coins}.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.MAKER, required=False),
@@ -222,7 +219,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "relief.funded",
         G.SOCIAL,
-        "{authority} set aside {budget} for relief by {kind}.",
+        "{authority} set aside {budget:coin|coins} for relief by {kind}.",
         roles=(RoleSpec(R.AUTHORITY),),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=ReliefKind),
@@ -246,7 +243,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "structure.dismantled",
         G.MAKING,
-        "{subject} was taken apart; {gained} went to new building.",
+        "{subject} was taken apart, yielding {gained:coin|coins} of worth for new building.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.ACTOR, required=False),
@@ -300,7 +297,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "garden.founded",
         G.NATURE,
-        "{kind:an} garden was laid out in {place}.",
+        "A garden was laid out in {place} ({kind}).",
         roles=(RoleSpec(R.PLACE),),
         facts=(FactSpec("kind", FactValue.ENUM, enum=GardenKind),),
         place=PlaceRule.REQUIRED,
@@ -318,7 +315,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "relic.studied",
         G.KNOWLEDGE,
-        "The keepers of {subject} took it up for study, {understood} understood.",
+        "The keepers of {subject} took it up for study, with {understood} percent of it understood.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.OWNER, required=False),
@@ -330,7 +327,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "theft.lock_beaten",
         G.LAW,
-        "{actor} got past the {lock} guarding {target} of {victim}.",
+        "{actor} got past the lock ({lock}) guarding {target} of {victim}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.VICTIM),
@@ -460,7 +457,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.dismantle_work",
         G.MAKING,
-        "{actor} had {subject} taken apart, {gained} going to new building.",
+        "{actor} had {subject} taken apart, yielding {gained:coin|coins} of worth for new building.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.SUBJECT),
@@ -472,7 +469,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.found_garden",
         G.NATURE,
-        "{actor} laid out {kind:an} garden in {place}.",
+        "{actor} laid out a garden in {place} ({kind}).",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.PLACE),
@@ -508,7 +505,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "reconstruction.abandoned",
         G.PEOPLES,
-        "{subject} was given up rather than rebuilt, at a cost of {cost}.",
+        "{subject} was given up rather than rebuilt, at a cost of {cost:coin|coins}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.MAKER, required=False)),
         facts=(FactSpec("cost", FactValue.NUMBER, FactUnit.COIN),),
         place=PlaceRule.REQUIRED,

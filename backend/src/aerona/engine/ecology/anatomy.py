@@ -11,6 +11,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.grammar import several, spoken
 from aerona.core.random import RandomKey, SeededRandom
 from aerona.core.total import total
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.anatomy import CreatureAnatomyRow, CreatureAttackRow
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -202,24 +203,20 @@ async def plan_limbs(session: AsyncSession, node_id: int) -> int:
 
 
 async def fit_beast_bodies(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, BEAST_BODIES_FIXUP) is not None:
+    if not await fixup_due(session, BEAST_BODIES_FIXUP):
         return 0
     bodies = await session.execute(
         select(EntityRow, BodyRow).join(BodyRow, BodyRow.node_id == EntityRow.id).where(EntityRow.entity_type == EntityType.BEAST).order_by(EntityRow.id)
     )
-    fitted = waiting = 0
+    fitted = 0
     for beast, body in list(bodies):
-        if body.plan is not BodyPlan.HUMANOID:
-            continue
-        if held(beast.id):
-            waiting += 1
+        if body.plan is not BodyPlan.HUMANOID or "plan" in body.locked or held(beast.id):
             continue
         plan, traits = await beast_plan(session, beast)
         if plan is not body.plan:
             body.plan, body.traits = plan, traits
             fitted += 1
-    if not waiting:
-        session.add(AppliedFixupRow(key=BEAST_BODIES_FIXUP, result={"fitted": fitted}))
+    session.add(AppliedFixupRow(key=BEAST_BODIES_FIXUP, result={"fitted": fitted}))
     await session.flush()
     return fitted
 

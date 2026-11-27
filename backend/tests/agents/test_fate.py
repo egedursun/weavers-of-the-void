@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import select
 
-from aerona.agents.chronicler import complete_chronicle, record_age, write_chronicle
+from aerona.agents.chronicler import complete_chronicle, lost_chronicle_epochs, record_age, write_chronicle
 from aerona.agents.context.scope import load_scope
 from aerona.agents.fate.judge import run_fate
 from aerona.agents.fate.naming import name_pending_records, requeue_engine_drafts
@@ -15,14 +15,18 @@ from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.entities import CreationVerdictRow, EntityRow
 from aerona.db.tables.epochs import EpochRow
 from aerona.db.tables.ledger import LedgerEntryRow
-from aerona.db.tables.lore import CanonFactRow, FateRewardRow, LexemeRow, ThreadRow
+from aerona.db.tables.lore import CanonFactRow, ChronicleRow, FateRewardRow, LexemeRow, ThreadRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.agent import Verdict
+from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.world import FateMode
 from aerona.domain.models.entity_stats import ItemStats
+from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record
 from aerona.prompts.schemas.fate import ChronicleOutput, FateJudgmentOutput, NamingsOutput, VerdictDecision
 from aerona.rules.registry import Rules
 from aerona.services.integrity.kept_name_texts import requeue_kept_names
@@ -198,6 +202,34 @@ async def test_chronicler_writes_and_records_a_unique_age(runtime: AgentRuntime,
     assert row.name == "Second Age of Dry Wells"
     assert row.chronicler_name == "Ehmel"
     assert (row.year_start, row.year_end) == (0, rules.time.years_per_epoch - 1)
+
+
+async def test_an_age_the_god_named_keeps_its_name_and_an_age_the_god_cleared_is_not_rewritten(
+    runtime: AgentRuntime, model: FakeModel, database: Database, rules: Rules, world: AgentWorld
+) -> None:
+    async with database.write() as session:
+        session.add(EpochRow(epoch=1, name="The Long Quiet"))
+        ctx = await manual_context(session, "test_fate", rules)
+        session.add(ChronicleRow(epoch=1, year=1, kind=ChronicleKind.WORLD, text="A line of the first age.", world_id=world.core.world.id))
+        await record(
+            ctx,
+            "player.canon.epoch_edited",
+            roles={IncidentRole.AUTHORITY: world.core.creator.id},
+            facts={"epoch": 1, "fields": "narrative"},
+            kind=ChronicleKind.CREATOR_HAND,
+        )
+        (await session.scalars(select(CosmosRow))).one().epoch = 3
+    model.script(ChronicleOutput, chronicle())
+    written = await write_chronicle(runtime, 1, [])
+    written.narrative = f"{written.age_name} began when the river left."
+    async with database.write() as session:
+        scope = await load_scope(session, rules)
+        row = await record_age(scope, written, 1)
+        assert row.name == "The Long Quiet"
+        assert row.narrative == "The Long Quiet began when the river left."
+        row.narrative = None
+        await session.flush()
+        assert 1 not in await lost_chronicle_epochs(scope, 10)
 
 
 async def test_rejection_rollback_undoes_the_creating_ledger_entry(database: Database, world: AgentWorld) -> None:

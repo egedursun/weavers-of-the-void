@@ -250,7 +250,7 @@ LAW_EFFECTS = MappingProxyType(
         LawKind.FOREIGNER_RIGHTS: "Foreigners have {level}; citizenship pulls migrants.",
         LawKind.RELIGIOUS_TOLERANCE: "Foreign faiths are under {level}; conversions follow.",
         LawKind.WORSHIP_BAN: "The worship of a god is banned.",
-        LawKind.BLOOD_FEUD: "Blood feuds may end in wergild: {wergild_allowed}. Blood feuds are banned: {banned}.",
+        LawKind.BLOOD_FEUD: "Blood feuds may end in a payment for the dead: {wergild_allowed}. Blood feuds are banned: {banned}.",
         LawKind.CENSORSHIP: "Contrary rumours, broadsheets and satire are suppressed with strictness {strictness}.",
         LawKind.QUARANTINE: "Sick lands are sealed for {epochs:epoch|epochs}.",
         LawKind.BURIAL_LAW: "The dead are given to {rite}; burning slows plague.",

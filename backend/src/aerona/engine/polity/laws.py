@@ -13,6 +13,7 @@ from aerona.catalog.life.polity import KIND_VALUES
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -109,7 +110,7 @@ async def ensure_profile(session: AsyncSession, law: EntityRow, epoch: int, *, k
 
 
 async def backfill_kinds(session: AsyncSession, epoch: int) -> int:
-    if await session.get(AppliedFixupRow, KIND_FIXUP) is not None:
+    if not await fixup_due(session, KIND_FIXUP):
         return 0
     laws = list(await session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.LAW, EntityRow.status == EntityStatus.CANON)))
     known = set(await session.scalars(select(LawProfileRow.law_entity_id)))

@@ -1,10 +1,13 @@
+import re
 from enum import StrEnum
 
 from aerona.prompts.environment import normalize, string_template
 
+SENTENCE_START = re.compile(r"(?<=[.!?] )([a-z])")
+
 
 def result(template: StrEnum, **values: object) -> str:
-    return normalize(string_template(template.value).render(**values))
+    return SENTENCE_START.sub(lambda match: match.group(1).upper(), normalize(string_template(template.value).render(**values)))
 
 
 class CommonResult(StrEnum):

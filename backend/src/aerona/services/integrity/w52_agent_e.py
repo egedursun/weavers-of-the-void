@@ -95,14 +95,15 @@ async def ground_allowed(session: AsyncSession, rules: Rules, battle: BattleRow)
     war = await session.get(WarRow, battle.war_id)
     view = await view_of(session, rules, war.world_id if war is not None else None)
     place = await session.get(RegionEnvironmentRow, battle.place_entity_id) if battle.place_entity_id is not None else None
-    return war_ground(view.war, place.dominant_terrain if place is not None else None)
+    return war_ground(view.war, battle.terrain if battle.terrain is not None else place.dominant_terrain if place is not None else None)
 
 
 async def misplaced_grounds(session: AsyncSession) -> list[int]:
     rules = await world_rules(session)
     found: list[int] = []
-    for battle in await session.scalars(select(BattleRow).where(BattleRow.ground != WarTerrain.LAND).order_by(BattleRow.id)):
-        if battle.ground not in {await ground_allowed(session, rules, battle), WarTerrain.UNDERGROUND}:
+    for battle in await session.scalars(select(BattleRow).order_by(BattleRow.id)):
+        allowed = await ground_allowed(session, rules, battle)
+        if battle.ground is not allowed and battle.ground is not WarTerrain.UNDERGROUND:
             found.append(battle.id)
     return found
 

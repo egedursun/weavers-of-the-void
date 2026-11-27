@@ -4,10 +4,12 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.warfare import BattleRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.demography import MartialStyle
 from aerona.engine.body.customs import people_of
 from aerona.engine.demography.peoples import tally_battle
@@ -43,13 +45,13 @@ class BattleTally:
 
 
 async def backfill_records(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, DEPTH_FIXUP) is not None:
+    if not await fixup_due(session, DEPTH_FIXUP):
         return 0
-    rows = list(await session.scalars(select(PeopleCultureRow)))
+    rows = [row for row in await session.scalars(select(PeopleCultureRow).order_by(PeopleCultureRow.people_entity_id)) if not held(row.people_entity_id)]
     for row in rows:
         if RECORD_LOCK not in row.locked:
             row.martial_record = {}
-        row.martial_epoch = 0
+            row.martial_epoch = 0
     session.add(AppliedFixupRow(key=DEPTH_FIXUP, result={"peoples": len(rows)}))
     await session.flush()
     return len(rows)

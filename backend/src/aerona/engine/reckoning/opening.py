@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionMemberRow, CollectionRow
@@ -117,7 +118,7 @@ async def after_coups(ctx: TickContext, tally: ReckoningTally) -> None:
 
 
 async def apply_legacy(ctx: TickContext, tally: ReckoningTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return
     made = 0
     for collection in list(await ctx.session.scalars(select(CollectionRow).where(CollectionRow.kind == CollectionKind.PURGE).order_by(CollectionRow.id))):

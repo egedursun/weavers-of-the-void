@@ -25,6 +25,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, add_flag, close
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
+from aerona.engine.primitives.renames import rename_everywhere
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.recording.record import StepDraft, record
 
@@ -192,7 +193,7 @@ async def found_dominion(ctx: TickContext, company: EntityRow, row: CompanyProfi
         await close(ctx.session, bond, ctx.epoch, f"ruled now by {company.name}")
     await add_flag(ctx.session, market.id, EntityFlag.INDEPENDENT, ctx.epoch)
     realm = await found_polity(ctx, book, market)
-    realm.entity.name = f"the dominion of {company.name.removeprefix('the ')}"
+    await rename_everywhere(ctx.session, realm.entity.id, f"the dominion of {company.name.removeprefix('the ')}", ctx.epoch, free=True)
     realm.profile.government = GovernmentKind.OLIGARCHY
     await refresh_realms(ctx, book)
     await ctx.session.delete(occupation)

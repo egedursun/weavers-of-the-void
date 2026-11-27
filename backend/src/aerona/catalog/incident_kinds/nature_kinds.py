@@ -161,7 +161,7 @@ AGRARIAN: tuple[IncidentKindSpec, ...] = (
     happening(
         "relief.refused",
         N,
-        "{subject} turned away the aid of {giver}, a rival it would not owe.",
+        "{subject} turned away the aid of {giver}, not wanting to owe it.",
         roles=(one(R.SUBJECT), one(R.GIVER)),
         facts=(amount("face", U.STANDING),),
         place=P.REQUIRED,
@@ -831,7 +831,7 @@ CREATURES: tuple[IncidentKindSpec, ...] = (
     happening(
         "creatures.merged_escaped",
         N,
-        "{actor} got out of control and turned{victim:? on #}, who made it.",
+        "{actor} got out of control and turned on its maker{victim:?, #}.",
         roles=(one(R.ACTOR), maybe(R.VICTIM)),
         facts=(amount("loss", U.PERCENT), amount("danger", U.PERCENT)),
         clock=C.INSTANT,
@@ -915,7 +915,10 @@ DISASTER_FACTS = (
 
 
 def disaster_line(disaster: Disaster) -> str:
-    return f"{DISASTERS[disaster].label} struck {{place}} with severity {{severity}}; {{lost:person was|people were}} lost and {{dead:person|people}} died."
+    return (
+        f"{DISASTERS[disaster].label} struck {{place}} with severity {{severity}}; "
+        "{lost:no one|one|#} of its common folk and {dead:no one|one|#} of those named in this chronicle died."
+    )
 
 
 DISASTER_KINDS: tuple[IncidentKindSpec, ...] = (
@@ -1132,7 +1135,7 @@ SPECIES: tuple[IncidentKindSpec, ...] = (
     happening(
         "life.out_of_its_world",
         N,
-        "{subject} dwindled at {place}, a land whose warmth its body cannot bear.",
+        "{subject} dwindled at {place}, a land too hot or too cold for its body.",
         roles=(one(R.SUBJECT), one(R.PLACE)),
         facts=(chosen("biochemistry", Biochemistry),),
         clock=C.SEASON,
@@ -1370,7 +1373,7 @@ LEY: tuple[IncidentKindSpec, ...] = (
     happening(
         "seasons.summer_drought",
         N,
-        "The long summer over {subject} took {lost:% of the harvest|% of the harvest} from its hot and dry lands.",
+        "The long summer over {subject} took {lost:%} of the harvest from its hot and dry lands.",
         roles=(one(R.SUBJECT),),
         facts=(amount("lost", U.PERCENT),),
         clock=C.SEASON,
@@ -1432,7 +1435,7 @@ LEY: tuple[IncidentKindSpec, ...] = (
     happening(
         "weather.late_frost",
         N,
-        "A late frost in {place} took {lost:% of the harvest|% of the harvest}.",
+        "A late frost in {place} took {lost:%} of the harvest.",
         roles=(one(R.PLACE),),
         facts=(amount("lost", U.PERCENT),),
         place=P.REQUIRED,
@@ -1442,7 +1445,7 @@ LEY: tuple[IncidentKindSpec, ...] = (
     happening(
         "weather.ice_storm_harm",
         N,
-        "An ice storm in {place} harmed {structures:no structure|one structure|# structures}, broke {timber:% of the forest|% of the forest}, "
+        "An ice storm in {place} harmed {structures:no structure|one structure|# structures}, broke {timber:%} of the forest, "
         "cut {networks:no network|one network|# networks} and killed {herds:no herd beast|one herd beast|# herd beasts}.",
         roles=(one(R.PLACE),),
         facts=(amount("structures", U.COUNT), amount("timber", U.PERCENT), amount("networks", U.COUNT), amount("herds", U.COUNT)),
@@ -1704,7 +1707,7 @@ GROUND: tuple[IncidentKindSpec, ...] = (
     happening(
         "scar.healed",
         N,
-        "{place} healed of {scar}.",
+        "The scar of {place} healed ({scar}).",
         roles=(one(R.PLACE), maybe(R.ACTOR)),
         facts=(chosen("scar", ScarKind),),
         place=P.REQUIRED,
@@ -1866,7 +1869,7 @@ GROUND: tuple[IncidentKindSpec, ...] = (
     happening(
         "deep.reservoir_tapped",
         N,
-        "A reservoir of {volume} beneath {place} was tapped.",
+        "A reservoir beneath {place} was tapped, holding {volume} in volume.",
         roles=(one(R.PLACE), maybe(R.ACTOR)),
         facts=(amount("volume", U.COUNT),),
         place=P.REQUIRED,

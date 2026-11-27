@@ -1299,6 +1299,7 @@ def classify_losses(rules: Rules, side: Side) -> tuple[int, int]:
             stack.row.count = 0
         walking += stack.walking
         stretcher += stack.stretcher
+    side.captives = sum(stack.captured for stack in side.stacks)
     return walking, stretcher
 
 
@@ -1335,7 +1336,7 @@ def aftermath(rules: Rules, winner: Side, loser: Side, gap: float) -> tuple[dict
     for side in (winner, loser):
         walking, stretcher = classify_losses(rules, side)
         wounded[side.entity.id] = treat(rules, side, walking, stretcher)
-        maimed[side.entity.id] = round(side.lost * rules.maimed.return_pct / PERCENT)
+        maimed[side.entity.id] = min(wounded[side.entity.id], round(side.lost * rules.maimed.return_pct / PERCENT))
         raise_dead(rules, side, fallen)
         gained = campaigns.winner_experience_gain if side is winner else campaigns.loser_experience_gain
         for stack in side.stacks:

@@ -165,6 +165,7 @@ async def pidgins(ctx: TickContext) -> None:
     "table.polity_memberstable.creator",
     "table.settlement_profiles",
     "table.sons",
+    "table.speaker_cohorts",
     "table.stars",
     "table.worlds",
 )

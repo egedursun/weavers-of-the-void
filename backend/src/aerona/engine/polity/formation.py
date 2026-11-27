@@ -32,6 +32,7 @@ from aerona.engine.primitives.knowledge import known_levels
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.records import RecordSpec, create_record, retire_in
+from aerona.engine.primitives.renames import rename_everywhere
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.engine.recording.record import record
 from aerona.engine.transform.record import record_transformation
@@ -344,6 +345,8 @@ async def refresh_realms(ctx: TickContext, book: RealmBook) -> dict[str, int]:
 
 
 async def shape(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
+    if held(realm.entity.id):
+        return
     profile = realm.profile
     members = book.members(realm)
     core = book.entities.get(profile.core_entity_id or -1) or (members[0] if members else None)
@@ -355,7 +358,7 @@ async def shape(ctx: TickContext, book: RealmBook, realm: Realm) -> None:
         if government is not profile.government:
             profile.government = government
             if "name" not in profile.locked:
-                realm.entity.name = f"the {TITLES[government]} of {core.name}"
+                await rename_everywhere(ctx.session, realm.entity.id, f"the {TITLES[government]} of {core.name}", ctx.epoch, free=True)
     if "decision_rule" not in profile.locked:
         profile.decision_rule = RULES_OF[profile.government]
     settlements = [member for member in members if member.entity_type is EntityType.SETTLEMENT]

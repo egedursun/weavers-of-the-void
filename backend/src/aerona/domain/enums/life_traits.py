@@ -133,7 +133,9 @@ class FactionKindTrait(StrEnum):
     HERALDRY_GUILDS = "heraldry_guilds"
     MOVEMENTS = "movements"
     ORDERS = "orders"
+    TRADES = "trades"
     TREASON_KINDS = "treason_kinds"
+    UNDERWRITES = "underwrites"
     WARLIKE = "warlike"
 
 

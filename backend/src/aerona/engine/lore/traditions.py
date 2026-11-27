@@ -9,6 +9,7 @@ from aerona.catalog.lore import ABSORBABLE, FUNCTIONS, SLOT_NAMED, TRADITIONS, s
 from aerona.catalog.named_years import NAMED_YEARS
 from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
+from aerona.db.fixups import fixup_due
 from aerona.db.read_memo import memo_of, memoized, table_names
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import CommemorationRow
@@ -30,7 +31,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import CalendarSlot, CustomCatalog, Technique, TraditionEffectKind, TraditionFunction
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EngineKind, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.mind import ActKind, MemoryKind, ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
@@ -155,12 +156,20 @@ async def seed_effects(ctx: TickContext, row: TraditionProfileRow, *, replace: b
     return len(planned)
 
 
+def retype(row: TraditionProfileRow, kind: TraditionFunction) -> None:
+    if "kind" in row.locked:
+        return
+    row.kind = kind
+    if "calendar_slot" not in row.locked:
+        row.calendar_slot = slot_fit(kind, row.stage)
+
+
 async def apply_custom_kind(ctx: TickContext, row: TraditionProfileRow) -> None:
     custom = await kind_of(ctx.session, row.custom_kind_id, CustomCatalog.TRADITION_KIND)
     if custom is None:
         return
-    if "kind" not in row.locked:
-        row.kind = TraditionFunction(custom.base)
+    if row.kind is not TraditionFunction(custom.base):
+        retype(row, TraditionFunction(custom.base))
     params = params_of(custom, TraditionKindParams)
     if params.cost and "cost" not in row.locked:
         row.cost = {Commodity(key).value: value for key, value in params.cost.items()}
@@ -514,7 +523,8 @@ async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow
     part = await participate(ctx, tradition, community)
     keeping = keeping or Keeping()
     counted = 1 + ctx.rules.technique_effects.calendar_pct / PERCENT if await has_technique(ctx.session, community.id, Technique.CALENDAR) else 1.0
-    share = min(1.0, part.participation / PERCENT * counted) * keeping.weight
+    taking = min(1.0, part.participation / PERCENT * counted)
+    share = taking * keeping.weight
     row.in_season = keeping.in_season
     if not await feast(ctx, community, row, share, keeping.relief):
         part.skipped += 1
@@ -535,7 +545,7 @@ async def celebrate(ctx: TickContext, tradition: EntityRow, community: EntityRow
         ctx,
         "tradition.kept",
         roles={IncidentRole.PRODUCT: tradition.id, IncidentRole.PLACE: community.id},
-        facts={"function": row.kind, "share": round_half_up(share * PERCENT)},
+        facts={"function": row.kind, "share": round_half_up(taking * PERCENT)},
         place=community.id,
     )
     return row.kind.value
@@ -557,11 +567,12 @@ def kind_slot(kind: TraditionFunction) -> CalendarSlot | None:
 
 
 async def backfill_functions(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, FUNCTIONS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, FUNCTIONS_FIXUP):
         return 0
     moved = 0
     for row in list(await ctx.session.scalars(select(TraditionProfileRow).order_by(TraditionProfileRow.tradition_entity_id))):
-        if held(row.tradition_entity_id) or "kind" in row.locked:
+        tradition = await ctx.session.get(EntityRow, row.tradition_entity_id)
+        if held(row.tradition_entity_id) or "kind" in row.locked or tradition is None or tradition.origin is not EntityOrigin.ENGINE:
             continue
         named = next((kind for kind in SLOT_NAMED if FUNCTIONS[kind].slot is row.calendar_slot and FUNCTIONS[row.kind].slot is not kind_slot(kind)), None)
         if named is not None:

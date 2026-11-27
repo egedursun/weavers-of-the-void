@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.death_causes import DEATH_CAUSES, LOOSE_CAUSES, death_cause_of
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -87,7 +88,7 @@ async def keep_readings(ctx: TickContext) -> int:
             if row.authored or "reading" in row.locked:
                 continue
             row.reading = derive_reading(ctx.rules, await stored_values(ctx.session, ValueHolder.CULTURE, people_id), row.cause)
-    if await ctx.session.get(AppliedFixupRow, READINGS_FIXUP) is None:
+    if await fixup_due(ctx.session, READINGS_FIXUP):
         ctx.session.add(AppliedFixupRow(key=READINGS_FIXUP, result={"readings": made}))
     await ctx.session.flush()
     return made
@@ -136,7 +137,7 @@ async def mend_death_cause(session: AsyncSession, key: int) -> None:
 
 
 async def backfill_drownings(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, DROWNINGS_FIXUP) is not None:
+    if not await fixup_due(session, DROWNINGS_FIXUP):
         return 0
     moved = 0
     for key in await mismatched_deaths(session):

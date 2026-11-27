@@ -774,7 +774,7 @@ async def set_out(ctx: TickContext, mortal: EntityRow) -> bool:
     atlas = await RegionAtlas.load(ctx.session)
     home = atlas.top_region(mortal.id)
     options = (
-        [community for region in sorted(atlas.neighbour_regions(home)) for community in atlas.communities_in(region) if community != mortal.location_id]
+        [town for region in sorted(atlas.neighbour_regions(home)) for town in atlas.settlements_in(region) if town != mortal.location_id]
         if home is not None
         else []
     )

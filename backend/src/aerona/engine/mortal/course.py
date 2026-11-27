@@ -8,6 +8,7 @@ from aerona.catalog.mind import CAREER_SKILLS
 from aerona.constants.units import PERCENT
 from aerona.core.random import SeededRandom
 from aerona.core.total import partial
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import ConditionRow, InjuryRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -50,11 +51,12 @@ from aerona.engine.mind.space import blend
 from aerona.engine.mind.split import seed_split, stored_attribute
 from aerona.engine.mortal.kin import betrothed_of, children_of, parents_of, partners_of, siblings_of
 from aerona.engine.mortal.kinship import betroth, end_marriage, foster, marriage_between, marriages_of, marry
-from aerona.engine.mortal.life import adult, assign_sex, refresh_life, stage_rank
+from aerona.engine.mortal.life import CHILD_SUBTYPE, adult, assign_sex, refresh_life, stage_rank, young
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.polity.oaths import swear
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import away_among, of_age_query
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
@@ -162,7 +164,7 @@ async def active_flags(ctx: TickContext, mortal_id: int) -> set[EntityFlag]:
 
 
 async def backfill_deaths(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, DEATH_FIXUP) is not None:
+    if not await fixup_due(ctx.session, DEATH_FIXUP):
         return 0
     dead = list(await ctx.session.scalars(select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.DEAD)))
     found = 0
@@ -229,6 +231,8 @@ async def grow_into_stage(ctx: TickContext, mortal: EntityRow) -> LifeStage:
     profile, _ = await ensure_profile(ctx.session, mortal.id, ctx.epoch)
     before = profile.life_stage
     stage = await refresh_life(ctx.session, ctx.rules, mortal, profile)
+    if mortal.subtype == CHILD_SUBTYPE and adult(stage):
+        mortal.subtype = None
     await tell_stage(ctx, mortal, profile, before, stage)
     return stage
 
@@ -491,7 +495,7 @@ async def betroth_children(ctx: TickContext, mortal: EntityRow) -> bool:
     for child_id in await children_of(ctx.session, mortal.id):
         child = await living_entity(ctx.session, child_id)
         child_profile = await ctx.session.get(MortalProfileRow, child_id)
-        if child is None or child_profile is None or adult(child_profile.life_stage) or await betrothed_of(ctx.session, child_id):
+        if child is None or child_profile is None or not young(child_profile.life_stage) or await betrothed_of(ctx.session, child_id):
             continue
         statement = (
             select(EntityRow)
@@ -522,7 +526,7 @@ async def betroth_children(ctx: TickContext, mortal: EntityRow) -> bool:
 
 
 async def foster_orphan(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRow) -> bool:
-    if adult(profile.life_stage) or mortal.location_id is None:
+    if not young(profile.life_stage) or mortal.location_id is None:
         return False
     parents = [await living_entity(ctx.session, parent) for parent in await parents_of(ctx.session, mortal.id)]
     if any(parent is not None for parent in parents) or not ctx.rng(seed_of("foster", mortal.id, ctx.epoch)).chance(ctx.rules.kinship.foster_chance):
@@ -533,8 +537,11 @@ async def foster_orphan(ctx: TickContext, mortal: EntityRow, profile: MortalProf
         EntityRow.status == EntityStatus.CANON,
         EntityRow.id != mortal.id,
         EntityRow.social_class == SocialClass.NOBLE,
+        of_age_query(),
     )
-    fosterer = next(iter(unheld(await ctx.session.scalars(statement.order_by(EntityRow.id)))), None)
+    willing = unheld(await ctx.session.scalars(statement.order_by(EntityRow.id)))
+    away = await away_among(ctx.session, [row.id for row in willing])
+    fosterer = next((row for row in willing if row.id not in away), None)
     if fosterer is None:
         return False
     await foster(ctx.session, mortal.id, fosterer.id, ctx.epoch, description="taken in as a ward")

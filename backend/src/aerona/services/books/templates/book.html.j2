@@ -5,23 +5,24 @@
 {% block title %}{{ book.title }}{% endblock %}
 {% block body %}
 {% set world_count = book.stars | sum(attribute="worlds", start=[]) | length %}
+{% macro counted(count, one, many) -%}{{ count }} {{ one if count == 1 else many }}{%- endmacro %}
 {% set parts = [] %}
 {% if book.cosmos.cosmology or book.laws or book.creation %}{% set _ = parts.append(("cosmology", "Cosmology", "How the world began")) %}{% endif %}
 {% if book.creator %}{% set _ = parts.append(("creator", book.creator.name, book.creator.title or "The Creator")) %}{% endif %}
-{% set _ = parts.append(("cosmos", "The Heavens", world_count ~ " worlds")) %}
-{% if book.foreign_gods %}{% set _ = parts.append(("foreign-gods", "Foreign Gods", book.foreign_gods | length ~ " gods")) %}{% endif %}
-{% if book.sons %}{% set _ = parts.append(("pantheon", "The Pantheon", book.sons | length ~ " children")) %}{% endif %}
-{% if book.chapters %}{% set _ = parts.append(("epochs", "The Epochs", book.chapters | length ~ " books")) %}{% endif %}
-{% if book.wars %}{% set _ = parts.append(("wars", "Wars", book.wars | length ~ " wars")) %}{% endif %}
-{% set _ = parts.append(("encyclopedia", "Encyclopedia", book.record_count ~ " records")) %}
-{% if book.knowledge %}{% set _ = parts.append(("knowledge", "Knowledge", book.knowledge | length ~ " discoveries")) %}{% endif %}
-{% if book.languages %}{% set _ = parts.append(("languages", "Tongues and Dictionaries", book.languages | length ~ " languages")) %}{% endif %}
+{% set _ = parts.append(("cosmos", "The Heavens", counted(world_count, "world", "worlds"))) %}
+{% if book.foreign_gods %}{% set _ = parts.append(("foreign-gods", "Foreign Gods", counted(book.foreign_gods | length, "god", "gods"))) %}{% endif %}
+{% if book.sons %}{% set _ = parts.append(("pantheon", "The Pantheon", counted(book.sons | length, "child", "children"))) %}{% endif %}
+{% if book.chapters %}{% set _ = parts.append(("epochs", "The Epochs", counted(book.chapters | length, "book", "books"))) %}{% endif %}
+{% if book.wars %}{% set _ = parts.append(("wars", "Wars", counted(book.wars | length, "war", "wars"))) %}{% endif %}
+{% set _ = parts.append(("encyclopedia", "Encyclopedia", counted(book.record_count, "record", "records"))) %}
+{% if book.knowledge %}{% set _ = parts.append(("knowledge", "Knowledge", counted(book.knowledge | length, "discovery", "discoveries"))) %}{% endif %}
+{% if book.languages %}{% set _ = parts.append(("languages", "Tongues and Dictionaries", counted(book.languages | length, "language", "languages"))) %}{% endif %}
 {% if book.open_threads or book.closed_threads or book.facts or book.prayers %}{% set _ = parts.append(("stories", "Stories, Facts and Prayers", "")) %}{% endif %}
 {% if book.deeds.shown %}{% set _ = parts.append(("achievements", "Deeds and Trials", "Achievements " ~ (book.deeds.earned | length) ~ "/" ~ book.deeds.tiers_total)) %}{% endif %}
-{% if book.ledger %}{% set _ = parts.append(("ledger", "Fate's Ledger", book.ledger | length ~ " entries")) %}{% endif %}
+{% if book.ledger %}{% set _ = parts.append(("ledger", "Fate's Ledger", counted(book.ledger | length, "entry", "entries"))) %}{% endif %}
 {% if book.chapters | selectattr("raw_lines") | list %}{% set _ = parts.append(("event-log", "Event Log", "")) %}{% endif %}
 {% if book.writings.shown %}{% set _ = parts.append(("writings", "Writings of the Divine Will", book.writings.tally)) %}{% endif %}
-{% if book.records %}{% set _ = parts.append(("records", "Records of the Cosmos", book.records | length ~ " registers")) %}{% endif %}
+{% if book.records %}{% set _ = parts.append(("records", "Records of the Cosmos", counted(book.records | length, "register", "registers"))) %}{% endif %}
 {% set _ = parts.append(("index", "Index", "")) %}
 {% macro numeral(id) -%}{% for part in parts %}{% if part[0] == id %}{{ ["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX"][loop.index0] }}{% endif %}{% endfor %}{%- endmacro %}
 
@@ -139,11 +140,11 @@
 {% set guide = world.guide %}
 {% if guide.climate or guide.dangers or guide.peoples or guide.resources or guide.routes or guide.foreign_gods or guide.sky %}
 <div class="box"><span class="label">Traveller's guide</span>
-{% if guide.climate %}<p><b class="small">Climate.</b> {{ guide.climate }}{% if guide.climate_epochs_left %} <span class="meta">for {{ guide.climate_epochs_left }} more epochs</span>{% endif %}</p>{% endif %}
+{% if guide.climate %}<p><b class="small">Climate.</b> {{ guide.climate }}{% if guide.climate_epochs_left %} <span class="meta">for {{ counted(guide.climate_epochs_left, "more epoch", "more epochs") }}</span>{% endif %}</p>{% endif %}
 {% if guide.dangers %}<p><b class="small">Dangers.</b> {% for danger in guide.dangers %}{{ danger.name }} <span class="meta">({{ danger.reason }})</span>{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
 {% if guide.peoples %}<p><b class="small">Peoples.</b> {% for people in guide.peoples %}{{ link("entity", people.id, people.name, false) }} <span class="meta">{{ people.population }}{% if people.language %}, speaking {{ people.language }}{% endif %}{% if people.god %}, worshipping {{ people.god }}{% endif %}</span>{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
 {% if guide.resources %}<p><b class="small">Riches.</b> {% for resource in guide.resources %}{{ link("entity", resource.id, resource.name, false) }}{% if resource.mechanics %} <span class="meta">[{{ resource.mechanics }}]</span>{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
-{% if guide.routes %}<p><b class="small">Roads out.</b> {% for route in guide.routes %}{{ route.target }} <span class="meta">({{ route.method }}, {{ route.duration }} epochs, danger {{ route.danger }}{% if not route.active %}, sealed{% endif %}{% if not route.known %}, unknown{% endif %})</span>{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
+{% if guide.routes %}<p><b class="small">Roads out.</b> {% for route in guide.routes %}{{ route.target }} <span class="meta">({{ route.method }}, {{ counted(route.duration, "epoch", "epochs") }}, danger {{ route.danger }}{% if not route.active %}, sealed{% endif %}{% if not route.known %}, unknown{% endif %})</span>{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
 {% if guide.foreign_gods %}<p><b class="small">Gods of this world.</b> {% for god in guide.foreign_gods %}<a href="#foreign-god-{{ god.id }}">{{ god.name }}</a>{% if god.title %} <span class="meta">{{ god.title }}</span>{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
 {% if guide.sky %}<p><b class="small">In the sky.</b> {% for body in guide.sky %}{{ link("entity", body.id, body.name, false) }}{% if not loop.last %}; {% endif %}{% endfor %}</p>{% endif %}
 </div>
@@ -171,7 +172,7 @@
 
 {% if book.chapters %}
 <section class="chapter" id="epochs">
-{{ chapter_head("epochs", numeral("epochs"), "The Epochs", book.epochs_count ~ " epochs, " ~ book.world_year ~ " years") }}
+{{ chapter_head("epochs", numeral("epochs"), "The Epochs", counted(book.epochs_count, "epoch", "epochs") ~ ", " ~ counted(book.world_year, "year", "years")) }}
 {% if book.cosmic %}
 {% set world_names = book.cosmic | map(attribute="worlds") | sum(start=[]) | map(attribute="name") | unique | list %}
 <h3 class="bm2">The cosmic chronicle</h3>
@@ -183,7 +184,7 @@
 <article class="epoch" id="{{ chapter.anchor }}">
 <span class="numeral">{{ chapter.numeral }}</span>
 <div class="epoch-title">
-<p class="overline">Book {{ chapter.numeral }}{% if chapter.row and chapter.row.year_start is not none %} · years {{ chapter.row.year_start }}–{{ chapter.row.year_end }}{% endif %}</p>
+<p class="overline">Book {{ chapter.numeral }} · years {{ chapter.year_start }}–{{ chapter.year_end }}{% if chapter.under_way %} · under way, not yet lived to its end{% endif %}</p>
 <h3 class="bm2">{% if chapter.row and chapter.row.name %}{{ chapter.row.name }}{% else %}Epoch {{ chapter.epoch }}{% endif %}</h3>
 </div>
 <div class="clear"></div>
@@ -198,7 +199,7 @@
 {% for people, view in chapter.perspectives %}<div class="quote">{{ view.text }}<cite>As {{ people }}'s historian tells it{% if view.historian %} · {% if view.historian_entity_id %}<a href="#entity-{{ view.historian_entity_id }}">{{ view.historian }}</a>{% else %}{{ view.historian }}{% endif %}{% endif %}</cite></div>{% endfor %}
 {% for council in chapter.councils %}<div class="council"><span class="label overline">Council</span><h5>{{ council.topic }}</h5>{% for speech in council.minutes.speeches %}<p class="speech"><b>{{ speech.name }}.</b> {{ speech.words }}</p>{% endfor %}<p><i>{{ council.minutes.motion }}</i> — <span class="verdict {{ 'passed' if council.passed else 'rejected' }}">{{ "passed" if council.passed else "rejected" }}</span>.{% if council.minutes.decision != "none" %} {{ council.minutes.decision | motion }}.{% endif %}</p></div>{% endfor %}
 {% if chapter.lines %}<p class="sublabel">Chronicle</p>{{ chronicle_lines(chapter.lines, book, false) }}{% endif %}
-{% if chapter.born %}<p class="meta small">Born in this epoch: {% for id, name in chapter.born %}{{ link("entity", id, name, false) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+{% if chapter.born %}<p class="meta small">New in this epoch: {% for id, name in chapter.born %}{{ link("entity", id, name, false) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
 </article>
 {% endfor %}
 </section>
@@ -210,7 +211,7 @@
 {% for war in book.wars %}
 <article class="war" id="{{ war.anchor }}">
 <div class="head"><h4 class="bm3"><a href="#{{ war.event_anchor }}">{{ war.name }}</a></h4></div>
-<p class="meta small">{{ war.world }} · {{ war.war.cause | spoken }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status.value }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending | spoken }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}</p>
+<p class="meta small">{{ war.world }} · {{ war.war.cause | spoken }} · {% if war.war.ended_epoch is not none %}epochs {{ war.war.started_epoch }}–{{ war.war.ended_epoch }}{% else %}since epoch {{ war.war.started_epoch }}, {{ war.war.status | spoken }}{% endif %}{% if war.war.ending %} · ended in {{ war.war.ending | spoken }}{% endif %}{% if war.instigator %} · stirred by {{ war.instigator }}{% endif %}</p>
 {% if war.war.cause_text %}<p>{{ war.war.cause_text }}</p>{% endif %}
 <div class="sides">
 <div class="side attackers"><span class="label">Attackers</span>{% for name in war.attackers %}<div{% if name == war.victor %} class="victor"{% endif %}>{{ name }}</div>{% else %}<div class="meta">no one</div>{% endfor %}</div>
@@ -219,14 +220,14 @@
 </div>
 <ul class="stats"><li>Battles<b>{{ war.war.battles }}</b></li><li>Momentum<b>{{ war.war.score }}</b></li>{% if war.war.violence is not none %}<li>Violence<b>{{ war.war.violence }}</b></li>{% endif %}{% if war.victor %}<li>Victor<b>{{ war.victor }}</b></li>{% endif %}</ul>
 {% if war.battles %}<table><thead><tr><th>Epoch</th><th>Battle</th><th>Victor</th><th>Defeated</th><th>Outcome</th><th>The field</th></tr></thead><tbody>{% for battle in war.battles %}<tr><td>{{ battle.epoch }}</td><td>{{ battle.name or ("Battle " ~ battle.sequence) }}{% if battle.place %}<br><span class="meta small">at {{ battle.place }}</span>{% endif %}</td><td>{{ battle.winner }}</td><td>{{ battle.loser }}</td><td>{{ battle.outcome }}</td><td>{{ battle.field or "—" }}</td></tr>{% endfor %}</tbody></table>{% endif %}
-{% if war.sieges %}<p class="sublabel">Sieges</p><ul class="timeline">{% for siege in war.sieges %}<li><span class="when">Epoch {{ siege.started_epoch }}{% if siege.ended_epoch is not none %}–{{ siege.ended_epoch }}{% endif %}</span>{{ siege.besieger }} besieged {{ siege.besieged }} · {{ siege.status }}, {{ siege.rounds }} rounds</li>{% endfor %}</ul>{% endif %}
+{% if war.sieges %}<p class="sublabel">Sieges</p><ul class="timeline">{% for siege in war.sieges %}<li><span class="when">Epoch {{ siege.started_epoch }}{% if siege.ended_epoch is not none and siege.ended_epoch != siege.started_epoch %}–{{ siege.ended_epoch }}{% endif %}</span>{{ siege.besieger }} besieged {{ siege.besieged }} · {{ siege.status }}, {{ counted(siege.rounds, "round", "rounds") }}</li>{% endfor %}</ul>{% endif %}
 </article>
 {% endfor %}
 </section>
 {% endif %}
 
 <section class="chapter" id="encyclopedia">
-{{ chapter_head("encyclopedia", numeral("encyclopedia"), "Encyclopedia", book.record_count ~ " records of everything that is and was") }}
+{{ chapter_head("encyclopedia", numeral("encyclopedia"), "Encyclopedia", counted(book.record_count, "record", "records") ~ " of everything that is and was") }}
 {% for group in book.encyclopedia %}
 {% if group.name %}<div class="group-head"><h3 class="bm2">{{ group.name }}</h3></div>{% endif %}
 {% for label, articles in group.groups %}
@@ -250,7 +251,7 @@
 {{ chapter_head("languages", numeral("languages"), "Tongues and Dictionaries", "Every language and every word") }}
 {% for language in book.languages %}
 {% for article in [language.article] | with_descendants %}{{ entity_article(article, false, links) }}{% endfor %}
-<p class="meta small">{{ language.words | length }} words · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}</p>
+<p class="meta small">{{ counted(language.words | length, "word", "words") }} · {% if language.speakers %}spoken by {{ language.speakers | join(", ") }}{% else %}a dead language{% endif %}</p>
 {% if language.words %}<table><thead><tr><th>Word</th><th>Kind</th><th>Meaning</th><th>Origin</th><th>Example</th></tr></thead><tbody>{% for word in language.words %}<tr><td class="word">{{ word.word }}</td><td class="meta">{{ word.part_of_speech | speech_part }}</td><td>{{ word.meaning }}</td><td class="small">{{ word.etymology or "" }}</td><td class="small"><i>{{ word.example or "" }}</i></td></tr>{% endfor %}</tbody></table>{% endif %}
 {% endfor %}
 </section>
@@ -279,7 +280,7 @@
 
 {% if book.ledger %}
 <section class="chapter" id="ledger">
-{{ chapter_head("ledger", numeral("ledger"), "Fate's Ledger", "Every hand laid upon the world") }}
+{{ chapter_head("ledger", numeral("ledger"), "Fate's Ledger", "Every action taken upon the world") }}
 <ul class="timeline">{% for entry in book.ledger %}<li><span class="when">Epoch {{ entry.epoch }}</span>{{ entry.actor_name }}{% if entry.author_name %} <span class="meta small">by {{ entry.author_name }}</span>{% endif %} · {{ entry.tool | replace("_", " ") | replace(":", " ") }}{% if entry.undone %} <span class="meta">undone{% if entry.undone_by_name %} by {{ entry.undone_by_name }}{% endif %}</span>{% endif %}{% if entry.input_summary %} <span class="meta small">— {{ entry.input_summary | plain }}</span>{% endif %}{% if entry.reason %}<br><span class="small">Why: {{ entry.reason | plain }}</span>{% endif %}{% set changes = book.ledger_changes.get(entry.id, []) %}{% if changes %}<ul class="changes">{% for change in changes %}<li><b>{{ change.verb }}</b> {{ change.target }}{% if change.details %}<span class="meta small"> — {{ change.details | join(" · ") }}</span>{% endif %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ul>
 </section>
 {% endif %}

@@ -1,5 +1,6 @@
 from sqlalchemy import or_, select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.warfare import BattleRow
 from aerona.domain.models.calendar import epoch_start_year
@@ -11,7 +12,7 @@ BATTLE_FIXUP = "environment.battle_ground"
 
 
 async def backfill_battle_ground(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, BATTLE_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BATTLE_FIXUP):
         return 0
     statement = select(BattleRow).where(
         or_(BattleRow.terrain.is_(None), BattleRow.year.is_(None), BattleRow.season_name.is_(None), BattleRow.weather.is_(None))

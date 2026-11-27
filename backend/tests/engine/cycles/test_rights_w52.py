@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.market_kinds import WAYS
 from aerona.core.errors import ValidationFailedError
 from aerona.db.tables.crafts import IncorporealRightRow
@@ -9,9 +10,11 @@ from aerona.db.tables.mortal import MarriageRow
 from aerona.db.tables.relations import ContestRow
 from aerona.domain.enums.crafts import RightAcquired, RightKind
 from aerona.domain.enums.culture import Technique
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.relations import ContestEnd, ContestKind, ContestStake
 from aerona.engine.crafts.control import claim_right
 from aerona.engine.crafts.rights import wed_portion, win_right
+from aerona.engine.recording.render import render_incident
 from aerona.services.integrity.market_links import unbound_rights
 from tests.engine.core.factories import CoreWorld, mortal
 from tests.engine.core.test_cycles_w21 import context, town_of
@@ -64,3 +67,12 @@ async def test_rights_pass_with_a_union_and_a_won_contest_and_must_name_them(ses
     song.contest_id = None
     await session.flush()
     assert song.id in await unbound_rights(session)
+
+
+def test_a_right_used_without_leave_is_told_with_its_kind() -> None:
+    line = render_incident(
+        INCIDENT_KINDS["rights.infringed"],
+        {IncidentRole.ACTOR: ["Fonju"], IncidentRole.VICTIM: ["House Anrar"]},
+        {"right": "House Anrar", "kind": RightKind.NAME, "opinion": -10},
+    )
+    assert line.startswith("Fonju used the name House Anrar without leave")

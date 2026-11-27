@@ -48,6 +48,7 @@ class EntityTypeSpec:
 REGION, PLACE, SETTLEMENT = EntityType.REGION, EntityType.PLACE, EntityType.SETTLEMENT
 LAND = frozenset({REGION, PLACE})
 INHABITED = frozenset({REGION, PLACE, SETTLEMENT})
+LEAVES_REMAINS = frozenset({EntityType.MORTAL, EntityType.BEAST})
 
 
 def _percent(*pairs: tuple[str, str]) -> tuple[StatField, ...]:
@@ -167,7 +168,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             "forge_item",
             INHABITED,
             False,
-            _percent(("damage", "Damage"), ("protection", "Protection"), ("might", "Might"), ("curse", "Curse")),
+            _percent(("damage", "Damage"), ("protection", "Protection"), ("might", "Might"), ("curse", "Curse strength")),
             frozenset({EngineKind.CURRENCY}),
         ),
         EntityTypeSpec(
@@ -178,7 +179,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             "build_structure",
             INHABITED,
             True,
-            _percent(("splendor", "Splendor"), ("durability", "Durability"), ("function", "Function")),
+            _percent(("splendor", "Splendor as built"), ("durability", "Durability"), ("function", "Function as built")),
             frozenset(
                 {
                     EngineKind.TEMPLE,
@@ -247,7 +248,7 @@ ENTITY_TYPES: dict[EntityType, EntityTypeSpec] = {
             "found_faction",
             INHABITED,
             True,
-            _percent(("strength", "Military strength"), ("wealth", "Wealth"), ("sway", "Sway")),
+            _percent(("strength", "Strength"), ("wealth", "Wealth"), ("sway", "Sway")),
             frozenset(
                 {
                     EngineKind.REBELS,

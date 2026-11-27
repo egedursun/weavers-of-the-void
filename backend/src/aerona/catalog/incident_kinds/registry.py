@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from dataclasses import replace
 from types import MappingProxyType
 
 from aerona.catalog.incident_kinds.authored import KINDS as AUTHORED
@@ -21,6 +22,7 @@ from aerona.catalog.incident_kinds.g16_peoples import KINDS as PEOPLES
 from aerona.catalog.incident_kinds.life import KINDS as LIFE
 from aerona.catalog.incident_kinds.nature50 import KINDS as NATURE50
 from aerona.catalog.incident_kinds.phases import KINDS as PHASES
+from aerona.catalog.incident_kinds.repeats import REPEATED_KINDS
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.catalog.incident_kinds.tellings import KINDS as TELLINGS
 from aerona.catalog.incident_kinds.w51_orders import KINDS as W51_ORDERS
@@ -90,7 +92,7 @@ def declared(kinds: Iterable[IncidentKindSpec]) -> MappingProxyType[str, Inciden
     for spec in kinds:
         if spec.key in found:
             raise DuplicateKindError(f"the incident kind {spec.key!r} is declared twice")
-        found[spec.key] = spec
+        found[spec.key] = replace(spec, repeatable=True) if spec.key in REPEATED_KINDS else spec
     return MappingProxyType(found)
 
 

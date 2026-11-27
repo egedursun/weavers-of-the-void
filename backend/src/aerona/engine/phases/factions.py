@@ -245,7 +245,7 @@ async def wider_kinds(ctx: TickContext, community: EntityRow, shares: Mapping[So
     return [kind for kind, fits in wanted if fits]
 
 
-async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKind) -> EntityRow:
+async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKind, *, tell: bool = True) -> EntityRow:
     rules = ctx.rules.factions
     plan = blueprint(kind)
     rng = ctx.rng("faction_stats")
@@ -279,13 +279,14 @@ async def found_faction(ctx: TickContext, community: EntityRow, kind: FactionKin
     patron = await bonds.patron(community.id)
     if patron is not None:
         await bonds.connect(BondDraft(faction.id, patron, BondKind.WORSHIPS, ctx.epoch, f"the faith of {community.name}"))
-    await record_incident(
-        ctx,
-        "faction.founded",
-        roles={IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: community.id},
-        facts={"kind": kind},
-        place=community.id,
-    )
+    if tell:
+        await record_incident(
+            ctx,
+            "faction.founded",
+            roles={IncidentRole.PRODUCT: faction.id, IncidentRole.PLACE: community.id},
+            facts={"kind": kind},
+            place=community.id,
+        )
     ctx.count("factions_founded")
     return faction
 

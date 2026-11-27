@@ -12,7 +12,16 @@ from aerona.domain.models.entity_stats import ArtworkStats, CultStats
 from aerona.engine.context import TickContext
 from aerona.engine.phases.doom import doom_clock, set_doom_clock, trigger_apocalypse
 from aerona.engine.phases.population import population_baseline, population_growth
-from aerona.engine.phases.sons import domain_rivalry, existence_target, rebel_theft, set_son_relation, sons_renewal, step_toward, works_remember_gods
+from aerona.engine.phases.sons import (
+    domain_rivalry,
+    existence_target,
+    rebel_theft,
+    renew_existence,
+    set_son_relation,
+    sons_renewal,
+    step_toward,
+    works_remember_gods,
+)
 from aerona.engine.primitives.ledger import DoomItem, EssenceItem, LedgerKey, doom_items, essence_items, read, record
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import stat
@@ -83,7 +92,7 @@ async def test_doom_clock_counts_and_destroys(session: AsyncSession, world: Core
     assert items[DoomItem.GODLESS] == ctx.rules.apocalypse.godless
     assert items[DoomItem.PEACE] == -ctx.rules.apocalypse.peace
     world.cosmos.doom_clock = ctx.rules.balance.apocalypse_threshold - 1
-    crowded = await manual_context(session, "doom_end", tuned_rules(apocalypse={"godless": 50}))
+    crowded = await manual_context(session, "doom_end", tuned_rules(apocalypse={"godless": 50}, balance={"apocalypse_speed": 100}))
     await doom_clock(crowded)
     assert world.cosmos.doom_clock == ctx.rules.balance.apocalypse_threshold * ctx.rules.apocalypse.after_ruin_pct // 100
     keys = list(await session.scalars(select(ChronicleRow.template_key)))
@@ -123,3 +132,17 @@ async def test_statistics_and_advance(ctx: TickContext, world: CoreWorld, sessio
     assert world.cosmos.epoch == ctx.epoch + 1
     assert world.cosmos.epoch_start_year == ctx.rules.time.years_per_epoch
     assert any(status is EntityStatus.CANON for status in [world.people.status])
+
+
+async def test_a_son_whose_anchor_perished_is_told_fading_only_when_its_existence_falls(world: CoreWorld, session: AsyncSession) -> None:
+    anchor = await entity(session, "Lost Shrine", EntityType.ARTWORK, ArtworkStats(), world_id=world.world.id)
+    anchor.status, anchor.end_epoch = EntityStatus.DESTROYED, 1
+    world.son.anchor_entity_id = anchor.id
+    ctx = await manual_context(session, "anchor", tuned_rules(world_epoch_transition={"existence_step": 100}))
+    world.son.existence = 0
+    await renew_existence(ctx, world.son, 100000)
+    world.son.existence = 100
+    await renew_existence(ctx, world.son, 0)
+    told = list(await session.scalars(select(ChronicleRow.text).where(ChronicleRow.template_key == "sons.existence").order_by(ChronicleRow.id)))
+    assert len(told) == 2
+    assert "anchor perished" not in told[0] and "anchor perished" in told[1]

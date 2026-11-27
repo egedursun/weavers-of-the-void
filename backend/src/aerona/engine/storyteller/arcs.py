@@ -1,9 +1,10 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 
 from aerona.catalog.arcs import ARCS, ENDS_IN_DEATH
+from aerona.catalog.incident_kinds.onlookers import NOT_PARTY_ROLES
 from aerona.catalog.life.storyteller import ADVANCE_ARC_ROLES
 from aerona.catalog.life_traits import LIFE_STAGE_TRAITS, having
 from aerona.constants.units import PERCENT
@@ -12,8 +13,9 @@ from aerona.core.grammar import spoken
 from aerona.db.tables.ages import AgeEchoRow, ArcBeatRow, ArcFigureRow, ArcRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.intrigue import SecretRow
-from aerona.db.tables.lore import ChronicleEntityRow, ChronicleRow, LegendaryQuestRow, ThreadLinkRow
+from aerona.db.tables.lore import ChronicleRow, LegendaryQuestRow, ThreadLinkRow
 from aerona.db.tables.mind import TraitRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.mythic import MantlingRow
@@ -34,6 +36,8 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.services.war import ongoing_wars
+
+ARC_QUIET_ROLES = NOT_PARTY_ROLES | {IncidentRole.GUEST}
 
 STAGES = (ArcStage.INCITING, ArcStage.RISING, ArcStage.CRISIS, ArcStage.CLIMAX, ArcStage.RESOLUTION)
 MONOMYTH = (ArcStage.CALL, ArcStage.REFUSAL, ArcStage.MENTOR, ArcStage.THRESHOLD, ArcStage.ORDEAL, ArcStage.RETURN, ArcStage.RESOLUTION)
@@ -415,12 +419,19 @@ async def last_line(ctx: TickContext, arc: ArcRow) -> int:
     return int(opened or 0)
 
 
+def lines_with_part(node_ids: list[int]) -> Select[int | None]:
+    return (
+        select(IncidentRow.chronicle_id)
+        .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentRow.id)
+        .where(IncidentParticipantRow.node_id.in_(node_ids), IncidentParticipantRow.role.not_in(sorted(ARC_QUIET_ROLES)), IncidentRow.chronicle_id.is_not(None))
+    )
+
+
 async def shared_lines(ctx: TickContext, arc: ArcRow, figure_ids: list[int], limit: int) -> list[ChronicleRow]:
-    mine = select(ChronicleEntityRow.chronicle_id).where(ChronicleEntityRow.entity_id == arc.subject_node_id)
+    mine = lines_with_part([arc.subject_node_id])
     query = select(ChronicleRow).where(ChronicleRow.id.in_(mine), ChronicleRow.id > await last_line(ctx, arc), ChronicleRow.template_key != "arcs.begun")
     if figure_ids:
-        theirs = select(ChronicleEntityRow.chronicle_id).where(ChronicleEntityRow.entity_id.in_(figure_ids))
-        query = query.where(ChronicleRow.id.in_(theirs))
+        query = query.where(ChronicleRow.id.in_(lines_with_part(figure_ids)))
     return list(await ctx.session.scalars(query.order_by(ChronicleRow.id).limit(limit)))
 
 

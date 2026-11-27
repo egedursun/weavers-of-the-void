@@ -148,10 +148,16 @@ async def city_plan(session: AsyncSession, rules: Rules, town: EntityRow) -> Pla
         if districts_n or built
     ]
     facts.append(("Homes", f"{several(homes, 'home', 'homes')} for {several(round(stat_or(town, 'population', 0)), 'person', 'people')}"))
-    facts.append(("Walls", f"level {walls}, {several(layout.walls_radius, 'hex', 'hexes')} out" if layout.walls_radius else "none"))
-    facts.append(("Growth", morphology.value))
+    facts.append(("Walls", walls_fact(walls, layout.walls_radius)))
+    facts.append(("Growth", spoken(morphology)))
     caption = f"{town.name}: its districts by zone on their hexes, each building in its place, shaded by its state"
     return Plan(_frame(cells, body, f"Plan of {town.name}"), caption, facts)
+
+
+def walls_fact(level: int, radius: int | None) -> str:
+    if not level:
+        return "none"
+    return f"level {level}, {several(radius, 'hex', 'hexes')} out" if radius else f"level {level}, close around the town"
 
 
 def _mark(cell: Hex, shape: str, size: float, fill: str) -> str:
@@ -249,9 +255,9 @@ async def type_tables(session: AsyncSession, rules: Rules) -> list[RecordTable]:
         civic = CIVIC_SERVICE_OF.get(kind)
         buildings.rows.append(
             [
-                worlds.get(world_id, f"World {world_id}"),
+                worlds.get(world_id, "a world no longer kept"),
                 spec.label if spec is not None else spoken(kind).capitalize(),
-                ZONE_OF_STRUCTURE[kind].value,
+                spoken(ZONE_OF_STRUCTURE[kind]),
                 ", ".join(spoken(part) for part in (civic, service) if part is not None) or "nothing",
                 *(str(count) for count in states),
                 ", ".join(hosts) or "the open land",
@@ -274,5 +280,6 @@ async def type_tables(session: AsyncSession, rules: Rules) -> list[RecordTable]:
             tally[key][1] += homes_of(people.get(district.id, 0), rules.city_plan.household)
             places[key].add(town.name)
     for (world_id, level), (count, dwellings) in sorted(tally.items(), key=lambda item: (item[0][0], item[0][1].value)):
-        homes.rows.append([worlds.get(world_id, f"World {world_id}"), spoken(level), str(count), str(dwellings), ", ".join(sorted(places[(world_id, level)]))])
+        world_name = worlds.get(world_id, "a world no longer kept")
+        homes.rows.append([world_name, spoken(level), str(count), str(dwellings), ", ".join(sorted(places[(world_id, level)]))])
     return [table for table in (buildings, homes) if table.rows]

@@ -13,6 +13,7 @@ from aerona.catalog.death_shapes import (
     TREATMENT_SANITATION,
     TREATMENT_SPIRIT_PCT,
 )
+from aerona.catalog.entity_types import LEAVES_REMAINS
 from aerona.catalog.life_traits import DEATH_ROLE_TRAITS, having
 from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
@@ -121,7 +122,12 @@ async def treat_the_dead(ctx: TickContext, people: EntityRow, towns: list[int], 
     for dead in list(
         await ctx.session.scalars(
             select(EntityRow)
-            .where(EntityRow.status == EntityStatus.DEAD, EntityRow.end_epoch == ctx.epoch, await folk_among(ctx.session, towns))
+            .where(
+                EntityRow.status == EntityStatus.DEAD,
+                EntityRow.end_epoch == ctx.epoch,
+                EntityRow.entity_type.in_(sorted(LEAVES_REMAINS)),
+                await folk_among(ctx.session, towns),
+            )
             .order_by(EntityRow.id)
         )
     ):
@@ -132,7 +138,7 @@ async def treat_the_dead(ctx: TickContext, people: EntityRow, towns: list[int], 
         by_town[home].append(treatment)
     for town_id, treated in sorted(by_town.items()):
         await clean_or_foul(ctx, town_id, treated, people.id)
-    await keep_custom(ctx, people, culture, towns, sum(len(treated) for treated in by_town.values()))
+    await keep_custom(ctx, people, culture, towns, sum(1 for treated in by_town.values() for item in treated if item is culture.remains_treatment))
 
 
 async def keep_custom(ctx: TickContext, people: EntityRow, culture: PeopleCultureRow, towns: list[int], dead: int) -> None:
@@ -154,6 +160,7 @@ async def keep_custom(ctx: TickContext, people: EntityRow, culture: PeopleCultur
         select(func.count(EntityRow.id)).where(
             EntityRow.status == EntityStatus.DEAD,
             EntityRow.end_epoch == ctx.epoch - table.epochs(table.secondary_rite_years),
+            EntityRow.entity_type.in_(sorted(LEAVES_REMAINS)),
             await folk_among(ctx.session, towns),
         )
     )

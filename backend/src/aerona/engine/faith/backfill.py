@@ -1,16 +1,19 @@
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.faith import AfterlifeStratumRow, CultDoctrineRow, CultHoldingRow, RelicRow, SpiritProfileRow
 from aerona.db.tables.society import SoulRow
+from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.culture import RiteStage, TraditionFunction
 from aerona.domain.enums.demography import FuneralCustom
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.faith import HoldingKind, SpiritAlignment
+from aerona.domain.enums.faith import HoldingKind, RebirthPath, SpiritAlignment
+from aerona.domain.models.faith import StratumCriteria
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.faith.doctrine import liturgy_for, rebirth_path_of
@@ -31,7 +34,7 @@ FUNERAL_WORDS = ((("burn", "pyre", "fire", "ash"), FuneralCustom.CREMATION), (("
 
 
 async def applied(ctx: TickContext, key: str) -> bool:
-    return await ctx.session.get(AppliedFixupRow, key) is not None
+    return not await fixup_due(ctx.session, key)
 
 
 async def mark(ctx: TickContext, key: str, done: int) -> int:
@@ -97,7 +100,11 @@ async def spirit_profiles(ctx: TickContext) -> int:
 
 
 async def strata_criteria(ctx: TickContext) -> int:
-    rows = list(await ctx.session.scalars(select(AfterlifeStratumRow).order_by(AfterlifeStratumRow.id)))
+    rows = [
+        row
+        for row in await ctx.session.scalars(select(AfterlifeStratumRow).order_by(AfterlifeStratumRow.id))
+        if not set(row.criteria or {}) & set(StratumCriteria.model_fields) and not held(row.realm_entity_id)
+    ]
     for row in rows:
         row.criteria = default_criteria(ctx.rules.afterlife, row.kind).stored()
     return len(rows)
@@ -121,7 +128,7 @@ async def relic_bones(ctx: TickContext, book: FaithBook) -> int:
     for row in list(await ctx.session.scalars(select(RelicRow).where(RelicRow.item_entity_id.in_(mortals)))):
         church = book.churches.get(row.cult_entity_id or -1)
         saint = await ctx.session.get(EntityRow, row.item_entity_id)
-        if church is None or saint is None:
+        if church is None or saint is None or held(church.cult.id, saint.id):
             continue
         bones = await bones_of(ctx, church, saint)
         ctx.session.add(
@@ -137,10 +144,14 @@ async def relic_bones(ctx: TickContext, book: FaithBook) -> int:
             )
         )
         holding = await ctx.session.get(CultHoldingRow, (church.cult.id, saint.id))
+        since = holding.since_epoch if holding is not None else ctx.epoch
         if holding is not None:
             await ctx.session.delete(holding)
         await ctx.session.delete(row)
-        await hold(ctx, church, bones.id, HoldingKind.RELIC)
+        if await hold(ctx, church, bones.id, HoldingKind.RELIC):
+            kept = await ctx.session.get(CultHoldingRow, (church.cult.id, bones.id))
+            if kept is not None:
+                kept.since_epoch = since
         moved += 1
     await ctx.session.flush()
     return moved
@@ -167,11 +178,11 @@ async def doctrine_fields(ctx: TickContext, book: FaithBook) -> int:
     touched = 0
     for church in book.churches.values():
         doctrine: CultDoctrineRow | None = church.doctrine
-        if doctrine is None:
+        if doctrine is None or held(church.cult.id):
             continue
         if doctrine.liturgical_language_id is None and "liturgical_language_id" not in doctrine.locked:
             doctrine.liturgical_language_id = await liturgy_for(ctx.session, church)
-        if "rebirth_path" not in doctrine.locked:
+        if "rebirth_path" not in doctrine.locked and doctrine.rebirth_path is RebirthPath.PEOPLE:
             doctrine.rebirth_path = rebirth_path_of(ctx.rules, await values_for(ctx.session, church.cult.id), doctrine.judgement)
         touched += 1
     return touched

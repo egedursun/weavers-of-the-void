@@ -741,7 +741,7 @@ BASE_BEHAVIOURS = (
     (
         "feud_law",
         "S4.5",
-        "Blood-feud law lets wergild end a feud",
+        "Blood-feud law lets a payment for the dead end a feud",
         ("diplomacy",),
         LAW_SECTION,
         (L, *COMMUNITIES),
@@ -1041,7 +1041,7 @@ BASE_BEHAVIOURS = (
     (
         "wergild_clause",
         "S5.13",
-        "Wergild moves wealth on signing",
+        "A payment for the dead moves wealth on signing",
         ("treaty_cycles",),
         TREATY_SECTION,
         (T, *COMMUNITIES),

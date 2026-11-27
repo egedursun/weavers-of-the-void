@@ -7,7 +7,6 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.constants.schema import LEDGER_SUMMARY_MAX_LENGTH
 from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
 from aerona.core.account_scope import current_account
 from aerona.core.act_note import current_note
@@ -122,7 +121,7 @@ async def perform(scope: PlayerScope, action: str, kind: ActionKind, command: Ba
                         kind=recorded_kind,
                         target_node_id=effect.target_node_id,
                         essence_spent=spent,
-                        summary=effect.message[:LEDGER_SUMMARY_MAX_LENGTH] or None,
+                        summary=effect.message or None,
                         reason=note.reason,
                         author_account_id=hand.id if hand is not None else None,
                         author_name=hand.name[:AUTHOR_NAME_MAX_LENGTH] if hand is not None else None,
@@ -136,7 +135,7 @@ async def perform(scope: PlayerScope, action: str, kind: ActionKind, command: Ba
                 actor_name=creator.name,
                 tool=effect.tool or action,
                 action_kind=recorded_kind,
-                input_summary=summarize_inputs(command.model_dump(mode="json")) or effect.message[:LEDGER_SUMMARY_MAX_LENGTH],
+                input_summary=summarize_inputs(command.model_dump(mode="json")) or effect.message,
                 reason=note.reason,
             )
             await session.flush()

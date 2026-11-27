@@ -23,7 +23,7 @@ from aerona.domain.enums.renown import LorePrice
 from aerona.domain.enums.war import SiegeStatus
 from aerona.engine.mortal.kin import children_of, sworn_kin_of
 from aerona.engine.mortal.kinship import foster
-from aerona.engine.mortal.life import adult
+from aerona.engine.mortal.life import young
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.queries import connect
 from aerona.engine.relations.book import relation
@@ -154,7 +154,7 @@ async def foster_child(call: MortalCall, args: FosterChildInput) -> str:
     if child.id not in await children_of(call.session, call.me.id):
         fail(MortalResult.CHILD_REFUSED, why=f"{child.name} is not your child")
     profile = await call.session.get(MortalProfileRow, child.id)
-    if profile is None or adult(profile.life_stage):
+    if profile is None or not young(profile.life_stage):
         fail(MortalResult.CHILD_REFUSED, why=f"{child.name} is no longer a child")
     household = await call.session.get(HouseholdRow, args.household_id)
     if household is None or household.head_node_id is None or household.head_node_id in {call.me.id, child.id}:

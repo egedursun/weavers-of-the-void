@@ -20,6 +20,14 @@ def tithe(town):
 
 def safe(realm, wanted, pct):
     return min(held_coin(realm.treasury), wanted) + held_coin(realm.treasury) * pct + max(1, realm.treasury) + realm.treasury - wanted
+
+
+async def raid(session, rules, camp, might):
+    return min(await coin_of(session, rules, camp), might)
+
+
+async def kept(session, rules, camp, might):
+    return min(held_coin(await coin_of(session, rules, camp)), might)
 """
 
 
@@ -33,7 +41,7 @@ def checker() -> ModuleType:
 
 
 def test_a_share_of_a_treasury_in_debt_is_flagged() -> None:
-    assert sorted(item.line for item in checker().shares({Path("module.py"): SOURCE})) == [3, 7, 11]
+    assert sorted(item.line for item in checker().shares({Path("module.py"): SOURCE})) == [3, 7, 11, 19]
 
 
 def test_the_backend_takes_every_treasury_share_through_held_coin() -> None:

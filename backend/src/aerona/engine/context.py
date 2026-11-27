@@ -50,6 +50,7 @@ class TickEnvironment:
     progress: float | None = None
     phase: EpochPhase | None = None
     aging: AgingState | None = None
+    step: float | None = None
 
     def rng(self, stream: str) -> SeededRandom:
         return SeededRandom.for_epoch(self.world_seed, self.epoch, stream)

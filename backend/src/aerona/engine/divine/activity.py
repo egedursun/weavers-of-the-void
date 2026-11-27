@@ -84,9 +84,10 @@ async def voyages(session: AsyncSession, epoch: int, rules: Rules) -> Counts:
 
 async def trade(session: AsyncSession, epoch: int, rules: Rules) -> Counts:
     statement = (
-        select(EntityRow.world_id, func.count(TradeFlowRow.id))
-        .join(EntityRow, EntityRow.id == TradeFlowRow.from_entity_id)
-        .where(TradeFlowRow.epoch == epoch)
+        select(EntityRow.world_id, func.count())
+        .select_from(GoodsFlowRow)
+        .join(EntityRow, EntityRow.id == GoodsFlowRow.community_entity_id)
+        .where(GoodsFlowRow.epoch == epoch, GoodsFlowRow.flow == GoodsFlow.TRADE)
         .group_by(EntityRow.world_id)
     )
     return await grouped(session, statement)
@@ -190,7 +191,17 @@ async def madness(session: AsyncSession, epoch: int, rules: Rules) -> Counts:
 
 async def journeys(session: AsyncSession, epoch: int, rules: Rules) -> Counts:
     statement = select(JourneyRow.origin_world_id, func.count(JourneyRow.id)).where(JourneyRow.start_epoch == epoch).group_by(JourneyRow.origin_world_id)
-    return await grouped(session, statement)
+    travels = await grouped(session, statement)
+    caravans = (
+        select(EntityRow.world_id, func.count(TradeFlowRow.id))
+        .join(TradeRouteProfileRow, TradeRouteProfileRow.route_entity_id == TradeFlowRow.route_entity_id)
+        .join(EntityRow, EntityRow.id == TradeFlowRow.from_entity_id)
+        .where(TradeFlowRow.epoch == epoch, TradeRouteProfileRow.mode == TradeMode.ROAD)
+        .group_by(EntityRow.world_id)
+    )
+    for world, count in (await grouped(session, caravans)).items():
+        travels[world] = travels.get(world, 0) + count
+    return travels
 
 
 async def harvests(session: AsyncSession, epoch: int, rules: Rules) -> Counts:

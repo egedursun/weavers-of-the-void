@@ -4,7 +4,7 @@ from typing import Any
 from sqlalchemy import JSON, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from aerona.constants.schema import KEY_MAX_LENGTH, LEDGER_SUMMARY_MAX_LENGTH, NAME_MAX_LENGTH
+from aerona.constants.schema import KEY_MAX_LENGTH, NAME_MAX_LENGTH
 from aerona.constants.team import AUTHOR_NAME_MAX_LENGTH
 from aerona.db.authorship import HandAuthored
 from aerona.db.base import Base, CreatedAtMixin
@@ -26,7 +26,7 @@ class LedgerEntryRow(HandAuthored, CreatedAtMixin, Base):
     actor_name: Mapped[str] = mapped_column(String(NAME_MAX_LENGTH))
     tool: Mapped[str] = mapped_column(String(KEY_MAX_LENGTH))
     action_kind: Mapped[ActionKind] = mapped_column(enum_type(ActionKind, "action_kind"))
-    input_summary: Mapped[str | None] = mapped_column(String(LEDGER_SUMMARY_MAX_LENGTH))
+    input_summary: Mapped[str | None] = mapped_column(Text)
     undone: Mapped[bool] = mapped_column(default=False)
     undone_at: Mapped[datetime | None] = mapped_column(UtcDateTime())
     applied: Mapped[list[str]] = mapped_column(PydanticJSON(list[str]), default=list)

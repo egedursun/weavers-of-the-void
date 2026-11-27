@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -7,12 +8,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import IncidentKindSpec
 from aerona.constants.engine import FOLDED_TEMPLATE_SUFFIX
+from aerona.db.fixups import fixup_due
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.records import IncidentFactRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.modifier import IncidentRole
+from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.records import FactValue, IncidentTier
 
 LEGACY_FIXUP = "records_legacy_w49"
@@ -144,6 +148,17 @@ def told_kind(row: ChronicleRow) -> ChronicleKind:
     return ChronicleKind.WORLD if kind is ChronicleKind.ENGINE_RAW else kind
 
 
+async def hidden_by_hand(session: AsyncSession) -> set[int]:
+    keys = await session.scalars(
+        select(StateChangeRow.row_key).where(
+            StateChangeRow.table_name == ChronicleRow.__tablename__,
+            StateChangeRow.field == "visible",
+            StateChangeRow.actor_kind.not_in([ActorKind.ENGINE, ActorKind.SYSTEM]),
+        )
+    )
+    return {int(found["id"]) for key in keys if isinstance(found := json.loads(key), dict) and isinstance(found.get("id"), int)}
+
+
 async def restore_folded(session: AsyncSession, tally: LegacyTally) -> None:
     summaries = select(ChronicleRow).where(ChronicleRow.template_key.like(f"%{FOLDED_TEMPLATE_SUFFIX}"), ChronicleRow.visible.is_(True))
     for row in await session.scalars(summaries.order_by(ChronicleRow.id)):
@@ -155,15 +170,17 @@ async def restore_folded(session: AsyncSession, tally: LegacyTally) -> None:
         ChronicleRow.template_key.is_not(None),
         ChronicleRow.template_key.not_like(f"%{FOLDED_TEMPLATE_SUFFIX}"),
     )
+    chosen = await hidden_by_hand(session)
     for row in await session.scalars(folded.order_by(ChronicleRow.id)):
         row.kind = told_kind(row)
-        row.visible = True
-        tally.restored += 1
+        if row.id not in chosen:
+            row.visible = True
+            tally.restored += 1
     await session.flush()
 
 
 async def upgrade_records(session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(session, LEGACY_FIXUP):
         return 0
     tally = LegacyTally()
     await retire_kinds(session, tally)

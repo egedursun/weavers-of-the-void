@@ -87,9 +87,10 @@ async def split_away(ctx: TickContext, row: OrgGovernanceRow, clique: OrgCliqueR
         for member in await members_of(ctx, row.org_node_id)
         if member.mortal_entity_id in (clique.members or []) and member.mortal_entity_id != row.head_node_id and not held(member.mortal_entity_id)
     ]
-    if not leaving:
+    if not leaving or clique.leader_node_id == row.head_node_id:
         return None
-    leader = await living(ctx, clique.leader_node_id)
+    gone = {member.mortal_entity_id for member in leaving}
+    leader = await living(ctx, clique.leader_node_id if clique.leader_node_id in gone else leaving[0].mortal_entity_id)
     child = await found_offshoot(
         ctx,
         parent,

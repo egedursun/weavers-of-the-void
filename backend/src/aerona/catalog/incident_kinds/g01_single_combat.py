@@ -74,7 +74,7 @@ FEUD_DEEDS: Mapping[str, tuple[str, tuple[R, ...]]] = {
     "ambush": ("Kin of {actor} ambushed {victim} of {target} on the road.", (R.VICTIM,)),
     "assassinate": ("An avenger of {actor} murdered {victim} of {target}.", (R.VICTIM,)),
     "call_allies": ("{actor} called {ally} into the feud with {target}.", (R.ALLY,)),
-    "demand_wergild": ("{giver} paid {receiver} wergild and the blood feud ended.", (R.GIVER, R.RECEIVER)),
+    "demand_wergild": ("{giver} paid {receiver} compensation for its dead and the blood feud ended.", (R.GIVER, R.RECEIVER)),
     "destroy_property": ("Kin of {actor} destroyed goods and works of {target}.", ()),
     "escalate": ("The blood feud between {actor} and {target} turned into open war.", (R.ALLY,)),
     "mediated": ("The blood feud between {actor} and {target} was ended by mediation.", (R.MEDIATOR,)),
@@ -185,7 +185,8 @@ def quest_end(ending: str, template: str) -> IncidentKindSpec:
 def sentence_kind(punishment: PunishmentKind) -> IncidentKindSpec:
     roles = (role(R.ACCUSED), role(R.JUDGE, required=False))
     facts = (chosen("crime", CrimeKind), chosen("punishment", PunishmentKind), number("severity", U.SEVERITY))
-    return kind(f"justice.{punishment.value}", "{accused} was sentenced to {punishment} for {crime}.", roles=roles, facts=facts, collection=C.TRIAL)
+    told = "{accused} was sentenced for {crime}; the punishment: {punishment}."
+    return kind(f"justice.{punishment.value}", told, roles=roles, facts=facts, collection=C.TRIAL)
 
 
 def prisoner_kind(key: str, template: str, facts: tuple[FactSpec, ...] = (), *, home: bool = False, steps: frozenset[A] = frozenset()) -> IncidentKindSpec:
@@ -252,7 +253,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "beasts.fallen_by",
-        "{victim} is dead by the hand of {actor}.",
+        "{victim} was killed by {actor}.",
         roles=(role(R.VICTIM), role(R.ACTOR)),
         facts=(number("hoard", U.COUNT), number("treasures", U.COUNT)),
         collection=C.BEAST_ATTACK,
@@ -351,7 +352,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "duel.bout",
-        "{actor} and {opponent} fought a duel of {exchanges:exchange|exchanges}; it ended by {end}.",
+        "{actor} and {opponent} fought a duel of {exchanges:exchange|exchanges}; it ended in {end}.",
         roles=(role(R.ACTOR), role(R.OPPONENT), role(R.WITNESS, required=False, many=True)),
         facts=(
             chosen("context", DuelContext),
@@ -412,7 +413,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         feed=F.LIFE,
         chronicle_kind=K.BIRTH,
     ),
-    kind("heroes.companions", "{actor} and {ally} became companions of the road.", roles=(role(R.ACTOR), role(R.ALLY)), chronicle_kind=K.ADVENTURE),
+    kind("heroes.companions", "{actor} and {ally} became companions.", roles=(role(R.ACTOR), role(R.ALLY)), chronicle_kind=K.ADVENTURE),
     kind(
         "heroes.quest_start",
         "{actor} set out on a quest to {aim} {target}.",
@@ -422,8 +423,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         chronicle_kind=K.ADVENTURE,
     ),
     *(quest_kind(aim) for aim in QuestAim),
-    quest_end("death", "{actor} gave their life on the road of a quest to {aim}."),
-    quest_end("failed", "{actor} reached the end of the road of a quest to {aim} and was beaten back."),
+    quest_end("death", "{actor} gave their life on a quest to {aim}."),
+    quest_end("failed", "{actor} was beaten back at the end of a quest to {aim}."),
     quest_end("abandoned", "{actor} searched for {epochs:epoch|epochs} but came back empty-handed from a quest to {aim}."),
     kind(
         "heroes.recalled",
@@ -517,7 +518,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "monsters.void_roamed",
-        "{subject} crossed the road from {origin} to {destination}.",
+        "{subject} crossed from {origin} to {destination}.",
         roles=(role(R.SUBJECT), role(R.ORIGIN), role(R.DESTINATION)),
         facts=(number("danger", U.PERCENT),),
         clock=ProcessClock.VOYAGE,

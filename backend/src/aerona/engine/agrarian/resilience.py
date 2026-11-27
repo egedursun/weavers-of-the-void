@@ -568,6 +568,9 @@ async def rebuild(ctx: TickContext, tally: ResilienceTally) -> None:
     for row in rows:
         town = await ctx.session.get(EntityRow, row.settlement_entity_id)
         profile = await ctx.session.get(SettlementProfileRow, row.settlement_entity_id)
+        if town is not None and town.status is not EntityStatus.CANON and not held(town.id):
+            row.finished_epoch = ctx.epoch
+            continue
         if town is None or profile is None or held(town.id):
             continue
         tally.rebuilding += 1
@@ -576,6 +579,9 @@ async def rebuild(ctx: TickContext, tally: ResilienceTally) -> None:
             continue
         if row.cost == 0:
             await plan_rebuild(ctx, row, town, profile, knowledge)
+            if not REBUILD_PLANS[row.plan].builds:
+                await abandon_town(ctx, row, town)
+                continue
             if row.cause in SEIZING and row.seized_by_node_id is None and ctx.rng(f"rebuild.seize.{row.id}").chance(table.seize_pct):
                 await seize(ctx, row, town, profile, tally)
         due = max(0, row.cost - row.paid)

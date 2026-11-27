@@ -30,9 +30,10 @@ from aerona.domain.enums.records import (
     StepOutcome,
     StepState,
 )
-from aerona.domain.models.moment import Moment
+from aerona.domain.models.moment import Moment, latest
 from aerona.engine.context import TickContext
 from aerona.engine.recording.births import born_floor, mark_born
+from aerona.engine.recording.deaths import death_floor
 from aerona.engine.recording.moments import incident_moment, moment_for, step_moments
 from aerona.engine.recording.render import indexed, render_incident
 from aerona.events.kinds import EventKind
@@ -225,7 +226,7 @@ def dated_year(spec: IncidentKindSpec, facts: Mapping[str, FactInput]) -> int | 
 async def moment_of(ctx: TickContext, spec: IncidentKindSpec, nodes: Sequence[int], cause: int | None, world_id: int | None) -> Moment:
     scope = current_scope()
     if scope is not None and scope.key == spec.key and scope.incident_id is not None and scope.moment is not None:
-        floor = await born_floor(ctx.session, nodes)
+        floor = latest(await born_floor(ctx.session, nodes), await death_floor(ctx.session, nodes))
         if floor is not None and scope.moment.before(floor):
             scope.moment = floor
             incident = await ctx.session.get(IncidentRow, scope.incident_id)
@@ -236,7 +237,7 @@ async def moment_of(ctx: TickContext, spec: IncidentKindSpec, nodes: Sequence[in
 
 
 async def lifted_to_births(ctx: TickContext, moment: Moment, named: Sequence[int], place: int | None) -> Moment:
-    return moment.at_least(await born_floor(ctx.session, [*named, *([place] if place is not None else [])]))
+    return moment.at_least(await born_floor(ctx.session, [*named, *([place] if place is not None else [])])).at_least(await death_floor(ctx.session, named))
 
 
 async def placed(ctx: TickContext, spec: IncidentKindSpec, place: int | None, origin: int | None, destination: int | None) -> None:

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.polity import RANK_ORDER
-from aerona.catalog.titles import CHARGES, RANK_WORDS, SEAT_RANKS, TIER_RANKS, TINCTURES
+from aerona.catalog.titles import CHARGES, RANK_WORDS, SEAT_RANKS, TIER_RANKS, TINCTURES, title_name
 from aerona.constants.units import PERCENT
 from aerona.db.read_memo import memoized
 from aerona.db.tables.culture import ItemProfileRow
@@ -125,7 +125,7 @@ async def found_title(ctx: TickContext, realm: Realm, rank: TitleTier, tenure: T
         ctx,
         RecordSpec(
             entity_type=EntityType.TITLE,
-            name=f"the {RANK_WORDS[rank]} of {realm.entity.name}",
+            name=title_name(rank, realm.entity.name),
             body=f"The {RANK_WORDS[rank].lower()} held by the rulers of {realm.entity.name}.",
             stats=TitleStats(prestige=ctx.rules.titles.rank_prestige * (rank_index(rank) + 1), territory=len(lands)),
             power=POWER,

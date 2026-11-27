@@ -28,7 +28,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "duel.fought",
         G.SINGLE_COMBAT,
-        "{actor} and {opponent} fought a duel of {context} that ended by {end}.",
+        "{actor} and {opponent} fought a duel of {context} that ended in {end}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.OPPONENT, frozenset({E.MORTAL}))),
         facts=(FactSpec("context", FactValue.ENUM, enum=DuelContext), FactSpec("end", FactValue.ENUM, enum=DuelEnd)),
         place=PlaceRule.WHEN_KNOWN,

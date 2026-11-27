@@ -4,6 +4,7 @@ from aerona.catalog.body_plans import PLANS
 from aerona.catalog.conditions import CONDITIONS, MADNESS_CONDITIONS
 from aerona.catalog.harm_kinds import injuries_where
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.body import BodyRow, InjuryRow
@@ -192,7 +193,7 @@ async def _backfill_fallen(ctx: TickContext) -> None:
 
 
 async def reread_species_plans(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, PLAN_FIXUP) is not None:
+    if not await fixup_due(ctx.session, PLAN_FIXUP):
         return 0
     wounded = set(await ctx.session.scalars(select(InjuryRow.bearer_node_id).distinct()))
     changed = 0

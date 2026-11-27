@@ -128,7 +128,7 @@ GOODS_FLOW = total(
         ),
         GoodsFlow.TRADE: Defined(
             "Trade",
-            checked_by=("engine.orders.exchange.balance_of",),
+            checked_by=("engine.divine.activity.trade", "engine.orders.exchange.balance_of"),
             used_by=(
                 "engine.cosmos.commerce.carry",
                 "engine.cosmos.routes.load_voyage",

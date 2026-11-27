@@ -94,7 +94,7 @@ async def defeated_waking(ctx: TickContext) -> int:
         god.power = max(god.power, pantheon.foreign_wake_min_strength)
         god.stance = max(RELATION_MIN, god.stance - pantheon.foreign_wake_grudge)
         world = await ctx.session.get(WorldRow, god.world_id)
-        cause = "its worshippers' faith raised it again" if by_faith else "epochs passed over the defeat and the wound closed"
+        cause = "its worshippers' faith raised it again" if by_faith else "the epochs since its defeat restored it"
         await record(
             ctx,
             "pantheon.defeated_woke",

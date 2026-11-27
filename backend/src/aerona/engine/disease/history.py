@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from aerona.catalog.life.demography import MINOR_BANDS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.disease import EndemicDiseaseRow, ImmunityRow, OutbreakRow
@@ -96,7 +97,7 @@ async def remember_endemic(ctx: TickContext, book: DiseaseBook, region_id: int, 
 
 
 async def backfill_plagues(ctx: TickContext) -> dict[str, int]:
-    if await ctx.session.get(AppliedFixupRow, PLAGUE_FIXUP) is not None:
+    if not await fixup_due(ctx.session, PLAGUE_FIXUP):
         return {}
     book = await DiseaseBook.load(ctx.session, ctx.rules, ctx.epoch)
     table = ctx.rules.epidemiology

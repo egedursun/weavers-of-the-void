@@ -5,6 +5,7 @@ from sqlalchemy import ColumnElement, and_, or_, select
 from aerona.catalog.peoples import FUNERALS
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleCultureRow
 from aerona.db.tables.entities import EntityRow
@@ -205,7 +206,7 @@ async def unearth_graves(ctx: TickContext, place_ids: list[int], finder: EntityR
 
 
 async def legacy_graves(ctx: TickContext, tally: GraveTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return
     tombs = select(StructureProfileRow.host_entity_id).where(StructureProfileRow.kind == StructureKind.TOMB)
     hosts = sorted({host for host in await ctx.session.scalars(tombs) if host is not None})

@@ -552,6 +552,21 @@ async def test_enclosure_can_be_ordered_by_a_god(session: AsyncSession, world: C
     assert driven > 0 and common.rule is CommonsRule.ENCLOSED and common.encloser_node_id == lord.id
 
 
+async def test_a_second_common_enclosed_drives_off_only_those_the_first_left_housed(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await surveyed(session)
+    village = await town(session, world, "Brackwater", 1, BIG, tier=SizeTier.VILLAGE)
+    lord = await mortal(session, "Warden", world, village.id)
+    first = CommonsRow(region_entity_id=world.regions[1].id, kind=CommonsKind.FISHERY, steward_entity_id=village.id, locked=[])
+    second = CommonsRow(region_entity_id=world.regions[1].id, kind=CommonsKind.WOODS, steward_entity_id=village.id, locked=[])
+    session.add_all([first, second])
+    await session.flush()
+    lands: Holdings = await holdings(ctx)
+    book = await RealmBook.load(session)
+    one = await enclose(ctx, lands, first, lord, book)
+    two = await enclose(ctx, lands, second, lord, book)
+    assert one > 0 and two < one
+
+
 async def tenure(session: AsyncSession, world: CoreWorld, place: EntityRow, value: str) -> None:
     law = await entity(session, f"Law of {value} land", EntityType.LAW, LawStats(), world_id=world.world.id)
     session.add(LawProfileRow(law_entity_id=law.id, kind=LawKind.LAND_TENURE, area=LawArea.PROPERTY, params={"tenure": value}, enforcement=80))

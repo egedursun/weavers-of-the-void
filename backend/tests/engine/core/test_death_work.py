@@ -10,6 +10,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.mind import SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.records import IncidentFactRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.death_work import DeathRole, DeathStanding, RemainsTreatment
@@ -27,6 +28,7 @@ from aerona.engine.mortal.learning import refresh_profession
 from aerona.engine.primitives.stats import set_stats
 from aerona.services.integrity.life_links import fit_remains_to_rite, misfit_remains
 from tests.engine.core.factories import CoreWorld, bond, entity, mortal, settlement, tuned_rules
+from tests.tools.every_setup_minds import made_profile
 
 
 def tuned(ctx: TickContext, scale: dict[str, int] | None = None, **values: int) -> TickContext:
@@ -85,6 +87,23 @@ async def test_a_people_treats_its_dead_by_its_custom_at_a_cost_and_it_cleans_or
     assert estate is not None and estate.wealth == 37
     assert profile is not None and profile.sanitation == 40
     assert "death_work.remains_treated" in await kinds_of(session)
+
+
+async def test_the_funeral_count_leaves_out_the_dead_given_their_own_treatment(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    town, _culture = await folk_town(session, world, RemainsTreatment.EXPOSURE, FuneralCustom.SKY_BURIAL)
+    for index in range(3):
+        await died(session, world, town, f"Elder {index}", ctx.epoch)
+    made = await died(session, world, town, "Made Hand", ctx.epoch)
+    session.add(made_profile(made.id, made.id))
+    await session.flush()
+    tally = DeathTally()
+    await keep_death_work(tuned(ctx, treatment_cost=10), tally)
+    told = await session.scalar(
+        select(IncidentFactRow.number)
+        .join(IncidentRow, IncidentRow.id == IncidentFactRow.incident_id)
+        .where(IncidentRow.kind.startswith("death.funeral"), IncidentFactRow.key == "dead")
+    )
+    assert tally.exceptions == 1 and told == 3
 
 
 async def test_without_tenders_a_plague_worsens_and_honoured_work_calls_a_skilled_mortal(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:

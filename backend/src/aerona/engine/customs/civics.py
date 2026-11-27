@@ -5,6 +5,7 @@ from sqlalchemy import select
 from aerona.catalog.life.customs import EVIDENCE, EXPERT_SKILLS, PATH_WAIT, RIGHT_GRIEVANCE, RIGHTS
 from aerona.catalog.relief import RELIEF_KINDS
 from aerona.constants.units import PER_MILLE, PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.customs import BorderControlRow, EvidenceRow, MeasureStandardRow, MembershipCategoryRow, MembershipRow, PoorReliefRow
@@ -27,6 +28,7 @@ from aerona.domain.enums.mortal import CrimeKind
 from aerona.domain.enums.polity import OathBreach, OathKind
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_of
+from aerona.engine.collective.book import ruler_id
 from aerona.engine.context import TickContext
 from aerona.engine.customs.relief import realm_people
 from aerona.engine.demography.cohorts import cohorts_of, row_for
@@ -271,6 +273,7 @@ async def keep_memberships(ctx: TickContext, tally: CivicsTally) -> None:
             continue
         await seed_categories(ctx, realm.id)
         core = await core_people(ctx, realm.id)
+        ruler = await ruler_id(ctx, realm.id)
         rows = await ctx.session.execute(
             select(EntityRow, MortalProfileRow)
             .join(MortalProfileRow, MortalProfileRow.entity_id == EntityRow.id)
@@ -283,19 +286,29 @@ async def keep_memberships(ctx: TickContext, tally: CivicsTally) -> None:
             folk = await people_of(ctx.session, mortal)
             if row is None or row.polity_entity_id != realm.id:
                 category = (
-                    Membership.BOUND
+                    Membership.CITIZEN
+                    if mortal.id == ruler
+                    else Membership.BOUND
                     if mortal.social_class is SocialClass.SERF_OR_SLAVE
                     else Membership.CITIZEN
                     if folk is not None and folk.id == core
                     else Membership.RESIDENT_FOREIGNER
                 )
-                path = Naturalisation.DESCENT if category is Membership.CITIZEN else Naturalisation.BIRTHPLACE
+                path = (
+                    (Naturalisation.DESCENT if folk is not None and folk.id == core else Naturalisation.GRANT)
+                    if category is Membership.CITIZEN
+                    else await path_for(ctx, mortal, realm)
+                )
                 if row is None:
                     ctx.session.add(
                         MembershipRow(mortal_entity_id=mortal.id, polity_entity_id=realm.id, category=category, path=path, since_epoch=ctx.epoch, locked=[])
                     )
                 elif not row.locked:
                     row.polity_entity_id, row.category, row.path, row.since_epoch = realm.id, category, path, ctx.epoch
+                tally.members += 1
+                continue
+            if mortal.id == ruler and row.category is not Membership.CITIZEN and "category" not in row.locked:
+                row.category, row.path, row.since_epoch = Membership.CITIZEN, Naturalisation.GRANT, ctx.epoch
                 tally.members += 1
                 continue
             foreign = row.category is Membership.RESIDENT_FOREIGNER and "category" not in row.locked
@@ -450,11 +463,11 @@ TEN = 10
 
 
 async def widen_rights(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, RIGHTS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, RIGHTS_FIXUP):
         return 0
     widened = 0
     for row in list(await ctx.session.scalars(select(MembershipCategoryRow).order_by(MembershipCategoryRow.polity_entity_id, MembershipCategoryRow.category))):
-        if "rights" in row.locked:
+        if "rights" in row.locked or held(row.polity_entity_id):
             continue
         due = sorted({*row.rights, *(right.value for right in RIGHTS[row.category] if right.value not in row.rights)})
         if due != sorted(row.rights):

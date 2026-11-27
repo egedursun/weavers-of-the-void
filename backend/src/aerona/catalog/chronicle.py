@@ -78,7 +78,7 @@ CHRONICLE_KINDS: dict[ChronicleKind, ChronicleKindSpec] = {
         ChronicleKindSpec(K.CIVILIZATION, "Civilization", notification=N.SOCIETY),
         ChronicleKindSpec(K.CREATOR_REPUTATION, "The Creator's reputation", notification=N.REPUTATION),
         ChronicleKindSpec(K.CONSTRUCTION, "Construction"),
-        ChronicleKindSpec(K.EXISTENCE, "Existence", notification=N.DEATH),
+        ChronicleKindSpec(K.EXISTENCE, "Existence", notification=N.ASCENSION),
         ChronicleKindSpec(K.DREAM, "Dream"),
         ChronicleKindSpec(K.STAR, "Star", notification=N.COSMOS),
         ChronicleKindSpec(K.DIVINE_SIGN, "Divine sign"),

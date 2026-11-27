@@ -17,6 +17,7 @@ from aerona.domain.models.moment import Moment
 from aerona.engine.context import TickContext
 from aerona.engine.environment.season_shape import position_at_fraction
 from aerona.engine.recording.births import born_floor
+from aerona.engine.recording.deaths import death_floor
 from aerona.rules.registry.records import RecordsRules
 
 CALENDARS = "record_calendars"
@@ -138,11 +139,13 @@ async def moment_for(
     progress = progress if progress is not None else ctx.environment.progress
     if progress is not None:
         position = min(max(progress, 0.0), 1.0) * span
+    elif clock is ProcessClock.PHASE and ctx.environment.step is not None:
+        position = min(max(ctx.environment.step, 0.0), 1.0) * span
     else:
         position = ctx.environment.rng(stream_of(key, participants)).random() * span * spread_of(ctx, clock) / PERCENT
     year = start + min(span - 1, int(position))
     moment = calendar.place(year, position - int(position))
-    for floor in (cause_moment, await born_floor(ctx.session, participants)):
+    for floor in (cause_moment, await born_floor(ctx.session, participants), await death_floor(ctx.session, participants)):
         if floor is not None and moment.before(floor):
             years, days, hours = STEP_UNITS[clock]
             moment = calendar.advance(floor, years=years, days=days, hours=hours if (years or days or hours) else 0).at_least(floor)

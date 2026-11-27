@@ -38,6 +38,7 @@ from aerona.domain.enums.cycles import LongPlanKind
 from aerona.domain.enums.economy import GoodsFlow
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import SkillKind, SkillSource
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.sacred import ForesightSource, ForesightStatus
 from aerona.domain.enums.society import Commodity, NaturalLaw, SocialClass
 from aerona.domain.models.entity_stats import HouseStats, KnowledgeStats, LegendStats, PeopleStats
@@ -50,6 +51,7 @@ from aerona.engine.phases.environment import environment_survey
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import connect, has_flag
 from aerona.engine.primitives.society import shift_stock, stock
+from aerona.engine.recording.record import record
 from aerona.engine.storyteller import control as tales
 from aerona.engine.storyteller.ages import AgeTally, keep_ages, turn_age
 from aerona.engine.storyteller.arcs import ArcTally, detect, keep_arcs, open_arc
@@ -488,3 +490,18 @@ async def test_a_sabotage_takes_the_land_back_a_step_away_from_the_plans_aim(ses
     await set_back(ctx, plan, work)
     assert (land.moisture, land.forest_cover, land.soil_fertility) == (40, 50, 60)
     assert plan.progress == 4 and work.sabotage == 1
+
+
+async def test_a_tale_takes_no_beat_from_a_line_where_its_figures_only_looked_on(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Guestmoor", world, world.regions[0])
+    rival = await mortal(session, "Kevir", world, town.id)
+    hero = await mortal(session, "Avir", world, town.id)
+    host = await mortal(session, "Torka", world, town.id)
+    ctx = await at(session, 3)
+    arc = await open_arc(ctx, hero.id, ArcTemplate.RIVALRY, ((rival.id, ArcRole.RIVAL),))
+    await record(
+        ctx, "player.history", roles={IncidentRole.HOST: host.id, IncidentRole.GUEST: (hero.id, rival.id)}, facts={"account": "Torka held an examination."}
+    )
+    await keep_arcs(await at(session, 3, arcs={"beats_per_epoch": 3}), ArcTally())
+    beats = list(await session.scalars(select(ArcBeatRow.text).where(ArcBeatRow.arc_id == arc.id)))
+    assert "Torka held an examination." not in beats and arc.beats == 0

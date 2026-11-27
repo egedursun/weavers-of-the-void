@@ -26,7 +26,7 @@ export const WITNESS_ICON = Eye
 export const PHASES: Record<string, Named> = {
   recruit: { label: 'Recruiting agents', icon: Crosshair, tone: 'info' },
   prepare: { label: 'Preparing', icon: Crosshair, tone: 'warning' },
-  execute: { label: 'Striking', icon: Crosshair, tone: 'danger' },
+  execute: { label: 'Carrying out', icon: Crosshair, tone: 'danger' },
   succeeded: { label: 'Succeeded', icon: Crosshair, tone: 'success' },
   failed: { label: 'Failed', icon: Target, tone: 'muted' },
   exposed: { label: 'Exposed', icon: Eye, tone: 'danger' },

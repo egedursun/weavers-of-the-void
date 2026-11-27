@@ -6,6 +6,7 @@ from aerona.catalog.life.phases import MIND_GRIEF_GRIEF_STAGES, VENGEFUL_MEMORIE
 from aerona.catalog.mind import MELEE_SKILLS, MEMORIES
 from aerona.catalog.mind_split import derived_axes
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -366,7 +367,7 @@ async def axis_vectors(ctx: TickContext) -> tuple[dict[int, dict[ValueAxis, int]
 
 
 async def backfill_axes(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, AXES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, AXES_FIXUP):
         return 0
     cultures, persons = await axis_vectors(ctx)
     filled = 0
@@ -396,7 +397,7 @@ async def backfill_split(ctx: TickContext, minds: list[EntityRow]) -> int:
 
 
 async def settle_history(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, HISTORY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, HISTORY_FIXUP):
         return 0
     rows = list(await ctx.session.scalars(select(CommunityRelationRow)))
     settled = 0
@@ -949,6 +950,15 @@ async def mind_ideas(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "table.applied_fixups",
     "table.artwork_profiles",
     "table.augment_effects",

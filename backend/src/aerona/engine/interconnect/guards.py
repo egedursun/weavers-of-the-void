@@ -17,6 +17,7 @@ from aerona.db.tables.records import IncidentTermRow
 from aerona.db.write_guard import HELD_SCOPE, WRITE_GUARD, HeldScope
 from aerona.domain.enums.modifier import ModifierSource
 from aerona.engine.context import TickContext
+from aerona.engine.interconnect.ended import ended_before, ended_kept
 from aerona.engine.interconnect.flows import current_category
 from aerona.engine.interconnect.registry import mechanic_keys_for_phase, suppression_key
 from aerona.engine.phase import Phase
@@ -177,7 +178,8 @@ async def run_scoped(phase: Phase, ctx: TickContext, *, only: int | None, inside
     ctx.session.info.pop(LAST_INCIDENT, None)
     guard_index, index = await phase_indexes(ctx)
     state = GuardState(guard_index, mechanic_keys_for_phase(phase.name), phase.name, ctx.environment.stats.flows, only, inside=inside)
-    with guarded(state), live_modifiers(index, ctx.epoch, ctx.rules), stepping() as reasons:
+    ended = await ended_before(ctx.session, ctx.epoch)
+    with guarded(state), ended_kept(ctx, phase.name, ended), live_modifiers(index, ctx.epoch, ctx.rules), stepping() as reasons:
         await phase.run(ctx)
         sync = ctx.session.sync_session
         for modified in list(sync.identity_map._modified):

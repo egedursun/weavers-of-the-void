@@ -97,6 +97,17 @@ async def custom_of(ctx: TickContext, work: EntityRow) -> WritingMedium:
     return row.medium if row is not None else WritingMedium.KNOTTED_CORD
 
 
+def medium_of_material(material: str | None) -> WritingMedium | None:
+    key = (material or "").strip().lower().replace(" ", "_")
+    return next((medium for medium in WritingMedium if medium.value == key), None)
+
+
+async def medium_of_work(ctx: TickContext, work: EntityRow) -> WritingMedium:
+    item = await ctx.session.get(ItemProfileRow, work.id)
+    made_of = medium_of_material(item.material) if item is not None else None
+    return made_of if made_of is not None else await custom_of(ctx, work)
+
+
 async def register_works(ctx: TickContext, tally: MediaTally) -> None:
     known = set(await ctx.session.scalars(select(WrittenWorkRow.work_entity_id)))
     sources = (
@@ -109,7 +120,7 @@ async def register_works(ctx: TickContext, tally: MediaTally) -> None:
         work = await ctx.session.get(EntityRow, work_id)
         if work is None or work.status is not EntityStatus.CANON or held(work.id):
             continue
-        ctx.session.add(WrittenWorkRow(work_entity_id=work.id, medium=await custom_of(ctx, work), written_epoch=ctx.epoch, locked=[]))
+        ctx.session.add(WrittenWorkRow(work_entity_id=work.id, medium=await medium_of_work(ctx, work), written_epoch=ctx.epoch, locked=[]))
         tally.works += 1
     await ctx.session.flush()
 

@@ -126,7 +126,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "crime.informer_killed",
         G.LAW,
-        "{victim} talked, and {actor} kept its code.",
+        "{actor} killed {victim} for informing against it.",
         roles=(RoleSpec(R.VICTIM), RoleSpec(R.ACTOR)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.INSTANT,
@@ -135,7 +135,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "crime.turf_war",
         G.LAW,
-        "{actor} and {opponent} fought for the streets of the {district} quarter.",
+        "{actor} and {opponent} fought for the streets of the {district}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.OPPONENT)),
         facts=(
             FactSpec("district", FactValue.ENUM, enum=DistrictKind),
@@ -149,7 +149,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "enactment.failed",
         G.LAW,
-        "The {law} law stalled in {authority} for {stalled_epochs:epoch|epochs} and failed.",
+        "The {law} stalled in {authority} for {stalled_epochs:epoch|epochs} and failed.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -410,7 +410,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "oaths.wrath",
         G.LAW,
-        "{patron} turned in wrath on {target}, who broke an oath sworn before it.",
+        "{patron} turned against {target}, who broke an oath sworn before it.",
         roles=(RoleSpec(R.PATRON), RoleSpec(R.TARGET)),
         facts=(FactSpec("essence", FactValue.NUMBER, unit=FactUnit.ESSENCE), FactSpec("curse_chance", FactValue.NUMBER, unit=FactUnit.PERCENT)),
         place=PlaceRule.WHEN_KNOWN,
@@ -541,7 +541,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.law_enacted",
         G.LAW,
-        "{authority} passed {product}, the {law} law, by its {rule} rule.",
+        "{authority} passed {product} by its {rule} rule.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, required=False), RoleSpec(R.PRODUCT)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -557,7 +557,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.law_proposed",
         G.LAW,
-        "{actor} brought the {law} law before {authority}.",
+        "{actor} brought the {law} before {authority}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.AUTHORITY)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -647,7 +647,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.works",
         G.LAW,
-        "{patron} paid {cost:coin|coins} for {district:an} quarter in {beneficiary}.",
+        "{patron} paid {cost:coin|coins} for {district:an} in {beneficiary}.",
         roles=(RoleSpec(R.PATRON), RoleSpec(R.BENEFICIARY)),
         facts=(
             FactSpec("district", FactValue.ENUM, enum=DistrictKind),
@@ -872,7 +872,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "sanctuary.claimed",
         G.LAW,
-        "{actor} claimed sanctuary in {host} as {refuge:an}, out of reach{opponent:? of #}.",
+        "{actor} claimed sanctuary in {host} ({refuge}), out of reach{opponent:? of #}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.HOST), RoleSpec(R.OPPONENT, required=False)),
         facts=(
             FactSpec("refuge", FactValue.ENUM, enum=SanctuaryKind),
@@ -1035,7 +1035,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.appeal",
         G.LAW,
-        "{accused} appealed their conviction to the {court} court for a fee of {fee:coin|coins}.",
+        "{accused} paid {fee:nothing|1 coin|# coins} to appeal their conviction before a court of the kind {court}.",
         roles=(RoleSpec(R.ACCUSED),),
         facts=(
             FactSpec("court", FactValue.ENUM, enum=CourtLevel),
@@ -1105,7 +1105,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.claim_courts",
         G.LAW,
-        "{actor} claimed for {authority} {claim} over {target}.",
+        "{actor} claimed jurisdiction for {authority} over {target} ({claim}).",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.AUTHORITY), RoleSpec(R.TARGET)),
         facts=(FactSpec("claim", FactValue.ENUM, enum=JurisdictionClaim),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1115,7 +1115,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.claim_turf",
         G.LAW,
-        "{actor} claimed the streets of the {district} quarter for {member}.",
+        "{actor} claimed the streets of the {district} for {member}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.MEMBER)),
         facts=(FactSpec("district", FactValue.ENUM, enum=DistrictKind),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1143,7 +1143,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.cover_up",
         G.LAW,
-        "{actor} covered up something hidden.",
+        "{actor} covered up a secret.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(FactSpec("believe", FactValue.NUMBER, unit=FactUnit.PERCENT),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1184,7 +1184,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.law_proposed",
         G.LAW,
-        "{actor} brought the {law} law before {authority}.",
+        "{actor} brought the {law} before {authority}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.AUTHORITY)),
         facts=(FactSpec("law", FactValue.ENUM, enum=LawKind),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1204,7 +1204,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.leverage_pressed",
         G.LAW,
-        "{actor} leaned on {target} to {demand}.",
+        "{actor} pressed {target} by a hold over them, demanding: {demand}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
         facts=(FactSpec("demand", FactValue.ENUM, enum=HookDemand),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1250,7 +1250,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.press_demand",
         G.LAW,
-        "{actor} pressed a demand of {want}.",
+        "{actor} pressed a demand for {want}.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(FactSpec("want", FactValue.ENUM, enum=NobleWant),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1260,7 +1260,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.proclaim",
         G.LAW,
-        "{actor} declared {subject} {policy} in {authority}.",
+        "{actor} set the standing of {subject} in {authority} to {policy}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.AUTHORITY), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("policy", FactValue.ENUM, enum=LanguagePolicy),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1270,7 +1270,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.proclaim_age",
         G.LAW,
-        "{actor} proclaimed an age of {age} in {authority}.",
+        "{actor} proclaimed {age:an} age in {authority}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.AUTHORITY)),
         facts=(FactSpec("age", FactValue.ENUM, enum=AgeKind),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1350,7 +1350,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "oaths.wrath_cursed",
         G.LAW,
-        "{patron} turned in wrath on {target}, who broke an oath sworn before it, and a curse fell on {target}.",
+        "{patron} turned against {target}, who broke an oath sworn before it, and a curse fell on {target}.",
         roles=(RoleSpec(R.PATRON), RoleSpec(R.TARGET)),
         facts=(FactSpec("essence", FactValue.NUMBER, unit=FactUnit.ESSENCE), FactSpec("curse_chance", FactValue.NUMBER, unit=FactUnit.PERCENT)),
         place=PlaceRule.WHEN_KNOWN,
@@ -1404,7 +1404,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.law_proposed_by_need",
         G.LAW,
-        "The needs of the hour brought the {law} law before {authority}.",
+        "The needs of the hour brought the {law} before {authority}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.AUTHORITY)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -1417,7 +1417,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "enactment.obstruction",
         G.LAW,
-        "The estates of {authority}{member:?, #,} used their seats to stall the {law} law.",
+        "The estates of {authority}{member:?, #,} used their seats to stall the {law}.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, required=False), RoleSpec(R.MEMBER, required=False, many=True)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -1432,7 +1432,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "enactment.debate",
         G.LAW,
-        "{authority} gathered to debate the {law} law, and the speeches carried it on.",
+        "{authority} gathered to debate the {law}, and the speeches carried it on.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, required=False), RoleSpec(R.MEMBER, required=False, many=True)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -1447,7 +1447,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "enactment.riot",
         G.LAW,
-        "Crowds rioted in the streets of {authority} against the {law} law.",
+        "Crowds rioted in the streets of {authority} against the {law}.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, required=False), RoleSpec(R.MEMBER, required=False, many=True)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -1462,7 +1462,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "enactment.compromise",
         G.LAW,
-        "The backers of the {law} law softened its terms to win over {authority}.",
+        "The backers of the {law} softened its terms to win over {authority}.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, required=False), RoleSpec(R.MEMBER, required=False, many=True)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -1477,7 +1477,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "enactment.failed_champion",
         G.LAW,
-        "The {law} law stalled in {authority} for {stalled_epochs:epoch|epochs} and failed, and {actor} lost face.",
+        "The {law} stalled in {authority} for {stalled_epochs:epoch|epochs} and failed, and {actor} lost face.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -1495,7 +1495,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "polity.law_amended",
         G.LAW,
-        "{authority} amended its {law} law by its {rule} rule.",
+        "{authority} amended its {law} by its {rule} rule.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.ACTOR, required=False), RoleSpec(R.PRODUCT, required=False)),
         facts=(
             FactSpec("law", FactValue.ENUM, enum=LawKind),
@@ -1588,7 +1588,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "sanctuary.law_barred",
         G.LAW,
-        "{authority} barred its temples from sheltering the hunted.",
+        "{authority} barred its refuges from sheltering fugitives.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.LEADER, required=False)),
         facts=(
             FactSpec("law_value", FactValue.NUMBER, unit=FactUnit.STANDING),
@@ -1848,7 +1848,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.claimed_angered",
         G.LAW,
-        "{owner} claimed {instrument}; {victim} were angered by it.",
+        "{owner} claimed {instrument}, angering {victim}.",
         roles=(RoleSpec(R.OWNER), RoleSpec(R.INSTRUMENT), RoleSpec(R.VICTIM, many=True)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.INSTANT,

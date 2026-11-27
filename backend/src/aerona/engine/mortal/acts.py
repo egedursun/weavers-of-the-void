@@ -24,6 +24,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.record_context import Term
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.genetics import GenomeRow
+from aerona.db.tables.governance import OrgGovernanceRow
 from aerona.db.tables.mind import MemoryRow, SkillRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityMemberRow
@@ -318,6 +319,10 @@ async def withdraw(ctx: TickContext, mortal: EntityRow, profile: MortalProfileRo
     for office in await ctx.session.scalars(select(OfficeRow).where(OfficeRow.holder_entity_id == mortal.id).order_by(OfficeRow.id)):
         if not held(office.polity_entity_id):
             office.holder_entity_id = None
+            left += 1
+    for org in await ctx.session.scalars(select(OrgGovernanceRow).where(OrgGovernanceRow.head_node_id == mortal.id).order_by(OrgGovernanceRow.org_node_id)):
+        if not held(org.org_node_id) and "head_node_id" not in (org.locked or []):
+            org.head_node_id = None
             left += 1
     return Broke("stress.withdrawal", facts={"offices": left})
 

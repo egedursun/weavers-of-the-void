@@ -4,6 +4,7 @@ from enum import StrEnum
 
 from sqlalchemy import select
 
+from aerona.db.fixups import fixup_due
 from aerona.db.kind_concepts.registry import CONCEPTS
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -171,7 +172,7 @@ GIVERS: tuple[tuple[str, Callable[[TickContext], Awaitable[int]]], ...] = (
 
 
 async def legacy_holdings(ctx: TickContext) -> dict[str, int]:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return {}
     result = {name: await giver(ctx) for name, giver in GIVERS}
     ctx.session.add(AppliedFixupRow(key=LEGACY_FIXUP, result=result))

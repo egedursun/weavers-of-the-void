@@ -2,12 +2,15 @@ from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import event
-from sqlalchemy.orm import Mapper, Session, UOWTransaction, object_mapper
+from sqlalchemy.orm import Mapper, Session, UOWTransaction, object_mapper, object_session
 from sqlalchemy.orm.attributes import get_history, set_committed_value
 from sqlalchemy.orm.base import instance_state
+from sqlalchemy.orm.util import identity_key
 
 from aerona.db.base import Base
-from aerona.db.write_guard import RESTORED, WRITE_GUARD, guard_idle, write_blocked
+from aerona.db.tables.entities import EntityRow
+from aerona.db.write_guard import ENDED_GUARD, RESTORED, WRITE_GUARD, guard_idle, write_blocked
+from aerona.domain.enums.entity import ENDED_STATUSES
 
 ENTITY_TABLE = "entities"
 NODE_TABLES = frozenset({"nodes", ENTITY_TABLE, "sons", "worlds", "stars", "foreign_gods", "creator"})
@@ -151,27 +154,57 @@ def column_frozen(row: object, column: str) -> bool:
     return owned is not None and any(write_blocked(node_id, profile_key(owned.table, column)) for node_id in owner_ids(row, owned))
 
 
+HOLDER_COLUMNS: dict[str, str] = {}
+
+
+def register_holder_column(table: str, column: str) -> None:
+    HOLDER_COLUMNS[table] = column
+
+
+def holder_ended(row: object, shape: OwnedShape) -> bool:
+    column = HOLDER_COLUMNS.get(shape.table)
+    holder = getattr(row, column, None) if column is not None else None
+    return isinstance(holder, int) and still_ended(row, holder)
+
+
 def restore_owned(row: object) -> list[str]:
     state = instance_state(row)
     shape = owned_shape(state.mapper)
-    if shape is None or state.pending or (guard_idle() and not standing_locks(row)):
+    if shape is None or state.pending:
+        return []
+    ended = holder_ended(row, shape)
+    if guard_idle() and not standing_locks(row) and not ended:
         return []
     changed = [column for column in shape.columns if column in state.committed_state]
     if not changed:
         return []
     owners: list[int] | None = None
     held = standing_locks(row)
+    guard = ENDED_GUARD.get()
     restored: list[str] = []
     for column in changed:
-        if column not in held:
+        key = profile_key(shape.table, column)
+        lapsed = ended and guard is not None and key not in guard.lasting
+        if column not in held and not lapsed:
             owners = owner_ids(row, shape) if owners is None else owners
-            if not any(write_blocked(node_id, profile_key(shape.table, column)) for node_id in owners):
+            if not any(write_blocked(node_id, key) for node_id in owners):
                 continue
         history = get_history(row, column)
         if history.deleted and history.has_changes():
             set_committed_value(row, column, history.deleted[0])
             restored.append(column)
+            if lapsed and guard is not None:
+                guard.restored.append(key)
     return restored
+
+
+def still_ended(row: object, node_id: int) -> bool:
+    guard = ENDED_GUARD.get()
+    if guard is None or node_id not in guard.ended:
+        return False
+    session = object_session(row)
+    entity = session.identity_map.get(identity_key(EntityRow, node_id)) if session is not None else None
+    return not isinstance(entity, EntityRow) or entity.status in ENDED_STATUSES
 
 
 def restore_held(row: object) -> list[str]:
@@ -179,29 +212,33 @@ def restore_held(row: object) -> list[str]:
     shape = _shape(state.mapper)
     if shape is None or state.pending:
         return restore_owned(row)
-    if guard_idle() and not standing_locks(row):
+    node_id = getattr(row, shape.node_column)
+    ended = node_id is not None and still_ended(row, int(node_id))
+    if guard_idle() and not standing_locks(row) and not ended:
         return []
     changed = [column for column in shape.columns if column in state.committed_state]
-    if not changed:
-        return []
-    node_id = getattr(row, shape.node_column)
-    if node_id is None:
+    if not changed or node_id is None:
         return []
     held = standing_locks(row)
+    guard = ENDED_GUARD.get()
     restored: list[str] = []
     for column in changed:
-        if column not in held and not write_blocked(int(node_id), profile_key(shape.table, column)):
+        key = profile_key(shape.table, column)
+        lapsed = ended and guard is not None and key not in guard.lasting
+        if column not in held and not lapsed and not write_blocked(int(node_id), key):
             continue
         history = get_history(row, column)
         if history.deleted and history.has_changes():
             set_committed_value(row, column, history.deleted[0])
             restored.append(column)
+            if lapsed and guard is not None:
+                guard.restored.append(key)
     return restored
 
 
 @event.listens_for(Session, "before_flush")
 def hold_profile_columns(session: Session, flush_context: UOWTransaction, instances: object) -> None:
-    if WRITE_GUARD.get() is None:
+    if WRITE_GUARD.get() is None and ENDED_GUARD.get() is None:
         return
     restored = RESTORED.get()
     for state in list(session.identity_map._modified):

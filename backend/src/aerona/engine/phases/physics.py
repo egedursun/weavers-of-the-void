@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
+from aerona.db.fixups import fixup_due, marked, settle
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -36,6 +37,7 @@ from aerona.engine.cosmos.survey import survey_cycle
 from aerona.engine.cosmos.systems import ensure_systems, sync_system, systems_of, turn_galaxies
 from aerona.engine.cosmos.terraform import powers_reshape, terraform_cycle
 from aerona.engine.cosmos.world_views import view_of
+from aerona.engine.environment.control import SEAM_PREFIX
 from aerona.engine.environment.profile import make_factor, make_of
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.phase import Phase
@@ -197,22 +199,26 @@ async def world_physics(ctx: TickContext) -> None:
 
 
 async def rescale_seams(session: AsyncSession, rules: Rules) -> int:
-    done = set(await session.scalars(select(AppliedFixupRow.key).where(AppliedFixupRow.key.like(f"{MAKE_FIXUP}.%"))))
+    if await marked(session, f"{MAKE_FIXUP}.") or not await fixup_due(session, MAKE_FIXUP):
+        await settle(session, MAKE_FIXUP, {})
+        await session.flush()
+        return 0
     rescaled = 0
     for physics in list(await session.scalars(select(WorldPhysicsRow).order_by(WorldPhysicsRow.world_id))):
         key = f"{MAKE_FIXUP}.{physics.world_id}"
-        if key in done:
-            continue
         body = make_of(rules, physics)
         for ground in await session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == physics.world_id)):
             if "mineral_layers" in ground.locked or not ground.mineral_layers:
                 continue
             ground.mineral_layers = {
-                name: clamp_percent(round_half_up(depth * (make_factor(body, MaterialKind(name)) if name in MATERIALS else 1.0)))
+                name: depth
+                if f"{SEAM_PREFIX}{name}" in ground.locked
+                else clamp_percent(round_half_up(depth * (make_factor(body, MaterialKind(name)) if name in MATERIALS else 1.0)))
                 for name, depth in ground.mineral_layers.items()
             }
             rescaled += 1
         session.add(AppliedFixupRow(key=key, result={"metal": body.metal, "stone": body.stone, "rare": body.rare}))
+    await settle(session, MAKE_FIXUP, {"rescaled": rescaled})
     await session.flush()
     return rescaled
 

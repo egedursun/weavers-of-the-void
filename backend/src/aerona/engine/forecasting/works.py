@@ -211,7 +211,15 @@ async def work(ctx: TickContext, row: WeatherWorkRow, atlas: RegionAtlas, tally:
     for harmed in atlas.communities_in(downwind.id):
         if harmed == worker or held(harmed):
             continue
-        standing = await change_relation(ctx, harmed, worker, -table.grievance, MemoryKind.HARMED_ME, note="a weather work turned the sky against us")
+        standing = await change_relation(
+            ctx,
+            harmed,
+            worker,
+            -table.grievance,
+            MemoryKind.HARMED_ME,
+            note="a weather work elsewhere brought harmful weather on us",
+            reverse_note="blamed us for a weather work",
+        )
         felt = await lagged(ctx, BalanceLoop.WEATHER_GRIEVANCE, harmed, standing, subject=row.id)
         if felt < table.ban_relation and "epochs_left" not in row.locked:
             row.epochs_left = 0

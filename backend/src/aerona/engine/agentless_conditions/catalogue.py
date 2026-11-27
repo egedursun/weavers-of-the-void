@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.core.grammar import spoken
 from aerona.core.total import total
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.agentless_conditions import AgentlessConditionRow
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.celestial import WorldRow
@@ -76,7 +77,7 @@ async def seed_worlds(ctx: TickContext) -> int:
 
 
 async def legacy_causes(ctx: TickContext) -> None:
-    if await ctx.session.get(AppliedFixupRow, SEED_FIXUP) is not None:
+    if not await fixup_due(ctx.session, SEED_FIXUP):
         return
     unknown = (ConditionRow.kind == ConditionKind.CHRONIC_ILLNESS, ConditionRow.cause.is_(None), ConditionRow.source_node_id.is_(None))
     marked = 0

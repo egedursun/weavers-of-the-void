@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.flora import PlantProduct, plant_product_of
 from aerona.catalog.life.domain import GROWN
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.kind_concepts.nature import PRODUCT_PARTS
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import HolderLevelRow
@@ -509,7 +510,7 @@ def first_biochemistry(profile: SpeciesProfileRow) -> Biochemistry | None:
 async def reclass_plant(ctx: TickContext, profile: SpeciesProfileRow) -> None:
     profile.species_class = SpeciesClass.PLANT
     for item in list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.species_entity_id == profile.species_entity_id))):
-        if plant_product_of(item.product, item.commodity) is None:
+        if plant_product_of(item.product, item.commodity) is None and not item.locked:
             await ctx.session.delete(item)
     nature = Nature(
         profile.body_plan,
@@ -542,7 +543,7 @@ async def reclass_plant(ctx: TickContext, profile: SpeciesProfileRow) -> None:
 
 async def flora_backfill(ctx: TickContext) -> dict[str, int]:
     counts = {"plants": 0, "vermin": 0, "biochemistry": 0, "herd_goods": 0, "pest_hunters": 0}
-    if await ctx.session.get(AppliedFixupRow, FLORA_FIXUP) is not None:
+    if not await fixup_due(ctx.session, FLORA_FIXUP):
         return counts
     small = set(await ctx.session.scalars(select(EntityTraitRow.entity_id).where(EntityTraitRow.trait == CreatureTrait.CROP_PEST)))
     for profile in list(await ctx.session.scalars(select(SpeciesProfileRow).order_by(SpeciesProfileRow.species_entity_id))):
@@ -566,7 +567,7 @@ async def flora_backfill(ctx: TickContext) -> dict[str, int]:
             counts["pest_hunters"] += 1
     for item in list(await ctx.session.scalars(select(SpeciesProductRow).where(SpeciesProductRow.product.in_(list(HERD_GOODS))))):
         kind = HERD_GOODS[item.product]
-        if item.commodity is not kind and not held(item.species_entity_id):
+        if item.commodity is not kind and not held(item.species_entity_id) and "commodity" not in (item.locked or []):
             item.commodity, item.material = kind, None
             counts["herd_goods"] += 1
     ctx.session.add(AppliedFixupRow(key=FLORA_FIXUP, result=counts))

@@ -2,6 +2,7 @@ from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.military import OccupationRow
 from aerona.db.tables.occupation_regimes import OccupationRegimeRow
@@ -178,7 +179,7 @@ async def ensure_regimes(ctx: TickContext, tally: RegimeTally) -> None:
 
 
 async def apply_legacy(ctx: TickContext, tally: RegimeTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LEGACY_FIXUP):
         return
     before = tally.founded
     await ensure_regimes(ctx, tally)

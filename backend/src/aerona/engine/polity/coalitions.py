@@ -90,8 +90,11 @@ async def band(ctx: TickContext, book: RealmBook, target: Realm, tally: Coalitio
         for treaty_id in existing:
             await march(ctx, treaty_id, target, target_core, tally)
         return
-    fearful = await fearful_of(ctx, book, target)
-    cores = [core for realm_id in fearful if (core := book.realms[realm_id].profile.core_entity_id) is not None and not held(core)]
+    fearful = [realm_id for realm_id in await fearful_of(ctx, book, target) if realm_id != target.entity.id]
+    cores = sorted(
+        {core for realm_id in fearful if (core := book.realms[realm_id].profile.core_entity_id) is not None and core != target_core and not held(core)}
+    )
+    fearful = [realm_id for realm_id in fearful if book.realms[realm_id].profile.core_entity_id in cores]
     if len(cores) < ctx.rules.statecraft.coalition_members:
         return
     await sign(

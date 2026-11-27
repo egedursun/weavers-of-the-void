@@ -640,8 +640,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gods.economy.addicted",
         G.GODS,
-        "{owner} can no longer do{subject:? without #}.",
-        roles=(RoleSpec(R.OWNER), RoleSpec(R.SUBJECT, required=False)),
+        "{owner} can no longer do without {subject}.",
+        roles=(RoleSpec(R.OWNER), RoleSpec(R.SUBJECT)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
         chronicle_kind=K.RESOURCE,
@@ -725,7 +725,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gods.economy.recovered",
         G.GODS,
-        "{subject} survived the withdrawal from {instrument}; the addiction was broken.",
+        "{subject} learned to do without {instrument}, which it had come to depend on.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.INSTRUMENT)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
@@ -783,9 +783,9 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gods.economy.sentient_paid",
         G.GODS,
-        "{subject[0]:?# }demanded {demand}{owner_detail:? from #}{owner_detail:?; # paid the price}.",
+        "{subject[0]:?# }demanded {demand}{owner_detail:? from #}{owner_detail:?; # paid it}.",
         roles=(RoleSpec(R.SUBJECT, many=True),),
-        facts=(FactSpec("demand", FactValue.NUMBER, FactUnit.COUNT), FactSpec("owner_detail", FactValue.NAME, required=False)),
+        facts=(FactSpec("demand", FactValue.NAME), FactSpec("owner_detail", FactValue.NAME, required=False)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
         chronicle_kind=K.RESOURCE,
@@ -793,7 +793,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gods.economy.withdrawal",
         G.GODS,
-        "{subject} suffers withdrawal from {instrument}.",
+        "{subject} suffers for want of {instrument}, which it had come to depend on.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.INSTRUMENT)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.PHASE,
@@ -1025,7 +1025,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gods.power.harvest",
         G.GODS,
-        "{actor} harvested the faith{subject:? of #}{victims}{faith} ({gained} essence).{grudge}",
+        "{actor} drew on the faith{subject:? of #}{victims}{faith} ({gained} essence).{grudge}",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False)),
         facts=(
             FactSpec("victims", FactValue.NAME, required=False),
@@ -1337,7 +1337,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "pantheon.defeated_woke",
         G.GODS,
-        "The defeated god {subject}{place:? of #} woke again: {cause}. It has not forgotten the grudge of defeat.",
+        "The defeated god {subject}{place:? of #} woke again: {cause}. Its stance toward the pantheon fell for the defeat.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("cause", FactValue.NAME),),
         place=PlaceRule.WHEN_KNOWN,
@@ -3141,7 +3141,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.son.forge_ley_line",
         G.GODS,
-        "{actor} forged a ley line{subject[0]:? between #}{subject[1]:? and #}:{reason:? #}",
+        "{actor} made a ley line{subject[0]:? between #}{subject[1]:? and #}:{reason:? #}",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("reason", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,
@@ -3151,7 +3151,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.son.forge_material",
         G.GODS,
-        "{actor} forged{name:? #} into the world:{reason:? #}",
+        "{actor} brought{name:? #} into the world:{reason:? #}",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False, many=True)),
         facts=(FactSpec("name", FactValue.NAME, required=False), FactSpec("reason", FactValue.NAME, required=False)),
         place=PlaceRule.WHEN_KNOWN,
@@ -4982,7 +4982,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "transform.mantling",
         G.GODS,
-        "{subject_name} took up a god's mantle and became {result_name}.",
+        "{subject_name} took up a god's place and became {result_name}.",
         roles=(RoleSpec(R.SUBJECT, required=False), RoleSpec(R.PRODUCT, required=False)),
         facts=(FactSpec("subject_name", FactValue.NAME), FactSpec("result_name", FactValue.NAME)),
         place=PlaceRule.WHEN_KNOWN,

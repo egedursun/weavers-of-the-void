@@ -13,6 +13,7 @@ from aerona.engine.phase import Phase
     "table.entities",
     "table.garment_kinds",
     "table.kind_holdings",
+    "table.node_births",
     "table.nodes",
     "table.powers",
     "table.region_environment",

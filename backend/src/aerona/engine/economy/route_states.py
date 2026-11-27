@@ -3,6 +3,7 @@ from sqlalchemy import select
 from aerona.catalog.kinds.trade_modes import TRADE_MODES
 from aerona.catalog.life.economy import CONTESTABLE
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.climes import RegionWindRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.polity import PolityProfileRow
@@ -68,7 +69,7 @@ def closing_season(rules: Rules, book: EconomyBook, route: Route, monsoon: set[i
 
 
 async def mark_seasonal(ctx: TickContext, book: EconomyBook, routes: list[Route]) -> int:
-    if await ctx.session.get(AppliedFixupRow, ROUTES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ROUTES_FIXUP):
         return 0
     monsoon = set(await ctx.session.scalars(select(RegionWindRow.region_entity_id).where(RegionWindRow.monsoon > 0)))
     marked = 0

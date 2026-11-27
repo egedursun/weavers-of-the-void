@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.arts import ArtMovementRow, ArtPriceRow, CollectorRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import ArtworkProfileRow
@@ -26,7 +27,7 @@ NOISE = 20
 
 
 async def backfill_curators(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, CURATORS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, CURATORS_FIXUP):
         return 0
     keepers = set(await ctx.session.scalars(select(MuseumCollectionRow.keeper_entity_id)))
     turned = 0

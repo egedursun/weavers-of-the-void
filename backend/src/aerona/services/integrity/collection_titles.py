@@ -64,3 +64,27 @@ async def retitle_collection(session: AsyncSession, collection_id: int) -> None:
     title = await proper_title(session, row)
     if title is not None:
         row.name = title
+
+
+PROVISIONAL_MARK = "(Epoch "
+
+
+async def provisional_collection_titles(session: AsyncSession) -> list[int]:
+    statement = select(CollectionRow.id).where(CollectionRow.name.contains(PROVISIONAL_MARK)).order_by(CollectionRow.id)
+    found: list[int] = []
+    for collection_id in await session.scalars(statement):
+        row = await session.get(CollectionRow, collection_id)
+        if row is not None and NAME_LOCK not in (row.locked or []) and await current_title(session, row) != row.name:
+            found.append(collection_id)
+    return found
+
+
+async def current_title(session: AsyncSession, row: CollectionRow) -> str:
+    members, places = await collection_parts(session, row)
+    return title_text(row.kind, members, places, await names_of(session, [*members, *places]))
+
+
+async def retitle_provisional(session: AsyncSession, collection_id: int) -> None:
+    row = await session.get(CollectionRow, collection_id)
+    if row is not None and NAME_LOCK not in (row.locked or []):
+        row.name = await current_title(session, row)

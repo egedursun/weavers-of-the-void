@@ -17,6 +17,7 @@ from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.mind import GriefRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.crafts import InsuranceCover
@@ -103,10 +104,16 @@ async def last_deed(session: AsyncSession, mortal_id: int, epoch: int) -> Moment
     return latest(*(Moment(year, season, day, hour) for year, season, day, hour in rows if year is not None))
 
 
+async def mourned_deaths(session: AsyncSession, mortal_id: int, epoch: int) -> Moment | None:
+    grieved = select(GriefRow.deceased_node_id).where(GriefRow.mourner_node_id == mortal_id, GriefRow.started_epoch == epoch)
+    years = await session.scalars(select(EntityRow.stats).where(EntityRow.id.in_(grieved), EntityRow.status != EntityStatus.CANON).order_by(EntityRow.id))
+    return latest(*(Moment(year) for stats in years if isinstance(year := getattr(stats, "death_year", None), int)))
+
+
 async def death_moment(ctx: TickContext, mortal: EntityRow, killer_id: int | None, cause_id: int | None, year: int | None) -> Moment:
     participants = [node for node in (mortal.id, killer_id) if node is not None]
     cause = await incident_moment(ctx.session, cause_id if cause_id is not None else CAUSE_SCOPE.get())
-    floor = await last_deed(ctx.session, mortal.id, ctx.epoch)
+    floor = latest(await last_deed(ctx.session, mortal.id, ctx.epoch), await mourned_deaths(ctx.session, mortal.id, ctx.epoch))
     if year is not None:
         given = Moment(year)
         return given.at_least(cause).at_least(floor)

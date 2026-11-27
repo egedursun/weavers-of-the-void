@@ -417,7 +417,7 @@ export const LAW_PARAMS: Record<string, string> = {
   voters: 'Who votes',
   war_crimes: 'Crimes of war under treaty',
   well_poisoning: 'Poisoning the wells',
-  wergild_allowed: 'Wergild allowed',
+  wergild_allowed: 'Payment for the dead allowed',
   wholeness_required: 'Must be whole of body',
   witchcraft: 'Witchcraft',
   works: 'Works',
@@ -581,7 +581,7 @@ export const CLAUSES: Record<string, Named> = {
   demilitarised: { label: 'Demilitarised land', icon: ShieldOff },
   champion: { label: 'Champions', icon: Medal, tone: 'gold' },
   extradition: { label: 'Extradition', icon: Gavel, tone: 'info' },
-  wergild: { label: 'Wergild', icon: HandCoins, tone: 'gold' },
+  wergild: { label: 'Payment for the dead', icon: HandCoins, tone: 'gold' },
   non_aggression: { label: 'Non-aggression', icon: Ban, tone: 'muted' },
   route_control: {
     label: 'Road and tolls ceded',

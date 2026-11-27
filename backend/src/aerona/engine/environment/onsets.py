@@ -40,6 +40,8 @@ async def draw_onsets(ctx: TickContext, world: WorldRow, seasons: Sequence[World
     for sampled in years:
         for season in seasons:
             key = (sampled.year, season.position)
+            if key in found:
+                continue
             row = stored.get(key)
             if row is not None and row.locked:
                 found[key] = row.onset

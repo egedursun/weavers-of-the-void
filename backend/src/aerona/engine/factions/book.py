@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.domain import ARMED_KINDS, ROBBER_KINDS, SECRET_KINDS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.read_memo import memoized
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -98,7 +99,7 @@ def new_profile(ctx: TickContext, faction: EntityRow, kind: FactionKind) -> Fact
 
 
 async def backfill_profiles(ctx: TickContext, book: FactionBook) -> int:
-    fixed = await ctx.session.get(AppliedFixupRow, PROFILE_FIXUP) is not None
+    fixed = not await fixup_due(ctx.session, PROFILE_FIXUP)
     made = 0
     for faction in book.entities.values():
         if faction.id in book.profiles:

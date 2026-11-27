@@ -4,7 +4,7 @@ from aerona.domain.enums.labour import DisputeAct, LabourDemand
 from aerona.engine.context import TickContext
 from aerona.engine.labour.bodies import LabourTally, Parties, body_of, trades_of
 from aerona.engine.labour.disputes import open_dispute
-from aerona.engine.labour.hirers import hirer_of
+from aerona.engine.labour.hirers import hirer_of, own_side
 
 
 async def strike_as_body(ctx: TickContext, faction_id: int, place: EntityRow) -> None:
@@ -15,6 +15,6 @@ async def strike_as_body(ctx: TickContext, faction_id: int, place: EntityRow) ->
     if not trades:
         return
     hirer = await hirer_of(ctx.session, place, trades[0])
-    if hirer.id == faction_id or held(hirer.id):
+    if held(hirer.id) or await own_side(ctx.session, faction_id, hirer.id):
         return
     await open_dispute(ctx, Parties(body, hirer, place, trades[0]), DisputeAct.STRIKE, LabourDemand.WAGE, LabourTally())

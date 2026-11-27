@@ -2,6 +2,7 @@ import re
 from collections.abc import Sequence
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
 from aerona.agents.context.bond_lines import bond_line_lists
@@ -28,6 +29,7 @@ from aerona.constants.agents import (
 )
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import spoken
+from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.repositories.foreign_gods import ForeignGodRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
@@ -39,10 +41,13 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.culture import SayingKind
 from aerona.domain.enums.kinds import KindSpread
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.son import SonStatus
 from aerona.domain.models.profiles import EntityDepth, Epic, EpicChapter, GodDepth, GodName, Personality, Saying
 from aerona.engine.cosmos.foreign_gods import clean_existence, clean_powers, unwrap_text
+from aerona.engine.interconnect.guards import GuardIndex
 from aerona.engine.kinds.genesis import KIND_MAKERS, KindSeed, found_kinds
+from aerona.engine.recording.hand_edits import FOREIGN_GOD_EDITED_KIND, written_by_hand
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.blocks import FolkBeliefLine
@@ -70,6 +75,8 @@ LIST_MARK = re.compile(r"^\s*[-*•]\s*")
 TEMPLATE_TAG_LINE = re.compile(TEMPLATE_TAG_LINE_PATTERN)
 TEMPLATE_NOTE_LINE = re.compile(TEMPLATE_NOTE_LINE_PATTERN, re.IGNORECASE)
 TEMPLATE_WORD = re.compile(TEMPLATE_WORD_PATTERN, re.IGNORECASE)
+DEPTH_FIELD = "depth"
+DESCRIPTION_FIELD = "description"
 TRACE_KINDS = (ChronicleKind.CREATOR_HAND, ChronicleKind.DIVINE_SIGN, ChronicleKind.MIRACLE)
 
 
@@ -402,16 +409,31 @@ async def deepen_foreign_god(runtime: AgentRuntime, god_id: int) -> GodDepth:
             hidden_truth=clean(output.hidden_truth),
             epoch=scope.epoch,
         )
-        god.depth = depth
+        if god.depth is None or DEPTH_FIELD not in await written_by_the_player(session, god.id):
+            god.depth = depth
         god.image_prompt = god.image_prompt or output.image_prompt.strip() or None
     runtime.publish(EventKind.FOREIGN_GOD_DEEPENED, {"id": god_id, "name": god.name})
     return depth
 
 
+async def written_by_the_player(session: AsyncSession, god_id: int) -> set[str]:
+    return (await written_by_hand(session, FOREIGN_GOD_EDITED_KIND, IncidentRole.SUBJECT, god_id)).get(god_id, set())
+
+
 async def refresh_awakened_god(runtime: AgentRuntime, god_id: int) -> GodDepth:
+    async with runtime.database.read() as session:
+        god = await session.get(ForeignGodRow, god_id)
+        if god is None:
+            raise NotFoundError("No such foreign god.")
+        epoch = (await CosmosRepository(session).require_cosmos()).epoch
+        holding = god_id in (await GuardIndex.load(session, epoch)).guarded_nodes
+        written = await written_by_the_player(session, god_id)
+        current = god.depth
+    if holding and current is not None:
+        return current
     depth = await deepen_foreign_god(runtime, god_id)
     paragraph = depth.history.split("\n\n", 1)[0].strip()
-    if paragraph:
+    if paragraph and not holding and DESCRIPTION_FIELD not in written:
         async with runtime.database.write() as session:
             god = await session.get(ForeignGodRow, god_id)
             if god is not None:

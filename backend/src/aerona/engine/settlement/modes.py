@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.settle_modes import PREFERRED, SETTLE_MODES
 from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleBiologyRow
 from aerona.db.tables.entities import EntityRow
@@ -14,7 +15,7 @@ from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.entity import EntityType
-from aerona.domain.enums.environment import MovementMode, TerrainKind, WeatherEffect
+from aerona.domain.enums.environment import MovementMode, TerrainKind, TerrainTrait, WeatherEffect
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.world_view import SettleMode
 from aerona.engine.body.customs import people_of
@@ -45,10 +46,12 @@ class SettleScene:
 
 
 def fits(rules: Rules, mode: SettleMode, scene: SettleScene) -> bool:
-    if mode is scene.default:
-        return True
     spec = SETTLE_MODES[mode]
     traits = TERRAIN[scene.terrain].traits if scene.terrain is not None else frozenset()
+    if spec.grounded and TerrainTrait.WATERY in traits and not spec.terrains & traits:
+        return False
+    if mode is scene.default:
+        return True
     if spec.needs is not None and spec.needs not in scene.modes:
         return False
     if spec.terrains and not traits & spec.terrains:
@@ -62,7 +65,11 @@ def chosen(rules: Rules, scene: SettleScene) -> SettleMode:
     for mode in PREFERRED:
         if scene.plan in SETTLE_MODES[mode].natural and fits(rules, mode, scene):
             return mode
-    return scene.default
+    if fits(rules, scene.default, scene):
+        return scene.default
+    traits = TERRAIN[scene.terrain].traits if scene.terrain is not None else frozenset()
+    suited = [mode for mode in SETTLE_MODES if SETTLE_MODES[mode].terrains & traits]
+    return next((mode for mode in [*suited, *SETTLE_MODES] if fits(rules, mode, scene)), scene.default)
 
 
 async def ground_of(session: AsyncSession, settlement: EntityRow) -> RegionEnvironmentRow | None:
@@ -119,7 +126,7 @@ class ModeTally:
 
 
 async def backfill_modes(ctx: TickContext, tally: ModeTally) -> None:
-    if await ctx.session.get(AppliedFixupRow, MODES_FIXUP) is not None:
+    if not await fixup_due(ctx.session, MODES_FIXUP):
         return
     for profile in list(
         await ctx.session.scalars(

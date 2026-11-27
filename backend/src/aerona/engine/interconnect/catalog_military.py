@@ -280,7 +280,7 @@ MILITARY_MECHANICS = (
     Mechanic(
         key="vendettas",
         spec_item="S5.9",
-        title="Blood feuds: raids, murders, wergild, mediation and war",
+        title="Blood feuds: raids, murders, payments for the dead, mediation and war",
         subsystem=Subsystem.WAR,
         phases=("vendetta_cycles",),
         surface=Surface(drawer=WAR_ROOM),
@@ -289,7 +289,7 @@ MILITARY_MECHANICS = (
         fields=("blood_feud", "grievance"),
         targets=(W, *COMMUNITIES, M),
         couplings=(
-            Coupling(Subsystem.LAW, "feud law allows wergild", EdgeKind.MODIFIER, "vendetta.wergild_chance"),
+            Coupling(Subsystem.LAW, "feud law allows a payment for the dead", EdgeKind.MODIFIER, "vendetta.wergild_chance"),
             Coupling(Subsystem.FAITH, "pious priests mediate", EdgeKind.TRIGGER, "vendetta.mediation_chance"),
         ),
     ),

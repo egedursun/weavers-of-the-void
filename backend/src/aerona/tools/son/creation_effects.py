@@ -227,7 +227,7 @@ async def seed_lore_kinds(call: SonCall, args: CreationInput, created: EntityRow
         await legends.profile_of(call.tick, created, args.option("archetype"))
     if created.entity_type is EntityType.TRADITION:
         row = await traditions.profile_of(call.tick, created, args.option("tradition_kind") or TraditionFunction.FESTIVAL)
-        row.calendar_slot = args.option("calendar_slot")
+        row.calendar_slot = args.option("calendar_slot") or row.calendar_slot
         taboo_target, taboo_act = args.option("taboo_target"), args.option("taboo_act")
         if taboo_target is not None:
             row.taboo_target = taboo_target.value

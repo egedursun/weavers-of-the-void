@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.effect_packages import CURSE_PACKAGES, NEW_CURSE_KINDS
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -25,7 +26,7 @@ async def curse_package(ctx: TickContext, item: EntityRow, bearer: EntityRow, cu
 
 
 async def backfill_packages(ctx: TickContext, session: AsyncSession) -> int:
-    if await session.get(AppliedFixupRow, PACKAGES_FIXUP) is not None:
+    if not await fixup_due(session, PACKAGES_FIXUP):
         return 0
     laid = 0
     rows = await session.scalars(select(ItemProfileRow).where(ItemProfileRow.curse.in_(NEW_CURSE_KINDS)).order_by(ItemProfileRow.item_entity_id))

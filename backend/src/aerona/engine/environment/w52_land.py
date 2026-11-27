@@ -4,6 +4,7 @@ from aerona.catalog.evolution import WET_LAND
 from aerona.catalog.soils import SOILS
 from aerona.catalog.terrain import TERRAIN
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import SpeciesRangeRow
@@ -32,7 +33,7 @@ OPEN_WATER_WETLAND = 80
 
 
 async def once(ctx: TickContext, key: str) -> bool:
-    if await ctx.session.get(AppliedFixupRow, key) is not None:
+    if not await fixup_due(ctx.session, key):
         return False
     ctx.session.add(AppliedFixupRow(key=key, result={}))
     return True

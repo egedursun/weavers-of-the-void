@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.governance import BODY_RANKS, CULT_FORM, ORG_FORMS, RANK_WEIGHT, OrgForm
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.read_memo import memoized
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
@@ -73,7 +74,7 @@ async def leader_of(ctx: TickContext, org: EntityRow) -> int | None:
 
 async def seed_governance(ctx: TickContext) -> SeedTally:
     tally = SeedTally()
-    legacy = await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is None
+    legacy = await fixup_due(ctx.session, LEGACY_FIXUP)
     for org in await organisations(ctx):
         if held(org.id) or await ctx.session.get(OrgGovernanceRow, org.id) is not None:
             continue

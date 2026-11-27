@@ -22,19 +22,19 @@ Deepen this {{ kind }}. The output consists of SEPARATE KEYS; never write one in
 - rumours: array; each item one rumour its peoples or travellers tell about the world
 - sayings: array; each item { kind, text } spoken about the world
 - details: array; each item one concrete detail of the world as the canon above gives it
-- hidden_truth: a single paragraph about what the world hides that its peoples do not know, only if it hides something; otherwise leave it empty
+- hidden_truth: a single paragraph on anything about the world not yet known to its peoples, only if there is any; otherwise leave it empty
 {% elif kind == "star" %}
 - history: how this star came to be and what its ages brought (2 to 4 paragraphs of prose; NO headings inside it)
 - rumours: array; each item one rumour told about the star
 - sayings: array; each item { kind, text } spoken about the star
 - details: array; each item one concrete detail of the star as the canon above gives it
-- hidden_truth: a single paragraph about what the star truly is or hides, only if it hides something; otherwise leave it empty
+- hidden_truth: a single paragraph on anything about the star not yet known to anyone, only if there is any; otherwise leave it empty
 {% else %}
 - history: how this {{ kind }} came to be and what its ages brought (2 to 4 paragraphs of prose; NO headings inside it)
 - rumours: array; each item one rumour told about the {{ kind }} by those who know of it
 - sayings: array; each item { kind, text } spoken about the {{ kind }}
 - details: array; each item one concrete detail of the {{ kind }} as the canon above gives it
-- hidden_truth: a single paragraph about what the {{ kind }} truly is or hides, only if it hides something; otherwise leave it empty
+- hidden_truth: a single paragraph on anything about the {{ kind }} not yet known to anyone, only if there is any; otherwise leave it empty
 {% endif %}
 
 Do not open the history with "In Age N" and do not count age numbers; place events relative to other events. Do not describe the world's sound rules. Do not write record numbers (like #12), stat names and values, or percentages in the text; say everything in the language of the narrative.

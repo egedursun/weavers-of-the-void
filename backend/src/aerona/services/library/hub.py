@@ -14,6 +14,7 @@ from aerona.constants.library import IDLE_SWEEP_SECONDS, SECONDS_PER_MINUTE, UNI
 from aerona.constants.media import ORIGINALS_PREFIX, THUMBNAILS_PREFIX
 from aerona.core.errors import BusyError, UniverseRequiredError
 from aerona.core.universe_scope import in_universe
+from aerona.db.fixups import mark_born_current
 from aerona.db.migrations import upgrade_to_head
 from aerona.domain.enums.library import LibraryEventKind, UniverseOrigin, UniverseStatus
 from aerona.events.bus import Event
@@ -299,7 +300,9 @@ class UniverseHub:
             summary=summary,
             tags=tags,
         )
-        return await self.register(universe_id, new, LibraryEventKind.CREATED)
+        record = await self.register(universe_id, new, LibraryEventKind.CREATED)
+        await mark_born_current(f"sqlite+aiosqlite:///{self.paths_of(universe_id).database}")
+        return record
 
     async def duplicate(self, source_id: str, name: str | None = None) -> UniverseRecord:
         source = await self.catalogue.require(source_id)

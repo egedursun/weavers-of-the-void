@@ -10,6 +10,7 @@ from aerona.catalog.kinds.trade_modes import TRADE_LOSSES, TRADE_MODES
 from aerona.catalog.life.economy import DANGER_KEYS, OPEN
 from aerona.catalog.life_traits import TRADE_ROUTE_STATUS_TRAITS, having
 from aerona.catalog.senses import NAVIGATION
+from aerona.catalog.terrain import terrain_has
 from aerona.constants.units import PER_MILLE, PERCENT
 from aerona.core.grammar import spoken
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -35,7 +36,7 @@ from aerona.domain.enums.discovery import TheoryDomain
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.economy import CommodityKind, GoodsFlow, TradeLoss, TradeMode, TradeRouteStatus, WorkshopKind
 from aerona.domain.enums.entity import EntityStatus, EntityType, LegendCategory
-from aerona.domain.enums.environment import CoastKind, RiverClass
+from aerona.domain.enums.environment import CoastKind, RiverClass, TerrainTrait
 from aerona.domain.enums.eras import EraChannel
 from aerona.domain.enums.geology import UndergroundStratum
 from aerona.domain.enums.interpretation import InterpretedEvent
@@ -207,12 +208,19 @@ def island_world(book: EconomyBook, world_id: int) -> bool:
     return view is not None and view.sea_roads
 
 
+def over_water(book: EconomyBook, path: list[int]) -> bool:
+    grounds = [book.ground.regions.get(region) for region in path]
+    return bool(grounds) and all(ground is not None and terrain_has(ground.dominant_terrain, TerrainTrait.WATERY) for ground in grounds)
+
+
 def choose_mode(book: EconomyBook, first: EntityRow, second: EntityRow, path: list[int]) -> TradeMode:
     ends = [book.ground.regions.get(region) for region in (path[0], path[-1])]
     sky = book.knowledge.knows(first.id, KnowledgeBranch.SKY_NAVIGATION) or book.knowledge.knows(second.id, KnowledgeBranch.SKY_NAVIGATION)
     seafaring = book.knowledge.knows(first.id, KnowledgeBranch.SEAFARING) or book.knowledge.knows(second.id, KnowledgeBranch.SEAFARING)
     if sky:
         return TradeMode.SKY
+    if over_water(book, path):
+        return TradeMode.SEA
     if len(path) > 1 and all(end is not None and island_world(book, end.world_id) for end in ends):
         return TradeMode.SEA
     if seafaring and len(path) > 1 and all(end is not None and end.coast_kind is not CoastKind.NONE for end in ends):

@@ -115,3 +115,11 @@ async def test_the_head_of_an_organisation_steps_down_and_the_record_names_the_s
     left = await leave(ctx, Seat(head, None, row), DepartureKind.RETIREMENT, heir=None, conditions=[], why="age")
     assert row.head_node_id is None and left.org_node_id == org.id and left.office_id is None
     assert await session.scalar(select(IncidentRow.id).where(IncidentRow.kind == "office.retired")) is not None
+
+
+async def test_years_held_count_the_holders_own_tenure_not_the_successors(ctx: TickContext, session: AsyncSession, world: CoreWorld) -> None:
+    _realm, office, holder = await realm_with(session, world, OfficeKind.RULER)
+    heir = await mortal(session, "Wren Venn", world, holder.location_id)
+    row = await leave(ctx, Seat(holder, office, None), DepartureKind.ABDICATION, heir=heir.id, conditions=[], why="by choice")
+    assert row.years_held == ctx.epoch * ctx.rules.time.years_per_epoch > 0
+    assert office.holder_entity_id == heir.id and office.since_epoch == ctx.epoch

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.life.divine import NEGLECT_KINDS, STRUCK_KINDS, WOUND_CAUSES, WOUND_LABELS
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import CastingRow
@@ -298,13 +299,16 @@ async def betrayed(ctx: TickContext, god_id: int, traitor_id: int) -> DivineWoun
     return await inflict(ctx, god, W.STOLEN_NAME, WoundCause.BETRAYAL, severity=ctx.rules.divine_wounds.betrayal_severity, cause_node_id=traitor_id)
 
 
+DEALT_CAUSES = frozenset(cause for cause, spec in WOUND_CAUSES.items() if spec.dealt)
+
+
 async def mark_neglect(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, NEGLECT_FIXUP) is not None:
+    if not await fixup_due(ctx.session, NEGLECT_FIXUP):
         return 0
     rows = list(
         await ctx.session.scalars(
             select(DivineWoundRow)
-            .where(DivineWoundRow.kind.in_(sorted(NEGLECT_KINDS)), DivineWoundRow.cause_node_id.is_(None), DivineWoundRow.cause != WoundCause.CREATOR)
+            .where(DivineWoundRow.kind.in_(sorted(NEGLECT_KINDS)), DivineWoundRow.cause_node_id.is_(None), DivineWoundRow.cause.in_(sorted(DEALT_CAUSES)))
             .order_by(DivineWoundRow.id)
         )
     )

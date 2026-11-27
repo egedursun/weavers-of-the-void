@@ -174,14 +174,14 @@ SACKS = {
         "{actor} sacked {target}: {dead:person|people} died, {captives:person was|people were} "
         "led away captive and {relics:treasure was|treasures were} carried off."
     ),
-    SackChoice.RAZE: "{actor} razed {target}: {dead:person|people} died, {captives:person was|people were} enslaved and its districts burned.",
+    SackChoice.RAZE: "{actor} razed {target}: {dead:person|people} died, {captives:person was|people were} enslaved and its districts destroyed.",
     SackChoice.RESETTLE: "{actor} took {target} and settled its own people there; {dead:person|people} died and {captives:person was|people were} led away.",
 }
 MOLES = {
-    MoleHuntOutcome.CAUGHT: "{actor}, spymaster of {authority}, hunted for moles and caught one.",
-    MoleHuntOutcome.CLEARED: "{actor}, spymaster of {authority}, hunted for moles, accused {accused} and cleared them.",
-    MoleHuntOutcome.PURGED: "{actor}, spymaster of {authority}, hunted for moles and purged {accused}, who was innocent.",
-    MoleHuntOutcome.DEFECTED: "{actor}, spymaster of {authority}, hunted for moles and drove {accused}, who was innocent, to flee to the enemy.",
+    MoleHuntOutcome.CAUGHT: "{actor}, spymaster of {authority}, searched its ranks for enemy agents and caught one.",
+    MoleHuntOutcome.CLEARED: "{actor}, spymaster of {authority}, searched its ranks for enemy agents, accused {accused} and cleared them.",
+    MoleHuntOutcome.PURGED: "{actor}, spymaster of {authority}, searched its ranks for enemy agents and purged {accused}, who was innocent.",
+    MoleHuntOutcome.DEFECTED: "{actor}, spymaster of {authority}, searched its ranks for enemy agents and drove the innocent {accused} to flee to the enemy.",
 }
 SPY = (role(R.ACTOR), role(R.TARGET))
 
@@ -200,7 +200,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "espionage.assassination_hidden",
-        "{victim}, ruler of {target}, died, and no one saw the hand behind it.",
+        "{victim}, ruler of {target}, died, and no one learned who was behind it.",
         (*SPY, role(R.VICTIM)),
         (enum("method", KillMethod),),
         chronicle=K.INTRIGUE,
@@ -328,7 +328,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "honours.disbanded",
-        "{actor} disbanded {unit}, whose standard bore {honours:honour|honours}.",
+        "{actor} disbanded {unit}, which had won {honours:honour|honours}.",
         (role(R.ACTOR),),
         (name("unit"), number("honours", U.COUNT), number("renown_lost", U.RENOWN)),
         terms=True,
@@ -438,7 +438,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "war.debasement",
-        "{actor} clipped its coin {currency} to pay its soldiers; its purity fell by {purity_lost} and its trust by {trust_lost}.",
+        "{actor} debased its coin {currency} to pay its soldiers; its purity fell by {purity_lost} and its trust by {trust_lost}.",
         (role(R.ACTOR),),
         (name("currency"), number("purity_lost", U.PERCENT), number("trust_lost", U.PERCENT), number("added", U.COIN), number("raised", U.COIN)),
         chronicle=K.TRADE,
@@ -452,7 +452,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "war.god_duel",
-        "Before the gods of {war}, {actor} and {opponent} fought as champions, and {victor} won; the war moved {score:point|points}.",
+        "In {war}, {actor} and {opponent} fought as champions before the gods, and {victor} won; the war moved {score:point|points}.",
         (role(R.ACTOR), role(R.OPPONENT)),
         (node("war"), node("victor"), number("score", U.COUNT)),
         terms=True,
@@ -680,7 +680,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     kind("tools.mortal.draft_unit_type", "{actor} set out a new kind of soldier for {owner}: {product}.", (role(R.ACTOR), role(R.OWNER), role(R.PRODUCT))),
     kind(
         "tools.mortal.hunt_moles",
-        "{actor} hunted for moles at the court of {authority}: {caught:mole was|moles were} caught, {purged} purged and {cleared} cleared.",
+        "{actor} searched the ranks of {authority} for enemy agents: {caught:agent was|agents were} caught, {purged} purged and {cleared} cleared.",
         (role(R.ACTOR), role(R.AUTHORITY)),
         (number("caught", U.COUNT), number("purged", U.COUNT), number("cleared", U.COUNT)),
         chronicle=K.WORLD,
@@ -744,7 +744,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "tools.mortal.take_arms",
-        "{actor} took new arms for {subject} on a field of {field}.",
+        "{actor} took a new emblem for {subject}, set on a field of {field}.",
         (role(R.ACTOR), role(R.SUBJECT)),
         (enum("field", Tincture),),
         chronicle=K.CIVILIZATION,

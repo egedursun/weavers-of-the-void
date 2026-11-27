@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
+from sqlalchemy import select
+
 from aerona.catalog.anatomy import SIGHT_PARTS
 from aerona.catalog.harm_kinds import DAMAGE, INJURIES, injuries_where
 from aerona.catalog.incident_kinds.body_lines import injury_line
@@ -17,6 +19,7 @@ from aerona.db.tables.body import SEVERITY_MAX, BodyRow, InjuryRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
+from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.records import IncidentStepStateRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.write_guard import held
@@ -28,6 +31,7 @@ from aerona.domain.enums.mind import Attribute
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import HarshnessScale
 from aerona.domain.enums.records import StepState
+from aerona.domain.models.calendar import epoch_start_year
 from aerona.engine.body.book import Bearer, anatomy_for, ensure_body, function_level, metallurgy_of
 from aerona.engine.body.conditions import gain_condition
 from aerona.engine.body.digits import lose
@@ -161,6 +165,7 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
                 taken = lose(body, hit.part.key, hit.severity * ctx.rules.anatomy.fingers_per_severity, rng)
             else:
                 setattr(body, counted, max(0, getattr(body, counted) - hit.severity * ctx.rules.anatomy.fingers_per_severity))
+        cause_incident = harm.incident_id or scoped_incident() or incident_for(ctx.session, bearer.id, ctx.epoch)
         row = InjuryRow(
             bearer_node_id=bearer.id,
             world_id=world_id,
@@ -179,9 +184,9 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
             cause_node_id=harm.source_node_id or harm.killer_id,
             event_entity_id=harm.event_entity_id,
             epoch=ctx.epoch,
-            year=ctx.environment.window.start if ctx.environment.window is not None else None,
+            year=await injury_year(ctx, cause_incident),
             visible=hit.part.visible,
-            incident_id=harm.incident_id or scoped_incident() or incident_for(ctx.session, bearer.id, ctx.epoch),
+            incident_id=cause_incident,
             digits=taken,
             step_id=harm.step_id,
             instrument_kind=harm.instrument_kind,
@@ -195,6 +200,14 @@ async def _record(ctx: TickContext, bearer: Bearer, body: BodyRow, harm: Harm, h
         await ctx.session.flush()
         await mark_wound_states(ctx, bearer.id, rows)
     return rows
+
+
+async def injury_year(ctx: TickContext, incident_id: int | None) -> int:
+    told = await ctx.session.scalar(select(IncidentRow.year).where(IncidentRow.id == incident_id)) if incident_id is not None else None
+    if told is not None:
+        return int(told)
+    window = ctx.environment.window
+    return epoch_start_year(ctx.epoch, ctx.rules.time.years_per_epoch) + (window.start if window is not None else 0)
 
 
 MEMBER_SEVERITY = 3

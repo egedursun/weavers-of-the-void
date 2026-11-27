@@ -6,6 +6,8 @@ from aerona.catalog.needs import WORKSHOP_JOBS
 from aerona.constants.units import PERCENT
 from aerona.db.tables.economy import WorkshopRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
+from aerona.db.tables.governance import OrgGovernanceRow
 from aerona.db.tables.labour import WorkerBodyRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
@@ -43,6 +45,14 @@ async def hirer_of(session: AsyncSession, community: EntityRow, trade: Job) -> E
             return owner
     company = await living_entity(session, await company_owner(session, community))
     return company if company is not None else community
+
+
+async def own_side(session: AsyncSession, body_id: int, hirer_id: int) -> bool:
+    if hirer_id == body_id or await session.get(FactionMembershipRow, (body_id, hirer_id)) is not None:
+        return True
+    governance = await session.get(OrgGovernanceRow, body_id)
+    profile = await session.get(FactionProfileRow, body_id)
+    return hirer_id in {governance.head_node_id if governance is not None else None, profile.leader_entity_id if profile is not None else None}
 
 
 async def made_minds_at(session: AsyncSession, community_id: int) -> int:

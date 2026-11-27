@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.constants.units import PERCENT
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.mortal import MortalProfileRow
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.mind import ThoughtKind, TraitEffect
 from aerona.engine.mind.book import effect_of
 from aerona.engine.mind.thoughts import think
@@ -12,14 +12,21 @@ from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import MORTAL_STANDING, has_stat, shift_stat, stat
 from aerona.rules.registry import Rules
 
+POSTHUMOUS = frozenset({"renown"})
+
 
 async def shift(session: AsyncSession, mortal_id: int, column: str, amount: float, epoch: int) -> MortalProfileRow:
     row, _ = await ensure_profile(session, mortal_id, epoch)
-    if is_held(row, column) or not amount:
+    if is_held(row, column) or not amount or (column not in POSTHUMOUS and not await alive(session, mortal_id)):
         return row
     current = getattr(row, column)
     setattr(row, column, clamp_int((current or 0) + amount, 0, PERCENT))
     return row
+
+
+async def alive(session: AsyncSession, mortal_id: int) -> bool:
+    mortal = await session.get(EntityRow, mortal_id)
+    return mortal is not None and mortal.status is not EntityStatus.DEAD
 
 
 async def add_renown(session: AsyncSession, mortal_id: int, amount: float, epoch: int, *, rules: Rules | None = None) -> MortalProfileRow:

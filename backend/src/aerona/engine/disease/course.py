@@ -191,6 +191,8 @@ def host_gone(book: DiseaseBook, outbreak: OutbreakRow) -> bool:
 def fade_immunity(ctx: TickContext, book: DiseaseBook) -> None:
     table = ctx.rules.epidemiology
     for (community_id, disease_id), rows in book.immunity.items():
+        if community_id in book.ended:
+            continue
         profile = book.profiles.get(disease_id)
         keep = 1 - 1 / max(1, profile.immunity_epochs if profile is not None else 1)
         region = book.atlas.top_region(community_id)

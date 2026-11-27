@@ -39,3 +39,24 @@ async def test_causes_chain_through_the_recording_scope_and_open_a_thread(sessio
     await incident_threads(ctx)
     thread = await session.scalar(select(ThreadRow))
     assert thread is not None and "the ford" in thread.text
+
+
+async def test_a_story_opened_from_an_old_chain_keeps_the_age_it_began_in_and_tells_only_told_lines(session: AsyncSession, world_id: int) -> None:
+    rules = tune(Rules(), incidents={"thread_chain_min": 3})
+    old, now = make_ctx(session, rules, epoch=4), make_ctx(session, rules, epoch=8)
+    duelist = await make(session, "Zemor", EntityType.MORTAL, world_id, hp=100, strength=60, agility=50, age=40)
+    first = await record(old, "player.history", roles={IncidentRole.ACTOR: duelist.id}, facts={"account": "Zemor called out a rival."}, magnitude=40)
+    async with recording(old, "player.history", cause=first.incident_id):
+        second = await record(old, "player.history", roles={IncidentRole.ACTOR: duelist.id}, facts={"account": "The rival answered."}, magnitude=40)
+    async with recording(now, "player.history", cause=second.incident_id):
+        third = await record(now, "player.history", roles={IncidentRole.ACTOR: duelist.id}, facts={"account": "Word of the duel spread."}, magnitude=40)
+    async with recording(now, "player.history", cause=third.incident_id):
+        fourth = await record(now, "player.history", roles={IncidentRole.ACTOR: duelist.id}, facts={"account": "Nobody told this."}, magnitude=40)
+    untold = await session.get(IncidentRow, fourth.incident_id)
+    assert untold is not None
+    untold.chronicle_id = None
+    await session.flush()
+    await incident_threads(now)
+    thread = await session.scalar(select(ThreadRow))
+    assert thread is not None and thread.epoch == 4
+    assert thread.text.startswith("Zemor called out a rival.") and thread.text.endswith("Word of the duel spread.")

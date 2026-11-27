@@ -11,9 +11,14 @@ from aerona.db.tables.affairs import MandateRow
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.cycles import GiftRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
 from aerona.db.tables.gatherings import GatheringRow
+from aerona.db.tables.governance import OrgGovernanceRow, OrgSeatRow
+from aerona.db.tables.households import HouseholdMemberRow
 from aerona.db.tables.lore import MessageRow
 from aerona.db.tables.mind import IdeaRow
+from aerona.db.tables.polity import OfficeRow
+from aerona.db.tables.regime import PatronageTieRow
 from aerona.db.tables.warfare import HeroQuestRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondState
@@ -52,6 +57,18 @@ AFFAIRS: tuple[Affair, ...] = (
 )
 
 ENDING = [kind for kind, outlives in OUTLIVES.items() if not outlives]
+SEATS: tuple[tuple[type[Any], str], ...] = (
+    (OfficeRow, "holder_entity_id"),
+    (FactionProfileRow, "leader_entity_id"),
+    (OrgGovernanceRow, "head_node_id"),
+)
+BOUND: tuple[tuple[type[Any], str], ...] = (
+    (PatronageTieRow, "client_entity_id"),
+    (PatronageTieRow, "patron_node_id"),
+    (OrgSeatRow, "member_node_id"),
+    (FactionMembershipRow, "mortal_entity_id"),
+    (HouseholdMemberRow, "member_node_id"),
+)
 
 
 @dataclass
@@ -74,6 +91,17 @@ async def open_affairs(ctx: TickContext) -> dict[int, list[tuple[object, str, ob
         )
         for row in rows:
             found[int(getattr(row, affair.holder))].append((row, affair.state, affair.ended))
+    for table, column in SEATS:
+        seat = getattr(table, column)
+        for row in await ctx.session.scalars(select(table).where(seat.in_(ended())).order_by(seat)):
+            found[int(getattr(row, column))].append((row, column, None))
+    taken: set[int] = set()
+    for table, column in BOUND:
+        side = getattr(table, column)
+        for row in await ctx.session.scalars(select(table).where(side.in_(ended())).order_by(*table.__table__.primary_key.columns)):
+            if id(row) not in taken:
+                taken.add(id(row))
+                found[int(getattr(row, column))].append((row, "", None))
     return found
 
 
@@ -101,7 +129,10 @@ async def close_affairs(ctx: TickContext, tally: AffairTally) -> None:
             continue
         async with recording(ctx, "lifecycle.affairs_closed", participants=[holder]):
             for row, state, closed in affairs:
-                setattr(row, state, closed)
+                if state:
+                    setattr(row, state, closed)
+                else:
+                    await ctx.session.delete(row)
             for tie in ties:
                 await bonds.deactivate(tie, ctx.epoch, "the end of one bound by it")
             await record(ctx, "lifecycle.affairs_closed", roles={IncidentRole.SUBJECT: holder}, facts={"affairs": len(affairs), "ties": len(ties)})

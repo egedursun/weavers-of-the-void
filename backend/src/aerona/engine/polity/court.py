@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.life.polity import POSITION_STATS
 from aerona.constants.units import PERCENT
 from aerona.core.total import partial
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.affairs import CourtPositionRow, CourtRow
 from aerona.db.tables.belonging import SatireRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -227,7 +228,7 @@ JESTERS_FIXUP = "court.w52"
 
 
 async def seat_jesters(session: AsyncSession, epoch: int) -> int:
-    if await session.get(AppliedFixupRow, JESTERS_FIXUP) is not None:
+    if not await fixup_due(session, JESTERS_FIXUP):
         return 0
     seated = 0
     rows = await session.scalars(

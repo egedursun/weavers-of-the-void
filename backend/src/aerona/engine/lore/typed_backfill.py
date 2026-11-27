@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.catalog.lore import ART_WORDS, ITEM_WORDS
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import ArtworkProfileRow, ItemProfileRow
 from aerona.db.tables.economy import NodeMaterialRow
@@ -63,7 +64,7 @@ async def mend_materials(ctx: TickContext) -> int:
 
 
 async def backfill_items(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, ITEMS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ITEMS_FIXUP):
         return 0
     typed = 0
     for entity in await unprofiled(ctx, EntityType.ITEM, ItemProfileRow):
@@ -79,7 +80,7 @@ async def backfill_items(ctx: TickContext) -> int:
 
 
 async def backfill_artworks(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, ARTWORKS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, ARTWORKS_FIXUP):
         return 0
     typed = 0
     for entity in await unprofiled(ctx, EntityType.ARTWORK, ArtworkProfileRow):

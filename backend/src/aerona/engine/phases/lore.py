@@ -229,6 +229,7 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     "language.sacredness",
     "people.population",
     "settlement.population",
+    "table.applied_fixups",
     "table.artwork_profiles",
     "table.bonds",
     "table.community_relations",
@@ -273,6 +274,7 @@ async def scribes(ctx: TickContext) -> tuple[int, int]:
     "table.world_maps",
 )
 @writes(
+    "table.applied_fixups",
     "table.chronicle",
     "table.chronicle_entities",
     "table.community_relations",
@@ -722,6 +724,7 @@ async def tradition_cycles(ctx: TickContext) -> None:
     "art_form.prestige",
     "disease.dead",
     "disease.infected",
+    "faction.wealth",
     "knowledge.spread",
     "mortal.hp",
     "people.population",
@@ -871,9 +874,11 @@ async def research_cycles(ctx: TickContext) -> None:
     "table.item_profiles",
     "table.memories",
     "table.name_registry",
+    "table.node_births",
     "table.node_materials",
     "table.polity_profiles",
     "table.regimes",
+    "table.sons",
     "table.value_profiles",
     "table.wars",
 )

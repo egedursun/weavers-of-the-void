@@ -38,7 +38,7 @@ from aerona.engine.cycles.indenture import record_manumission
 from aerona.engine.demography.bound import BOUND, move_people, sync_bound_share
 from aerona.engine.demography.cohorts import cohorts_of, row_for
 from aerona.engine.demography.events import captive_origins
-from aerona.engine.economy.purse import coin_of, receive_coin, take_coin
+from aerona.engine.economy.purse import coin_of, held_coin, receive_coin, take_coin
 from aerona.engine.genetics.genome import genome_of
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.mind.book import stored_values
@@ -413,7 +413,7 @@ async def sell(ctx: TickContext, town: EntityRow, row: SlaveMarketRow, markets: 
     buyer = await buyer_for(ctx, town, markets)
     if buyer is None:
         return
-    affordable = min(row.stock, await coin_of(ctx.session, ctx.rules, buyer) // row.price)
+    affordable = min(row.stock, held_coin(await coin_of(ctx.session, ctx.rules, buyer)) // row.price)
     if affordable <= 0 or not await take_coin(ctx.session, ctx.rules, buyer, affordable * row.price):
         return
     await receive_coin(ctx.session, ctx.rules, town, affordable * row.price)

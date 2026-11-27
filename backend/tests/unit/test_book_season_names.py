@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from aerona.catalog.season_positions import SEASON_POSITIONS
 from aerona.db.base import Base
 from aerona.db.tables.economy import TradeRouteProfileRow
+from aerona.db.tables.node import NodeBirthRow
 from aerona.domain.enums.environment import SeasonDating, WorldLink
 from aerona.services.books.typed import SEASON_COLUMNS, TypedIndex
 
@@ -29,8 +30,17 @@ def test_a_season_beyond_the_world_still_reads_as_a_season() -> None:
 
 def test_every_registered_season_position_reads_as_a_season_name() -> None:
     index = index_with_seasons()
-    positions = [position for position in SEASON_POSITIONS if position.dating is SeasonDating.POSITION]
+    positions = list(SEASON_POSITIONS)
     assert positions and {(position.table, position.column) for position in positions} == set(SEASON_COLUMNS)
     for position in positions:
         row = SimpleNamespace(**{position.through: WORLD if position.link is WorldLink.WORLD else NODE})
         assert index.value(Base.metadata.tables[position.table].columns[position.column], 0, row) == "Thaw", position
+
+
+def test_a_moment_day_reads_one_based_like_the_history_lines() -> None:
+    row = NodeBirthRow(node_id=NODE, year=311, season=0, day=101, hour=0)
+    columns = NodeBirthRow.__table__.columns
+    index = index_with_seasons()
+    assert index.value(columns["day"], 101, row) == "102"
+    assert index.value(columns["season"], 0, row) == "Thaw"
+    assert any(position.dating is SeasonDating.DAY for position in SEASON_POSITIONS)

@@ -28,6 +28,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits, fatal_injury
 from aerona.engine.military.w52_war import resolve_missing, scatter_named
+from aerona.engine.mortal.course import DEATH_FLAGS
 from aerona.engine.mortal.standing import add_renown
 from aerona.engine.phase import Phase
 from aerona.engine.phases.disasters import DISASTER_KINDS
@@ -128,7 +129,8 @@ async def fall(ctx: TickContext, mortal: EntityRow, cause: str, killer_id: int |
     )
     if mortal.status is EntityStatus.CANON and flag not in BLOODLESS_FALLS:
         await fatal_injury(ctx, mortal, harm)
-    if not await death_path(ctx, mortal, cause, killer_id, cause, event_id=event.id if event is not None else None, manner=DeathCause.BATTLE):
+    manner = DEATH_FLAGS.get(flag, DeathCause.BATTLE)
+    if not await death_path(ctx, mortal, cause, killer_id, cause, event_id=event.id if event is not None else None, manner=manner):
         return False
     await add_flag(ctx.session, mortal.id, flag, ctx.epoch)
     if event is not None and event.id != killer_id:
@@ -636,6 +638,7 @@ async def mark_disaster_dead(ctx: TickContext, event: EntityRow, flag: EntityFla
     "table.deeds",
     "table.entities",
     "table.entity_flags",
+    "table.grave_goods",
     "table.griefs",
     "table.house_profiles",
     "table.incident_facts",

@@ -26,7 +26,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import CommemorationRow
 from aerona.db.tables.culture import TraditionProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
+from aerona.db.tables.gatherings import CollectionMemberRow, CollectionRow, GatheringGuestRow, GatheringRow
 from aerona.db.tables.intrigue import SchemeRow, SecretRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.node import NodeRow
@@ -60,7 +60,7 @@ from aerona.engine.faith.book import patron_node
 from aerona.engine.folkways.purity import apart_at_table, unclean
 from aerona.engine.gatherings.occasions import Guest, Occasion, household_of
 from aerona.engine.happenings.profile import season_for, year_at
-from aerona.engine.history.collections import open_collection
+from aerona.engine.history.collections import add_members, add_places, open_collection
 from aerona.engine.interconnect.flows import FlowCategory, flowing
 from aerona.engine.intrigue.schemes import SchemeTally, execute
 from aerona.engine.intrigue.secrets import learn
@@ -773,16 +773,27 @@ def collection_role(holding: Holding, node: int) -> CollectionRole:
     return GUEST_ROLES[guest.role] if guest is not None else CollectionRole.GUEST
 
 
+async def rites_already_kept(ctx: TickContext, row: GatheringRow) -> CollectionRow | None:
+    if row.kind not in FOR_THE_DEAD or row.honoured_node_id is None:
+        return None
+    mourned = select(CollectionMemberRow.collection_id).where(CollectionMemberRow.node_id == row.honoured_node_id)
+    return await ctx.session.scalar(
+        select(CollectionRow).where(CollectionRow.kind == GATHERING_COLLECTIONS[row.kind], CollectionRow.id.in_(mourned)).order_by(CollectionRow.id).limit(1)
+    )
+
+
 async def chronicle(ctx: TickContext, holding: Holding) -> None:
     row = holding.row
-    collection = await open_collection(
-        ctx,
-        GATHERING_COLLECTIONS[row.kind],
-        world_id=row.world_id,
-        members={node: collection_role(holding, node) for node in holding.attendees},
-        places=[row.place_entity_id] if row.place_entity_id is not None else [],
-        source_key=f"gathering.{row.id}",
-    )
+    members = {node: collection_role(holding, node) for node in holding.attendees}
+    places = [row.place_entity_id] if row.place_entity_id is not None else []
+    collection = await rites_already_kept(ctx, row)
+    if collection is not None:
+        await add_members(ctx, collection, members)
+        await add_places(ctx, collection, places)
+    else:
+        collection = await open_collection(
+            ctx, GATHERING_COLLECTIONS[row.kind], world_id=row.world_id, members=members, places=places, source_key=f"gathering.{row.id}"
+        )
     if collection is not None and "collection_id" not in row.locked:
         row.collection_id = collection.id
     guests: dict[IncidentRole, list[int]] = {}

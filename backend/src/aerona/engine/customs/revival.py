@@ -200,7 +200,15 @@ async def revive_language(ctx: TickContext, row: RevivalRow, people: EntityRow) 
 async def expel_foreigners(ctx: TickContext, row: RevivalRow, people: EntityRow) -> bool:
     if row.dominant_entity_id is None:
         return True
-    await change_relation(ctx, people.id, row.dominant_entity_id, -ctx.rules.revivals.expel_opinion, MemoryKind.ILL_WILL, note="pressed its ways on us")
+    await change_relation(
+        ctx,
+        people.id,
+        row.dominant_entity_id,
+        -ctx.rules.revivals.expel_opinion,
+        MemoryKind.ILL_WILL,
+        note="pressed its ways on us",
+        reverse_note="pushed back against our ways",
+    )
     return await dominant_of(ctx, people.id) is None
 
 
@@ -271,7 +279,7 @@ async def found_faith(ctx: TickContext, row: RevivalRow, people: EntityRow) -> N
         ctx,
         RecordSpec(
             entity_type=EntityType.CULT,
-            name=f"The faith of the {people.name} revival",
+            name=f"The revival faith of {people.name}",
             body=f"A faith that rose among {people.name} round a prophet who joined their old ways and the new.",
             stats=CultStats(followers=max(1, stat_or(people, "population", 0) // 20), zeal=PERCENT * 3 // 5, influence=PERCENT // 5),
             power=1,
@@ -317,13 +325,29 @@ async def withdraw(ctx: TickContext, row: RevivalRow, people: EntityRow) -> None
             await build_district(ctx, towns[0], DistrictKind.FOREIGN_QUARTER, material=BuildMaterial.TIMBER, son_id=None)
             await record(ctx, "revival.withdrew", roles={IncidentRole.ACTOR: people.id, IncidentRole.PLACE: towns[0]}, facts={"way": row.way}, place=towns[0])
     if row.dominant_entity_id is not None:
-        await change_relation(ctx, people.id, row.dominant_entity_id, ctx.rules.revival.withdraw_calm, MemoryKind.GOODWILL, note="left us to live apart")
+        await change_relation(
+            ctx,
+            people.id,
+            row.dominant_entity_id,
+            ctx.rules.revival.withdraw_calm,
+            MemoryKind.GOODWILL,
+            note="left us to live apart",
+            reverse_note="was left to live apart",
+        )
 
 
 async def follow_way(ctx: TickContext, row: RevivalRow, people: EntityRow) -> None:
     spec = REVIVAL_WAYS[row.way]
     if spec.clashes and row.dominant_entity_id is not None:
-        await change_relation(ctx, people.id, row.dominant_entity_id, -ctx.rules.revival.clash_opinion, MemoryKind.ILL_WILL, note="stood against our old ways")
+        await change_relation(
+            ctx,
+            people.id,
+            row.dominant_entity_id,
+            -ctx.rules.revival.clash_opinion,
+            MemoryKind.ILL_WILL,
+            note="stood against our old ways",
+            reverse_note="held to its old ways against us",
+        )
     if spec.founds_faith:
         await found_faith(ctx, row, people)
     if spec.awaits_sign:
@@ -373,7 +397,7 @@ async def restore_god(ctx: TickContext, row: RevivalRow, people: EntityRow) -> b
     old = await old_god_of(ctx, people)
     if old is None or not ctx.rng(seed_of("revival.restore", row.id, ctx.epoch)).chance(ctx.rules.revivals.restore_chance):
         return False
-    if await change_religion(ctx.session, people, old, ctx.epoch, "a movement brought it back to the god of its ancestors"):
+    if await change_religion(ctx.session, people, old, ctx.epoch, "a movement brought it back to the god it once worshipped"):
         await record(
             ctx,
             "revivals.restored",
@@ -394,7 +418,15 @@ async def put_down(ctx: TickContext, row: RevivalRow, people: EntityRow, tally: 
     if "ended_epoch" not in row.locked:
         row.ended_epoch = ctx.epoch
     tally.suppressed += 1
-    await change_relation(ctx, people.id, row.dominant_entity_id, -2 * ctx.rules.revivals.expel_opinion, MemoryKind.ILL_WILL, note="put down our movement")
+    await change_relation(
+        ctx,
+        people.id,
+        row.dominant_entity_id,
+        -2 * ctx.rules.revivals.expel_opinion,
+        MemoryKind.ILL_WILL,
+        note="put down our movement",
+        reverse_note="had its movement put down by us",
+    )
     await record(
         ctx,
         "revivals.suppressed",

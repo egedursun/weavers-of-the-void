@@ -125,9 +125,9 @@ async def harvest_community(ctx: TickContext, creator: CreatorRow, community: En
             roles={IncidentRole.ACTOR: creator.id, IncidentRole.SUBJECT: community.id},
             facts={
                 "victims": f": {several(victims, 'life', 'lives')} {agree(victims, 'was', 'were')} sacrificed" if victims else "",
-                "faith": f", their faith dimmed by {faith_loss}" if faith_loss else "",
+                "faith": f", their piety lowered by {faith_loss}" if faith_loss else "",
                 "gained": gained,
-                "grudge": f" {', '.join(grudging)} resented the reaping of their worshippers." if grudging else "",
+                "grudge": f" The loyalty of {', '.join(grudging)} to the Creator fell for it." if grudging else "",
             },
             kind=ChronicleKind.CREATOR_HAND,
         )

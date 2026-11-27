@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from aerona.catalog.divine_grammar import FOREIGN_PRESETS, SCOPE_RANK, SON_PRESETS, VERB_SIGN, Grammar
 from aerona.catalog.domains import DOMAIN_LABELS
+from aerona.catalog.powers import unlocked_power_slots
 from aerona.constants.units import PERCENT
 from aerona.core.total import total
 from aerona.db.tables.concealment import HiddenTruthRow
@@ -245,8 +246,10 @@ async def threatened(ctx: TickContext, row: DivinePowerRow) -> bool:
 async def carry_presets(ctx: TickContext) -> int:
     known = {(row.holder_node_id, row.son_preset, row.foreign_preset) for row in await ctx.session.scalars(select(DivinePowerRow))}
     made = 0
+    levels = {son_id: level for son_id, level in await ctx.session.execute(select(SonRow.id, SonRow.level))}
     for power in list(await ctx.session.scalars(select(SonPowerRow).order_by(SonPowerRow.son_id, SonPowerRow.slot))):
-        if (power.son_id, power.effect, None) not in known and not held(power.son_id):
+        awake = power.slot in unlocked_power_slots(ctx.rules, levels.get(power.son_id, 0))
+        if awake and (power.son_id, power.effect, None) not in known and not held(power.son_id):
             spec = SON_PRESETS[power.effect]
             ctx.session.add(preset_row(power.son_id, power.name, spec, ctx.epoch, son=power))
             made += 1

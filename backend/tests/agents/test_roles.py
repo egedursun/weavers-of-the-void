@@ -10,7 +10,7 @@ from aerona.agents.bard import voices_of_peoples, write_son_epic
 from aerona.agents.context.scope import load_scope
 from aerona.agents.council import convene_council
 from aerona.agents.creative import agent_creative_ports
-from aerona.agents.deepener import creator_deepen, creator_epic, deepen_entity, deepen_foreign_god
+from aerona.agents.deepener import creator_deepen, creator_epic, deepen_entity, deepen_foreign_god, refresh_awakened_god
 from aerona.agents.genesis import GenesisRequest, creator_portrait, genesis
 from aerona.agents.image_prompter import missing_cosmos_prompts, missing_image_prompts
 from aerona.agents.localiser import localise_epoch
@@ -34,10 +34,13 @@ from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.chronicle import ChronicleKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityType
+from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.rarity import Rarity
 from aerona.domain.enums.world import LoreLanguage
 from aerona.domain.models.stats import StatBlock
 from aerona.engine.primitives.folk import towns_of_people
+from aerona.engine.primitives.manual import manual_context
+from aerona.engine.recording.record import record
 from aerona.llm.errors import LlmDisabledError
 from aerona.prompts import PromptId, output_model
 from aerona.prompts.schemas.base import OutputModel
@@ -169,6 +172,27 @@ async def test_deepening_roles(runtime: AgentRuntime, model: FakeModel, database
     async with database.read() as session:
         stored = await session.get(ForeignGodRow, god_id)
     assert stored is not None and stored.depth is not None
+
+
+async def test_an_awakened_god_keeps_the_description_the_player_wrote(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
+    written = "Ulmar is the drowned bell the player rang."
+    ids: list[int] = []
+    async with database.write() as session:
+        for name in ("Ulmar", "Oskal"):
+            draft = ForeignGodDraft(name=name, world_id=world.core.world.id, domain_primary=Domain.SEA, power=30, stats=StatBlock.uniform(40), created_epoch=1)
+            god = await ForeignGodRepository(session).create(draft)
+            god.description = written
+            ids.append(god.id)
+        ctx = await manual_context(session, "test_roles")
+        roles = {IncidentRole.AUTHORITY: world.core.creator.id, IncidentRole.SUBJECT: ids[0]}
+        await record(ctx, "player.foreign_god.edited", roles=roles, facts={"fields": "description"}, kind=ChronicleKind.FOREIGN_GOD)
+    for god_id in ids:
+        model.script(output_model(PromptId.FOREIGN_GOD_DEEPEN_USER), payload(PromptId.FOREIGN_GOD_DEEPEN_USER))
+        await refresh_awakened_god(runtime, god_id)
+    async with database.read() as session:
+        kept, told = [await session.get(ForeignGodRow, god_id) for god_id in ids]
+    assert kept is not None and kept.description == written and kept.depth is not None
+    assert told is not None and told.description != written
 
 
 async def test_image_prompts_and_portrait(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:

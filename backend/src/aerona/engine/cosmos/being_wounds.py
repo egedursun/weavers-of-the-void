@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
+from aerona.db.fixups import marker
 from aerona.db.tables.body import BodyRow
 from aerona.db.tables.cosmography import CosmicBeingProfileRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -108,7 +109,7 @@ async def regrow(ctx: TickContext, being: EntityRow, tally: WoundTally) -> None:
 
 async def leave_remains(ctx: TickContext, being: EntityRow, tally: WoundTally) -> None:
     key = f"{REMAINS_PREFIX}{being.id}"
-    if await ctx.session.get(AppliedFixupRow, key) is not None:
+    if await marker(ctx.session, key) is not None:
         return
     place = await ctx.session.get(EntityRow, being.location_id) if being.location_id is not None else None
     if place is not None:

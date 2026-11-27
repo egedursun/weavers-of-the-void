@@ -1,4 +1,5 @@
 from sqlalchemy import delete, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.chronicle import QUIET_ROLES
@@ -11,7 +12,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.interconnect.derived import derive_environment_modifiers, derive_tick_modifiers
 from aerona.engine.interconnect.incident_backfill import backfill_incident_roles
-from aerona.engine.interconnect.incidents import chains_in
+from aerona.engine.interconnect.incidents import Chain, chains_in
 from aerona.engine.interconnect.sources import CONDITION_EFFECTS, DERIVED_SOURCES
 from aerona.engine.phase import Phase
 from aerona.engine.primitives.derivation import identity_of
@@ -159,6 +160,23 @@ async def derive_modifiers(ctx: TickContext) -> int:
     "table.wars",
 )
 @writes("table.applied_fixups", "table.incident_participants", "table.incidents", "table.thread_links", "table.threads")
+async def told_texts(session: AsyncSession, chain: Chain) -> list[str]:
+    lined = set(await session.scalars(select(IncidentRow.id).where(IncidentRow.id.in_(list(chain.incident_ids)), IncidentRow.chronicle_id.is_not(None))))
+    return [text for incident_id, text in zip(chain.incident_ids, chain.texts, strict=True) if incident_id in lined]
+
+
+@reads(
+    "table.applied_fixups",
+    "table.chronicle",
+    "table.entities",
+    "table.incident_participants",
+    "table.incidents",
+    "table.nodes",
+    "table.thread_links",
+    "table.war_sides",
+    "table.wars",
+)
+@writes("table.applied_fixups", "table.incident_participants", "table.incidents", "table.thread_links", "table.threads")
 async def incident_threads(ctx: TickContext) -> None:
     table = ctx.rules.incidents
     ctx.count("incident_roles_backfilled", await backfill_incident_roles(ctx))
@@ -177,8 +195,11 @@ async def incident_threads(ctx: TickContext) -> None:
                 )
             )
         )
-        text = f"{chain.texts[0]} What followed has not ended: {chain.texts[-1]}"
-        thread = await open_story(ctx.session, text, related, ctx.epoch)
+        told = await told_texts(ctx.session, chain)
+        if len(told) < CHAIN_ENDS:
+            continue
+        text = f"{told[0]} What followed has not ended: {told[-1]}"
+        thread = await open_story(ctx.session, text, related, root.epoch)
         if thread is None:
             continue
         for incident_id in chain.incident_ids:
@@ -190,4 +211,5 @@ async def incident_threads(ctx: TickContext) -> None:
 
 
 PHASES = (Phase("modifier_upkeep", modifier_upkeep), Phase("environment_modifiers", environment_modifiers))
+CHAIN_ENDS = 2
 THREAD_PHASES = (Phase("incident_threads", incident_threads),)

@@ -81,6 +81,8 @@ async def record_end(ctx: TickContext, mortal: EntityRow, manner: DeathCause) ->
         profile.cause_of_death = manner
     if not is_held(profile, "death_place_id"):
         profile.death_place_id = await death_place(ctx, mortal)
+    if not is_held(profile, "health"):
+        profile.health = 0
     kinship = ctx.rules.kinship
     reading = await reading_for(ctx.session, ctx.rules, mortal, manner)
     lament = kinship.widowed_magnitude * (ctx.rules.death_readings.lament_pct / PERCENT if abs(GLORY[reading]) > 1 else 1)

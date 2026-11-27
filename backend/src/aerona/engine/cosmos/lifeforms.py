@@ -5,6 +5,7 @@ from aerona.catalog.life.cosmos import AIR_GAS, LIFE_BARRING_WORLDS
 from aerona.catalog.life_traits import WORLD_TYPE_TRAITS, having
 from aerona.catalog.physics_life import LIFE_PLACES
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due, marked
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.demography import PeopleBiologyRow
@@ -196,7 +197,7 @@ async def fit_to_homeland(session: AsyncSession, rules: Rules, biology: PeopleBi
 
 
 async def fit_peoples(session: AsyncSession, rules: Rules) -> int:
-    done = set(await session.scalars(select(AppliedFixupRow.key).where(AppliedFixupRow.key.like(f"{HOMELAND_FIXUP}.%"))))
+    done = await marked(session, f"{HOMELAND_FIXUP}.")
     fitted = 0
     for biology in list(await session.scalars(select(PeopleBiologyRow).order_by(PeopleBiologyRow.people_entity_id))):
         key = f"{HOMELAND_FIXUP}.{biology.people_entity_id}"
@@ -215,7 +216,7 @@ GRAVITY_FIXUP = "physics.w52_gravity"
 
 
 async def rehome_life(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, LIFE_FIXUP) is not None:
+    if not await fixup_due(ctx.session, LIFE_FIXUP):
         return 0
     moved = 0
     for life in list(await ctx.session.scalars(select(WorldLifeRow).order_by(WorldLifeRow.world_id))):
@@ -232,7 +233,7 @@ async def rehome_life(ctx: TickContext) -> int:
 
 
 async def rederive_gravity(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, GRAVITY_FIXUP) is not None:
+    if not await fixup_due(ctx.session, GRAVITY_FIXUP):
         return 0
     moved = 0
     for physics in list(await ctx.session.scalars(select(WorldPhysicsRow).order_by(WorldPhysicsRow.world_id))):

@@ -255,3 +255,18 @@ async def test_epic_poems_plays_and_book_items_are_written_on_their_maker_s_medi
     await keep_media(await at(session, 2), tally)
     assert await session.get(WrittenWorkRow, poem.id) is not None and await session.get(WrittenWorkRow, tome.id) is not None
     assert await session.get(WrittenWorkRow, song.id) is None and tally.works == 2
+
+
+async def test_a_book_made_of_a_writing_stuff_is_written_on_that_stuff_whatever_its_people_use(session: AsyncSession, world: CoreWorld) -> None:
+    town = await settlement(session, "Cordmere", world, world.regions[0])
+    await homeland(session, world.people.id, town.id)
+    session.add(WritingCustomRow(people_entity_id=world.people.id, medium=WritingMedium.KNOTTED_CORD, since_epoch=1, locked=[]))
+    leaves = await book_in(session, world, town, "The Margin Leaves")
+    session.add(ItemProfileRow(item_entity_id=leaves.id, item_class=ItemClass.BOOK, material="paper", locked=[]))
+    plain = await book_in(session, world, town, "The Plain Record")
+    await session.flush()
+    await keep_media(await at(session, 2), MediaTally())
+    written = await session.get(WrittenWorkRow, leaves.id)
+    other = await session.get(WrittenWorkRow, plain.id)
+    assert written is not None and written.medium is WritingMedium.PAPER
+    assert other is not None and other.medium is WritingMedium.KNOTTED_CORD

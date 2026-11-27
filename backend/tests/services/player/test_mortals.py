@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.errors import ValidationFailedError
 from aerona.db.ledger_undo import UndoRun
-from aerona.db.tables.body import ConditionRow, InjuryRow, ProsthesisRow
+from aerona.db.tables.body import BodyRow, ConditionRow, InjuryRow, ProsthesisRow
 from aerona.db.tables.economy import WorldMaterialRow
 from aerona.db.tables.mind import MemoryRow, SkillRow, TraitRow
 from aerona.db.tables.mortal import MarriageRow, MortalEquipmentRow, MortalProfileRow
-from aerona.domain.enums.body import BodyPart, ConditionKind, InjuryKind
+from aerona.domain.enums.body import BodyPart, BodyPlan, ConditionKind, InjuryKind
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.demography import SexKind
 from aerona.domain.enums.economy import MaterialFamily, MaterialOrigin
@@ -134,6 +134,9 @@ async def test_body_controls_edit_conditions_prostheses_and_holds(scope: PlayerS
     assert injury is not None and injury.part is BodyPart.RIGHT_HAND
     await body.hold_injuries(scope, body.HoldInjuries(bearer_id=mortal_id))
     await body.hold_injuries(scope, body.HoldInjuries(bearer_id=mortal_id, hold=False))
+    await body.set_plan(scope, body.SetBodyPlan(bearer_id=mortal_id, plan=BodyPlan.SERPENTINE))
+    shaped = await session.get(BodyRow, mortal_id)
+    assert shaped is not None and shaped.plan is BodyPlan.SERPENTINE and "plan" in shaped.locked
 
 
 async def test_mind_levers_shape_values_traits_skills_memories_and_needs(scope: PlayerScope, session: AsyncSession, world: PlayerWorld) -> None:

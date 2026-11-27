@@ -5,9 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.entity_types import ENTITY_TYPES
 from aerona.core.grammar import spoken
+from aerona.db.fixups import fixup_due, settle
 from aerona.db.repositories.lexicon import add_lexeme
 from aerona.db.tables.discovery import EpithetRow, NameExonymRow, NameMeaningRow
-from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.lore import LexemeRow, lexeme_key
 from aerona.db.tables.mortal import MortalProfileRow
@@ -16,7 +17,7 @@ from aerona.db.tables.renown import DeedRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.chronicle import PartOfSpeech
 from aerona.domain.enums.culture import LanguageRegister
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
+from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.mind import MemoryKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
@@ -27,11 +28,13 @@ from aerona.engine.lore.language import register_barrier, register_tongues
 from aerona.engine.lore.research_depth import trade_partners
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.naming import Namer, seed_of
-from aerona.engine.primitives.queries import spoken_language
+from aerona.engine.primitives.queries import has_flag, spoken_language
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.services.community_relations import change_relation
 from aerona.engine.tongues.grammar import compounds, head_first, misread_factor
 from aerona.language.generator import NameKind
+
+BORROWED_WORDS_FIXUP = "lore.words_from_borrowed_names"
 
 TOKEN = re.compile(r"[^\W\d_]+", re.UNICODE)
 GLOSS_JOIN = "-"
@@ -130,7 +133,7 @@ async def give_meanings(ctx: TickContext) -> int:
         glosses: list[str] = []
         if language is not None:
             parts = split(entity.name, await lexicon(ctx.session, language.id))
-            if not parts and not held(language.id):
+            if not parts and not held(language.id) and await has_flag(ctx.session, entity.id, EntityFlag.NAME_FROM_LANGUAGE):
                 token = next(iter(TOKEN.findall(entity.name)), None)
                 if token is not None:
                     parts = await coined(ctx, language, token, entity, await feature_of(ctx.session, entity, atlas))
@@ -273,8 +276,39 @@ async def misreadings(ctx: TickContext) -> int:
     return misread
 
 
+async def unwind_borrowed_words(ctx: TickContext) -> int:
+    if not await fixup_due(ctx.session, BORROWED_WORDS_FIXUP):
+        return 0
+    flagged = set(await ctx.session.scalars(select(EntityFlagRow.entity_id).where(EntityFlagRow.flag == EntityFlag.NAME_FROM_LANGUAGE)))
+    meanings = list(await ctx.session.scalars(select(NameMeaningRow).order_by(NameMeaningRow.node_id)))
+    kept = {(row.language_entity_id, lexeme_key(word)) for row in meanings if row.node_id in flagged for word in row.morphemes}
+    removed = 0
+    for row in meanings:
+        if row.language_entity_id is None or row.node_id in flagged or held(row.node_id) or not row.morphemes:
+            continue
+        for word in row.morphemes:
+            if (row.language_entity_id, lexeme_key(word)) in kept:
+                continue
+            lexeme = await ctx.session.scalar(
+                select(LexemeRow).where(
+                    LexemeRow.language_entity_id == row.language_entity_id,
+                    LexemeRow.word_key == lexeme_key(word),
+                    LexemeRow.added_by_kind == ActorKind.ENGINE,
+                    LexemeRow.etymology.is_(None),
+                )
+            )
+            if lexeme is not None:
+                await ctx.session.delete(lexeme)
+                removed += 1
+        row.morphemes, row.gloss = [], ""
+    await settle(ctx.session, BORROWED_WORDS_FIXUP, {"removed": removed})
+    await ctx.session.flush()
+    return removed
+
+
 async def names(ctx: TickContext) -> dict[str, int]:
     return {
+        "borrowed_words_unwound": await unwind_borrowed_words(ctx),
         "names_given_meaning": await give_meanings(ctx),
         "exonyms": await give_exonyms(ctx),
         "epithets": await give_epithets(ctx),

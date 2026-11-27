@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 from aerona.catalog.body_plans import ATHERMIC_PLANS
 from aerona.catalog.domestication import ATHERMIC_BIOCHEMISTRY
 from aerona.catalog.flora import PRODUCT_BY_COMMODITY
+from aerona.db.fixups import fixup_due
 from aerona.db.kind_concepts.nature import PLANT_PARTS
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.ecology import SpeciesProductRow, SpeciesProfileRow
@@ -39,7 +40,7 @@ async def renamed(ctx: TickContext, row: SpeciesProductRow, product: str, part: 
 
 
 async def backfill_products(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, PRODUCTS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, PRODUCTS_FIXUP):
         return 0
     ctx.session.add(AppliedFixupRow(key=PRODUCTS_FIXUP, result={}))
     plants = select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.species_class != SpeciesClass.ANIMAL)
@@ -65,7 +66,7 @@ async def backfill_products(ctx: TickContext) -> int:
 
 
 async def backfill_regulation(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, REGULATION_FIXUP) is not None:
+    if not await fixup_due(ctx.session, REGULATION_FIXUP):
         return 0
     ctx.session.add(AppliedFixupRow(key=REGULATION_FIXUP, result={}))
     moved = 0
@@ -95,7 +96,7 @@ def beast_category(text: str) -> YieldProduct | None:
 
 
 async def backfill_beast_products(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, BEAST_PRODUCTS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, BEAST_PRODUCTS_FIXUP):
         return 0
     ctx.session.add(AppliedFixupRow(key=BEAST_PRODUCTS_FIXUP, result={}))
     animals = select(SpeciesProfileRow.species_entity_id).where(SpeciesProfileRow.species_class == SpeciesClass.ANIMAL)

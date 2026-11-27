@@ -20,12 +20,15 @@ from aerona.domain.enums.mind import ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.youth import YouthPlace, YouthPurpose
+from aerona.domain.models.calendar import epoch_end_year, epoch_start_year
+from aerona.domain.models.moment import Moment
 from aerona.engine.body.customs import people_of
 from aerona.engine.context import TickContext
 from aerona.engine.cycles.book import realm_of
 from aerona.engine.mind.book import stored_values, write_values
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.births import birth_year
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 
@@ -75,6 +78,16 @@ async def members_of(session: AsyncSession, group_id: int) -> list[YouthGroupMem
     return list(await session.scalars(select(YouthGroupMemberRow).where(YouthGroupMemberRow.group_id == group_id).order_by(YouthGroupMemberRow.member_node_id)))
 
 
+async def coming_of_age(ctx: TickContext, being: EntityRow) -> Moment | None:
+    born = await birth_year(ctx.session, being.id)
+    standing = await standing_for(ctx.session, being)
+    if born is None or standing is None:
+        return None
+    years = ctx.rules.time.years_per_epoch
+    first, last = epoch_start_year(ctx.epoch, years), epoch_end_year(ctx.epoch, years) - 1
+    return Moment(min(last, max(first, born + standing.youth_to)))
+
+
 async def come_of_age(ctx: TickContext, group: YouthGroupRow, tally: YouthTally) -> None:
     for member in await members_of(ctx.session, group.id):
         being = await ctx.session.get(EntityRow, member.member_node_id)
@@ -84,7 +97,14 @@ async def come_of_age(ctx: TickContext, group: YouthGroupRow, tally: YouthTally)
         if group.leader_node_id == member.member_node_id and "leader_node_id" not in (group.locked or []):
             group.leader_node_id = None
         if being.status is EntityStatus.CANON:
-            await record(ctx, "youth.came_of_age", roles={IncidentRole.SUBJECT: being.id}, facts={"group": group.name}, place=group.settlement_entity_id)
+            await record(
+                ctx,
+                "youth.came_of_age",
+                roles={IncidentRole.SUBJECT: being.id},
+                facts={"group": group.name},
+                place=group.settlement_entity_id,
+                at_moment=await coming_of_age(ctx, being),
+            )
             tally.came_of_age += 1
     await ctx.session.flush()
 

@@ -2,7 +2,7 @@ from collections import Counter
 from collections.abc import Awaitable, Callable
 from types import MappingProxyType
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.life.factions import CLASS_OF_KIND
@@ -22,7 +22,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of
 from aerona.engine.governance.seats import members_of, seats_of, shares_of, sync_seats
 from aerona.engine.primitives.folk import present_among
-from aerona.engine.primitives.maturity import of_age, of_age_among, of_age_query
+from aerona.engine.primitives.maturity import away_among, of_age, of_age_among, of_age_query, past_office_age
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat_or
@@ -43,10 +43,22 @@ async def candidates(ctx: TickContext, row: OrgGovernanceRow) -> list[EntityRow]
     if row.decision_body is GoverningBody.SHAREHOLDERS_MEETING:
         ids += [holder for holder in await shares_of(ctx, row.org_node_id) if holder not in ids]
     found = [entity for entity in [await living(ctx, node) for node in ids] if entity is not None]
-    pool = [entity for entity in found if not held(entity.id)]
+    away = await away_among(ctx.session, [entity.id for entity in found]) | await busy_heads(ctx, row.org_node_id, [entity.id for entity in found])
+    pool = [entity for entity in found if not held(entity.id) and entity.id not in away]
     if row.head_selection is not HeadSelection.INHERITED:
-        pool = await of_age_among(ctx.session, pool)
+        pool = [entity for entity in await of_age_among(ctx.session, pool) if not past_office_age(ctx.rules, entity)]
     return pool or await home_folk(ctx, row.org_node_id)
+
+
+async def busy_heads(ctx: TickContext, org_id: int, ids: list[int]) -> set[int]:
+    if not ids:
+        return set()
+    counts = await ctx.session.execute(
+        select(OrgGovernanceRow.head_node_id, func.count())
+        .where(OrgGovernanceRow.head_node_id.in_(sorted(set(ids))), OrgGovernanceRow.org_node_id != org_id)
+        .group_by(OrgGovernanceRow.head_node_id)
+    )
+    return {int(head) for head, count in counts if head is not None and count >= ctx.rules.governance.headships_max}
 
 
 async def home_folk(ctx: TickContext, org_id: int) -> list[EntityRow]:
@@ -62,8 +74,10 @@ async def home_folk(ctx: TickContext, org_id: int) -> list[EntityRow]:
             .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [home]), of_age_query())
             .order_by(EntityRow.id)
         )
-        if not held(mortal.id)
+        if not held(mortal.id) and not past_office_age(ctx.rules, mortal)
     ]
+    busy = await busy_heads(ctx, org_id, [mortal.id for mortal in folk]) | await away_among(ctx.session, [mortal.id for mortal in folk])
+    folk = [mortal for mortal in folk if mortal.id not in busy]
     wanted = CLASS_OF_KIND.get(profile.kind) if profile is not None else None
     kin = [mortal for mortal in folk if wanted is not None and mortal.social_class is wanted]
     return kin or folk
@@ -170,6 +184,7 @@ async def chosen_head(ctx: TickContext, row: OrgGovernanceRow) -> EntityRow | No
 
 async def install_head(ctx: TickContext, row: OrgGovernanceRow, head: EntityRow, why: str) -> None:
     row.head_node_id = head.id
+    row.since_epoch = ctx.epoch
     row.term_ends_epoch = ctx.epoch + max(1, row.term_epochs)
     if TRUST_LOCK not in (row.locked or []):
         row.trust = ctx.rules.governance.new_head_trust

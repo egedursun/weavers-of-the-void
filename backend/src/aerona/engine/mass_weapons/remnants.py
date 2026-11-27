@@ -1,6 +1,7 @@
 from sqlalchemy import select
 
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
@@ -179,7 +180,7 @@ async def left_by(ctx: TickContext, atlas: RegionAtlas, war: WarRow, tally: Arse
 
 async def after_wars(ctx: TickContext, tally: ArsenalTally) -> None:
     atlas = await RegionAtlas.load(ctx.session)
-    legacy = await ctx.session.get(AppliedFixupRow, LEGACY_FIXUP) is None
+    legacy = await fixup_due(ctx.session, LEGACY_FIXUP)
     query = select(WarRow).where(WarRow.ended_epoch.is_not(None)) if legacy else select(WarRow).where(WarRow.ended_epoch == ctx.epoch)
     for war in list(await ctx.session.scalars(query.order_by(WarRow.id))):
         await left_by(ctx, atlas, war, tally)

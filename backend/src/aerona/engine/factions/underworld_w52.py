@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from aerona.catalog.life.domain import GANG_KINDS, LICENSABLE_KINDS
 from aerona.catalog.urban import ROUGH_QUARTERS
 from aerona.constants.units import PERCENT
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.factions import FactionProfileRow
@@ -189,7 +190,7 @@ async def traffic(ctx: TickContext) -> int:
 
 
 async def backfill_gangs(ctx: TickContext) -> int:
-    if await ctx.session.get(AppliedFixupRow, GANGS_FIXUP) is not None:
+    if not await fixup_due(ctx.session, GANGS_FIXUP):
         return 0
     kinds = await add_organisations(ctx.session, GANG_KINDS)
     raised = await raise_gangs(ctx, certain=True)

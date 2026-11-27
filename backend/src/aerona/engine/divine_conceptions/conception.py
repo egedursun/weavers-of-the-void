@@ -2,6 +2,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.core.total import total
+from aerona.db.fixups import fixup_due
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.divine_conceptions import DivineConceptionRow, GodReadingRow
 from aerona.db.tables.entities import EntityRow
@@ -106,7 +107,7 @@ async def conceive_all(ctx: TickContext) -> int:
         if await ctx.session.get(DivineConceptionRow, cult.id) is None:
             await conceive(ctx, cult)
             made += 1
-    if await ctx.session.get(AppliedFixupRow, SEED_FIXUP) is None:
+    if await fixup_due(ctx.session, SEED_FIXUP):
         ctx.session.add(AppliedFixupRow(key=SEED_FIXUP, result={"conceived": made}))
         await ctx.session.flush()
     return made

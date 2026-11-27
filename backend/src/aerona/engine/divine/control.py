@@ -51,7 +51,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.divine.avatars import manifest, withdraw
 from aerona.engine.divine.creator import attention_row
 from aerona.engine.divine.foreign import seal_pact
-from aerona.engine.divine.goals import SON_ONLY, TARGET_TYPES
+from aerona.engine.divine.goals import SON_ONLY, TARGET_TYPES, target_ahead
 from aerona.engine.divine.gods import God, divine_of, god_of
 from aerona.engine.divine.laws import KIND_TYPES, profile_for
 from aerona.engine.divine.motions import Motion
@@ -149,6 +149,7 @@ async def set_goal(
         since_epoch=ctx.epoch,
         locked=[],
     )
+    row.amount = await target_ahead(ctx, god, row)
     ctx.session.add(row)
     await ctx.session.flush()
     return row
