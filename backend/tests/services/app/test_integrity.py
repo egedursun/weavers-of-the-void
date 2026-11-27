@@ -214,3 +214,17 @@ async def test_repair_covers_every_derivable_bond(session: AsyncSession, rules: 
     assert legacy.kind is BondKind.WORSHIPS and legacy.description is None
     assert singer.id in {bond.source_node_id for bond in await bonds.incoming(moon.id, active_only=False)}
     assert counters.structure >= 1 and counters.cleaned >= 1 and counters.related_converted >= 1
+
+
+async def test_a_people_is_never_a_diaspora_in_its_own_homeland(session: AsyncSession, world: Cosmos) -> None:
+    town = await make_entity(session, "Founded Quay", EntityType.SETTLEMENT, world_id=world.world.id, location_id=world.region.id)
+    await BondRepository(session).connect(BondDraft(world.people.id, town.id, BondKind.RULES, 1))
+    await BondRepository(session).connect(BondDraft(world.people.id, town.id, BondKind.LIVES_IN, 1))
+    session.add(DiasporaRow(people_entity_id=world.people.id, host_entity_id=town.id, locked=[]))
+    await session.flush()
+    await restore_homelands(session)
+    assert await restore_homelands(session) == 0
+    role = await session.scalar(
+        select(BondRow.role).where(BondRow.source_node_id == world.people.id, BondRow.target_node_id == town.id, BondRow.kind == BondKind.LIVES_IN)
+    )
+    assert role is BondRole.HOMELAND

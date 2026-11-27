@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.bonds import BondDraft, BondRepository
@@ -146,7 +146,10 @@ async def restore_homelands(session: AsyncSession) -> int:
         for town in pending:
             people = await people_for(session, town, peoples, homes)
             if people is not None:
-                await repository.connect(homeland_draft(people, town))
+                bond = await repository.connect(homeland_draft(people, town))
+                if bond.role is not BondRole.HOMELAND:
+                    bond.role = BondRole.HOMELAND
+                    await session.execute(delete(DiasporaRow).where(DiasporaRow.people_entity_id == people, DiasporaRow.host_entity_id == town.id))
                 homes[town.id] = people
                 settled.append(town)
         if not settled:
