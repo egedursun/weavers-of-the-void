@@ -14,10 +14,87 @@
       content="Weavers of the Void®, a worldbuilding studio: a self-generating pantheon and lore engine."
     />
     <meta name="theme-color" content="#13111d" />
+    <style>
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.5rem;
+        background: oklch(0.135 0.04 291);
+        color: oklch(0.86 0.168 89);
+        font-family: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
+        letter-spacing: 0.04em;
+        text-align: center;
+      }
+      html.light .boot {
+        background: oklch(0.975 0.012 86);
+        color: oklch(0.48 0.22 302);
+      }
+      .boot-mark {
+        position: relative;
+        width: 7rem;
+        height: 7rem;
+      }
+      .boot-mark::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        background: currentColor;
+        opacity: 0.2;
+        filter: blur(24px);
+        animation: boot-breathe 2.8s ease-in-out infinite;
+      }
+      .boot-mark img {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .boot-name {
+        font-size: 1.5rem;
+        margin: 0;
+      }
+      @keyframes boot-breathe {
+        0%,
+        100% {
+          transform: scale(0.94);
+          opacity: 0.12;
+        }
+        50% {
+          transform: scale(1.06);
+          opacity: 0.3;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-mark::before {
+          animation: none;
+        }
+      }
+    </style>
+    <script>
+      ;(function () {
+        var saved = (document.cookie.match(/(?:^|; )aerona-theme=([^;]*)/) || [])[1]
+        var dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        var resolved = saved === 'light' || (saved === 'system' && !dark) ? 'light' : 'dark'
+        document.documentElement.classList.remove('light', 'dark')
+        document.documentElement.classList.add(resolved)
+      })()
+    </script>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" role="status" aria-busy="true" aria-label="Opening the gates">
+        <div class="boot-mark">
+          <img src="/brand/logo-256.webp" alt="Weavers of the Void" decoding="async" />
+        </div>
+        <p class="boot-name">Weavers of the Void®</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

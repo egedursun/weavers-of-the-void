@@ -109,6 +109,22 @@
   animation: indeterminate 1.4s ease-in-out infinite;
 }
 
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.8;
+  }
+}
+
+@utility animate-breathe {
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
 @utility max-h-lightbox {
   max-height: max(12rem, calc(100dvh - 24rem));
 }
