@@ -1,7 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 
-from sqlalchemy import func, select
+from sqlalchemy import Subquery, func, select
 
 from aerona.catalog.collective import CROWD_FEELINGS
 from aerona.catalog.life_traits import EMOTION_TRAITS
@@ -9,7 +9,7 @@ from aerona.constants.units import PERCENT
 from aerona.db.tables.collective import CrowdMoodRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.feeling_spread import FeelingSpreadRow
-from aerona.db.tables.households import HouseholdMemberRow
+from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.mind import ThoughtRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -23,7 +23,7 @@ from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat
-from aerona.engine.recording.record import record
+from aerona.engine.recording.record import FactInput, record
 
 SPREAD_BONDS = (BondKind.PARENT_OF, BondKind.SPOUSE_OF, BondKind.LOVES, BondKind.COMPANION, BondKind.SWORN_KIN, BondKind.APPRENTICE_OF, BondKind.ADHERENT_OF)
 KEPT = 3
@@ -55,31 +55,46 @@ async def mood_of(ctx: TickContext, *, settlement: int | None = None, household:
     return row
 
 
-def blended(ctx: TickContext, before: dict[str, int], measured: dict[Emotion, float]) -> dict[str, int]:
-    keep = PERCENT - ctx.rules.feeling_spread.fade_per_epoch
+def blended(fade_pct: int, before: dict[str, int], measured: dict[Emotion, float]) -> dict[str, int]:
+    keep = PERCENT - fade_pct
     mixed: dict[str, float] = {key: value * keep / PERCENT for key, value in before.items()}
     for emotion, value in measured.items():
-        mixed[emotion.value] = mixed.get(emotion.value, 0.0) + value
+        mixed[emotion.value] = max(mixed.get(emotion.value, 0.0), value)
     ranked = sorted(mixed.items(), key=lambda item: (-item[1], item[0]))[:KEPT]
     return {key: clamp_int(round_half_up(value), 0, PERCENT) for key, value in ranked if round_half_up(value) > 0}
 
 
-async def settle(ctx: TickContext, row: FeelingSpreadRow, measured: dict[Emotion, float], tally: MoodTally, subject: int) -> None:
+@dataclass(frozen=True)
+class MoodShift:
+    top: int
+    before: int
+    leading: Emotion | None
+
+    def spread(self, told_at: int) -> bool:
+        return self.leading is not None and self.top >= told_at > self.before
+
+    def faded(self) -> bool:
+        return self.top < FADED <= self.before
+
+
+def settle(ctx: TickContext, row: FeelingSpreadRow, measured: dict[Emotion, float]) -> MoodShift | None:
     if "feelings" in (row.locked or []):
-        return
-    table = ctx.rules.feeling_spread
+        return None
     before_top = max((row.feelings or {}).values(), default=0)
-    row.feelings = blended(ctx, dict(row.feelings or {}), measured)
+    row.feelings = blended(ctx.rules.feeling_spread.fade_per_epoch, dict(row.feelings or {}), measured)
     row.updated_epoch = ctx.epoch
     leading = max(row.feelings.items(), key=lambda item: (item[1], item[0]), default=None)
     row.leading = emotion_of(leading[0]) if leading is not None else None
-    top = leading[1] if leading is not None else 0
-    if top >= table.told_at > before_top and row.leading is not None:
-        tally.spread += 1
-        await record(ctx, "mood.spread", roles={IncidentRole.SUBJECT: subject}, facts={"feeling": row.leading, "strength": top})
-    elif top < FADED <= before_top:
-        tally.faded += 1
-        await record(ctx, "mood.faded", roles={IncidentRole.SUBJECT: subject}, facts={"strength": top})
+    return MoodShift(leading[1] if leading is not None else 0, before_top, row.leading)
+
+
+def strongest_felt(epoch: int) -> Subquery:
+    return (
+        select(ThoughtRow.holder_node_id.label("holder"), ThoughtRow.emotion.label("emotion"), func.max(ThoughtRow.intensity).label("strength"))
+        .where(ThoughtRow.epoch == epoch)
+        .group_by(ThoughtRow.holder_node_id, ThoughtRow.emotion)
+        .subquery()
+    )
 
 
 async def measured_by_place(ctx: TickContext) -> tuple[dict[int, dict[Emotion, float]], dict[int, int]]:
@@ -89,32 +104,33 @@ async def measured_by_place(ctx: TickContext) -> tuple[dict[int, dict[Emotion, f
         .group_by(EntityRow.location_id)
     )
     counts = {place: count for place, count in await ctx.session.execute(people) if place is not None}
+    strongest = strongest_felt(ctx.epoch)
     felt = (
-        select(EntityRow.location_id, ThoughtRow.emotion, func.sum(ThoughtRow.intensity))
-        .join(EntityRow, EntityRow.id == ThoughtRow.holder_node_id)
-        .where(ThoughtRow.epoch == ctx.epoch, EntityRow.status == EntityStatus.CANON)
-        .group_by(EntityRow.location_id, ThoughtRow.emotion)
+        select(EntityRow.location_id, strongest.c.emotion, func.sum(strongest.c.strength))
+        .join(EntityRow, EntityRow.id == strongest.c.holder)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .group_by(EntityRow.location_id, strongest.c.emotion)
     )
     found: dict[int, dict[Emotion, float]] = defaultdict(dict)
     for place, emotion, total in await ctx.session.execute(felt):
         if place is not None and counts.get(place):
-            found[place][emotion] = float(total or 0) / counts[place]
+            found[place][Emotion(emotion)] = float(total or 0) / counts[place]
     return found, counts
 
 
 async def measured_by_household(ctx: TickContext) -> dict[int, dict[Emotion, float]]:
     members = select(HouseholdMemberRow.household_id, func.count()).group_by(HouseholdMemberRow.household_id)
     counts = {household: count for household, count in await ctx.session.execute(members)}
+    strongest = strongest_felt(ctx.epoch)
     felt = (
-        select(HouseholdMemberRow.household_id, ThoughtRow.emotion, func.sum(ThoughtRow.intensity))
-        .join(ThoughtRow, ThoughtRow.holder_node_id == HouseholdMemberRow.member_node_id)
-        .where(ThoughtRow.epoch == ctx.epoch)
-        .group_by(HouseholdMemberRow.household_id, ThoughtRow.emotion)
+        select(HouseholdMemberRow.household_id, strongest.c.emotion, func.sum(strongest.c.strength))
+        .join(strongest, strongest.c.holder == HouseholdMemberRow.member_node_id)
+        .group_by(HouseholdMemberRow.household_id, strongest.c.emotion)
     )
     found: dict[int, dict[Emotion, float]] = defaultdict(dict)
     for household, emotion, total in await ctx.session.execute(felt):
         if counts.get(household):
-            found[household][emotion] = float(total or 0) / counts[household]
+            found[household][Emotion(emotion)] = float(total or 0) / counts[household]
     return found
 
 
@@ -140,6 +156,39 @@ async def feed_crowd(ctx: TickContext, town: int, feelings: dict[str, int]) -> N
     )
 
 
+async def tell_place(ctx: TickContext, town: int, shift: MoodShift | None, tally: MoodTally) -> None:
+    if shift is None:
+        return
+    if shift.spread(ctx.rules.feeling_spread.told_at):
+        tally.spread += 1
+        await record(ctx, "mood.spread", roles={IncidentRole.SUBJECT: town}, facts={"feeling": shift.leading, "strength": shift.top})
+    elif shift.faded():
+        tally.faded += 1
+        await record(ctx, "mood.faded", roles={IncidentRole.SUBJECT: town}, facts={"strength": shift.top})
+
+
+async def household_head(ctx: TickContext, household: HouseholdRow) -> EntityRow | None:
+    head = await ctx.session.get(EntityRow, household.head_node_id) if household.head_node_id is not None else None
+    return head if head is not None and head.entity_type is EntityType.MORTAL else None
+
+
+async def tell_household(ctx: TickContext, household: HouseholdRow | None, shift: MoodShift | None, tally: MoodTally) -> None:
+    if household is None or shift is None:
+        return
+    head = await household_head(ctx, household)
+    if head is None:
+        return
+    home = await ctx.session.get(EntityRow, household.settlement_node_id) if household.settlement_node_id is not None else None
+    place = home.id if home is not None else None
+    if shift.spread(ctx.rules.feeling_spread.told_at):
+        tally.spread += 1
+        facts: dict[str, FactInput] = {"feeling": shift.leading, "strength": shift.top}
+        await record(ctx, "mood.spread_household", roles={IncidentRole.SUBJECT: head.id}, facts=facts, place=place)
+    elif shift.faded():
+        tally.faded += 1
+        await record(ctx, "mood.faded_household", roles={IncidentRole.SUBJECT: head.id}, facts={"strength": shift.top}, place=place)
+
+
 async def spread_in_places(ctx: TickContext, tally: MoodTally) -> None:
     table = ctx.rules.feeling_spread
     measured, _counts = await measured_by_place(ctx)
@@ -149,7 +198,7 @@ async def spread_in_places(ctx: TickContext, tally: MoodTally) -> None:
         if held(town):
             continue
         row = await mood_of(ctx, settlement=town)
-        await settle(ctx, row, measured.get(town, {}), tally, town)
+        await tell_place(ctx, town, settle(ctx, row, measured.get(town, {})), tally)
         tally.places += 1
         await feed_crowd(ctx, town, dict(row.feelings or {}))
         strength = max((row.feelings or {}).values(), default=0)
@@ -165,9 +214,10 @@ async def spread_in_places(ctx: TickContext, tally: MoodTally) -> None:
 async def spread_in_households(ctx: TickContext, tally: MoodTally) -> None:
     measured = await measured_by_household(ctx)
     kept = {household for household in await ctx.session.scalars(select(FeelingSpreadRow.household_id)) if household is not None}
-    for household in sorted(set(measured) | kept):
-        row = await mood_of(ctx, household=household)
-        await settle(ctx, row, measured.get(household, {}), tally, household)
+    for household_id in sorted(set(measured) | kept):
+        row = await mood_of(ctx, household=household_id)
+        shift = settle(ctx, row, measured.get(household_id, {}))
+        await tell_household(ctx, await ctx.session.get(HouseholdRow, household_id), shift, tally)
         tally.households += 1
 
 

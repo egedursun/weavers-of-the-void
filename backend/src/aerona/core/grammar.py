@@ -93,28 +93,33 @@ NUMBER_TEXT = re.compile(r"-?\d+(\.\d+)?")
 COUNTED_FORMS = 3
 SPANS = frozenset({"epoch", "age", "year", "season", "month", "round", "day", "hour", "generation"})
 COUNT_MARK = "#"
+OPTIONAL_MARK = "?"
 
 
 class ArticleFormatter(Formatter):
     def format_field(self, value: Any, format_spec: str) -> str:
+        if format_spec.startswith(OPTIONAL_MARK):
+            text = format(value, "")
+            return format_spec[len(OPTIONAL_MARK) :].replace(COUNT_MARK, text) if text.strip() else ""
         if format_spec in ARTICLE_SPECS or format_spec == PERCENT_SPEC:
             return f"{value}%" if format_spec == PERCENT_SPEC else an(str(value), capital=ARTICLE_SPECS[format_spec])
         if "|" in format_spec and isinstance(value, str) and NUMBER_TEXT.fullmatch(value.strip()):
             value = float(value)
         if "|" in format_spec and isinstance(value, (int, float)) and not isinstance(value, bool):
-            count = int(value) if float(value).is_integer() else value
-            forms = format_spec.split("|")
-            if len(forms) == COUNTED_FORMS:
-                none, one, many = forms
-                return (none if count == 0 else one if count == 1 else many).replace(COUNT_MARK, str(count))
-            one, many = format_spec.split("|", 1)
-            if count == 0 and one in SPANS:
-                return f"less than one {one}"
-            if count == 0:
-                return f"no {many}"
-            return f"{count} {agree(1 if count == 1 else 0, one, many)}"
+            return counted(int(value) if float(value).is_integer() else value, format_spec)
         formatted: str = super().format_field(value, format_spec)
         return formatted
+
+
+def counted(count: float, format_spec: str) -> str:
+    forms = format_spec.split("|")
+    if len(forms) == COUNTED_FORMS:
+        none, one, many = forms
+        return (none if count == 0 else one if count == 1 else many).replace(COUNT_MARK, str(count))
+    one, many = format_spec.split("|", 1)
+    if count == 0:
+        return f"less than one {one}" if one in SPANS else f"no {many}"
+    return f"{count} {agree(1 if count == 1 else 0, one, many)}"
 
 
 ARTICLES = ArticleFormatter()

@@ -12,7 +12,7 @@ from aerona.db.repositories.cosmos import CosmosRepository, rules_from_snapshot
 from aerona.db.session import Database, Steps
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.engine import records, snapshot, transition
-from aerona.engine.context import Publisher, TickContext, TickEnvironment, phase_window
+from aerona.engine.context import AgingState, Publisher, TickContext, TickEnvironment, phase_window
 from aerona.engine.interconnect.guards import run_guarded
 from aerona.engine.notes import FoldResult, fold_tick_lines, last_chronicle_id
 from aerona.engine.phase import Phase
@@ -1107,6 +1107,8 @@ async def current_environment(
             publish=publish,
             stats=TickStats(),
             window=phase_window(resolved, phase) if phase is not None else None,
+            phase=phase,
+            aging=AgingState() if phase is EpochPhase.ENGINE else None,
         )
 
 

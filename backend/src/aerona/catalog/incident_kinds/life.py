@@ -606,7 +606,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "youth.recruited",
         G.SOCIAL,
-        "{actor} drew {target} of {group} into {purpose}.",
+        "{actor} drew{target:? #} of {group} into {purpose}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("group", FactValue.NAME), FactSpec("purpose", FactValue.ENUM, enum=YouthPurpose)),
         place=PlaceRule.WHEN_KNOWN,

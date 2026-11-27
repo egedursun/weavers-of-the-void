@@ -53,8 +53,10 @@ from aerona.services.integrity.arsenal_links import (
     unskilled_weapons,
     widen_posture,
 )
+from aerona.services.integrity.chronology import close_judgment, early_judgments, early_rites, follow_rite, heard_later, overaged, set_age, unborn_witnesses
 from aerona.services.integrity.city_links import mend_conurbation, odd_conurbations, stray_rules, widen_rule
 from aerona.services.integrity.cohort_sexes import resplit_cohort_sexes, stray_cohort_sexes
+from aerona.services.integrity.collection_titles import mixed_collection_titles, retitle_collection
 from aerona.services.integrity.competition_links import (
     call_off_war,
     drop_outsiders,
@@ -147,7 +149,7 @@ from aerona.services.integrity.life_links import (
 from aerona.services.integrity.market_links import beastless_clubs, bind_right, loose_fixings, settle_fixing, unbeast_club, unbound_rights
 from aerona.services.integrity.monetary_links import align_issuer, bad_pegs, clear_peg, stray_issuers
 from aerona.services.integrity.money_links import clear_metal, clear_source, metal_paper, stray_sources
-from aerona.services.integrity.mood_links import mend_mood, odd_moods
+from aerona.services.integrity.mood_links import mend_mood, odd_moods, retell_mood_line, stray_mood_lines
 from aerona.services.integrity.nature_links import (
     balance_will,
     drop_aims,
@@ -185,6 +187,7 @@ from aerona.services.integrity.record_links import (
     absent_witnesses,
     ahead_of_births,
     begin_at_start,
+    births_after_sighting,
     births_unknown,
     broken_checkpoints,
     clear_nesting,
@@ -201,6 +204,7 @@ from aerona.services.integrity.record_links import (
     late_beginnings,
     misfit_facts,
     modeless_witnesses,
+    redate_birth,
     retake_checkpoint,
     retire_kind,
     scope_change,
@@ -645,6 +649,11 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "step_action": (undeclared_steps, drop_step),
     "moment_after_cause": (early_moments, follow_cause),
     "genesis_at_start": (late_beginnings, begin_at_start),
+    "birth_at_first_sight": (births_after_sighting, redate_birth),
+    "age_since_birth": (overaged, set_age),
+    "judgment_at_epoch_close": (early_judgments, close_judgment),
+    "rite_after_death": (early_rites, follow_rite),
+    "witness_born": (unborn_witnesses, heard_later),
     "moment_after_births": (ahead_of_births, follow_births),
     "birth_dated": (births_unknown, date_birth),
     "step_moment_order": (steps_out_of_order, follow_step),
@@ -671,6 +680,8 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "grave_goods_held": (loose_grave_goods, gather_grave_goods),
     "interpretation_reader": (unskilled_readers, unseat_reader),
     "feeling_spread_values": (odd_moods, mend_mood),
+    "mood_told_of_its_own": (stray_mood_lines, retell_mood_line),
+    "collection_title_one_standing": (mixed_collection_titles, retitle_collection),
     "plant_product_part": (unsourced_products, strike_unsourced_products),
     "will_shares_whole": (unbalanced_wills, balance_will),
     "dwelling_fits_body": (unfit_dwellings, refit_dwelling),

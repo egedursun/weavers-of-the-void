@@ -28,6 +28,7 @@ from aerona.engine.daily.service import engage_servant
 from aerona.engine.economy.purse import coin_of, give_coin, take_coin
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.folk import towns_of_people
+from aerona.engine.primitives.maturity import UNDER_AGE
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
@@ -162,7 +163,7 @@ async def shame_the_poor(ctx: TickContext, tally: DailyTally) -> None:
     for mortal, profile in list(rows):
         folk = await people_of(ctx.session, mortal)
         standard = standards.get(folk.id) if folk is not None else None
-        if standard is None or held(mortal.id) or profile.wealth >= standard or "honour" in (profile.locked or []):
+        if standard is None or held(mortal.id) or profile.life_stage in UNDER_AGE or profile.wealth >= standard or "honour" in (profile.locked or []):
             continue
         loss = table.cleanliness_honour_loss
         if not loss:

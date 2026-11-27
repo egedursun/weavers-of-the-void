@@ -224,6 +224,7 @@ class LifeStageTrait(StrEnum):
     GROWING = "growing"
     GROWN = "grown"
     OLD = "old"
+    UNDER_AGE = "under_age"
     YOUNG = "young"
 
 

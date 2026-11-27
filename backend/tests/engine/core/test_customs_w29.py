@@ -67,7 +67,7 @@ from aerona.domain.enums.society import SocialClass
 from aerona.domain.enums.society_depth import DriftCause
 from aerona.domain.enums.structure import StructureKind
 from aerona.domain.models.entity_stats import FactionStats, PolityStats, StructureStats
-from aerona.engine.body.afflictions import active
+from aerona.engine.body.agelessness import active
 from aerona.engine.context import TickContext
 from aerona.engine.customs.age_sets import AgeSetTally, keep_age_sets
 from aerona.engine.customs.civics import CivicsTally, keep_civics

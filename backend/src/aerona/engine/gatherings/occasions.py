@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 from sqlalchemy import select
 
+from aerona.catalog.gatherings import UNDER_AGE_HOSTS
 from aerona.catalog.life.domain import STANDING_STATES
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import TraditionParticipationRow, TraditionProfileRow
@@ -31,6 +32,7 @@ from aerona.engine.mortal.kin import children_of, close_kin_of, parents_of, spou
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import under_age
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.queries import count_communities
 from aerona.engine.primitives.stats import stat_or
@@ -100,11 +102,13 @@ async def deaths(ctx: TickContext) -> list[Occasion]:
     )
     for dead, renown in rows:
         mourners = [mourner for mourner in [await living(ctx, kin) for kin in await close_kin_of(ctx.session, dead.id)] if mourner is not None]
-        host = mourners[0] if mourners else await living(ctx, dead.location_id)
+        young = await under_age(ctx.session, [mourner.id for mourner in mourners])
+        grown = [mourner for mourner in mourners if mourner.id not in young]
+        host = grown[0] if grown else await living(ctx, dead.location_id)
         if host is None:
             continue
         kind = G.FUNERAL if renown >= ctx.rules.gatherings.funeral_renown else G.WAKE
-        guests = [Guest(mourner.id, GuestRole.GUEST, AttendanceReason.KIN) for mourner in mourners[1:]]
+        guests = [Guest(mourner.id, GuestRole.GUEST, AttendanceReason.KIN) for mourner in mourners if mourner.id != host.id]
         found.append(Occasion(kind, host.id, dead.world_id, dead.location_id, dead.id, guests=guests))
     return found
 
@@ -427,7 +431,10 @@ async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
     kept: list[Occasion] = []
     per_world: dict[int | None, int] = {}
     caps: dict[int | None, int] = {}
+    young = await under_age(ctx.session, [occasion.host_id for occasion in found if occasion.kind not in UNDER_AGE_HOSTS])
     for occasion in ctx.rng(f"gathering.order.{ctx.epoch}").shuffled(found):
+        if occasion.host_id in young and occasion.kind not in UNDER_AGE_HOSTS:
+            continue
         if occasion.world_id not in caps:
             communities = await count_communities(ctx.session, occasion.world_id) if occasion.world_id is not None else 0
             caps[occasion.world_id] = scaled_cap(table.per_world_max, table.per_world_communities, communities)

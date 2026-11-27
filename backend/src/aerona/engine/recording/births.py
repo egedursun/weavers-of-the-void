@@ -1,25 +1,28 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.fast_session import rows_by_id
 from aerona.db.read_memo import memo_of, table_names
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.node import NodeBirthRow
+from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.node import NodeBirthRow, NodeRow
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.moment import Moment, latest
 
 CREATION_ROLES = frozenset({IncidentRole.PRODUCT, IncidentRole.CHILD})
+HEARSAY_ROLES = frozenset({IncidentRole.WITNESS, IncidentRole.TELLER})
 
 
 BIRTHS_MEMO = "aerona.recording.births"
 BIRTH_TABLES = table_names([NodeBirthRow])
 
 
-async def born_floor(session: AsyncSession, nodes: Iterable[int]) -> Moment | None:
+async def birth_moments(session: AsyncSession, nodes: Iterable[int]) -> dict[int, Moment | None]:
     ids = sorted({node for node in nodes if node is not None})
     if not ids:
-        return None
+        return {}
     memo = memo_of(session, BIRTHS_MEMO, BIRTH_TABLES)
     known: dict[int, Moment | None] = {node: memo[node] for node in ids if memo is not None and node in memo}
     missing = [node for node in ids if node not in known]
@@ -35,15 +38,42 @@ async def born_floor(session: AsyncSession, nodes: Iterable[int]) -> Moment | No
             for node, moment in found.items():
                 after[node] = moment
         known.update(found)
-    return latest(*known.values())
+    return known
 
 
-async def mark_born(session: AsyncSession, participants: Iterable[tuple[int, IncidentRole]], moment: Moment, epoch: int) -> None:
-    ids = sorted({node for node, role in participants if role in CREATION_ROLES})
-    if not ids:
+async def born_floor(session: AsyncSession, nodes: Iterable[int]) -> Moment | None:
+    return latest(*(await birth_moments(session, nodes)).values())
+
+
+def date_born(session: AsyncSession, node: int, moment: Moment) -> None:
+    session.add(NodeBirthRow(node_id=node, year=moment.year, season=moment.season, day=moment.day, hour=moment.hour, locked=[]))
+
+
+def born_now(row: NodeRow | None, created: bool, epoch: int) -> bool:
+    if isinstance(row, EntityRow):
+        return row.birth_epoch == epoch
+    return created
+
+
+async def mark_born(session: AsyncSession, participants: Iterable[tuple[int, IncidentRole]], moment: Moment, epoch: int, known: Mapping[int, NodeRow]) -> None:
+    named = [(node, role) for node, role in participants if role not in HEARSAY_ROLES]
+    if not named:
         return
-    older = set(await session.scalars(select(EntityRow.id).where(EntityRow.id.in_(ids), EntityRow.birth_epoch != epoch)))
-    dated = set(await session.scalars(select(NodeBirthRow.node_id).where(NodeBirthRow.node_id.in_(ids))))
-    for node in ids:
-        if node not in older and node not in dated:
-            session.add(NodeBirthRow(node_id=node, year=moment.year, season=moment.season, day=moment.day, hour=moment.hour, locked=[]))
+    created = {node for node, role in named if role in CREATION_ROLES}
+    births = await birth_moments(session, [node for node, _ in named])
+    for node in sorted(births):
+        if births[node] is None and born_now(known.get(node), node in created, epoch):
+            date_born(session, node, moment)
+
+
+async def birth_year(session: AsyncSession, node: int) -> int | None:
+    moment = (await birth_moments(session, [node])).get(node)
+    return moment.year if moment is not None else None
+
+
+async def mark_born_at(session: AsyncSession, participants: Sequence[tuple[int, IncidentRole]], incident_id: int) -> None:
+    incident = await session.get(IncidentRow, incident_id)
+    if incident is None or incident.year is None:
+        return
+    known = await rows_by_id(session, NodeRow, sorted({node for node, _ in participants}))
+    await mark_born(session, participants, Moment(incident.year, incident.season, incident.day, incident.hour), incident.epoch, known)

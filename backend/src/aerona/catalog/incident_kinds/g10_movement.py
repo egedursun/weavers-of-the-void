@@ -56,7 +56,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "beyond.cosmic_court",
         G.MOVEMENT,
-        "Fate judged {accused} for breaking the oath given to {victim}: a curse and the distrust of {neighbours:neighbour|neighbours}.",
+        "Fate judged {accused} for breaking the oath given{victim:? to #}: a curse and the distrust of {neighbours:neighbour|neighbours}.",
         roles=(RoleSpec(R.ACCUSED), RoleSpec(R.VICTIM, required=False), RoleSpec(R.WITNESS, required=False, many=True)),
         facts=(FactSpec("neighbours", FactValue.NUMBER, FactUnit.COUNT), FactSpec("relation_loss", FactValue.NUMBER, FactUnit.STANDING)),
         steps=frozenset({A.JUDGE, A.CURSE}),
@@ -305,7 +305,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "expedition.lost",
         G.MOVEMENT,
-        "The expedition of {leader} into {destination} never came back.",
+        "The expedition{leader:? of #}{destination:? into #} never came back.",
         roles=(RoleSpec(R.LEADER, required=False), RoleSpec(R.DESTINATION, required=False)),
         facts=(FactSpec("members", FactValue.NUMBER, FactUnit.PEOPLE), FactSpec("legs_done", FactValue.NUMBER, FactUnit.COUNT)),
         place=PlaceRule.WHEN_KNOWN,
@@ -324,7 +324,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "expedition.returned",
         G.MOVEMENT,
-        "The expedition of {leader} came back from {destination} with {finds:find|finds} and {returned} of its {members:member|members}.",
+        "The expedition{leader:? of #} came back{destination:? from #} with {finds:find|finds} and {returned} of its {members:member|members}.",
         roles=(RoleSpec(R.LEADER, required=False), RoleSpec(R.MEMBER, required=False, many=True), RoleSpec(R.DESTINATION, required=False)),
         facts=(
             FactSpec("finds", FactValue.NUMBER, FactUnit.COUNT),
@@ -355,7 +355,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "exploration.land_found",
         G.MOVEMENT,
-        "{actor} found {product}, unknown until that day.",
+        "{product} was found{actor:? by #}, unknown until that day.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.LEADER, required=False), RoleSpec(R.PRODUCT), RoleSpec(R.PLACE, required=False)),
         facts=(
             FactSpec("land_kind", FactValue.ENUM, enum=E),

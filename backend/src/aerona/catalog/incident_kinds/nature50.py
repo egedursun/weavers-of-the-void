@@ -469,7 +469,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     happening(
         "tools.son.move_ice",
         G.GODS,
-        "{actor} moved the ice of {place} by {change:month|months} a year: {reason}",
+        "{actor} moved the ice of {place} by {change:month|months} a year:{reason:? #}",
         roles=(one(R.ACTOR), one(R.PLACE)),
         facts=(amount("change", U.COUNT), named("reason", required=False)),
         place=P.REQUIRED,
@@ -480,7 +480,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     happening(
         "tools.son.shield_world",
         G.GODS,
-        "{actor} changed the magnetic field of {subject} by {change} for {epochs:epoch|epochs}: {reason}",
+        "{actor} changed the magnetic field of {subject} by {change} for {epochs:epoch|epochs}:{reason:? #}",
         roles=(one(R.ACTOR), one(R.SUBJECT, N.WORLD), maybe(R.PLACE)),
         facts=(amount("change", U.PERCENT), amount("epochs", U.COUNT), named("reason", required=False)),
         place=P.NONE,

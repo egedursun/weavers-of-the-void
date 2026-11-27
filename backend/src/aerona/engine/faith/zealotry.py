@@ -37,6 +37,7 @@ from aerona.engine.mind.hooks import judged
 from aerona.engine.mind.space import value_distance
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import of_age_among
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, close, connect
 from aerona.engine.primitives.records import retire_in
@@ -206,7 +207,7 @@ async def forced_conversion(ctx: TickContext, church: Church) -> FaithLine | Non
 
 
 async def martyrdom(ctx: TickContext, church: Church) -> FaithLine | None:
-    devout = await followers(ctx, church)
+    devout = await of_age_among(ctx.session, await followers(ctx, church))
     if not devout:
         return None
     martyr = devout[0]
@@ -220,7 +221,7 @@ async def martyrdom(ctx: TickContext, church: Church) -> FaithLine | None:
 
 async def mortification(ctx: TickContext, church: Church) -> FaithLine | None:
     table = ctx.rules.zeal
-    penitents = reach(ctx, await followers(ctx, church))
+    penitents = reach(ctx, await of_age_among(ctx.session, await followers(ctx, church)))
     for penitent in penitents:
         await apply_hits(ctx, penitent, Harm(table.mortification_hp, HarmCause.RITUAL, f"mortified the body for the faith of {church.cult.name}"), lethal=False)
     if not penitents:

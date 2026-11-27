@@ -393,7 +393,7 @@ ENTITY_FLAG = total(
             "Name from language",
             checked_by=("epoch.phases.transition.add_epoch_words", "services.name_report.refit_pending_names"),
             used_by=(
-                "agents.fate.naming.KEPT_NAME_FLAGS",
+                "agents.context.kept_names.KEPT_NAME_FLAGS",
                 "engine.cosmos.birth._rename_misfits",
                 "engine.lifecycle.succession._spawn_heir",
                 "engine.phases.births.bear_child",
@@ -418,7 +418,7 @@ ENTITY_FLAG = total(
             "Fixed name",
             checked_by=(),
             used_by=(
-                "agents.fate.naming.KEPT_NAME_FLAGS",
+                "agents.context.kept_names.KEPT_NAME_FLAGS",
                 "agents.genesis.write_genesis",
                 "engine.cosmos.birth._cosmic_resource",
                 "services.player.curation.accept_name",
@@ -471,7 +471,9 @@ ENTITY_FLAG = total(
         EntityFlag.WHISPER_SOURCE: Defined(
             "Whisper source", checked_by=(), used_by=("engine.phases.horror._whisperers_born", "engine.phases.horror.birth_whisperers")
         ),
-        EntityFlag.NAMELESS: Defined("Nameless", checked_by=(), used_by=("agents.fate.naming.KEPT_NAME_FLAGS", "engine.phases.horror.summon_outer_being")),
+        EntityFlag.NAMELESS: Defined(
+            "Nameless", checked_by=(), used_by=("agents.context.kept_names.KEPT_NAME_FLAGS", "engine.phases.horror.summon_outer_being")
+        ),
         EntityFlag.ESCAPED: Defined("Escaped", checked_by=(), used_by=("engine.phases.creatures.merged_escapes",)),
         EntityFlag.MEGAFAUNA: Defined(
             "Megafauna",

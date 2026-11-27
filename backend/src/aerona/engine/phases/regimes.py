@@ -170,6 +170,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.incident_terms",
     "table.incidents",
     "table.mortal_profiles",
+    "table.node_births",
     "table.oaths",
     "table.office_history",
     "table.offices",
@@ -214,6 +215,7 @@ async def patronage(ctx: TickContext) -> None:
     "table.incidents",
     "table.lineage_segments",
     "table.long_plans",
+    "table.node_births",
 )
 async def kin_politics(ctx: TickContext) -> None:
     tally = LineageTally()

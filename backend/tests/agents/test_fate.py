@@ -25,6 +25,7 @@ from aerona.domain.enums.world import FateMode
 from aerona.domain.models.entity_stats import ItemStats
 from aerona.prompts.schemas.fate import ChronicleOutput, FateJudgmentOutput, NamingsOutput, VerdictDecision
 from aerona.rules.registry import Rules
+from aerona.services.integrity.kept_name_texts import requeue_kept_names
 from tests.agents.fakes import FakeModel
 from tests.agents.outputs import chronicle, judgment, naming
 from tests.agents.world import AgentWorld
@@ -147,6 +148,36 @@ async def test_fixed_name_survives_the_writer(runtime: AgentRuntime, model: Fake
         written = await session.get(EntityRow, world.pending.id)
     assert written is not None and written.name == "Unnamed Tale" and not written.pending_name
     assert written.description.startswith("A tale the river people tell")
+
+
+async def test_a_kept_name_is_marked_for_the_writer_and_its_text_calls_the_record_by_it(
+    runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld
+) -> None:
+    async with database.write() as session:
+        await EntityRepository(session).add_flag(world.pending.id, EntityFlag.NAME_FROM_LANGUAGE)
+    renamed = naming(world.pending.id, "Teskara").model_copy(
+        update={"description": "Teskara is a tale the river people tell. It ends with a well.", "image_prompt": "Teskara told beside a dry well"}
+    )
+    model.script(NamingsOutput, NamingsOutput(namings=[renamed]))
+    await name_pending_records(runtime)
+    assert any("Unnamed Tale" in call.prompt and "name kept" in call.prompt for call in model.calls)
+    async with database.read() as session:
+        written = await session.get(EntityRow, world.pending.id)
+    assert written is not None and written.name == "Unnamed Tale"
+    assert written.description.startswith("Unnamed Tale is a tale") and "Teskara" not in written.description
+    assert written.image_prompt == "Unnamed Tale told beside a dry well"
+
+
+async def test_kept_names_described_under_another_name_are_written_again_once(database: Database, world: AgentWorld) -> None:
+    async with database.write() as session:
+        await EntityRepository(session).add_flag(world.creation.id, EntityFlag.NAME_FROM_LANGUAGE)
+        named = await session.get(EntityRow, world.creation.id)
+        assert named is not None
+        named.description = "Dorvel is a seer whose warnings were heard."
+        assert await requeue_kept_names(session) == 1
+        assert named.pending_name and named.naming_attempts == 0
+        named.pending_name = False
+        assert await requeue_kept_names(session) == 0
 
 
 async def test_requeue_only_touches_engine_drafts(database: Database, world: AgentWorld) -> None:

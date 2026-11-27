@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.ask import ask
 from aerona.agents.context.entity_detail import entity_detail
+from aerona.agents.context.kept_names import keeps_name
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.context.world_header import world_header
 from aerona.agents.fate.name_check import dialect_letters, fresh_name, name_problems, renamed_item, type_named_subtype
@@ -15,18 +16,16 @@ from aerona.agents.text import ENGINE_DESCRIPTION_PREFIXES, sanitize, without_en
 from aerona.core.grammar import several
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.names import NameRepository
-from aerona.db.tables.entities import EntityFlagRow, EntityRow
-from aerona.domain.enums.entity import EntityFlag, EntityOrigin
+from aerona.db.tables.entities import EntityRow
+from aerona.domain.enums.entity import EntityOrigin
 from aerona.domain.models.phonology import Phonology
 from aerona.engine.primitives.motifs import record_motifs
-from aerona.engine.primitives.renames import rewrite_name
+from aerona.engine.primitives.renames import name_in_text, rewrite_name
 from aerona.language.alphabet import first_word
 from aerona.prompts import PromptId
 from aerona.prompts.contexts.narrative import DialectWarning, NamingContext
 from aerona.prompts.schemas.fate import NamingsOutput
 from aerona.prompts.schemas.shared import NamingItemOutput
-
-KEPT_NAME_FLAGS = (EntityFlag.NAME_FROM_LANGUAGE, EntityFlag.FIXED_NAME, EntityFlag.NAMELESS)
 
 
 @dataclass
@@ -46,16 +45,17 @@ async def pending_count(session: AsyncSession) -> int:
     return int(await session.scalar(select(func.count()).select_from(EntityRow).where(EntityRow.pending_name.is_(True))) or 0)
 
 
-async def keeps_name(session: AsyncSession, entity_id: int) -> bool:
-    found = await session.scalar(select(EntityFlagRow.entity_id).where(EntityFlagRow.entity_id == entity_id, EntityFlagRow.flag.in_(KEPT_NAME_FLAGS)).limit(1))
-    return found is not None
-
-
 async def requeue_engine_drafts(session: AsyncSession) -> int:
     prefixed = or_(*(EntityRow.description.startswith(prefix) for prefix in ENGINE_DESCRIPTION_PREFIXES))
     caught = await session.execute(update(EntityRow).where(EntityRow.pending_name.is_(False), prefixed).values(pending_name=True, naming_attempts=0))
     await session.execute(update(EntityRow).where(EntityRow.pending_name.is_(True), EntityRow.naming_attempts > 0).values(naming_attempts=0))
     return int(getattr(caught, "rowcount", 0) or 0)
+
+
+def called(text: str, others: tuple[str, ...], name: str) -> str:
+    for other in others:
+        text = name_in_text(text, other, name)
+    return text
 
 
 async def apply_naming(session: AsyncSession, item: NamingItemOutput, epoch: int) -> tuple[str, str] | None:
@@ -72,13 +72,15 @@ async def apply_naming(session: AsyncSession, item: NamingItemOutput, epoch: int
         name = item.name.strip()
     if entity.origin is not EntityOrigin.ENGINE or not entity.subtype:
         entity.subtype = type_named_subtype(item.subtype, entity.entity_type) or entity.subtype
-    entity.description = sanitize(without_engine_prefix(item.description) or without_engine_prefix(entity.description)) or entity.description
-    entity.image_prompt = item.image_prompt.strip() or entity.image_prompt
-    entity.pending_name = False
-    await record_motifs(session, entity, item.motifs, epoch, replace=True)
     if name != old:
         name = await repository.rename(entity, name)
         await rewrite_name(session, entity.id, old, name)
+    proposed = item.name.strip()
+    description = sanitize(without_engine_prefix(item.description) or without_engine_prefix(entity.description)) or entity.description
+    entity.description = called(description, (proposed, old), name)
+    entity.image_prompt = called(item.image_prompt.strip(), (proposed, old), name) or entity.image_prompt
+    entity.pending_name = False
+    await record_motifs(session, entity, item.motifs, epoch, replace=True)
     await session.flush()
     return old, name
 

@@ -68,7 +68,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "diplomacy.betrayal_war_lost",
         G.DIPLOMACY,
-        "Abandoned by its ally {actor}, {victim} could not hold the field and {war} was lost to {opponent}.",
+        "Abandoned by its ally {actor}, {victim} could not hold the field and{war:? #} was lost to {opponent}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM), RoleSpec(R.OPPONENT)),
         facts=(
             FactSpec("war", FactValue.NODE, required=False),

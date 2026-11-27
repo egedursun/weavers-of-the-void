@@ -33,6 +33,7 @@ from aerona.engine.phase import Phase
     "table.land_use_rules",
     "table.law_jurisdictions",
     "table.municipal_services",
+    "table.node_births",
     "table.settlement_profiles",
 )
 async def city_rules(ctx: TickContext) -> None:

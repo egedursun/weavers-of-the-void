@@ -1,12 +1,13 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.reproduction import SEX_KINDS, SEX_SYSTEMS, kind_of_sex
 from aerona.db.tables.cycles import KinshipSystemRow, MortalCasteRow, PeopleReproductionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.polity import HouseMemberRow, HouseProfileRow
 from aerona.db.tables.unions import UnionCustomRow
 from aerona.domain.enums.cycles import DescentGroup, KinshipDescent, KinTermSystem, ReproductiveCaste, ReproductiveSystem
-from aerona.domain.enums.demography import InheritanceCustom
+from aerona.domain.enums.demography import InheritanceCustom, SexKind
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.unions import KinMatch, PartnerScope
 from aerona.domain.models.entity_stats import MortalStats
@@ -137,9 +138,24 @@ async def custom_bonus(session: AsyncSession, rules: Rules, first: EntityRow, se
     return table.exogamy_bonus if union.exogamy in SOUGHT_OUTSIDE else 0
 
 
+def sex_kind_of(mortal: EntityRow) -> SexKind:
+    stats = mortal.stats
+    return kind_of_sex(stats.sex if isinstance(stats, MortalStats) else None)
+
+
+def conceive_together(first: EntityRow, second: EntityRow) -> bool:
+    sexes = (sex_kind_of(first), sex_kind_of(second))
+    if SexKind.NONE in sexes:
+        return True
+    one, other = (SEX_KINDS[sex] for sex in sexes)
+    return (one.bears and other.begets) or (one.begets and other.bears)
+
+
 async def breeds(session: AsyncSession, first: EntityRow, second: EntityRow) -> bool:
     system = await system_of(session, first)
     if system is ReproductiveSystem.ASEXUAL:
+        return False
+    if SEX_SYSTEMS[system].split and not conceive_together(first, second):
         return False
     if system is ReproductiveSystem.CASTE:
         return ReproductiveCaste.BREEDER in {await caste_of(session, first.id), await caste_of(session, second.id)}

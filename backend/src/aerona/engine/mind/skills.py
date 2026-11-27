@@ -118,11 +118,14 @@ async def practise(
     return gained
 
 
-async def practise_any(session: AsyncSession, rules: Rules, node_id: int, skills: Iterable[SkillKind], xp: float, *, epoch: int) -> int:
+async def best_skill(session: AsyncSession, node_id: int, skills: Iterable[SkillKind]) -> SkillKind:
     rows = await skills_of(session, node_id)
     wanted = list(skills)
-    best = max(wanted, key=lambda skill: (rows[skill].level if skill in rows else -1, -wanted.index(skill)))
-    return await practise(session, rules, node_id, best, xp, epoch=epoch)
+    return max(wanted, key=lambda skill: (rows[skill].level if skill in rows else -1, -wanted.index(skill)))
+
+
+async def practise_any(session: AsyncSession, rules: Rules, node_id: int, skills: Iterable[SkillKind], xp: float, *, epoch: int) -> int:
+    return await practise(session, rules, node_id, await best_skill(session, node_id, skills), xp, epoch=epoch)
 
 
 async def weather_skills(ctx: TickContext, mortal: EntityRow) -> int:

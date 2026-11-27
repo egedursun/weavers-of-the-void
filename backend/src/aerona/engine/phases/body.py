@@ -24,7 +24,8 @@ from aerona.domain.enums.environment import TemperatureBand
 from aerona.domain.enums.faith import TenetKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import NodeKind
-from aerona.engine.body.afflictions import active, afflict, cure, progress
+from aerona.engine.body.afflictions import afflict, cure, progress
+from aerona.engine.body.agelessness import active
 from aerona.engine.body.book import ensure_species_body, injuries_of, recorded_plan, species_of, species_traits
 from aerona.engine.body.cohorts import tend_cohorts
 from aerona.engine.body.conditions import CONDITION_KEY, condition_of, end_condition, gain_condition
@@ -242,6 +243,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "mortal.wisdom",
     "settlement.population",
     "spirit.unrest",
+    "table.afflictions",
     "table.assistive_aids",
     "table.augment_effects",
     "table.augments",
@@ -263,6 +265,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.culture_values",
     "table.deep_passages",
     "table.designated_heirs",
+    "table.dimensional_events",
     "table.dimensions",
     "table.divine_wounds",
     "table.doctrine_sacraments",
@@ -273,6 +276,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.entity_tags",
     "table.entity_traits",
     "table.foreign_gods",
+    "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
     "table.gardens",
@@ -308,6 +312,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.node_births",
     "table.nodes",
     "table.outbreaks",
@@ -341,6 +346,7 @@ async def members_of(ctx: TickContext, species: EntityRow) -> list[EntityRow]:
     "table.worlds",
 )
 @writes(
+    "mortal.age",
     "mortal.death_year",
     "mortal.hp",
     "mortal.lifespan",

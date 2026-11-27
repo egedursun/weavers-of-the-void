@@ -197,6 +197,7 @@ JUSTICE_FULL = 100
     "table.mortal_profiles",
     "table.name_registry",
     "table.network_outages",
+    "table.node_births",
     "table.polity_profiles",
     "table.reconstructions",
     "table.region_environment",

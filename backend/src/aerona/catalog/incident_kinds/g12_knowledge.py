@@ -311,7 +311,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "intrusion.",
             G.KNOWLEDGE,
-            "{actor} attempted an intrusion on {target} to {aim}; it ended {outcome}.",
+            "An intrusion{actor:? by #} was attempted{target:? on #} to {aim}; it ended {outcome}.",
             roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.TARGET, required=False), RoleSpec(R.ACCUSED, required=False)),
             facts=(
                 FactSpec("outcome", FactValue.ENUM, enum=IntrusionOutcome),
@@ -578,7 +578,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.conversion",
         G.KNOWLEDGE,
-        "{subject} turned away from {predecessor} to {successor}.",
+        "{subject} turned away{predecessor:? from #} to {successor}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PREDECESSOR, required=False), RoleSpec(R.SUCCESSOR)),
         facts=(),
     ),
@@ -593,7 +593,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.departed",
         G.KNOWLEDGE,
-        "{subject} left {maker}, who made it.",
+        "{subject} left{maker:? #}, who made it.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.MAKER, required=False)),
         facts=(),
     ),
@@ -703,7 +703,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.saved",
         G.KNOWLEDGE,
-        "The mind of {subject} was saved for {owner}.",
+        "The mind of {subject} was saved{owner:? for #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.OWNER, required=False)),
         facts=(FactSpec("fidelity", FactValue.NUMBER, FactUnit.PERCENT),),
         steps=frozenset({StepAction.SAVE_MIND}),
@@ -759,7 +759,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "network.founded",
         G.KNOWLEDGE,
-        "{product}, a network carried by {carrier}, was founded by {owner}.",
+        "{product}, a network carried by {carrier}, was founded{owner:? by #}.",
         roles=(RoleSpec(R.PRODUCT), RoleSpec(R.OWNER, required=False)),
         facts=(FactSpec("carrier", FactValue.ENUM, enum=NetworkCarrier),),
     ),

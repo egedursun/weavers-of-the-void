@@ -1072,7 +1072,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "money.reformed",
         G.EXCHANGE,
-        "{actor} moved its money to {form}, backed by {backing}.",
+        "{actor} moved its money to {form}, backed{backing:? by #}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.SUBJECT, required=False),
@@ -1479,7 +1479,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.policy_laid",
         G.EXCHANGE,
-        "{authority} laid {policy:an} on {good} for {owner} at a rate of {rate}.",
+        "{authority} laid {policy:an}{good:? on #} for {owner} at a rate of {rate}.",
         roles=(
             RoleSpec(R.AUTHORITY),
             RoleSpec(R.OWNER),

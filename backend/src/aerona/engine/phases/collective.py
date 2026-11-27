@@ -515,6 +515,7 @@ async def role_norms(ctx: TickContext) -> None:
     "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.nodes",
     "table.offices",
     "table.personality_values",
@@ -572,6 +573,7 @@ async def dating_systems(ctx: TickContext) -> None:
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.polity_profiles",
     "table.title_profiles",
 )

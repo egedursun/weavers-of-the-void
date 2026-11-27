@@ -28,6 +28,7 @@ from aerona.engine.polity.revolts import REVOLTS, seed_aims
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.folk import folk_of
+from aerona.engine.primitives.maturity import under_age
 from aerona.engine.primitives.numbers import clamp_int, fraction, round_half_up
 from aerona.engine.primitives.queries import canon, flags_by_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
@@ -222,6 +223,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.messages",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.oaths",
     "table.professions_of_value",
     "table.reputations",
@@ -279,6 +281,7 @@ async def uprisings(ctx: TickContext) -> None:
     "table.kin_groups",
     "table.kinship_systems",
     "table.memberships",
+    "table.mortal_profiles",
     "table.node_births",
     "table.nodes",
     "table.people_biology",
@@ -295,9 +298,11 @@ async def love_and_rivalry(ctx: TickContext) -> None:
     settings = ctx.rules.society
     session = ctx.session
     by_place: dict[int, list[EntityRow]] = defaultdict(list)
-    for mortal in unheld(await canon(session, [EntityType.MORTAL])):
+    mortals = unheld(await canon(session, [EntityType.MORTAL]))
+    young = await under_age(session, [mortal.id for mortal in mortals])
+    for mortal in mortals:
         age = stat(mortal, "age")
-        if mortal.location_id is not None and age is not None and age >= settings.love_min_age:
+        if mortal.location_id is not None and mortal.id not in young and age is not None and age >= settings.love_min_age:
             by_place[mortal.location_id].append(mortal)
     bonds = BondRepository(session)
     rng = ctx.rng("love")

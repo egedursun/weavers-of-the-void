@@ -27,6 +27,7 @@ from aerona.engine.phase import Phase
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.species_ranges",
 )
 async def creature_groups(ctx: TickContext) -> None:

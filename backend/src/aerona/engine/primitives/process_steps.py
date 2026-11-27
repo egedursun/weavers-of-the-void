@@ -9,6 +9,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import ProcessClock
 from aerona.domain.models.moment import Moment, latest
 from aerona.engine.context import TickContext
+from aerona.engine.recording.births import mark_born_at
 from aerona.engine.recording.moments import incident_moment, moment_for
 from aerona.engine.recording.record import StepDraft, checked_steps, write_steps
 from aerona.engine.recording.scope import recording
@@ -23,6 +24,7 @@ async def open_process(ctx: TickContext, key: str, clock: ProcessClock, particip
         IncidentParticipantRow(incident_id=incident, node_id=node, role=role, position=position)
         for position, (node, role) in enumerate(dict.fromkeys(participants))
     )
+    await mark_born_at(ctx.session, list(dict.fromkeys(participants)), incident)
     return incident
 
 

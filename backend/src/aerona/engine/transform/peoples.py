@@ -25,7 +25,7 @@ from aerona.domain.enums.tongues import LanguagePolicy
 from aerona.domain.enums.transform import TransformTrigger
 from aerona.domain.enums.unions import PartnerScope
 from aerona.domain.models.entity_stats import PeopleStats, SpeciesStats
-from aerona.engine.body.afflictions import spec_of
+from aerona.engine.body.agelessness import spec_of
 from aerona.engine.context import TickContext
 from aerona.engine.faith.book import FaithBook
 from aerona.engine.interconnect.flows import FlowCategory, flowing

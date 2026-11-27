@@ -202,7 +202,6 @@ DEFINITIONS: dict[str, Mapping[Any, Defined]] = {
     "folk_knowledge.LoreTransmission": folk_knowledge.LORE_TRANSMISSION,
     "folk_knowledge.NumberReading": folk_knowledge.NUMBER_READING,
     "folkways.Purification": folkways.PURIFICATION,
-    "gathering.CollectionKind": gathering.COLLECTION_KIND,
     "gathering.Milestone": gathering.MILESTONE,
     "genetics.DwellingTenure": genetics.DWELLING_TENURE,
     "geology.DeepPassageKind": geology.DEEP_PASSAGE_KIND,

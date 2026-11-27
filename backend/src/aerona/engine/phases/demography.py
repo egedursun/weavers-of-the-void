@@ -136,6 +136,7 @@ async def region_of(ctx: TickContext, atlas: RegionAtlas, community: EntityRow) 
     "table.memories",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.people_biology",
     "table.people_culture",
     "table.settlement_profiles",

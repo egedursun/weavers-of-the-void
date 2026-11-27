@@ -10,6 +10,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.chronicle import scoped_cause
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.culture import HolderLevelRow
@@ -35,6 +36,7 @@ from aerona.domain.enums.transform import TransformKind
 from aerona.domain.enums.unions import UnionForm, UnionPurpose
 from aerona.domain.enums.world import TechnologyEra
 from aerona.domain.models.entity_stats import MortalStats, PeopleStats, SettlementStats
+from aerona.domain.models.moment import Moment
 from aerona.engine.agrarian.book import gap_site
 from aerona.engine.body.afflictions import afflict, inherit
 from aerona.engine.body.cohorts import healer_demand
@@ -98,7 +100,9 @@ from aerona.engine.primitives.quota import WorldQuota
 from aerona.engine.primitives.records import RecordSpec, open_record, sentence_case
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import headcount, headcount_bounds, set_stats, stat, stat_or
-from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
+from aerona.engine.recording.births import date_born
+from aerona.engine.recording.moments import incident_moment, moment_for
+from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, kind_of, record
 from aerona.engine.settlement.modes import choose_mode
 from aerona.engine.storyteller.pace import recovered
 from aerona.engine.transform.record import blocked, record_transformation
@@ -126,6 +130,7 @@ CLASS_RANK = {
     )
 }
 CHILD_SUBTYPE = "child"
+BIRTH_KEY = "births.child"
 VILLAGE_SUBTYPE = "village"
 HOMELAND_SUBTYPE = "homeland"
 NEW_PEOPLE_SUBTYPE = "new tribe"
@@ -864,6 +869,12 @@ def child_class(first: EntityRow, second: EntityRow) -> SocialClass | None:
     return min(classes, key=lambda item: CLASS_RANK.get(item, len(CLASS_RANK)))
 
 
+async def birth_moment(ctx: TickContext, child: EntityRow, first: EntityRow, second: EntityRow) -> Moment:
+    cause = await incident_moment(ctx.session, scoped_cause())
+    clock = kind_of(BIRTH_KEY).clock
+    return await moment_for(ctx, clock, key=BIRTH_KEY, participants=[first.id, second.id], cause_moment=cause, world_id=child.world_id)
+
+
 async def bear_child(
     ctx: TickContext,
     first: EntityRow,
@@ -915,6 +926,8 @@ async def bear_child(
             flags=(EntityFlag.NAME_FROM_LANGUAGE,) if name else (),
         ),
     )
+    moment = await birth_moment(ctx, child, first, second)
+    date_born(ctx.session, child.id, moment)
     child.social_class = child_class(first, second)
     await assign_caste(ctx.session, child, first, rng, ctx.epoch)
     for parent in (first, second):
@@ -944,7 +957,7 @@ async def bear_child(
         StepDraft(StepAction.GIVE_BIRTH, actor=mother.id, target=child.id, outcome=StepOutcome.SUCCESS),
         StepDraft(StepAction.NAME_CHILD, actor=first.id, target=child.id),
     )
-    await record(ctx, "births.child", roles=roles, facts=facts, steps=steps, place=child.location_id)
+    await record(ctx, BIRTH_KEY, roles=roles, facts=facts, steps=steps, place=child.location_id, at_moment=moment)
     ctx.count("children")
     return child
 

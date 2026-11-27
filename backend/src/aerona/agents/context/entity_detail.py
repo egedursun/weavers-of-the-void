@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.context.bond_lines import bond_line_lists
 from aerona.agents.context.entity_line import line_item, line_items
+from aerona.agents.context.kept_names import keeps_name
 from aerona.agents.context.made_lines import made_facts
 from aerona.agents.context.scope import Scope
 from aerona.agents.context.society import people_facts
@@ -78,6 +79,7 @@ async def entity_detail_context(scope: Scope, entity: EntityRow, *, private: boo
         world=WorldItem(id=entity.world_id, name=scope.world_name(entity.world_id)) if scope.multi_world else None,
         domain=DOMAIN_LABELS[entity.domain] if entity.domain else None,
         tags=await EntityRepository(session).tags(entity.id),
+        name_kept=entity.pending_name and await keeps_name(session, entity.id),
         stats=stat_values(entity),
         description=entity.description,
         history=entity.depth.history or None if entity.depth is not None else None,

@@ -266,7 +266,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "credit.repudiated",
         G.EXCHANGE,
-        "{subject} declared its debts void, and {victim} lost {voided}.",
+        "{subject} declared its debts void, and{victim:? #} lost {voided}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.VICTIM, required=False), RoleSpec(R.ACTOR, required=False)),
         facts=(number("voided", FactUnit.COIN),),
     ),

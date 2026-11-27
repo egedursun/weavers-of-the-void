@@ -3,8 +3,9 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.gatherings import INCIDENT_ROLES, KEY_COLLECTIONS, KEY_PREFIX_COLLECTIONS, NEST_PARENTS
+from aerona.catalog.gatherings import INCIDENT_ROLES, KEY_COLLECTIONS, KEY_PREFIX_COLLECTIONS, NEST_PARENTS, TITLE_ROLES
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.life.history import SCHEME_COLLECTIONS
 from aerona.core.grammar import spoken
@@ -24,7 +25,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.primitives.stats import stat_or
 
 TEN_THOUSAND = 10000
-NAMED_ROLES = (CollectionRole.LEADER, CollectionRole.HOST, CollectionRole.FOUNDER, CollectionRole.MEMBER, CollectionRole.VICTIM, CollectionRole.ACCUSED)
+TITLED_NAMES = 2
 
 
 @dataclass
@@ -43,24 +44,35 @@ def kind_of_key(key: str) -> CollectionKind | None:
     return next((kind for prefix, kind in KEY_PREFIX_COLLECTIONS.items() if key.startswith(prefix)), None)
 
 
-async def names_of(ctx: TickContext, ids: Iterable[int]) -> dict[int, str]:
+async def names_of(session: AsyncSession, ids: Iterable[int]) -> dict[int, str]:
     wanted = sorted(set(ids))
     if not wanted:
         return {}
-    return {row.id: row.name for row in await ctx.session.scalars(select(NodeRow).where(NodeRow.id.in_(wanted)))}
+    return {row.id: row.name for row in await session.scalars(select(NodeRow).where(NodeRow.id.in_(wanted)))}
 
 
-async def title_for(ctx: TickContext, kind: CollectionKind, members: Mapping[int, CollectionRole], places: Iterable[int]) -> str:
-    places = list(places)
-    named = [node for role in NAMED_ROLES for node, given in members.items() if given is role]
-    names = await names_of(ctx, [*named[:2], *places[:1]])
+def titled_nodes(kind: CollectionKind, members: Mapping[int, CollectionRole]) -> list[int]:
+    for roles in TITLE_ROLES[kind]:
+        named = [node for node, given in members.items() if given in roles]
+        if named:
+            return named[:TITLED_NAMES]
+    return []
+
+
+def title_text(kind: CollectionKind, members: Mapping[int, CollectionRole], places: list[int], names: Mapping[int, str]) -> str:
     label = spoken(kind).capitalize()
-    leads = [names[node] for node in named[:2] if node in names]
+    leads = [names[node] for node in titled_nodes(kind, members) if node in names]
     if leads:
         return f"{label} of {' and '.join(leads)}"
     if places and places[0] in names:
         return f"{label} at {names[places[0]]}"
     return label
+
+
+async def title_for(session: AsyncSession, kind: CollectionKind, members: Mapping[int, CollectionRole], places: Iterable[int]) -> str:
+    places = list(places)
+    names = await names_of(session, [*titled_nodes(kind, members), *places[:1]])
+    return title_text(kind, members, places, names)
 
 
 def free_members(members: Mapping[int, CollectionRole]) -> dict[int, CollectionRole]:
@@ -99,7 +111,7 @@ async def open_collection(
     places = list(places)
     row = CollectionRow(
         kind=kind,
-        name=name or await title_for(ctx, kind, free, places),
+        name=name or await title_for(ctx.session, kind, free, places),
         world_id=world_id,
         start_epoch=ctx.epoch,
         source_key=source_key,

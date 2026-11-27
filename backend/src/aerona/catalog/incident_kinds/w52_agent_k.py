@@ -12,7 +12,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.son.tend_soil_stock",
         G.GODS,
-        "{actor} tended the {stock} in the soil of {place}, which now stands at {level}: {reason}",
+        "{actor} tended the {stock} in the soil of {place}, which now stands at {level}:{reason:? #}",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE)),
         facts=(
             FactSpec("stock", FactValue.ENUM, enum=NutrientKind),
@@ -92,7 +92,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "seal.failed",
         G.NATURE,
-        "The made mind {actor} no longer kept the seal over the deep beneath {subject}, and the seal failed.",
+        "The made mind{actor:? #} no longer kept the seal over the deep beneath {subject}, and the seal failed.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR, required=False)),
         place=PlaceRule.REQUIRED,
         clock=C.INSTANT,

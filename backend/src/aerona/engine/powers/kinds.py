@@ -313,4 +313,4 @@ async def harm(ctx: TickContext, user: EntityRow, power: PowerRow, kind: str) ->
     elif kind == "age":
         shift_stat(user, "age", table.hazard_years, 0)
     elif kind == "possess":
-        await afflict(ctx, user, PackageKind.POSSESSION, Transmission.EXPERIENCE, source_node_id=power.source_id)
+        await afflict(ctx, user, PackageKind.POSSESSION, Transmission.EXPERIENCE)

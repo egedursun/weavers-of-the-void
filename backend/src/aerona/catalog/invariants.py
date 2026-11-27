@@ -110,14 +110,49 @@ TYPED: tuple[InvariantSpec, ...] = (
         "genesis_at_start", "incidents", "the making of the cosmos happens at the very start of its first age", Remedy.REPAIR, "moved to the first year"
     ),
     InvariantSpec(
+        "birth_dated", "node_births", "every thing a record brings into being knows the moment it came into being", Remedy.REPAIR, "dated by that record"
+    ),
+    InvariantSpec(
+        "birth_at_first_sight",
+        "node_births",
+        "a thing comes into being no later than the first record that names it in the age it was made, and a child at its birth",
+        Remedy.REPAIR,
+        "moved to the moment of that record",
+    ),
+    InvariantSpec(
+        "age_since_birth",
+        "entities",
+        "a mortal born in the world is never older than the years since its birth",
+        Remedy.REPAIR,
+        "its age, the age told of its death and the age in its notes set to the years since its birth",
+    ),
+    InvariantSpec(
+        "judgment_at_epoch_close",
+        "incidents",
+        "the Fate's verdicts on an age stand at the close of that age",
+        Remedy.REPAIR,
+        "moved to the last year of its age",
+    ),
+    InvariantSpec(
+        "rite_after_death",
+        "gatherings",
+        "a gathering is never earlier than the coming into being of its host or the one it honours, nor earlier than the death it honours",
+        Remedy.REPAIR,
+        "moved, with its happening, to the latest of those moments",
+    ),
+    InvariantSpec(
+        "witness_born",
+        "incident_participants",
+        "no one saw with their own eyes what happened before they came into being",
+        Remedy.REPAIR,
+        "the witness is kept as one who heard of it later",
+    ),
+    InvariantSpec(
         "moment_after_births",
         "incidents",
         "a happening is never earlier than the coming into being of everyone and everything that takes part in it",
         Remedy.REPAIR,
         "moved to the moment its latest-born participant came into being",
-    ),
-    InvariantSpec(
-        "birth_dated", "node_births", "every thing a record brings into being knows the moment it came into being", Remedy.REPAIR, "dated by that record"
     ),
     InvariantSpec(
         "step_moment_order", "incident_steps", "a step is never earlier than the step before it", Remedy.REPAIR, "moved to the moment of the step before"
@@ -649,6 +684,20 @@ TYPED: tuple[InvariantSpec, ...] = (
         "a mood belongs to one place or household and holds only feelings, each of strength 0 to 100",
         Remedy.REPAIR,
         "stray entries are dropped and strengths brought in range; a mood of neither or both is struck",
+    ),
+    InvariantSpec(
+        "mood_told_of_its_own",
+        "incidents",
+        "the spread or fading of a place's mood is told of that place, and a household's of the head of that household",
+        Remedy.REPAIR,
+        "a household's mood told as a place's is told again of its head; one with no head is struck",
+    ),
+    InvariantSpec(
+        "collection_title_one_standing",
+        "incident_collections",
+        "a history named after two of its members names two who share one standing in it, never a host beside the one it is held for",
+        Remedy.REPAIR,
+        "renamed after the members of the standing its kind is named for",
     ),
     InvariantSpec(
         "kin_dynamic_scope",

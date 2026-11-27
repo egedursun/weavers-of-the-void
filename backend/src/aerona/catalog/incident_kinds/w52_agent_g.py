@@ -40,7 +40,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "sacrament.given",
         G.FAITH,
-        "{officiant} gave {patient} the rite of {rite} in the faith of {subject}.",
+        "{patient} was given the rite of {rite} in the faith of {subject}{officiant:? by #}.",
         roles=(RoleSpec(R.PATIENT), RoleSpec(R.SUBJECT), RoleSpec(R.OFFICIANT, required=False)),
         facts=(FactSpec("rite", FactValue.ENUM, enum=SacramentKind),),
         place=PlaceRule.NONE,

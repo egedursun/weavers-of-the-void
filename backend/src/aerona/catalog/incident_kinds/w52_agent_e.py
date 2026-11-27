@@ -166,7 +166,7 @@ WAR_KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "spy.missing",
         D,
-        "{subject}, an agent of {actor} in {target}, went out of contact.",
+        "An agent of {actor} in {target}{subject:?, #,} went out of contact.",
         roles=(*SPY_SIDES, RoleSpec(R.SUBJECT, required=False)),
         steps=frozenset({StepAction.LEAVE}),
         place=PlaceRule.NONE,
@@ -175,7 +175,7 @@ WAR_KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "spy.exposed",
         D,
-        "{subject}, an agent of {actor} in {target}, became known to its enemies and is watched.",
+        "An agent of {actor} in {target}{subject:?, #,} became known to its enemies and is watched.",
         roles=(*SPY_SIDES, RoleSpec(R.SUBJECT, required=False)),
         steps=frozenset({StepAction.REVEAL}),
         place=PlaceRule.NONE,
@@ -184,7 +184,7 @@ WAR_KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "spy.found",
         D,
-        "{subject}, an agent of {actor} in {target}, was found again.",
+        "An agent of {actor} in {target}{subject:?, #,} was found again.",
         roles=(*SPY_SIDES, RoleSpec(R.SUBJECT, required=False)),
         steps=frozenset({StepAction.DISCOVER}),
         place=PlaceRule.NONE,
@@ -343,7 +343,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.release_debt",
         G.FAITH,
-        "{actor} released {debtor_detail} from the return owed for a gift.",
+        "{actor} released{debtor_detail:? #} from the return owed for a gift.",
         roles=(RoleSpec(R.ACTOR),),
         facts=(FactSpec("debtor_detail", FactValue.NAME, required=False),),
         place=PlaceRule.WHEN_KNOWN,

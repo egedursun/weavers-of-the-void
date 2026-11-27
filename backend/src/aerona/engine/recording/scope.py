@@ -93,8 +93,9 @@ async def recording(
 ) -> AsyncIterator[RecordScope]:
     outer = current_scope()
     cause_id = cause if cause is not None else triggering(outer)
+    present = [*participants, *([place_id] if place_id is not None else [])]
     when = moment or await moment_for(
-        ctx, clock, key=key, participants=participants, cause_moment=await incident_moment(ctx.session, cause_id), progress=progress, world_id=world_id
+        ctx, clock, key=key, participants=present, cause_moment=await incident_moment(ctx.session, cause_id), progress=progress, world_id=world_id
     )
     scope = RecordScope(
         key=key,

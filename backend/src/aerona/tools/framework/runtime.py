@@ -195,6 +195,10 @@ class ToolRuntime[CallT: ToolCall]:
             return failed(error)
         return value
 
+    @property
+    def epoch_phase(self) -> EpochPhase:
+        return EpochPhase.GODS if self.agent is AgentKind.SON else EpochPhase.MORTALS
+
     def _tick(self, session: AsyncSession, spec: ToolSpec[CallT, Any]) -> TickContext:
         settings = self.settings
         environment = TickEnvironment(
@@ -204,8 +208,9 @@ class ToolRuntime[CallT: ToolCall]:
             lore_language=settings.lore_language,
             publish=settings.publish,
             stats=TickStats(),
-            window=phase_window(settings.rules, EpochPhase.GODS if self.agent is AgentKind.SON else EpochPhase.MORTALS),
+            window=phase_window(settings.rules, self.epoch_phase),
             progress=1 - 1 / (self._calls + 2),
+            phase=self.epoch_phase,
         )
         return TickContext(environment, session, f"tool.{spoken(self.agent)}.{settings.actor_node_id}.{self._calls}.{spec.name}")
 

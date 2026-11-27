@@ -91,6 +91,7 @@ from aerona.engine.phases.dominion import count
     "table.incidents",
     "table.mind_attributes",
     "table.mortal_profiles",
+    "table.node_births",
     "table.nutrient_needs",
     "table.nutrition_scores",
     "table.thoughts",

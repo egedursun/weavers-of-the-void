@@ -586,6 +586,9 @@ LIFE_STAGE_TRAIT = total(
         LifeStageTrait.OLD: Defined(
             "Old", checked_by=(), used_by=("catalog.life_traits.LIFE_STAGE_TRAITS", "engine.households.formation.OLD", "engine.mind.wider_needs.OLD")
         ),
+        LifeStageTrait.UNDER_AGE: Defined(
+            "Under age", checked_by=(), used_by=("catalog.life_traits.LIFE_STAGE_TRAITS", "engine.primitives.maturity.UNDER_AGE")
+        ),
         LifeStageTrait.YOUNG: Defined(
             "Young",
             checked_by=(),

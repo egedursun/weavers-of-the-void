@@ -8,7 +8,8 @@ from aerona.catalog.effect_packages import PACKAGES, PackageSpec
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.afflictions import AfflictionRow
 from aerona.db.tables.entities import EntityRow
-from aerona.engine.body.afflictions import STAGE_HOLD, bearable, spec_of, stage_of
+from aerona.engine.body.afflictions import STAGE_HOLD, bearable
+from aerona.engine.body.agelessness import spec_of, stage_of
 
 router = APIRouter(tags=["afflictions"])
 

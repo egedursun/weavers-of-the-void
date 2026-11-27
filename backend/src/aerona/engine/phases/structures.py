@@ -105,6 +105,15 @@ async def structure_upkeep(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.agility",
+    "mortal.charisma",
+    "mortal.creativity",
+    "mortal.endurance",
+    "mortal.intellect",
+    "mortal.perception",
+    "mortal.strength",
+    "mortal.willpower",
+    "mortal.wisdom",
     "people.piety",
     "people.prosperity",
     "people.wealth",
@@ -112,13 +121,18 @@ async def structure_upkeep(ctx: TickContext) -> None:
     "settlement.piety",
     "settlement.prosperity",
     "settlement.wealth",
+    "table.augment_effects",
+    "table.augments",
     "table.bonds",
+    "table.charms",
     "table.entities",
+    "table.incubating_ideas",
     "table.nodes",
     "table.people_culture",
     "table.skills",
     "table.sons",
     "table.structure_profiles",
+    "table.traits",
 )
 @writes(
     "knowledge.spread",

@@ -579,7 +579,7 @@ CATALOGUE: tuple[ComplianceRow, ...] = (
         ("event_records",),
         (),
         (),
-        ("birth_dated",),
+        ("birth_dated", "birth_at_first_sight"),
     ),
     ComplianceRow(
         "F58.4",

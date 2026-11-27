@@ -22,6 +22,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of
 from aerona.engine.governance.seats import members_of, seats_of, shares_of, sync_seats
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import of_age, of_age_among, of_age_query
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.stats import stat_or
@@ -43,6 +44,8 @@ async def candidates(ctx: TickContext, row: OrgGovernanceRow) -> list[EntityRow]
         ids += [holder for holder in await shares_of(ctx, row.org_node_id) if holder not in ids]
     found = [entity for entity in [await living(ctx, node) for node in ids] if entity is not None]
     pool = [entity for entity in found if not held(entity.id)]
+    if row.head_selection is not HeadSelection.INHERITED:
+        pool = await of_age_among(ctx.session, pool)
     return pool or await home_folk(ctx, row.org_node_id)
 
 
@@ -56,7 +59,7 @@ async def home_folk(ctx: TickContext, org_id: int) -> list[EntityRow]:
         mortal
         for mortal in await ctx.session.scalars(
             select(EntityRow)
-            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [home]))
+            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [home]), of_age_query())
             .order_by(EntityRow.id)
         )
         if not held(mortal.id)
@@ -194,13 +197,14 @@ async def renew_head(ctx: TickContext, row: OrgGovernanceRow) -> bool:
     current = await living(ctx, row.head_node_id)
     member_ids = {member.mortal_entity_id for member in await members_of(ctx, row.org_node_id)}
     lost = current is None or (row.decision_body is not GoverningBody.SHAREHOLDERS_MEETING and member_ids and current.id not in member_ids)
+    young = current is not None and row.head_selection is not HeadSelection.INHERITED and not await of_age(ctx.session, current.id)
     ended = row.term_ends_epoch is not None and ctx.epoch >= row.term_ends_epoch
-    if not lost and not ended:
+    if not lost and not young and not ended:
         return False
     head = await chosen_head(ctx, row)
     if head is None:
         return False
-    why = "the head was gone" if lost else "the term ended"
+    why = "the head was gone" if lost else "the head was too young to lead" if young else "the term ended"
     if head.id == row.head_node_id:
         row.term_ends_epoch = ctx.epoch + max(1, row.term_epochs)
         return False

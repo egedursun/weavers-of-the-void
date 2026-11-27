@@ -44,7 +44,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "inheritance.will_read",
         G.SOCIAL,
-        "The will of {predecessor} was read, naming {heirs:heir|heirs}: {heir}.",
+        "The will of {predecessor} was read, naming {heirs:heir|heirs}:{heir:? #}.",
         roles=(RoleSpec(R.PREDECESSOR), RoleSpec(R.HEIR, required=False, many=True)),
         facts=(FactSpec("heirs", FactValue.NUMBER, FactUnit.COUNT),),
         place=PlaceRule.NONE,
@@ -171,7 +171,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "settlement.left_after_ruin",
         G.PEOPLES,
-        "After {cause:an}, {subject} was left; {displaced:person|people} of it went to {host}.",
+        "After {cause:an}, {subject} was left; {displaced:person|people} of it went{host:? to #}.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.HOST, required=False),
@@ -273,7 +273,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "structure.left_unfinished",
         G.MAKING,
-        "{actor} left {subject} unfinished.",
+        "{subject} was left unfinished{actor:? by #}.",
         roles=(
             RoleSpec(R.SUBJECT),
             RoleSpec(R.ACTOR, required=False),
@@ -376,7 +376,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "fugitive.fled",
         G.LAW,
-        "{actor} fled as {kind:an}, hunted by {opponent}.",
+        "{actor} fled as {kind:an}, hunted{opponent:? by #}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.OPPONENT, required=False),
@@ -388,7 +388,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "fugitive.caught",
         G.LAW,
-        "{victim}, {kind:an}, was taken by {actor}.",
+        "{victim}, {kind:an}, was taken{actor:? by #}.",
         roles=(
             RoleSpec(R.VICTIM),
             RoleSpec(R.ACTOR, required=False),
@@ -411,7 +411,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "sanctuary.sought",
         G.LAW,
-        "{actor} sought refuge in {host} ({kind}), out of reach of {opponent}.",
+        "{actor} sought refuge in {host} ({kind}), out of reach{opponent:? of #}.",
         roles=(
             RoleSpec(R.ACTOR),
             RoleSpec(R.HOST),

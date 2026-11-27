@@ -24,6 +24,7 @@ from aerona.engine.phase import Phase
     "table.deep_passages",
     "table.dimensions",
     "table.entities",
+    "table.entity_flags",
     "table.estate_privileges",
     "table.estate_profiles",
     "table.faction_memberships",

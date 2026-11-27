@@ -235,6 +235,10 @@ async def moment_of(ctx: TickContext, spec: IncidentKindSpec, nodes: Sequence[in
     return await moment_for(ctx, spec.clock, key=spec.key, participants=nodes, cause_moment=await incident_moment(ctx.session, cause), world_id=world_id)
 
 
+async def lifted_to_births(ctx: TickContext, moment: Moment, named: Sequence[int], place: int | None) -> Moment:
+    return moment.at_least(await born_floor(ctx.session, [*named, *([place] if place is not None else [])]))
+
+
 async def placed(ctx: TickContext, spec: IncidentKindSpec, place: int | None, origin: int | None, destination: int | None) -> None:
     if spec.place is PlaceRule.REQUIRED and place is None:
         raise ValidationFailedError(f"A happening of kind {spec.key} needs its place.")
@@ -277,7 +281,9 @@ async def record(
     participants = typed_roles(spec, roles or {}) if text is None else []
     fact_rows_found = typed_facts(spec, given_facts) if text is None else []
     checked_steps(spec, steps)
-    known = await names_of(ctx, [*(node for node, _ in participants), *(row.node_id for row in fact_rows_found if row.node_id is not None)])
+    known = await names_of(
+        ctx, [*(node for node, _ in participants), *(row.node_id for row in fact_rows_found if row.node_id is not None), *([place] if place else [])]
+    )
     await accepted(ctx, spec, participants, known)
     if text is None:
         names: dict[IncidentRole, list[str]] = {}
@@ -296,7 +302,10 @@ async def record(
         at_moment = Moment(dated)
     if at_moment is not None and dated is not None and at_moment.year != dated:
         raise ValidationFailedError(f"A happening of kind {key} told as of year {dated} cannot stand in year {at_moment.year}.")
-    moment = at_moment if at_moment is not None else await moment_of(ctx, spec, [node for node, _ in participants] or list(ids), cause_id, world_id)
+    named = [node for node, _ in participants] or list(ids)
+    moment = at_moment if at_moment is not None else await moment_of(ctx, spec, named, cause_id, world_id)
+    if dated is None:
+        moment = await lifted_to_births(ctx, moment, named if at_moment is not None else [], place)
     cause_moment = await incident_moment(ctx.session, cause_id)
     if at_moment is not None and cause_moment is not None and at_moment.before(cause_moment):
         raise ValidationFailedError(f"A happening of kind {key} cannot come before what caused it.")
@@ -333,7 +342,7 @@ async def record(
     ctx.session.add_all(term_rows(incident_id, terms if terms is not None else untold_terms()))
     if steps:
         await write_steps(ctx, incident_id, steps, moment, spec.clock, world_id=world_id)
-    await mark_born(ctx.session, participants, moment, epoch)
+    await mark_born(ctx.session, [*participants, *([(place, IncidentRole.PLACE)] if place is not None else [])], moment, epoch, known)
     ctx.count("records")
     ctx.publish(
         EventKind.ENGINE_NOTE,

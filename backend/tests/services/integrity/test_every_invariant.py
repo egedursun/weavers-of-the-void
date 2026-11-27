@@ -59,6 +59,7 @@ from aerona.db.tables.feeling_spread import FeelingSpreadRow
 from aerona.db.tables.fertility_means import FertilityMeansRow, FertilityUseRow
 from aerona.db.tables.folk_knowledge import FolkClassRow
 from aerona.db.tables.folkways import LuckBeliefRow
+from aerona.db.tables.gatherings import CollectionMemberRow, CollectionRow, GatheringRow
 from aerona.db.tables.genetics import GenomeRow
 from aerona.db.tables.geology import DeepPassageRow, RegionStratumRow
 from aerona.db.tables.governance import InsolvencyCaseRow, OrgGovernanceRow, OrgMergerRow, OrgSeatRow
@@ -84,6 +85,7 @@ from aerona.db.tables.monetary import MonetaryAuthorityRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.museums import MuseumCollectionRow, MuseumPieceRow
 from aerona.db.tables.mythic import ServitorRow
+from aerona.db.tables.node import NodeBirthRow
 from aerona.db.tables.occupation_regimes import CollaborationRow, OccupationMeasureRow, OccupationRegimeRow
 from aerona.db.tables.operations import ExpeditionRow, ShipCrewRow
 from aerona.db.tables.orders import EconomicOrderRow, OrderTransitionRow
@@ -143,7 +145,7 @@ from aerona.domain.enums.ecology import Biochemistry, YieldProduct
 from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialOrigin, MoneyForm, TradeMode, TradeRouteStatus
 from aerona.domain.enums.endowments import EndowmentState
 from aerona.domain.enums.entity import EntityStatus, EntityType
-from aerona.domain.enums.environment import TemperatureBand, TerrainKind
+from aerona.domain.enums.environment import RiverClass, TemperatureBand, TerrainKind
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.faction import FactionKind, MovementCause
@@ -151,6 +153,7 @@ from aerona.domain.enums.faith import RebirthPath, ReincarnationGate
 from aerona.domain.enums.fertility_means import FertilityMeans
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.folkways import LuckReach, LuckSign
+from aerona.domain.enums.gathering import CollectionKind, CollectionRole, GatheringKind, GatheringStatus
 from aerona.domain.enums.geology import DeepPassageOrigin, DeepPassageState, UndergroundStratum
 from aerona.domain.enums.governance import GoverningBody
 from aerona.domain.enums.honours import UnitHonourKind
@@ -427,9 +430,55 @@ async def world_made_late(session: AsyncSession, world: CoreWorld) -> None:
 
 async def people_before_its_world(session: AsyncSession, world: CoreWorld) -> None:
     made = await happening(session, kind=PHASE_KIND, year=31)
-    session.add(IncidentParticipantRow(incident_id=made.id, node_id=world.regions[0].id, role=IncidentRole.PRODUCT, position=0))
+    session.add(IncidentParticipantRow(incident_id=made.id, node_id=world.regions[0].id, role=IncidentRole.CHILD, position=0))
+    session.add(NodeBirthRow(node_id=world.regions[0].id, year=31, locked=[]))
     woke = await happening(session, kind=PHASE_KIND, year=0)
     session.add(IncidentParticipantRow(incident_id=woke.id, node_id=world.regions[0].id, role=IncidentRole.SUBJECT, position=0))
+
+
+async def birth_after_its_first_record(session: AsyncSession, world: CoreWorld) -> None:
+    named = await mortal(session, "Late Dated", world, world.regions[0].id)
+    session.add(NodeBirthRow(node_id=named.id, year=40, locked=[]))
+    seen = await happening(session, kind=PHASE_KIND, year=10)
+    session.add(IncidentParticipantRow(incident_id=seen.id, node_id=named.id, role=IncidentRole.SUBJECT, position=0))
+
+
+async def child_older_than_its_years(session: AsyncSession, world: CoreWorld) -> None:
+    child = await mortal(session, "Old Child", world, world.regions[0].id, age=40)
+    session.add(NodeBirthRow(node_id=child.id, year=45, locked=[]))
+    born = await happening(session, kind="births.child", year=45)
+    session.add(IncidentParticipantRow(incident_id=born.id, node_id=child.id, role=IncidentRole.CHILD, position=0))
+
+
+async def witness_before_birth(session: AsyncSession, world: CoreWorld) -> None:
+    onlooker = await mortal(session, "Unborn Onlooker", world, world.regions[0].id)
+    session.add(NodeBirthRow(node_id=onlooker.id, year=30, locked=[]))
+    seen = await happening(session, kind=PHASE_KIND, year=0)
+    session.add(
+        IncidentParticipantRow(incident_id=seen.id, node_id=onlooker.id, role=IncidentRole.WITNESS, position=0, witness_mode=WitnessMode.SAW, fidelity=90)
+    )
+
+
+async def verdict_inside_its_age(session: AsyncSession, world: CoreWorld) -> None:
+    await happening(session, kind="fate.reward", year=5)
+
+
+async def wake_before_the_death(session: AsyncSession, world: CoreWorld) -> None:
+    host = await mortal(session, "Wake Host", world, world.regions[0].id)
+    honoured = await mortal(session, "Wake Honoured", world, world.regions[0].id, death_year=30)
+    honoured.status, honoured.end_epoch = EntityStatus.DEAD, 1
+    session.add(
+        GatheringRow(
+            host_node_id=host.id,
+            kind=GatheringKind.WAKE,
+            status=GatheringStatus.HELD,
+            honoured_node_id=honoured.id,
+            world_id=world.world.id,
+            epoch=1,
+            year=10,
+            locked=[],
+        )
+    )
 
 
 async def undated_birth(session: AsyncSession, world: CoreWorld) -> None:
@@ -620,6 +669,25 @@ async def exchange_with_itself(session: AsyncSession, world: CoreWorld) -> None:
 async def mood_with_a_stray_feeling(session: AsyncSession, world: CoreWorld) -> None:
     town = await settlement(session, "Moody Town", world, world.regions[0])
     session.add(FeelingSpreadRow(settlement_entity_id=town.id, feelings={"joy": 150, "not a feeling": 20}, locked=[]))
+
+
+async def household_mood_told_as_a_place(session: AsyncSession, world: CoreWorld) -> None:
+    head = await mortal(session, "Hearth Head", world, None)
+    session.add(HouseholdRow(id=head.id, name="House of the Hearth", head_node_id=head.id, locked=[]))
+    told = await happening(session, kind="mood.spread", year=12)
+    session.add(IncidentParticipantRow(incident_id=told.id, node_id=head.id, role=IncidentRole.SUBJECT, position=0))
+    session.add(IncidentFactRow(incident_id=told.id, key="feeling", enum_name="Emotion", enum_value="joy"))
+    session.add(IncidentFactRow(incident_id=told.id, key="strength", number=60.0, unit=FactUnit.PERCENT))
+
+
+async def funeral_named_after_its_host(session: AsyncSession, world: CoreWorld) -> None:
+    host = await mortal(session, "Keel Host", world, None)
+    mourned = await mortal(session, "Mourned One", world, None)
+    row = CollectionRow(kind=CollectionKind.FUNERAL, name="Funeral of Keel Host and Mourned One", world_id=world.world.id, start_epoch=1, locked=[])
+    session.add(row)
+    await session.flush()
+    session.add(CollectionMemberRow(collection_id=row.id, node_id=host.id, role=CollectionRole.HOST, since_epoch=1))
+    session.add(CollectionMemberRow(collection_id=row.id, node_id=mourned.id, role=CollectionRole.VICTIM, since_epoch=1))
 
 
 async def dynamic_of_nothing(session: AsyncSession, world: CoreWorld) -> None:
@@ -1344,7 +1412,7 @@ async def flood_with_no_water(session: AsyncSession, world: CoreWorld) -> None:
     war_id, first, second = await war_between(session, world)
     ground = await session.get(RegionEnvironmentRow, world.regions[0].id)
     if ground is not None:
-        ground.river_class = None
+        ground.river_class = RiverClass.NONE
     session.add(
         SiegeRow(
             war_id=war_id,
@@ -1911,6 +1979,11 @@ BREAKERS: dict[str, Breaker] = {
     "genesis_at_start": world_made_late,
     "moment_after_births": people_before_its_world,
     "birth_dated": undated_birth,
+    "birth_at_first_sight": birth_after_its_first_record,
+    "age_since_birth": child_older_than_its_years,
+    "judgment_at_epoch_close": verdict_inside_its_age,
+    "rite_after_death": wake_before_the_death,
+    "witness_born": witness_before_birth,
     "step_moment_order": steps_running_back,
     "witness_present": witness_far_away,
     "witness_mode": witness_who_does_not_say_how,
@@ -1934,6 +2007,8 @@ BREAKERS: dict[str, Breaker] = {
     "grave_goods_held": grave_with_a_stray_thing,
     "interpretation_reader": exchange_with_itself,
     "feeling_spread_values": mood_with_a_stray_feeling,
+    "mood_told_of_its_own": household_mood_told_as_a_place,
+    "collection_title_one_standing": funeral_named_after_its_host,
     "kin_dynamic_scope": dynamic_of_nothing,
     "kin_favour_other": favour_for_oneself,
     "kin_rivalry_pair": rivalry_backwards,

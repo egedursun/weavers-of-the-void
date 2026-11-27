@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.agents.chronicle import record_line
+from aerona.agents.chronicle import EPOCH_CLOSE, record_line
 from aerona.agents.fate.facts import entities_in_text, usable
 from aerona.agents.fate.naming import apply_naming
 from aerona.agents.fate.rollback import roll_back_rejection
@@ -109,6 +109,7 @@ async def apply_verdicts(session: AsyncSession, rules: Rules, ruling: FateRuling
                 facts={"detail": f": {rationale}" if rationale else ""},
                 kind=ChronicleKind.FATE,
                 son_id=entity.creator_son_id,
+                progress=EPOCH_CLOSE,
             )
             applied.rejected.append(entity.name)
             applied.rejected_ids.append(entity.id)
@@ -128,6 +129,7 @@ async def apply_verdicts(session: AsyncSession, rules: Rules, ruling: FateRuling
                 facts={"detail": f": {rationale}" if rationale else ""},
                 kind=ChronicleKind.FATE,
                 son_id=entity.creator_son_id,
+                progress=EPOCH_CLOSE,
             )
             applied.fixed.append(entity.name)
         else:
@@ -155,8 +157,9 @@ async def apply_prophecies(session: AsyncSession, rules: Rules, ruling: FateRuli
             facts={"reading": item.reading, "reading_text": READING_TEXTS[item.reading], "how": how or ""},
             kind=ChronicleKind.PROPHECY,
             son_id=prophecy.creator_son_id,
+            progress=EPOCH_CLOSE,
         )
-        ctx = await manual_context(session, "fate_prophecy", rules, key=str(prophecy.id))
+        ctx = await manual_context(session, "fate_prophecy", rules, key=str(prophecy.id), progress=EPOCH_CLOSE)
         await reward_fulfilment(ctx, prophecy, misread=item.reading is ProphecyReading.MISREAD)
 
 
@@ -176,14 +179,24 @@ async def apply_threads(session: AsyncSession, rules: Rules, ruling: FateRuling,
         if not await advance_story(session, thread, record.id, epoch):
             continue
         if thread.id not in closed_ids:
-            await record_line(session, rules, "fate.story_advanced", roles={IncidentRole.SUBJECT: record.id}, facts={"how": how}, kind=ChronicleKind.FATE)
+            await record_line(
+                session,
+                rules,
+                "fate.story_advanced",
+                roles={IncidentRole.SUBJECT: record.id},
+                facts={"how": how},
+                kind=ChronicleKind.FATE,
+                progress=EPOCH_CLOSE,
+            )
     for item in first_by_id(closing, lambda closed: closed.id):
         thread = await session.get(ThreadRow, item.id)
         if thread is None or thread.status is ThreadStatus.CLOSED or not await thread_closable(session, rules, thread, epoch):
             continue
         how = clean_fate_note(item.how) or ""
         related = await close_story(session, thread, how or None, epoch)
-        await record_line(session, rules, "fate.story_closed", roles={IncidentRole.SUBJECT: list(related)}, facts={"how": how}, kind=ChronicleKind.FATE)
+        await record_line(
+            session, rules, "fate.story_closed", roles={IncidentRole.SUBJECT: list(related)}, facts={"how": how}, kind=ChronicleKind.FATE, progress=EPOCH_CLOSE
+        )
 
 
 async def new_stories(session: AsyncSession, ruling: FateRuling, output: FateJudgmentOutput, limit: int) -> None:
@@ -257,8 +270,9 @@ async def apply_rewards(session: AsyncSession, rules: Rules, ruling: FateRuling,
             facts={"fame": fame, "xp": xp, "detail": f": {reason}" if reason else "."},
             kind=ChronicleKind.FATE,
             son_id=son.id,
+            progress=EPOCH_CLOSE,
         )
-        await grant_progress(await manual_context(session, "fate_reward", rules, key=str(son.id)), son, xp=xp, fame=fame)
+        await grant_progress(await manual_context(session, "fate_reward", rules, key=str(son.id), progress=EPOCH_CLOSE), son, xp=xp, fame=fame)
 
 
 async def apply_namings(session: AsyncSession, ruling: FateRuling, output: FateJudgmentOutput, applied: FateApplied) -> None:

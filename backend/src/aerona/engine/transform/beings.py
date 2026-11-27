@@ -20,7 +20,7 @@ from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityStatus, EntityType
 from aerona.domain.enums.life_traits import PackageKindTrait
 from aerona.domain.enums.transform import TransformKind, TransformState
 from aerona.domain.models.entity_stats import BeastStats, MortalStats
-from aerona.engine.body.afflictions import spec_of
+from aerona.engine.body.agelessness import spec_of
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.foreign_gods import NewForeignGod, add_foreign_god
 from aerona.engine.ecology.beasts import profile_beast

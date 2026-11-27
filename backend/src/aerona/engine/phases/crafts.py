@@ -161,6 +161,8 @@ async def trades(ctx: TickContext) -> None:
 @reads(
     "settlement.prosperity",
     "table.assistive_aids",
+    "table.augment_effects",
+    "table.augments",
     "table.bonds",
     "table.conditions",
     "table.creator",
@@ -173,9 +175,11 @@ async def trades(ctx: TickContext) -> None:
     "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
+    "table.incubating_ideas",
     "table.kind_holdings",
     "table.language_profiles",
     "table.lexemes",
+    "table.mind_attributes",
     "table.minds",
     "table.name_registry",
     "table.node_births",
@@ -186,6 +190,7 @@ async def trades(ctx: TickContext) -> None:
     "table.skills",
     "table.sons",
     "table.stars",
+    "table.traits",
     "table.worlds",
 )
 @writes(
@@ -235,6 +240,7 @@ async def learning_aids(ctx: TickContext) -> None:
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.thoughts",
 )
 async def sympathies(ctx: TickContext) -> None:
     sympathy, spirits = SympathyTally(), SpiritTally()

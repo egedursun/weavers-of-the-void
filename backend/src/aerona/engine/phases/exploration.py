@@ -51,6 +51,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.maturity import of_age, under_age
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_percent, scaled_cap
 from aerona.engine.primitives.queries import canon, flags_by_entity
@@ -103,7 +104,7 @@ def is_explorer(rules: Rules, entity: EntityRow, mobility: float = 1.0) -> bool:
 
 
 async def explores(ctx: TickContext, entity: EntityRow) -> bool:
-    return is_explorer(ctx.rules, entity, await factor(ctx.session, entity.id, Capacity.MOBILITY))
+    return is_explorer(ctx.rules, entity, await factor(ctx.session, entity.id, Capacity.MOBILITY)) and await of_age(ctx.session, entity.id)
 
 
 @dataclass
@@ -679,6 +680,8 @@ async def cosmic_exploration(ctx: TickContext) -> int:
         if (entity.entity_type is EntityType.MORTAL or unlocked(ctx.rules, entity.civ_tier or 0, TierCapability.ROUTE_SEARCH))
         and await route_method(ctx, entity, knowledge) is not None
     ]
+    young = await under_age(ctx.session, [seeker.id for seeker in seekers])
+    seekers = [seeker for seeker in seekers if seeker.id not in young]
     searched = 0
     cap = scaled_cap(settings.route_search_cap, settings.route_search_cap_seeker_divisor, len(seekers))
     for seeker in unheld(rng.shuffled(seekers)):
@@ -758,6 +761,7 @@ async def foreign_god_land(ctx: TickContext, god_id: int | None = None) -> list[
     "table.incidents",
     "table.language_profiles",
     "table.lexemes",
+    "table.mortal_profiles",
     "table.name_registry",
     "table.node_births",
     "table.nodes",

@@ -14,6 +14,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import shift_points
 from aerona.engine.polity.held_titles import title_prestige
+from aerona.engine.primitives.maturity import UNDER_AGE, of_age
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
@@ -44,12 +45,16 @@ async def alive(session: AsyncSession, node_id: int | None) -> bool:
 
 
 async def choose_head(ctx: TickContext, group: KinGroupRow, members: list[KinGroupMemberRow], tally: GroupTally) -> None:
-    if await alive(ctx.session, group.head_node_id) or "head_node_id" in (group.locked or []):
+    if "head_node_id" in (group.locked or []):
+        return
+    if await alive(ctx.session, group.head_node_id) and await of_age(ctx.session, group.head_node_id):
         return
     ranked: list[tuple[int, int, int]] = []
     for member in members:
         profile = await ctx.session.get(MortalProfileRow, member.member_node_id)
-        if profile is not None and await alive(ctx.session, member.member_node_id) and not held(member.member_node_id):
+        if profile is None or profile.life_stage in UNDER_AGE:
+            continue
+        if await alive(ctx.session, member.member_node_id) and not held(member.member_node_id):
             ranked.append((-profile.renown, member.joined_epoch, member.member_node_id))
     if not ranked:
         return

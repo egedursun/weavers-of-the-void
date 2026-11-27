@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 
 from aerona.agents.ask import ask
-from aerona.agents.chronicle import record_line
+from aerona.agents.chronicle import EPOCH_CLOSE, record_line
 from aerona.agents.context.scope import Scope, load_scope
 from aerona.agents.context.siblings import relations_of
 from aerona.agents.context.world_header import world_header
@@ -239,7 +239,9 @@ async def apply_alliances(scope: Scope, names: dict[int, str], output: CouncilOu
             notes.append(f"{names[alliance.a]} and {names[alliance.b]} broke apart in the council")
 
 
-async def apply_decision(scope: Scope, members: list[SonRow], output: CouncilOutput, notes: list[str], council_id: int | None = None) -> None:
+async def apply_decision(
+    scope: Scope, members: list[SonRow], output: CouncilOutput, notes: list[str], council_id: int | None = None, *, progress: float | None = None
+) -> None:
     council = scope.rules.council
     decision = output.decision
     if decision is CouncilMotion.AGAINST_DOOMSDAY:
@@ -258,7 +260,7 @@ async def apply_decision(scope: Scope, members: list[SonRow], output: CouncilOut
         if peace:
             notes.append(peace)
     elif decision is not CouncilMotion.NONE:
-        ctx = await manual_context(scope.session, "council", scope.rules, key=str(scope.epoch))
+        ctx = await manual_context(scope.session, "council", scope.rules, key=str(scope.epoch), progress=progress)
         motion = Motion(
             decision, output.target_id, output.world_id, output.school, output.punishment or SonPunishment.CHAIN, output.voting_rule, output.penance_deed
         )
@@ -294,6 +296,10 @@ async def carried_by_procedure(scope: Scope, members: list[SonRow], output: Coun
     return carried(procedure, cast, len(members) + len(guests))
 
 
+def closing(caller: CouncilCaller) -> float | None:
+    return EPOCH_CLOSE if caller is CouncilCaller.FATE else None
+
+
 async def apply_council(scope: Scope, members: list[SonRow], output: CouncilOutput, topic: str, *, caller: CouncilCaller, god_asked: bool) -> CouncilResult:
     names = {son.id: son.name for son in members}
     votes = await weighed_votes(scope, members, output, await tally(scope, names, output))
@@ -306,7 +312,7 @@ async def apply_council(scope: Scope, members: list[SonRow], output: CouncilOutp
     scope.session.add(held_row)
     await scope.session.flush()
     if passed:
-        await apply_decision(scope, members, output, notes, held_row.id)
+        await apply_decision(scope, members, output, notes, held_row.id, progress=closing(caller))
     minutes = CouncilMinutes(
         topic=topic,
         convened_by=caller,
@@ -339,6 +345,7 @@ async def apply_council(scope: Scope, members: list[SonRow], output: CouncilOutp
         facts={"topic": subject, "motion": minutes.motion, "verdict": verdict, "yes": yes, "no": no, "notes": note_text, "summary": minutes.summary},
         kind=ChronicleKind.COUNCIL,
         steps=(*ballots, StepDraft(StepAction.COUNT_VOTES, outcome=StepOutcome.ACCEPTED if passed else StepOutcome.REFUSED)),
+        progress=closing(caller),
     )
     return CouncilResult(row.id, topic, passed, minutes.motion, notes)
 

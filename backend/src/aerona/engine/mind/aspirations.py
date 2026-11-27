@@ -59,6 +59,7 @@ from aerona.engine.mortal.life import adult
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
+from aerona.engine.primitives.maturity import of_age
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int
@@ -766,7 +767,9 @@ async def set_out(ctx: TickContext, mortal: EntityRow) -> bool:
     want = await ctx.session.scalar(
         select(WantRow).where(WantRow.holder_node_id == mortal.id, WantRow.kind == WantKind.TRAVEL, WantRow.fulfilled_epoch.is_(None)).limit(1)
     )
-    if want is None or not ctx.rng(seed_of("wanderlust", mortal.id, ctx.epoch)).chance(ctx.rules.aspirations.want_travel_pct):
+    if want is None or not await of_age(ctx.session, mortal.id):
+        return False
+    if not ctx.rng(seed_of("wanderlust", mortal.id, ctx.epoch)).chance(ctx.rules.aspirations.want_travel_pct):
         return False
     atlas = await RegionAtlas.load(ctx.session)
     home = atlas.top_region(mortal.id)

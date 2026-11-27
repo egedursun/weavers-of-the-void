@@ -316,7 +316,19 @@ async def vaccination(ctx: TickContext) -> None:
     count(ctx, "vaccination", tally)
 
 
-@reads("table.disease_cures", "table.entities", "table.nodes", "table.outbreaks", "table.structure_profiles", "table.theory_adherents", "table.theory_profiles")
+@reads(
+    "table.assistive_aids",
+    "table.cure_research",
+    "table.disease_cures",
+    "table.entities",
+    "table.nodes",
+    "table.outbreaks",
+    "table.skills",
+    "table.structure_profiles",
+    "table.theory_adherents",
+    "table.theory_profiles",
+)
+@writes("table.cure_research")
 async def cure_research(ctx: TickContext) -> None:
     tally = ResearchTally()
     await research_cures(ctx, tally)

@@ -191,6 +191,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.incidents",
     "table.messages",
     "table.name_registry",
+    "table.node_births",
     "table.son_relations",
 )
 async def schisms(ctx: TickContext) -> None:

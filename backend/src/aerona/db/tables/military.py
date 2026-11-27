@@ -461,13 +461,13 @@ class SpyNetworkRow(Base):
 
 
 register_profile_table("army_units", "army_entity_id")
-register_profile_table("unit_designs", "id")
+register_profile_table("unit_designs", "entity_id")
 register_profile_table("army_officers", "army_entity_id")
 register_profile_table("mercenary_contracts", "employer_entity_id")
 register_profile_table("war_aims", "side_entity_id")
 register_profile_table("captive_cohorts", "captor_entity_id")
 register_profile_table("spy_networks", "owner_entity_id")
-register_profile_table("spy_agents", "id")
+register_profile_table("spy_agents", "mortal_entity_id")
 register_profile_table("feuds", "first_entity_id")
 
 

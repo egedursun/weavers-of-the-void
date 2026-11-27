@@ -12,7 +12,7 @@ from aerona.domain.enums.evolution import SuccessionStage
 from aerona.domain.enums.faction import FactionActionKind, FactionGoalKind
 from aerona.domain.enums.fortune import FortuneSourceKind
 from aerona.domain.enums.law_depth import CourtLevel
-from aerona.domain.enums.mind import ActKind, Emotion, GriefStage
+from aerona.domain.enums.mind import ActKind, Emotion, GriefStage, SkillKind
 from aerona.domain.enums.modifier import IncidentRole as R
 from aerona.domain.enums.mortal import CareerPath
 from aerona.domain.enums.mythic import GeasLayer, GeasMode, QuestTrial
@@ -46,7 +46,7 @@ CAREERS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "career.settled_frontier",
         G.SOCIAL,
-        "{subject} left {origin} to settle the frontier at {destination}.",
+        "{subject} left{origin:? #} to settle the frontier at {destination}.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.ORIGIN, required=False), RoleSpec(R.DESTINATION)),
         steps=frozenset({A.DEPART, A.ARRIVE}),
         place=PlaceRule.WHEN_KNOWN,
@@ -156,9 +156,33 @@ MINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mind.emotion_felt",
         G.SOCIAL,
-        "Moved by {emotion}, {subject} acted toward {target}.",
+        "Moved by {emotion}, {subject} acted{target:? toward #}.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("emotion", FactValue.ENUM, enum=Emotion),),
+        clock=C.SEASON,
+        legacy=True,
+    ),
+    IncidentKindSpec(
+        "mind.curiosity_studied",
+        G.SOCIAL,
+        "Moved by curiosity, {subject} studied {skill}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})),),
+        facts=(FactSpec("skill", FactValue.ENUM, enum=SkillKind),),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "mind.compassion_gift",
+        G.SOCIAL,
+        "Moved by compassion, {subject} gave {target} {gift:wealth point|wealth points}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.TARGET)),
+        facts=(FactSpec("gift", FactValue.NUMBER, FactUnit.WEALTH_POINTS),),
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "mind.contempt_humiliation",
+        G.SOCIAL,
+        "Moved by contempt, {subject} humiliated {target}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.TARGET)),
         clock=C.SEASON,
     ),
 )
@@ -275,7 +299,7 @@ STATECRAFT: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "mandate.issued",
         G.LAW,
-        "{authority} laid {mandate:an} mandate on {subject}, to stand until epoch {until}.",
+        "{authority} laid {mandate:an} mandate{subject:? on #}, to stand until epoch {until}.",
         roles=(RoleSpec(R.AUTHORITY), RoleSpec(R.SUBJECT, required=False), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("mandate", FactValue.ENUM, enum=MandateKind), FactSpec("until", FactValue.NUMBER, FactUnit.COUNT)),
         place=PlaceRule.WHEN_KNOWN,
@@ -350,7 +374,7 @@ STATECRAFT: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "oath.broken",
         G.LAW,
-        "{actor} broke the {oath} oath before the courts of {authority} in the case of {accused}.",
+        "{actor} broke the {oath} oath before the courts{authority:? of #} in the case{accused:? of #}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.AUTHORITY, required=False), RoleSpec(R.ACCUSED, required=False)),
         facts=(FactSpec("oath", FactValue.ENUM, enum=OathKind),),
         place=PlaceRule.WHEN_KNOWN,
@@ -359,7 +383,7 @@ STATECRAFT: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "faction.acted",
         G.SOCIAL,
-        "{actor} turned to {action} toward {target}, pressing for {goal}.",
+        "{actor} turned to {action}{target:? toward #}, pressing for {goal}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("action", FactValue.ENUM, enum=FactionActionKind), FactSpec("goal", FactValue.ENUM, enum=FactionGoalKind)),
         clock=C.SEASON,
@@ -418,7 +442,7 @@ STATECRAFT: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.testify",
         G.LAW,
-        "{actor} gave {evidence} evidence in the case against {accused}.",
+        "{actor} gave {evidence} evidence in the case{accused:? against #}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.ACCUSED, required=False)),
         facts=(FactSpec("evidence", FactValue.ENUM, enum=EvidenceKind),),
         clock=C.INSTANT,
@@ -426,7 +450,7 @@ STATECRAFT: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.set_faction_goal",
         G.SOCIAL,
-        "{actor} set their faction to press for {goal}, aimed at {target}.",
+        "{actor} set their faction to press for {goal}, aimed{target:? at #}.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("goal", FactValue.ENUM, enum=FactionGoalKind),),
         clock=C.INSTANT,
@@ -438,7 +462,7 @@ ARCANA: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "rite.ended",
         G.KNOWLEDGE,
-        "The working of {subject} on {target} came to its end: {end}.",
+        "The working of {subject}{target:? on #} came to its end: {end}.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.RITE})), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("end", FactValue.ENUM, enum=RiteEnd),),
         clock=C.PHASE,
@@ -454,7 +478,7 @@ ARCANA: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "geas.laid",
         G.FAITH,
-        "A geas was laid on {subject} by {origin}, {layer}: {mode} of {act}.",
+        "A geas was laid on {subject}{origin:? by #}, {layer}: {mode} of {act}.",
         roles=(RoleSpec(R.SUBJECT, frozenset({E.MORTAL})), RoleSpec(R.ORIGIN, required=False)),
         facts=(
             FactSpec("layer", FactValue.ENUM, enum=GeasLayer),
@@ -466,7 +490,7 @@ ARCANA: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "orders.given",
         G.MAKING,
-        "{subject} was given an order by {authority}: {order}, aimed at {target}, kept {condition}.",
+        "{subject} was given an order{authority:? by #}: {order}, aimed{target:? at #}, kept {condition}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.AUTHORITY, required=False), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("order", FactValue.ENUM, enum=OrderKind), FactSpec("condition", FactValue.ENUM, enum=OrderCondition)),
         clock=C.INSTANT,

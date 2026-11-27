@@ -29,6 +29,7 @@ from aerona.engine.divine.gods import god_of
 from aerona.engine.divine.standing import present, standing_row
 from aerona.engine.mind.thoughts import think
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import of_age_query
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.society import shift_stock, stock
@@ -147,7 +148,12 @@ async def petitioner_in(ctx: TickContext, community: EntityRow) -> int:
     mortals = list(
         await ctx.session.scalars(
             select(EntityRow.id)
-            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [community.id]))
+            .where(
+                EntityRow.entity_type == EntityType.MORTAL,
+                EntityRow.status == EntityStatus.CANON,
+                await present_among(ctx.session, [community.id]),
+                of_age_query(),
+            )
             .order_by(EntityRow.id)
         )
     )

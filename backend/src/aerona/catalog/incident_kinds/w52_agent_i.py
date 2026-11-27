@@ -99,7 +99,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "relic.restored",
         G.MAKING,
-        "{subject} was studied and repaired until it worked again for {owner}.",
+        "{subject} was studied and repaired until it worked again{owner:? for #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.OWNER, required=False)),
         place=PlaceRule.WHEN_KNOWN,
         clock=C.PHASE,
@@ -107,7 +107,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "relic.dismantled",
         G.MAKING,
-        "{owner} took {subject} apart for its parts, gaining {salvage} coin and what its making taught.",
+        "{subject} was taken apart for its parts{owner:? by #}, yielding {salvage} coin and what its making taught.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.OWNER, required=False)),
         facts=(FactSpec("salvage", FactValue.NUMBER, U.COIN),),
         place=PlaceRule.NONE,

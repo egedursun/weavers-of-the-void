@@ -10,7 +10,8 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.affliction import ChangeSign, CharmKind, CureKind, ForgetScope, PackageKind, SleepUntil, Transmission
 from aerona.domain.enums.body import BodyPlan
 from aerona.domain.enums.material import MaterialKind
-from aerona.engine.body.afflictions import STAGE_HOLD, active, afflict, bearable, cure, enter_stage, revert, spec_of
+from aerona.engine.body.afflictions import STAGE_HOLD, afflict, bearable, cure, enter_stage, revert
+from aerona.engine.body.agelessness import active, spec_of
 from aerona.engine.body.packages_w52 import Shape
 from aerona.services.player.scope import Command, Effect, PlayerScope, player_action
 

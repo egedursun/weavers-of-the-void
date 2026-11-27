@@ -58,7 +58,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_dug",
         G.NATURE,
-        "{actor} finished digging {kind:an} from {place} to {destination}.",
+        "The digging of {kind:an} from {place} to {destination} was finished{actor:? by #}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),
@@ -110,7 +110,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "deep.passage_cleared",
         G.NATURE,
-        "{actor} cleared the fallen {kind} from {place} to {destination}.",
+        "The fallen {kind} from {place} to {destination} was cleared{actor:? by #}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.DESTINATION), RoleSpec(R.ACTOR, required=False)),
         facts=(
             FactSpec("kind", FactValue.ENUM, enum=DeepPassageKind),

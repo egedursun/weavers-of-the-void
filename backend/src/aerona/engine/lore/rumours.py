@@ -52,6 +52,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity, load_entities, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import shift_stat, stat
+from aerona.engine.recording.births import mark_born_at
 from aerona.engine.recording.record import record as record_incident
 from aerona.engine.recording.terms import explaining_alone, term
 from aerona.engine.renown.book import standing_with
@@ -675,6 +676,7 @@ async def plant(
         ctx.session.add(incident)
         await ctx.session.flush()
         ctx.session.add(IncidentParticipantRow(incident_id=incident.id, node_id=subject.id, role=IncidentRole.SUBJECT, position=0))
+        await mark_born_at(ctx.session, [(subject.id, IncidentRole.SUBJECT)], incident.id)
         ctx.session.add(IncidentFactRow(incident_id=incident.id, key="account", position=0, name=text.strip()))
     existing = await ctx.session.scalar(select(RumourRow).where(RumourRow.incident_id == incident.id, RumourRow.carrier_entity_id == carrier.id))
     if existing is not None:

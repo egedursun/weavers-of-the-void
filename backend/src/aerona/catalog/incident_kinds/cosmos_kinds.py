@@ -207,7 +207,7 @@ STARS: tuple[IncidentKindSpec, ...] = (
     happening(
         "star.divine_lapsed",
         S,
-        "{subject} fell back under the laws of its kind when {maker} could no longer keep it.",
+        "{subject} fell back under the laws of its kind when{maker:? #} could no longer keep it.",
         roles=(one(R.SUBJECT), maybe(R.MAKER)),
         facts=(amount("upkeep", U.ESSENCE),),
         clock=C.INSTANT,
@@ -814,7 +814,7 @@ ACTS: tuple[IncidentKindSpec, ...] = (
     happening(
         "terraform.begun",
         S,
-        "{actor} began to reshape {subject} toward {aim} over {epochs:epoch|epochs}.",
+        "{subject} began to be reshaped toward {aim}{actor:? by #} over {epochs:epoch|epochs}.",
         roles=(maybe(R.ACTOR), one(R.SUBJECT)),
         facts=(chosen("aim", TerraformAim), amount("step", U.PERCENT), amount("epochs", U.COUNT)),
         steps=(A.BEGIN,),

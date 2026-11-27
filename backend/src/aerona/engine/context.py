@@ -33,6 +33,11 @@ def phase_window(rules: Rules, phase: EpochPhase) -> YearWindow:
     return YearWindow(start=min(start, end), end=max(start, end))
 
 
+@dataclass
+class AgingState:
+    done: bool = False
+
+
 @dataclass(frozen=True)
 class TickEnvironment:
     rules: Rules
@@ -43,6 +48,8 @@ class TickEnvironment:
     stats: TickStats
     window: YearWindow | None = None
     progress: float | None = None
+    phase: EpochPhase | None = None
+    aging: AgingState | None = None
 
     def rng(self, stream: str) -> SeededRandom:
         return SeededRandom.for_epoch(self.world_seed, self.epoch, stream)

@@ -1365,6 +1365,7 @@ async def split_already(ctx: TickContext, people: EntityRow) -> bool:
     "table.modifiers",
     "table.mortal_perks",
     "table.mortal_profiles",
+    "table.node_births",
     "table.thoughts",
     "table.wants",
 )

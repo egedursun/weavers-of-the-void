@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 
 from aerona.catalog.commodities import FOOD_KINDS
-from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATHERING_THOUGHTS, GUEST_ROLES, HONOURED_ROLES, HOSTED_FEASTS
+from aerona.catalog.gatherings import CONTEST_KINDS, GATHERING_COLLECTIONS, GATHERING_THOUGHTS, GUEST_ROLES, HONOURED_ROLES, HOST_ROLES, HOSTED_FEASTS
 from aerona.catalog.kinds.gathering_outcomes import GATHERING_RESULTS
 from aerona.catalog.life.gatherings import HOLD_GATHERING_KINDS
 from aerona.constants.units import PERCENT
@@ -12,6 +12,7 @@ from aerona.core.dispatch import Handlers
 from aerona.core.grammar import spoken
 from aerona.core.random import SeededRandom
 from aerona.core.total import total
+from aerona.db.repositories.chronicle import scoped_cause
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import CommemorationRow
 from aerona.db.tables.culture import TraditionProfileRow
@@ -39,6 +40,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind, TreatyKind
 from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.models.moment import Moment, latest
 from aerona.engine.body.hits import Harm
 from aerona.engine.collective.feelings import stir_feelings
 from aerona.engine.context import TickContext
@@ -71,7 +73,9 @@ from aerona.engine.primitives.folk import folk_among, present_among
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
-from aerona.engine.recording.record import FactInput, StepDraft, record
+from aerona.engine.recording.births import born_floor
+from aerona.engine.recording.moments import incident_moment, moment_for
+from aerona.engine.recording.record import FactInput, StepDraft, kind_of, record
 from aerona.engine.relations.book import ensure_relation, relation, relations_of, shift
 
 G = GatheringKind
@@ -131,10 +135,24 @@ async def plan(ctx: TickContext, occasion: Occasion, *, by_player: bool = False)
     )
     ctx.session.add(row)
     await ctx.session.flush()
-    row.year = max(0, year_at(ctx, ctx.epoch, f"gathering_year.{row.id}"))
+    floor = await rite_floor(ctx, row)
+    row.year = max(0, year_at(ctx, ctx.epoch, f"gathering_year.{row.id}"), floor.year if floor is not None else 0)
     row.season = await season_of(ctx, row)
     await invite(ctx, row, occasion.guests)
     return row
+
+
+async def death_moment_of(ctx: TickContext, node: int | None) -> Moment | None:
+    found = await ctx.session.get(EntityRow, node) if node is not None else None
+    if found is None or found.status is not EntityStatus.DEAD:
+        return None
+    year = stat(found, "death_year")
+    return Moment(int(year)) if year is not None else None
+
+
+async def rite_floor(ctx: TickContext, row: GatheringRow) -> Moment | None:
+    births = await born_floor(ctx.session, [node for node in (row.host_node_id, row.honoured_node_id, row.place_entity_id) if node is not None])
+    return latest(births, await death_moment_of(ctx, row.honoured_node_id))
 
 
 async def season_of(ctx: TickContext, row: GatheringRow) -> int | None:
@@ -739,13 +757,20 @@ async def remember(ctx: TickContext, holding: Holding) -> None:
             )
 
 
+def collection_role(holding: Holding, node: int) -> CollectionRole:
+    if node == holding.row.host_node_id:
+        return HOST_ROLES.get(holding.row.kind, CollectionRole.HOST)
+    guest = holding.guests.get(node)
+    return GUEST_ROLES[guest.role] if guest is not None else CollectionRole.GUEST
+
+
 async def chronicle(ctx: TickContext, holding: Holding) -> None:
     row = holding.row
     collection = await open_collection(
         ctx,
         GATHERING_COLLECTIONS[row.kind],
         world_id=row.world_id,
-        members={node: GUEST_ROLES[holding.guests[node].role] if node in holding.guests else CollectionRole.GUEST for node in holding.attendees},
+        members={node: collection_role(holding, node) for node in holding.attendees},
         places=[row.place_entity_id] if row.place_entity_id is not None else [],
         source_key=f"gathering.{row.id}",
     )
@@ -757,9 +782,14 @@ async def chronicle(ctx: TickContext, holding: Holding) -> None:
             continue
         guest = holding.guests.get(node)
         guests.setdefault(GUEST_INCIDENT_ROLES[guest.role] if guest is not None else IncidentRole.GUEST, []).append(node)
+    key = f"gathering.{row.kind.value}"
+    floor = latest(Moment(row.year) if row.year is not None else None, await rite_floor(ctx, row), await incident_moment(ctx.session, scoped_cause()))
+    moment = await moment_for(ctx, kind_of(key).clock, key=key, participants=[row.host_node_id, *holding.attendees], cause_moment=floor, world_id=row.world_id)
+    if "year" not in row.locked:
+        row.year = moment.year
     await record(
         ctx,
-        f"gathering.{row.kind.value}",
+        key,
         roles={IncidentRole.HOST: row.host_node_id, IncidentRole.PLACE: row.place_entity_id if row.place_entity_id != row.host_node_id else None, **guests},
         facts={
             "gathering": row.kind,
@@ -774,6 +804,7 @@ async def chronicle(ctx: TickContext, holding: Holding) -> None:
         steps=tuple(holding.steps),
         place=row.place_entity_id,
         world_id=row.world_id,
+        at_moment=moment,
     )
 
 

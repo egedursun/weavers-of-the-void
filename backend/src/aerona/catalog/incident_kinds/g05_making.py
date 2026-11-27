@@ -352,8 +352,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "item.masterwork",
         G.MAKING,
-        "{maker} made {product}, a masterwork of quality {quality}.",
-        roles=(RoleSpec(R.PRODUCT), RoleSpec(R.MAKER, required=False)),
+        "{maker:?# }made {product}, a masterwork of quality {quality}.",
+        roles=(RoleSpec(R.PRODUCT), RoleSpec(R.MAKER)),
         facts=(FactSpec("quality", FactValue.NUMBER, unit=FactUnit.PERCENT), FactSpec("renown_gain", FactValue.NUMBER, unit=FactUnit.RENOWN)),
         place=PlaceRule.WHEN_KNOWN,
         clock=ProcessClock.SEASON,
@@ -808,7 +808,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "structures.finished",
         G.MAKING,
-        "{product} stands finished for {owner} {years:within the epoch it was begun|after # epoch|after # epochs}: {structure:an}.",
+        "{product} stands finished{owner:? for #} {years:within the epoch it was begun|after # epoch|after # epochs}: {structure:an}.",
         roles=(
             RoleSpec(R.PRODUCT),
             RoleSpec(R.OWNER, required=False),
@@ -950,7 +950,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.draw_design",
         G.MAKING,
-        "{maker} drew {product} for {owner}, {frame:an} built for its {emphasis}.",
+        "{maker} drew{product:? #} for {owner}, {frame:an} built for its {emphasis}.",
         roles=(
             RoleSpec(R.MAKER),
             RoleSpec(R.OWNER),
@@ -967,7 +967,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.draw_structure_type",
         G.MAKING,
-        "{maker} drew {product}, {structure:an} of {storeys:storey|storeys}, for {owner}.",
+        "{maker} drew{product:? #}, {structure:an} of {storeys:storey|storeys}, for {owner}.",
         roles=(
             RoleSpec(R.MAKER),
             RoleSpec(R.OWNER),
@@ -995,7 +995,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tools.mortal.forge_model",
         G.MAKING,
-        "{maker} made {product}, a new {family} for {owner}.",
+        "{maker} made{product:? #}, a new {family} for {owner}.",
         roles=(
             RoleSpec(R.MAKER),
             RoleSpec(R.OWNER),
@@ -1165,7 +1165,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "structures.finished_by_hand",
         G.MAKING,
-        "{product} stands finished at the Creator's word for {owner}: {structure:an}.",
+        "{product} stands finished at the Creator's word{owner:? for #}: {structure:an}.",
         roles=(
             RoleSpec(R.PRODUCT),
             RoleSpec(R.OWNER, required=False),

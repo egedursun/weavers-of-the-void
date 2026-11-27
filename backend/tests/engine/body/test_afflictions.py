@@ -7,7 +7,8 @@ from aerona.db.tables.mind import MemoryRow
 from aerona.domain.enums.affliction import CureKind, PackageKind, Transmission, Visibility
 from aerona.domain.enums.body import BodyFunction, ConditionKind, DamageType, HarmCause, InjuryKind, InjuryState
 from aerona.domain.enums.mind import MemoryKind, NeedKind
-from aerona.engine.body.afflictions import active, afflict, ageless, cure, inherit, progress, spread_by_bite, traumatise, visible
+from aerona.engine.body.afflictions import afflict, cure, inherit, progress, spread_by_bite, traumatise, visible
+from aerona.engine.body.agelessness import active, ageless
 from aerona.engine.mind.book import needs_of
 from aerona.engine.mind.memories import remember
 from aerona.engine.primitives.stats import set_stats, stat

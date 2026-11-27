@@ -31,6 +31,7 @@ from aerona.engine.phase import Phase
     "table.incident_participants",
     "table.incidents",
     "table.mortal_profiles",
+    "table.node_births",
 )
 async def fertility_means(ctx: TickContext) -> None:
     for key, value in asdict(await tend_means(ctx)).items():

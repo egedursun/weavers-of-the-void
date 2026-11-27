@@ -66,6 +66,7 @@ from aerona.engine.mythic.geasa import spring_trap
 from aerona.engine.polity.trials import frame_case, report_crime
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import of_age_query
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.queries import connect, living_entity, spoken_language
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
@@ -154,7 +155,12 @@ async def hire(ctx: TickContext, scheme: SchemeRow, agents: list[int], wanted: i
     seek = scaled_cap(HIRE_SEEK, ctx.rules.scale.hire_seek_people, stat_or(place, "population", 0) if place is not None else 0)
     everyone = await ctx.session.scalars(
         select(EntityRow.id)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, [owner.location_id]))
+        .where(
+            EntityRow.entity_type == EntityType.MORTAL,
+            EntityRow.status == EntityStatus.CANON,
+            await present_among(ctx.session, [owner.location_id]),
+            of_age_query(),
+        )
         .order_by(EntityRow.id)
     )
     locals_ = ctx.rng(f"scheme.hire.{scheme.id}.{ctx.epoch}").sample(list(everyone), seek)
@@ -705,7 +711,9 @@ async def choose_kind(ctx: TickContext, owner: EntityRow, rival: EntityRow) -> P
 async def plotters(ctx: TickContext, tally: SchemeTally) -> None:
     table = ctx.rules.intrigue
     open_owners = set(await ctx.session.scalars(select(SchemeRow.owner_node_id).where(SchemeRow.phase.in_(list(OPEN)))))
-    statement = select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON).order_by(EntityRow.id)
+    statement = (
+        select(EntityRow).where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, of_age_query()).order_by(EntityRow.id)
+    )
     mortals = ctx.rng("scheme.order").shuffled(list(await ctx.session.scalars(statement)))
     limit = scaled_cap(table.scheme_cap, table.scheme_cap_mortal_divisor, len(mortals))
     for mortal in mortals:

@@ -34,7 +34,8 @@ from aerona.domain.enums.mind import ActKind, SkillKind, SkillSource
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mythic import HeroquestBoon, HeroquestState, MythicRealm, QuestTrial
 from aerona.domain.models.entity_stats import ItemStats
-from aerona.engine.body.afflictions import active, afflict, cure
+from aerona.engine.body.afflictions import afflict, cure
+from aerona.engine.body.agelessness import active
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -49,6 +50,7 @@ from aerona.engine.lore.names import entitle
 from aerona.engine.mind.book import skill_level
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import of_age, of_age_query
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import canon, connect
 from aerona.engine.primitives.quota import WorldQuota
@@ -485,7 +487,7 @@ async def fellows(ctx: TickContext, quester: EntityRow, ids: list[int]) -> list[
 
 async def eligible(ctx: TickContext, mortal: EntityRow) -> tuple[LegendProfileRow, EntityRow | None] | None:
     table = ctx.rules.heroquests
-    if held(mortal.id) or await renown_of(ctx, mortal.id) < table.renown_min:
+    if held(mortal.id) or not await of_age(ctx.session, mortal.id) or await renown_of(ctx, mortal.id) < table.renown_min:
         return None
     community = await community_of(ctx.session, mortal)
     if community is None or (stat(community, "piety") or 0) < table.piety_min:
@@ -530,6 +532,7 @@ async def companions(ctx: TickContext, quester: EntityRow, questing: set[int]) -
             EntityRow.entity_type == EntityType.MORTAL,
             EntityRow.status == EntityStatus.CANON,
             EntityRow.id != quester.id,
+            of_age_query(),
         )
         .order_by(EntityRow.id)
     )

@@ -21,7 +21,7 @@ from aerona.domain.enums.records import StepAction
 from aerona.domain.enums.society import SocialClass
 from aerona.engine.body.customs import people_id_of
 from aerona.engine.context import TickContext
-from aerona.engine.mortal.learning import practise_subject
+from aerona.engine.mind.skills import practise
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
@@ -171,7 +171,7 @@ async def play(ctx: TickContext, row: KindHoldingRow, game: GameRow, tally: Game
         for player in await players_of(ctx, towns):
             if held(player):
                 continue
-            if await practise_subject(ctx.session, ctx.rules, player, game.skill, subject_id=game.id, xp=table.strategy_xp * skilled, epoch=ctx.epoch):
+            if await practise(ctx.session, ctx.rules, player, game.skill, table.strategy_xp * skilled, epoch=ctx.epoch):
                 tally.trained += 1
     wager = share * game.chance_share * game.betting / PERCENT / PERCENT
     crowd = share * game.spectators / PERCENT

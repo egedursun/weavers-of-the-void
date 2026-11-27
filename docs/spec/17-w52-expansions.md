@@ -4354,7 +4354,7 @@ The deepening pass (Parts 100–109) widens several of the values named here; Ap
 
 **Rules.** Namespace `emotions`: per emotion `{emotion}_decay` (0–50) and `{emotion}_act_weight` (0–100).
 
-**Incidents.** `mind.emotion_felt` with the emotion as a fact.
+**Incidents.** Each act tells what happened: `mind.curiosity_studied` (the skill studied), `mind.compassion_gift` (the gift to the target, in wealth points) and `mind.contempt_humiliation` (the target humiliated). The older `mind.emotion_felt` stays readable for records written before.
 
 **Agent tools.** Mortal tools read emotions; son `stir_emotion` (`node_id`, `emotion`) lists twenty-eight.
 

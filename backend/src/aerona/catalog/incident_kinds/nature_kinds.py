@@ -831,7 +831,7 @@ CREATURES: tuple[IncidentKindSpec, ...] = (
     happening(
         "creatures.merged_escaped",
         N,
-        "{actor} got out of control and turned on {victim}, who made it.",
+        "{actor} got out of control and turned{victim:? on #}, who made it.",
         roles=(one(R.ACTOR), maybe(R.VICTIM)),
         facts=(amount("loss", U.PERCENT), amount("danger", U.PERCENT)),
         clock=C.INSTANT,
@@ -879,7 +879,7 @@ CREATURES: tuple[IncidentKindSpec, ...] = (
     happening(
         "creatures.migration",
         N,
-        "Herds of {subject} spilled out of {origin} and spread into the lands of {destination}.",
+        "Herds of {subject} spilled out{origin:? of #} and spread into the lands of {destination}.",
         roles=(one(R.SUBJECT), maybe(R.ORIGIN), one(R.DESTINATION)),
         facts=(amount("chance", U.PERCENT),),
         steps=(A.DEPART, A.MIGRATE, A.ARRIVE),
@@ -967,7 +967,7 @@ DISASTER_KINDS: tuple[IncidentKindSpec, ...] = (
     happening(
         "disasters.plague_spread",
         N,
-        "{subject} spread along the roads from {origin} to {destination}; {lost:person was|people were} lost there.",
+        "{subject} spread along the roads{origin:? from #} to {destination}; {lost:person was|people were} lost there.",
         roles=(one(R.SUBJECT), maybe(R.ORIGIN), one(R.DESTINATION)),
         facts=(*DISASTER_FACTS, amount("chance", U.PERCENT)),
         steps=DISASTER_STEPS,

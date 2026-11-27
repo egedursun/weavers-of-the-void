@@ -1,5 +1,6 @@
 from sqlalchemy import select
 
+from aerona.agents.chronicle import EPOCH_CLOSE
 from aerona.agents.council import convene_council
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.epochs import DeferredStepRow
@@ -25,7 +26,7 @@ async def auto_council(ec: EpochContext) -> None:
     if not ec.runtime.llm_enabled:
         async with ec.database.write() as session:
             rules = await ec.runtime.rules(session)
-            held_council = await engine_council(await manual_context(session, "engine_council", rules, key=str(ec.epoch)))
+            held_council = await engine_council(await manual_context(session, "engine_council", rules, key=str(ec.epoch), progress=EPOCH_CLOSE))
         if held_council is None:
             await ec.mark(EpochStepKind.COUNCIL, EpochStepStatus.SKIPPED)
             return

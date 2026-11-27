@@ -1,6 +1,6 @@
 {% from "shared/macros.md.j2" import entity_line, bond_lines, society_lines, economy_block %}
 {{ entity_line(entity) }}
-Created by: {% if author == "world" %}the world's own course (mortals){% elif author == "creator" %}the creator god{% elif author == "son" and author_son %}son#{{ author_son.id }} {{ author_son.name }}{% else %}unknown{% endif %} · Age {{ age }}{% if world %} · world#{{ world.id }} {{ world.name }} (judged by its own dialect){% endif %}{% if domain %} · domain {{ domain }}{% endif %}{% if tags %} · tags: {{ tags | join(", ") }}{% endif %}
+Created by: {% if author == "world" %}the world's own course (mortals){% elif author == "creator" %}the creator god{% elif author == "son" and author_son %}son#{{ author_son.id }} {{ author_son.name }}{% else %}unknown{% endif %} · Age {{ age }}{% if world %} · world#{{ world.id }} {{ world.name }} (judged by its own dialect){% endif %}{% if domain %} · domain {{ domain }}{% endif %}{% if tags %} · tags: {{ tags | join(", ") }}{% endif %}{% if name_kept %} · name kept{% endif %}
 
 {% if stats %}
 Stats: {% for stat in stats %}{{ stat.label }} {{ stat.value }}{% if not loop.last %}, {% endif %}{% endfor %}

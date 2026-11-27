@@ -402,7 +402,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "faction.riot",
         G.PEOPLES,
-        "{actor} took to the streets of {place}.",
+        "{actor} took to the streets{place:? of #}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("order_lost", FactValue.NUMBER, FactUnit.PERCENT),),
         terms=True,
@@ -740,7 +740,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "life_cycles.siege_razed",
         G.PEOPLES,
-        "{target} fell during {actor}.",
+        "{target} fell during{actor:? #}.",
         roles=(RoleSpec(R.TARGET), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("wonder", FactValue.NUMBER, FactUnit.COUNT),),
         feed=F.WAR,

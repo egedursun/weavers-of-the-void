@@ -665,7 +665,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     ),
     kind(
         "tools.mortal.defend_system",
-        "{actor} hardened the defences of {target}.",
+        "{actor} hardened the defences{target:? of #}.",
         (role(R.ACTOR), role(R.TARGET, required=False)),
         (number("security", U.PERCENT),),
         chronicle=K.WORLD,

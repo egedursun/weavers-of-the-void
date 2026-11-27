@@ -6020,7 +6020,7 @@ Each epoch the head of each house may favour one of two or more children; each s
 
 **Behaviour.**
 
-1. Each epoch strong feelings pass along bonds (kin, friends, followers) and to those sharing a place, by susceptibility and bond strength, and fade over time.
+1. Each epoch strong feelings pass along bonds (kin, friends, followers) and to those sharing a place, by susceptibility and bond strength, and fade over time. A place's or household's measured feeling is the mean, over its members, of each member's strongest thought of that feeling in the epoch; the stored strength is the larger of that measure and the faded strength before it, so it stays within 0 to 100. A household's mood is told of the head of the household, never of the household's own number.
 2. Shared feeling moves decisions (biases, 47.8.2), crowd thresholds (F32), worship (emotion-fed gods) and gatherings.
 3. Leaders and speakers with high charisma spread their feeling further (50.13).
 
@@ -6032,7 +6032,7 @@ Each epoch the head of each house may favour one of two or more children; each s
 - A "Mood" section in every drawer.
 - Context block `mood`.
 
-**Incidents.** `mood.spread`, `mood.faded`, `mood.stirred`, `mood.moved`.
+**Incidents.** `mood.spread`, `mood.faded` (of a settlement), `mood.spread_household`, `mood.faded_household` (of a household, told of its head), `mood.stirred`, `mood.moved`.
 
 **Rules namespace.** `feeling_spread`:
 

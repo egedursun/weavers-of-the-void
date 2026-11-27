@@ -11,7 +11,8 @@ from aerona.domain.enums.records import FactUnit
 from aerona.domain.models.moment import Moment
 from aerona.engine.pipeline import simulate
 from aerona.rules.registry import Rules
-from aerona.services.integrity.record_links import ahead_of_births
+from aerona.services.integrity.chronology import early_rites, overaged, unborn_witnesses
+from aerona.services.integrity.record_links import ahead_of_births, births_after_sighting, births_unknown
 from tests.engine.core.stirring import eager, stir
 from tests.engine.integration.factories import seed_rich_cosmos
 
@@ -74,6 +75,11 @@ async def test_no_happening_is_earlier_than_its_cause_and_no_step_earlier_than_t
     told = [f"{kind}: incident year {year} but line year {line}" for kind, year, line in years if year != line]
     async with database.read() as session:
         unborn = await ahead_of_births(session)
+        undated = await births_unknown(session)
+        late_births = await births_after_sighting(session)
+        overgrown = await overaged(session)
+        early_rite = await early_rites(session)
+        unborn_seers = await unborn_witnesses(session)
         dated = (
             await session.execute(
                 select(IncidentRow.id, IncidentRow.kind, IncidentRow.year, IncidentFactRow.number)
@@ -90,3 +96,8 @@ async def test_no_happening_is_earlier_than_its_cause_and_no_step_earlier_than_t
     assert told == []
     assert unborn == [], f"happenings earlier than the first record of someone in them: {unborn[:20]}"
     assert misdated == [], f"happenings that tell one year and stand in another: {misdated[:20]}"
+    assert undated == [], f"things named in the age they were made with no moment of coming into being: {undated[:20]}"
+    assert late_births == [], f"things dated as coming into being after the first record that names them: {late_births[:20]}"
+    assert overgrown == [], f"mortals born in the world older than the years since their birth: {overgrown[:20]}"
+    assert early_rite == [], f"gatherings earlier than their host, the one they honour, or the death they honour: {early_rite[:20]}"
+    assert unborn_seers == [], f"witnesses who saw what happened before they came into being: {unborn_seers[:20]}"

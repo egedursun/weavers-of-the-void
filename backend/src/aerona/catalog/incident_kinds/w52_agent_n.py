@@ -27,7 +27,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dominion.creature_carry_messages",
         G.GODS,
-        "{actor}, beast of {patron}, carried the word of its god to {target}.",
+        "{actor}, beast of {patron}, carried the word of its god{target:? to #}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PATRON), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("deed", FactValue.ENUM, enum=CreatureDeed),),
         place=PlaceRule.WHEN_KNOWN,
@@ -36,7 +36,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dominion.creature_teach",
         G.GODS,
-        "{actor}, beast of {patron}, taught the folk of {target}.",
+        "{actor}, beast of {patron}, taught the folk{target:? of #}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PATRON), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("deed", FactValue.ENUM, enum=CreatureDeed),),
         place=PlaceRule.WHEN_KNOWN,
@@ -45,7 +45,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dominion.creature_trade",
         G.GODS,
-        "{actor}, beast of {patron}, traded with the folk of {target}.",
+        "{actor}, beast of {patron}, traded with the folk{target:? of #}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PATRON), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("deed", FactValue.ENUM, enum=CreatureDeed),),
         place=PlaceRule.WHEN_KNOWN,

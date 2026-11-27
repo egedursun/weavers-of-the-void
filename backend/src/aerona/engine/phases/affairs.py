@@ -143,6 +143,7 @@ from aerona.engine.polity.revenue import RevenueTally, tend_revenue
     "table.memories",
     "table.mortal_profiles",
     "table.noble_demands",
+    "table.node_births",
     "table.offices",
     "table.policy_approval",
     "table.polity_profiles",

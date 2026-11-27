@@ -151,7 +151,7 @@ async def creator_essence(ctx: TickContext) -> None:
             )
 
 
-@reads("table.chronicle", "table.cosmos", "table.nodes", "table.worlds")
+@reads("table.chronicle", "table.cosmos", "table.node_births", "table.nodes", "table.worlds")
 @writes("table.chronicle", "table.chronicle_entities", "table.cosmos", "table.incident_facts", "table.incident_participants", "table.incidents")
 async def advance_epoch(ctx: TickContext) -> None:
     cosmos = await cosmos_of(ctx.session)

@@ -31,6 +31,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.numbers import apportion, clamp_int
 from aerona.engine.primitives.queries import active_bonds
 from aerona.engine.primitives.records import RecordSpec, create_record
+from aerona.engine.recording.births import mark_born_at
 from aerona.engine.recording.record import StepDraft, record
 
 MULTI_SEASON = frozenset({EngineKind.FAMINE, EngineKind.PLAGUE, EngineKind.SIEGE})
@@ -308,6 +309,7 @@ async def happen(
         incident_id = written.incident_id
     elif incident_id is not None and await ctx.session.get(IncidentRow, incident_id) is not None:
         ctx.session.add(IncidentParticipantRow(incident_id=incident_id, node_id=event.id, role=IncidentRole.SUBJECT, position=0))
+        await mark_born_at(ctx.session, [(event.id, IncidentRole.SUBJECT)], incident_id)
     profile = await open_profile(ctx, event, incident_id=incident_id)
     for region_id in {await region_of(ctx.session, atlas, where.id), *happening.regions}:
         await add_footprint(ctx.session, event.id, region_id, ctx.epoch)

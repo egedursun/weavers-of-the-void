@@ -269,6 +269,7 @@ async def lift_curse(ctx: TickContext, entity: EntityRow) -> bool:
     "table.injuries",
     "table.memories",
     "table.mortal_profiles",
+    "table.node_births",
 )
 async def cursed_items(ctx: TickContext) -> None:
     rules = ctx.rules

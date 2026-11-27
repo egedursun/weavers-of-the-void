@@ -15,7 +15,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.mind.book import values_for
 from aerona.engine.mind.memories import remember
-from aerona.engine.mind.skills import practise_any
+from aerona.engine.mind.skills import best_skill, practise
 from aerona.engine.mind.thoughts import think
 from aerona.engine.mortal.standing import add_wealth
 from aerona.engine.primitives.folk import present_among
@@ -108,20 +108,23 @@ async def act_on(ctx: TickContext, mortal: EntityRow, row: ThoughtRow) -> bool:
         return False
     other = row.subject_node_id
     if row.emotion is Emotion.CURIOSITY:
-        await practise_any(ctx.session, ctx.rules, mortal.id, CURIOUS_STUDY, table.curiosity_xp, epoch=ctx.epoch)
+        skill = await best_skill(ctx.session, mortal.id, CURIOUS_STUDY)
+        await practise(ctx.session, ctx.rules, mortal.id, skill, table.curiosity_xp, epoch=ctx.epoch)
+        await record(ctx, "mind.curiosity_studied", roles={IncidentRole.SUBJECT: mortal.id}, facts={"skill": skill})
     elif row.emotion is Emotion.COMPASSION and other is not None:
         await add_wealth(ctx.session, mortal.id, -table.compassion_gift, ctx.epoch)
         await add_wealth(ctx.session, other, table.compassion_gift, ctx.epoch)
         await remember(
             ctx.session, ctx.rules, holder_id=other, subject_id=mortal.id, kind=MemoryKind.GIFTED_ME, magnitude=table.compassion_gift, epoch=ctx.epoch
         )
+        await record(ctx, "mind.compassion_gift", roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.TARGET: other}, facts={"gift": table.compassion_gift})
     elif row.emotion is Emotion.CONTEMPT and other is not None:
         await remember(
             ctx.session, ctx.rules, holder_id=other, subject_id=mortal.id, kind=MemoryKind.HUMILIATED_ME, magnitude=-table.contempt_insult, epoch=ctx.epoch
         )
+        await record(ctx, "mind.contempt_humiliation", roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.TARGET: other})
     else:
         return False
-    await record(ctx, "mind.emotion_felt", roles={IncidentRole.SUBJECT: mortal.id, IncidentRole.TARGET: other}, facts={"emotion": row.emotion})
     return True
 
 

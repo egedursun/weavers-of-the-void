@@ -79,7 +79,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "arts.canonised",
         G.SOCIAL,
-        "{subject} entered the canon of {member}.",
+        "{subject} entered the canon{member:? of #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.MEMBER, required=False)),
         facts=(FactSpec("path", FactValue.ENUM, enum=CanonPath), FactSpec("weight", FactValue.NUMBER, FactUnit.COUNT)),
         steps=frozenset({A.HONOUR}),
@@ -128,7 +128,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "arts.orthodox",
         G.SOCIAL,
-        "{subject} became the orthodoxy of the art of {member}.",
+        "{subject} became the orthodoxy of the art{member:? of #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.MEMBER, required=False)),
         facts=(FactSpec("patrons", FactValue.NUMBER, FactUnit.COUNT),),
         place=PlaceRule.WHEN_KNOWN,
@@ -485,7 +485,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "game.poachers_punished",
         G.SOCIAL,
-        "Poachers were caught in the reserve of {place} and punished by {owner}.",
+        "Poachers were caught in the reserve of {place} and punished{owner:? by #}.",
         roles=(RoleSpec(R.OWNER, required=False), RoleSpec(R.PLACE), RoleSpec(R.MEMBER, required=False, many=True)),
         facts=(
             FactSpec("poaching", FactValue.NUMBER, FactUnit.PERCENT),
@@ -604,7 +604,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             IncidentKindSpec(
                 "households.",
                 G.SOCIAL,
-                "The household {household} of {actor} chose to {decision}.",
+                "The household {household}{actor:? of #} chose to {decision}.",
                 roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.TARGET, required=False, many=True), RoleSpec(R.DESTINATION, required=False)),
                 facts=(
                     FactSpec("household", FactValue.NAME),
@@ -819,7 +819,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "remembrance.disaster",
         G.SOCIAL,
-        "{subject} was not forgotten: {product} remember it.",
+        "{subject} was not forgotten{product:?: # remember it}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PRODUCT, required=False, many=True)),
         facts=(FactSpec("toll", FactValue.NUMBER, FactUnit.PEOPLE),),
         steps=frozenset({A.MOURN}),
@@ -829,7 +829,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "remembrance.hero",
         G.SOCIAL,
-        "{subject} was not forgotten: {product} remember them.",
+        "{subject} was not forgotten{product:?: # remember them}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PRODUCT, required=False, many=True)),
         steps=frozenset({A.HONOUR}),
         place=PlaceRule.WHEN_KNOWN,
@@ -838,7 +838,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "remembrance.plague_clung",
         G.SOCIAL,
-        "Facing {subject}, {actor} held tighter to {target}.",
+        "Facing {subject}, {actor} held tighter{target:? to #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("piety", FactValue.NUMBER, FactUnit.PERCENT),),
         steps=frozenset({A.PRAY}),
@@ -848,7 +848,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "remembrance.plague_estranged",
         G.SOCIAL,
-        "During {subject}, {actor} turned away from {target}.",
+        "During {subject}, {actor} turned away{target:? from #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("piety", FactValue.NUMBER, FactUnit.PERCENT),),
         steps=frozenset({A.DENY}),
@@ -877,7 +877,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "remembrance.war",
         G.SOCIAL,
-        "{actor} remembered its victory in {subject}: {product}.",
+        "{actor} remembered its victory in {subject}:{product:? #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR), RoleSpec(R.OPPONENT, required=False), RoleSpec(R.PRODUCT, required=False, many=True)),
         facts=(FactSpec("battles", FactValue.NUMBER, FactUnit.COUNT),),
         steps=frozenset({A.CELEBRATE, A.MOURN}),
@@ -887,7 +887,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "revivals.begun",
         G.SOCIAL,
-        "Pressed by {opponent}, {actor} began a movement to {goal}.",
+        "Pressed{opponent:? by #}, {actor} began a movement to {goal}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.OPPONENT, required=False), RoleSpec(R.LEADER, required=False)),
         facts=(FactSpec("way", FactValue.ENUM, enum=RevivalWay), FactSpec("goal", FactValue.ENUM, enum=RevivalGoal)),
         steps=frozenset({A.BEGIN}),
@@ -1022,7 +1022,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "standing.patronage",
         G.SOCIAL,
-        "{patron} became the patron of {product}.",
+        "{patron} became the patron{product:? of #}.",
         roles=(RoleSpec(R.PATRON), RoleSpec(R.PRODUCT, required=False)),
         facts=(FactSpec("cost", FactValue.NUMBER, FactUnit.WEALTH_POINTS), FactSpec("renown", FactValue.NUMBER, FactUnit.RENOWN)),
         steps=frozenset({A.PAY}),
@@ -1035,7 +1035,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         IncidentKindSpec(
             "storylet.",
             G.SOCIAL,
-            "{actor} came to a choice in the {storylet}, step {step}.",
+            "A choice came{actor:? to #} in the {storylet}, step {step}.",
             roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.MEMBER, required=False, many=True)),
             facts=(
                 FactSpec("storylet", FactValue.ENUM, enum=StoryletId),
@@ -1055,7 +1055,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
             IncidentKindSpec(
                 "storylet.",
                 G.SOCIAL,
-                "{actor} chose option {choice} in the {storylet}, step {step}.",
+                "Option {choice} was chosen{actor:? by #} in the {storylet}, step {step}.",
                 roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.MEMBER, required=False, many=True)),
                 facts=(
                     FactSpec("storylet", FactValue.ENUM, enum=StoryletId),

@@ -42,6 +42,7 @@ from aerona.domain.enums.powers import PowerState
 from aerona.domain.enums.records import StepAction, StepOutcome, StepState
 from aerona.domain.enums.society import KnowledgeBranch
 from aerona.domain.enums.war import HeroQuestStatus
+from aerona.engine.body.agelessness import active, spec_of, stage_of
 from aerona.engine.body.book import ensure_body
 from aerona.engine.body.conditions import end_condition, gain_condition
 from aerona.engine.body.hits import Harm
@@ -79,15 +80,6 @@ STAGE_HOLD = "stage"
 BEARER_TYPES = frozenset({EntityType.MORTAL, EntityType.BEAST})
 
 
-def spec_of(row: AfflictionRow) -> PackageSpec:
-    return PACKAGES[row.package]
-
-
-def stage_of(row: AfflictionRow) -> StageSpec | None:
-    stages = spec_of(row).stages
-    return stages[row.stage - 1] if 1 <= row.stage <= len(stages) else None
-
-
 def visible(row: AfflictionRow) -> bool:
     return spec_of(row).visibility not in (Visibility.HIDDEN, Visibility.MARKED) and row.stage > 0
 
@@ -101,22 +93,11 @@ async def recognised(ctx: TickContext, row: AfflictionRow, watcher_id: int) -> b
     return True
 
 
-async def active(session: AsyncSession, bearer_id: int) -> list[AfflictionRow]:
-    rows = await session.scalars(
-        select(AfflictionRow).where(AfflictionRow.bearer_node_id == bearer_id, AfflictionRow.cured_epoch.is_(None)).order_by(AfflictionRow.id)
-    )
-    return list(rows)
-
-
 async def carriers(session: AsyncSession, packages: set[PackageKind]) -> dict[int, list[AfflictionRow]]:
     found: dict[int, list[AfflictionRow]] = {}
     for row in await session.scalars(select(AfflictionRow).where(AfflictionRow.cured_epoch.is_(None), AfflictionRow.package.in_(list(packages)))):
         found.setdefault(row.bearer_node_id, []).append(row)
     return found
-
-
-async def ageless(session: AsyncSession, bearer_id: int) -> bool:
-    return any((stage := stage_of(row)) is not None and stage.ageless for row in await active(session, bearer_id))
 
 
 def bearable(bearer: EntityRow | None) -> bool:

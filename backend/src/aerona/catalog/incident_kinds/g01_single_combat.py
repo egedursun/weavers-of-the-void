@@ -399,14 +399,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     kind("creation.shaped", "{product} came into being by the Creator's will.", roles=(role(R.PRODUCT),), chronicle_kind=K.CREATOR_HAND),
     kind(
         "mortals.shaped",
-        "{child} was born among {origin} by the Creator's will.",
+        "{child} came into being among {origin} by the Creator's will.",
         roles=(role(R.CHILD), role(R.ORIGIN)),
         feed=F.LIFE,
         chronicle_kind=K.BIRTH,
     ),
     kind(
         "heroes.birth",
-        "A new hero, {child}, was born among {origin}.",
+        "A new hero, {child}, arose among {origin}.",
         roles=(role(R.CHILD), role(R.ORIGIN)),
         facts=(number("power", U.STRENGTH),),
         feed=F.LIFE,

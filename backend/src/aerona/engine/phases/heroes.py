@@ -33,6 +33,7 @@ from aerona.engine.phases.society_support.quest_claims import CLAIMS, Claim, Cla
 from aerona.engine.phases.society_support.quests import QuestOption, QuestWorld, open_threads, quest_options
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import FaithIndex
+from aerona.engine.primitives.maturity import under_age
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_float, clamp_int, fraction, scaled_cap
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity, spoken_language
@@ -97,7 +98,8 @@ async def load_hero_world(ctx: TickContext) -> HeroWorld:
     )
     chosen = await flags_by_entity(session, EntityFlag.CHOSEN)
     captives = await held_captives(session)
-    heroes = [entity for entity in entities.values() if is_hero(ctx.rules, entity, chosen, captives)]
+    young = await under_age(session, entities)
+    heroes = [entity for entity in entities.values() if entity.id not in young and is_hero(ctx.rules, entity, chosen, captives)]
     return HeroWorld(quests, await FaithIndex.load(session), chosen, captives, heroes)
 
 
@@ -391,6 +393,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "species.danger",
     "species.strength",
     "spirit.unrest",
+    "table.afflictions",
     "table.afterlife_strata",
     "table.assistive_aids",
     "table.augment_effects",
@@ -417,6 +420,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.deeds",
     "table.deep_passages",
     "table.designated_heirs",
+    "table.dimensional_events",
     "table.dimensions",
     "table.divine_wounds",
     "table.doctrine_sacraments",
@@ -427,6 +431,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.expedition_members",
     "table.feuds",
     "table.foreign_gods",
+    "table.galactic_structures",
     "table.galaxies",
     "table.galaxy_clusters",
     "table.geasa",
@@ -457,6 +462,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
     "table.mortal_equipment",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.natural_law_profiles",
     "table.node_births",
     "table.nodes",
     "table.offices",
@@ -498,6 +504,7 @@ async def _apprentice_round(ctx: TickContext, world: HeroWorld, counters: HeroCo
 )
 @writes(
     "knowledge.spread",
+    "mortal.age",
     "mortal.charisma",
     "mortal.death_year",
     "mortal.hp",

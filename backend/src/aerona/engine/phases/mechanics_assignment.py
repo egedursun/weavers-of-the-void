@@ -90,6 +90,7 @@ async def weigh(ctx: TickContext, entities: list[EntityRow], announce: bool) -> 
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
 )
 async def mechanics_assignment(ctx: TickContext) -> None:
     ctx.count("weighed", await weigh(ctx, await unweighed(ctx.session), announce=True))

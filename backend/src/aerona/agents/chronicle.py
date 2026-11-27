@@ -18,6 +18,9 @@ class ChroniclePhase(StrEnum):
     NEW_EPOCH = "new_epoch"
 
 
+EPOCH_CLOSE = 1.0
+
+
 async def record_line(
     session: AsyncSession,
     rules: Rules,
@@ -31,7 +34,8 @@ async def record_line(
     world_id: int | None = None,
     feed: FeedCategory | None = None,
     steps: Sequence[StepDraft] = (),
+    progress: float | None = None,
 ) -> str:
-    ctx = await manual_context(session, f"agents.{phase.value}", rules, key=key)
+    ctx = await manual_context(session, f"agents.{phase.value}", rules, key=key, progress=progress)
     written = await record(ctx, key, roles=roles, facts=facts, kind=kind, son_id=son_id, world_id=world_id, feed=feed, steps=steps)
     return written.text

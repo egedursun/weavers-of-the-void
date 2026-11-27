@@ -9,16 +9,23 @@ from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmography import PhenomenonFootprintRow, PhenomenonProfileRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.minds import MindProfileRow
 from aerona.domain.enums.cosmography import PhenomenonKind
+from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityFlag, EntityType, MortalRole
 from aerona.domain.enums.eras import EraChannel
-from aerona.domain.enums.society import KnowledgeBranch
+from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
+from aerona.engine.body.agelessness import ageless
+from aerona.engine.body.variants import folk_biology
+from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import world_pull
+from aerona.engine.divine.laws import binds
 from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.knowledge import known_branches, known_levels
+from aerona.engine.primitives.knowledge import LawBook, known_branches, known_levels
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.physics import PhysicsTable
 from aerona.engine.primitives.queries import canon
 from aerona.engine.primitives.stats import set_stats, stat
 from aerona.rules.registry import Rules
@@ -140,3 +147,20 @@ async def raise_lifespan_to_death_age(
         return False
     set_stats(mortal, lifespan=age - info.medicine - info.notable)
     return True
+
+
+async def aging_rate(ctx: TickContext, mortal: EntityRow, laws: LawBook, physics: PhysicsTable) -> float:
+    if (
+        await binds(ctx, NaturalLaw.IMMORTALITY, mortal)
+        or immortal(await EntityRepository(ctx.session).flags(mortal.id))
+        or await ageless(ctx.session, mortal.id)
+    ):
+        return 0.0
+    if not (await folk_biology(ctx.session, mortal)).ages:
+        return 0.0
+    seated = await ctx.session.get(MindProfileRow, mortal.id)
+    if seated is not None and seated.dormant:
+        return 0.0
+    effects = ctx.rules.world_effects
+    multiplier = (effects.short_life_aging_mult if laws.has(NaturalLaw.SHORT_LIFE, mortal.world_id) else 1) * physics.of(mortal.world_id).time
+    return multiplier * await ctx.hook_easing(mortal.id, DomainHook.AGING)

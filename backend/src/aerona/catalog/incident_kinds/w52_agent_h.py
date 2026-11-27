@@ -27,7 +27,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "expedition.resolve",
         G.MOVEMENT,
-        "Under strain on the way to {destination}, {member} turned {resolve}.",
+        "Under strain on the way{destination:? to #}, {member} turned {resolve}.",
         roles=(RoleSpec(R.MEMBER, frozenset({E.MORTAL})), RoleSpec(R.DESTINATION, required=False)),
         facts=(
             FactSpec("resolve", FactValue.ENUM, enum=ResolveKind),
@@ -40,7 +40,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "expedition.discovery",
         G.MOVEMENT,
-        "On a leg into the {ground} of {destination}, {actor} made a discovery.",
+        "On a leg into the {ground}{destination:? of #}, {actor} made a discovery.",
         roles=(RoleSpec(R.ACTOR, frozenset({E.MORTAL})), RoleSpec(R.DESTINATION, required=False)),
         facts=(
             FactSpec("ground", FactValue.ENUM, enum=ExpeditionGround),

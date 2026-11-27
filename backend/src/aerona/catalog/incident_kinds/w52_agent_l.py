@@ -27,7 +27,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "gift.hoarded",
         G.SOCIAL,
-        "{actor} kept {instrument} of the circuit {circuit} instead of passing it on.",
+        "{actor} kept{instrument:? #} of the circuit {circuit} instead of passing it on.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.INSTRUMENT, required=False)),
         facts=(FactSpec("circuit", FactValue.NAME),),
         place=PlaceRule.NONE,

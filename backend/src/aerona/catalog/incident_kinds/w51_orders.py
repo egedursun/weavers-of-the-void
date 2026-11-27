@@ -9,6 +9,7 @@ from aerona.domain.enums.demography import Job
 from aerona.domain.enums.departures import DepartureKind
 from aerona.domain.enums.divine_conceptions import ConceptionAxis, CreatorPlace, DivineCount, GodReading
 from aerona.domain.enums.economy import CommodityKind, WorkshopKind
+from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.fertility_means import FertilityMeans, MeansSource
 from aerona.domain.enums.forecasting import ObservationMethod
 from aerona.domain.enums.governance import HeadSelection, InsolvencyPath, MergerKind, OrgStrategy
@@ -246,7 +247,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "labour.contract_agreed",
         G.SOCIAL,
-        "{actor} and {co_actor} agreed terms for {trade} at {place}: a wage at {wage} percent of the customary and {hours:hour|hours} a week.",
+        "{co_actor} agreed terms{actor:? with #} for {trade}{place:? at #}: a wage at {wage} percent of the customary and {hours:hour|hours} a week.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.CO_ACTOR), RoleSpec(R.PLACE, required=False)),
         facts=(
             FactSpec("trade", FactValue.ENUM, enum=Job),
@@ -259,7 +260,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "labour.contract_broken",
         G.SOCIAL,
-        "{actor} broke its contract for {trade} with {victim} at {place}: {why}.",
+        "{actor} broke its contract for {trade}{victim:? with #}{place:? at #}: {why}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM, required=False), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("trade", FactValue.ENUM, enum=Job), FactSpec("why", FactValue.NAME)),
         place=PlaceRule.WHEN_KNOWN,
@@ -296,7 +297,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "labour.dispute_ended",
         G.SOCIAL,
-        "The {act} of {subject} against {opponent} at {place} ended {outcome}; the workers lost {body_losses} coin and the hirer {hirer_losses}.",
+        "The {act} of {subject}{opponent:? against #}{place:? at #} ended {outcome}; the workers lost {body_losses} coin and the hirer {hirer_losses}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.OPPONENT, required=False), RoleSpec(R.PLACE, required=False)),
         facts=(
             FactSpec("act", FactValue.ENUM, enum=DisputeAct),
@@ -310,7 +311,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "labour.strikebreakers_used",
         G.SOCIAL,
-        "{actor} brought in others to break the strike of {target} at {place}; "
+        "{actor} brought in others to break the strike of {target}{place:? at #}; "
         "{injured:member was|members were} hurt and {workers:worker stayed|workers stayed} out.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("injured", FactValue.NUMBER, FactUnit.PEOPLE), FactSpec("workers", FactValue.NUMBER, FactUnit.PEOPLE)),
@@ -338,7 +339,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "money.rate_set",
         G.EXCHANGE,
-        "{actor} moved the rate of {currency} from {before} to {rate}, aiming at {aim}.",
+        "The rate of {currency} was moved from {before} to {rate}{actor:? by #}, aiming at {aim}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT, required=False)),
         facts=(
             FactSpec("currency", FactValue.NAME),
@@ -352,7 +353,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "money.printed_for_state",
         G.EXCHANGE,
-        "{actor} issued {currency} to fund {beneficiary}, {bent}: its supply rose to {supply} and its trust fell to {trust}, and the state gained {coin} coin.",
+        "{currency} was issued{actor:? by #} to fund{beneficiary:? #}, {bent}: its supply rose to {supply} and its trust fell to {trust}, "
+        "and the state gained {coin} coin.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.BENEFICIARY, required=False), RoleSpec(R.SUBJECT, required=False)),
         facts=(
             FactSpec("currency", FactValue.NAME),
@@ -367,7 +369,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "money.peg_held",
         G.EXCHANGE,
-        "{actor} spent {spent} of its reserves to hold {currency} to its peg, keeping {reserves}.",
+        "The keepers of the reserves{actor:?, #,} spent {spent} to hold {currency} to its peg, keeping {reserves}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT, required=False)),
         facts=(FactSpec("currency", FactValue.NAME), FactSpec("spent", FactValue.NUMBER, FactUnit.COIN), FactSpec("reserves", FactValue.NUMBER, FactUnit.COIN)),
         place=PlaceRule.NONE,
@@ -390,7 +392,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "money.bank_rescued",
         G.EXCHANGE,
-        "{actor} saved {beneficiary} from failing, spending {spent} of its reserves and raising the supply of {currency} to {supply}.",
+        "{beneficiary} was saved from failing{actor:? by #}, at a cost of {spent} from the reserves, raising the supply of {currency} to {supply}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.BENEFICIARY), RoleSpec(R.SUBJECT, required=False)),
         facts=(FactSpec("currency", FactValue.NAME), FactSpec("spent", FactValue.NUMBER, FactUnit.COIN), FactSpec("supply", FactValue.NUMBER, FactUnit.COIN)),
         place=PlaceRule.NONE,
@@ -660,7 +662,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "office.abdicated",
         G.SOCIAL,
-        "{actor} gave up their seat as {seat} of {subject} to {successor}: {why}.",
+        "{actor} gave up their seat as {seat}{subject:? of #}{successor:? to #}: {why}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUCCESSOR, required=False), RoleSpec(R.SUBJECT, required=False)),
         facts=(FactSpec("kind", FactValue.ENUM, enum=DepartureKind), FactSpec("seat", FactValue.NAME), FactSpec("why", FactValue.NAME)),
         place=PlaceRule.NONE,
@@ -669,7 +671,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "office.retired",
         G.SOCIAL,
-        "{actor} retired as {seat} of {subject}: {why}.",
+        "{actor} retired as {seat}{subject:? of #}: {why}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUCCESSOR, required=False), RoleSpec(R.SUBJECT, required=False)),
         facts=(FactSpec("kind", FactValue.ENUM, enum=DepartureKind), FactSpec("seat", FactValue.NAME), FactSpec("why", FactValue.NAME)),
         place=PlaceRule.NONE,
@@ -678,7 +680,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "office.resigned",
         G.SOCIAL,
-        "{actor} resigned as {seat} of {subject}: {why}.",
+        "{actor} resigned as {seat}{subject:? of #}: {why}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUCCESSOR, required=False), RoleSpec(R.SUBJECT, required=False)),
         facts=(FactSpec("kind", FactValue.ENUM, enum=DepartureKind), FactSpec("seat", FactValue.NAME), FactSpec("why", FactValue.NAME)),
         place=PlaceRule.NONE,
@@ -687,7 +689,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "office.withdrew",
         G.SOCIAL,
-        "{actor} left their seat as {seat} of {subject} by {kind}: {why}.",
+        "{actor} left their seat as {seat}{subject:? of #} by {kind}: {why}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUCCESSOR, required=False), RoleSpec(R.SUBJECT, required=False)),
         facts=(FactSpec("kind", FactValue.ENUM, enum=DepartureKind), FactSpec("seat", FactValue.NAME), FactSpec("why", FactValue.NAME)),
         place=PlaceRule.NONE,
@@ -696,7 +698,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "office.returned",
         G.SOCIAL,
-        "{actor} came back as {seat} of {subject}, which they had left by {kind}.",
+        "{actor} came back as {seat}{subject:? of #}, which they had left by {kind}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False)),
         facts=(FactSpec("kind", FactValue.ENUM, enum=DepartureKind), FactSpec("seat", FactValue.NAME)),
         place=PlaceRule.NONE,
@@ -714,7 +716,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "vote.called",
         G.SOCIAL,
-        "{actor} put a question on {question} to the people of {subject} by {caller}, open to {franchise} and {binding}.",
+        "A question on {question} was put to the people of {subject}{actor:? by #}, called by {caller}, open to {franchise} and {binding}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT), RoleSpec(R.TARGET, required=False)),
         facts=(
             FactSpec("question", FactValue.ENUM, enum=ReferendumSubject),
@@ -790,7 +792,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "reckoning.opened",
         G.LAW,
-        "{actor} opened a reckoning in {subject} with the servants of {predecessor}: {measures}.",
+        "A reckoning was opened{actor:? by #} in {subject} with the servants{predecessor:? of #}: {measures}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT), RoleSpec(R.PREDECESSOR, required=False)),
         facts=(FactSpec("measures", FactValue.NAME),),
         place=PlaceRule.NONE,
@@ -826,7 +828,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "reckoning.inquiry_report",
         G.LAW,
-        "An inquiry of {actor} wrote down the deeds of {subject}, true to {fidelity} percent.",
+        "An inquiry of {actor} wrote down the deeds{subject:? of #}, true to {fidelity} percent.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT, required=False)),
         facts=(FactSpec("fidelity", FactValue.NUMBER, FactUnit.PERCENT),),
         place=PlaceRule.NONE,
@@ -844,7 +846,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "reckoning.closed",
         G.LAW,
-        "The reckoning of {subject} with the servants of {predecessor} came to an end, their resistance at {resistance}.",
+        "The reckoning of {subject} with the servants{predecessor:? of #} came to an end, their resistance at {resistance}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PREDECESSOR, required=False)),
         facts=(FactSpec("resistance", FactValue.NUMBER, FactUnit.PERCENT),),
         place=PlaceRule.NONE,
@@ -862,7 +864,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "cult.begun",
         G.SOCIAL,
-        "A cult of {subject} was raised in {place}, with {promoters:promoter|promoters}.",
+        "A cult of {subject} was raised{place:? in #}, with {promoters:promoter|promoters}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("promoters", FactValue.NUMBER, FactUnit.COUNT),),
         place=PlaceRule.NONE,
@@ -880,7 +882,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "cult.critic_punished",
         G.SOCIAL,
-        "{victim} was punished for mocking {subject}, whose cult forbids it; the mockery had a bite of {bite}.",
+        "A mocking of {subject}{victim:? by #} was punished under the cult that forbids it; the mockery had a bite of {bite}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.VICTIM, required=False)),
         facts=(FactSpec("bite", FactValue.NUMBER, FactUnit.PERCENT),),
         place=PlaceRule.NONE,
@@ -889,7 +891,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "cult.passed_on",
         G.SOCIAL,
-        "The cult of {subject} passed to {successor} at an intensity of {intensity}.",
+        "The cult of {subject} passed{successor:? to #} at an intensity of {intensity}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.SUCCESSOR, required=False)),
         facts=(FactSpec("intensity", FactValue.NUMBER, FactUnit.PERCENT),),
         place=PlaceRule.NONE,
@@ -898,7 +900,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "cult.became_faith",
         G.SOCIAL,
-        "The cult of {subject} became a faith, {successor}, at an intensity of {intensity}.",
+        "The cult of {subject} became a faith{successor:?, #,} at an intensity of {intensity}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.SUCCESSOR, required=False)),
         facts=(FactSpec("intensity", FactValue.NUMBER, FactUnit.PERCENT),),
         place=PlaceRule.NONE,
@@ -1101,7 +1103,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "war.posture_declared",
         G.BATTLES,
-        "{actor} declared a posture of {posture} toward {target}.",
+        "{actor} declared a posture of {posture}{target:? toward #}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("posture", FactValue.ENUM, enum=Posture),),
         place=PlaceRule.NONE,
@@ -1150,7 +1152,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "war.campaign_launched",
         G.BATTLES,
-        "{actor} sent {forces:soldier|soldiers} across to another world against {target}, on {carriers:carrier|carriers}, for "
+        "{actor} sent {forces:soldier|soldiers} across to another world{target:? against #}, on {carriers:carrier|carriers}, for "
         "{transit:epoch|epochs} of crossing.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.TARGET, required=False)),
         facts=(
@@ -1173,7 +1175,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "war.orbit_won",
         G.BATTLES,
-        "{actor} won the space around the world from {victim}, holding it at a strength of {strength}.",
+        "{actor} won the space around the world{victim:? from #}, holding it at a strength of {strength}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM, required=False)),
         facts=(FactSpec("strength", FactValue.NUMBER, FactUnit.PERCENT),),
         place=PlaceRule.NONE,
@@ -1191,7 +1193,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "war.landing",
         G.BATTLES,
-        "{actor} landed {forces:soldier|soldiers} in {place} against {target}.",
+        "{actor} landed {forces:soldier|soldiers} in {place}{target:? against #}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.PLACE), RoleSpec(R.TARGET, required=False)),
         facts=(FactSpec("forces", FactValue.NUMBER, FactUnit.COUNT),),
         place=PlaceRule.WHEN_KNOWN,
@@ -1475,7 +1477,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "mood.spread",
         G.SOCIAL,
         "{feeling} spread through {subject}, at a strength of {strength}.",
-        roles=(RoleSpec(R.SUBJECT),),
+        roles=(RoleSpec(R.SUBJECT, frozenset({EntityType.SETTLEMENT})),),
         facts=(FactSpec("feeling", FactValue.ENUM, enum=Emotion), FactSpec("strength", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.NONE,
         clock=C.SEASON,
@@ -1484,9 +1486,27 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         "mood.faded",
         G.SOCIAL,
         "The mood of {subject} faded to {strength}.",
-        roles=(RoleSpec(R.SUBJECT),),
+        roles=(RoleSpec(R.SUBJECT, frozenset({EntityType.SETTLEMENT})),),
         facts=(FactSpec("strength", FactValue.NUMBER, FactUnit.PERCENT),),
         place=PlaceRule.NONE,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "mood.spread_household",
+        G.SOCIAL,
+        "{feeling} spread through the household of {subject}, at a strength of {strength}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({EntityType.MORTAL})),),
+        facts=(FactSpec("feeling", FactValue.ENUM, enum=Emotion), FactSpec("strength", FactValue.NUMBER, FactUnit.PERCENT)),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.SEASON,
+    ),
+    IncidentKindSpec(
+        "mood.faded_household",
+        G.SOCIAL,
+        "The mood of the household of {subject} faded to {strength}.",
+        roles=(RoleSpec(R.SUBJECT, frozenset({EntityType.MORTAL})),),
+        facts=(FactSpec("strength", FactValue.NUMBER, FactUnit.PERCENT),),
+        place=PlaceRule.WHEN_KNOWN,
         clock=C.SEASON,
     ),
     IncidentKindSpec(
@@ -1510,7 +1530,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tongue.mistranslated",
         G.KNOWLEDGE,
-        "{actor} carried the words of the {event} between {subject} and {target} wrongly, with {fault}, at a fidelity of {fidelity}.",
+        "The words of the {event} between {subject} and {target} were carried wrongly{actor:? by #}, with {fault}, at a fidelity of {fidelity}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT), RoleSpec(R.TARGET)),
         facts=(
             FactSpec("event", FactValue.ENUM, enum=InterpretedEvent),
@@ -1523,7 +1543,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "tongue.slanted",
         G.KNOWLEDGE,
-        "{actor} slanted the words of the {event} between {subject} and {target} toward {beneficiary}, at a fidelity of {fidelity}.",
+        "The words of the {event} between {subject} and {target} were slanted{actor:? by #}{beneficiary:? toward #}, at a fidelity of {fidelity}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT), RoleSpec(R.TARGET), RoleSpec(R.BENEFICIARY, required=False)),
         facts=(FactSpec("event", FactValue.ENUM, enum=InterpretedEvent), FactSpec("fidelity", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.NONE,
@@ -1550,7 +1570,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.goods_placed",
         G.FAITH,
-        "{subject} was laid in {place} with {items:item|items} and goods worth {value}, kept {guard}.",
+        "{subject} was laid{place:? in #} with {items:item|items} and goods worth {value}, kept {guard}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False), RoleSpec(R.INSTRUMENT, required=False, many=True)),
         facts=(
             FactSpec("items", FactValue.NUMBER, FactUnit.COUNT),
@@ -1563,7 +1583,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.grave_robbed",
         G.LAW,
-        "{actor} robbed the grave of {subject} in {place} of goods worth {value} and {items:item|items}, past a guard of {guard}.",
+        "The grave of {subject}{place:? in #} was robbed{actor:? by #} of goods worth {value} and {items:item|items}, past a guard of {guard}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False), RoleSpec(R.INSTRUMENT, required=False, many=True)),
         facts=(
             FactSpec("value", FactValue.NUMBER, FactUnit.WEALTH_POINTS),
@@ -1576,7 +1596,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.robber_caught",
         G.LAW,
-        "{actor} was caught by the {guard} at the grave of {subject} in {place}.",
+        "{actor} was caught by the {guard} at the grave of {subject}{place:? in #}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("guard", FactValue.ENUM, enum=GraveGuard),),
         place=PlaceRule.NONE,
@@ -1585,7 +1605,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.grave_found",
         G.KNOWLEDGE,
-        "{actor} found the grave of {subject} in {place}, with goods worth {value} and {items:item|items}.",
+        "{actor} found the grave of {subject}{place:? in #}, with goods worth {value} and {items:item|items}.",
         roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False), RoleSpec(R.INSTRUMENT, required=False, many=True)),
         facts=(FactSpec("value", FactValue.NUMBER, FactUnit.WEALTH_POINTS), FactSpec("items", FactValue.NUMBER, FactUnit.COUNT)),
         place=PlaceRule.NONE,
@@ -1594,7 +1614,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "dead.grave_guarded",
         G.FAITH,
-        "{actor} set {guard} over the grave of {subject} in {place}.",
+        "A guard of {guard} was set over the grave of {subject}{place:? in #}{actor:? by #}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT), RoleSpec(R.PLACE, required=False)),
         facts=(FactSpec("guard", FactValue.ENUM, enum=GraveGuard),),
         place=PlaceRule.NONE,
@@ -1626,7 +1646,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "body.condition_eased",
         G.BODY,
-        "The {condition} of {subject} eased by the hand of {actor}, to a severity of {severity}.",
+        "The {condition} of {subject} eased by the hand{actor:? of #}, to a severity of {severity}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("condition", FactValue.NAME), FactSpec("severity", FactValue.NUMBER, FactUnit.SEVERITY)),
         place=PlaceRule.NONE,
@@ -1635,7 +1655,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "body.condition_healed",
         G.BODY,
-        "{subject} is free of {condition}, eased by the hand of {actor}.",
+        "{subject} is free of {condition}, eased by the hand{actor:? of #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("condition", FactValue.NAME),),
         place=PlaceRule.NONE,
@@ -1644,7 +1664,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "birth.means_found",
         G.BODY,
-        "{subject} came to know {means} by {source}, from {origin}, at a reliability of {reliability}.",
+        "{subject} came to know {means} by {source}{origin:?, from #}, at a reliability of {reliability}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ORIGIN, required=False)),
         facts=(
             FactSpec("means", FactValue.ENUM, enum=FertilityMeans),
@@ -1693,8 +1713,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "honour.conferred",
         G.SOCIAL,
-        "{actor} conferred {honour}, an honour of rank {rank} and worth {worth}, on {subject}.",
-        roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT)),
+        "{actor:?# }conferred {honour}, an honour of rank {rank} and worth {worth}, on {subject}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("honour", FactValue.NAME), FactSpec("rank", FactValue.NUMBER, FactUnit.COUNT), FactSpec("worth", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.NONE,
         clock=C.SEASON,
@@ -1702,8 +1722,8 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "honour.sold",
         G.SOCIAL,
-        "{actor} sold {honour} to {subject}, and its worth fell to {worth}.",
-        roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT)),
+        "{actor:?# }sold {honour} to {subject}, and its worth fell to {worth}.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("honour", FactValue.NAME), FactSpec("worth", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.NONE,
         clock=C.SEASON,
@@ -1711,7 +1731,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "honour.revoked",
         G.SOCIAL,
-        "{actor} took {honour} back from {subject}.",
+        "{honour} was taken back from {subject}{actor:? by #}.",
         roles=(RoleSpec(R.ACTOR, required=False), RoleSpec(R.SUBJECT)),
         facts=(FactSpec("honour", FactValue.NAME),),
         place=PlaceRule.NONE,
@@ -1729,7 +1749,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "land.sea_wave",
         G.NATURE,
-        "A wave raised by {origin} near {place} at a strength of {strength} struck {coasts:coast|coasts}, {target}, and {dead:life was|lives were} lost.",
+        "A wave raised by {origin} near {place} at a strength of {strength} struck {coasts:coast|coasts}{target:?, #,} and {dead:life was|lives were} lost.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.ACTOR, required=False), RoleSpec(R.TARGET, required=False, many=True)),
         facts=(
             FactSpec("origin", FactValue.ENUM, enum=WaveOrigin),
@@ -1779,7 +1799,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "beasts.leader_fell",
         G.NATURE,
-        "The leader of {subject}, {predecessor}, fell in a contest and {successor} rose over {form}.",
+        "The leader of {subject}{predecessor:?, #,} fell in a contest and{successor:? #} rose over {form}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.PREDECESSOR, required=False), RoleSpec(R.SUCCESSOR, required=False)),
         facts=(FactSpec("form", FactValue.ENUM, enum=GroupForm),),
         place=PlaceRule.NONE,
@@ -1797,7 +1817,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "beasts.group_raid",
         G.NATURE,
-        "{subject}, {form} of {size:creature|creatures} led by {actor}, raided {target}.",
+        "{subject}, {form} of {size:creature|creatures} led{actor:? by #}, raided {target}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.TARGET), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("form", FactValue.ENUM, enum=GroupForm), FactSpec("size", FactValue.NUMBER, FactUnit.COUNT)),
         place=PlaceRule.NONE,
@@ -1833,7 +1853,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "faith.conception_changed",
         G.FAITH,
-        "{subject} came to hold the {axis} of the divine as {value}, moved by {actor}.",
+        "{subject} came to hold the {axis} of the divine as {value}, moved{actor:? by #}.",
         roles=(RoleSpec(R.SUBJECT), RoleSpec(R.ACTOR, required=False)),
         facts=(FactSpec("axis", FactValue.ENUM, enum=ConceptionAxis), FactSpec("value", FactValue.NAME)),
         place=PlaceRule.NONE,

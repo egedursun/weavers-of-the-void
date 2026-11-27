@@ -215,6 +215,7 @@ class EntityDetailContext(PromptContext):
     world: WorldItem | None = None
     domain: str | None = None
     tags: list[str] = Field(default_factory=list)
+    name_kept: bool = False
     stats: list[LabelValue] = Field(default_factory=list)
     description: str
     history: str | None = None

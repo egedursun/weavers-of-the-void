@@ -23,6 +23,7 @@ from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.demography import InheritanceCustom
 from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
@@ -45,7 +46,7 @@ from aerona.engine.folkways.wrongs import wrongly_condemned
 from aerona.engine.gods.god_death import fallen_body_died
 from aerona.engine.grave_goods.furnish import furnish_grave
 from aerona.engine.interconnect.causes import killing_incident
-from aerona.engine.lifecycle.aging import immortal, raise_lifespan_to_death_age
+from aerona.engine.lifecycle.aging import aging_rate, immortal, raise_lifespan_to_death_age
 from aerona.engine.lifecycle.succession import dynasty_root, pass_rule
 from aerona.engine.lore.history import record
 from aerona.engine.mind.ethics import killing_act
@@ -57,10 +58,12 @@ from aerona.engine.mortal.kin import children_of
 from aerona.engine.mortal.readings import reading_for
 from aerona.engine.polity.law_effects import bequest_order
 from aerona.engine.primitives.naming import seed_of
-from aerona.engine.primitives.numbers import clamp_int, scaled_cap
+from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
+from aerona.engine.primitives.physics import PhysicsTable
 from aerona.engine.primitives.queries import active_bonds, close, connect, count_communities, living_entity, living_sons
 from aerona.engine.primitives.records import RecordSpec, append_sentence, open_record, sweep_dead_bonds
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.births import birth_year
 from aerona.engine.recording.moments import incident_moment, moment_for
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft
 from aerona.engine.recording.record import record as record_happening
@@ -107,6 +110,43 @@ async def death_moment(ctx: TickContext, mortal: EntityRow, killer_id: int | Non
     return chosen if year is None or chosen.year >= year else Moment(year)
 
 
+AGED_PHASES = frozenset({EpochPhase.FATE, EpochPhase.TRANSITION})
+
+
+async def aged_this_epoch(ctx: TickContext) -> bool | None:
+    phase = ctx.environment.phase
+    if phase is None:
+        return None
+    if phase is EpochPhase.ENGINE:
+        return ctx.environment.aging is not None and ctx.environment.aging.done
+    return phase in AGED_PHASES
+
+
+async def age_at_death(ctx: TickContext, mortal: EntityRow, death_year: int) -> int | None:
+    age = stat(mortal, "age")
+    aged = await aged_this_epoch(ctx)
+    if age is None or aged is None:
+        return age
+    rate = await aging_rate(ctx, mortal, await ctx.laws(), await PhysicsTable.load(ctx.session, ctx.rules))
+    if rate <= 0:
+        return age
+    start = await world_year(ctx.session)
+    if aged:
+        end = start + ctx.rules.time.years_per_epoch
+        return max(0, age - round_half_up(max(0, end - death_year) * rate))
+    born = await birth_year(ctx.session, mortal.id) if mortal.birth_epoch == ctx.epoch else None
+    since = start if born is None else max(start, born)
+    return age + round_half_up(max(0, death_year - since) * rate)
+
+
+async def dated_death(ctx: TickContext, mortal: EntityRow, death_year: int, given: int | None) -> int | None:
+    age = await age_at_death(ctx, mortal, death_year) if given is None else stat(mortal, "age")
+    set_stats(mortal, death_year=death_year)
+    if age is not None and age != stat(mortal, "age"):
+        set_stats(mortal, age=age)
+    return age
+
+
 async def world_year(session: AsyncSession) -> int:
     cosmos = await session.get(CosmosRow, SINGLETON_ID)
     return cosmos.epoch_start_year if cosmos is not None else 0
@@ -139,8 +179,7 @@ async def die(
     cause_id = None if natural or killer_id is None or CAUSE_SCOPE.get() is not None else await killing_incident(ctx.session, mortal.id, killer_id)
     moment = await death_moment(ctx, mortal, killer_id, cause_id, year)
     death_year = moment.year
-    set_stats(mortal, death_year=death_year)
-    age = stat(mortal, "age")
+    age = await dated_death(ctx, mortal, death_year, year)
     age_text = str(age) if age is not None else "unknown"
     fate = (
         f"Epoch {ctx.epoch}, world year {death_year}: died at age {age_text}."

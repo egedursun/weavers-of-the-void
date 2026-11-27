@@ -4,27 +4,22 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.conditions import OPEN_INJURY_STATES
-from aerona.constants.engine import MIN_AGING_MULTIPLIER
 from aerona.constants.units import PERCENT
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.minds import MindProfileRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import HarmCause, InjuryState
-from aerona.domain.enums.divine import DomainHook
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.records import FactUnit, StepAction, StepOutcome
 from aerona.domain.enums.society import NaturalLaw
-from aerona.engine.body.afflictions import ageless
+from aerona.domain.models.calendar import epoch_end_year
 from aerona.engine.body.hits import Harm
-from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
-from aerona.engine.divine.laws import binds
 from aerona.engine.interconnect.annotations import reads, writes
-from aerona.engine.lifecycle.aging import effective_lifespan, immortal, medicine_regions
+from aerona.engine.lifecycle.aging import aging_rate, effective_lifespan, immortal, medicine_regions
 from aerona.engine.lifecycle.mortal_death import die, world_year
 from aerona.engine.lifecycle.wounds import fatal_injury
 from aerona.engine.mortal.life import hazard_chance
@@ -38,6 +33,7 @@ from aerona.engine.primitives.physics import PhysicsTable
 from aerona.engine.primitives.queries import add_flag, canon
 from aerona.engine.primitives.records import append_sentence
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
+from aerona.engine.recording.births import birth_year
 from aerona.engine.recording.record import StepDraft, record
 
 WOUND_DEATH = "succumbed to their wounds"
@@ -88,10 +84,13 @@ async def mortal_wounds(ctx: TickContext) -> None:
         await succumb(ctx, mortal)
 
 
-def years_lived(ctx: TickContext, mortal: EntityRow) -> int:
+def years_lived(ctx: TickContext, mortal: EntityRow, born: int | None) -> int:
     engine = ctx.rules.world_engine
+    years = ctx.rules.time.years_per_epoch
     if mortal.birth_epoch != ctx.epoch:
-        return ctx.rules.time.years_per_epoch
+        return years
+    if born is not None:
+        return min(years, max(1, epoch_end_year(ctx.epoch, years) - born))
     return engine.first_epoch_years_engine if mortal.origin is EntityOrigin.ENGINE else engine.first_epoch_years_son
 
 
@@ -106,15 +105,11 @@ class AgingWorld:
 
 
 async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> None:
-    laws, physics = world.laws, world.physics
+    laws = world.laws
     rules = ctx.rules
     effects = rules.world_effects
-    if await binds(ctx, NaturalLaw.IMMORTALITY, mortal) or immortal(await mortal_flags(ctx.session, mortal)) or await ageless(ctx.session, mortal.id):
-        return
-    if not (await folk_biology(ctx.session, mortal)).ages:
-        return
-    seated = await ctx.session.get(MindProfileRow, mortal.id)
-    if seated is not None and seated.dormant:
+    multiplier = await aging_rate(ctx, mortal, laws, world.physics)
+    if multiplier <= 0:
         return
     rng = ctx.rng(seed_of("aging", mortal.id))
     first = mortal.birth_epoch == ctx.epoch
@@ -122,9 +117,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     age = stat(mortal, "age") or 0
     if first and age >= lifespan - effects.rejuvenate_years_left:
         age = round_half_up(lifespan * (effects.rejuvenate_age_min_pct / PERCENT + rng.random() * effects.rejuvenate_age_random_pct / PERCENT))
-    lived = years_lived(ctx, mortal)
-    multiplier = (effects.short_life_aging_mult if laws.has(NaturalLaw.SHORT_LIFE, mortal.world_id) else 1) * physics.of(mortal.world_id).time
-    multiplier *= await ctx.hook_easing(mortal.id, DomainHook.AGING)
+    lived = years_lived(ctx, mortal, await birth_year(ctx.session, mortal.id) if first else None)
     aged = age + round_half_up(lived * multiplier)
     info = await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine, healing=world.healing)
     limit = info.effective
@@ -134,9 +127,10 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
         set_stats(mortal, age=aged)
         return
     years = rules.time.years_per_epoch
-    death_age = aged
     offset = years - lived if first else 0
-    death_year = world.start_year + offset + min(years - 1, max(0, round_half_up((death_age - age) / max(MIN_AGING_MULTIPLIER, multiplier))))
+    reached = rng.integer(0, max(0, lived - 1))
+    death_age = age + round_half_up(reached * multiplier)
+    death_year = world.start_year + offset + reached
     set_stats(mortal, age=death_age)
     if laws.has(NaturalLaw.DEAD_RETURN, mortal.world_id) and rng.chance(rules.world_engine.ghost_chance):
         await add_flag(ctx.session, mortal.id, EntityFlag.GHOST, ctx.epoch)
@@ -287,6 +281,8 @@ async def mortal_aging(ctx: TickContext) -> None:
     for mortal in unheld(await canon(ctx.session, [EntityType.MORTAL])):
         if mortal.status is EntityStatus.CANON:
             await age_one(ctx, mortal, world)
+    if ctx.environment.aging is not None:
+        ctx.environment.aging.done = True
 
 
 PHASES = (Phase("mortal_wounds", mortal_wounds), Phase("mortal_aging", mortal_aging))

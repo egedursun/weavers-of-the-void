@@ -76,6 +76,7 @@ from aerona.engine.sacred.spirits import SpiritTally, keep_place_spirits
     "table.mind_facets",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.personality_values",
     "table.petitions",
     "table.spirit_offices",
@@ -317,6 +318,7 @@ async def rites_of_passage(ctx: TickContext) -> None:
     "table.long_plans",
     "table.mortal_profiles",
     "table.name_registry",
+    "table.node_births",
     "table.prophecy_conditions",
 )
 async def foresight(ctx: TickContext) -> None:

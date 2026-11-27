@@ -38,5 +38,16 @@ async def test_compassion_gives_and_contempt_insults(realm: Realm) -> None:
     assert await act_on(ctx, giver, pity) and await act_on(ctx, giver, scorn)
     kinds = set(await realm.session.scalars(select(MemoryRow.kind).where(MemoryRow.holder_node_id == sufferer.id)))
     assert {MemoryKind.GIFTED_ME, MemoryKind.HUMILIATED_ME} <= kinds
-    assert "mind.emotion_felt" in set(await realm.session.scalars(select(IncidentRow.kind)))
+    assert {"mind.compassion_gift", "mind.contempt_humiliation"} <= set(await realm.session.scalars(select(IncidentRow.kind)))
     assert (await realm.session.scalar(select(ThoughtRow.emotion).where(ThoughtRow.id == pity.id))) is Emotion.COMPASSION
+
+
+async def test_each_act_of_feeling_tells_what_was_done_and_to_whom(realm: Realm) -> None:
+    seeker = await mortal(realm, "Seeker")
+    sure = tuned(emotions={"curiosity_act_weight": 100, "felt_intensity": 0})
+    wonder = await think(realm.session, sure, seeker.id, ThoughtKind.GREW_CURIOUS, 3, intensity=80)
+    assert wonder is not None
+    assert await act_on(context(realm.session, sure), seeker, wonder)
+    told = await realm.session.scalar(select(IncidentRow.kind).where(IncidentRow.kind.startswith("mind.")).order_by(IncidentRow.id.desc()).limit(1))
+    assert told == "mind.curiosity_studied"
+    assert "mind.emotion_felt" not in set(await realm.session.scalars(select(IncidentRow.kind)))

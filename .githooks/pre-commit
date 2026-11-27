@@ -103,6 +103,7 @@ run spec_duplicates "$PYTHON" scripts/check_spec_duplicates.py
 run head_returns "$PYTHON" scripts/check_head_returns.py
 run point_shares "$PYTHON" scripts/check_point_shares.py
 run held_ids "$PYTHON" scripts/check_held_ids.py
+run role_ids "$PYTHON" scripts/check_role_ids.py
 run ended_war_sides "$PYTHON" scripts/check_ended_war_sides.py
 run purse_welfare "$PYTHON" scripts/check_purse_welfare.py
 run method_orphans "$PYTHON" scripts/check_method_orphans.py

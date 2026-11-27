@@ -44,6 +44,7 @@ from aerona.engine.mortal.standing import add_renown
 from aerona.engine.phases.births import NOTABLE_ROLES, raise_notable
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import folk_of
+from aerona.engine.primitives.maturity import of_age_query
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.queries import spoken_language
 from aerona.engine.primitives.stats import shift_stat
@@ -149,6 +150,7 @@ async def candidate(ctx: TickContext, community: EntityRow, field: GreatField) -
                 EntityRow.entity_type == EntityType.MORTAL,
                 EntityRow.status == EntityStatus.CANON,
                 EntityRow.id.not_in(great),
+                of_age_query(),
             )
             .order_by(EntityRow.id)
         )

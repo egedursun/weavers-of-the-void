@@ -1192,8 +1192,10 @@ LEISURE_KIND_TRAITS: Mapping[LeisureKind, frozenset[LeisureKindTrait]] = total(
 LIFE_STAGE_TRAITS: Mapping[LifeStage, frozenset[LifeStageTrait]] = total(
     LifeStage,
     {
-        LifeStage.INFANT: frozenset({LifeStageTrait.CARED_FOR, LifeStageTrait.DUTIES_YOUNG, LifeStageTrait.GROWING}),
-        LifeStage.CHILD: frozenset({LifeStageTrait.CARED_FOR, LifeStageTrait.DUTIES_YOUNG, LifeStageTrait.GROWING, LifeStageTrait.YOUNG}),
+        LifeStage.INFANT: frozenset({LifeStageTrait.CARED_FOR, LifeStageTrait.DUTIES_YOUNG, LifeStageTrait.GROWING, LifeStageTrait.UNDER_AGE}),
+        LifeStage.CHILD: frozenset(
+            {LifeStageTrait.CARED_FOR, LifeStageTrait.DUTIES_YOUNG, LifeStageTrait.GROWING, LifeStageTrait.UNDER_AGE, LifeStageTrait.YOUNG}
+        ),
         LifeStage.YOUTH: frozenset({LifeStageTrait.GROWING, LifeStageTrait.YOUNG}),
         LifeStage.ADULT: frozenset({LifeStageTrait.GROWN}),
         LifeStage.ELDER: frozenset({LifeStageTrait.CARED_FOR, LifeStageTrait.GROWN, LifeStageTrait.OLD}),

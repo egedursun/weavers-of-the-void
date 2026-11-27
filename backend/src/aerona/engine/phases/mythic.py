@@ -9,7 +9,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.phases.dominion import count
 
 
-@reads("table.afflictions", "table.heroquests", "table.reputations")
+@reads("table.afflictions", "table.heroquests", "table.mortal_profiles", "table.reputations")
 async def heroquests(ctx: TickContext) -> None:
     tally = QuestTally()
     await quest_world(ctx, tally)

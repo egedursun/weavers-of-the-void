@@ -18,6 +18,7 @@ from aerona.engine.phase import Phase
     "table.galaxies",
     "table.galaxy_clusters",
     "table.household_members",
+    "table.households",
     "table.mind_facets",
     "table.minds",
     "table.node_births",

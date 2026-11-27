@@ -31,6 +31,7 @@ from aerona.engine.lifecycle.wounds import apply_hits
 from aerona.engine.military.spy_depth import compromise, motivate
 from aerona.engine.mortal.profile import ensure_profile, is_held
 from aerona.engine.primitives.folk import present_among
+from aerona.engine.primitives.maturity import of_age_query
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.services.community_relations import change_relation
@@ -115,7 +116,7 @@ async def recruit(ctx: TickContext, network: SpyNetworkRow) -> SpyAgentRow | Non
         row
         for row in await ctx.session.scalars(
             select(EntityRow)
-            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, homes))
+            .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, await present_among(ctx.session, homes), of_age_query())
             .order_by(EntityRow.id)
         )
         if row.id not in taken

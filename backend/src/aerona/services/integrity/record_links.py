@@ -1,8 +1,9 @@
 import json
 
-from sqlalchemy import delete, func, or_, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.incident_kinds.newborns import NEWBORN_KINDS
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import FactSpec
 from aerona.catalog.life.services import PRESENT_MODES
@@ -309,6 +310,14 @@ async def retire_kind(session: AsyncSession, incident_id: int) -> None:
         await retire_one(session, incident)
 
 
+async def floors_by_incident(session: AsyncSession) -> dict[int, list[int]]:
+    found: dict[int, list[int]] = {}
+    statement = select(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id).where(IncidentParticipantRow.role.not_in(sorted(KNOWING_ROLES)))
+    for incident_id, node_id in await session.execute(statement.order_by(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id)):
+        found.setdefault(int(incident_id), []).append(int(node_id))
+    return found
+
+
 async def participants_by_incident(session: AsyncSession) -> dict[int, list[tuple[int, IncidentRole]]]:
     found: dict[int, list[tuple[int, IncidentRole]]] = {}
     statement = select(IncidentParticipantRow.incident_id, IncidentParticipantRow.node_id, IncidentParticipantRow.role, IncidentParticipantRow.witness_mode)
@@ -319,33 +328,23 @@ async def participants_by_incident(session: AsyncSession) -> dict[int, list[tupl
     return found
 
 
+Key = tuple[int, int, int, int]
+
+
+async def birth_keys(session: AsyncSession) -> dict[int, Key]:
+    rows = await session.execute(select(NodeBirthRow.node_id, NodeBirthRow.year, NodeBirthRow.season, NodeBirthRow.day, NodeBirthRow.hour))
+    return {int(node): (year, season or 0, day or 0, hour or 0) for node, year, season, day, hour in rows}
+
+
 async def ahead_of_births(session: AsyncSession) -> list[int]:
-    nodes = await participants_by_incident(session)
-    born: dict[int, tuple[int, int, int, int]] = {}
-    seen: set[int] = set()
+    nodes = await floors_by_incident(session)
+    born = await birth_keys(session)
     found: list[int] = []
     for incident in await session.scalars(select(IncidentRow).where(IncidentRow.year.is_not(None)).order_by(IncidentRow.id)):
         own = moment_key(incident)
-        if own is None:
-            continue
-        floor = max((born[node] for node, _ in nodes.get(incident.id, []) if node in born), default=None)
-        if floor is not None and own < floor:
+        floor = max((born[node] for node in nodes.get(incident.id, []) if node in born), default=None)
+        if own is not None and floor is not None and own < floor:
             found.append(incident.id)
-            own = floor
-        for node, role in nodes.get(incident.id, []):
-            if role in CREATION_ROLES and node not in seen:
-                born.setdefault(node, own)
-            seen.add(node)
-    return found
-
-
-async def first_seen(session: AsyncSession, node_id: int, before: int) -> IncidentRow | None:
-    earlier = select(IncidentParticipantRow.incident_id).where(
-        IncidentParticipantRow.node_id == node_id, IncidentParticipantRow.incident_id < before, IncidentParticipantRow.role.in_(sorted(CREATION_ROLES))
-    )
-    found: IncidentRow | None = await session.scalar(
-        select(IncidentRow).where(IncidentRow.id.in_(earlier), IncidentRow.year.is_not(None)).order_by(IncidentRow.id).limit(1)
-    )
     return found
 
 
@@ -354,37 +353,91 @@ async def follow_births(session: AsyncSession, incident_id: int) -> None:
     own = moment_key(incident) if incident is not None else None
     if incident is None or own is None:
         return
-    floor: IncidentRow | None = None
     nodes = select(IncidentParticipantRow.node_id).where(
-        IncidentParticipantRow.incident_id == incident_id,
-        or_(IncidentParticipantRow.role.not_in(sorted(KNOWING_ROLES)), IncidentParticipantRow.witness_mode.in_(PRESENT_MODES)),
+        IncidentParticipantRow.incident_id == incident_id, IncidentParticipantRow.role.not_in(sorted(KNOWING_ROLES))
     )
-    for node in await session.scalars(nodes.order_by(IncidentParticipantRow.node_id)):
-        seen = await first_seen(session, node, incident_id)
-        if seen is not None and (floor is None or (moment_key(seen) or own) > (moment_key(floor) or own)):
-            floor = seen
-    if floor is None or own >= (moment_key(floor) or own):
+    births = select(NodeBirthRow).where(NodeBirthRow.node_id.in_(nodes))
+    floor = max((row for row in await session.scalars(births)), key=lambda row: (row.year, row.season or 0, row.day or 0, row.hour or 0), default=None)
+    if floor is None or own >= (floor.year, floor.season or 0, floor.day or 0, floor.hour or 0):
         return
     incident.year, incident.season, incident.day, incident.hour = floor.year, floor.season, floor.day, floor.hour
     line = await session.get(ChronicleRow, incident.chronicle_id) if incident.chronicle_id is not None else None
     if line is not None:
         line.year = floor.year
+    mark_floor = (floor.year, floor.season or 0, floor.day or 0, floor.hour or 0)
     for step in await session.scalars(select(IncidentStepRow).where(IncidentStepRow.incident_id == incident_id).order_by(IncidentStepRow.position)):
         mark = moment_key(step)
-        if mark is not None and mark < (moment_key(floor) or mark):
+        if mark is not None and mark < mark_floor:
             step.year, step.season, step.day, step.hour = floor.year, floor.season, floor.day, floor.hour
 
 
+async def sightings_of(session: AsyncSession, node_id: int) -> dict[int, list[tuple[int, IncidentRole]]]:
+    found: dict[int, list[tuple[int, IncidentRole]]] = {}
+    statement = select(IncidentParticipantRow.incident_id, IncidentParticipantRow.role, IncidentParticipantRow.witness_mode).where(
+        IncidentParticipantRow.node_id == node_id
+    )
+    for incident_id, role, mode in await session.execute(statement.order_by(IncidentParticipantRow.incident_id)):
+        if role not in KNOWING_ROLES or mode in PRESENT_MODES:
+            found.setdefault(int(incident_id), []).append((node_id, role))
+    return found
+
+
+async def due_births(session: AsyncSession, only: int | None = None, *, beyond: bool = False) -> dict[int, IncidentRow]:
+    epochs = {int(node): int(epoch) for node, epoch in await session.execute(select(EntityRow.id, EntityRow.birth_epoch))}
+    nodes = await participants_by_incident(session) if only is None else await sightings_of(session, only)
+    child: dict[int, IncidentRow] = {}
+    seen: dict[int, IncidentRow] = {}
+    later: dict[int, IncidentRow] = {}
+    made: dict[int, IncidentRow] = {}
+    statement = select(IncidentRow).where(IncidentRow.year.is_not(None))
+    if only is not None:
+        statement = statement.where(IncidentRow.id.in_(select(IncidentParticipantRow.incident_id).where(IncidentParticipantRow.node_id == only)))
+    for incident in await session.scalars(statement.order_by(IncidentRow.id)):
+        own = moment_key(incident) or (FAR, 0, 0, 0)
+        for node, role in nodes.get(incident.id, []):
+            if role is IncidentRole.CHILD and incident.kind in NEWBORN_KINDS:
+                child.setdefault(node, incident)
+            if role in CREATION_ROLES and (beyond or epochs.get(node, incident.epoch) == incident.epoch):
+                made.setdefault(node, incident)
+            if role in KNOWING_ROLES or node not in epochs:
+                continue
+            found = seen if epochs[node] == incident.epoch else later if beyond else None
+            if found is None:
+                continue
+            earlier = found.get(node)
+            if earlier is None or own < (moment_key(earlier) or own):
+                found[node] = incident
+    return {node: child.get(node) or seen.get(node) or later.get(node) or made[node] for node in sorted({*child, *seen, *later, *made})}
+
+
 async def births_unknown(session: AsyncSession) -> list[int]:
-    seen = select(IncidentParticipantRow.node_id).where(IncidentParticipantRow.role.in_(sorted(CREATION_ROLES)))
-    dated = select(NodeBirthRow.node_id)
-    return list(await session.scalars(select(NodeRow.id).where(NodeRow.id.in_(seen), NodeRow.id.not_in(dated)).order_by(NodeRow.id)))
+    dated = set(await session.scalars(select(NodeBirthRow.node_id)))
+    known = set(await session.scalars(select(NodeRow.id)))
+    return [node for node in await due_births(session) if node not in dated and node in known]
 
 
 async def date_birth(session: AsyncSession, node_id: int) -> None:
-    first = await first_seen(session, node_id, before=FAR)
+    first = (await due_births(session, node_id)).get(node_id)
     if first is not None and first.year is not None and await session.get(NodeBirthRow, node_id) is None:
         session.add(NodeBirthRow(node_id=node_id, year=first.year, season=first.season, day=first.day, hour=first.hour, locked=[]))
+
+
+async def births_after_sighting(session: AsyncSession) -> list[int]:
+    born = await birth_keys(session)
+    found: list[int] = []
+    for node, incident in (await due_births(session, beyond=True)).items():
+        own = moment_key(incident)
+        if node in born and own is not None and own < born[node]:
+            found.append(node)
+    return found
+
+
+async def redate_birth(session: AsyncSession, node_id: int) -> None:
+    first = (await due_births(session, node_id, beyond=True)).get(node_id)
+    row = await session.get(NodeBirthRow, node_id)
+    if first is None or first.year is None or row is None or "year" in (row.locked or []):
+        return
+    row.year, row.season, row.day, row.hour = first.year, first.season, first.day, first.hour
 
 
 async def late_beginnings(session: AsyncSession) -> list[int]:

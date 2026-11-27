@@ -33,6 +33,7 @@ from aerona.engine.economy.stocks import holdings
 from aerona.engine.intrigue.secrets import keep_secret
 from aerona.engine.lore.items import profile_of
 from aerona.engine.polity.trials import report_crime
+from aerona.engine.primitives.maturity import of_age_query
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import connect, living_entity
 from aerona.engine.primitives.quota import WorldQuota
@@ -316,7 +317,7 @@ async def forge_works(ctx: TickContext, tally: ForgeryTally) -> None:
     makers = await ctx.session.scalars(
         select(EntityRow)
         .join(MortalProfileRow, MortalProfileRow.entity_id == EntityRow.id)
-        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON)
+        .where(EntityRow.entity_type == EntityType.MORTAL, EntityRow.status == EntityStatus.CANON, of_age_query())
         .order_by(EntityRow.id)
     )
     quota = WorldQuota(table.forgeries_per_epoch)

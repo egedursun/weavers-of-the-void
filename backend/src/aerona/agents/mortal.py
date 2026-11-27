@@ -43,6 +43,7 @@ from aerona.engine.mind.book import scaled_by, trait_effect
 from aerona.engine.phases.civilization import late_debts
 from aerona.engine.primitives.knowledge import LawBook
 from aerona.engine.primitives.manual import manual_context
+from aerona.engine.primitives.maturity import under_age
 from aerona.events.kinds import EventKind
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.mortal import MortalTurnSystemContext, MortalTurnUserContext
@@ -149,6 +150,7 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
     for node_id, trait in await session_scope.session.execute(select(TraitRow.node_id, TraitRow.trait).where(TraitRow.node_id.in_(ids))):
         held[node_id].append(trait)
     lit = {row.spotlight_entity_id for row in await session_scope.session.scalars(select(StorytellerRow)) if row.spotlight_entity_id is not None}
+    young = await under_age(session_scope.session, ids) - forced
     return [
         Candidate(
             row,
@@ -161,6 +163,7 @@ async def candidates(session_scope: Scope) -> list[Candidate]:
             rules.storyteller.spotlight_weight_pct / PERCENT if row.id in lit else 1.0,
         )
         for row in eligible
+        if row.id not in young
     ]
 
 
