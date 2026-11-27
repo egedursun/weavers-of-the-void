@@ -9,13 +9,14 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.mortal.standing import add_honour
 from aerona.engine.primitives.numbers import round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.recording.record import record
 from aerona.engine.relations.book import ensure_relation, shift
 
 
 async def owe(ctx: TickContext, owed_by: int, owed_to: int, origin: FavourOrigin, magnitude: int) -> FavourRow | None:
     magnitude = round_half_up(magnitude * FAVOUR_WEIGHTS[origin](ctx.rules) / PERCENT)
-    if owed_by == owed_to or held(owed_by) or magnitude <= 0:
+    if owed_by == owed_to or held(owed_by) or magnitude <= 0 or await living_entity(ctx.session, owed_by) is None:
         return None
     found = await ctx.session.scalar(
         select(FavourRow).where(FavourRow.owed_by_node_id == owed_by, FavourRow.owed_to_node_id == owed_to, FavourRow.called_epoch.is_(None)).limit(1)

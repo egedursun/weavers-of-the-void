@@ -24,6 +24,20 @@ MEDIUM_FADE: Mapping[AccountMedium, int] = total(
     },
 )
 
+MEDIUM_PHRASES: Mapping[AccountMedium, str] = total(
+    AccountMedium,
+    {
+        AccountMedium.ORAL: "word of mouth",
+        AccountMedium.BOOK: "writing in books",
+        AccountMedium.INSCRIPTION: "inscription",
+        AccountMedium.ARTWORK: "works of art",
+        AccountMedium.RECORD: "written records",
+        AccountMedium.PERFORMANCE: "performance",
+        AccountMedium.MIND_STATE: "held states of mind",
+        AccountMedium.MARKS: "marks",
+    },
+)
+
 
 CONFORMING = (Facet.COOPERATION, Facet.POLITENESS, Facet.SENSE_OF_DUTY)
 

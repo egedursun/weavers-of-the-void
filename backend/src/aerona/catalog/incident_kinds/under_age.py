@@ -25,4 +25,4 @@ ACTING_ROLES = frozenset(
         R.PATRON,
     }
 )
-UNDER_AGE_KINDS = frozenset({"afterlife.possession"})
+UNDER_AGE_KINDS = frozenset({"afterlife.possession", "social.taboo_word"})

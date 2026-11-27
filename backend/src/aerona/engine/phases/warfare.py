@@ -1173,7 +1173,7 @@ async def _announce(
         IncidentRole.OPPONENT: report.loser.id,
         IncidentRole.MEMBER: sorted({winner_side.army.id, loser_side.army.id}),
     }
-    leaders = sorted({commander for commander in commanders.values() if commander is not None})
+    leaders = sorted({commander for commander in commanders.values() if commander is not None and await living_entity(ctx.session, commander) is not None})
     if leaders:
         roles[IncidentRole.LEADER] = leaders
     witnesses = sorted({node for node in report.ids if node not in leaders})

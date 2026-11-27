@@ -224,9 +224,14 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "account.made",
         G.SOCIAL,
-        "{subject} came to keep {kind:an} told as {medium:an}.",
+        "{subject} came to keep {kind:an}{about:? of #}, told through {through}.",
         roles=(RoleSpec(R.SUBJECT),),
-        facts=(chosen("kind", AccountKind), chosen("medium", AccountMedium)),
+        facts=(
+            chosen("kind", AccountKind),
+            chosen("medium", AccountMedium),
+            FactSpec("through", FactValue.NAME),
+            FactSpec("about", FactValue.NAME, required=False),
+        ),
     ),
     IncidentKindSpec(
         "tools.mortal.compose_account",

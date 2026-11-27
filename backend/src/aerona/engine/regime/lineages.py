@@ -291,7 +291,7 @@ async def keep_claims_in_the_blood(ctx: TickContext, tally: LineageTally) -> Non
     houses = select(HouseProfileRow).where(HouseProfileRow.head_entity_id.is_not(None)).order_by(HouseProfileRow.house_entity_id)
     for house in list(await ctx.session.scalars(houses)):
         head_id = house.head_entity_id
-        if head_id is None or house.house_entity_id in planned or held(house.house_entity_id, head_id):
+        if head_id is None or house.house_entity_id in planned or held(house.house_entity_id, head_id) or await living_entity(ctx.session, head_id) is None:
             continue
         claim = await ctx.session.scalar(
             select(ClaimRow).where(ClaimRow.claimant_entity_id == head_id, ClaimRow.ended_epoch.is_(None)).order_by(ClaimRow.id).limit(1)

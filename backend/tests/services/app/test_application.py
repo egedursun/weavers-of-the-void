@@ -37,6 +37,7 @@ async def test_application_tracks_changes_and_maintains(tmp_path: Path, open_dat
     assert not application.feed.changes_since(token, 1000).touched(TrackedTable.COSMOS)
     counters = await epoch_end_maintenance(application, database, rules.current, 1)
     assert counters["importance"] >= 1
+    assert "data_repairs" in counters and "schema_repairs" in counters
     await application.world_changed.fire("World replaced.")
     assert application.feed.changes_since(token, 1000).full
     await stop_application(application)

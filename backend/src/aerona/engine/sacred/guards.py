@@ -15,6 +15,7 @@ from aerona.db.tables.sacred import DoctrineSacramentRow, SacramentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.disease import OutbreakStatus
 from aerona.domain.enums.economy import GoodsFlow
+from aerona.domain.enums.entity import EntityStatus
 from aerona.domain.enums.folkways import PurityState
 from aerona.domain.enums.mind import ThoughtKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
@@ -40,7 +41,8 @@ async def hardship(ctx: TickContext, town: EntityRow, plagued: set[int]) -> bool
 async def priest_of(ctx: TickContext, cult_id: int) -> int | None:
     found = await ctx.session.scalar(
         select(CultOfficeRow.holder_entity_id)
-        .where(CultOfficeRow.cult_entity_id == cult_id, CultOfficeRow.holder_entity_id.is_not(None))
+        .join(EntityRow, EntityRow.id == CultOfficeRow.holder_entity_id)
+        .where(CultOfficeRow.cult_entity_id == cult_id, EntityRow.status == EntityStatus.CANON)
         .order_by(CultOfficeRow.kind, CultOfficeRow.id)
         .limit(1)
     )

@@ -52,6 +52,7 @@ from aerona.engine.polity.trials import report_crime
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_in
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft, record
 
@@ -548,7 +549,7 @@ async def obey_orders(ctx: TickContext, lands: Holdings, row: CommonsRow, orders
     issuer_id = orders.get(row.steward_entity_id) if row.steward_entity_id is not None else None
     if issuer_id is None or row.rule is CommonsRule.ENCLOSED or "rule" in row.locked:
         return
-    encloser = await ctx.session.get(EntityRow, issuer_id)
+    encloser = await living_entity(ctx.session, issuer_id)
     if encloser is None or held(encloser.id):
         return
     tally.enclosed += 1

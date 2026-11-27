@@ -26,6 +26,7 @@ from aerona.engine.folk_knowledge.factor import folk_factor
 from aerona.engine.mortal.kin import children_of, parents_of
 from aerona.engine.polity.laws import ruling_law
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.recording.terms import explaining, term
@@ -136,7 +137,7 @@ async def mock(ctx: TickContext, speech: SpeechRow, speaker: EntityRow, place: E
 
 
 async def hear(ctx: TickContext, speech: SpeechRow, tally: SpeechTally) -> None:
-    speaker = await ctx.session.get(EntityRow, speech.speaker_node_id)
+    speaker = await living_entity(ctx.session, speech.speaker_node_id)
     place = await ctx.session.get(EntityRow, speech.place_entity_id)
     speech.heard = True
     if speaker is None or place is None:

@@ -1,12 +1,15 @@
 from itertools import pairwise
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 
+from aerona.catalog.incident_kinds.under_age import ACTING_ROLES
 from aerona.db.session import Database
-from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow
+from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.records import FactUnit
 from aerona.domain.models.moment import Moment
 from aerona.engine.pipeline import simulate
@@ -78,6 +81,19 @@ async def test_no_happening_is_earlier_than_its_cause_and_no_step_earlier_than_t
         undated = await births_unknown(session)
         late_births = await births_after_sighting(session)
         overgrown = await overaged(session)
+        dead_acts = (
+            await session.execute(
+                select(IncidentRow.id, IncidentRow.kind, IncidentParticipantRow.role)
+                .join(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentRow.id)
+                .join(EntityRow, EntityRow.id == IncidentParticipantRow.node_id)
+                .where(
+                    EntityRow.entity_type == EntityType.MORTAL,
+                    EntityRow.status == EntityStatus.DEAD,
+                    IncidentParticipantRow.role.in_(sorted(ACTING_ROLES)),
+                    IncidentRow.year > func.json_extract(EntityRow.stats, "$.death_year"),
+                )
+            )
+        ).all()
         early_rite = await early_rites(session)
         unborn_seers = await unborn_witnesses(session)
         dated = (
@@ -99,5 +115,6 @@ async def test_no_happening_is_earlier_than_its_cause_and_no_step_earlier_than_t
     assert undated == [], f"things named in the age they were made with no moment of coming into being: {undated[:20]}"
     assert late_births == [], f"things dated as coming into being after the first record that names them: {late_births[:20]}"
     assert overgrown == [], f"mortals born in the world older than the years since their birth: {overgrown[:20]}"
+    assert dead_acts == [], f"mortals acting after the year of their death: {dead_acts[:20]}"
     assert early_rite == [], f"gatherings earlier than their host, the one they honour, or the death they honour: {early_rite[:20]}"
     assert unborn_seers == [], f"witnesses who saw what happened before they came into being: {unborn_seers[:20]}"

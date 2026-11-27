@@ -421,6 +421,8 @@ async def epoch_end_maintenance(application: ApplicationServices, database: Data
         repaired = await repair_at_epoch_end(session, rules, epoch, application.repair_log)
         counters["graph_ends"] = repaired.total if repaired is not None else 0
         counters["containment"] = await close_mismatched_inside(session, epoch) + await close_market_trade(session, epoch)
+        counters["data_repairs"] = await application.repairs.run_all(session, rules, epoch)
+        counters["schema_repairs"] = await application.repairs.schema(session, rules, epoch)
         counters["snapshots"] = await take_snapshot(session, rules, epoch)
         await refresh_planner_statistics(session)
     counters["metrics"] = await application.metrics.prune()

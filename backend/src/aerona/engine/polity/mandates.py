@@ -39,6 +39,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
+from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.stats import shift_stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.engine.services.war import ongoing_wars
@@ -322,10 +323,11 @@ async def judge(ctx: TickContext, realm: Realm, row: MandateRow, tally: MandateT
     tally.failed += 1
     if LEGITIMACY not in realm.profile.locked:
         realm.profile.legitimacy = clamp_int(realm.profile.legitimacy - ctx.rules.affairs.mandate_legitimacy, 0, PERCENT)
+    issuer = await living_entity(ctx.session, row.issuer_node_id) if row.issuer_node_id is not None else None
     await record(
         ctx,
         "affairs.mandate_failed",
-        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.SUBJECT: row.settlement_entity_id, IncidentRole.ACTOR: row.issuer_node_id},
+        roles={IncidentRole.AUTHORITY: realm.entity.id, IncidentRole.SUBJECT: row.settlement_entity_id, IncidentRole.ACTOR: issuer.id if issuer else None},
         facts={"mandate": row.kind, "legitimacy_lost": ctx.rules.affairs.mandate_legitimacy},
         place=row.settlement_entity_id,
     )

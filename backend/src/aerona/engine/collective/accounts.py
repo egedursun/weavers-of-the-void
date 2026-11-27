@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from sqlalchemy import func, select
 
-from aerona.catalog.life.collective import ACCOUNT_KINDS, ACCOUNT_STANCES, MEDIUM_FADE, REMEMBERING_KINDS
+from aerona.catalog.life.collective import ACCOUNT_KINDS, ACCOUNT_STANCES, MEDIUM_FADE, MEDIUM_PHRASES, REMEMBERING_KINDS
 from aerona.constants.units import PERCENT
 from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.db.record_context import Term
@@ -13,6 +13,7 @@ from aerona.db.tables.gatherings import CollectionIncidentRow, CollectionMemberR
 from aerona.db.tables.made import DataStoreRow
 from aerona.db.tables.minds import MindProfileRow
 from aerona.db.tables.mortal import MortalProfileRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.polity import ClaimRow, HouseMemberRow, OfficeRow, PolityMemberRow, PolityProfileRow, PolityTerritoryRow
 from aerona.db.tables.renown import DeedClaimRow, DeedRow
 from aerona.db.tables.settlement import SettlementProfileRow
@@ -43,6 +44,7 @@ from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.stats import stat_or
+from aerona.engine.recording.record import FactInput
 from aerona.engine.recording.record import record as record_incident
 
 C = CollectionKind
@@ -169,8 +171,19 @@ async def record(
         ctx.session.add(AccountStanceRow(account_id=row.id, node_id=node_id, stance=stance))
     await ctx.session.flush()
     await tell_standing(ctx, row, stances)
-    await record_incident(ctx, "account.made", roles={IncidentRole.SUBJECT: holder.id}, facts={"kind": kind, "medium": medium})
+    about = await account_subject(ctx, collection_id, subject_id)
+    facts: dict[str, FactInput] = {"kind": kind, "medium": medium, "through": MEDIUM_PHRASES[medium], **({"about": about} if about else {})}
+    await record_incident(ctx, "account.made", roles={IncidentRole.SUBJECT: holder.id}, facts=facts)
     return row
+
+
+async def account_subject(ctx: TickContext, collection_id: int | None, subject_id: int | None) -> str | None:
+    if collection_id is not None:
+        collection = await ctx.session.get(CollectionRow, collection_id)
+        if collection is not None:
+            return f"the {collection.name}"
+    node = await ctx.session.get(NodeRow, subject_id) if subject_id is not None else None
+    return node.name if node is not None else None
 
 
 async def tell_standing(ctx: TickContext, row: AccountRow, stances: dict[int, AccountStance]) -> None:

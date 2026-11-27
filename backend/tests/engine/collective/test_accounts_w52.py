@@ -5,6 +5,7 @@ from aerona.catalog.life.collective import ACCOUNT_KINDS, ACCOUNT_STANCES, REMEM
 from aerona.db.tables.collective import AccountRow, AccountStanceRow, CommemorationRow
 from aerona.db.tables.gatherings import CollectionRow
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.mortal import MortalProfileRow
 from aerona.db.tables.polity import ClaimRow
 from aerona.domain.enums.collective import AccountKind, AccountMedium, AccountStance
@@ -41,6 +42,8 @@ async def test_a_mocking_song_lowers_its_targets_fame_and_is_told_as_made(ctx: T
     assert song is not None
     assert (await session.get(MortalProfileRow, ruler.id)).renown == 50 + ctx.rules.historiography.mock_standing_effect
     assert await session.scalar(select(IncidentRow.id).where(IncidentRow.kind == "account.made")) is not None
+    told = await session.scalar(select(ChronicleRow.text).where(ChronicleRow.template_key == "account.made"))
+    assert told == f"{world.people.name} came to keep a song of Corvan, told through performance."
     assert distance_from_truth(song, [AccountStance.MOCK]) == 60
 
 
