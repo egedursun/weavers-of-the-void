@@ -1,11 +1,13 @@
 import json
+import mmap
 import os
+import re
 import struct
 import tempfile
 import weakref
 from array import array
 from collections import Counter, defaultdict
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from itertools import batched
 from pathlib import Path
@@ -133,6 +135,10 @@ class ToldChange:
         before, after = self.shift if self.shift is not None else ("", self.rewrote)
         return PACK.join(part.replace(PACK, " ") for part in (kind, self.when, self.head, self.tail, before, after))
 
+    def bound(self, bind: Callable[[str], str]) -> "ToldChange":
+        shift = (bind(self.shift[0]), bind(self.shift[1])) if self.shift is not None else None
+        return ToldChange(self.when, bind(self.head), bind(self.tail), shift, self.rewrote)
+
     @classmethod
     def unpacked(cls, text: str) -> "ToldChange":
         kind, when, head, tail, before, after = text.split(PACK)
@@ -198,6 +204,7 @@ class RowStore:
         self.written = os.fstat(handle).st_size
         self.end = self.written
         self.buffer = bytearray()
+        self.view: mmap.mmap | bytes = b""
         weakref.finalize(self, os.close, handle)
 
     def append(self, text: str) -> int:
@@ -217,9 +224,17 @@ class RowStore:
             self.buffer = bytearray()
 
     def read(self, offset: int) -> str:
+        start = offset + LENGTH.size
+        if start > len(self.view):
+            self.remap()
+        (size,) = LENGTH.unpack_from(self.view, offset)
+        if start + size > len(self.view):
+            self.remap()
+        return self.view[start : start + size].decode()
+
+    def remap(self) -> None:
         self.flush()
-        (size,) = LENGTH.unpack(os.pread(self.handle, LENGTH.size, offset))
-        return os.pread(self.handle, size, offset + LENGTH.size).decode()
+        self.view = mmap.mmap(self.handle, self.written, access=mmap.ACCESS_READ) if self.written else b""
 
 
 class SpilledRows(Sequence[str]):
@@ -258,6 +273,101 @@ PACK = "\x1f"
 MADE = "m"
 SHIFTED = "s"
 REWROTE = "r"
+UNNAMED = "an unnamed record"
+MARK = "\ue000"
+MARK_END = "\ue001"
+TOKEN = re.compile(r"\ue000([a-z])(\d+)(?::(\d+))?\ue001")
+NAME_TOKEN = "n"
+NAME_AT_TOKEN = "m"
+LINE_TOKEN = "l"
+SOURCE_TOKEN = "e"
+DURING_TOKEN = "d"
+CAUSE_PART_TOKEN = "c"
+CAUSE_CELL_TOKEN = "k"
+RUMOURS_PART_TOKEN = "r"
+RUMOURS_CELL_TOKEN = "s"
+
+
+def token(kind: str, first: int, second: int | None = None) -> str:
+    return f"{MARK}{kind}{first}{'' if second is None else f':{second}'}{MARK_END}"
+
+
+def name_within(current: str, former: Sequence[str], text: str) -> str:
+    if current in text:
+        return current
+    then = next((name for name in sorted(former, key=len, reverse=True) if name in text), None)
+    return f"{current} (then {then})" if then is not None else current
+
+
+def during_text(line: str | None, phase: bool) -> str:
+    return f" (during: {line})" if line is not None and not phase else ""
+
+
+def source_text(line: str | None) -> str:
+    return f" ({line})" if line is not None else ""
+
+
+def cause_part_text(line: str | None) -> str:
+    return f" · cause: {line}" if line is not None else ""
+
+
+def rumours_part_text(told: Sequence[str]) -> str:
+    return f" · rumours: {'; '.join(told)}" if told else ""
+
+
+@dataclass(frozen=True)
+class Bindings:
+    names: dict[int, str]
+    lines: dict[int, str]
+    phases: frozenset[int]
+    former: dict[int, list[str]]
+    rumours: dict[int, list[str]]
+
+    def name(self, node_id: int) -> str:
+        return self.names.get(node_id) or UNNAMED
+
+    def bind(self, text: str) -> str:
+        return TOKEN.sub(self.resolve, text) if MARK in text else text
+
+    def resolve(self, found: re.Match[str]) -> str:
+        first, second = int(found.group(2)), found.group(3)
+        if second is not None:
+            return self.name_at(first, int(second))
+        return RESOLVERS[found.group(1)](self, first)
+
+    def name_at(self, node_id: int, incident_id: int) -> str:
+        within = self.lines.get(incident_id)
+        return name_within(self.name(node_id), self.former.get(node_id, []), within) if within is not None else self.name(node_id)
+
+    def line(self, incident_id: int) -> str:
+        return self.lines.get(incident_id) or ""
+
+    def source(self, incident_id: int) -> str:
+        return source_text(self.lines.get(incident_id))
+
+    def during(self, incident_id: int) -> str:
+        return during_text(self.lines.get(incident_id), incident_id in self.phases)
+
+    def cause_part(self, incident_id: int) -> str:
+        return cause_part_text(self.lines.get(incident_id))
+
+    def rumours_part(self, incident_id: int) -> str:
+        return rumours_part_text(self.rumours.get(incident_id, []))
+
+    def rumours_cell(self, incident_id: int) -> str:
+        return "; ".join(self.rumours.get(incident_id, []))
+
+
+RESOLVERS: dict[str, Callable[[Bindings, int], str]] = {
+    NAME_TOKEN: Bindings.name,
+    LINE_TOKEN: Bindings.line,
+    SOURCE_TOKEN: Bindings.source,
+    DURING_TOKEN: Bindings.during,
+    CAUSE_PART_TOKEN: Bindings.cause_part,
+    CAUSE_CELL_TOKEN: Bindings.line,
+    RUMOURS_PART_TOKEN: Bindings.rumours_part,
+    RUMOURS_CELL_TOKEN: Bindings.rumours_cell,
+}
 
 
 @dataclass
@@ -273,9 +383,6 @@ class Ledger:
     states: dict[int, list[IncidentStepStateRow]] = field(default_factory=lambda: defaultdict(list))
     terms: dict[int, list[IncidentTermRow]] = field(default_factory=lambda: defaultdict(list))
     store: RowStore = field(default_factory=RowStore)
-    changes: dict[int | None, array[int]] = field(default_factory=lambda: defaultdict(lambda: array("Q")))
-    by_incident: dict[int, list[str]] = field(default_factory=lambda: defaultdict(list))
-    phase_counts: dict[int, int] = field(default_factory=lambda: defaultdict(int))
     first_seen: dict[int, dict[tuple[str, str], ChangeLine]] = field(default_factory=lambda: defaultdict(dict))
     last_seen: dict[int, dict[tuple[str, str], ChangeLine]] = field(default_factory=lambda: defaultdict(dict))
     named: dict[int, IncidentNameRow] = field(default_factory=dict)
@@ -288,6 +395,12 @@ class Ledger:
             self.incidents[row.id] = row
         for chronicle_id, text in await session.execute(select(ChronicleRow.id, ChronicleRow.text).order_by(ChronicleRow.id)):
             self.lines[chronicle_id] = text
+
+    async def load_incidents_between(self, session: AsyncSession, first: int, last: int) -> None:
+        for row in await session.scalars(
+            select(IncidentRow).where(IncidentRow.id >= first, IncidentRow.id <= last).order_by(IncidentRow.epoch, IncidentRow.id)
+        ):
+            self.incidents[row.id] = row
 
     async def load_happening_records(self, session: AsyncSession, first: int, last: int) -> None:
         span = (IncidentParticipantRow.incident_id >= first, IncidentParticipantRow.incident_id <= last)
@@ -327,49 +440,39 @@ class Ledger:
             self.former[node_id].append(name)
 
     def name_in(self, node_id: int | None, text: str) -> str:
-        current = self.name(node_id)
-        if node_id is None or current in text:
-            return current
-        then = next((name for name in sorted(self.former.get(node_id, []), key=len, reverse=True) if name in text), None)
-        return f"{current} (then {then})" if then is not None else current
+        return name_within(self.name(node_id), self.former.get(node_id, []), text) if node_id is not None else ""
 
-    async def load_changes(self, session: AsyncSession, after: int, last: int) -> None:
-        for start in range(after, last, CHANGE_CHUNK):
-            end = min(start + CHANGE_CHUNK, last)
-            terms: dict[int, list[TermLine]] = defaultdict(list)
-            term_rows = await session.execute(
-                select(
-                    StateChangeTermRow.change_id,
-                    StateChangeTermRow.op,
-                    StateChangeTermRow.term,
-                    StateChangeTermRow.amount,
-                    StateChangeTermRow.source_node_id,
-                    StateChangeTermRow.source_incident_id,
-                )
-                .where(StateChangeTermRow.change_id > start, StateChangeTermRow.change_id <= end)
-                .order_by(StateChangeTermRow.change_id, StateChangeTermRow.position)
-            )
-            for change_id, op, term, amount, source_node_id, source_incident_id in term_rows:
-                terms[change_id].append(TermLine(op, term, amount, source_node_id, source_incident_id))
-            rows = await session.execute(select(*CHANGE_COLUMNS).where(StateChangeRow.id > start, StateChangeRow.id <= end).order_by(StateChangeRow.id))
-            for row in rows:
-                self.take_change(ChangeLine(*row), terms.get(row[0], []))
+    def name_at(self, node_id: int | None, incident: IncidentRow) -> str:
+        return self.name_in(node_id, self.line_of(incident))
 
-    def take_change(self, change: ChangeLine, terms: list[TermLine]) -> None:
-        told = self.told_change(change, terms)
-        text = told.text()
-        self.changes[change.node_id].append(self.store.append(told.packed()))
-        happening = self.incidents.get(change.incident_id) if change.incident_id is not None else None
-        if happening is not None and happening.kind.startswith(PHASE_PREFIX):
-            self.phase_counts[happening.id] += 1
-        elif change.incident_id is not None:
-            self.by_incident[change.incident_id].append(text)
-        if change.node_id is not None and change.field == NAME_FIELD and change.table_name in NAMED_TABLES:
-            self.remember_name(change.node_id, change.before_text)
-        if change.node_id is not None and change.operation is LedgerOperation.UPDATE and change.field is not None:
-            key = (change.table_name, change.field)
-            self.first_seen[change.node_id].setdefault(key, change)
-            self.last_seen[change.node_id][key] = change
+    def happening_line(self, incident: IncidentRow) -> str:
+        return self.line_of(incident)
+
+    def known_line(self, incident_id: int | None) -> str | None:
+        happening = self.incidents.get(incident_id) if incident_id is not None else None
+        return self.line_of(happening) if happening is not None else None
+
+    def source_part(self, incident_id: int | None) -> str:
+        return source_text(self.known_line(incident_id))
+
+    def during_part(self, incident_id: int | None) -> str:
+        happening = self.incidents.get(incident_id) if incident_id is not None else None
+        return during_text(self.line_of(happening), happening.kind.startswith(PHASE_PREFIX)) if happening is not None else ""
+
+    def rumours_told(self, incident_id: int) -> list[str]:
+        return [self.rumour_text(rumour) for rumour in self.rumours.get(incident_id, [])]
+
+    def rumours_part(self, incident_id: int) -> str:
+        return rumours_part_text(self.rumours_told(incident_id))
+
+    def rumours_cell(self, incident_id: int) -> str:
+        return "; ".join(self.rumours_told(incident_id))
+
+    def cause_part(self, incident_id: int | None) -> str:
+        return cause_part_text(self.known_line(incident_id))
+
+    def cause_cell(self, incident_id: int | None) -> str:
+        return self.known_line(incident_id) or ""
 
     async def load_tellings(self, session: AsyncSession, first: int, last: int) -> None:
         named = select(IncidentNameRow).where(IncidentNameRow.incident_id >= first, IncidentNameRow.incident_id <= last)
@@ -386,7 +489,7 @@ class Ledger:
     def name(self, node_id: int | None) -> str:
         if node_id is None:
             return ""
-        return self.names.get(node_id) or "an unnamed record"
+        return self.names.get(node_id) or UNNAMED
 
     def name_of(self, incident: IncidentRow) -> str:
         named = self.named.get(incident.id)
@@ -445,21 +548,18 @@ class Ledger:
         if term == PRESENT_EPOCH:
             return f"the age is now epoch {number_text(amount)}"
         source = self.name(source_node_id) if source_node_id is not None else ""
-        happening = self.incidents.get(source_incident_id) if source_incident_id is not None else None
         origin = f" from {source}" if source else ""
-        if happening is not None:
-            origin += f" ({self.line_of(happening)})"
-        return f"{words(term).lower()} {signed(op, amount)}{origin}"
+        return f"{words(term).lower()} {signed(op, amount)}{origin}{self.source_part(source_incident_id)}"
 
-    def step_text(self, step: IncidentStepRow, line: str) -> str:
+    def step_text(self, step: IncidentStepRow, incident: IncidentRow) -> str:
         parts = [f"{step.position + 1}."]
         if step.round is not None:
             parts.append(f"round {step.round + 1}:")
         if step.actor_node_id is not None:
-            parts.append(self.name_in(step.actor_node_id, line))
+            parts.append(self.name_at(step.actor_node_id, incident))
         parts.append(spoken(step.action))
         if step.target_node_id is not None:
-            parts.append(self.name_in(step.target_node_id, line))
+            parts.append(self.name_at(step.target_node_id, incident))
         if step.instrument_kind is not InstrumentKind.NONE or step.instrument_node_id is not None or step.instrument_key:
             instrument = self.name(step.instrument_node_id) if step.instrument_node_id is not None else spoken(step.instrument_key or step.instrument_kind)
             parts.append(f"with {instrument}")
@@ -509,9 +609,7 @@ class Ledger:
         phase = f" in {spoken(change.phase)}" if change.phase else ""
         reasons = [self.term_text(term.op, term.term, term.amount, term.source_node_id, term.source_incident_id) for term in terms]
         why = f" because {'; '.join(reasons)}" if reasons else ""
-        happening = self.incidents.get(change.incident_id) if change.incident_id is not None else None
-        cause = f" (during: {self.line_of(happening)})" if happening is not None and not happening.kind.startswith(PHASE_PREFIX) else ""
-        return f"{actor}{phase}{why}{cause}"
+        return f"{actor}{phase}{why}{self.during_part(change.incident_id)}"
 
     def account_text(self, incident: IncidentRow, node_id: int | None) -> str:
         roles = self.participants.get(incident.id, [])
@@ -523,19 +621,18 @@ class Ledger:
         parts.extend(self.account_place(incident))
         if own and all(role in KNOWERS for role in own):
             return " · ".join(parts)
-        line = self.line_of(incident)
-        others = [f"{spoken(row.role)} {self.name_in(row.node_id, line)}" for row in roles if row.node_id != node_id and row.role not in UNLISTED_ROLES]
+        others = [f"{spoken(row.role)} {self.name_at(row.node_id, incident)}" for row in roles if row.node_id != node_id and row.role not in UNLISTED_ROLES]
         knowing = Counter(row.role for row in roles if row.node_id != node_id and row.role in KNOWERS)
         others.extend(several(knowing[role], *words) for role, words in sorted(KNOWER_WORDS.items()) if knowing[role])
         if others:
             parts.append("with " + ", ".join(others))
         parts.extend(self.account_tail(incident))
-        return " · ".join(parts)
+        return " · ".join(parts) + self.rumours_part(incident.id) + self.cause_part(incident.cause_incident_id)
 
     def account_head(self, incident: IncidentRow) -> str:
         found = self.heads.get(incident.id)
         if found is None:
-            found = f"{self.when(incident)}: {self.line_of(incident)}"
+            found = f"{self.when(incident)}: {self.happening_line(incident)}"
             if incident.id in self.named:
                 found = f"{found} · named {self.name_of(incident)}"
             self.heads[incident.id] = found
@@ -560,23 +657,11 @@ class Ledger:
         terms = [self.term_text(term.op, term.term, term.amount, term.source_node_id, term.source_incident_id) for term in self.terms.get(incident.id, [])]
         if terms:
             parts.append("terms: " + "; ".join(terms))
-        steps = [self.step_text(step, self.line_of(incident)) for step in self.steps.get(incident.id, [])]
+        steps = [self.step_text(step, incident) for step in self.steps.get(incident.id, [])]
         if steps:
             parts.append("steps: " + " ".join(steps))
-        rumours = [self.rumour_text(rumour) for rumour in self.rumours.get(incident.id, [])]
-        if rumours:
-            parts.append("rumours: " + "; ".join(rumours))
-        cause = self.incidents.get(incident.cause_incident_id) if incident.cause_incident_id is not None else None
-        if cause is not None:
-            parts.append(f"cause: {self.line_of(cause)}")
         self.tails[incident.id] = parts
         return parts
-
-    def changes_cell(self, incident: IncidentRow) -> str:
-        if incident.kind.startswith(PHASE_PREFIX):
-            count = self.phase_counts.get(incident.id, 0)
-            return f"{several(count, 'change', 'changes')}, each told under the record it changed" if count else ""
-        return "; ".join(self.by_incident.get(incident.id, []))
 
     def then_and_now(self, node_id: int) -> list[tuple[str, str]]:
         first = self.first_seen.get(node_id, {})
@@ -592,6 +677,71 @@ class Ledger:
                     (label, f"since epoch {earliest.epoch}: rewrote {rewritten}" if rewritten is not None else f"epoch {earliest.epoch}: {then} → now: {now}")
                 )
         return found
+
+
+@dataclass
+class LateLedger(Ledger):
+    changes: dict[int | None, array[int]] = field(default_factory=lambda: defaultdict(lambda: array("Q")))
+    incident_changes: dict[int, array[int]] = field(default_factory=lambda: defaultdict(lambda: array("Q")))
+
+    async def load_changes(self, session: AsyncSession, after: int, last: int) -> None:
+        for start in range(after, last, CHANGE_CHUNK):
+            end = min(start + CHANGE_CHUNK, last)
+            terms: dict[int, list[TermLine]] = defaultdict(list)
+            term_rows = await session.execute(
+                select(
+                    StateChangeTermRow.change_id,
+                    StateChangeTermRow.op,
+                    StateChangeTermRow.term,
+                    StateChangeTermRow.amount,
+                    StateChangeTermRow.source_node_id,
+                    StateChangeTermRow.source_incident_id,
+                )
+                .where(StateChangeTermRow.change_id > start, StateChangeTermRow.change_id <= end)
+                .order_by(StateChangeTermRow.change_id, StateChangeTermRow.position)
+            )
+            for change_id, op, term, amount, source_node_id, source_incident_id in term_rows:
+                terms[change_id].append(TermLine(op, term, amount, source_node_id, source_incident_id))
+            rows = await session.execute(select(*CHANGE_COLUMNS).where(StateChangeRow.id > start, StateChangeRow.id <= end).order_by(StateChangeRow.id))
+            for row in rows:
+                self.take_change(ChangeLine(*row), terms.get(row[0], []))
+
+    def name(self, node_id: int | None) -> str:
+        return token(NAME_TOKEN, node_id) if node_id is not None else ""
+
+    def name_at(self, node_id: int | None, incident: IncidentRow) -> str:
+        return token(NAME_AT_TOKEN, node_id, incident.id) if node_id is not None else ""
+
+    def happening_line(self, incident: IncidentRow) -> str:
+        return token(LINE_TOKEN, incident.id)
+
+    def source_part(self, incident_id: int | None) -> str:
+        return token(SOURCE_TOKEN, incident_id) if incident_id is not None else ""
+
+    def during_part(self, incident_id: int | None) -> str:
+        return token(DURING_TOKEN, incident_id) if incident_id is not None else ""
+
+    def rumours_part(self, incident_id: int) -> str:
+        return token(RUMOURS_PART_TOKEN, incident_id)
+
+    def rumours_cell(self, incident_id: int) -> str:
+        return token(RUMOURS_CELL_TOKEN, incident_id)
+
+    def cause_part(self, incident_id: int | None) -> str:
+        return token(CAUSE_PART_TOKEN, incident_id) if incident_id is not None else ""
+
+    def cause_cell(self, incident_id: int | None) -> str:
+        return token(CAUSE_CELL_TOKEN, incident_id) if incident_id is not None else ""
+
+    def take_change(self, change: ChangeLine, terms: list[TermLine]) -> None:
+        offset = self.store.append(self.told_change(change, terms).packed())
+        self.changes[change.node_id].append(offset)
+        if change.incident_id is not None:
+            self.incident_changes[change.incident_id].append(offset)
+        if change.node_id is not None and change.operation is LedgerOperation.UPDATE and change.field is not None:
+            key = (change.table_name, change.field)
+            self.first_seen[change.node_id].setdefault(key, change)
+            self.last_seen[change.node_id][key] = change
 
 
 def composite(text: str | None) -> dict[str, object] | list[object] | None:
@@ -654,7 +804,7 @@ def age_spans(ages: Iterable[AgeRow]) -> list[tuple[str, int, int | None]]:
 
 def report_table(ledger: Ledger, incident: IncidentRow, title: str) -> RecordTable:
     table = RecordTable(
-        f"{title}: {ledger.line_of(incident)}",
+        f"{title}: {ledger.happening_line(incident)}",
         ["Step", "Round", "Moment", "Actor", "Action", "Target", "Instrument", "Section or part", "Amount", "Outcome", "States"],
     )
     for step in ledger.steps.get(incident.id, []):

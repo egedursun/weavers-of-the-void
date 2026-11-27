@@ -1,4 +1,7 @@
 import asyncio
+import hashlib
+import os
+import pickle
 import shutil
 import tempfile
 import weakref
@@ -6,27 +9,35 @@ from array import array
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from concurrent.futures import Executor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from functools import cache
 from pathlib import Path
 
-from sqlalchemy import Integer, func, select
+from sqlalchemy import Integer, TextClause, func, select, text
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import aerona
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.core.grammar import several, spoken
 from aerona.db.base import Base
+from aerona.db.book_marks import PAST_STAMP, ledger_folder, past_stamp
 from aerona.db.profile_guard import table_name
 from aerona.db.session import Database
 from aerona.db.tables.ages import AgeRow
-from aerona.db.tables.changes import StateChangeRow, StateCheckpointRow
+from aerona.db.tables.changes import StateChangeRow, StateChangeTermRow, StateCheckpointRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
+from aerona.db.tables.records import IncidentFactRow, IncidentStepRow, IncidentStepStateRow, IncidentTermRow
+from aerona.db.tables.tellings import IncidentNameRow
 from aerona.services.books.records import (
     CHANGES_TITLE,
     HISTORY_TITLE,
     PHASE_PREFIX,
     REPORT_GROUPS,
     THEN_TITLE,
+    Bindings,
     ChangeLine,
+    LateLedger,
     Ledger,
     RowStore,
     SpilledRows,
@@ -42,17 +53,32 @@ CHANGES_COLUMN = 8
 LOOSE_TITLE = "Changes to records of no single node"
 CHECKPOINT_HEADERS = ["Epoch", "Table", "Rows", "Digest", "Last change"]
 CHECKPOINT_TITLE = "Checkpoints of the past"
-SLICES_PER_WORKER = 2
+CHANGE_GRID = 125_000
+HAPPENING_GRID = 2_000
+CHANGES_KIND = "changes"
+HAPPENINGS_KIND = "happenings"
+ROWS_SUFFIX = ".rows"
+META_SUFFIX = ".meta"
+WRITING_SUFFIX = ".writing"
+KEY_PART = "\x1f"
+RANGE = '"{column}" > :after AND "{column}" <= :last'
+STEPS_IN_RANGE = '"step_id" IN (SELECT "id" FROM "incident_steps" WHERE "incident_id" > :after AND "incident_id" <= :last)'
 FieldKey = tuple[str, str]
 
 
 @dataclass(frozen=True)
 class Slice:
     url: str
-    names: dict[int, str]
     after: int
     last: int
-    path: str
+    folder: str
+    version: str
+
+
+@dataclass(frozen=True)
+class BindingsJob:
+    url: str
+    names: dict[int, str]
 
 
 @dataclass
@@ -61,8 +87,7 @@ class ChangesTold:
     nodes: dict[int | None, array[int]]
     first_seen: dict[int, dict[FieldKey, ChangeLine]]
     last_seen: dict[int, dict[FieldKey, ChangeLine]]
-    by_incident: dict[int, list[str]]
-    phase_counts: dict[int, int]
+    incidents: dict[int, array[int]]
 
 
 @dataclass
@@ -81,6 +106,7 @@ class Grouping:
     account_paths: list[str]
     accounts: dict[int, list[tuple[int, int, int, int]]]
     path: str
+    bindings: Bindings
 
 
 @dataclass
@@ -140,51 +166,148 @@ def on_database[T](url: str, work: Callable[[AsyncSession], Awaitable[T]]) -> T:
     return asyncio.run(run())
 
 
+@cache
+def code_version() -> str:
+    root = Path(aerona.__file__).parent
+    digest = hashlib.sha256()
+    for path in sorted(root.rglob("*.py")):
+        digest.update(str(path.relative_to(root)).encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
+def database_identity(url: str) -> int:
+    database = make_url(url).database
+    try:
+        return os.stat(database).st_ino if database else 0
+    except FileNotFoundError:
+        return 0
+
+
+def key_of(*parts: object) -> str:
+    return hashlib.sha256(KEY_PART.join(str(part) for part in parts).encode()).hexdigest()
+
+
+def rows_text(name: str, where: str) -> TextClause:
+    table = Base.metadata.tables[name]
+    fields = "||char(31)||".join(f'quote("{column.name}")' for column in table.columns)
+    order = ", ".join(f'"{column.name}"' for column in table.primary_key.columns)
+    return text(f'SELECT group_concat({fields}, char(30) ORDER BY {order}) FROM "{table.name}" WHERE {where}')
+
+
+HAPPENING_ROWS = (
+    rows_text(IncidentRow.__tablename__, RANGE.format(column="id")),
+    *(
+        rows_text(row.__tablename__, RANGE.format(column="incident_id"))
+        for row in (IncidentParticipantRow, IncidentFactRow, IncidentStepRow, IncidentTermRow, IncidentNameRow)
+    ),
+    rows_text(IncidentStepStateRow.__tablename__, STEPS_IN_RANGE),
+)
+CHANGE_EDGES = rows_text(StateChangeRow.__tablename__, '"id" IN (:first, :top)')
+
+
+async def change_key(session: AsyncSession, job: Slice) -> str:
+    count, first, top = (
+        await session.execute(
+            select(func.count(), func.min(StateChangeRow.id), func.max(StateChangeRow.id)).where(StateChangeRow.id > job.after, StateChangeRow.id <= job.last)
+        )
+    ).one()
+    terms = await session.scalar(
+        select(func.count()).select_from(StateChangeTermRow).where(StateChangeTermRow.change_id > job.after, StateChangeTermRow.change_id <= job.last)
+    )
+    edges = await session.scalar(CHANGE_EDGES, {"first": first, "top": top}) if count else ""
+    return key_of(job.version, count, top, terms, edges)
+
+
+async def happening_key(session: AsyncSession, job: Slice) -> str:
+    digest = hashlib.sha256(job.version.encode())
+    for statement in HAPPENING_ROWS:
+        found = await session.scalar(statement, {"after": job.after, "last": job.last})
+        digest.update(KEY_PART.join(("", found or "")).encode())
+    return digest.hexdigest()
+
+
+def kept_told[T: (ChangesTold, HappeningsTold)](folder: Path, stem: str, kind: type[T]) -> T | None:
+    rows, meta = folder / f"{stem}{ROWS_SUFFIX}", folder / f"{stem}{META_SUFFIX}"
+    if not rows.exists() or not meta.exists():
+        return None
+    try:
+        told = pickle.loads(meta.read_bytes())
+    except (OSError, pickle.UnpicklingError, EOFError, AttributeError, ImportError, TypeError, ValueError):
+        return None
+    if not isinstance(told, kind):
+        return None
+    told.path = str(rows)
+    return told
+
+
+def writing_path(folder: Path, stem: str) -> Path:
+    found = folder / f"{stem}.{os.getpid()}{ROWS_SUFFIX}{WRITING_SUFFIX}"
+    found.unlink(missing_ok=True)
+    return found
+
+
+def keep_told[T: (ChangesTold, HappeningsTold)](folder: Path, stem: str, told: T) -> T:
+    rows = folder / f"{stem}{ROWS_SUFFIX}"
+    os.replace(told.path, rows)
+    told.path = str(rows)
+    writing = folder / f"{stem}.{os.getpid()}{META_SUFFIX}{WRITING_SUFFIX}"
+    writing.write_bytes(pickle.dumps(told))
+    os.replace(writing, folder / f"{stem}{META_SUFFIX}")
+    return told
+
+
 async def tell_changes_in(session: AsyncSession, job: Slice) -> ChangesTold:
-    ledger = Ledger(job.names, store=RowStore(Path(job.path)))
-    await ledger.load_incidents(session)
+    folder = Path(job.folder)
+    stem = f"{CHANGES_KIND}-{job.after}-{job.last}-{await change_key(session, job)}"
+    kept = kept_told(folder, stem, ChangesTold)
+    if kept is not None:
+        return kept
+    path = writing_path(folder, stem)
+    ledger = LateLedger({}, store=RowStore(path))
     await ledger.load_changes(session, job.after, job.last)
     ledger.store.flush()
-    return ChangesTold(
-        job.path,
+    told = ChangesTold(
+        str(path),
         dict(ledger.changes),
         {node: dict(seen) for node, seen in ledger.first_seen.items()},
         {node: dict(seen) for node, seen in ledger.last_seen.items()},
-        dict(ledger.by_incident),
-        dict(ledger.phase_counts),
+        dict(ledger.incident_changes),
     )
+    return keep_told(folder, stem, told)
 
 
 def happening_cells(ledger: Ledger, incident: IncidentRow) -> list[str]:
-    cause = ledger.incidents.get(incident.cause_incident_id) if incident.cause_incident_id is not None else None
-    line = ledger.line_of(incident)
     return [
         ledger.when(incident),
         words(incident.kind),
-        line,
+        ledger.happening_line(incident),
         ledger.name_of(incident),
         ledger.name(incident.place_entity_id),
-        ", ".join(f"{spoken(row.role)} {ledger.name_in(row.node_id, line)}" for row in ledger.participants.get(incident.id, [])),
+        ", ".join(f"{spoken(row.role)} {ledger.name_at(row.node_id, incident)}" for row in ledger.participants.get(incident.id, [])),
         "; ".join(ledger.fact_text(fact) for fact in ledger.facts.get(incident.id, [])),
-        " ".join(ledger.step_text(step, line) for step in ledger.steps.get(incident.id, [])),
+        " ".join(ledger.step_text(step, incident) for step in ledger.steps.get(incident.id, [])),
         "",
-        "; ".join(ledger.rumour_text(rumour) for rumour in ledger.rumours.get(incident.id, [])),
-        ledger.line_of(cause) if cause is not None else "",
+        ledger.rumours_cell(incident.id),
+        ledger.cause_cell(incident.cause_incident_id),
     ]
 
 
 async def tell_happenings_in(session: AsyncSession, job: Slice) -> HappeningsTold:
+    folder = Path(job.folder)
+    stem = f"{HAPPENINGS_KIND}-{job.after}-{job.last}-{await happening_key(session, job)}"
+    kept = kept_told(folder, stem, HappeningsTold)
+    if kept is not None:
+        return kept
     first = job.after + 1
-    ledger = Ledger(job.names, store=RowStore(Path(job.path)))
-    await ledger.load_incidents(session)
+    path = writing_path(folder, stem)
+    ledger = LateLedger({}, store=RowStore(path))
+    await ledger.load_incidents_between(session, first, job.last)
     await ledger.load_happening_records(session, first, job.last)
-    await ledger.load_former_names(session)
     accounts: dict[int, list[tuple[int, int, int]]] = defaultdict(list)
     rows: list[tuple[int, int, bool, list[str]]] = []
     reports: list[tuple[int, int, RecordTable]] = []
     for incident in ledger.incidents.values():
-        if not first <= incident.id <= job.last:
-            continue
         for node_id in sorted({row.node_id for row in ledger.participants.get(incident.id, [])}):
             accounts[node_id].append((incident.epoch, incident.id, ledger.store.append(ledger.account_text(incident, node_id))))
         rows.append((incident.epoch, incident.id, incident.kind.startswith(PHASE_PREFIX), happening_cells(ledger, incident)))
@@ -193,7 +316,7 @@ async def tell_happenings_in(session: AsyncSession, job: Slice) -> HappeningsTol
         if report is not None and ledger.steps.get(incident.id):
             reports.append((incident.epoch, incident.id, report_table(ledger, incident, report)))
     ledger.store.flush()
-    return HappeningsTold(job.path, dict(accounts), rows, reports)
+    return keep_told(folder, stem, HappeningsTold(str(path), dict(accounts), rows, reports))
 
 
 def group_in(job: Grouping) -> Grouped:
@@ -202,13 +325,21 @@ def group_in(job: Grouping) -> Grouped:
     account_stores = [RowStore(Path(path)) for path in job.account_paths]
     history: dict[int, array[int]] = {}
     changes: dict[int | None, array[int]] = {}
+    seen: dict[str, str] = {}
+
+    def bind(told: str) -> str:
+        found = seen.get(told)
+        if found is None:
+            found = seen[told] = job.bindings.bind(told)
+        return found
+
     for node in job.nodes:
         told = job.accounts.get(node) if node is not None else None
         if node is not None and told:
-            history[node] = array("Q", (out.append(account_stores[store].read(offset)) for _epoch, _id, store, offset in sorted(told)))
+            history[node] = array("Q", (out.append(job.bindings.bind(account_stores[store].read(offset))) for _epoch, _id, store, offset in sorted(told)))
         spans = job.changes.get(node)
         if spans:
-            lines = (ToldChange.unpacked(change_stores[store].read(offset)) for store, offsets in spans for offset in offsets)
+            lines = (ToldChange.unpacked(change_stores[store].read(offset)).bound(bind) for store, offsets in spans for offset in offsets)
             changes[node] = array("Q", (out.append(text) for text in grouped_changes(lines)))
     out.flush()
     return Grouped(job.path, history, changes)
@@ -240,9 +371,8 @@ def tell_happenings(job: Slice) -> HappeningsTold:
     return on_database(job.url, lambda session: tell_happenings_in(session, job))
 
 
-def spans(first: int, last: int, count: int) -> list[tuple[int, int]]:
-    size = max(1, -(-(last - first + 1) // count))
-    return [(start - 1, min(start + size - 1, last)) for start in range(first, last + 1, size)]
+def grid(last: int, size: int) -> list[tuple[int, int]]:
+    return [(start, min(start + size, last)) for start in range(0, last, size)]
 
 
 async def table_sizes(session: AsyncSession, tables: list[str]) -> dict[str, int]:
@@ -328,54 +458,78 @@ def then_and_now(names: dict[int, str], told: list[ChangesTold], node_id: int) -
 @dataclass
 class LedgerWork:
     folder: Path
+    kept: Path
+    bindings: Pending[Bindings, BindingsJob]
     changes: Pending[ChangesTold, Slice]
     happenings: Pending[HappeningsTold, Slice]
 
 
-async def happening_spans(session: AsyncSession, count: int) -> list[tuple[int, int]]:
-    weights = list(
-        await session.execute(
-            select(IncidentRow.id, func.count(IncidentParticipantRow.incident_id))
-            .outerjoin(IncidentParticipantRow, IncidentParticipantRow.incident_id == IncidentRow.id)
-            .group_by(IncidentRow.id)
-            .order_by(IncidentRow.id)
-        )
-    )
-    if not weights:
-        return []
-    share = max(1, -(-sum(weight + 1 for _id, weight in weights) // count))
-    found: list[tuple[int, int]] = []
-    after = int(weights[0][0]) - 1
-    load = 0
-    for incident_id, weight in weights:
-        load += weight + 1
-        if load >= share:
-            found.append((after, int(incident_id)))
-            after, load = int(incident_id), 0
-    if after < int(weights[-1][0]):
-        found.append((after, int(weights[-1][0])))
-    return found
+async def bindings_in(session: AsyncSession, job: BindingsJob) -> Bindings:
+    return await bindings_of(session, job.names)
+
+
+def tell_bindings(job: BindingsJob) -> Bindings:
+    return on_database(job.url, lambda session: bindings_of(session, job.names))
 
 
 async def start_ledger(session: AsyncSession, names: dict[int, str]) -> LedgerWork:
     folder = Path(tempfile.mkdtemp(prefix="aerona-ledger-"))
     url = session.sync_session.get_bind().engine.url.render_as_string(hide_password=False)
-    count = SLICES.count * SLICES_PER_WORKER if SLICES.count > 1 else 1
+    kept = ledger_folder(url)
+    kept.mkdir(parents=True, exist_ok=True)
+    code = code_version()
+    changes_version = key_of(code, database_identity(url), past_stamp(url))
     last_change = int(await session.scalar(select(func.coalesce(func.max(StateChangeRow.id), 0))) or 0)
-    change_jobs = [
-        Slice(url, names, after, last, str(folder / f"changes-{number}"))
-        for number, (after, last) in enumerate(spans(1, last_change, max(1, count // SLICES_PER_WORKER)))
-    ]
-    happening_jobs = [
-        Slice(url, names, after, last, str(folder / f"happenings-{number}")) for number, (after, last) in enumerate(await happening_spans(session, count))
-    ]
-    return LedgerWork(folder, Pending(change_jobs, tell_changes_in, tell_changes), Pending(happening_jobs, tell_happenings_in, tell_happenings))
+    last_incident = int(await session.scalar(select(func.coalesce(func.max(IncidentRow.id), 0))) or 0)
+    change_jobs = [Slice(url, after, last, str(kept), changes_version) for after, last in grid(last_change, CHANGE_GRID)]
+    happening_jobs = [Slice(url, after, last, str(kept), code) for after, last in grid(last_incident, HAPPENING_GRID)]
+    bindings = Pending([BindingsJob(url, names)], bindings_in, tell_bindings)
+    return LedgerWork(folder, kept, bindings, Pending(change_jobs, tell_changes_in, tell_changes), Pending(happening_jobs, tell_happenings_in, tell_happenings))
+
+
+async def bindings_of(session: AsyncSession, names: dict[int, str]) -> Bindings:
+    ledger = Ledger(names)
+    await ledger.load_incidents(session)
+    await ledger.load_tellings(session, 0, max(ledger.incidents, default=0))
+    await ledger.load_former_names(session)
+    return Bindings(
+        names,
+        {incident_id: ledger.line_of(incident) for incident_id, incident in ledger.incidents.items()},
+        frozenset(incident_id for incident_id, incident in ledger.incidents.items() if incident.kind.startswith(PHASE_PREFIX)),
+        {node: list(former) for node, former in ledger.former.items()},
+        {incident_id: ledger.rumours_told(incident_id) for incident_id in ledger.rumours},
+    )
+
+
+def bound_report(report: RecordTable, bindings: Bindings) -> RecordTable:
+    return replace(report, title=bindings.bind(report.title), rows=[[bindings.bind(cell) for cell in row] for row in report.rows])
+
+
+def changes_by_incident(told: list[ChangesTold], bindings: Bindings) -> tuple[dict[int, list[str]], dict[int, int]]:
+    by_incident: dict[int, list[str]] = defaultdict(list)
+    phase_counts: dict[int, int] = defaultdict(int)
+    for part in told:
+        store = RowStore(Path(part.path))
+        for incident_id, offsets in part.incidents.items():
+            if incident_id in bindings.phases:
+                phase_counts[incident_id] += len(offsets)
+            else:
+                by_incident[incident_id].extend(ToldChange.unpacked(store.read(offset)).bound(bindings.bind).text() for offset in offsets)
+    return dict(by_incident), dict(phase_counts)
+
+
+def tidy(folder: Path, used: set[str]) -> None:
+    for path in folder.iterdir():
+        if path.name.startswith(PAST_STAMP) or (path.suffix in (ROWS_SUFFIX, META_SUFFIX) and path.stem in used):
+            continue
+        path.unlink(missing_ok=True)
 
 
 async def add_history_sections(session: AsyncSession, index: TypedIndex, work: LedgerWork | None = None) -> LedgerBook:
     started = work or await start_ledger(session, index.names)
     folder = started.folder
     count = SLICES.count
+    (bindings,) = await started.bindings.done(session)
     told = await started.changes.done(session)
     happened = await started.happenings.done(session)
     changes: dict[int | None, list[tuple[int, array[int]]]] = defaultdict(list)
@@ -399,6 +553,7 @@ async def add_history_sections(session: AsyncSession, index: TypedIndex, work: L
             [happening.path for happening in happened],
             {node: accounts[node] for node in bucket if node is not None and node in accounts},
             str(folder / f"grouped-{number}"),
+            bindings,
         )
         for number, bucket in enumerate(buckets)
     ]
@@ -415,20 +570,25 @@ async def add_history_sections(session: AsyncSession, index: TypedIndex, work: L
         rows = then_and_now(index.names, told, node)
         if rows:
             index.sections[node].append(TypedSection(THEN_TITLE, rows=rows))
-    by_incident: dict[int, list[str]] = defaultdict(list)
-    phase_counts: dict[int, int] = defaultdict(int)
-    for part in told:
-        for incident_id, texts in part.by_incident.items():
-            by_incident[incident_id].extend(texts)
-        for incident_id, number in part.phase_counts.items():
-            phase_counts[incident_id] += number
+    by_incident, phase_counts = changes_by_incident(told, bindings)
     loose = list(SpilledRows(*merged[None])) if None in merged else []
+    tidy(started.kept, {Path(part.path).stem for part in told} | {Path(part.path).stem for part in happened})
     return LedgerBook(
-        sorted((row for happening in happened for row in happening.rows), key=lambda row: (row[0], row[1])),
-        sorted((report for happening in happened for report in happening.reports), key=lambda report: (report[0], report[1])),
+        sorted(
+            (
+                (epoch, incident_id, phase, [bindings.bind(cell) for cell in cells])
+                for happening in happened
+                for epoch, incident_id, phase, cells in happening.rows
+            ),
+            key=lambda row: (row[0], row[1]),
+        ),
+        sorted(
+            ((epoch, incident_id, bound_report(report, bindings)) for happening in happened for epoch, incident_id, report in happening.reports),
+            key=lambda report: (report[0], report[1]),
+        ),
         loose,
-        dict(by_incident),
-        dict(phase_counts),
+        by_incident,
+        phase_counts,
     )
 
 

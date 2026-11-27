@@ -1,4 +1,5 @@
 import importlib.util
+import shutil
 from pathlib import Path
 
 import pytest
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.api.views.scoped_lines import scoped_lines
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec, RoleSpec
+from aerona.db.book_marks import ledger_folder, renew_past
 from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.cosmos import AppliedFixupRow
 from aerona.db.tables.culture import RumourRow
@@ -278,3 +280,85 @@ async def test_a_renamed_one_is_named_in_a_line_as_it_was_called_when_the_line_w
     assert ledger.name_in(dead.id, "Ilsaren gave Sordir a gift worth 10.") == "Dorar (then Sordir)"
     assert ledger.name_in(dead.id, "Dorar was laid to rest.") == "Dorar"
     assert ledger.name_in(dead.id, "A storm came.") == "Dorar"
+
+
+def url_of(session: AsyncSession) -> str:
+    return session.sync_session.get_bind().engine.url.render_as_string(hide_password=False)
+
+
+async def told_book(session: AsyncSession, names: dict[int, str]) -> tuple[object, ...]:
+    index = TypedIndex(dict(names))
+    book = await add_history_sections(session, index)
+    sections = sorted((node, section.title, tuple(section.lines)) for node, found in index.sections.items() for section in found)
+    tables = [(table.title, tuple(tuple(row) for row in table.rows)) for table in await record_tables(session, book)]
+    return sections, tables, book.by_incident, book.phase_counts
+
+
+async def later_happening(session: AsyncSession, world: CoreWorld, target: int) -> int:
+    actor = await mortal(session, "Corin", world, world.regions[0].id)
+    line = ChronicleRow(epoch=2, year=60, kind=ChronicleKind.WORLD, template_key=DUEL, world_id=world.world.id, text="Corin fought Arem for land.")
+    session.add(line)
+    await session.flush()
+    incident = IncidentRow(kind=DUEL, epoch=2, year=60, world_id=world.world.id, chronicle_id=line.id, magnitude=1, locked=[])
+    session.add(incident)
+    await session.flush()
+    session.add_all(
+        [
+            IncidentParticipantRow(incident_id=incident.id, node_id=actor.id, role=IncidentRole.ACTOR, position=0),
+            IncidentParticipantRow(incident_id=incident.id, node_id=target, role=IncidentRole.TARGET, position=1),
+            StateChangeRow(
+                epoch=2,
+                year=60,
+                table_name="entities",
+                row_key=f'{{"id": {target}}}',
+                node_id=target,
+                operation=LedgerOperation.UPDATE,
+                field="power_level",
+                before_number=5.0,
+                after_number=6.0,
+                actor_kind=ActorKind.ENGINE,
+                phase="vendettas",
+                incident_id=incident.id,
+            ),
+        ]
+    )
+    await session.flush()
+    return actor.id
+
+
+async def test_kept_slices_tell_the_book_a_fresh_build_tells(session: AsyncSession, world: CoreWorld, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(ledger_parts, "CHANGE_GRID", 8)
+    monkeypatch.setattr(ledger_parts, "HAPPENING_GRID", 1)
+    incident, first, second = await duel(session, world)
+    names = {first: "Arem", second: "Bessa", world.regions[0].id: world.regions[0].name}
+    await told_book(session, names)
+    folder = ledger_folder(url_of(session))
+    kept = {path.name: path.stat().st_mtime_ns for path in folder.glob("*.meta")}
+    third = await later_happening(session, world, first)
+    names.update({third: "Corin", first: "Arem the Bold"})
+    rumour = await session.scalar(select(RumourRow).where(RumourRow.incident_id == incident.id))
+    assert rumour is not None
+    rumour.fidelity = 7
+    await session.flush()
+    again = await told_book(session, names)
+    reused = {path.name for path in folder.glob("*.meta") if kept.get(path.name) == path.stat().st_mtime_ns}
+    assert any(name.startswith(f"happenings-{incident.id - 1}-{incident.id}-") for name in reused)
+    assert any(name.startswith("changes-") for name in reused)
+    shutil.rmtree(folder)
+    assert again == await told_book(session, names)
+    sections = again[0]
+    assert isinstance(sections, list)
+    told = [line for node, title, lines in sections if node == second and title == "History" for line in lines]
+    assert any("Arem the Bold" in line and "fidelity 7%" in line for line in told)
+
+
+async def test_a_rewritten_past_retells_every_kept_change(session: AsyncSession, world: CoreWorld, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(ledger_parts, "CHANGE_GRID", 8)
+    _incident, first, second = await duel(session, world)
+    names = {first: "Arem", second: "Bessa", world.regions[0].id: world.regions[0].name}
+    before = await told_book(session, names)
+    folder = ledger_folder(url_of(session))
+    kept = {path.name for path in folder.glob("changes-*.meta")}
+    renew_past(url_of(session))
+    assert await told_book(session, names) == before
+    assert kept and not kept & {path.name for path in folder.glob("changes-*.meta")}

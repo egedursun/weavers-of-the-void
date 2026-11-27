@@ -14,7 +14,11 @@ STYLE_FIXED = re.compile(r"backgroundAttachment\s*:\s*['\"`][^'\"`]*\bfixed\b")
 def sources(suffixes: tuple[str, ...]) -> list[Path]:
     if not SOURCE_ROOT.exists():
         return []
-    return sorted(path for path in SOURCE_ROOT.rglob("*") if path.suffix in suffixes and "node_modules" not in path.parts and "generated" not in path.parts)
+    return sorted(
+        path
+        for path in SOURCE_ROOT.rglob("*")
+        if path.suffix in suffixes and path.is_file() and "node_modules" not in path.parts and "generated" not in path.parts
+    )
 
 
 def fixed_in_css(css: str) -> list[str]:

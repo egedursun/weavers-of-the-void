@@ -558,7 +558,7 @@ def incident_body(ledger: Ledger, incident: IncidentRow, lines: Mapping[int, str
         [FACT_SEPARATOR.join(ledger.fact_text(fact) for fact in ledger.facts.get(incident.id, []))],
         fields(
             ("Terms", LIST_SEPARATOR.join(terms)),
-            ("Steps", " ".join(ledger.step_text(step, ledger.line_of(incident)) for step in ledger.steps.get(incident.id, []))),
+            ("Steps", " ".join(ledger.step_text(step, incident) for step in ledger.steps.get(incident.id, []))),
             ("Rumours", LIST_SEPARATOR.join(ledger.rumour_text(rumour) for rumour in ledger.rumours.get(incident.id, []))),
             ("Cause", ledger.line_of(cause) if cause is not None else None),
             ("From", ledger.name(incident.origin_entity_id)),

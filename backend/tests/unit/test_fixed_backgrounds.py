@@ -36,3 +36,11 @@ def test_a_fixed_background_in_markup_is_caught() -> None:
 
 def test_the_app_paints_no_background_pinned_to_the_viewport() -> None:
     assert checker().problems() == []
+
+
+def test_a_folder_named_like_a_screen_is_not_read_as_one(tmp_path: Path) -> None:
+    module = checker()
+    (tmp_path / "__screenshots__" / "panel.test.tsx").mkdir(parents=True)
+    (tmp_path / "panel.tsx").write_text("const a = <div className='bg-cover' />\n", encoding="utf-8")
+    module.SOURCE_ROOT = tmp_path
+    assert module.sources((".tsx",)) == [tmp_path / "panel.tsx"]

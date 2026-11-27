@@ -14,7 +14,7 @@ from aerona.constants.maintenance import SQLITE_CACHE_KIB, SQLITE_MMAP_BYTES
 from aerona.constants.timeouts import SQLITE_BUSY_TIMEOUT_MS
 from aerona.db.activity import install_activity_capture
 from aerona.db.bond_index import drop_lookup
-from aerona.db.book_marks import BookMarks
+from aerona.db.book_marks import BookMarks, renew_past
 from aerona.db.cascades import install_cascade_following
 from aerona.db.fast_session import FastSession
 from aerona.db.flush_batch import install_flush_batching
@@ -203,6 +203,8 @@ class Database:
         self.generation += 1
         if self.book_marks.taken():
             self.gate.book_generation += 1
+        if self.book_marks.past_taken():
+            renew_past(self.url)
 
     def sibling(self) -> "Database":
         return Database(self.url, self.gate)
@@ -262,6 +264,7 @@ class Database:
         async with self.gate.held():
             await self.dispose()
             swap()
+            renew_past(self.url)
             await self.dispose()
 
 
