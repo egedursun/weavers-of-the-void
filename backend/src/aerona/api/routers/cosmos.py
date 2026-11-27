@@ -45,9 +45,13 @@ from aerona.engine.phases.doom import doom_forecast
 from aerona.engine.phases.world_balance import son_shares, world_pulse
 from aerona.engine.primitives.ledger import DoomItem
 from aerona.services.codex import traveller_guide
+from aerona.services.container import Services
 from aerona.services.images.records import covers_of
+from aerona.services.state_memo import per_state
 
 router = APIRouter(tags=["cosmos"])
+
+COSMOS_KEY = "cosmos"
 
 WID = {"world_id": "world_id"}
 PLACE_TYPES = (EntityType.REGION, EntityType.PLACE)
@@ -182,6 +186,10 @@ async def read_doom(services: ServicesDep) -> DoomForecastView:
 
 @router.get("/cosmos", response_model=CosmosView)
 async def read_cosmos(services: ServicesDep) -> CosmosView:
+    return await per_state(services.database, COSMOS_KEY, lambda: cosmos_view(services))
+
+
+async def cosmos_view(services: Services) -> CosmosView:
     async with reader(services) as session:
         worlds = list(await session.scalars(select(WorldRow).order_by(WorldRow.id)))
         sons = list(await session.scalars(select(SonRow).where(SonRow.status != SonStatus.DEAD).order_by(SonRow.id)))

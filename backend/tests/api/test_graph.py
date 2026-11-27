@@ -1,3 +1,7 @@
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from aerona.services.search import Graph, graph
 from tests.api.conftest import ApiWorld, seeded
 
 
@@ -35,3 +39,19 @@ async def test_graph_nodes_carry_their_world(api: ApiWorld) -> None:
     window = (await api.http.get("/api/graph")).json()
     entities = [node for node in window["nodes"] if node["kind"] == "entity"]
     assert entities and all(node["world_id"] == world.id for node in entities)
+
+
+async def test_the_network_is_built_once_for_every_window_of_one_world_state(api: ApiWorld, monkeypatch: pytest.MonkeyPatch) -> None:
+    built: list[int] = []
+
+    async def counted(session: AsyncSession) -> Graph:
+        built.append(1)
+        return await graph(session)
+
+    monkeypatch.setattr("aerona.api.routers.graph.graph", counted)
+    windows = [(await api.http.get("/api/graph", params={"node_offset": offset, "node_limit": 2, "link_limit": 2})).json() for offset in range(0, 6, 2)]
+    assert len(built) == 1
+    assert len({node["id"] for window in windows for node in window["nodes"]}) == sum(len(window["nodes"]) for window in windows)
+    api.services.database.generation += 1
+    await api.http.get("/api/graph", params={"node_limit": 2})
+    assert len(built) == 2

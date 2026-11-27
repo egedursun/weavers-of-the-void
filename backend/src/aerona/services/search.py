@@ -502,22 +502,23 @@ async def graph(session: AsyncSession) -> Graph:
                 world_id=son.current_world_id,
             )
         )
-    visible = select(EntityRow).where(EntityRow.status != EntityStatus.REJECTED, EntityRow.pending_name.is_(False)).order_by(EntityRow.id)
-    for entity in await session.scalars(visible):
-        nodes.append(
-            GraphNode(
-                entity.id,
-                NodeKind.ENTITY,
-                entity.name,
-                entity.entity_type.value,
-                ENTITY_BASE_SIZE + entity.power_level,
-                entity.birth_epoch,
-                entity.status.value,
-                entity.creator_son_id,
-                entity.location_id,
-                entity.world_id,
-            )
+    visible = (
+        select(
+            EntityRow.id,
+            EntityRow.name,
+            EntityRow.entity_type,
+            EntityRow.power_level,
+            EntityRow.birth_epoch,
+            EntityRow.status,
+            EntityRow.creator_son_id,
+            EntityRow.location_id,
+            EntityRow.world_id,
         )
+        .where(EntityRow.status != EntityStatus.REJECTED, EntityRow.pending_name.is_(False))
+        .order_by(EntityRow.id)
+    )
+    for entity_id, name, entity_type, power, born, status, creator_son, location, world in await session.execute(visible):
+        nodes.append(GraphNode(entity_id, NodeKind.ENTITY, name, entity_type.value, ENTITY_BASE_SIZE + power, born, status.value, creator_son, location, world))
     creator = await session.scalar(select(CreatorRow))
     if creator is not None:
         nodes.append(GraphNode(creator.id, NodeKind.CREATOR, creator.name, NodeKind.CREATOR.value, CREATOR_SIZE, 0, CREATOR_STATUS))
@@ -526,9 +527,14 @@ async def graph(session: AsyncSession) -> Graph:
             GraphNode(god.id, NodeKind.FOREIGN_GOD, god.name, NodeKind.FOREIGN_GOD.value, FOREIGN_GOD_SIZE, 0, god.status.value, world_id=god.world_id)
         )
     present = {node.id for node in nodes}
+    bonds = (
+        select(BondRow.source_node_id, BondRow.target_node_id, BondRow.kind, BondRow.epoch, BondRow.state)
+        .where(BondRow.state.in_([BondState.ACTIVE, BondState.PAST]))
+        .order_by(BondRow.id)
+    )
     links = [
-        GraphLink(bond.source_node_id, bond.target_node_id, bond.kind, bond.epoch, bond.state is BondState.PAST)
-        for bond in await session.scalars(select(BondRow).where(BondRow.state.in_([BondState.ACTIVE, BondState.PAST])).order_by(BondRow.id))
-        if bond.source_node_id in present and bond.target_node_id in present and bond.source_node_id != bond.target_node_id
+        GraphLink(source, target, kind, epoch, state is BondState.PAST)
+        for source, target, kind, epoch, state in await session.execute(bonds)
+        if source in present and target in present and source != target
     ]
     return Graph(nodes, links)

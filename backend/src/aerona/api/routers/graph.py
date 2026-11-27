@@ -13,13 +13,15 @@ from aerona.domain.enums.action import ActionKind
 from aerona.domain.enums.job import JobKind
 from aerona.jobs.context import JobContext
 from aerona.services.integrity.network import NetworkHealth, health, repair_dangling_ends
-from aerona.services.search import PathResult, find_path, graph
+from aerona.services.search import Graph, PathResult, find_path, graph
+from aerona.services.state_memo import per_state
 
 router = APIRouter(tags=["graph"])
 
 FATE_LINK_GROUP = "network:fate"
 FATE_LINK_LABEL = "Fate's network repair"
 REPAIR_TOOL = "network:repair"
+GRAPH_KEY = "graph"
 
 
 @router.get("/graph", response_model=GraphWindow)
@@ -30,8 +32,11 @@ async def read_graph(
     link_offset: int = Query(default=0, ge=0),
     link_limit: int = Query(default=GRAPH_PAGE_DEFAULT, ge=1, le=GRAPH_PAGE_MAX),
 ) -> GraphWindow:
-    async with reader(services) as session:
-        full = await graph(session)
+    async def built() -> Graph:
+        async with reader(services) as session:
+            return await graph(session)
+
+    full = await per_state(services.database, GRAPH_KEY, built)
     return GraphWindow(
         nodes=full.nodes[node_offset : node_offset + node_limit],
         links=full.links[link_offset : link_offset + link_limit],

@@ -17,7 +17,7 @@ export type NetworkHealth = components['schemas']['NetworkHealth']
 export type RepairResult = components['schemas']['RepairResult']
 export type FateLinkRequest = components['schemas']['FateLinkRequest']
 
-export const GRAPH_WINDOW = 2000
+export const GRAPH_WINDOW = 20000
 export const JOB_SCAN_LIMIT = 50
 
 export const graphKeys = {

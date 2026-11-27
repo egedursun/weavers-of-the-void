@@ -188,6 +188,7 @@ export type GraphFilter = {
 export type FilteredGraph = Graph & {
   radius: number
   reduced: boolean
+  partial: number
   degree: Map<number, number>
 }
 
@@ -209,16 +210,17 @@ function adjacency(links: readonly GraphLink[]): Map<number, number[]> {
   return found
 }
 
-export function neighbourhood(
+export function rings(
   links: readonly GraphLink[],
   kinds: ReadonlyMap<number, string>,
   focus: number,
   radius: number
-): Set<number> {
+): number[][] {
   const neighbours = adjacency(links)
   const seen = new Set([focus])
+  const found = [[focus]]
   let frontier = [focus]
-  for (let step = 0; step < radius; step += 1) {
+  for (let step = 0; step < radius && frontier.length > 0; step += 1) {
     const next: number[] = []
     for (const id of frontier) {
       if (id !== focus && kinds.get(id) === 'world') continue
@@ -228,9 +230,33 @@ export function neighbourhood(
         next.push(other)
       }
     }
+    if (next.length > 0) found.push(next)
     frontier = next
   }
-  return seen
+  return found
+}
+
+function nearest(
+  found: readonly number[][],
+  cap: number,
+  degree: ReadonlyMap<number, number>
+): { kept: Set<number>; whole: number; partial: number; cut: boolean } {
+  const kept = new Set<number>()
+  let whole = 0
+  for (const [step, ring] of found.entries()) {
+    if (kept.size + ring.length <= cap) {
+      for (const id of ring) kept.add(id)
+      whole = step
+      continue
+    }
+    const room = Math.max(cap - kept.size, 0)
+    const best = [...ring]
+      .sort((a, b) => (degree.get(b) ?? 0) - (degree.get(a) ?? 0) || a - b)
+      .slice(0, room)
+    for (const id of best) kept.add(id)
+    return { kept, whole, partial: best.length, cut: true }
+  }
+  return { kept, whole, partial: 0, cut: false }
 }
 
 function worldScope(graph: Graph, worldId: number): Set<number> {
@@ -270,13 +296,16 @@ export function filterGraph(graph: Graph, filter: GraphFilter): FilteredGraph {
   )
   let radius = filter.radius
   let reduced = false
+  let partial = 0
   if (filter.focusId !== null && ids.has(filter.focusId)) {
     const kinds = new Map(nodes.map((node) => [node.id, node.kind]))
-    let around = neighbourhood(links, kinds, filter.focusId, radius)
-    while (around.size > filter.cap && radius > 1) {
-      radius -= 1
+    const found = rings(links, kinds, filter.focusId, radius)
+    const fitted = nearest(found, filter.cap, degrees(links))
+    const around = fitted.kept
+    if (fitted.cut) {
       reduced = true
-      around = neighbourhood(links, kinds, filter.focusId, radius)
+      radius = fitted.whole
+      partial = fitted.partial
     }
     nodes = nodes.filter((node) => around.has(node.id))
     links = links.filter(
@@ -286,7 +315,7 @@ export function filterGraph(graph: Graph, filter: GraphFilter): FilteredGraph {
     const linked = new Set(links.flatMap((link) => [link.source, link.target]))
     nodes = nodes.filter((node) => linked.has(node.id))
   }
-  return { nodes, links, radius, reduced, degree: degrees(links) }
+  return { nodes, links, radius, reduced, partial, degree: degrees(links) }
 }
 
 export function defaultFocus(

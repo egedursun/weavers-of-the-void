@@ -3,7 +3,7 @@ import { api } from '@/api/client'
 import { ApiError, unwrap } from '@/api/errors'
 import { ENTITY_PAGE_MAX, NAMES_STALE_MS } from '../constants'
 import { loreKeys } from './keys'
-import { type EntitySummary } from './types'
+import { type EntitySummary, type EntityType } from './types'
 
 export function useEntity(id: number | null) {
   return useQuery({
@@ -79,7 +79,8 @@ export function useEntityChronicle(
 
 export async function fetchAllEntities(
   status: string,
-  hideArchived = false
+  hideArchived = false,
+  entityType: EntityType | null = null
 ): Promise<EntitySummary[]> {
   const items: EntitySummary[] = []
   let offset = 0
@@ -92,6 +93,7 @@ export async function fetchAllEntities(
             offset,
             limit: ENTITY_PAGE_MAX,
             hide_archived: hideArchived,
+            type: entityType ?? undefined,
           },
         },
       })
@@ -108,6 +110,20 @@ export function useAllEntities(status: string, hideArchived = false) {
       `${status}:${hideArchived ? 'atlas' : 'history'}`
     ),
     queryFn: () => fetchAllEntities(status, hideArchived),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useEntitiesOfType(
+  status: string,
+  entityType: EntityType,
+  hideArchived = false
+) {
+  return useQuery({
+    queryKey: loreKeys.entityAll(
+      `${status}:${entityType}:${hideArchived ? 'atlas' : 'history'}`
+    ),
+    queryFn: () => fetchAllEntities(status, hideArchived, entityType),
     placeholderData: keepPreviousData,
   })
 }

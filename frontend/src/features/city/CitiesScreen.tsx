@@ -11,7 +11,7 @@ import { RecordCombobox } from '@/components/domain/RecordCombobox'
 import { useEntryStack } from '@/components/layout/entry/useEntryStack'
 import { useGlobalWorld } from '@/components/layout/worldFilter'
 import { READ_ONLY_REASON } from '@/features/entity/actions/gate'
-import { useAllEntities, useWorldState } from '@/features/entity/api/queries'
+import { useEntitiesOfType, useWorldState } from '@/features/entity/api/queries'
 import { type EntitySummary } from '@/features/entity/api/types'
 import { STRATUM } from '@/features/entity/environment/geologyLabels'
 import { StratumSwatch } from '@/features/map/SwatchMarker'
@@ -63,19 +63,21 @@ export function CitiesView({
   search: CitiesSearch
   onSearch: (patch: CitiesSearch) => void
 }) {
-  const entities = useAllEntities(CANON, true)
+  const settlements = useEntitiesOfType(CANON, 'settlement', true)
+  const lands = useEntitiesOfType(CANON, 'region', true)
+  const failed = settlements.error ?? lands.error
   const below = useBelow()
   const state = useWorldState()
   const world = useGlobalWorld()
   const entryStack = useEntryStack()
   const view: CityView = search.view ?? 'city'
   const towns = useMemo(
-    () => ranked(entities.data ?? [], 'settlement', world),
-    [entities.data, world]
+    () => ranked(settlements.data ?? [], 'settlement', world),
+    [settlements.data, world]
   )
   const regions = useMemo(
-    () => ranked(entities.data ?? [], 'region', world),
-    [entities.data, world]
+    () => ranked(lands.data ?? [], 'region', world),
+    [lands.data, world]
   )
   const town = towns.find((item) => item.id === search.town) ?? towns[0]
   const region =
@@ -194,16 +196,16 @@ export function CitiesView({
           </Button>
         </div>
       </div>
-      {entities.isPending ? (
+      {settlements.isPending || lands.isPending ? (
         <div className='p-4 md:p-6'>
           <Skeleton className='h-scene w-full lg:h-scene-lg' />
         </div>
-      ) : entities.isError ? (
+      ) : failed ? (
         <div className='p-4 md:p-6'>
           <EmptyState
             icon={CITY_ICON}
             title='The towns could not be read'
-            description={entities.error.message}
+            description={failed.message}
           />
         </div>
       ) : !current ? (

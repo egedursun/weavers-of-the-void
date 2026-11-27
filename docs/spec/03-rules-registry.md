@@ -4338,7 +4338,7 @@ Old namespace `ARAYUZ` · 5 rows · defined in `src/degisim.js`, `src/harita.js`
 
 | key | old key | default | min | max | group | label |
 |---|---|---|---|---|---|---|
-| graph_focus_node_cap | ag_odak_tavan | 10,000 | 10 | 100,000 | Interface | Graph: maximum nodes shown around the focus (if exceeded, the step count is reduced) |
+| graph_focus_node_cap | ag_odak_tavan | 100 | 10 | 100,000 | Interface | Graph: maximum nodes shown around the focus (if exceeded, the step count is reduced) |
 | graph_auto_focus_max_links | ag_oto_odak_bag | 50 | 3 | 100,000 | Interface | Graph: maximum links of an automatically chosen focus node (so hub nodes don't become the focus and turn the view into a hairball) |
 | map_population_trend_min_pct | nufus_yon | 5 | 0 | 100 | Interface | Minimum change for population to count as growing or shrinking on the map (%) |
 | delta_max_changes | degisim_sinir | 1500 | 50 | 100,000 | Interface | Maximum changes in one incremental-update response (more triggers a full refresh) |

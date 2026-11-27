@@ -1,5 +1,5 @@
 import statistics
-from collections import Counter, deque
+from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
@@ -200,7 +200,16 @@ class RepairCounters:
 class Graph:
     nodes: dict[int, tuple[str, str]]
     degree: Counter[int]
-    edges: list[BondRow]
+    edges: list["Edge"]
+
+
+@dataclass(frozen=True, slots=True)
+class Edge:
+    source_node_id: int
+    target_node_id: int
+    kind: BondKind
+    state: BondState
+    description: str | None
 
 
 async def visible_graph(session: AsyncSession) -> Graph:
@@ -215,10 +224,13 @@ async def visible_graph(session: AsyncSession) -> Graph:
     creator = await CosmosRepository(session).creator()
     if creator is not None:
         nodes[creator.id] = (creator.name, "creator")
+    visible = select(BondRow.source_node_id, BondRow.target_node_id, BondRow.kind, BondRow.state, BondRow.description).where(
+        BondRow.state.in_(list(VISIBLE_BOND_STATES))
+    )
     edges = [
-        bond
-        for bond in await session.scalars(select(BondRow).where(BondRow.state.in_(list(VISIBLE_BOND_STATES))))
-        if bond.source_node_id in nodes and bond.target_node_id in nodes and bond.source_node_id != bond.target_node_id
+        Edge(source, target, kind, state, description)
+        for source, target, kind, state, description in await session.execute(visible.order_by(BondRow.id))
+        if source in nodes and target in nodes and source != target
     ]
     degree: Counter[int] = Counter()
     for bond in edges:
@@ -703,19 +715,43 @@ async def _co_mentions(session: AsyncSession, entity_id: int) -> Counter[int]:
     return Counter(await session.scalars(statement))
 
 
+async def bonded_ends(session: AsyncSession, ids: set[int]) -> dict[int, set[int]]:
+    found: dict[int, set[int]] = defaultdict(set)
+    ends = select(BondRow.source_node_id, BondRow.target_node_id).where(BondRow.state.in_(list(VISIBLE_BOND_STATES)))
+    for source, target in await session.execute(ends):
+        if source in ids:
+            found[source].add(target)
+        if target in ids:
+            found[target].add(source)
+    return found
+
+
+async def mentioned_with(session: AsyncSession, ids: set[int]) -> dict[int, Counter[int]]:
+    lines: dict[int, list[int]] = defaultdict(list)
+    for chronicle_id, entity_id in await session.execute(select(ChronicleEntityRow.chronicle_id, ChronicleEntityRow.entity_id)):
+        lines[chronicle_id].append(entity_id)
+    found: dict[int, Counter[int]] = defaultdict(Counter)
+    for members in lines.values():
+        for entity_id in members:
+            if entity_id in ids:
+                found[entity_id].update(other for other in members if other != entity_id)
+    return found
+
+
 async def priority_records(session: AsyncSession, rules: Rules, epoch: int, limit: int) -> list[tuple[EntityRow, int]]:
     reviewed = await _recently_reviewed(session, rules, epoch)
     living = set(await session.scalars(select(EntityRow.id).where(EntityRow.status.in_(list(LIVING_STATUSES)))))
     importance = await _importance(session)
-    ranked: list[tuple[EntityRow, int]] = []
     statement = select(EntityRow).where(
         EntityRow.entity_type.in_(list(PRIORITY_TYPES)), EntityRow.status.in_(list(LIVING_STATUSES)), EntityRow.pending_name.is_(False)
     )
-    for record in await session.scalars(statement):
-        if record.id in reviewed:
-            continue
-        bonded = {bond.other_end(record.id) for bond in await BondRepository(session).touching(record.id, VISIBLE_BOND_STATES)}
-        unbonded = [other for other in await _co_mentions(session, record.id) if other in living and other not in bonded]
+    records = [record for record in await session.scalars(statement) if record.id not in reviewed]
+    ids = {record.id for record in records}
+    bonded = await bonded_ends(session, ids)
+    mentions = await mentioned_with(session, ids)
+    ranked: list[tuple[EntityRow, int]] = []
+    for record in records:
+        unbonded = [other for other in mentions.get(record.id, Counter()) if other in living and other not in bonded.get(record.id, set())]
         if unbonded:
             ranked.append((record, len(unbonded)))
     ranked.sort(key=lambda item: (-item[1], -importance.get(item[0].id, 0), item[0].id))

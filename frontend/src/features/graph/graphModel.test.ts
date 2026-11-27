@@ -135,6 +135,43 @@ describe('graph filtering', () => {
     })
     expect(capped.reduced).toBe(true)
     expect(capped.radius).toBe(1)
+    expect(capped.nodes).toHaveLength(3)
+  })
+
+  it('fills the view up to the cap with the best-connected records of the next step', () => {
+    const wide: FullGraph = {
+      nodes: [1, 2, 3, 4, 5, 6, 7].map((id) => node(id, 'mortal')),
+      links: [
+        link(1, 2, 'knows'),
+        link(1, 3, 'knows'),
+        link(2, 4, 'knows'),
+        link(3, 5, 'knows'),
+        link(3, 6, 'knows'),
+        link(6, 7, 'knows'),
+        link(5, 7, 'knows'),
+      ],
+      nodeTotal: 7,
+      linkTotal: 7,
+    }
+    const graph = buildGraph(wide, WORLDS.slice(0, 1), [], GROUP_INDEX)
+    const filled = filterGraph(graph, {
+      ...BASE,
+      focusId: 1,
+      radius: 2,
+      cap: 5,
+    })
+    expect(filled.nodes.map((item) => item.id).sort()).toEqual([1, 2, 3, 5, 6])
+    expect(filled.radius).toBe(1)
+    expect(filled.partial).toBe(2)
+    expect(filled.reduced).toBe(true)
+    const crowded = filterGraph(graph, {
+      ...BASE,
+      focusId: 3,
+      radius: 1,
+      cap: 2,
+    })
+    expect(crowded.nodes).toHaveLength(2)
+    expect(crowded.radius).toBe(0)
   })
 
   it('scopes to a world and its route neighbours', () => {

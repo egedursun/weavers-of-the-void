@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Separator } from '@/components/ui/separator'
 import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
@@ -29,13 +30,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { FieldTile } from '@/components/domain/FieldTile'
-import { Muted } from '@/components/typography'
+import { Label } from '@/components/typography'
 import { MapSearch } from '@/features/map/MapSearch'
 import { type LinkGroup, type LinkGroupInfo } from './api'
 import { type GraphMode, RADII } from './graphModel'
 
 const ALL_WORLDS = 'all'
 const WHOLE = 'whole'
+const WHOLE_SHOWN = 'Depth All shows every record, so there is no count to set.'
 
 type GraphToolbarProps = {
   mode: GraphMode
@@ -49,6 +51,7 @@ type GraphToolbarProps = {
   onRadius: (radius: number) => void
   shownRadius: number
   reduced: boolean
+  partial: number
   cap: number
   ruleCap: number
   capOverridden: boolean
@@ -85,94 +88,125 @@ export function GraphToolbar(props: GraphToolbarProps) {
   return (
     <div
       data-graph-toolbar
-      className='flex min-w-0 flex-wrap items-center gap-2 rounded-md border surface-framed border-gild/70 bg-card p-3'
+      role='toolbar'
+      aria-label='Network view'
+      className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-md border surface-framed border-gild/70 bg-card p-2.5'
     >
-      <ToggleGroup
-        type='single'
-        size='sm'
-        variant='outline'
-        value={props.mode}
-        aria-label='View'
-        onValueChange={(value) => value && props.onMode(value as GraphMode)}
-      >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <ToggleGroupItem value='2d'>
-              <Square />
-              2D
-            </ToggleGroupItem>
-          </TooltipTrigger>
-          <TooltipContent>Flat, top-down view</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <ToggleGroupItem value='3d'>
-              <Box />
-              3D
-            </ToggleGroupItem>
-          </TooltipTrigger>
-          <TooltipContent>
-            Three-dimensional, rotatable and navigable
-          </TooltipContent>
-        </Tooltip>
-      </ToggleGroup>
-      <MapSearch
-        items={props.findable}
-        onFind={props.onFind}
-        placeholder='Search a node and focus…'
-        missing='No such node in the network.'
-        label='Search a node and focus'
-      />
-      <Select
-        value={props.group}
-        onValueChange={(value) => props.onGroup(value as LinkGroup)}
-      >
-        <SelectTrigger size='sm' aria-label='Links shown' className='max-w-64'>
-          <Link2 />
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {props.groups.map((group) => (
-            <SelectItem key={group.key} value={group.key}>
-              {group.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {multiWorld && (
-        <Select
-          value={props.worldId === null ? ALL_WORLDS : String(props.worldId)}
-          onValueChange={(value) =>
-            props.onWorld(value === ALL_WORLDS ? null : Number(value))
-          }
+      <div role='group' aria-label='View' className='flex items-center'>
+        <ToggleGroup
+          type='single'
+          size='sm'
+          variant='outline'
+          value={props.mode}
+          aria-label='View'
+          onValueChange={(value) => value && props.onMode(value as GraphMode)}
         >
-          <SelectTrigger size='sm' aria-label='World' className='max-w-60'>
-            <Globe2 />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ToggleGroupItem value='2d'>
+                <Square />
+                2D
+              </ToggleGroupItem>
+            </TooltipTrigger>
+            <TooltipContent>Flat, top-down view</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ToggleGroupItem value='3d'>
+                <Box />
+                3D
+              </ToggleGroupItem>
+            </TooltipTrigger>
+            <TooltipContent>
+              Three-dimensional, rotatable and navigable
+            </TooltipContent>
+          </Tooltip>
+        </ToggleGroup>
+      </div>
+      <Separator
+        orientation='vertical'
+        className='hidden self-stretch sm:block'
+      />
+      <div
+        role='group'
+        aria-label='Filter'
+        className='flex min-w-0 grow flex-wrap items-center gap-2'
+      >
+        <MapSearch
+          items={props.findable}
+          onFind={props.onFind}
+          placeholder='Search a node and focus…'
+          missing='No such node in the network.'
+          label='Search a node and focus'
+        />
+        <Select
+          value={props.group}
+          onValueChange={(value) => props.onGroup(value as LinkGroup)}
+        >
+          <SelectTrigger
+            size='sm'
+            aria-label='Links shown'
+            className='max-w-56'
+          >
+            <Link2 />
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL_WORLDS}>Whole cosmos</SelectItem>
-            {props.worlds.map((world) => (
-              <SelectItem key={world.id} value={String(world.id)}>
-                <span className='min-w-0 truncate'>{world.name}</span>
+            {props.groups.map((group) => (
+              <SelectItem key={group.key} value={group.key}>
+                {group.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-      )}
-      {multiWorld && (
-        <Toggle
-          size='sm'
-          variant='outline'
-          pressed={props.cluster}
-          onPressedChange={props.onCluster}
+        {multiWorld && (
+          <Select
+            value={props.worldId === null ? ALL_WORLDS : String(props.worldId)}
+            onValueChange={(value) =>
+              props.onWorld(value === ALL_WORLDS ? null : Number(value))
+            }
+          >
+            <SelectTrigger size='sm' aria-label='World' className='max-w-56'>
+              <Globe2 />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_WORLDS}>Whole cosmos</SelectItem>
+              {props.worlds.map((world) => (
+                <SelectItem key={world.id} value={String(world.id)}>
+                  <span className='min-w-0 truncate'>{world.name}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {multiWorld && (
+          <Toggle
+            size='sm'
+            variant='outline'
+            pressed={props.cluster}
+            onPressedChange={props.onCluster}
+          >
+            <Group />
+            Cluster by world
+          </Toggle>
+        )}
+      </div>
+      <Separator
+        orientation='vertical'
+        className='hidden self-stretch lg:block'
+      />
+      <div
+        role='group'
+        aria-label='Scope'
+        className='flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2'
+      >
+        <FieldTile
+          group
+          framed={false}
+          label='Depth'
+          className='flex-row items-center gap-2'
         >
-          <Group />
-          Cluster by world
-        </Toggle>
-      )}
-      <div className='flex min-w-0 items-center gap-1.5'>
-        <FieldTile group label='Depth'>
           <ToggleGroup
             type='single'
             size='sm'
@@ -215,78 +249,90 @@ export function GraphToolbar(props: GraphToolbarProps) {
             </Tooltip>
           </ToggleGroup>
         </FieldTile>
+        <FieldTile
+          id={limitId}
+          framed={false}
+          label='Up to'
+          className='flex-row items-center gap-2'
+        >
+          <Input
+            id={limitId}
+            size='sm'
+            type='number'
+            inputMode='numeric'
+            min={1}
+            max={props.total}
+            step={1}
+            value={draft}
+            disabled={props.whole}
+            title={props.whole ? WHOLE_SHOWN : undefined}
+            aria-label='Most records shown around the focus'
+            aria-description={props.whole ? WHOLE_SHOWN : undefined}
+            className='w-20'
+            onChange={(event) => setDraft(event.target.value)}
+            onBlur={commit}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') commit()
+            }}
+          />
+          <Label>records</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size='icon-sm'
+                variant='ghost'
+                aria-label={`Back to the world rule (${props.ruleCap.toLocaleString('en-US')})`}
+                disabled={!props.capOverridden || props.whole}
+                disabledReason={
+                  props.whole
+                    ? WHOLE_SHOWN
+                    : `Already the world rule: ${plural(props.ruleCap, 'record', 'records')}`
+                }
+                onClick={() => props.onCap(null)}
+              >
+                <RotateCcw />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{`Back to the world rule: ${plural(props.ruleCap, 'record', 'records')} (World rules › Interface › Graph)`}</TooltipContent>
+          </Tooltip>
+        </FieldTile>
       </div>
-      {!props.whole && (
-        <div className='flex min-w-0 flex-col gap-2'>
-          <FieldTile id={limitId} label='Up to' className='items-center'>
-            <Input
-              id={limitId}
-              type='number'
-              inputMode='numeric'
-              min={1}
-              max={props.total}
-              step={1}
-              value={draft}
-              aria-label='Most records shown around the focus'
-              className='w-24'
-              onChange={(event) => setDraft(event.target.value)}
-              onBlur={commit}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') commit()
-              }}
-            />
-            <Muted as='span' variant='caption'>
-              records
-            </Muted>
-          </FieldTile>
-          {props.capOverridden && (
+      {((props.reduced && !props.whole) ||
+        (props.focusName !== null && !props.whole)) && (
+        <div className='flex min-w-0 flex-wrap items-center gap-2'>
+          {props.focusName !== null && !props.whole && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  size='icon-sm'
-                  variant='ghost'
-                  aria-label={`Back to the world rule (${props.ruleCap.toLocaleString('en-US')})`}
-                  onClick={() => props.onCap(null)}
-                >
-                  <RotateCcw />
-                </Button>
+                <Badge variant='outline' className='max-w-60'>
+                  <Crosshair aria-hidden='true' />
+                  <span className='min-w-0 truncate'>
+                    {props.automaticFocus
+                      ? `${props.focusName} · focus`
+                      : props.focusName}
+                  </span>
+                </Badge>
               </TooltipTrigger>
-              <TooltipContent>{`Back to the world rule: ${plural(props.ruleCap, 'record', 'records')} (World rules › Interface › Graph)`}</TooltipContent>
+              <TooltipContent>
+                {props.automaticFocus
+                  ? 'Automatically chosen focus: the most connected record. Search a node to focus elsewhere.'
+                  : 'Your chosen focus'}
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {props.reduced && !props.whole && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant='warning'>
+                  <Settings2 aria-hidden='true' />
+                  {`${plural(props.radius, 'step', 'steps')} would pass ${props.cap.toLocaleString('en-US')}; showing ${[props.shownRadius > 0 ? plural(props.shownRadius, 'step', 'steps') : null, props.partial > 0 ? `${plural(props.partial, 'best-connected record', 'best-connected records')} of step ${props.shownRadius + 1}` : null].filter(Boolean).join(' and ')}`}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                Raise “Up to” or choose All to see further.
+              </TooltipContent>
             </Tooltip>
           )}
         </div>
-      )}
-      {props.reduced && !props.whole && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant='warning'>
-              <Settings2 aria-hidden='true' />
-              {`${plural(props.radius, 'step', 'steps')} would pass ${props.cap.toLocaleString('en-US')}; showing ${props.shownRadius}`}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>
-            Raise “Up to” or choose All to see further.
-          </TooltipContent>
-        </Tooltip>
-      )}
-      {props.focusName !== null && !props.whole && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant='outline' className='max-w-60'>
-              <Crosshair aria-hidden='true' />
-              <span className='min-w-0 truncate'>
-                {props.automaticFocus
-                  ? `${props.focusName} · focus`
-                  : props.focusName}
-              </span>
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>
-            {props.automaticFocus
-              ? 'Automatically chosen focus: the most connected record. Search a node to focus elsewhere.'
-              : 'Your chosen focus'}
-          </TooltipContent>
-        </Tooltip>
       )}
     </div>
   )

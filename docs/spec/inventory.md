@@ -12,7 +12,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | incident | 5 |
 | tool | 775 |
 | lever | 2297 |
-| screen | 1554 |
+| screen | 1555 |
 | text | 206 |
 
 | Axis | Item | Proven by | Open layers and the rows that close them |
@@ -6333,6 +6333,7 @@ Generated and checked by `scripts/check_inventory.py`; the commit gate fails whe
 | screen | components/layout/RootLayout | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/SearchButton | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/SkipToMain | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
+| screen | components/layout/SplashScreen | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/StatusDot | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/ThemeSwitch | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |
 | screen | components/layout/TopBar | check_hidden_controls.py; check_raw_ids.py; check_frontend_orphans.py; test_frontend_reads_every_field.py | none |

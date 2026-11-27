@@ -6,7 +6,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 
 | The rule book at a glance | |
 |---|---:|
-| Rules | 20,731 |
+| Rules | 20,733 |
 | Chapters | 74 |
 | Topics | 1,055 |
 | Rules counted in years | 220 |
@@ -24,7 +24,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
    - [Fate and chronicle](#g-fate-and-chronicle) (221)
    - [Environment and seasons](#g-environment-and-seasons) (2,038)
    - [Exploration](#g-exploration) (175)
-   - [War and diplomacy](#g-war-and-diplomacy) (1,851)
+   - [War and diplomacy](#g-war-and-diplomacy) (1,852)
    - [Minds, values and memory](#g-minds-values-and-memory) (1,077)
    - [Reputation](#g-reputation) (226)
    - [Population and growth](#g-population-and-growth) (536)
@@ -73,7 +73,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
    - [Son tools](#g-son-tools) (272)
    - [Creator and essence](#g-creator-and-essence) (130)
    - [Council](#g-council) (40)
-   - [Organisations](#g-organisations) (22)
+   - [Organisations](#g-organisations) (23)
    - [Opportunities](#g-opportunities) (34)
    - [Epoch flow](#g-epoch-flow) (7)
    - [Interface](#g-interface) (39)
@@ -113,7 +113,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | [Fate and chronicle](#g-fate-and-chronicle) | 11 | 221 |
 | [Environment and seasons](#g-environment-and-seasons) | 67 | 2,038 |
 | [Exploration](#g-exploration) | 6 | 175 |
-| [War and diplomacy](#g-war-and-diplomacy) | 103 | 1,851 |
+| [War and diplomacy](#g-war-and-diplomacy) | 103 | 1,852 |
 | [Minds, values and memory](#g-minds-values-and-memory) | 69 | 1,077 |
 | [Reputation](#g-reputation) | 11 | 226 |
 | [Population and growth](#g-population-and-growth) | 39 | 536 |
@@ -162,7 +162,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | [Son tools](#g-son-tools) | 3 | 272 |
 | [Creator and essence](#g-creator-and-essence) | 4 | 130 |
 | [Council](#g-council) | 1 | 40 |
-| [Organisations](#g-organisations) | 1 | 22 |
+| [Organisations](#g-organisations) | 1 | 23 |
 | [Opportunities](#g-opportunities) | 2 | 34 |
 | [Epoch flow](#g-epoch-flow) | 2 | 7 |
 | [Interface](#g-interface) | 3 | 39 |
@@ -266,7 +266,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | <a id="r-divine_will-max_steps"></a>Model replies one exchange with the Divine Will may take | 40 | 5 to 200 | — |
 | <a id="r-divine_will-costly_essence"></a>Essence at or above which an act of the Divine Will asks the player first | 25 | 0 to 100,000 | — |
 | <a id="r-divine_will-forecast_max_epochs"></a>Most epochs a Divine Will forecast may live on its copy of the world | 3 | 1 to 10 | — |
-| <a id="r-divine_will-index_batch"></a>Passages the Divine Will index embeds in one batch | 16 | 1 to 256 | — |
+| <a id="r-divine_will-index_batch"></a>Passages the Divine Will index embeds in one batch | 64 | 1 to 256 | — |
 
 #### Presence
 
@@ -3704,7 +3704,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### War and diplomacy
 
-1,851 rules in 103 topics: council of worlds, dispatches, envoys, signals, eras, programmes, thermoregulation, senses, communication, battle depth, army depth, scale, historiography, designs, spy depth, mole hunts, defections, forensics, war conduct, asabiyya, reproduction systems, nomadism, slave markets, armament, vehicles, integrity, unit types, cuisine, order of battle, supply network, culmination, theatres, lanchester, age of sail, engagement, statecraft, casualties, navigation instruments, unit honours, veterans, field diplomacy, campaigns, core rules, crisis, diplomacy, military units, logistics, attrition, morale, terrain effects, weather battle effects, tactics, battle terrain, battle weather, tactic matchups, battle magic, levies, campaign depth, war finance, siege depth, captive depth, seafaring, son military, leagues, departures, referendums, reckoning, leader cults, restoration, mass weapons, interworld, crews, captives, deepened, campaign, armies, siege, sack, war grounds, siegecraft, naval, duels, captivity, war aims, occupation, war weariness, peace, vendetta, espionage, incitement, factions, intrigue, mercenaries, banditry, limits, mortal tools, society, son relations, trade, wonders, world effects, world engine, world war strength.
+1,852 rules in 103 topics: council of worlds, dispatches, envoys, signals, eras, programmes, thermoregulation, senses, communication, battle depth, army depth, scale, historiography, designs, spy depth, mole hunts, defections, forensics, war conduct, asabiyya, reproduction systems, nomadism, slave markets, armament, vehicles, integrity, unit types, cuisine, order of battle, supply network, culmination, theatres, lanchester, age of sail, engagement, statecraft, casualties, navigation instruments, unit honours, veterans, field diplomacy, campaigns, core rules, crisis, diplomacy, military units, logistics, attrition, morale, terrain effects, weather battle effects, tactics, battle terrain, battle weather, tactic matchups, battle magic, levies, campaign depth, war finance, siege depth, captive depth, seafaring, son military, leagues, departures, referendums, reckoning, leader cults, restoration, mass weapons, interworld, crews, captives, deepened, campaign, armies, siege, sack, war grounds, siegecraft, naval, duels, captivity, war aims, occupation, war weariness, peace, vendetta, espionage, incitement, factions, intrigue, mercenaries, banditry, limits, mortal tools, society, son relations, trade, wonders, world effects, world engine, world war strength.
 
 #### Council of worlds
 
@@ -4533,6 +4533,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-campaigns-siege_default_supplies"></a>Supplies assumed for a besieged city with no granary record | 50 | 0 to 100,000 | — |
 | <a id="r-campaigns-siege_default_population"></a>Population assumed for a besieged city with no population record | 100 | 0 to 10,000,000 | — |
 | <a id="r-campaigns-great_victory_diff"></a>Strength difference counted as a great victory | 35 | 0 to 1,000 | — |
+| <a id="r-campaigns-great_victory_loss_pct"></a>Share of the beaten side's fielded soldiers it must lose or see taken for a win to count as great (%) | 20% | 0% to 100% | — |
 | <a id="r-campaigns-great_victory_score"></a>Contribution of a great victory to the war score | 2 | 0 to 20 | — |
 | <a id="r-campaigns-loser_morale_loss"></a>Morale loss of the defeated army | 10 | 0 to 100 | — |
 | <a id="r-campaigns-loser_morale_diff_divisor"></a>Defeated extra morale loss: strength difference / this number | 8 | 1 to 1,000 | — |
@@ -5751,9 +5752,9 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-vendetta-grievance"></a>Grief for slain kin at which a house or people acts on a feud | 35 | 0 to 100 | Grief for slain kin drives a feud |
 | <a id="r-vendetta-raid_chance"></a>An aggrieved side raids in an epoch (%) | 30 | 0 to 100 | Avengers raid |
 | <a id="r-vendetta-assassinate_chance"></a>An aggrieved side sends an assassin (%) | 10 | 0 to 100 | Avengers send assassins |
-| <a id="r-vendetta-wergild_chance"></a>An aggrieved side demands wergild where custom allows (%) | 25 | 0 to 100 | Blood feuds: raids, murders, wergild, mediation and war |
+| <a id="r-vendetta-wergild_chance"></a>An aggrieved side demands a payment for its dead where custom allows (%) | 25 | 0 to 100 | Blood feuds: raids, murders, payments for the dead, mediation and war |
 | <a id="r-vendetta-escalate_chance"></a>A feud escalates to war (%) | 8 | 0 to 100 | Feuds flare into war |
-| <a id="r-vendetta-mediation_chance"></a>A peace-minded priest mediates a feud (%) | 20 | 0 to 100 | Blood feuds: raids, murders, wergild, mediation and war |
+| <a id="r-vendetta-mediation_chance"></a>A peace-minded priest mediates a feud (%) | 20 | 0 to 100 | Blood feuds: raids, murders, payments for the dead, mediation and war |
 | <a id="r-vendetta-raid_hp"></a>Harm a feud raid deals | 25 | 0 to 1,000 | Feud raids wound their targets |
 | <a id="r-vendetta-cap"></a>Base of the most feud actions in an epoch, grown by the number of live feuds; also the most people of a side a feud action reaches | 6 | 0 to 10,000 | Only so many feud actions an epoch |
 | <a id="r-vendetta-cap_feud_divisor"></a>Live feuds per extra feud action in an epoch (0: the cap stays at its base) | 1 | 0 to 10,000 | — |
@@ -12529,7 +12530,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-legislation-jubilee_relief"></a>Satisfaction farmers and the bound gain at a debt jubilee | 10 | 0 to 100 | — |
 | <a id="r-legislation-levy_return_pct"></a>Share of levies kept past their term that go home each epoch (%) | 50% | 0% to 100% | Law effects: tenure, serfdom, tolls, standing armies, levy terms, jubilees, inheritance, luxury, justice by crime, cult law and proposals |
 | <a id="r-legislation-standing_upkeep_per_100"></a>Treasury a hundred standing soldiers cost each epoch | 2 | 0 to 1,000 | — |
-| <a id="r-legislation-fine_amount"></a>Treasury a fine or wergild sentence brings the city | 5 | 0 to 10,000 | — |
+| <a id="r-legislation-fine_amount"></a>Treasury a fine or blood payment sentence brings the city | 5 | 0 to 10,000 | — |
 | <a id="r-legislation-penal_infamy"></a>Infamy the ruler gains for a cruel sentence at full cruelty | 3 | 0 to 100 | Law effects: tenure, serfdom, tolls, standing armies, levy terms, jubilees, inheritance, luxury, justice by crime, cult law and proposals |
 | <a id="r-legislation-crisis_crime"></a>Average crime at which a realm hardens its penal code | 60 | 0 to 100 | — |
 | <a id="r-legislation-crisis_debt"></a>Realm debt per 1000 subjects at which the realm proclaims a debt jubilee law | 20 | 0 to 1,000,000 | — |
@@ -12584,7 +12585,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-treaties-accept_relation"></a>Relation toward the proposer at which a party accepts an offered treaty | 20 | -100 to 100 | — |
 | <a id="r-treaties-proposal_years"></a>Years an offered treaty waits before it is turned down | 1 year | 1 year to 2,500 years | — |
 | <a id="r-treaties-hostage_years"></a>Years a hostage stays with the other party | 5 years | 1 year to 2,500 years | Hostages live with the other party for a term |
-| <a id="r-treaties-wergild_value"></a>Wealth a wergild clause transfers | 30 | 0 to 100,000 | Blood-feud law lets wergild end a feud; Wergild moves wealth on signing |
+| <a id="r-treaties-wergild_value"></a>Wealth a wergild clause transfers | 30 | 0 to 100,000 | A payment for the dead moves wealth on signing; Blood-feud law lets a payment for the dead end a feud |
 | <a id="r-treaties-marriage_treaty_years"></a>Years a marriage pact holds | 30 years | 1 year to 25,000 years | Marriages across realms seal marriage pacts |
 | <a id="r-treaties-isolated_war_pct"></a>Chance a polity that stands apart from all is drawn into a war of its region (%) | 5% | 0% to 100% | — |
 | <a id="r-treaties-accord_relation"></a>Regard two realms of one world need before they fix their borders by accord | 30 | -100 to 100 | — |
@@ -19001,7 +19002,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-aging-elder_health_loss"></a>Health an elder loses each epoch | 4 | 0 to 100 | — |
 | <a id="r-aging-ancient_health_loss"></a>Health an ancient loses each epoch | 8 | 0 to 100 | — |
 | <a id="r-aging-health_recovery"></a>Health a sound adult regains each epoch | 5 | 0 to 100 | — |
-| <a id="r-aging-hazard_base_pct"></a>Chance of death each epoch at exactly the lifespan (%) | 25% | 0% to 100% | — |
+| <a id="r-aging-hazard_base_pct"></a>Chance of death in a year at exactly the lifespan (%) | 12% | 0% to 100% | — |
 | <a id="r-aging-hazard_steepness"></a>How steeply the chance of death climbs past the lifespan | 4 | 0 to 50 | — |
 | <a id="r-aging-hazard_start_pct"></a>Share of the lifespan from which old age can kill (%) | 85% | 0% to 200% | — |
 | <a id="r-aging-hazard_medicine_pct"></a>Death chance of the old where medicine is known (%) | 70% | 0% to 100% | — |
@@ -24246,7 +24247,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-balance-dream"></a>Dream sent by the Creator to a mortal | 8 | 0 to 1,000 | — |
 | <a id="r-balance-awaken_peoples"></a>Awaken the peoples | 35 | 0 to 1,000 | — |
 | <a id="r-balance-apocalypse_threshold"></a>Apocalypse threshold (apocalypse happens when the clock reaches this) | 100 | 1 to 1,000 | — |
-| <a id="r-balance-apocalypse_speed"></a>Apocalypse speed (%; 0 = clock stops) | 100 | 0 to 300 | — |
+| <a id="r-balance-apocalypse_speed"></a>Apocalypse speed (%; 0 = clock stops) | 1 | 0 to 300 | — |
 | <a id="r-balance-suppress_revolt"></a>Suppress an uprising | 20 | 0 to 1,000 | — |
 | <a id="r-balance-creator_starting_essence"></a>Creator's starting essence in a new cosmos | 150 | 0 to 1,000 | — |
 
@@ -25344,7 +25345,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Organisations
 
-22 rules in 1 topic: governance.
+23 rules in 1 topic: governance.
 
 #### Governance
 
@@ -25357,6 +25358,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-governance-head_defiance_trust_loss"></a>Trust a head loses with the body when it acts against the body's decision | 15 | 0 to 100 | — |
 | <a id="r-governance-removal_trust"></a>Trust below which a decision body removes its head | 30 | 0 to 100 | — |
 | <a id="r-governance-new_head_trust"></a>Trust a newly chosen head starts with | 60 | 0 to 100 | — |
+| <a id="r-governance-headships_max"></a>Organisations one person can head at once before members look to someone else | 3 | 1 to 100 | — |
 | <a id="r-governance-clique_min_seats"></a>Seats a decision body needs before cliques form within it | 3 | 1 to 100 | — |
 | <a id="r-governance-clique_form_chance_pct"></a>Chance in an epoch that a clique forms in a body with enough seats (%) | 25% | 0% to 100% | — |
 | <a id="r-governance-challenge_margin"></a>Trust above the removal line under which a new clique aims at the headship | 15 | 0 to 100 | — |
@@ -25502,7 +25504,7 @@ The rules counted in years here follow your world's epoch length.
 
 | Rule | Starts at | Range | Tied to |
 |---|---:|---|---|
-| <a id="r-ui-graph_focus_node_cap"></a>Graph: maximum nodes shown around the focus (if exceeded, the step count is reduced) | 10,000 | 10 to 100,000 | — |
+| <a id="r-ui-graph_focus_node_cap"></a>Graph: maximum nodes shown around the focus (if exceeded, the step count is reduced) | 100 | 10 to 100,000 | — |
 | <a id="r-ui-graph_auto_focus_max_links"></a>Graph: maximum links of an automatically chosen focus node (so hub nodes don't become the focus and turn the view into a hairball) | 50 | 3 to 100,000 | — |
 | <a id="r-ui-map_population_trend_min_pct"></a>Minimum change for population to count as growing or shrinking on the map (%) | 5% | 0% to 100% | — |
 | <a id="r-ui-delta_max_changes"></a>Maximum changes in one incremental-update response (more triggers a full refresh) | 1,500 | 50 to 100,000 | — |

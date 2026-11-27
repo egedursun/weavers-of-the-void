@@ -43,14 +43,16 @@ from aerona.services.accounts.guard import ensure_allowed
 from aerona.services.container import Services
 from aerona.services.images.records import covers_of
 from aerona.services.presence.runtime import PresenceRuntime
-from aerona.services.presence.speakers import SpeakerCard, heard_speaker, speaker_card, speaker_lines
+from aerona.services.presence.speakers import SpeakerCard, SpeakerLine, heard_speaker, speaker_card, speaker_lines
 from aerona.services.presence.tools import may_act
+from aerona.services.state_memo import per_state
 
 router = APIRouter(prefix="/presence", tags=["presence"])
 
 SPEAKER_PAGE = 30
 SPEAKER_PAGE_MAX = 200
 QUERY_MAX = 200
+SPEAKERS_KEY = "speakers"
 NO_SESSION = "No such audience."
 NOT_YOURS = "Only the one who summoned this audience can continue or change it."
 NO_EXCHANGE = "No such exchange of an audience."
@@ -172,9 +174,12 @@ async def read_speakers(
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=SPEAKER_PAGE_MAX)] = SPEAKER_PAGE,
 ) -> PresenceSpeakerPage:
+    async def listed() -> list[SpeakerLine]:
+        async with reader(services) as session:
+            return await speaker_lines(session, await world_rules(services, session), query=q, group=group, dead=dead)
+
+    lines = await per_state(services.database, (SPEAKERS_KEY, q, group, dead), listed)
     async with reader(services) as session:
-        rules = await world_rules(services, session)
-        lines = await speaker_lines(session, rules, query=q, group=group, dead=dead)
         shown = lines[offset : offset + limit]
         ids = [line.node_id for line in shown]
         covers = await covers_of(session, ids)

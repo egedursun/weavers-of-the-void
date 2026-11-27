@@ -98,6 +98,7 @@ from aerona.services.images.records import covers_of
 from aerona.services.kind_map import region_kinds, region_money
 from aerona.services.map_lines import conurbation_lines, region_creators, relation_lines, routed_roads, war_sites
 from aerona.services.remnant_map import region_groups, region_protection, region_remnants, region_waves
+from aerona.services.state_memo import per_state
 from aerona.services.wiki import (
     event_markers,
     ground_snapshot,
@@ -113,6 +114,7 @@ from aerona.services.wiki import (
 router = APIRouter(tags=["map"])
 
 NO_WORLD = "No such world."
+MAP_KEY = "map"
 NO_ENTITY = "No such entity."
 POSITION_TOOL = "map:position"
 POPULATED = (EntityType.PEOPLE, EntityType.SETTLEMENT)
@@ -159,14 +161,14 @@ async def geometry(services: Services, world_id: int) -> WorldMap:
 
 @router.get("/worlds/{world_id}/map", response_model=MapView)
 async def read_map(services: ServicesDep, world_id: int = Path(ge=1), epoch: int | None = Query(default=None, ge=1)) -> MapView:
-    return await build_map(services, world_id, epoch, None)
+    return await per_state(services.database, (MAP_KEY, world_id, epoch, None), lambda: build_map(services, world_id, epoch, None))
 
 
 @router.get("/worlds/{world_id}/map/deep/{stratum}", response_model=MapView)
 async def read_deep_map(
     services: ServicesDep, stratum: UndergroundStratum, world_id: int = Path(ge=1), epoch: int | None = Query(default=None, ge=1)
 ) -> MapView:
-    return await build_map(services, world_id, epoch, stratum)
+    return await per_state(services.database, (MAP_KEY, world_id, epoch, stratum), lambda: build_map(services, world_id, epoch, stratum))
 
 
 @router.get("/below", response_model=list[RegionBelow])

@@ -96,7 +96,7 @@ const STORAGE = {
   cluster: 'aerona.graph.cluster',
   cap: 'aerona.graph.cap',
 } as const
-const FALLBACK = { cap: 10000, autoFocusLinks: 50 }
+const FALLBACK = { cap: 100, autoFocusLinks: 50 }
 const DEFAULT_RADIUS = 2
 const NO_3D_LIBRARY =
   "The 3D network library couldn't be loaded; switched back to the 2D view."
@@ -571,6 +571,7 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
         onRadius={setRadius}
         shownRadius={filtered.radius}
         reduced={filtered.reduced}
+        partial={filtered.partial}
         cap={cap}
         ruleCap={ruleCap}
         capOverridden={capOverride > 0}
@@ -613,7 +614,9 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
           label={
             focusId === null
               ? 'Records shown'
-              : `Within ${filtered.radius} ${filtered.radius === 1 ? 'step' : 'steps'}`
+              : filtered.partial > 0
+                ? `Closest to the focus, up to ${formatInteger(cap)}`
+                : `Within ${filtered.radius} ${filtered.radius === 1 ? 'step' : 'steps'}`
           }
           value={`${formatInteger(filtered.nodes.length)} / ${formatInteger(built.nodes.length)}`}
         />
@@ -644,7 +647,7 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
         <div
           ref={frameRef}
           data-graph-frame
-          className='relative min-h-120 min-w-0 flex-1 overflow-hidden rounded-lg border md:min-h-160'
+          className='relative min-h-120 min-w-0 flex-1 overflow-hidden rounded-lg border md:min-h-160 lg:sticky lg:top-20 lg:h-scene-lg lg:self-start'
         >
           {mode === '2d' ? (
             <GraphCanvas2D

@@ -7,7 +7,7 @@ from aerona.rules.model import rule
 @dataclass(frozen=True)
 class UiRules:
     graph_focus_node_cap: int = rule(
-        10000, 10, 100000, RuleGroup.INTERFACE, "Graph: maximum nodes shown around the focus (if exceeded, the step count is reduced)"
+        100, 10, 100000, RuleGroup.INTERFACE, "Graph: maximum nodes shown around the focus (if exceeded, the step count is reduced)"
     )
     graph_auto_focus_max_links: int = rule(
         50,
