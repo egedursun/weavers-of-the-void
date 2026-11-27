@@ -239,7 +239,8 @@ async def strategy_vote(ctx: TickContext, row: OrgGovernanceRow) -> OrgStrategy 
 async def set_strategy(ctx: TickContext, row: OrgGovernanceRow, strategy: OrgStrategy, actor: int | None, reason: str | None = None) -> None:
     before = row.strategy
     row.strategy = strategy
-    roles = {IncidentRole.SUBJECT: row.org_node_id} | ({IncidentRole.ACTOR: actor} if actor is not None else {})
+    deciding = await living(ctx, actor) if actor is not None else None
+    roles = {IncidentRole.SUBJECT: row.org_node_id} | ({IncidentRole.ACTOR: deciding.id} if deciding is not None else {})
     facts = {"before": before, "after": strategy} | ({"reason": reason} if reason is not None else {})
     await record(ctx, "org.strategy_changed", roles=roles, facts=facts)
 

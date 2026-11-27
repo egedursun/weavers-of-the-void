@@ -21,6 +21,7 @@ from aerona.domain.enums.mortal import DeathCause
 from aerona.domain.enums.quests import QuestAim
 from aerona.domain.enums.war import HeroQuestStatus
 from aerona.domain.models.entity_stats import MortalStats
+from aerona.domain.models.moment import Moment
 from aerona.engine.body.book import factor
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
@@ -38,7 +39,7 @@ from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_float, clamp_int, fraction, scaled_cap
 from aerona.engine.primitives.queries import BondIndex, canon, flags_by_entity, spoken_language
 from aerona.engine.primitives.records import RecordSpec, create_record
-from aerona.engine.primitives.stats import set_stats, stat_or
+from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.thresholds import relative_threshold
 from aerona.engine.recording.record import FactInput, RoleValue, record
 from aerona.engine.records import death_path
@@ -186,17 +187,21 @@ async def _quest_failed(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, 
         await fatal_injury(ctx, hero, Harm(settings.quest_epoch_hp_loss, HarmCause.QUEST, f"died on the road {quest.description}"))
         await death_path(ctx, hero, f"died on the road {quest.description}", manner=DeathCause.HARDSHIP)
         key = "heroes.quest_death"
+        died = stat(hero, "death_year")
+        when = Moment(int(died)) if died is not None else None
     elif beaten:
         await close_quest(ctx, quest, HeroQuestStatus.FAILED)
         key = "heroes.quest_failed"
+        when = None
     elif ctx.epoch - quest.started_epoch >= settings.quest_abandon_epochs:
         await close_quest(ctx, quest, HeroQuestStatus.ABANDONED)
         key = "heroes.quest_abandoned"
+        when = None
     else:
         await apply_hits(ctx, hero, Harm(settings.quest_epoch_hp_loss, HarmCause.QUEST, f"died on the road {quest.description}"), lethal=False)
         return
     facts: dict[str, FactInput] = {"aim": quest.aim, "obstacle": quest.obstacle, "epochs": ctx.epoch - quest.started_epoch}
-    await record(ctx, key, roles={IncidentRole.ACTOR: hero.id, IncidentRole.TARGET: quest.target_node_id}, facts=facts)
+    await record(ctx, key, roles={IncidentRole.ACTOR: hero.id, IncidentRole.TARGET: quest.target_node_id}, facts=facts, at_moment=when)
 
 
 async def resolve_quest_now(ctx: TickContext, hero: EntityRow, quest: HeroQuestRow, world: HeroWorld, forced: bool | None = None) -> HeroQuestStatus:
