@@ -76,7 +76,6 @@ import {
   GRAPH_MODES,
   entryKindOf,
   buildGraph,
-  defaultFocus,
   filterGraph,
   linkGroupIndex,
   linkKey,
@@ -387,18 +386,6 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
     search.focus !== undefined && nodeIds.has(search.focus)
       ? search.focus
       : null
-  const automatic = useMemo(
-    () => defaultFocus(built, hiddenTypes, autoLinks),
-    [built, hiddenTypes, autoLinks]
-  )
-  const focusId = explicitFocus ?? (whole ? null : automatic)
-
-  const [layoutFocus, setLayoutFocus] = useState(focusId)
-  if (layoutFocus !== focusId) {
-    setLayoutFocus(focusId)
-    setPositions(new Map())
-  }
-
   const filtered = useMemo(
     () =>
       filterGraph(built, {
@@ -406,7 +393,9 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
         epoch,
         hiddenTypes,
         worldId: search.world ?? globalWorld,
-        focusId,
+        focusId: explicitFocus,
+        whole,
+        autoLinks,
         radius,
         cap,
       }),
@@ -417,11 +406,24 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
       hiddenTypes,
       search.world,
       globalWorld,
-      focusId,
+      explicitFocus,
+      whole,
+      autoLinks,
       radius,
       cap,
     ]
   )
+  const focusId = filtered.focusId
+  const chosenFocus = filtered.strayFocus ? null : explicitFocus
+  const strayName = filtered.strayFocus
+    ? (built.nodes.find((node) => node.id === explicitFocus)?.name ?? null)
+    : null
+
+  const [layoutFocus, setLayoutFocus] = useState(focusId)
+  if (layoutFocus !== focusId) {
+    setLayoutFocus(focusId)
+    setPositions(new Map())
+  }
 
   const from = search.from ?? null
   const to = search.to ?? null
@@ -589,7 +591,8 @@ function GraphView({ full, cosmos, linkGroups }: GraphViewProps) {
           setCluster(on)
         }}
         focusName={focusNode?.name ?? null}
-        automaticFocus={explicitFocus === null}
+        automaticFocus={chosenFocus === null}
+        strayFocus={strayName}
         whole={whole && explicitFocus === null}
         onWhole={(next) => {
           setWhole(next)

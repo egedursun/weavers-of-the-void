@@ -64,6 +64,7 @@ type GraphToolbarProps = {
   onCluster: (on: boolean) => void
   focusName: string | null
   automaticFocus: boolean
+  strayFocus: string | null
   whole: boolean
   onWhole: (whole: boolean) => void
 }
@@ -300,6 +301,21 @@ export function GraphToolbar(props: GraphToolbarProps) {
       {((props.reduced && !props.whole) ||
         (props.focusName !== null && !props.whole)) && (
         <div className='flex min-w-0 flex-wrap items-center gap-2'>
+          {props.strayFocus !== null && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant='warning' className='max-w-80'>
+                  <Crosshair aria-hidden='true' />
+                  <span className='min-w-0 truncate'>
+                    {`${props.strayFocus} is outside this view`}
+                  </span>
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                {`${props.strayFocus} is not in the chosen world, time or families, so the view centres on the most connected record inside it. Pick another world or time, or show its family, to focus on it.`}
+              </TooltipContent>
+            </Tooltip>
+          )}
           {props.focusName !== null && !props.whole && (
             <Tooltip>
               <TooltipTrigger asChild>

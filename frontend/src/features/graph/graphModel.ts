@@ -181,11 +181,15 @@ export type GraphFilter = {
   hiddenTypes: ReadonlySet<string>
   worldId: number | null
   focusId: number | null
+  whole: boolean
+  autoLinks: number
   radius: number
   cap: number
 }
 
 export type FilteredGraph = Graph & {
+  focusId: number | null
+  strayFocus: boolean
   radius: number
   reduced: boolean
   partial: number
@@ -277,6 +281,19 @@ function worldScope(graph: Graph, worldId: number): Set<number> {
   )
 }
 
+function busiest(
+  nodes: readonly GraphNode[],
+  links: readonly GraphLink[]
+): number | null {
+  const degree = degrees(links)
+  const ranked = [...nodes].sort(
+    (left, right) =>
+      (degree.get(right.id) ?? 0) - (degree.get(left.id) ?? 0) ||
+      left.id - right.id
+  )
+  return ranked[0]?.id ?? null
+}
+
 export function filterGraph(graph: Graph, filter: GraphFilter): FilteredGraph {
   const scope =
     filter.worldId === null ? null : worldScope(graph, filter.worldId)
@@ -297,9 +314,17 @@ export function filterGraph(graph: Graph, filter: GraphFilter): FilteredGraph {
   let radius = filter.radius
   let reduced = false
   let partial = 0
-  if (filter.focusId !== null && ids.has(filter.focusId)) {
+  const inView = filter.focusId !== null && ids.has(filter.focusId)
+  const focusId = inView
+    ? filter.focusId
+    : filter.whole && filter.focusId === null
+      ? null
+      : (defaultFocus({ nodes, links }, filter.hiddenTypes, filter.autoLinks) ??
+        busiest(nodes, links))
+  const strayFocus = filter.focusId !== null && !inView
+  if (focusId !== null) {
     const kinds = new Map(nodes.map((node) => [node.id, node.kind]))
-    const found = rings(links, kinds, filter.focusId, radius)
+    const found = rings(links, kinds, focusId, radius)
     const fitted = nearest(found, filter.cap, degrees(links))
     const around = fitted.kept
     if (fitted.cut) {
@@ -315,7 +340,16 @@ export function filterGraph(graph: Graph, filter: GraphFilter): FilteredGraph {
     const linked = new Set(links.flatMap((link) => [link.source, link.target]))
     nodes = nodes.filter((node) => linked.has(node.id))
   }
-  return { nodes, links, radius, reduced, partial, degree: degrees(links) }
+  return {
+    nodes,
+    links,
+    focusId,
+    strayFocus,
+    radius,
+    reduced,
+    partial,
+    degree: degrees(links),
+  }
 }
 
 export function defaultFocus(
