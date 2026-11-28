@@ -1,3 +1,6 @@
+import pytest
+
+from aerona.services import bulk_deepen
 from tests.api.conftest import ApiWorld, seeded
 
 
@@ -29,3 +32,15 @@ async def test_changes_falls_back_to_full_for_unknown_cursor_and_tracks_writes(a
     delta = (await api.http.get("/api/changes", params={"since": cursor})).json()
     assert delta["full"] is False
     assert world.people.id in [entity["id"] for entity in delta["entities"]]
+
+
+async def test_state_reads_the_bulk_state_without_building_the_deepening_queue(api: ApiWorld, monkeypatch: pytest.MonkeyPatch) -> None:
+    seeded(api)
+
+    async def refused(*_: object) -> list[object]:
+        raise AssertionError("the state read built the whole deepening queue")
+
+    monkeypatch.setattr(bulk_deepen, "deepening_queue", refused)
+    reply = await api.http.get("/api/state")
+    assert reply.status_code == 200, reply.text
+    assert reply.json()["batch_deepen"]["running"] is False

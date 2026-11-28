@@ -1,10 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
+from pydantic import TypeAdapter
 
 from aerona.api.actions import Alias, mount_catalog
 from aerona.api.dependencies import ServicesDep
 from aerona.api.routers import chronicle, cosmos, creator, entities, foreign_gods, goals, languages, map, notes, player, prayers, relations, settings, sons
 from aerona.api.schemas.actions import ActionCatalogueItem
+from aerona.constants.api import JSON_CONTENT_TYPE
 from aerona.constants.http import API_PREFIX
+from aerona.rules.registry import Rules
 from aerona.services.accounts.lever_holds import LEVER_HOLD_FIELDS
 from aerona.services.accounts.permissions import lever_permission
 from aerona.services.player.catalog import ACTIONS, describe
@@ -12,6 +15,9 @@ from aerona.services.player.catalog import ACTIONS, describe
 router = APIRouter(tags=["actions"])
 
 ACTIONS_PATH = "/actions"
+CATALOGUE_ADAPTER = TypeAdapter(list[ActionCatalogueItem])
+CATALOGUES_KEPT = 8
+CATALOGUES: dict[int, tuple[Rules, bytes]] = {}
 TYPED_ALIASES: tuple[Alias, ...] = (
     *chronicle.ALIASES,
     *cosmos.ALIASES,
@@ -44,9 +50,11 @@ def action_method(action_id: str) -> str:
     return alias.method if alias is not None else "POST"
 
 
-@router.get(ACTIONS_PATH, response_model=list[ActionCatalogueItem])
-async def list_actions(services: ServicesDep) -> list[ActionCatalogueItem]:
-    return [
+def catalogue_json(rules: Rules) -> bytes:
+    found = CATALOGUES.get(id(rules))
+    if found is not None and found[0] is rules:
+        return found[1]
+    items = [
         ActionCatalogueItem(
             **descriptor.model_dump(),
             path=action_path(descriptor.id),
@@ -54,8 +62,18 @@ async def list_actions(services: ServicesDep) -> list[ActionCatalogueItem]:
             permission=lever_permission(descriptor.id),
             hold_fields=list(LEVER_HOLD_FIELDS.get(descriptor.id, ())),
         )
-        for descriptor in describe(services.rules.current)
+        for descriptor in describe(rules)
     ]
+    body = CATALOGUE_ADAPTER.dump_json(items, by_alias=True)
+    CATALOGUES[id(rules)] = (rules, body)
+    while len(CATALOGUES) > CATALOGUES_KEPT:
+        CATALOGUES.pop(next(iter(CATALOGUES)))
+    return body
+
+
+@router.get(ACTIONS_PATH, response_model=list[ActionCatalogueItem])
+async def list_actions(services: ServicesDep) -> Response:
+    return Response(catalogue_json(services.rules.current), media_type=JSON_CONTENT_TYPE)
 
 
 mount_catalog(router, GENERIC_ACTIONS, ACTIONS_PATH)

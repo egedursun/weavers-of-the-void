@@ -36,7 +36,7 @@ async def read_state(services: ServicesDep) -> StateResponse:
         state = await snapshot(session, rules)
         unread = await unread_count(session) if state.cosmos is not None else 0
         half = await half_epoch(session) if state.cosmos is not None else None
-    bulk = (await application.bulk_deepen.status()).state
+    bulk = application.bulk_deepen.state
     creator = state.creator
     mood = None
     if creator is not None:
