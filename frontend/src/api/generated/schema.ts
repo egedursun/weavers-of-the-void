@@ -73817,7 +73817,6 @@ export interface components {
       lifespan: number
       lifespan_base: number
       medicine_bonus: number
-      notable_bonus: number
       immortal: boolean
       death_year: number | null
       kill_chance_pct: number

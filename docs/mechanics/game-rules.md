@@ -6,7 +6,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 
 | The rule book at a glance | |
 |---|---:|
-| Rules | 20,740 |
+| Rules | 20,739 |
 | Chapters | 74 |
 | Topics | 1,055 |
 | Rules counted in years | 220 |
@@ -47,7 +47,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
    - [Houses, claims and oaths](#g-houses-claims-and-oaths) (133)
    - [The divine](#g-the-divine) (378)
    - [The god's power](#g-the-god-s-power) (102)
-   - [Heroes and mortals](#g-heroes-and-mortals) (660)
+   - [Heroes and mortals](#g-heroes-and-mortals) (659)
    - [Disease and medicine](#g-disease-and-medicine) (159)
    - [Death and resurrection](#g-death-and-resurrection) (180)
    - [Materials and production](#g-materials-and-production) (230)
@@ -136,7 +136,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | [Houses, claims and oaths](#g-houses-claims-and-oaths) | 12 | 133 |
 | [The divine](#g-the-divine) | 30 | 378 |
 | [The god's power](#g-the-god-s-power) | 8 | 102 |
-| [Heroes and mortals](#g-heroes-and-mortals) | 50 | 660 |
+| [Heroes and mortals](#g-heroes-and-mortals) | 50 | 659 |
 | [Disease and medicine](#g-disease-and-medicine) | 10 | 159 |
 | [Death and resurrection](#g-death-and-resurrection) | 10 | 180 |
 | [Materials and production](#g-materials-and-production) | 8 | 230 |
@@ -21256,7 +21256,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Heroes and mortals
 
-660 rules in 50 topics: spell grammar, vis, spell resistance, paradigms, myth coupling, spell environment, warping, enchanted items, longevity, global enchantments, heroquests, mantling, geasa, sites, excavations, attraction, constructs, honour, packages, casualties, powers, powered society, campaigns, civilization, arcana, links, deep life, deep world, diplomacy, rites, backlash, crafting, item wear, item curses, maps, item renown, regalia, feeling spread, gifted, relics, item powers, enchantments, heroes, knowledge, limits, mortal tools, society, world effects, world engine, world hunt.
+659 rules in 50 topics: spell grammar, vis, spell resistance, paradigms, myth coupling, spell environment, warping, enchanted items, longevity, global enchantments, heroquests, mantling, geasa, sites, excavations, attraction, constructs, honour, packages, casualties, powers, powered society, campaigns, civilization, arcana, links, deep life, deep world, diplomacy, rites, backlash, crafting, item wear, item curses, maps, item renown, regalia, feeling spread, gifted, relics, item powers, enchantments, heroes, knowledge, limits, mortal tools, society, world effects, world engine, world hunt.
 
 #### Spell grammar
 
@@ -22133,7 +22133,6 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-world_engine-curse_medicine_bonus_pct"></a>Contribution of knowing medicine to escaping a curse (%) | 10% | 0% to 100% | — |
 | <a id="r-world_engine-first_epoch_years_engine"></a>Years an engine-born mortal lives in the epoch of birth | 15 | 0 to 50 | — |
 | <a id="r-world_engine-first_epoch_years_son"></a>Years a son-created mortal lives in the epoch of creation | 35 | 0 to 50 | — |
-| <a id="r-world_engine-notable_lifespan_bonus"></a>Extra lifespan of notable mortals (years) | 15 | 0 to 500 | — |
 | <a id="r-world_engine-cursed_item_contagion_chance"></a>A cursed item infects its owner (%) | 25 | 0 to 100 | — |
 | <a id="r-world_engine-sorcerer_act_chance"></a>A sorcerer casts magic this epoch (%) | 30 | 0 to 100 | — |
 | <a id="r-world_engine-sorcerer_curse_chance"></a>A sorcerer curses an enemy (otherwise protects) (%) | 50 | 0 to 100 | — |

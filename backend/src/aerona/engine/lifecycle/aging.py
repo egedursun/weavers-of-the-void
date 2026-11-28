@@ -19,6 +19,7 @@ from aerona.engine.body.agelessness import ageless
 from aerona.engine.body.variants import folk_biology
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.placement import world_pull
+from aerona.engine.cycles.book import realm_of, realm_towns
 from aerona.engine.divine.laws import binds
 from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.gods.queries import community_of
@@ -40,11 +41,10 @@ MEDICINE_COMMUNITY_TYPES = (EntityType.SETTLEMENT, EntityType.PEOPLE)
 class LifespanInfo:
     base: int
     medicine: int
-    notable: int
 
     @property
     def effective(self) -> int:
-        return self.base + self.medicine + self.notable
+        return self.base + self.medicine
 
 
 @dataclass(frozen=True)
@@ -84,6 +84,20 @@ async def medicine_regions(session: AsyncSession, atlas: RegionAtlas) -> dict[in
     return best
 
 
+async def realm_care(session: AsyncSession, home: EntityRow, healing: dict[int, int] | None) -> int:
+    realm = await realm_of(session, home.id)
+    if realm is None:
+        return 0
+    if healing is not None and realm in healing:
+        return healing[realm]
+    towns = [town.id for town in await realm_towns(session, realm)]
+    levels = await known_levels(session, towns)
+    best = max((levels.get(town, {}).get(KnowledgeBranch.MEDICINE, 0) for town in towns), default=0)
+    if healing is not None:
+        healing[realm] = best
+    return best
+
+
 async def effective_lifespan(
     session: AsyncSession,
     rules: Rules,
@@ -107,12 +121,12 @@ async def effective_lifespan(
             if healing is not None:
                 healing[home.id] = known
         level = max(level, known)
+        if is_notable(rules, entity, await EntityRepository(session).flags(entity.id)):
+            level = max(level, await realm_care(session, home, healing))
     medicine_bonus = round(base * MEDICINE[tier_of(rules.healing, level, 0, False)].lifespan_pct / PERCENT)
     if home is not None:
         medicine_bonus += round(base * await tech_bonus(session, rules, home.id, EraChannel.HEALTH) / PERCENT)
-    flags = await EntityRepository(session).flags(entity.id)
-    notable_bonus = rules.world_engine.notable_lifespan_bonus if is_notable(rules, entity, flags) else 0
-    return LifespanInfo(base=base, medicine=medicine_bonus, notable=notable_bonus)
+    return LifespanInfo(base=base, medicine=medicine_bonus)
 
 
 async def in_time_slip(session: AsyncSession, region_id: int | None) -> bool:
@@ -152,7 +166,7 @@ async def raise_lifespan_to_death_age(
     info = await effective_lifespan(session, rules, mortal, atlas, medicine)
     if age <= info.effective:
         return False
-    set_stats(mortal, lifespan=age - info.medicine - info.notable)
+    set_stats(mortal, lifespan=age - info.medicine)
     return True
 
 

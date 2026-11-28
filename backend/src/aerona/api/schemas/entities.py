@@ -56,7 +56,6 @@ class LifeInsight(ApiModel):
     lifespan: int
     lifespan_base: int
     medicine_bonus: int
-    notable_bonus: int
     immortal: bool
     death_year: int | None
     kill_chance_pct: int

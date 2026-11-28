@@ -23,7 +23,6 @@ class WorldEngineRules:
     curse_medicine_bonus_pct: int = rule(10, 0, 100, RuleGroup.HEROES_AND_MORTALS, "Contribution of knowing medicine to escaping a curse (%)")
     first_epoch_years_engine: int = rule(15, 0, 50, RuleGroup.HEROES_AND_MORTALS, "Years an engine-born mortal lives in the epoch of birth")
     first_epoch_years_son: int = rule(35, 0, 50, RuleGroup.HEROES_AND_MORTALS, "Years a son-created mortal lives in the epoch of creation")
-    notable_lifespan_bonus: int = rule(15, 0, 500, RuleGroup.HEROES_AND_MORTALS, "Extra lifespan of notable mortals (years)")
     growth_min_pct: int = rule(3, 0, 100, RuleGroup.POPULATION_AND_GROWTH, "Minimum rate of population growth (%)")
     growth_fertility_divisor: int = rule(600, 10, 100000, RuleGroup.POPULATION_AND_GROWTH, "Fertility contribution to growth: fertility / this number")
     growth_prosperity_divisor: int = rule(

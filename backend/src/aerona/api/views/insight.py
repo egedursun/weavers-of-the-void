@@ -56,7 +56,6 @@ async def life_insight(session: AsyncSession, rules: Rules, entity: EntityRow) -
         lifespan=info.lifespan.effective,
         lifespan_base=info.lifespan.base,
         medicine_bonus=info.lifespan.medicine,
-        notable_bonus=info.lifespan.notable,
         immortal=info.immortal,
         death_year=info.death_year,
         kill_chance_pct=price.chance.percent,

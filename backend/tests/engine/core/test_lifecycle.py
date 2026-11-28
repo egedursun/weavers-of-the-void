@@ -6,13 +6,16 @@ from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
+from aerona.db.tables.culture import HolderLevelRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.polity import PolityMemberRow, PolityProfileRow
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind
 from aerona.domain.enums.domain import Domain
 from aerona.domain.enums.entity import EntityFlag, EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.polity import DecisionRule, GovernmentKind
 from aerona.domain.enums.society import KnowledgeBranch, NaturalLaw
-from aerona.domain.models.entity_stats import ItemStats, RegionStats
+from aerona.domain.models.entity_stats import ItemStats, PolityStats, RegionStats
 from aerona.engine.body.hits import Harm
 from aerona.engine.context import TickContext
 from aerona.engine.gods.mortality import ProtectorKind, kill_chance
@@ -31,6 +34,7 @@ from tests.engine.core.factories import CoreWorld, add_flag, bond, entity, knowl
 
 HERB_LORE_LEVEL = 2
 MEDICINE_LEVELS = 10
+HOSPITAL_LEVEL = 6
 
 
 async def test_single_death_path_records_fate_killer_and_heir(ctx: TickContext, world: CoreWorld, session: AsyncSession) -> None:
@@ -128,7 +132,7 @@ async def test_effective_lifespan_and_life_info(ctx: TickContext, world: CoreWor
     span = await effective_lifespan(session, rules, sage)
     share = MEDICINE[tier_of(rules.healing, HERB_LORE_LEVEL, 0, False)].lifespan_pct
     assert span.medicine == round(80 * share / PERCENT)
-    assert span.effective == 80 + span.medicine + rules.world_engine.notable_lifespan_bonus
+    assert span.effective == 80 + span.medicine
     info = await life_info(session, rules, sage)
     assert info.years_per_epoch == rules.time.years_per_epoch and not info.immortal
 
@@ -190,9 +194,7 @@ async def test_death_raises_a_lifespan_the_mortal_outlived(ctx: TickContext, wor
     base = stat(elder, "lifespan") or ctx.rules.world_effects.default_lifespan
     assert base < 400
     await die(ctx, elder, cause="was struck down", forced=True)
-    assert (stat(elder, "lifespan") or 0) >= 400 - ctx.rules.world_engine.notable_lifespan_bonus - round(
-        400 * max(spec.lifespan_pct for spec in MEDICINE.values()) / PERCENT
-    )
+    assert (stat(elder, "lifespan") or 0) >= 400 - round(400 * max(spec.lifespan_pct for spec in MEDICINE.values()) / PERCENT)
     assert ctx.environment.stats.counters[f"{ctx.phase}.lifespans_raised"] == 1
 
 
@@ -227,3 +229,37 @@ async def test_a_land_that_knows_a_little_medicine_never_outlives_one_that_knows
     assert spans == sorted(spans)
     assert spans[0] == 0
     assert spans[1] <= round(80 * max(MEDICINE[tier].lifespan_pct for tier in MEDICINE if tier_of(rules.healing, 1, 0, False) is tier) / PERCENT)
+
+
+async def test_a_notable_reaches_the_best_medicine_of_its_realm_while_a_commoner_has_only_its_own_towns(
+    world: CoreWorld, session: AsyncSession, rules: Rules
+) -> None:
+    capital = await settlement(session, "Hospital Seat", world, world.regions[0])
+    village = await settlement(session, "Far Hamlet", world, world.regions[1])
+    polity = await entity(session, "Crown of the Seat", EntityType.POLITY, PolityStats(), world_id=world.world.id)
+    session.add(
+        PolityProfileRow(
+            polity_entity_id=polity.id,
+            government=next(iter(GovernmentKind)),
+            decision_rule=next(iter(DecisionRule)),
+            capital_entity_id=capital.id,
+            legitimacy=50,
+            stability=50,
+            treasury=0,
+            debt=0,
+            emblem={},
+            legitimacy_parts={},
+            locked=[],
+        )
+    )
+    for town in (capital, village):
+        session.add(PolityMemberRow(polity_entity_id=polity.id, member_entity_id=town.id))
+    session.add(HolderLevelRow(holder_entity_id=capital.id, branch=KnowledgeBranch.MEDICINE, level=HOSPITAL_LEVEL, locked=[]))
+    await session.flush()
+    notable = await mortal(session, "Famed Envoy", world, village.id, charisma=95, lifespan=80)
+    commoner = await mortal(session, "Plain Herder", world, village.id, charisma=10, lifespan=80)
+    assert is_notable(rules, notable, set()) and not is_notable(rules, commoner, set())
+    hospital = round(80 * MEDICINE[tier_of(rules.healing, HOSPITAL_LEVEL, 0, False)].lifespan_pct / PERCENT)
+    assert hospital > 0
+    assert (await effective_lifespan(session, rules, notable)).medicine == hospital
+    assert (await effective_lifespan(session, rules, commoner)).medicine < hospital

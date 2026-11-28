@@ -3570,7 +3570,7 @@
     "DUNYA_MOTORU.lanet_kalkma": "world_engine.curse_lift_chance",
     "DUNYA_MOTORU.lanet_tip_ek": "world_engine.curse_medicine_bonus_pct",
     "DUNYA_MOTORU.lehce_sans": "world_engine.dialect_split_chance",
-    "DUNYA_MOTORU.onemli_omur": "world_engine.notable_lifespan_bonus",
+    "DUNYA_MOTORU.onemli_omur": null,
     "DUNYA_MOTORU.para_benimse_sans": "trade.currency_adopt_chance",
     "DUNYA_MOTORU.rekabet_sans": "trade.rivalry_war_chance",
     "DUNYA_MOTORU.ruh_dogus_sans": "world_engine.famous_spirit_chance",

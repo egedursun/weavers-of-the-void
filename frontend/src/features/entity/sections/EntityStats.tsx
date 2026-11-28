@@ -228,7 +228,7 @@ export function EntityStats({ ctx, readOnlyReason }: EntityStatsProps) {
             },
             {
               label: 'Lifespan',
-              value: `${formatInteger(life.lifespan_base)} base + ${formatInteger(life.medicine_bonus)} medicine + ${formatInteger(life.notable_bonus)} renown = ${formatInteger(life.lifespan)}`,
+              value: `${formatInteger(life.lifespan_base)} base + ${formatInteger(life.medicine_bonus)} medicine = ${formatInteger(life.lifespan)}`,
             },
             ...(life.death_year === null && !life.immortal
               ? [
