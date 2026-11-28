@@ -160,6 +160,9 @@ async def moment_for(
         moment = calendar.place(min(start + span - 1, after), position - int(position))
     for floor in (after_this, await born_floor(ctx.session, participants), await mortal_floor(ctx.session, participants)):
         if floor is not None and moment.before(floor):
+            if floor.season is None and floor.day is None:
+                moment = calendar.place(floor.year, position - int(position)).at_least(floor)
+                continue
             years, days, hours = STEP_UNITS[clock]
             moment = calendar.advance(floor, years=years, days=days, hours=hours if (years or days or hours) else 0).at_least(floor)
     return moment

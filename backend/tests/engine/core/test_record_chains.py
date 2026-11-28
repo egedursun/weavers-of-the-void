@@ -25,6 +25,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
 from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.chains import anchor_at, happening_clock
+from aerona.engine.recording.moments import moment_for
 from aerona.engine.recording.record import FactInput, record
 from aerona.engine.recording.scope import recording
 from aerona.rules.registry import Rules
@@ -251,3 +252,14 @@ async def test_a_thing_made_in_a_step_is_born_when_it_was_made_and_not_at_its_la
     )
     born = await session.get(NodeBirthRow, hamlet.id)
     assert born is not None and born.year <= start + 3
+
+
+async def test_a_happening_held_back_to_a_bare_year_falls_through_that_year_and_not_on_its_first_hour(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    world.world.year_length_days, world.world.season_count, world.world.day_length_hours = 360, 4, 24
+    await session.flush()
+    ctx = tick(session, rules)
+    late = epoch_start_year(ctx.epoch, rules.time.years_per_epoch) + rules.time.years_per_epoch - 1
+    placed = [await moment_for(ctx, ProcessClock.INSTANT, key=f"held.{index}", cause_moment=Moment(late), world_id=world.world.id) for index in range(TOWNS)]
+    assert all(moment.year == late for moment in placed)
+    assert len({(moment.day, moment.hour) for moment in placed}) > 1

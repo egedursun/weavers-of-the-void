@@ -20545,7 +20545,7 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 **What it is.** Told happenings spread over the years of their window instead of standing on their step's single moment, and every happening that follows another stands after it.
 
-**Engine.** `engine/recording/chains.py`: a told kind of the phase clock spreads like a single happening; `catalog/incident_kinds/sequence.py` lists which kinds follow which, matched on a shared principal node; a battle's aftermath is anchored at the battle; an effect floored by its cause takes a moment between the cause and the end of the window; repeated happenings draw their own moments; an open happening dated later carries what it set off along. A thing made in a step comes into being when it was made, when that is earlier than the first record that names it.
+**Engine.** `engine/recording/chains.py`: a told kind of the phase clock spreads like a single happening; `catalog/incident_kinds/sequence.py` lists which kinds follow which, matched on a shared principal node; a battle's aftermath is anchored at the battle; an effect floored by its cause takes a moment between the cause and the end of the window; repeated happenings draw their own moments; an open happening dated later carries what it set off along. A thing made in a step comes into being when it was made, when that is earlier than the first record that names it. A happening held back to a bare year falls at its own time within that year, never on the year's first hour.
 
 **Rules.** None new.
 
