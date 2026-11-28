@@ -176,6 +176,7 @@ async def grow_community(
     "table.demographic_transitions",
     "table.dimensional_events",
     "table.dimensions",
+    "table.disease_profiles",
     "table.divine_wounds",
     "table.endemic_diseases",
     "table.entities",

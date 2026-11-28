@@ -301,6 +301,7 @@ async def item_cycles(ctx: TickContext) -> None:
     "table.sons",
     "table.speaker_cohorts",
     "table.spirit_profiles",
+    "table.state_changes",
     "table.traits",
     "table.transform_prospects",
 )

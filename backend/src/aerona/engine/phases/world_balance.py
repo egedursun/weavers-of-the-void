@@ -464,6 +464,7 @@ async def revive(ctx: TickContext, world: WorldRow, *, forced: bool = False) -> 
     "table.nodes",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.storytellers",
     "table.world_maps",
     "table.worlds",

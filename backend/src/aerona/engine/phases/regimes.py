@@ -208,6 +208,7 @@ async def patronage(ctx: TickContext) -> None:
     "table.node_births",
     "table.nodes",
     "table.polity_profiles",
+    "table.state_changes",
 )
 @writes(
     "table.breeding_plans",

@@ -30,6 +30,7 @@ from aerona.engine.phase import Phase
     "table.node_births",
     "table.nodes",
     "table.polity_members",
+    "table.state_changes",
     "table.worker_bodies",
     "table.workshops",
 )

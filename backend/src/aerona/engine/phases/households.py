@@ -100,6 +100,7 @@ async def household_survey(ctx: TickContext) -> None:
     "table.technology_profiles",
     "table.thoughts",
     "table.tradition_profiles",
+    "table.traits",
     "table.union_customs",
     "table.world_maps",
     "table.worlds",

@@ -80,6 +80,7 @@ async def weigh(ctx: TickContext, entities: list[EntityRow], announce: bool) -> 
     "table.resource_mechanics",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

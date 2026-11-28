@@ -136,6 +136,7 @@ async def spirits_rest(ctx: TickContext) -> None:
     "table.sons",
     "table.spirit_profiles",
     "table.stars",
+    "table.state_changes",
     "table.world_maps",
     "table.worlds",
 )

@@ -59,6 +59,7 @@ async def file_failing(ctx: TickContext, tally: InsolvencyTally) -> None:
     "table.org_seats",
     "table.polity_members",
     "table.prisoners",
+    "table.state_changes",
     "table.war_sides",
     "table.wars",
 )

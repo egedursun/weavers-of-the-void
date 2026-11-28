@@ -78,10 +78,12 @@ async def trade_policy(ctx: TickContext) -> None:
     "table.credit_profiles",
     "table.cult_doctrines",
     "table.currencies",
+    "table.entities",
     "table.faction_profiles",
     "table.issued_securities",
     "table.loans",
     "table.node_births",
+    "table.nodes",
     "table.polity_members",
     "table.polity_profiles",
 )

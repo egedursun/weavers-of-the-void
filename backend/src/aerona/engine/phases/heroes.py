@@ -699,6 +699,7 @@ async def bear_hero(ctx: TickContext, community: EntityRow) -> EntityRow:
     "table.reverences",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

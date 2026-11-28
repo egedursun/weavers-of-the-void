@@ -394,6 +394,7 @@ async def found_factions(ctx: TickContext) -> int:
     "table.skills",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",

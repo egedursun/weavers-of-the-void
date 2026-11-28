@@ -196,6 +196,7 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
     "table.signal_links",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.tax_policies",
     "table.tradition_profiles",
     "table.traits",
@@ -295,6 +296,7 @@ async def uprisings(ctx: TickContext) -> None:
     "table.relationships",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.union_customs",
     "table.worlds",
 )

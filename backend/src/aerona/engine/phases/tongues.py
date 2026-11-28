@@ -40,6 +40,7 @@ async def sound_changes(ctx: TickContext) -> None:
     "table.entities",
     "table.language_grammar",
     "table.language_profiles",
+    "table.language_standing",
     "table.network_nodes",
     "table.nodes",
     "table.people_biology",
@@ -167,6 +168,7 @@ async def pidgins(ctx: TickContext) -> None:
     "table.sons",
     "table.speaker_cohorts",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

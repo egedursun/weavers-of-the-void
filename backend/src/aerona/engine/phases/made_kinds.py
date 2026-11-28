@@ -91,6 +91,7 @@ async def equipment_forging(ctx: TickContext) -> None:
     "table.polity_profiles",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.structure_designs",
     "table.unit_design_equipment",
     "table.unit_design_techniques",

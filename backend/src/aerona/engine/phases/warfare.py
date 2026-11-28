@@ -2064,6 +2064,7 @@ def take_the_field(ctx: TickContext, ongoing: list[OngoingWar]) -> int:
     "table.spy_agents",
     "table.spy_networks",
     "table.stars",
+    "table.state_changes",
     "table.structure_designs",
     "table.structure_profiles",
     "table.theatres",

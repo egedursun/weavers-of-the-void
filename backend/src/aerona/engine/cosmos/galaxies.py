@@ -585,6 +585,7 @@ async def cluster_worship(ctx: TickContext, cosmography: Cosmography, grown: set
     "table.routes",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

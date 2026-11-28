@@ -35,6 +35,7 @@ from aerona.engine.polity.titles import TitleTally, tend_titles
     "table.ruler_currencies",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.title_holders",
     "table.title_profiles",
     "table.transform_prospects",

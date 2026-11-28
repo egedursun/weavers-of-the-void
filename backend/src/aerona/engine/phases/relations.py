@@ -226,6 +226,7 @@ async def relations_social(ctx: TickContext) -> None:
     "table.social_circles",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.thoughts",
     "table.threads",
     "table.worlds",

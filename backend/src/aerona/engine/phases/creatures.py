@@ -505,6 +505,7 @@ async def invasive_pressure(ctx: TickContext) -> None:
     "table.species_ranges",
     "table.species_uses",
     "table.stars",
+    "table.state_changes",
     "table.world_biochemistries",
     "table.world_fields",
     "table.world_maps",

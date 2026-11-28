@@ -790,6 +790,7 @@ async def spontaneous_treaty(ctx: TickContext) -> int:
     "table.sons",
     "table.speaker_cohorts",
     "table.stars",
+    "table.state_changes",
     "table.tradition_profiles",
     "table.traits",
     "table.tributes",

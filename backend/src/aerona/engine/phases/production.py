@@ -648,6 +648,7 @@ async def species_products(ctx: TickContext) -> None:
     "table.species_products",
     "table.species_profiles",
     "table.stars",
+    "table.state_changes",
     "table.treaty_parties",
     "table.workshop_designs",
     "table.workshops",

@@ -58,6 +58,7 @@ from aerona.engine.phase import Phase
     "table.sons",
     "table.species_ranges",
     "table.stars",
+    "table.state_changes",
     "table.trade_route_profiles",
     "table.vassalages",
     "table.war_sides",

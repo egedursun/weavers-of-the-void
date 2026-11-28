@@ -655,6 +655,7 @@ async def _pirates(ctx: TickContext, traffic: int) -> None:
     "table.routes",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

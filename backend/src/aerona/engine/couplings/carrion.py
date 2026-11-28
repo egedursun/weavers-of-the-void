@@ -269,6 +269,7 @@ async def mourn_cost(ctx: TickContext, region_id: int) -> None:
     "table.species_profiles",
     "table.species_ranges",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

@@ -118,6 +118,7 @@ def work_seam(rules: Rules, ground: RegionEnvironmentRow | None, owners: int, ma
     "table.species_products",
     "table.species_profiles",
     "table.stars",
+    "table.state_changes",
     "table.treaty_parties",
     "table.water_lifts",
     "table.workshop_designs",

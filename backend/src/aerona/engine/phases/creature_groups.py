@@ -17,6 +17,7 @@ from aerona.engine.phase import Phase
     "table.node_births",
     "table.protected_areas",
     "table.species_ranges",
+    "table.state_changes",
 )
 @writes(
     "settlement.prosperity",

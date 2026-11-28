@@ -831,6 +831,7 @@ async def sapience(ctx: TickContext, atlas: RegionAtlas, born: WorldQuota) -> No
     "table.region_underground",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.storytellers",
     "table.world_maps",
     "table.worlds",

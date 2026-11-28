@@ -94,6 +94,7 @@ async def geomorphology(ctx: TickContext) -> None:
     "table.species_profiles",
     "table.species_ranges",
     "table.stars",
+    "table.state_changes",
     "table.structure_profiles",
     "table.theory_adherents",
     "table.theory_profiles",

@@ -171,6 +171,7 @@ async def split_cult(ctx: TickContext, cult: EntityRow, candidate: SonRow, old_p
     "table.son_relations",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.vassalages",
     "table.war_sides",
     "table.wars",

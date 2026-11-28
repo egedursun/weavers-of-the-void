@@ -166,6 +166,7 @@ async def arm_movements(ctx: TickContext, tally: ArmedTally) -> None:
     "table.polity_members",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(
@@ -565,6 +566,7 @@ async def dating_systems(ctx: TickContext) -> None:
     "table.polity_profiles",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.title_profiles",
     "table.worlds",
 )
@@ -611,6 +613,7 @@ async def heraldry(ctx: TickContext) -> None:
     "table.polity_profiles",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.vessel_profiles",
     "table.world_materials",
     "table.worlds",

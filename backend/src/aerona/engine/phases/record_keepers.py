@@ -22,6 +22,7 @@ from aerona.engine.record_keepers.legacy import recover_keepers
     "table.skills",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

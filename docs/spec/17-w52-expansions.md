@@ -20652,6 +20652,19 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 **Proving tests.** `tests/engine/environment/test_happenings.py`; `tests/unit/test_no_epoch_tags.py`; the case in `tests/services/integrity/test_every_invariant.py`.
 
+
+### 52.680 Strains of one sickness burden a land once
+
+**What it is.** The strains a sickness gives rise to are counted as one sickness when a land's burden is reckoned: the strongest strain of a line weighs on the land, while sicknesses of different lines still add up. A land where one sickness kept splitting into strains no longer bears each strain as a sickness of its own.
+
+**Engine.** `engine/disease/load.py` (`roots_of`, `by_lineage`).
+
+**Rules.** None new.
+
+**Levers and surfaces.** The disease card shows each strain's parent; `profile:set` sets it.
+
+**Proving tests.** `tests/engine/core/test_disease_carried.py`.
+
 ---
 
 ## Appendix 17.A Every value this spec adds

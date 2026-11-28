@@ -248,6 +248,7 @@ async def seed_place(ctx: TickContext, region: EntityRow, *, move: bool | None =
     "table.region_environment",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

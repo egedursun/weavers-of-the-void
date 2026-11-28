@@ -104,6 +104,7 @@ from aerona.engine.polity.revenue import RevenueTally, tend_revenue
     "table.sons",
     "table.speaker_cohorts",
     "table.stars",
+    "table.state_changes",
     "table.structure_profiles",
     "table.tax_policies",
     "table.trade_policies",

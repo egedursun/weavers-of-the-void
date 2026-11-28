@@ -1,8 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.db.tables.disease import EndemicDiseaseRow, ImmunityRow
+from aerona.db.tables.disease import DiseaseProfileRow, EndemicDiseaseRow, ImmunityRow
 from aerona.db.tables.environment import RegionEnvironmentRow
+from aerona.domain.enums.affliction import Transmission
 from aerona.domain.enums.demography import AgeBand
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
@@ -75,3 +76,37 @@ async def test_folk_immune_to_an_endemic_sickness_bear_little_of_its_load(sessio
     assert exposed == 0.4
     assert guarded < exposed * (1 - RULES.epidemiology.immunity_strength_pct / 100) + 0.02
     assert (await DiseaseLoads.load(session, RULES)).of_region(world.regions[0].id) == 40
+
+
+async def test_strains_of_one_sickness_burden_a_land_once_while_unrelated_sicknesses_add_up(session: AsyncSession, world: CoreWorld) -> None:
+    region = world.regions[0].id
+    ground = await ground_of(session, region, world.world.id)
+    ground.disease_load, ground.temperature, ground.wetland = 0, 0, 0
+    parent = await entity(session, "The Grey Fever", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id)
+    strain = await entity(session, "The Grey Fever, strain 2", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id)
+    other = await entity(session, "The Shaking Cough", EntityType.DISEASE, DiseaseStats(), world_id=world.world.id)
+    for disease, origin in ((parent, None), (strain, parent.id), (other, None)):
+        session.add(
+            DiseaseProfileRow(
+                disease_entity_id=disease.id,
+                primary_route=next(iter(Transmission)),
+                virulence=30,
+                lethality=30,
+                chronic_rate=0,
+                incubation=1,
+                immunity_epochs=1,
+                mutation_rate=10,
+                stigma=0,
+                cure_level=0,
+                parent_disease_id=origin,
+                locked=[],
+            )
+        )
+    await session.flush()
+    session.add(EndemicDiseaseRow(region_entity_id=region, disease_entity_id=parent.id, load=40, since_epoch=1))
+    session.add(EndemicDiseaseRow(region_entity_id=region, disease_entity_id=strain.id, load=40, since_epoch=1))
+    await session.flush()
+    assert (await DiseaseLoads.load(session, RULES)).of_region(region) == 40
+    session.add(EndemicDiseaseRow(region_entity_id=region, disease_entity_id=other.id, load=40, since_epoch=1))
+    await session.flush()
+    assert (await DiseaseLoads.load(session, RULES)).of_region(region) == 64

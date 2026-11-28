@@ -13,6 +13,7 @@ from aerona.engine.phase import Phase
     "table.endowments",
     "table.entities",
     "table.folk_knowledge",
+    "table.incidents",
     "table.mortal_profiles",
     "table.node_births",
     "table.nodes",

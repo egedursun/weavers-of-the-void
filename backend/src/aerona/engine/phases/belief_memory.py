@@ -407,6 +407,7 @@ async def fairy_tales(ctx: TickContext) -> None:
     "table.skills",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.transform_prospects",
     "table.world_maps",
     "table.worlds",

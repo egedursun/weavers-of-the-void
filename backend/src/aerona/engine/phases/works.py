@@ -259,6 +259,7 @@ WORKS_READS = (
     "table.skills",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.structure_designs",
     "table.structure_profiles",
     "table.structure_sections",

@@ -62,6 +62,7 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.skills",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.world_materials",
     "table.worlds",
 )

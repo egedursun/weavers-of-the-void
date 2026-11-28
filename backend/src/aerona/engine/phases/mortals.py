@@ -261,6 +261,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "mortal.death_year",
     "mortal.hp",
     "mortal.lifespan",
+    "table.armies",
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",

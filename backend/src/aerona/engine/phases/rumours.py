@@ -64,6 +64,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.speaker_cohorts",
     "table.spy_networks",
     "table.stars",
+    "table.state_changes",
     "table.taverns",
     "table.traits",
     "table.war_sides",

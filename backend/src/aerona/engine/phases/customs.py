@@ -153,6 +153,7 @@ async def customs(ctx: TickContext) -> None:
     "table.settlement_infrastructure",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.structure_profiles",
     "table.welfare_houses",
     "table.worlds",

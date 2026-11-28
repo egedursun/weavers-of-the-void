@@ -464,6 +464,7 @@ async def remember_age(ctx: TickContext, beast: EntityRow, profile: BeastProfile
     "table.place_secrets",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.teachings",
     "table.true_names",
     "table.worlds",

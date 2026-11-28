@@ -120,6 +120,7 @@ async def intrigue_survey(ctx: TickContext) -> None:
     "table.sky_events",
     "table.source_trust",
     "table.spy_networks",
+    "table.state_enterprises",
     "table.surveillance_profiles",
     "table.traits",
     "table.true_names",
