@@ -102,7 +102,7 @@ class AgingWorld:
     laws: LawBook
     physics: PhysicsTable
     atlas: RegionAtlas
-    medicine: set[int]
+    medicine: dict[int, int]
     start_year: int
     healing: dict[int, int] = field(default_factory=dict)
 

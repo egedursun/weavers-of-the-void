@@ -3583,7 +3583,7 @@
     "DUNYA_MOTORU.tarikat_buyume_taban": "world_engine.cult_growth_base_pct",
     "DUNYA_MOTORU.tarikat_etki_bolen": "world_engine.cult_growth_influence_divisor",
     "DUNYA_MOTORU.tarikat_karizma_bolen": "world_engine.cult_growth_charisma_divisor",
-    "DUNYA_MOTORU.tip_omur": "world_engine.medicine_lifespan_bonus",
+    "DUNYA_MOTORU.tip_omur": null,
     "DUNYA_MOTORU.veba_yayilim_sans": "disasters.plague_spread_chance",
     "DUNYA_MOTORU.veba_yayilim_tip_sans": "disasters.plague_spread_medicine_chance",
     "DUNYA_MOTORU.yaratik_goc_sans": "creatures.creature_migration_chance",

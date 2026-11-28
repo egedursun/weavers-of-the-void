@@ -20589,7 +20589,7 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 ### 52.675 Every grown mortal may wed
 
-**What it is.** Any unwed grown mortal with no lover or promise may wed within its community, a suitor near its own age first, and among the other towns of its people when its own holds none. A birth slot counts each parent's age in the year of that slot, and a parent's fertility is read from its body and people at the birth, not from a mark left by an earlier step. A grown newcomer of an epoch ages, and is told dead, from the moment it came at the age it came with, never from its birth; nothing is told of it before it came, and no stage it had already passed is told as reached. A grown mortal living out in a land or a place weds within the community that stands there, or within its own people.
+**What it is.** Any unwed grown mortal with no lover or promise may wed within its community, a suitor near its own age first, and among the other towns of its people when its own holds none. A birth slot counts each parent's age in the year of that slot, and a parent's fertility is read from its body and people at the birth, not from a mark left by an earlier step. A grown newcomer of an epoch ages, and is told dead, from the moment it came at the age it came with, never from its birth; nothing is told of it before it came, and no stage it had already passed is told as reached. A grown mortal living out in a land or a place weds within the community that stands there, or within its own people. A mortal's lifespan grows by the share the best medicine of its home or of its land gives; knowing some medicine adds no fixed years, so a land of herbs never outlives one of hospitals.
 
 **Rules.** `kinship.community_marriage_chance`.
 

@@ -1,6 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.medicine import MEDICINE, tier_of
+from aerona.constants.units import PERCENT
 from aerona.db.repositories.bonds import BondRepository
 from aerona.db.repositories.sons import SonRepository
 from aerona.db.tables.bonds import BondRow
@@ -20,11 +22,15 @@ from aerona.engine.lifecycle.succession import designate_heir, dynasty_root
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
 from aerona.engine.mortal.life import sex_of_stats, window_end_pct
 from aerona.engine.phases.mortals import mortal_aging, mortal_wounds
+from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.queries import has_flag
 from aerona.engine.primitives.stats import stat
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import CoreWorld, add_flag, bond, entity, knowledge, mortal, natural_law, settlement, son_draft, tuned_rules
+
+HERB_LORE_LEVEL = 2
+MEDICINE_LEVELS = 10
 
 
 async def test_single_death_path_records_fate_killer_and_heir(ctx: TickContext, world: CoreWorld, session: AsyncSession) -> None:
@@ -120,7 +126,9 @@ async def test_effective_lifespan_and_life_info(ctx: TickContext, world: CoreWor
     healing = await knowledge(session, world, "Herb Lore", KnowledgeBranch.MEDICINE)
     await bond(session, world.people.id, healing.id, BondKind.KNOWS)
     span = await effective_lifespan(session, rules, sage)
-    assert span.effective == 80 + rules.world_engine.medicine_lifespan_bonus + rules.world_engine.notable_lifespan_bonus
+    share = MEDICINE[tier_of(rules.healing, HERB_LORE_LEVEL, 0, False)].lifespan_pct
+    assert span.medicine == round(80 * share / PERCENT)
+    assert span.effective == 80 + span.medicine + rules.world_engine.notable_lifespan_bonus
     info = await life_info(session, rules, sage)
     assert info.years_per_epoch == rules.time.years_per_epoch and not info.immortal
 
@@ -182,7 +190,9 @@ async def test_death_raises_a_lifespan_the_mortal_outlived(ctx: TickContext, wor
     base = stat(elder, "lifespan") or ctx.rules.world_effects.default_lifespan
     assert base < 400
     await die(ctx, elder, cause="was struck down", forced=True)
-    assert (stat(elder, "lifespan") or 0) >= 400 - ctx.rules.world_engine.notable_lifespan_bonus - ctx.rules.world_engine.medicine_lifespan_bonus
+    assert (stat(elder, "lifespan") or 0) >= 400 - ctx.rules.world_engine.notable_lifespan_bonus - round(
+        400 * max(spec.lifespan_pct for spec in MEDICINE.values()) / PERCENT
+    )
     assert ctx.environment.stats.counters[f"{ctx.phase}.lifespans_raised"] == 1
 
 
@@ -206,3 +216,14 @@ async def test_an_heir_raised_for_an_old_ruler_was_born_within_the_ruler_s_ferti
     assert result is not None and result.heir is not None
     oldest_parent = 192 * window_end_pct(ctx.rules, sex_of_stats(king)) // 100
     assert (stat(result.heir, "age") or 0) >= 168 - oldest_parent
+
+
+async def test_a_land_that_knows_a_little_medicine_never_outlives_one_that_knows_much(world: CoreWorld, session: AsyncSession, rules: Rules) -> None:
+    dweller = await mortal(session, "Ivo", world, world.regions[0].id, lifespan=80)
+    atlas = await RegionAtlas.load(session)
+    region = atlas.top_region(dweller.id)
+    assert region is not None
+    spans = [(await effective_lifespan(session, rules, dweller, atlas, {region: level})).medicine for level in range(MEDICINE_LEVELS)]
+    assert spans == sorted(spans)
+    assert spans[0] == 0
+    assert spans[1] <= round(80 * max(MEDICINE[tier].lifespan_pct for tier in MEDICINE if tier_of(rules.healing, 1, 0, False) is tier) / PERCENT)

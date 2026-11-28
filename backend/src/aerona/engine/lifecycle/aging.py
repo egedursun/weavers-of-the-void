@@ -23,7 +23,7 @@ from aerona.engine.divine.laws import binds
 from aerona.engine.eras.effects import tech_bonus
 from aerona.engine.gods.queries import community_of
 from aerona.engine.primitives.distance import RegionAtlas
-from aerona.engine.primitives.knowledge import LawBook, known_branches, known_levels
+from aerona.engine.primitives.knowledge import LawBook, known_levels
 from aerona.engine.primitives.numbers import round_half_up
 from aerona.engine.primitives.physics import PhysicsTable
 from aerona.engine.primitives.queries import canon
@@ -72,11 +72,16 @@ def is_notable(rules: Rules, entity: EntityRow, flags: set[EntityFlag]) -> bool:
     return charisma is not None and charisma >= rules.world_effects.notable_min_charisma
 
 
-async def medicine_regions(session: AsyncSession, atlas: RegionAtlas) -> set[int]:
+async def medicine_regions(session: AsyncSession, atlas: RegionAtlas) -> dict[int, int]:
     communities = await canon(session, MEDICINE_COMMUNITY_TYPES)
-    known = await known_branches(session, [community.id for community in communities])
-    regions = {atlas.top_region(community.id) for community in communities if KnowledgeBranch.MEDICINE in known.get(community.id, set())}
-    return {region for region in regions if region is not None}
+    levels = await known_levels(session, [community.id for community in communities])
+    best: dict[int, int] = {}
+    for community in communities:
+        region = atlas.top_region(community.id)
+        level = levels.get(community.id, {}).get(KnowledgeBranch.MEDICINE, 0)
+        if region is not None and level > best.get(region, 0):
+            best[region] = level
+    return best
 
 
 async def effective_lifespan(
@@ -84,7 +89,7 @@ async def effective_lifespan(
     rules: Rules,
     entity: EntityRow,
     atlas: RegionAtlas | None = None,
-    medicine: set[int] | None = None,
+    medicine: dict[int, int] | None = None,
     *,
     healing: dict[int, int] | None = None,
 ) -> LifespanInfo:
@@ -93,15 +98,17 @@ async def effective_lifespan(
     recorded = stat(entity, "lifespan")
     base = recorded if recorded else rules.world_effects.default_lifespan
     region = region_atlas.top_region(entity.id)
-    medicine_bonus = rules.world_engine.medicine_lifespan_bonus if region is not None and region in healed else 0
+    level = healed.get(region, 0) if region is not None else 0
     home = await community_of(session, entity) if entity.entity_type is EntityType.MORTAL else None
     if home is not None:
-        level = healing.get(home.id) if healing is not None else None
-        if level is None:
-            level = (await known_levels(session, [home.id])).get(home.id, {}).get(KnowledgeBranch.MEDICINE, 0)
+        known = healing.get(home.id) if healing is not None else None
+        if known is None:
+            known = (await known_levels(session, [home.id])).get(home.id, {}).get(KnowledgeBranch.MEDICINE, 0)
             if healing is not None:
-                healing[home.id] = level
-        medicine_bonus = max(medicine_bonus, round(base * MEDICINE[tier_of(rules.healing, level, 0, False)].lifespan_pct / PERCENT))
+                healing[home.id] = known
+        level = max(level, known)
+    medicine_bonus = round(base * MEDICINE[tier_of(rules.healing, level, 0, False)].lifespan_pct / PERCENT)
+    if home is not None:
         medicine_bonus += round(base * await tech_bonus(session, rules, home.id, EraChannel.HEALTH) / PERCENT)
     flags = await EntityRepository(session).flags(entity.id)
     notable_bonus = rules.world_engine.notable_lifespan_bonus if is_notable(rules, entity, flags) else 0
@@ -137,7 +144,7 @@ async def life_info(session: AsyncSession, rules: Rules, entity: EntityRow) -> L
 
 
 async def raise_lifespan_to_death_age(
-    session: AsyncSession, rules: Rules, mortal: EntityRow, atlas: RegionAtlas | None = None, medicine: set[int] | None = None
+    session: AsyncSession, rules: Rules, mortal: EntityRow, atlas: RegionAtlas | None = None, medicine: dict[int, int] | None = None
 ) -> bool:
     age = stat(mortal, "age")
     if age is None:

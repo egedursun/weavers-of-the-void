@@ -6,7 +6,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 
 | The rule book at a glance | |
 |---|---:|
-| Rules | 20,733 |
+| Rules | 20,740 |
 | Chapters | 74 |
 | Topics | 1,055 |
 | Rules counted in years | 220 |
@@ -19,19 +19,19 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 2. [The chapters](#the-chapters)
 3. [The rules, chapter by chapter](#the-rules-chapter-by-chapter)
    - [Agents and model](#g-agents-and-model) (46)
-   - [Cosmos](#g-cosmos) (197)
+   - [Cosmos](#g-cosmos) (201)
    - [Interconnection](#g-interconnection) (203)
    - [Fate and chronicle](#g-fate-and-chronicle) (221)
    - [Environment and seasons](#g-environment-and-seasons) (2,038)
    - [Exploration](#g-exploration) (175)
    - [War and diplomacy](#g-war-and-diplomacy) (1,852)
-   - [Minds, values and memory](#g-minds-values-and-memory) (1,077)
+   - [Minds, values and memory](#g-minds-values-and-memory) (1,078)
    - [Reputation](#g-reputation) (226)
-   - [Population and growth](#g-population-and-growth) (536)
+   - [Population and growth](#g-population-and-growth) (537)
    - [Engine phases](#g-engine-phases) (509)
    - [Weather](#g-weather) (428)
    - [Bodies and wounds](#g-bodies-and-wounds) (591)
-   - [Religion and language](#g-religion-and-language) (808)
+   - [Religion and language](#g-religion-and-language) (809)
    - [Realms, law and treaties](#g-realms-law-and-treaties) (867)
    - [Civilization](#g-civilization) (1,235)
    - [Economy](#g-economy) (1,079)
@@ -108,19 +108,19 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 | Chapter | Topics | Rules |
 |---|---:|---:|
 | [Agents and model](#g-agents-and-model) | 12 | 46 |
-| [Cosmos](#g-cosmos) | 12 | 197 |
+| [Cosmos](#g-cosmos) | 12 | 201 |
 | [Interconnection](#g-interconnection) | 6 | 203 |
 | [Fate and chronicle](#g-fate-and-chronicle) | 11 | 221 |
 | [Environment and seasons](#g-environment-and-seasons) | 67 | 2,038 |
 | [Exploration](#g-exploration) | 6 | 175 |
 | [War and diplomacy](#g-war-and-diplomacy) | 103 | 1,852 |
-| [Minds, values and memory](#g-minds-values-and-memory) | 69 | 1,077 |
+| [Minds, values and memory](#g-minds-values-and-memory) | 69 | 1,078 |
 | [Reputation](#g-reputation) | 11 | 226 |
-| [Population and growth](#g-population-and-growth) | 39 | 536 |
+| [Population and growth](#g-population-and-growth) | 39 | 537 |
 | [Engine phases](#g-engine-phases) | 2 | 509 |
 | [Weather](#g-weather) | 5 | 428 |
 | [Bodies and wounds](#g-bodies-and-wounds) | 19 | 591 |
-| [Religion and language](#g-religion-and-language) | 56 | 808 |
+| [Religion and language](#g-religion-and-language) | 56 | 809 |
 | [Realms, law and treaties](#g-realms-law-and-treaties) | 67 | 867 |
 | [Civilization](#g-civilization) | 75 | 1,235 |
 | [Economy](#g-economy) | 45 | 1,079 |
@@ -300,7 +300,7 @@ Every world runs on a book of rules: how fast peoples grow, how often wars break
 
 ### Cosmos
 
-197 rules in 12 topics: agents, vehicles, megastructures, cosmic wounds, formation, world views, world ends, prehistory, space weather, stellar evolution, orbits, impacts.
+201 rules in 12 topics: agents, vehicles, megastructures, cosmic wounds, formation, world views, world ends, prehistory, space weather, stellar evolution, orbits, impacts.
 
 #### Agents
 
@@ -502,6 +502,10 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-orbits-greenhouse_water"></a>Kelvin of warming per point of water vapour at one unit of pressure | 3 | 0 to 200 | — |
 | <a id="r-orbits-tidal_heat"></a>Kelvin of tidal heating a moon at the closest orbit gains from a world of one mass | 20 | 0 to 500 | — |
 | <a id="r-orbits-internal_heat"></a>Kelvin of inner heat a world of full volcanism gives its surface | 10 | 0 to 200 | — |
+| <a id="r-orbits-livable_low_kelvin"></a>Coldest mean surface temperature, in kelvin, at which a world with air counts as habitable | 260 | 1 to 2,000 | — |
+| <a id="r-orbits-livable_high_kelvin"></a>Hottest mean surface temperature, in kelvin, at which a world with air counts as habitable | 330 | 1 to 2,000 | — |
+| <a id="r-orbits-warming_vapour_most"></a>Most water vapour a peopled world's air gains when even its darkest ground leaves it too cold to live on | 10 | 0 to 100 | — |
+| <a id="r-orbits-settled_home_kelvin"></a>Mean surface temperature, in kelvin, a peopled world is brought to when its own ground and air leave it unlivable | 288 | 1 to 2,000 | — |
 | <a id="r-orbits-low_gravity_g_hundredths"></a>Gravity below which a world counts as light, in hundredths of the reference | 60 | 1 to 1,000 | — |
 | <a id="r-orbits-high_gravity_g_hundredths"></a>Gravity above which a world counts as heavy, in hundredths of the reference | 140 | 1 to 10,000 | — |
 | <a id="r-orbits-thin_air_hundredths"></a>Air pressure below which the air counts as thin, in hundredths | 50 | 0 to 10,000 | — |
@@ -5302,7 +5306,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-departures-pension"></a>Coin a realm pays each epoch to one who left office with a pension | 5 | 0 to 100,000 | Leaving office: abdication, retirement, resignation, withdrawal and exile by choice, with pensions, rallying points and returns |
 | <a id="r-departures-rally_standing"></a>Standing from which one who abdicated is a rallying point against the ruler after them | 60 | 0 to 100 | — |
 | <a id="r-departures-rally_stability_loss"></a>Stability a realm loses in an epoch while one who abdicated stands as a rallying point | 2 | 0 to 100 | Leaving office: abdication, retirement, resignation, withdrawal and exile by choice, with pensions, rallying points and returns |
-| <a id="r-departures-standing_per_year"></a>Standing one who left office keeps for each year held, before the conditions add theirs | 1 | 0 to 100 | — |
+| <a id="r-departures-standing_per_year"></a>Standing one who left office keeps for every year they sat in the seat, before the conditions add theirs | 1 | 0 to 100 | — |
 | <a id="r-departures-standing_decay"></a>Standing one who left office loses in an epoch | 3 | 0 to 100 | — |
 | <a id="r-departures-scandal_unrest_relief"></a>Unrest a resignation under scandal takes from the holder's seat | 10 | 0 to 100 | — |
 | <a id="r-departures-call_heed_pct"></a>Chance a holder heeds a son's call to step aside (%) | 70% | 0% to 100% | — |
@@ -6103,7 +6107,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Minds, values and memory
 
-1,077 rules in 69 topics: opinion subjects, biases, identities, identity, peer groups, satire, culture drift, traits, skills, mind split, ideas, needs depth, needs wider, preference depth, belief depth, norm depth, witchcraft depth, thoughts, grief, dreams, preferences, ethics, aspirations, social, relations, interactions, circles, passions, persuasion, pecking, contests, belief state, collective behaviour, norms, volition, social learning, generations, role norms, asabiyya, challenge response, reciprocity, potlatch, ceremonial circuits, nomadism, legacy traits, mind, careers, emotions, breaks, memory, opinion, needs, stress, loyalty, acts, minds, mind making, mind awakening, mind will, continuity, interfaces, made realms, made peoples, mind law, instructions, gifts, folk knowledge, presence, community relations.
+1,078 rules in 69 topics: opinion subjects, biases, identities, identity, peer groups, satire, culture drift, traits, skills, mind split, ideas, needs depth, needs wider, preference depth, belief depth, norm depth, witchcraft depth, thoughts, grief, dreams, preferences, ethics, aspirations, social, relations, interactions, circles, passions, persuasion, pecking, contests, belief state, collective behaviour, norms, volition, social learning, generations, role norms, asabiyya, challenge response, reciprocity, potlatch, ceremonial circuits, nomadism, legacy traits, mind, careers, emotions, breaks, memory, opinion, needs, stress, loyalty, acts, minds, mind making, mind awakening, mind will, continuity, interfaces, made realms, made peoples, mind law, instructions, gifts, folk knowledge, presence, community relations.
 
 #### Opinion subjects
 
@@ -7008,7 +7012,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-reciprocity-return_regard"></a>Regard a giver feels when its gift is returned in kind | 5 | 0 to 100 | — |
 | <a id="r-reciprocity-lapse_prestige"></a>Standing a receiver loses and a giver gains for each hundred of an unreturned gift's value (%) | 20 | 0 to 200 | Gift ledgers: gifts bind their receivers to answer in kind and in time; refusals insult and unanswered gifts cost face |
 | <a id="r-reciprocity-courtesy_pct"></a>Chance each epoch an ally sends a gift to its ally (%) | 10% | 0% to 100% | — |
-| <a id="r-reciprocity-courtesy_value"></a>Coin a gift between allies is worth | 10 | 0 to 100,000 | — |
+| <a id="r-reciprocity-courtesy_value"></a>Most coin a gift between allies is worth | 40 | 0 to 100,000 | — |
 
 #### Potlatch
 
@@ -7507,7 +7511,8 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-gifts-amends_pct"></a>Chance each epoch one side of a feud sends a gift of amends (%) | 20% | 0% to 100% | — |
 | <a id="r-gifts-patronage_pct"></a>Chance each epoch a patron sends a gift to an artist whose work it keeps (%) | 20% | 0% to 100% | — |
 | <a id="r-gifts-hospitality_pct"></a>Chance the host of a gathering gives a guest gift to a guest (%) | 40% | 0% to 100% | — |
-| <a id="r-gifts-occasion_value"></a>Coin a gift at a birth, a funeral, a gathering or from a patron is worth | 10 | 0 to 100,000 | — |
+| <a id="r-gifts-occasion_value"></a>Most coin a gift at a birth, a funeral, a gathering or from a patron is worth | 40 | 0 to 100,000 | — |
+| <a id="r-gifts-means_share_pct"></a>Share of what a giver holds that a gift at an occasion or between allies is worth, up to its most (%) | 2% | 0% to 100% | — |
 | <a id="r-gifts-amends_value"></a>Coin a gift of amends is worth | 40 | 0 to 100,000 | — |
 | <a id="r-gifts-gifts_per_occasion"></a>Gifts one birth, death or gathering may draw | 3 | 0 to 100 | — |
 | <a id="r-gifts-guest_right_infamy"></a>Infamy one who kills a guest it exchanged guest gifts with gains, the gravest breach of guest right | 40 | 0 to 100 | — |
@@ -7848,7 +7853,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Population and growth
 
-536 rules in 39 topics: harvest, nutrition, time budgets, age sets, taverns, welfare, commuting, cooperatives, scale, generations, diaspora, demographic transition, sex ratio, structural demography, reproduction systems, clones, climate effects, climate world type, deep life, deep world, disasters, cohorts, demography, childhood, unions and birth, youth, population policy, fertility means, peoples, biology, customs, empty world, limits, mortal tools, society, son tools, world effects, world engine, world epoch transition.
+537 rules in 39 topics: harvest, nutrition, time budgets, age sets, taverns, welfare, commuting, cooperatives, scale, generations, diaspora, demographic transition, sex ratio, structural demography, reproduction systems, clones, climate effects, climate world type, deep life, deep world, disasters, cohorts, demography, childhood, unions and birth, youth, population policy, fertility means, peoples, biology, customs, empty world, limits, mortal tools, society, son tools, world effects, world engine, world epoch transition.
 
 #### Harvest
 
@@ -8089,6 +8094,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-climate_effects-ice_age_population_loss"></a>Ice age: population loss per epoch (%) | 3 | 0 to 100 | — |
 | <a id="r-climate_effects-scorching_age_plague_freq"></a>Scorching age: plague frequency (%) | 150 | 0 to 1,000 | — |
 | <a id="r-climate_effects-first_duration"></a>Base duration of the first climate age (epochs) | 3 | 1 to 100 | — |
+| <a id="r-climate_effects-compounding_damping_pct"></a>How strongly a world already pushed cold or hot by its sky resists an age that pushes it further the same way (%) | 200% | 0% to 1,000% | — |
 | <a id="r-climate_effects-first_die"></a>Die added to the first climate age (epochs) | 3 | 1 to 100 | — |
 | <a id="r-climate_effects-duration"></a>Base duration of a climate age (epochs) | 3 | 1 to 100 | — |
 | <a id="r-climate_effects-duration_die"></a>Die added to a climate age (epochs) | 4 | 1 to 100 | — |
@@ -10277,7 +10283,7 @@ The rules counted in years here follow your world's epoch length.
 
 ### Religion and language
 
-808 rules in 56 topics: purity, mishaps, revivals, intoxication, marks, naming customs, cosmopolitan, sanctuary, collective behaviour, norms, dating, sacrifice exchange, genius loci, celestial bureaucracy, mysticism, millenarianism, theodicy, sacraments, afterlife belief, secularisation, divination, prescience, psychohistory, mystics, rebirth, petitions, luck, charms, hunts, everyday mishaps, life cycles, remembrance, campaigns, culture, deep life, deep world, interpreters, prestige, belief, prophecy, divine conceptions, doctrine, zeal, tithes, missions, inquisition, faith, knowledge, language contact, limits, mortal tools, record schema, religion, son tools, world effects, world engine.
+809 rules in 56 topics: purity, mishaps, revivals, intoxication, marks, naming customs, cosmopolitan, sanctuary, collective behaviour, norms, dating, sacrifice exchange, genius loci, celestial bureaucracy, mysticism, millenarianism, theodicy, sacraments, afterlife belief, secularisation, divination, prescience, psychohistory, mystics, rebirth, petitions, luck, charms, hunts, everyday mishaps, life cycles, remembrance, campaigns, culture, deep life, deep world, interpreters, prestige, belief, prophecy, divine conceptions, doctrine, zeal, tithes, missions, inquisition, faith, knowledge, language contact, limits, mortal tools, record schema, religion, son tools, world effects, world engine.
 
 #### Purity
 
@@ -10490,6 +10496,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-genius_loci-pollution_offence"></a>Pollution of a land that offends the spirits of its places | 45 | 0 to 100 | Place spirits: notable places, towns and houses gain spirits that take offerings from their community and give favour or misfortune |
 | <a id="r-genius_loci-clearing_offence"></a>Forest cover below which the spirits of groves and forests take offence at the clearing | 30 | 0 to 100 | Place spirits: notable places, towns and houses gain spirits that take offerings from their community and give favour or misfortune |
 | <a id="r-genius_loci-content_at"></a>Contentment from which a place spirit grants favour | 60 | 0 to 100 | — |
+| <a id="r-genius_loci-born_mood_spread"></a>Most a new place spirit's contentment lies above or below the contentment from which it grants favour | 15 | 0 to 50 | — |
 | <a id="r-genius_loci-favour_gain"></a>Favour a contented place spirit grows each epoch | 8 | 0 to 100 | — |
 | <a id="r-genius_loci-contentment_step"></a>Contentment a place spirit gains when paid in full, or loses when short or offended | 10 | 0 to 100 | — |
 | <a id="r-genius_loci-favour_food"></a>Food a community gains each epoch for every ten points of its place spirit's favour | 6 | 0 to 1,000 | Place spirits: notable places, towns and houses gain spirits that take offerings from their community and give favour or misfortune |
@@ -11029,7 +11036,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-belief-false_memory_chance"></a>Chance each epoch a believed, distorted legend plants a false memory in a telling people (%) | 25 | 0 to 100 | — |
 | <a id="r-belief-false_memory_magnitude"></a>Strength of a memory a legend plants | 30 | 0 to 100 | — |
 | <a id="r-belief-confirmation"></a>Credence a confirming event adds | 15 | 0 to 100 | An event of the same kind confirms a legend |
-| <a id="r-belief-moral_pressure_pct"></a>Value pressure of a fully believed legend on its tellers (%) | 5% | 0% to 100% | A tale of ascent teaches hierarchy, competition; A tale of bargain teaches honour, superstition; A tale of betrayal teaches honour, kinship, xenophilia; A tale of chosen one teaches piety, hierarchy; A tale of creation teaches piety, tradition; A tale of cursed line teaches superstition, kinship; A tale of deception teaches honour, superstition; A tale of discovery teaches xenophilia, tradition; A tale of exile teaches xenophilia, kinship; A tale of fall teaches hierarchy, tradition; A tale of founding teaches tradition, kinship; A tale of haunted place teaches superstition, death; A tale of hero quest teaches honour, martial; A tale of lost golden age teaches tradition, purity; A tale of monster teaches martial, xenophilia; A tale of return of a ruler teaches hierarchy, tradition; A tale of rivalry teaches competition, honour; A tale of sacrifice teaches piety, kinship; A tale of transformation teaches tradition, nature; A tale of trickster teaches tradition, hierarchy; A tale of union teaches kinship, xenophilia; A tale of world disaster teaches piety, nature; Legends told and retold: credence, distortion among the unlettered, archetypes, morals pressed on tellers, and consequences of belief |
+| <a id="r-belief-moral_pressure_pct"></a>Value pressure of a fully believed legend on its tellers (%) | 5% | 0% to 100% | A tale of a bargain teaches honour, superstition; A tale of a chosen one teaches piety, hierarchy; A tale of a cursed line teaches superstition, kinship; A tale of a haunted place teaches superstition, death; A tale of a hero's quest teaches honour, martial; A tale of a lost golden age teaches tradition, purity; A tale of a monster teaches martial, xenophilia; A tale of a ruler's return teaches hierarchy, tradition; A tale of a trickster teaches tradition, hierarchy; A tale of a world's disaster teaches piety, nature; A tale of ascent teaches hierarchy, competition; A tale of betrayal teaches honour, kinship, xenophilia; A tale of creation teaches piety, tradition; A tale of deception teaches honour, superstition; A tale of discovery teaches xenophilia, tradition; A tale of exile teaches xenophilia, kinship; A tale of fall teaches hierarchy, tradition; A tale of founding teaches tradition, kinship; A tale of rivalry teaches competition, honour; A tale of sacrifice teaches piety, kinship; A tale of transformation teaches tradition, nature; A tale of union teaches kinship, xenophilia; Legends told and retold: credence, distortion among the unlettered, archetypes, morals pressed on tellers, and consequences of belief |
 | <a id="r-belief-return_ruler_claim"></a>Claim strength a legend of a returning ruler lends the claimant who fits it | 15 | 0 to 100 | A return-of-the-king tale strengthens a pretender's claim; Legends told and retold: credence, distortion among the unlettered, archetypes, morals pressed on tellers, and consequences of belief |
 | <a id="r-belief-cursed_line_prestige"></a>Prestige a cursed-line legend costs a house | 10 | 0 to 100 | A cursed-line tale shames a house |
 | <a id="r-belief-haunted_avoidance"></a>Credence at which settlers shun a haunted land | 30 | 0 to 100 | Legends told and retold: credence, distortion among the unlettered, archetypes, morals pressed on tellers, and consequences of belief; Settlers fleeing famine shun haunted lands |
@@ -14033,7 +14040,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-rumours-cap"></a>Most rumours passed on in one epoch, before the number of communities adds more | 600 | 0 to 10,000,000 | — |
 | <a id="r-rumours-cap_per_community"></a>Further rumours passed on in one epoch for each living community | 20 | 0 to 100,000 | — |
 | <a id="r-rumours-renown_spread_pct"></a>Extra chance, at the full renown of the doer, that word of a deed is passed on (%) | 20% | 0% to 100% | Those present at a happening witness it; retellings change its parts, truer tellings set them right and contrary ones cost trust |
-| <a id="r-rumours-contradiction_trust_loss"></a>Trust in what is told that a community loses on hearing a happening told otherwise than it knew it | 3 | 0 to 100 | Those present at a happening witness it; retellings change its parts, truer tellings set them right and contrary ones cost trust |
+| <a id="r-rumours-contradiction_trust_loss"></a>Trust in what is told a community loses for each way a wholly faithful teller tells a happening otherwise than it knew it | 4 | 0 to 100 | Those present at a happening witness it; retellings change its parts, truer tellings set them right and contrary ones cost trust |
 
 #### Art
 
@@ -15082,7 +15089,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-civilization-loan_chance"></a>A wealthy community lends to its poor neighbour on its own (% per epoch) | 70 | 0 to 100 | — |
 | <a id="r-civilization-loan_lender_min"></a>Minimum wealth or prosperity of a community able to lend | 55 | 0 to 100 | — |
 | <a id="r-civilization-loan_borrower_max"></a>Maximum wealth or prosperity of a community asking for a loan | 35 | 0 to 100 | — |
-| <a id="r-civilization-loan_amount"></a>Amount of a spontaneous loan | 10 | 1 to 100 | — |
+| <a id="r-civilization-loan_amount"></a>Most a spontaneous loan can be; each loan is what the lender can spare or what the borrower lacks, whichever is less | 25 | 1 to 100 | — |
 | <a id="r-civilization-loan_term_years"></a>Term of a spontaneous loan (years) | 5 years | 1 year to 1,250 years | — |
 | <a id="r-civilization-loan_distance"></a>Farthest distance between borrowing communities (steps) | 6 | 0 to 99 | — |
 | <a id="r-civilization-loan_repay_chance"></a>A debtor able to pay repays on its own (% per epoch) | 40 | 0 to 100 | — |
@@ -19058,7 +19065,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-kinship-purpose_bonus"></a>Pull toward a match that serves the purpose a people holds unions for | 15 | 0 to 100 | Customs of union by axes: form, purpose, residence, descent, exchange, arrangement, dissolution and the circles partners come from |
 | <a id="r-kinship-purpose_pull_pct"></a>Share of a match's prestige, friendship, strength or wealth that its purpose weighs (%) | 30% | 0% to 300% | Customs of union by axes: form, purpose, residence, descent, exchange, arrangement, dissolution and the circles partners come from |
 | <a id="r-kinship-marriage_chance"></a>Chance that adult lovers or the betrothed wed (% per year) | 5 | 0 to 100 | — |
-| <a id="r-kinship-community_marriage_chance"></a>Chance that the unwed head of a house or household with no lover or promise weds someone of its own community (% per year) | 1 | 0 to 100 | — |
+| <a id="r-kinship-community_marriage_chance"></a>Chance that an unwed grown mortal with no lover or promise weds someone of its own community (% per year) | 1 | 0 to 100 | — |
 | <a id="r-kinship-divorce_chance"></a>Chance each epoch that a cold marriage ends (%) | 2 | 0 to 100 | — |
 | <a id="r-kinship-divorce_opinion_below"></a>Opinion between spouses below which they may part | -40 | -100 to 100 | — |
 | <a id="r-kinship-annulment_chance"></a>Chance each epoch that a cold, childless marriage is declared void where divorce is forbidden (%) | 2 | 0 to 100 | — |
@@ -22080,6 +22087,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-society-love_rivalry_chance"></a>Love or rivalry between two mortals in the same place (% per year) | 0.5 | 0 to 100 | — |
 | <a id="r-society-love_share_pct"></a>Share of these that are love (%) | 55% | 0% to 100% | — |
 | <a id="r-society-love_min_age"></a>Minimum age of a mortal able to enter love or rivalry | 16 | 0 to 200 | — |
+| <a id="r-society-love_romance"></a>Romance each of two mortals feels for the other when love grows between them | 30 | 0 to 100 | — |
 
 #### World effects
 
@@ -22126,7 +22134,6 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-world_engine-first_epoch_years_engine"></a>Years an engine-born mortal lives in the epoch of birth | 15 | 0 to 50 | — |
 | <a id="r-world_engine-first_epoch_years_son"></a>Years a son-created mortal lives in the epoch of creation | 35 | 0 to 50 | — |
 | <a id="r-world_engine-notable_lifespan_bonus"></a>Extra lifespan of notable mortals (years) | 15 | 0 to 500 | — |
-| <a id="r-world_engine-medicine_lifespan_bonus"></a>Extra lifespan in a region that knows medicine (years) | 20 | 0 to 500 | — |
 | <a id="r-world_engine-cursed_item_contagion_chance"></a>A cursed item infects its owner (%) | 25 | 0 to 100 | — |
 | <a id="r-world_engine-sorcerer_act_chance"></a>A sorcerer casts magic this epoch (%) | 30 | 0 to 100 | — |
 | <a id="r-world_engine-sorcerer_curse_chance"></a>A sorcerer curses an enemy (otherwise protects) (%) | 50 | 0 to 100 | — |
@@ -22620,7 +22627,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-necromancy-outer_seal_chance"></a>An outer being gnaws a soul it does not devour and seals it (%) | 20 | 0 to 100 | Binding seals, nameless burials and the feeding of outer beings seal a soul against rebirth; only a stronger counter-rite breaks the seal |
 | <a id="r-necromancy-outer_seal"></a>Seal an outer being's gnawing lays on a soul | 80 | 0 to 100 | — |
 | <a id="r-necromancy-consumption_loss"></a>Essence a god loses for each soul of its own that is eaten | 1 | 0 to 100 | The souls of a god's faithful in the realms of the dead feed death gods; an eaten soul is a follower its god has lost |
-| <a id="r-necromancy-rebirth_gate_cost"></a>Essence a god spends to open the gate of rebirth for a soul | 20 | 0 to 1,000 | A reborn soul comes back to its people, its house or by merit, as its doctrine teaches; a god may open the gate by its own hand |
+| <a id="r-necromancy-rebirth_gate_cost"></a>Essence a god spends to open the gate of rebirth for a soul | 20 | 0 to 1,000 | A reborn soul comes back to its people, its house or by merit, as its doctrine teaches; a god may open the gate itself |
 
 <a id="g-materials-and-production"></a>
 

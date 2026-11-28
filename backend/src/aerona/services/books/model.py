@@ -507,7 +507,7 @@ class BookBuilder:
         self.wheels: dict[int, Markup] = {}
         self.kin: set[int] = set()
         self.audiences: dict[int, SpeakerAudiences] = {}
-        self.healers: tuple[RegionAtlas, set[int], dict[int, int]] | None = None
+        self.healers: tuple[RegionAtlas, dict[int, int], dict[int, int]] | None = None
         self.epoch: int | None = None
 
     async def reached_lifespan(self, entity: EntityRow) -> Labelled | None:
