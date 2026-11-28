@@ -1,6 +1,6 @@
 from dataclasses import replace
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.repositories.names import NameRepository
@@ -37,15 +37,20 @@ from aerona.engine.mortal.course import grow_into_stage
 from aerona.engine.mortal.life import fertility_window, folk_lifespan, folk_span, sex_of_stats, years_to_step, young_through
 from aerona.engine.mortal.profile import ensure_profile
 from aerona.engine.phases.births import couples_bear_children
+from aerona.engine.phases.mortals import mortal_aging
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.maturity import past_office_age
 from aerona.engine.primitives.naming import Namer
+from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.births import date_born
 from aerona.engine.recording.scope import phase_moment
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import CoreWorld, bond, mortal, settlement, tuned_rules
 
 YEARS = 50
+NEWCOMER_AGE = 29
+NEWCOMER_ARRIVES = 31
+NEWCOMER_SPAN = 400
 
 
 async def folk_town(session: AsyncSession, world: CoreWorld) -> int:
@@ -219,3 +224,16 @@ async def test_a_mortal_still_a_child_this_epoch_is_never_chosen_to_head_a_body(
     await session.flush()
     chosen = {being.id for being in await candidates(aged, org)}
     assert elder.id in chosen and young.id not in chosen
+
+
+async def test_a_grown_newcomer_of_this_epoch_ages_from_when_it_came_not_from_its_birth(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    await biology(session, world)
+    start = epoch_start_year(ctx.epoch, YEARS)
+    came = start + NEWCOMER_ARRIVES
+    newcomer = await mortal(session, "Late Captain", world, await folk_town(session, world), age=NEWCOMER_AGE, lifespan=NEWCOMER_SPAN)
+    newcomer.birth_epoch = ctx.epoch
+    await session.execute(delete(NodeBirthRow).where(NodeBirthRow.node_id == newcomer.id))
+    date_born(session, newcomer.id, Moment(came - NEWCOMER_AGE))
+    await session.flush()
+    await mortal_aging(ctx)
+    assert stat(newcomer, "age") == NEWCOMER_AGE + (start + YEARS - came)

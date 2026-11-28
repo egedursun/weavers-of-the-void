@@ -1258,6 +1258,7 @@ async def wed_within_the_community(ctx: TickContext) -> int:
     "table.conditions",
     "table.culture_values",
     "table.deep_passages",
+    "table.disease_profiles",
     "table.divine_wounds",
     "table.dwellings",
     "table.endemic_diseases",

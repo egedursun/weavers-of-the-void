@@ -8,12 +8,15 @@ from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.restoration import RestorationRow
+from aerona.db.tables.society import CommunityRelationRow
+from aerona.db.tables.thin_sections import RelationComponentRow
 from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.agentless_conditions import ConditionCause
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.folkways import AccusationOutcome
 from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole
+from aerona.domain.enums.mind import RelationComponent
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import MortalStats, PolityStats
@@ -23,6 +26,7 @@ from aerona.engine.feeling_spread.moods import household_head
 from aerona.engine.fortune.profiles import keep_fortune
 from aerona.engine.gatherings.hold import invite
 from aerona.engine.gatherings.occasions import Guest
+from aerona.engine.mind.relation_parts import keep_relation_components
 from aerona.engine.recording.record import record
 from aerona.engine.restoration.rise import standing_claimant
 from aerona.rules.registry import Rules
@@ -126,3 +130,18 @@ async def test_the_dead_are_never_asked_to_a_gathering_and_keep_no_fortune(sessi
     await keep_fortune(ctx)
     kept = await session.get(FortuneProfileRow, gone.id)
     assert kept is not None and (kept.fortune, kept.updated_epoch) == (3, 1)
+
+
+async def test_the_parts_of_a_tie_to_the_dead_are_no_longer_worked_out_each_epoch(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = tick(session, rules)
+    gone = await entity(session, "Gone Neighbour", EntityType.MORTAL, MortalStats(age=70, death_year=2), world_id=world.world.id)
+    gone.status, gone.end_epoch = EntityStatus.DEAD, 1
+    town = world.regions[0].id
+    low, high = sorted((town, gone.id))
+    session.add(CommunityRelationRow(entity_a_id=low, entity_b_id=high, value=10))
+    session.add(RelationComponentRow(entity_a_id=low, entity_b_id=high, component=next(iter(RelationComponent)), value=7, updated_epoch=1, locked=[]))
+    await session.flush()
+    await keep_relation_components(ctx)
+    part = await session.scalar(select(RelationComponentRow).where(RelationComponentRow.entity_a_id == low, RelationComponentRow.entity_b_id == high))
+    assert part is not None and (part.value, part.updated_epoch) == (7, 1)

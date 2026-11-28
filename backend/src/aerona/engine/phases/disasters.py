@@ -938,6 +938,7 @@ async def climate_plague_multipliers(ctx: TickContext) -> dict[int, int]:
     "table.impurity_sources",
     "table.incident_facts",
     "table.incident_participants",
+    "table.incident_steps",
     "table.incidents",
     "table.incorporeal_rights",
     "table.incubating_ideas",

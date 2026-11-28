@@ -25,6 +25,7 @@ async def living(ctx: TickContext, kinds: tuple[EntityType, ...]) -> list[Entity
 @reads(
     "table.armies",
     "table.army_profiles",
+    "table.beliefs",
     "table.bonds",
     "table.ciphers",
     "table.community_relations",
@@ -46,11 +47,12 @@ async def living(ctx: TickContext, kinds: tuple[EntityType, ...]) -> list[Entity
     "table.reputations",
     "table.ruler_currencies",
     "table.signal_links",
+    "table.source_trust",
     "table.spy_networks",
     "table.traits",
     "table.world_maps",
 )
-@writes("table.ciphers", "table.favours", "table.messages", "table.secrets", "table.signal_links", "table.treaty_breaches")
+@writes("table.beliefs", "table.ciphers", "table.favours", "table.messages", "table.secrets", "table.signal_links", "table.treaty_breaches")
 async def correspondence(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     dispatches = DispatchTally()

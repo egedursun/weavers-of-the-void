@@ -140,6 +140,7 @@ async def folk_spirits(ctx: TickContext) -> None:
     "table.sky_events",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.storytellers",
     "table.theodicy_crises",
     "table.world_domain_hooks",

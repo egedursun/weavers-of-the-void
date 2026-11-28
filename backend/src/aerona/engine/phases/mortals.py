@@ -93,7 +93,7 @@ def years_lived(ctx: TickContext, mortal: EntityRow, born: int | None) -> int:
     if mortal.birth_epoch != ctx.epoch:
         return years
     if born is not None:
-        return min(years, max(1, epoch_end_year(ctx.epoch, years) - born))
+        return min(years, max(1, epoch_end_year(ctx.epoch, years) - (born + (stat(mortal, "age") or 0))))
     return engine.first_epoch_years_engine if mortal.origin is EntityOrigin.ENGINE else engine.first_epoch_years_son
 
 

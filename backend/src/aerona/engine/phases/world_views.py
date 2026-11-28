@@ -25,6 +25,7 @@ from aerona.engine.settlement.modes import ModeTally, keep_modes
     "table.settlement_profiles",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.water_lifts",
     "table.world_type_profiles",
     "table.worlds",

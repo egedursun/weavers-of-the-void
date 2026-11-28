@@ -143,7 +143,7 @@ async def age_at_death(ctx: TickContext, mortal: EntityRow, death_year: int) -> 
         end = start + ctx.rules.time.years_per_epoch
         return max(0, age - round_half_up(max(0, end - death_year) * rate))
     born = await birth_year(ctx.session, mortal.id) if mortal.birth_epoch == ctx.epoch else None
-    since = start if born is None else max(start, born)
+    since = start if born is None else max(start, born + age)
     return age + round_half_up(max(0, death_year - since) * rate)
 
 

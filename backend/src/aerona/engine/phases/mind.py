@@ -1061,6 +1061,7 @@ async def mind_thoughts(ctx: TickContext) -> None:
     "table.entities",
     "table.entity_flags",
     "table.griefs",
+    "table.incident_participants",
     "table.incubating_ideas",
     "table.item_profiles",
     "table.marriages",

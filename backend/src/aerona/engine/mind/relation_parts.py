@@ -14,6 +14,7 @@ from aerona.db.tables.society import CommunityRelationRow
 from aerona.db.tables.thin_sections import RelationComponentRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
+from aerona.domain.enums.entity import ALIVE_STATUSES
 from aerona.domain.enums.military import FeudStatus
 from aerona.domain.enums.mind import MemoryKind, RelationComponent
 from aerona.engine.context import TickContext
@@ -149,7 +150,9 @@ READERS: Mapping[RelationComponent, Reader] = total(
 
 async def keep_relation_components(ctx: TickContext) -> int:
     relations = list(await ctx.session.scalars(select(CommunityRelationRow).order_by(CommunityRelationRow.entity_a_id, CommunityRelationRow.entity_b_id)))
-    live = [row for row in relations if not held(row.entity_a_id, row.entity_b_id)]
+    sides = sorted({node for row in relations for node in (row.entity_a_id, row.entity_b_id)})
+    ended = set(await ctx.session.scalars(select(EntityRow.id).where(EntityRow.id.in_(sides), EntityRow.status.not_in(sorted(ALIVE_STATUSES)))))
+    live = [row for row in relations if not held(row.entity_a_id, row.entity_b_id) and not ended & {row.entity_a_id, row.entity_b_id}]
     if not live:
         return 0
     nodes = {node for row in live for node in (row.entity_a_id, row.entity_b_id)}

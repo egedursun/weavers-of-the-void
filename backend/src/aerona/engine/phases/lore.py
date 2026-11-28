@@ -991,6 +991,7 @@ async def rite_cycles(ctx: TickContext) -> None:
     "table.entities",
     "table.foreign_gods",
     "table.house_members",
+    "table.incidents",
     "table.legend_profiles",
     "table.node_births",
     "table.nodes",
@@ -999,6 +1000,7 @@ async def rite_cycles(ctx: TickContext) -> None:
     "table.prophecy_conditions",
     "table.sky_events",
     "table.sons",
+    "table.state_changes",
     "table.wars",
     "table.world_domain_hooks",
 )
@@ -1011,6 +1013,7 @@ async def rite_cycles(ctx: TickContext) -> None:
     "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
+    "table.node_births",
     "table.prophecy_conditions",
     "table.relations",
 )

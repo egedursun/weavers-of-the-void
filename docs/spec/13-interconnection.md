@@ -31,9 +31,9 @@ Edges come from declared couplings, from the `@reads`/`@writes` annotations (a w
 
 ## Edges by kind
 
-- modifier: 44092
+- modifier: 44485
 - rule_switch: 2981
-- flow: 44415870
+- flow: 44578047
 - trigger: 568
 
 ## Feedback cycles between subsystems (length ≤ 3 listed)
