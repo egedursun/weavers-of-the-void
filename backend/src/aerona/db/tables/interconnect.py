@@ -67,10 +67,13 @@ class IncidentRow(CreatedAtMixin, Base):
 
 class IncidentParticipantRow(Base):
     __tablename__ = "incident_participants"
-    __table_args__ = (nullable_between("fidelity", PERCENT_MIN, PERCENT_MAX),)
+    __table_args__ = (
+        nullable_between("fidelity", PERCENT_MIN, PERCENT_MAX),
+        Index("ix_incident_participants_node_id_incident_id", "node_id", "incident_id"),
+    )
 
     incident_id: Mapped[int] = mapped_column(ForeignKey("incidents.id", ondelete="CASCADE"), primary_key=True)
-    node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True, index=True)
+    node_id: Mapped[int] = mapped_column(ForeignKey("nodes.id", ondelete="CASCADE"), primary_key=True)
     role: Mapped[IncidentRole] = mapped_column(enum_type(IncidentRole, "role"), primary_key=True)
     position: Mapped[int] = mapped_column(default=0)
     witness_mode: Mapped[WitnessMode | None] = mapped_column(enum_type(WitnessMode, "witness_mode"))

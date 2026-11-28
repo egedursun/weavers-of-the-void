@@ -101,6 +101,17 @@ async def is_carrier(session: AsyncSession, entity_id: int | None) -> EntityRow 
     return entity if entity is not None and entity.entity_type in CARRIER_TYPES else None
 
 
+@dataclass
+class CarrierMemo:
+    session: AsyncSession
+    found: dict[int | None, EntityRow | None] = field(default_factory=dict)
+
+    async def of(self, entity_id: int | None) -> EntityRow | None:
+        if entity_id not in self.found:
+            self.found[entity_id] = await is_carrier(self.session, entity_id)
+        return self.found[entity_id]
+
+
 async def participants(session: AsyncSession, incident_id: int) -> list[IncidentParticipantRow]:
     rows = await session.scalars(
         select(IncidentParticipantRow).where(IncidentParticipantRow.incident_id == incident_id).order_by(IncidentParticipantRow.position)
@@ -319,15 +330,16 @@ async def spread(ctx: TickContext, atlas: RegionAtlas) -> dict[str, int]:
     most = table.cap + table.cap_per_community * await community_count(ctx.session)
     born: list[tuple[RumourRow, RumourRow]] = []
     taverns: dict[int, TavernRow | None] = {}
+    carriers = CarrierMemo(ctx.session)
     for rumour in ctx.rng("rumour.order").shuffled(fresh):
-        carrier = await is_carrier(ctx.session, rumour.carrier_entity_id)
+        carrier = await carriers.of(rumour.carrier_entity_id)
         if carrier is None:
             continue
         for community_id in await pilgrims_of(ctx, carrier, faithful):
             found.pilgrims[carrier.id].add(community_id)
         fame = renown.get((rumour.incident_id, carrier.id), 0)
         for target, channel in found.of(carrier.id):
-            if passed >= most or held(carrier.id, target) or await is_carrier(ctx.session, target) is None:
+            if passed >= most or held(carrier.id, target) or await carriers.of(target) is None:
                 continue
             if target not in taverns:
                 taverns[target] = await tavern_of(ctx.session, target)

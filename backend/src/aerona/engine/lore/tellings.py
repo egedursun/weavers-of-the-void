@@ -2,7 +2,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 
-from sqlalchemy import select
+from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
@@ -30,6 +30,7 @@ from aerona.engine.recording.render import render_incident
 from aerona.engine.recording.terms import explaining, term
 
 LOAD_CHUNK = 500
+EARLIER_CAUSES = 8
 DOERS = frozenset({IncidentRole.ACTOR, IncidentRole.CO_ACTOR, IncidentRole.SUBJECT})
 DONE_TO = frozenset({IncidentRole.TARGET, IncidentRole.VICTIM, IncidentRole.OPPONENT})
 UNSWAPPED = frozenset({*DOERS, *DONE_TO, IncidentRole.WITNESS, IncidentRole.TELLER, IncidentRole.PLACE})
@@ -173,24 +174,22 @@ def changed_outcome(telling: Telling, rng: SeededRandom) -> RumourDistortionRow 
     return None
 
 
+def earlier_incidents_of(nodes: list[int], before: int, besides: int) -> Select[int]:
+    return (
+        select(IncidentParticipantRow.incident_id)
+        .where(IncidentParticipantRow.node_id.in_(nodes), IncidentParticipantRow.incident_id < before, IncidentParticipantRow.incident_id != besides)
+        .order_by(IncidentParticipantRow.incident_id.desc())
+        .limit(EARLIER_CAUSES)
+    )
+
+
 async def changed_cause(session: AsyncSession, telling: Telling, rng: SeededRandom) -> RumourDistortionRow | None:
     if telling.incident.cause_incident_id is None:
         return None
     nodes = [row.node_id for row in telling.roles]
     if not nodes:
         return None
-    others = list(
-        await session.scalars(
-            select(IncidentParticipantRow.incident_id)
-            .where(
-                IncidentParticipantRow.node_id.in_(nodes),
-                IncidentParticipantRow.incident_id < telling.incident.id,
-                IncidentParticipantRow.incident_id != telling.incident.cause_incident_id,
-            )
-            .order_by(IncidentParticipantRow.incident_id.desc())
-            .limit(8)
-        )
-    )
+    others = list(await session.scalars(earlier_incidents_of(nodes, telling.incident.id, telling.incident.cause_incident_id)))
     if not others:
         return None
     return RumourDistortionRow(distortion=RumourDistortion.CAUSE_CHANGED, told_incident_id=rng.pick(sorted(set(others))))
