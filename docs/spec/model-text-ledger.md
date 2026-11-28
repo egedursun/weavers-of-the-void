@@ -196,7 +196,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/g11_social.py` | 136 | 2026-11-27 | `27c565b117906eb7` |
 | `backend/src/aerona/catalog/incident_kinds/g12_knowledge.py` | 177 | 2026-11-27 | `4b3193e9bd973c59` |
 | `backend/src/aerona/catalog/incident_kinds/g15_gods.py` | 510 | 2026-11-27 | `5c3a338634cc5207` |
-| `backend/src/aerona/catalog/incident_kinds/g16_peoples.py` | 97 | 2026-11-27 | `25ae50d6dea8d145` |
+| `backend/src/aerona/catalog/incident_kinds/g16_peoples.py` | 97 | 2026-11-28 | `7aac4159f49fee16` |
 | `backend/src/aerona/catalog/incident_kinds/life.py` | 97 | 2026-11-27 | `28c50b31cae866ee` |
 | `backend/src/aerona/catalog/incident_kinds/nature50.py` | 55 | 2026-11-27 | `01eb0bea1bf6b1da` |
 | `backend/src/aerona/catalog/incident_kinds/nature_kinds.py` | 209 | 2026-11-27 | `389243864daac9bb` |
@@ -220,7 +220,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/w52_agent_q.py` | 2 | 2026-11-23 | `249c266599930da6` |
 | `backend/src/aerona/catalog/interventions.py` | 18 | 2026-11-16 | `5a8f9b083be397b6` |
 | `backend/src/aerona/catalog/intrigue.py` | 100 | 2026-11-27 | `97ab32e2693460b0` |
-| `backend/src/aerona/catalog/invariants.py` | 499 | 2026-11-28 | `fc15110b79975b64` |
+| `backend/src/aerona/catalog/invariants.py` | 501 | 2026-11-28 | `090c162d92891280` |
 | `backend/src/aerona/catalog/kinds/crafts_labels.py` | 17 | 2026-11-23 | `9fdffde0c35b9ec5` |
 | `backend/src/aerona/catalog/kinds/defined/affliction.py` | 2 | 2026-11-23 | `3ff454f4b566431f` |
 | `backend/src/aerona/catalog/kinds/defined/ages.py` | 5 | 2026-11-22 | `087637eb161a0b66` |
@@ -910,7 +910,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/engine/phases/sons.py` | 3 | 2026-11-27 | `01846d11fb707595` |
 | `backend/src/aerona/engine/phases/spirits.py` | 10 | 2026-11-17 | `864f3ec8c47e8d0d` |
 | `backend/src/aerona/engine/phases/trade.py` | 7 | 2026-11-22 | `218acada9dda0b5b` |
-| `backend/src/aerona/engine/phases/travel.py` | 46 | 2026-11-27 | `fcd17dd530b1de00` |
+| `backend/src/aerona/engine/phases/travel.py` | 46 | 2026-11-28 | `bc2558e611a39317` |
 | `backend/src/aerona/engine/phases/tribute.py` | 6 | 2026-11-17 | `f6eb2aaea54107fb` |
 | `backend/src/aerona/engine/phases/vendettas.py` | 8 | 2026-11-23 | `41b4d55a1c1f1173` |
 | `backend/src/aerona/engine/phases/warfare.py` | 34 | 2026-11-23 | `b9d5c3073020adb0` |

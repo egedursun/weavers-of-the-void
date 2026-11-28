@@ -1,3 +1,4 @@
+import re
 from collections import Counter
 
 from sqlalchemy import func, select
@@ -5,6 +6,7 @@ from sqlalchemy import func, select
 from aerona.constants.units import PERCENT
 from aerona.core.grammar import agree, several
 from aerona.db.repositories.chronicle import incident_for
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.celestial import SkyEventRow
 from aerona.db.tables.entities import EntityRow
@@ -35,13 +37,25 @@ REALM_TYPES = (EntityType.POLITY, EntityType.SETTLEMENT, EntityType.PEOPLE)
 RULER_TYPES = (EntityType.MORTAL,)
 
 
-def tag(ctx: TickContext, name: str) -> str:
-    return f"{name} (Epoch {ctx.epoch})"
+ROMAN = re.compile(r"[IVXLCDM]+")
 
 
-async def born_names(ctx: TickContext, kind: EngineKind) -> set[str]:
+async def named(ctx: TickContext, base: str) -> str:
+    return await NameRepository(ctx.session).unique_name(base)
+
+
+def of_base(name: str, base: str) -> bool:
+    folded, root = name.casefold(), base.casefold()
+    return folded == root or (folded.startswith(f"{root} ") and ROMAN.fullmatch(name[len(base) + 1 :]) is not None)
+
+
+def already(known: list[str], base: str) -> bool:
+    return any(of_base(name, base) for name in known)
+
+
+async def born_names(ctx: TickContext, kind: EngineKind) -> list[str]:
     statement = select(EntityRow.name).where(EntityRow.entity_type == EntityType.EVENT, EntityRow.engine_kind == kind, EntityRow.birth_epoch == ctx.epoch)
-    return {name.casefold() for name in await ctx.session.scalars(statement)}
+    return list(await ctx.session.scalars(statement.order_by(EntityRow.id)))
 
 
 async def recent_at(ctx: TickContext, kind: EngineKind, location_id: int, epochs: int) -> bool:
@@ -60,7 +74,7 @@ async def record_fire(ctx: TickContext, town: EntityRow, dead: int) -> EntityRow
         ctx,
         Happening(
             EngineKind.FIRE,
-            tag(ctx, f"the Great Fire of {town.name}"),
+            await named(ctx, f"the Great Fire of {town.name}"),
             f"A great fire in {town.name} in which {several(dead, 'person', 'people')} died.",
             town,
             clamp_int(20 + dead * PERCENT // max(1, stat_or(town, "population", 0) + dead) * 4, 0, PERCENT),
@@ -83,7 +97,7 @@ async def record_sack(ctx: TickContext, town: EntityRow, dead: int) -> EntityRow
         ctx,
         Happening(
             EngineKind.SACK,
-            tag(ctx, f"the Sack of {town.name}"),
+            await named(ctx, f"the Sack of {town.name}"),
             f"The sack of {town.name}, in which its stores were taken and {several(dead, 'person', 'people')} {agree(dead, 'was', 'were')} killed.",
             town,
             clamp_int(40 + dead * PERCENT // max(1, stat_or(town, "population", 0) + dead) * 4, 0, PERCENT),
@@ -113,9 +127,10 @@ async def festivals(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
         town = await ctx.session.get(EntityRow, town_id)
         if town is None or town.status is not EntityStatus.CANON or stat_or(town, "population", 0) < table.festival_population or held(town.id):
             continue
-        name = tag(ctx, f"the Great Festival of {town.name}")
-        if name.casefold() in known or made >= cap:
+        base = f"the Great Festival of {town.name}"
+        if already(known, base) or made >= cap:
             continue
+        name = await named(ctx, base)
         event, _ = await happen(
             ctx,
             Happening(
@@ -154,9 +169,10 @@ async def coronations(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
             continue
         if ruler.status is not EntityStatus.CANON or realm.power_level < table.coronation_realm_power or held(ruler.id, realm.id):
             continue
-        name = tag(ctx, f"the Coronation of {ruler.name}")
-        if name.casefold() in known or made >= cap:
+        base = f"the Coronation of {ruler.name}"
+        if already(known, base) or made >= cap:
             continue
+        name = await named(ctx, base)
         event, _ = await happen(
             ctx,
             Happening(
@@ -192,9 +208,10 @@ async def weddings(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
             or held(first.id, second.id)
         ):
             continue
-        name = tag(ctx, f"the Wedding of {first.name} and {second.name}")
-        if name.casefold() in known or made >= cap:
+        base = f"the Wedding of {first.name} and {second.name}"
+        if already(known, base) or made >= cap:
             continue
+        name = await named(ctx, base)
         event, _ = await happen(
             ctx,
             Happening(
@@ -226,9 +243,10 @@ async def massacres(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
         where = place or loser
         if loser is None or where is None or held(loser.id, where.id, battle.winner_entity_id):
             continue
-        name = tag(ctx, f"the Massacre at {where.name}")
-        if name.casefold() in known or made >= cap:
+        base = f"the Massacre at {where.name}"
+        if already(known, base) or made >= cap:
             continue
+        name = await named(ctx, base)
         victor = winner.name if winner is not None else "the victors"
         event, _ = await happen(
             ctx,
@@ -268,7 +286,7 @@ async def riots(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int:
             ctx,
             Happening(
                 EngineKind.RIOT,
-                tag(ctx, f"the Riots of {town.name}"),
+                await named(ctx, f"the Riots of {town.name}"),
                 f"Riots in {town.name}.",
                 town,
                 clamp_int(profile.unrest, 0, PERCENT),
@@ -292,9 +310,10 @@ async def schism_councils(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int
         if sect is None or parent is None or made >= cap or held(sect.id, parent.id, parent.location_id):
             continue
         where = await ctx.session.get(EntityRow, parent.location_id) if parent.location_id is not None else None
-        name = tag(ctx, f"the Council of {sect.name}")
-        if name.casefold() in known:
+        base = f"the Council of {sect.name}"
+        if already(known, base):
             continue
+        name = await named(ctx, base)
         event, _ = await happen(
             ctx,
             Happening(
@@ -326,9 +345,10 @@ async def eclipse_watches(ctx: TickContext, atlas: RegionAtlas, cap: int) -> int
         host = max(towns, key=lambda town: (stat_or(town, "population", 0), -town.id), default=None)
         if host is None or made >= cap:
             continue
-        name = tag(ctx, f"the Eclipse Watch over {host.name}")
-        if name.casefold() in known:
+        base = f"the Eclipse Watch over {host.name}"
+        if already(known, base):
             continue
+        name = await named(ctx, base)
         event, _ = await happen(
             ctx,
             Happening(

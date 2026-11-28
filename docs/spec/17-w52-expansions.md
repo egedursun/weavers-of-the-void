@@ -20635,6 +20635,21 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 **Proving tests.** The case in `tests/services/integrity/test_every_invariant.py`.
 
+
+### 52.679 A happening of note is named as a name
+
+**What it is.** A fire, sack, festival, crowning, wedding, massacre, riot, council, watch or disaster is named plainly and takes the next free form of its name when the name is already held, never the epoch it fell in written in brackets after it; a name that carried the epoch loses it in every text. A rising of a class is told once, by the rising and the realm it rose against.
+
+**Engine.** `engine/happenings/emergence.py` (`named`), `engine/phases/disasters.py`.
+
+**Rules.** None new.
+
+**Repairs.** `event_named_plainly`.
+
+**Levers and surfaces.** `record:edit` renames any happening; the entry window shows its name.
+
+**Proving tests.** `tests/engine/environment/test_happenings.py`; `tests/unit/test_no_epoch_tags.py`; the case in `tests/services/integrity/test_every_invariant.py`.
+
 ---
 
 ## Appendix 17.A Every value this spec adds

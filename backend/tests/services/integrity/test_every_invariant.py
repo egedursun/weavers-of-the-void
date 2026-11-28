@@ -1073,6 +1073,10 @@ async def seat_held_before_its_holder_came(session: AsyncSession, world: CoreWor
     session.add(DepartureRow(holder_node_id=holder.id, kind=DepartureKind.RETIREMENT, epoch=8, years_held=300, locked=[]))
 
 
+async def riot_named_by_its_epoch(session: AsyncSession, world: CoreWorld) -> None:
+    await entity(session, "The Riots of Greystead (Epoch 3)", EntityType.EVENT, EventStats(), world_id=world.world.id)
+
+
 async def law_named_twice(session: AsyncSession, world: CoreWorld) -> None:
     await entity(session, "The burial law law of Greystead", EntityType.LAW, LawStats(), world_id=world.world.id)
 
@@ -2453,6 +2457,7 @@ BREAKERS: dict[str, Breaker] = {
     "injury_dated_in_its_time": wound_dated_outside_its_epoch,
     "tenure_within_presence": seat_held_before_its_holder_came,
     "law_named_once": law_named_twice,
+    "event_named_plainly": riot_named_by_its_epoch,
     "birth_sign_by_age": grown_mortal_signed_at_arrival,
     "generations_within_people": generations_outnumber_their_town,
     "son_essence_within_cap": son_overfilled,

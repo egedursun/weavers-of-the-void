@@ -82,6 +82,7 @@ from aerona.services.integrity.ended_remains import (
     ruins_still_peopled,
     still_the_dead,
 )
+from aerona.services.integrity.event_names import events_named_by_epoch, name_event_plainly
 from aerona.services.integrity.fact_keys import drop_undeclared_facts, facts_beyond_their_kind
 from aerona.services.integrity.fertility_links import barren_means, strike_barren_means, strike_unknown_use, unknown_uses
 from aerona.services.integrity.generation_counts import fit_generations, generations_beyond_people
@@ -746,6 +747,7 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "injury_dated_in_its_time": (injuries_out_of_their_time, date_injury_in_its_time),
     "tenure_within_presence": (tenures_beyond_presence, bound_tenure),
     "law_named_once": (laws_named_twice, name_law_once),
+    "event_named_plainly": (events_named_by_epoch, name_event_plainly),
     "birth_sign_by_age": (signs_born_too_late, date_birth_sign),
     "generations_within_people": (generations_beyond_people, fit_generations),
     "son_essence_within_cap": (sons_over_their_cap, fit_son_essence),

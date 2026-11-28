@@ -12,6 +12,7 @@ from aerona.core.errors import NotFoundError, ValidationFailedError
 from aerona.core.grammar import an, several
 from aerona.db.repositories.bonds import BondDraft, BondRepository
 from aerona.db.repositories.entities import EntityRepository
+from aerona.db.repositories.names import NameRepository
 from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.disease import OutbreakRow
 from aerona.db.tables.entities import EntityRow
@@ -357,7 +358,7 @@ async def record_disaster_event(ctx: TickContext, target: EntityRow, disaster: D
     event = await create_record(
         ctx,
         RecordSpec(
-            name=f"{target.name} {label} (Epoch {ctx.epoch})",
+            name=await NameRepository(ctx.session).unique_name(f"{target.name} {label}"),
             entity_type=EntityType.EVENT,
             stats=EventStats(severity=clamp_int(severity, 0, PERCENT)),
             body=f"{label} over {target.name}.",

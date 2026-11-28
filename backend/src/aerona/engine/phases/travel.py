@@ -658,7 +658,7 @@ async def _closed_route(ctx: TickContext, journey: JourneyRow, traveller: Entity
         if journey.status is not JourneyStatus.WAITING:
             journey.status = JourneyStatus.WAITING
             kind = JourneyEventKind.VOID_STORM if status.state is RouteState.SEVERED else JourneyEventKind.OTHER
-            await add_event(ctx, journey, kind, f"the route closed; the expedition is waiting for it to reopen (Epoch {status.opens_epoch})")
+            await add_event(ctx, journey, kind, f"the route closed; the expedition is waiting for it to reopen in epoch {status.opens_epoch}")
             await record(
                 ctx,
                 "travel.waiting",

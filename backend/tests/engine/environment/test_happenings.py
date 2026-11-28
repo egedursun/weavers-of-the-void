@@ -247,6 +247,8 @@ async def test_festivals_and_riots_rise_from_the_life_of_towns(realm: Realm) -> 
     assert (stat(angry, "population") or 0) < 4000
     again = await emerge(context(realm.session), await RegionAtlas.load(realm.session))
     assert again["festivals"] == 0 and again["riots"] == 0
+    names = list(await realm.session.scalars(select(EntityRow.name).where(EntityRow.entity_type == EntityType.EVENT)))
+    assert names and not any("(Epoch" in name for name in names)
 
 
 def test_plain_names_lose_their_epoch_mark() -> None:

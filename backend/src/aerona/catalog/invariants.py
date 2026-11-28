@@ -942,6 +942,13 @@ TYPED: tuple[InvariantSpec, ...] = (
         "the years held are cut to the years since the holder came into the world, up to the end of the epoch they left in",
     ),
     InvariantSpec(
+        "event_named_plainly",
+        "entities",
+        "a happening of note is named as a name, never with the epoch it fell in written after it",
+        Remedy.REPAIR,
+        "the epoch is cut from the name, which takes the next free form, in every text",
+    ),
+    InvariantSpec(
         "law_named_once",
         "entities",
         "a law names itself a law once",

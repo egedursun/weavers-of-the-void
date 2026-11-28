@@ -872,7 +872,7 @@ KINDS: tuple[IncidentKindSpec, ...] = (
     IncidentKindSpec(
         "society.class_uprising",
         G.PEOPLES,
-        "In {place} the {social_class} rose up as {actor} against {target}: their satisfaction had fallen to {satisfaction}.",
+        "{actor} broke out against {target}: the satisfaction of its {social_class} class had fallen to {satisfaction}.",
         roles=(RoleSpec(R.PLACE), RoleSpec(R.ACTOR), RoleSpec(R.TARGET)),
         facts=(FactSpec("social_class", FactValue.ENUM, enum=SocialClass), FactSpec("satisfaction", FactValue.NUMBER, FactUnit.PERCENT)),
         place=PlaceRule.REQUIRED,
