@@ -97,7 +97,7 @@ from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import scaled_cap
 from aerona.engine.primitives.prosperity import add_prosperity
-from aerona.engine.primitives.queries import active_bonds, canon, connect, count_communities, spoken_language
+from aerona.engine.primitives.queries import active_bonds, canon, connect, count_societies, spoken_language
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import headcount, move_stat, put_stat, shift_bounded, stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
@@ -366,7 +366,7 @@ async def spontaneous_expeditions(ctx: TickContext) -> int:
         candidates.append((chance * rng.random(), chance, community))
     candidates.sort(key=lambda item: (-item[0], item[2].id))
     sent = 0
-    cap = scaled_cap(travel.expedition_cap, travel.expedition_cap_community_divisor, await count_communities(ctx.session))
+    cap = scaled_cap(travel.expedition_cap, travel.expedition_cap_community_divisor, await count_societies(ctx.session))
     for _weight, chance, community in candidates:
         if sent >= cap:
             break

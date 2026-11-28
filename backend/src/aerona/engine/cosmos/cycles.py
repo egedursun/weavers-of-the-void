@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.climate import climate_profile
 from aerona.catalog.life.cosmos import AIR
 from aerona.catalog.planetary_cycles import CYCLES, SCALES, CycleFlow, cycles_moving
 from aerona.constants.units import PERCENT
@@ -122,7 +123,9 @@ def settle_pool(row: WorldCycleRow, gained: int, lost: int) -> None:
         row.stock = clamp_int(row.stock + gained - lost, 0, PERCENT)
 
 
-def state_of(land: list[RegionEnvironmentRow], physics: WorldPhysicsRow | None, animals: int, epoch: int, industry: float = 0.0) -> WorldState:
+def state_of(
+    land: list[RegionEnvironmentRow], physics: WorldPhysicsRow | None, animals: int, epoch: int, *, industry: float = 0.0, era_heat: int = 0
+) -> WorldState:
     burned = mean([ground.cleared for ground in land]) + PERCENT * sum(1 for ground in land if ground.burned_epoch == epoch) / len(land)
     return WorldState(
         volcanism=physics.volcanism if physics is not None else 0,
@@ -131,7 +134,7 @@ def state_of(land: list[RegionEnvironmentRow], physics: WorldPhysicsRow | None, 
         forest=mean([ground.forest_cover for ground in land]),
         ocean=physics.hydrosphere if physics is not None else 0,
         roughness=mean([ground.roughness for ground in land]),
-        warmth=mean([ground.temperature_shift for ground in land]),
+        warmth=mean([ground.temperature_shift for ground in land]) + era_heat,
         rivers=sum(1 for ground in land if ground.river_class is not RiverClass.NONE) / len(land),
         erosion=mean([ground.erosion for ground in land]),
         industry=industry,
@@ -250,7 +253,8 @@ async def turn_cycles(ctx: TickContext, tally: CycleTally) -> None:
         if world is None or held(world_id):
             continue
         physics = await ctx.session.get(WorldPhysicsRow, world_id)
-        state = state_of(grounds[world_id], physics, living.get(world_id, 0), ctx.epoch, fumes.get(world_id, 0.0))
+        era_heat = climate_profile(ctx.rules, world.climate_era).temperature_shift if world.climate_era is not None else 0
+        state = state_of(grounds[world_id], physics, living.get(world_id, 0), ctx.epoch, industry=fumes.get(world_id, 0.0), era_heat=era_heat)
         cycles = known[world_id]
         for cycle, spec in CYCLES.items():
             row = cycles.get(cycle)

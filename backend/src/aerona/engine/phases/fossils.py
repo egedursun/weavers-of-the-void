@@ -8,6 +8,7 @@ from aerona.engine.phases.dominion import count
 @reads(
     "table.constructs",
     "table.creator",
+    "table.deep_passages",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",

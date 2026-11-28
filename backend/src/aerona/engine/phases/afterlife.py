@@ -45,7 +45,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.numbers import clamp_percent, fraction, scaled_cap
 from aerona.engine.primitives.prosperity import add_prosperity
-from aerona.engine.primitives.queries import BondIndex, canon, count_communities, flags_by_entity
+from aerona.engine.primitives.queries import BondIndex, canon, count_societies, flags_by_entity
 from aerona.engine.primitives.records import RecordSpec, open_record, retire
 from aerona.engine.primitives.stats import FOLLOWERS_KEY, POPULATION_KEY, scale_stat, shift_bounded, stat_or
 from aerona.engine.recording.record import StepDraft, record
@@ -611,7 +611,7 @@ async def mirror_worlds(ctx: TickContext) -> int:
             EntityRow.end_epoch >= ctx.epoch - RECENT_DEATH_EPOCHS,
         )
         dead = [item for item in await ctx.session.scalars(statement.order_by(EntityRow.end_epoch, EntityRow.id)) if item.id not in born_flags]
-        cap = scaled_cap(beyond.mirror_births_cap, beyond.mirror_births_community_divisor, await count_communities(ctx.session, twin.id))
+        cap = scaled_cap(beyond.mirror_births_cap, beyond.mirror_births_community_divisor, await count_societies(ctx.session, twin.id))
         for mortal in dead[:cap]:
             await mirror_birth(ctx, mortal, rng.pick(regions), twin, mirror)
             births += 1

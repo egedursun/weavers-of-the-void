@@ -17,7 +17,7 @@ from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow
 from aerona.db.tables.sons import SonRow
 from aerona.domain.enums.bond import BondKind, BondState
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityStatus, EntityType
+from aerona.domain.enums.entity import SOCIETY_TYPES, EntityFlag, EntityStatus, EntityType
 from aerona.domain.enums.son import SonStatus
 
 ACTIVE_ONLY = (BondState.ACTIVE,)
@@ -93,8 +93,8 @@ async def living_entity(session: AsyncSession, entity_id: int | None) -> EntityR
     return found if found is not None and found.status is EntityStatus.CANON else None
 
 
-async def count_communities(session: AsyncSession, world_id: int | None = None) -> int:
-    statement = select(func.count()).select_from(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_(list(COMMUNITY_TYPES)))
+async def count_societies(session: AsyncSession, world_id: int | None = None) -> int:
+    statement = select(func.count()).select_from(EntityRow).where(EntityRow.status == EntityStatus.CANON, EntityRow.entity_type.in_(sorted(SOCIETY_TYPES)))
     if world_id is not None:
         statement = statement.where(EntityRow.world_id == world_id)
     return int(await session.scalar(statement) or 0)

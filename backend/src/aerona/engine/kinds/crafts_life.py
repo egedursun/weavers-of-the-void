@@ -43,7 +43,7 @@ from aerona.engine.lore.civics import holders_know
 from aerona.engine.polity.laws import law_param
 from aerona.engine.primitives.folk import towns_of_people
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.queries import count_communities
+from aerona.engine.primitives.queries import count_societies
 from aerona.engine.primitives.stats import shift_stat
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.sacred.places import realm_of_town
@@ -406,7 +406,7 @@ async def held_meanings(ctx: TickContext, holders: dict[int, HolderKinds]) -> in
 async def garment_fashion(ctx: TickContext, tally: CraftTally) -> None:
     table = ctx.rules.fashion
     garments = list(await ctx.session.scalars(select(GarmentKindRow).where(GarmentKindRow.retired.is_(False)).order_by(GarmentKindRow.id)))
-    everywhere = max(1, await count_communities(ctx.session) * table.saturation // PERCENT)
+    everywhere = max(1, await count_societies(ctx.session) * table.saturation // PERCENT)
     for garment in garments:
         holdings = list(
             await ctx.session.scalars(

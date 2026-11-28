@@ -13,6 +13,7 @@ from aerona.engine.phase import Phase
     "table.districts",
     "table.entities",
     "table.gardens",
+    "table.incidents",
     "table.item_profiles",
     "table.museum_collections",
     "table.museum_pieces",

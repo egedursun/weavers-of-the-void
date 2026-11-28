@@ -243,6 +243,7 @@ async def social_norms(ctx: TickContext) -> None:
     "table.polity_profiles",
     "table.polity_territories",
     "table.secrets",
+    "table.state_changes",
     "table.vassalages",
 )
 @writes(

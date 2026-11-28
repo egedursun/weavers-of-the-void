@@ -35,7 +35,7 @@ from aerona.engine.polity.accords import Clause, end_treaty, sign, treaty_betwee
 from aerona.engine.polity.book import RealmBook
 from aerona.engine.polity.laws import law_param
 from aerona.engine.polity.treaties import breach
-from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, count_communities, living_entity
+from aerona.engine.primitives.queries import BondIndex, active_bonds, canon, count_societies, living_entity
 from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.recording.record import FactInput, StepDraft, record
 from aerona.engine.services.community_relations import (
@@ -576,7 +576,7 @@ async def alliance_lifetimes(ctx: TickContext, communities: int) -> int:
     "table.wars",
 )
 async def diplomacy(ctx: TickContext) -> None:
-    counters = DiplomacyCounters(communities=await count_communities(ctx.session))
+    counters = DiplomacyCounters(communities=await count_societies(ctx.session))
     ctx.count("alliances_lapsed", await alliance_lifetimes(ctx, counters.communities))
     candidates = [pair for pair in ctx.rng("candidates").shuffled(await hostile_pairs(ctx.session)) if not held(pair[0], pair[1])]
     faded = await _fade_grudges(ctx, candidates, counters.communities)

@@ -118,17 +118,32 @@ async def native_species(ctx: TickContext, world: WorldRow, region: EntityRow) -
     return species
 
 
-@reads("region.fertility", "table.entities", "table.nodes", "table.world_life", "table.worlds")
+@reads(
+    "region.fertility",
+    "table.bonds",
+    "table.deep_passages",
+    "table.entities",
+    "table.lexemes",
+    "table.name_registry",
+    "table.node_births",
+    "table.nodes",
+    "table.state_changes",
+    "table.world_life",
+    "table.worlds",
+)
 @writes(
     "table.bonds",
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
     "table.entity_flags",
+    "table.incident_facts",
     "table.incident_participants",
     "table.incidents",
     "table.language_profiles",
+    "table.lexemes",
     "table.name_registry",
+    "table.node_births",
     "table.nodes",
 )
 async def life_seed(ctx: TickContext) -> None:

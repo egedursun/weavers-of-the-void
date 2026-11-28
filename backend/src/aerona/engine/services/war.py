@@ -55,7 +55,7 @@ from aerona.engine.primitives.knowledge import KnowledgeMap
 from aerona.engine.primitives.levies import levy, levy_category
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
-from aerona.engine.primitives.queries import count_communities, living_entity
+from aerona.engine.primitives.queries import count_societies, living_entity
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.primitives.strength import MilitaryStrength
@@ -355,7 +355,7 @@ def diplomacy_cap(rules: Rules, base: int, communities: int) -> int:
 
 
 async def world_war_limit(session: AsyncSession, rules: Rules) -> int:
-    return diplomacy_cap(rules, rules.diplomacy.world_war_cap, await count_communities(session))
+    return diplomacy_cap(rules, rules.diplomacy.world_war_cap, await count_societies(session))
 
 
 async def _cap_block(session: AsyncSession, rules: Rules, first_id: int, second_id: int, *, world_cap: bool, community_cap: bool) -> WarBlock | None:
@@ -411,7 +411,7 @@ async def declare_war(
     brokered: bool = False,
 ) -> bool:
     counters = ctx.environment.stats.counters
-    if world_cap and counters[DECLARATIONS_COUNTER] >= diplomacy_cap(ctx.rules, ctx.rules.diplomacy.declarations_cap, await count_communities(ctx.session)):
+    if world_cap and counters[DECLARATIONS_COUNTER] >= diplomacy_cap(ctx.rules, ctx.rules.diplomacy.declarations_cap, await count_societies(ctx.session)):
         return False
     if await can_open_war(ctx.session, ctx.rules, first_id, second_id, ctx.epoch, world_cap=world_cap, community_cap=community_cap, cause=cause) is not None:
         return False

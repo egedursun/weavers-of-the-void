@@ -68,6 +68,7 @@ from aerona.engine.phase import Phase
     "table.chronicle_entities",
     "table.dish_ingredients",
     "table.dishes",
+    "table.drink_kinds",
     "table.emblem_systems",
     "table.good_kinds",
     "table.incident_facts",

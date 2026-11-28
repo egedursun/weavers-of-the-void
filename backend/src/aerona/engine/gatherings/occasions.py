@@ -36,7 +36,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.maturity import away_among, under_age
 from aerona.engine.primitives.numbers import scaled_cap
-from aerona.engine.primitives.queries import count_communities
+from aerona.engine.primitives.queries import count_societies
 from aerona.engine.primitives.stats import stat_or
 from aerona.engine.renown.currencies import ruler_of_realm
 
@@ -448,7 +448,7 @@ async def occasions(ctx: TickContext, atlas: RegionAtlas) -> list[Occasion]:
         if (occasion.host_id in young and occasion.kind not in UNDER_AGE_HOSTS) or occasion.host_id in away:
             continue
         if occasion.world_id not in caps:
-            communities = await count_communities(ctx.session, occasion.world_id) if occasion.world_id is not None else 0
+            communities = await count_societies(ctx.session, occasion.world_id) if occasion.world_id is not None else 0
             caps[occasion.world_id] = scaled_cap(table.per_world_max, table.per_world_communities, communities)
         if held(occasion.host_id) or per_world.get(occasion.world_id, 0) >= caps[occasion.world_id]:
             continue

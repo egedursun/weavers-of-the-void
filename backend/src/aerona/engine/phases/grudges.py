@@ -13,7 +13,7 @@ from aerona.engine.phase import Phase
 from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.faith import living_patron
 from aerona.engine.primitives.numbers import scaled_cap
-from aerona.engine.primitives.queries import canon, count_communities, living_entity
+from aerona.engine.primitives.queries import canon, count_societies, living_entity
 from aerona.engine.recording.record import RoleValue, record
 from aerona.engine.services.war import bears_arms, declare_war
 
@@ -70,7 +70,7 @@ async def divine_grudges(ctx: TickContext) -> None:
     sons = SonRepository(ctx.session)
     atlas = await RegionAtlas.load(ctx.session)
     leaked = 0
-    cap = scaled_cap(effects.god_grudge_cap, effects.god_grudge_cap_community_divisor, await count_communities(ctx.session))
+    cap = scaled_cap(effects.god_grudge_cap, effects.god_grudge_cap_community_divisor, await count_societies(ctx.session))
     order = ctx.rng("order")
     for first_son, second_son in order.shuffled(combinations(sorted(by_patron), 2)):
         if await sons.relation(first_son, second_son) > -effects.god_grudge_relation:

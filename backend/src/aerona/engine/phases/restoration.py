@@ -7,7 +7,15 @@ from aerona.engine.restoration.rise import tend_restorations
 
 
 @reads(
-    "table.accounts", "table.claims", "table.entities", "table.nodes", "table.restorations", "table.settlement_profiles", "table.title_profiles", "table.titles"
+    "table.accounts",
+    "table.claims",
+    "table.de_jure_links",
+    "table.entities",
+    "table.nodes",
+    "table.restorations",
+    "table.settlement_profiles",
+    "table.title_profiles",
+    "table.titles",
 )
 @writes("table.applied_fixups", "table.bonds", "table.claims", "table.polity_profiles", "table.restorations", "table.titles")
 async def restoration(ctx: TickContext) -> None:

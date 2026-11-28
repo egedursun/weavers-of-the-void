@@ -1,13 +1,16 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.catalog.climate import climate_profile
 from aerona.catalog.life.cosmos import AIR
 from aerona.catalog.planetary_cycles import CYCLES, cycles_moving
 from aerona.db.repositories.cosmos import CosmosRepository
+from aerona.db.tables.environment import RegionEnvironmentRow
 from aerona.db.tables.evolution import WorldCycleRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.physics import WorldPhysicsRow
-from aerona.domain.enums.evolution import CycleEffect
+from aerona.domain.enums.evolution import CycleEffect, PlanetaryCycle
+from aerona.domain.enums.world import ClimateEra
 from aerona.engine.context import TickContext
 from aerona.engine.cosmos.cycles import BALANCE, CycleTally, WorldState, breathable_target, first_stock, note_band, thin_air, turn_cycles
 from aerona.engine.phases.environment import environment_survey
@@ -89,3 +92,19 @@ async def test_a_cycle_crossing_a_band_is_told_and_thin_air_thins_the_world(sess
     await session.flush()
     kinds = set(await session.scalars(select(IncidentRow.kind)))
     assert {"world.air_thinned", "world.air_freshened"} <= kinds
+
+
+async def test_a_scorching_age_melts_ice_even_where_the_sea_takes_back_part_of_its_heat(session: AsyncSession, world: CoreWorld) -> None:
+    await environment_survey(await at(session, 2))
+    await physics_of(session, world)
+    await turn_cycles(await at(session, 3), CycleTally())
+    world.world.climate_era = ClimateEra.SCORCHING
+    heat = climate_profile(RULES, ClimateEra.SCORCHING).temperature_shift
+    for ground in await session.scalars(select(RegionEnvironmentRow).where(RegionEnvironmentRow.world_id == world.world.id)):
+        ground.temperature_shift = -round(heat * RULES.world_life.coast_era_pct / 100)
+    ice = await session.scalar(select(WorldCycleRow).where(WorldCycleRow.world_id == world.world.id, WorldCycleRow.cycle == PlanetaryCycle.ICE))
+    assert ice is not None
+    ice.stock = BALANCE
+    await session.flush()
+    await turn_cycles(await at(session, 4), CycleTally())
+    assert ice.stock < BALANCE

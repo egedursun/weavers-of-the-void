@@ -48,7 +48,7 @@ from aerona.engine.mortal.standing import add_infamy, add_renown
 from aerona.engine.polity.control import grant_claim
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.numbers import clamp_int, scaled_cap
-from aerona.engine.primitives.queries import count_communities, living_entity
+from aerona.engine.primitives.queries import count_societies, living_entity
 from aerona.engine.primitives.records import retire_in
 from aerona.engine.primitives.society import shift_stock, stock
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
@@ -367,7 +367,7 @@ async def open_storylets(ctx: TickContext, tally: StoryletTally) -> None:
         waiting = await ctx.session.scalar(
             select(func.count()).select_from(StoryletRunRow).where(StoryletRunRow.world_id == world_id, StoryletRunRow.status == StoryletStatus.OPEN)
         )
-        if (waiting or 0) >= scaled_cap(table.max_open, table.max_open_community_divisor, await count_communities(ctx.session, world_id)):
+        if (waiting or 0) >= scaled_cap(table.max_open, table.max_open_community_divisor, await count_societies(ctx.session, world_id)):
             continue
         boost = await boost_of(ctx, world_id)
         for storylet in StoryletId:

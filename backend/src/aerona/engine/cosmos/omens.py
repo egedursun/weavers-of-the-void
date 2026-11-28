@@ -161,6 +161,7 @@ async def epoch_body_sway(ctx: TickContext, world: WorldRow) -> None:
     "celestial.visibility",
     "table.biology_variants",
     "table.celestial_readings",
+    "table.culture_values",
     "table.entities",
     "table.nodes",
     "table.power_sources",

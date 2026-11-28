@@ -16,7 +16,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.interconnect.annotations import reads, writes
 from aerona.engine.loops.delay import lagged
 from aerona.engine.primitives.numbers import clamp_percent
-from aerona.engine.primitives.queries import count_communities
+from aerona.engine.primitives.queries import count_societies
 from aerona.engine.recording.record import record
 
 
@@ -55,7 +55,7 @@ async def fashion_holders(ctx: TickContext) -> list[int]:
 async def novelty(ctx: TickContext) -> None:
     table = ctx.rules.fashion
     counts = await ubiquity(ctx)
-    everywhere = max(1, await count_communities(ctx.session) * table.saturation // PERCENT)
+    everywhere = max(1, await count_societies(ctx.session) * table.saturation // PERCENT)
     rows = {row.holder_entity_id: row for row in await ctx.session.scalars(select(NoveltyStockRow))}
     for holder_id in await fashion_holders(ctx):
         entity = await ctx.session.get(EntityRow, holder_id)

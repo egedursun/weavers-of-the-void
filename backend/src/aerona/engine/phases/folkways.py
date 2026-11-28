@@ -297,6 +297,7 @@ async def mishaps(ctx: TickContext) -> None:
     "table.rumours",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.traits",
     "table.witch_hunts",
     "table.worlds",

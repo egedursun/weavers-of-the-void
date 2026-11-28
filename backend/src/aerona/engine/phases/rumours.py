@@ -57,6 +57,7 @@ register_profile_table("rumours", "carrier_entity_id")
     "table.region_environment",
     "table.relationships",
     "table.reputations",
+    "table.ruler_currencies",
     "table.rumour_distortions",
     "table.rumours",
     "table.skills",

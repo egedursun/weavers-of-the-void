@@ -62,7 +62,7 @@ from aerona.engine.polity.law_effects import bequest_order
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
 from aerona.engine.primitives.physics import PhysicsTable
-from aerona.engine.primitives.queries import active_bonds, close, connect, count_communities, living_entity, living_sons
+from aerona.engine.primitives.queries import active_bonds, close, connect, count_societies, living_entity, living_sons
 from aerona.engine.primitives.records import RecordSpec, append_sentence, open_record, sweep_dead_bonds
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.births import birth_year
@@ -376,7 +376,7 @@ async def _leave_spirit(ctx: TickContext, mortal: EntityRow, underworld: EntityR
     if await _spirits_at(session, place_id) >= ctx.rules.deep_world.spirits_per_place_cap:
         return
     if await _born_this_epoch(session, EntityType.SPIRIT, SPIRIT_SUBTYPES, ctx.epoch) >= scaled_cap(
-        effects.afterdeath_cap, effects.afterdeath_cap_community_divisor, await count_communities(session)
+        effects.afterdeath_cap, effects.afterdeath_cap_community_divisor, await count_societies(session)
     ):
         return
     murdered = bool(await active_bonds(session, [BondKind.KILLED], targets=[mortal.id]))
@@ -430,7 +430,7 @@ async def _start_mourning(ctx: TickContext, mortal: EntityRow) -> None:
     if not rng.chance(min(PERCENT, ctx.rules.world_engine.mourning_tradition_chance * mourning_factor(ctx.rules, await rite_of(session, mortal)))):
         return
     if await _born_this_epoch(session, EntityType.TRADITION, (MOURNING_SUBTYPE,), ctx.epoch) >= scaled_cap(
-        effects.afterdeath_cap, effects.afterdeath_cap_community_divisor, await count_communities(session)
+        effects.afterdeath_cap, effects.afterdeath_cap_community_divisor, await count_societies(session)
     ):
         return
     tradition = await open_record(

@@ -327,6 +327,7 @@ async def desolation(ctx: TickContext, atlas: RegionAtlas) -> int:
     "table.entities",
     "table.entity_flags",
     "table.map_snapshots",
+    "table.node_births",
     "table.node_materials",
     "table.nodes",
     "table.routes",

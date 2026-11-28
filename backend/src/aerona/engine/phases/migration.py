@@ -36,7 +36,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.first_bonds import bind_language_and_faith
 from aerona.engine.primitives.naming import Namer, seed_of
 from aerona.engine.primitives.numbers import round_half_up, scaled_cap
-from aerona.engine.primitives.queries import canon, connect, count_communities, living_entity
+from aerona.engine.primitives.queries import canon, connect, count_societies, living_entity
 from aerona.engine.primitives.records import RecordSpec, open_record
 from aerona.engine.primitives.society import stock
 from aerona.engine.primitives.stats import headcount_bounds, set_stats, stat
@@ -252,7 +252,7 @@ async def famine_migration(ctx: TickContext) -> None:
     atlas = await RegionAtlas.load(ctx.session)
     ground = await EnvironmentBook.load(ctx.session, rules, ctx.epoch, atlas)
     moved = 0
-    cap = scaled_cap(effects.famine_migration_cap, effects.famine_migration_cap_community_divisor, await count_communities(ctx.session))
+    cap = scaled_cap(effects.famine_migration_cap, effects.famine_migration_cap_community_divisor, await count_societies(ctx.session))
     for community in ctx.rng("order").shuffled(await canon(ctx.session, [EntityType.SETTLEMENT, EntityType.PEOPLE])):
         if moved >= cap:
             return

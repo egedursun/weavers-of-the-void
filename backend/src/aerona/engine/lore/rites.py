@@ -130,7 +130,7 @@ from aerona.engine.primitives.distance import RegionAtlas
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.modifiers import ModifierDraft, add_modifier
 from aerona.engine.primitives.numbers import clamp_int, round_half_up, scaled_cap
-from aerona.engine.primitives.queries import add_flag, connect, count_communities, living_entity, remove_flag
+from aerona.engine.primitives.queries import add_flag, connect, count_societies, living_entity, remove_flag
 from aerona.engine.primitives.records import RecordSpec, create_record
 from aerona.engine.primitives.stats import headcount, headcount_key, put_stat, set_stats, stat
 from aerona.engine.recording.record import StepDraft, record
@@ -1408,7 +1408,7 @@ async def choose(ctx: TickContext, caster: EntityRow, *, hostile: bool, protecti
 
 
 async def casting_limit(ctx: TickContext) -> int:
-    return scaled_cap(ctx.rules.rites.cap, ctx.rules.rites.cap_community_divisor, await count_communities(ctx.session))
+    return scaled_cap(ctx.rules.rites.cap, ctx.rules.rites.cap_community_divisor, await count_societies(ctx.session))
 
 
 async def cult_rites(ctx: TickContext, realms: RealmBook) -> int:
