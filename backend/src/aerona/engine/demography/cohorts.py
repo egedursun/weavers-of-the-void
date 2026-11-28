@@ -1,5 +1,6 @@
 from collections import Counter
 from collections.abc import Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,8 +28,8 @@ from aerona.engine.primitives.kept import kept_rows
 from aerona.engine.primitives.numbers import apportion, round_half_up
 from aerona.engine.primitives.society import class_shares
 from aerona.engine.primitives.stats import stat
-from aerona.engine.primitives.transfers import move_amount
-from aerona.engine.recording.terms import explaining, term
+from aerona.engine.primitives.transfers import move_amount, move_told
+from aerona.engine.recording.terms import explaining, explaining_alone, term
 from aerona.rules.registry import Rules
 
 A = AgeBand
@@ -127,7 +128,24 @@ def row_for(session: AsyncSession, rows: dict[CohortKey, CohortRow], community_i
     return row
 
 
-def place(rows: dict[CohortKey, CohortRow], weights: Mapping[CohortKey, float], amount: int, add: bool) -> int:
+@dataclass(frozen=True)
+class FlowTold:
+    key: str
+    source: int
+
+
+def shift(row: CohortRow, by: int, told: FlowTold | None) -> None:
+    if by == 0:
+        return
+    if told is None:
+        row.count += by
+        return
+    with explaining_alone():
+        term(told.key, by, source_node_id=told.source)
+        row.count += by
+
+
+def place(rows: dict[CohortKey, CohortRow], weights: Mapping[CohortKey, float], amount: int, add: bool, told: FlowTold | None = None) -> int:
     if amount <= 0:
         return 0
     filled = any(rows[key].count > 0 for key in weights if key in rows)
@@ -145,16 +163,16 @@ def place(rows: dict[CohortKey, CohortRow], weights: Mapping[CohortKey, float], 
     for key, _score in ordered:
         part = parts.get(key, 0)
         if add:
-            rows[key].count += max(0, part)
+            shift(rows[key], max(0, part), told)
             done += max(0, part)
         else:
             taken = min(rows[key].count, max(0, part))
-            rows[key].count -= taken
+            shift(rows[key], -taken, told)
             done += taken
     if not add and done < amount:
         for key in sorted(rows, key=lambda item: -rows[item].count):
             taken = min(rows[key].count, amount - done)
-            rows[key].count -= taken
+            shift(rows[key], -taken, told)
             done += taken
             if done >= amount:
                 break
@@ -221,6 +239,7 @@ async def place_flow(
     session: AsyncSession, rules: Rules, community: EntityRow, rows: dict[CohortKey, CohortRow], delta: int, *, category: FlowCategory, epoch: int
 ) -> None:
     combat = await combat_weights(session, community) if category in COMBAT_FLOWS else None
+    told = FlowTold(f"flows.{category.value}", community.id)
     if delta < 0:
         adults = sum(row.count for key, row in rows.items() if key[0] in BEARING_BANDS)
         place(
@@ -228,6 +247,7 @@ async def place_flow(
             weights_for(rows, category, sick_weight=rules.epidemiology.sick_death_weight_pct / PERCENT, combat=combat, bands=band_leans(rules, category)),
             -delta,
             add=False,
+            told=told,
         )
         if category in ORPHANING_FLOWS:
             orphan(session, community, rows, adults - sum(row.count for key, row in rows.items() if key[0] in BEARING_BANDS), adults, epoch=epoch)
@@ -241,7 +261,9 @@ async def place_flow(
             for social_class, share in shares.items():
                 if profile.get((age, sex), 0.0) > 0 and share > 0:
                     row_for(session, rows, community.id, (age, sex, social_class, condition), epoch)
-    place(rows, {key: profile.get((key[0], key[1]), 0.0) * max(0.0, shares.get(key[2], 0.0)) for key in rows if key[3] is condition}, delta, add=True)
+    place(
+        rows, {key: profile.get((key[0], key[1]), 0.0) * max(0.0, shares.get(key[2], 0.0)) for key in rows if key[3] is condition}, delta, add=True, told=told
+    )
 
 
 def band_leans(rules: Rules, category: FlowCategory) -> dict[AgeBand, float]:
@@ -255,6 +277,8 @@ def band_leans(rules: Rules, category: FlowCategory) -> dict[AgeBand, float]:
 INFANT_PERILS = frozenset({FC.FAMINE, FC.PLAGUE, FC.DEATH})
 ORPHANING_FLOWS = frozenset({FC.CASUALTY, FC.FAMINE, FC.PLAGUE, FC.DISASTER})
 ORPHANS_KEY = "orphaned_this_epoch"
+ORPHANED_TERM = "cohorts.orphaned"
+DISPLACED_TERM = "cohorts.displaced"
 
 
 def orphan(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, CohortRow], lost: int, adults: int, *, epoch: int) -> int:
@@ -264,7 +288,14 @@ def orphan(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, Co
     for key in sorted((key for key in rows if key[0] in MINOR_BANDS and key[3] is CohortCondition.NONE), key=lambda key: tuple(part.value for part in key)):
         moving = min(rows[key].count, round_half_up(rows[key].count * lost / adults))
         if moving > 0:
-            move_amount(rows[key], row_for(session, rows, community.id, (key[0], key[1], key[2], CohortCondition.ORPHANED), epoch), "count", moving)
+            move_told(
+                rows[key],
+                row_for(session, rows, community.id, (key[0], key[1], key[2], CohortCondition.ORPHANED), epoch),
+                "count",
+                moving,
+                key=ORPHANED_TERM,
+                source=community.id,
+            )
             moved += moving
     found: dict[int, int] = session.info.setdefault(ORPHANS_KEY, {})
     found[community.id] = found.get(community.id, 0) + moved
@@ -278,7 +309,14 @@ def displace(session: AsyncSession, community: EntityRow, rows: dict[CohortKey, 
         if moved >= count:
             break
         moving = min(rows[key].count, count - moved)
-        move_amount(rows[key], row_for(session, rows, community.id, (key[0], key[1], key[2], CohortCondition.DISPLACED), epoch), "count", moving)
+        move_told(
+            rows[key],
+            row_for(session, rows, community.id, (key[0], key[1], key[2], CohortCondition.DISPLACED), epoch),
+            "count",
+            moving,
+            key=DISPLACED_TERM,
+            source=community.id,
+        )
         moved += moving
     return moved
 
