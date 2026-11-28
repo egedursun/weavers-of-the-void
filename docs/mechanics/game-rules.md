@@ -26013,7 +26013,7 @@ The rules counted in years here follow your world's epoch length.
 | <a id="r-image_gen-width"></a>Width of the generated image (px) | 720 | 256 to 3,840 | — |
 | <a id="r-image_gen-height"></a>Height of the generated image (px) | 720 | 256 to 3,840 | — |
 | <a id="r-image_gen-steps"></a>Denoising steps per image (few: fast, many: detailed) | 4 | 1 to 50 | — |
-| <a id="r-image_gen-auto"></a>At epoch end, automatically start generation for all records without an image (0 off) | 1 | 0 to 1 | — |
+| <a id="r-image_gen-auto"></a>At epoch end, automatically start generation for all records without an image (0 off) | 0 | 0 to 1 | — |
 | <a id="r-image_gen-idle_unload_seconds"></a>Time for an idle image worker to release the model from memory (s; 0 never releases) | 600 | 0 to 86,400 | — |
 | <a id="r-image_gen-startup_timeout_seconds"></a>Maximum wait for the image worker to load the model (s) | 300 | 10 to 3,600 | — |
 | <a id="r-image_gen-image_timeout_seconds"></a>Maximum time for a single image (s); if exceeded the worker is restarted | 300 | 10 to 3,600 | — |

@@ -177,6 +177,17 @@ async def test_image_autogen_runs_only_when_enabled(runtime: AgentRuntime, datab
     assert ran == [1] and await step(database, EpochStepKind.IMAGES) is EpochStepStatus.DONE
 
 
+async def test_a_new_universe_paints_nothing_after_an_epoch_until_the_player_turns_it_on(runtime: AgentRuntime, database: Database, world: AgentWorld) -> None:
+    ran: list[int] = []
+
+    async def hook() -> None:
+        ran.append(1)
+
+    assert Rules().image_gen.auto == 0
+    await image_autogen(context(runtime, EpochHooks(image_autogen=hook)))
+    assert ran == [] and await step(database, EpochStepKind.IMAGES) is EpochStepStatus.SKIPPED
+
+
 async def test_image_autogen_failure_is_marked(runtime: AgentRuntime, database: Database, rules: Rules, world: AgentWorld) -> None:
     async def hook() -> None:
         raise RuntimeError("worker down")

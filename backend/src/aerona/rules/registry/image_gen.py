@@ -9,7 +9,7 @@ class ImageGenRules:
     width: int = rule(720, 256, 3840, RuleGroup.IMAGE_GENERATION, "Width of the generated image (px)")
     height: int = rule(720, 256, 3840, RuleGroup.IMAGE_GENERATION, "Height of the generated image (px)")
     steps: int = rule(4, 1, 50, RuleGroup.IMAGE_GENERATION, "Denoising steps per image (few: fast, many: detailed)")
-    auto: int = rule(1, 0, 1, RuleGroup.IMAGE_GENERATION, "At epoch end, automatically start generation for all records without an image (0 off)")
+    auto: int = rule(0, 0, 1, RuleGroup.IMAGE_GENERATION, "At epoch end, automatically start generation for all records without an image (0 off)")
     idle_unload_seconds: int = rule(
         600, 0, 86400, RuleGroup.IMAGE_GENERATION, "Time for an idle image worker to release the model from memory (s; 0 never releases)"
     )
