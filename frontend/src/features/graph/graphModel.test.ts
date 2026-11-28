@@ -242,6 +242,23 @@ describe('graph filtering', () => {
     expect(defaultFocus(graph, new Set(), 50)).toBe(3)
     expect(defaultFocus(graph, new Set(['people']), 50)).not.toBe(3)
   })
+
+  it('never focuses a record with no bonds in the view while a bonded one exists', () => {
+    const lonely: FullGraph = {
+      nodes: [
+        node(1, 'creator', { kind: 'creator', size: 14, world_id: null }),
+        node(2, 'people'),
+        node(3, 'people'),
+      ],
+      links: [link(2, 3, 'knows')],
+      nodeTotal: 3,
+      linkTotal: 1,
+    }
+    const graph = buildGraph(lonely, WORLDS.slice(0, 1), [], GROUP_INDEX)
+    expect(defaultFocus(graph, new Set(), 50)).not.toBe(1)
+    const view = filterGraph(graph, { ...BASE, whole: false, cap: 100 })
+    expect(view.nodes.length).toBe(2)
+  })
 })
 
 describe('graph helpers', () => {

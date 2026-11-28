@@ -369,8 +369,9 @@ export function defaultFocus(
   const ranked = [...candidates].sort(
     (left, right) => score(right) - score(left)
   )
-  const within = ranked.find((node) => (degree.get(node.id) ?? 0) <= maxLinks)
-  return (within ?? ranked[0])?.id ?? null
+  const linked = ranked.filter((node) => (degree.get(node.id) ?? 0) > 0)
+  const within = linked.find((node) => (degree.get(node.id) ?? 0) <= maxLinks)
+  return (within ?? linked[0] ?? ranked[0])?.id ?? null
 }
 
 export function nodeRadius(node: GraphNode, degree: number): number {
