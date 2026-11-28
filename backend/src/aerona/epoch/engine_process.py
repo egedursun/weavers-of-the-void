@@ -5,6 +5,8 @@ import threading
 from collections.abc import Awaitable, Callable
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, replace
+from multiprocessing import forkserver
+from multiprocessing.context import BaseContext
 from typing import Any
 from weakref import WeakKeyDictionary
 
@@ -14,7 +16,7 @@ from aerona.db.record_edits import Edit
 from aerona.db.session import Database, SharedGate, WriteGate, shared_gate
 from aerona.domain.enums.epoch import EngineStage
 from aerona.engine.context import Publisher, TickEnvironment
-from aerona.engine.parallel.pool import exit_with_parent
+from aerona.engine.parallel.pool import exit_with_server
 from aerona.engine.phase import Phase
 from aerona.engine.pipeline import EnginePhaseError, all_phases
 from aerona.engine.stats import TickStats
@@ -86,7 +88,7 @@ def absorb(target: TickStats, source: TickStats) -> None:
 
 
 def child_start(parent: int, shared: SharedGate, outbox: Any) -> None:
-    exit_with_parent(parent)
+    exit_with_server(parent)
     CHILD["shared"] = shared
     CHILD["outbox"] = outbox
 
@@ -132,9 +134,23 @@ def job_in_child[T](url: str, job: Callable[[Database, Publisher], Awaitable[T]]
     return asyncio.run(run())
 
 
+CHILD_MODULES = ("aerona.epoch.engine_process", "aerona.services.application", "aerona.services.integrity.maintenance")
+
+
+def engine_context() -> BaseContext:
+    context = multiprocessing.get_context("forkserver")
+    context.set_forkserver_preload(list(CHILD_MODULES))
+    return context
+
+
+def warm_engine_processes() -> None:
+    engine_context()
+    forkserver.ensure_running()
+
+
 class EngineProcess:
     def __init__(self, database: Database) -> None:
-        context = multiprocessing.get_context("spawn")
+        context = engine_context()
         self.shared = shared_gate()
         self.outbox = context.Queue()
         self.pool = ProcessPoolExecutor(max_workers=1, mp_context=context, initializer=child_start, initargs=(os.getpid(), self.shared, self.outbox))

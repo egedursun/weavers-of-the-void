@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import logging
 import os
@@ -11,6 +12,7 @@ from aerona.agents.ports import LanguageModel
 from aerona.constants.api import LOCK_FILENAME
 from aerona.core.errors import ConflictError
 from aerona.core.logging import configure_logging
+from aerona.epoch.engine_process import warm_engine_processes
 from aerona.services.accounts.service import AccountService
 from aerona.services.library.adoption import prepare_library
 from aerona.services.library.catalogue import Catalogue
@@ -82,6 +84,8 @@ def lifespan_for(settings: Settings, model: LanguageModel | None = None) -> Call
             app.state.library = library
             app.state.accounts = accounts
             app.state.providers = providers
+            if settings.work_in_processes:
+                app.state.engine_warming = asyncio.create_task(asyncio.to_thread(warm_engine_processes))
             await hub.start()
             await library.start()
             try:

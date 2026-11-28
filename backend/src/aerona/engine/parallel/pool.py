@@ -21,6 +21,27 @@ def exit_with_parent(parent: int) -> None:
     threading.Thread(target=watch, daemon=True).start()
 
 
+def lives(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def exit_with_server(server: int) -> None:
+    keeper = os.getppid()
+
+    def watch() -> None:
+        while os.getppid() == keeper and lives(server):
+            time.sleep(PARENT_POLL_SECONDS)
+        os._exit(0)
+
+    threading.Thread(target=watch, daemon=True).start()
+
+
 def workers_for(rules: Rules) -> int:
     wanted = rules.engine_budget.workers
     return wanted if wanted > 0 else max(1, (os.cpu_count() or 2) - 1)
