@@ -5,10 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.bonds import bond_spec
 from aerona.core.errors import ValidationFailedError
-from aerona.db.repositories.bonds import BondDraft, BondRepository
+from aerona.db.repositories.bonds import BondDraft, BondRepository, normalized
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.node import NodeRow
 from aerona.domain.enums.bond import VISIBLE_BOND_STATES, BondKind, BondState
 from aerona.domain.enums.entity import COMPANION_TYPES, EntityType
 from aerona.domain.enums.modifier import IncidentRole
@@ -91,13 +92,13 @@ class BondService:
                 description = f"{label}: {draft.description}" if draft.description else label
                 draft = replace(draft, kind=BondKind.RELATED, description=description)
         repository = BondRepository(session)
-        normalized = await repository.normalize(draft)
-        displaced = await self._displaced_rulers(session, normalized)
-        bond = await repository.connect(normalized)
+        settled = await repository.normalize(draft)
+        displaced = await self._displaced_rulers(session, settled)
+        bond = await repository.connect(settled)
         if displaced:
-            await self._shared_throne_line(session, rules, normalized.target_node_id, normalized.source_node_id, displaced)
-        if normalized.kind in FRIENDLY_KINDS:
-            await resolve_friend_and_foe(session, rules, normalized.source_node_id, normalized.target_node_id)
+            await self._shared_throne_line(session, rules, settled.target_node_id, settled.source_node_id, displaced)
+        if settled.kind in FRIENDLY_KINDS:
+            await resolve_friend_and_foe(session, rules, settled.source_node_id, settled.target_node_id)
         return bond
 
     async def _displaced_rulers(self, session: AsyncSession, draft: BondDraft) -> list[int]:
@@ -162,19 +163,22 @@ async def resolve_all_friend_and_foe(session: AsyncSession, rules: Rules) -> int
 
 
 async def flip_reversed(session: AsyncSession) -> int:
-    repository = BondRepository(session)
-    statement = select(BondRow).where(BondRow.state == BondState.ACTIVE).order_by(BondRow.id)
-    changed = 0
-    for bond in list(await session.scalars(statement)):
-        draft = BondDraft(bond.source_node_id, bond.target_node_id, bond.kind, bond.epoch, description=bond.description, role=bond.role)
-        normalized = await repository.normalize(draft)
-        if (normalized.source_node_id, normalized.target_node_id, normalized.kind) == (bond.source_node_id, bond.target_node_id, bond.kind):
-            continue
-        bond.source_node_id, bond.target_node_id = normalized.source_node_id, normalized.target_node_id
-        bond.kind, bond.description = normalized.kind, normalized.description
-        changed += 1
+    kinds = {int(node_id): kind for node_id, kind in await session.execute(select(NodeRow.id, NodeRow.kind))}
+    types = {int(entity_id): entity_type for entity_id, entity_type in await session.execute(select(EntityRow.id, EntityRow.entity_type))}
+    columns = (BondRow.id, BondRow.source_node_id, BondRow.target_node_id, BondRow.kind, BondRow.epoch, BondRow.description, BondRow.role)
+    flipped: dict[int, BondDraft] = {}
+    for bond_id, source, target, kind, epoch, description, role in await session.execute(
+        select(*columns).where(BondRow.state == BondState.ACTIVE).order_by(BondRow.id)
+    ):
+        draft = normalized(BondDraft(source, target, kind, epoch, description=description, role=role), kinds, types)
+        if (draft.source_node_id, draft.target_node_id, draft.kind) != (source, target, kind):
+            flipped[bond_id] = draft
+    for bond in await session.scalars(select(BondRow).where(BondRow.id.in_(list(flipped))).order_by(BondRow.id)):
+        draft = flipped[bond.id]
+        bond.source_node_id, bond.target_node_id = draft.source_node_id, draft.target_node_id
+        bond.kind, bond.description = draft.kind, draft.description
     await session.flush()
-    return changed
+    return len(flipped)
 
 
 async def link_list(session: AsyncSession, node_id: int, include_hidden: bool = False) -> list[LinkItem]:

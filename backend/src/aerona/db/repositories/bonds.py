@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 
 from sqlalchemy import ColumnElement, and_, or_, select
@@ -43,6 +43,29 @@ class BondDraft:
 
     def swapped(self) -> "BondDraft":
         return replace(self, source_node_id=self.target_node_id, target_node_id=self.source_node_id)
+
+
+def normalized(draft: BondDraft, kinds: Mapping[int, NodeKind], types: Mapping[int, EntityType]) -> BondDraft:
+    source_kind = kinds.get(draft.source_node_id)
+    target_kind = kinds.get(draft.target_node_id)
+    if source_kind is None or target_kind is None:
+        raise NotFoundError("A bond needs two existing records.")
+    result = draft
+    if draft.kind is BondKind.WORSHIPS and source_kind is not NodeKind.ENTITY and target_kind is NodeKind.ENTITY:
+        result = draft.swapped()
+    if source_kind is NodeKind.ENTITY and target_kind is NodeKind.ENTITY:
+        subject_type, object_type = types[result.source_node_id], types[result.target_node_id]
+        if should_swap(result.kind, subject_type, object_type):
+            result = result.swapped()
+            subject_type, object_type = object_type, subject_type
+        if not endpoints_valid(result.kind, subject_type, object_type):
+            downgrades = BOND_DOWNGRADES.get()
+            if downgrades is not None:
+                downgrades.append(f"{spoken(result.kind)} from {spoken(subject_type)} to {spoken(object_type)}")
+            label = bond_spec(result.kind).label
+            description = f"{label}: {result.description}" if result.description else label
+            result = replace(result, kind=BondKind.RELATED, description=description)
+    return result
 
 
 def _pair_filter(first: int, second: int, both_directions: bool) -> ColumnElement[bool]:
@@ -109,28 +132,10 @@ class BondRepository(Repository):
         return None
 
     async def normalize(self, draft: BondDraft) -> BondDraft:
-        kinds = await NodeRepository(self.session).kinds_of([draft.source_node_id, draft.target_node_id])
-        source_kind = kinds.get(draft.source_node_id)
-        target_kind = kinds.get(draft.target_node_id)
-        if source_kind is None or target_kind is None:
-            raise NotFoundError("A bond needs two existing records.")
-        result = draft
-        if draft.kind is BondKind.WORSHIPS and source_kind is not NodeKind.ENTITY and target_kind is NodeKind.ENTITY:
-            result = draft.swapped()
-        if source_kind is NodeKind.ENTITY and target_kind is NodeKind.ENTITY:
-            types = await self._entity_types([draft.source_node_id, draft.target_node_id])
-            subject_type, object_type = types[result.source_node_id], types[result.target_node_id]
-            if should_swap(result.kind, subject_type, object_type):
-                result = result.swapped()
-                subject_type, object_type = object_type, subject_type
-            if not endpoints_valid(result.kind, subject_type, object_type):
-                downgrades = BOND_DOWNGRADES.get()
-                if downgrades is not None:
-                    downgrades.append(f"{spoken(result.kind)} from {spoken(subject_type)} to {spoken(object_type)}")
-                label = bond_spec(result.kind).label
-                description = f"{label}: {result.description}" if result.description else label
-                result = replace(result, kind=BondKind.RELATED, description=description)
-        return result
+        ends = [draft.source_node_id, draft.target_node_id]
+        kinds = await NodeRepository(self.session).kinds_of(ends)
+        both_entities = kinds.get(draft.source_node_id) is NodeKind.ENTITY and kinds.get(draft.target_node_id) is NodeKind.ENTITY
+        return normalized(draft, kinds, await self._entity_types(ends) if both_entities else {})
 
     async def deactivate(self, bond: BondRow, epoch: int, reason: str | None = None, state: BondState = BondState.PAST) -> BondRow:
         bond.state = state
