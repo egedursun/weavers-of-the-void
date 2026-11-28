@@ -1108,8 +1108,8 @@ def remember_set(target: Any, value: Any, oldvalue: Any, initiator: Any) -> None
     if not terms and scope is not None and (initiator.key == "epoch" or initiator.key.endswith("_epoch")) and value == scope.epoch:
         terms = (Term(PRESENT_EPOCH, float(value)),)
     earlier = stamps.get(initiator.key)
-    if earlier is not None and earlier[0] is scope:
-        terms = (*earlier[1], *(found for found in terms if found not in earlier[1]))
+    if earlier is not None and earlier[0] is scope and earlier[1] is not terms:
+        terms = tuple(dict.fromkeys((*earlier[1], *terms)))
     stamps[initiator.key] = (scope, terms)
 
 

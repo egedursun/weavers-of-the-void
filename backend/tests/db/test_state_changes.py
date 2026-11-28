@@ -1,3 +1,5 @@
+import time
+
 from sqlalchemy import ColumnElement, delete, event, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
@@ -14,6 +16,10 @@ from aerona.engine.recording.checkpoints import checkpoint_holds, take_checkpoin
 from aerona.engine.recording.past import state_at, value_at
 from aerona.engine.recording.terms import explaining, term
 from tests.db.factories import seed_world
+
+MANY_REASONS = 300
+MANY_SETS = 20_001
+MANY_SETS_SECONDS = 20
 
 
 async def changes(session: AsyncSession, *conditions: ColumnElement[bool]) -> list[StateChangeRow]:
@@ -172,3 +178,20 @@ async def test_json_changed_in_place_keeps_its_stored_value_as_before(session: A
     assert updated and updated[-1].epoch == 4
     assert await value_at(session, "worlds", {"id": world.id}, "calendar_locked", epoch=3) == ["year"]
     assert await value_at(session, "worlds", {"id": world.id}, "calendar_locked", epoch=4) == ["year", "season"]
+
+
+async def test_a_value_set_many_times_in_one_happening_keeps_each_reason_once_and_stays_fast(session: AsyncSession) -> None:
+    world = await seed_world(session)
+    await session.flush()
+    started = time.perf_counter()
+    with scoped(RecordScope(key="test.many_sets", epoch=4, moment=Moment(150))), explaining():
+        for index in range(MANY_REASONS):
+            term(f"rules.test.reason_{index}", 1)
+        base = world.magnetism or 0
+        for index in range(MANY_SETS):
+            world.magnetism = base + 1 - index % 2
+        await session.flush()
+    assert time.perf_counter() - started < MANY_SETS_SECONDS
+    changed = await changes(session, StateChangeRow.table_name == "worlds", StateChangeRow.field == "magnetism")
+    told = list(await session.scalars(select(StateChangeTermRow.term).where(StateChangeTermRow.change_id == changed[-1].id)))
+    assert len(told) == len(set(told)) == MANY_REASONS
