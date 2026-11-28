@@ -26,15 +26,18 @@ def test_an_error_worded_from_a_raw_body_is_caught() -> None:
 
 
 def test_a_proxy_without_a_down_answer_is_caught() -> None:
-    bare = "server {\n    location /api/ {\n        proxy_pass http://b;\n    }\n}\n"
+    bare = "server {\n    location /api/ {\n        proxy_pass ${AERONA_BACKEND_ORIGIN};\n    }\n}\n"
     found = checker().nginx_problems(bare)
     assert any("location /api/" in problem for problem in found)
     assert any("no @backend_down" in problem for problem in found)
+    assert any("names the backend in proxy_pass" in problem for problem in found)
+    assert any("no resolver" in problem for problem in found)
 
 
 def test_a_down_answer_must_be_json_or_the_page() -> None:
     conf = (
-        "server {\n    location /api/ {\n        proxy_pass http://b;\n        error_page 502 504 =503 @backend_down;\n    }\n"
+        "server {\n    resolver 127.0.0.11;\n    location /api/ {\n        set $b http://b;\n        proxy_pass $b;\n"
+        "        error_page 502 504 =503 @backend_down;\n    }\n"
         "    location @backend_down {\n        return 503 'down';\n    }\n}\n"
     )
     assert checker().nginx_problems(conf) == ["@backend_down must answer requests with JSON and browser pages with /backend-down.html"]

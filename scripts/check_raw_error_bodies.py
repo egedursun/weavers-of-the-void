@@ -15,6 +15,8 @@ RAW_READS = (
 )
 STRING_BODY = re.compile(r"typeof\s+body\s*===\s*['\"]string['\"]")
 LOCATION = re.compile(r"location\s+([^{]+)\{")
+LITERAL_PROXY = re.compile(r"proxy_pass\s+(?!\$\w)")
+RESOLVER = re.compile(r"^\s*resolver\s+\S", re.MULTILINE)
 FALLBACK = re.compile(r"error_page\s+502\s+504\s+=503\s+" + re.escape(DOWN_LOCATION) + r"\s*;")
 
 
@@ -46,6 +48,10 @@ def blocks(conf: str) -> list[tuple[str, str]]:
 def nginx_problems(conf: str) -> list[str]:
     unrouted = [name for name, body in blocks(conf) if "proxy_pass" in body and not FALLBACK.search(body)]
     found = [f"location {name} proxies the backend without routing its 502 and 504 to {DOWN_LOCATION}" for name in unrouted]
+    named = [name for name, body in blocks(conf) if LITERAL_PROXY.search(body)]
+    found.extend(f"location {name} names the backend in proxy_pass, so nginx stops at start while it is down; pass it through a variable" for name in named)
+    if "proxy_pass" in conf and not RESOLVER.search(conf):
+        found.append("no resolver finds the backend per request, so nginx cannot start while the backend is down")
     down = [body for name, body in blocks(conf) if name == DOWN_LOCATION]
     if not down:
         found.append(f"no {DOWN_LOCATION} location answers while the backend is down")
