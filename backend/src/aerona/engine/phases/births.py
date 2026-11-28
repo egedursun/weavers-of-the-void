@@ -1201,13 +1201,33 @@ async def suitor_among(ctx: TickContext, head: EntityRow, circle: int) -> Entity
     return None
 
 
+async def home_to_wed_in(ctx: TickContext, head: EntityRow) -> EntityRow | None:
+    found = await community_of(ctx.session, head)
+    if found is not None and found.entity_type in SOCIETY_TYPES:
+        return found
+    nearby = (
+        await ctx.session.scalar(
+            select(EntityRow)
+            .where(EntityRow.location_id == head.location_id, EntityRow.entity_type.in_(sorted(SOCIETY_TYPES)), EntityRow.status == EntityStatus.CANON)
+            .order_by(EntityRow.id)
+            .limit(1)
+        )
+        if head.location_id is not None
+        else None
+    )
+    if isinstance(nearby, EntityRow):
+        return nearby
+    folk = await people_of(ctx.session, head)
+    return folk if folk is not None and folk.status is EntityStatus.CANON else None
+
+
 async def wed_within_the_community(ctx: TickContext) -> int:
     table = ctx.rules.kinship
     wed = 0
     for head_id in await grown_to_wed(ctx):
         head = await living_entity(ctx.session, head_id)
-        community = await living_entity(ctx.session, head.location_id) if head is not None and head.location_id is not None else None
-        if head is None or community is None or community.entity_type not in SOCIETY_TYPES or held(head.id) or held(community.id):
+        community = await home_to_wed_in(ctx, head) if head is not None else None
+        if head is None or community is None or held(head.id) or held(community.id):
             continue
         profile = await ctx.session.get(MortalProfileRow, head.id)
         if profile is None or not adult(profile.life_stage) or await partners_of(ctx.session, head.id) or await betrothed_of(ctx.session, head.id):
@@ -1313,6 +1333,7 @@ async def wed_within_the_community(ctx: TickContext) -> int:
     "table.routes",
     "table.skills",
     "table.sons",
+    "table.state_changes",
     "table.structure_profiles",
     "table.thoughts",
     "table.time_budgets",

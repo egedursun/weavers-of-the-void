@@ -1,6 +1,6 @@
 from aerona.catalog.anatomy import Part, anatomy_of
 from aerona.catalog.harm_kinds import INJURIES, asphyxia_wound, blunt_wound
-from aerona.catalog.incident_kinds.body_lines import INJURY_PHRASES
+from aerona.catalog.incident_kinds.body_lines import INJURY_PHRASES, injury_line
 from aerona.domain.enums.body import BodyPart, BodyPlan, HarmCause, InjuryKind
 from aerona.rules.registry import Rules
 
@@ -31,3 +31,9 @@ def test_lack_of_air_harms_and_at_its_worst_kills() -> None:
     table = RULES.injury
     assert asphyxia_wound(table, part(BodyPart.LUNGS), 1, HarmCause.DISASTER) is InjuryKind.ASPHYXIA
     assert asphyxia_wound(table, part(BodyPart.LUNGS), table.blunt_crush_at, HarmCause.DISASTER) is InjuryKind.DESTROYED
+
+
+def test_a_ruined_part_is_told_with_no_verb_to_agree_with_it() -> None:
+    line = injury_line(InjuryKind.DESTROYED)
+    assert " was " not in line and " were " not in line
+    assert line.format(patient="Daru", part="lungs") == "Daru had their lungs ruined."

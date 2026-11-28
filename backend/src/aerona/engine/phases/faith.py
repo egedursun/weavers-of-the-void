@@ -385,6 +385,7 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.sons",
     "table.spirit_profiles",
     "table.stars",
+    "table.state_changes",
     "table.traits",
     "table.transform_prospects",
     "table.world_domain_hooks",

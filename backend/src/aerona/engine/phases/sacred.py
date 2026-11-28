@@ -221,6 +221,7 @@ async def mysteries(ctx: TickContext) -> None:
     "table.sons",
     "table.soul_judgements",
     "table.spirit_profiles",
+    "table.state_changes",
     "table.theory_profiles",
     "table.thoughts",
     "table.war_sides",

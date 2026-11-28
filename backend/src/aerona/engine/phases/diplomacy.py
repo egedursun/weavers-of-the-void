@@ -524,6 +524,7 @@ async def alliance_lifetimes(ctx: TickContext, communities: int) -> int:
     "table.speaker_cohorts",
     "table.spy_networks",
     "table.stars",
+    "table.state_changes",
     "table.storytellers",
     "table.trade_route_profiles",
     "table.tradition_profiles",

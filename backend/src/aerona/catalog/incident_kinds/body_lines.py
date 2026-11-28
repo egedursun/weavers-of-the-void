@@ -108,7 +108,7 @@ INJURY_PHRASES: Mapping[InjuryKind, str] = total(
 LOSS_LINES: Mapping[InjuryKind, str] = {
     InjuryKind.SEVERED: "{patient} lost their {part}.",
     InjuryKind.GOUGED: "{patient} had their {part} gouged out.",
-    InjuryKind.DESTROYED: "The {part} of {patient} was ruined.",
+    InjuryKind.DESTROYED: "{patient} had their {part} ruined.",
 }
 
 

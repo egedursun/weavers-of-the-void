@@ -42,6 +42,7 @@ from aerona.engine.phase import Phase
     "table.nodes",
     "table.prostheses",
     "table.region_pollution",
+    "table.state_changes",
     "table.thoughts",
     "table.worlds",
 )

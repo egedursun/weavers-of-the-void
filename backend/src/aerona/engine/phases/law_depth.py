@@ -103,6 +103,7 @@ async def jurisdictions(ctx: TickContext) -> None:
     "table.prisoners",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.war_sides",
     "table.wars",
     "table.worlds",

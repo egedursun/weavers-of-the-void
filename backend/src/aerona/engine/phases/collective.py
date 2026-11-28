@@ -392,6 +392,7 @@ async def lost_lands(ctx: TickContext) -> None:
     "table.settlement_profiles",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.storylet_runs",
     "table.storytellers",
     "table.worlds",

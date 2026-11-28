@@ -31,7 +31,7 @@ from aerona.domain.enums.mind import ActKind, EthicalStance, ValueAxis
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.enums.polity import OathKind, OathStatus
 from aerona.domain.enums.relations import RelationType
-from aerona.domain.models.entity_stats import HouseStats
+from aerona.domain.models.entity_stats import HouseStats, revised
 from aerona.engine.collective.roles import career_open
 from aerona.engine.context import AgingState, TickContext
 from aerona.engine.intimacy.course import birth_course
@@ -252,7 +252,18 @@ async def test_a_couple_bears_by_the_bodies_they_have_now_not_by_a_stale_mark_of
     ctx = await manual_context(session, "fertility_now", tuned_rules())
     bearer = await folk(session, world, "Pia Rook", life_stage=LifeStage.ADULT, fertility=0)
     begetter = await folk(session, world, "Alon Drey", life_stage=LifeStage.ADULT, fertility=0)
-    set_stats(bearer, age=24, sex=SexKind.BEARER)
-    set_stats(begetter, age=26, sex=SexKind.BEGETTER)
+    bearer.stats = revised(bearer.stats, {"age": 24, "sex": SexKind.BEARER.value})
+    begetter.stats = revised(begetter.stats, {"age": 26, "sex": SexKind.BEGETTER.value})
     await session.flush()
     assert await couple_chance(ctx, bearer, begetter, BondKind.SPOUSE_OF) > 0
+
+
+async def test_a_grown_mortal_living_out_in_the_land_weds_within_the_community_there(session: AsyncSession, world: CoreWorld) -> None:
+    ctx = await manual_context(session, "community_wed_land", tuned_rules(kinship={"community_marriage_chance": 100}))
+    await home_town(session, world)
+    roamer = await folk(session, world, "Wide Walker", life_stage=LifeStage.ADULT)
+    roamer.location_id = world.regions[0].id
+    match = await folk(session, world, "Hearth Keeper", life_stage=LifeStage.ADULT)
+    await session.flush()
+    await wed_within_the_community(ctx)
+    assert match.id in await partners_of(session, roamer.id)

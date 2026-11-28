@@ -31,6 +31,7 @@ from aerona.engine.phase import Phase
     "table.settlement_profiles",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

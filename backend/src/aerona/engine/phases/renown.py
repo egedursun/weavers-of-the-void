@@ -120,6 +120,7 @@ async def renown_claims(ctx: TickContext) -> None:
     "table.polity_members",
     "table.reputations",
     "table.ruler_currencies",
+    "table.state_changes",
 )
 @writes(
     "table.applied_fixups",

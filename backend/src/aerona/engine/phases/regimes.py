@@ -159,6 +159,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.spy_agents",
     "table.spy_networks",
     "table.stars",
+    "table.state_changes",
     "table.tradition_profiles",
     "table.traits",
     "table.vassalages",

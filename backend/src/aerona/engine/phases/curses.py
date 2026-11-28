@@ -159,6 +159,7 @@ async def curse_decay(ctx: TickContext) -> None:
     "table.prostheses",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.worlds",
 )
 @writes(

@@ -80,6 +80,7 @@ from aerona.engine.phases.dominion import count
     "table.sons",
     "table.species_ranges",
     "table.stars",
+    "table.state_changes",
     "table.time_budgets",
     "table.true_names",
     "table.worlds",

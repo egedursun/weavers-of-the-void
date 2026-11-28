@@ -528,6 +528,7 @@ async def ritual_duels(ctx: TickContext) -> int:
     "table.spirit_profiles",
     "table.spy_agents",
     "table.stars",
+    "table.state_changes",
     "table.structure_profiles",
     "table.thoughts",
     "table.tradition_profiles",

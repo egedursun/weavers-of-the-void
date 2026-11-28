@@ -74,6 +74,7 @@ async def ages(ctx: TickContext) -> None:
     "table.setups",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.thread_links",
     "table.threads",
     "table.traits",

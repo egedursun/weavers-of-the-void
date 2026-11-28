@@ -48,8 +48,26 @@ async def birth_moments(session: AsyncSession, nodes: Iterable[int]) -> dict[int
     return known
 
 
+APPEARED_MEMO = "aerona.recording.appeared"
+
+
+async def appeared(session: AsyncSession, node: int) -> Moment | None:
+    known: dict[int, Moment] = session.sync_session.info.setdefault(APPEARED_MEMO, {})
+    if node in known:
+        return known[node]
+    row = await session.get(EntityRow, node)
+    if row is None or row.entity_type is not EntityType.MORTAL or not getattr(row.stats, "age", None):
+        return None
+    found = await made_at(session, node, row.birth_epoch)
+    if found is not None:
+        known[node] = found
+    return found
+
+
 async def born_floor(session: AsyncSession, nodes: Iterable[int]) -> Moment | None:
-    return latest(*(await birth_moments(session, nodes)).values())
+    wanted = sorted({node for node in nodes if node is not None})
+    births = await birth_moments(session, wanted)
+    return latest(*births.values(), *[await appeared(session, node) for node in wanted])
 
 
 def date_born(session: AsyncSession, node: int, moment: Moment) -> None:

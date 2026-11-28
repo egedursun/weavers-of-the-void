@@ -55,6 +55,7 @@ from aerona.engine.phase import Phase
     "table.space_norms",
     "table.species_ranges",
     "table.stars",
+    "table.state_changes",
     "table.structure_profiles",
     "table.time_budgets",
     "table.traits",

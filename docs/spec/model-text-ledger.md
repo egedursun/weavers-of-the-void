@@ -181,7 +181,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/image_styles.py` | 13 | 2026-11-16 | `2c4cb8b67bc03b54` |
 | `backend/src/aerona/catalog/impacts.py` | 7 | 2026-11-23 | `ac3806a8cd9b27af` |
 | `backend/src/aerona/catalog/incident_kinds/amounts.py` | 4 | 2026-11-24 | `635e40b642c5eaa9` |
-| `backend/src/aerona/catalog/incident_kinds/body_lines.py` | 52 | 2026-11-23 | `9570651a389a9c70` |
+| `backend/src/aerona/catalog/incident_kinds/body_lines.py` | 52 | 2026-11-28 | `6539595c56e322ad` |
 | `backend/src/aerona/catalog/incident_kinds/cosmos_kinds.py` | 115 | 2026-11-27 | `4472e8e22dc11111` |
 | `backend/src/aerona/catalog/incident_kinds/g01_single_combat.py` | 92 | 2026-11-27 | `792d1ced663ecf40` |
 | `backend/src/aerona/catalog/incident_kinds/g02_battles.py` | 103 | 2026-11-27 | `c2df27454cd84e3a` |

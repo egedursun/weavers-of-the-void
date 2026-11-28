@@ -31,6 +31,7 @@ from aerona.engine.phase import Phase
     "table.relation_components",
     "table.sons",
     "table.stars",
+    "table.state_changes",
     "table.title_holders",
     "table.title_profiles",
     "table.traits",

@@ -39,6 +39,8 @@ TOWNS = 12
 DEED_YEARS = (30, 40, 45)
 DIED_AFTER = 8
 GENESIS_SEEN = 44
+NEWCOMER_CAME = 39
+NEWCOMER_AGE = 21
 NAMED_FACTS: dict[str, FactInput] = {"name": "Second Elder", "living": "Elder", "taboo": 0}
 
 
@@ -290,3 +292,25 @@ async def test_a_thing_the_creator_made_at_genesis_is_born_at_the_start_of_the_c
     )
     born = await session.get(NodeBirthRow, region.id)
     assert born is not None and born.year == 0
+
+
+async def test_nothing_is_told_of_a_grown_newcomer_before_it_appeared(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = tick(session, rules)
+    start = epoch_start_year(ctx.epoch, rules.time.years_per_epoch)
+    came = start + NEWCOMER_CAME
+    async with recording(ctx, "disasters.drought", place_id=world.regions[0].id, world_id=world.world.id, moment=Moment(came)):
+        newcomer = await mortal(session, "Sudden Elder", world, world.regions[0].id, age=NEWCOMER_AGE)
+        newcomer.birth_epoch = ctx.epoch
+        await session.flush()
+    await session.execute(delete(NodeBirthRow).where(NodeBirthRow.node_id == newcomer.id))
+    session.add(NodeBirthRow(node_id=newcomer.id, year=came - NEWCOMER_AGE, season=None, day=None, hour=None, locked=[]))
+    await session.flush()
+    told = await record(
+        ctx,
+        "body.maimed",
+        roles={IncidentRole.SUBJECT: newcomer.id},
+        facts={"maim": MaimedKind.ONE_ARMED, "count": 1},
+        at_moment=Moment(came - NEWCOMER_AGE // 2),
+    )
+    assert (await moment(session, told.incident_id)).year >= came

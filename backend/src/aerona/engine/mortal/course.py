@@ -65,7 +65,7 @@ from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
 from aerona.engine.primitives.queries import active_bonds, connect, living_entity
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
-from aerona.engine.recording.births import birth_year
+from aerona.engine.recording.births import appeared, birth_year
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.unions.axes import spousing_of
 from aerona.engine.unions.customs import divorce_rule
@@ -247,6 +247,9 @@ async def tell_stage(ctx: TickContext, mortal: EntityRow, profile: MortalProfile
     key = LIFE_KEYS.get(stage)
     if stage is not before and stage_rank(stage) > stage_rank(before) and key is not None:
         year, age = await reached_at(ctx, mortal, stage, aged=aged)
+        came = await appeared(ctx.session, mortal.id)
+        if came is not None and year < came.year:
+            return
         await record(
             ctx,
             key,
