@@ -8,6 +8,7 @@ from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.restoration import RestorationRow
+from aerona.db.tables.warfare import CaptiveRow
 from aerona.domain.enums.agentless_conditions import ConditionCause
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.entity import EntityStatus, EntityType
@@ -113,13 +114,15 @@ async def test_the_dead_are_never_asked_to_a_gathering_and_keep_no_fortune(sessi
     friend = await entity(session, "Living Friend", EntityType.MORTAL, MortalStats(age=40), world_id=world.world.id)
     gone = await entity(session, "Gone Friend", EntityType.MORTAL, MortalStats(age=70, death_year=2), world_id=world.world.id)
     gone.status, gone.end_epoch = EntityStatus.DEAD, 1
+    held_away = await entity(session, "Held Friend", EntityType.MORTAL, MortalStats(age=40), world_id=world.world.id)
+    session.add(CaptiveRow(captive_entity_id=held_away.id, captor_entity_id=world.regions[1].id, taken_epoch=1, locked=[]))
     session.add(FortuneProfileRow(node_id=gone.id, fortune=3, streak=1, updated_epoch=1, locked=[]))
     gathering = GatheringRow(host_node_id=host.id, kind=next(iter(GatheringKind)), epoch=ctx.epoch, locked=[])
     session.add(gathering)
     await session.flush()
-    await invite(ctx, gathering, [Guest(friend.id, GuestRole.GUEST, AttendanceReason.FRIEND), Guest(gone.id, GuestRole.GUEST, AttendanceReason.FRIEND)])
+    await invite(ctx, gathering, [Guest(being.id, GuestRole.GUEST, AttendanceReason.FRIEND) for being in (friend, gone, held_away)])
     asked = set(await session.scalars(select(GatheringGuestRow.node_id).where(GatheringGuestRow.gathering_id == gathering.id)))
-    assert friend.id in asked and gone.id not in asked
+    assert friend.id in asked and gone.id not in asked and held_away.id not in asked
     await keep_fortune(ctx)
     kept = await session.get(FortuneProfileRow, gone.id)
     assert kept is not None and (kept.fortune, kept.updated_epoch) == (3, 1)

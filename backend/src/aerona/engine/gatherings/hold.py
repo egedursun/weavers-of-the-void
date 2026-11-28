@@ -34,7 +34,7 @@ from aerona.db.tables.place import PlaceProfileRow
 from aerona.db.tables.polity import OfficeRow, PolityProfileRow
 from aerona.db.tables.settlement import SettlementProfileRow
 from aerona.db.tables.society import CommunitySocietyRow
-from aerona.db.tables.warfare import ArmyRow
+from aerona.db.tables.warfare import ArmyRow, CaptiveRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.body import HarmCause
 from aerona.domain.enums.bond import BondKind, BondState
@@ -49,6 +49,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.polity import OfficeKind, TreatyKind
 from aerona.domain.enums.records import FactUnit, InstrumentKind, StepAction, StepOutcome
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.enums.war import CaptiveStatus
 from aerona.domain.models.moment import Moment, latest
 from aerona.engine.body.hits import Harm
 from aerona.engine.collective.feelings import stir_feelings
@@ -212,6 +213,11 @@ async def alive(ctx: TickContext, node_id: int) -> bool:
     return found is None or found.status in ALIVE_STATUSES
 
 
+async def free_to_come(ctx: TickContext, node_id: int) -> bool:
+    captive = select(CaptiveRow.id).where(CaptiveRow.captive_entity_id == node_id, CaptiveRow.status == CaptiveStatus.HELD).limit(1)
+    return await alive(ctx, node_id) and await ctx.session.scalar(captive) is None
+
+
 async def invite(ctx: TickContext, row: GatheringRow, chosen: list[Guest]) -> int:
     limit = ctx.rules.gatherings.guests_max
     invited = set(await ctx.session.scalars(select(GatheringGuestRow.node_id).where(GatheringGuestRow.gathering_id == row.id)))
@@ -224,7 +230,7 @@ async def invite(ctx: TickContext, row: GatheringRow, chosen: list[Guest]) -> in
             break
         if guest.node_id in present or held(guest.node_id) or await ctx.session.get(NodeRow, guest.node_id) is None:
             continue
-        if guest.node_id != row.honoured_node_id and not await alive(ctx, guest.node_id):
+        if guest.node_id != row.honoured_node_id and not await free_to_come(ctx, guest.node_id):
             continue
         ctx.session.add(GatheringGuestRow(gathering_id=row.id, node_id=guest.node_id, role=guest.role, reason=guest.reason, attended=None))
         present.add(guest.node_id)
