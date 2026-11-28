@@ -5,21 +5,24 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.sequence import AFTER_KINDS, FOLLOWS, RITE_YEARS, matching
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeBirthRow
 from aerona.db.tables.records import IncidentFactRow
 from aerona.domain.enums.agrarian import RebuildCause
 from aerona.domain.enums.body import MaimedKind
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityOrigin, EntityType
 from aerona.domain.enums.intervention import Disaster
+from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.records import FactUnit, ProcessClock
 from aerona.domain.enums.settlement import DistrictHarm, DistrictKind
 from aerona.domain.enums.statecraft import MandateKind
 from aerona.domain.models.calendar import epoch_start_year
-from aerona.domain.models.entity_stats import MortalStats, SettlementStats
+from aerona.domain.models.entity_stats import MortalStats, RegionStats, SettlementStats
 from aerona.domain.models.moment import Moment
 from aerona.engine.context import TickContext
 from aerona.engine.lifecycle.mortal_death import die
@@ -35,6 +38,7 @@ from tests.engine.cosmos.factories import tick
 TOWNS = 12
 DEED_YEARS = (30, 40, 45)
 DIED_AFTER = 8
+GENESIS_SEEN = 44
 NAMED_FACTS: dict[str, FactInput] = {"name": "Second Elder", "living": "Elder", "taboo": 0}
 
 
@@ -263,3 +267,26 @@ async def test_a_happening_held_back_to_a_bare_year_falls_through_that_year_and_
     placed = [await moment_for(ctx, ProcessClock.INSTANT, key=f"held.{index}", cause_moment=Moment(late), world_id=world.world.id) for index in range(TOWNS)]
     assert all(moment.year == late for moment in placed)
     assert len({(moment.day, moment.hour) for moment in placed}) > 1
+
+
+async def test_a_thing_the_creator_made_at_genesis_is_born_at_the_start_of_the_cosmos(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = tick(session, rules, epoch=1)
+    region = await entity(session, "First Vale", EntityType.REGION, RegionStats(), world_id=world.world.id, birth_epoch=1, origin=EntityOrigin.CREATOR)
+    await session.execute(delete(NodeBirthRow).where(NodeBirthRow.node_id == region.id))
+    session.add(
+        StateChangeRow(
+            epoch=1, table_name="entities", row_key=f'{{"id": {region.id}}}', node_id=region.id, operation=LedgerOperation.INSERT, actor_kind=ActorKind.SYSTEM
+        )
+    )
+    await session.flush()
+    await record(
+        ctx,
+        "disasters.drought",
+        roles={IncidentRole.PLACE: region.id},
+        facts={"disaster": Disaster.DROUGHT, "severity": 3, "lost": 0, "dead": 0, "destroyed": 0},
+        place=region.id,
+        at_moment=Moment(GENESIS_SEEN),
+    )
+    born = await session.get(NodeBirthRow, region.id)
+    assert born is not None and born.year == 0

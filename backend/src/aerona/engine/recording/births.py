@@ -10,7 +10,7 @@ from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.node import NodeBirthRow, NodeRow
-from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.entity import EntityOrigin, EntityType
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.moment import Moment, latest
@@ -22,6 +22,8 @@ HEARSAY_ROLES = ONLOOKER_ROLES
 BIRTHS_MEMO = "aerona.recording.births"
 BIRTH_TABLES = table_names([NodeBirthRow])
 MADE_TABLES = sorted(table_names([NodeRow, EntityRow]))
+GENESIS = Moment(0)
+GENESIS_EPOCH = 1
 
 
 async def birth_moments(session: AsyncSession, nodes: Iterable[int]) -> dict[int, Moment | None]:
@@ -68,26 +70,26 @@ async def mark_born(session: AsyncSession, participants: Iterable[tuple[int, Inc
     births = await birth_moments(session, [node for node, _ in named])
     for node in sorted(births):
         if births[node] is None and born_now(known.get(node), node in created, epoch):
-            first = earliest(moment, await made_at(session, node, epoch))
+            first = GENESIS if made_at_genesis(known.get(node)) else earliest(moment, await made_at(session, node, epoch))
             date_born(session, node, first if node in created else lived_since(known.get(node), first))
 
 
 async def made_at(session: AsyncSession, node: int, epoch: int | None = None) -> Moment | None:
-    row = (
-        await session.execute(
-            select(StateChangeRow.year, StateChangeRow.season, StateChangeRow.day, StateChangeRow.hour)
-            .where(
-                StateChangeRow.node_id == node,
-                StateChangeRow.epoch == epoch if epoch is not None else StateChangeRow.epoch.is_not(None),
-                StateChangeRow.operation == LedgerOperation.INSERT,
-                StateChangeRow.table_name.in_(MADE_TABLES),
-                StateChangeRow.year.is_not(None),
-            )
-            .order_by(StateChangeRow.year, StateChangeRow.season, StateChangeRow.day, StateChangeRow.hour)
-            .limit(1)
+    rows = await session.execute(
+        select(StateChangeRow.year, StateChangeRow.season, StateChangeRow.day, StateChangeRow.hour)
+        .where(
+            StateChangeRow.node_id == node,
+            StateChangeRow.epoch == epoch if epoch is not None else StateChangeRow.epoch.is_not(None),
+            StateChangeRow.operation == LedgerOperation.INSERT,
+            StateChangeRow.table_name.in_(MADE_TABLES),
         )
-    ).first()
-    return Moment(row[0], row[1], row[2], row[3]) if row is not None and row[0] is not None else None
+        .order_by(StateChangeRow.id)
+    )
+    return min((Moment(year, season, day, hour) for year, season, day, hour in rows if year is not None), key=Moment.key, default=None)
+
+
+def made_at_genesis(row: NodeRow | None) -> bool:
+    return isinstance(row, EntityRow) and row.origin is EntityOrigin.CREATOR and row.birth_epoch == GENESIS_EPOCH
 
 
 def earliest(moment: Moment, made: Moment | None) -> Moment:
