@@ -336,6 +336,7 @@ async def long_plans(ctx: TickContext) -> None:
     "table.incorporeal_rights",
     "table.memories",
     "table.mortal_profiles",
+    "table.node_births",
     "table.polity_profiles",
     "table.professions_of_value",
     "table.reputations",

@@ -1005,6 +1005,7 @@ async def mind_ideas(ctx: TickContext) -> None:
     "table.skills",
     "table.sky_events",
     "table.stars",
+    "table.state_changes",
     "table.thoughts",
     "table.tradition_profiles",
     "table.traits",

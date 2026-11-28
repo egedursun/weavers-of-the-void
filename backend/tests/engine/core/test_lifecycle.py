@@ -21,7 +21,7 @@ from aerona.engine.context import TickContext
 from aerona.engine.gods.mortality import ProtectorKind, kill_chance
 from aerona.engine.lifecycle.aging import effective_lifespan, is_notable, life_info
 from aerona.engine.lifecycle.mortal_death import die, force_death
-from aerona.engine.lifecycle.succession import designate_heir, dynasty_root
+from aerona.engine.lifecycle.succession import designate_heir, dynasty_root, heir_age
 from aerona.engine.lifecycle.wounds import WoundOutcome, apply_hits
 from aerona.engine.mortal.life import sex_of_stats, window_end_pct
 from aerona.engine.phases.mortals import mortal_aging, mortal_wounds
@@ -35,6 +35,10 @@ from tests.engine.core.factories import CoreWorld, add_flag, bond, entity, knowl
 HERB_LORE_LEVEL = 2
 MEDICINE_LEVELS = 10
 HOSPITAL_LEVEL = 6
+ANCIENT_RULER_AGE = 140
+YOUNG_RULER_AGE = 45
+HEIR_WANTED = 20
+RULER_LIFESPAN = 80
 
 
 async def test_single_death_path_records_fate_killer_and_heir(ctx: TickContext, world: CoreWorld, session: AsyncSession) -> None:
@@ -263,3 +267,16 @@ async def test_a_notable_reaches_the_best_medicine_of_its_realm_while_a_commoner
     assert hospital > 0
     assert (await effective_lifespan(session, rules, notable)).medicine == hospital
     assert (await effective_lifespan(session, rules, commoner)).medicine < hospital
+
+
+async def test_the_heir_of_a_ruler_far_past_their_years_is_of_their_line_and_young_enough_to_live(
+    ctx: TickContext, world: CoreWorld, session: AsyncSession
+) -> None:
+    town = await settlement(session, "Old Seat", world, world.regions[1])
+    elder = await mortal(session, "Very Old Monarch", world, town.id, age=ANCIENT_RULER_AGE, lifespan=RULER_LIFESPAN)
+    young = await mortal(session, "Young Monarch", world, town.id, age=YOUNG_RULER_AGE, lifespan=RULER_LIFESPAN)
+    room = RULER_LIFESPAN - ctx.rules.world_effects.rejuvenate_years_left
+    late = heir_age(ctx.rules, elder, HEIR_WANTED, RULER_LIFESPAN)
+    assert not late.child and late.age < room
+    early = heir_age(ctx.rules, young, HEIR_WANTED, RULER_LIFESPAN)
+    assert early.child and early.age < room

@@ -131,6 +131,9 @@ def drawn_stream(ctx: TickContext, stream: str) -> str:
     return stream if count == 0 else f"{stream}.{count}"
 
 
+WHOLE_YEAR_SLACK = 1e-6
+
+
 async def moment_for(
     ctx: TickContext,
     clock: ProcessClock,
@@ -153,7 +156,7 @@ async def moment_for(
         position = ctx.environment.rng(drawn_stream(ctx, stream_of(key, participants))).random() * span * spread_of(ctx, clock) / PERCENT
     year = start + min(span - 1, int(position))
     within = position - int(position)
-    if within == 0:
+    if within < WHOLE_YEAR_SLACK or within > 1 - WHOLE_YEAR_SLACK:
         within = ctx.environment.rng(drawn_stream(ctx, f"{stream_of(key, participants)}.within")).random()
     position = int(position) + within
     moment = calendar.place(year, within)

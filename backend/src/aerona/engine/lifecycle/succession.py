@@ -1,4 +1,5 @@
 import re
+from dataclasses import dataclass
 
 from sqlalchemy import select
 
@@ -73,6 +74,7 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
         lifespan_base + rng.integer(-effects.heir_lifespan_deviation, effects.heir_lifespan_deviation), effects.heir_min_lifespan, rules.deep_life.lifespan_cap
     )
     flags = [EntityFlag.NAME_FROM_LANGUAGE] if name else []
+    born = heir_age(rules, dead, effects.heir_age_base + rng.die(effects.heir_age_die), lifespan)
     heir = await open_record(
         ctx.session,
         ctx.epoch,
@@ -86,7 +88,7 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
                 agility=inherit("agility"),
                 intellect=inherit("intellect"),
                 charisma=inherit("charisma"),
-                age=heir_age(rules, dead, effects.heir_age_base + rng.die(effects.heir_age_die)),
+                age=born.age,
                 lifespan=lifespan,
             ),
             power=max(1, dead.power_level - 1),
@@ -98,7 +100,10 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
             flags=flags,
         ),
     )
-    await connect(ctx.session, dead.id, heir.id, BondKind.PARENT_OF, ctx.epoch, description="named heir")
+    if born.child:
+        await connect(ctx.session, dead.id, heir.id, BondKind.PARENT_OF, ctx.epoch, description="named heir")
+    else:
+        await connect(ctx.session, heir.id, dead.id, BondKind.DESCENDS_FROM, ctx.epoch, description="heir of the line")
     language = await spoken_language(ctx.session, dead.id) or (await spoken_language(ctx.session, primary.id) if primary is not None else None)
     if language is not None:
         await connect(ctx.session, heir.id, language.id, BondKind.SPEAKS, ctx.epoch)
@@ -108,14 +113,23 @@ async def _spawn_heir(ctx: TickContext, dead: EntityRow, primary: EntityRow | No
     return heir
 
 
-def heir_age(rules: Rules, parent: EntityRow, wanted: int) -> int:
+@dataclass(frozen=True)
+class HeirAge:
+    age: int
+    child: bool
+
+
+def heir_age(rules: Rules, parent: EntityRow, wanted: int, own_lifespan: int) -> HeirAge:
     lifespan = stat_or(parent, "lifespan", rules.world_effects.default_lifespan)
     youngest_parent = lifespan * rules.fertility.window_start_pct // PERCENT
     oldest_parent = max(youngest_parent, lifespan * window_end_pct(rules, sex_of_stats(parent)) // PERCENT)
     age = int(stat_or(parent, "age", wanted + youngest_parent))
     oldest_child = age - youngest_parent
     youngest_child = age - oldest_parent
-    return max(0, min(oldest_child, max(wanted, youngest_child)))
+    room = max(0, own_lifespan - rules.world_effects.rejuvenate_years_left - 1)
+    if youngest_child > room:
+        return HeirAge(max(0, min(wanted, room)), child=False)
+    return HeirAge(max(0, min(oldest_child, room, max(wanted, youngest_child))), child=True)
 
 
 async def pass_rule(ctx: TickContext, dead: EntityRow) -> EntityRow | None:

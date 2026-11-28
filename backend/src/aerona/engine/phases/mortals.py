@@ -9,6 +9,7 @@ from aerona.core.random import SeededRandom
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.tables.body import InjuryRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.node import NodeBirthRow
 from aerona.db.write_guard import unheld
 from aerona.domain.enums.body import HarmCause, InjuryState
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
@@ -37,6 +38,7 @@ from aerona.engine.primitives.records import append_sentence
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.births import birth_year
 from aerona.engine.recording.record import StepDraft, record
+from aerona.engine.recording.terms import explaining, term
 from aerona.rules.registry import Rules
 
 WOUND_DEATH = "succumbed to their wounds"
@@ -114,6 +116,26 @@ def fatal_year(rng: SeededRandom, rules: Rules, age: int, *, multiplier: float, 
     return None
 
 
+REJUVENATED_TERM = "aging.rejuvenated"
+
+
+async def born_later(ctx: TickContext, mortal_id: int, years: int) -> None:
+    birth = await ctx.session.get(NodeBirthRow, mortal_id)
+    if birth is None or years <= 0 or "year" in (birth.locked or []):
+        return
+    with explaining():
+        term(REJUVENATED_TERM, years, source_node_id=mortal_id)
+        birth.year += years
+
+
+async def years_missed(ctx: TickContext, mortal_id: int, age: int, start_year: int) -> int:
+    born = await birth_year(ctx.session, mortal_id)
+    if born is None:
+        return 0
+    lag = (start_year - 1) - born - age
+    return lag if 0 < lag <= ctx.rules.time.years_per_epoch else 0
+
+
 async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> None:
     laws = world.laws
     rules = ctx.rules
@@ -125,9 +147,15 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     first = mortal.birth_epoch == ctx.epoch
     lifespan = stat_or(mortal, "lifespan", effects.default_lifespan)
     age = stat(mortal, "age") or 0
-    if first and age >= lifespan - effects.rejuvenate_years_left:
-        age = round_half_up(lifespan * (effects.rejuvenate_age_min_pct / PERCENT + rng.random() * effects.rejuvenate_age_random_pct / PERCENT))
     lived = years_lived(ctx, mortal, await birth_year(ctx.session, mortal.id) if first else None)
+    if mortal.birth_epoch == ctx.epoch - 1 and multiplier == 1:
+        age += await years_missed(ctx, mortal.id, age, world.start_year)
+    rejuvenated = 0
+    if first and age >= lifespan - effects.rejuvenate_years_left:
+        younger = round_half_up(lifespan * (effects.rejuvenate_age_min_pct / PERCENT + rng.random() * effects.rejuvenate_age_random_pct / PERCENT))
+        rejuvenated = age - younger
+        age = younger
+        await born_later(ctx, mortal.id, rejuvenated)
     aged = age + round_half_up(lived * multiplier)
     info = await effective_lifespan(ctx.session, rules, mortal, world.atlas, world.medicine, healing=world.healing)
     limit = info.effective
@@ -139,8 +167,11 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
         else fatal_year(rng, rules, age, multiplier=multiplier, sampled_years=lived, limit=limit, health=health, medicine=info.medicine > 0)
     )
     if fatal is None:
-        set_stats(mortal, age=aged)
-        await grow_into_stage(ctx, mortal)
+        with explaining():
+            if rejuvenated:
+                term(REJUVENATED_TERM, -rejuvenated, source_node_id=mortal.id)
+            set_stats(mortal, age=aged)
+            await grow_into_stage(ctx, mortal)
         return
     years = rules.time.years_per_epoch
     offset = years - lived if first else 0
@@ -276,6 +307,7 @@ async def age_one(ctx: TickContext, mortal: EntityRow, world: AgingWorld) -> Non
     "table.incident_facts",
     "table.incident_participants",
     "table.incident_steps",
+    "table.incident_terms",
     "table.incidents",
     "table.incorporeal_rights",
     "table.item_history",

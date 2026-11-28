@@ -120,6 +120,7 @@ async def native_species(ctx: TickContext, world: WorldRow, region: EntityRow) -
 
 @reads(
     "region.fertility",
+    "species.danger",
     "table.bonds",
     "table.deep_passages",
     "table.entities",
@@ -127,6 +128,7 @@ async def native_species(ctx: TickContext, world: WorldRow, region: EntityRow) -
     "table.name_registry",
     "table.node_births",
     "table.nodes",
+    "table.sons",
     "table.state_changes",
     "table.world_life",
     "table.worlds",

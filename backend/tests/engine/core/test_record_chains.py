@@ -42,6 +42,7 @@ GENESIS_SEEN = 44
 NEWCOMER_CAME = 39
 NEWCOMER_AGE = 21
 ACT_STEPS = 10
+ACT_SHARE = 0.1
 YEAR_DAYS = 360
 SEASONS = 4
 DAY_HOURS = 24
@@ -325,6 +326,7 @@ async def test_acts_placed_by_the_progress_of_an_epoch_fall_through_their_years_
     world.world.year_length_days, world.world.season_count, world.world.day_length_hours = YEAR_DAYS, SEASONS, DAY_HOURS
     await session.flush()
     ctx = tick(session, rules)
-    placed = [await moment_for(ctx, ProcessClock.INSTANT, key=f"act.{step}", progress=step / ACT_STEPS, world_id=world.world.id) for step in range(ACT_STEPS)]
+    placed = [await moment_for(ctx, ProcessClock.INSTANT, key=f"act.{step}", progress=step * ACT_SHARE, world_id=world.world.id) for step in range(ACT_STEPS)]
     assert len({(moment.season, moment.day, moment.hour) for moment in placed}) > 1
+    assert all((moment.season, moment.day, moment.hour) != (0, 0, 0) for moment in placed)
     assert [moment.year for moment in placed] == sorted(moment.year for moment in placed)

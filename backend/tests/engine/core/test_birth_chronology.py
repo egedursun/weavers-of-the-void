@@ -36,6 +36,13 @@ from tests.engine.core.factories import CoreWorld, entity, mortal
 
 LIVED_BEFORE_END = 3
 DEATH_DRAWS = 5
+MADE_INTO_EPOCH = 40
+WORN_AGE = 78
+WORN_LIFESPAN = 80
+AGE_SLACK = 2
+LATE_AGE = 30
+MISSED_YEARS = 4
+LONG_LIFESPAN = 400
 
 
 async def sexed(session: AsyncSession, name: str, world: CoreWorld, sex: SexKind) -> EntityRow:
@@ -252,3 +259,41 @@ async def test_a_mortal_never_dies_before_a_change_it_lived_through_this_epoch(c
     for _ in range(DEATH_DRAWS):
         moment = await death_moment(ctx, elder, None, None, None)
         assert moment.year >= lived
+
+
+async def test_a_mortal_made_too_old_and_rejuvenated_is_born_as_much_later_as_it_was_made_younger(ctx: TickContext, world: CoreWorld) -> None:
+    start = epoch_end_year(ctx.epoch, ctx.rules.time.years_per_epoch) - ctx.rules.time.years_per_epoch
+    made_at = start + MADE_INTO_EPOCH
+    worn = await mortal(ctx.session, "Made Worn", world, world.regions[0].id, age=WORN_AGE)
+    worn.birth_epoch = ctx.epoch
+    set_stats(worn, lifespan=WORN_LIFESPAN)
+    birth = await ctx.session.get(NodeBirthRow, worn.id)
+    if birth is None:
+        birth = NodeBirthRow(node_id=worn.id, year=made_at - WORN_AGE, season=None, day=None, hour=None, locked=[])
+        ctx.session.add(birth)
+    birth.year = made_at - WORN_AGE
+    await ctx.session.flush()
+    await mortal_aging(in_phase(ctx, EpochPhase.ENGINE, AgingState()))
+    if worn.status is EntityStatus.DEAD:
+        return
+    young = stat_or(worn, "age", 0)
+    assert young < WORN_AGE
+    end = epoch_end_year(ctx.epoch, ctx.rules.time.years_per_epoch) - 1
+    assert abs((end - birth.year) - young) <= AGE_SLACK
+
+
+async def test_a_newcomer_who_came_after_last_epochs_aging_is_aged_for_the_years_it_missed(ctx: TickContext, world: CoreWorld) -> None:
+    years = ctx.rules.time.years_per_epoch
+    start = epoch_end_year(ctx.epoch, years) - years
+    late = await mortal(ctx.session, "Late Promoted", world, world.regions[0].id, age=LATE_AGE)
+    late.birth_epoch = ctx.epoch - 1
+    set_stats(late, lifespan=LONG_LIFESPAN)
+    birth = await ctx.session.get(NodeBirthRow, late.id)
+    if birth is None:
+        birth = NodeBirthRow(node_id=late.id, year=0, season=None, day=None, hour=None, locked=[])
+        ctx.session.add(birth)
+    birth.year = start - 1 - LATE_AGE - MISSED_YEARS
+    await ctx.session.flush()
+    await mortal_aging(in_phase(ctx, EpochPhase.ENGINE, AgingState()))
+    assert late.status is not EntityStatus.DEAD
+    assert stat_or(late, "age", 0) == LATE_AGE + MISSED_YEARS + years

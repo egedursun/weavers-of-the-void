@@ -77,6 +77,7 @@ async def curser_of(ctx: TickContext, entity: EntityRow) -> int | None:
     "table.mortal_profiles",
     "table.node_births",
     "table.nodes",
+    "table.nutrition_scores",
     "table.prostheses",
     "table.sense_profiles",
     "table.traits",
