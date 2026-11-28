@@ -799,6 +799,13 @@ async def kept_after_its_time_did_not_come(session: AsyncSession, world: CoreWor
         session.add(IncidentParticipantRow(incident_id=told.id, node_id=town.id, role=roles[1], position=0))
 
 
+async def remembrance_of_no_one(session: AsyncSession, world: CoreWorld) -> None:
+    dead = await mortal(session, "Remembered Elder", world, world.regions[0].id)
+    rite = await entity(session, "Mourning of Remembered Elder", EntityType.TRADITION, TraditionStats(), world_id=world.world.id, origin=EntityOrigin.ENGINE)
+    await bond(session, rite.id, dead.id, BondKind.TELLS_OF)
+    session.add(TraditionProfileRow(tradition_entity_id=rite.id, kind=TraditionFunction.MOURNING, calendar_slot=CalendarSlot.REMEMBRANCE, locked=[]))
+
+
 async def mourning_under_another_dead(session: AsyncSession, world: CoreWorld) -> None:
     dead = await mortal(session, "Mourned Here", world, world.regions[0].id)
     other = await mortal(session, "Mourned Elsewhere", world, world.regions[0].id)
@@ -2455,6 +2462,7 @@ BREAKERS: dict[str, Breaker] = {
     "son_covenant_between_friends": covenant_of_enemies,
     "divine_mind_counts_its_epochs": divine_mind_left_behind,
     "star_lit_by_its_kind": star_left_dim,
+    "remembrance_names_its_past": remembrance_of_no_one,
     "star_clock_follows_its_age": star_clock_set_from_birth,
     "adult_born_before_first_sight": grown_mortal_born_at_first_sight,
     "home_on_its_lived_orbit": planet_moved_by_an_old_repair,

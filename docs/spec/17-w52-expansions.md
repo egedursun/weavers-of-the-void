@@ -20620,6 +20620,21 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 **Proving tests.** `tests/engine/core/test_record_chains.py`.
 
+
+### 52.678 A remembrance names what it remembers
+
+**What it is.** A custom kept at a remembrance that tells of someone remembers that one, so it is kept at its proper time instead of out of it every epoch; a mourning founded at a death remembers the dead it tells of from its first keeping.
+
+**Engine.** `engine/lore/traditions.py` (a new tradition profile takes the one it tells of as its origin), `db/remembered.py`.
+
+**Rules.** None new.
+
+**Repairs.** `remembrance_names_its_past`.
+
+**Levers and surfaces.** `profile:set` edits a tradition's origin; the tradition's entry window shows it.
+
+**Proving tests.** The case in `tests/services/integrity/test_every_invariant.py`.
+
 ---
 
 ## Appendix 17.A Every value this spec adds

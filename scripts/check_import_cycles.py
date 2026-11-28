@@ -33,8 +33,20 @@ def targets(node: ast.stmt, modules: dict[str, Path]) -> set[str]:
     return found
 
 
+def packages_of(name: str, modules: dict[str, Path]) -> set[str]:
+    parts = name.split(".")
+    return {package for size in range(1, len(parts)) if (package := ".".join(parts[:size])) in modules}
+
+
+def run_on_import(name: str, target: str, modules: dict[str, Path]) -> set[str]:
+    return {target} | (packages_of(target, modules) - packages_of(name, modules) - {name})
+
+
 def import_graph(modules: dict[str, Path]) -> dict[str, set[str]]:
-    return {name: {target for node in ast.parse(path.read_text(encoding="utf-8")).body for target in targets(node, modules)} for name, path in modules.items()}
+    return {
+        name: {run for node in ast.parse(path.read_text(encoding="utf-8")).body for target in targets(node, modules) for run in run_on_import(name, target, modules)}
+        for name, path in modules.items()
+    }
 
 
 def cycles(graph: dict[str, set[str]]) -> list[list[str]]:

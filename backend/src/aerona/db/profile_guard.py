@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import cache
 from typing import Any
 
 from sqlalchemy import event
@@ -8,7 +9,6 @@ from sqlalchemy.orm.base import instance_state
 from sqlalchemy.orm.util import identity_key
 
 from aerona.db.base import Base
-from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import ENDED_GUARD, RESTORED, WRITE_GUARD, guard_idle, write_blocked
 from aerona.domain.enums.entity import ENDED_STATUSES
 
@@ -203,8 +203,14 @@ def still_ended(row: object, node_id: int) -> bool:
     if guard is None or node_id not in guard.ended:
         return False
     session = object_session(row)
-    entity = session.identity_map.get(identity_key(EntityRow, node_id)) if session is not None else None
-    return not isinstance(entity, EntityRow) or entity.status in ENDED_STATUSES
+    kind = entity_class()
+    entity = session.identity_map.get(identity_key(kind, node_id)) if session is not None else None
+    return not isinstance(entity, kind) or entity.status in ENDED_STATUSES
+
+
+@cache
+def entity_class() -> type[Any]:
+    return next(mapper.class_ for mapper in Base.registry.mappers if getattr(mapper.class_, "__tablename__", None) == ENTITY_TABLE)
 
 
 def restore_held(row: object) -> list[str]:

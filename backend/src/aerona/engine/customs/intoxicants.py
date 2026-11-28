@@ -276,7 +276,7 @@ async def brawls(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) 
             )
         )
         held_at = Moment(gathering.year, gathering.season) if gathering.year is not None else None
-        guests = [guest for guest in guests if await there_at(ctx, guest, held_at)]
+        guests = [guest for guest in guests if guest != gathering.host_node_id and await there_at(ctx, guest, held_at)]
         hurt = await ctx.session.get(EntityRow, ctx.rng(seed_of("brawl.hurt", gathering.id)).pick(guests)) if guests else None
         if hurt is None or held(hurt.id) or hurt.entity_type is not EntityType.MORTAL:
             continue

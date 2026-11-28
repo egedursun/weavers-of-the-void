@@ -872,6 +872,13 @@ TYPED: tuple[InvariantSpec, ...] = (
         "the covenant of two sons who became enemies is closed",
     ),
     InvariantSpec(
+        "remembrance_names_its_past",
+        "tradition_profiles",
+        "a custom kept at a remembrance names the year or the one it remembers when it tells of someone",
+        Remedy.REPAIR,
+        "the custom remembers the one it tells of",
+    ),
+    InvariantSpec(
         "star_lit_by_its_kind",
         "stars",
         "a star's light is the light its mass, age and kind give, with every lasting change on it",

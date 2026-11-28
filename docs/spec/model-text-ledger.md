@@ -220,7 +220,7 @@ so any change to it after the read date fails the gate until the file is read ag
 | `backend/src/aerona/catalog/incident_kinds/w52_agent_q.py` | 2 | 2026-11-23 | `249c266599930da6` |
 | `backend/src/aerona/catalog/interventions.py` | 18 | 2026-11-16 | `5a8f9b083be397b6` |
 | `backend/src/aerona/catalog/intrigue.py` | 100 | 2026-11-27 | `97ab32e2693460b0` |
-| `backend/src/aerona/catalog/invariants.py` | 497 | 2026-11-27 | `3d0dbbbad469980e` |
+| `backend/src/aerona/catalog/invariants.py` | 499 | 2026-11-28 | `fc15110b79975b64` |
 | `backend/src/aerona/catalog/kinds/crafts_labels.py` | 17 | 2026-11-23 | `9fdffde0c35b9ec5` |
 | `backend/src/aerona/catalog/kinds/defined/affliction.py` | 2 | 2026-11-23 | `3ff454f4b566431f` |
 | `backend/src/aerona/catalog/kinds/defined/ages.py` | 5 | 2026-11-22 | `087637eb161a0b66` |

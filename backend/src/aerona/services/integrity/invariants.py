@@ -244,6 +244,7 @@ from aerona.services.integrity.record_links import (
     unscoped_changes,
 )
 from aerona.services.integrity.referendum_links import aimless_votes, align_franchise, early_votes, mend_held, stray_franchises, void_vote
+from aerona.services.integrity.remembrances import remember_what_it_tells, remembrances_forgetting
 from aerona.services.integrity.restoration_links import end_living_fallen, link_restored, living_fallen, unlinked_restored
 from aerona.services.integrity.restoration_links import mend_end as mend_restoration_end
 from aerona.services.integrity.restoration_links import mismatched_ends as restoration_ends
@@ -755,6 +756,7 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "divine_mind_counts_its_epochs": (divine_minds_behind, count_divine_mind_epochs),
     "adult_born_before_first_sight": (adults_born_at_first_sight, date_adult_birth),
     "star_lit_by_its_kind": (stars_lit_astray, light_star_by_its_kind),
+    "remembrance_names_its_past": (remembrances_forgetting, remember_what_it_tells),
     "star_clock_follows_its_age": (clocks_past_their_age, wind_clock_to_age),
     "home_on_its_lived_orbit": (homes_moved_off_their_orbit, return_home_to_its_orbit),
     "peopled_world_habitable": (homes_too_harsh, settle_home_climate),

@@ -6,7 +6,14 @@ from pathlib import Path
 from types import ModuleType
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
-STANDALONE = ("aerona.engine.ecology.control", "aerona.engine.lore.control", "aerona.engine.lore.rites", "aerona.engine.ecology.flora_control")
+STANDALONE = (
+    "aerona.engine.ecology.control",
+    "aerona.engine.lore.control",
+    "aerona.engine.lore.rites",
+    "aerona.engine.ecology.flora_control",
+    "aerona.db.profile_guard",
+    "aerona.services.player.profiles",
+)
 
 
 def checker() -> ModuleType:
@@ -34,3 +41,12 @@ def test_the_control_modules_import_on_their_own() -> None:
     for name in STANDALONE:
         done = subprocess.run([sys.executable, "-c", f"import {name}"], capture_output=True, text=True, check=False)
         assert done.returncode == 0, done.stderr[-400:]
+
+
+def test_importing_a_module_runs_the_packages_it_belongs_to_but_not_its_own() -> None:
+    module = checker()
+    modules = dict.fromkeys(("p", "p.inner", "p.sub", "p.sub.leaf", "q"), Path())
+    assert module.run_on_import("q", "p.sub.leaf", modules) == {"p.sub.leaf", "p", "p.sub"}
+    assert module.run_on_import("p.sub.other", "p.sub.leaf", modules) == {"p.sub.leaf"}
+    graph = {"q": module.run_on_import("q", "p.sub.leaf", modules), "p.sub": {"p.inner"}, "p.inner": {"q"}, "p": set(), "p.sub.leaf": set()}
+    assert module.cycles(graph) == [["p.inner", "p.sub", "q"]]

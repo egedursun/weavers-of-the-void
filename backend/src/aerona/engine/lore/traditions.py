@@ -11,6 +11,7 @@ from aerona.constants.units import PERCENT
 from aerona.core.dispatch import Handlers
 from aerona.db.fixups import fixup_due
 from aerona.db.read_memo import memo_of, memoized, table_names
+from aerona.db.remembered import told_of
 from aerona.db.tables.bonds import BondRow
 from aerona.db.tables.collective import CommemorationRow
 from aerona.db.tables.cosmos import AppliedFixupRow
@@ -200,6 +201,7 @@ async def profile_of(ctx: TickContext, tradition: EntityRow, kind: TraditionFunc
         taboo_target=await taboo_good(ctx, tradition) if kind is K.TABOO else None,
         updated_epoch=ctx.epoch,
         locked=[],
+        origin_entity_id=await told_of(ctx.session, tradition.id),
     )
     ctx.session.add(row)
     await ctx.session.flush()
