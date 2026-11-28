@@ -301,6 +301,7 @@ class CivilizationTier(IntEnum):
 
 
 LIVING_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.DEAD, EntityStatus.FULFILLED})
+ALIVE_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
 ENDED_STATUSES = frozenset({EntityStatus.DEAD, EntityStatus.DESTROYED})
 AGENT_TYPES = frozenset(
     {EntityType.PEOPLE, EntityType.SETTLEMENT, EntityType.FACTION, EntityType.CULT, EntityType.MORTAL, EntityType.SPECIES, EntityType.ARMY, EntityType.BEAST}

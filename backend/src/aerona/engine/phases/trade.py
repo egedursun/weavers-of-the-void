@@ -243,6 +243,8 @@ async def _seize_from_neighbours(
 
 
 @reads(
+    "faction.strength",
+    "faction.sway",
     "people.martiality",
     "people.population",
     "settlement.defense",

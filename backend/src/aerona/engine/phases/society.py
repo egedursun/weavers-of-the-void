@@ -140,6 +140,8 @@ async def raise_rebels(ctx: TickContext, settlement: EntityRow, book: CommunityB
 
 @reads(
     "law.justice",
+    "mortal.age",
+    "mortal.lifespan",
     "polity.subjects",
     "settlement.defense",
     "settlement.population",

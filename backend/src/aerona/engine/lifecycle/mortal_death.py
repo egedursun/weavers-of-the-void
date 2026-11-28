@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from aerona.catalog.incident_kinds.onlookers import ONLOOKER_ROLES
 from aerona.catalog.lore import MOURNING_RITE
 from aerona.catalog.stats import max_essence
 from aerona.catalog.worlds import WORLD_TYPES
@@ -17,7 +16,6 @@ from aerona.db.tables.celestial import WorldRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
-from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.mind import GriefRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
@@ -25,7 +23,7 @@ from aerona.domain.enums.crafts import InsuranceCover
 from aerona.domain.enums.culture import ItemDeed
 from aerona.domain.enums.demography import InheritanceCustom
 from aerona.domain.enums.divine import DomainHook
-from aerona.domain.enums.entity import COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
+from aerona.domain.enums.entity import ALIVE_STATUSES, COMMUNITY_TYPES, EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.epoch import EpochPhase
 from aerona.domain.enums.faith import SpiritAlignment
 from aerona.domain.enums.modifier import IncidentRole
@@ -68,6 +66,8 @@ from aerona.engine.primitives.queries import active_bonds, close, connect, count
 from aerona.engine.primitives.records import RecordSpec, append_sentence, open_record, sweep_dead_bonds
 from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.births import birth_year
+from aerona.engine.recording.chains import anchored
+from aerona.engine.recording.last_days import keep_deeds_before
 from aerona.engine.recording.moments import incident_moment, moment_for
 from aerona.engine.recording.record import FactInput, RoleValue, StepDraft
 from aerona.engine.recording.record import record as record_happening
@@ -75,7 +75,7 @@ from aerona.engine.relations.passions import bereaved
 from aerona.engine.sacred.guards import unrest_shift
 from aerona.engine.transform.record import blocked, record_transformation
 
-LIVING_DEATH_STATUSES = frozenset({EntityStatus.CANON, EntityStatus.FULFILLED})
+LIVING_DEATH_STATUSES = ALIVE_STATUSES
 RESTLESS_SPIRIT_SUBTYPE = "restless spirit"
 ANCESTOR_SPIRIT_SUBTYPE = "ancestor spirit"
 MOURNING_SUBTYPE = MOURNING_RITE
@@ -91,21 +91,6 @@ class DeathResult:
     text: str
 
 
-HEARSAY_ROLES = ONLOOKER_ROLES
-
-
-async def last_deed(session: AsyncSession, mortal_id: int, epoch: int) -> Moment | None:
-    deeds = select(IncidentParticipantRow.incident_id).where(
-        IncidentParticipantRow.node_id == mortal_id, IncidentParticipantRow.role.not_in(sorted(HEARSAY_ROLES))
-    )
-    rows = await session.execute(
-        select(IncidentRow.year, IncidentRow.season, IncidentRow.day, IncidentRow.hour).where(
-            IncidentRow.id.in_(deeds), IncidentRow.epoch == epoch, IncidentRow.year.is_not(None)
-        )
-    )
-    return latest(*(Moment(year, season, day, hour) for year, season, day, hour in rows if year is not None))
-
-
 async def mourned_deaths(session: AsyncSession, mortal_id: int, epoch: int) -> Moment | None:
     grieved = select(GriefRow.deceased_node_id).where(GriefRow.mourner_node_id == mortal_id, GriefRow.started_epoch == epoch)
     years = await session.scalars(select(EntityRow.stats).where(EntityRow.id.in_(grieved), EntityRow.status != EntityStatus.CANON).order_by(EntityRow.id))
@@ -115,12 +100,12 @@ async def mourned_deaths(session: AsyncSession, mortal_id: int, epoch: int) -> M
 async def death_moment(ctx: TickContext, mortal: EntityRow, killer_id: int | None, cause_id: int | None, year: int | None) -> Moment:
     participants = [node for node in (mortal.id, killer_id) if node is not None]
     cause = await incident_moment(ctx.session, cause_id if cause_id is not None else CAUSE_SCOPE.get())
-    floor = latest(await last_deed(ctx.session, mortal.id, ctx.epoch), await mourned_deaths(ctx.session, mortal.id, ctx.epoch))
+    floor = latest(anchored(ctx, [mortal.id]), await mourned_deaths(ctx.session, mortal.id, ctx.epoch))
     if year is not None:
-        given = Moment(year)
-        return given.at_least(cause).at_least(floor)
-    chosen = await moment_for(ctx, ProcessClock.INSTANT, key=f"death.{mortal.id}", participants=participants, cause_moment=cause)
-    return chosen.at_least(floor)
+        chosen = Moment(year).at_least(cause).at_least(floor)
+    else:
+        chosen = (await moment_for(ctx, ProcessClock.INSTANT, key=f"death.{mortal.id}", participants=participants, cause_moment=cause)).at_least(floor)
+    return await keep_deeds_before(ctx, mortal.id, chosen)
 
 
 AGED_PHASES = frozenset({EpochPhase.FATE, EpochPhase.TRANSITION})

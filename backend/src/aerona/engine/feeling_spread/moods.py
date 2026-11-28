@@ -13,7 +13,7 @@ from aerona.db.tables.households import HouseholdMemberRow, HouseholdRow
 from aerona.db.tables.mind import ThoughtRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.bond import BondKind
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import ALIVE_STATUSES, EntityStatus, EntityType
 from aerona.domain.enums.mind import Emotion, ThoughtKind
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.collective.feelings import stir_feelings
@@ -169,7 +169,7 @@ async def tell_place(ctx: TickContext, town: int, shift: MoodShift | None, tally
 
 async def household_head(ctx: TickContext, household: HouseholdRow) -> EntityRow | None:
     head = await ctx.session.get(EntityRow, household.head_node_id) if household.head_node_id is not None else None
-    return head if head is not None and head.entity_type is EntityType.MORTAL else None
+    return head if head is not None and head.entity_type is EntityType.MORTAL and head.status in ALIVE_STATUSES else None
 
 
 async def tell_household(ctx: TickContext, household: HouseholdRow | None, shift: MoodShift | None, tally: MoodTally) -> None:

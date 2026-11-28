@@ -118,6 +118,7 @@ async def regimes(ctx: TickContext) -> None:
     "table.cosmos",
     "table.creator_taboos",
     "table.culture_ethics",
+    "table.culture_values",
     "table.dimensional_events",
     "table.dimensions",
     "table.entities",

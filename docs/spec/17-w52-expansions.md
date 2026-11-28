@@ -20595,6 +20595,31 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 **Proving tests.** `tests/engine/core/test_unions_and_birth.py`.
 
+
+### 52.676 A death keeps its own year and the dead stay still
+
+**What it is.** A mortal dies in the year its life ran out or its cause struck, not in the year of its last deed. A deed written earlier in the epoch at a later year moves to a year before the death, inside its own floor (its cause, what it follows, the births of those present, and the endings before it), carrying the births of things it made. A deed that tells its own year, or has no room before the death, holds the death after it. A record that names a dead mortal in a living role (an actor, a guest, the accused, a patient) stands no later than that death; a brawl stands at its gathering, among the guests alive there. A condition of the dead neither heals nor worsens, a household's mood is told only of a living head, and a restoration names only a living claimant.
+
+**Engine.** `engine/recording/last_days.py` (`keep_deeds_before`), `engine/recording/rites.py` (`before_the_dead`), `catalog/incident_kinds/under_age.py` (`ALIVE_ROLES`).
+
+**Rules.** None new.
+
+**Levers and surfaces.** None of its own: deaths and their years show in the entry window, the book and the Codex.
+
+**Proving tests.** `tests/engine/core/test_record_chains.py`; `tests/engine/core/test_the_dead_stay_still.py`; `tests/engine/core/test_moments.py` (no mortal in a living role after their death).
+
+### 52.677 The rites follow a death closely
+
+**What it is.** The treatment of the remains, the wake, the funeral, the mourning, the naming of the dead and the closing of their affairs fall in the year of the death or the next, never decades later. A gathering leaves out guests not yet born when it is held.
+
+**Engine.** `catalog/incident_kinds/sequence.py` (`AFTER_A_DEATH`, `RITE_YEARS`), `engine/recording/rites.py` (`near_the_dead`), `engine/gatherings/hold.py`.
+
+**Rules.** None new.
+
+**Levers and surfaces.** None of its own: gatherings show in the gatherings panel, the book and the Codex.
+
+**Proving tests.** `tests/engine/core/test_record_chains.py`.
+
 ---
 
 ## Appendix 17.A Every value this spec adds

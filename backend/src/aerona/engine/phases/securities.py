@@ -14,6 +14,7 @@ from aerona.engine.securities.tend import tend_securities
     "table.currencies",
     "table.entities",
     "table.hidden_truths",
+    "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
     "table.issued_securities",

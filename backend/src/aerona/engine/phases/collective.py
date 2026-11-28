@@ -517,6 +517,7 @@ async def role_norms(ctx: TickContext) -> None:
     "table.holder_techniques",
     "table.incident_participants",
     "table.incidents",
+    "table.minds",
     "table.node_births",
     "table.nodes",
     "table.offices",

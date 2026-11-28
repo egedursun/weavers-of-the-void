@@ -18,6 +18,7 @@ from aerona.engine.phase import Phase
     "table.entities",
     "table.holder_levels",
     "table.node_births",
+    "table.nodes",
     "table.outbreaks",
     "table.species_ranges",
 )

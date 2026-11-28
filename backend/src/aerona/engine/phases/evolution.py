@@ -24,6 +24,7 @@ from aerona.engine.phases.dominion import count
     "table.disease_agents",
     "table.entity_traits",
     "table.herds",
+    "table.incidents",
     "table.node_births",
     "table.outbreaks",
     "table.region_environment",
@@ -242,6 +243,7 @@ async def spillover(ctx: TickContext) -> None:
 
 
 @reads(
+    "people.population",
     "people.prosperity",
     "settlement.population",
     "settlement.prosperity",
@@ -261,6 +263,7 @@ async def spillover(ctx: TickContext) -> None:
     "table.tradition_profiles",
 )
 @writes(
+    "people.population",
     "people.prosperity",
     "settlement.population",
     "settlement.prosperity",

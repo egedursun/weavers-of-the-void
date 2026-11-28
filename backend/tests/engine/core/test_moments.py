@@ -5,7 +5,7 @@ from sqlalchemy.orm import aliased
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.sequence import AFTER_KINDS
-from aerona.catalog.incident_kinds.under_age import ACTING_ROLES
+from aerona.catalog.incident_kinds.under_age import ALIVE_ROLES
 from aerona.db.record_context import PHASE_FAMILY
 from aerona.db.session import Database
 from aerona.db.tables.entities import EntityRow
@@ -99,7 +99,7 @@ async def test_no_happening_is_earlier_than_its_cause_and_no_step_earlier_than_t
                 .where(
                     EntityRow.entity_type == EntityType.MORTAL,
                     EntityRow.status == EntityStatus.DEAD,
-                    IncidentParticipantRow.role.in_(sorted(ACTING_ROLES)),
+                    IncidentParticipantRow.role.in_(sorted(ALIVE_ROLES)),
                     IncidentRow.year > func.json_extract(EntityRow.stats, "$.death_year"),
                 )
             )

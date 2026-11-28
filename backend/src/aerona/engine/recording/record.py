@@ -7,6 +7,7 @@ from sqlalchemy import select
 from aerona.catalog.incident_kinds.amounts import NEVER_ZERO
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
 from aerona.catalog.incident_kinds.spec import FactSpec, IncidentKindSpec
+from aerona.catalog.incident_kinds.under_age import ALIVE_ROLES
 from aerona.core.errors import ValidationFailedError
 from aerona.core.grammar import spoken
 from aerona.db.fast_session import rows_by_id
@@ -39,6 +40,7 @@ from aerona.engine.recording.chains import anchored, followed, happening_clock, 
 from aerona.engine.recording.deaths import death_floor, mortal_floor
 from aerona.engine.recording.moments import incident_moment, moment_for, next_after, step_moments
 from aerona.engine.recording.render import indexed, render_incident
+from aerona.engine.recording.rites import before_the_dead, near_the_dead
 from aerona.events.kinds import EventKind
 
 RoleValue = int | Sequence[int] | None
@@ -256,7 +258,8 @@ async def moment_of(
     prior = anchored(ctx, principal)
     if prior is not None:
         return await next_after(ctx, clock, latest(prior, floor) or prior, participants=nodes, world_id=world_id)
-    return await moment_for(ctx, clock, key=spec.key, participants=nodes, cause_moment=floor, world_id=world_id)
+    moment = await moment_for(ctx, clock, key=spec.key, participants=nodes, cause_moment=floor, world_id=world_id)
+    return await near_the_dead(ctx, spec.key, principal, moment, floor)
 
 
 async def happening_moment(
@@ -272,7 +275,13 @@ async def happening_moment(
     place: int | None,
 ) -> Moment:
     principal = principals(participants)
-    moment = at_moment if at_moment is not None else await moment_of(ctx, spec, named, cause_id, world_id, principal=principal)
+    if at_moment is not None:
+        moment = at_moment
+    else:
+        drawn = await moment_of(ctx, spec, named, cause_id, world_id, principal=principal)
+        living = [node for node, role in participants if role in ALIVE_ROLES]
+        floor = latest(await incident_moment(ctx.session, cause_id), await followed(ctx, spec.key, principal))
+        moment = await before_the_dead(ctx, living, named, drawn, floor)
     if dated is None:
         moment = await lifted_to_births(ctx, moment, named if at_moment is not None else [], place)
     return moment

@@ -15,6 +15,7 @@ from aerona.domain.models.calendar import YearWindow, epoch_start_year
 from aerona.domain.models.moment import Moment
 from aerona.engine.context import TickContext, TickEnvironment
 from aerona.engine.recording.moments import incident_moment, moment_for
+from aerona.engine.recording.rites import near_the_dead
 
 
 def phase_key(phase: str) -> str:
@@ -95,9 +96,15 @@ async def recording(
 ) -> AsyncIterator[RecordScope]:
     outer = current_scope()
     cause_id = cause if cause is not None else triggering(outer)
-    present = [*participants, *([place_id] if place_id is not None else [])]
-    when = moment or await moment_for(
-        ctx, clock, key=key, participants=present, cause_moment=await incident_moment(ctx.session, cause_id), progress=progress, world_id=world_id
+    listed = list(participants)
+    present = [*listed, *([place_id] if place_id is not None else [])]
+    cause_moment = await incident_moment(ctx.session, cause_id)
+    when = moment or await near_the_dead(
+        ctx,
+        key,
+        listed,
+        await moment_for(ctx, clock, key=key, participants=present, cause_moment=cause_moment, progress=progress, world_id=world_id),
+        cause_moment,
     )
     scope = RecordScope(
         key=key,

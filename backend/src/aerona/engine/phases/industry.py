@@ -167,6 +167,8 @@ async def tell_shortfalls(ctx: TickContext, book: EconomyBook) -> int:
 
 
 @reads(
+    "mortal.age",
+    "mortal.lifespan",
     "people.population",
     "settlement.population",
     "table.army_profiles",

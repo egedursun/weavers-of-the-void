@@ -69,6 +69,7 @@ from aerona.engine.phases.dominion import count
     "table.holder_levels",
     "table.holder_techniques",
     "table.house_members",
+    "table.incident_participants",
     "table.incidents",
     "table.incorporeal_rights",
     "table.incubating_ideas",

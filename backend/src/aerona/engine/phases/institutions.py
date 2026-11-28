@@ -415,6 +415,7 @@ async def peoples(ctx: TickContext) -> int:
     "table.entities",
     "table.entity_flags",
     "table.faction_profiles",
+    "table.incidents",
     "table.law_profiles",
     "table.node_births",
     "table.nodes",

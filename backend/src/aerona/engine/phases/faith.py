@@ -363,6 +363,8 @@ async def faith_cycles(ctx: TickContext) -> None:
     "table.holder_levels",
     "table.house_members",
     "table.house_profiles",
+    "table.incident_participants",
+    "table.incidents",
     "table.injuries",
     "table.item_profiles",
     "table.memories",

@@ -17,6 +17,17 @@ WAR_COURSE = (
     "war.terror",
     "war.remnant_harm",
 )
+AFTER_A_DEATH = (
+    "death_work.",
+    "death.funeral",
+    "death.named",
+    "gathering.wake",
+    "gathering.funeral",
+    "gathering.mourning",
+    "mortal.mourning",
+    "lifecycle.affairs_closed",
+)
+RITE_YEARS = 1
 RUIN = ("deepened.town_ruined", "disasters.", "settlement.district_", "war.sack.", "event.sack", "refugees.ruin", "structures.ruined")
 FOLLOWS: tuple[tuple[tuple[str, ...], tuple[str, ...]], ...] = (
     (("affairs.mandate_failed",), ("mandate.issued", "tools.mortal.mandate")),
@@ -78,3 +89,4 @@ def built(keys: frozenset[str]) -> MappingProxyType[str, frozenset[str]]:
 
 
 AFTER_KINDS = built(frozenset(INCIDENT_KINDS))
+SOON_AFTER_DEATH = matching(AFTER_A_DEATH, frozenset(INCIDENT_KINDS))

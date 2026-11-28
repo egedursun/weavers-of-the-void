@@ -60,6 +60,8 @@ from aerona.engine.polity.revenue import RevenueTally, tend_revenue
     "table.holder_techniques",
     "table.household_members",
     "table.ideology_tenets",
+    "table.incident_participants",
+    "table.incidents",
     "table.land_use_rules",
     "table.language_intelligibility",
     "table.law_jurisdictions",

@@ -34,6 +34,7 @@ from aerona.domain.enums.mind import ActKind, ValueAxis, ValueHolder
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.records import FactUnit, StepAction
 from aerona.domain.enums.society import SocialClass
+from aerona.domain.models.moment import Moment
 from aerona.engine.body.afflictions import afflict
 from aerona.engine.body.customs import people_of
 from aerona.engine.body.hits import Harm
@@ -46,7 +47,7 @@ from aerona.engine.mortal.profile import is_held
 from aerona.engine.primitives.folk import present_among, towns_of_people
 from aerona.engine.primitives.naming import seed_of
 from aerona.engine.primitives.numbers import clamp_int, round_half_up
-from aerona.engine.primitives.stats import stat_or
+from aerona.engine.primitives.stats import stat, stat_or
 from aerona.engine.recording.record import StepDraft, record
 from aerona.engine.relations.book import ensure_relation, shift
 
@@ -248,6 +249,16 @@ async def cheer(ctx: TickContext, town: EntityRow, amount: int) -> None:
         setattr(society, key, clamp_int(int(getattr(society, key)) + amount, 0, PERCENT))
 
 
+async def there_at(ctx: TickContext, node_id: int, moment: Moment | None) -> bool:
+    guest = await ctx.session.get(EntityRow, node_id)
+    if guest is None:
+        return False
+    if guest.status is not EntityStatus.DEAD:
+        return True
+    died = stat(guest, "death_year")
+    return moment is not None and died is not None and died >= moment.year
+
+
 async def brawls(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) -> None:
     towns = await towns_of_people(ctx.session, people.id)
     if not towns:
@@ -264,6 +275,8 @@ async def brawls(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) 
                 select(GatheringGuestRow.node_id).where(GatheringGuestRow.gathering_id == gathering.id, GatheringGuestRow.attended.is_(True))
             )
         )
+        held_at = Moment(gathering.year, gathering.season) if gathering.year is not None else None
+        guests = [guest for guest in guests if await there_at(ctx, guest, held_at)]
         hurt = await ctx.session.get(EntityRow, ctx.rng(seed_of("brawl.hurt", gathering.id)).pick(guests)) if guests else None
         if hurt is None or held(hurt.id) or hurt.entity_type is not EntityType.MORTAL:
             continue
@@ -281,6 +294,7 @@ async def brawls(ctx: TickContext, people: EntityRow, tally: IntoxicationTally) 
                 StepDraft(StepAction.STRIKE, target=hurt.id, amount=ctx.rules.intoxication.brawl_damage, unit=FactUnit.HP),
             ),
             place=gathering.place_entity_id,
+            at_moment=held_at,
         )
 
 

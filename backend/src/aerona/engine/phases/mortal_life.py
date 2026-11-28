@@ -213,6 +213,8 @@ async def mortal_life_course(ctx: TickContext) -> None:
 
 
 @reads(
+    "mortal.age",
+    "mortal.lifespan",
     "table.bonds",
     "table.community_relations",
     "table.creator",

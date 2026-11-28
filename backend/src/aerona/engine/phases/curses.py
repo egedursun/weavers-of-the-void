@@ -135,10 +135,12 @@ async def curse_decay(ctx: TickContext) -> None:
     "mortal.lifespan",
     "mortal.strength",
     "mortal.willpower",
+    "table.augment_effects",
     "table.augments",
     "table.bonds",
     "table.conditions",
     "table.creator",
+    "table.cult_tenets",
     "table.dimensions",
     "table.entities",
     "table.entity_flags",
@@ -161,6 +163,7 @@ async def curse_decay(ctx: TickContext) -> None:
 )
 @writes(
     "table.bodies",
+    "table.body_customs",
     "table.chronicle",
     "table.chronicle_entities",
     "table.conditions",

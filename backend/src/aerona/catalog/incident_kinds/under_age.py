@@ -25,4 +25,5 @@ ACTING_ROLES = frozenset(
         R.PATRON,
     }
 )
+ALIVE_ROLES = ACTING_ROLES | {R.GUEST, R.ACCUSED, R.PATIENT}
 UNDER_AGE_KINDS = frozenset({"afterlife.possession", "social.taboo_word"})

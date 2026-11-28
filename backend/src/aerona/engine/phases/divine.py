@@ -125,6 +125,8 @@ async def divine_standing(ctx: TickContext) -> None:
     "table.entities",
     "table.foreign_god_powers",
     "table.foreign_gods",
+    "table.incident_participants",
+    "table.incidents",
     "table.node_births",
     "table.nodes",
     "table.pressures",

@@ -425,6 +425,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
     "table.chronicle",
     "table.chronicle_entities",
     "table.entities",
+    "table.hidden_truths",
     "table.incident_participants",
     "table.incidents",
     "table.magic_system_sources",
@@ -439,6 +440,7 @@ async def train(ctx: TickContext, power: PowerRow) -> None:
     "table.power_spans",
     "table.powers",
     "table.source_density",
+    "table.truth_keepers",
 )
 async def keep_powers(ctx: TickContext) -> None:
     ctx.count("powers_backfilled", await legacy_backfill(ctx))

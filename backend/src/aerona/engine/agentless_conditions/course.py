@@ -7,6 +7,7 @@ from aerona.db.tables.body import SEVERITY_MAX, SEVERITY_MIN, ConditionRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.write_guard import held
 from aerona.domain.enums.agentless_conditions import ConditionCourse
+from aerona.domain.enums.entity import ALIVE_STATUSES
 from aerona.domain.enums.folk_knowledge import FolkDomain
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.society import KnowledgeBranch
@@ -66,7 +67,7 @@ async def burden(ctx: TickContext, row: ConditionRow, bearer: EntityRow) -> None
 
 async def run_course(ctx: TickContext, row: ConditionRow, tally: ConditionTally) -> None:
     bearer = await ctx.session.get(EntityRow, row.bearer_node_id)
-    if bearer is None or held(bearer.id) or blocked(bearer.id, CONDITION_KEY):
+    if bearer is None or bearer.status not in ALIVE_STATUSES or held(bearer.id) or blocked(bearer.id, CONDITION_KEY):
         return
     kind = await ctx.session.get(AgentlessConditionRow, row.kind_id) if row.kind_id is not None else None
     course = kind.course if kind is not None else ConditionCourse.STABLE
@@ -83,6 +84,11 @@ async def run_course(ctx: TickContext, row: ConditionRow, tally: ConditionTally)
 
 
 async def tend_courses(ctx: TickContext, tally: ConditionTally) -> None:
-    query = select(ConditionRow).where(ConditionRow.ended_epoch.is_(None), ConditionRow.cause.is_not(None)).order_by(ConditionRow.id)
+    query = (
+        select(ConditionRow)
+        .join(EntityRow, EntityRow.id == ConditionRow.bearer_node_id)
+        .where(ConditionRow.ended_epoch.is_(None), ConditionRow.cause.is_not(None), EntityRow.status.in_(sorted(ALIVE_STATUSES)))
+        .order_by(ConditionRow.id)
+    )
     for row in list(await ctx.session.scalars(query)):
         await run_course(ctx, row, tally)

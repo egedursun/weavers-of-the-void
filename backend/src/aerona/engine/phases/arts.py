@@ -43,6 +43,8 @@ from aerona.engine.sacred.astrology import SignTally, sign_births
     "table.good_kinds",
     "table.holder_levels",
     "table.holder_techniques",
+    "table.incident_participants",
+    "table.incidents",
     "table.law_jurisdictions",
     "table.law_profiles",
     "table.mortal_profiles",

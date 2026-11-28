@@ -132,7 +132,10 @@ async def fail(ctx: TickContext, row: RestorationRow, why: RestorationFailure, t
     row.stage, row.ended_epoch = RestorationStage.FAILED, ctx.epoch
     tally.failed += 1
     await record(
-        ctx, "polity.restoration_failed", roles={IncidentRole.SUBJECT: row.fallen_polity_id, IncidentRole.ACTOR: row.claimant_node_id}, facts={"why": why}
+        ctx,
+        "polity.restoration_failed",
+        roles={IncidentRole.SUBJECT: row.fallen_polity_id, IncidentRole.ACTOR: await standing_claimant(ctx, row)},
+        facts={"why": why},
     )
 
 
@@ -207,10 +210,15 @@ async def restore(ctx: TickContext, row: RestorationRow, tally: RestorationTally
     await record(
         ctx,
         "polity.restored",
-        roles={IncidentRole.PREDECESSOR: fallen.id, IncidentRole.SUCCESSOR: realm.entity.id, IncidentRole.ACTOR: row.claimant_node_id},
+        roles={IncidentRole.PREDECESSOR: fallen.id, IncidentRole.SUCCESSOR: realm.entity.id, IncidentRole.ACTOR: await standing_claimant(ctx, row)},
         facts={"lands": len(towns), "laws": laws},
     )
     return realm.entity
+
+
+async def standing_claimant(ctx: TickContext, row: RestorationRow) -> int | None:
+    claimant = await living_entity(ctx.session, row.claimant_node_id) if row.claimant_node_id is not None else None
+    return claimant.id if claimant is not None else None
 
 
 async def advance(ctx: TickContext, row: RestorationRow, tally: RestorationTally) -> RestorationStage:
@@ -225,7 +233,7 @@ async def advance(ctx: TickContext, row: RestorationRow, tally: RestorationTally
             await record(
                 ctx,
                 "polity.restoration_rising",
-                roles={IncidentRole.SUBJECT: row.fallen_polity_id, IncidentRole.ACTOR: row.claimant_node_id},
+                roles={IncidentRole.SUBJECT: row.fallen_polity_id, IncidentRole.ACTOR: await standing_claimant(ctx, row)},
                 facts={"memory": row.memory},
             )
     elif row.stage is RestorationStage.RISING:

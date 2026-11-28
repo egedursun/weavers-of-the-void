@@ -130,6 +130,7 @@ async def world_ends(ctx: TickContext) -> None:
     "table.incidents",
     "table.incubating_ideas",
     "table.mandates",
+    "table.messages",
     "table.node_births",
     "table.offices",
     "table.org_governance",

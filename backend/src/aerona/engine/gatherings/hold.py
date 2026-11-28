@@ -82,9 +82,10 @@ from aerona.engine.primitives.folk import folk_among, present_among
 from aerona.engine.primitives.levies import demobilise
 from aerona.engine.primitives.numbers import clamp_int
 from aerona.engine.primitives.stats import set_stats, shift_stat, stat, stat_or
-from aerona.engine.recording.births import born_floor
+from aerona.engine.recording.births import birth_moments, born_floor
 from aerona.engine.recording.moments import incident_moment, moment_for
 from aerona.engine.recording.record import FactInput, StepDraft, kind_of, record
+from aerona.engine.recording.rites import near_the_dead
 from aerona.engine.relations.book import ensure_relation, relation, relations_of, shift
 
 G = GatheringKind
@@ -145,7 +146,10 @@ async def plan(ctx: TickContext, occasion: Occasion, *, by_player: bool = False)
     ctx.session.add(row)
     await ctx.session.flush()
     floor = await rite_floor(ctx, row)
-    row.year = max(0, year_at(ctx, ctx.epoch, f"gathering_year.{row.id}"), floor.year if floor is not None else 0)
+    planned = Moment(max(0, year_at(ctx, ctx.epoch, f"gathering_year.{row.id}"), floor.year if floor is not None else 0))
+    if row.honoured_node_id is not None:
+        planned = await near_the_dead(ctx, f"gathering.{row.kind.value}", [row.honoured_node_id], planned, floor)
+    row.year = planned.year
     row.season = await season_of(ctx, row)
     await invite(ctx, row, occasion.guests)
     return row
@@ -786,6 +790,13 @@ async def rites_already_kept(ctx: TickContext, row: GatheringRow) -> CollectionR
 
 async def chronicle(ctx: TickContext, holding: Holding) -> None:
     row = holding.row
+    key = f"gathering.{row.kind.value}"
+    floor = latest(Moment(row.year) if row.year is not None else None, await rite_floor(ctx, row), await incident_moment(ctx.session, scoped_cause()))
+    moment = await moment_for(ctx, kind_of(key).clock, key=key, participants=[row.host_node_id, *holding.attendees], cause_moment=floor, world_id=row.world_id)
+    if row.honoured_node_id is not None:
+        moment = await near_the_dead(ctx, key, [row.honoured_node_id], moment, await rite_floor(ctx, row))
+    born = await birth_moments(ctx.session, holding.attendees)
+    holding.attendees = [node for node in holding.attendees if (birth := born.get(node)) is None or not moment.before(birth)]
     members = {node: collection_role(holding, node) for node in holding.attendees}
     places = [row.place_entity_id] if row.place_entity_id is not None else []
     collection = await rites_already_kept(ctx, row)
@@ -804,9 +815,6 @@ async def chronicle(ctx: TickContext, holding: Holding) -> None:
             continue
         guest = holding.guests.get(node)
         guests.setdefault(GUEST_INCIDENT_ROLES[guest.role] if guest is not None else IncidentRole.GUEST, []).append(node)
-    key = f"gathering.{row.kind.value}"
-    floor = latest(Moment(row.year) if row.year is not None else None, await rite_floor(ctx, row), await incident_moment(ctx.session, scoped_cause()))
-    moment = await moment_for(ctx, kind_of(key).clock, key=key, participants=[row.host_node_id, *holding.attendees], cause_moment=floor, world_id=row.world_id)
     if "year" not in row.locked:
         row.year = moment.year
     await record(

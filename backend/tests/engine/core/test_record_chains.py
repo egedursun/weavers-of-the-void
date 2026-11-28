@@ -4,29 +4,37 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
-from aerona.catalog.incident_kinds.sequence import AFTER_KINDS, FOLLOWS, matching
+from aerona.catalog.incident_kinds.sequence import AFTER_KINDS, FOLLOWS, RITE_YEARS, matching
 from aerona.db.tables.interconnect import IncidentRow
+from aerona.db.tables.lore import ChronicleRow
 from aerona.db.tables.node import NodeBirthRow
+from aerona.db.tables.records import IncidentFactRow
 from aerona.domain.enums.agrarian import RebuildCause
 from aerona.domain.enums.body import MaimedKind
 from aerona.domain.enums.entity import EntityType
 from aerona.domain.enums.intervention import Disaster
 from aerona.domain.enums.modifier import IncidentRole
-from aerona.domain.enums.records import ProcessClock
+from aerona.domain.enums.mortal import DeathCause
+from aerona.domain.enums.records import FactUnit, ProcessClock
 from aerona.domain.enums.settlement import DistrictHarm, DistrictKind
 from aerona.domain.enums.statecraft import MandateKind
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import MortalStats, SettlementStats
 from aerona.domain.models.moment import Moment
 from aerona.engine.context import TickContext
+from aerona.engine.lifecycle.mortal_death import die
+from aerona.engine.primitives.stats import stat
 from aerona.engine.recording.chains import anchor_at, happening_clock
-from aerona.engine.recording.record import record
+from aerona.engine.recording.record import FactInput, record
 from aerona.engine.recording.scope import recording
 from aerona.rules.registry import Rules
-from tests.engine.core.factories import entity, seed_core_world
+from tests.engine.core.factories import entity, mortal, seed_core_world
 from tests.engine.cosmos.factories import tick
 
 TOWNS = 12
+DEED_YEARS = (30, 40, 45)
+DIED_AFTER = 8
+NAMED_FACTS: dict[str, FactInput] = {"name": "Second Elder", "living": "Elder", "taboo": 0}
 
 
 def at_step(ctx: TickContext, step: float, phase: str) -> TickContext:
@@ -146,3 +154,72 @@ async def test_what_a_happening_set_off_moves_with_it_when_the_happening_is_date
             place=region,
         )
     assert not (await moment(session, follower.incident_id)).before(await moment(session, scope.incident_id))
+
+
+async def test_a_death_keeps_its_own_year_and_the_deeds_written_later_in_the_epoch_move_before_it(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = tick(session, rules)
+    start = epoch_start_year(ctx.epoch, rules.time.years_per_epoch)
+    elder = await mortal(session, "Old Keeper", world, world.regions[0].id, age=80)
+    deeds = []
+    for offset in DEED_YEARS:
+        written = await record(
+            ctx,
+            "body.maimed",
+            roles={IncidentRole.SUBJECT: elder.id},
+            facts={"maim": MaimedKind.ONE_ARMED, "count": 1},
+            at_moment=Moment(start + offset),
+        )
+        deeds.append(written.incident_id)
+    follower = await record(
+        ctx,
+        "body.maimed",
+        roles={IncidentRole.SUBJECT: world.regions[1].id},
+        facts={"maim": MaimedKind.ONE_ARMED, "count": 2},
+        cause=deeds[-1],
+        at_moment=Moment(start + DEED_YEARS[-1] + 1),
+    )
+    died = start + DIED_AFTER
+    await die(ctx, elder, natural=True, year=died, manner=DeathCause.OLD_AGE)
+    assert stat(elder, "death_year") == died
+    for incident_id in deeds:
+        row = await session.get(IncidentRow, incident_id)
+        assert row is not None and row.year is not None and row.year < died
+        line = await session.get(ChronicleRow, row.chronicle_id)
+        assert line is None or line.year == row.year
+    assert not (await moment(session, follower.incident_id)).before(await moment(session, deeds[-1]))
+
+
+async def test_a_deed_that_tells_its_own_year_holds_the_death_after_it(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = tick(session, rules)
+    start = epoch_start_year(ctx.epoch, rules.time.years_per_epoch)
+    elder = await mortal(session, "Dated Keeper", world, world.regions[0].id, age=80)
+    fixed = await record(
+        ctx,
+        "body.maimed",
+        roles={IncidentRole.SUBJECT: elder.id},
+        facts={"maim": MaimedKind.ONE_ARMED, "count": 1},
+        at_moment=Moment(start + DEED_YEARS[-1]),
+    )
+    session.add(IncidentFactRow(incident_id=fixed.incident_id, key="year", position=0, number=start + DEED_YEARS[-1], unit=FactUnit.YEARS))
+    await session.flush()
+    await die(ctx, elder, natural=True, year=start + DIED_AFTER, manner=DeathCause.OLD_AGE)
+    assert stat(elder, "death_year") == start + DEED_YEARS[-1]
+
+
+async def test_the_rites_after_a_death_fall_close_to_it_and_never_decades_later(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = at_step(tick(session, rules), 0.95, "rites")
+    start = epoch_start_year(ctx.epoch, rules.time.years_per_epoch)
+    died = start + DIED_AFTER
+    years = []
+    for index in range(TOWNS):
+        elder = await mortal(session, f"Elder {index}", world, world.regions[0].id, age=80)
+        await die(ctx, elder, natural=True, year=died, manner=DeathCause.OLD_AGE)
+        async with recording(ctx, "lifecycle.affairs_closed", participants=[elder.id]) as scope:
+            await record(ctx, "lifecycle.affairs_closed", roles={IncidentRole.SUBJECT: elder.id}, facts={"affairs": 1, "ties": 1})
+        years.append((await moment(session, scope.incident_id)).year)
+        named = await record(ctx, "death.named", roles={IncidentRole.SUBJECT: elder.id}, facts=NAMED_FACTS)
+        years.append((await moment(session, named.incident_id)).year)
+    assert all(died <= year <= died + RITE_YEARS for year in years)
