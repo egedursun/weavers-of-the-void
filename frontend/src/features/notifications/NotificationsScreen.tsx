@@ -28,6 +28,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { Label as FieldLabel } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -39,7 +40,6 @@ import {
   PagedList,
   PageHeader,
   Section,
-  FieldTile,
 } from '@/components/domain'
 import { MentionText } from '@/components/domain/MentionText'
 import { Label, Muted, Text } from '@/components/typography'
@@ -541,15 +541,16 @@ export function NotificationsScreen() {
           description='Deaths, rebellions, prophecies, cosmic events and the prayers made to you collect here.'
           surface='card'
           actions={
-            <div className='flex min-w-0 flex-wrap items-center gap-3'>
+            <div className='flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2'>
               <div className='flex items-center gap-2'>
-                <FieldTile id='only-unread' label='Only unread'>
-                  <Switch
-                    id='only-unread'
-                    checked={unreadOnly}
-                    onCheckedChange={setUnreadOnly}
-                  />
-                </FieldTile>
+                <Switch
+                  id='only-unread'
+                  checked={unreadOnly}
+                  onCheckedChange={setUnreadOnly}
+                />
+                <FieldLabel htmlFor='only-unread' className='whitespace-nowrap'>
+                  Only unread
+                </FieldLabel>
               </div>
               <Button
                 act={mark}
