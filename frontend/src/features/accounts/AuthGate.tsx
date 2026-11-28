@@ -49,7 +49,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           }
           description={
             serverDown(state.error)
-              ? `${state.error.message} This screen reconnects on its own.`
+              ? 'It may be starting or restarting. This screen reconnects on its own as soon as the server answers.'
               : state.error.message
           }
           action={
