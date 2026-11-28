@@ -152,7 +152,11 @@ async def moment_for(
     else:
         position = ctx.environment.rng(drawn_stream(ctx, stream_of(key, participants))).random() * span * spread_of(ctx, clock) / PERCENT
     year = start + min(span - 1, int(position))
-    moment = calendar.place(year, position - int(position))
+    within = position - int(position)
+    if within == 0:
+        within = ctx.environment.rng(drawn_stream(ctx, f"{stream_of(key, participants)}.within")).random()
+    position = int(position) + within
+    moment = calendar.place(year, within)
     after_this = latest(cause_moment, await ended_floor(ctx.session, participants))
     if after_this is not None and moment.before(after_this) and after_this.year < start + span - 1:
         rest = start + span - after_this.year

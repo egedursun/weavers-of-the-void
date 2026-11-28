@@ -265,13 +265,22 @@ async def press(ctx: TickContext, atlas: RegionAtlas, town: EntityRow, camp: Cam
                 await receive_coin(ctx.session, ctx.rules, town, taken)
             await change_relation(ctx, other.id, town.id, -table.raid_relation, MemoryKind.HARMED_ME, note="raided by herders")
             tally.raids += 1
-            await record(
-                ctx,
-                "nomads.raid",
-                roles={IncidentRole.ACTOR: town.id, IncidentRole.VICTIM: other.id},
-                facts={"taken": taken, "might": might, "guard": guard},
-                steps=(StepDraft(StepAction.PILLAGE, actor=town.id, target=other.id, amount=taken or None, unit=FactUnit.COIN if taken else None),),
-            )
+            if taken > 0:
+                await record(
+                    ctx,
+                    "nomads.raid",
+                    roles={IncidentRole.ACTOR: town.id, IncidentRole.VICTIM: other.id},
+                    facts={"taken": taken, "might": might, "guard": guard},
+                    steps=(StepDraft(StepAction.PILLAGE, actor=town.id, target=other.id, amount=taken, unit=FactUnit.COIN),),
+                )
+            else:
+                await record(
+                    ctx,
+                    "nomads.raid_empty",
+                    roles={IncidentRole.ACTOR: town.id, IncidentRole.VICTIM: other.id},
+                    facts={"might": might, "guard": guard},
+                    steps=(StepDraft(StepAction.PILLAGE, actor=town.id, target=other.id),),
+                )
             continue
         if ctx.rng(f"nomads.trade.{town.id}.{other.id}.{ctx.epoch}").chance(table.trade_pct):
             await trade(ctx, town, camp, other, tally)

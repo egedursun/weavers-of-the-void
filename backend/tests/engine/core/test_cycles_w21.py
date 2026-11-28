@@ -979,3 +979,20 @@ async def test_three_towns_that_return_each_others_gifts_begin_a_circuit_once(se
     circuits = list(await session.scalars(select(CircuitRow)))
     assert tally.circuits == 1 and [sorted(row.stops) for row in circuits] == [sorted(town.id for town in towns)]
     assert tally.passes >= 1
+
+
+async def test_raiders_who_find_no_coin_are_told_so_plainly_never_as_carrying_off_none(session: AsyncSession, world: CoreWorld) -> None:
+    camp_town = await town_of(session, world, "Riders", region=0, population=3000, tier=SizeTier.VILLAGE)
+    farm = await town_of(session, world, "Bare Fields", region=1, population=500)
+    await realm_of(session, world, farm, treasury=0)
+    session.add(LabourRow(community_entity_id=camp_town.id, job=Job.HERDING, workers=900, output_pct=100, epoch=0, held=False))
+    session.add(CampRow(settlement_entity_id=camp_town.id, mode=MobilityMode.NOMADIC, circuit=[world.regions[1].id], herd=500, grazing=90, water=50, locked=[]))
+    farm_profile = await session.get(SettlementProfileRow, farm.id)
+    assert farm_profile is not None
+    farm_profile.militia = 0
+    await session.flush()
+    ctx = await context(session, nomadism={"raid_pct": 100, "tribute_ratio": 1_000_000, "trade_pct": 0})
+    tally = NomadTally()
+    await keep_nomads(ctx, tally)
+    kinds = list(await session.scalars(select(IncidentRow.kind).where(IncidentRow.kind.like("nomads.raid%"))))
+    assert tally.raids >= 1 and kinds and set(kinds) == {"nomads.raid_empty"}

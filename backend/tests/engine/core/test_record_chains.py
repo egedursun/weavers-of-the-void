@@ -41,6 +41,10 @@ DIED_AFTER = 8
 GENESIS_SEEN = 44
 NEWCOMER_CAME = 39
 NEWCOMER_AGE = 21
+ACT_STEPS = 10
+YEAR_DAYS = 360
+SEASONS = 4
+DAY_HOURS = 24
 NAMED_FACTS: dict[str, FactInput] = {"name": "Second Elder", "living": "Elder", "taboo": 0}
 
 
@@ -314,3 +318,13 @@ async def test_nothing_is_told_of_a_grown_newcomer_before_it_appeared(session: A
         at_moment=Moment(came - NEWCOMER_AGE // 2),
     )
     assert (await moment(session, told.incident_id)).year >= came
+
+
+async def test_acts_placed_by_the_progress_of_an_epoch_fall_through_their_years_not_on_the_first_hour(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    world.world.year_length_days, world.world.season_count, world.world.day_length_hours = YEAR_DAYS, SEASONS, DAY_HOURS
+    await session.flush()
+    ctx = tick(session, rules)
+    placed = [await moment_for(ctx, ProcessClock.INSTANT, key=f"act.{step}", progress=step / ACT_STEPS, world_id=world.world.id) for step in range(ACT_STEPS)]
+    assert len({(moment.season, moment.day, moment.hour) for moment in placed}) > 1
+    assert [moment.year for moment in placed] == sorted(moment.year for moment in placed)

@@ -509,6 +509,20 @@ KINDS: tuple[IncidentKindSpec, ...] = (
         terms=True,
     ),
     IncidentKindSpec(
+        "nomads.raid_empty",
+        G.MOVEMENT,
+        "Raiders of {actor} struck {victim} but found no coin to carry off.",
+        roles=(RoleSpec(R.ACTOR), RoleSpec(R.VICTIM)),
+        facts=(
+            FactSpec("might", FactValue.NUMBER, FactUnit.STRENGTH),
+            FactSpec("guard", FactValue.NUMBER, FactUnit.STRENGTH),
+        ),
+        steps=frozenset({A.PILLAGE}),
+        place=PlaceRule.WHEN_KNOWN,
+        clock=C.INSTANT,
+        terms=True,
+    ),
+    IncidentKindSpec(
         "nomads.rerouted",
         G.MOVEMENT,
         "With its pastures grazed bare, {actor} set out on a new round of {pastures:pasture|pastures}.",

@@ -252,6 +252,7 @@ CYCLE_MECHANICS = (
             "nomads.settled",
             "nomads.tribute",
             "nomads.raid",
+            "nomads.raid_empty",
             "nomads.trade",
             "nomads.rerouted",
             "nomads.confederation",
