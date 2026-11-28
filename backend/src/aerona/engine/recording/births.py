@@ -6,10 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aerona.catalog.incident_kinds.onlookers import ONLOOKER_ROLES
 from aerona.db.fast_session import rows_by_id
 from aerona.db.read_memo import memo_of, table_names
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.interconnect import IncidentRow
 from aerona.db.tables.node import NodeBirthRow, NodeRow
 from aerona.domain.enums.entity import EntityType
+from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.moment import Moment, latest
 
@@ -19,6 +21,7 @@ HEARSAY_ROLES = ONLOOKER_ROLES
 
 BIRTHS_MEMO = "aerona.recording.births"
 BIRTH_TABLES = table_names([NodeBirthRow])
+MADE_TABLES = sorted(table_names([NodeRow, EntityRow]))
 
 
 async def birth_moments(session: AsyncSession, nodes: Iterable[int]) -> dict[int, Moment | None]:
@@ -65,7 +68,30 @@ async def mark_born(session: AsyncSession, participants: Iterable[tuple[int, Inc
     births = await birth_moments(session, [node for node, _ in named])
     for node in sorted(births):
         if births[node] is None and born_now(known.get(node), node in created, epoch):
-            date_born(session, node, moment if node in created else lived_since(known.get(node), moment))
+            first = earliest(moment, await made_at(session, node, epoch))
+            date_born(session, node, first if node in created else lived_since(known.get(node), first))
+
+
+async def made_at(session: AsyncSession, node: int, epoch: int | None = None) -> Moment | None:
+    row = (
+        await session.execute(
+            select(StateChangeRow.year, StateChangeRow.season, StateChangeRow.day, StateChangeRow.hour)
+            .where(
+                StateChangeRow.node_id == node,
+                StateChangeRow.epoch == epoch if epoch is not None else StateChangeRow.epoch.is_not(None),
+                StateChangeRow.operation == LedgerOperation.INSERT,
+                StateChangeRow.table_name.in_(MADE_TABLES),
+                StateChangeRow.year.is_not(None),
+            )
+            .order_by(StateChangeRow.year, StateChangeRow.season, StateChangeRow.day, StateChangeRow.hour)
+            .limit(1)
+        )
+    ).first()
+    return Moment(row[0], row[1], row[2], row[3]) if row is not None and row[0] is not None else None
+
+
+def earliest(moment: Moment, made: Moment | None) -> Moment:
+    return made if made is not None and made.before(moment) else moment
 
 
 def lived_since(row: NodeRow | None, moment: Moment) -> Moment:

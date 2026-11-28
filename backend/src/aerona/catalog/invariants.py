@@ -113,6 +113,13 @@ TYPED: tuple[InvariantSpec, ...] = (
         "birth_dated", "node_births", "every thing a record brings into being knows the moment it came into being", Remedy.REPAIR, "dated by that record"
     ),
     InvariantSpec(
+        "born_no_later_than_made",
+        "node_births",
+        "a thing comes into being no later than the change that made it",
+        Remedy.REPAIR,
+        "moved to the moment of its making",
+    ),
+    InvariantSpec(
         "birth_at_first_sight",
         "node_births",
         "a thing comes into being no later than the first record that names it in the age it was made, and a child at its birth",

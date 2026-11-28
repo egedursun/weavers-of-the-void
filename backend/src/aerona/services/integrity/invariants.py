@@ -175,6 +175,7 @@ from aerona.services.integrity.life_links import (
     venueless_speeches,
     void_lease,
 )
+from aerona.services.integrity.made_births import born_after_their_making, date_birth_at_making
 from aerona.services.integrity.market_links import beastless_clubs, bind_right, loose_fixings, settle_fixing, unbeast_club, unbound_rights
 from aerona.services.integrity.memory_causes import causes_without_their_subject, unlink_cause
 from aerona.services.integrity.monetary_links import align_issuer, bad_pegs, clear_peg, stray_issuers
@@ -703,6 +704,7 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "moment_after_cause": (early_moments, follow_cause),
     "genesis_at_start": (late_beginnings, begin_at_start),
     "birth_at_first_sight": (births_after_sighting, redate_birth),
+    "born_no_later_than_made": (born_after_their_making, date_birth_at_making),
     "age_since_birth": (overaged, set_age),
     "judgment_at_epoch_close": (early_judgments, close_judgment),
     "rite_after_death": (early_rites, follow_rite),

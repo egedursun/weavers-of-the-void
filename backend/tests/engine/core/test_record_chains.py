@@ -223,3 +223,31 @@ async def test_the_rites_after_a_death_fall_close_to_it_and_never_decades_later(
         named = await record(ctx, "death.named", roles={IncidentRole.SUBJECT: elder.id}, facts=NAMED_FACTS)
         years.append((await moment(session, named.incident_id)).year)
     assert all(died <= year <= died + RITE_YEARS for year in years)
+
+
+async def test_a_thing_made_in_a_step_is_born_when_it_was_made_and_not_at_its_later_first_record(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = tick(session, rules)
+    start = epoch_start_year(ctx.epoch, rules.time.years_per_epoch)
+    async with recording(ctx, "disasters.drought", place_id=world.regions[0].id, world_id=world.world.id, moment=Moment(start + 3)):
+        hamlet = await entity(
+            session,
+            "Early Hamlet",
+            EntityType.SETTLEMENT,
+            SettlementStats(population=10),
+            world_id=world.world.id,
+            location_id=world.regions[0].id,
+            birth_epoch=ctx.epoch,
+        )
+        await session.execute(delete(NodeBirthRow).where(NodeBirthRow.node_id == hamlet.id))
+        await session.flush()
+    await record(
+        ctx,
+        "settlement.district_drought",
+        roles={IncidentRole.PLACE: hamlet.id},
+        facts={"harm": next(iter(DistrictHarm)), "districts": next(iter(DistrictKind)), "destroyed": 1},
+        place=hamlet.id,
+        at_moment=Moment(start + 40),
+    )
+    born = await session.get(NodeBirthRow, hamlet.id)
+    assert born is not None and born.year <= start + 3

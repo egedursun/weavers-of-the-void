@@ -2,7 +2,7 @@ from collections.abc import AsyncIterator, Awaitable, Callable
 from pathlib import Path
 
 import pytest
-from sqlalchemy import select, text
+from sqlalchemy import delete, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.death_causes import DEATH_CAUSES, LOOSE_CAUSES, death_cause_of
@@ -733,6 +733,23 @@ async def plague_named_before_its_naming(session: AsyncSession, world: CoreWorld
 async def headship_named_by_its_label(session: AsyncSession, world: CoreWorld) -> None:
     title = await entity(session, "the Headship of an association of Ormedal", EntityType.TITLE, TitleStats(), world_id=world.world.id)
     session.add(TitleProfileRow(title_entity_id=title.id, rank=TitleTier.GUILD, locked=[]))
+
+
+async def hamlet_born_after_its_making(session: AsyncSession, world: CoreWorld) -> None:
+    hamlet = await settlement(session, "Late Born Hamlet", world, world.regions[0])
+    await session.execute(delete(NodeBirthRow).where(NodeBirthRow.node_id == hamlet.id))
+    session.add(NodeBirthRow(node_id=hamlet.id, year=40, season=None, day=None, hour=None, locked=[]))
+    session.add(
+        StateChangeRow(
+            epoch=1,
+            year=3,
+            table_name="entities",
+            row_key=f'{{"id": {hamlet.id}}}',
+            node_id=hamlet.id,
+            operation=LedgerOperation.INSERT,
+            actor_kind=ActorKind.ENGINE,
+        )
+    )
 
 
 async def tribute_named_for_an_old_name(session: AsyncSession, world: CoreWorld) -> None:
@@ -2416,6 +2433,7 @@ BREAKERS: dict[str, Breaker] = {
     "moment_after_births": people_before_its_world,
     "birth_dated": undated_birth,
     "birth_at_first_sight": birth_after_its_first_record,
+    "born_no_later_than_made": hamlet_born_after_its_making,
     "age_since_birth": child_older_than_its_years,
     "judgment_at_epoch_close": verdict_inside_its_age,
     "rite_after_death": wake_before_the_death,

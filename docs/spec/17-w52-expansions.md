@@ -20545,13 +20545,15 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 **What it is.** Told happenings spread over the years of their window instead of standing on their step's single moment, and every happening that follows another stands after it.
 
-**Engine.** `engine/recording/chains.py`: a told kind of the phase clock spreads like a single happening; `catalog/incident_kinds/sequence.py` lists which kinds follow which, matched on a shared principal node; a battle's aftermath is anchored at the battle; an effect floored by its cause takes a moment between the cause and the end of the window; repeated happenings draw their own moments; an open happening dated later carries what it set off along.
+**Engine.** `engine/recording/chains.py`: a told kind of the phase clock spreads like a single happening; `catalog/incident_kinds/sequence.py` lists which kinds follow which, matched on a shared principal node; a battle's aftermath is anchored at the battle; an effect floored by its cause takes a moment between the cause and the end of the window; repeated happenings draw their own moments; an open happening dated later carries what it set off along. A thing made in a step comes into being when it was made, when that is earlier than the first record that names it.
 
 **Rules.** None new.
 
 **Levers and surfaces.** None of its own: the moments show wherever a record is shown.
 
-**Proving tests.** `tests/engine/core/test_record_chains.py`; `tests/engine/core/test_moments.py` (no chain reversed, no kind on one year).
+**Repairs.** `born_no_later_than_made`.
+
+**Proving tests.** `tests/engine/core/test_record_chains.py`; `tests/engine/core/test_moments.py` (no chain reversed, no kind on one year); the case in `tests/services/integrity/test_every_invariant.py`.
 
 ### 52.672 Worlds keep the orbits they lived by
 
