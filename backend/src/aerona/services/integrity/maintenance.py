@@ -69,10 +69,17 @@ async def startup_repairs(database: Database, publish: Publisher, rules: Rules) 
     return Maintained(counters, log.recent(rules.link_graph.summary_list))
 
 
+async def made(database: Database) -> bool:
+    async with database.read() as session:
+        return await CosmosRepository(session).get() is not None
+
+
 async def background_repairs(database: Database, publish: Publisher, rules: Rules) -> Maintained:
     repairs, log = repairs_for(publish)
     counters: dict[str, int] = {}
     failures: dict[str, str] = {}
+    if not await made(database):
+        return Maintained(counters, [], failures)
     for name, repair in ((GRAPH_ENDS_STEP, graph_ends), (SCHEMA_STEP, schema)):
         try:
             counters[name] = await repair(repairs, database, rules)

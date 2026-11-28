@@ -2,6 +2,7 @@ import asyncio
 import time
 from collections.abc import Awaitable, Callable
 from functools import partial
+from pathlib import Path
 
 from sqlalchemy import select
 
@@ -25,6 +26,7 @@ from aerona.services.books.worker import close_books, in_books, order_for, page,
 from aerona.services.integrity.data_repairs import GRAPH_ENDS_STEP, SCHEMA_STEP
 from aerona.services.integrity.maintenance import HISTORY_STEP, Maintained, background_repairs, startup_repairs
 from tests.agents.world import AgentWorld
+from tests.conftest import OpenDatabase
 
 BEAT = 0.02
 HEAVY_SECONDS = 1.5
@@ -144,3 +146,10 @@ async def test_the_startup_repairs_run_in_the_engine_process_without_holding_the
     assert "data_repairs" in startup.counters and HISTORY_STEP in startup.counters
     assert set(background.counters) == {GRAPH_ENDS_STEP, SCHEMA_STEP} and not background.failures
     assert wait < LONGEST_WAIT
+
+
+async def test_a_universe_whose_world_is_not_made_yet_runs_no_background_repair(open_database: OpenDatabase, tmp_path: Path, rules: Rules) -> None:
+    empty = open_database(tmp_path / "unmade.db")
+    found = await background_repairs(empty, lambda kind, payload: None, rules)
+    assert found.failures == {}
+    await empty.dispose()
