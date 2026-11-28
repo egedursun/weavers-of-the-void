@@ -31,8 +31,6 @@ INTERNAL_REASONING = re.compile(
 LEADING_CONTRAST = re.compile(r"^(?:however|but|yet|still)[,\s]+", re.IGNORECASE)
 META_SENTENCE = re.compile(r"\bfate\b[^.!?]*\b(?:rewrote|re-wrote|fixed|changed|corrected|amended)\b|\bthe first telling\b", re.IGNORECASE)
 LETTER = re.compile(r"[^\W\d_]")
-TRAILING_JOINERS = " ,;:"
-ELLIPSIS = "…"
 NUMBER_TOKEN = re.compile(r"(?<![\w.])\d+(?![\w.])")
 
 
@@ -94,10 +92,7 @@ def shorten_rationale(text: str | None, word_limit: int) -> str | None:
     words = cleaned.split()
     if len(words) <= word_limit:
         return cleaned
-    first = sentences(cleaned)[0]
-    if len(first.split()) <= word_limit:
-        return first
-    return " ".join(words[:word_limit]).rstrip(TRAILING_JOINERS) + ELLIPSIS
+    return sentences(cleaned)[0]
 
 
 def strip_meta_sentences(text: str | None) -> str:

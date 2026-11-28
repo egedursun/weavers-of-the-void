@@ -24,7 +24,8 @@ def test_sanitize_removes_game_marks() -> None:
 def test_fate_note_drops_internal_reasoning_and_shortens() -> None:
     note = clean_fate_note("PRE-SCREEN warning ignored. However the salt holds; it is bound to the river.")
     assert note == "The salt holds; it is bound to the river."
-    assert shorten_rationale("one two three four five six seven eight", 4) == "One two three four…"
+    assert shorten_rationale("one two three four five six seven eight", 4) == "One two three four five six seven eight"
+    assert shorten_rationale("one two three four five. six seven eight nine ten.", 4) == "One two three four five."
 
 
 def test_meta_sentences_names_and_prefix() -> None:
