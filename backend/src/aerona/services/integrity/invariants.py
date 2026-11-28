@@ -26,7 +26,7 @@ from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.life_traits import OrderKindTrait
 from aerona.domain.enums.war import CaptiveStatus
 from aerona.engine.mortal.readings import mend_death_cause, mismatched_deaths
-from aerona.services.integrity.adult_births import adults_born_at_first_sight, date_adult_birth
+from aerona.services.integrity.adult_births import adults_born_at_first_sight, date_adult_birth, pulled_births, restore_pulled_birth
 from aerona.services.integrity.agent_d_links import (
     clear_identity_target,
     lone_disputes,
@@ -759,6 +759,7 @@ CHECKS: dict[str, tuple[Find, Fix]] = {
     "son_covenant_between_friends": (covenants_between_enemies, end_covenant_of_enemies),
     "divine_mind_counts_its_epochs": (divine_minds_behind, count_divine_mind_epochs),
     "adult_born_before_first_sight": (adults_born_at_first_sight, date_adult_birth),
+    "birth_kept_from_a_misread_age": (pulled_births, restore_pulled_birth),
     "star_lit_by_its_kind": (stars_lit_astray, light_star_by_its_kind),
     "remembrance_names_its_past": (remembrances_forgetting, remember_what_it_tells),
     "star_clock_follows_its_age": (clocks_past_their_age, wind_clock_to_age),

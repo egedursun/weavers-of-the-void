@@ -13,6 +13,7 @@ from aerona.db.repositories.chronicle import CAUSE_SCOPE
 from aerona.db.repositories.entities import EntityRepository
 from aerona.db.repositories.nodes import NodeRepository
 from aerona.db.tables.celestial import WorldRow
+from aerona.db.tables.changes import StateChangeRow
 from aerona.db.tables.cosmos import CosmosRow
 from aerona.db.tables.culture import ItemProfileRow
 from aerona.db.tables.entities import EntityRow
@@ -97,10 +98,22 @@ async def mourned_deaths(session: AsyncSession, mortal_id: int, epoch: int) -> M
     return latest(*(Moment(year) for stats in years if isinstance(year := getattr(stats, "death_year", None), int)))
 
 
+async def lived_until(session: AsyncSession, mortal_id: int, epoch: int) -> Moment | None:
+    found = (
+        await session.execute(
+            select(StateChangeRow.year, StateChangeRow.season, StateChangeRow.day, StateChangeRow.hour)
+            .where(StateChangeRow.node_id == mortal_id, StateChangeRow.epoch == epoch, StateChangeRow.year.is_not(None))
+            .order_by(StateChangeRow.year.desc(), StateChangeRow.season.desc(), StateChangeRow.day.desc(), StateChangeRow.hour.desc(), StateChangeRow.id.desc())
+            .limit(1)
+        )
+    ).first()
+    return Moment(found.year, found.season, found.day, found.hour) if found is not None and found.year is not None else None
+
+
 async def death_moment(ctx: TickContext, mortal: EntityRow, killer_id: int | None, cause_id: int | None, year: int | None) -> Moment:
     participants = [node for node in (mortal.id, killer_id) if node is not None]
     cause = await incident_moment(ctx.session, cause_id if cause_id is not None else CAUSE_SCOPE.get())
-    floor = latest(anchored(ctx, [mortal.id]), await mourned_deaths(ctx.session, mortal.id, ctx.epoch))
+    floor = latest(anchored(ctx, [mortal.id]), await mourned_deaths(ctx.session, mortal.id, ctx.epoch), await lived_until(ctx.session, mortal.id, ctx.epoch))
     if year is not None:
         chosen = Moment(year).at_least(cause).at_least(floor)
     else:

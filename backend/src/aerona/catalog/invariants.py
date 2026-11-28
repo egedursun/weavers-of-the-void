@@ -900,6 +900,13 @@ TYPED: tuple[InvariantSpec, ...] = (
         "the birth is dated back to the year their age gives",
     ),
     InvariantSpec(
+        "birth_kept_from_a_misread_age",
+        "node_births",
+        "a birth a repair moved earlier keeps the year the mortal's age gives, read at the epoch's end once the epoch has aged them",
+        Remedy.REPAIR,
+        "the birth goes back to the year it had before the repair moved it",
+    ),
+    InvariantSpec(
         "star_clock_follows_its_age",
         "stars",
         "the epochs a star has left in its age count from the age it has already lived",

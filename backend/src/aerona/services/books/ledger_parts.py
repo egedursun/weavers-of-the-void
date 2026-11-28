@@ -7,13 +7,14 @@ import tempfile
 import weakref
 from array import array
 from collections import defaultdict
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from concurrent.futures import Executor
 from dataclasses import dataclass, field, replace
 from functools import cache
 from pathlib import Path
+from typing import Any
 
-from sqlalchemy import Integer, TextClause, func, select, text
+from sqlalchemy import Integer, Table, TextClause, func, select, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,8 +34,10 @@ from aerona.services.books.records import (
     CHANGES_TITLE,
     HISTORY_TITLE,
     PHASE_PREFIX,
+    RECORD_TABLES,
     REPORT_GROUPS,
     THEN_TITLE,
+    UNNAMED,
     Bindings,
     ChangeLine,
     LateLedger,
@@ -509,7 +512,49 @@ async def bindings_of(session: AsyncSession, names: dict[int, str]) -> Bindings:
         frozenset(incident_id for incident_id, incident in ledger.incidents.items() if incident.kind.startswith(PHASE_PREFIX)),
         {node: list(former) for node, former in ledger.former.items()},
         {incident_id: ledger.rumours_told(incident_id) for incident_id in ledger.rumours},
+        await record_labels(session, names),
     )
+
+
+LABEL_COLUMNS = ("name", "title")
+KIND_COLUMNS = ("kind", "category")
+OWNER_SUFFIXES = ("_entity_id", "_node_id")
+EPOCH_KEY = "epoch"
+
+
+async def record_labels(session: AsyncSession, names: dict[int, str]) -> dict[tuple[int, int], str]:
+    found: dict[tuple[int, int], str] = {}
+    for index, name in enumerate(RECORD_TABLES):
+        table = Base.metadata.tables[name]
+        keys = list(table.primary_key.columns)
+        if len(keys) != 1:
+            continue
+        for row in (await session.execute(select(table).order_by(keys[0]))).mappings():
+            found[(index, int(row[keys[0].name]))] = record_label(table, dict(row), names)
+    return found
+
+
+def record_label(table: Table, row: Mapping[str, Any], names: dict[int, str]) -> str:
+    for column in LABEL_COLUMNS:
+        if isinstance(row.get(column), str) and row[column]:
+            return str(row[column])
+    keys = [column.name for column in table.primary_key.columns]
+    if keys == [EPOCH_KEY]:
+        return f"epoch {row[EPOCH_KEY]}"
+    singular = words(table.name).lower().removesuffix("s")
+    kind = next((spoken(row[column]) for column in KIND_COLUMNS if row.get(column)), None)
+    owner = next(
+        (
+            names.get(int(row[column.name]), UNNAMED)
+            for column in table.columns
+            if column.name.endswith(OWNER_SUFFIXES) and row.get(column.name) is not None and not column.primary_key
+        ),
+        None,
+    )
+    year = row.get("year")
+    epoch = row.get(EPOCH_KEY)
+    when = f" in year {year}" if isinstance(year, int) else f" of epoch {epoch}" if isinstance(epoch, int) else ""
+    return f"the {f'{kind} ' if kind else ''}{singular}{f' of {owner}' if owner else ''}{when}"
 
 
 def bound_report(report: RecordTable, bindings: Bindings) -> RecordTable:

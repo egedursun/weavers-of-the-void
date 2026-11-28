@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from aerona.catalog.season_positions import SEASON_POSITIONS
+from aerona.catalog.season_positions import SEASON_POSITIONS, SEASON_STEPS
 from aerona.db.base import Base
 from aerona.db.tables.economy import TradeRouteProfileRow
 from aerona.db.tables.node import NodeBirthRow
@@ -44,3 +44,12 @@ def test_a_moment_day_reads_one_based_like_the_history_lines() -> None:
     assert index.value(columns["day"], 101, row) == "102"
     assert index.value(columns["season"], 0, row) == "Thaw"
     assert any(position.dating is SeasonDating.DAY for position in SEASON_POSITIONS)
+
+
+def test_every_campaign_season_step_reads_as_the_season_of_its_campaign_never_a_bare_count() -> None:
+    index = index_with_seasons()
+    assert SEASON_STEPS
+    for step in SEASON_STEPS:
+        column = Base.metadata.tables[step.table].columns[step.column]
+        assert index.value(column, 0, SimpleNamespace()) == "First of the campaign", step
+        assert index.value(column, 2, SimpleNamespace()) == "Third of the campaign", step

@@ -16,9 +16,9 @@ from sqlalchemy.orm.base import instance_state
 from sqlalchemy.sql.elements import ColumnElement, KeyedColumnElement
 
 from aerona.cartography.biomes import Biome
-from aerona.catalog.season_positions import SEASON_POSITIONS, SeasonPosition
+from aerona.catalog.season_positions import SEASON_POSITIONS, SEASON_STEPS, SeasonPosition
 from aerona.constants.control import BOOKKEEPING_TABLES
-from aerona.core.grammar import an, singular, spoken
+from aerona.core.grammar import an, ordinal_word, singular, spoken
 from aerona.db.base import Base
 from aerona.db.profile_guard import LOCK_COLUMN, shape_of_table, table_name
 from aerona.db.tables.collective import AccountRow
@@ -451,6 +451,7 @@ def marked_items(key: str, items: list[Any]) -> str | None:
 
 SEASON_COLUMNS: dict[tuple[str, str], SeasonPosition] = {(position.table, position.column): position for position in SEASON_POSITIONS}
 MOMENT_DAYS = frozenset((position.table, "day") for position in SEASON_POSITIONS if position.dating is SeasonDating.DAY)
+CAMPAIGN_STEPS = frozenset((step.table, step.column) for step in SEASON_STEPS)
 
 
 class TypedIndex:
@@ -649,6 +650,8 @@ class TypedIndex:
         season = SEASON_COLUMNS.get(key)
         if season is not None and row is not None:
             return self.season_name(season, row, value)
+        if key in CAMPAIGN_STEPS:
+            return f"{ordinal_word(value + 1)} of the campaign"
         return str(value + 1) if key in MOMENT_DAYS else None
 
     def linked(self, column: KeyedColumnElement[Any], value: Any) -> str | None:

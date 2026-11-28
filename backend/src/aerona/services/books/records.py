@@ -12,10 +12,10 @@ from dataclasses import dataclass, field
 from functools import cache
 from itertools import batched
 from pathlib import Path
-from typing import overload
+from typing import Any, overload
 
+from sqlalchemy import Column, Table, select
 from sqlalchemy import Enum as SqlEnum
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.catalog.incident_kinds.registry import INCIDENT_KINDS
@@ -29,6 +29,7 @@ from aerona.db.tables.culture import RumourRow
 from aerona.db.tables.customs import NameFormRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.lore import ChronicleRow
+from aerona.db.tables.node import NodeRow
 from aerona.db.tables.records import IncidentFactRow, IncidentStepRow, IncidentStepStateRow, IncidentTermRow
 from aerona.db.tables.tellings import IncidentNameRow, RumourDistortionRow
 from aerona.domain.enums.meta import LedgerOperation
@@ -328,6 +329,29 @@ CAUSE_PART_TOKEN = "c"
 CAUSE_CELL_TOKEN = "k"
 RUMOURS_PART_TOKEN = "r"
 RUMOURS_CELL_TOKEN = "s"
+RECORD_TOKEN = "g"
+NODE_KEY_SUFFIXES = ("_entity_id", "_node_id", "_id")
+
+
+def node_table(table: Table) -> bool:
+    return table.name == NodeRow.__tablename__ or any(
+        foreign.column.table.name == NodeRow.__tablename__ for column in table.primary_key.columns for foreign in column.foreign_keys
+    )
+
+
+def keyed_tables() -> tuple[str, ...]:
+    found = {
+        foreign.column.table.name
+        for table in Base.metadata.tables.values()
+        if len(table.primary_key.columns) > 1
+        for column in table.primary_key.columns
+        for foreign in column.foreign_keys
+        if not node_table(foreign.column.table)
+    }
+    return tuple(sorted(found))
+
+
+RECORD_TABLES = keyed_tables()
 
 
 def token(kind: str, first: int, second: int | None = None) -> str:
@@ -364,15 +388,21 @@ class Bindings:
     phases: frozenset[int]
     former: dict[int, list[str]]
     rumours: dict[int, list[str]]
+    records: dict[tuple[int, int], str] = field(default_factory=dict)
 
     def name(self, node_id: int) -> str:
         return self.names.get(node_id) or UNNAMED
+
+    def record(self, table: int, row_id: int) -> str:
+        return self.records.get((table, row_id)) or f"{an(words(RECORD_TABLES[table]).lower().removesuffix('s'))} no longer kept"
 
     def bind(self, text: str) -> str:
         return TOKEN.sub(self.resolve, text) if MARK in text else text
 
     def resolve(self, found: re.Match[str]) -> str:
         first, second = int(found.group(2)), found.group(3)
+        if second is not None and found.group(1) == RECORD_TOKEN:
+            return self.record(first, int(second))
         if second is not None:
             return self.name_at(first, int(second))
         return RESOLVERS[found.group(1)](self, first)
@@ -535,6 +565,26 @@ class Ledger:
             return ""
         return self.names.get(node_id) or UNNAMED
 
+    def row_text(self, table: str, row_key: str, node_id: int | None) -> str:
+        parts = row_parts(row_key, node_id)
+        if not parts or set(parts) == {SURROGATE_KEY}:
+            return ""
+        columns = Base.metadata.tables[table].columns if table in Base.metadata.tables else None
+        return ", ".join(self.part_text(columns[key] if columns is not None and key in columns else None, key, value) for key, value in sorted(parts.items()))
+
+    def part_text(self, column: Column[Any] | None, key: str, value: object) -> str:
+        targets = [foreign.column.table for foreign in column.foreign_keys] if column is not None else []
+        label = words(next((key.removesuffix(suffix) for suffix in NODE_KEY_SUFFIXES if key.endswith(suffix)), key)).lower()
+        if isinstance(value, int) and not isinstance(value, bool):
+            if any(node_table(target) for target in targets):
+                return f"{label} {self.name(value)}"
+            found = next((RECORD_TABLES.index(target.name) for target in targets if target.name in RECORD_TABLES), None)
+            if found is not None:
+                return token(RECORD_TOKEN, found, value)
+        if isinstance(value, str):
+            return f"{label} {spoken(value)}"
+        return f"{label} {value}"
+
     def name_of(self, incident: IncidentRow) -> str:
         named = self.named.get(incident.id)
         if named is None:
@@ -642,7 +692,7 @@ class Ledger:
         tail = self.change_tail(change, terms)
         if change.operation is not LedgerOperation.UPDATE:
             return ToldChange(when, f"{'created' if change.operation is LedgerOperation.INSERT else 'removed'} {an(record)} record{owner}", tail)
-        told_row = row_words(change.row_key, change.node_id)
+        told_row = self.row_text(change.table_name, change.row_key, change.node_id)
         head = f"{words(change.field or '').lower()} of {record}{f' ({told_row})' if told_row else ''}{owner}"
         row = "" if told_row or own_row(change.row_key, change.node_id) else change.row_key
         rewritten = rewritten_parts(change.before_text, change.after_text)
@@ -734,7 +784,8 @@ class Ledger:
             latest = last[key]
             then, now = self.value_text(earliest, True), self.value_text(latest, False)
             if then != now:
-                label = f"{words(key[1])} ({title_of(key[0]).lower()}{f', {key[2]}' if key[2] else ''})"
+                told_row = self.row_text(key[0], earliest.row_key, node_id) if key[2] else ""
+                label = f"{words(key[1])} ({title_of(key[0]).lower()}{f', {told_row}' if told_row else ''})"
                 rewritten = rewritten_parts(earliest.before_text, latest.after_text)
                 found.append(
                     (label, f"since epoch {earliest.epoch}: rewrote {rewritten}" if rewritten is not None else f"epoch {earliest.epoch}: {then} → now: {now}")

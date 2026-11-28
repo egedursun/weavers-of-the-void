@@ -55,6 +55,7 @@ from aerona.db.tables.economy import CurrencyRow, TradeRouteProfileRow, WorldMat
 from aerona.db.tables.endowments import EndowmentRow
 from aerona.db.tables.entities import EntityFlagRow, EntityRow, LanguageProfileRow
 from aerona.db.tables.environment import RegionEnvironmentRow, WorldSeasonRow
+from aerona.db.tables.epochs import EpochEnginePhaseRow, EpochRunRow
 from aerona.db.tables.estates import MovementProfileRow
 from aerona.db.tables.facets import FacetPracticeRow
 from aerona.db.tables.factions import FactionMembershipRow, FactionProfileRow
@@ -154,6 +155,7 @@ from aerona.domain.enums.economy import CommodityKind, MaterialFamily, MaterialO
 from aerona.domain.enums.endowments import EndowmentState
 from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, EntityType
 from aerona.domain.enums.environment import CoastKind, RiverClass, SoilKind, TemperatureBand, TerrainKind
+from aerona.domain.enums.epoch import EngineStage
 from aerona.domain.enums.eras import TechFamily
 from aerona.domain.enums.facets import FacetKind
 from aerona.domain.enums.faction import FactionKind, MovementCause
@@ -212,6 +214,7 @@ from aerona.domain.enums.war import BattleOutcome, CaptiveStatus, WarCause, WarS
 from aerona.domain.enums.world import Gravity
 from aerona.domain.enums.world_end import WorldEnd, WorldEndCause
 from aerona.domain.enums.world_view import SettleMode, WarTerrain
+from aerona.domain.models.calendar import epoch_end_year, epoch_start_year
 from aerona.domain.models.entity_stats import (
     ArmyStats,
     ArtworkStats,
@@ -250,11 +253,15 @@ from aerona.engine.minds.profiles import profile_of
 from aerona.engine.primitives.language_profile import DEFAULT_PHONOLOGY
 from aerona.engine.recording.checkpoints import take_checkpoint
 from aerona.rules.registry import Rules
+from aerona.services.integrity.adult_births import AGING_PHASE, adults_born_at_first_sight, date_adult_birth
 from aerona.services.integrity.invariants import CHECKS, findings, resolve, sweep
 from aerona.services.integrity.record_links import absent_witnesses
 from tests.conftest import OpenDatabase
 from tests.engine.core.factories import CoreWorld, add_empty_world, bond, entity, mortal, seed_core_world, settlement, son_draft
 from tests.engine.core.test_arcana_w15 import foreign_caster
+
+AGED_EPOCH = 6
+NEWCOMER_AGE = 80
 
 
 async def crisis_settled_by_no_one(session: AsyncSession, world: CoreWorld) -> None:
@@ -1017,6 +1024,28 @@ async def grown_mortal_born_at_first_sight(session: AsyncSession, world: CoreWor
     world.cosmos.epoch = 10
     grown = await entity(session, "Grey Captain", EntityType.MORTAL, MortalStats(age=44), world_id=world.world.id)
     session.add(NodeBirthRow(node_id=grown.id, year=481, season=None, day=None, hour=None, locked=[]))
+
+
+async def birth_pulled_back_by_a_misread_age(session: AsyncSession, world: CoreWorld) -> None:
+    world.cosmos.epoch = AGED_EPOCH
+    years = Rules().time.years_per_epoch
+    smith = await entity(session, "Promoted Smith", EntityType.MORTAL, MortalStats(age=NEWCOMER_AGE), world_id=world.world.id)
+    true_birth = epoch_start_year(AGED_EPOCH, years) - 1 - NEWCOMER_AGE
+    pulled = true_birth - years
+    session.add(NodeBirthRow(node_id=smith.id, year=pulled, season=None, day=None, hour=None, locked=[]))
+    session.add(
+        StateChangeRow(
+            epoch=AGED_EPOCH,
+            table_name=NodeBirthRow.__tablename__,
+            row_key=str(smith.id),
+            node_id=smith.id,
+            operation=LedgerOperation.UPDATE,
+            field="year",
+            before_number=true_birth,
+            after_number=pulled,
+            actor_kind=ActorKind.ENGINE,
+        )
+    )
 
 
 async def star_clock_set_from_birth(session: AsyncSession, world: CoreWorld) -> None:
@@ -2488,6 +2517,7 @@ BREAKERS: dict[str, Breaker] = {
     "remembrance_names_its_past": remembrance_of_no_one,
     "star_clock_follows_its_age": star_clock_set_from_birth,
     "adult_born_before_first_sight": grown_mortal_born_at_first_sight,
+    "birth_kept_from_a_misread_age": birth_pulled_back_by_a_misread_age,
     "home_on_its_lived_orbit": planet_moved_by_an_old_repair,
     "peopled_world_habitable": planet_far_from_its_star,
     "rebuild_of_a_standing_town": rebuilding_a_ruin,
@@ -2647,3 +2677,19 @@ async def test_one_who_heard_from_afar_or_moved_later_is_not_called_absent(sessi
         moved.location_id = world.regions[1].id
         await session.flush()
     assert await absent_witnesses(session) == []
+
+
+async def test_a_newcomer_aged_this_epoch_keeps_the_birth_its_age_gives_at_the_epochs_end(session: AsyncSession, world: CoreWorld) -> None:
+    world.cosmos.epoch = AGED_EPOCH
+    years = Rules().time.years_per_epoch
+    session.add(EpochRunRow(epoch=AGED_EPOCH, started=True))
+    await session.flush()
+    session.add(EpochEnginePhaseRow(epoch=AGED_EPOCH, stage=EngineStage.TICK, phase=AGING_PHASE, seconds=1.0))
+    newcomer = await entity(session, "Late Promoted Smith", EntityType.MORTAL, MortalStats(age=NEWCOMER_AGE), world_id=world.world.id)
+    born = epoch_end_year(AGED_EPOCH, years) - 1 - NEWCOMER_AGE
+    session.add(NodeBirthRow(node_id=newcomer.id, year=born, season=None, day=None, hour=None, locked=[]))
+    await session.flush()
+    assert newcomer.id not in await adults_born_at_first_sight(session)
+    await date_adult_birth(session, newcomer.id)
+    birth = await session.get(NodeBirthRow, newcomer.id)
+    assert birth is not None and birth.year == born

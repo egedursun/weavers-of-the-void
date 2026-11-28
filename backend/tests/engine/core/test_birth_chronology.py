@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.agents.chronicle import EPOCH_CLOSE, record_line
+from aerona.db.record_context import RecordScope, scoped
 from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.gatherings import CollectionMemberRow, CollectionRow, GatheringRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
@@ -21,6 +22,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.mortal import LifeStage
 from aerona.domain.models.calendar import epoch_end_year
 from aerona.domain.models.entity_stats import MortalStats
+from aerona.domain.models.moment import Moment
 from aerona.engine.context import AgingState, TickContext
 from aerona.engine.cycles.lineage import breeds
 from aerona.engine.gatherings.hold import rite_floor, rites_already_kept
@@ -31,6 +33,9 @@ from aerona.engine.primitives.stats import set_stats, stat, stat_or
 from aerona.engine.recording.record import record
 from aerona.rules.registry import Rules
 from tests.engine.core.factories import CoreWorld, entity, mortal
+
+LIVED_BEFORE_END = 3
+DEATH_DRAWS = 5
 
 
 async def sexed(session: AsyncSession, name: str, world: CoreWorld, sex: SexKind) -> EntityRow:
@@ -236,3 +241,14 @@ async def test_a_mourning_joins_only_the_rites_of_its_own_dead(ctx: TickContext,
     await ctx.session.flush()
     assert await rites_already_kept(ctx, rites[0]) is funeral
     assert await rites_already_kept(ctx, rites[1]) is None
+
+
+async def test_a_mortal_never_dies_before_a_change_it_lived_through_this_epoch(ctx: TickContext, world: CoreWorld) -> None:
+    elder = await mortal(ctx.session, "Late Changed Elder", world, world.regions[0].id, age=60)
+    lived = epoch_end_year(ctx.epoch, ctx.rules.time.years_per_epoch) - LIVED_BEFORE_END
+    with scoped(RecordScope(key="test.lived", epoch=ctx.epoch, moment=Moment(lived))):
+        set_stats(elder, charisma=(stat(elder, "charisma") or 0) + 1)
+        await ctx.session.flush()
+    for _ in range(DEATH_DRAWS):
+        moment = await death_moment(ctx, elder, None, None, None)
+        assert moment.year >= lived
