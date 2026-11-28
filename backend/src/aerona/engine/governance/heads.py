@@ -21,7 +21,7 @@ from aerona.domain.enums.modifier import IncidentRole
 from aerona.engine.context import TickContext
 from aerona.engine.economy.purse import coin_of
 from aerona.engine.governance.seats import members_of, seats_of, shares_of, sync_seats
-from aerona.engine.mortal.life import years_to_step
+from aerona.engine.mortal.life import years_to_step, young_through
 from aerona.engine.polity.divided_loyalty import serves_a_foe
 from aerona.engine.primitives.folk import present_among
 from aerona.engine.primitives.maturity import away_among, of_age, of_age_among, of_age_query, past_office_age
@@ -50,7 +50,14 @@ async def candidates(ctx: TickContext, row: OrgGovernanceRow) -> list[EntityRow]
     pool = [entity for entity in found if not held(entity.id) and entity.id not in away]
     if row.head_selection is not HeadSelection.INHERITED:
         pool = [entity for entity in await of_age_among(ctx.session, pool) if not past_office_age(ctx.rules, entity, years_to_step(ctx.environment))]
-    return pool or await home_folk(ctx, row.org_node_id)
+        pool = await grown_through(ctx, pool)
+    return pool or await grown_through(ctx, await home_folk(ctx, row.org_node_id))
+
+
+async def grown_through(ctx: TickContext, pool: list[EntityRow]) -> list[EntityRow]:
+    aged = ctx.environment.aging is not None and ctx.environment.aging.done
+    young = await young_through(ctx.session, ctx.rules, ctx.epoch, pool, aged=aged)
+    return [entity for entity in pool if entity.id not in young]
 
 
 async def busy_heads(ctx: TickContext, org_id: int, ids: list[int]) -> set[int]:

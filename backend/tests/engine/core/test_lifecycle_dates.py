@@ -25,7 +25,7 @@ from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import revised
 from aerona.domain.models.moment import Moment
 from aerona.engine.childhood.life import at_age
-from aerona.engine.context import TickContext
+from aerona.engine.context import AgingState, TickContext
 from aerona.engine.customs.naming import NamingTally, name_the_dead
 from aerona.engine.demography.peoples import HUMAN_LIFESPAN, biology_for
 from aerona.engine.departures.book import DepartureTally, Seat
@@ -205,3 +205,17 @@ async def test_office_age_is_judged_at_the_moment_the_step_acts(session: AsyncSe
     assert not past_office_age(ctx.rules, elder, years_to_step(ctx.environment))
     assert past_office_age(ctx.rules, elder, years_to_step(late.environment))
     assert elder.id not in {being.id for being in await candidates(late, org)}
+
+
+async def test_a_mortal_still_a_child_this_epoch_is_never_chosen_to_head_a_body(session: AsyncSession, world: CoreWorld, ctx: TickContext) -> None:
+    await biology(session, world)
+    aged = TickContext(replace(ctx.environment, aging=AgingState(done=True)), session, "heads")
+    young = await mortal(session, "Grown By Year End", world, await folk_town(session, world), age=18)
+    elder = await mortal(session, "Long Grown", world, await folk_town(session, world), age=60)
+    org = OrgGovernanceRow(org_node_id=world.people.id, head_selection=HeadSelection.ELECTED_BY_MEMBERS, locked=[])
+    session.add(org)
+    for member in (young, elder):
+        session.add(FactionMembershipRow(faction_entity_id=world.people.id, mortal_entity_id=member.id, joined_epoch=1, locked=[]))
+    await session.flush()
+    chosen = {being.id for being in await candidates(aged, org)}
+    assert elder.id in chosen and young.id not in chosen
