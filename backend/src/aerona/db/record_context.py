@@ -187,8 +187,8 @@ def stamp_row(instance: Any) -> None:
 
 
 @contextmanager
-def acting(actor_kind: ActorKind, actor_node_id: int | None, epoch: int, key: str = "actor") -> Iterator[RecordScope]:
+def acting(actor_kind: ActorKind, actor_node_id: int | None, epoch: int, key: str = "actor", moment: Moment | None = None) -> Iterator[RecordScope]:
     outer = SCOPE.get()
-    scope = RecordScope(key=key, epoch=epoch, actor_kind=actor_kind, actor_node_id=actor_node_id, parent=outer)
+    scope = RecordScope(key=key, epoch=epoch, actor_kind=actor_kind, actor_node_id=actor_node_id, parent=outer, moment=moment)
     with scoped(scope) as found:
         yield found

@@ -19,10 +19,13 @@ from aerona.db.tables.lore import ChronicleRow
 from aerona.db.write_guard import chosen_bonds
 from aerona.domain.enums.agent import AgentKind
 from aerona.domain.enums.epoch import EpochPhase
+from aerona.domain.enums.records import ProcessClock
 from aerona.domain.enums.world import LoreLanguage
+from aerona.domain.models.moment import Moment
 from aerona.domain.models.turn import LongJobTrace, PendingJob
 from aerona.engine.context import Publisher, TickContext, TickEnvironment, phase_window
 from aerona.engine.interconnect.tool_holds import tool_holds
+from aerona.engine.recording.moments import moment_for
 from aerona.engine.stats import TickStats
 from aerona.prompts import PromptId, render
 from aerona.prompts.contexts.agent import PendingLongJobContext, ToolFailureContext, ToolRejectionContext
@@ -119,6 +122,11 @@ def catalogue_of(specs: Sequence[ToolSpec[Any, Any]], rules: Rules) -> ToolCatal
     paid = [spec.name for spec in specs if spec.meta.actions(rules) > 0]
     free = [spec.name for spec in specs if spec.meta.actions(rules) == 0]
     return ToolCatalogue(names=[spec.name for spec in specs], paid=paid, free=free)
+
+
+async def act_moment(call: ToolCall, tool: str) -> Moment:
+    actor = [call.actor_id] if call.actor_id is not None else []
+    return await moment_for(call.tick, ProcessClock.INSTANT, key=f"actor.{tool}", participants=actor)
 
 
 class ToolRuntime[CallT: ToolCall]:
@@ -247,7 +255,7 @@ class ToolRuntime[CallT: ToolCall]:
     async def _write(self, spec: ToolSpec[CallT, Any], parsed: ToolInput) -> ToolResult | PendingLongJob:
         async with self._database.write() as session:
             call = await self.build_call(await self._environment(session, spec, writable=True))
-            with acting(call.actor_kind, call.actor_id, call.epoch, key=f"actor.{spec.name}"):
+            with acting(call.actor_kind, call.actor_id, call.epoch, key=f"actor.{spec.name}", moment=await act_moment(call, spec.name)):
                 blocked = await self.gate(call, spec)
                 if blocked is not None:
                     if blocked.exhaust:
@@ -322,7 +330,7 @@ class ToolRuntime[CallT: ToolCall]:
         spec = pending.spec
         async with self._database.write() as session:
             call = await self.build_call(await self._environment(session, spec, writable=True))
-            with acting(call.actor_kind, call.actor_id, call.epoch, key=f"actor.{spec.name}"):
+            with acting(call.actor_kind, call.actor_id, call.epoch, key=f"actor.{spec.name}", moment=await act_moment(call, spec.name)):
                 call.turn.set_pending_job(None)
                 recorder = change_capture(session)
                 try:

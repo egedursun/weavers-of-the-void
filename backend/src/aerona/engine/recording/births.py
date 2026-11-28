@@ -85,11 +85,12 @@ async def mark_born(session: AsyncSession, participants: Iterable[tuple[int, Inc
     if not named:
         return
     created = {node for node, role in named if role in CREATION_ROLES}
+    made = {node for node, role in named if role is IncidentRole.PRODUCT}
     births = await birth_moments(session, [node for node, _ in named])
     for node in sorted(births):
         if births[node] is None and born_now(known.get(node), node in created, epoch):
             first = GENESIS if made_at_genesis(known.get(node)) else earliest(moment, await made_at(session, node, epoch))
-            date_born(session, node, first if node in created else lived_since(known.get(node), first))
+            date_born(session, node, first if node in made else lived_since(known.get(node), first))
 
 
 async def made_at(session: AsyncSession, node: int, epoch: int | None = None) -> Moment | None:

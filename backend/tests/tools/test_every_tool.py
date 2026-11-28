@@ -71,6 +71,12 @@ async def unowned_changes(database: Database, mark: int) -> list[str]:
     return sorted({f"{table}.{field}" for table, field in rows})
 
 
+async def undated_changes(database: Database, mark: int) -> list[str]:
+    async with database.read() as session:
+        rows = await session.execute(select(StateChangeRow.table_name, StateChangeRow.field).where(StateChangeRow.id > mark, StateChangeRow.year.is_(None)))
+    return sorted({f"{table}.{field}" for table, field in rows})
+
+
 def test_every_son_tool_has_a_working_case() -> None:
     assert sorted(SON_CASES) == sorted(SON_SPECS)
 
@@ -106,6 +112,7 @@ async def test_son_tool_runs(database: Database, name: str) -> None:
     outcome = await toolkit.runtime.call(name, complete(SON_SPECS[name].input_model, case.arguments(realm, ids)))
     assert not outcome.is_error, outcome.text
     assert await unowned_changes(database, mark) == []
+    assert await undated_changes(database, mark) == []
 
 
 @pytest.mark.parametrize("name", sorted(MORTAL_CASES))
@@ -119,6 +126,7 @@ async def test_mortal_tool_runs(database: Database, name: str) -> None:
     outcome = await toolkit.runtime.call(name, complete(MORTAL_SPECS[name].input_model, case.arguments(realm, ids)))
     assert not outcome.is_error, outcome.text
     assert await unowned_changes(database, mark) == []
+    assert await undated_changes(database, mark) == []
 
 
 @pytest.mark.parametrize("label", sorted(COMMUNITY_CASES))

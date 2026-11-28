@@ -43,6 +43,7 @@ NEWCOMER_CAME = 39
 NEWCOMER_AGE = 21
 ACT_STEPS = 10
 ACT_SHARE = 0.1
+HERO_AGE = 17
 YEAR_DAYS = 360
 SEASONS = 4
 DAY_HOURS = 24
@@ -330,3 +331,17 @@ async def test_acts_placed_by_the_progress_of_an_epoch_fall_through_their_years_
     assert len({(moment.season, moment.day, moment.hour) for moment in placed}) > 1
     assert all((moment.season, moment.day, moment.hour) != (0, 0, 0) for moment in placed)
     assert [moment.year for moment in placed] == sorted(moment.year for moment in placed)
+
+
+async def test_a_hero_who_arises_grown_was_born_as_many_years_before_as_its_age(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = tick(session, rules)
+    start = epoch_start_year(ctx.epoch, rules.time.years_per_epoch)
+    arose = start + NEWCOMER_CAME
+    hero = await mortal(session, "Risen Champion", world, world.regions[0].id, age=HERO_AGE)
+    hero.birth_epoch = ctx.epoch
+    await session.execute(delete(NodeBirthRow).where(NodeBirthRow.node_id == hero.id))
+    await session.flush()
+    await record(ctx, "heroes.birth", roles={IncidentRole.CHILD: hero.id, IncidentRole.ORIGIN: world.people.id}, facts={"power": 1}, at_moment=Moment(arose))
+    born = await session.get(NodeBirthRow, hero.id)
+    assert born is not None and born.year == arose - HERO_AGE
