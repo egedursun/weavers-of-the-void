@@ -72,21 +72,23 @@ async def keyed_rows(session: AsyncSession, spec: IndexSpec, scope: Hashable = N
     sync = session.sync_session
     if KEEP_KEY not in sync.info:
         return None
-    found: KeyIndex | None = sync.info.get(spec.key)
-    if found is not None and found.scope == scope:
+    kept: dict[Hashable, KeyIndex] | None = sync.info.get(spec.key)
+    found = kept.get(scope) if kept is not None else None
+    if found is not None:
         follow(sync, spec, found)
         return found
     if spec.table in pending_tables(sync):
         await session.flush()
-    found = sync.info.get(spec.key)
-    if found is None or found.scope != scope:
+    kept = sync.info.setdefault(spec.key, {})
+    found = kept.get(scope)
+    if found is None:
         found = KeyIndex(spec.columns, scope)
         statement = select(spec.row_type)
         if spec.scope_column is not None:
             statement = statement.where(getattr(spec.row_type, spec.scope_column) == scope)
         for row in await session.scalars(statement.order_by(*inspect(spec.row_type).primary_key)):
             found.add(row)
-        sync.info[spec.key] = found
+        kept[scope] = found
     return found
 
 
@@ -106,8 +108,8 @@ def follow(sync: Session, spec: IndexSpec, found: KeyIndex) -> None:
 
 def follow_flush(sync: Session, *_: object) -> None:
     for key, spec in SPECS.items():
-        found: KeyIndex | None = sync.info.get(key)
-        if found is not None:
+        kept: dict[Hashable, KeyIndex] | None = sync.info.get(key)
+        for found in (kept or {}).values():
             follow(sync, spec, found)
 
 
