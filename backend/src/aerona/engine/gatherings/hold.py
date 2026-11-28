@@ -41,7 +41,7 @@ from aerona.domain.enums.bond import BondKind, BondState
 from aerona.domain.enums.collective import CrowdFeeling
 from aerona.domain.enums.culture import TraditionFunction
 from aerona.domain.enums.economy import GoodsFlow
-from aerona.domain.enums.entity import EntityStatus, EntityType, MortalRole
+from aerona.domain.enums.entity import ALIVE_STATUSES, EntityStatus, EntityType, MortalRole
 from aerona.domain.enums.gathering import AttendanceReason, CollectionRole, GatheringKind, GatheringOutcome, GatheringStatus, GuestRole
 from aerona.domain.enums.intrigue import PlotKind, SchemePhase
 from aerona.domain.enums.mind import ActKind, EthicalStance, MemoryKind, ThoughtKind
@@ -207,6 +207,11 @@ async def candidates(ctx: TickContext, row: GatheringRow) -> list[Guest]:
     return found
 
 
+async def alive(ctx: TickContext, node_id: int) -> bool:
+    found = await ctx.session.get(EntityRow, node_id)
+    return found is None or found.status in ALIVE_STATUSES
+
+
 async def invite(ctx: TickContext, row: GatheringRow, chosen: list[Guest]) -> int:
     limit = ctx.rules.gatherings.guests_max
     invited = set(await ctx.session.scalars(select(GatheringGuestRow.node_id).where(GatheringGuestRow.gathering_id == row.id)))
@@ -218,6 +223,8 @@ async def invite(ctx: TickContext, row: GatheringRow, chosen: list[Guest]) -> in
         if added >= limit:
             break
         if guest.node_id in present or held(guest.node_id) or await ctx.session.get(NodeRow, guest.node_id) is None:
+            continue
+        if guest.node_id != row.honoured_node_id and not await alive(ctx, guest.node_id):
             continue
         ctx.session.add(GatheringGuestRow(gathering_id=row.id, node_id=guest.node_id, role=guest.role, reason=guest.reason, attended=None))
         present.add(guest.node_id)

@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aerona.db.tables.body import ConditionRow
 from aerona.db.tables.entities import EntityRow
+from aerona.db.tables.fortune import FortuneProfileRow
+from aerona.db.tables.gatherings import GatheringGuestRow, GatheringRow
 from aerona.db.tables.households import HouseholdRow
 from aerona.db.tables.interconnect import IncidentParticipantRow, IncidentRow
 from aerona.db.tables.restoration import RestorationRow
@@ -10,12 +12,16 @@ from aerona.domain.enums.agentless_conditions import ConditionCause
 from aerona.domain.enums.body import ConditionKind, HarmCause
 from aerona.domain.enums.entity import EntityStatus, EntityType
 from aerona.domain.enums.folkways import AccusationOutcome
+from aerona.domain.enums.gathering import AttendanceReason, GatheringKind, GuestRole
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.models.calendar import epoch_start_year
 from aerona.domain.models.entity_stats import MortalStats, PolityStats
 from aerona.engine.agentless_conditions.arise import ConditionTally
 from aerona.engine.agentless_conditions.course import tend_courses
 from aerona.engine.feeling_spread.moods import household_head
+from aerona.engine.fortune.profiles import keep_fortune
+from aerona.engine.gatherings.hold import invite
+from aerona.engine.gatherings.occasions import Guest
 from aerona.engine.recording.record import record
 from aerona.engine.restoration.rise import standing_claimant
 from aerona.rules.registry import Rules
@@ -98,3 +104,22 @@ async def test_a_record_naming_the_dead_in_a_living_role_stands_no_later_than_th
         )
         told = await session.get(IncidentRow, written.incident_id)
         assert told is not None and told.year is not None and told.year <= died
+
+
+async def test_the_dead_are_never_asked_to_a_gathering_and_keep_no_fortune(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    ctx = tick(session, rules)
+    host = await entity(session, "Living Host", EntityType.MORTAL, MortalStats(age=40), world_id=world.world.id)
+    friend = await entity(session, "Living Friend", EntityType.MORTAL, MortalStats(age=40), world_id=world.world.id)
+    gone = await entity(session, "Gone Friend", EntityType.MORTAL, MortalStats(age=70, death_year=2), world_id=world.world.id)
+    gone.status, gone.end_epoch = EntityStatus.DEAD, 1
+    session.add(FortuneProfileRow(node_id=gone.id, fortune=3, streak=1, updated_epoch=1, locked=[]))
+    gathering = GatheringRow(host_node_id=host.id, kind=next(iter(GatheringKind)), epoch=ctx.epoch, locked=[])
+    session.add(gathering)
+    await session.flush()
+    await invite(ctx, gathering, [Guest(friend.id, GuestRole.GUEST, AttendanceReason.FRIEND), Guest(gone.id, GuestRole.GUEST, AttendanceReason.FRIEND)])
+    asked = set(await session.scalars(select(GatheringGuestRow.node_id).where(GatheringGuestRow.gathering_id == gathering.id)))
+    assert friend.id in asked and gone.id not in asked
+    await keep_fortune(ctx)
+    kept = await session.get(FortuneProfileRow, gone.id)
+    assert kept is not None and (kept.fortune, kept.updated_epoch) == (3, 1)

@@ -9,7 +9,7 @@ from aerona.db.tables.entities import EntityRow
 from aerona.db.tables.folkways import LuckBeliefRow
 from aerona.db.tables.fortune import FortuneLawRow, FortuneProfileRow, FortuneSourceRow
 from aerona.db.write_guard import held
-from aerona.domain.enums.entity import EntityStatus, EntityType
+from aerona.domain.enums.entity import ALIVE_STATUSES, EntityStatus, EntityType
 from aerona.domain.enums.fortune import FortuneLaw, FortuneSourceKind
 from aerona.engine.context import TickContext
 from aerona.engine.primitives.numbers import clamp_int
@@ -118,6 +118,8 @@ async def keep_fortune(ctx: TickContext) -> int:
         if held(node_id):
             continue
         entity = await ctx.session.get(EntityRow, node_id)
+        if entity is not None and entity.status not in ALIVE_STATUSES:
+            continue
         law = await law_of(ctx, entity.world_id if entity is not None else None)
         sources = [row for row in by_holder.get(node_id, []) if law is not FortuneLaw.DIVINE or DIVINE_SOURCE[row.kind]]
         total_luck = sum(row.strength for row in sources) + (streak_of(ctx, node_id) if STREAKS[law] else 0)
