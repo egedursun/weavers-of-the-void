@@ -85,22 +85,23 @@ async def apply_naming(session: AsyncSession, item: NamingItemOutput, epoch: int
     return old, name
 
 
-async def next_batches(runtime: AgentRuntime, max_tries: int) -> list[NamingBatch]:
+async def next_batch(runtime: AgentRuntime, max_tries: int, busy: set[int]) -> NamingBatch | None:
     async with runtime.database.read() as session:
         rules = await runtime.rules(session)
         rows = await session.execute(
             select(EntityRow.id, EntityRow.world_id)
-            .where(EntityRow.pending_name.is_(True), EntityRow.naming_attempts < max_tries)
+            .where(EntityRow.pending_name.is_(True), EntityRow.naming_attempts < max_tries, EntityRow.id.not_in(busy))
             .order_by(EntityRow.world_id, EntityRow.id)
+            .limit(rules.naming.batch)
         )
-        batches: list[NamingBatch] = []
+        batch: NamingBatch | None = None
         for entity_id, world_id in rows:
-            if not batches or batches[-1].world_id != world_id or len(batches[-1].ids) >= rules.naming.batch:
-                if len(batches) >= rules.naming.parallel:
-                    break
-                batches.append(NamingBatch(world_id, []))
-            batches[-1].ids.append(entity_id)
-        return batches
+            if batch is None:
+                batch = NamingBatch(world_id, [])
+            elif batch.world_id != world_id:
+                break
+            batch.ids.append(entity_id)
+        return batch
 
 
 async def naming_context(scope: Scope, batch: NamingBatch, warnings: list[DialectWarning]) -> NamingContext:
@@ -149,6 +150,47 @@ async def run_batch(runtime: AgentRuntime, batch: NamingBatch, report: NamingRep
                 report.warnings.pop(item.id, None)
 
 
+@dataclass
+class NamingPool:
+    runtime: AgentRuntime
+    report: NamingReport
+    max_tries: int
+    busy: set[int] = field(default_factory=set)
+    claim: asyncio.Lock = field(default_factory=asyncio.Lock)
+    failures: list[BaseException] = field(default_factory=list)
+    succeeded: int = 0
+    streak: int = 0
+
+    async def claimed(self) -> NamingBatch | None:
+        async with self.claim:
+            batch = await next_batch(self.runtime, self.max_tries, self.busy)
+            if batch is None:
+                return None
+            self.busy.update(batch.ids)
+            async with self.runtime.database.write() as session:
+                await session.execute(update(EntityRow).where(EntityRow.id.in_(batch.ids)).values(naming_attempts=EntityRow.naming_attempts + 1))
+                remaining = await pending_count(session)
+        self.runtime.note(f"{several(len(batch.ids), 'record', 'records')} born of the world's own course are being named ({remaining} remaining).")
+        return batch
+
+    async def work(self) -> None:
+        parallel = (await self.runtime.current_rules()).naming.parallel
+        while self.streak < parallel:
+            batch = await self.claimed()
+            if batch is None:
+                return
+            try:
+                await run_batch(self.runtime, batch, self.report, self.max_tries)
+            except Exception as error:
+                self.failures.append(error)
+                self.streak += 1
+            else:
+                self.succeeded += 1
+                self.streak = 0
+            finally:
+                self.busy.difference_update(batch.ids)
+
+
 async def name_pending_records(runtime: AgentRuntime) -> NamingReport:
     rules = await runtime.current_rules()
     max_tries = 1 + rules.naming.retries
@@ -157,20 +199,10 @@ async def name_pending_records(runtime: AgentRuntime) -> NamingReport:
         caught = await requeue_engine_drafts(session)
     if caught:
         runtime.note(f"{several(caught, 'record', 'records')} still carrying the world engine's draft text were put back in line to be written.")
-    while True:
-        batches = await next_batches(runtime, max_tries)
-        if not batches:
-            break
-        ids = [entity_id for batch in batches for entity_id in batch.ids]
-        async with runtime.database.write() as session:
-            await session.execute(update(EntityRow).where(EntityRow.id.in_(ids)).values(naming_attempts=EntityRow.naming_attempts + 1))
-            remaining = await pending_count(session)
-        records = several(len(ids), "record", "records")
-        runtime.note(f"{records} born of the world's own course are being named in {several(len(batches), 'batch', 'batches')} ({remaining} remaining).")
-        results = await asyncio.gather(*(run_batch(runtime, batch, report, max_tries) for batch in batches), return_exceptions=True)
-        failures = [result for result in results if isinstance(result, BaseException)]
-        if len(failures) == len(results):
-            raise failures[0]
+    pool = NamingPool(runtime, report, max_tries)
+    await asyncio.gather(*(pool.work() for _ in range(rules.naming.parallel)))
+    if pool.failures and (pool.succeeded == 0 or pool.streak >= rules.naming.parallel):
+        raise pool.failures[-max(pool.streak, 1)]
     async with runtime.database.read() as session:
         report.left = await pending_count(session)
     if report.named or report.left:

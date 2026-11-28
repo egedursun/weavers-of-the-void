@@ -1,10 +1,14 @@
+import asyncio
+from dataclasses import replace
+
 import pytest
 from sqlalchemy import select
 
 from aerona.agents.chronicler import complete_chronicle, lost_chronicle_epochs, record_age, write_chronicle
 from aerona.agents.context.scope import load_scope
+from aerona.agents.fate import naming as naming_module
 from aerona.agents.fate.judge import run_fate
-from aerona.agents.fate.naming import name_pending_records, requeue_engine_drafts
+from aerona.agents.fate.naming import NamingBatch, NamingReport, name_pending_records, requeue_engine_drafts
 from aerona.agents.fate.rollback import roll_back_rejection
 from aerona.agents.runtime import AgentRuntime
 from aerona.constants.agents import LEGACY_ENGINE_DESCRIPTION_PREFIX
@@ -24,7 +28,7 @@ from aerona.domain.enums.entity import EntityFlag, EntityOrigin, EntityStatus, E
 from aerona.domain.enums.modifier import IncidentRole
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.world import FateMode
-from aerona.domain.models.entity_stats import ItemStats
+from aerona.domain.models.entity_stats import ItemStats, LegendStats
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.recording.record import record
 from aerona.prompts.schemas.fate import ChronicleOutput, FateJudgmentOutput, NamingsOutput, VerdictDecision
@@ -114,6 +118,49 @@ async def test_naming_loop_names_and_cleans(runtime: AgentRuntime, model: FakeMo
         pending = await session.get(EntityRow, world.pending.id)
     assert report.named == 1
     assert pending is not None and pending.name == "Teskara"
+
+
+async def test_naming_keeps_every_slot_busy_while_one_batch_is_slow(
+    runtime: AgentRuntime, database: Database, world: AgentWorld, rules: Rules, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async with database.write() as session:
+        entities = EntityRepository(session)
+        for index in range(4):
+            await entities.create(
+                EntityDraft(
+                    name=f"Unnamed Tale {index}",
+                    entity_type=EntityType.LEGEND,
+                    description="[World engine] A tale born of the drought.",
+                    stats=LegendStats(),
+                    power_level=2,
+                    origin=EntityOrigin.ENGINE,
+                    birth_epoch=1,
+                    world_id=world.core.world.id,
+                    pending_name=True,
+                    split_title=False,
+                )
+            )
+    runtime.rules_override = replace(rules, naming=replace(rules.naming, batch=1, parallel=2))
+    started: list[int] = []
+    released = asyncio.Event()
+
+    async def stand_in(_: AgentRuntime, batch: NamingBatch, report: NamingReport, __: int) -> None:
+        started.append(batch.ids[0])
+        if len(started) == 1:
+            await released.wait()
+        elif len(started) == 5:
+            released.set()
+        async with database.write() as session:
+            for entity_id in batch.ids:
+                row = await session.get(EntityRow, entity_id)
+                assert row is not None
+                row.pending_name = False
+        report.named += len(batch.ids)
+
+    monkeypatch.setattr(naming_module, "run_batch", stand_in)
+    report = await asyncio.wait_for(name_pending_records(runtime), timeout=20)
+    assert report.named == 5
+    assert len(set(started)) == 5
 
 
 async def test_legacy_engine_draft_left_unflagged_is_caught_and_written(runtime: AgentRuntime, model: FakeModel, database: Database, world: AgentWorld) -> None:
