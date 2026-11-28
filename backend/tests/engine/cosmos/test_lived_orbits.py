@@ -12,7 +12,7 @@ from aerona.domain.enums.cosmography import StarAge
 from aerona.domain.enums.meta import LedgerOperation
 from aerona.domain.enums.node import ActorKind
 from aerona.domain.enums.world import StarType
-from aerona.engine.cosmos.orbits import Light, Sky, derive, infer
+from aerona.engine.cosmos.orbits import Light, Sky, derive, ground_fit, infer, surface_temperature
 from aerona.engine.cosmos.starlife import age_star, stage_epochs
 from aerona.engine.cosmos.stellar import luminosity_of, main_luminosity, new_physics, stage_start
 from aerona.engine.phases.physics import derive_all
@@ -23,6 +23,7 @@ from aerona.services.integrity.habitable_homes import (
     light_star_by_its_kind,
     return_home_to_its_orbit,
     settle_home_climate,
+    sky_now,
     stars_lit_astray,
 )
 from tests.engine.core.factories import CoreWorld, seed_core_world
@@ -31,6 +32,7 @@ from tests.engine.cosmos.factories import tick
 SEASON_NAMES = ("Nipcu", "Eipjuc", "Ceni", "Nicu")
 MOVED_ORBIT = 0.0367
 COLD_ORBIT = 1.6
+SETTLED_SLACK = 6
 
 
 def test_a_broken_star_still_sheds_the_light_of_its_mass(rules: Rules) -> None:
@@ -164,3 +166,19 @@ async def test_a_star_first_counting_its_age_counts_from_the_years_it_has_alread
     own.age_epochs = stage_start(rules, own.mass, StarAge.MAIN) + full // 2
     await age_star(tick(session, rules), star, physics=own)
     assert star.lifecycle_clock == full - full // 2 - 1
+
+
+async def test_a_home_brought_only_to_the_cold_edge_of_life_is_settled_at_a_temperate_warmth(session: AsyncSession, rules: Rules) -> None:
+    world = await seed_core_world(session)
+    physics = await lit_world(session, world)
+    sky = await sky_now(session, rules, world.world, physics)
+    assert sky is not None
+    ground_fit(rules, world.world, physics, sky=sky, parent=None, target=rules.orbits.livable_low_kelvin)
+    await session.flush()
+    edge = surface_temperature(rules, world.world, physics, sky.insolation, None)
+    assert rules.orbits.livable_low_kelvin - 1 <= edge <= rules.orbits.livable_low_kelvin + 1
+    assert await homes_too_harsh(session) == [world.world.id]
+    await settle_home_climate(session, world.world.id)
+    await session.flush()
+    assert abs(physics.surface_temperature - rules.orbits.settled_home_kelvin) <= SETTLED_SLACK
+    assert await homes_too_harsh(session) == []

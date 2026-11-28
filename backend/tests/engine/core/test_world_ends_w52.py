@@ -22,6 +22,7 @@ from aerona.engine.divine.outer import outer_profile
 from aerona.engine.primitives.manual import manual_context
 from aerona.engine.primitives.stats import put_stat
 from tests.engine.core.factories import CoreWorld, entity
+from tests.engine.cosmos.test_lived_orbits import lit_world
 
 
 async def at(session: AsyncSession, epoch: int) -> TickContext:
@@ -110,3 +111,17 @@ async def test_a_declared_end_names_a_source_only_for_war_or_hunger(session: Asy
         await declare_end(ctx, world.world.id, WorldEnd.FROZEN_DEAD, WorldEndCause.STAR_DEATH, None, source_node_id=world.people.id)
     row = await declare_end(ctx, world.world.id, WorldEnd.BURNED, WorldEndCause.WAR, None, source_node_id=world.people.id)
     assert row.source_node_id == world.people.id
+
+
+@pytest.mark.parametrize(("kelvin_below_band", "frozen"), [(0, False), (-20, False), (5, True)])
+async def test_a_world_freezes_dead_from_runaway_ice_only_when_it_is_colder_than_life_can_bear(
+    session: AsyncSession, world: CoreWorld, kelvin_below_band: int, frozen: bool
+) -> None:
+    ctx = await at(session, 3)
+    physics = await lit_world(session, world)
+    physics.surface_temperature = ctx.rules.orbits.livable_low_kelvin - kelvin_below_band
+    session.add(WorldCycleRow(world_id=world.world.id, cycle=PlanetaryCycle.ICE, stock=ctx.rules.world_ends.runaway_stock, locked=[]))
+    await session.flush()
+    await keep_world_ends(ctx, EndingTally())
+    row = await session.get(WorldEndRow, world.world.id)
+    assert (row is not None and row.state is WorldEnd.FROZEN_DEAD) is frozen

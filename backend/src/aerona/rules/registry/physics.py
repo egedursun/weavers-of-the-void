@@ -53,6 +53,7 @@ class OrbitRules:
     livable_low_kelvin: int = rule(260, 1, 2000, C, "Coldest mean surface temperature, in kelvin, at which a world with air counts as habitable")
     livable_high_kelvin: int = rule(330, 1, 2000, C, "Hottest mean surface temperature, in kelvin, at which a world with air counts as habitable")
     warming_vapour_most: int = rule(10, 0, 100, C, "Most water vapour a peopled world's air gains when even its darkest ground leaves it too cold to live on")
+    settled_home_kelvin: int = rule(288, 1, 2000, C, "Mean surface temperature, in kelvin, a peopled world is brought to when its own ground and air leave it unlivable")
     low_gravity_g_hundredths: int = rule(60, 1, 1000, C, "Gravity below which a world counts as light, in hundredths of the reference")
     high_gravity_g_hundredths: int = rule(140, 1, 10000, C, "Gravity above which a world counts as heavy, in hundredths of the reference")
     thin_air_hundredths: int = rule(50, 0, 10000, C, "Air pressure below which the air counts as thin, in hundredths")

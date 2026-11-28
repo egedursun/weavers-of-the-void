@@ -23,6 +23,7 @@ from aerona.db.tables.evolution import WorldCycleRow
 from aerona.db.tables.foreign_gods import ForeignGodRow
 from aerona.db.tables.made import ReplicatorLineRow, ReplicatorPresenceRow
 from aerona.db.tables.mass_weapons import MassWeaponRow
+from aerona.db.tables.physics import WorldPhysicsRow
 from aerona.db.tables.sons import SonRow
 from aerona.db.tables.world_ends import WorldEndRow
 from aerona.db.write_guard import held
@@ -268,9 +269,23 @@ def runaway_end(ctx: TickContext, world: WorldRow, row: WorldCycleRow) -> WorldE
     return E.DROWNED if world.terrain_sea * PERCENT >= ctx.rules.world_ends.drowned_sea_pct else None
 
 
+def past_its_band(ctx: TickContext, physics: WorldPhysicsRow | None, end: WorldEnd | None) -> bool:
+    if end is None or physics is None:
+        return end is not None
+    table = ctx.rules.orbits
+    if end is E.FROZEN_DEAD:
+        return physics.surface_temperature < table.livable_low_kelvin
+    if end is E.BURNED:
+        return physics.surface_temperature > table.livable_high_kelvin
+    return True
+
+
 async def runaway_cycle(ctx: TickContext, world: WorldRow) -> WorldCycleRow | None:
     cycles = select(WorldCycleRow).where(WorldCycleRow.world_id == world.id, WorldCycleRow.stock >= ctx.rules.world_ends.runaway_stock)
-    return next((row for row in await ctx.session.scalars(cycles.order_by(WorldCycleRow.cycle)) if runaway_end(ctx, world, row) is not None), None)
+    physics = await ctx.session.get(WorldPhysicsRow, world.id)
+    return next(
+        (row for row in await ctx.session.scalars(cycles.order_by(WorldCycleRow.cycle)) if past_its_band(ctx, physics, runaway_end(ctx, world, row))), None
+    )
 
 
 @CAUSE_SIGN.on(WorldEndCause.RUNAWAY_CLIMATE)

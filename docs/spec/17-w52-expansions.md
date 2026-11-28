@@ -20557,9 +20557,9 @@ The batch is built in W52.1 after batch 3 (52.29–52.37) and its deepening rows
 
 ### 52.672 Worlds keep the orbits they lived by
 
-**What it is.** A peopled planet is habitable when its surface temperature lies in the livable band and it holds air; a repair never moves a planet. A planet an old repair moved goes back to its orbit with its own year, days and seasons; a harsh home is brought to the nearest livable temperature through its ground and the water vapour of its air. A broken star sheds the light of its mass, and a star counts its age from the years it has lived.
+**What it is.** A peopled planet is habitable when its surface temperature lies in the livable band and it holds air; a repair never moves a planet. A planet an old repair moved goes back to its orbit with its own year, days and seasons; a harsh home is brought to a settled, temperate warmth through its ground and the water vapour of its air, and a home an old repair left at the cold edge of life is settled once the same way. A runaway cycle ends a world only when it has pushed the world past the band of life: runaway ice freezes a world dead only when it is colder than life can bear, and a runaway greenhouse burns it only when it is hotter. A broken star sheds the light of its mass, and a star counts its age from the years it has lived.
 
-**Rules.** `orbits.livable_low_kelvin`, `orbits.livable_high_kelvin`, `orbits.warming_vapour_most`.
+**Rules.** `orbits.livable_low_kelvin`, `orbits.livable_high_kelvin`, `orbits.warming_vapour_most`, `orbits.settled_home_kelvin`.
 
 **Repairs.** `star_lit_by_its_kind`, `star_clock_follows_its_age`, `home_on_its_lived_orbit`, `peopled_world_habitable`, `adult_born_before_first_sight`.
 

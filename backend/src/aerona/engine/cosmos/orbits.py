@@ -306,9 +306,9 @@ def livable(rules: Rules, physics: WorldPhysicsRow) -> bool:
     return physics.pressure >= hundredths(table.no_air_hundredths) and table.livable_low_kelvin <= physics.surface_temperature <= table.livable_high_kelvin
 
 
-def nearest_livable(rules: Rules, temperature: float) -> float:
+def settled_temperature(rules: Rules) -> float:
     table = rules.orbits
-    return float(min(max(temperature, table.livable_low_kelvin), table.livable_high_kelvin))
+    return float(min(max(table.settled_home_kelvin, table.livable_low_kelvin), table.livable_high_kelvin))
 
 
 def ground_fit(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, sky: Sky, parent: WorldPhysicsRow | None, target: float) -> None:
@@ -319,10 +319,10 @@ def ground_fit(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, sky: 
 
 def bring_into_livable(rules: Rules, world: WorldRow, physics: WorldPhysicsRow, *, sky: Sky, parent: WorldPhysicsRow | None) -> None:
     table = rules.orbits
-    target = nearest_livable(rules, surface_temperature(rules, world, physics, sky.insolation, parent))
+    target = settled_temperature(rules)
     ground_fit(rules, world, physics, sky=sky, parent=parent, target=target)
     while (
-        surface_temperature(rules, world, physics, sky.insolation, parent) < table.livable_low_kelvin
+        surface_temperature(rules, world, physics, sky.insolation, parent) < target
         and "water_vapour" not in physics.locked
         and physics.water_vapour < table.warming_vapour_most
         and physics.nitrogen > 0

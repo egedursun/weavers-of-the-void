@@ -3,6 +3,7 @@ import json
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aerona.db.fixups import fixup_due, settle
 from aerona.db.repositories.cosmos import CosmosRepository
 from aerona.db.tables.celestial import StarRow, WorldRow
 from aerona.db.tables.changes import StateChangeRow
@@ -54,8 +55,13 @@ async def sky_now(session: AsyncSession, rules: Rules, world: WorldRow, physics:
     return sky_of(rules, world, physics, stars={star.id: star}, star_physics={star.id: lit}, systems=await systems_of(session))
 
 
+EDGE_FIXUP = "worlds.homes_left_at_the_edge"
+EDGE_KELVIN = 1
+
+
 async def homes_too_harsh(session: AsyncSession) -> list[int]:
     rules = await CosmosRepository(session).rules()
+    edge = rules.orbits.livable_low_kelvin + EDGE_KELVIN if await fixup_due(session, EDGE_FIXUP) else rules.orbits.livable_low_kelvin
     found: list[int] = []
     for world in await peopled_planets(session):
         physics = await session.get(WorldPhysicsRow, world.id)
@@ -65,7 +71,7 @@ async def homes_too_harsh(session: AsyncSession) -> list[int]:
         if sky is None or not sky.lights:
             continue
         temperature = surface_temperature(rules, world, physics, sky.insolation, None)
-        if rules.orbits.livable_low_kelvin <= temperature <= rules.orbits.livable_high_kelvin:
+        if edge <= temperature <= rules.orbits.livable_high_kelvin:
             continue
         trial = WorldPhysicsRow(**{column.key: getattr(physics, column.key) for column in WorldPhysicsRow.__table__.columns})
         bring_into_livable(rules, world, trial, sky=sky, parent=None)
@@ -88,6 +94,7 @@ async def settle_home_climate(session: AsyncSession, world_id: int) -> None:
     sky = sky_of(rules, world, physics, stars={star.id: star}, star_physics={star.id: own}, systems=await systems_of(session))
     bring_into_livable(rules, world, physics, sky=sky, parent=None)
     derive(rules, world, physics, sky=sky, moons=[], parent=None, rogue=set(), shards=False)
+    await settle(session, EDGE_FIXUP, {"world": world_id})
 
 
 async def orbit_moves(session: AsyncSession) -> list[tuple[StateChangeRow, StateChangeRow]]:
