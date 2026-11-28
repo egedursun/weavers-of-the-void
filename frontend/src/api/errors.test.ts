@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ApiError, errorFromResponse, unwrap } from './errors'
+import { ApiError, errorFromResponse, serverDown, unwrap } from './errors'
 
 function response(status: number) {
   return new Response(null, { status })
@@ -27,8 +27,37 @@ describe('api errors', () => {
       'The requested record does not exist.'
     )
     expect(errorFromResponse(response(418), null).message).toBe(
-      'Request failed with status 418.'
+      'The server refused the request.'
     )
+    expect(errorFromResponse(response(507), null).message).toBe(
+      'The server failed to complete the request.'
+    )
+  })
+
+  it('never shows a body that is not the server error object', () => {
+    const page =
+      '<html> <head><title>502 Bad Gateway</title></head> <body> <center><h1>502 Bad Gateway</h1></center> <hr><center>nginx</center> </body> </html> <!-- a padding to disable MSIE and Chrome friendly error page -->'
+    for (const body of [
+      page,
+      'Internal Server Error',
+      ['detail'],
+      { detail: [{ msg: 'field required' }] },
+      42,
+    ]) {
+      for (const status of [400, 422, 500, 502, 503, 504]) {
+        const message = errorFromResponse(response(status), body).message
+        expect(message).not.toMatch(/[<>]|Bad Gateway|nginx|Internal Server/)
+        expect(message.length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('tells a server that is down from one that refused', () => {
+    expect(serverDown(errorFromResponse(response(502), 'x'))).toBe(true)
+    expect(serverDown(errorFromResponse(response(504), null))).toBe(true)
+    expect(serverDown(errorFromResponse(undefined, null))).toBe(true)
+    expect(serverDown(errorFromResponse(response(409), null))).toBe(false)
+    expect(serverDown(new Error('x'))).toBe(false)
   })
 
   it('reports an unreachable server', () => {

@@ -1,3 +1,5 @@
+import { APP_NAME } from '@/config/brand'
+
 export class ApiError extends Error {
   readonly status: number | null
 
@@ -8,24 +10,30 @@ export class ApiError extends Error {
   }
 }
 
+const UNREACHABLE_MESSAGE = `The ${APP_NAME} server cannot be reached right now. It may be starting or restarting; try again in a moment.`
+
+const SERVER_FAILED = 'The server failed to complete the request.'
+const REFUSED = 'The server refused the request.'
+
 const STATUS_MESSAGES: Record<number, string> = {
   400: 'The request was not valid.',
   404: 'The requested record does not exist.',
   409: 'The world changed in the meantime. Try again.',
+  413: 'What was sent is too large for the server to take.',
   422: 'Some fields are not valid.',
-  500: 'The server failed to complete the request.',
-  503: 'The server is not available right now.',
+  500: SERVER_FAILED,
+  502: UNREACHABLE_MESSAGE,
+  503: 'The server is not available right now. Try again in a moment.',
+  504: 'The server took too long to answer. Try again in a moment.',
 }
 
-const UNREACHABLE_MESSAGE = 'The Weavers of the Void server cannot be reached.'
+const SERVER_DOWN = new Set([502, 503, 504])
 
 function detailOf(body: unknown): string | null {
-  if (typeof body === 'string' && body.trim()) return body
-  if (body && typeof body === 'object') {
-    for (const key of ['error', 'detail'] as const) {
-      const value = (body as Record<string, unknown>)[key]
-      if (typeof value === 'string' && value.trim()) return value
-    }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return null
+  for (const key of ['error', 'detail'] as const) {
+    const value = (body as Record<string, unknown>)[key]
+    if (typeof value === 'string' && value.trim()) return value
   }
   return null
 }
@@ -38,8 +46,13 @@ export function errorFromResponse(
   const message =
     detailOf(body) ??
     STATUS_MESSAGES[response.status] ??
-    `Request failed with status ${response.status}.`
+    (response.status >= 500 ? SERVER_FAILED : REFUSED)
   return new ApiError(message, response.status)
+}
+
+export function serverDown(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false
+  return error.status === null || SERVER_DOWN.has(error.status)
 }
 
 export async function unwrap<T>(

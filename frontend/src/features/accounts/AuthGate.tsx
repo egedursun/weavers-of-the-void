@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef } from 'react'
 import { CircleAlert } from 'lucide-react'
 import { onAuthSignal } from '@/api/authSignals'
+import { serverDown } from '@/api/errors'
 import { forgetViewer } from '@/api/viewerExit'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/domain'
@@ -41,8 +42,16 @@ export function AuthGate({ children }: { children: ReactNode }) {
       <Waiting>
         <EmptyState
           icon={CircleAlert}
-          title='The server cannot be reached'
-          description={state.error.message}
+          title={
+            serverDown(state.error)
+              ? 'The server cannot be reached'
+              : 'The gates could not be opened'
+          }
+          description={
+            serverDown(state.error)
+              ? `${state.error.message} This screen reconnects on its own.`
+              : state.error.message
+          }
           action={
             <Button
               type='button'

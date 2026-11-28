@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { setAccountScope } from '@/api/accountScope'
 import { api } from '@/api/client'
-import { unwrap } from '@/api/errors'
+import { serverDown, unwrap } from '@/api/errors'
 import { useMutation } from '@/api/mutation'
 import { libraryQueryClient } from '@/api/queryClients'
 import { adoptViewerStorage } from '@/lib/universeStorage'
@@ -14,6 +14,7 @@ import {
 } from './types'
 
 const AUTH_KEY = ['auth'] as const
+const RECONNECT_MS = 5000
 
 export const authKeys = {
   all: AUTH_KEY,
@@ -47,6 +48,8 @@ export function useAuthState() {
       },
       staleTime: Number.POSITIVE_INFINITY,
       retry: 1,
+      refetchInterval: (query) =>
+        serverDown(query.state.error) ? RECONNECT_MS : false,
     },
     libraryQueryClient
   )

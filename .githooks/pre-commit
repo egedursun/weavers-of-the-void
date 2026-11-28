@@ -73,6 +73,7 @@ run auto_load "$PYTHON" scripts/check_auto_load.py
 run paged_reads "$PYTHON" scripts/check_paged_reads.py
 run entity_sweeps "$PYTHON" scripts/check_entity_sweeps.py
 run enum_caches "$PYTHON" scripts/check_enum_caches.py
+run raw_error_bodies "$PYTHON" scripts/check_raw_error_bodies.py
 run pending_reads "$PYTHON" scripts/check_pending_reads.py
 run fixup_keys "$PYTHON" scripts/check_fixup_keys.py
 run universe_title "$PYTHON" scripts/check_universe_title.py
